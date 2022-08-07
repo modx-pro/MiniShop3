@@ -14,6 +14,7 @@ use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 use MODX\Revolution\Transport\modPackageBuilder;
 use MODX\Revolution\Transport\modTransportPackage;
+use xPDO\Transport\xPDOTransport;
 
 class MiniShop3Package
 {
@@ -22,6 +23,9 @@ class MiniShop3Package
     private $category;
     private $category_attributes = [];
 
+    /**
+     * @var modPackageBuilder;
+     */
     public $builder;
 
     /**
@@ -61,7 +65,7 @@ class MiniShop3Package
      */
     public function process()
     {
-        $this->buildModel();
+        //$this->buildModel();
 
         // Add elements
         $elements = scandir($this->config['elements']);
@@ -102,12 +106,13 @@ class MiniShop3Package
         $this->builder->putVehicle($vehicle);
 
         $this->builder->setPackageAttributes([
-            'changelog' => file_get_contents($this->config['core'] . 'docs/changelog.txt'),
-            'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
-            'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
+//            'changelog' => file_get_contents($this->config['core'] . 'docs/changelog.txt'),
+//            'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
+//            'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
             'requires' => [
                 'php' => '>=7.2.0',
                 'modx' => '>=3.0.0',
+                //'pdoTools' => '>=3.0.0'
             ],
         ]);
         $this->modx->log(modX::LOG_LEVEL_INFO, 'Added package attributes and setup options.');
@@ -179,6 +184,8 @@ class MiniShop3Package
         $sig = explode('-', $signature);
         $versionSignature = explode('.', $sig[1]);
 
+        $this->modx->log(3, 'signature: ' . $signature);
+
         /** @var modTransportPackage $package */
         $package = $this->modx->getObject(modTransportPackage::class, ['signature' => $signature]);
         if (!$package) {
@@ -207,7 +214,8 @@ class MiniShop3Package
             }
             $package->save();
         }
-        $package->xpdo->packages['MODX\Revolution\\'] = $package->xpdo->packages['Revolution'];
+
+        //$package->xpdo->packages['MODX\Revolution\\'] = $package->xpdo->packages['Revolution'];
         if ($package->install()) {
             $this->modx->runProcessor('System/ClearCache');
         }
@@ -234,7 +242,7 @@ class MiniShop3Package
             /** @var modSystemSetting $setting */
             $setting = $this->modx->newObject(modSystemSetting::class);
             $setting->fromArray(array_merge([
-                'key' => $this->config['name_lower'] . '_' . $name,
+                'key' => $name,
                 'namespace' => $this->config['name_lower'],
             ], $data), '', true, true);
             $vehicle = $this->builder->createVehicle($setting, $attributes);
@@ -308,11 +316,12 @@ class MiniShop3Package
         foreach ($plugins as $name => $data) {
             /** @var modPlugin $plugin */
             $plugin = $this->modx->newObject(modPlugin::class);
+            $filepath = $this->config['core'] . '/elements/plugins/' . $data['file'] . '.php';
             $plugin->fromArray(array_merge([
                 'name' => $name,
                 'category' => 0,
                 'description' => @$data['description'],
-                'plugincode' => $this::getFileContent($this->config['core'] . 'elements/plugins/' . $data['file'] . '.php'),
+                'plugincode' => $this::getFileContent($filepath),
                 'static' => !empty($this->config['static']['plugins']),
                 'source' => 1,
                 'static_file' => 'core/components/' . $this->config['name_lower'] . '/elements/plugins/' . $data['file'] . '.php',
@@ -345,30 +354,28 @@ class MiniShop3Package
      */
     public function events()
     {
-        /** @noinspection PhpIncludeInspection */
         $events = include($this->config['elements'] . 'events.php');
         if (!is_array($events)) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not package in Events');
-
             return;
         }
-        $this->category_attributes[xPDOTransport::RELATED_OBJECT_ATTRIBUTES]['Events'] = [
-            xPDOTransport::PRESERVE_KEYS => false,
-            xPDOTransport::UPDATE_OBJECT => !empty($this->config['update']['events']),
-            xPDOTransport::UNIQUE_KEY => 'name',
+
+        $attributes = [
+            xPDOTransport::PRESERVE_KEYS => true,
+            xPDOTransport::UPDATE_OBJECT => $this->config['update']['events'],
         ];
-        $objects = [];
         foreach ($events as $name) {
             $event = $this->modx->newObject(modEvent::class);
             $event->fromArray([
                 'name' => $name,
                 'service' => 6,
-                'groupname' => PKG_NAME,
+                'groupname' => $this->config['name'],
             ], '', true, true);
-            $objects[] = $event;
+            //$objects[] = $event;
+            $vehicle = $this->builder->createVehicle($event, $attributes);
+            $this->builder->putVehicle($vehicle);
         }
-        $this->category->addMany($objects);
-        $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($objects) . ' Events');
+        $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($events) . ' Events');
     }
 
     /**
@@ -391,11 +398,12 @@ class MiniShop3Package
         foreach ($snippets as $name => $data) {
             /** @var modSnippet $snippet */
             $objects[$name] = $this->modx->newObject(modSnippet::class);
+            $filepath = $this->config['core'] . '/elements/snippets/' . $data['file'] . '.php';
             $objects[$name]->fromArray(array_merge([
                 'id' => 0,
                 'name' => $name,
                 'description' => @$data['description'],
-                'snippet' => $this::getFileContent($this->config['core'] . 'elements/snippets/' . $data['file'] . '.php'),
+                'snippet' => $this::getFileContent($filepath),
                 'static' => !empty($this->config['static']['snippets']),
                 'source' => 1,
                 'static_file' => 'core/components/' . $this->config['name_lower'] . '/elements/snippets/' . $data['file'] . '.php',
@@ -435,11 +443,12 @@ class MiniShop3Package
         foreach ($chunks as $name => $file) {
             /** @var modChunk[] $objects */
             $objects[$name] = $this->modx->newObject(modChunk::class);
+            $filepath = $this->config['core'] . '/elements/chunks/' . $file . '.tpl';
             $objects[$name]->fromArray([
                 'id' => 0,
                 'name' => $name,
                 'description' => '',
-                'snippet' => $this::getFileContent($this->config['core'] . 'elements/chunks/' . $file . '.tpl'),
+                'snippet' => $this::getFileContent($filepath),
                 'static' => !empty($this->config['static']['chunks']),
                 'source' => 1,
                 'static_file' => 'core/components/' . $this->config['name_lower'] . '/elements/chunks/' . $file . '.tpl',

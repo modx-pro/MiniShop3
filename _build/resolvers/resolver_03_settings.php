@@ -7,17 +7,18 @@
 
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msDeliveryMember;
+use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\modCategory;
+use MODX\Revolution\modChunk;
 use MODX\Revolution\modSystemSetting;
-use MODX\Revolution\mysql\modChunk;
 
 if ($transport->xpdo) {
     $modx = $transport->xpdo;
     switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         case xPDOTransport::ACTION_INSTALL:
         case xPDOTransport::ACTION_UPGRADE:
-            $modx->addPackage('MiniShop3\Model', $options['path'] . 'src/', null, 'MiniShop3\\');
+            $modx->addPackage('MiniShop3\Model', MODX_CORE_PATH . 'components/minishop3/src/', null, 'MiniShop3\\');
             $lang = $modx->getOption('manager_language') === 'en' ? 1 : 0;
 
             $statuses = [
@@ -84,21 +85,21 @@ if ($transport->xpdo) {
             ];
 
             foreach ($statuses as $id => $properties) {
-                if (!$status = $modx->getCount('msOrderStatus', ['id' => $id])) {
-                    $status = $modx->newObject('msOrderStatus', array_merge([
+                if (!$status = $modx->getCount(msOrderStatus::class, ['id' => $id])) {
+                    $status = $modx->newObject(msOrderStatus::class, array_merge([
                         'editable' => 0,
                         'active' => 1,
-                        'rank' => $id - 1,
+                        'position' => $id - 1,
                     ], $properties));
                     $status->set('id', $id);
                     /*@var modChunk $chunk */
                     if (!empty($properties['body_user'])) {
-                        if ($chunk = $modx->getObject('modChunk', ['name' => $properties['body_user']])) {
+                        if ($chunk = $modx->getObject(modChunk::class, ['name' => $properties['body_user']])) {
                             $status->set('body_user', $chunk->get('id'));
                         }
                     }
                     if (!empty($properties['body_manager'])) {
-                        if ($chunk = $modx->getObject('modChunk', ['name' => $properties['body_manager']])) {
+                        if ($chunk = $modx->getObject(modChunk::class, ['name' => $properties['body_manager']])) {
                             $status->set('body_manager', $chunk->get('id'));
                         }
                     }
@@ -118,7 +119,7 @@ if ($transport->xpdo) {
                     'distance_price' => 0,
                     'active' => 1,
                     'requires' => 'email,receiver',
-                    'rank' => 0,
+                    'position' => 0,
                 ], '', true);
                 $delivery->save();
             }
@@ -131,7 +132,7 @@ if ($transport->xpdo) {
                     'id' => 1,
                     'name' => !$lang ? 'Оплата наличными' : 'Cash',
                     'active' => 1,
-                    'rank' => 0,
+                    'position' => 0,
                 ], '', true);
                 $payment->save();
             }

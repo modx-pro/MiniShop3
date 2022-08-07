@@ -5,8 +5,17 @@ namespace MiniShop3\Utils;
 use MiniShop3\MiniShop3;
 use MODX\Revolution\modX;
 
-class Plugins extends MiniShop3
+class Plugins
 {
+    private $modx;
+    private $ms3;
+
+    public function __construct(MiniShop3 $ms3)
+    {
+        $this->ms3 = $ms3;
+        $this->modx = $this->ms3->modx;
+    }
+
     /**
      * Register plugin into miniShop3
      *
@@ -15,10 +24,10 @@ class Plugins extends MiniShop3
      */
     public function add($name, $controller)
     {
-        $plugins = $this->utils->getSetting('ms_plugins');
+        $plugins = $this->ms3->utils->getSetting('ms_plugins');
         $plugins[strtolower($name)] = $controller;
 
-        $this->utils->updateSetting('ms_plugins', $plugins);
+        $this->ms3->utils->updateSetting('ms_plugins', $plugins);
     }
 
     /**
@@ -28,9 +37,9 @@ class Plugins extends MiniShop3
      */
     public function remove($name)
     {
-        $plugins = $this->utils->getSetting('ms_plugins');
+        $plugins = $this->ms3->utils->getSetting('ms_plugins');
         unset($plugins[strtolower($name)]);
-        $this->utils->updateSetting('ms_plugins', $plugins);
+        $this->ms3->utils->updateSetting('ms_plugins', $plugins);
     }
 
     /**
@@ -40,7 +49,7 @@ class Plugins extends MiniShop3
      */
     public function get()
     {
-        return $this->utils->getSetting('ms_plugins');
+        return $this->ms3->utils->getSetting('ms_plugins');
     }
 
     /**
@@ -52,12 +61,12 @@ class Plugins extends MiniShop3
     {
         $output = [];
         // Original plugins
-        $plugins = scandir($this->config['pluginsPath']);
+        $plugins = scandir($this->ms3->config['pluginsPath']);
         foreach ($plugins as $plugin) {
             if ($plugin == '.' || $plugin == '..') {
                 continue;
             }
-            $dir = $this->config['pluginsPath'] . $plugin;
+            $dir = $this->ms3->config['pluginsPath'] . $plugin;
 
             if (is_dir($dir) && file_exists($dir . '/index.php')) {
                 $include = include_once($dir . '/index.php');
@@ -68,13 +77,13 @@ class Plugins extends MiniShop3
         }
 
         // 3rd party plugins
-        $placeholders = array(
+        $placeholders = [
             'base_path' => MODX_BASE_PATH,
             'core_path' => MODX_CORE_PATH,
             'assets_path' => MODX_ASSETS_PATH,
-        );
-        $pl1 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[++', ']]', false);
-        $pl2 = $this->pdoFetch->makePlaceholders($placeholders, '', '{', '}', false);
+        ];
+        $pl1 = $this->ms3->pdoFetch->makePlaceholders($placeholders, '', '[[++', ']]', false);
+        $pl2 = $this->ms3->pdoFetch->makePlaceholders($placeholders, '', '{', '}', false);
         $plugins = $this->get();
         if (!empty($plugins) && is_array($plugins)) {
             foreach ($plugins as $plugin => $controller) {

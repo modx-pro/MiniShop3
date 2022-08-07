@@ -10,7 +10,7 @@ if ($transport->xpdo) {
     switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         case xPDOTransport::ACTION_INSTALL:
         case xPDOTransport::ACTION_UPGRADE:
-            $modx->addPackage('MiniShop\Model', MODX_CORE_PATH . 'components/minishop3/src/', null, 'MiniShop\\');
+            $modx->addPackage('MiniShop3\Model', MODX_CORE_PATH . 'components/minishop3/src/', null, 'MiniShop3\\');
             $manager = $modx->getManager();
             $objects = [];
             $schemaFile = MODX_CORE_PATH . 'components/minishop3/schema/minishop3.mysql.schema.xml';
@@ -24,7 +24,7 @@ if ($transport->xpdo) {
                 unset($schema);
             }
             foreach ($objects as $class) {
-                $class = 'MiniShop\\Model\\' . $class;
+                $class = 'MiniShop3\\Model\\' . $class;
                 $table = $modx->getTableName($class);
                 $sql = "SHOW TABLES LIKE '" . trim($table, '`') . "'";
                 $stmt = $modx->prepare($sql);

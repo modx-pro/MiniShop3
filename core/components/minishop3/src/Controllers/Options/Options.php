@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Options;
 
 use MiniShop3\Controllers\Options\Types\msOptionType;
+use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOption;
 use MODX\Revolution\modX;
 
@@ -14,12 +15,12 @@ class Options
     /** @var array $optionTypes */
     private $optionTypes = [];
 
-    public function __construct(modX $modx)
+    public function __construct(MiniShop3 $ms3)
     {
-        $this->modx = $modx;
-        $this->ms3 = $this->modx->services->get('ms3');
+        $this->ms3 = $ms3;
+        $this->modx = $this->ms3->modx;
         $this->config = [
-            'types_dir' => $this->ms3->config['corePath'] . 'src/Processors/Settings/Option/Types'
+            'types_dir' => $this->ms3->config['corePath'] . 'src/Controllers/Options/Types'
         ];
     }
 
@@ -76,7 +77,7 @@ class Options
         foreach ($s as $k) {
             $o[] = ucfirst($k);
         }
-        $fileName =  implode('', $o);
+        $fileName = implode('', $o);
 
         $typePath = $this->config['types_dir'] . '/' . $fileName . '.php';
 

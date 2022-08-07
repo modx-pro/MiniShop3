@@ -1,12 +1,12 @@
 <?php
 
-use MiniShop3\Model\msOptionType;
+use MiniShop3\Controllers\Options\Types\msOptionType;
 
 if (!class_exists('msManagerController')) {
     require_once dirname(__FILE__, 2) . '/manager.class.php';
 }
 
-class MiniShopMgrSettingsManagerController extends msManagerController
+class MiniShop3MgrSettingsManagerController extends msManagerController
 {
     /**
      * @return string

@@ -8,8 +8,17 @@ use MODX\Revolution\Mail\modPHPMailer;
 use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 
-class Utils extends MiniShop3
+class Utils
 {
+    private $modx;
+    private $ms3;
+
+    public function __construct(MiniShop3 $ms3)
+    {
+        $this->ms3 = $ms3;
+        $this->modx = $this->ms3->modx;
+    }
+
     /**
      * General method to get JSON settings
      *
@@ -19,7 +28,7 @@ class Utils extends MiniShop3
      */
     public function getSetting($key)
     {
-        $setting = $this->modx->getObject(modSystemSetting::class, array('key' => $key));
+        $setting = $this->modx->getObject(modSystemSetting::class, ['key' => $key]);
         if (!$setting) {
             $setting = $this->modx->newObject(modSystemSetting::class);
             $setting->set('key', $key);
@@ -29,14 +38,13 @@ class Utils extends MiniShop3
 
         $value = json_decode($setting->get('value'), true);
         if (!is_array($value)) {
-            $value = array();
+            $value = [];
             $setting->set('value', $value);
             $setting->save();
         }
 
         return $value;
     }
-
 
     /**
      * General method to update JSON settings
@@ -46,7 +54,7 @@ class Utils extends MiniShop3
      */
     public function updateSetting($key, $value)
     {
-        $setting = $this->modx->getObject(modSystemSetting::class, array('key' => $key));
+        $setting = $this->modx->getObject(modSystemSetting::class, ['key' => $key]);
         if (!$setting) {
             $setting = $this->modx->newObject(modSystemSetting::class);
             $setting->set('key', $key);
@@ -64,7 +72,7 @@ class Utils extends MiniShop3
      *
      * @return array
      */
-    public function invokeEvent($eventName, array $params = array(), $glue = '<br/>')
+    public function invokeEvent($eventName, array $params = [], $glue = '<br/>')
     {
         if (isset($this->modx->event->returnedValues)) {
             $this->modx->event->returnedValues = null;
@@ -84,11 +92,11 @@ class Utils extends MiniShop3
             $params = array_merge($params, $this->modx->event->returnedValues);
         }
 
-        return array(
+        return [
             'success' => empty($message),
             'message' => $message,
             'data' => $params,
-        );
+        ];
     }
 
     /**
@@ -100,19 +108,18 @@ class Utils extends MiniShop3
      *
      * @return array|string $response
      */
-    public function error($message = '', $data = array(), $placeholders = array())
+    public function error($message = '', $data = [], $placeholders = [])
     {
-        $response = array(
+        $response = [
             'success' => false,
             'message' => $this->modx->lexicon($message, $placeholders),
             'data' => $data,
-        );
+        ];
 
-        return $this->config['json_response']
+        return $this->ms3->config['json_response']
             ? json_encode($response)
             : $response;
     }
-
 
     /**
      * This method returns a success of the order
@@ -123,15 +130,15 @@ class Utils extends MiniShop3
      *
      * @return array|string $response
      */
-    public function success($message = '', $data = array(), $placeholders = array())
+    public function success($message = '', $data = [], $placeholders = [])
     {
-        $response = array(
+        $response = [
             'success' => true,
             'message' => $this->modx->lexicon($message, $placeholders),
             'data' => $data,
-        );
+        ];
 
-        return $this->config['json_response']
+        return $this->ms3->config['json_response']
             ? json_encode($response)
             : $response;
     }
@@ -175,13 +182,13 @@ class Utils extends MiniShop3
     {
         // Russian files
         if (preg_match('#[а-яё]#im', $path)) {
-            $path = strtr($path, array('\\' => '/'));
+            $path = strtr($path, ['\\' => '/']);
 
             preg_match("#[^/]+$#", $path, $file);
             preg_match("#([^/]+)[.$]+(.*)#", $path, $file_ext);
             preg_match("#(.*)[/$]+#", $path, $dirname);
 
-            $info = array(
+            $info = [
                 'dirname' => (isset($dirname[1]))
                     ? $dirname[1]
                     : '.',
@@ -192,7 +199,7 @@ class Utils extends MiniShop3
                 'filename' => (isset($file_ext[1]))
                     ? $file_ext[1]
                     : $file[0],
-            );
+            ];
         } else {
             $info = pathinfo($path);
         }
@@ -213,8 +220,8 @@ class Utils extends MiniShop3
      */
     public function sendEmail($email, $subject, $body = '')
     {
-        $this->modx->getParser()->processElementTags('', $body, true, false, '[[', ']]', array(), 10);
-        $this->modx->getParser()->processElementTags('', $body, true, true, '[[', ']]', array(), 10);
+        $this->modx->getParser()->processElementTags('', $body, true, false, '[[', ']]', [], 10);
+        $this->modx->getParser()->processElementTags('', $body, true, true, '[[', ']]', [], 10);
 
         /** @var modPHPMailer $mail */
         $mail = $this->modx->services->get('modPHPMailer');

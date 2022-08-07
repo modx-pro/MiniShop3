@@ -11,6 +11,7 @@ if (!defined('MODX_CORE_PATH')) {
 return [
     'name' => 'MiniShop3',
     'name_lower' => 'minishop3',
+    'name_short' => 'ms3',
     'version' => '1.0.0',
     'release' => 'alpha',
     // Install package to site right after build
@@ -25,6 +26,7 @@ return [
         'policy_templates' => true,
         'settings' => false,
         'snippets' => true,
+        'events' => true
     ],
     // Which elements should be static by default
     'static' => [

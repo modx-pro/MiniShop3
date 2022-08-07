@@ -4,7 +4,7 @@ if (!class_exists('msManagerController')) {
     require_once dirname(__FILE__, 2) . '/manager.class.php';
 }
 
-class MiniShopMgrOrdersManagerController extends msManagerController
+class MiniShop3MgrOrdersManagerController extends msManagerController
 {
     /**
     * @return string

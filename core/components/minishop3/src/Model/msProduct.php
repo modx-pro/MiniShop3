@@ -41,7 +41,9 @@ class msProduct extends modResource
     {
         parent::__construct($xpdo);
         parent::set('class_key', 'msProduct');
-        $this->ms3 = $this->xpdo->services->get('ms3');
+        if ($this->xpdo->services->has('ms3')) {
+            $this->ms3 = $this->xpdo->services->get('ms3');
+        }
         $this->originalFieldMeta = $this->_fieldMeta;
 
         $aggregates = $this->xpdo->getAggregates(msProductData::class);

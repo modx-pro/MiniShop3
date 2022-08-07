@@ -77,16 +77,18 @@ class MiniShop3
             'json_response' => false,
         ], $config);
 
-        $this->pdoFetch = $this->modx->services->get('pdoFetch');
+        if ($this->modx->services->has(Fetch::class)) {
+            $this->pdoFetch = $this->modx->services->get(Fetch::class);
+        }
         if ($this->pdoFetch) {
             $this->pdoFetch->setConfig($this->config);
         }
 
-        $this->utils = new Utils($this->modx);
-        $this->format = new Format($this->modx);
-        $this->services = new Services($this->modx);
-        $this->plugins = new Plugins($this->modx);
-        $this->options = new Options($this->modx);
+        $this->utils = new Utils($this);
+        $this->format = new Format($this);
+        //$this->services = new Services($this->modx);
+        //$this->plugins = new Plugins($this);
+        $this->options = new Options($this);
     }
 
     public function registerFrontend($ctx = 'web')
@@ -255,25 +257,25 @@ class MiniShop3
     public function loadMap()
     {
         if (method_exists($this->pdoFetch, 'makePlaceholders')) {
-            $plugins = $this->plugins->load();
-            foreach ($plugins as $plugin) {
-                // For legacy plugins
-                if (isset($plugin['xpdo_meta_map']) && is_array($plugin['xpdo_meta_map'])) {
-                    $plugin['map'] = $plugin['xpdo_meta_map'];
-                }
-                if (isset($plugin['map']) && is_array($plugin['map'])) {
-                    foreach ($plugin['map'] as $class => $map) {
-                        if (!isset($this->modx->map[$class])) {
-                            $this->modx->loadClass($class, $this->config['modelPath'] . 'minishop3/');
-                        }
-                        if (isset($this->modx->map[$class])) {
-                            foreach ($map as $key => $values) {
-                                $this->modx->map[$class][$key] = array_merge($this->modx->map[$class][$key], $values);
-                            }
-                        }
-                    }
-                }
-            }
+//            $plugins = $this->plugins->load();
+//            foreach ($plugins as $plugin) {
+//                // For legacy plugins
+//                if (isset($plugin['xpdo_meta_map']) && is_array($plugin['xpdo_meta_map'])) {
+//                    $plugin['map'] = $plugin['xpdo_meta_map'];
+//                }
+//                if (isset($plugin['map']) && is_array($plugin['map'])) {
+//                    foreach ($plugin['map'] as $class => $map) {
+//                        if (!isset($this->modx->map[$class])) {
+//                            $this->modx->loadClass($class, $this->config['modelPath'] . 'minishop3/');
+//                        }
+//                        if (isset($this->modx->map[$class])) {
+//                            foreach ($map as $key => $values) {
+//                                $this->modx->map[$class][$key] = array_merge($this->modx->map[$class][$key], $values);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         } else {
             $this->modx->log(modX::LOG_LEVEL_ERROR, 'pdoTools not installed, metadata for miniShop3 objects not loaded');
         }

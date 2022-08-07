@@ -1,9 +1,6 @@
 <?php
 
-/** @var modX $modx */
-$menus = [];
-
-$tmp = [
+return [
     'miniShop3' => [
         'description' => 'ms_menu_desc',
         'icon' => '<i class="icon-shopping-cart icon icon-large"></i>',

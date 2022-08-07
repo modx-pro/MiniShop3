@@ -417,8 +417,6 @@
     </object>
 
     <object class="msCustomerProfile" table="ms_customer_profiles" extends="xPDO\Om\xPDOSimpleObject"  >
-        <field key="id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" index="pk"/>
-        <field key="account" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>
         <field key="spent" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>
         <field key="createdon" dbtype="timestamp" phptype="datetime" null="true" default="CURRENT_TIMESTAMP"/>
         <field key="referrer_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="true"
@@ -426,9 +424,6 @@
         <field key="referrer_code" dbtype="varchar" precision="50" phptype="string" null="true" default=""
                index="index"/>
 
-        <index alias="id" name="id" primary="true" unique="true" type="BTREE">
-            <column key="id" length="" collation="A" null="false"/>
-        </index>
         <index alias="referrer_id" name="referrer_id" primary="false" unique="false" type="BTREE">
             <column key="referrer_id" length="" collation="A" null="false"/>
         </index>

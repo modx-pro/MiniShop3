@@ -4,8 +4,17 @@ namespace MiniShop3\Utils;
 
 use MiniShop3\MiniShop3;
 
-class Format extends MiniShop3
+class Format
 {
+    private $modx;
+    private $ms3;
+
+    public function __construct(MiniShop3 $ms3)
+    {
+        $this->ms3 = $ms3;
+        $this->modx = $this->ms3->modx;
+    }
+
     /**
      * Function for formatting dates
      *

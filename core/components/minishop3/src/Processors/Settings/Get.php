@@ -7,7 +7,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MODX\Revolution\Processors\ModelProcessor;
 
-class GetClass extends ModelProcessor
+class Get extends ModelProcessor
 {
     /**
      * @return string

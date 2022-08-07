@@ -36,7 +36,9 @@ class msOption extends xPDOSimpleObject
     public function __construct(xPDO $xpdo)
     {
         parent::__construct($xpdo);
-        $this->ms3 = $this->xpdo->services->get('ms3');
+        if ($this->xpdo->services->has('ms3')) {
+            $this->ms3 = $this->xpdo->services->get('ms3');
+        }
     }
 
     /**
