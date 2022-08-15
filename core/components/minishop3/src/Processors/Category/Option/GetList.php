@@ -13,7 +13,7 @@ class GetList extends GetListProcessor
     public $classKey = 'msCategoryOption';
     public $defaultSortField = 'msCategoryOption.rank';
     public $defaultSortDirection = 'asc';
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
 
 
     /**

@@ -12,7 +12,7 @@ use MODX\Revolution\Sources\modMediaSource;
 class Upload extends ModelProcessor
 {
     public $classKey = msProductFile::class;
-    public $languageTopics = ['minishop:default', 'minishop:product'];
+    public $languageTopics = ['minishop3:default', 'minishop3:product'];
     public $permission = 'msproductfile_save';
     /** @var modMediaSource $mediaSource */
     public $mediaSource;

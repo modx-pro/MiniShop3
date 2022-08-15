@@ -94,7 +94,7 @@ class MiniShop3
     public function registerFrontend($ctx = 'web')
     {
         if ($ctx != 'mgr' && (!defined('MODX_API_MODE') || !MODX_API_MODE)) {
-            $this->modx->lexicon->load('minishop:default');
+            $this->modx->lexicon->load('minishop3:default');
 
             $config = $this->pdoFetch->makePlaceholders($this->config);
 
@@ -243,7 +243,7 @@ class MiniShop3
         }
         $this->config = array_merge($this->config, $scriptProperties);
         $this->config['ctx'] = $ctx;
-        $this->modx->lexicon->load('minishop:default');
+        $this->modx->lexicon->load('minishop3:default');
 
         $load = $this->services->load($ctx);
         $this->initialized[$ctx] = $load;

@@ -36,7 +36,7 @@ class Order
 
         $this->config = array_merge([], $config);
 
-        $this->modx->lexicon->load('minishop:cart');
+        $this->modx->lexicon->load('minishop3:cart');
     }
 
     /**

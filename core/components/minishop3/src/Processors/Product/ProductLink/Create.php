@@ -9,7 +9,7 @@ use MODX\Revolution\Processors\Model\CreateProcessor;
 class Create extends CreateProcessor
 {
     public $classKey = msProductLink::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'msproduct_save';
 
     /**

@@ -13,7 +13,6 @@ minishop.page.UpdateCategory = function (config) {
     minishop.page.UpdateCategory.superclass.constructor.call(this, config);
 };
 Ext.extend(minishop.page.UpdateCategory, MODx.page.UpdateResource, {
-
     getButtons: function (config) {
         const buttons = [];
         const originals = MODx.page.UpdateResource.prototype.getButtons.call(this, config);
@@ -103,109 +102,108 @@ minishop.panel.UpdateCategory = function (config) {
 };
 Ext.extend(minishop.panel.UpdateCategory, minishop.panel.Category, {
 
-    getFields: function (config) {
-        const fields = [];
-        const originals = minishop.panel.Category.prototype.getFields.call(this, config);
-
-        for (const i in originals) {
-            if (!originals.hasOwnProperty(i)) {
-                continue;
-            }
-            const item = originals[i];
-            if (item.id == 'modx-resource-tabs') {
-                let tabs = [
-                    this.getProducts(config)
-                ],
-                pageSettingsTab, accessPermissionsTab;
-                for (const i2 in item.items) {
-                    if (!item.items.hasOwnProperty(i2)) {
-                        continue;
-                    }
-                    const tab = item.items[i2];
-                    if (tab.id != 'modx-page-settings' && tab.id != 'modx-resource-access-permissions') {
-                        tabs.push(tab);
-                    } else {
-                        // Get the "Settings" and "Resource Groups" tabs
-                        if (tab.id == 'modx-page-settings') {
-                            // Add "Product Options" inside the "Settings" tab
-                            tab.items = this.addOptions(config, tab.items);
-                            pageSettingsTab = tab;
-                        }
-                        if (tab.id == 'modx-resource-access-permissions') {
-                            accessPermissionsTab = tab;
-                        }
-                    }
-                }
-                if (minishop.config['show_comments']) {
-                    tabs.push(this.getComments(config));
-                }
-                // Move the "Settings" and "Resource Groups" to the end of tabs
-                pageSettingsTab && tabs.push(pageSettingsTab);
-                accessPermissionsTab && tabs.push(accessPermissionsTab);
-                item.items = tabs;
-            }
-            fields.push(item);
-        }
-
-        return fields;
-    },
-
-    getProducts: function (config) {
-        return {
-            title: _('ms_tab_products'),
-            id: 'modx-minishop-products',
-            layout: 'anchor',
-            items: [{
-                xtype: 'minishop-grid-products',
-                resource: config.resource,
-                border: false,
-                listeners: {
-
-                },
-            }]
-        };
-    },
-
-    addOptions: function (config, items) {
-        return [{
-            layout: 'form',
-            items: [items, {
-                html: String.format('<h3>{0}</h3>', _('ms_product_options')),
-                style: 'margin-top: 20px',
-                border: false,
-            }, {
-                xtype: 'minishop-grid-category-option',
-                border: false,
-                record: config['record'],
-            }]
-        }];
-    },
-
-    getComments: function (config) {
-        return {
-            title: _('ms_tab_comments'),
-            layout: 'anchor',
-            items: [{
-                xtype: 'tickets-panel-comments',
-                record: config.record,
-                section: config.record.id,
-                border: false,
-            }]
-        };
-    },
-
-    handlePreview: function (action) {
-        const previewBtn = Ext.getCmp('modx-abtn-preview');
-        const deleteButton = Ext.getCmp('modx-abtn-delete');
-        if (previewBtn == undefined || deleteButton == undefined) {
-            Ext.defer(function () {
-                this.handlePreview(action);
-            }, 200, this);
-        } else {
-            previewBtn[action]();
-            deleteButton[action]();
-        }
-    },
+    // getFields: function (config) {
+    //     console.log('update getFields')
+    //     const fields = [];
+    //     const originals = minishop.panel.Category.prototype.getFields.call(this, config);
+    //     for (const i in originals) {
+    //         if (!originals.hasOwnProperty(i)) {
+    //             continue;
+    //         }
+    //         const item = originals[i];
+    //         if (item.id === 'modx-resource-tabs') {
+    //             let tabs = [
+    //                 //this.getProducts(config)
+    //             ],
+    //             pageSettingsTab, accessPermissionsTab;
+    //             for (const i2 in item.items) {
+    //                 if (!item.items.hasOwnProperty(i2)) {
+    //                     continue;
+    //                 }
+    //                 const tab = item.items[i2];
+    //                 if (tab.id !== 'modx-page-settings' && tab.id !== 'modx-resource-access-permissions') {
+    //                     tabs.push(tab);
+    //                 } else {
+    //                     // Get the "Settings" and "Resource Groups" tabs
+    //                     if (tab.id === 'modx-page-settings') {
+    //                         // Add "Product Options" inside the "Settings" tab
+    //                         tab.items = this.addOptions(config, tab.items);
+    //                         pageSettingsTab = tab;
+    //                     }
+    //                     if (tab.id === 'modx-resource-access-permissions') {
+    //                         accessPermissionsTab = tab;
+    //                     }
+    //                 }
+    //             }
+    //             // if (minishop.config['show_comments']) {
+    //             //     tabs.push(this.getComments(config));
+    //             // }
+    //             // Move the "Settings" and "Resource Groups" to the end of tabs
+    //             pageSettingsTab && tabs.push(pageSettingsTab);
+    //             accessPermissionsTab && tabs.push(accessPermissionsTab);
+    //             item.items = tabs;
+    //         }
+    //         fields.push(item);
+    //     }
+    //     return fields;
+    // },
+    //
+    // getProducts: function (config) {
+    //     return {
+    //         title: _('ms_tab_products'),
+    //         id: 'modx-minishop-products',
+    //         layout: 'anchor',
+    //         items: [{
+    //             xtype: 'minishop-grid-products',
+    //             resource: config.resource,
+    //             border: false,
+    //             listeners: {
+    //
+    //             },
+    //         }]
+    //     };
+    // },
+    //
+    // addOptions: function (config, items) {
+    //     return [{
+    //         layout: 'form',
+    //         items: [items, {
+    //             html: String.format('<h3>{0}</h3>', _('ms_product_options')),
+    //             style: 'margin-top: 20px',
+    //             border: false,
+    //         }, {
+    //             xtype: 'minishop-grid-category-option',
+    //             border: false,
+    //             record: config['record'],
+    //         }]
+    //     }];
+    // },
+    //
+    // getComments: function (config) {
+    //     return {
+    //         title: _('ms_tab_comments'),
+    //         layout: 'anchor',
+    //         items: [{
+    //             xtype: 'tickets-panel-comments',
+    //             record: config.record,
+    //             section: config.record.id,
+    //             border: false,
+    //         }]
+    //     };
+    // },
+    //
+    // handlePreview: function (action) {
+    //     const previewBtn = Ext.getCmp('modx-abtn-preview');
+    //     const deleteButton = Ext.getCmp('modx-abtn-delete');
+    //     if (previewBtn === undefined || deleteButton === undefined) {
+    //         Ext.defer(function () {
+    //             this.handlePreview(action);
+    //         }, 200, this);
+    //     } else {
+    //         previewBtn[action]();
+    //         deleteButton[action]();
+    //     }
+    // },
 
 });
 Ext.reg('minishop-panel-category-update', minishop.panel.UpdateCategory);

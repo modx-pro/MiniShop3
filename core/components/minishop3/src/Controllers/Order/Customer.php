@@ -20,7 +20,7 @@ class Customer
         $this->ms3 = $ms3;
         $this->modx = $ms3->modx;
 
-        $this->modx->lexicon->load('minishop:default');
+        $this->modx->lexicon->load('minishop3:default');
     }
 
     /**

@@ -29,6 +29,7 @@ minishop.grid.Products = function (config) {
 Ext.extend(minishop.grid.Products, minishop.grid.Default, {
 
     getFields: function () {
+        console.log('product.grid getFields')
         const fields = minishop.config['product_fields'];
         const options = minishop.config['option_fields'];
 
@@ -341,7 +342,7 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
     },
 
     reloadTree: function (ids) {
-        if (ids == undefined || typeof(ids) != 'object') {
+        if (ids === undefined || typeof(ids) != 'object') {
             ids = this._getSelectedIds();
         }
         const store = this.getStore();
@@ -351,7 +352,7 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
                 continue;
             }
             const item = store.data.map[Number(ids[i])];
-            if (item != undefined) {
+            if (item !== undefined) {
                 parents[item['data']['parent']] = item['data']['context_key'];
             }
         }

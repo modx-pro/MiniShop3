@@ -100,7 +100,7 @@ class Sort extends ModelProcessor
      */
     public function updateIndex()
     {
-        // Check if need to update children indexes
+        // Check if you need to update children indexes
         $c = $this->modx->newQuery($this->classKey, ['parent' => $this->parent]);
         $c->groupby('menuindex');
         $c->select('COUNT(menuindex) as idx');

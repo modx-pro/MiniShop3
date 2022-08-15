@@ -10,7 +10,7 @@ use MODX\Revolution\Processors\Model\RemoveProcessor;
 class Remove extends RemoveProcessor
 {
     public $classKey = msProductFile::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'msproductfile_save';
 
     /**

@@ -17,7 +17,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
      */
     public function getLanguageTopics()
     {
-        return ['resource', 'minishop:default', 'minishop:product', 'minishop:manager', 'tickets:default'];
+        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager', 'tickets:default'];
     }
 
     /**
@@ -105,7 +105,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
-            'show_comments' => $show_comments,
+            //'show_comments' => $show_comments,
             'show_gallery' => $show_gallery,
             'show_extra' => (bool)$this->getOption('ms_product_tab_extra', null, true),
             'show_options' => (bool)$this->getOption('ms_product_tab_options', null, true),
@@ -153,7 +153,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         MODx.config.publish_document = "' . $this->canPublish . '";
         MODx.onDocFormRender = "' . $this->onDocFormRender . '";
         MODx.ctx = "' . $this->ctx . '";
-        MS3.config = ' . json_encode($config) . ';
+        minishop.config = ' . json_encode($config) . ';
         Ext.onReady(function() {
             MODx.load(' . json_encode($ready) . ');
         });

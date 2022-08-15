@@ -13,30 +13,34 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
                 continue;
             }
             const item = originals[i];
-            if (item.id == 'modx-resource-header') {
-                item.html = '<h2>' + _('ms_category_new') + '</h2>';
-            } else if (item.id == 'modx-resource-tabs') {
-                item.stateful = MODx.config['ms_category_remember_tabs'] == 1;
-                item.stateId = 'minishop-category-' + config.mode + '-tabpanel';
-                item.stateEvents = ['tabchange'];
-                item.collapsible = false;
-                item.getState = function () {
-                    return {activeTab: this.items.indexOf(this.getActiveTab())};
-                };
+            if (item.id === "modx-header-breadcrumbs") {
+                item.items[0].html = _('ms_category_new');
+            }
+            fields.push(item)
+            if (item.id === 'modx-resource-tabs') {
+                // item.stateful = MODx.config['ms_category_remember_tabs'] === 1;
+                // item.stateId = 'minishop-category-' + config.mode + '-tabpanel';
+                // item.stateEvents = ['tabchange'];
+                // item.collapsible = false;
+                // item.getState = function () {
+                //     return {activeTab: this.items.indexOf(this.getActiveTab())};
+                // };
                 let pageSettingsTab, accessPermissionsTab;
                 for (const i2 in item.items) {
                     if (!item.items.hasOwnProperty(i2)) {
                         continue;
                     }
                     const tab = item.items[i2];
-                    if (tab.id == 'modx-resource-settings') {
+                    if (tab.id === 'modx-resource-settings') {
                         tab.title = _('ms_tab_category');
                         tab.items.push(this.getContent(config));
-                    } else if (tab.id == 'modx-page-settings') {
+                    }
+                    if (tab.id === 'modx-page-settings') {
                         tab.items = this.getCategorySettings(config);
                         pageSettingsTab = tab;
                         item.items.splice(i2, 1);
-                    } else if (tab.id == 'modx-resource-access-permissions') {
+                    }
+                    if (tab.id === 'modx-resource-access-permissions') {
                         accessPermissionsTab = tab;
                         item.items.splice(i2, 1);
                     }
@@ -45,7 +49,7 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
                 pageSettingsTab && item.items.push(pageSettingsTab);
                 accessPermissionsTab && item.items.push(accessPermissionsTab);
             }
-            if (item.id != 'modx-resource-content') {
+            if (item.id !== 'modx-resource-content') {
                 fields.push(item);
             }
         }
@@ -54,25 +58,35 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
     },
 
     getContent: function (config) {
-        const fields = [];
+        let fields = [];
         const originals = MODx.panel.Resource.prototype.getContentField.call(this, config);
+        fields = originals;
         for (const i in originals) {
             if (!originals.hasOwnProperty(i)) {
                 continue;
             }
             const item = originals[i];
-
-            if (item.id === 'ta') {
-                item.hideLabel = false;
-                item.fieldLabel = _('content');
-                item.itemCls = 'contentblocks_replacement';
-                item.description = '<b>[[*content]]</b>';
-                if (MODx.config['ms_category_content_default'] && config['mode'] === 'create') {
-                    item.value = MODx.config['ms_category_content_default'];
-                }
-                item.hidden = minishop.config.isHideContent;
+            if (!Array.isArray(item)) {
+                continue;
             }
-            fields.push(item);
+
+            for (const j in item) {
+                if (!item.hasOwnProperty(j)) {
+                    continue;
+                }
+                const item_j = item[j];
+                // if (item_j.id === 'ta') {
+                //     item_j.hideLabel = false;
+                //     item_j.fieldLabel = _('content');
+                //     item_j.itemCls = 'contentblocks_replacement';
+                //     item_j.description = '<b>[[*content]]</b>';
+                //     if (MODx.config['ms_category_content_default'] && config['mode'] === 'create') {
+                //         item_j.value = MODx.config['ms_category_content_default'];
+                //     }
+                //     item_j.hidden = minishop.config.isHideContent;
+                // }
+                // fields.push(item_j);
+            }
         }
 
         return fields;
@@ -81,7 +95,6 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
     getCategorySettings: function (config) {
         const originals = MODx.panel.Resource.prototype.getSettingFields.call(this, config);
 
-        const moved = {};
         const items = [];
         for (const i in originals[0]['items']) {
             if (!originals[0]['items'].hasOwnProperty(i)) {
@@ -94,73 +107,32 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
                     continue;
                 }
                 const field = column['items'][i2];
-                switch (field.id) {
-                    case 'modx-resource-content-type':
-                        field.xtype = 'hidden';
-                        field.value = MODx.config['default_content_type'] || 1;
-                        break;
-                    case 'modx-resource-content-dispo':
-                        field.xtype = 'hidden';
-                        field.value = config.record['content_dispo'] || 0;
-                        break;
-                    case 'modx-resource-menuindex':
-                        moved.menuindex = field;
-                        continue;
-                    case undefined:
-                        if (field.xtype == 'fieldset') {
-                            this.findField(field, 'modx-resource-isfolder', function (f) {
-                                f.disabled = true;
-                                f.hidden = true;
-                            });
-                            field.items[0].items[0].items = [{
-                                id: 'modx-resource-hide_children_in_tree',
-                                xtype: 'xcheckbox',
-                                name: 'hide_children_in_tree',
-                                listeners: config.listeners,
-                                enableKeyEvents: true,
-                                msgTarget: 'under',
-                                hideLabel: true,
-                                boxLabel: _('ms_product_hide_children_in_tree'),
-                                description: '<b>[[*hide_children_in_tree]]</b><br />' + _('ms_product_hide_children_in_tree_help'),
-                            }].concat(field.items[0].items[0].items);
-                            moved.checkboxes = field;
-                            continue;
-                        } else {
-                            break;
-                        }
+
+                if (field.id === "modx-page-settings-left") {
+                    //content_type
+                    field.items[1].xtype = 'hidden';
+                    field.items[1].value = MODx.config['default_content_type'] || 1;
+                }
+
+                if (field.id === "modx-page-settings-box-left") {
+                    //is_folder
+                    field.items[0].disabled = true;
+                    field.items[0].hidden = true;
+                }
+
+                //content-disposition
+                if (field.id === "modx-page-settings-right") {
+                    field.items[1].xtype = 'hidden';
+                    field.items[1] = config.record['content_dispo'] || 0;
                 }
                 fields.push(field);
             }
             column.items = fields;
             items.push(column);
         }
-        if (moved.checkboxes != undefined) {
-            items[0]['items'].push(moved.checkboxes);
-        }
-        if (moved.menuindex != undefined) {
-            items[1]['items'].push(moved.menuindex);
-        }
         originals[0]['items'] = items;
 
         return originals[0];
-    },
-
-    findField: function (data, id, callback) {
-        for (const i in data) {
-            if (!data.hasOwnProperty(i)) {
-                continue;
-            }
-            const item = data[i];
-            if (typeof(item) == 'object') {
-                if (item.id == id) {
-                    return callback(item);
-                } else {
-                    this.findField(item, id, callback);
-                }
-            }
-        }
-
-        return false;
     },
 
 });

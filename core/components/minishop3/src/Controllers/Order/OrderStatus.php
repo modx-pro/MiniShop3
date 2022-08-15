@@ -29,7 +29,7 @@ class OrderStatus
         $this->modx = $ms3->modx;
         $this->orderLogController = new OrderLog($ms3);
 
-        $this->modx->lexicon->load('minishop:default');
+        $this->modx->lexicon->load('minishop3:default');
     }
 
     /**
@@ -116,7 +116,7 @@ class OrderStatus
             }
 
             $this->modx->setOption('cultureKey', $lang);
-            $this->modx->lexicon->load($lang . ':minishop:default', $lang . ':minishop:cart');
+            $this->modx->lexicon->load($lang . ':minishop3:default', $lang . ':minishop3:cart');
 
             $this->sendEmails($order, $status);
         }

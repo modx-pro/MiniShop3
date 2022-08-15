@@ -15,7 +15,7 @@ class msCategory extends \MiniShop3\Model\msCategory
             ),
         'fields' =>
             array(
-                'class_key' => 'msCategory',
+                'class_key' => 'MiniShop3\\Model\\msCategory',
             ),
         'fieldMeta' =>
             array(
@@ -25,7 +25,7 @@ class msCategory extends \MiniShop3\Model\msCategory
                         'precision' => '100',
                         'phptype' => 'string',
                         'null' => false,
-                        'default' => 'msCategory',
+                        'default' => 'MiniShop3\\Model\\msCategory',
                     ),
             ),
         'composites' =>

@@ -40,7 +40,7 @@ class msProduct extends modResource
     public function __construct(xPDO &$xpdo)
     {
         parent::__construct($xpdo);
-        parent::set('class_key', 'msProduct');
+        parent::set('class_key', msProduct::class);
         if ($this->xpdo->services->has('ms3')) {
             $this->ms3 = $this->xpdo->services->get('ms3');
         }
@@ -103,7 +103,7 @@ class msProduct extends modResource
      */
     public function getContextMenuText()
     {
-        $this->xpdo->lexicon->load('minishop:default');
+        $this->xpdo->lexicon->load('minishop3:default');
 
         return [
             'text_create' => $this->xpdo->lexicon('ms_product'),
@@ -121,10 +121,10 @@ class msProduct extends modResource
      */
     public static function load(xPDO &$xpdo, $className, $criteria = null, $cacheFlag = true)
     {
-        if (!is_object($criteria)) {
-            $criteria = $xpdo->getCriteria($className, $criteria, $cacheFlag);
-        }
-        $xpdo->addDerivativeCriteria($className, $criteria);
+//        if (!is_object($criteria)) {
+//            $criteria = $xpdo->getCriteria($className, $criteria, $cacheFlag);
+//        }
+//        $xpdo->addDerivativeCriteria($className, $criteria);
         return parent::load($xpdo, $className, $criteria, $cacheFlag);
     }
 
@@ -133,7 +133,7 @@ class msProduct extends modResource
      */
     public function getResourceTypeName()
     {
-        $this->xpdo->lexicon->load('minishop:default');
+        $this->xpdo->lexicon->load('minishop3:default');
 
         return $this->xpdo->lexicon('ms_product_type');
     }
@@ -145,7 +145,7 @@ class msProduct extends modResource
      */
     public function save($cacheFlag = null)
     {
-        if (!$this->isNew() && parent::get('class_key') !== 'msProduct') {
+        if (!$this->isNew() && parent::get('class_key') !== msProduct::class) {
             $this->loadData()->remove();
             parent::set('show_in_tree', true);
         } else {
@@ -201,9 +201,9 @@ class msProduct extends modResource
      */
     protected function setRaw($key, $val)
     {
-        return isset($this->_originalFieldMeta[$key])
-            ? parent::setRaw($key, $val)
-            : $this->loadData()->setRaw($key, $val);
+//        return isset($this->_originalFieldMeta[$key])
+//            ? parent::setRaw($key, $val)
+//            : $this->loadData()->setRaw($key, $val);
     }
 
     /**
@@ -237,7 +237,7 @@ class msProduct extends modResource
     {
         if (!is_object($this->Data) || !($this->Data instanceof msProductData)) {
             if (!$this->Data = $this->getOne('Data')) {
-                $this->Data = $this->xpdo->newObject('msProductData');
+                $this->Data = $this->xpdo->newObject(msProductData::class);
                 parent::addOne($this->Data);
             }
         }
@@ -406,7 +406,7 @@ class msProduct extends modResource
     {
         $arr = [];
 
-        $q = $this->xpdo->newQuery(msProduct::class, ['parent' => $this->parent, 'class_key' => 'msProduct']);
+        $q = $this->xpdo->newQuery(msProduct::class, ['parent' => $this->parent, 'class_key' => msProduct::class]);
         $q->sortby('menuindex', 'ASC');
         $q->select('id');
         if ($q->prepare() && $q->stmt->execute()) {
@@ -446,9 +446,9 @@ class msProduct extends modResource
             }
             $pls['weight'] = $this->getWeight($pls);
             $pls = $this->modifyFields($pls);
-            $pls['price'] = $this->ms3->formatPrice($pls['price']);
-            $pls['old_price'] = $this->ms3->formatPrice($pls['old_price']);
-            $pls['weight'] = $this->ms3->formatWeight($pls['weight']);
+            $pls['price'] = $this->ms3->format->price($pls['price']);
+            $pls['old_price'] = $this->ms3->format->price($pls['old_price']);
+            $pls['weight'] = $this->ms3->format->weight($pls['weight']);
             unset($pls['id']);
 
             $this->xpdo->setPlaceholders($pls);
@@ -460,9 +460,9 @@ class msProduct extends modResource
         if ($vendor = $this->getOne('Vendor')) {
             $this->xpdo->setPlaceholders($vendor->toArray('vendor.'));
         }
-        $this->xpdo->lexicon->load('minishop:default');
-        $this->xpdo->lexicon->load('minishop:cart');
-        $this->xpdo->lexicon->load('minishop:product');
+        $this->xpdo->lexicon->load('minishop3:default');
+        $this->xpdo->lexicon->load('minishop3:cart');
+        $this->xpdo->lexicon->load('minishop3:product');
 
         return parent::process();
     }

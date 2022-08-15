@@ -1,5 +1,9 @@
 <?php
 
+use MODX\Revolution\modActionDom;
+use MODX\Revolution\modFormCustomizationProfile;
+use MODX\Revolution\modFormCustomizationSet;
+
 class msResourceUpdateController extends ResourceUpdateManagerController
 {
     /** @var MiniShop3\MiniShop3 $ms3 */
@@ -51,11 +55,11 @@ class msResourceUpdateController extends ResourceUpdateManagerController
     public function isHideContent()
     {
         $userGroups = $this->modx->user->getUserGroups();
-        $c = $this->modx->newQuery('modActionDom');
-        $c->innerJoin('modFormCustomizationSet', 'FCSet');
-        $c->innerJoin('modFormCustomizationProfile', 'Profile', 'FCSet.profile = Profile.id');
-        $c->leftJoin('modFormCustomizationProfileUserGroup', 'ProfileUserGroup', 'Profile.id = ProfileUserGroup.profile');
-        $c->leftJoin('modFormCustomizationProfile', 'UGProfile', 'UGProfile.id = ProfileUserGroup.profile');
+        $c = $this->modx->newQuery(modActionDom::class);
+        $c->innerJoin(modFormCustomizationSet::class, 'FCSet');
+        $c->innerJoin(modFormCustomizationProfile::class, 'Profile', 'FCSet.profile = Profile.id');
+        $c->leftJoin(modFormCustomizationProfileUserGroup::class, 'ProfileUserGroup', 'Profile.id = ProfileUserGroup.profile');
+        $c->leftJoin(modFormCustomizationProfile::class, 'UGProfile', 'UGProfile.id = ProfileUserGroup.profile');
         $c->where([
             'modActionDom.action:IN' => ['resource/*', 'resource/update'],
             'modActionDom.name' => 'modx-resource-content',
@@ -77,7 +81,7 @@ class msResourceUpdateController extends ResourceUpdateManagerController
             'OR:ProfileUserGroup.usergroup:=' => null,
         ], xPDOQuery::SQL_AND, null, 2);
 
-        return (bool)$this->modx->getCount('modActionDom', $c);
+        return (bool)$this->modx->getCount(modActionDom::class, $c);
     }
 
     /**

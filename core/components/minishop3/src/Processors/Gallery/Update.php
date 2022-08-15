@@ -10,7 +10,7 @@ use MODX\Revolution\Processors\Model\UpdateProcessor;
 class Update extends UpdateProcessor
 {
     public $classKey = msProductFile::class;
-    public $languageTopics = ['core:default', 'minishop:default'];
+    public $languageTopics = ['core:default', 'minishop3:default'];
     public $permission = 'msproductfile_save';
     /** @var msProductFile $object */
     public $object;

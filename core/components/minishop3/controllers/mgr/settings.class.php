@@ -21,7 +21,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
      */
     public function getLanguageTopics()
     {
-        return ['minishop:default', 'minishop:product', 'minishop:manager'];
+        return ['minishop3:default', 'minishop3:product', 'minishop3:manager'];
     }
 
     /**

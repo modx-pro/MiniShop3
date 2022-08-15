@@ -9,7 +9,7 @@ use MODX\Revolution\Processors\ModelProcessor;
 class Duplicate extends ModelProcessor
 {
     public $classKey = msCategory::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'mscategory_save';
     /** @var msCategory $to_object */
     public $to_object;

@@ -13,7 +13,7 @@ use xPDO\Om\xPDOQuery;
 class GetList extends GetListProcessor
 {
     public $classKey = msProductFile::class;
-    public $languageTopics = ['default', 'minishop:default'];
+    public $languageTopics = ['default', 'minishop3:default'];
     public $defaultSortField = 'position';
     public $defaultSortDirection = 'ASC';
     public $permission = 'msproductfile_list';

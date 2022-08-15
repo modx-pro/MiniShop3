@@ -8,7 +8,7 @@ use MODX\Revolution\Processors\Model\GetProcessor;
 class Get extends GetProcessor
 {
     public $classKey = msOrderProduct::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'msorder_view';
     private $product_options = [];
 

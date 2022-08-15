@@ -15,7 +15,7 @@ use MiniShop3\Model\msVendor;
 class GetList extends GetListProcessor
 {
     public $classKey = msOrderProduct::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'msorder_list';
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'ASC';

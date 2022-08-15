@@ -13,7 +13,7 @@ class Update extends UpdateProcessor
     public $object;
     public $classKey = msOption::class;
     public $objectType = 'ms_option';
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'mssetting_save';
     protected $oldKey = null;
 

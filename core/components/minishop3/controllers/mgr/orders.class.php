@@ -20,7 +20,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
     */
     public function getLanguageTopics()
     {
-        return array('minishop:default', 'minishop:product', 'minishop:manager');
+        return array('minishop3:default', 'minishop3:product', 'minishop3:manager');
     }
 
 
@@ -35,7 +35,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.grid.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.window.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/strftime-min-1.3.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms2.utils.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms.utils.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms2.combo.js');
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/orders/orders.form.js');
@@ -73,12 +73,12 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $config['order_product_options_fields'] = $product_options;
         $this->addHtml('
             <script>
-                MS3.config = ' . json_encode($config) . ';
+                minishop.config = ' . json_encode($config) . ';
 
                 MODx.perm.mssetting_list = ' . ($this->modx->hasPermission('mssetting_list') ? 1 : 0) . ';
 
                 Ext.onReady(function() {
-                    MODx.add({xtype: "minishop2-page-orders"});
+                    MODx.add({xtype: "minisho2-page-orders"});
                 });
             </script>');
 

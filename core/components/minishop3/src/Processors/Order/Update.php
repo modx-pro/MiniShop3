@@ -10,7 +10,7 @@ class Update extends UpdateProcessor
 {
     public $classKey = msOrder::class;
     public $objectType = 'msOrder';
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $beforeSaveEvent = 'msOnBeforeUpdateOrder';
     public $afterSaveEvent = 'msOnUpdateOrder';
     public $permission = 'msorder_save';

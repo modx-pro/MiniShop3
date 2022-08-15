@@ -14,7 +14,7 @@ class msProduct extends \MiniShop3\Model\msProduct
             ),
         'fields' =>
             array(
-                'class_key' => 'msProduct',
+                'class_key' => 'MiniShop3\\Model\\msProduct',
             ),
         'fieldMeta' =>
             array(
@@ -24,7 +24,7 @@ class msProduct extends \MiniShop3\Model\msProduct
                         'precision' => '100',
                         'phptype' => 'string',
                         'null' => false,
-                        'default' => 'msProduct',
+                        'default' => 'MiniShop3\\Model\\msProduct',
                     ),
             ),
         'composites' =>

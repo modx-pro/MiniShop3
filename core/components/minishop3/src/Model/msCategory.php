@@ -29,7 +29,7 @@ class msCategory extends modResource
     public function __construct(xPDO &$xpdo)
     {
         parent::__construct($xpdo);
-        $this->set('class_key', 'msCategory');
+        $this->set('class_key', msCategory::class);
     }
 
     /**
@@ -71,7 +71,7 @@ class msCategory extends modResource
      */
     public function getContextMenuText()
     {
-        $this->xpdo->lexicon->load('minishop:default');
+        $this->xpdo->lexicon->load('minishop3:default');
 
         return [
             'text_create' => $this->xpdo->lexicon('ms_category'),
@@ -89,10 +89,10 @@ class msCategory extends modResource
      */
     public static function load(xPDO &$xpdo, $className, $criteria = null, $cacheFlag = true)
     {
-        if (!is_object($criteria)) {
-            $criteria = $xpdo->getCriteria($className, $criteria, $cacheFlag);
-        }
-        $xpdo->addDerivativeCriteria($className, $criteria);
+//        if (!is_object($criteria)) {
+//            $criteria = $xpdo->getCriteria($className, $criteria, $cacheFlag);
+//        }
+//        $xpdo->addDerivativeCriteria($className, $criteria);
 
         return parent::load($xpdo, $className, $criteria, $cacheFlag);
     }
@@ -102,7 +102,7 @@ class msCategory extends modResource
      */
     public function getResourceTypeName()
     {
-        $this->xpdo->lexicon->load('minishop:default');
+        $this->xpdo->lexicon->load('minishop3:default');
 
         return $this->xpdo->lexicon('ms_category_type');
     }

@@ -39,7 +39,7 @@ class Cart
             'allow_unpublished' => false,
         ], $config);
         
-        $this->modx->lexicon->load('minishop:cart');
+        $this->modx->lexicon->load('minishop3:cart');
     }
 
     /**

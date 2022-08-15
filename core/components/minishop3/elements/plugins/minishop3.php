@@ -32,7 +32,7 @@ switch ($modx->event->name) {
     case 'OnManagerPageBeforeRender':
         /** @var \MiniShop3\MiniShop3 $ms3 */
         if ($ms3 = $modx->services->get('ms3')) {
-            $modx->controller->addLexiconTopic('minishop:default');
+            $modx->controller->addLexiconTopic('minishop3:default');
             $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms.manager.js');
         }
         break;

@@ -277,7 +277,7 @@ class msProductData extends xPDOSimpleObject
         $c = $this->xpdo->newQuery(msOption::class);
         $c->leftJoin(msCategoryOption::class, 'msCategoryOption', 'msCategoryOption.option_id = msOption.id');
         $c->leftJoin(modCategory::class, 'Category', 'Category.id = msOption.category_id');
-        $c->sortby('msCategoryOption.rank');
+        $c->sortby('msCategoryOption.position');
         $c->where(['msCategoryOption.active' => 1]);
         if (!empty($categories[0])) {
             $c->where(['msCategoryOption.category_id:IN' => $categories]);

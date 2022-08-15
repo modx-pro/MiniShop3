@@ -10,7 +10,7 @@ use MODX\Revolution\Processors\Model\CreateProcessor;
 class Add extends CreateProcessor
 {
     public $classKey = msCategoryOption::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'mscategory_save';
     /** @var  msCategoryOption */
     public $object;

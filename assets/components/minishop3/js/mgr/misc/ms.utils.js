@@ -1,5 +1,7 @@
 Ext.namespace('minishop.utils');
 
+minishop.utils = {};
+
 minishop.utils.formatDate = function (string) {
     if (string && string != '0000-00-00 00:00:00' && string != '-1-11-30 00:00:00' && string != 0) {
         const date = /^[0-9]+$/.test(string)
@@ -20,7 +22,7 @@ minishop.utils.userLink = function (value, id, blank) {
     }
 
     return String.format(
-        '<a href="?a=security/user/update&id={0}" class="ms2-link" target="{1}">{2}</a>',
+        '<a href="?a=security/user/update&id={0}" class="ms-link" target="{1}">{2}</a>',
         id,
         (blank ? '_blank' : '_self'),
         value
@@ -35,7 +37,7 @@ minishop.utils.productLink = function (value, id, blank) {
     }
 
     return String.format(
-        '<a href="index.php?a=resource/update&id={0}" class="ms2-link" target="{1}">{2}</a>',
+        '<a href="index.php?a=resource/update&id={0}" class="ms-link" target="{1}">{2}</a>',
         id,
         (blank ? '_blank' : '_self'),
         value

@@ -8,7 +8,7 @@ use MiniShop3\Model\msCategoryOption;
 class Update extends UpdateProcessor
 {
     public $classKey = msCategoryOption::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'mscategory_save';
 
 

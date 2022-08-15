@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model package="MiniShop3\Model" baseClass="xPDO\Om\xPDOObject" platform="mysql" defaultEngine="InnoDB" version="3.0">
     <object class="msCategory"  extends="MODX\Revolution\modResource">
-        <field key="class_key" dbtype="varchar" precision="100" phptype="string" null="false" default="msCategory"/>
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" null="false" default="MiniShop3\\Model\\msCategory"/>
 
         <composite alias="OwnProducts" class="MiniShop3\Model\msProduct" local="id" foreign="parent" cardinality="many" owner="local"/>
         <composite alias="AlienProducts" class="MiniShop3\Model\msCategoryMember" local="id" foreign="category_id" cardinality="many"
@@ -11,7 +11,7 @@
     </object>
 
     <object class="msProduct"  extends="MODX\Revolution\modResource">
-        <field key="class_key" dbtype="varchar" precision="100" phptype="string" null="false" default="msProduct"/>
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" null="false" default="MiniShop3\\Model\\msProduct"/>
 
         <aggregate alias="Category" class="MiniShop3\Model\msCategory" local="parent" foreign="id" cardinality="one" owner="foreign"/>
         <composite alias="Data" class="MiniShop3\Model\msProductData" local="id" foreign="id" cardinality="one" owner="local"/>

@@ -8,7 +8,7 @@ use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 class Create extends CreateProcessor
 {
     public $classKey = msProduct::class;
-    public $languageTopics = ['resource', 'minishop:default'];
+    public $languageTopics = ['resource', 'minishop3:default'];
     public $permission = 'msproduct_save';
     public $beforeSaveEvent = 'OnBeforeDocFormSave';
     public $afterSaveEvent = 'OnDocFormSave';

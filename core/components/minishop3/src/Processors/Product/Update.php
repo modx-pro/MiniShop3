@@ -9,7 +9,7 @@ use MODX\Revolution\Processors\Resource\Update as UpdateProcessor;
 class Update extends UpdateProcessor
 {
     public $classKey = msProduct::class;
-    public $languageTopics = ['resource', 'minishop:default'];
+    public $languageTopics = ['resource', 'minishop3:default'];
     public $permission = 'msproduct_save';
     public $beforeSaveEvent = 'OnBeforeDocFormSave';
     public $afterSaveEvent = 'OnDocFormSave';

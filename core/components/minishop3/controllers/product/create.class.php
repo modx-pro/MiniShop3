@@ -17,7 +17,7 @@ class msProductCreateManagerController extends msResourceCreateController
      */
     public function getLanguageTopics()
     {
-        return ['resource', 'minishop:default', 'minishop:product', 'minishop:manager'];
+        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager'];
     }
 
     /**
@@ -141,7 +141,7 @@ class msProductCreateManagerController extends msResourceCreateController
         MODx.config.publish_document = "' . $this->canPublish . '";
         MODx.onDocFormRender = "' . $this->onDocFormRender . '";
         MODx.ctx = "' . $this->ctx . '";
-        MS3.config = ' . json_encode($config) . ';
+        minishop.config = ' . json_encode($config) . ';
         Ext.onReady(function() {
             MODx.load(' . json_encode($ready) . ');
         });

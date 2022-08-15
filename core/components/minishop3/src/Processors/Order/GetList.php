@@ -15,7 +15,7 @@ use xPDO\Om\xPDOQueryCondition;
 class GetList extends GetListProcessor
 {
     public $classKey = msOrder::class;
-    public $languageTopics = ['default', 'minishop:manager'];
+    public $languageTopics = ['default', 'minishop3:manager'];
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'DESC';
     public $permission = 'msorder_list';

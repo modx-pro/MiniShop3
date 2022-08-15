@@ -1,7 +1,8 @@
 minishop.grid.Default = function (config) {
+
     config = config || {};
 
-    if (typeof(config['multi_select']) != 'undefined' && config['multi_select'] == true) {
+    if (typeof(config['multi_select']) != 'undefined' && config['multi_select'] === true) {
         config.sm = new Ext.grid.CheckboxSelectionModel();
     }
 
@@ -24,16 +25,16 @@ minishop.grid.Default = function (config) {
             scrollOffset: -10,
             getRowClass: function (rec) {
                 const cls = [];
-                if (rec.data['published'] != undefined && rec.data['published'] == 0) {
+                if (rec.data['published'] !== undefined && rec.data['published'] == 0) {
                     cls.push('minishop-row-unpublished');
                 }
-                if (rec.data['active'] != undefined && rec.data['active'] == 0) {
+                if (rec.data['active'] !== undefined && rec.data['active'] == 0) {
                     cls.push('minishop-row-inactive');
                 }
-                if (rec.data['deleted'] != undefined && rec.data['deleted'] == 1) {
+                if (rec.data['deleted'] !== undefined && rec.data['deleted'] == 1) {
                     cls.push('minishop-row-deleted');
                 }
-                if (rec.data['required'] != undefined && rec.data['required'] == 1) {
+                if (rec.data['required'] !== undefined && rec.data['required'] == 1) {
                     cls.push('minishop-row-required');
                 }
                 return cls.join(' ');
@@ -118,11 +119,11 @@ Ext.extend(minishop.grid.Default, MODx.grid.Grid, {
 
     onClick: function (e) {
         const elem = e.getTarget();
-        if (elem.nodeName == 'BUTTON') {
+        if (elem.nodeName === 'BUTTON') {
             const row = this.getSelectionModel().getSelected();
             if (typeof(row) != 'undefined') {
                 const action = elem.getAttribute('action');
-                if (action == 'showMenu') {
+                if (action === 'showMenu') {
                     const ri = this.getStore().find('id', row.id);
                     return this._showMenu(this, ri, e);
                 } else if (typeof this[action] === 'function') {
@@ -130,10 +131,10 @@ Ext.extend(minishop.grid.Default, MODx.grid.Grid, {
                     return this[action](this, e);
                 }
             }
-        } else if (elem.nodeName == 'A' && elem.href.match(/(\?|\&)a=resource/)) {
-            if (e.button == 1 || (e.button == 0 && e.ctrlKey == true)) {
+        } else if (elem.nodeName === 'A' && elem.href.match(/(\?|\&)a=resource/)) {
+            if (e.button == 1 || (e.button == 0 && e.ctrlKey === true)) {
                 // Bypass
-            } else if (elem.target && elem.target == '_blank') {
+            } else if (elem.target && elem.target === '_blank') {
                 // Bypass
             } else {
                 e.preventDefault();
@@ -145,7 +146,7 @@ Ext.extend(minishop.grid.Default, MODx.grid.Grid, {
 
     refresh: function () {
         this.getStore().reload();
-        if (this.config['enableDragDrop'] == true) {
+        if (this.config['enableDragDrop'] === true) {
             this.getSelectionModel().clearSelections(true);
         }
     },
@@ -212,17 +213,17 @@ Ext.extend(minishop.grid.Default, MODx.grid.Grid, {
                                     sources.push(target.id);
                                     grid.reloadTree(sources);
                                 }
-                                if (grid.xtype == 'minishop-grid-products' && !grid.defaultNotify) {
+                                if (grid.xtype === 'minishop-grid-products' && !grid.defaultNotify) {
                                     const sourceNodes = data.selections;
                                     if (Ext.isArray(sourceNodes) && sourceNodes.length > 0) {
-                                        const message = '';
+                                        let message = '';
                                         const singleParent = sourceNodes.every(function (node) {
                                             return node.data.parent == sourceNodes[0].data.parent;
                                         });
 
                                         if (singleParent) {
                                             if (sourceNodes[0].data.parent != target.data.parent) {
-                                                if (target.data.category_name == '') {
+                                                if (target.data.category_name === '') {
                                                     message = (sourceNodes.length > 1) ? _('ms_drag_move_current_many_success') : _('ms_drag_move_current_once_success');
                                                 } else {
                                                     message = (sourceNodes.length > 1) ? String.format(_('ms_drag_move_many_success'), target.data.category_name) : String.format(_('ms_drag_move_one_success'), target.data.category_name);
@@ -235,7 +236,7 @@ Ext.extend(minishop.grid.Default, MODx.grid.Grid, {
                                             message = (sourceNodes.length > 1) ? String.format(_('ms_drag_move_many_success'), target.data.category_name) : String.format(_('ms_drag_move_one_success'), target.data.category_name);
                                         }
 
-                                        if (message != '') {
+                                        if (message !== '') {
                                             MODx.msg.status({
                                                 title: _('success')
                                                 ,message: message
@@ -255,7 +256,7 @@ Ext.extend(minishop.grid.Default, MODx.grid.Grid, {
             },
             notifyOver: function (dd, e, data) {
                 const returnCls = this.dropAllowed;
-                if (grid.xtype == 'minishop-grid-products' && !grid.defaultNotify) {
+                if (grid.xtype === 'minishop-grid-products' && !grid.defaultNotify) {
                     if (dd.getDragData(e)) {
                         const sourceNodes = data.selections;
                         const targetNode = dd.getDragData(e).selections[0];
@@ -286,7 +287,7 @@ Ext.extend(minishop.grid.Default, MODx.grid.Grid, {
             },
             _notifyMove: function (count, targetNode, dd) {
                 returnCls = 'x-tree-drop-ok-append';
-                if (targetNode.data.category_name == '') {
+                if (targetNode.data.category_name === '') {
                     dd.ddel.innerHTML = (count > 1) ? _('ms_drag_move_current_many') : _('ms_drag_move_current_one');
                 } else {
                     dd.ddel.innerHTML = (count > 1) ? String.format(_('ms_drag_move_many'), targetNode.data.category_name) : String.format(_('ms_drag_move_one'), targetNode.data.category_name);

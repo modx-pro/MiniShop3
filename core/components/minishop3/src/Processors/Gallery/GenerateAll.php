@@ -10,7 +10,7 @@ use MODX\Revolution\Processors\ModelProcessor;
 class GenerateAll extends  ModelProcessor
 {
     public $classKey = msProductFile::class;
-    public $languageTopics = ['minishop:default'];
+    public $languageTopics = ['minishop3:default'];
     public $permission = 'msproductfile_generate';
 
 

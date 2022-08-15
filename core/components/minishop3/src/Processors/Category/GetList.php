@@ -17,7 +17,7 @@ use xPDO\xPDOIterator;
 class GetList extends GetListProcessor
 {
     public $classKey = msProduct::class;
-    public $languageTopics = ['default', 'minishop:product'];
+    public $languageTopics = ['default', 'minishop3:product'];
     public $defaultSortField = 'menuindex';
     public $defaultSortDirection = 'ASC';
     public int $parent = 0;

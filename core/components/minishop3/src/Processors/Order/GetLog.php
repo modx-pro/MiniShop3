@@ -12,7 +12,7 @@ use xPDO\Om\xPDOQuery;
 class GetLog extends GetListProcessor
 {
     public $classKey = msOrderLog::class;
-    public $languageTopics = ['default', 'minishop:manager'];
+    public $languageTopics = ['default', 'minishop3:manager'];
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'DESC';
     public $permission = 'msorder_view';
