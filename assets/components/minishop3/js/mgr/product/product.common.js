@@ -3,95 +3,109 @@ minishop.panel.Product = function (config) {
     minishop.panel.Product.superclass.constructor.call(this, config);
 };
 Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
-
     active_fields: [],
 
     getFields: function (config) {
         const fields = [];
         const originals = MODx.panel.Resource.prototype.getFields.call(this, config);
-
         for (const i in originals) {
             if (!originals.hasOwnProperty(i)) {
                 continue;
             }
             const item = originals[i];
-            if (item.id == 'modx-resource-header') {
-                item.html = '<h2>' + _('ms_product_new') + '</h2>';
-            } else if (item.id == 'modx-resource-tabs') {
-                item.stateful = MODx.config['ms_product_remember_tabs'] == 1;
-                item.stateId = 'minishop-product-' + config.mode + '-tabpanel';
-                item.stateEvents = ['tabchange'];
-                item.collapsible = false;
-                item.getState = function () {
-                    return {activeTab: this.items.indexOf(this.getActiveTab())};
-                };
 
-                const product = [];
-                const other = [];
-
-                for (const i2 in item.items) {
-                    if (!item.items.hasOwnProperty(i2)) {
-                        continue;
-                    }
-                    const tab = item.items[i2];
-                    switch (tab.id) {
-                        case 'modx-resource-settings':
-                            tab.items.push(this.getContent(config));
-                            product.push(tab);
-                            break;
-                        case 'modx-page-settings':
-                            if (minishop.config['show_extra']) {
-                                product.push(this.getProductFields(config));
-                            }
-                            if (minishop.config['show_options']) {
-                                const options = this.getProductOptions(config);
-                                if (options) {
-                                    product.push(options);
-                                }
-                            }
-                            if (config.mode == 'update' && minishop.config['show_links']) {
-                                product.push(this.getProductLinks(config));
-                            }
-                            if (minishop.config['show_categories']) {
-                                product.push(this.getProductCategories(config));
-                            }
-                            tab.items = this.getProductSettings(config);
-                            product.push(tab);
-                            break;
-                        default:
-                            other.push(tab);
-                    }
-                }
-
-                const tabs = [{
-                    title: _('ms_tab_product'),
-                    cls: 'panel-wrapper',
-                    id: 'minishop-product-tab',
-                    items: [{
-                        xtype: 'modx-tabs',
-                        id: 'minishop-product-tabs',
-                        stateful: MODx.config['ms_product_remember_tabs'] == 1,
-                        stateId: 'minishop-product-' + config.mode + '-tabpanel-product',
-                        stateEvents: ['tabchange'],
-                        getState: function () {
-                            return {activeTab: this.items.indexOf(this.getActiveTab())};
-                        },
-                        deferredRender: false,
-                        items: product,
-                        resource: config.resource,
-                        border: false,
-                        listeners: {},
-                    }]
-                }];
-
-                item.items = tabs.concat(other);
-            }
-            if (item.id != 'modx-resource-content') {
-                fields.push(item);
+            if (item.id === "modx-header-breadcrumbs") {
+                item.items[0].html = '<h2>' + _('ms_product_new') + '</h2>';
+                fields.push(item)
+            } else {
+                fields.push(item)
             }
         }
-
         return fields;
+
+
+        // for (const i in originals) {
+        //     if (!originals.hasOwnProperty(i)) {
+        //         continue;
+        //     }
+        //     const item = originals[i];
+        //     if (item.id == 'modx-resource-header') {
+        //         item.html = '<h2>' + _('ms_product_new') + '</h2>';
+        //     } else if (item.id == 'modx-resource-tabs') {
+        //         item.stateful = MODx.config['ms_product_remember_tabs'] == 1;
+        //         item.stateId = 'minishop-product-' + config.mode + '-tabpanel';
+        //         item.stateEvents = ['tabchange'];
+        //         item.collapsible = false;
+        //         item.getState = function () {
+        //             return {activeTab: this.items.indexOf(this.getActiveTab())};
+        //         };
+        //
+        //         const product = [];
+        //         const other = [];
+        //
+        //         for (const i2 in item.items) {
+        //             if (!item.items.hasOwnProperty(i2)) {
+        //                 continue;
+        //             }
+        //             const tab = item.items[i2];
+        //             switch (tab.id) {
+        //                 case 'modx-resource-settings':
+        //                     tab.items.push(this.getContent(config));
+        //                     product.push(tab);
+        //                     break;
+        //                 case 'modx-page-settings':
+        //                     if (minishop.config['show_extra']) {
+        //                         product.push(this.getProductFields(config));
+        //                     }
+        //                     if (minishop.config['show_options']) {
+        //                         const options = this.getProductOptions(config);
+        //                         if (options) {
+        //                             product.push(options);
+        //                         }
+        //                     }
+        //                     if (config.mode == 'update' && minishop.config['show_links']) {
+        //                         product.push(this.getProductLinks(config));
+        //                     }
+        //                     if (minishop.config['show_categories']) {
+        //                         product.push(this.getProductCategories(config));
+        //                     }
+        //                     tab.items = this.getProductSettings(config);
+        //                     product.push(tab);
+        //                     break;
+        //                 default:
+        //                     other.push(tab);
+        //             }
+        //         }
+        //
+        //         const tabs = [{
+        //             title: _('ms_tab_product'),
+        //             cls: 'panel-wrapper',
+        //             id: 'minishop-product-tab',
+        //             items: [{
+        //                 xtype: 'modx-tabs',
+        //                 id: 'minishop-product-tabs',
+        //                 stateful: MODx.config['ms_product_remember_tabs'] == 1,
+        //                 stateId: 'minishop-product-' + config.mode + '-tabpanel-product',
+        //                 stateEvents: ['tabchange'],
+        //                 getState: function () {
+        //                     return {activeTab: this.items.indexOf(this.getActiveTab())};
+        //                 },
+        //                 deferredRender: false,
+        //                 items: product,
+        //                 resource: config.resource,
+        //                 border: false,
+        //                 listeners: {},
+        //             }]
+        //         }];
+        //
+        //         item.items = tabs.concat(other);
+        //     }
+        //     if (item.id != 'modx-resource-content') {
+        //         fields.push(item);
+        //     }
+        // }
+        //
+        // return fields;
     },
 
     getMainFields: function (config) {
@@ -368,7 +382,7 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 continue;
             }
             const item = data[i];
-            if (typeof(item) == 'object') {
+            if (typeof (item) == 'object') {
                 if (item.id == id) {
                     return callback(item);
                 } else {
@@ -599,7 +613,7 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
             if (!minishop.plugin.hasOwnProperty(i)) {
                 continue;
             }
-            if (typeof(minishop.plugin[i]['getFields']) == 'function') {
+            if (typeof (minishop.plugin[i]['getFields']) == 'function') {
                 const add = minishop.plugin[i].getFields(config);
                 Ext.apply(fields, add);
             }
@@ -622,3 +636,5 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
     }
 
 });
+
+

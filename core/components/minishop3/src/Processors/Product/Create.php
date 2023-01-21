@@ -49,6 +49,7 @@ class Create extends CreateProcessor
         ]);
 
         $properties = $this->getProperties();
+        $this->modx->log(1, print_r($properties, 1));
         $options = [];
         foreach ($properties as $key => $value) {
             if (strpos($key, 'options-') === 0) {

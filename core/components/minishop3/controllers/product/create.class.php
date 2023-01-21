@@ -8,6 +8,15 @@ if (!class_exists('msResourceCreateController')) {
 
 class msProductCreateManagerController extends msResourceCreateController
 {
+    /**
+     *
+     */
+    public function initialize()
+    {
+        parent::initialize();
+        $this->modx->log(1, 'msProductCreateManagerController');
+    }
+
     /** @var msProduct $resource */
     public $resource;
 
@@ -25,6 +34,7 @@ class msProductCreateManagerController extends msResourceCreateController
      */
     public function getDefaultTemplate()
     {
+        parent::getDefaultTemplate();;
         if (!$template = $this->getOption('ms_template_product_default')) {
             $template = parent::getDefaultTemplate();
         }
@@ -97,7 +107,6 @@ class msProductCreateManagerController extends msResourceCreateController
         $product_extra_fields = array_map('trim', explode(',', $product_extra_fields));
         $product_extra_fields = array_values(array_intersect($product_extra_fields, $product_fields));
         $product_option_fields = $this->resource->loadData()->getOptionFields();
-        //---
 
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
@@ -151,19 +160,19 @@ class msProductCreateManagerController extends msResourceCreateController
         // load RTE
         $this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', ['controller' => &$this, 'page' => 'product_create']);
-        $this->loadPlugins();
+        //$this->loadPlugins();
     }
 
-    /**
-     * Loads additional scripts for product form from miniShop2 plugins
-     */
-    public function loadPlugins()
-    {
-        $plugins = $this->ms3->plugins->load();
-        foreach ($plugins as $plugin) {
-            if (!empty($plugin['manager']['msProductData'])) {
-                $this->addJavascript($plugin['manager']['msProductData']);
-            }
-        }
-    }
+//    /**
+//     * Loads additional scripts for product form from miniShop2 plugins
+//     */
+//    public function loadPlugins()
+//    {
+//        $plugins = $this->ms3->plugins->load();
+//        foreach ($plugins as $plugin) {
+//            if (!empty($plugin['manager']['msProductData'])) {
+//                $this->addJavascript($plugin['manager']['msProductData']);
+//            }
+//        }
+//    }
 }

@@ -119,6 +119,7 @@ class msCategory extends modResource
         $node['cls'] = implode(' ', array_diff($classes, $remove));
         $node['hasChildren'] = true;
         $node['expanded'] = false;
+        $node['type'] = "MiniShop3\\Model\\msCategory";
 
         return $node;
     }

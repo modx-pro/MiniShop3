@@ -29,7 +29,6 @@ minishop.grid.Products = function (config) {
 Ext.extend(minishop.grid.Products, minishop.grid.Default, {
 
     getFields: function () {
-        console.log('product.grid getFields')
         const fields = minishop.config['product_fields'];
         const options = minishop.config['option_fields'];
 
@@ -252,11 +251,11 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
     },
 
     createProduct: function () {
-        MODx.loadPage('resource/create', 'class_key=msProduct&parent=' + MODx.request.id + '&context_key=' + MODx.ctx);
+        MODx.loadPage('resource/create', 'class_key=MiniShop3\\Model\\msProduct&parent=' + MODx.request.id + '&context_key=' + MODx.ctx);
     },
 
     createCategory: function () {
-        MODx.loadPage('resource/create', 'class_key=msCategory&parent=' + MODx.request.id + '&context_key=' + MODx.ctx);
+        MODx.loadPage('resource/create', 'class_key=MiniShop3\\Model\\msCategory&parent=' + MODx.request.id + '&context_key=' + MODx.ctx);
     },
 
     viewProduct: function () {

@@ -40,12 +40,12 @@ class msProduct extends modResource
     public function __construct(xPDO &$xpdo)
     {
         parent::__construct($xpdo);
-        parent::set('class_key', msProduct::class);
-        if ($this->xpdo->services->has('ms3')) {
-            $this->ms3 = $this->xpdo->services->get('ms3');
+        $this->set('class_key', msProduct::class);
+        if ($xpdo->services->has('ms3')) {
+            $this->ms3 = $xpdo->services->get('ms3');
         }
         $this->originalFieldMeta = $this->_fieldMeta;
-
+//
         $aggregates = $this->xpdo->getAggregates(msProductData::class);
         $composites = $this->xpdo->getComposites(msProductData::class);
         $this->dataRelated = array_merge(array_keys($aggregates), array_keys($composites));
@@ -98,6 +98,8 @@ class msProduct extends modResource
         return $path . 'controllers/product/';
     }
 
+
+
     /**
      * @return array
      */
@@ -121,10 +123,10 @@ class msProduct extends modResource
      */
     public static function load(xPDO &$xpdo, $className, $criteria = null, $cacheFlag = true)
     {
-//        if (!is_object($criteria)) {
-//            $criteria = $xpdo->getCriteria($className, $criteria, $cacheFlag);
-//        }
-//        $xpdo->addDerivativeCriteria($className, $criteria);
+        if (!is_object($criteria)) {
+            $criteria = $xpdo->getCriteria($className, $criteria, $cacheFlag);
+        }
+        $xpdo->addDerivativeCriteria($className, $criteria);
         return parent::load($xpdo, $className, $criteria, $cacheFlag);
     }
 
@@ -162,36 +164,36 @@ class msProduct extends modResource
      *
      * @return array|mixed|null|xPDOObject
      */
-    public function get($k, $format = null, $formatTemplate = null)
-    {
-        if (is_array($k)) {
-            $array = [];
-            foreach ($k as $v) {
-                $array[$v] = isset($this->_originalFieldMeta[$v])
-                    ? parent::get($v, $format, $formatTemplate)
-                    : $this->get($v, $format, $formatTemplate);
-            }
-
-            return $array;
-        } elseif (isset($this->_originalFieldMeta[$k])) {
-            return parent::get($k, $format, $formatTemplate);
-        } elseif (strpos($k, 'vendor_') !== false || strpos($k, 'vendor.') !== false) {
-            return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
-        } elseif (isset($this->loadData()->_fields[$k])) {
-            return $this->loadData()->get($k, $format, $formatTemplate);
-        } elseif (
-            in_array($k, $this->loadData()->getOptionKeys()) ||
-            (($optFields = explode('.', $k)) && in_array($optFields[0], $this->loadData()->getOptionKeys()))
-        ) {
-            if (isset($this->$k)) {
-                return $this->$k;
-            }
-            $this->loadOptions();
-            return $this->options[$k] ?? null;
-        } else {
-            return parent::get($k, $format, $formatTemplate);
-        }
-    }
+//    public function get($k, $format = null, $formatTemplate = null)
+//    {
+//        if (is_array($k)) {
+//            $array = [];
+//            foreach ($k as $v) {
+//                $array[$v] = isset($this->_originalFieldMeta[$v])
+//                    ? parent::get($v, $format, $formatTemplate)
+//                    : $this->get($v, $format, $formatTemplate);
+//            }
+//
+//            return $array;
+//        } elseif (isset($this->_originalFieldMeta[$k])) {
+//            return parent::get($k, $format, $formatTemplate);
+//        } elseif (strpos($k, 'vendor_') !== false || strpos($k, 'vendor.') !== false) {
+//            //return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
+//        } elseif (isset($this->loadData()->_fields[$k])) {
+//            return $this->loadData()->get($k, $format, $formatTemplate);
+//        } elseif (
+//            in_array($k, $this->loadData()->getOptionKeys()) ||
+//            (($optFields = explode('.', $k)) && in_array($optFields[0], $this->loadData()->getOptionKeys()))
+//        ) {
+//            if (isset($this->$k)) {
+//                return $this->$k;
+//            }
+//            //$this->loadOptions();
+//            return $this->options[$k] ?? null;
+//        } else {
+//            return parent::get($k, $format, $formatTemplate);
+//        }
+//    }
 
     /**
      * @param string $key
@@ -202,8 +204,8 @@ class msProduct extends modResource
     protected function setRaw($key, $val)
     {
 //        return isset($this->_originalFieldMeta[$key])
-//            ? parent::setRaw($key, $val)
-//            : $this->loadData()->setRaw($key, $val);
+//            ? //parent::setRaw($key, $val)
+//            : //$this->loadData()->setRaw($key, $val);
     }
 
     /**
@@ -219,8 +221,8 @@ class msProduct extends modResource
         $original = parent::toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated);
         $additional = array_merge(
             $this->loadData()->toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated),
-            $this->loadOptions(),
-            $this->loadVendor()->toArray($keyPrefix . 'vendor.', $rawValues, $excludeLazy, $includeRelated)
+//            $this->loadOptions(),
+//            $this->loadVendor()->toArray($keyPrefix . 'vendor.', $rawValues, $excludeLazy, $includeRelated)
         );
         $intersect = array_keys(array_intersect_key($original, $additional));
         foreach ($intersect as $key) {

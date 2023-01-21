@@ -1,6 +1,7 @@
 minishop.page.CreateCategory = function (config) {
     config = config || {record: {}};
     config.record = config.record || {};
+    console.log('minishop.page.CreateCategory')
 
     Ext.applyIf(config, {
         panelXType: 'minishop-panel-category-create',

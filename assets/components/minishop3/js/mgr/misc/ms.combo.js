@@ -8,10 +8,6 @@ minishop.combo.ComboBoxDefault = function (config) {
             if (this.valueField && Ext.isDefined(this.value)) {
                 rec = this.findRecord(this.valueField, this.value);
             }
-            /* fix for https://github.com/bezumkin/minishop/pull/350
-            if(!rec || rec.get(this.displayField) != val){
-                rec = this.findRecord(this.displayField, val);
-            }*/
             if (rec && rec.get(this.displayField) != val) {
                 rec = null;
             }

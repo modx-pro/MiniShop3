@@ -54,36 +54,46 @@ minishop.panel.CreateProduct = function (config) {
     minishop.panel.CreateProduct.superclass.constructor.call(this, config);
 };
 Ext.extend(minishop.panel.CreateProduct, minishop.panel.Product, {
+    formatMainPanelTitle(formId, record, realtimeValue = null, returnBaseTitle = false) {
 
+    },
     getFields: function (config) {
         const fields = [];
         const originals = minishop.panel.Product.prototype.getFields.call(this, config);
-
         for (const i in originals) {
             if (!originals.hasOwnProperty(i)) {
                 continue;
             }
             const item = originals[i];
-            if (item.id == 'modx-resource-tabs') {
-                // Additional "Gallery" tab
-                if (minishop.config['show_gallery'] != 0) {
-                    item.items.push(this.getGallery(config));
-
-                    // Get the "Resource Groups" tab and move it to the end
-                    let accessPermissionsTab;
-                    const index = item.items.findIndex(function (tab) {
-                        return tab.id == 'modx-resource-access-permissions';
-                    });
-                    if (index != -1) {
-                        accessPermissionsTab = item.items.splice(index, 1);
-                        accessPermissionsTab && item.items.push(accessPermissionsTab);
-                    }
-                }
-            }
             fields.push(item);
         }
-
         return fields;
+
+        // for (const i in originals) {
+        //     if (!originals.hasOwnProperty(i)) {
+        //         continue;
+        //     }
+        //     const item = originals[i];
+        //     if (item.id == 'modx-resource-tabs') {
+        //         // Additional "Gallery" tab
+        //         if (minishop.config['show_gallery'] != 0) {
+        //             item.items.push(this.getGallery(config));
+        //
+        //             // Get the "Resource Groups" tab and move it to the end
+        //             let accessPermissionsTab;
+        //             const index = item.items.findIndex(function (tab) {
+        //                 return tab.id == 'modx-resource-access-permissions';
+        //             });
+        //             if (index != -1) {
+        //                 accessPermissionsTab = item.items.splice(index, 1);
+        //                 accessPermissionsTab && item.items.push(accessPermissionsTab);
+        //             }
+        //         }
+        //     }
+        //     fields.push(item);
+        // }
+        //
+        // return fields;
     },
 
     getGallery: function (config) {

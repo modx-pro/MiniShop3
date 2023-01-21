@@ -112,7 +112,7 @@ return [
         'area' => 'ms_product',
     ],
     'ms_product_thumbnail_default' => [
-        'value' => '{assets_url}components/minishop2/img/mgr/ms_thumb.png',
+        'value' => '{assets_url}components/minishop3/img/mgr/ms3_thumb.png',
         'xtype' => 'textfield',
         'area' => 'ms_product',
     ],
