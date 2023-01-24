@@ -3,6 +3,7 @@
 namespace MiniShop3\Model;
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msProductData;
 use MODX\Revolution\modResource;
 use xPDO\Om\xPDOObject;
 use xPDO\xPDO;
@@ -45,7 +46,7 @@ class msProduct extends modResource
             $this->ms3 = $xpdo->services->get('ms3');
         }
         $this->originalFieldMeta = $this->_fieldMeta;
-//
+
         $aggregates = $this->xpdo->getAggregates(msProductData::class);
         $composites = $this->xpdo->getComposites(msProductData::class);
         $this->dataRelated = array_merge(array_keys($aggregates), array_keys($composites));
@@ -60,6 +61,7 @@ class msProduct extends modResource
      */
     public function set($k, $v = null, $vType = '')
     {
+        return parent::set($k, $v, $vType);
         return isset($this->_originalFieldMeta[$k])
             ? parent::set($k, $v, $vType)
             : $this->loadData()->set($k, $v, $vType);
@@ -97,8 +99,6 @@ class msProduct extends modResource
 
         return $path . 'controllers/product/';
     }
-
-
 
     /**
      * @return array

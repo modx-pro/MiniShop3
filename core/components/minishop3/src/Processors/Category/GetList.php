@@ -33,12 +33,12 @@ class GetList extends GetListProcessor
         if ($this->getProperty('combo') && !$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
             $this->item_id = $id;
         } else {
-            $showOptions = (bool)$this->modx->getOption('ms_category_show_options', null, true);
-            if ($showOptions) {
-                $grid_fields = $this->modx->getOption('ms_category_grid_fields');
-                $grid_fields = array_map('trim', explode(',', $grid_fields));
-                $this->options = $this->modx->getIterator(msOption::class, ['key:IN' => $grid_fields]);
-            }
+//            $showOptions = (bool)$this->modx->getOption('ms_category_show_options', null, true);
+//            if ($showOptions) {
+//                $grid_fields = $this->modx->getOption('ms_category_grid_fields');
+//                $grid_fields = array_map('trim', explode(',', $grid_fields));
+//                $this->options = $this->modx->getIterator(msOption::class, ['key:IN' => $grid_fields]);
+//            }
         }
         if (!$this->getProperty('limit')) {
             $this->setProperty('limit', 20);

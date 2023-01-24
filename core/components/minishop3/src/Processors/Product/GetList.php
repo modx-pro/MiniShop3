@@ -34,11 +34,11 @@ class GetList extends GetListProcessor
             $this->item_id = $id;
         } else {
             $showOptions = (bool)$this->modx->getOption('ms_category_show_options', null, true);
-            if ($showOptions) {
-                $grid_fields = $this->modx->getOption('ms_category_grid_fields');
-                $grid_fields = array_map('trim', explode(',', $grid_fields));
-                $this->options = $this->modx->getIterator('msOption', ['key:IN' => $grid_fields]);
-            }
+//            if ($showOptions) {
+//                $grid_fields = $this->modx->getOption('ms_category_grid_fields');
+//                $grid_fields = array_map('trim', explode(',', $grid_fields));
+//                $this->options = $this->modx->getIterator('msOption', ['key:IN' => $grid_fields]);
+//            }
         }
         if (!$this->getProperty('limit')) {
             $this->setProperty('limit', 20);
@@ -46,7 +46,6 @@ class GetList extends GetListProcessor
         if ($this->getProperty('sort') === 'menuindex') {
             $this->setProperty('sort', 'msProduct.parent ' . $this->getProperty('dir') . ', msProduct.menuindex');
         }
-
         return parent::initialize();
     }
 
@@ -57,10 +56,10 @@ class GetList extends GetListProcessor
      */
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
-        $c->where(['class_key' => 'msProduct']);
+        $c->where(['class_key' => 'MiniShop3\Model\msProduct']);
         $c->leftJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
         $c->leftJoin(msCategoryMember::class, 'Member', 'msProduct.id = Member.product_id');
-        $c->leftJoin(msVendor::class, 'Vendor', 'Data.vendor = Vendor.id');
+        $c->leftJoin(msVendor::class, 'Vendor', 'Data.vendor_id = Vendor.id');
         $c->leftJoin(msCategory::class, 'Category', 'Category.id = msProduct.parent');
         if ($this->getProperty('combo')) {
             $c->select('msProduct.id,msProduct.pagetitle,msProduct.context_key');
@@ -104,7 +103,11 @@ class GetList extends GetListProcessor
                 $parents = [$parent];
 
                 $nested = $this->getProperty('nested', null);
-                $nested = $nested === null && $this->modx->getOption('ms_category_show_nested_products', null, true) || (bool)$nested;
+                $nested = $nested === null && $this->modx->getOption(
+                        'ms_category_show_nested_products',
+                        null,
+                        true
+                    ) || (bool)$nested;
                 if ($nested) {
                     $tmp = $this->modx->getChildIds($parent, 10, ['context' => $category->get('context_key')]);
                     foreach ($tmp as $v) {
@@ -112,14 +115,16 @@ class GetList extends GetListProcessor
                     }
                 }
                 $parents = "(" . implode(',', $parents) . ")";
-                $c->query['where'][] = [[
-                    new xPDOQueryCondition(['sql' => 'msProduct.parent IN ' . $parents, 'conjunction' => 'OR']),
-                    new xPDOQueryCondition(['sql' => 'Member.category_id IN ' . $parents, 'conjunction' => 'OR'])
-                ]];
+                $c->query['where'][] = [
+                    [
+                        new xPDOQueryCondition(['sql' => 'msProduct.parent IN ' . $parents, 'conjunction' => 'OR']),
+                        new xPDOQueryCondition(['sql' => 'Member.category_id IN ' . $parents, 'conjunction' => 'OR'])
+                    ]
+                ];
             }
         }
 
-        $c->groupby($this->classKey . '.id');
+        $c->groupby('msProduct.id');
 
         return $c;
     }
@@ -138,7 +143,18 @@ class GetList extends GetListProcessor
         $q = clone $c;
         $q->query['columns'] = ['SQL_CALC_FOUND_ROWS msProduct.id'];
         $sortClassKey = $this->getSortClassKey();
-        $sortKey = $this->modx->getSelectColumns($sortClassKey, $this->getProperty('sortAlias', $sortClassKey), '', [$this->getProperty('sort')]);
+        $sortAlias = $this->getSortClassKey();
+        if (strpos($sortAlias, '\\') !== false) {
+            $explodedAlias = explode('\\', $sortAlias);
+            $sortAlias = array_pop($explodedAlias);
+        }
+        $sortKey = $this->modx->getSelectColumns(
+            $sortClassKey,
+            $this->getProperty('sortAlias', $sortAlias),
+            '',
+            [$this->getProperty('sort')]
+        );
+
         if (empty($sortKey)) {
             $sortKey = $this->getProperty('sort');
         }
@@ -153,9 +169,11 @@ class GetList extends GetListProcessor
             $total = $this->modx->query('SELECT FOUND_ROWS()')->fetchColumn();
         }
         $ids = empty($ids) ? "(0)" : "(" . implode(',', $ids) . ")";
-        $c->query['where'] = [[
-            new xPDOQueryCondition(['sql' => 'msProduct.id IN ' . $ids, 'conjunction' => 'AND']),
-        ]];
+        $c->query['where'] = [
+            [
+                new xPDOQueryCondition(['sql' => 'msProduct.id IN ' . $ids, 'conjunction' => 'AND']),
+            ]
+        ];
         $c->sortby($sortKey, $this->getProperty('dir'));
 
         $this->setProperty('total', $total);
@@ -171,8 +189,19 @@ class GetList extends GetListProcessor
         $c = $this->modx->newQuery($this->classKey);
         $c = $this->prepareQueryBeforeCount($c);
         $c = $this->prepareQueryAfterCount($c);
+        $results = ($c->prepare() and $c->stmt->execute()) ? $c->stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
+        $this->modx->log(
+            1,
+            print_r(
+                [
+                    $c->toSQL(),
+                    $results
+                ],
+                1
+            )
+        );
         return [
-            'results' => ($c->prepare() and $c->stmt->execute()) ? $c->stmt->fetchAll(\PDO::FETCH_ASSOC) : [],
+            'results' => $results,
             'total' => (int)$this->getProperty('total'),
         ];
     }

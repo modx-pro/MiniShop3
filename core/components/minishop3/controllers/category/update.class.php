@@ -51,16 +51,14 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         /** @var msProduct $product */
         $product = $this->modx->newObject(msProduct::class);
         $product_fields = array_merge(
-            //$product->getAllFieldsNames(),
+            $product->getAllFieldsNames(),
             $category_option_keys,
             array('actions', 'preview_url', 'cls', 'vendor_name', 'category_name')
         );
 
-        //$category_grid_fields = $this->getOption('ms_category_grid_fields');
-        $category_grid_fields = null;
+        $category_grid_fields = $this->getOption('ms_category_grid_fields');
         if (!$category_grid_fields) {
             $category_grid_fields = 'id,pagetitle,article,price,weight,image';
-            $category_grid_fields = 'id,pagetitle';
         }
 
         $category_grid_fields = array_map('trim', explode(',', $category_grid_fields));

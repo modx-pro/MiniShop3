@@ -38,7 +38,6 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
                 fields[index] = 'options-' + fields[index];
             }
         }
-
         return fields;
     },
 

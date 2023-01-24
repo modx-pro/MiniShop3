@@ -50,14 +50,14 @@ class Create extends CreateProcessor
 
         $properties = $this->getProperties();
         $this->modx->log(1, print_r($properties, 1));
-        $options = [];
-        foreach ($properties as $key => $value) {
-            if (strpos($key, 'options-') === 0) {
-                $options[substr($key, 8)] = $value;
-                $this->unsetProperty($key);
-            }
-        }
-        $this->setProperty('options', $options);
+//        $options = [];
+//        foreach ($properties as $key => $value) {
+//            if (strpos($key, 'options-') === 0) {
+//                $options[substr($key, 8)] = $value;
+//                $this->unsetProperty($key);
+//            }
+//        }
+//        $this->setProperty('options', $options);
         return parent::beforeSet();
     }
 
