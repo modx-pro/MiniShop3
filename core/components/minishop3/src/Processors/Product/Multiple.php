@@ -2,12 +2,12 @@
 
 namespace MiniShop3\Processors\Product;
 
-use MiniShop3\MiniShop3;
+use MiniShop3\Model\msProduct;
 use MODX\Revolution\Processors\ModelProcessor;
-use MODX\Revolution\Processors\ProcessorResponse;
 
 class Multiple extends ModelProcessor
 {
+    public $classKey = msProduct::class;
     /**
      * @return array|string]
      *
@@ -25,15 +25,10 @@ class Multiple extends ModelProcessor
             return $this->success();
         }
 
-        /** @var MiniShop3 $ms3 */
-        $ms3 = $this->modx->services->get('ms3');
-
-        foreach ($ids as $key) {
-            /** @var ProcessorResponse $response */
-            $ms3->utils->runProcessor('MiniShop3\\Processors\\Product\\' . $method, $key);
-            if ($response->isError()) {
-                return $response->getResponse();
-            }
+        foreach ($ids as $id) {
+            $this->modx->runProcessor('MiniShop3\\Processors\\Product\\' . $method, [
+                'id' => $id,
+            ]);
         }
 
         return $this->success();

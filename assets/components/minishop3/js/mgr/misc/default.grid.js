@@ -26,16 +26,16 @@ minishop.grid.Default = function (config) {
             getRowClass: function (rec) {
                 const cls = [];
                 if (rec.data['published'] !== undefined && rec.data['published'] == 0) {
-                    cls.push('minishop-row-unpublished');
+                    cls.push('minishop3-row-unpublished');
                 }
                 if (rec.data['active'] !== undefined && rec.data['active'] == 0) {
-                    cls.push('minishop-row-inactive');
+                    cls.push('minishop3-row-inactive');
                 }
                 if (rec.data['deleted'] !== undefined && rec.data['deleted'] == 1) {
-                    cls.push('minishop-row-deleted');
+                    cls.push('minishop3-row-deleted');
                 }
                 if (rec.data['required'] !== undefined && rec.data['required'] == 1) {
-                    cls.push('minishop-row-required');
+                    cls.push('minishop3-row-required');
                 }
                 return cls.join(' ');
             }

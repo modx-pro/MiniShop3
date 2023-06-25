@@ -57,7 +57,7 @@ Ext.extend(minishop.grid.ComboboxOptions, MODx.grid.LocalGrid, {
             renderer: function () {
                 return String.format(
                     '\
-                    <ul class="minishop-row-actions">\
+                    <ul class="minishop3-row-actions">\
                         <li>\
                             <button class="btn btn-default icon icon-remove action-red" title="{0}" action="removeOption"></button>\
                         </li>\

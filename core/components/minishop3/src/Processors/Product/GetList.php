@@ -190,16 +190,6 @@ class GetList extends GetListProcessor
         $c = $this->prepareQueryBeforeCount($c);
         $c = $this->prepareQueryAfterCount($c);
         $results = ($c->prepare() and $c->stmt->execute()) ? $c->stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
-        $this->modx->log(
-            1,
-            print_r(
-                [
-                    $c->toSQL(),
-                    $results
-                ],
-                1
-            )
-        );
         return [
             'results' => $results,
             'total' => (int)$this->getProperty('total'),
@@ -320,7 +310,7 @@ class GetList extends GetListProcessor
             // Publish
             if (!$array['published']) {
                 $array['actions'][] = [
-                    'cls' => '',
+                    'cls' => 'fw-900',
                     'icon' => 'icon icon-power-off action-green',
                     'title' => $this->modx->lexicon('ms_product_publish'),
                     'multiple' => $this->modx->lexicon('ms_product_publish'),
@@ -330,7 +320,7 @@ class GetList extends GetListProcessor
                 ];
             } else {
                 $array['actions'][] = [
-                    'cls' => '',
+                    'cls' => 'fw-900',
                     'icon' => 'icon icon-power-off action-gray',
                     'title' => $this->modx->lexicon('ms_product_unpublish'),
                     'multiple' => $this->modx->lexicon('ms_product_unpublish'),
@@ -385,7 +375,7 @@ class GetList extends GetListProcessor
             }
             // Menu
             $array['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-cog actions-menu',
                 'menu' => false,
                 'button' => true,

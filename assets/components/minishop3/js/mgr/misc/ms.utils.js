@@ -161,7 +161,7 @@ minishop.utils.renderActions = function (value, props, row) {
     }
 
     return String.format(
-        '<ul class="minishop-row-actions">{0}</ul>',
+        '<ul class="minishop3-row-actions">{0}</ul>',
         res.join('')
     );
 };

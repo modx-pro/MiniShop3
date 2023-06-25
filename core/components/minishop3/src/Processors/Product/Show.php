@@ -8,14 +8,20 @@ class Show extends Update
 {
     public $classKey = msProduct::class;
 
-
     /**
      * @return bool
      */
     public function beforeSet()
     {
+        $this->workingContext = $this->modx->getContext(
+            $this->getProperty(
+                'context_key',
+                $this->object->get('context_key') ? $this->object->get('context_key') : 'web'
+            )
+        );
+
         $this->properties = [
-            'show_in_tree' => false,
+            'show_in_tree' => true
         ];
 
         return true;

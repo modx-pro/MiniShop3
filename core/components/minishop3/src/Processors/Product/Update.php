@@ -4,6 +4,8 @@ namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msProduct;
+use MODX\Revolution\modX;
+use MODX\Revolution\Processors\Processor;
 use MODX\Revolution\Processors\Resource\Update as UpdateProcessor;
 
 class Update extends UpdateProcessor
@@ -16,27 +18,20 @@ class Update extends UpdateProcessor
     /** @var msProduct $object */
     public $object;
 
-
     /**
-     * @return bool|null|string
+     * Allow for Resources to use derivative classes for their processors
+     *
+     * @static
+     * @param modX $modx
+     * @param string $className
+     * @param array $properties
+     * @return Processor
      */
-    public function initialize()
+    public static function getInstance(modX $modx, $className, $properties = [])
     {
-        $primaryKey = $this->getProperty($this->primaryKeyField, false);
-        if (empty($primaryKey)) {
-            return $this->modx->lexicon($this->classKey . '_err_ns');
-        }
-
-        if (!$this->modx->getCount($this->classKey, ['id' => $primaryKey, 'class_key' => $this->classKey])) {
-            if ($res = $this->modx->getObject(\modResource::class, ['id' => $primaryKey])) {
-                $res->set('class_key', $this->classKey);
-                $res->save();
-            }
-        }
-
-        return parent::initialize();
+        /** @var Processor $processor */
+        return new $className($modx, $properties);
     }
-
 
     /**
      * @return array|string
@@ -58,7 +53,6 @@ class Update extends UpdateProcessor
         return parent::beforeSet();
     }
 
-
     /**
      *
      */
@@ -70,7 +64,6 @@ class Update extends UpdateProcessor
         $this->setCheckbox('favorite');
         $this->setCheckbox('show_in_tree');
     }
-
 
     /**
      * @return int|mixed|string
@@ -87,7 +80,6 @@ class Update extends UpdateProcessor
         return $alias;
     }
 
-
     /**
      * @return bool
      */
@@ -97,7 +89,6 @@ class Update extends UpdateProcessor
 
         return parent::beforeSave();
     }
-
 
     /**
      *

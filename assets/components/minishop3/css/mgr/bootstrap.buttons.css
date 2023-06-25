@@ -269,3 +269,7 @@
 input[type="submit"].btn-block, input[type="reset"].btn-block, input[type="button"].btn-block {
     width: 100%
 }
+
+.fw-900 .btn {
+    font-weight: 900 !important;
+}
