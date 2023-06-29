@@ -232,12 +232,12 @@ class msProductUpdateManagerController extends msResourceUpdateController
      */
     public function loadPlugins()
     {
-        $plugins = $this->ms3->plugins->load();
-        foreach ($plugins as $plugin) {
-            if (!empty($plugin['manager']['msProductData'])) {
-                $this->addJavascript($plugin['manager']['msProductData']);
-            }
-        }
+//        $plugins = $this->ms3->plugins->load();
+//        foreach ($plugins as $plugin) {
+//            if (!empty($plugin['manager']['msProductData'])) {
+//                $this->addJavascript($plugin['manager']['msProductData']);
+//            }
+//        }
     }
 
     /**

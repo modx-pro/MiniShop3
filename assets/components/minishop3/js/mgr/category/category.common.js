@@ -16,7 +16,6 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
             if (item.id === "modx-header-breadcrumbs") {
                 item.items[0].html = _('ms_category_new');
             }
-            fields.push(item)
             if (item.id === 'modx-resource-tabs') {
                 // item.stateful = MODx.config['ms_category_remember_tabs'] === 1;
                 // item.stateId = 'minishop-category-' + config.mode + '-tabpanel';
@@ -33,7 +32,8 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
                     const tab = item.items[i2];
                     if (tab.id === 'modx-resource-settings') {
                         tab.title = _('ms_tab_category');
-                        tab.items.push(this.getContent(config));
+                        tab.layout = "form";
+                        //tab.items.push(this.getContent(config));
                     }
                     if (tab.id === 'modx-page-settings') {
                         tab.items = this.getCategorySettings(config);
@@ -60,7 +60,7 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
     getContent: function (config) {
         let fields = [];
         const originals = MODx.panel.Resource.prototype.getContentField.call(this, config);
-        fields = originals;
+
         for (const i in originals) {
             if (!originals.hasOwnProperty(i)) {
                 continue;
@@ -75,20 +75,24 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
                     continue;
                 }
                 const item_j = item[j];
-                // if (item_j.id === 'ta') {
-                //     item_j.hideLabel = false;
-                //     item_j.fieldLabel = _('content');
-                //     item_j.itemCls = 'contentblocks_replacement';
-                //     item_j.description = '<b>[[*content]]</b>';
-                //     if (MODx.config['ms_category_content_default'] && config['mode'] === 'create') {
-                //         item_j.value = MODx.config['ms_category_content_default'];
-                //     }
-                //     item_j.hidden = minishop.config.isHideContent;
-                // }
-                // fields.push(item_j);
+                if (item_j.id === 'ta') {
+                    item_j.hideLabel = false;
+                    item_j.border = false;
+                    item_j.fieldLabel = _('content');
+                    item_j.itemCls = 'contentblocks_replacement';
+                    item_j.msgTarget = "under";
+                    item_j.description = '<b>[[*content]]</b>';
+                    if (MODx.config['ms_category_content_default'] && config['mode'] === 'create') {
+                        item_j.value = MODx.config['ms_category_content_default'];
+                    }
+                    item_j.value = "<p></p>"
+                    //item_j.hidden = minishop.config.isHideContent;
+                    item_j.hidden = false;
+                }
+                fields.push(item_j);
             }
-        }
 
+        }
         return fields;
     },
 

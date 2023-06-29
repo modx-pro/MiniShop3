@@ -22,9 +22,6 @@ Ext.extend(minishop.page.UpdateProduct, MODx.page.UpdateResource, {
                 case 'modx-abtn-save':
                     button.text = '<i class="icon icon-save"></i> ' + button.text;
                     break;
-                case 'modx-abtn-delete':
-                    button.text = '<i class="icon icon-times"></i> ' + button.text;
-                    break;
                 case 'modx-abtn-preview':
                     button.text = '<i class="icon icon-eye"></i>';
                     break;
@@ -108,26 +105,26 @@ Ext.extend(minishop.panel.UpdateProduct, minishop.panel.Product, {
                 continue;
             }
             const item = originals[i];
-            if (item.id == 'modx-resource-tabs') {
+            if (item.id === 'modx-resource-tabs') {
                 let accessPermissionsTab;
 
                 // Additional "Gallery" and "Comments" tabs
-                if (minishop.config['show_gallery'] != 0) {
-                    item.items.push(this.getGallery(config));
-                }
-                if (minishop.config['show_comments'] != 0) {
-                    item.items.push(this.getComments(config));
-                }
-                // Get the "Resource Groups" tab and move it to the end
-                if (minishop.config['show_gallery'] != 0 || minishop.config['show_comments'] != 0) {
-                    const index = item.items.findIndex(function (tab) {
-                        return tab.id == 'modx-resource-access-permissions';
-                    });
-                    if (index != -1) {
-                        accessPermissionsTab = item.items.splice(index, 1);
-                        accessPermissionsTab && item.items.push(accessPermissionsTab);
-                    }
-                }
+                // if (minishop.config['show_gallery'] != 0) {
+                //     item.items.push(this.getGallery(config));
+                // }
+                // if (minishop.config['show_comments'] != 0) {
+                //     item.items.push(this.getComments(config));
+                // }
+                // // Get the "Resource Groups" tab and move it to the end
+                // if (minishop.config['show_gallery'] != 0 || minishop.config['show_comments'] != 0) {
+                //     const index = item.items.findIndex(function (tab) {
+                //         return tab.id == 'modx-resource-access-permissions';
+                //     });
+                //     if (index != -1) {
+                //         accessPermissionsTab = item.items.splice(index, 1);
+                //         accessPermissionsTab && item.items.push(accessPermissionsTab);
+                //     }
+                // }
             }
             fields.push(item);
         }
