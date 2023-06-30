@@ -129,5 +129,4 @@ class msCustomerProfile extends \MiniShop3\Model\msCustomerProfile
                     ],
             ],
     ];
-
 }

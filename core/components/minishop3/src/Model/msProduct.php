@@ -3,7 +3,6 @@
 namespace MiniShop3\Model;
 
 use MiniShop3\MiniShop3;
-use MiniShop3\Model\msProductData;
 use MODX\Revolution\modResource;
 use xPDO\Om\xPDOObject;
 use xPDO\xPDO;
@@ -61,8 +60,7 @@ class msProduct extends modResource
      */
     public function set($k, $v = null, $vType = '')
     {
-        return parent::set($k, $v, $vType);
-        return isset($this->_originalFieldMeta[$k])
+        return isset($this->originalFieldMeta[$k])
             ? parent::set($k, $v, $vType)
             : $this->loadData()->set($k, $v, $vType);
     }
@@ -164,36 +162,42 @@ class msProduct extends modResource
      *
      * @return array|mixed|null|xPDOObject
      */
-//    public function get($k, $format = null, $formatTemplate = null)
-//    {
-//        if (is_array($k)) {
-//            $array = [];
-//            foreach ($k as $v) {
-//                $array[$v] = isset($this->_originalFieldMeta[$v])
-//                    ? parent::get($v, $format, $formatTemplate)
-//                    : $this->get($v, $format, $formatTemplate);
-//            }
-//
-//            return $array;
-//        } elseif (isset($this->_originalFieldMeta[$k])) {
-//            return parent::get($k, $format, $formatTemplate);
-//        } elseif (strpos($k, 'vendor_') !== false || strpos($k, 'vendor.') !== false) {
-//            //return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
-//        } elseif (isset($this->loadData()->_fields[$k])) {
-//            return $this->loadData()->get($k, $format, $formatTemplate);
-//        } elseif (
-//            in_array($k, $this->loadData()->getOptionKeys()) ||
-//            (($optFields = explode('.', $k)) && in_array($optFields[0], $this->loadData()->getOptionKeys()))
-//        ) {
-//            if (isset($this->$k)) {
-//                return $this->$k;
-//            }
-//            //$this->loadOptions();
-//            return $this->options[$k] ?? null;
-//        } else {
-//            return parent::get($k, $format, $formatTemplate);
-//        }
-//    }
+    public function get($k, $format = null, $formatTemplate = null)
+    {
+        if (is_array($k)) {
+            $array = [];
+            foreach ($k as $v) {
+                $array[$v] = isset($this->originalFieldMeta[$v])
+                    ? parent::get($v, $format, $formatTemplate)
+                    : $this->get($v, $format, $formatTemplate);
+            }
+
+            return $array;
+        }
+
+        if (isset($this->originalFieldMeta[$k])) {
+            return parent::get($k, $format, $formatTemplate);
+        }
+
+        if (strpos($k, 'vendor_') !== false || strpos($k, 'vendor.') !== false) {
+            //return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
+        }
+        return parent::get($k, $format, $formatTemplate);
+        if (isset($this->loadData()->_fields[$k])) {
+            return $this->loadData()->get($k, $format, $formatTemplate);
+        }
+        if (
+            in_array($k, $this->loadData()->getOptionKeys()) ||
+            (($optFields = explode('.', $k)) && in_array($optFields[0], $this->loadData()->getOptionKeys()))
+        ) {
+            if (isset($this->$k)) {
+                return $this->$k;
+            }
+            //$this->loadOptions();
+            return $this->options[$k] ?? null;
+        }
+        return parent::get($k, $format, $formatTemplate);
+    }
 
     /**
      * @param string $key
@@ -201,11 +205,11 @@ class msProduct extends modResource
      *
      * @return bool
      */
-    protected function setRaw($key, $val)
+    protected function _setRaw($key, $val)
     {
-//        return isset($this->_originalFieldMeta[$key])
-//            ? //parent::setRaw($key, $val)
-//            : //$this->loadData()->setRaw($key, $val);
+        return isset($this->originalFieldMeta[$key])
+            ? parent::_setRaw($key, $val)
+            : $this->loadData()->_setRaw($key, $val);
     }
 
     /**
@@ -238,9 +242,10 @@ class msProduct extends modResource
     public function loadData()
     {
         if (!is_object($this->Data) || !($this->Data instanceof msProductData)) {
-            if (!$this->Data = $this->getOne('Data')) {
+            $this->Data = $this->getOne('Data');
+            if (!$this->Data) {
                 $this->Data = $this->xpdo->newObject(msProductData::class);
-                parent::addOne($this->Data);
+                parent::addOne($this->Data, 'Data');
             }
         }
 
@@ -266,14 +271,14 @@ class msProduct extends modResource
      */
     public function loadOptions()
     {
-        if ($this->options === null) {
-            $this->options = $this->xpdo->call(msProductData::class, 'loadOptions', [
-                $this->xpdo,
-                $this->loadData()->get('id'),
-            ]);
-        }
-
-        return $this->options;
+//        if ($this->options === null) {
+//            $this->options = $this->xpdo->call(msProductData::class, 'loadOptions', [
+//                $this->xpdo,
+//                $this->loadData()->get('id'),
+//            ]);
+//        }
+//
+//        return $this->options;
     }
 
     /**

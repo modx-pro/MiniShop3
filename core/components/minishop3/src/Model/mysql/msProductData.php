@@ -328,5 +328,4 @@ class msProductData extends \MiniShop3\Model\msProductData
                     ],
             ],
     ];
-
 }

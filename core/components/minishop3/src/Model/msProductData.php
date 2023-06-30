@@ -98,11 +98,12 @@ class msProductData extends xPDOSimpleObject
      */
     public function save($cacheFlag = null)
     {
+        $this->xpdo->log(1, 'Model/msProductData::save ' . print_r($this->toArray(), 1));
         $this->prepareObject();
         $save = parent::save($cacheFlag);
-        $this->saveProductCategories();
-        $this->saveProductOptions();
-        $this->saveProductLinks();
+//        $this->saveProductCategories();
+//        $this->saveProductOptions();
+//        $this->saveProductLinks();
 
         return $save;
     }
