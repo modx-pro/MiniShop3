@@ -1,6 +1,7 @@
 <?php
 
 use MiniShop3\Model\msProduct;
+use MiniShop3\Model\msProductData;
 
 if (!class_exists('msResourceUpdateController')) {
     require_once dirname(__FILE__, 2) . '/resource_update.class.php';
@@ -87,8 +88,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $product_extra_fields = array_map('trim', explode(',', $product_extra_fields));
         $product_extra_fields = array_values(array_intersect($product_extra_fields, $product_fields));
 
-        $product_option_keys = $this->resource->loadData()->getOptionKeys();
-        $product_option_fields = $this->resource->loadData()->getOptionFields();
+//        $product_option_keys = $this->resource->loadData()->getOptionKeys();
+//        $product_option_fields = $this->resource->loadData()->getOptionFields();
 
         $this->prepareFields();
         //---
@@ -114,8 +115,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'default_thumb' => $this->ms3->config['defaultThumb'],
             'main_fields' => $product_main_fields,
             'extra_fields' => $product_extra_fields,
-            'option_keys' => $product_option_keys,
-            'option_fields' => $product_option_fields,
+//            'option_keys' => $product_option_keys,
+//            'option_fields' => $product_option_fields,
             'data_fields' => $product_data_fields,
             'additional_fields' => [],
             'media_source' => $this->getSourceProperties(),
@@ -209,7 +210,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
      */
     public function prepareFields()
     {
-        $data = array_keys($this->modx->getFieldMeta('msProductData'));
+        $data = array_keys($this->modx->getFieldMeta(msProductData::class));
         foreach ($this->resourceArray as $k => $v) {
             if (is_array($v) && in_array($k, $data)) {
                 $tmp = $this->resourceArray[$k];

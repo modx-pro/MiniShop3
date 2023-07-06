@@ -51,8 +51,8 @@ switch ($modx->event->name) {
             }
         }
         // Set product fields as [[*resource]] tags
-        if ($modx->resource->get('class_key') == 'msProduct') {
-            if ($dataMeta = $modx->getFieldMeta('msProductData')) {
+        if ($modx->resource->get('class_key') == MiniShop3\Model\msProduct::class) {
+            if ($dataMeta = $modx->getFieldMeta(MiniShop3\Model\msProductData::class)) {
                 unset($dataMeta['id']);
                 $modx->resource->_fieldMeta = array_merge(
                     $modx->resource->_fieldMeta,

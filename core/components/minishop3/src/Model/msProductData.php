@@ -5,6 +5,7 @@ namespace MiniShop3\Model;
 use MiniShop3\MiniShop3;
 use MODX\Revolution\modCategory;
 use MODX\Revolution\Sources\modMediaSource;
+use xPDO\Om\xPDOObject;
 use xPDO\Om\xPDOQuery;
 use xPDO\Om\xPDOSimpleObject;
 use xPDO\xPDO;
@@ -98,7 +99,7 @@ class msProductData extends xPDOSimpleObject
      */
     public function save($cacheFlag = null)
     {
-        $this->xpdo->log(1, 'Model/msProductData::save ' . print_r($this->toArray(), 1));
+        $this->xpdo->log(1, print_r($_POST, 1));
         $this->prepareObject();
         $save = parent::save($cacheFlag);
 //        $this->saveProductCategories();
@@ -115,7 +116,7 @@ class msProductData extends xPDOSimpleObject
     {
         // prepare "array" fields
         foreach ($this->getArraysValues() as $name => $array) {
-            $array = $this->prepareOptionValues($array);
+          //  $array = $this->prepareOptionValues($array);
             parent::set($name, $array);
         }
 
@@ -549,54 +550,54 @@ class msProductData extends xPDOSimpleObject
         } else {
             $value = null;
             switch ($k) {
-                case 'categories':
-                    $c = $this->xpdo->newQuery(msCategoryMember::class, ['product_id' => $this->id]);
-                    $c->select('category_id');
-                    if ($c->prepare() && $c->stmt->execute()) {
-                        $value = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
-                    }
-                    break;
-                case 'options':
-                    $c = $this->xpdo->newQuery(msProductOption::class, ['product_id' => $this->id]);
-                    $c->select('key,value');
-                    $c->sortby('value');
-                    if ($c->prepare() && $c->stmt->execute()) {
-                        $value = [];
-                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-                            if (isset($value[$row['key']])) {
-                                $value[$row['key']][] = $row['value'];
-                            } else {
-                                $value[$row['key']] = [$row['value']];
-                            }
-                        }
-                    }
-                    break;
-                case 'links':
-                    $value = ['master' => [], 'slave' => []];
-                    $c = $this->xpdo->newQuery(msProductLink::class, ['master' => $this->id]);
-                    $c->select('link,slave');
-                    if ($c->prepare() && $c->stmt->execute()) {
-                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-                            if (isset($value['master'][$row['link']])) {
-                                $value['master'][$row['link']][] = $row['slave'];
-                            } else {
-                                $value['master'][$row['link']] = [$row['slave']];
-                            }
-                        }
-                    }
-
-                    $c = $this->xpdo->newQuery(msProductLink::class, ['slave' => $this->id]);
-                    $c->select('link,master');
-                    if ($c->prepare() && $c->stmt->execute()) {
-                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-                            if (isset($value['slave'][$row['link']])) {
-                                $value['slave'][$row['link']][] = $row['master'];
-                            } else {
-                                $value['slave'][$row['link']] = [$row['master']];
-                            }
-                        }
-                    }
-                    break;
+//                case 'categories':
+//                    $c = $this->xpdo->newQuery(msCategoryMember::class, ['product_id' => $this->id]);
+//                    $c->select('category_id');
+//                    if ($c->prepare() && $c->stmt->execute()) {
+//                        $value = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
+//                    }
+//                    break;
+//                case 'options':
+//                    $c = $this->xpdo->newQuery(msProductOption::class, ['product_id' => $this->id]);
+//                    $c->select('key,value');
+//                    $c->sortby('value');
+//                    if ($c->prepare() && $c->stmt->execute()) {
+//                        $value = [];
+//                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
+//                            if (isset($value[$row['key']])) {
+//                                $value[$row['key']][] = $row['value'];
+//                            } else {
+//                                $value[$row['key']] = [$row['value']];
+//                            }
+//                        }
+//                    }
+//                    break;
+//                case 'links':
+//                    $value = ['master' => [], 'slave' => []];
+//                    $c = $this->xpdo->newQuery(msProductLink::class, ['master' => $this->id]);
+//                    $c->select('link,slave');
+//                    if ($c->prepare() && $c->stmt->execute()) {
+//                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
+//                            if (isset($value['master'][$row['link']])) {
+//                                $value['master'][$row['link']][] = $row['slave'];
+//                            } else {
+//                                $value['master'][$row['link']] = [$row['slave']];
+//                            }
+//                        }
+//                    }
+//
+//                    $c = $this->xpdo->newQuery(msProductLink::class, ['slave' => $this->id]);
+//                    $c->select('link,master');
+//                    if ($c->prepare() && $c->stmt->execute()) {
+//                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
+//                            if (isset($value['slave'][$row['link']])) {
+//                                $value['slave'][$row['link']][] = $row['master'];
+//                            } else {
+//                                $value['slave'][$row['link']] = [$row['master']];
+//                            }
+//                        }
+//                    }
+//                    break;
                 default:
                     $value = parent::get($k, $format, $formatTemplate);
             }

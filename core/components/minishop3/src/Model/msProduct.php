@@ -40,7 +40,7 @@ class msProduct extends modResource
     public function __construct(xPDO &$xpdo)
     {
         parent::__construct($xpdo);
-        $this->set('class_key', msProduct::class);
+//        $this->set('class_key', msProduct::class);
         if ($xpdo->services->has('ms3')) {
             $this->ms3 = $xpdo->services->get('ms3');
         }
