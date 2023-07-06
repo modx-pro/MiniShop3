@@ -72,7 +72,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $config = $this->ms3->config;
         $config['default_thumb'] = $this->ms3->config['defaultThumb'];
         $this->addHtml('<script>
-            MS3.config = ' . json_encode($config) . ';
+            minishop.config = ' . json_encode($config) . ';
 
             MODx.perm.msorder_list = ' . ($this->modx->hasPermission('msorder_list') ? 1 : 0) . ';
 

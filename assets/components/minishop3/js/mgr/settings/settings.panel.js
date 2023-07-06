@@ -3,7 +3,7 @@ minishop.panel.Settings = function (config) {
     Ext.apply(config, {
         cls: 'container',
         items: [{
-            html: '<h2>' + _('minishop') + ' :: ' + _('ms_settings') + '</h2>',
+            html: '<h2>' + _('miniShop3') + ' :: ' + _('ms_settings') + '</h2>',
             cls: 'modx-page-header',
         }, {
             xtype: 'modx-tabs',

@@ -16,7 +16,7 @@ Ext.extend(minishop.page.Settings, MODx.Component, {
 
         if (MODx.perm.msorder_list) {
             b.push({
-                text: _('ms_orders'),
+                text: _('ms _orders'),
                 id: 'ms-abtn-orders',
                 cls: 'primary-button',
                 handler: function () {

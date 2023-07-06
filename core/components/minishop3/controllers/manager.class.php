@@ -1,7 +1,7 @@
 <?php
 
 
-class msManagerController extends modExtraManagerController
+class msManagerController extends \MODX\Revolution\modExtraManagerController
 {
     /** @var MiniShop3\MiniShop3 $ms3 */
     public $ms3;

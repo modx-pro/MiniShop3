@@ -39,7 +39,7 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
                 renderer: function (value) {
                     return _('ms_link_' + value);
                 }
-        },
+            },
             {header: _('ms_description'), dataIndex: 'description', width: 100},
             {
                 header: _('ms_actions'),
@@ -47,8 +47,15 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
                 id: 'actions',
                 width: 50,
                 renderer: minishop.utils.renderActions
-        }
+            }
         ];
+    },
+
+    actionsColumnRenderer: function(value, metaData, record, rowIndex, colIndex, store) {
+        const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
+        return this._getActionsColumnTpl().apply({
+            actions: actions
+        });
     },
 
     getListeners: function () {
