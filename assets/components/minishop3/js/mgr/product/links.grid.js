@@ -54,6 +54,13 @@ Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
         }, '->', this.getSearchField()];
     },
 
+    actionsColumnRenderer: function(value, metaData, record, rowIndex, colIndex, store) {
+        const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
+        return this._getActionsColumnTpl().apply({
+            actions: actions
+        });
+    },
+
     createLink: function (btn, e) {
         let w = Ext.getCmp('minishop-product-link-create');
         if (w) {

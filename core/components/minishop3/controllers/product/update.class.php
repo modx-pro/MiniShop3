@@ -83,7 +83,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $product_main_fields = array_values(array_intersect($product_main_fields, $product_fields));
 
         if (!$product_extra_fields = $this->getOption('ms_product_extra_fields')) {
-            $product_extra_fields = 'article,price,old_price,weight,color,remains,reserved,vendor,made_in,tags';
+            $product_extra_fields = 'price,old_price,article,weight,color,size,vendor,made_in,tags,new,popular,favorite';
         }
         $product_extra_fields = array_map('trim', explode(',', $product_extra_fields));
         $product_extra_fields = array_values(array_intersect($product_extra_fields, $product_fields));

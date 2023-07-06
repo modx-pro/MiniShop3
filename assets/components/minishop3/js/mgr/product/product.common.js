@@ -69,6 +69,8 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
 
                                 tabs.push(tab);
                                 tabs.push(this.getProductFields(config));
+                                tabs.push(this.getProductLinks(config));
+                                tabs.push(this.getProductCategories(config));
                             })
                             break;
                         case 'modx-page-settings':

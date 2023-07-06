@@ -18,21 +18,12 @@ class Multiple extends ModelProcessor
             return $this->failure();
         }
         $method = ucfirst($method);
-        $ids = json_decode($this->getProperty('ids'), true);
-        if (empty($ids)) {
+        $data = json_decode($this->getProperty('ids'), true);
+        if (empty($data)) {
             return $this->success();
         }
 
-        /** @var MiniShop3 $ms3 */
-        $ms3 = $this->modx->services->get('ms3');
-
-        foreach ($ids as $key) {
-            /** @var ProcessorResponse $response */
-            $ms3->utils->runProcessor('MiniShop3\\Processors\\Product\\ProductLink\\' . $method, $key);
-            if ($response->isError()) {
-                return $response->getResponse();
-            }
-        }
+        $this->modx->runProcessor('MiniShop3\\Processors\\Product\\ProductLink\\' . $method, $data[0]);
 
         return $this->success();
     }

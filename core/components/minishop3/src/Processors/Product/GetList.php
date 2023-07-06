@@ -232,7 +232,7 @@ class GetList extends GetListProcessor
                 $q = $this->modx->newQuery(msCategory::class, ['id:IN' => $parents]);
                 $q->select('id,pagetitle');
                 if ($q->prepare() && $q->stmt->execute()) {
-                    while ($row = $q->stmt->fetch(PDO::FETCH_ASSOC)) {
+                    while ($row = $q->stmt->fetch(\PDO::FETCH_ASSOC)) {
                         $key = array_search($row['id'], $parents);
                         if ($key !== false) {
                             $parents[$key] = $row;

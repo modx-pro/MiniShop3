@@ -782,10 +782,9 @@ Ext.extend(MODx.combo.LinkType, minishop.combo.ComboBoxDefault, {
     getTypes: function () {
         const array = [];
         const types = ['many_to_many', 'one_to_many', 'many_to_one', 'one_to_one'];
-        for (let i = 0; i < types.length; i++) {
-            const t = types[i];
+        types.forEach(t => {
             array.push([t, _('ms_link_' + t), _('ms_link_' + t + '_desc')]);
-        }
+        })
         return array;
     }
 });

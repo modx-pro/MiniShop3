@@ -10,7 +10,7 @@ use xPDO\Om\xPDOQuery;
 class GetList extends GetListProcessor
 {
     public $classKey = msLink::class;
-    public $defaultSortField = 'position';
+    public $defaultSortField = 'id';
     public $defaultSortDirection = 'asc';
     public $permission = 'mssetting_list';
 
@@ -58,6 +58,7 @@ class GetList extends GetListProcessor
      */
     public function prepareRow(xPDOObject $object)
     {
+        $this->modx->log(1, print_r($object->toArray(), 1));
         if ($this->getProperty('combo')) {
             $data = [
                 'id' => $object->get('id'),
