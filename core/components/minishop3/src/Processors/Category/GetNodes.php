@@ -13,7 +13,6 @@ class GetNodes extends ParentProcessor
     protected int $resource_id = 0;
     protected int $parent_id = 0;
 
-
     /**
      * @return bool
      */
@@ -26,7 +25,6 @@ class GetNodes extends ParentProcessor
 
         return $initialize;
     }
-
 
     /**
      * @return xPDOQuery
@@ -66,7 +64,7 @@ class GetNodes extends ParentProcessor
             'context_key' => $this->contextKey,
             'show_in_tree' => true,
             'isfolder' => true,
-            'OR:class_key:=' => 'msCategory',
+            'OR:class_key:LIKE' => '%msCategory',
             'AND:context_key:=' => $this->contextKey,
         ]);
         if (empty($this->startNode) && !empty($this->defaultRootId)) {
@@ -84,7 +82,6 @@ class GetNodes extends ParentProcessor
 
         return $c;
     }
-
 
     /**
      * @param modContext $context
@@ -108,7 +105,6 @@ class GetNodes extends ParentProcessor
         ];
     }
 
-
     /**
      * @param modResource $resource
      *
@@ -128,10 +124,14 @@ class GetNodes extends ParentProcessor
         if (substr($classKey, 0, 3) == 'mod') {
             $classKey = substr($classKey, 3);
         }
-        $classKeyIcon = $this->modx->getOption('mgr_tree_icon_' . $classKey, null, 'tree-resource');
+        $tmp = explode('\\', $resource->get('class_key'));
+        $cleanClassKey = $tmp[count($tmp) - 1];
+        $classKeyIcon = $this->modx->getOption('mgr_tree_icon_' . strtolower($cleanClassKey), null, 'tree-resource');
         $iconCls[] = $classKeyIcon;
 
-        $class[] = 'icon-' . strtolower(str_replace('mod', '', $resource->get('class_key')));
+
+
+        $class[] = 'icon-' . strtolower(str_replace('mod', '', $cleanClassKey));
         if (!$resource->get('isfolder')) {
             $class[] = 'x-tree-node-leaf icon-resource';
         }
@@ -146,7 +146,7 @@ class GetNodes extends ParentProcessor
         }
         if ($hasChildren) {
             $class[] = 'haschildren';
-            if ($resource->get('class_key') != 'msCategory') {
+            if ($cleanClassKey !== 'msCategory') {
                 $iconCls[] = $this->modx->getOption('mgr_tree_icon_folder', null, 'tree-folder');
             }
             $iconCls[] = 'parent-resource';
@@ -178,7 +178,7 @@ class GetNodes extends ParentProcessor
             'cls' => implode(' ', $class),
             'iconCls' => implode(' ', $iconCls),
             'type' => 'modResource',
-            'classKey' => $resource->get('class_key'),
+            'classKey' => $cleanClassKey,
             'ctx' => $resource->get('context_key'),
             'hide_children_in_tree' => $resource->get('hide_children_in_tree'),
             'qtip' => $qtip,
@@ -193,7 +193,7 @@ class GetNodes extends ParentProcessor
             $itemArray['hasChildren'] = true;
         }
 
-        if ($itemArray['classKey'] != 'msCategory') {
+        if ($itemArray['classKey'] !== 'msCategory') {
             unset($itemArray['checked']);
         }
 
