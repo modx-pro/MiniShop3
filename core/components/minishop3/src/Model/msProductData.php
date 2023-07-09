@@ -428,7 +428,7 @@ class msProductData extends xPDOSimpleObject
      */
     public function initializeMediaSource($ctx = '')
     {
-        if ($this->mediaSource = $this->xpdo->getObject(modMediaSource::class, ['id' => $this->get('source')])) {
+        if ($this->mediaSource = $this->xpdo->getObject(modMediaSource::class, ['id' => $this->get('source_id')])) {
             if (empty($ctx)) {
                 $product = $this->getOne('Product');
                 $ctx = $product->get('context_key');

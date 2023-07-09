@@ -268,7 +268,7 @@ minishop.combo.Source = function (config) {
         valueField: 'id',
         width: 300,
         listWidth: 300,
-        fieldLabel: _('ms_product_' + config.name || 'source'),
+        fieldLabel: _('ms_product_' + config.name || 'source_id'),
         anchor: '99%',
         allowBlank: false
     });

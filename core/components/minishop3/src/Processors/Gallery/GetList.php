@@ -111,12 +111,8 @@ class GetList extends GetListProcessor
         if ($limit > 0) {
             $c->limit($limit, $start);
         }
-        $c->prepare();
-
-        $this->modx->log(1, $c->toSQL());
-
         $data['results'] = [];
-        if ($c->stmt->execute()) {
+        if ($c->prepare() && $c->stmt->execute()) {
             while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $data['results'][] = $this->prepareArray($row);
             }

@@ -40,7 +40,7 @@
         <field key="tags" dbtype="text" phptype="json" null="true"/>
         <field key="color" dbtype="text" phptype="json" null="true"/>
         <field key="size" dbtype="text" phptype="json" null="true"/>
-        <field key="source" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"
+        <field key="source_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"
                default="1"/>
 
         <index alias="article" name="article" primary="false" unique="false" type="BTREE">

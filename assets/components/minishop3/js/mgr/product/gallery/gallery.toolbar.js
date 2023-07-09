@@ -30,10 +30,10 @@ minishop.panel.Toolbar = function (config) {
         }, '-', {
             xtype: 'minishop-combo-source',
             id: 'minishop-resource-source',
-            description: '<b>[[+source]]</b><br />' + _('ms_product_source_help'),
+            description: '<b>[[+source_id]]</b><br />' + _('ms_product_source_help'),
             value: config.record.source,
-            name: 'source',
-            hiddenName: 'source',
+            name: 'source_id',
+            hiddenName: 'source_id',
             listeners: {
                 select: {
                     fn: this.sourceWarning,

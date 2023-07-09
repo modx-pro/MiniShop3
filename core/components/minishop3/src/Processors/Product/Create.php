@@ -40,7 +40,7 @@ class Create extends CreateProcessor
         $this->setDefaultProperties([
             'show_in_tree' => $this->modx->getOption('ms_product_show_in_tree_default', null, false),
             'hidemenu' => $this->modx->getOption('hidemenu_default', null, true),
-            'source' => $this->modx->getOption('ms_product_source_default', null, 1),
+            'source_id' => $this->modx->getOption('ms_product_source_default', null, 1),
             'template' => $this->modx->getOption(
                 'ms_template_product_default',
                 null,

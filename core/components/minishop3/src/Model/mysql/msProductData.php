@@ -29,7 +29,7 @@ class msProductData extends \MiniShop3\Model\msProductData
                 'tags' => null,
                 'color' => null,
                 'size' => null,
-                'source' => 1,
+                'source_id' => 1,
             ],
         'fieldMeta' =>
             [
@@ -140,7 +140,7 @@ class msProductData extends \MiniShop3\Model\msProductData
                         'phptype' => 'json',
                         'null' => true,
                     ],
-                'source' =>
+                'source_id' =>
                     [
                         'dbtype' => 'int',
                         'precision' => '10',
