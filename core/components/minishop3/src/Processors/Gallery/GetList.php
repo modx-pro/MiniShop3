@@ -13,16 +13,15 @@ use xPDO\Om\xPDOQuery;
 class GetList extends GetListProcessor
 {
     public $classKey = msProductFile::class;
+    public $shortClassKey = 'msProductFile';
     public $languageTopics = ['default', 'minishop3:default'];
     public $defaultSortField = 'position';
     public $defaultSortDirection = 'ASC';
     public $permission = 'msproductfile_list';
 
-
     /** @var MiniShop3 $ms3 */
     protected $ms3;
     protected $thumb;
-
 
     /**
      * @return bool|null|string
@@ -40,7 +39,7 @@ class GetList extends GetListProcessor
             $data = $product->getOne('Data');
             if ($data) {
                 /** @var modMediaSource $source */
-                $source = $this->modx->getObject(modMediaSource::class, (int)$data->get('source_id'));
+                $source = $this->modx->getObject(modMediaSource::class, (int)$data->get('source'));
                 if ($source) {
                     $properties = $source->getProperties();
                     $thumbnails = [];
@@ -69,7 +68,6 @@ class GetList extends GetListProcessor
         return parent::initialize();
     }
 
-
     /**
      * @return array|string
      */
@@ -84,7 +82,6 @@ class GetList extends GetListProcessor
         return $this->outputArray($data['results'], $data['total']);
     }
 
-
     /**
      * @return array
      */
@@ -98,12 +95,12 @@ class GetList extends GetListProcessor
         $c = $this->prepareQueryBeforeCount($c);
         $data['total'] = $this->modx->getCount($this->classKey, $c);
         $c = $this->prepareQueryAfterCount($c);
-        $c->select($this->modx->getSelectColumns($this->classKey, $this->classKey));
+        $c->select($this->modx->getSelectColumns($this->classKey, $this->shortClassKey));
 
         $sortClassKey = $this->getSortClassKey();
         $sortKey = $this->modx->getSelectColumns(
             $sortClassKey,
-            $this->getProperty('sortAlias', $sortClassKey),
+            $this->shortClassKey,
             '',
             [$this->getProperty('sort')]
         );
@@ -114,9 +111,12 @@ class GetList extends GetListProcessor
         if ($limit > 0) {
             $c->limit($limit, $start);
         }
+        $c->prepare();
+
+        $this->modx->log(1, $c->toSQL());
 
         $data['results'] = [];
-        if ($c->prepare() && $c->stmt->execute()) {
+        if ($c->stmt->execute()) {
             while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $data['results'][] = $this->prepareArray($row);
             }
@@ -126,7 +126,6 @@ class GetList extends GetListProcessor
 
         return $data;
     }
-
 
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
@@ -147,7 +146,6 @@ class GetList extends GetListProcessor
         return $c;
     }
 
-
     /**
      * @param xPDOQuery $c
      *
@@ -159,15 +157,14 @@ class GetList extends GetListProcessor
         $c->leftJoin(
             $this->classKey,
             'Thumb',
-            $this->classKey . '.id = Thumb.parent_id AND
+            $this->shortClassKey . '.id = Thumb.parent_id AND
             Thumb.path LIKE "%/' . $this->thumb . '/"'
         );
-        $c->select('Source.name as source_name, Thumb.url as thumbnail');
-        $c->groupby($this->classKey . '.id, thumbnail');
+        $c->select('`Source`.name as source_name, `Thumb`.url as thumbnail');
+        $c->groupby($this->shortClassKey . '.id, thumbnail');
 
         return $c;
     }
-
 
     /**
      * @param array $row
@@ -176,10 +173,11 @@ class GetList extends GetListProcessor
      */
     public function prepareArray(array $row)
     {
-
         if (empty($row['thumbnail'])) {
-            if ($row['type'] != 'image') {
-                $row['thumbnail'] = (file_exists(MODX_ASSETS_PATH . 'components/minishop2/img/mgr/extensions/' . $row['type'] . '.png'))
+            if ($row['type'] !== 'image') {
+                $row['thumbnail'] = (file_exists(
+                    MODX_ASSETS_PATH . 'components/minishop2/img/mgr/extensions/' . $row['type'] . '.png'
+                ))
                     ? MODX_ASSETS_URL . 'components/minishop3/img/mgr/extensions/' . $row['type'] . '.png'
                     : MODX_ASSETS_URL . 'components/minishop3/img/mgr/extensions/other.png';
             } else {

@@ -416,7 +416,7 @@ Ext.extend(minishop.combo.Options, Ext.ux.form.SuperBoxSelect, {
     initSorting: function () {
         const _this = this;
 
-        if (typeof Sortable != 'undefined') {
+        if (typeof Sortable !== undefined) {
             const item = document.querySelectorAll("#" + this.outerWrapEl.id + " ul")[0];
             if (item) {
                 item.setAttribute("data-xcomponentid", this.id);

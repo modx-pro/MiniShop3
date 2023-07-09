@@ -105,44 +105,42 @@ Ext.extend(minishop.panel.UpdateProduct, minishop.panel.Product, {
                 continue;
             }
             const item = originals[i];
-            if (item.id === 'modx-resource-tabs') {
-                let accessPermissionsTab;
-
-                // Additional "Gallery" and "Comments" tabs
-                // if (minishop.config['show_gallery'] != 0) {
-                //     item.items.push(this.getGallery(config));
-                // }
-                // if (minishop.config['show_comments'] != 0) {
-                //     item.items.push(this.getComments(config));
-                // }
-                // // Get the "Resource Groups" tab and move it to the end
-                // if (minishop.config['show_gallery'] != 0 || minishop.config['show_comments'] != 0) {
-                //     const index = item.items.findIndex(function (tab) {
-                //         return tab.id == 'modx-resource-access-permissions';
-                //     });
-                //     if (index != -1) {
-                //         accessPermissionsTab = item.items.splice(index, 1);
-                //         accessPermissionsTab && item.items.push(accessPermissionsTab);
-                //     }
-                // }
+            if (item.id === 'modx-header-breadcrumbs') {
+                fields.push(item);
+                continue;
             }
+            const tabs = [];
+
+            let accessPermissionsTab;
+            let pageSettingsTab;
+
+            item.items.forEach(tabItem => {
+                switch (tabItem.id) {
+                    case 'modx-page-settings':
+                        pageSettingsTab = tabItem;
+                        break;
+                    case 'modx-resource-access-permissions':
+                        accessPermissionsTab = tabItem;
+                        break;
+                    default:
+                        tabs.push(tabItem);
+                }
+            });
+
+
+
+            if (parseInt(minishop.config['show_gallery']) !== 0) {
+                const galleryTab = this.getGallery(config);
+                tabs.push(galleryTab);
+            }
+            tabs.push(pageSettingsTab);
+            tabs.push(accessPermissionsTab);
+
+            item.items = tabs;
             fields.push(item);
         }
 
         return fields;
-    },
-
-    getComments: function (config) {
-        return {
-            title: _('ms_tab_comments'),
-            layout: 'anchor',
-            items: [{
-                xtype: 'tickets-panel-comments',
-                record: config.record,
-                parents: config.record.id,
-                border: false,
-            }]
-        };
     },
 
     getGallery: function (config) {

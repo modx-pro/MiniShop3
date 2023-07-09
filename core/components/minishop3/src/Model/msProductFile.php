@@ -4,6 +4,7 @@ namespace MiniShop3\Model;
 
 use MiniShop3\MiniShop3;
 use MODX\Revolution\modPhpThumb;
+use MODX\Revolution\modX;
 use MODX\Revolution\Sources\modMediaSource;
 use xPDO\Om\xPDOSimpleObject;
 use xPDO\xPDO;
@@ -73,7 +74,9 @@ class msProductFile extends xPDOSimpleObject
             if ($product) {
                 $this->mediaSource = $product->initializeMediaSource();
                 if (!$this->mediaSource || !($this->mediaSource instanceof modMediaSource)) {
-                    return '[miniShop3] Could not initialize media source for product with id = ' . $this->get('product_id');
+                    return '[miniShop3] Could not initialize media source for product with id = ' . $this->get(
+                            'product_id'
+                        );
                 }
 
                 return true;
@@ -92,7 +95,9 @@ class msProductFile extends xPDOSimpleObject
     {
         if ($this->isDirty('position')) {
             $table = $this->xpdo->getTableName(msProductFile::class);
-            $this->xpdo->exec("UPDATE {$table} SET `position` = {$this->get('position')} WHERE parent_id = {$this->id}");
+            $this->xpdo->exec(
+                "UPDATE {$table} SET `position` = {$this->get('position')} WHERE parent_id = {$this->id}"
+            );
         }
 
         return parent::save($cacheFlag);
@@ -190,13 +195,6 @@ class msProductFile extends xPDOSimpleObject
      */
     public function makeThumbnail($options = [], array $info)
     {
-        if (!class_exists('modPhpThumb')) {
-            if (file_exists(MODX_CORE_PATH . 'model/phpthumb/modphpthumb.class.php')) {
-                require MODX_CORE_PATH . 'model/phpthumb/modphpthumb.class.php';
-            } else {
-                $this->xpdo->services->get('phpthumb');
-            }
-        }
         $phpThumb = new modPhpThumb($this->xpdo);
         $phpThumb->initialize();
 
@@ -210,12 +208,18 @@ class msProductFile extends xPDOSimpleObject
 
         $output = false;
         if ($phpThumb->GenerateThumbnail() && $phpThumb->RenderOutput()) {
-            $this->xpdo->log(\modX::LOG_LEVEL_INFO, '[miniShop3] phpThumb messages for "' . $this->get('url') .
-                '". ' . print_r($phpThumb->debugmessages, true));
+            $this->xpdo->log(
+                modX::LOG_LEVEL_INFO,
+                '[miniShop3] phpThumb messages for "' . $this->get('url') .
+                '". ' . print_r($phpThumb->debugmessages, true)
+            );
             $output = $phpThumb->outputImageData;
         } else {
-            $this->xpdo->log(\modX::LOG_LEVEL_ERROR, '[miniShop3] Could not generate thumbnail for "' .
-                $this->get('url') . '". ' . print_r($phpThumb->debugmessages, true));
+            $this->xpdo->log(
+                modX::LOG_LEVEL_ERROR,
+                '[miniShop3] Could not generate thumbnail for "' .
+                $this->get('url') . '". ' . print_r($phpThumb->debugmessages, true)
+            );
         }
 
         if (file_exists($phpThumb->sourceFilename)) {
@@ -234,9 +238,9 @@ class msProductFile extends xPDOSimpleObject
      */
     public function saveThumbnail($raw_image, $options = [])
     {
-        $filename = $this->ms3->pathinfo($this->get('file'), 'filename') . '.' . $options['f'];
+        $filename = $this->ms3->utils->pathinfo($this->get('file'), 'filename') . '.' . $options['f'];
         if (!empty($options['name'])) {
-            $thumb_dir = preg_replace('#[^W]#', '', $options['name']);
+            $thumb_dir = preg_replace('#[^\w]#', '', $options['name']);
         }
         if (empty($thumb_dir)) {
             $thumb_dir = $options['w'] . 'x' . $options['h'];
@@ -266,15 +270,18 @@ class msProductFile extends xPDOSimpleObject
         file_put_contents($tf, $raw_image);
         $tmp = getimagesize($tf);
         if (is_array($tmp)) {
-            $product_file->set('properties', array_merge(
-                $product_file->get('properties'),
-                [
-                    'width' => $tmp[0],
-                    'height' => $tmp[1],
-                    'bits' => $tmp['bits'],
-                    'mime' => $tmp['mime'],
-                ]
-            ));
+            $product_file->set(
+                'properties',
+                array_merge(
+                    $product_file->get('properties'),
+                    [
+                        'width' => $tmp[0],
+                        'height' => $tmp[1],
+                        'bits' => $tmp['bits'],
+                        'mime' => $tmp['mime'],
+                    ]
+                )
+            );
         }
         unlink($tf);
 
@@ -286,9 +293,12 @@ class msProductFile extends xPDOSimpleObject
         );
 
         if ($file) {
-            $product_file->set('url', $this->mediaSource->getObjectUrl(
-                $product_file->get('path') . $product_file->get('file')
-            ));
+            $product_file->set(
+                'url',
+                $this->mediaSource->getObjectUrl(
+                    $product_file->get('path') . $product_file->get('file')
+                )
+            );
 
             return $product_file->save();
         }

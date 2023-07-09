@@ -60,10 +60,10 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/update.js');
 
-        $show_gallery = $this->getOption('ms_product_tab_gallery', null, true) &&
-            !($this->getOption('ms2gallery_sync_ms', null, false, true));
+        $show_gallery = $this->getOption('ms_product_tab_gallery', null, true);
         if ($show_gallery) {
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/plupload/plupload.full.min.js');
+            $this->addLastJavascript($assetsUrl . 'js/mgr/misc/plupload/i18n.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/ext.ddview.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.panel.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.toolbar.js');
@@ -167,43 +167,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->modx->invokeEvent('msOnManagerCustomCssJs', ['controller' => $this, 'page' => 'product_update']);
         $this->loadPlugins();
     }
-
-//    /**
-//     * Loads Tickets component to display comments
-//     */
-//    public function loadTickets()
-//    {
-//        /** @var Tickets $Tickets */
-//        if (!$Tickets = $this->modx->getService('Tickets')) {
-//            return;
-//        }
-//        if (method_exists($Tickets, 'loadManagerFiles')) {
-//            $Tickets->loadManagerFiles($this, [
-//                'config' => true,
-//                'utils' => true,
-//                'css' => true,
-//                'comments' => true,
-//            ]);
-//        } else {
-//            $ticketsAssetsUrl = $Tickets->config['assetsUrl'];
-//            $connectorUrl = $ticketsAssetsUrl . 'connector.php';
-//            $ticketsJsUrl = $ticketsAssetsUrl . 'js/mgr/';
-//
-//            $this->addJavascript($ticketsJsUrl . 'tickets.js');
-//            $this->addLastJavascript($ticketsJsUrl . 'misc/utils.js');
-//            $this->addLastJavascript($ticketsJsUrl . 'comment/comments.common.js');
-//            $this->addLastJavascript($ticketsJsUrl . 'comment/comments.grid.js');
-//            $this->addHtml('
-//            <script>
-//            // <![CDATA[
-//            Tickets.config = {
-//                assets_url: "' . $ticketsAssetsUrl . '",
-//                connector_url: "' . $connectorUrl . '"
-//            };
-//            // ]]>
-//            </script>');
-//        }
-//    }
 
     /**
      * Additional preparation of the resource fields

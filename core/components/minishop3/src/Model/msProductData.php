@@ -99,7 +99,6 @@ class msProductData extends xPDOSimpleObject
      */
     public function save($cacheFlag = null)
     {
-        $this->xpdo->log(1, print_r($_POST, 1));
         $this->prepareObject();
         $save = parent::save($cacheFlag);
         $this->saveProductCategories();
@@ -121,7 +120,7 @@ class msProductData extends xPDOSimpleObject
         }
 
         if ($this->isNew()) {
-            parent::set('source', $this->xpdo->getOption('ms_product_source_default', null, 1));
+            parent::set('source_id', $this->xpdo->getOption('ms_product_source_default', null, 1));
         }
 
         parent::set('price', (float)parent::get('price'));
@@ -397,7 +396,7 @@ class msProductData extends xPDOSimpleObject
         $this->xpdo->removeCollection(msCategoryMember::class, ['product_id' => $this->id]);
         $this->xpdo->removeCollection(msProductLink::class, ['master' => $this->id, 'OR:slave:=' => $this->id]);
 
-        $files = $this->getMany('Files', ['parent' => 0]);
+        $files = $this->getMany('Files', ['parent_id' => 0]);
         /** @var msProductFile $file */
         foreach ($files as $file) {
             $file->remove();
@@ -413,7 +412,7 @@ class msProductData extends xPDOSimpleObject
     {
         $files = $this->xpdo->getIterator(msProductFile::class, [
             'type' => 'image',
-            'parent' => 0,
+            'parent_id' => 0,
         ]);
 
         /** @var msProductFile $file */
@@ -451,7 +450,7 @@ class msProductData extends xPDOSimpleObject
         // Check if need to update files ranks
         $c = $this->xpdo->newQuery(msProductFile::class, [
             'product_id' => $this->get('id'),
-            'parent' => 0,
+            'parent_id' => 0,
         ]);
         $c->select('MAX(`position`) + 1 as max');
         $c->select('COUNT(id) as total');
@@ -465,14 +464,14 @@ class msProductData extends xPDOSimpleObject
         // Update ranks
         $c = $this->xpdo->newQuery(msProductFile::class, [
             'product_id' => $this->get('id'),
-            'parent' => 0,
+            'parent_id' => 0,
         ]);
         $c->select('id');
         $c->sortby('position ASC, createdon', 'ASC');
 
         if ($c->prepare() && $c->stmt->execute()) {
             $table = $this->xpdo->getTableName(msProductFile::class);
-            $update = $this->xpdo->prepare("UPDATE {$table} SET `position` = ? WHERE (id = ? OR parent = ?)");
+            $update = $this->xpdo->prepare("UPDATE {$table} SET `position` = ? WHERE (id = ? OR parent_id = ?)");
             $ids = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
             foreach ($ids as $k => $id) {
                 $update->execute([$k, $id, $id]);
@@ -491,7 +490,7 @@ class msProductData extends xPDOSimpleObject
         $this->rankProductImages();
         $c = $this->xpdo->newQuery(msProductFile::class, [
             'product_id' => $this->id,
-            'parent' => 0,
+            'parent_id' => 0,
             'type' => 'image',
             //'active' => true,
         ]);
@@ -550,13 +549,13 @@ class msProductData extends xPDOSimpleObject
         } else {
             $value = null;
             switch ($k) {
-//                case 'categories':
-//                    $c = $this->xpdo->newQuery(msCategoryMember::class, ['product_id' => $this->id]);
-//                    $c->select('category_id');
-//                    if ($c->prepare() && $c->stmt->execute()) {
-//                        $value = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
-//                    }
-//                    break;
+                case 'categories':
+                    $c = $this->xpdo->newQuery(msCategoryMember::class, ['product_id' => $this->id]);
+                    $c->select('category_id');
+                    if ($c->prepare() && $c->stmt->execute()) {
+                        $value = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
+                    }
+                    break;
 //                case 'options':
 //                    $c = $this->xpdo->newQuery(msProductOption::class, ['product_id' => $this->id]);
 //                    $c->select('key,value');
@@ -572,32 +571,32 @@ class msProductData extends xPDOSimpleObject
 //                        }
 //                    }
 //                    break;
-//                case 'links':
-//                    $value = ['master' => [], 'slave' => []];
-//                    $c = $this->xpdo->newQuery(msProductLink::class, ['master' => $this->id]);
-//                    $c->select('link,slave');
-//                    if ($c->prepare() && $c->stmt->execute()) {
-//                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-//                            if (isset($value['master'][$row['link']])) {
-//                                $value['master'][$row['link']][] = $row['slave'];
-//                            } else {
-//                                $value['master'][$row['link']] = [$row['slave']];
-//                            }
-//                        }
-//                    }
-//
-//                    $c = $this->xpdo->newQuery(msProductLink::class, ['slave' => $this->id]);
-//                    $c->select('link,master');
-//                    if ($c->prepare() && $c->stmt->execute()) {
-//                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-//                            if (isset($value['slave'][$row['link']])) {
-//                                $value['slave'][$row['link']][] = $row['master'];
-//                            } else {
-//                                $value['slave'][$row['link']] = [$row['master']];
-//                            }
-//                        }
-//                    }
-//                    break;
+                case 'links':
+                    $value = ['master' => [], 'slave' => []];
+                    $c = $this->xpdo->newQuery(msProductLink::class, ['master' => $this->id]);
+                    $c->select('link,slave');
+                    if ($c->prepare() && $c->stmt->execute()) {
+                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
+                            if (isset($value['master'][$row['link']])) {
+                                $value['master'][$row['link']][] = $row['slave'];
+                            } else {
+                                $value['master'][$row['link']] = [$row['slave']];
+                            }
+                        }
+                    }
+
+                    $c = $this->xpdo->newQuery(msProductLink::class, ['slave' => $this->id]);
+                    $c->select('link,master');
+                    if ($c->prepare() && $c->stmt->execute()) {
+                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
+                            if (isset($value['slave'][$row['link']])) {
+                                $value['slave'][$row['link']][] = $row['master'];
+                            } else {
+                                $value['slave'][$row['link']] = [$row['master']];
+                            }
+                        }
+                    }
+                    break;
                 default:
                     $value = parent::get($k, $format, $formatTemplate);
             }

@@ -64,7 +64,7 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
         const params = {
             action: 'MiniShop3\\Processors\\Gallery\\Upload',
             id: this.record.id,
-            source: this.record.source_id,
+            source: this.record.source,
             ctx: 'mgr',
             HTTP_MODAUTH: MODx.siteId
         };
@@ -75,10 +75,10 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
             container: this.id,
             drop_element: this.id,
             multipart: true,
-            max_file_size: minishop.config.media_source.maxUploadSize || 10485760,
+            max_file_size: minishop.config.media_source.maxUploadSize || MODx.config.upload_maxsize || 10485760,
             filters: [{
                 title: "Image files",
-                extensions: minishop.config.media_source.allowedFileTypes || 'jpg,jpeg,png,gif'
+                extensions: minishop.config.media_source.allowedFileTypes || MODx.config.upload_images || 'jpg,jpeg,png,gif,webp'
             }],
             resize: {
                 width: minishop.config.media_source.maxUploadWidth || 1920,
@@ -86,7 +86,7 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
             }
         });
 
-        const uploaderEvents = ['FilesAdded', 'FileUploaded', 'QueueChanged', /*'UploadFile',*/ 'UploadProgress', 'UploadComplete'];
+        const uploaderEvents = ['FilesAdded', 'FileUploaded', 'QueueChanged', /*'UploadFile',*/ 'UploadProgress', 'UploadComplete', 'Error'];
         Ext.each(uploaderEvents, function (v) {
             const fn = 'on' + v;
             this.uploader.bind(v, this[fn], this);
@@ -166,6 +166,10 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
         }
     },
 
+    onError: function(uploader, error ) {
+        MODx.msg.alert(_('error'), error.message)
+    },
+
     resetUploader: function () {
         this.uploader.files = {};
         this.uploader.destroy();
@@ -178,7 +182,7 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
     },
 
     fireAlert: function () {
-        MODx.msg.alert(_('ms_errors'), this.errors);
+        MODx.msg.alert(_('ms2_errors'), this.errors);
     },
 
     /*

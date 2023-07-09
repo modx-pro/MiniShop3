@@ -16,14 +16,14 @@ minishop.window.Image = function (config) {
 Ext.extend(minishop.window.Image, minishop.window.Default, {
 
     getFields: function (config) {
-        const src = config.record['type'] == 'image'
+        const src = config.record['type'] === 'image'
             ? config.record['url']
             : config.record['thumbnail'];
         const img = MODx.config['connectors_url'] + 'system/phpthumb.php?src='
             + src
             + '&w=333&h=198&f=jpg&q=90&zc=0&far=1&HTTP_MODAUTH='
             + MODx.siteId + '&wctx=mgr&source='
-            + config.record['source_id'];
+            + config.record['source'];
         const fields = {
             ms_gallery_file_source: config.record['source_name'],
             ms_gallery_file_size: config.record['size'],

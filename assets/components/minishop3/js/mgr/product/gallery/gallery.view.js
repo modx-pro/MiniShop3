@@ -119,14 +119,14 @@ minishop.view.Images = function (config) {
         url: minishop.config.connector_url,
         fields: [
             'id', 'product_id', 'name', 'description', 'url', 'createdon', 'createdby', 'file',
-            'thumbnail', 'source_id', 'source_name', 'type', 'position', 'active', 'properties', 'class',
+            'thumbnail', 'source', 'source_name', 'type', 'rank', 'active', 'properties', 'class',
             'add', 'alt', 'actions'
         ],
         id: 'minishop-gallery-images-view',
         baseParams: {
             action: 'MiniShop3\\Processors\\Gallery\\GetList',
             product_id: config.product_id,
-            parent_id: 0,
+            parent: 0,
             type: 'image',
             limit: config.pageSize || MODx.config.default_per_page
         },
@@ -159,6 +159,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
 
     onSort: function (o) {
         const el = this.getEl();
+        console.log('onSort', el)
         el.mask(_('loading'), 'x-mask-loading');
         MODx.Ajax.request({
             url: minishop.config.connector_url,
@@ -380,18 +381,18 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
         data.size += data.properties['size']
             ? minishop.utils.formatSize(data.properties['size'])
             : '';
-        this.lookup['ms2-gallery-image-' + data.id] = data;
+        this.lookup['ms_-gallery-image-' + data.id] = data;
         return data;
     },
 
     _initTemplates: function () {
         this.templates.thumb = new Ext.XTemplate(
             '<tpl for=".">\
-                <div class="modx-browser-thumb-wrap modx-pb-thumb-wrap minishop-gallery-thumb-wrap {class}" id="ms2-gallery-image-{id}">\
+                <div class="modx-browser-thumb-wrap modx-pb-thumb-wrap minishop-gallery-thumb-wrap {class}" id="ms_-gallery-image-{id}">\
                     <div class="modx-browser-thumb modx-pb-thumb minishop-gallery-thumb">\
                         <img src="{thumbnail}" title="{name}" />\
                     </div>\
-                    <small>{position}. {shortName}</small>\
+                    <small>{rank}. {shortName}</small>\
                 </div>\
             </tpl>'
         );
@@ -417,7 +418,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
     },
 
     _getSelectedIds: function () {
-        const ids = [];
+        var ids = [];
         const selected = this.getSelectedRecords();
 
         for (const i in selected) {

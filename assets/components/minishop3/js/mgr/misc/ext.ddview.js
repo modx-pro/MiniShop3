@@ -5,14 +5,14 @@ minishop.DragZone = function (view) {
 Ext.extend(minishop.DragZone, Ext.dd.DragZone, {
 
     getDragData: function (e) {
-        var target = e.getTarget(this.view.itemSelector);
+        const target = e.getTarget(this.view.itemSelector);
         if (!target) {
             return false;
         } else if (!this.view.isSelected(target)) {
             this.view.onClick(e);
         }
 
-        var selNodes = this.view.getSelectedNodes();
+        const selNodes = this.view.getSelectedNodes();
         if (selNodes.length > 1) {
             return false;
         }
@@ -45,17 +45,17 @@ Ext.extend(minishop.DropZone, Ext.dd.DropZone, {
     },
 
     onNodeOver: function (target, dd, e, data) {
-        return Ext.dd.DropZone.prototype.dropAllowed && (target != data.nodes[0]);
+        return Ext.dd.DropZone.prototype.dropAllowed && (target !== data.nodes[0]);
     },
 
     onNodeDrop: function (target, dd, e, data) {
-        var targetNode = this.view.getRecord(target);
-        var sourceNode = this.view.getRecord(data.nodes[0]);
-        if (sourceNode == targetNode) {
+        const targetNode = this.view.getRecord(target);
+        const sourceNode = this.view.getRecord(data.nodes[0]);
+        if (sourceNode === targetNode) {
             return false;
         }
-        var targetElement = Ext.get(target);
-        var sourceElement = Ext.get(data.nodes[0]);
+        const targetElement = Ext.get(target);
+        const sourceElement = Ext.get(data.nodes[0]);
         sourceElement.insertBefore(targetElement);
 
         this.view.fireEvent('sort', {

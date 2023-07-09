@@ -11,7 +11,20 @@ class RemoveCatalogs
     {
         $source = $modx->getObject(modMediaSource::class, $modx->getOption('ms_product_source_default'));
         $props = $source->get('properties');
-        $imgPath = MODX_BASE_PATH . $props['basePath']['value'] . $id;
-        $modx->runProcessor('browser/directory/remove', ['dir' => $imgPath]);
+        $path = MODX_BASE_PATH . $props['basePath']['value'] . $id;
+
+        self::removeDir($path);
+    }
+
+    private static function removeDir($path)
+    {
+        $files = glob($path . '/*');
+        foreach ($files as $file) {
+            if (is_dir($file)) {
+                self::removeDir($file);
+            }
+        }
+
+        rmdir($path);
     }
 }

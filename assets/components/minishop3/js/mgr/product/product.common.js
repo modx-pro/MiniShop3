@@ -46,7 +46,6 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                     return { activeTab: this.items.indexOf(this.getActiveTab()) };
                 };
 
-
                 const tabs = [];
 
                 item.items.forEach((tab, key) => {
@@ -66,12 +65,11 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                                         });
                                         break;
                                 }
-
-                                tabs.push(tab);
-                                tabs.push(this.getProductFields(config));
-                                tabs.push(this.getProductLinks(config));
-                                tabs.push(this.getProductCategories(config));
                             })
+                            tabs.push(tab);
+                            tabs.push(this.getProductFields(config));
+                            tabs.push(this.getProductLinks(config));
+                            tabs.push(this.getProductCategories(config));
                             break;
                         case 'modx-page-settings':
                         default:
@@ -83,8 +81,6 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
 
                 item.items = tabs;
                 fields.push(item);
-
-
             }
         }
         return fields;
@@ -298,24 +294,6 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
         originals[0]['items'] = items;
 
         return originals[0];
-    },
-
-    findField: function (data, id, callback) {
-        for (const i in data) {
-            if (!data.hasOwnProperty(i)) {
-                continue;
-            }
-            const item = data[i];
-            if (typeof (item) == 'object') {
-                if (item.id == id) {
-                    return callback(item);
-                } else {
-                    this.findField(item, id, callback);
-                }
-            }
-        }
-
-        return false;
     },
 
     getExtField: function (config, name, field) {

@@ -53,7 +53,7 @@ class Upload extends ModelProcessor
         }
 
         $properties = $this->mediaSource->getPropertyList();
-        $pathinfo = $this->ms3->pathinfo($data['name']);
+        $pathinfo = $this->ms3->utils->pathinfo($data['name']);
         $extension = strtolower($pathinfo['extension']);
         $filename = strtolower($pathinfo['filename']);
 
