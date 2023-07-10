@@ -115,7 +115,7 @@ class msProductData extends xPDOSimpleObject
     {
         // prepare "array" fields
         foreach ($this->getArraysValues() as $name => $array) {
-          //  $array = $this->prepareOptionValues($array);
+            //  $array = $this->prepareOptionValues($array);
             parent::set($name, $array);
         }
 
@@ -145,28 +145,23 @@ class msProductData extends xPDOSimpleObject
             $remove = $this->xpdo->prepare("DELETE FROM {$table} WHERE product_id = $id AND category_id = ?;");
             $add = $this->xpdo->prepare("INSERT INTO {$table} (product_id, category_id) VALUES ($id, ?);");
 
-            if (is_string($categories)) {
-                $categories = json_decode($categories, true);
-            }
-            if (is_array($categories)) {
-                // Plain array with all product categories
-                if (isset($categories[0])) {
-                    if (!parent::isNew()) {
-                        $this->xpdo->removeCollection(msCategoryMember::class, ['product_id' => $id]);
+            // Plain array with all product categories
+            if (isset($categories[0])) {
+                if (!parent::isNew()) {
+                    $this->xpdo->removeCollection(msCategoryMember::class, ['product_id' => $id]);
+                }
+                foreach ($categories as $category) {
+                    if ($category != $parent) {
+                        $add->execute([$category]);
                     }
-                    foreach ($categories as $category) {
-                        if ($category != $parent) {
-                            $add->execute([$category]);
-                        }
-                    }
-                } // Key-value array with categories to add of remove
-                else {
-                    foreach ($categories as $category => $selected) {
-                        if (!$selected) {
-                            $remove->execute([$category]);
-                        } elseif ($category != $parent) {
-                            $add->execute([$category]);
-                        }
+                }
+            } // Key-value array with categories to add of remove
+            else {
+                foreach ($categories as $category => $selected) {
+                    if (!$selected) {
+                        $remove->execute([$category]);
+                    } elseif ($category != $parent) {
+                        $add->execute([$category]);
                     }
                 }
             }
