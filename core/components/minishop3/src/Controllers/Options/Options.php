@@ -6,7 +6,6 @@ use MiniShop3\Controllers\Options\Types\msOptionType;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOption;
 use MODX\Revolution\modX;
-
 class Options
 {
     private $modx;
@@ -20,7 +19,8 @@ class Options
         $this->ms3 = $ms3;
         $this->modx = $this->ms3->modx;
         $this->config = [
-            'types_dir' => $this->ms3->config['corePath'] . 'src/Controllers/Options/Types'
+            'optionTypesDir' => $this->ms3->config['corePath'] . 'src/Controllers/Options/Types',
+            'optionTypesNamespace' => 'MiniShop3\Controllers\Options\Types\\'
         ];
     }
 
@@ -29,7 +29,7 @@ class Options
      */
     public function loadOptionTypeList()
     {
-        $files = scandir($this->config['types_dir']);
+        $files = scandir($this->config['optionTypesDir']);
         $list = [];
 
         foreach ($files as $file) {
@@ -72,20 +72,14 @@ class Options
      */
     public function loadOptionType($type)
     {
-        $o = [];
-        $s = explode(' ', str_replace(['_', '-'], ' ', $type));
-        foreach ($s as $k) {
-            $o[] = ucfirst($k);
-        }
-        $fileName = implode('', $o);
+        //$typePath = $this->config['optionTypesDir'] . '/' . $type . '.php';
 
-        $typePath = $this->config['types_dir'] . '/' . $fileName . '.php';
-
-        if (array_key_exists($typePath, $this->optionTypes)) {
-            $className = $this->optionTypes[$typePath];
+        if (array_key_exists($type, $this->optionTypes)) {
+            $className = $this->optionTypes[$type];
         } else {
-            $className = include_once $typePath;
-            $this->optionTypes[$typePath] = $className;
+            $className = $this->config['optionTypesNamespace'] . $type;
+            $this->optionTypes[$type] = $className;
+            //$this->optionTypes[$type] = new $className();
         }
 
         return $className;

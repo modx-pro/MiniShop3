@@ -68,6 +68,13 @@ Ext.extend(minishop.grid.Option, minishop.grid.Default, {
         ];
     },
 
+    actionsColumnRenderer: function(value, metaData, record, rowIndex, colIndex, store) {
+        const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
+        return this._getActionsColumnTpl().apply({
+            actions: actions
+        });
+    },
+
     getTopBar: function (config) {
         return [{
             text: '<i class="icon icon-plus"></i> ' + _('ms_btn_create'),
@@ -101,6 +108,14 @@ Ext.extend(minishop.grid.Option, minishop.grid.Default, {
             },
         };
     },
+
+    actionsColumnRenderer: function(value, metaData, record, rowIndex, colIndex, store) {
+        const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
+        return this._getActionsColumnTpl().apply({
+            actions: actions
+        });
+    },
+
 
     createOption: function (btn, e) {
         let w = Ext.getCmp('minishop-window-option-create');

@@ -113,7 +113,7 @@
     </object>
 
 
-    <object class="msProductOption" table="ms_product_options" extends="xPDO\Om\xPDOObject">
+    <object class="msProductOption" table="ms_product_options" extends="xPDO\Om\xPDOSimpleObject">
         <field key="product_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="key" dbtype="varchar" precision="191" phptype="string" null="false"/>
         <field key="value" dbtype="text" phptype="string" null="true" default=""/>

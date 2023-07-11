@@ -134,9 +134,9 @@ $_lang['ms_ft_textfield'] = 'Текстовое поле';
 $_lang['ms_ft_numberfield'] = 'Числовое поле';
 $_lang['ms_ft_textarea'] = 'Текстовая область';
 $_lang['ms_ft_combobox'] = 'Выпадающий список';
-$_lang['ms_ft_combo-boolean'] = 'Да/Нет';
-$_lang['ms_ft_combo-multiple'] = 'Множественный список';
-$_lang['ms_ft_combo-options'] = 'Список с автодополнением';
+$_lang['ms_ft_comboBoolean'] = 'Да/Нет';
+$_lang['ms_ft_comboMultiple'] = 'Множественный список';
+$_lang['ms_ft_comboOptions'] = 'Список с автодополнением';
 $_lang['ms_ft_checkbox'] = 'Флажок';
 $_lang['ms_ft_datefield'] = 'Дата';
 

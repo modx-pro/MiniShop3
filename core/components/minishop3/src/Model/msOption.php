@@ -136,6 +136,7 @@ class msOption extends xPDOSimpleObject
      */
     public function getManagerField($field)
     {
+        $this->xpdo->log(1, 'getManagerField');
         /** @var msOptionType $type */
         $type = $this->ms3->options->getOptionType($this);
 

@@ -16,7 +16,7 @@ use ModxPro\PdoTools\Fetch;
 
 class MiniShop3
 {
-    public $version = '1.0.1-alpha';
+    public $version = '1.0.0-alpha';
 
     /** @var modX $modx */
     public $modx;

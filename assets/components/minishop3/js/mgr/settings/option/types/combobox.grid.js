@@ -3,6 +3,7 @@ minishop.grid.ComboboxOptions = function (config) {
     if (!config.id) {
         config.id = 'minishop-grid-combobox-options';
     }
+    config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
         autoHeight: false,
@@ -28,44 +29,48 @@ minishop.grid.ComboboxOptions = function (config) {
 Ext.extend(minishop.grid.ComboboxOptions, MODx.grid.LocalGrid, {
 
     getColumns: function () {
-        return [{
-            header: _('sort'),
-            dataIndex: 'dd',
-            width: 10,
-            align: 'center',
-            renderer: function () {
-                return String.format(
-                    '<div class="sort icon icon-sort" style="cursor:move;" title="{0}"></div>',
-                    _('move')
-                );
-            }
-        }, {
-            header: _('value'),
-            dataIndex: 'value',
-            editor: {
-                xtype: 'textfield',
-                listeners: {
-                    change: {fn: this.prepareProperties, scope: this}
+        return [
+            {
+                header: _('sort'),
+                dataIndex: 'dd',
+                width: 10,
+                align: 'center',
+                renderer: function () {
+                    return String.format(
+                        '<div class="sort icon icon-sort" style="cursor:move;" title="{0}"></div>',
+                        _('move')
+                    );
+                }
+            },
+            {
+                header: _('value'),
+                dataIndex: 'value',
+                editor: {
+                    xtype: 'textfield',
+                    listeners: {
+                        change: {fn: this.prepareProperties, scope: this}
+                    }
+                }
+            },
+            {
+                header: _('remove'),
+                dataIndex: 'remove',
+                width: 50,
+                id: 'actions',
+                align: 'center',
+                renderer: function () {
+                    return String.format(
+                        '\
+                        <ul class="minishop3-row-actions">\
+                            <li>\
+                                <button class="btn btn-default icon icon-trash action-red" title="{0}" action="removeOption"></button>\
+                            </li>\
+                        </ul>',
+                        _('remove')
+                    );
                 }
             }
-        }, {
-            header: _('remove'),
-            dataIndex: 'remove',
-            width: 10,
-            id: 'actions',
-            align: 'center',
-            renderer: function () {
-                return String.format(
-                    '\
-                    <ul class="minishop3-row-actions">\
-                        <li>\
-                            <button class="btn btn-default icon icon-remove action-red" title="{0}" action="removeOption"></button>\
-                        </li>\
-                    </ul>',
-                    _('remove')
-                );
-            }
-        }];
+        ];
     },
 
     getBottomBar: function (config) {

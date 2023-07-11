@@ -16,7 +16,7 @@ class GetList extends GetListProcessor
     public $defaultSortDirection = 'asc';
     public $objectType = 'ms2';
     public $permission = 'mssetting_list';
-    public $languageTopics = ['minishop2:default'];
+    public $languageTopics = ['minishop3:default'];
 
 
     /**

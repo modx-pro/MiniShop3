@@ -12,7 +12,7 @@ use xPDO\Om\xPDOQuery;
 
 class GetTypes extends GetListProcessor
 {
-    public $languageTopics = ['minishop2:manager'];
+    public $languageTopics = ['minishop3:manager'];
 
 
     /**
@@ -32,6 +32,7 @@ class GetTypes extends GetListProcessor
         foreach ($files as $name) {
             $className = $ms3->options->loadOptionType($name);
             if (class_exists($className)) {
+                $name = lcfirst($name);
                 $data['results'][] = [
                     'name' => $name,
                     'caption' => $this->modx->lexicon('ms_ft_' . $name),

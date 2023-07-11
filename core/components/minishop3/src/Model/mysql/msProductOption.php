@@ -8,7 +8,7 @@ class msProductOption extends \MiniShop3\Model\msProductOption
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
         'table' => 'ms_product_options',
-        'extends' => 'xPDO\\Om\\xPDOObject',
+        'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [
                 'engine' => 'InnoDB',
