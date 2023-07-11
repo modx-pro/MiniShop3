@@ -426,12 +426,6 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 checked: parseInt(config.record.uri_override),
                 id: 'modx-resource-uri-override'
             },
-            syncsite: {
-                xtype: 'xcheckbox',
-                inputValue: 1,
-                description: _('resource_syncsite_help'),
-                checked: config.record.syncsite !== undefined && config.record.syncsite !== null ? parseInt(config.record.syncsite) : true
-            },
             show_in_tree: {
                 xtype: 'xcheckbox',
                 inputValue: 1,
@@ -454,11 +448,6 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 decimalPrecision: 3,
                 description: '<b>[[+weight]]</b><br />' + _('ms_product_weight_help')
             },
-            remains: {xtype: 'numberfield', description: '<b>[[+remains]]</b><br />' + _('ms_product_remains_help')},
-            reserved: {
-                xtype: 'numberfield',
-                description: '<b>[[+reserved]]</b><br />' + _('ms_product_reserved_help')
-            },
             vendor_id: {
                 xtype: 'minishop-combo-vendor',
                 description: '<b>[[+vendor_id]]</b><br />' + _('ms_product_vendor_help')
@@ -467,12 +456,12 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 xtype: 'minishop-combo-autocomplete',
                 description: '<b>[[+made_in]]</b><br />' + _('ms_product_made_in_help')
             },
-            source: {
+            source_id: {
                 xtype: config.mode == 'update' ? 'hidden' : 'minishop-combo-source',
                 name: 'source-cmb',
                 disabled: config.mode == 'update',
-                value: config.record.source || 1,
-                description: '<b>[[+source]]</b><br />' + _('ms_product_source_help'),
+                value: config.record.source_id || 1,
+                description: '<b>[[+source_id]]</b><br />' + _('ms_product_source_id_help'),
                 listeners: {
                     select: {
                         fn: function (data) {
