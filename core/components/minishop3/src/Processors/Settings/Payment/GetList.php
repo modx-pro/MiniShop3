@@ -40,8 +40,8 @@ class GetList extends GetListProcessor
             $c->where(['active' => 1, 'OR:id:=' => $this->getProperty('id')]);
         } else {
             $c->leftJoin(msDeliveryMember::class, 'Deliveries');
-            $c->groupby($this->classKey . '.id');
-            $c->select($this->modx->getSelectColumns($this->classKey, $this->classKey));
+            $c->groupby('msPayment.id');
+            $c->select($this->modx->getSelectColumns($this->classKey, 'msPayment'));
             $c->select('COUNT(Deliveries.delivery_id) as deliveries');
         }
         if ($query = trim($this->getProperty('query'))) {

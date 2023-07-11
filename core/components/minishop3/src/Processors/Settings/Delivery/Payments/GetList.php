@@ -38,9 +38,9 @@ class GetList extends GetListProcessor
         $c->leftJoin(
             msDeliveryMember::class,
             'Deliveries',
-            "Deliveries.payment_id = {$this->classKey}.id AND Deliveries.delivery_id = {$this->getProperty('delivery')}"
+            "Deliveries.payment_id = msPayment.id AND Deliveries.delivery_id = {$this->getProperty('delivery')}"
         );
-        $c->select($this->modx->getSelectColumns($this->classKey, $this->classKey));
+        $c->select($this->modx->getSelectColumns($this->classKey, 'msPayment'));
         $c->select('(Deliveries.payment_id is not null) as active');
         $c->groupby($this->classKey . '.id');
 

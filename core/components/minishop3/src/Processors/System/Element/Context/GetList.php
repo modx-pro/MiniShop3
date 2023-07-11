@@ -1,6 +1,6 @@
 <?php
 
-namespace MiniShop3\Processors\Element\Context;
+namespace MiniShop3\Processors\System\Element\Context;
 
 use MODX\Revolution\modContext;
 use MODX\Revolution\Processors\Model\GetListProcessor;

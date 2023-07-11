@@ -79,6 +79,7 @@
     </object>
 
     <object class="msVendor" table="ms_vendors" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="position"  dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
         <field key="name" dbtype="varchar" precision="100" phptype="string" null="false"/>
         <field key="resource_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"
                default="0"/>

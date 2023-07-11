@@ -15,6 +15,7 @@ class msVendor extends \MiniShop3\Model\msVendor
             ],
         'fields' =>
             [
+                'position' => 0,
                 'name' => null,
                 'resource_id' => 0,
                 'country' => null,
@@ -27,6 +28,15 @@ class msVendor extends \MiniShop3\Model\msVendor
             ],
         'fieldMeta' =>
             [
+                'position' =>
+                    [
+                        'dbtype' => 'int',
+                        'precision' => '10',
+                        'attributes' => 'unsigned',
+                        'phptype' => 'integer',
+                        'null' => true,
+                        'default' => 0,
+                    ],
                 'name' =>
                     [
                         'dbtype' => 'varchar',

@@ -1,6 +1,6 @@
 <?php
 
-namespace MiniShop3\Processors\Element\Chunk;
+namespace MiniShop3\Processors\System\Element\Chunk;
 
 use MODX\Revolution\modChunk;
 use MODX\Revolution\Processors\Model\GetListProcessor;

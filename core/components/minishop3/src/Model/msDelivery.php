@@ -107,12 +107,12 @@ class msDelivery extends xPDOSimpleObject
     public function getFirstPayment()
     {
         $id = 0;
-        $c = $this->xpdo->newQuery(msPayment::Class);
-        $c->leftJoin(msDeliveryMember::class, 'Member', 'msPayment.id = Member.payment_id');
+        $c = $this->xpdo->newQuery(msPayment::class);
+        $c->leftJoin(msDeliveryMember::class, 'Member', msPayment::class . '.id = Member.payment_id');
         $c->leftJoin(msDelivery::class, 'Delivery', 'Member.delivery_id = Delivery.id');
-        $c->sortby('msPayment.position', 'ASC');
-        $c->select('msPayment.id');
-        $c->where(['msPayment.active' => 1, 'Delivery.id' => $this->id]);
+        $c->sortby(msPayment::class . '.id', 'ASC');
+        $c->select(msPayment::class . '.id');
+        $c->where([msPayment::class . '.active' => 1, 'Delivery.id' => $this->id]);
         $c->limit(1);
         if ($c->prepare() && $c->stmt->execute()) {
             $id = $c->stmt->fetchColumn();

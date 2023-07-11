@@ -43,7 +43,7 @@ class GetList extends GetListProcessor
             $c->select('id,name');
         } else {
             $c->leftJoin(modResource::class, 'Resource');
-            $c->select($this->modx->getSelectColumns($this->classKey, $this->classKey));
+            $c->select($this->modx->getSelectColumns($this->classKey, 'msVendor'));
             $c->select('Resource.pagetitle');
         }
 
@@ -81,8 +81,8 @@ class GetList extends GetListProcessor
             ];
         } else {
             $data = $object->toArray();
-            if (!$data['resource']) {
-                $data['resource'] = null;
+            if (!$data['resource_id']) {
+                $data['resource_id'] = null;
             }
             $data['actions'] = [];
 
