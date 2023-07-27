@@ -21,7 +21,7 @@ class Get extends ModelProcessor
         $declared = get_declared_classes();
         /** @var MiniShop3 $ms3 */
         $ms3 = $this->modx->services->get('ms3');
-        $ms3->loadCustomClasses($type);
+        //$ms3->loadCustomClasses($type);
 
         $declared = array_diff(get_declared_classes(), $declared);
         $available = [];

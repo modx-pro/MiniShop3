@@ -60,7 +60,7 @@ class msPayment extends xPDOSimpleObject
         }
 
         if ($class !== 'Payment') {
-            $this->ms3->loadCustomClasses('payment');
+            //$this->ms3->loadCustomClasses('payment');
         }
 
         if (!class_exists($class)) {

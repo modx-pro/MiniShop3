@@ -12,6 +12,7 @@ class GetList extends GetListProcessor
 {
     public $classKey = msDelivery::class;
     public $defaultSortField = 'position';
+    public $sortAlias = 'msDelivery';
     public $defaultSortDirection = 'asc';
     public $permission = 'mssetting_list';
 
@@ -42,7 +43,7 @@ class GetList extends GetListProcessor
         );
         $c->select($this->modx->getSelectColumns($this->classKey, 'msDelivery'));
         $c->select('(Payments.delivery_id is not null) as active');
-        $c->groupby($this->classKey . '.id');
+        $c->groupby($this->sortAlias . '.id');
 
         return $c;
     }

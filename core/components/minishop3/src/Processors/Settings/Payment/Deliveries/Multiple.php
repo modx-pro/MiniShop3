@@ -25,15 +25,8 @@ class Multiple extends ModelProcessor
             return $this->success();
         }
 
-        /** @var MiniShop3 $ms3 */
-        $ms3 = $this->modx->services->get('ms3');
-
         foreach ($ids as $id) {
-            /** @var ProcessorResponse $response */
-            $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Payment\\Deliveries\\' . $method, $id);
-            if ($response->isError()) {
-                return $response->getResponse();
-            }
+            $this->modx->runProcessor('MiniShop3\\Processors\\Settings\\Payment\\Deliveries\\' . $method, $id);
         }
 
         return $this->success();

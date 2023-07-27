@@ -303,46 +303,46 @@ class MiniShop3
     public function loadCustomClasses($type)
     {
         // Original classes
-        $files = scandir($this->config['customPath'] . $type);
-        foreach ($files as $file) {
-            if (preg_match('/.*?\.class\.php$/i', $file)) {
-                include_once($this->config['customPath'] . $type . '/' . $file);
-            }
-        }
-
-        // 3rd party classes
-        $type = strtolower($type);
-        $placeholders = [
-            'base_path' => MODX_BASE_PATH,
-            'core_path' => MODX_CORE_PATH,
-            'assets_path' => MODX_ASSETS_PATH,
-        ];
-        $pl1 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[+', ']]', false);
-        $pl2 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[++', ']]', false);
-        $pl3 = $this->pdoFetch->makePlaceholders($placeholders, '', '{', '}', false);
-        $services = $this->services->get();
-        if (!empty($services[$type]) && is_array($services[$type])) {
-            foreach ($services[$type] as $controller) {
-                if (is_string($controller)) {
-                    $file = $controller;
-                } elseif (is_array($controller) && !empty($controller['controller'])) {
-                    $file = $controller['controller'];
-                } else {
-                    continue;
-                }
-
-                $file = str_replace($pl1['pl'], $pl1['vl'], $file);
-                $file = str_replace($pl2['pl'], $pl2['vl'], $file);
-                $file = str_replace($pl3['pl'], $pl3['vl'], $file);
-                if (strpos($file, MODX_BASE_PATH) === false && strpos($file, MODX_CORE_PATH) === false) {
-                    $file = MODX_BASE_PATH . ltrim($file, '/');
-                }
-                if (file_exists($file)) {
-                    include_once($file);
-                } else {
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, "[miniShop3] Could not load custom class at \"$file\"");
-                }
-            }
-        }
+//        $files = scandir($this->config['customPath'] . $type);
+//        foreach ($files as $file) {
+//            if (preg_match('/.*?\.class\.php$/i', $file)) {
+//                include_once($this->config['customPath'] . $type . '/' . $file);
+//            }
+//        }
+//
+//        // 3rd party classes
+//        $type = strtolower($type);
+//        $placeholders = [
+//            'base_path' => MODX_BASE_PATH,
+//            'core_path' => MODX_CORE_PATH,
+//            'assets_path' => MODX_ASSETS_PATH,
+//        ];
+//        $pl1 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[+', ']]', false);
+//        $pl2 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[++', ']]', false);
+//        $pl3 = $this->pdoFetch->makePlaceholders($placeholders, '', '{', '}', false);
+//        $services = $this->services->get();
+//        if (!empty($services[$type]) && is_array($services[$type])) {
+//            foreach ($services[$type] as $controller) {
+//                if (is_string($controller)) {
+//                    $file = $controller;
+//                } elseif (is_array($controller) && !empty($controller['controller'])) {
+//                    $file = $controller['controller'];
+//                } else {
+//                    continue;
+//                }
+//
+//                $file = str_replace($pl1['pl'], $pl1['vl'], $file);
+//                $file = str_replace($pl2['pl'], $pl2['vl'], $file);
+//                $file = str_replace($pl3['pl'], $pl3['vl'], $file);
+//                if (strpos($file, MODX_BASE_PATH) === false && strpos($file, MODX_CORE_PATH) === false) {
+//                    $file = MODX_BASE_PATH . ltrim($file, '/');
+//                }
+//                if (file_exists($file)) {
+//                    include_once($file);
+//                } else {
+//                    $this->modx->log(modX::LOG_LEVEL_ERROR, "[miniShop3] Could not load custom class at \"$file\"");
+//                }
+//            }
+//        }
     }
 }
