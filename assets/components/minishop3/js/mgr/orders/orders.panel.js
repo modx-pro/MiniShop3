@@ -4,6 +4,9 @@ minishop.panel.Orders = function (config) {
     Ext.apply(config, {
         cls: 'container',
         items: [{
+            html: '<h2>' + _('miniShop3') + ' :: ' + _('ms_orders') + '</h2>',
+            cls: 'modx-page-header',
+        },{
             xtype: 'modx-tabs',
             id: 'minishop-orders-tabs',
             stateful: true,

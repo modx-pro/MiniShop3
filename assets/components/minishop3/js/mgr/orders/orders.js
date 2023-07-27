@@ -19,7 +19,7 @@ Ext.extend(minishop.page.Orders, MODx.Component, {
                 text: _('ms_settings')
                 ,id: 'ms2-abtn-settings'
                 ,handler: function () {
-                    MODx.loadPage('?', 'a=mgr/settings&namespace=minishop');
+                    MODx.loadPage('?', 'a=mgr/settings&namespace=minishop3');
                 }
             });
         }

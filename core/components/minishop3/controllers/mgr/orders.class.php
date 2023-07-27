@@ -36,7 +36,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.window.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/strftime-min-1.3.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms.utils.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms2.combo.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms.combo.js');
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/orders/orders.form.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/orders/orders.grid.js');
@@ -78,7 +78,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
                 MODx.perm.mssetting_list = ' . ($this->modx->hasPermission('mssetting_list') ? 1 : 0) . ';
 
                 Ext.onReady(function() {
-                    MODx.add({xtype: "minisho2-page-orders"});
+                    MODx.add({xtype: "minishop-panel-orders"});
                 });
             </script>');
 
