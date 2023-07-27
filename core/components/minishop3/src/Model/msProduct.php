@@ -40,7 +40,6 @@ class msProduct extends modResource
     public function __construct(xPDO &$xpdo)
     {
         parent::__construct($xpdo);
-//        $this->set('class_key', msProduct::class);
         if ($xpdo->services->has('ms3')) {
             $this->ms3 = $xpdo->services->get('ms3');
         }
@@ -90,7 +89,7 @@ class msProduct extends modResource
     public static function getControllerPath(xPDO &$modx)
     {
         $path = $modx->getOption(
-            'minishop.core_path',
+            'minishop3.core_path',
             null,
             $modx->getOption('core_path') . 'components/minishop3/'
         );
@@ -180,9 +179,8 @@ class msProduct extends modResource
         }
 
         if (strpos($k, 'vendor_') !== false || strpos($k, 'vendor.') !== false) {
-            //return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
+            return $this->loadVendor()->get(substr($k, 7), $format, $formatTemplate);
         }
-        return parent::get($k, $format, $formatTemplate);
         if (isset($this->loadData()->_fields[$k])) {
             return $this->loadData()->get($k, $format, $formatTemplate);
         }
@@ -193,7 +191,7 @@ class msProduct extends modResource
             if (isset($this->$k)) {
                 return $this->$k;
             }
-            //$this->loadOptions();
+            $this->loadOptions();
             return $this->options[$k] ?? null;
         }
         return parent::get($k, $format, $formatTemplate);
@@ -225,8 +223,8 @@ class msProduct extends modResource
         $original = parent::toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated);
         $additional = array_merge(
             $this->loadData()->toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated),
-//            $this->loadOptions(),
-//            $this->loadVendor()->toArray($keyPrefix . 'vendor.', $rawValues, $excludeLazy, $includeRelated)
+            $this->loadOptions(),
+            $this->loadVendor()->toArray($keyPrefix . 'vendor.', $rawValues, $excludeLazy, $includeRelated)
         );
         $intersect = array_keys(array_intersect_key($original, $additional));
         foreach ($intersect as $key) {
@@ -271,14 +269,14 @@ class msProduct extends modResource
      */
     public function loadOptions()
     {
-//        if ($this->options === null) {
-//            $this->options = $this->xpdo->call(msProductData::class, 'loadOptions', [
-//                $this->xpdo,
-//                $this->loadData()->get('id'),
-//            ]);
-//        }
-//
-//        return $this->options;
+        if ($this->options === null) {
+            $this->options = $this->xpdo->call(msProductOption::class, 'loadOptions', [
+                $this->xpdo,
+                $this->get('id'),
+            ]);
+        }
+
+        return $this->options;
     }
 
     /**

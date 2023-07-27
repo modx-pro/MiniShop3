@@ -46,7 +46,7 @@ class msOption extends xPDOSimpleObject
      */
     public function getInputProperties()
     {
-        if ($this->get('type') == 'number') {
+        if ($this->get('type') === 'number') {
             return '<input type="text" value="" name="option' . $this->get('id') . '">';
         }
 
@@ -136,7 +136,6 @@ class msOption extends xPDOSimpleObject
      */
     public function getManagerField($field)
     {
-        $this->xpdo->log(1, 'getManagerField');
         /** @var msOptionType $type */
         $type = $this->ms3->options->getOptionType($this);
 

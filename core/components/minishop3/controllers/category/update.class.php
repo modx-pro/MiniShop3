@@ -19,7 +19,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
     */
     public function getLanguageTopics()
     {
-        return array('resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager', 'tickets:default');
+        return array('resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager');
     }
 
 
@@ -43,9 +43,8 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
 
         $category_option_keys = array();
         $showOptions = (bool)$this->getOption('ms_category_show_options', null, true);
-        $showOptions = false;
         if ($showOptions) {
-            //$category_option_keys = $this->resource->getOptionKeys();
+            $category_option_keys = $this->resource->getOptionKeys();
         }
 
         /** @var msProduct $product */
@@ -68,7 +67,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         }
 
         if ($this->resource instanceof msCategory) {
-            //$neighborhood = $this->resource->getNeighborhood();
+            $neighborhood = $this->resource->getNeighborhood();
         }
 
         $this->addCss($assetsUrl . 'css/mgr/main.css');
@@ -90,18 +89,15 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/category/option.windows.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/product.grid.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/update.js');
-//
-//        $showComments = (int)(class_exists('TicketsSection') && $this->getOption('ms_category_show_comments'));
-//
+
         $category_option_fields = array();
-//        if ($showOptions) {
-//            //$category_option_fields = $this->resource->getOptionFields($grid_fields);
-//        }
-//
+        if ($showOptions) {
+            $category_option_fields = $this->resource->getOptionFields($grid_fields);
+        }
+
         $config = array(
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
-           // 'show_comments' => $showComments,
             'show_options' => $showOptions,
             'product_fields' => $product_fields,
             'grid_fields' => $grid_fields,
@@ -149,11 +145,6 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         //$this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', array('controller' => $this, 'page' => 'category_update'));
 //        $this->loadPlugins();
-//
-//        // Load Tickets
-//        if ($showComments) {
-//            //$this->loadTickets();
-//        }
     }
 
 
@@ -171,45 +162,6 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
 //            }
 //        }
     }
-
-
-    /**
-    * Loads component Tickets for displaying comments
-    */
-//    public function loadTickets()
-//    {
-//        /** @var Tickets $Tickets */
-//        if (!$Tickets = $this->modx->getService('Tickets')) {
-//            return;
-//        }
-//        if (method_exists($Tickets, 'loadManagerFiles')) {
-//            $Tickets->loadManagerFiles($this, array(
-//                'config' => true,
-//                'utils' => true,
-//                'css' => true,
-//                'comments' => true,
-//            ));
-//        } else {
-//            $ticketsAssetsUrl = $Tickets->config['assetsUrl'];
-//            $connectorUrl = $ticketsAssetsUrl . 'connector.php';
-//            $ticketsJsUrl = $ticketsAssetsUrl . 'js/mgr/';
-//
-//            $this->addJavascript($ticketsJsUrl . 'tickets.js');
-//            $this->addLastJavascript($ticketsJsUrl . 'misc/utils.js');
-//            $this->addLastJavascript($ticketsJsUrl . 'comment/comments.common.js');
-//            $this->addLastJavascript($ticketsJsUrl . 'comment/comments.grid.js');
-//            $this->addHtml('
-//            <script>
-//            // <![CDATA[
-//            Tickets.config = {
-//                assets_url: "' . $ticketsAssetsUrl . '",
-//                connector_url: "' . $connectorUrl . '",
-//            };
-//            // ]]>
-//            </script>');
-//        }
-//    }
-
 
     /**
     * Loads additional scripts for product form from miniShop2 plugins

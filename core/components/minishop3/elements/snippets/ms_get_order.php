@@ -150,7 +150,7 @@ foreach ($rows as $product) {
     }
 
     // Add option values
-    $options = $modx->call('msProductData', 'loadOptions', [$modx, $product['id']]);
+    $options = $modx->call('msProductOption', 'loadOptions', [$modx, $product['id']]);
     $products[] = array_merge($product, $options);
 
     // Count total

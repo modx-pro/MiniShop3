@@ -46,9 +46,9 @@ class msProductOption extends \MiniShop3\Model\msProductOption
             ],
         'indexes' =>
             [
-                'product' =>
+                'product_id' =>
                     [
-                        'alias' => 'product',
+                        'alias' => 'product_id',
                         'primary' => false,
                         'unique' => false,
                         'type' => 'BTREE',
@@ -60,6 +60,16 @@ class msProductOption extends \MiniShop3\Model\msProductOption
                                         'collation' => 'A',
                                         'null' => false,
                                     ],
+                            ],
+                    ],
+                'key' =>
+                    [
+                        'alias' => 'key',
+                        'primary' => false,
+                        'unique' => false,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
                                 'key' =>
                                     [
                                         'length' => '',

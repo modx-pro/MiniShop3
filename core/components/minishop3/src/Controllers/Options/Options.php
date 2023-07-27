@@ -52,7 +52,6 @@ class Options
     public function getOptionType($option)
     {
         $className = $this->loadOptionType($option->get('type'));
-
         if (class_exists($className)) {
             return new $className($option);
         } else {
@@ -73,7 +72,7 @@ class Options
     public function loadOptionType($type)
     {
         //$typePath = $this->config['optionTypesDir'] . '/' . $type . '.php';
-
+        $type = ucfirst($type);
         if (array_key_exists($type, $this->optionTypes)) {
             $className = $this->optionTypes[$type];
         } else {

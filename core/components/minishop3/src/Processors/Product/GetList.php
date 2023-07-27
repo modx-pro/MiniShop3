@@ -34,11 +34,11 @@ class GetList extends GetListProcessor
             $this->item_id = $id;
         } else {
             $showOptions = (bool)$this->modx->getOption('ms_category_show_options', null, true);
-//            if ($showOptions) {
-//                $grid_fields = $this->modx->getOption('ms_category_grid_fields');
-//                $grid_fields = array_map('trim', explode(',', $grid_fields));
-//                $this->options = $this->modx->getIterator('msOption', ['key:IN' => $grid_fields]);
-//            }
+            if ($showOptions) {
+                $grid_fields = $this->modx->getOption('ms_category_grid_fields');
+                $grid_fields = array_map('trim', explode(',', $grid_fields));
+                $this->options = $this->modx->getIterator('msOption', ['key:IN' => $grid_fields]);
+            }
         }
         if (!$this->getProperty('limit')) {
             $this->setProperty('limit', 20);
@@ -257,13 +257,10 @@ class GetList extends GetListProcessor
             $array['preview_url'] = $this->modx->makeUrl($array['id'], $array['context_key']);
 
             // Options
-            if ($this->options) {
-                $this->options->rewind();
-                if ($this->options->valid()) {
-                    /** @var msOption $option */
-                    foreach ($this->options as $option) {
-                        $array['options-' . $option->get('key')] = $option->getRowValue($array['id']);
-                    }
+            if (!empty($this->options)) {
+                /** @var msOption $option */
+                foreach ($this->options as $option) {
+                    $array['options-' . $option->get('key')] = $option->getRowValue($array['id']);
                 }
             }
 

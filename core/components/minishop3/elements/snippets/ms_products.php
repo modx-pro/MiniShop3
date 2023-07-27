@@ -221,7 +221,7 @@ if (!empty($rows) && is_array($rows)) {
         $row['idx'] = $pdoFetch->idx++;
 
         $opt_time_start = microtime(true);
-        $options = $modx->call('msProductData', 'loadOptions', [$modx, $row['id']]);
+        $options = $modx->call('msProductOption', 'loadOptions', [$modx, $row['id']]);
         $row = array_merge($row, $options);
         $opt_time += microtime(true) - $opt_time_start;
 

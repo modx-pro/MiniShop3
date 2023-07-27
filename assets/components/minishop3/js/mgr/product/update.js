@@ -4,7 +4,8 @@ minishop.page.UpdateProduct = function (config) {
 
     Ext.applyIf(config, {
         panelXType: 'minishop-panel-product-update',
-        mode: 'update'
+        mode: 'update',
+        url: minishop.config.connector_url
     });
     minishop.page.UpdateProduct.superclass.constructor.call(this, config);
 };

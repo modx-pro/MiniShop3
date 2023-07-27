@@ -18,7 +18,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
      */
     public function getLanguageTopics()
     {
-        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager', 'tickets:default'];
+        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager'];
     }
 
     /**
@@ -88,16 +88,11 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $product_extra_fields = array_map('trim', explode(',', $product_extra_fields));
         $product_extra_fields = array_values(array_intersect($product_extra_fields, $product_fields));
 
-//        $product_option_keys = $this->resource->loadData()->getOptionKeys();
-//        $product_option_fields = $this->resource->loadData()->getOptionFields();
+        $product_option_keys = $this->resource->loadData()->getOptionKeys();
+        $product_option_fields = $this->resource->loadData()->getOptionFields();
 
         $this->prepareFields();
-        //---
 
-//        $show_comments = class_exists('Ticket') && $this->getOption('ms_product_show_comments');
-//        if ($show_comments) {
-//            $this->loadTickets();
-//        }
         $neighborhood = [];
         if ($this->resource instanceof msProduct) {
             $neighborhood = $this->resource->getNeighborhood();
@@ -106,7 +101,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
-            //'show_comments' => $show_comments,
             'show_gallery' => $show_gallery,
             'show_extra' => (bool)$this->getOption('ms_product_tab_extra', null, true),
             'show_options' => (bool)$this->getOption('ms_product_tab_options', null, true),
@@ -115,8 +109,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'default_thumb' => $this->ms3->config['defaultThumb'],
             'main_fields' => $product_main_fields,
             'extra_fields' => $product_extra_fields,
-//            'option_keys' => $product_option_keys,
-//            'option_fields' => $product_option_fields,
+            'option_keys' => $product_option_keys,
+            'option_fields' => $product_option_fields,
             'data_fields' => $product_data_fields,
             'additional_fields' => [],
             'media_source' => $this->getSourceProperties(),

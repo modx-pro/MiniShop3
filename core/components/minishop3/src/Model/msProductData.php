@@ -3,10 +3,8 @@
 namespace MiniShop3\Model;
 
 use MiniShop3\MiniShop3;
-use MODX\Revolution\modCategory;
+use MiniShop3\Processors\Gallery\RemoveCatalogs;
 use MODX\Revolution\Sources\modMediaSource;
-use xPDO\Om\xPDOObject;
-use xPDO\Om\xPDOQuery;
 use xPDO\Om\xPDOSimpleObject;
 use xPDO\xPDO;
 
@@ -44,6 +42,9 @@ class msProductData extends xPDOSimpleObject
     public $mediaSource;
     protected $optionKeys = null;
 
+    /** @var msProductOption $msProductOptionInstance */
+    protected $msProductOptionInstance = null;
+
     /**
      * msProductData constructor.
      *
@@ -58,39 +59,6 @@ class msProductData extends xPDOSimpleObject
     }
 
     /**
-     * @param xPDO $xpdo
-     * @param $product
-     *
-     * @return array
-     */
-    public static function loadOptions(xPDO $xpdo, $product)
-    {
-        $c = $xpdo->newQuery(msProductOption::class);
-        $c->rightJoin(msOption::class, 'msOption', 'msProductOption.key=msOption.key');
-        $c->leftJoin(modCategory::class, 'Category', 'Category.id=msOption.category_id');
-        $c->where(['msProductOption.product_id' => $product]);
-        $c->select($xpdo->getSelectColumns(msOption::class, 'msOption'));
-        $c->select($xpdo->getSelectColumns(msProductOption::class, 'msProductOption', '', ['key'], true));
-        $c->select('Category.category AS category_name');
-        $data = [];
-        if ($c->prepare() && $c->stmt->execute()) {
-            while ($option = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-                // If the option is repeated, its value will be an array
-                if (isset($data[$option['key']])) {
-                    $data[$option['key']][] = $option['value'];
-                } else {
-                    $data[$option['key']] = [$option['value']];
-                }
-                foreach ($option as $key => $value) {
-                    $data[$option['key'] . '.' . $key] = $value;
-                }
-            }
-        }
-
-        return $data;
-    }
-
-    /**
      * All json fields of product are synchronized with msProduct Options
      *
      * @param null $cacheFlag
@@ -102,7 +70,7 @@ class msProductData extends xPDOSimpleObject
         $this->prepareObject();
         $save = parent::save($cacheFlag);
         $this->saveProductCategories();
-//        $this->saveProductOptions();
+        $this->saveProductOptions();
         $this->saveProductLinks();
 
         return $save;
@@ -115,7 +83,7 @@ class msProductData extends xPDOSimpleObject
     {
         // prepare "array" fields
         foreach ($this->getArraysValues() as $name => $array) {
-            //  $array = $this->prepareOptionValues($array);
+            $array = $this->prepareOptionValues($array);
             parent::set($name, $array);
         }
 
@@ -126,6 +94,40 @@ class msProductData extends xPDOSimpleObject
         parent::set('price', (float)parent::get('price'));
         parent::set('old_price', (float)parent::get('old_price'));
         parent::set('weight', (float)parent::get('weight'));
+    }
+
+    /**
+     * @param bool $force
+     *
+     * @return array
+     */
+    public function getOptionKeys($force = false)
+    {
+        if ($this->optionKeys === null || $force) {
+            if (empty($this->msProductOptionInstance)) {
+                $this->loadProductOptionInstance();
+            }
+
+            $this->optionKeys = $this->msProductOptionInstance->getOptionKeys(parent::get('id'));
+        }
+
+        return $this->optionKeys;
+    }
+
+    /**
+     * @return array
+     */
+    public function getOptionFields()
+    {
+        if (empty($this->msProductOptionInstance)) {
+            $this->loadProductOptionInstance();
+        }
+        return $this->msProductOptionInstance->getOptionFields(parent::get('id'));
+    }
+
+    private function loadProductOptionInstance()
+    {
+        $this->msProductOptionInstance = $this->xpdo->newObject(msProductOption::class);
     }
 
     /**
@@ -170,63 +172,19 @@ class msProductData extends xPDOSimpleObject
     }
 
     /**
-     *
+     *  Shorthand for msProductOption::saveProductOptions
      */
     protected function saveProductOptions()
     {
-        $table = $this->xpdo->getTableName(msProductOption::class);
-        $id = parent::get('id');
-        $add = $this->xpdo->prepare("INSERT INTO {$table} (`product_id`, `key`, `value`) VALUES ({$id}, ?, ?)");
-
-        $arrays = $this->getArraysValues();
-        // Copy JSON fields to options
-        $c = $this->xpdo->newQuery(msProductOption::class);
-        $c->command('DELETE');
-        $c->where([
-            'product_id' => $id,
-            'key:IN' => array_keys($arrays),
-        ]);
-        if ($c->prepare() && $c->stmt->execute()) {
-            foreach ($arrays as $key => $array) {
-                $array = $this->prepareOptionValues($array);
-                if (is_array($array)) {
-                    foreach ($array as $value) {
-                        $add->execute([$key, $value]);
-                    }
-                }
-            }
+        if (empty($this->msProductOptionInstance)) {
+            $this->loadProductOptionInstance();
         }
 
-        // Save given options
-        $options = parent::get('options');
-        if (is_array($options)) {
-            $c = $this->xpdo->newQuery(msProductOption::class);
-            $c->command('DELETE');
-            $c->where([
-                'product_id' => $id,
-            ]);
-            if ($category_keys = $this->getOptionKeys()) {
-                $c->andCondition([
-                    'key:NOT IN' => array_merge($category_keys, array_keys($arrays)),
-                ], '', 1);
-            }
-            if ($given_keys = array_keys($options)) {
-                $c->orCondition([
-                    'key:IN' => $given_keys,
-                ], '', 1);
-            }
-            if ($c->prepare()) {
-                $c->stmt->execute();
-            }
-            foreach ($options as $key => $array) {
-                $array = $this->prepareOptionValues($array);
-                if (is_array($array)) {
-                    foreach ($array as $value) {
-                        $add->execute([$key, $value]);
-                    }
-                }
-            }
-        }
+        $options = array_merge(
+            $this->getArraysValues(),
+            parent::get('options')
+        );
+        $this->msProductOptionInstance->saveProductOptions(parent::get('id'), $options);
     }
 
     /**
@@ -250,37 +208,6 @@ class msProductData extends xPDOSimpleObject
                 }
             }
         }
-    }
-
-    /**
-     * @return xPDOQuery
-     */
-    public function prepareOptionListCriteria()
-    {
-        $categories = [];
-        $q = $this->xpdo->newQuery(msCategoryMember::class, ['product_id' => parent::get('id')]);
-        $q->select('category_id');
-        if ($q->prepare() && $q->stmt->execute()) {
-            $categories = $q->stmt->fetchAll(\PDO::FETCH_COLUMN);
-        }
-        if ($product = $this->getOne('Product')) {
-            $categories[] = $product->get('parent');
-        } elseif (!empty($_GET['parent'])) {
-            $categories[] = (int)$_GET['parent'];
-        }
-        $categories = array_unique($categories);
-
-        $c = $this->xpdo->newQuery(msOption::class);
-        $c->leftJoin(msCategoryOption::class, 'msCategoryOption', 'msCategoryOption.option_id = msOption.id');
-        $c->leftJoin(modCategory::class, 'Category', 'Category.id = msOption.category_id');
-        $c->sortby('msCategoryOption.position');
-        $c->where(['msCategoryOption.active' => 1]);
-        if (!empty($categories[0])) {
-            $c->where(['msCategoryOption.category_id:IN' => $categories]);
-        }
-        $c->groupby('msOption.id');
-
-        return $c;
     }
 
     /**
@@ -324,63 +251,6 @@ class msProductData extends xPDOSimpleObject
     }
 
     /**
-     * @param bool $force
-     *
-     * @return array
-     */
-    public function getOptionKeys($force = false)
-    {
-        if ($this->optionKeys === null || $force) {
-            /** @var xPDOQuery $c */
-            $c = $this->prepareOptionListCriteria();
-
-            $c->groupby('msOption.id');
-            $c->select('msOption.key');
-
-            $this->optionKeys = $c->prepare() && $c->stmt->execute()
-                ? $c->stmt->fetchAll(\PDO::FETCH_COLUMN)
-                : [];
-        }
-
-        return $this->optionKeys;
-    }
-
-    /**
-     * @return array
-     */
-    public function getOptionFields()
-    {
-        $fields = [];
-        /** @var xPDOQuery $c */
-        $c = $this->prepareOptionListCriteria();
-
-        $c->select([
-            $this->xpdo->getSelectColumns(msOption::class, 'msOption'),
-            $this->xpdo->getSelectColumns(
-                msCategoryOption::class,
-                'msCategoryOption',
-                '',
-                ['id', 'option_id', 'category_id'],
-                true
-            ),
-            'Category.category AS category_name',
-        ]);
-
-        $options = $this->xpdo->getIterator(msOption::class, $c);
-
-        /** @var msOption $option */
-        foreach ($options as $option) {
-            $field = $option->toArray();
-            $value = $option->getValue(parent::get('id'));
-            $field['value'] = !is_null($value) ? $value : $field['value'];
-            $field['ext_field'] = $option->getManagerField($field);
-            $fields[] = $field;
-        }
-
-        return $fields;
-    }
-
-    /**
      * @param array $ancestors
      *
      * @return bool
@@ -396,6 +266,8 @@ class msProductData extends xPDOSimpleObject
         foreach ($files as $file) {
             $file->remove();
         }
+
+        RemoveCatalogs::process($this->xpdo, $this->id);
 
         return parent::remove($ancestors);
     }
@@ -551,21 +423,13 @@ class msProductData extends xPDOSimpleObject
                         $value = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
                     }
                     break;
-//                case 'options':
-//                    $c = $this->xpdo->newQuery(msProductOption::class, ['product_id' => $this->id]);
-//                    $c->select('key,value');
-//                    $c->sortby('value');
-//                    if ($c->prepare() && $c->stmt->execute()) {
-//                        $value = [];
-//                        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-//                            if (isset($value[$row['key']])) {
-//                                $value[$row['key']][] = $row['value'];
-//                            } else {
-//                                $value[$row['key']] = [$row['value']];
-//                            }
-//                        }
-//                    }
-//                    break;
+                case 'options':
+                    if (empty($this->msProductOptionInstance)) {
+                        $this->loadProductOptionInstance();
+                    }
+
+                    $value = $this->msProductOptionInstance->getForProduct(parent::get('id'));
+                    break;
                 case 'links':
                     $value = ['master' => [], 'slave' => []];
                     $c = $this->xpdo->newQuery(msProductLink::class, ['master' => $this->id]);

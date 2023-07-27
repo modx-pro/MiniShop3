@@ -14,7 +14,6 @@ class msProductCreateManagerController extends msResourceCreateController
     public function initialize()
     {
         parent::initialize();
-        $this->modx->log(1, 'msProductCreateManagerController');
     }
 
     /** @var msProduct $resource */
@@ -111,7 +110,6 @@ class msProductCreateManagerController extends msResourceCreateController
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
-            'show_comments' => false,
             'show_gallery' => (bool)$this->getOption('ms_product_tab_gallery', null, true),
             'show_extra' => (bool)$this->getOption('ms_product_tab_extra', null, true),
             'show_options' => (bool)$this->getOption('ms_product_tab_options', null, true),

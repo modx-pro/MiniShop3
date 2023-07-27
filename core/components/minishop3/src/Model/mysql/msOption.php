@@ -19,7 +19,7 @@ class msOption extends \MiniShop3\Model\msOption
                 'caption' => '',
                 'description' => null,
                 'measure_unit' => null,
-                'category' => null,
+                'category_id' => null,
                 'type' => '',
                 'properties' => null,
             ],
@@ -55,7 +55,7 @@ class msOption extends \MiniShop3\Model\msOption
                         'phptype' => 'string',
                         'null' => true,
                     ],
-                'category' =>
+                'category_id' =>
                     [
                         'dbtype' => 'int',
                         'precision' => '10',

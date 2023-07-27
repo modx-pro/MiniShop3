@@ -4,7 +4,8 @@ minishop.page.CreateProduct = function (config) {
 
     Ext.applyIf(config, {
         panelXType: 'minishop-panel-product-create',
-        mode: 'create'
+        mode: 'create',
+        url: minishop.config.connector_url
     });
     minishop.page.CreateProduct.superclass.constructor.call(this, config);
 };
