@@ -154,7 +154,7 @@ class msOption extends \MiniShop3\Model\msOption
                 'Category' =>
                     [
                         'class' => 'MODX\\Revolution\\modCategory',
-                        'local' => 'category',
+                        'local' => 'category_id',
                         'foreign' => 'id',
                         'owner' => 'foreign',
                         'cardinality' => 'one',

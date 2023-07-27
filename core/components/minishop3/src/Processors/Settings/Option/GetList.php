@@ -14,7 +14,7 @@ class GetList extends GetListProcessor
     public $classKey = msOption::class;
     public $defaultSortField = 'key';
     public $defaultSortDirection = 'asc';
-    public $objectType = 'ms2';
+    public $objectType = 'ms3';
     public $permission = 'mssetting_list';
     public $languageTopics = ['minishop3:default'];
 
@@ -35,7 +35,7 @@ class GetList extends GetListProcessor
             ]);
         }
 
-        $category = (int)$this->getProperty('category', 0);
+        $category = (int)$this->getProperty('category_id', 0);
         $categories = $this->getProperty('categories', '[]');
         $categories = json_decode($categories, true);
 
@@ -69,13 +69,13 @@ class GetList extends GetListProcessor
 
         if (is_numeric($mod_category)) {
             if ($mod_category > 0) {
-                $c->leftJoin(modCategory::class, 'modCategory', 'modCategory.id=msOption.category');
+                $c->leftJoin(modCategory::class, 'modCategory', 'modCategory.id=msOption.category_id');
                 $c->where([
                     'modCategory.id' => $mod_category,
                 ]);
             } else {
                 $c->where([
-                    'msOption.category' => $mod_category,
+                    'msOption.category_id' => $mod_category,
                 ]);
             }
         }

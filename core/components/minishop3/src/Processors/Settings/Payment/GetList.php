@@ -78,7 +78,7 @@ class GetList extends GetListProcessor
         ];
         if (empty($data['active'])) {
             $data['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-power-off action-green',
                 'title' => $this->modx->lexicon('ms_menu_enable'),
                 'multiple' => $this->modx->lexicon('ms_menu_enable'),
@@ -88,7 +88,7 @@ class GetList extends GetListProcessor
             ];
         } else {
             $data['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-power-off action-gray',
                 'title' => $this->modx->lexicon('ms_menu_disable'),
                 'multiple' => $this->modx->lexicon('ms_menu_disable'),

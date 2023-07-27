@@ -87,19 +87,19 @@ class msOrderStatus extends \MiniShop3\Model\msOrderStatus
                     ],
                 'body_user' =>
                     [
-                        'dbtype' => 'int',
-                        'precision' => '10',
-                        'phptype' => 'integer',
+                        'dbtype' => 'varchar',
+                        'precision' => '255',
+                        'phptype' => 'string',
                         'null' => true,
-                        'default' => 0,
+                        'default' => null,
                     ],
                 'body_manager' =>
                     [
-                        'dbtype' => 'int',
-                        'precision' => '10',
-                        'phptype' => 'integer',
+                        'dbtype' => 'varchar',
+                        'precision' => '255',
+                        'phptype' => 'string',
                         'null' => true,
-                        'default' => 0,
+                        'default' => null,
                     ],
                 'active' =>
                     [

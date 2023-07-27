@@ -3,6 +3,7 @@ minishop.grid.Link = function (config) {
     if (!config.id) {
         config.id = 'minishop-grid-link';
     }
+    config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
         baseParams: {
@@ -49,13 +50,6 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
                 renderer: minishop.utils.renderActions
             }
         ];
-    },
-
-    actionsColumnRenderer: function(value, metaData, record, rowIndex, colIndex, store) {
-        const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
-        return this._getActionsColumnTpl().apply({
-            actions: actions
-        });
     },
 
     getListeners: function () {

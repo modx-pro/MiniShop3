@@ -64,7 +64,7 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
                     name: 'subject_user',
                     anchor: '99%'
                 }, {
-                    xtype: 'minishop-combo-chunk',
+                    xtype: 'textfield',
                     fieldLabel: _('ms_body_user'),
                     name: 'body_user',
                     id: config.id + '-body-user',
@@ -97,7 +97,7 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
                     name: 'subject_manager',
                     anchor: '99%'
                 }, {
-                    xtype: 'minishop-combo-chunk',
+                    xtype: 'textfield',
                     id: config.id + '-body-manager',
                     fieldLabel: _('ms_body_manager'),
                     name: 'body_manager',

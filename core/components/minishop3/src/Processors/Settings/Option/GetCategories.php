@@ -23,7 +23,7 @@ class GetCategories extends GetListProcessor
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
 
-        $c->innerJoin(msOption::class, 'msOption', 'msOption.category=modCategory.id');
+        $c->innerJoin(msOption::class, 'msOption', 'msOption.category_id=modCategory.id');
 
         return $c;
     }
@@ -38,7 +38,7 @@ class GetCategories extends GetListProcessor
     {
         array_unshift($list, [
             'id' => 0,
-            'category' => $this->modx->lexicon('no_category'),
+            'category_id' => $this->modx->lexicon('no_category'),
         ]);
 
         return $list;

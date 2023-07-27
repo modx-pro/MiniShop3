@@ -3,6 +3,7 @@ minishop.grid.Status = function (config) {
     if (!config.id) {
         config.id = 'minishop-grid-status';
     }
+    config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
         baseParams: {

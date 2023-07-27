@@ -3,6 +3,7 @@ minishop.grid.Payment = function (config) {
     if (!config.id) {
         config.id = 'minishop-grid-payment';
     }
+    config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
         baseParams: {

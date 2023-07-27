@@ -3,6 +3,7 @@ minishop.grid.Delivery = function (config) {
     if (!config.id) {
         config.id = 'minishop-grid-delivery';
     }
+    config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
         baseParams: {

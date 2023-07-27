@@ -285,8 +285,8 @@
         <field key="email_manager" dbtype="tinyint" precision="1" phptype="integer" null="true" default="0"/>
         <field key="subject_user" dbtype="varchar" precision="255" phptype="string" null="true" default=""/>
         <field key="subject_manager" dbtype="varchar" precision="255" phptype="string" null="true" default=""/>
-        <field key="body_user" dbtype="int" precision="10" phptype="integer" null="true" default="0"/>
-        <field key="body_manager" dbtype="int" precision="10" phptype="integer" null="true" default="0"/>
+        <field key="body_user" dbtype="varchar" precision="255" phptype="string" null="true" default="null"/>
+        <field key="body_manager" dbtype="varchar" precision="255" phptype="string" null="true" default="null"/>
         <field key="active" dbtype="tinyint" precision="1" phptype="integer" null="true" default="1"/>
         <field key="final" dbtype="tinyint" precision="1" phptype="integer" null="true" default="0"/>
         <field key="fixed" dbtype="tinyint" precision="1" phptype="integer" null="true" default="0"/>
