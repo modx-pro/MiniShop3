@@ -9,7 +9,7 @@ class Get extends GetProcessor
 {
     public $object;
     public $classKey = msOrderStatus::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_view';
 
 

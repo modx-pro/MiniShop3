@@ -22,14 +22,14 @@ class Sort extends ModelProcessor
 
 
     /**
-     * It is adapted code from https://github.com/splittingred/Gallery/blob/a51442648fde1066cf04d46550a04265b1ad67da/core/components/gallery/processors/mgr/item/sort.php
+     *
      *
      * @return array|string
      */
     public function process()
     {
         /** @var msProductFile $source */
-        $source = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('source')]);
+        $source = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('source_id')]);
         /** @var msProductFile $target */
         $target = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('target')]);
         /** @var msProductData $product */

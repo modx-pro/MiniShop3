@@ -1,8 +1,8 @@
-minishop.grid.ProductLinks = function (config) {
+ms3.grid.ProductLinks = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        id: 'minishop-grid-product-link',
+        id: 'ms3-grid-product-link',
         baseParams: {
             action: 'MiniShop3\\Processors\\Product\\ProductLink\\GetList',
             master: config.record.id,
@@ -11,9 +11,9 @@ minishop.grid.ProductLinks = function (config) {
         },
         multi_select: true,
     });
-    minishop.grid.ProductLinks.superclass.constructor.call(this, config);
+    ms3.grid.ProductLinks.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
+Ext.extend(ms3.grid.ProductLinks, ms3.grid.Default, {
 
     getFields: function () {
         return [
@@ -24,10 +24,10 @@ Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
 
     getColumns: function () {
         return [
-            {header: _('ms_link_name'), dataIndex: 'name', width: 75, sortable: true},
-            {header: _('ms_type'), dataIndex: 'type', width: 75, sortable: true, renderer: this._renderType},
+            {header: _('ms3_link_name'), dataIndex: 'name', width: 75, sortable: true},
+            {header: _('ms3_type'), dataIndex: 'type', width: 75, sortable: true, renderer: this._renderType},
             {
-                header: _('ms_link_master'),
+                header: _('ms3_link_master'),
                 dataIndex: 'master_pagetitle',
                 width: 125,
                 sortable: true,
@@ -35,20 +35,20 @@ Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
                 scope: this,
         },
             {
-                header: _('ms_link_slave'),
+                header: _('ms3_link_slave'),
                 dataIndex: 'slave_pagetitle',
                 width: 125,
                 sortable: true,
                 renderer: this._renderSlave,
                 scope: this
         },
-            {header: '', dataIndex: 'actions', width: 35, id: 'actions', renderer: minishop.utils.renderActions}
+            {header: '', dataIndex: 'actions', width: 35, id: 'actions', renderer: ms3.utils.renderActions}
         ];
     },
 
     getTopBar: function () {
         return [{
-            text: '<i class="icon icon-plus"></i> ' + _('ms_btn_create'),
+            text: '<i class="icon icon-plus"></i> ' + _('ms3_btn_create'),
             handler: this.createLink,
             scope: this
         }, '->', this.getSearchField()];
@@ -62,13 +62,13 @@ Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
     },
 
     createLink: function (btn, e) {
-        let w = Ext.getCmp('minishop-product-link-create');
+        let w = Ext.getCmp('ms3-product-link-create');
         if (w) {
             w.close();
         }
         w = MODx.load({
-            xtype: 'minishop-product-link-create',
-            id: 'minishop-product-link-create',
+            xtype: 'ms3-product-link-create',
+            id: 'ms3-product-link-create',
             baseParams: {
                 action: 'MiniShop3\\Processors\\Product\\ProductLink\\Create',
                 master: btn.scope.record.id
@@ -115,10 +115,10 @@ Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
         const ids = this._getSelectedIds();
 
         Ext.MessageBox.confirm(
-            _('ms_menu_remove_title'),
+            _('ms3_menu_remove_title'),
             ids.length > 1
-                ? _('ms_menu_remove_multiple_confirm')
-                : _('ms_menu_remove_confirm'),
+                ? _('ms3_menu_remove_multiple_confirm')
+                : _('ms3_menu_remove_confirm'),
             function (val) {
                 if (val == 'yes') {
                     this.linkAction('Remove');
@@ -129,19 +129,19 @@ Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
     },
 
     _renderType: function (value) {
-        return _('ms_link_' + value);
+        return _('ms3_link_' + value);
     },
 
     _renderMaster: function (value, cell, row) {
         return row.data.master == this.record.id
             ? value
-            : minishop.utils.productLink(value, row.data.master);
+            : ms3.utils.productLink(value, row.data.master);
     },
 
     _renderSlave: function (value, cell, row) {
         return row.data.slave == this.record.id
             ? value
-            : minishop.utils.productLink(value, row.data.slave);
+            : ms3.utils.productLink(value, row.data.slave);
     },
 
     _getSelectedIds: function () {
@@ -163,4 +163,4 @@ Ext.extend(minishop.grid.ProductLinks, minishop.grid.Default, {
     },
 
 });
-Ext.reg('minishop-product-links', minishop.grid.ProductLinks);
+Ext.reg('ms3-product-links', ms3.grid.ProductLinks);

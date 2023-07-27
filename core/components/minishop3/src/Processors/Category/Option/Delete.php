@@ -8,7 +8,7 @@ use MiniShop3\Model\msCategoryOption;
 class Delete extends RemoveProcessor
 {
     public $classKey = msCategoryOption::class;
-    public $objectType = 'ms_option';
+    public $objectType = 'ms3_option';
     public $languageTopics = ['minishop3:default'];
     public $permission = 'mscategory_save';
 
@@ -22,7 +22,7 @@ class Delete extends RemoveProcessor
             'category_id' => $this->getProperty('category_id'),
         ]);
         if (empty($this->object)) {
-            return $this->modx->lexicon('ms_option_err_nfs');
+            return $this->modx->lexicon('ms3_option_err_nfs');
         }
 
         return true;

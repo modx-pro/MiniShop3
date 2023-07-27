@@ -1,8 +1,9 @@
-minishop.grid.Products = function (config) {
+ms3.grid.Products = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-products';
+        config.id = 'ms3-grid-products';
     }
+    config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
         baseParams: {
@@ -22,15 +23,15 @@ minishop.grid.Products = function (config) {
         enableDragDrop: true,
         defaultNotify: false
     });
-    minishop.grid.Products.superclass.constructor.call(this, config);
+    ms3.grid.Products.superclass.constructor.call(this, config);
     if (!this.defaultNotify) {
         this.ddText = ''; }
 };
-Ext.extend(minishop.grid.Products, minishop.grid.Default, {
+Ext.extend(ms3.grid.Products, ms3.grid.Default, {
 
     getFields: function () {
-        const fields = minishop.config['product_fields'];
-        const options = minishop.config['option_fields'];
+        const fields = ms3.config['product_fields'];
+        const options = ms3.config['option_fields'];
 
         for (let i = 0; i < options.length; i++) {
             const index = fields.indexOf(options[i].key);
@@ -42,10 +43,10 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
     },
 
     getOptionFields: function (config) {
-        const options = minishop.config['option_fields'];
+        const options = ms3.config['option_fields'];
         const fields = {};
         for (let i = 0; i < options.length; i++) {
-            const field = minishop.utils.getExtField(config, options[i].key, options[i], 'extra-column');
+            const field = ms3.utils.getExtField(config, options[i].key, options[i], 'extra-column');
             if (field) {
                 Ext.apply(fields, field);
             }
@@ -78,36 +79,36 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
             introtext: {width: 100, sortable: false, editor: {xtype: 'textarea'}},
             content: {width: 100, sortable: false, editor: {xtype: 'textarea'}},
             template: {width: 100, sortable: true, editor: {xtype: 'modx-combo-template'}},
-            createdby: {width: 100, sortable: true, editor: {xtype: 'minishop-combo-user', name: 'createdby'}},
+            createdby: {width: 100, sortable: true, editor: {xtype: 'ms3-combo-user', name: 'createdby'}},
             createdon: {
                 width: 50,
                 sortable: true,
-                editor: {xtype: 'minishop-xdatetime', timePosition: 'below'},
-                renderer: minishop.utils.formatDate
+                editor: {xtype: 'ms3-xdatetime', timePosition: 'below'},
+                renderer: ms3.utils.formatDate
             },
-            editedby: {width: 100, sortable: true, editor: {xtype: 'minishop-combo-user', name: 'editedby'}},
+            editedby: {width: 100, sortable: true, editor: {xtype: 'ms3-combo-user', name: 'editedby'}},
             editedon: {
                 width: 50,
                 sortable: true,
-                editor: {xtype: 'minishop-xdatetime', timePosition: 'below'},
-                renderer: minishop.utils.formatDate
+                editor: {xtype: 'ms3-xdatetime', timePosition: 'below'},
+                renderer: ms3.utils.formatDate
             },
             deleted: {width: 50, sortable: true, editor: {xtype: 'combo-boolean', renderer: 'boolean'}},
             deletedon: {
                 width: 50,
                 sortable: true,
-                editor: {xtype: 'minishop-xdatetime', timePosition: 'below'},
-                renderer: minishop.utils.formatDate
+                editor: {xtype: 'ms3-xdatetime', timePosition: 'below'},
+                renderer: ms3.utils.formatDate
             },
-            deletedby: {width: 100, sortable: true, editor: {xtype: 'minishop-combo-user', name: 'deletedby'}},
+            deletedby: {width: 100, sortable: true, editor: {xtype: 'ms3-combo-user', name: 'deletedby'}},
             published: {width: 50, sortable: true, editor: {xtype: 'combo-boolean', renderer: 'boolean'}},
             publishedon: {
                 width: 50,
                 sortable: true,
-                editor: {xtype: 'minishop-xdatetime', timePosition: 'below'},
-                renderer: minishop.utils.formatDate
+                editor: {xtype: 'ms3-xdatetime', timePosition: 'below'},
+                renderer: ms3.utils.formatDate
             },
-            publishedby: {width: 100, sortable: true, editor: {xtype: 'minishop-combo-user', name: 'publishedby'}},
+            publishedby: {width: 100, sortable: true, editor: {xtype: 'ms3-combo-user', name: 'publishedby'}},
             menutitle: {width: 100, sortable: true, editor: {xtype: 'textfield'}},
             menuindex: {width: 35, sortable: true, header: 'IDx', editor: {xtype: 'numberfield'}},
             uri: {width: 50, sortable: true, editor: {xtype: 'textfield'}},
@@ -125,53 +126,53 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
             price: {width: 50, sortable: true, editor: {xtype: 'numberfield', decimalPrecision: 2}},
             old_price: {width: 50, sortable: true, editor: {xtype: 'numberfield', decimalPrecision: 2}},
             weight: {width: 50, sortable: true, editor: {xtype: 'numberfield', decimalPrecision: 3}},
-            image: {width: 50, sortable: false, renderer: minishop.utils.renderImage, id: 'product-image'},
-            thumb: {width: 50, sortable: false, renderer: minishop.utils.renderImage, id: 'product-thumb'},
+            image: {width: 50, sortable: false, renderer: ms3.utils.renderImage, id: 'product-image'},
+            thumb: {width: 50, sortable: false, renderer: ms3.utils.renderImage, id: 'product-thumb'},
             vendor_id: {
                 width: 50,
                 sortable: true,
                 renderer: this._renderVendor,
-                editor: {xtype: 'minishop-combo-vendor'},
+                editor: {xtype: 'ms3-combo-vendor'},
             },
-            vendor_name: {width: 50, sortable: true, header: _('ms_product_vendor')},
-            made_in: {width: 50, sortable: true, editor: {xtype: 'minishop-combo-autocomplete', name: 'made_in'}},
-            //color: {width:50, sortable:false, editor: {xtype: 'minishop-combo-options', name: 'color'}},
-            //size: {width:50, sortable:false, editor: {xtype: 'minishop-combo-options', name: 'size'}},
-            //tags: {width:50, sortable:false, editor: {xtype: 'minishop-combo-options', name: 'tags'}},
+            vendor_name: {width: 50, sortable: true, header: _('ms3_product_vendor')},
+            made_in: {width: 50, sortable: true, editor: {xtype: 'ms3-combo-autocomplete', name: 'made_in'}},
+            //color: {width:50, sortable:false, editor: {xtype: 'ms3-combo-options', name: 'color'}},
+            //size: {width:50, sortable:false, editor: {xtype: 'ms3-combo-options', name: 'size'}},
+            //tags: {width:50, sortable:false, editor: {xtype: 'ms3-combo-options', name: 'tags'}},
             actions: {
-                header: _('ms_actions'),
+                header: _('ms3_actions'),
                 id: 'actions',
                 width: 75,
                 sortable: false,
-                renderer: minishop.utils.renderActions
+                renderer: ms3.utils.renderActions
             }
         };
 
         let i,add;
-        for (i in minishop.plugin) {
-            if (!minishop.plugin.hasOwnProperty(i)) {
+        for (i in ms3.plugin) {
+            if (!ms3.plugin.hasOwnProperty(i)) {
                 continue;
             }
-            if (typeof(minishop.plugin[i]['getColumns']) == 'function') {
-                add = minishop.plugin[i].getColumns();
+            if (typeof(ms3.plugin[i]['getColumns']) == 'function') {
+                add = ms3.plugin[i].getColumns();
                 Ext.apply(columns, add);
             }
         }
 
         let option_columns = [];
-        if (minishop.config['show_options']) {
-            option_columns = this.getCategoryOptions(minishop.config);
+        if (ms3.config['show_options']) {
+            option_columns = this.getCategoryOptions(ms3.config);
         }
 
         const fields = [];
-        for (i in minishop.config['grid_fields']) {
-            if (!minishop.config['grid_fields'].hasOwnProperty(i)) {
+        for (i in ms3.config['grid_fields']) {
+            if (!ms3.config['grid_fields'].hasOwnProperty(i)) {
                 continue;
             }
-            const field = minishop.config['grid_fields'][i];
+            const field = ms3.config['grid_fields'][i];
             if (columns[field]) {
                 Ext.applyIf(columns[field], {
-                    header: _('ms_product_' + field),
+                    header: _('ms3_product_' + field),
                     dataIndex: field
                 });
                 fields.push(columns[field]);
@@ -185,11 +186,11 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
 
     getTopBar: function () {
         return [{
-            text: (MODx.config.ms_add_icon_product ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.ms_add_icon_product)) : '') + _('ms_product_create'),
+            text: (MODx.config.ms3_add_icon_product ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.ms3_add_icon_product)) : '') + _('ms3_product_create'),
             handler: this.createProduct,
             scope: this
         }, '-', {
-            text: (MODx.config.ms_add_icon_category ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.ms_add_icon_category)) : '') + _('ms_category_create'),
+            text: (MODx.config.ms3_add_icon_category ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.ms3_add_icon_category)) : '') + _('ms3_category_create'),
             handler: this.createCategory,
             scope: this
         }, '-', {
@@ -200,9 +201,9 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
             xtype: 'xcheckbox',
             name: 'nested',
             width: 200,
-            boxLabel: _('ms_category_show_nested'),
+            boxLabel: _('ms3_category_show_nested'),
             ctCls: 'tbar-checkbox',
-            checked: MODx.config['ms_category_show_nested_products'] == 1,
+            checked: MODx.config['ms3_category_show_nested_products'] == 1,
             listeners: {
                 check: {fn: this.nestedFilter, scope: this}
             }
@@ -225,7 +226,7 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             params: {
                 action: 'MiniShop3\\Processors\\Product\\Multiple',
                 method: method,
@@ -316,7 +317,7 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             params: {
                 action: 'MiniShop3\\Processors\\Gallery\\GenerateAll',
                 product_id: ids,
@@ -377,7 +378,7 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
     },
 
     _renderPagetitle: function (value, cell, row) {
-        const link = minishop.utils.productLink(value, row['data']['id']);
+        const link = ms3.utils.productLink(value, row['data']['id']);
         if (!row.data['category_name']) {
             return String.format(
                 '<div class="native-product"><span class="id">({0})</span>{1}</div>',
@@ -385,7 +386,7 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
                 link
             );
         } else {
-            const category_link = minishop.utils.productLink(row.data['category_name'], row.data['parent']);
+            const category_link = ms3.utils.productLink(row.data['category_name'], row.data['parent']);
             return String.format(
                 '<div class="nested-product">\
                     <span class="id">({0})</span>{1}\
@@ -423,4 +424,4 @@ Ext.extend(minishop.grid.Products, minishop.grid.Default, {
     },
 
 });
-Ext.reg('minishop-grid-products', minishop.grid.Products);
+Ext.reg('ms3-grid-products', ms3.grid.Products);

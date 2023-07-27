@@ -47,11 +47,11 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.tv.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.js');
         $this->addJavascript($mgrUrl . 'assets/modext/sections/resource/update.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/minishop.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/minishop3.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/sortable/sortable.min.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.combo.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/strftime-min-1.3.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.utils.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/category.tree.js');
@@ -60,7 +60,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/update.js');
 
-        $show_gallery = $this->getOption('ms_product_tab_gallery', null, true);
+        $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
         if ($show_gallery) {
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/plupload/plupload.full.min.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/plupload/i18n.js');
@@ -75,14 +75,14 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $product_fields = array_merge($this->resource->getAllFieldsNames(), ['syncsite']);
         $product_data_fields = $this->resource->getDataFieldsNames();
 
-        if (!$product_main_fields = $this->getOption('ms_product_main_fields')) {
+        if (!$product_main_fields = $this->getOption('ms3_product_main_fields')) {
             $product_main_fields = 'pagetitle,longtitle,introtext,content,publishedon,pub_date,unpub_date,template,
                 parent,alias,menutitle,searchable,cacheable,richtext,uri_override,uri,hidemenu,show_in_tree';
         }
         $product_main_fields = array_map('trim', explode(',', $product_main_fields));
         $product_main_fields = array_values(array_intersect($product_main_fields, $product_fields));
 
-        if (!$product_extra_fields = $this->getOption('ms_product_extra_fields')) {
+        if (!$product_extra_fields = $this->getOption('ms3_product_extra_fields')) {
             $product_extra_fields = 'price,old_price,article,weight,color,size,vendor,made_in,tags,new,popular,favorite';
         }
         $product_extra_fields = array_map('trim', explode(',', $product_extra_fields));
@@ -102,10 +102,10 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
             'show_gallery' => $show_gallery,
-            'show_extra' => (bool)$this->getOption('ms_product_tab_extra', null, true),
-            'show_options' => (bool)$this->getOption('ms_product_tab_options', null, true),
-            'show_links' => (bool)$this->getOption('ms_product_tab_links', null, true),
-            'show_categories' => (bool)$this->getOption('ms_product_tab_categories', null, true),
+            'show_extra' => (bool)$this->getOption('ms3_product_tab_extra', null, true),
+            'show_options' => (bool)$this->getOption('ms3_product_tab_options', null, true),
+            'show_links' => (bool)$this->getOption('ms3_product_tab_links', null, true),
+            'show_categories' => (bool)$this->getOption('ms3_product_tab_categories', null, true),
             'default_thumb' => $this->ms3->config['defaultThumb'],
             'main_fields' => $product_main_fields,
             'extra_fields' => $product_extra_fields,
@@ -118,7 +118,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         ];
 
         $ready = [
-            'xtype' => 'minishop-page-product-update',
+            'xtype' => 'ms3-page-product-update',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
             'publish_document' => $this->canPublish,
@@ -148,7 +148,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         MODx.config.publish_document = "' . $this->canPublish . '";
         MODx.onDocFormRender = "' . $this->onDocFormRender . '";
         MODx.ctx = "' . $this->ctx . '";
-        minishop.config = ' . json_encode($config) . ';
+        ms3.config = ' . json_encode($config) . ';
         Ext.onReady(function() {
             MODx.load(' . json_encode($ready) . ');
         });

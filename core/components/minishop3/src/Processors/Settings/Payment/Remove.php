@@ -8,7 +8,7 @@ use MODX\Revolution\Processors\Model\RemoveProcessor;
 class Remove extends RemoveProcessor
 {
     public $classKey = msPayment::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
 
 

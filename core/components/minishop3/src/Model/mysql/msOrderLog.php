@@ -7,7 +7,7 @@ class msOrderLog extends \MiniShop3\Model\msOrderLog
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_order_logs',
+        'table' => 'ms3_order_logs',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [

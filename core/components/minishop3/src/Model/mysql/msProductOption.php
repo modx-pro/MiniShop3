@@ -7,7 +7,7 @@ class msProductOption extends \MiniShop3\Model\msProductOption
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_product_options',
+        'table' => 'ms3_product_options',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [

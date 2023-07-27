@@ -1,11 +1,11 @@
-minishop.tree.OptionCategories = function (config) {
+ms3.tree.OptionCategories = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-option-categories-tree';
+        config.id = 'ms3-option-categories-tree';
     }
 
     Ext.applyIf(config, {
-        url: minishop.config.connector_url,
+        url: ms3.config.connector_url,
         title: '',
         anchor: '100%',
         autoHeight: false,
@@ -21,14 +21,14 @@ minishop.tree.OptionCategories = function (config) {
         stateful: false,
         listeners: this.getListeners(config)
     });
-    minishop.tree.OptionCategories.superclass.constructor.call(this, config);
+    ms3.tree.OptionCategories.superclass.constructor.call(this, config);
 
     this.on('afterrender', function () {
         this.maxHeight = this.maxHeight || Ext.getBody().getViewSize().height  * 0.75;
         this.setSize('', this.maxHeight);
     });
 };
-Ext.extend(minishop.tree.OptionCategories, MODx.tree.Tree, {
+Ext.extend(ms3.tree.OptionCategories, MODx.tree.Tree, {
 
     getListeners: function () {
         return {
@@ -70,7 +70,7 @@ Ext.extend(minishop.tree.OptionCategories, MODx.tree.Tree, {
                 this.cm.activeNode.collapse(true);
             }
         },{
-            text: '<i class="x-menu-item-icon icon icon-check-square-o"></i> ' + _('ms_menu_select_all'),
+            text: '<i class="x-menu-item-icon icon icon-check-square-o"></i> ' + _('ms3_menu_select_all'),
             handler: function () {
                 const activeNode = this.cm.activeNode;
                 const checkchange = this.getListeners().checkchange;
@@ -88,7 +88,7 @@ Ext.extend(minishop.tree.OptionCategories, MODx.tree.Tree, {
                 massCheck(activeNode);
             }
         },{
-            text: '<i class="x-menu-item-icon icon icon-square-o"></i> ' + _('ms_menu_clear_all'),
+            text: '<i class="x-menu-item-icon icon icon-square-o"></i> ' + _('ms3_menu_clear_all'),
             handler: function () {
                 const activeNode = this.cm.activeNode;
                 const checkchange = this.getListeners().checkchange;
@@ -114,4 +114,4 @@ Ext.extend(minishop.tree.OptionCategories, MODx.tree.Tree, {
     },
 
 });
-Ext.reg('minishop-tree-option-categories', minishop.tree.OptionCategories);
+Ext.reg('ms3-tree-option-categories', ms3.tree.OptionCategories);

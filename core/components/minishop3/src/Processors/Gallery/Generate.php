@@ -33,7 +33,7 @@ class Generate extends ModelProcessor
     {
         $id = (int)$this->getProperty('id');
         if (empty($id)) {
-            return $this->failure($this->modx->lexicon('ms_gallery_err_ns'));
+            return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
         }
 
         /** @var msProductFile $file */

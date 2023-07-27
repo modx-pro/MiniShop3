@@ -21,7 +21,7 @@
                    owner="local"/>
     </object>
 
-    <object class="msProductData" table="ms_products" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msProductData" table="ms3_products" extends="xPDO\Om\xPDOSimpleObject">
         <field key="article" dbtype="varchar" precision="50" phptype="string" null="true"/>
         <field key="price" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>
         <field key="old_price" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>
@@ -78,7 +78,7 @@
         <aggregate alias="Vendor" class="MiniShop3\Model\msVendor" local="vendor_id" foreign="id" cardinality="one" owner="foreign"/>
     </object>
 
-    <object class="msVendor" table="ms_vendors" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msVendor" table="ms3_vendors" extends="xPDO\Om\xPDOSimpleObject">
         <field key="position"  dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
         <field key="name" dbtype="varchar" precision="100" phptype="string" null="false"/>
         <field key="resource_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"
@@ -96,7 +96,7 @@
     </object>
 
 
-    <object class="msCategoryMember" table="ms_product_categories" extends="xPDO\Om\xPDOObject">
+    <object class="msCategoryMember" table="ms3_product_categories" extends="xPDO\Om\xPDOObject">
         <field key="product_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
                index="pk"/>
         <field key="category_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
@@ -113,7 +113,7 @@
     </object>
 
 
-    <object class="msProductOption" table="ms_product_options" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msProductOption" table="ms3_product_options" extends="xPDO\Om\xPDOSimpleObject">
         <field key="product_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="key" dbtype="varchar" precision="191" phptype="string" null="false"/>
         <field key="value" dbtype="text" phptype="string" null="true" default=""/>
@@ -130,7 +130,7 @@
     </object>
 
 
-    <object class="msProductFile" table="ms_product_files" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msProductFile" table="ms3_product_files" extends="xPDO\Om\xPDOSimpleObject">
         <field key="product_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="source_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"
                default="1"/>
@@ -174,7 +174,7 @@
     </object>
 
 
-    <object class="msDelivery" table="ms_deliveries" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msDelivery" table="ms3_deliveries" extends="xPDO\Om\xPDOSimpleObject">
         <field key="name" dbtype="varchar" precision="255" phptype="string" null="false"/>
         <field key="description" dbtype="text" phptype="string" null="true"/>
         <field key="price" dbtype="varchar" precision="11" phptype="string" null="true" default="0"/>
@@ -195,7 +195,7 @@
     </object>
 
 
-    <object class="msPayment" table="ms_payments" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msPayment" table="ms3_payments" extends="xPDO\Om\xPDOSimpleObject">
         <field key="name" dbtype="varchar" precision="255" phptype="string" null="false"/>
         <field key="description" dbtype="text" phptype="string" null="true"/>
         <field key="price" dbtype="varchar" precision="11" phptype="string" null="true" default="0"/>
@@ -231,7 +231,7 @@
     </object>
 
 
-    <object class="msOrder" table="ms_orders" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msOrder" table="ms3_orders" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="session_id" dbtype="varchar" precision="32" phptype="string" null="false" default=""/>
         <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
@@ -277,7 +277,7 @@
     </object>
 
 
-    <object class="msOrderStatus" table="ms_order_statuses" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msOrderStatus" table="ms3_order_statuses" extends="xPDO\Om\xPDOSimpleObject">
         <field key="name" dbtype="varchar" precision="100" phptype="string" null="false"/>
         <field key="description" dbtype="text" phptype="string" null="true"/>
         <field key="color" dbtype="char" precision="6" phptype="string" null="true" default="000000"/>
@@ -302,7 +302,7 @@
     </object>
 
 
-    <object class="msOrderLog" table="ms_order_logs" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msOrderLog" table="ms3_order_logs" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
                default="0"/>
         <field key="order_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
@@ -328,7 +328,7 @@
     </object>
 
 
-    <object class="msOrderAddress" table="ms_order_addresses" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msOrderAddress" table="ms3_order_addresses" extends="xPDO\Om\xPDOSimpleObject">
         <field key="order_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
@@ -366,7 +366,7 @@
     </object>
 
 
-    <object class="msOrderProduct" table="ms_order_products" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msOrderProduct" table="ms3_order_products" extends="xPDO\Om\xPDOSimpleObject">
         <field key="product_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false"/>
         <field key="order_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false"/>
         <field key="name" dbtype="varchar" precision="255" phptype="string" null="true"/>
@@ -389,7 +389,7 @@
     </object>
 
 
-    <object class="msLink" table="ms_links" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msLink" table="ms3_links" extends="xPDO\Om\xPDOSimpleObject">
         <field key="type" dbtype="varchar" precision="100" phptype="string" null="false"/>
         <field key="name" dbtype="varchar" precision="255" phptype="string" null="false"/>
         <field key="description" dbtype="text" phptype="string" null="true"/>
@@ -402,7 +402,7 @@
     </object>
 
 
-    <object class="msProductLink" table="ms_product_links" extends="xPDO\Om\xPDOObject">
+    <object class="msProductLink" table="ms3_product_links" extends="xPDO\Om\xPDOObject">
         <field key="link" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" index="pk"/>
         <field key="master" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false"
                index="pk"/>
@@ -419,7 +419,7 @@
         <aggregate alias="Slave" class="MiniShop3\Model\msProduct" local="slave" foreign="id" owner="foreign" cardinality="one"/>
     </object>
 
-    <object class="msCustomerProfile" table="ms_customer_profiles" extends="xPDO\Om\xPDOSimpleObject"  >
+    <object class="msCustomerProfile" table="ms3_customer_profiles" extends="xPDO\Om\xPDOSimpleObject"  >
         <field key="spent" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>
         <field key="createdon" dbtype="timestamp" phptype="datetime" null="true" default="CURRENT_TIMESTAMP"/>
         <field key="referrer_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="true"
@@ -440,7 +440,7 @@
         <aggregate alias="User" class="MODX\Revolution\modUser" local="id" foreign="id" owner="foreign" cardinality="one"/>
     </object>
 
-    <object class="msOption" table="ms_options" extends="xPDO\Om\xPDOSimpleObject">
+    <object class="msOption" table="ms3_options" extends="xPDO\Om\xPDOSimpleObject">
         <field key="key" dbtype="varchar" precision="191" phptype="string" null="false" default="" index="index"/>
         <field key="caption" dbtype="varchar" precision="191" phptype="string" null="false" default=""
                index="fulltext"/>
@@ -478,7 +478,7 @@
         </validation>
     </object>
 
-    <object class="msCategoryOption" table="ms_category_options" extends="xPDO\Om\xPDOObject">
+    <object class="msCategoryOption" table="ms3_category_options" extends="xPDO\Om\xPDOObject">
         <field key="option_id" dbtype="int" precision="10" phptype="integer" null="false" default="" index="pk"/>
         <field key="category_id" dbtype="int" precision="10" phptype="integer" null="false" default="" index="pk"/>
         <field key="position" dbtype="int" precision="10" phptype="integer" null="false" default="0" index="index"/>

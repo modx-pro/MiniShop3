@@ -24,10 +24,10 @@ class Plugins
      */
     public function add($name, $controller)
     {
-        $plugins = $this->ms3->utils->getSetting('ms_plugins');
+        $plugins = $this->ms3->utils->getSetting('ms3_plugins');
         $plugins[strtolower($name)] = $controller;
 
-        $this->ms3->utils->updateSetting('ms_plugins', $plugins);
+        $this->ms3->utils->updateSetting('ms3_plugins', $plugins);
     }
 
     /**
@@ -37,9 +37,9 @@ class Plugins
      */
     public function remove($name)
     {
-        $plugins = $this->ms3->utils->getSetting('ms_plugins');
+        $plugins = $this->ms3->utils->getSetting('ms3_plugins');
         unset($plugins[strtolower($name)]);
-        $this->ms3->utils->updateSetting('ms_plugins', $plugins);
+        $this->ms3->utils->updateSetting('ms3_plugins', $plugins);
     }
 
     /**
@@ -49,7 +49,7 @@ class Plugins
      */
     public function get()
     {
-        return $this->ms3->utils->getSetting('ms_plugins');
+        return $this->ms3->utils->getSetting('ms3_plugins');
     }
 
     /**

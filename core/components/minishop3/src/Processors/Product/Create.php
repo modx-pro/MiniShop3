@@ -21,7 +21,7 @@ class Create extends CreateProcessor
      */
     public function prepareAlias()
     {
-        $id_as_alias = $this->workingContext->getOption('ms_product_id_as_alias');
+        $id_as_alias = $this->workingContext->getOption('ms3_product_id_as_alias');
         if ($id_as_alias) {
             $alias = 'empty-resource-alias';
             $this->setProperty('alias', $alias);
@@ -38,11 +38,11 @@ class Create extends CreateProcessor
     public function beforeSet()
     {
         $this->setDefaultProperties([
-            'show_in_tree' => $this->modx->getOption('ms_product_show_in_tree_default', null, false),
+            'show_in_tree' => $this->modx->getOption('ms3_product_show_in_tree_default', null, false),
             'hidemenu' => $this->modx->getOption('hidemenu_default', null, true),
-            'source_id' => $this->modx->getOption('ms_product_source_default', null, 1),
+            'source_id' => $this->modx->getOption('ms3_product_source_default', null, 1),
             'template' => $this->modx->getOption(
-                'ms_template_product_default',
+                'ms3_template_product_default',
                 null,
                 $this->modx->getOption('default_template')
             ),

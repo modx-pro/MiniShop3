@@ -22,7 +22,7 @@ class Get extends GetProcessor
             return $this->modx->lexicon('access_denied');
         }
 
-        $this->product_options = array_map('trim', explode(',', $this->modx->getOption('ms_order_product_options')));
+        $this->product_options = array_map('trim', explode(',', $this->modx->getOption('ms3_order_product_options')));
 
         return parent::initialize();
     }

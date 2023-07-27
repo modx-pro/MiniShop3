@@ -7,7 +7,7 @@ class msCustomerProfile extends \MiniShop3\Model\msCustomerProfile
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_customer_profiles',
+        'table' => 'ms3_customer_profiles',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [

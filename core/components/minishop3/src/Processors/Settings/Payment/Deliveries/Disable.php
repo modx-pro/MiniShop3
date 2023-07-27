@@ -12,7 +12,7 @@ class Disable extends RemoveProcessor
     /** @var msDelivery $object */
     public $object;
     public $classKey = msDeliveryMember::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
 
 

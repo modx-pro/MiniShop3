@@ -1,5 +1,8 @@
 <?php
 
+use xPDO\Transport\xPDOTransport;
+use MODX\Revolution\modX;
+
 /** @var xPDO\Transport\xPDOTransport $transport */
 /** @var array $options */
 /** @var  MODX\Revolution\modX $modx */
@@ -91,7 +94,8 @@ if ($transport->xpdo) {
                         } else {
                             if ($index != $indexes[$key]) {
                                 if ($manager->removeIndex($class, $key) && $manager->addIndex($class, $key)) {
-                                    $modx->log(modX::LOG_LEVEL_INFO,
+                                    $modx->log(
+                                        modX::LOG_LEVEL_INFO,
                                         "Updated index \"{$key}\" of the table \"{$class}\""
                                     );
                                 }

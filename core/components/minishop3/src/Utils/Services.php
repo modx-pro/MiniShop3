@@ -23,7 +23,7 @@ class Services extends MiniShop3
         }
 
         // Custom cart class
-        $cart_class = $this->modx->getOption('ms_cart_handler_class', null, 'msCartHandler');
+        $cart_class = $this->modx->getOption('ms3_cart_handler_class', null, 'msCartHandler');
         if ($cart_class != 'msCartHandler') {
             $this->loadCustomClasses('cart');
         }
@@ -42,7 +42,7 @@ class Services extends MiniShop3
         }
 
         // Custom order class
-        $order_class = $this->modx->getOption('ms_order_handler_class', null, 'msOrderHandler');
+        $order_class = $this->modx->getOption('ms3_order_handler_class', null, 'msOrderHandler');
         if ($order_class != 'msOrderHandler') {
             $this->loadCustomClasses('order');
         }
@@ -72,7 +72,7 @@ class Services extends MiniShop3
      */
     public function add($type, $name, $controller)
     {
-        $services = $this->utils->getSetting('ms_services');
+        $services = $this->utils->getSetting('ms3_services');
         $type = strtolower($type);
         $name = strtolower($name);
         if (!isset($services[$type])) {
@@ -81,7 +81,7 @@ class Services extends MiniShop3
             $services[$type][$name] = $controller;
         }
 
-        $this->utils->updateSetting('ms_services', $services);
+        $this->utils->updateSetting('ms3_services', $services);
     }
 
     /**
@@ -92,11 +92,11 @@ class Services extends MiniShop3
      */
     public function remove($type, $name)
     {
-        $services = $this->utils->getSetting('ms_services');
+        $services = $this->utils->getSetting('ms3_services');
         $type = strtolower($type);
         $name = strtolower($name);
         unset($services[$type][$name]);
-        $this->utils->updateSetting('ms_services', $services);
+        $this->utils->updateSetting('ms3_services', $services);
     }
 
     /**
@@ -108,7 +108,7 @@ class Services extends MiniShop3
      */
     public function get($type = '')
     {
-        $services = $this->utils->getSetting('ms_services');
+        $services = $this->utils->getSetting('ms3_services');
 
         if (is_array($services)) {
             return !empty($type) && isset($services[$type])

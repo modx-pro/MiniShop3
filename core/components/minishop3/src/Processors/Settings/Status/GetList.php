@@ -93,7 +93,7 @@ class GetList extends GetListProcessor
             $data['actions'][] = [
                 'cls' => '',
                 'icon' => 'icon icon-edit',
-                'title' => $this->modx->lexicon('ms_menu_update'),
+                'title' => $this->modx->lexicon('ms3_menu_update'),
                 'action' => 'updateStatus',
                 'button' => true,
                 'menu' => true,
@@ -103,8 +103,8 @@ class GetList extends GetListProcessor
                 $data['actions'][] = [
                     'cls' => 'fw-900',
                     'icon' => 'icon icon-power-off action-green',
-                    'title' => $this->modx->lexicon('ms_menu_enable'),
-                    'multiple' => $this->modx->lexicon('ms_menu_enable'),
+                    'title' => $this->modx->lexicon('ms3_menu_enable'),
+                    'multiple' => $this->modx->lexicon('ms3_menu_enable'),
                     'action' => 'enableStatus',
                     'button' => true,
                     'menu' => true,
@@ -113,8 +113,8 @@ class GetList extends GetListProcessor
                 $data['actions'][] = [
                     'cls' => 'fw-900',
                     'icon' => 'icon icon-power-off action-gray',
-                    'title' => $this->modx->lexicon('ms_menu_disable'),
-                    'multiple' => $this->modx->lexicon('ms_menu_disable'),
+                    'title' => $this->modx->lexicon('ms3_menu_disable'),
+                    'multiple' => $this->modx->lexicon('ms3_menu_disable'),
                     'action' => 'disableStatus',
                     'button' => true,
                     'menu' => true,
@@ -127,8 +127,8 @@ class GetList extends GetListProcessor
                         'button' => 'red',
                     ],
                     'icon' => 'icon icon-trash-o',
-                    'title' => $this->modx->lexicon('ms_menu_remove'),
-                    'multiple' => $this->modx->lexicon('ms_menu_remove_multiple'),
+                    'title' => $this->modx->lexicon('ms3_menu_remove'),
+                    'multiple' => $this->modx->lexicon('ms3_menu_remove_multiple'),
                     'action' => 'removeStatus',
                     'button' => true,
                     'menu' => true,
@@ -152,7 +152,7 @@ class GetList extends GetListProcessor
             $array = array_merge_recursive([
                 [
                     'id' => 0,
-                    'name' => $this->modx->lexicon('ms_all'),
+                    'name' => $this->modx->lexicon('ms3_all'),
                 ]
             ], $array);
         }

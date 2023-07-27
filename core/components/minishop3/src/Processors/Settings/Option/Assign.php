@@ -12,7 +12,7 @@ class Assign extends CreateProcessor
     /** @var msCategoryOption $object */
     public $object;
     public $classKey = msCategoryOption::class;
-    public $objectType = 'ms_option';
+    public $objectType = 'ms3_option';
     public $languageTopics = ['minishop3:default'];
     public $permission = 'mssetting_save';
 

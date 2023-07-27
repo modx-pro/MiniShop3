@@ -33,10 +33,10 @@ class Upload extends ModelProcessor
         $id = (int)$this->getProperty('id', @$_GET['id']);
         $this->product = $this->modx->getObject(msProduct::class, $id);
         if (!$this->product) {
-            return $this->modx->lexicon('ms_gallery_err_no_product');
+            return $this->modx->lexicon('ms3_gallery_err_no_product');
         }
         if (!$this->mediaSource = $this->product->initializeMediaSource()) {
-            return $this->modx->lexicon('ms_gallery_err_no_source');
+            return $this->modx->lexicon('ms3_gallery_err_no_source');
         }
         $this->ms3 = $this->modx->services->get('ms3');
 
@@ -49,7 +49,7 @@ class Upload extends ModelProcessor
     public function process()
     {
         if (!$data = $this->handleFile()) {
-            return $this->failure($this->modx->lexicon('ms_err_gallery_ns'));
+            return $this->failure($this->modx->lexicon('ms3_err_gallery_ns'));
         }
 
         $properties = $this->mediaSource->getPropertyList();
@@ -67,13 +67,13 @@ class Upload extends ModelProcessor
         if (!empty($allowed_extensions) && !in_array($extension, $allowed_extensions)) {
             @unlink($data['tmp_name']);
 
-            return $this->failure($this->modx->lexicon('ms_err_gallery_ext'));
+            return $this->failure($this->modx->lexicon('ms3_err_gallery_ext'));
         } else {
             if (in_array($extension, $image_extensions)) {
                 if (empty($data['properties']['height']) || empty($data['properties']['width'])) {
                     @unlink($data['tmp_name']);
 
-                    return $this->failure($this->modx->lexicon('ms_err_wrong_image'));
+                    return $this->failure($this->modx->lexicon('ms3_err_wrong_image'));
                 }
                 $type = 'image';
             } else {
@@ -90,7 +90,7 @@ class Upload extends ModelProcessor
         if ($count) {
             @unlink($data['tmp_name']);
 
-            return $this->failure($this->modx->lexicon('ms_err_gallery_exists'));
+            return $this->failure($this->modx->lexicon('ms3_err_gallery_exists'));
         }
 
         $filename = !empty($properties['imageNameType']) && $properties['imageNameType'] == 'friendly'
@@ -166,14 +166,14 @@ class Upload extends ModelProcessor
                     '. ' . $generate
                 );
 
-                return $this->failure($this->modx->lexicon('ms_err_gallery_thumb'));
+                return $this->failure($this->modx->lexicon('ms3_err_gallery_thumb'));
             } else {
                 $this->product->updateProductImage();
 
                 return $this->success('', $uploaded_file);
             }
         } else {
-            return $this->failure($this->modx->lexicon('ms_err_gallery_save') . ': ' .
+            return $this->failure($this->modx->lexicon('ms3_err_gallery_save') . ': ' .
                 print_r($this->mediaSource->getErrors(), true));
         }
     }
@@ -183,7 +183,7 @@ class Upload extends ModelProcessor
      */
     public function handleFile()
     {
-        $tf = tempnam(MODX_BASE_PATH, 'ms_');
+        $tf = tempnam(MODX_BASE_PATH, 'ms3_');
 
         if (!empty($_FILES['file']) && is_uploaded_file($_FILES['file']['tmp_name'])) {
             $name = $_FILES['file']['name'];

@@ -50,14 +50,14 @@ class MiniShop3
     public function __construct(modX $modx, array $config = [])
     {
         $this->modx = $modx;
-        $corePath = $this->modx->getOption('minishop.core_path', $config, MODX_CORE_PATH . 'components/minishop3/');
+        $corePath = $this->modx->getOption('ms3.core_path', $config, MODX_CORE_PATH . 'components/minishop3/');
         $assetsPath = $this->modx->getOption(
-            'minishop.assets_path',
+            'ms3.assets_path',
             $config,
             MODX_ASSETS_PATH . 'components/minishop3/'
         );
-        $assetsUrl = $this->modx->getOption('minishop.assets_url', $config, MODX_ASSETS_URL . 'components/minishop3/');
-        $actionUrl = $this->modx->getOption('minishop.action_url', $config, $assetsUrl . 'action.php');
+        $assetsUrl = $this->modx->getOption('ms3.assets_url', $config, MODX_ASSETS_URL . 'components/minishop3/');
+        $actionUrl = $this->modx->getOption('ms3.action_url', $config, $assetsUrl . 'action.php');
         $connectorUrl = $assetsUrl . 'connector.php';
         $this->config = array_merge([
             'corePath' => $corePath,
@@ -72,7 +72,7 @@ class MiniShop3
             'connector_url' => $connectorUrl,
             'actionUrl' => $actionUrl,
 
-            'defaultThumb' => trim($this->modx->getOption('ms_product_thumbnail_default', null, true)),
+            'defaultThumb' => trim($this->modx->getOption('ms3_product_thumbnail_default', null, true)),
             'ctx' => 'web',
             'json_response' => false,
         ], $config);
@@ -99,7 +99,7 @@ class MiniShop3
             $config = $this->pdoFetch->makePlaceholders($this->config);
 
             // Register CSS
-            $css = trim($this->modx->getOption('ms_frontend_css'));
+            $css = trim($this->modx->getOption('ms3_frontend_css'));
             if (!empty($css) && preg_match('/\.css/i', $css)) {
                 if (preg_match('/\.css$/i', $css)) {
                     $css .= '?v=' . substr(md5($this->version), 0, 10);
@@ -108,13 +108,13 @@ class MiniShop3
             }
 
             // Register notify plugin CSS
-            $message_css = trim($this->modx->getOption('ms_frontend_message_css'));
+            $message_css = trim($this->modx->getOption('ms3_frontend_message_css'));
             if (!empty($message_css) && preg_match('/\.css/i', $message_css)) {
                 $this->modx->regClientCSS(str_replace($config['pl'], $config['vl'], $message_css));
             }
 
             // Register JS
-            $js = trim($this->modx->getOption('ms_frontend_js'));
+            $js = trim($this->modx->getOption('ms3_frontend_js'));
             if (!empty($js) && preg_match('/\.js/i', $js)) {
                 if (preg_match('/\.js$/i', $js)) {
                     $js .= '?v=' . substr(md5($this->version), 0, 10);
@@ -123,7 +123,7 @@ class MiniShop3
             }
 
             $message_setting = [
-                'close_all_message' => $this->modx->lexicon('ms_message_close_all'),
+                'close_all_message' => $this->modx->lexicon('ms3_message_close_all'),
             ];
 
             $js_setting = [
@@ -132,15 +132,15 @@ class MiniShop3
                 'actionUrl' => $this->config['actionUrl'],
                 'ctx' => $ctx,
                 'price_format' => json_decode(
-                    $this->modx->getOption('ms_price_format', null, '[2, ".", " "]'),
+                    $this->modx->getOption('ms3_price_format', null, '[2, ".", " "]'),
                     true
                 ),
-                'price_format_no_zeros' => (bool)$this->modx->getOption('ms_price_format_no_zeros', null, true),
+                'price_format_no_zeros' => (bool)$this->modx->getOption('ms3_price_format_no_zeros', null, true),
                 'weight_format' => json_decode(
-                    $this->modx->getOption('ms_weight_format', null, '[3, ".", " "]'),
+                    $this->modx->getOption('ms3_weight_format', null, '[3, ".", " "]'),
                     true
                 ),
-                'weight_format_no_zeros' => (bool)$this->modx->getOption('ms_weight_format_no_zeros', null, true),
+                'weight_format_no_zeros' => (bool)$this->modx->getOption('ms3_weight_format_no_zeros', null, true),
             ];
 
             $data = json_encode(array_merge($message_setting, $js_setting), true);
@@ -150,12 +150,12 @@ class MiniShop3
             );
 
             // Register notify plugin JS
-            $message_js = trim($this->modx->getOption('ms_frontend_message_js'));
+            $message_js = trim($this->modx->getOption('ms3_frontend_message_js'));
             if (!empty($message_js) && preg_match('/\.js/i', $message_js)) {
                 $this->modx->regClientScript(str_replace($config['pl'], $config['vl'], $message_js));
             }
 
-            $message_settings_js = trim($this->modx->getOption('ms_frontend_message_js_settings'));
+            $message_settings_js = trim($this->modx->getOption('ms3_frontend_message_js_settings'));
             if (!empty($message_settings_js) && preg_match('/\.js/i', $message_settings_js)) {
                 $this->modx->regClientScript(str_replace($config['pl'], $config['vl'], $message_settings_js));
             }
@@ -219,9 +219,9 @@ class MiniShop3
                 $response = $this->order->get();
                 break;
             default:
-                $message = ($data['ms_action'] != $action)
-                    ? 'ms_err_register_globals'
-                    : 'ms_err_unknown';
+                $message = ($data['ms3_action'] != $action)
+                    ? 'ms3_err_register_globals'
+                    : 'ms3_err_unknown';
                 $response = $this->error($message);
         }
 

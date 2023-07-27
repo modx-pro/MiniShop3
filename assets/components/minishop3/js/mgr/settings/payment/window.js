@@ -1,16 +1,16 @@
-minishop.window.CreatePayment = function (config) {
+ms3.window.CreatePayment = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_payment'),
+        title: _('ms3_payment'),
         width: 600,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Payment\\Create',
         },
     });
-    minishop.window.CreatePayment.superclass.constructor.call(this, config);
+    ms3.window.CreatePayment.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.CreatePayment, minishop.window.Default, {
+Ext.extend(ms3.window.CreatePayment, ms3.window.Default, {
 
     getFields: function (config) {
         return [{
@@ -25,7 +25,7 @@ Ext.extend(minishop.window.CreatePayment, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'textfield',
-                    fieldLabel: _('ms_name'),
+                    fieldLabel: _('ms3_name'),
                     name: 'name',
                     anchor: '99%',
                     id: config.id + '-name'
@@ -36,9 +36,9 @@ Ext.extend(minishop.window.CreatePayment, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'textfield',
-                    fieldLabel: _('ms_add_cost'),
+                    fieldLabel: _('ms3_add_cost'),
                     name: 'price',
-                    description: _('ms_add_cost_help'),
+                    description: _('ms3_add_cost_help'),
                     anchor: '99%',
                     id: config.id + '-price'
                 }],
@@ -49,16 +49,16 @@ Ext.extend(minishop.window.CreatePayment, minishop.window.Default, {
             layout: 'form',
             defaults: {msgTarget: 'under'},
             items: [{
-                xtype: 'minishop-combo-classes',
+                xtype: 'ms3-combo-classes',
                 type: 'payment',
-                fieldLabel: _('ms_class'),
+                fieldLabel: _('ms3_class'),
                 name: 'class',
                 anchor: '99%',
                 id: config.id + '-class',
             }],
         }, {
-            xtype: 'minishop-combo-browser',
-            fieldLabel: _('ms_logo'),
+            xtype: 'ms3-combo-browser',
+            fieldLabel: _('ms3_logo'),
             name: 'logo',
             anchor: '99%',
             id: config.id + '-logo',
@@ -66,23 +66,23 @@ Ext.extend(minishop.window.CreatePayment, minishop.window.Default, {
             allowedFileTypes: config.allowedFileTypes || MODx.config.upload_images
         }, {
             xtype: 'textarea',
-            fieldLabel: _('ms_description'),
+            fieldLabel: _('ms3_description'),
             name: 'description',
             anchor: '99%',
             id: config.id + '-description'
         }, {
             xtype: 'xcheckbox',
-            boxLabel: _('ms_active'),
+            boxLabel: _('ms3_active'),
             hideLabel: true,
             name: 'active',
             id: config.id + '-active'
         }];
     },
 });
-Ext.reg('minishop-window-payment-create', minishop.window.CreatePayment);
+Ext.reg('ms3-window-payment-create', ms3.window.CreatePayment);
 
 
-minishop.window.UpdatePayment = function (config) {
+ms3.window.UpdatePayment = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
@@ -91,21 +91,21 @@ minishop.window.UpdatePayment = function (config) {
         },
         bodyCssClass: 'tabs',
     });
-    minishop.window.UpdatePayment.superclass.constructor.call(this, config);
+    ms3.window.UpdatePayment.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.UpdatePayment, minishop.window.CreatePayment, {
+Ext.extend(ms3.window.UpdatePayment, ms3.window.CreatePayment, {
 
     getFields: function (config) {
         return [{
             xtype: 'modx-tabs',
             items: [{
-                title: _('ms_payment'),
+                title: _('ms3_payment'),
                 layout: 'form',
-                items: minishop.window.CreatePayment.prototype.getFields.call(this, config),
+                items: ms3.window.CreatePayment.prototype.getFields.call(this, config),
             }, {
-                title: _('ms_deliveries'),
+                title: _('ms3_deliveries'),
                 items: [{
-                    xtype: 'minishop-grid-payment-deliveries',
+                    xtype: 'ms3-grid-payment-deliveries',
                     record: config.record,
                 }]
             }]
@@ -113,4 +113,4 @@ Ext.extend(minishop.window.UpdatePayment, minishop.window.CreatePayment, {
     }
 
 });
-Ext.reg('minishop-window-payment-update', minishop.window.UpdatePayment);
+Ext.reg('ms3-window-payment-update', ms3.window.UpdatePayment);

@@ -7,7 +7,7 @@ class msOption extends \MiniShop3\Model\msOption
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_options',
+        'table' => 'ms3_options',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [
@@ -170,13 +170,13 @@ class msOption extends \MiniShop3\Model\msOption
                                     [
                                         'type' => 'preg_match',
                                         'rule' => '/^(?!\\W+)(?!\\d)[a-zA-Z0-9\\x2d-\\x2f\\x7f-\\xff-_]+(?!\\s)$/',
-                                        'message' => 'ms_option_err_invalid_key',
+                                        'message' => 'ms3_option_err_invalid_key',
                                     ],
                                 'reserved' =>
                                     [
                                         'type' => 'preg_match',
                                         'rule' => '/^(?!(id|type|contentType|pagetitle|longtitle|description|alias|link_attributes|published|pub_date|unpub_date|parent|isfolder|introtext|content|richtext|template|menuindex|searchable|cacheable|createdby|createdon|editedby|editedon|deleted|deletedby|deletedon|publishedon|publishedby|menutitle|donthit|privateweb|privatemgr|content_dispo|hidemenu|class_key|context_key|content_type|uri|uri_override|hide_children_in_tree|show_in_tree|article|price|old_price|weight|image|thumb|vendor|made_in|new|popular|favorite|tags|color|size|source|action)$)/',
-                                        'message' => 'ms_option_err_reserved_key',
+                                        'message' => 'ms3_option_err_reserved_key',
                                     ],
                             ],
                     ],

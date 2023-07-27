@@ -34,7 +34,7 @@ class GenerateAll extends  ModelProcessor
     {
         $product_id = (int)$this->getProperty('product_id');
         if (empty($product_id)) {
-            return $this->failure($this->modx->lexicon('ms_gallery_err_ns'));
+            return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
         }
 
         $files = $this->modx->getCollection(msProductFile::class, ['product_id' => $product_id, 'parent_id' => 0]);

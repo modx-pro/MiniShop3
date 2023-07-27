@@ -1,10 +1,10 @@
-minishop.window.Default = function (config) {
+ms3.window.Default = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         title: '',
-        url: minishop.config['connector_url'],
-        cls: 'minishop-window ' || config['cls'],
+        url: ms3.config['connector_url'],
+        cls: 'ms3-window ' || config['cls'],
         width: 600,
         autoHeight: true,
         allowDrop: false,
@@ -15,7 +15,7 @@ minishop.window.Default = function (config) {
         buttons: this.getButtons(config),
         listeners: this.getListeners(config),
     });
-    minishop.window.Default.superclass.constructor.call(this, config);
+    ms3.window.Default.superclass.constructor.call(this, config);
 
     this.on('hide', function () {
         const w = this;
@@ -24,7 +24,7 @@ minishop.window.Default = function (config) {
         }, 200);
     });
 };
-Ext.extend(minishop.window.Default, MODx.Window, {
+Ext.extend(ms3.window.Default, MODx.Window, {
 
     getFields: function () {
         return [];
@@ -62,4 +62,4 @@ Ext.extend(minishop.window.Default, MODx.Window, {
     },
 
 });
-Ext.reg('minishop-window-default', minishop.window.Default);
+Ext.reg('ms3-window-default', ms3.window.Default);

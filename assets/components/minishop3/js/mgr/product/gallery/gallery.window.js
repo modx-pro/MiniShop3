@@ -1,4 +1,4 @@
-minishop.window.Image = function (config) {
+ms3.window.Image = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
@@ -11,9 +11,9 @@ minishop.window.Image = function (config) {
         maximizable: false,
         minimizable: false,
     });
-    minishop.window.Image.superclass.constructor.call(this, config);
+    ms3.window.Image.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.Image, minishop.window.Default, {
+Ext.extend(ms3.window.Image, ms3.window.Default, {
 
     getFields: function (config) {
         const src = config.record['type'] === 'image'
@@ -25,9 +25,9 @@ Ext.extend(minishop.window.Image, minishop.window.Default, {
             + MODx.siteId + '&wctx=mgr&source='
             + config.record['source'];
         const fields = {
-            ms_gallery_file_source: config.record['source_name'],
-            ms_gallery_file_size: config.record['size'],
-            ms_gallery_file_createdon: config.record['createdon'],
+            ms3_gallery_file_source: config.record['source_name'],
+            ms3_gallery_file_size: config.record['size'],
+            ms3_gallery_file_createdon: config.record['createdon'],
         };
         let details = '';
         for (const i in fields) {
@@ -54,10 +54,10 @@ Ext.extend(minishop.window.Image, minishop.window.Default, {
                         xtype: 'displayfield',
                         hideLabel: true,
                         html: '\
-                            <a href="' + config.record['url'] + '" target="_blank" class="minishop-gallery-window-link">\
-                                <img src="' + img + '" class="minishop-gallery-window-thumb"  />\
+                            <a href="' + config.record['url'] + '" target="_blank" class="ms3-gallery-window-link">\
+                                <img src="' + img + '" class="ms3-gallery-window-thumb"  />\
                             </a>\
-                            <table class="minishop-gallery-window-details">' + details + '</table>'
+                            <table class="ms3-gallery-window-details">' + details + '</table>'
                     }]
                 }, {
                     columnWidth: .5,
@@ -66,19 +66,19 @@ Ext.extend(minishop.window.Image, minishop.window.Default, {
                     border: false,
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_gallery_file_name'),
+                        fieldLabel: _('ms3_gallery_file_name'),
                         name: 'file',
                         id: this.ident + '-file',
                         anchor: '100%'
                     }, {
                         xtype: 'textfield',
-                        fieldLabel: _('ms_gallery_file_title'),
+                        fieldLabel: _('ms3_gallery_file_title'),
                         name: 'name',
                         id: this.ident + '-name',
                         anchor: '100%'
                     }, {
                         xtype: 'textarea',
-                        fieldLabel: _('ms_gallery_file_description'),
+                        fieldLabel: _('ms3_gallery_file_description'),
                         name: 'description',
                         id: this.ident + '-description',
                         anchor: '100%',
@@ -90,4 +90,4 @@ Ext.extend(minishop.window.Image, minishop.window.Default, {
     }
 
 });
-Ext.reg('minishop-gallery-image', minishop.window.Image);
+Ext.reg('ms3-gallery-image', ms3.window.Image);

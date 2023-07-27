@@ -28,7 +28,6 @@ abstract class msOptionType
         $this->option = $option;
         $this->xpdo = $option->xpdo;
         $this->config = array_merge($this->config, $config);
-        $this::$xtype = $this->getField();
     }
 
     /**

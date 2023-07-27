@@ -7,7 +7,7 @@ class msLink extends \MiniShop3\Model\msLink
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_links',
+        'table' => 'ms3_links',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [

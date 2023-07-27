@@ -14,7 +14,7 @@ class ComboOptions extends msOptionType
      */
     public function getField($field)
     {
-        return "{xtype:'minishop-combo-options'}";
+        return "{xtype:'ms3-combo-options'}";
     }
 
     /**

@@ -110,7 +110,7 @@ class MiniShop3Package
 //            'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
 //            'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
             'requires' => [
-                'php' => '>=7.2.0',
+                'php' => '>=8.0.0',
                 'modx' => '>=3.0.0',
                 //'pdoTools' => '>=3.0.0'
             ],
@@ -413,7 +413,7 @@ class MiniShop3Package
                 $properties[] = array_merge([
                     'name' => $k,
                     'desc' => 'ms_prop_' . $k,
-                    'lexicon' => 'minishop:properties',
+                    'lexicon' => 'minishop3:properties',
                 ], $v);
             }
             $objects[$name]->setProperties($properties);

@@ -79,7 +79,7 @@ class GetList extends GetListProcessor
      */
     public function prepareRow(xPDOObject $object)
     {
-        $fields = array_map('trim', explode(',', $this->modx->getOption('ms_order_product_fields', null, '')));
+        $fields = array_map('trim', explode(',', $this->modx->getOption('ms3_order_product_fields', null, '')));
         $fields = array_values(array_unique(array_merge($fields, [
             'id',
             'product_id',
@@ -107,7 +107,7 @@ class GetList extends GetListProcessor
         if (!empty($options) && is_array($options)) {
             $tmp = [];
             foreach ($options as $k => $v) {
-                $tmp[] = $this->modx->lexicon('ms_' . $k) . ': ' . $v;
+                $tmp[] = $this->modx->lexicon('ms3_' . $k) . ': ' . $v;
                 $data['option_' . $k] = $v;
             }
             $data['options'] = implode('; ', $tmp);
@@ -117,7 +117,7 @@ class GetList extends GetListProcessor
             [
                 'cls' => '',
                 'icon' => 'icon icon-edit',
-                'title' => $this->modx->lexicon('ms_menu_update'),
+                'title' => $this->modx->lexicon('ms3_menu_update'),
                 'action' => 'updateOrderProduct',
                 'button' => true,
                 'menu' => true,
@@ -128,8 +128,8 @@ class GetList extends GetListProcessor
                     'button' => 'red',
                 ],
                 'icon' => 'icon icon-trash-o',
-                'title' => $this->modx->lexicon('ms_menu_remove'),
-                'multiple' => $this->modx->lexicon('ms_menu_remove'),
+                'title' => $this->modx->lexicon('ms3_menu_remove'),
+                'multiple' => $this->modx->lexicon('ms3_menu_remove'),
                 'action' => 'removeOrderProduct',
                 'button' => true,
                 'menu' => true,

@@ -1,8 +1,8 @@
-minishop.Message = {
+ms3.Message = {
     initialize: function () {
-        minishop.Message.close = function () {
+        ms3.Message.close = function () {
         };
-        minishop.Message.show = function (message) {
+        ms3.Message.show = function (message) {
             if (message != '') {
                 alert(message);
             }
@@ -10,10 +10,10 @@ minishop.Message = {
 
         if (typeof($.fn.jGrowl) === 'function') {
             $.jGrowl.defaults.closerTemplate = '<div>[ ' + miniShop2Config.close_all_message + ' ]</div>';
-            minishop.Message.close = function () {
+            ms3.Message.close = function () {
                 $.jGrowl('close');
             };
-            minishop.Message.show = function (message, options) {
+            ms3.Message.show = function (message, options) {
                 if (message != '') {
                     $.jGrowl(message, options);
                 }
@@ -22,7 +22,7 @@ minishop.Message = {
     },
     success: function (message) {
         if (typeof($.fn.jGrowl) === 'function') {
-            minishop.Message.show(message, {
+            ms3.Message.show(message, {
                 theme: 'ms2-message-success',
                 sticky: false
             });
@@ -30,7 +30,7 @@ minishop.Message = {
     },
     error: function (message) {
         if (typeof($.fn.jGrowl) === 'function') {
-            minishop.Message.show(message, {
+            ms3.Message.show(message, {
                 theme: 'ms2-message-error',
                 sticky: false
             });
@@ -38,7 +38,7 @@ minishop.Message = {
     },
     info: function (message) {
         if (typeof($.fn.jGrowl) === 'function') {
-            minishop.Message.show(message, {
+            ms3.Message.show(message, {
                 theme: 'ms2-message-info',
                 sticky: false
             });

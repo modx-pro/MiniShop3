@@ -7,7 +7,7 @@ class msProductLink extends \MiniShop3\Model\msProductLink
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_product_links',
+        'table' => 'ms3_product_links',
         'extends' => 'xPDO\\Om\\xPDOObject',
         'tableMeta' =>
             [

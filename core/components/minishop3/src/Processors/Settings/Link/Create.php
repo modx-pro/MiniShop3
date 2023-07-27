@@ -10,7 +10,7 @@ class Create extends CreateProcessor
     /** @var msLink $object */
     public $object;
     public $classKey = msLink::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
 
 
@@ -41,7 +41,7 @@ class Create extends CreateProcessor
             }
         }
         if ($this->modx->getCount($this->classKey, ['name' => $this->getProperty('name')])) {
-            $this->modx->error->addField('name', $this->modx->lexicon('ms_err_ae'));
+            $this->modx->error->addField('name', $this->modx->lexicon('ms3_err_ae'));
         }
 
         return !$this->hasErrors();

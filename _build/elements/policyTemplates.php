@@ -2,7 +2,7 @@
 
 return [
     'miniShopManagerPolicyTemplate' => [
-        'description' => 'A policy for miniShop2 managers.',
+        'description' => 'A policy for MiniShop3 managers.',
         'template_group' => 1,
         'permissions' => [
             'mscategory_save' => [],

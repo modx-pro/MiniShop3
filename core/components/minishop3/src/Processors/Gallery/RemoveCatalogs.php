@@ -9,7 +9,7 @@ class RemoveCatalogs
 {
     public static function process(modX $modx, int $id)
     {
-        $source = $modx->getObject(modMediaSource::class, $modx->getOption('ms_product_source_default'));
+        $source = $modx->getObject(modMediaSource::class, $modx->getOption('ms3_product_source_default'));
         $props = $source->get('properties');
         $path = MODX_BASE_PATH . $props['basePath']['value'] . $id;
 

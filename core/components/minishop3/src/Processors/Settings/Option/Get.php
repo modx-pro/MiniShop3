@@ -13,8 +13,8 @@ class Get extends GetProcessor
     /** @var msOption $object */
     public $object;
     public $classKey = msOption::class;
-    public $objectType = 'ms_option';
-    public $languageTopics = ['minishop'];
+    public $objectType = 'ms3_option';
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_view';
 
 

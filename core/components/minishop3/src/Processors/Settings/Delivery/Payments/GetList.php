@@ -62,8 +62,8 @@ class GetList extends GetListProcessor
             $data['actions'][] = [
                 'cls' => 'fw-900',
                 'icon' => 'icon icon-power-off action-green',
-                'title' => $this->modx->lexicon('ms_menu_enable'),
-                'multiple' => $this->modx->lexicon('ms_menu_enable'),
+                'title' => $this->modx->lexicon('ms3_menu_enable'),
+                'multiple' => $this->modx->lexicon('ms3_menu_enable'),
                 'action' => 'enablePayment',
                 'button' => true,
                 'menu' => true,
@@ -72,8 +72,8 @@ class GetList extends GetListProcessor
             $data['actions'][] = [
                 'cls' => 'fw-900',
                 'icon' => 'icon icon-power-off action-gray',
-                'title' => $this->modx->lexicon('ms_menu_disable'),
-                'multiple' => $this->modx->lexicon('ms_menu_disable'),
+                'title' => $this->modx->lexicon('ms3_menu_disable'),
+                'multiple' => $this->modx->lexicon('ms3_menu_disable'),
                 'action' => 'disablePayment',
                 'button' => true,
                 'menu' => true,

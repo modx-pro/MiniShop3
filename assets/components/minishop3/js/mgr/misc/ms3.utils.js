@@ -1,20 +1,20 @@
-Ext.namespace('minishop.utils');
+Ext.namespace('ms3.utils');
 
-minishop.utils = {};
+ms3.utils = {};
 
-minishop.utils.formatDate = function (string) {
+ms3.utils.formatDate = function (string) {
     if (string && string != '0000-00-00 00:00:00' && string != '-1-11-30 00:00:00' && string != 0) {
         const date = /^[0-9]+$/.test(string)
             ? new Date(string * 1000)
             : new Date(string.replace(/(\d+)-(\d+)-(\d+)/, '$2/$3/$1'));
 
-        return date.strftime(MODx.config['ms_date_format']);
+        return date.strftime(MODx.config['ms3_date_format']);
     } else {
         return '&nbsp;';
     }
 };
 
-minishop.utils.userLink = function (value, id, blank) {
+ms3.utils.userLink = function (value, id, blank) {
     if (!value) {
         return '';
     } else if (!id) {
@@ -29,7 +29,7 @@ minishop.utils.userLink = function (value, id, blank) {
     );
 };
 
-minishop.utils.productLink = function (value, id, blank) {
+ms3.utils.productLink = function (value, id, blank) {
     if (!value) {
         return '';
     } else if (!id) {
@@ -44,9 +44,9 @@ minishop.utils.productLink = function (value, id, blank) {
     );
 };
 
-minishop.utils.renderImage = function (value) {
+ms3.utils.renderImage = function (value) {
     if (Ext.isEmpty(value)) {
-        value = minishop.config['default_thumb'];
+        value = ms3.config['default_thumb'];
     } else {
         if (!/\/\//.test(value)) {
             if (!/^\//.test(value)) {
@@ -58,7 +58,7 @@ minishop.utils.renderImage = function (value) {
     return String.format('<img src="{0}" />', value);
 };
 
-minishop.utils.renderBoolean = function (value) {
+ms3.utils.renderBoolean = function (value) {
     let color, text;
     if (value == 0 || value == false || value == undefined) {
         color = 'red';
@@ -71,7 +71,7 @@ minishop.utils.renderBoolean = function (value) {
     return String.format('<span class="{0}">{1}</span>', color, text);
 };
 
-minishop.utils.getMenu = function (actions, grid, selected) {
+ms3.utils.getMenu = function (actions, grid, selected) {
     const menu = [];
     let cls, icon, title, action = '';
 
@@ -126,7 +126,7 @@ minishop.utils.getMenu = function (actions, grid, selected) {
     return menu;
 };
 
-minishop.utils.renderActions = function (value, props, row) {
+ms3.utils.renderActions = function (value, props, row) {
     const res = [];
     let cls, icon, title, action, item = '';
     for (const i in row.data.actions) {
@@ -161,12 +161,12 @@ minishop.utils.renderActions = function (value, props, row) {
     }
 
     return String.format(
-        '<ul class="minishop3-row-actions">{0}</ul>',
+        '<ul class="ms3-row-actions">{0}</ul>',
         res.join('')
     );
 };
 
-minishop.utils.Hash = {
+ms3.utils.Hash = {
     get: function () {
         let consts = {}, hash, splitter, hashes;
         if (!this.oldbrowser()) {
@@ -236,7 +236,7 @@ minishop.utils.Hash = {
     },
 };
 
-minishop.utils.formatSize = function (size) {
+ms3.utils.formatSize = function (size) {
     if (size >= 1048576) {
         size = Math.round(size / 1048576).toFixed(2) + ' Mb';
     } else if (size >= 1024) {
@@ -248,7 +248,7 @@ minishop.utils.formatSize = function (size) {
     return size;
 };
 
-minishop.utils.getExtField = function (config, key, option, context) {
+ms3.utils.getExtField = function (config, key, option, context) {
     config = config || {};
     if (!config.record) {
         config.record = {};
@@ -280,8 +280,8 @@ minishop.utils.getExtField = function (config, key, option, context) {
     let help = '';
     if (_('resource_' + key + '_help')) {
         help = '<br/>' + _('resource_' + key + '_help');
-    } else if (_('ms_product_' + key + '_help')) {
-        help = '<br/>' + _('ms_product_' + key + '_help');
+    } else if (_('ms3_product_' + key + '_help')) {
+        help = '<br/>' + _('ms3_product_' + key + '_help');
     } else if (option.description) {
         help = '<br/>' + option.description;
     }
@@ -291,7 +291,7 @@ minishop.utils.getExtField = function (config, key, option, context) {
         name: name,
         value: option.value || config.record[key] || '',
         description: '[[+' + key + ']]' + help,
-        fieldLabel: option.caption || _('ms_product_' + key) || key,
+        fieldLabel: option.caption || _('ms3_product_' + key) || key,
         fieldKey: key,
         allowBlank: Boolean(1 - parseInt(option.required || 0)),
         enableKeyEvents: true,
@@ -306,13 +306,13 @@ minishop.utils.getExtField = function (config, key, option, context) {
     }
 
     switch (field.xtype) {
-        case 'minishop-combo-options':
+        case 'ms3-combo-options':
             if (context.indexOf('column') > 0) {
                 field.disabled = true;
                 field.xtype = 'textfield';
             }
             break;
-        case 'minishop-xdatetime':
+        case 'ms3-xdatetime':
             field.anchor = '95%';
             field.fieldColumnWidth = '75';
             break;
@@ -322,7 +322,7 @@ minishop.utils.getExtField = function (config, key, option, context) {
                 field.value = '';
             }
             break;
-        case 'minishop-combo-user':
+        case 'ms3-combo-user':
             field.anchor = '95%';
             field.fieldColumnWidth = '75';
             break;
@@ -370,7 +370,7 @@ minishop.utils.getExtField = function (config, key, option, context) {
     }
 };
 
-minishop.utils.renderBadge = function (value, cell, row) {
+ms3.utils.renderBadge = function (value, cell, row) {
     let color = row.data.color || 'CACACA',
         textColor = '000000';
 

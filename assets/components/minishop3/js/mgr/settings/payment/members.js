@@ -1,12 +1,12 @@
-minishop.grid.PaymentDeliveries = function (config) {
+ms3.grid.PaymentDeliveries = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-payment-deliveries';
+        config.id = 'ms3-grid-payment-deliveries';
     }
     config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
-        cls: 'minishop-grid',
+        cls: 'ms3-grid',
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Payment\\Deliveries\\GetList',
             sort: 'position',
@@ -16,9 +16,9 @@ minishop.grid.PaymentDeliveries = function (config) {
         pageSize: 5,
         multi_select: true,
     });
-    minishop.grid.PaymentDeliveries.superclass.constructor.call(this, config);
+    ms3.grid.PaymentDeliveries.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.grid.PaymentDeliveries, minishop.grid.Default, {
+Ext.extend(ms3.grid.PaymentDeliveries, ms3.grid.Default, {
 
     getFields: function () {
         return ['id', 'name', 'price', 'logo', 'position', 'active', 'class', 'actions'];
@@ -26,15 +26,15 @@ Ext.extend(minishop.grid.PaymentDeliveries, minishop.grid.Default, {
 
     getColumns: function () {
         return [
-            {header: _('ms_logo'), dataIndex: 'logo', id: 'image', width: 30, renderer: minishop.utils.renderImage},
-            {header: _('ms_name'), dataIndex: 'name', width: 75},
-            {header: _('ms_add_cost'), dataIndex: 'price', width: 50},
+            {header: _('ms3_logo'), dataIndex: 'logo', id: 'image', width: 30, renderer: ms3.utils.renderImage},
+            {header: _('ms3_name'), dataIndex: 'name', width: 75},
+            {header: _('ms3_add_cost'), dataIndex: 'price', width: 50},
             {
-                header: _('ms_actions'),
+                header: _('ms3_actions'),
                 dataIndex: 'actions',
                 id: 'actions',
                 width: 35,
-                renderer: minishop.utils.renderActions
+                renderer: ms3.utils.renderActions
         }
         ];
     },
@@ -53,7 +53,7 @@ Ext.extend(minishop.grid.PaymentDeliveries, minishop.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             params: {
                 action: 'MiniShop3\\Processors\\Settings\\Payment\\Deliveries\\Multiple',
                 method: method,
@@ -100,4 +100,4 @@ Ext.extend(minishop.grid.PaymentDeliveries, minishop.grid.Default, {
         return ids;
     },
 });
-Ext.reg('minishop-grid-payment-deliveries', minishop.grid.PaymentDeliveries);
+Ext.reg('ms3-grid-payment-deliveries', ms3.grid.PaymentDeliveries);

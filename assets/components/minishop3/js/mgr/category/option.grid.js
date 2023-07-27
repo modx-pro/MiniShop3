@@ -1,11 +1,11 @@
-minishop.grid.CategoryOption = function (config) {
+ms3.grid.CategoryOption = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-category-option';
+        config.id = 'ms3-grid-category-option';
     }
 
     Ext.applyIf(config, {
-        cls: 'minishop-grid' || config['cls'],
+        cls: 'ms3-grid' || config['cls'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Category\\Option\\GetList',
             category: config.record['id'],
@@ -21,9 +21,9 @@ minishop.grid.CategoryOption = function (config) {
         ddGroup: 'dd-option-grid',
         enableDragDrop: true,
     });
-    minishop.grid.CategoryOption.superclass.constructor.call(this, config);
+    ms3.grid.CategoryOption.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
+Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
 
     getFields: function () {
         return [
@@ -35,16 +35,16 @@ Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
     getColumns: function () {
         return [
             {header: _('id'), dataIndex: 'id', width: 35, sortable: true},
-            {header: _('ms_ft_name'), dataIndex: 'key', width: 50, sortable: true},
-            {header: _('ms_ft_caption'), dataIndex: 'caption', width: 75, sortable: true},
-            {header: _('ms_ft_type'), dataIndex: 'type', width: 75, renderer: this._renderType},
-            {header: _('ms_default_value'), dataIndex: 'value', width: 75, editor: {xtype: 'textfield'}},
-            {header: _('ms_ft_rank'), dataIndex: 'rank', width: 50, editor: {xtype: 'numberfield'}, hidden: true, sortable: true},
+            {header: _('ms3_ft_name'), dataIndex: 'key', width: 50, sortable: true},
+            {header: _('ms3_ft_caption'), dataIndex: 'caption', width: 75, sortable: true},
+            {header: _('ms3_ft_type'), dataIndex: 'type', width: 75, renderer: this._renderType},
+            {header: _('ms3_default_value'), dataIndex: 'value', width: 75, editor: {xtype: 'textfield'}},
+            {header: _('ms3_ft_rank'), dataIndex: 'rank', width: 50, editor: {xtype: 'numberfield'}, hidden: true, sortable: true},
             {
-                header: _('ms_actions'),
+                header: _('ms3_actions'),
                 width: 75,
                 id: 'actions',
-                renderer: minishop.utils.renderActions,
+                renderer: ms3.utils.renderActions,
                 sortable: false
         }
         ];
@@ -52,11 +52,11 @@ Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
 
     getTopBar: function () {
         return [{
-            text: '<i class="icon icon-plus"></i> ' + _('ms_btn_addoption'),
+            text: '<i class="icon icon-plus"></i> ' + _('ms3_btn_addoption'),
             handler: this.addOption,
             scope: this
         }, {
-            text: '<i class="icon icon-files-o"></i> ' + _('ms_btn_copy'),
+            text: '<i class="icon icon-files-o"></i> ' + _('ms3_btn_copy'),
             handler: this.copyCategory,
             scope: this
         }, '->', this.getSearchField()];
@@ -77,13 +77,13 @@ Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
     },
 
     addOption: function (btn, e) {
-        let w = Ext.getCmp('minishop-window-option-add');
+        let w = Ext.getCmp('ms3-window-option-add');
         if (w) {
             return false;
         }
         w = MODx.load({
-            id: 'minishop-window-option-add',
-            xtype: 'minishop-window-option-add',
+            id: 'ms3-window-option-add',
+            xtype: 'ms3-window-option-add',
             listeners: {
                 success: {
                     fn: function () {
@@ -100,13 +100,13 @@ Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
     },
 
     copyCategory: function (btn, e) {
-        let w = Ext.getCmp('minishop-window-copy-category');
+        let w = Ext.getCmp('ms3-window-copy-category');
         if (w) {
             return false;
         }
         w = MODx.load({
-            id: 'minishop-window-copy-category',
-            xtype: 'minishop-window-copy-category',
+            id: 'ms3-window-copy-category',
+            xtype: 'ms3-window-copy-category',
             listeners: {
                 success: {
                     fn: function () {
@@ -129,7 +129,7 @@ Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
         }
 
         MODx.Ajax.request({
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             params: {
                 action: 'MiniShop3\\Processors\\Category\\Option\\Multiple',
                 method: method,
@@ -191,7 +191,7 @@ Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
     },
 
     _renderType: function (value) {
-        return _('ms_ft_' + value);
+        return _('ms3_ft_' + value);
     },
 
     _getSelectedIds: function () {
@@ -211,4 +211,4 @@ Ext.extend(minishop.grid.CategoryOption, minishop.grid.Default, {
     },
 
 });
-Ext.reg('minishop-grid-category-option', minishop.grid.CategoryOption);
+Ext.reg('ms3-grid-category-option', ms3.grid.CategoryOption);

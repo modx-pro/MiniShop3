@@ -34,7 +34,7 @@ class msProductCreateManagerController extends msResourceCreateController
     public function getDefaultTemplate()
     {
         parent::getDefaultTemplate();;
-        if (!$template = $this->getOption('ms_template_product_default')) {
+        if (!$template = $this->getOption('ms3_template_product_default')) {
             $template = parent::getDefaultTemplate();
         }
 
@@ -59,8 +59,8 @@ class msProductCreateManagerController extends msResourceCreateController
     {
         $placeholders = parent::process($scriptProperties);
 
-        $this->resourceArray['show_in_tree'] = (int)$this->getOption('ms_product_show_in_tree_default');
-        $this->resourceArray['source'] = (int)$this->getOption('ms_product_source_default');
+        $this->resourceArray['show_in_tree'] = (int)$this->getOption('ms3_product_show_in_tree_default');
+        $this->resourceArray['source'] = (int)$this->getOption('ms3_product_source_default');
 
         return $placeholders;
     }
@@ -81,10 +81,10 @@ class msProductCreateManagerController extends msResourceCreateController
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.tv.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.js');
         $this->addJavascript($mgrUrl . 'assets/modext/sections/resource/create.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/minishop.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/minishop3.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/sortable/sortable.min.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.combo.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.utils.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/category.tree.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/create.js');
@@ -93,14 +93,14 @@ class msProductCreateManagerController extends msResourceCreateController
         $product_fields = array_merge($this->resource->getAllFieldsNames(), ['syncsite']);
         $product_data_fields = $this->resource->getDataFieldsNames();
 
-        if (!$product_main_fields = $this->getOption('ms_product_main_fields')) {
+        if (!$product_main_fields = $this->getOption('ms3_product_main_fields')) {
             $product_main_fields = 'pagetitle,longtitle,introtext,content,publishedon,pub_date,unpub_date,template,
                 parent,alias,menutitle,searchable,cacheable,richtext,uri_override,uri,hidemenu,show_in_tree';
         }
         $product_main_fields = array_map('trim', explode(',', $product_main_fields));
         $product_main_fields = array_values(array_intersect($product_main_fields, $product_fields));
 
-        if (!$product_extra_fields = $this->getOption('ms_product_extra_fields')) {
+        if (!$product_extra_fields = $this->getOption('ms3_product_extra_fields')) {
             $product_extra_fields = 'article,price,old_price,weight,color,remains,reserved,vendor,made_in,tags';
         }
         $product_extra_fields = array_map('trim', explode(',', $product_extra_fields));
@@ -110,25 +110,25 @@ class msProductCreateManagerController extends msResourceCreateController
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
-            'show_gallery' => (bool)$this->getOption('ms_product_tab_gallery', null, true),
-            'show_extra' => (bool)$this->getOption('ms_product_tab_extra', null, true),
-            'show_options' => (bool)$this->getOption('ms_product_tab_options', null, true),
-            'show_links' => (bool)$this->getOption('ms_product_tab_links', null, true),
-            'show_categories' => (bool)$this->getOption('ms_product_tab_categories', null, true),
+            'show_gallery' => (bool)$this->getOption('ms3_product_tab_gallery', null, true),
+            'show_extra' => (bool)$this->getOption('ms3_product_tab_extra', null, true),
+            'show_options' => (bool)$this->getOption('ms3_product_tab_options', null, true),
+            'show_links' => (bool)$this->getOption('ms3_product_tab_links', null, true),
+            'show_categories' => (bool)$this->getOption('ms3_product_tab_categories', null, true),
             'default_thumb' => $this->ms3->config['defaultThumb'],
             'main_fields' => $product_main_fields,
             'extra_fields' => $product_extra_fields,
             'option_fields' => $product_option_fields,
-            'product_tab_extra' => (bool)$this->getOption('ms_product_tab_extra', null, true),
-            'product_tab_gallery' => (bool)$this->getOption('ms_product_tab_gallery', null, true),
-            'product_tab_links' => (bool)$this->getOption('ms_product_tab_links', null, true),
+            'product_tab_extra' => (bool)$this->getOption('ms3_product_tab_extra', null, true),
+            'product_tab_gallery' => (bool)$this->getOption('ms3_product_tab_gallery', null, true),
+            'product_tab_links' => (bool)$this->getOption('ms3_product_tab_links', null, true),
             'data_fields' => $product_data_fields,
             'additional_fields' => [],
             'isHideContent' => $this->isHideContent(),
         ];
 
         $ready = [
-            'xtype' => 'minishop-page-product-create',
+            'xtype' => 'ms3-page-product-create',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
             'publish_document' => $this->canPublish,
@@ -148,7 +148,7 @@ class msProductCreateManagerController extends msResourceCreateController
         MODx.config.publish_document = "' . $this->canPublish . '";
         MODx.onDocFormRender = "' . $this->onDocFormRender . '";
         MODx.ctx = "' . $this->ctx . '";
-        minishop.config = ' . json_encode($config) . ';
+        ms3.config = ' . json_encode($config) . ';
         Ext.onReady(function() {
             MODx.load(' . json_encode($ready) . ');
         });

@@ -14,8 +14,8 @@
             {/foreach}
         </div>
     {else}
-        <img src="{('assets_url' | option) ~ 'components/minishop2/img/web/ms2_medium.png'}"
-            srcset="{('assets_url' | option) ~ 'components/minishop2/img/web/ms2_medium@2x.png'} 2x"
+        <img src="{('assets_url' | option) ~ 'components/minishop3/img/web/ms2_medium.png'}"
+            srcset="{('assets_url' | option) ~ 'components/minishop3/img/web/ms2_medium@2x.png'} 2x"
             alt="" title=""/>
     {/if}
 </div>

@@ -1,8 +1,8 @@
-minishop.DragZone = function (view) {
+ms3.DragZone = function (view) {
     this.view = view;
-    minishop.DragZone.superclass.constructor.call(this, view.getEl());
+    ms3.DragZone.superclass.constructor.call(this, view.getEl());
 };
-Ext.extend(minishop.DragZone, Ext.dd.DragZone, {
+Ext.extend(ms3.DragZone, Ext.dd.DragZone, {
 
     getDragData: function (e) {
         const target = e.getTarget(this.view.itemSelector);
@@ -26,11 +26,11 @@ Ext.extend(minishop.DragZone, Ext.dd.DragZone, {
 });
 
 
-minishop.DropZone = function (view) {
+ms3.DropZone = function (view) {
     this.view = view;
-    minishop.DropZone.superclass.constructor.call(this, view.getEl(), {containerScroll: true});
+    ms3.DropZone.superclass.constructor.call(this, view.getEl(), {containerScroll: true});
 };
-Ext.extend(minishop.DropZone, Ext.dd.DropZone, {
+Ext.extend(ms3.DropZone, Ext.dd.DropZone, {
 
     getTargetFromEvent: function (e) {
         return e.getTarget(this.view.itemSelector);

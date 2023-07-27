@@ -1,7 +1,7 @@
-minishop.grid.Logs = function (config) {
+ms3.grid.Logs = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-order-logs';
+        config.id = 'ms3-grid-order-logs';
     }
     Ext.applyIf(config, {
         baseParams: {
@@ -9,15 +9,15 @@ minishop.grid.Logs = function (config) {
             order_id: config.order_id,
             type: 'status'
         },
-        cls: 'minishop-grid',
+        cls: 'ms3-grid',
         multi_select: false,
         stateful: true,
         stateId: config.id,
         pageSize: Math.round(MODx.config['default_per_page'] / 2),
     });
-    minishop.grid.Logs.superclass.constructor.call(this, config);
+    ms3.grid.Logs.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.grid.Logs, minishop.grid.Default, {
+Ext.extend(ms3.grid.Logs, ms3.grid.Default, {
 
     getFields: function () {
         return ['id', 'user_id', 'username', 'fullname', 'timestamp', 'action', 'entry', 'color'];
@@ -25,20 +25,20 @@ Ext.extend(minishop.grid.Logs, minishop.grid.Default, {
 
     getColumns: function () {
         return [
-            {header: _('ms_id'), dataIndex: 'id', hidden: true, sortable: true, width: 50},
-            {header: _('ms_username'), dataIndex: 'username', width: 75, renderer: function (val, cell, row) {
-                return minishop.utils.userLink(val, row.data['user_id'], true);
+            {header: _('ms3_id'), dataIndex: 'id', hidden: true, sortable: true, width: 50},
+            {header: _('ms3_username'), dataIndex: 'username', width: 75, renderer: function (val, cell, row) {
+                return ms3.utils.userLink(val, row.data['user_id'], true);
             }},
-            {header: _('ms_fullname'), dataIndex: 'fullname', width: 100},
+            {header: _('ms3_fullname'), dataIndex: 'fullname', width: 100},
             {
-                header: _('ms_timestamp'),
+                header: _('ms3_timestamp'),
                 dataIndex: 'timestamp',
                 sortable: true,
-                renderer: minishop.utils.formatDate,
+                renderer: ms3.utils.formatDate,
                 width: 75
         },
-            {header: _('ms_action'), dataIndex: 'action', width: 50},
-            {header: _('ms_entry'), dataIndex: 'entry', width: 50, renderer: minishop.utils.renderBadge}
+            {header: _('ms3_action'), dataIndex: 'action', width: 50},
+            {header: _('ms3_entry'), dataIndex: 'entry', width: 50, renderer: ms3.utils.renderBadge}
         ];
     },
 
@@ -47,4 +47,4 @@ Ext.extend(minishop.grid.Logs, minishop.grid.Default, {
     },
 
 });
-Ext.reg('minishop-grid-order-logs', minishop.grid.Logs);
+Ext.reg('ms3-grid-order-logs', ms3.grid.Logs);

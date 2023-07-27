@@ -1,8 +1,8 @@
-minishop.window.CreateProductLink = function (config) {
+ms3.window.CreateProductLink = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_link'),
+        title: _('ms3_link'),
         width: 600,
         success: this.success,
         baseParams: {
@@ -10,22 +10,22 @@ minishop.window.CreateProductLink = function (config) {
         },
         fields: config.fields,
     });
-    minishop.window.CreateProductLink.superclass.constructor.call(this, config);
+    ms3.window.CreateProductLink.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.CreateProductLink, minishop.window.Default, {
+Ext.extend(ms3.window.CreateProductLink, ms3.window.Default, {
 
     getFields: function (config) {
         return [{
-            xtype: 'minishop-combo-link',
+            xtype: 'ms3-combo-link',
             id: config.id + '-link',
-            fieldLabel: _('ms_link'),
+            fieldLabel: _('ms3_link'),
             name: 'link',
             allowBlank: false,
             anchor: '99%',
         }, {
-            xtype: 'minishop-combo-product',
+            xtype: 'ms3-combo-product',
             id: config.id + '-product',
-            fieldLabel: _('ms_product'),
+            fieldLabel: _('ms3_product'),
             name: 'slave',
             hiddenName: 'slave',
             allowBlank: false,
@@ -63,4 +63,4 @@ Ext.extend(minishop.window.CreateProductLink, minishop.window.Default, {
     },
 
 });
-Ext.reg('minishop-product-link-create', minishop.window.CreateProductLink);
+Ext.reg('ms3-product-link-create', ms3.window.CreateProductLink);

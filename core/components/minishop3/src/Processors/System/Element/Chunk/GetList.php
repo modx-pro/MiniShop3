@@ -21,7 +21,7 @@ class GetList extends GetListProcessor
      */
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
-        $categories = $this->modx->getOption('ms_chunks_categories');
+        $categories = $this->modx->getOption('ms3_chunks_categories');
         if (!empty($categories)) {
             $c->where([
                 'category:IN' => explode(',', $categories)

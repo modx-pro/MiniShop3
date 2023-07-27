@@ -1,7 +1,7 @@
-minishop.grid.Link = function (config) {
+ms3.grid.Link = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-link';
+        config.id = 'ms3-grid-link';
     }
     config.disableContextMenuAction = true;
 
@@ -13,9 +13,9 @@ minishop.grid.Link = function (config) {
         stateId: config.id,
         multi_select: true,
     });
-    minishop.grid.Link.superclass.constructor.call(this, config);
+    ms3.grid.Link.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.grid.Link, minishop.grid.Default, {
+Ext.extend(ms3.grid.Link, ms3.grid.Default, {
 
     getFields: function () {
         return ['id', 'type', 'name', 'description', 'actions'];
@@ -23,7 +23,7 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
 
     getTopBar: function () {
         return [{
-            text: '<i class="icon icon-plus"></i> ' + _('ms_btn_create'),
+            text: '<i class="icon icon-plus"></i> ' + _('ms3_btn_create'),
             handler: this.createLink,
             scope: this
         }, '->', this.getSearchField()];
@@ -31,23 +31,23 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
 
     getColumns: function () {
         return [
-            {header: _('ms_id'), dataIndex: 'id', width: 50, sortable: true},
-            {header: _('ms_name'), dataIndex: 'name', width: 100, sortable: true},
+            {header: _('ms3_id'), dataIndex: 'id', width: 50, sortable: true},
+            {header: _('ms3_name'), dataIndex: 'name', width: 100, sortable: true},
             {
-                header: _('ms_type'),
+                header: _('ms3_type'),
                 dataIndex: 'type',
                 width: 100,
                 renderer: function (value) {
-                    return _('ms_link_' + value);
+                    return _('ms3_link_' + value);
                 }
             },
-            {header: _('ms_description'), dataIndex: 'description', width: 100},
+            {header: _('ms3_description'), dataIndex: 'description', width: 100},
             {
-                header: _('ms_actions'),
+                header: _('ms3_actions'),
                 dataIndex: 'actions',
                 id: 'actions',
                 width: 50,
-                renderer: minishop.utils.renderActions
+                renderer: ms3.utils.renderActions
             }
         ];
     },
@@ -67,7 +67,7 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             params: {
                 action: 'MiniShop3\\Processors\\Settings\\Link\\Multiple',
                 method: method,
@@ -90,13 +90,13 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
     },
 
     createLink: function (btn, e) {
-        let w = Ext.getCmp('minishop-window-link-create');
+        let w = Ext.getCmp('ms3-window-link-create');
         if (w) {
             w.close();
         }
         w = MODx.load({
-            xtype: 'minishop-window-link-create',
-            id: 'minishop-window-link-create',
+            xtype: 'ms3-window-link-create',
+            id: 'ms3-window-link-create',
             listeners: {
                 success: {
                     fn: function () {
@@ -113,13 +113,13 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
             this.menu.record = row.data;
         }
 
-        let w = Ext.getCmp('minishop-window-link-update');
+        let w = Ext.getCmp('ms3-window-link-update');
         if (w) {
             w.close();
         }
         w = MODx.load({
-            xtype: 'minishop-window-link-update',
-            id: 'minishop-window-link-update',
+            xtype: 'ms3-window-link-update',
+            id: 'ms3-window-link-update',
             title: this.menu.record['name'],
             record: this.menu.record,
             listeners: {
@@ -139,10 +139,10 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
         const ids = this._getSelectedIds();
 
         Ext.MessageBox.confirm(
-            _('ms_menu_remove_title'),
+            _('ms3_menu_remove_title'),
             ids.length > 1
-                ? _('ms_menu_remove_multiple_confirm')
-                : _('ms_menu_remove_confirm'),
+                ? _('ms3_menu_remove_multiple_confirm')
+                : _('ms3_menu_remove_confirm'),
             function (val) {
                 if (val == 'yes') {
                     this.linkAction('Remove');
@@ -153,4 +153,4 @@ Ext.extend(minishop.grid.Link, minishop.grid.Default, {
     },
 
 });
-Ext.reg('minishop-grid-link', minishop.grid.Link);
+Ext.reg('ms3-grid-link', ms3.grid.Link);

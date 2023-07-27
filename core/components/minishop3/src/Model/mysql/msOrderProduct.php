@@ -7,7 +7,7 @@ class msOrderProduct extends \MiniShop3\Model\msOrderProduct
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_order_products',
+        'table' => 'ms3_order_products',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [

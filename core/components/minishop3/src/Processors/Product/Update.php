@@ -70,7 +70,7 @@ class Update extends UpdateProcessor
      */
     public function checkFriendlyAlias()
     {
-        if ($this->workingContext->getOption('ms_product_id_as_alias')) {
+        if ($this->workingContext->getOption('ms3_product_id_as_alias')) {
             $alias = $this->object->get('id');
             $this->setProperty('alias', $alias);
         } else {

@@ -24,9 +24,9 @@ class Add extends CreateProcessor
         $option = (int)$this->getProperty('option_id');
         $category = (int)$this->getProperty('category_id');
         if (!$option) {
-            return $this->modx->lexicon('ms_option_err_ns');
+            return $this->modx->lexicon('ms3_option_err_ns');
         } elseif (!$category) {
-            return $this->modx->lexicon('ms_category_err_ns');
+            return $this->modx->lexicon('ms3_category_err_ns');
         }
 
         $unique = [
@@ -35,13 +35,13 @@ class Add extends CreateProcessor
         ];
 
         if ($this->doesAlreadyExist($unique)) {
-            return $this->modx->lexicon('ms_option_err_ae', $unique);
+            return $this->modx->lexicon('ms3_option_err_ae', $unique);
         }
 
         if (!$this->modx->getCount(msOption::class, $option)) {
-            return $this->modx->lexicon('ms_option_err_nf');
+            return $this->modx->lexicon('ms3_option_err_nf');
         } elseif (!$this->modx->getCount(msCategory::class, $category)) {
-            return $this->modx->lexicon('ms_category_err_nf');
+            return $this->modx->lexicon('ms3_category_err_nf');
         }
 
         $this->object->set('option_id', $option);

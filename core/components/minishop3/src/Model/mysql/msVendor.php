@@ -7,7 +7,7 @@ class msVendor extends \MiniShop3\Model\msVendor
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_vendors',
+        'table' => 'ms3_vendors',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [

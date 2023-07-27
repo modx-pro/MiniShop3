@@ -31,27 +31,27 @@ class Create extends CreateProcessor
     public function process()
     {
         if (!$master = $this->getProperty('master')) {
-            $this->addFieldError('master', $this->modx->lexicon('ms_err_ns'));
+            $this->addFieldError('master', $this->modx->lexicon('ms3_err_ns'));
         }
         if (!$slave = $this->getProperty('slave')) {
-            $this->addFieldError('slave', $this->modx->lexicon('ms_err_ns'));
+            $this->addFieldError('slave', $this->modx->lexicon('ms3_err_ns'));
         }
         if (!$link = $this->getProperty('link')) {
-            $this->addFieldError('link', $this->modx->lexicon('ms_err_ns'));
+            $this->addFieldError('link', $this->modx->lexicon('ms3_err_ns'));
         }
 
         if ($this->hasErrors()) {
             return $this->failure();
         } else {
             if ($master == $slave) {
-                return $this->failure($this->modx->lexicon('ms_err_link_equal'));
+                return $this->failure($this->modx->lexicon('ms3_err_link_equal'));
             }
         }
 
         /** @var msLink $msLink */
         $msLink = $this->modx->getObject(msLink::class, ['id' => $link]);
         if (!$msLink) {
-            return $this->failure($this->modx->lexicon('ms_err_no_link'));
+            return $this->failure($this->modx->lexicon('ms3_err_no_link'));
         }
         $type = $msLink->get('type');
 

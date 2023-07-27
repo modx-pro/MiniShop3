@@ -1,33 +1,33 @@
-minishop.panel.Images = function (config) {
+ms3.panel.Images = function (config) {
     config = config || {};
 
     this.view = MODx.load({
-        xtype: 'minishop-gallery-images-view',
-        id: 'minishop-gallery-images-view',
-        cls: 'minishop-gallery-images',
+        xtype: 'ms3-gallery-images-view',
+        id: 'ms3-gallery-images-view',
+        cls: 'ms3-gallery-images',
         containerScroll: true,
         pageSize: parseInt(config.pageSize || MODx.config.default_per_page),
         product_id: config.product_id,
-        emptyText: _('ms_gallery_emptymsg'),
+        emptyText: _('ms3_gallery_emptymsg'),
     });
 
     Ext.applyIf(config, {
-        id: 'minishop-gallery-images',
+        id: 'ms3-gallery-images',
         cls: 'browser-view',
         border: false,
         items: [this.view],
         tbar: this.getTopBar(config),
         bbar: this.getBottomBar(config),
     });
-    minishop.panel.Images.superclass.constructor.call(this, config);
+    ms3.panel.Images.superclass.constructor.call(this, config);
 
     const dv = this.view;
     dv.on('render', function () {
-        dv.dragZone = new minishop.DragZone(dv);
-        dv.dropZone = new minishop.DropZone(dv);
+        dv.dragZone = new ms3.DragZone(dv);
+        dv.dropZone = new ms3.DropZone(dv);
     });
 };
-Ext.extend(minishop.panel.Images, MODx.Panel, {
+Ext.extend(ms3.panel.Images, MODx.Panel, {
 
     _doSearch: function (tf) {
         this.view.getStore().baseParams.query = tf.getValue();
@@ -42,7 +42,7 @@ Ext.extend(minishop.panel.Images, MODx.Panel, {
     getTopBar: function () {
         return new Ext.Toolbar({
             items: ['->', {
-                xtype: 'minishop-field-search',
+                xtype: 'ms3-field-search',
                 width: 300,
                 listeners: {
                     search: {
@@ -107,22 +107,22 @@ Ext.extend(minishop.panel.Images, MODx.Panel, {
     },
 
 });
-Ext.reg('minishop-gallery-images-panel', minishop.panel.Images);
+Ext.reg('ms3-gallery-images-panel', ms3.panel.Images);
 
 
-minishop.view.Images = function (config) {
+ms3.view.Images = function (config) {
     config = config || {};
 
     this._initTemplates();
 
     Ext.applyIf(config, {
-        url: minishop.config.connector_url,
+        url: ms3.config.connector_url,
         fields: [
             'id', 'product_id', 'name', 'description', 'url', 'createdon', 'createdby', 'file',
             'thumbnail', 'source', 'source_name', 'type', 'rank', 'active', 'properties', 'class',
             'add', 'alt', 'actions'
         ],
-        id: 'minishop-gallery-images-view',
+        id: 'ms3-gallery-images-view',
         baseParams: {
             action: 'MiniShop3\\Processors\\Gallery\\GetList',
             product_id: config.product_id,
@@ -138,7 +138,7 @@ minishop.view.Images = function (config) {
         listeners: {},
         prepareData: this.formatData.createDelegate(this)
     });
-    minishop.view.Images.superclass.constructor.call(this, config);
+    ms3.view.Images.superclass.constructor.call(this, config);
 
     this.addEvents('sort', 'select');
     this.on('sort', this.onSort, this);
@@ -152,7 +152,7 @@ minishop.view.Images = function (config) {
         widget.getEl().unmask();
     });
 };
-Ext.extend(minishop.view.Images, MODx.DataView, {
+Ext.extend(ms3.view.Images, MODx.DataView, {
 
     templates: {},
     windows: {},
@@ -162,7 +162,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
         console.log('onSort', el)
         el.mask(_('loading'), 'x-mask-loading');
         MODx.Ajax.request({
-            url: minishop.config.connector_url,
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Gallery\\Sort',
                 product_id: this.config.product_id,
@@ -200,7 +200,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
         }
 
         const w = MODx.load({
-            xtype: 'minishop-gallery-image',
+            xtype: 'ms3-gallery-image',
             record: data,
             listeners: {
                 success: {
@@ -231,7 +231,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
         }
         this.getEl().mask(_('loading'), 'x-mask-loading');
         MODx.Ajax.request({
-            url: minishop.config.connector_url,
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Gallery\\Multiple',
                 method: method,
@@ -259,11 +259,11 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
     deleteFiles: function () {
         const ids = this._getSelectedIds();
         const title = ids.length > 1
-            ? 'ms_gallery_file_delete_multiple'
-            : 'ms_gallery_file_delete';
+            ? 'ms3_gallery_file_delete_multiple'
+            : 'ms3_gallery_file_delete';
         const message = ids.length > 1
-            ? 'ms_gallery_file_delete_multiple_confirm'
-            : 'ms_gallery_file_delete_confirm';
+            ? 'ms3_gallery_file_delete_multiple_confirm'
+            : 'ms3_gallery_file_delete_confirm';
         Ext.MessageBox.confirm(
             _(title),
             _(message),
@@ -280,13 +280,13 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
         const product_id = this.config.product_id || '';
 
         Ext.MessageBox.confirm(
-            _('ms_gallery_file_delete_multiple'),
-            _('ms_gallery_file_delete_multiple_confirm'),
+            _('ms3_gallery_file_delete_multiple'),
+            _('ms3_gallery_file_delete_multiple_confirm'),
             function (val) {
                 if (val == 'yes') {
                     this.getEl().mask(_('loading'), 'x-mask-loading');
                     MODx.Ajax.request({
-                        url: minishop.config.connector_url,
+                        url: ms3.config.connector_url,
                         params: {
                             action: 'MiniShop3\\Processors\\Gallery\\RemoveAll',
                             product_id: product_id,
@@ -320,13 +320,13 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
         const product_id = this.config.product_id || '';
 
         Ext.MessageBox.confirm(
-            _('ms_gallery_file_generate_thumbs'),
-            _('ms_gallery_file_generate_thumbs_confirm'),
+            _('ms3_gallery_file_generate_thumbs'),
+            _('ms3_gallery_file_generate_thumbs_confirm'),
             function (val) {
                 if (val == 'yes') {
                     this.getEl().mask(_('loading'), 'x-mask-loading');
                     MODx.Ajax.request({
-                        url: minishop.config.connector_url,
+                        url: ms3.config.connector_url,
                         params: {
                             action: 'MiniShop3\\Processors\\Gallery\\GenerateAll',
                             product_id: product_id,
@@ -353,7 +353,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
     },
 
     updateThumb: function (url) {
-        const thumb = Ext.get('minishop-product-image');
+        const thumb = Ext.get('ms3-product-image');
         if (thumb && url) {
             thumb.set({'src': url});
         }
@@ -371,7 +371,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
 
     formatData: function (data) {
         data.shortName = Ext.util.Format.ellipsis(data.name, 20);
-        data.createdon = minishop.utils.formatDate(data.createdon);
+        data.createdon = ms3.utils.formatDate(data.createdon);
         data.size = (data.properties['width'] && data.properties['height'])
             ? data.properties['width'] + 'x' + data.properties['height']
             : '';
@@ -379,17 +379,17 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
             data.size += ', ';
         }
         data.size += data.properties['size']
-            ? minishop.utils.formatSize(data.properties['size'])
+            ? ms3.utils.formatSize(data.properties['size'])
             : '';
-        this.lookup['ms_-gallery-image-' + data.id] = data;
+        this.lookup['ms3_-gallery-image-' + data.id] = data;
         return data;
     },
 
     _initTemplates: function () {
         this.templates.thumb = new Ext.XTemplate(
             '<tpl for=".">\
-                <div class="modx-browser-thumb-wrap modx-pb-thumb-wrap minishop-gallery-thumb-wrap {class}" id="ms_-gallery-image-{id}">\
-                    <div class="modx-browser-thumb modx-pb-thumb minishop-gallery-thumb">\
+                <div class="modx-browser-thumb-wrap modx-pb-thumb-wrap ms3-gallery-thumb-wrap {class}" id="ms3_-gallery-image-{id}">\
+                    <div class="modx-browser-thumb modx-pb-thumb ms3-gallery-thumb">\
                         <img src="{thumbnail}" title="{name}" />\
                     </div>\
                     <small>{rank}. {shortName}</small>\
@@ -405,7 +405,7 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
         const m = this.cm;
         m.removeAll();
 
-        const menu = minishop.utils.getMenu(data.actions, this, this._getSelectedIds());
+        const menu = ms3.utils.getMenu(data.actions, this, this._getSelectedIds());
         for (const item in menu) {
             if (!menu.hasOwnProperty(item)) {
                 continue;
@@ -432,4 +432,4 @@ Ext.extend(minishop.view.Images, MODx.DataView, {
     },
 
 });
-Ext.reg('minishop-gallery-images-view', minishop.view.Images);
+Ext.reg('ms3-gallery-images-view', ms3.view.Images);

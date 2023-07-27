@@ -3,7 +3,7 @@ Ext.override(MODx.window.QuickCreateResource, {
         show: function () {
             let classKey = this.config.record.class_key,
                 isProduct = classKey === 'MiniShop3\\Model\\msProduct',
-                class_key = isProduct ? 'ms_product' : 'ms_category',
+                class_key = isProduct ? 'ms3_product' : 'ms3_category',
                 windowTitle = _(class_key + '_create_here');
 
             if (['msProduct', 'msCategory'].includes(classKey)) {
@@ -12,9 +12,9 @@ Ext.override(MODx.window.QuickCreateResource, {
                         let form = this.fp.getForm(),
                             templateCmb = form.findField('template'),
                             templateCmbStore = templateCmb.getStore(),
-                            templateSettingKey = isProduct ? 'ms_template_product_default' : 'ms_template_category_default',
+                            templateSettingKey = isProduct ? 'ms3_template_product_default' : 'ms3_template_category_default',
                             templateVal = MODx.config[templateSettingKey] || MODx.config.default_template,
-                            contentSettingKey = 'ms_category_content_default',
+                            contentSettingKey = 'ms3_category_content_default',
                             contentCmb = form.findField('content'),
                             contentVal = MODx.config[contentSettingKey];
 

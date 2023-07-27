@@ -10,7 +10,7 @@ class Get extends  GetProcessor
     /** @var msLink $object */
     public $object;
     public $classKey = msLink::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_view';
 
 

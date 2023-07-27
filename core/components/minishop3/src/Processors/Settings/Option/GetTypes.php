@@ -35,7 +35,7 @@ class GetTypes extends GetListProcessor
                 $name = lcfirst($name);
                 $data['results'][] = [
                     'name' => $name,
-                    'caption' => $this->modx->lexicon('ms_ft_' . $name),
+                    'caption' => $this->modx->lexicon('ms3_ft_' . $name),
                     'xtype' => $className::$xtype,
                 ];
             }

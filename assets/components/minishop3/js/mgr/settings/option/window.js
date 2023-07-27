@@ -1,23 +1,23 @@
-minishop.window.CreateOption = function (config) {
+ms3.window.CreateOption = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_menu_create'),
+        title: _('ms3_menu_create'),
         width: 800,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Option\\Create',
         },
     });
-    minishop.window.CreateOption.superclass.constructor.call(this, config);
+    ms3.window.CreateOption.superclass.constructor.call(this, config);
 
     this.on('success', function () {
-        const c = Ext.getCmp('minishop-grid-option-modcategory');
+        const c = Ext.getCmp('ms3-grid-option-modcategory');
         if (c) {
             c.getStore().load();
         }
     });
 };
-Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
+Ext.extend(ms3.window.CreateOption, ms3.window.Default, {
 
     getFields: function (config) {
         return [{
@@ -37,7 +37,7 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
 
     getTree: function (config) {
         return [{
-            xtype: 'minishop-tree-option-categories',
+            xtype: 'ms3-tree-option-categories',
             id: config.id + '-option-categories',
             categories: config.record['categories'] || '',
             maxHeight: 320,
@@ -71,7 +71,7 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
                     defaults: {msgTarget: 'under'},
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_ft_name'),
+                        fieldLabel: _('ms3_ft_name'),
                         name: 'key',
                         //allowBlank: false,
                         anchor: '99%',
@@ -83,7 +83,7 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
                     defaults: {msgTarget: 'under'},
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_ft_caption'),
+                        fieldLabel: _('ms3_ft_caption'),
                         name: 'caption',
                         //allowBlank: false,
                         anchor: '99%',
@@ -91,7 +91,7 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
                     }]
                 }]
         }, {
-            xtype: 'minishop-combo-option-types',
+            xtype: 'ms3-combo-option-types',
             anchor: '99%',
             id: config.id + '-types',
             listeners: {
@@ -109,7 +109,7 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'textfield',
-                    fieldLabel: _('ms_ft_measure_unit'),
+                    fieldLabel: _('ms3_ft_measure_unit'),
                     name: 'measure_unit',
                     allowBlank: true,
                     anchor: '99%',
@@ -121,7 +121,7 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'modx-combo-category',
-                    fieldLabel: _('ms_ft_group'),
+                    fieldLabel: _('ms3_ft_group'),
                     name: 'category',
                     anchor: '99%',
                     id: config.id + '-category',
@@ -129,7 +129,7 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
             }]
         }, {
             xtype: 'textarea',
-            fieldLabel: _('ms_ft_description'),
+            fieldLabel: _('ms3_ft_description'),
             name: 'description',
             anchor: '99%',
             id: config.id + '-description'
@@ -154,45 +154,45 @@ Ext.extend(minishop.window.CreateOption, minishop.window.Default, {
         });
     },
 });
-Ext.reg('minishop-window-option-create', minishop.window.CreateOption);
+Ext.reg('ms3-window-option-create', ms3.window.CreateOption);
 
 
-minishop.window.UpdateOption = function (config) {
+ms3.window.UpdateOption = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_menu_update'),
+        title: _('ms3_menu_update'),
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Option\\Update',
         }
     });
-    minishop.window.UpdateOption.superclass.constructor.call(this, config);
+    ms3.window.UpdateOption.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.UpdateOption, minishop.window.CreateOption);
-Ext.reg('minishop-window-option-update', minishop.window.UpdateOption);
+Ext.extend(ms3.window.UpdateOption, ms3.window.CreateOption);
+Ext.reg('ms3-window-option-update', ms3.window.UpdateOption);
 
 
-minishop.window.AssignOptions = function (config) {
+ms3.window.AssignOptions = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_category_options_assign'),
+        title: _('ms3_category_options_assign'),
         width: 600,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Option\\Multiple',
             method: 'assign',
         }
     });
-    minishop.window.AssignOptions.superclass.constructor.call(this, config);
+    ms3.window.AssignOptions.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.AssignOptions, minishop.window.Default, {
+Ext.extend(ms3.window.AssignOptions, ms3.window.Default, {
 
     getFields: function (config) {
         return [
             {xtype: 'hidden', name: 'options', id: config.id + '-options'},
             {xtype: 'hidden', name: 'categories', id: config.id + '-categories'},
             {
-                xtype: 'minishop-tree-option-categories',
+                xtype: 'ms3-tree-option-categories',
                 id: config.id + '-assign-tree',
                 options: config['options'] || '',
                 listeners: {
@@ -214,4 +214,4 @@ Ext.extend(minishop.window.AssignOptions, minishop.window.Default, {
     }
 
 });
-Ext.reg('minishop-window-option-assign', minishop.window.AssignOptions);
+Ext.reg('ms3-window-option-assign', ms3.window.AssignOptions);

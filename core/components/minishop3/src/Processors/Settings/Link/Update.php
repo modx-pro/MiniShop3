@@ -11,7 +11,7 @@ class Update extends UpdateProcessor
     /** @var msLink $object */
     public $object;
     public $classKey = msLink::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
 
 
@@ -42,7 +42,7 @@ class Update extends UpdateProcessor
         }
         $name = $this->getProperty('name');
         if ($this->modx->getCount($this->classKey, ['name' => $name, 'id:!=' => $this->object->get('id')])) {
-            $this->modx->error->addField('name', $this->modx->lexicon('ms_err_ae'));
+            $this->modx->error->addField('name', $this->modx->lexicon('ms3_err_ae'));
         }
         $this->unsetProperty('type');
 

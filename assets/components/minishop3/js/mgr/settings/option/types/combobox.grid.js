@@ -1,7 +1,7 @@
-minishop.grid.ComboboxOptions = function (config) {
+ms3.grid.ComboboxOptions = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-combobox-options';
+        config.id = 'ms3-grid-combobox-options';
     }
     config.disableContextMenuAction = true;
 
@@ -21,12 +21,12 @@ minishop.grid.ComboboxOptions = function (config) {
         listeners: this.getListeners(config),
         bbar: this.getBottomBar(config),
         bodyCssClass: 'x-menu',
-        cls: 'minishop-grid',
+        cls: 'ms3-grid',
     });
-    minishop.grid.ComboboxOptions.superclass.constructor.call(this, config);
+    ms3.grid.ComboboxOptions.superclass.constructor.call(this, config);
 };
 
-Ext.extend(minishop.grid.ComboboxOptions, MODx.grid.LocalGrid, {
+Ext.extend(ms3.grid.ComboboxOptions, MODx.grid.LocalGrid, {
 
     getColumns: function () {
         return [
@@ -61,7 +61,7 @@ Ext.extend(minishop.grid.ComboboxOptions, MODx.grid.LocalGrid, {
                 renderer: function () {
                     return String.format(
                         '\
-                        <ul class="minishop3-row-actions">\
+                        <ul class="ms3-row-actions">\
                             <li>\
                                 <button class="btn btn-default icon icon-trash action-red" title="{0}" action="removeOption"></button>\
                             </li>\
@@ -138,7 +138,7 @@ Ext.extend(minishop.grid.ComboboxOptions, MODx.grid.LocalGrid, {
             }));
             this.focusValueCell(this.store.data.length - 1);
         } else {
-            Ext.Msg.alert(_('error'), _('ms_err_value_duplicate'), function () {
+            Ext.Msg.alert(_('error'), _('ms3_err_value_duplicate'), function () {
                 this.focusValueCell(this.store.data.length - 1);
             }, this);
         }
@@ -183,4 +183,4 @@ Ext.extend(minishop.grid.ComboboxOptions, MODx.grid.LocalGrid, {
     },
 
 });
-Ext.reg('minishop-grid-combobox-options', minishop.grid.ComboboxOptions);
+Ext.reg('ms3-grid-combobox-options', ms3.grid.ComboboxOptions);

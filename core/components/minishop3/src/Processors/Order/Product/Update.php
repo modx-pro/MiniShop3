@@ -11,7 +11,7 @@ class Update extends UpdateProcessor
 {
     public $classKey = msOrderProduct::class;
     public $objectType = 'msOrderProduct';
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $beforeSaveEvent = 'msOnBeforeUpdateOrderProduct';
     public $afterSaveEvent = 'msOnUpdateOrderProduct';
     public $permission = 'msorder_save';
@@ -38,7 +38,7 @@ class Update extends UpdateProcessor
     {
         $count = $this->getProperty('count');
         if ($count <= 0) {
-            $this->modx->error->addField('count', $this->modx->lexicon('ms_err_ns'));
+            $this->modx->error->addField('count', $this->modx->lexicon('ms3_err_ns'));
         }
 
         $options = $this->getProperty('options');
@@ -52,7 +52,7 @@ class Update extends UpdateProcessor
             $buildedOptions = $this->buildOptions();
 
             if (!is_array($tmp)) {
-                $this->modx->error->addField('options', $this->modx->lexicon('ms_err_json'));
+                $this->modx->error->addField('options', $this->modx->lexicon('ms3_err_json'));
             } else {
                 $tmp = array_merge($tmp, $buildedOptions);
                 $this->setProperty('options', $tmp);
@@ -61,13 +61,13 @@ class Update extends UpdateProcessor
 
         $this->order = $this->object->getOne('Order');
         if (!$this->order) {
-            return $this->modx->lexicon('ms_err_order_nf');
+            return $this->modx->lexicon('ms3_err_order_nf');
         }
 
         /** @var msOrderStatus $status */
         $status = $this->order->getOne('Status');
         if ($status && $status->get('final')) {
-            return $this->modx->lexicon('ms_err_status_final');
+            return $this->modx->lexicon('ms3_err_status_final');
         }
 
         $this->setProperty('cost', $this->getProperty('price') * $this->getProperty('count'));

@@ -13,7 +13,7 @@ require_once MODX_CONNECTORS_PATH . 'index.php';
 /** @var modX $modx */
 /** @var \MiniShop3\MiniShop3 $ms3 */
 $ms3 = $modx->services->get('ms3');
-$modx->lexicon->load('minishop3:default', 'minishop:manager');
+$modx->lexicon->load('minishop3:default', 'minishop3:manager');
 
 $path = $modx->getOption('processorsPath', $ms3->config, MODX_CORE_PATH . 'components/minishop3/src/Processors/');
 

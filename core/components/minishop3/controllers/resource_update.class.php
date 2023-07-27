@@ -3,6 +3,7 @@
 use MODX\Revolution\modActionDom;
 use MODX\Revolution\modFormCustomizationProfile;
 use MODX\Revolution\modFormCustomizationSet;
+use \xPDO\Om\xPDOQuery;
 
 class msResourceUpdateController extends ResourceUpdateManagerController
 {

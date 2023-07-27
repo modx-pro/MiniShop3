@@ -1,7 +1,7 @@
-minishop.panel.OrdersForm = function (config) {
+ms3.panel.OrdersForm = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-form-orders';
+        config.id = 'ms3-form-orders';
     }
 
     Ext.apply(config, {
@@ -15,9 +15,9 @@ minishop.panel.OrdersForm = function (config) {
         buttons: this.getButtons(config),
         keys: this.getKeys(config),
     });
-    minishop.panel.OrdersForm.superclass.constructor.call(this, config);
+    ms3.panel.OrdersForm.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
+Ext.extend(ms3.panel.OrdersForm, MODx.FormPanel, {
 
     grid: null,
 
@@ -47,7 +47,7 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
         return [{
             xtype: 'datefield',
             id: config.id + '-begin',
-            emptyText: _('ms_orders_form_begin'),
+            emptyText: _('ms3_orders_form_begin'),
             name: 'date_start',
             format: MODx.config['manager_date_format'] || 'Y-m-d',
             startDay: +MODx.config['manager_week_start'] || 0,
@@ -61,7 +61,7 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
         }, {
             xtype: 'datefield',
             id: config.id + '-end',
-            emptyText: _('ms_orders_form_end'),
+            emptyText: _('ms3_orders_form_end'),
             name: 'date_end',
             format: MODx.config['manager_date_format'] || 'Y-m-d',
             startDay: +MODx.config['manager_week_start'] || 0,
@@ -73,9 +73,9 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
                 },
             },
         }, {
-            xtype: 'minishop-combo-status',
+            xtype: 'ms3-combo-status',
             id: config.id + '-status',
-            emptyText: _('ms_orders_form_status'),
+            emptyText: _('ms3_orders_form_status'),
             name: 'status',
             addall: true,
             listeners: {
@@ -91,23 +91,23 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
     getCenterFields: function () {
         return [{
             xtype: 'displayfield',
-            id: 'minishop-orders-info',
+            id: 'ms3-orders-info',
             html: String.format(
                 '\
                 <table>\
                     <tr class="top">\
-                        <td><span id="minishop-orders-info-num">0</span><br>{0}</td>\
-                        <td><span id="minishop-orders-info-sum">0</span><br>{1}</td>\
+                        <td><span id="ms3-orders-info-num">0</span><br>{0}</td>\
+                        <td><span id="ms3-orders-info-sum">0</span><br>{1}</td>\
                     </tr>\
                     <tr class="bottom">\
-                        <td><span id="minishop-orders-info-month-num">0</span><br>{2}</td>\
-                        <td><span id="minishop-orders-info-month-sum">0</span><br>{3}</td>\
+                        <td><span id="ms3-orders-info-month-num">0</span><br>{2}</td>\
+                        <td><span id="ms3-orders-info-month-sum">0</span><br>{3}</td>\
                     </tr>\
                 </table>',
-                _('ms_orders_form_selected_num'),
-                _('ms_orders_form_selected_sum'),
-                _('ms_orders_form_month_num'),
-                _('ms_orders_form_month_sum')
+                _('ms3_orders_form_selected_num'),
+                _('ms3_orders_form_selected_sum'),
+                _('ms3_orders_form_month_num'),
+                _('ms3_orders_form_month_sum')
             ),
         }];
     },
@@ -116,12 +116,12 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
         return [{
             xtype: 'textfield',
             id: config.id + '-search',
-            emptyText: _('ms_orders_form_search'),
+            emptyText: _('ms3_orders_form_search'),
             name: 'query',
         }, {
-            xtype: 'minishop-combo-user',
+            xtype: 'ms3-combo-user',
             id: config.id + '-user',
-            emptyText: _('ms_orders_form_customer'),
+            emptyText: _('ms3_orders_form_customer'),
             name: 'customer',
             allowBlank: true,
             listeners: {
@@ -132,9 +132,9 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
                 }
             }
         }, {
-            xtype: 'minishop-combo-context',
+            xtype: 'ms3-combo-context',
             id: config.id + '-context',
-            emptyText: _('ms_orders_form_context'),
+            emptyText: _('ms3_orders_form_context'),
             name: 'context',
             allowBlank: true,
             listeners: {
@@ -150,7 +150,7 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
     getListeners: function () {
         return {
             beforerender: function () {
-                this.grid = Ext.getCmp('minishop-grid-orders');
+                this.grid = Ext.getCmp('ms3-grid-orders');
                 const store = this.grid.getStore();
                 const form = this;
                 store.on('load', function (res) {
@@ -173,12 +173,12 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
 
     getButtons: function () {
         return [{
-            text: '<i class="icon icon-times"></i> ' + _('ms_orders_form_reset'),
+            text: '<i class="icon icon-times"></i> ' + _('ms3_orders_form_reset'),
             handler: this.reset,
             scope: this,
             iconCls: 'x-btn-small',
         }, {
-            text: '<i class="icon icon-check"></i> ' + _('ms_orders_form_submit'),
+            text: '<i class="icon icon-check"></i> ' + _('ms3_orders_form_submit'),
             handler: this.submit,
             scope: this,
             cls: 'primary-button',
@@ -246,7 +246,7 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
                 continue;
             }
             const text_size = 30;
-            const elem = Ext.get('minishop-orders-info-' + i);
+            const elem = Ext.get('ms3-orders-info-' + i);
             if (elem) {
                 elem.setStyle('font-size', text_size + 'px');
                 const val = data !== undefined
@@ -271,4 +271,4 @@ Ext.extend(minishop.panel.OrdersForm, MODx.FormPanel, {
     },
 
 });
-Ext.reg('minishop-form-orders', minishop.panel.OrdersForm);
+Ext.reg('ms3-form-orders', ms3.panel.OrdersForm);

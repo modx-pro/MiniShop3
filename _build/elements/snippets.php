@@ -2,7 +2,7 @@
 
 return [
     'msProducts' => [
-        'file' => 'ms_products',
+        'file' => 'ms3_products',
         'description' => '',
         'properties' => [
             'tpl' => [
@@ -128,7 +128,7 @@ return [
         ],
     ],
     'msMiniCart' => [
-        'file' => 'ms_minicart',
+        'file' => 'ms3_minicart',
         'description' => '',
         'properties' => [
             'tpl' => [
@@ -138,7 +138,7 @@ return [
         ],
     ],
     'msCart' => [
-        'file' => 'ms_cart',
+        'file' => 'ms3_cart',
         'description' => '',
         'properties' => [
             'tpl' => [
@@ -164,7 +164,7 @@ return [
         ],
     ],
     'msGallery' => [
-        'file' => 'ms_gallery',
+        'file' => 'ms3_gallery',
         'description' => '',
         'properties' => [
             'product' => [
@@ -214,7 +214,7 @@ return [
         ],
     ],
     'msOptions' => [
-        'file' => 'ms_options',
+        'file' => 'ms3_options',
         'description' => '',
         'properties' => [
             'product' => [
@@ -236,7 +236,7 @@ return [
         ],
     ],
     'msOrder' => [
-        'file' => 'ms_order',
+        'file' => 'ms3_order',
         'description' => '',
         'properties' => [
             'tpl' => [
@@ -254,7 +254,7 @@ return [
         ],
     ],
     'msGetOrder' => [
-        'file' => 'ms_get_order',
+        'file' => 'ms3_get_order',
         'description' => '',
         'properties' => [
             'tpl' => [
@@ -280,7 +280,7 @@ return [
         ],
     ],
     'msProductOptions' => [
-        'file' => 'ms_product_options',
+        'file' => 'ms3_product_options',
         'description' => '',
         'properties' => [
             'product' => [

@@ -11,7 +11,7 @@ class Remove extends RemoveProcessor
 {
     public $checkRemovePermission = true;
     public $classKey = msProductLink::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'msproduct_save';
 
     /**
@@ -48,7 +48,7 @@ class Remove extends RemoveProcessor
         /** @var msLink $msLink */
         $msLink = $this->modx->getObject(msLink::class, ['id' => $link]);
         if (!$msLink) {
-            return $this->failure($this->modx->lexicon('ms_err_no_link'));
+            return $this->failure($this->modx->lexicon('ms3_err_no_link'));
         }
         $type = $msLink->get('type');
 

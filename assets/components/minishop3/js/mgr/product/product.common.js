@@ -1,8 +1,8 @@
-minishop.panel.Product = function (config) {
+ms3.panel.Product = function (config) {
     config = config || {};
-    minishop.panel.Product.superclass.constructor.call(this, config);
+    ms3.panel.Product.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
+Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
     getFields: function (config) {
         const fields = [];
         const originals = MODx.panel.Resource.prototype.getFields.call(this, config);
@@ -11,14 +11,14 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
             anchor: '100%',
             cls: 'modx-resource-panel',
             collapsible: false,
-            id: 'minishop-product-image-panel',
+            id: 'ms3-product-image-panel',
             items: [
                 {
                     xtype: 'displayfield',
-                    id: 'minishop-product-image-wrap',
+                    id: 'ms3-product-image-wrap',
                     html: String.format(
-                      '<img src="{0}" id="minishop-product-image"/>',
-                      config.record['thumb'] || minishop.config.default_thumb
+                      '<img src="{0}" id="ms3-product-image"/>',
+                      config.record['thumb'] || ms3.config.default_thumb
                     ),
                     style: { 'textAlign': 'center' }
                 }
@@ -35,10 +35,10 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
             const item = originals[i];
 
             if (item.id === "modx-header-breadcrumbs") {
-                item.items[0].html = '<h2>' + _('ms_product_new') + '</h2>';
+                item.items[0].html = '<h2>' + _('ms3_product_new') + '</h2>';
                 fields.push(item)
             } else if (item.id === 'modx-resource-tabs') {
-                item.stateful = parseInt(MODx.config.ms_product_remember_tabs) === 1;
+                item.stateful = parseInt(MODx.config.ms3_product_remember_tabs) === 1;
                 item.stateId = 'minishop2-product-' + config.mode + '-tabpanel';
                 item.stateEvents = ['tabchange'];
                 item.collapsible = false;
@@ -89,8 +89,8 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
     },
 
     getProductFields: function (config) {
-        const enabled = minishop.config.data_fields;
-        const available = minishop.config.extra_fields;
+        const enabled = ms3.config.data_fields;
+        const available = ms3.config.extra_fields;
 
         const product_fields = this.getAllProductFields(config);
         const col1 = [];
@@ -114,21 +114,21 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
         }
 
         return {
-            title: _('ms_tab_product_data'),
-            id: 'minishop-product-data',
+            title: _('ms3_tab_product_data'),
+            id: 'ms3-product-data',
             bodyCssClass: 'main-wrapper',
             items: [{
                 layout: 'column',
                 items: [{
                     columnWidth: .5,
                     layout: 'form',
-                    id: 'minishop-product-data-left',
+                    id: 'ms3-product-data-left',
                     labelAlign: 'top',
                     items: col1,
                 }, {
                     columnWidth: .5,
                     layout: 'form',
-                    id: 'minishop-product-data-right',
+                    id: 'ms3-product-data-right',
                     labelAlign: 'top',
                     items: col2,
                 }],
@@ -155,13 +155,13 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
             }
             if (newGroup) {
                 option_groups.push({
-                    id: 'minishop-options-tab-' + options[i].category,
+                    id: 'ms3-options-tab-' + options[i].category,
                     layout: 'form',
                     labelAlign: 'top',
                     category: options[i].category,
                     title: options[i].category_name
                         ? options[i].category_name
-                        : _('ms_ft_nogroup'),
+                        : _('ms3_ft_nogroup'),
                     bodyCssClass: 'main-wrapper',
                     items: [options[i]],
                 });
@@ -169,15 +169,15 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
         }
 
         return {
-            title: _('ms_tab_product_options'),
-            id: 'minishop-product-options',
+            title: _('ms3_tab_product_options'),
+            id: 'ms3-product-options',
             items: [{
                 xtype: 'modx-vtabs',
                 autoTabs: true,
                 border: false,
                 plain: true,
                 deferredRender: false,
-                id: 'minishop-options-vtabs',
+                id: 'ms3-options-vtabs',
                 items: option_groups,
             }]
         };
@@ -185,10 +185,10 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
 
     getProductLinks: function (config) {
         return {
-            title: _('ms_tab_product_links'),
-            id: 'minishop-product-links',
+            title: _('ms3_tab_product_links'),
+            id: 'ms3-product-links',
             items: [{
-                xtype: 'minishop-product-links',
+                xtype: 'ms3-product-links',
                 record: config.record,
             }]
         };
@@ -196,10 +196,10 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
 
     getProductCategories: function (config) {
         return {
-            title: _('ms_tab_product_categories'),
-            id: 'minishop-product-categories',
+            title: _('ms3_tab_product_categories'),
+            id: 'ms3-product-categories',
             items: [{
-                xtype: 'minishop-tree-categories',
+                xtype: 'ms3-tree-categories',
                 parent: config.record['parent'] || 0,
                 resource: config.record['id'] || 0,
             }]
@@ -220,7 +220,7 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 item.fieldLabel = _('content');
                 item.itemCls = 'contentblocks_replacement';
                 item.description = '<b>[[*content]]</b>';
-                item.hidden = minishop.config.isHideContent;
+                item.hidden = ms3.config.isHideContent;
             }
             fields.push(item);
         }
@@ -257,7 +257,7 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                         moved.menuindex = field;
                         continue;
                     case 'modx-resource-parent':
-                        field.xtype = 'minishop-combo-category';
+                        field.xtype = 'ms3-combo-category';
                         field.listeners = {
                             select: {
                                 fn: function (data) {
@@ -298,14 +298,14 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
     },
 
     getExtField: function (config, name, field) {
-        return minishop.utils.getExtField(config, name, field);
+        return ms3.utils.getExtField(config, name, field);
     },
 
     getAllProductFields: function (config) {
         const fields = {
             pagetitle: {
                 xtype: 'textfield',
-                fieldLabel: _('ms_product_pagetitle'),
+                fieldLabel: _('ms3_product_pagetitle'),
                 maxLength: 255,
                 allowBlank: false,
                 listeners: {
@@ -331,53 +331,53 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 value: (config.record.content || config.record.ta) || ''
             },
             createdby: {
-                xtype: 'minishop-combo-user',
+                xtype: 'ms3-combo-user',
                 value: config.record.createdby,
-                description: '<b>[[*createdby]]</b><br/>' + _('ms_product_createdby_help')
+                description: '<b>[[*createdby]]</b><br/>' + _('ms3_product_createdby_help')
             },
             publishedby: {
-                xtype: 'minishop-combo-user',
+                xtype: 'ms3-combo-user',
                 value: config.record.publishedby,
-                description: '<b>[[*publishedby]]</b><br/>' + _('ms_product_publishedby_help')
+                description: '<b>[[*publishedby]]</b><br/>' + _('ms3_product_publishedby_help')
             },
             deletedby: {
-                xtype: 'minishop-combo-user',
+                xtype: 'ms3-combo-user',
                 value: config.record.deletedby,
-                description: '<b>[[*deletedby]]</b><br/>' + _('ms_product_deletedby_help')
+                description: '<b>[[*deletedby]]</b><br/>' + _('ms3_product_deletedby_help')
             },
             editedby: {
-                xtype: 'minishop-combo-user',
+                xtype: 'ms3-combo-user',
                 value: config.record.deletedby,
-                description: '<b>[[*editedby]]</b><br/>' + _('ms_product_editedby_help')
+                description: '<b>[[*editedby]]</b><br/>' + _('ms3_product_editedby_help')
             },
             publishedon: {
-                xtype: 'minishop-xdatetime',
+                xtype: 'ms3-xdatetime',
                 value: config.record.publishedon,
-                description: '<b>[[*publishedon]]</b><br/>' + _('ms_product_publishedon_help')
+                description: '<b>[[*publishedon]]</b><br/>' + _('ms3_product_publishedon_help')
             },
             createdon: {
-                xtype: 'minishop-xdatetime',
+                xtype: 'ms3-xdatetime',
                 value: config.record.createdon,
-                description: '<b>[[*createdon]]</b><br/>' + _('ms_product_createdon_help')
+                description: '<b>[[*createdon]]</b><br/>' + _('ms3_product_createdon_help')
             },
             deletedon: {
-                xtype: 'minishop-xdatetime',
+                xtype: 'ms3-xdatetime',
                 value: config.record.deletedon,
-                description: '<b>[[*deletedon]]</b><br/>' + _('ms_product_deletedon_help')
+                description: '<b>[[*deletedon]]</b><br/>' + _('ms3_product_deletedon_help')
             },
             editedon: {
-                xtype: 'minishop-xdatetime',
+                xtype: 'ms3-xdatetime',
                 value: config.record.editedon,
-                description: '<b>[[*editedon]]</b><br/>' + _('ms_product_editedon_help')
+                description: '<b>[[*editedon]]</b><br/>' + _('ms3_product_editedon_help')
             },
             pub_date: {
-                xtype: MODx.config.publish_document ? 'minishop-xdatetime' : 'hidden',
+                xtype: MODx.config.publish_document ? 'ms3-xdatetime' : 'hidden',
                 description: '<b>[[*pub_date]]</b><br />' + _('resource_publishdate_help'),
                 id: 'modx-resource-pub-date',
                 value: config.record.pub_date
             },
             unpub_date: {
-                xtype: MODx.config.publish_document ? 'minishop-xdatetime' : 'hidden',
+                xtype: MODx.config.publish_document ? 'ms3-xdatetime' : 'hidden',
                 description: '<b>[[*unpub_date]]</b><br />' + _('resource_unpublishdate_help'),
                 id: 'modx-resource-unpub-date',
                 value: config.record.unpub_date
@@ -393,7 +393,7 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 listeners: {select: {fn: this.templateWarning, scope: this}}
             },
             parent: {
-                xtype: 'minishop-combo-category',
+                xtype: 'ms3-combo-category',
                 value: config.record.parent,
                 listeners: {
                     select: {
@@ -430,39 +430,39 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
             show_in_tree: {
                 xtype: 'xcheckbox',
                 inputValue: 1,
-                description: '<b>[[*show_in_tree]]</b><br/>' + _('ms_product_show_in_tree_help'),
+                description: '<b>[[*show_in_tree]]</b><br/>' + _('ms3_product_show_in_tree_help'),
                 checked: parseInt(config.record.show_in_tree)
             },
-            article: {xtype: 'textfield', description: '<b>[[+article]]</b><br />' + _('ms_product_article_help')},
+            article: {xtype: 'textfield', description: '<b>[[+article]]</b><br />' + _('ms3_product_article_help')},
             price: {
                 xtype: 'numberfield',
                 decimalPrecision: 2,
-                description: '<b>[[+price]]</b><br />' + _('ms_product_price_help')
+                description: '<b>[[+price]]</b><br />' + _('ms3_product_price_help')
             },
             old_price: {
                 xtype: 'numberfield',
                 decimalPrecision: 2,
-                description: '<b>[[+old_price]]</b><br />' + _('ms_product_old_price_help')
+                description: '<b>[[+old_price]]</b><br />' + _('ms3_product_old_price_help')
             },
             weight: {
                 xtype: 'numberfield',
                 decimalPrecision: 3,
-                description: '<b>[[+weight]]</b><br />' + _('ms_product_weight_help')
+                description: '<b>[[+weight]]</b><br />' + _('ms3_product_weight_help')
             },
             vendor_id: {
-                xtype: 'minishop-combo-vendor',
-                description: '<b>[[+vendor_id]]</b><br />' + _('ms_product_vendor_help')
+                xtype: 'ms3-combo-vendor',
+                description: '<b>[[+vendor_id]]</b><br />' + _('ms3_product_vendor_help')
             },
             made_in: {
-                xtype: 'minishop-combo-autocomplete',
-                description: '<b>[[+made_in]]</b><br />' + _('ms_product_made_in_help')
+                xtype: 'ms3-combo-autocomplete',
+                description: '<b>[[+made_in]]</b><br />' + _('ms3_product_made_in_help')
             },
             source_id: {
-                xtype: config.mode == 'update' ? 'hidden' : 'minishop-combo-source',
+                xtype: config.mode == 'update' ? 'hidden' : 'ms3-combo-source',
                 name: 'source-cmb',
                 disabled: config.mode == 'update',
                 value: config.record.source_id || 1,
-                description: '<b>[[+source_id]]</b><br />' + _('ms_product_source_id_help'),
+                description: '<b>[[+source_id]]</b><br />' + _('ms3_product_source_id_help'),
                 listeners: {
                     select: {
                         fn: function (data) {
@@ -476,37 +476,37 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
                 xtype: 'xcheckbox',
                 inputValue: 1,
                 checked: parseInt(config.record.new),
-                description: '<b>[[+new]]</b><br />' + _('ms_product_new_help')
+                description: '<b>[[+new]]</b><br />' + _('ms3_product_new_help')
             },
             favorite: {
                 xtype: 'xcheckbox',
                 inputValue: 1,
                 checked: parseInt(config.record.favorite),
-                description: '<b>[[+favorite]]</b><br />' + _('ms_product_favorite_help')
+                description: '<b>[[+favorite]]</b><br />' + _('ms3_product_favorite_help')
             },
             popular: {
                 xtype: 'xcheckbox',
                 inputValue: 1,
                 checked: parseInt(config.record.popular),
-                description: '<b>[[+popular]]</b><br />' + _('ms_product_popular_help')
+                description: '<b>[[+popular]]</b><br />' + _('ms3_product_popular_help')
             },
             tags: {
-                xtype: 'minishop-combo-options',
-                description: '<b>[[+tags]]</b><br />' + _('ms_product_tags_help')
+                xtype: 'ms3-combo-options',
+                description: '<b>[[+tags]]</b><br />' + _('ms3_product_tags_help')
             },
             color: {
-                xtype: 'minishop-combo-options',
-                description: '<b>[[+color]]</b><br />' + _('ms_product_color_help')
+                xtype: 'ms3-combo-options',
+                description: '<b>[[+color]]</b><br />' + _('ms3_product_color_help')
             },
-            size: {xtype: 'minishop-combo-options', description: '<b>[[+size]]</b><br />' + _('ms_product_size_help')}
+            size: {xtype: 'ms3-combo-options', description: '<b>[[+size]]</b><br />' + _('ms3_product_size_help')}
         };
 
-        for (const i in minishop.plugin) {
-            if (!minishop.plugin.hasOwnProperty(i)) {
+        for (const i in ms3.plugin) {
+            if (!ms3.plugin.hasOwnProperty(i)) {
                 continue;
             }
-            if (typeof (minishop.plugin[i]['getFields']) == 'function') {
-                const add = minishop.plugin[i].getFields(config);
+            if (typeof (ms3.plugin[i]['getFields']) == 'function') {
+                const add = ms3.plugin[i].getFields(config);
                 Ext.apply(fields, add);
             }
         }
@@ -515,10 +515,10 @@ Ext.extend(minishop.panel.Product, MODx.panel.Resource, {
     },
 
     getOptionFields: function (config) {
-        const options = minishop.config.option_fields;
+        const options = ms3.config.option_fields;
         const fields = [];
         for (let i = 0; i < options.length; i++) {
-            const field = minishop.utils.getExtField(config, options[i].key, options[i], 'extra-field');
+            const field = ms3.utils.getExtField(config, options[i].key, options[i], 'extra-field');
             if (field) {
                 fields.push(field);
             }

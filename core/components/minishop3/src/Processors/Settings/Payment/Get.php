@@ -10,7 +10,7 @@ class Get extends GetProcessor
     /** @var msPayment $object */
     public $object;
     public $classKey = msPayment::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_view';
 
 

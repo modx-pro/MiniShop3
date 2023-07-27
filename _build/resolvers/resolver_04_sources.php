@@ -1,5 +1,8 @@
 <?php
 
+use xPDO\Transport\xPDOTransport;
+use MODX\Revolution\modX;
+
 /** @var xPDOTransport $transport */
 /** @var array $options */
 
@@ -63,35 +66,35 @@ if ($transport->xpdo) {
                     ],
                     'thumbnails' => [
                         'name' => 'thumbnails',
-                        'desc' => 'ms_source_thumbnails_desc',
+                        'desc' => 'ms3_source_thumbnails_desc',
                         'type' => 'textarea',
                         'lexicon' => 'MiniShop3:setting',
                         'value' => '{"small":{"w":120,"h":90,"q":90,"zc":"1","bg":"000000"}, "webp":{"w":120,"h":90,"q":90,"zc":"1","bg":"000000","f":"webp"}}',
                     ],
                     'maxUploadWidth' => [
                         'name' => 'maxUploadWidth',
-                        'desc' => 'ms_source_maxUploadWidth_desc',
+                        'desc' => 'ms3_source_maxUploadWidth_desc',
                         'type' => 'numberfield',
                         'lexicon' => 'MiniShop3:setting',
                         'value' => 1920,
                     ],
                     'maxUploadHeight' => [
                         'name' => 'maxUploadHeight',
-                        'desc' => 'ms_source_maxUploadHeight_desc',
+                        'desc' => 'ms3_source_maxUploadHeight_desc',
                         'type' => 'numberfield',
                         'lexicon' => 'MiniShop3:setting',
                         'value' => 1080,
                     ],
                     'maxUploadSize' => [
                         'name' => 'maxUploadSize',
-                        'desc' => 'ms_source_maxUploadSize_desc',
+                        'desc' => 'ms3_source_maxUploadSize_desc',
                         'type' => 'numberfield',
                         'lexicon' => 'MiniShop3:setting',
                         'value' => 10485760,
                     ],
                     'imageNameType' => [
                         'name' => 'imageNameType',
-                        'desc' => 'ms_source_imageNameType_desc',
+                        'desc' => 'ms3_source_imageNameType_desc',
                         'type' => 'list',
                         'lexicon' => 'MiniShop3:setting',
                         'options' => [
@@ -104,7 +107,7 @@ if ($transport->xpdo) {
                 'is_stream' => 1,
             ];
 
-            $settings_properties = ['key' => 'ms_product_source_default'];
+            $settings_properties = ['key' => 'ms3_product_source_default'];
             /** @var $setting modSystemSetting */
             $setting = $modx->getObject(modSystemSetting::class, $settings_properties) ?:
                 $modx->newObject(modSystemSetting::class, $settings_properties);

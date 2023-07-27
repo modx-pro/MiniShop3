@@ -1,16 +1,16 @@
-minishop.panel.Orders = function (config) {
+ms3.panel.Orders = function (config) {
     config = config || {};
 
     Ext.apply(config, {
         cls: 'container',
         items: [{
-            html: '<h2>' + _('miniShop3') + ' :: ' + _('ms_orders') + '</h2>',
+            html: '<h2>' + _('miniShop3') + ' :: ' + _('ms3_orders') + '</h2>',
             cls: 'modx-page-header',
         },{
             xtype: 'modx-tabs',
-            id: 'minishop-orders-tabs',
+            id: 'ms3-orders-tabs',
             stateful: true,
-            stateId: 'minishop-orders-tabs',
+            stateId: 'ms3-orders-tabs',
             stateEvents: ['tabchange'],
             getState: function () {
                 return {
@@ -19,19 +19,19 @@ minishop.panel.Orders = function (config) {
             },
             deferredRender: false,
             items: [{
-                title: _('ms_orders'),
+                title: _('ms3_orders'),
                 layout: 'anchor',
                 items: [{
-                    xtype: 'minishop-form-orders',
-                    id: 'minishop-form-orders',
+                    xtype: 'ms3-form-orders',
+                    id: 'ms3-form-orders',
                 }, {
-                    xtype: 'minishop-grid-orders',
-                    id: 'minishop-grid-orders',
+                    xtype: 'ms3-grid-orders',
+                    id: 'ms3-grid-orders',
                 }],
             }]
         }]
     });
-    minishop.panel.Orders.superclass.constructor.call(this, config);
+    ms3.panel.Orders.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.Orders, MODx.Panel);
-Ext.reg('minishop-panel-orders', minishop.panel.Orders);
+Ext.extend(ms3.panel.Orders, MODx.Panel);
+Ext.reg('ms3-panel-orders', ms3.panel.Orders);

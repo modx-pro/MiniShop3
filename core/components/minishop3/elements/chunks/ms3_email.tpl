@@ -24,7 +24,7 @@
     {block 'logo'}
         <a href="{$site_url}">
             <img style="{$style.logo}"
-                src="{$site_url}{$assets_url}components/minishop2/img/web/ms2_small@2x.png"
+                src="{$site_url}{$assets_url}components/minishop3/img/web/ms3_small@2x.png"
                 alt="{$site_url}"
                 width="120" height="90"/>
         </a>
@@ -40,7 +40,7 @@
                             <td>
                                 <h3 style="{$style.h}{$style.h3}">
                                     {block 'title'}
-                                        miniShop2
+                                        minishop3
                                     {/block}
                                 </h3>
 
@@ -49,10 +49,10 @@
                                         <thead>
                                         <tr>
                                             <th>&nbsp;</th>
-                                            <th style="{$style.th}">{'ms2_cart_title' | lexicon}</th>
-                                            <th style="{$style.th}">{'ms2_cart_count' | lexicon}</th>
-                                            <th style="{$style.th}">{'ms2_cart_weight' | lexicon}</th>
-                                            <th style="{$style.th}">{'ms2_cart_cost' | lexicon}</th>
+                                            <th style="{$style.th}">{'ms3_cart_title' | lexicon}</th>
+                                            <th style="{$style.th}">{'ms3_cart_count' | lexicon}</th>
+                                            <th style="{$style.th}">{'ms3_cart_weight' | lexicon}</th>
+                                            <th style="{$style.th}">{'ms3_cart_cost' | lexicon}</th>
                                         </tr>
                                         </thead>
                                         {foreach $products as $product}
@@ -64,7 +64,7 @@
                                                             title="{$product.pagetitle}"
                                                             width="120" height="90"/>
                                                     {else}
-                                                        <img src="{$site_url}{$assets_url}components/minishop2/img/web/ms2_small@2x.png"
+                                                        <img src="{$site_url}{$assets_url}components/minishop3/img/web/ms3_small@2x.png"
                                                             alt="{$product.pagetitle}"
                                                             title="{$product.pagetitle}"
                                                             width="120" height="90"/>
@@ -85,33 +85,33 @@
                                                         </div>
                                                     {/if}
                                                 </td>
-                                                <td style="{$style.th}">{$product.count} {'ms2_frontend_count_unit' | lexicon}</td>
-                                                <td style="{$style.th}">{$product.weight} {'ms2_frontend_weight_unit' | lexicon}</td>
-                                                <td style="{$style.th}">{$product.price} {'ms2_frontend_currency' | lexicon}</td>
+                                                <td style="{$style.th}">{$product.count} {'ms3_frontend_count_unit' | lexicon}</td>
+                                                <td style="{$style.th}">{$product.weight} {'ms3_frontend_weight_unit' | lexicon}</td>
+                                                <td style="{$style.th}">{$product.price} {'ms3_frontend_currency' | lexicon}</td>
                                             </tr>
                                         {/foreach}
                                         <tfoot>
                                         <tr>
                                             <th colspan="2"></th>
                                             <th style="{$style.th}">
-                                                {$total.cart_count} {'ms2_frontend_count_unit' | lexicon}
+                                                {$total.cart_count} {'ms3_frontend_count_unit' | lexicon}
                                             </th>
                                             <th style="{$style.th}">
-                                                {$total.cart_weight} {'ms2_frontend_weight_unit' | lexicon}
+                                                {$total.cart_weight} {'ms3_frontend_weight_unit' | lexicon}
                                             </th>
                                             <th style="{$style.th}">
-                                                {$total.cart_cost} {'ms2_frontend_currency' | lexicon}
+                                                {$total.cart_cost} {'ms3_frontend_currency' | lexicon}
                                             </th>
                                         </tr>
                                         </tfoot>
                                     </table>
                                     <h3 style="{$style.h}{$style.h3}">
-                                        {'ms2_frontend_order_cost' | lexicon}:
+                                        {'ms3_frontend_order_cost' | lexicon}:
                                         {if $total.delivery_cost}
-                                            {$total.cart_cost} {'ms2_frontend_currency' | lexicon} + {$total.delivery_cost}
-                                            {'ms2_frontend_currency' | lexicon} =
+                                            {$total.cart_cost} {'ms3_frontend_currency' | lexicon} + {$total.delivery_cost}
+                                            {'ms3_frontend_currency' | lexicon} =
                                         {/if}
-                                        <strong>{$total.cost}</strong> {'ms2_frontend_currency' | lexicon}
+                                        <strong>{$total.cost}</strong> {'ms3_frontend_currency' | lexicon}
                                     </h3>
                                 {/block}
                             </td>

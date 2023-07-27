@@ -1,5 +1,8 @@
 <?php
 
+use xPDO\Transport\xPDOTransport;
+use MODX\Revolution\modX;
+
 /** @var xPDOTransport $transport */
 /** @var array $options */
 
@@ -27,8 +30,8 @@ if ($transport->xpdo) {
                     'color' => '000000',
                     'email_user' => 1,
                     'email_manager' => 1,
-                    'subject_user' => '[[%ms_email_subject_new_user]]',
-                    'subject_manager' => '[[%ms_email_subject_new_manager]]',
+                    'subject_user' => '[[%ms3_email_subject_new_user]]',
+                    'subject_manager' => '[[%ms3_email_subject_new_manager]]',
                     'body_user' => 'tpl.msEmail.new.user',
                     'body_manager' => 'tpl.msEmail.new.manager',
                     'final' => 0,
@@ -39,8 +42,8 @@ if ($transport->xpdo) {
                     'color' => '008000',
                     'email_user' => 1,
                     'email_manager' => 1,
-                    'subject_user' => '[[%ms_email_subject_paid_user]]',
-                    'subject_manager' => '[[%ms_email_subject_paid_manager]]',
+                    'subject_user' => '[[%ms3_email_subject_paid_user]]',
+                    'subject_manager' => '[[%ms3_email_subject_paid_manager]]',
                     'body_user' => 'tpl.msEmail.paid.user',
                     'body_manager' => 'tpl.msEmail.paid.manager',
                     'final' => 0,
@@ -51,7 +54,7 @@ if ($transport->xpdo) {
                     'color' => '003366',
                     'email_user' => 1,
                     'email_manager' => 0,
-                    'subject_user' => '[[%ms_email_subject_sent_user]]',
+                    'subject_user' => '[[%ms3_email_subject_sent_user]]',
                     'subject_manager' => '',
                     'body_user' => 'tpl.msEmail.sent.user',
                     'body_manager' => '',
@@ -63,7 +66,7 @@ if ($transport->xpdo) {
                     'color' => '800000',
                     'email_user' => 1,
                     'email_manager' => 0,
-                    'subject_user' => '[[%ms_email_subject_cancelled_user]]',
+                    'subject_user' => '[[%ms3_email_subject_cancelled_user]]',
                     'subject_manager' => '',
                     'body_user' => 'tpl.msEmail.cancelled.user',
                     'body_manager' => '',
@@ -148,7 +151,7 @@ if ($transport->xpdo) {
                 $member->save();
             }
 
-            $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms_order_product_fields']);
+            $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_order_product_fields']);
             if ($setting) {
                 $value = $setting->get('value');
                 if (strpos($value, 'product_pagetitle') !== false) {
@@ -159,7 +162,7 @@ if ($transport->xpdo) {
             }
 
             /** @var modSystemSetting $setting */
-            $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms_chunks_categories']);
+            $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_chunks_categories']);
             if ($setting) {
                 if (!$setting->get('editedon')) {
                     /** @var modCategory $category */
@@ -170,7 +173,7 @@ if ($transport->xpdo) {
                 }
             }
 
-            $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms_order_address_fields']);
+            $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_order_address_fields']);
             if ($setting) {
                 $fields = explode(',', $setting->get('value'));
                 $fields = array_unique(array_merge($fields, ['entrance', 'floor', 'text_address']));

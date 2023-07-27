@@ -7,7 +7,7 @@ class msDeliveryMember extends \MiniShop3\Model\msDeliveryMember
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_delivery_payments',
+        'table' => 'ms3_delivery_payments',
         'extends' => 'xPDO\\Om\\xPDOObject',
         'tableMeta' =>
             [

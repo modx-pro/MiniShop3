@@ -41,7 +41,7 @@ class Update extends UpdateProcessor
      */
     public function checkFriendlyAlias()
     {
-        $id_as_alias = $this->workingContext->getOption('ms_category_id_as_alias');
+        $id_as_alias = $this->workingContext->getOption('ms3_category_id_as_alias');
         if ($id_as_alias) {
             $alias = $this->object->get('id');
             $this->setProperty('alias', $alias);

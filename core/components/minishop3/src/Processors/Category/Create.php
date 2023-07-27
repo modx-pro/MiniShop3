@@ -19,7 +19,7 @@ class Create extends CreateProcessor
      */
     public function prepareAlias()
     {
-        $id_as_alias = $this->workingContext->getOption('ms_category_id_as_alias');
+        $id_as_alias = $this->workingContext->getOption('ms3_category_id_as_alias');
         if ($id_as_alias) {
             $alias = 'empty-resource-alias';
             $this->setProperty('alias', $alias);
@@ -61,7 +61,7 @@ class Create extends CreateProcessor
                     'category_to' => $this->object->get('id'),
                     'category_from' => $this->object->get('parent')
                 ];
-                $ms3->utils->runProcessor('MiniShop3\\Processors\\Category\\Option\\Duplicate', $processorConfig);
+                $this->modx->runProcessor('MiniShop3\\Processors\\Category\\Option\\Duplicate', $processorConfig);
             }
         }
 

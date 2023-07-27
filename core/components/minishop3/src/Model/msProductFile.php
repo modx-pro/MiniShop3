@@ -198,7 +198,7 @@ class msProductFile extends xPDOSimpleObject
         $phpThumb = new modPhpThumb($this->xpdo);
         $phpThumb->initialize();
 
-        $tf = tempnam(MODX_BASE_PATH, 'ms_');
+        $tf = tempnam(MODX_BASE_PATH, 'ms3_');
         file_put_contents($tf, $info['content']);
         $phpThumb->setSourceFilename($tf);
 
@@ -266,7 +266,7 @@ class msProductFile extends xPDOSimpleObject
             ],
         ]);
 
-        $tf = tempnam(MODX_BASE_PATH, 'ms_');
+        $tf = tempnam(MODX_BASE_PATH, 'ms3_');
         file_put_contents($tf, $raw_image);
         $tmp = getimagesize($tf);
         if (is_array($tmp)) {

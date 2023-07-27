@@ -1,26 +1,26 @@
-minishop.page.Settings = function (config) {
+ms3.page.Settings = function (config) {
     config = config || {};
     Ext.apply(config, {
-        formpanel: 'minishop-panel-settings',
+        formpanel: 'ms3-panel-settings',
         cls: 'container',
         buttons: this.getButtons(),
         components: [{
-            xtype: 'minishop-panel-settings'
+            xtype: 'ms3-panel-settings'
         }]
     });
-    minishop.page.Settings.superclass.constructor.call(this, config);
+    ms3.page.Settings.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.page.Settings, MODx.Component, {
+Ext.extend(ms3.page.Settings, MODx.Component, {
     getButtons: function (config) {
         const b = [];
 
         if (MODx.perm.msorder_list) {
             b.push({
-                text: _('ms _orders'),
+                text: _('ms3_orders'),
                 id: 'ms-abtn-orders',
                 cls: 'primary-button',
                 handler: function () {
-                    MODx.loadPage('?', 'a=mgr/orders&namespace=minishop');
+                    MODx.loadPage('?', 'a=mgr/orders&namespace=minishop3');
                 }
             });
         }
@@ -28,4 +28,4 @@ Ext.extend(minishop.page.Settings, MODx.Component, {
         return b;
     }
 });
-Ext.reg('minishop-page-settings', minishop.page.Settings);
+Ext.reg('ms3-page-settings', ms3.page.Settings);

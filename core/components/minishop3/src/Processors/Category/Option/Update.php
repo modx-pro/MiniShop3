@@ -22,7 +22,7 @@ class Update extends UpdateProcessor
             'category_id' => $this->getProperty('category_id'),
         ]);
         if (empty($this->object)) {
-            return $this->modx->lexicon('ms_option_err_nfs');
+            return $this->modx->lexicon('ms3_option_err_nfs');
         }
 
         return true;

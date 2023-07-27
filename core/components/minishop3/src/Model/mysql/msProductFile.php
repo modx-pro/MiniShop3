@@ -7,7 +7,7 @@ class msProductFile extends \MiniShop3\Model\msProductFile
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_product_files',
+        'table' => 'ms3_product_files',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
         'tableMeta' =>
             [

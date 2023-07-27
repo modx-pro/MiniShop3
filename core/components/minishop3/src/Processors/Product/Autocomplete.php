@@ -17,7 +17,7 @@ class Autocomplete extends ModelProcessor
         $query = trim($this->getProperty('query'));
 
         if (!$name) {
-            return $this->failure('ms_product_autocomplete_err_noname');
+            return $this->failure('ms3_product_autocomplete_err_noname');
         }
 
         $res = [];

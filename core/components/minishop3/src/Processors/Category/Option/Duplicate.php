@@ -23,13 +23,13 @@ class Duplicate extends ModelProcessor
         $from = (int)$this->getProperty('category_from');
         $to = (int)$this->getProperty('category_to');
         if (!$from || !$to) {
-            return $this->modx->lexicon('ms_category_err_ns');
+            return $this->modx->lexicon('ms3_category_err_ns');
         }
         $this->object = $this->modx->getObject($this->classKey, $from);
         $this->to_object = $this->modx->getObject($this->classKey, $to);
 
         if (!$this->object || !$this->to_object) {
-            return $this->modx->lexicon('ms_category_err_nfs', [
+            return $this->modx->lexicon('ms3_category_err_nfs', [
                 $this->primaryKeyField => [$from, $to],
             ]);
         }
@@ -59,7 +59,7 @@ class Duplicate extends ModelProcessor
         }
 
         if (!$this->to_object->save()) {
-            return $this->failure($this->modx->lexicon('ms_category_err_save'));
+            return $this->failure($this->modx->lexicon('ms3_category_err_save'));
         }
 
         return $this->cleanup();

@@ -21,7 +21,7 @@ class ComboMultiple extends Combobox
         }
 
         return "{
-            xtype: 'minishop-combo-options',
+            xtype: 'ms3-combo-options',
             allowAddNewData: false,
             pinList: true,
             mode: 'local',

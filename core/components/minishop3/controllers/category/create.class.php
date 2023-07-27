@@ -30,7 +30,7 @@ class msCategoryCreateManagerController extends msResourceCreateController
      */
     public function getDefaultTemplate()
     {
-        if (!$template = $this->getOption('ms_template_category_default')) {
+        if (!$template = $this->getOption('ms3_template_category_default')) {
             $template = parent::getDefaultTemplate();
         }
 
@@ -54,9 +54,9 @@ class msCategoryCreateManagerController extends msResourceCreateController
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.tv.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.js');
         $this->addJavascript($mgrUrl . 'assets/modext/sections/resource/create.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/minishop.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.combo.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.utils.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/minishop3.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/category.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/create.js');
 
@@ -66,7 +66,7 @@ class msCategoryCreateManagerController extends msResourceCreateController
             'isHideContent' => $this->isHideContent(),
         ];
         $ready = [
-            'xtype' => 'minishop-page-category-create',
+            'xtype' => 'ms3-page-category-create',
             'record' => array_merge($this->resourceArray, [
                 'isfolder' => true,
             ]),
@@ -82,7 +82,7 @@ class msCategoryCreateManagerController extends msResourceCreateController
             MODx.config.publish_document = "' . $this->canPublish . '";
             MODx.onDocFormRender = "' . $this->onDocFormRender . '";
             MODx.ctx = "' . $this->ctx . '";
-            minishop.config = ' . json_encode($config) . ';
+            ms3.config = ' . json_encode($config) . ';
             Ext.onReady(function() {
                 MODx.load(' . json_encode($ready) . ');
             });

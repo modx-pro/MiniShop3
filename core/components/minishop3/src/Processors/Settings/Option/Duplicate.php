@@ -12,7 +12,7 @@ class Duplicate extends DuplicateProcessor
     /** @var msOption $object */
     public $object;
     public $classKey = msOption::class;
-    public $objectType = 'ms_option';
+    public $objectType = 'ms3_option';
     public $languageTopics = ['default', 'minishop2:default'];
     public $nameField = 'key';
 

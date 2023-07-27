@@ -1,16 +1,16 @@
-minishop.window.CreateDelivery = function (config) {
+ms3.window.CreateDelivery = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_delivery'),
+        title: _('ms3_delivery'),
         width: 600,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Delivery\\Create',
         },
     });
-    minishop.window.CreateDelivery.superclass.constructor.call(this, config);
+    ms3.window.CreateDelivery.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.CreateDelivery, minishop.window.Default, {
+Ext.extend(ms3.window.CreateDelivery, ms3.window.Default, {
 
     getFields: function (config) {
         return [{
@@ -25,7 +25,7 @@ Ext.extend(minishop.window.CreateDelivery, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'textfield',
-                    fieldLabel: _('ms_name'),
+                    fieldLabel: _('ms3_name'),
                     name: 'name',
                     anchor: '99%',
                     id: config.id + '-name'
@@ -36,18 +36,18 @@ Ext.extend(minishop.window.CreateDelivery, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'textfield',
-                    fieldLabel: _('ms_add_cost'),
+                    fieldLabel: _('ms3_add_cost'),
                     name: 'price',
-                    description: _('ms_add_cost_help'),
+                    description: _('ms3_add_cost_help'),
                     anchor: '99%',
                     id: config.id + '-price'
                 }],
             }]
         }, {
             xtype: 'numberfield',
-            fieldLabel: _('ms_free_delivery_amount'),
+            fieldLabel: _('ms3_free_delivery_amount'),
             name: 'free_delivery_amount',
-            description: _('ms_free_delivery_amount_help'),
+            description: _('ms3_free_delivery_amount_help'),
             anchor: '99%',
             decimalPrecision: 2,
             id: config.id + '-free-delivery-amount'
@@ -59,16 +59,16 @@ Ext.extend(minishop.window.CreateDelivery, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'numberfield',
-                    fieldLabel: _('ms_weight_price'),
-                    description: _('ms_weight_price_help'),
+                    fieldLabel: _('ms3_weight_price'),
+                    description: _('ms3_weight_price_help'),
                     name: 'weight_price',
                     decimalPrecision: 2,
                     anchor: '99%',
                     id: config.id + '-weight-price'
                 }, {
                     xtype: 'textfield',
-                    fieldLabel: _('ms_order_requires'),
-                    description: _('ms_order_requires_help'),
+                    fieldLabel: _('ms3_order_requires'),
+                    description: _('ms3_order_requires_help'),
                     name: 'requires',
                     anchor: '99%',
                     id: config.id + '-requires'
@@ -79,24 +79,24 @@ Ext.extend(minishop.window.CreateDelivery, minishop.window.Default, {
                 defaults: {msgTarget: 'under'},
                 items: [{
                     xtype: 'numberfield',
-                    fieldLabel: _('ms_distance_price'),
-                    description: _('ms_distance_price_help'),
+                    fieldLabel: _('ms3_distance_price'),
+                    description: _('ms3_distance_price_help'),
                     name: 'distance_price',
                     decimalPrecision: 2,
                     anchor: '99%',
                     id: config.id + '-distance-price'
                 }, {
-                    xtype: 'minishop-combo-classes',
+                    xtype: 'ms3-combo-classes',
                     type: 'delivery',
-                    fieldLabel: _('ms_class'),
+                    fieldLabel: _('ms3_class'),
                     name: 'class',
                     anchor: '99%',
                     id: config.id + '-class'
                 }],
             }]
         }, {
-            xtype: 'minishop-combo-browser',
-            fieldLabel: _('ms_logo'),
+            xtype: 'ms3-combo-browser',
+            fieldLabel: _('ms3_logo'),
             name: 'logo',
             anchor: '99%',
             id: config.id + '-logo',
@@ -104,23 +104,23 @@ Ext.extend(minishop.window.CreateDelivery, minishop.window.Default, {
             allowedFileTypes: config.allowedFileTypes || MODx.config.upload_images
         }, {
             xtype: 'textarea',
-            fieldLabel: _('ms_description'),
+            fieldLabel: _('ms3_description'),
             name: 'description',
             anchor: '99%',
             id: config.id + '-description'
         }, {
             xtype: 'xcheckbox',
-            boxLabel: _('ms_active'),
+            boxLabel: _('ms3_active'),
             hideLabel: true,
             name: 'active',
             id: config.id + '-active'
         }];
     },
 });
-Ext.reg('minishop-window-delivery-create', minishop.window.CreateDelivery);
+Ext.reg('ms3-window-delivery-create', ms3.window.CreateDelivery);
 
 
-minishop.window.UpdateDelivery = function (config) {
+ms3.window.UpdateDelivery = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
@@ -129,21 +129,21 @@ minishop.window.UpdateDelivery = function (config) {
         },
         bodyCssClass: 'tabs',
     });
-    minishop.window.UpdateDelivery.superclass.constructor.call(this, config);
+    ms3.window.UpdateDelivery.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.UpdateDelivery, minishop.window.CreateDelivery, {
+Ext.extend(ms3.window.UpdateDelivery, ms3.window.CreateDelivery, {
 
     getFields: function (config) {
         return [{
             xtype: 'modx-tabs',
             items: [{
-                title: _('ms_delivery'),
+                title: _('ms3_delivery'),
                 layout: 'form',
-                items: minishop.window.CreateDelivery.prototype.getFields.call(this, config),
+                items: ms3.window.CreateDelivery.prototype.getFields.call(this, config),
             }, {
-                title: _('ms_payments'),
+                title: _('ms3_payments'),
                 items: [{
-                    xtype: 'minishop-grid-delivery-payments',
+                    xtype: 'ms3-grid-delivery-payments',
                     record: config.record,
                 }]
             }]
@@ -151,4 +151,4 @@ Ext.extend(minishop.window.UpdateDelivery, minishop.window.CreateDelivery, {
     }
 
 });
-Ext.reg('minishop-window-delivery-update', minishop.window.UpdateDelivery);
+Ext.reg('ms3-window-delivery-update', ms3.window.UpdateDelivery);

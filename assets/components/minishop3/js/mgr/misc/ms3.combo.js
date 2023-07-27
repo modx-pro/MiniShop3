@@ -1,4 +1,4 @@
-minishop.combo.ComboBoxDefault = function (config) {
+ms3.combo.ComboBoxDefault = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
@@ -30,13 +30,13 @@ minishop.combo.ComboBoxDefault = function (config) {
         },
 
     });
-    minishop.combo.ComboBoxDefault.superclass.constructor.call(this, config);
+    ms3.combo.ComboBoxDefault.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.ComboBoxDefault, MODx.combo.ComboBox);
-Ext.reg('minishop-combo-combobox-default', minishop.combo.ComboBoxDefault);
+Ext.extend(ms3.combo.ComboBoxDefault, MODx.combo.ComboBox);
+Ext.reg('ms3-combo-combobox-default', ms3.combo.ComboBoxDefault);
 
 
-minishop.combo.Search = function (config) {
+ms3.combo.Search = function (config) {
     config = config || {};
     Ext.applyIf(config, {
         xtype: 'twintrigger',
@@ -51,7 +51,7 @@ minishop.combo.Search = function (config) {
         onTrigger1Click: this._triggerSearch,
         onTrigger2Click: this._triggerClear,
     });
-    minishop.combo.Search.superclass.constructor.call(this, config);
+    ms3.combo.Search.superclass.constructor.call(this, config);
     this.on('render', function () {
         this.getEl().addKeyListener(Ext.EventObject.ENTER, function () {
             this._triggerSearch();
@@ -59,7 +59,7 @@ minishop.combo.Search = function (config) {
     });
     this.addEvents('clear', 'search');
 };
-Ext.extend(minishop.combo.Search, Ext.form.TwinTriggerField, {
+Ext.extend(ms3.combo.Search, Ext.form.TwinTriggerField, {
 
     initComponent: function () {
         Ext.form.TwinTriggerField.superclass.initComponent.call(this);
@@ -82,11 +82,11 @@ Ext.extend(minishop.combo.Search, Ext.form.TwinTriggerField, {
     },
 
 });
-Ext.reg('minishop-combo-search', minishop.combo.Search);
-Ext.reg('minishop-field-search', minishop.combo.Search);
+Ext.reg('ms3-combo-search', ms3.combo.Search);
+Ext.reg('ms3-field-search', ms3.combo.Search);
 
 
-minishop.combo.User = function (config) {
+ms3.combo.User = function (config) {
     config = config || {};
     Ext.applyIf(config, {
         name: 'user',
@@ -100,7 +100,7 @@ minishop.combo.User = function (config) {
         typeAhead: false,
         editable: true,
         allowBlank: false,
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\User\\GetList',
             combo: true,
@@ -119,32 +119,32 @@ minishop.combo.User = function (config) {
             {compiled: true}
         ),
     });
-    minishop.combo.User.superclass.constructor.call(this, config);
+    ms3.combo.User.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.User, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-user', minishop.combo.User);
+Ext.extend(ms3.combo.User, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-user', ms3.combo.User);
 
 
-minishop.combo.Category = function (config) {
+ms3.combo.Category = function (config) {
     config = config || {};
     Ext.applyIf(config, {
-        id: 'minishop-combo-section',
-        fieldLabel: _('ms_category'),
-        description: '<b>[[*parent]]</b><br />' + _('ms_product_parent_help'),
+        id: 'ms3-combo-section',
+        fieldLabel: _('ms3_category'),
+        description: '<b>[[*parent]]</b><br />' + _('ms3_product_parent_help'),
         fields: ['id', 'pagetitle', 'parents'],
         valueField: 'id',
         displayField: 'pagetitle',
         name: 'parent-cmb',
         hiddenName: 'parent-cmp',
         allowBlank: false,
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Category\\GetCats',
             combo: true,
             id: config.value
         },
         tpl: new Ext.XTemplate('\
-            <tpl for="."><div class="x-combo-list-item minishop-category-list-item">\
+            <tpl for="."><div class="x-combo-list-item ms3-category-list-item">\
                 <tpl if="parents">\
                     <div class="parents">\
                         <tpl for="parents">\
@@ -158,22 +158,22 @@ minishop.combo.Category = function (config) {
             </div></tpl>', {
     compiled: true
         }),
-    itemSelector: 'div.minishop-category-list-item',
+    itemSelector: 'div.ms3-category-list-item',
     pageSize: 20,
     editable: true
     });
-    minishop.combo.Category.superclass.constructor.call(this, config);
+    ms3.combo.Category.superclass.constructor.call(this, config);
     this.on('expand', function () {
         if (!!this.pageTb) {
             this.pageTb.show();
         }
     });
 };
-Ext.extend(minishop.combo.Category, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-category', minishop.combo.Category);
+Ext.extend(ms3.combo.Category, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-category', ms3.combo.Category);
 
 
-minishop.combo.DateTime = function (config) {
+ms3.combo.DateTime = function (config) {
     config = config || {};
     Ext.applyIf(config, {
         timePosition: 'right',
@@ -184,19 +184,19 @@ minishop.combo.DateTime = function (config) {
         dateWidth: 120,
         timeWidth: 120
     });
-    minishop.combo.DateTime.superclass.constructor.call(this, config);
+    ms3.combo.DateTime.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.DateTime, Ext.ux.form.DateTime);
-Ext.reg('minishop-xdatetime', minishop.combo.DateTime);
+Ext.extend(ms3.combo.DateTime, Ext.ux.form.DateTime);
+Ext.reg('ms3-xdatetime', ms3.combo.DateTime);
 
 
-minishop.combo.Autocomplete = function (config) {
+ms3.combo.Autocomplete = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         name: config.name,
-        fieldLabel: _('ms_product_' + config.name),
-        id: 'minishop-product-' + config.name,
+        fieldLabel: _('ms3_product_' + config.name),
+        id: 'ms3-product-' + config.name,
         hiddenName: config.name,
         displayField: config.name,
         valueField: config.name,
@@ -204,7 +204,7 @@ minishop.combo.Autocomplete = function (config) {
         fields: [config.name],
         //pageSize: 20,
         forceSelection: false,
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         typeAhead: true,
         editable: true,
         allowBlank: true,
@@ -216,25 +216,25 @@ minishop.combo.Autocomplete = function (config) {
         },
         hideTrigger: false,
     });
-    minishop.combo.Autocomplete.superclass.constructor.call(this, config);
+    ms3.combo.Autocomplete.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Autocomplete, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-autocomplete', minishop.combo.Autocomplete);
+Ext.extend(ms3.combo.Autocomplete, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-autocomplete', ms3.combo.Autocomplete);
 
 
-minishop.combo.Vendor = function (config) {
+ms3.combo.Vendor = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         name: config.name || 'vendor',
-        fieldLabel: _('ms_product_' + config.name || 'vendor'),
+        fieldLabel: _('ms3_product_' + config.name || 'vendor'),
         hiddenName: config.name || 'vendor',
         displayField: 'name',
         valueField: 'id',
         anchor: '99%',
         fields: ['name', 'id'],
         pageSize: 20,
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         typeAhead: true,
         editable: true,
         allowBlank: true,
@@ -246,39 +246,39 @@ minishop.combo.Vendor = function (config) {
             id: config.value,
         }
     });
-    minishop.combo.Vendor.superclass.constructor.call(this, config);
+    ms3.combo.Vendor.superclass.constructor.call(this, config);
     this.on('expand', function () {
         if (!!this.pageTb) {
             this.pageTb.show();
         }
     });
 };
-Ext.extend(minishop.combo.Vendor, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-vendor', minishop.combo.Vendor);
+Ext.extend(ms3.combo.Vendor, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-vendor', ms3.combo.Vendor);
 
 
-minishop.combo.Source = function (config) {
+ms3.combo.Source = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         name: config.name || 'source-cmb',
-        id: 'minishop-product-source',
+        id: 'ms3-product-source',
         hiddenName: 'source-cmb',
         displayField: 'name',
         valueField: 'id',
         width: 300,
         listWidth: 300,
-        fieldLabel: _('ms_product_' + config.name || 'source_id'),
+        fieldLabel: _('ms3_product_' + config.name || 'source_id'),
         anchor: '99%',
         allowBlank: false
     });
-    minishop.combo.Source.superclass.constructor.call(this, config);
+    ms3.combo.Source.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Source, MODx.combo.MediaSource);
-Ext.reg('minishop-combo-source', minishop.combo.Source);
+Ext.extend(ms3.combo.Source, MODx.combo.MediaSource);
+Ext.reg('ms3-combo-source', ms3.combo.Source);
 
 
-minishop.combo.Options = function (config) {
+ms3.combo.Options = function (config) {
     config = config || {};
 
     if (config.mode == 'remote') {
@@ -308,7 +308,7 @@ minishop.combo.Options = function (config) {
             autoSave: false,
             totalProperty: 'total',
             fields: ['value'],
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             baseParams: {
                 action: 'MiniShop3\\Processors\\Product\\GetOptions',
                 key: config.name
@@ -394,9 +394,9 @@ minishop.combo.Options = function (config) {
         }
     });
 
-    minishop.combo.Options.superclass.constructor.call(this, config);
+    ms3.combo.Options.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Options, Ext.ux.form.SuperBoxSelect, {
+Ext.extend(ms3.combo.Options, Ext.ux.form.SuperBoxSelect, {
 
     beforequery: function (o) {
         // reset sort
@@ -502,10 +502,10 @@ Ext.extend(minishop.combo.Options, Ext.ux.form.SuperBoxSelect, {
     },
 
 });
-Ext.reg('minishop-combo-options', minishop.combo.Options);
+Ext.reg('ms3-combo-options', ms3.combo.Options);
 
 
-minishop.combo.Chunk = function (config) {
+ms3.combo.Chunk = function (config) {
     config = config || {};
     Ext.applyIf(config, {
         name: 'chunk',
@@ -515,9 +515,9 @@ minishop.combo.Chunk = function (config) {
         editable: true,
         fields: ['id', 'name'],
         pageSize: 20,
-        emptyText: _('ms_combo_select'),
+        emptyText: _('ms3_combo_select'),
         hideMode: 'offsets',
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\Element\\Chunk\\GetList',
             mode: 'chunks'
@@ -535,13 +535,13 @@ minishop.combo.Chunk = function (config) {
             {compiled: true}
         ),
     });
-    minishop.combo.Chunk.superclass.constructor.call(this, config);
+    ms3.combo.Chunk.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Chunk, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-chunk', minishop.combo.Chunk);
+Ext.extend(ms3.combo.Chunk, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-chunk', ms3.combo.Chunk);
 
 
-minishop.combo.Resource = function (config) {
+ms3.combo.Resource = function (config) {
     config = config || {};
     Ext.applyIf(config, {
         name: 'resource',
@@ -551,21 +551,21 @@ minishop.combo.Resource = function (config) {
         editable: true,
         fields: ['id', 'pagetitle'],
         pageSize: 20,
-        emptyText: _('ms_combo_select'),
+        emptyText: _('ms3_combo_select'),
         hideMode: 'offsets',
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\Element\\Resource\\GetList',
             combo: true
         }
     });
-    minishop.combo.Resource.superclass.constructor.call(this, config);
+    ms3.combo.Resource.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Resource, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-resource', minishop.combo.Resource);
+Ext.extend(ms3.combo.Resource, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-resource', ms3.combo.Resource);
 
 
-minishop.combo.Context = function (config) {
+ms3.combo.Context = function (config) {
     config = config || {};
     Ext.applyIf(config, {
         name: 'context',
@@ -575,21 +575,21 @@ minishop.combo.Context = function (config) {
         editable: true,
         fields: ['key', 'name'],
         pageSize: 20,
-        emptyText: _('ms_combo_select'),
+        emptyText: _('ms3_combo_select'),
         hideMode: 'offsets',
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\Element\\Context\\GetList',
             combo: true
         }
     });
-    minishop.combo.Context.superclass.constructor.call(this, config);
+    ms3.combo.Context.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Context, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-context', minishop.combo.Context);
+Ext.extend(ms3.combo.Context, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-context', ms3.combo.Context);
 
 
-minishop.combo.Browser = function (config) {
+ms3.combo.Browser = function (config) {
     config = config || {};
 
     if (config.length != 0 && config.openTo != undefined) {
@@ -608,10 +608,10 @@ minishop.combo.Browser = function (config) {
         width: 300,
         triggerAction: 'all'
     });
-    minishop.combo.Browser.superclass.constructor.call(this, config);
+    ms3.combo.Browser.superclass.constructor.call(this, config);
     this.config = config;
 };
-Ext.extend(minishop.combo.Browser, Ext.form.TriggerField, {
+Ext.extend(ms3.combo.Browser, Ext.form.TriggerField, {
     browser: null,
 
     onTriggerClick: function () {
@@ -660,10 +660,10 @@ Ext.extend(minishop.combo.Browser, Ext.form.TriggerField, {
         return n.attributes.path + '/';
     }
 });
-Ext.reg('minishop-combo-browser', minishop.combo.Browser);
+Ext.reg('ms3-combo-browser', ms3.combo.Browser);
 
 
-minishop.combo.listeners_disable = {
+ms3.combo.listeners_disable = {
     render: function () {
         this.store.on('load', function () {
             if (this.store.getTotalCount() == 1 && this.store.getAt(0).id == this.value) {
@@ -678,82 +678,82 @@ minishop.combo.listeners_disable = {
 };
 
 
-minishop.combo.Status = function (config) {
+ms3.combo.Status = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         name: 'status',
-        id: 'minishop-combo-status',
+        id: 'ms3-combo-status',
         hiddenName: 'status',
         displayField: 'name',
         valueField: 'id',
         fields: ['id', 'name'],
         pageSize: 10,
-        emptyText: _('ms_combo_select_status'),
-        url: minishop.config['connector_url'],
+        emptyText: _('ms3_combo_select_status'),
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Status\\GetList',
             combo: true,
             addall: config.addall || 0,
             order_id: config.order_id || 0
         },
-        listeners: minishop.combo.listeners_disable
+        listeners: ms3.combo.listeners_disable
     });
-    minishop.combo.Status.superclass.constructor.call(this, config);
+    ms3.combo.Status.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Status, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-status', minishop.combo.Status);
+Ext.extend(ms3.combo.Status, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-status', ms3.combo.Status);
 
 
-minishop.combo.Delivery = function (config) {
+ms3.combo.Delivery = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         name: 'delivery',
-        id: 'minishop-combo-delivery',
+        id: 'ms3-combo-delivery',
         hiddenName: 'delivery',
         displayField: 'name',
         valueField: 'id',
         fields: ['id', 'name'],
         pageSize: 10,
-        emptyText: _('ms_combo_select'),
-        url: minishop.config['connector_url'],
+        emptyText: _('ms3_combo_select'),
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Delivery\\GetList',
             combo: true
         },
-        listeners: minishop.combo.listeners_disable
+        listeners: ms3.combo.listeners_disable
     });
-    minishop.combo.Delivery.superclass.constructor.call(this, config);
+    ms3.combo.Delivery.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Delivery, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-delivery', minishop.combo.Delivery);
+Ext.extend(ms3.combo.Delivery, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-delivery', ms3.combo.Delivery);
 
 
-minishop.combo.Payment = function (config) {
+ms3.combo.Payment = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         name: 'payment',
-        id: 'minishop-combo-payment',
+        id: 'ms3-combo-payment',
         hiddenName: 'payment',
         displayField: 'name',
         valueField: 'id',
         fields: ['id', 'name'],
         pageSize: 10,
-        emptyText: _('ms_combo_select'),
-        url: minishop.config['connector_url'],
+        emptyText: _('ms3_combo_select'),
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Payment\\GetList',
             combo: true,
             delivery_id: config.delivery_id || 0
         },
-        listeners: minishop.combo.listeners_disable
+        listeners: ms3.combo.listeners_disable
     });
-    minishop.combo.Payment.superclass.constructor.call(this, config);
+    ms3.combo.Payment.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Payment, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-payment', minishop.combo.Payment);
+Ext.extend(ms3.combo.Payment, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-payment', ms3.combo.Payment);
 
 
 MODx.combo.LinkType = function (config) {
@@ -763,7 +763,7 @@ MODx.combo.LinkType = function (config) {
             fields: ['type', 'name', 'description'],
             data: this.getTypes()
         }),
-    emptyText: _('ms_combo_select'),
+    emptyText: _('ms3_combo_select'),
     displayField: 'name',
     valueField: 'type',
     hiddenName: 'type',
@@ -777,57 +777,57 @@ MODx.combo.LinkType = function (config) {
     });
     MODx.combo.LinkType.superclass.constructor.call(this, config);
 };
-Ext.extend(MODx.combo.LinkType, minishop.combo.ComboBoxDefault, {
+Ext.extend(MODx.combo.LinkType, ms3.combo.ComboBoxDefault, {
 
     getTypes: function () {
         const array = [];
         const types = ['many_to_many', 'one_to_many', 'many_to_one', 'one_to_one'];
         types.forEach(t => {
-            array.push([t, _('ms_link_' + t), _('ms_link_' + t + '_desc')]);
+            array.push([t, _('ms3_link_' + t), _('ms3_link_' + t + '_desc')]);
         })
         return array;
     }
 });
-Ext.reg('minishop-combo-link-type', MODx.combo.LinkType);
+Ext.reg('ms3-combo-link-type', MODx.combo.LinkType);
 
 
-minishop.combo.Link = function (config) {
+ms3.combo.Link = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
         name: 'link',
-        id: 'minishop-combo-link',
+        id: 'ms3-combo-link',
         hiddenName: 'link',
         displayField: 'name',
         valueField: 'id',
         fields: ['id', 'name'],
         pageSize: 10,
         editable: true,
-        emptyText: _('ms_combo_select'),
-        url: minishop.config['connector_url'],
+        emptyText: _('ms3_combo_select'),
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Link\\GetList',
             combo: true
         }
     });
-    minishop.combo.Link.superclass.constructor.call(this, config);
+    ms3.combo.Link.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Link, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-link', minishop.combo.Link);
+Ext.extend(ms3.combo.Link, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-link', ms3.combo.Link);
 
 
-minishop.combo.Product = function (config) {
+ms3.combo.Product = function (config) {
     config = config || {};
     Ext.applyIf(config, {
-        id: 'minishop-combo-product',
-        fieldLabel: _('ms_product_name'),
+        id: 'ms3-combo-product',
+        fieldLabel: _('ms3_product_name'),
         fields: ['id', 'pagetitle', 'parents'],
         valueField: 'id',
         displayField: 'pagetitle',
         name: 'product',
         hiddenName: 'product',
         allowBlank: false,
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Product\\GetList',
             combo: true,
@@ -835,7 +835,7 @@ minishop.combo.Product = function (config) {
         },
         tpl: new Ext.XTemplate('\
             <tpl for=".">\
-                <div class="x-combo-list-item minishop-product-list-item" ext:qtip="{pagetitle}">\
+                <div class="x-combo-list-item ms3-product-list-item" ext:qtip="{pagetitle}">\
                     <tpl if="parents">\
                         <span class="parents">\
                             <tpl for="parents">\
@@ -847,81 +847,81 @@ minishop.combo.Product = function (config) {
                 </div>\
             </tpl>', {compiled: true}),
     pageSize: 5,
-    emptyText: _('ms_combo_select'),
+    emptyText: _('ms3_combo_select'),
     editable: true,
     });
-    minishop.combo.Product.superclass.constructor.call(this, config);
+    ms3.combo.Product.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Product, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-product', minishop.combo.Product);
+Ext.extend(ms3.combo.Product, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-product', ms3.combo.Product);
 
 
-minishop.combo.ExtraOptions = function (config) {
+ms3.combo.ExtraOptions = function (config) {
     config = config || {};
     Ext.applyIf(config, {
-        id: 'minishop-combo-extra-options',
-        fieldLabel: _('ms_option'),
+        id: 'ms3-combo-extra-options',
+        fieldLabel: _('ms3_option'),
         name: 'option',
         hiddenName: 'option',
         displayField: 'key',
         valueField: 'id',
         pageSize: 20,
         fields: ['id', 'key', 'caption', 'type'],
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Option\\GetList',
         },
         tpl: new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item"><span style="font-weight: bold">{caption}</span>'
             , ' - <span style="font-style:italic">{key}</span><br />{[this.getLang(values.type)]}</div></tpl>', {
                 getLang: function (type) {
-                    return _("ms_ft_" + type);
+                    return _("ms3_ft_" + type);
                 }
             }),
     allowBlank: false,
     editable: true,
     });
-    minishop.combo.ExtraOptions.superclass.constructor.call(this, config);
+    ms3.combo.ExtraOptions.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.ExtraOptions, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-extra-options', minishop.combo.ExtraOptions);
+Ext.extend(ms3.combo.ExtraOptions, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-extra-options', ms3.combo.ExtraOptions);
 
 
-minishop.combo.OptionTypes = function (config) {
+ms3.combo.OptionTypes = function (config) {
     config = config || {};
     Ext.applyIf(config, {
-        id: 'minishop-combo-option-type',
-        fieldLabel: _('ms_option_type'),
+        id: 'ms3-combo-option-type',
+        fieldLabel: _('ms3_option_type'),
         name: 'type',
         hiddenName: 'type',
         displayField: 'caption',
         valueField: 'name',
         pageSize: 20,
         fields: ['name', 'caption', 'xtype'],
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Option\\GetTypes',
         },
         allowBlank: false,
         editable: true
     });
-    minishop.combo.OptionTypes.superclass.constructor.call(this, config);
+    ms3.combo.OptionTypes.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.OptionTypes, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-option-types', minishop.combo.OptionTypes);
+Ext.extend(ms3.combo.OptionTypes, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-option-types', ms3.combo.OptionTypes);
 
 
-minishop.combo.Classes = function (config) {
+ms3.combo.Classes = function (config) {
     config = config || {};
     Ext.applyIf(config, {
-        id: 'minishop-combo-classes',
-        fieldLabel: _('ms_class'),
+        id: 'ms3-combo-classes',
+        fieldLabel: _('ms3_class'),
         name: 'class',
         hiddenName: 'class',
         displayField: 'class',
         valueField: 'class',
         pageSize: 20,
         fields: ['type', 'class'],
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\GetClass',
             type: config.type || '',
@@ -929,13 +929,13 @@ minishop.combo.Classes = function (config) {
         allowBlank: true,
         editable: true,
     });
-    minishop.combo.Classes.superclass.constructor.call(this, config);
+    ms3.combo.Classes.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.combo.Classes, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-classes', minishop.combo.Classes);
+Ext.extend(ms3.combo.Classes, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-classes', ms3.combo.Classes);
 
 
-minishop.combo.ModCategory = function (config) {
+ms3.combo.ModCategory = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
@@ -946,7 +946,7 @@ minishop.combo.ModCategory = function (config) {
         anchor: '99%',
         fields: ['category', 'id'],
         pageSize: 20,
-        url: minishop.config['connector_url'],
+        url: ms3.config['connector_url'],
         typeAhead: false,
         editable: false,
         allowBlank: true,
@@ -957,12 +957,12 @@ minishop.combo.ModCategory = function (config) {
             id: config.value,
         }
     });
-    minishop.combo.ModCategory.superclass.constructor.call(this, config);
+    ms3.combo.ModCategory.superclass.constructor.call(this, config);
     this.on('expand', function () {
         if (!!this.pageTb && this.pageSize < this.getStore().totalLength) {
             this.pageTb.show();
         }
     });
 };
-Ext.extend(minishop.combo.ModCategory, minishop.combo.ComboBoxDefault);
-Ext.reg('minishop-combo-modcategory', minishop.combo.ModCategory);
+Ext.extend(ms3.combo.ModCategory, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-modcategory', ms3.combo.ModCategory);

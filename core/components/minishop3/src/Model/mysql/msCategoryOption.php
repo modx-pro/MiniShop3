@@ -7,7 +7,7 @@ class msCategoryOption extends \MiniShop3\Model\msCategoryOption
     public static $metaMap = [
         'package' => 'MiniShop3\\Model',
         'version' => '3.0',
-        'table' => 'ms_category_options',
+        'table' => 'ms3_category_options',
         'extends' => 'xPDO\\Om\\xPDOObject',
         'tableMeta' =>
             [

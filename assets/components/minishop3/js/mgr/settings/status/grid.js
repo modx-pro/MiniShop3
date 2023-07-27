@@ -1,7 +1,7 @@
-minishop.grid.Status = function (config) {
+ms3.grid.Status = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-status';
+        config.id = 'ms3-grid-status';
     }
     config.disableContextMenuAction = true;
 
@@ -13,14 +13,14 @@ minishop.grid.Status = function (config) {
         },
         stateful: true,
         stateId: config.id,
-        ddGroup: 'ms-settings-status',
+        ddGroup: 'ms3-settings-status',
         ddAction: 'MiniShop3\\Processors\\Settings\\Status\\Sort',
         enableDragDrop: true,
         multi_select: true,
     });
-    minishop.grid.Status.superclass.constructor.call(this, config);
+    ms3.grid.Status.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.grid.Status, minishop.grid.Default, {
+Ext.extend(ms3.grid.Status, ms3.grid.Default, {
 
     getFields: function () {
         return [
@@ -32,26 +32,26 @@ Ext.extend(minishop.grid.Status, minishop.grid.Default, {
 
     getColumns: function () {
         return [
-            {header: _('ms_id'), dataIndex: 'id', width: 30},
-            {header: _('ms_name'), dataIndex: 'name', width: 50, renderer: minishop.utils.renderBadge},
-            {header: _('ms_email_user'), dataIndex: 'email_user', width: 50, renderer: this._renderBoolean},
-            {header: _('ms_email_manager'), dataIndex: 'email_manager', width: 50, renderer: this._renderBoolean},
-            {header: _('ms_status_final'), dataIndex: 'final', width: 50, renderer: this._renderBoolean},
-            {header: _('ms_status_fixed'), dataIndex: 'fixed', width: 50, renderer: this._renderBoolean},
-            {header: _('ms_rank'), dataIndex: 'position', width: 35, hidden: true},
+            {header: _('ms3_id'), dataIndex: 'id', width: 30},
+            {header: _('ms3_name'), dataIndex: 'name', width: 50, renderer: ms3.utils.renderBadge},
+            {header: _('ms3_email_user'), dataIndex: 'email_user', width: 50, renderer: this._renderBoolean},
+            {header: _('ms3_email_manager'), dataIndex: 'email_manager', width: 50, renderer: this._renderBoolean},
+            {header: _('ms3_status_final'), dataIndex: 'final', width: 50, renderer: this._renderBoolean},
+            {header: _('ms3_status_fixed'), dataIndex: 'fixed', width: 50, renderer: this._renderBoolean},
+            {header: _('ms3_rank'), dataIndex: 'position', width: 35, hidden: true},
             {
-                header: _('ms_actions'),
+                header: _('ms3_actions'),
                 dataIndex: 'actions',
                 id: 'actions',
                 width: 50,
-                renderer: minishop.utils.renderActions
+                renderer: ms3.utils.renderActions
         }
         ];
     },
 
     getTopBar: function () {
         return [{
-            text: '<i class="icon icon-plus"></i> ' + _('ms_btn_create'),
+            text: '<i class="icon icon-plus"></i> ' + _('ms3_btn_create'),
             handler: this.createStatus,
             scope: this
         }, '->', this.getSearchField()];
@@ -72,7 +72,7 @@ Ext.extend(minishop.grid.Status, minishop.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             params: {
                 action: 'MiniShop3\\Processors\\Settings\\Status\\Multiple',
                 method: method,
@@ -95,13 +95,13 @@ Ext.extend(minishop.grid.Status, minishop.grid.Default, {
     },
 
     createStatus: function (btn, e) {
-        let w = Ext.getCmp('minishop-window-status-create');
+        let w = Ext.getCmp('ms3-window-status-create');
         if (w) {
             w.close();
         }
         w = MODx.load({
-            xtype: 'minishop-window-status-create',
-            id: 'minishop-window-status-create',
+            xtype: 'ms3-window-status-create',
+            id: 'ms3-window-status-create',
             record: {
                 color: '000000',
                 active: 1
@@ -122,13 +122,13 @@ Ext.extend(minishop.grid.Status, minishop.grid.Default, {
             this.menu.record = row.data;
         }
 
-        let w = Ext.getCmp('minishop-window-status-update');
+        let w = Ext.getCmp('ms3-window-status-update');
         if (w) {
             w.close();
         }
         w = MODx.load({
-            xtype: 'minishop-window-status-update',
-            id: 'minishop-window-status-update',
+            xtype: 'ms3-window-status-update',
+            id: 'ms3-window-status-update',
             title: this.menu.record['name'],
             record: this.menu.record,
             listeners: {
@@ -156,10 +156,10 @@ Ext.extend(minishop.grid.Status, minishop.grid.Default, {
         const ids = this._getSelectedIds();
 
         Ext.MessageBox.confirm(
-            _('ms2_menu_remove_title'),
+            _('ms3_menu_remove_title'),
             ids.length > 1
-                ? _('ms2_menu_remove_multiple_confirm')
-                : _('ms2_menu_remove_confirm'),
+                ? _('ms3_menu_remove_multiple_confirm')
+                : _('ms3_menu_remove_confirm'),
             function (val) {
                 if (val == 'yes') {
                     this.statusAction('Remove');
@@ -185,4 +185,4 @@ Ext.extend(minishop.grid.Status, minishop.grid.Default, {
             : text;
     },
 });
-Ext.reg('minishop-grid-status', minishop.grid.Status);
+Ext.reg('ms3-grid-status', ms3.grid.Status);

@@ -1,7 +1,7 @@
-minishop.grid.Payment = function (config) {
+ms3.grid.Payment = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-grid-payment';
+        config.id = 'ms3-grid-payment';
     }
     config.disableContextMenuAction = true;
 
@@ -13,14 +13,14 @@ minishop.grid.Payment = function (config) {
         },
         stateful: true,
         stateId: config.id,
-        ddGroup: 'ms-settings-payment',
+        ddGroup: 'ms3-settings-payment',
         ddAction: 'MiniShop3\\Processors\\Settings\\Payment\\Sort',
         enableDragDrop: true,
         multi_select: true,
     });
-    minishop.grid.Payment.superclass.constructor.call(this, config);
+    ms3.grid.Payment.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.grid.Payment, minishop.grid.Default, {
+Ext.extend(ms3.grid.Payment, ms3.grid.Default, {
 
     getFields: function () {
         return ['id', 'name', 'description', 'price', 'logo', 'position', 'active', 'class', 'deliveries', 'actions'];
@@ -28,26 +28,26 @@ Ext.extend(minishop.grid.Payment, minishop.grid.Default, {
 
     getColumns: function () {
         return [
-            {header: _('ms_id'), dataIndex: 'id', width: 20},
-            {header: _('ms_logo'), dataIndex: 'logo', id: 'image', width: 30, renderer: minishop.utils.renderImage},
-            {header: _('ms_name'), dataIndex: 'name', width: 75},
-            {header: _('ms_add_cost'), dataIndex: 'price', width: 50},
-            {header: _('ms_deliveries'), dataIndex: 'deliveries', width: 50},
-            {header: _('ms_class'), dataIndex: 'class', width: 50},
-            {header: _('ms_rank'), dataIndex: 'position', width: 35, hidden: true},
+            {header: _('ms3_id'), dataIndex: 'id', width: 20},
+            {header: _('ms3_logo'), dataIndex: 'logo', id: 'image', width: 30, renderer: ms3.utils.renderImage},
+            {header: _('ms3_name'), dataIndex: 'name', width: 75},
+            {header: _('ms3_add_cost'), dataIndex: 'price', width: 50},
+            {header: _('ms3_deliveries'), dataIndex: 'deliveries', width: 50},
+            {header: _('ms3_class'), dataIndex: 'class', width: 50},
+            {header: _('ms3_rank'), dataIndex: 'position', width: 35, hidden: true},
             {
-                header: _('ms_actions'),
+                header: _('ms3_actions'),
                 dataIndex: 'actions',
                 id: 'actions',
                 width: 50,
-                renderer: minishop.utils.renderActions
+                renderer: ms3.utils.renderActions
         }
         ];
     },
 
     getTopBar: function () {
         return [{
-            text: '<i class="icon icon-plus"></i> ' + _('ms_btn_create'),
+            text: '<i class="icon icon-plus"></i> ' + _('ms3_btn_create'),
             handler: this.createPayment,
             scope: this
         }, '->', this.getSearchField()];
@@ -68,7 +68,7 @@ Ext.extend(minishop.grid.Payment, minishop.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: minishop.config['connector_url'],
+            url: ms3.config['connector_url'],
             params: {
                 action: 'MiniShop3\\Processors\\Settings\\Payment\\Multiple',
                 method: method,
@@ -91,14 +91,14 @@ Ext.extend(minishop.grid.Payment, minishop.grid.Default, {
     },
 
     createPayment: function (btn, e) {
-        let w = Ext.getCmp('minishop-window-payment-create');
+        let w = Ext.getCmp('ms3-window-payment-create');
         if (w) {
             w.hide().getEl().remove();
         }
 
         w = MODx.load({
-            xtype: 'minishop-window-payment-create',
-            id: 'minishop-window-payment-create',
+            xtype: 'ms3-window-payment-create',
+            id: 'ms3-window-payment-create',
             record: this.menu.record,
             listeners: {
                 success: {
@@ -121,13 +121,13 @@ Ext.extend(minishop.grid.Payment, minishop.grid.Default, {
             this.menu.record = row.data;
         }
 
-        let w = Ext.getCmp('minishop-window-payment-update');
+        let w = Ext.getCmp('ms3-window-payment-update');
         if (w) {
             w.close();
         }
         w = MODx.load({
-            xtype: 'minishop-window-payment-update',
-            id: 'minishop-window-payment-update',
+            xtype: 'ms3-window-payment-update',
+            id: 'ms3-window-payment-update',
             record: this.menu.record,
             title: this.menu.record['name'],
             listeners: {
@@ -155,10 +155,10 @@ Ext.extend(minishop.grid.Payment, minishop.grid.Default, {
         const ids = this._getSelectedIds();
 
         Ext.MessageBox.confirm(
-            _('ms_menu_remove_title'),
+            _('ms3_menu_remove_title'),
             ids.length > 1
-                ? _('ms_menu_remove_multiple_confirm')
-                : _('ms_menu_remove_confirm'),
+                ? _('ms3_menu_remove_multiple_confirm')
+                : _('ms3_menu_remove_confirm'),
             function (val) {
                 if (val == 'yes') {
                     this.paymentAction('Remove');
@@ -168,4 +168,4 @@ Ext.extend(minishop.grid.Payment, minishop.grid.Default, {
         );
     },
 });
-Ext.reg('minishop-grid-payment', minishop.grid.Payment);
+Ext.reg('ms3-grid-payment', ms3.grid.Payment);

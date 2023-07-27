@@ -33,12 +33,12 @@ class GetList extends GetListProcessor
         if ($this->getProperty('combo') && !$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
             $this->item_id = $id;
         } else {
-//            $showOptions = (bool)$this->modx->getOption('ms_category_show_options', null, true);
-//            if ($showOptions) {
-//                $grid_fields = $this->modx->getOption('ms_category_grid_fields');
-//                $grid_fields = array_map('trim', explode(',', $grid_fields));
-//                $this->options = $this->modx->getIterator(msOption::class, ['key:IN' => $grid_fields]);
-//            }
+            $showOptions = (bool)$this->modx->getOption('ms3_category_show_options', null, true);
+            if ($showOptions) {
+                $grid_fields = $this->modx->getOption('ms3_category_grid_fields');
+                $grid_fields = array_map('trim', explode(',', $grid_fields));
+                $this->options = $this->modx->getIterator(msOption::class, ['key:IN' => $grid_fields]);
+            }
         }
         if (!$this->getProperty('limit')) {
             $this->setProperty('limit', 20);
@@ -118,7 +118,7 @@ class GetList extends GetListProcessor
                 $parents = [$parent];
 
                 $nested = $this->getProperty('nested', null);
-                $show_nested = $this->modx->getOption('ms_category_show_nested_products', null, true);
+                $show_nested = $this->modx->getOption('ms3_category_show_nested_products', null, true);
                 $nested = $nested === null && $show_nested || $nested;
                 if ($nested) {
                     $tmp = $this->modx->getChildIds($parent, 10, ['context' => $category->get('context_key')]);
@@ -255,7 +255,7 @@ class GetList extends GetListProcessor
                 $array['actions'][] = [
                     'cls' => '',
                     'icon' => 'icon icon-eye',
-                    'title' => $this->modx->lexicon('ms_product_view'),
+                    'title' => $this->modx->lexicon('ms3_product_view'),
                     'action' => 'viewProduct',
                     'button' => true,
                     'menu' => true,
@@ -265,7 +265,7 @@ class GetList extends GetListProcessor
             $array['actions'][] = [
                 'cls' => '',
                 'icon' => 'icon icon-refresh',
-                'title' => $this->modx->lexicon('ms_gallery_file_generate_thumbs'),
+                'title' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
                 'action' => 'generatePreview',
                 'button' => false,
                 'menu' => true,
@@ -274,7 +274,7 @@ class GetList extends GetListProcessor
             $array['actions'][] = [
                 'cls' => '',
                 'icon' => 'icon icon-edit',
-                'title' => $this->modx->lexicon('ms_product_edit'),
+                'title' => $this->modx->lexicon('ms3_product_edit'),
                 'action' => 'editProduct',
                 'button' => false,
                 'menu' => true,
@@ -283,7 +283,7 @@ class GetList extends GetListProcessor
             $array['actions'][] = [
                 'cls' => '',
                 'icon' => 'icon icon-files-o',
-                'title' => $this->modx->lexicon('ms_product_duplicate'),
+                'title' => $this->modx->lexicon('ms3_product_duplicate'),
                 'action' => 'duplicateProduct',
                 'button' => false,
                 'menu' => true,
@@ -293,8 +293,8 @@ class GetList extends GetListProcessor
                 $array['actions'][] = [
                     'cls' => '',
                     'icon' => 'icon icon-power-off action-green',
-                    'title' => $this->modx->lexicon('ms_product_publish'),
-                    'multiple' => $this->modx->lexicon('ms_product_publish'),
+                    'title' => $this->modx->lexicon('ms3_product_publish'),
+                    'multiple' => $this->modx->lexicon('ms3_product_publish'),
                     'action' => 'publishProduct',
                     'button' => true,
                     'menu' => true,
@@ -303,8 +303,8 @@ class GetList extends GetListProcessor
                 $array['actions'][] = [
                     'cls' => '',
                     'icon' => 'icon icon-power-off action-gray',
-                    'title' => $this->modx->lexicon('ms_product_unpublish'),
-                    'multiple' => $this->modx->lexicon('ms_product_unpublish'),
+                    'title' => $this->modx->lexicon('ms3_product_unpublish'),
+                    'multiple' => $this->modx->lexicon('ms3_product_unpublish'),
                     'action' => 'unpublishProduct',
                     'button' => true,
                     'menu' => true,
@@ -315,8 +315,8 @@ class GetList extends GetListProcessor
                 $array['actions'][] = [
                     'cls' => '',
                     'icon' => 'icon icon-plus',
-                    'title' => $this->modx->lexicon('ms_product_show_in_tree'),
-                    'multiple' => $this->modx->lexicon('ms_product_show_in_tree'),
+                    'title' => $this->modx->lexicon('ms3_product_show_in_tree'),
+                    'multiple' => $this->modx->lexicon('ms3_product_show_in_tree'),
                     'action' => 'showProduct',
                     'button' => false,
                     'menu' => true,
@@ -325,8 +325,8 @@ class GetList extends GetListProcessor
                 $array['actions'][] = [
                     'cls' => '',
                     'icon' => 'icon icon-minus',
-                    'title' => $this->modx->lexicon('ms_product_hide_in_tree'),
-                    'multiple' => $this->modx->lexicon('ms_product_hide_in_tree'),
+                    'title' => $this->modx->lexicon('ms3_product_hide_in_tree'),
+                    'multiple' => $this->modx->lexicon('ms3_product_hide_in_tree'),
                     'action' => 'hideProduct',
                     'button' => false,
                     'menu' => true,
@@ -337,8 +337,8 @@ class GetList extends GetListProcessor
                 $array['actions'][] = [
                     'cls' => '',
                     'icon' => 'icon icon-trash-o action-red',
-                    'title' => $this->modx->lexicon('ms_product_delete'),
-                    'multiple' => $this->modx->lexicon('ms_product_delete'),
+                    'title' => $this->modx->lexicon('ms3_product_delete'),
+                    'multiple' => $this->modx->lexicon('ms3_product_delete'),
                     'action' => 'deleteProduct',
                     'button' => false,
                     'menu' => true,
@@ -347,8 +347,8 @@ class GetList extends GetListProcessor
                 $array['actions'][] = [
                     'cls' => '',
                     'icon' => 'icon icon-undo action-green',
-                    'title' => $this->modx->lexicon('ms_product_undelete'),
-                    'multiple' => $this->modx->lexicon('ms_product_undelete'),
+                    'title' => $this->modx->lexicon('ms3_product_undelete'),
+                    'multiple' => $this->modx->lexicon('ms3_product_undelete'),
                     'action' => 'undeleteProduct',
                     'button' => true,
                     'menu' => true,

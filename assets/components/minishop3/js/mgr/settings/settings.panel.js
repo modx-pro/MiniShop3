@@ -1,94 +1,94 @@
-minishop.panel.Settings = function (config) {
+ms3.panel.Settings = function (config) {
     config = config || {};
     Ext.apply(config, {
         cls: 'container',
         items: [{
-            html: '<h2>' + _('miniShop3') + ' :: ' + _('ms_settings') + '</h2>',
+            html: '<h2>' + _('miniShop3') + ' :: ' + _('ms3_settings') + '</h2>',
             cls: 'modx-page-header',
         }, {
             xtype: 'modx-tabs',
-            id: 'minishop-settings-tabs',
+            id: 'ms3-settings-tabs',
             stateful: true,
-            stateId: 'minishop-settings-tabs',
+            stateId: 'ms3-settings-tabs',
             stateEvents: ['tabchange'],
-            cls: 'minishop-panel',
+            cls: 'ms3-panel',
             getState: function () {
                 return {
                     activeTab: this.items.indexOf(this.getActiveTab())
                 };
             },
             items: [{
-                title: _('ms_deliveries'),
+                title: _('ms3_deliveries'),
                 layout: 'anchor',
                 items: [{
-                    html: _('ms_deliveries_intro'),
+                    html: _('ms3_deliveries_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'minishop-grid-delivery',
+                    xtype: 'ms3-grid-delivery',
                     cls: 'main-wrapper',
                 }]
             }, {
-                title: _('ms_payments'),
+                title: _('ms3_payments'),
                 layout: 'anchor',
                 items: [{
-                    html: _('ms_payments_intro'),
+                    html: _('ms3_payments_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'minishop-grid-payment',
+                    xtype: 'ms3-grid-payment',
                     cls: 'main-wrapper',
                 }]
             }, {
-                title: _('ms_statuses'),
+                title: _('ms3_statuses'),
                 layout: 'anchor',
                 items: [{
-                    html: _('ms_statuses_intro'),
+                    html: _('ms3_statuses_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'minishop-grid-status',
+                    xtype: 'ms3-grid-status',
                     cls: 'main-wrapper',
                 }]
             }, {
-                title: _('ms_vendors'),
+                title: _('ms3_vendors'),
                 layout: 'anchor',
                 items: [{
-                    html: _('ms_vendors_intro'),
+                    html: _('ms3_vendors_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'minishop-grid-vendor',
+                    xtype: 'ms3-grid-vendor',
                     cls: 'main-wrapper',
                 }]
             }, {
-                title: _('ms_links'),
+                title: _('ms3_links'),
                 layout: 'anchor',
                 items: [{
-                    html: _('ms_links_intro'),
+                    html: _('ms3_links_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'minishop-grid-link',
+                    xtype: 'ms3-grid-link',
                     cls: 'main-wrapper',
                 }]
             }, {
-                title: _('ms_options'),
+                title: _('ms3_options'),
                 layout: 'anchor',
                 items: [{
-                    html: _('ms_options_intro'),
+                    html: _('ms3_options_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
                     layout: 'column',
                     cls: 'main-wrapper',
                     items: [{
-                        xtype: 'minishop-tree-option-categories',
-                        optionGrid: 'minishop-grid-option',
+                        xtype: 'ms3-tree-option-categories',
+                        optionGrid: 'ms3-grid-option',
                         columnWidth: .25
                     }, {
-                        xtype: 'minishop-grid-option',
+                        xtype: 'ms3-grid-option',
                         columnWidth: .75,
                     }]
                 }]
             }]
         }]
     });
-    minishop.panel.Settings.superclass.constructor.call(this, config);
+    ms3.panel.Settings.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.Settings, MODx.Panel);
-Ext.reg('minishop-panel-settings', minishop.panel.Settings);
+Ext.extend(ms3.panel.Settings, MODx.Panel);
+Ext.reg('ms3-panel-settings', ms3.panel.Settings);

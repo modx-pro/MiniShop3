@@ -1,15 +1,15 @@
-minishop.page.UpdateProduct = function (config) {
+ms3.page.UpdateProduct = function (config) {
     config = config || {record: {}};
     config.record = config.record || {};
 
     Ext.applyIf(config, {
-        panelXType: 'minishop-panel-product-update',
+        panelXType: 'ms3-panel-product-update',
         mode: 'update',
-        url: minishop.config.connector_url
+        url: ms3.config.connector_url
     });
-    minishop.page.UpdateProduct.superclass.constructor.call(this, config);
+    ms3.page.UpdateProduct.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.page.UpdateProduct, MODx.page.UpdateResource, {
+Ext.extend(ms3.page.UpdateProduct, MODx.page.UpdateResource, {
 
     getButtons: function (config) {
         const buttons = [];
@@ -48,20 +48,20 @@ Ext.extend(minishop.page.UpdateProduct, MODx.page.UpdateResource, {
             handler: this.prevPage,
             disabled: !config['prev_page'],
             scope: this,
-            tooltip: _('ms_btn_prev'),
+            tooltip: _('ms3_btn_prev'),
             keys: [{key: 37, alt: true, scope: this, fn: this.prevPage}]
         }, {
             text: '<i class="icon icon-arrow-up"></i>',
             handler: this.cancel,
             scope: this,
-            tooltip: _('ms_btn_back'),
+            tooltip: _('ms3_btn_back'),
             keys: [{key: 38, alt: true, scope: this, fn: this.upPage}]
         }, {
             text: '<i class="icon icon-arrow-right"></i>',
             handler: this.nextPage,
             disabled: !config['next_page'],
             scope: this,
-            tooltip: _('ms_btn_next'),
+            tooltip: _('ms3_btn_next'),
             keys: [{key: 39, alt: true, scope: this, fn: this.nextPage}]
         }];
     },
@@ -88,18 +88,18 @@ Ext.extend(minishop.page.UpdateProduct, MODx.page.UpdateResource, {
     },
 
 });
-Ext.reg('minishop-page-product-update', minishop.page.UpdateProduct);
+Ext.reg('ms3-page-product-update', ms3.page.UpdateProduct);
 
 
-minishop.panel.UpdateProduct = function (config) {
+ms3.panel.UpdateProduct = function (config) {
     config = config || {};
-    minishop.panel.UpdateProduct.superclass.constructor.call(this, config);
+    ms3.panel.UpdateProduct.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.UpdateProduct, minishop.panel.Product, {
+Ext.extend(ms3.panel.UpdateProduct, ms3.panel.Product, {
 
     getFields: function (config) {
         const fields = [];
-        const originals = minishop.panel.Product.prototype.getFields.call(this, config);
+        const originals = ms3.panel.Product.prototype.getFields.call(this, config);
 
         for (const i in originals) {
             if (!originals.hasOwnProperty(i)) {
@@ -130,7 +130,7 @@ Ext.extend(minishop.panel.UpdateProduct, minishop.panel.Product, {
 
 
 
-            if (parseInt(minishop.config['show_gallery']) !== 0) {
+            if (parseInt(ms3.config['show_gallery']) !== 0) {
                 const galleryTab = this.getGallery(config);
                 tabs.push(galleryTab);
             }
@@ -146,10 +146,10 @@ Ext.extend(minishop.panel.UpdateProduct, minishop.panel.Product, {
 
     getGallery: function (config) {
         return {
-            title: _('ms_tab_product_gallery'),
+            title: _('ms3_tab_product_gallery'),
             layout: 'anchor',
             items: [{
-                xtype: 'minishop-gallery-page',
+                xtype: 'ms3-gallery-page',
                 record: config.record,
                 pageSize: 50,
                 border: false,
@@ -158,4 +158,4 @@ Ext.extend(minishop.panel.UpdateProduct, minishop.panel.Product, {
     },
 
 });
-Ext.reg('minishop-panel-product-update', minishop.panel.UpdateProduct);
+Ext.reg('ms3-panel-product-update', ms3.panel.UpdateProduct);

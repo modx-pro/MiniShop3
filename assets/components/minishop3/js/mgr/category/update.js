@@ -1,8 +1,8 @@
-minishop.page.UpdateCategory = function (config) {
+ms3.page.UpdateCategory = function (config) {
     config = config || {record: {}};
     config.record = config.record || {};
     Ext.applyIf(config, {
-        panelXType: 'minishop-panel-category-update',
+        panelXType: 'ms3-panel-category-update',
         mode: 'update',
         actions: {
             new: 'resource/create',
@@ -10,9 +10,9 @@ minishop.page.UpdateCategory = function (config) {
             preview: 'resource/preview',
         }
     });
-    minishop.page.UpdateCategory.superclass.constructor.call(this, config);
+    ms3.page.UpdateCategory.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.page.UpdateCategory, MODx.page.UpdateResource, {
+Ext.extend(ms3.page.UpdateCategory, MODx.page.UpdateResource, {
     getButtons: function (config) {
         const buttons = [];
         const originals = MODx.page.UpdateResource.prototype.getButtons.call(this, config);
@@ -52,20 +52,20 @@ Ext.extend(minishop.page.UpdateCategory, MODx.page.UpdateResource, {
             handler: this.prevPage,
             disabled: !config['prev_page'],
             scope: this,
-            tooltip: _('ms_btn_prev'),
+            tooltip: _('ms3_btn_prev'),
             keys: [{key: 37, alt: true, scope: this, fn: this.prevPage}]
         }, {
             text: '<i class="icon icon-arrow-up"></i>',
             handler: this.cancel,
             scope: this,
-            tooltip: _('ms_btn_back'),
+            tooltip: _('ms3_btn_back'),
             keys: [{key: 38, alt: true, scope: this, fn: this.upPage}]
         }, {
             text: '<i class="icon icon-arrow-right"></i>',
             handler: this.nextPage,
             disabled: !config['next_page'],
             scope: this,
-            tooltip: _('ms_btn_next'),
+            tooltip: _('ms3_btn_next'),
             keys: [{key: 39, alt: true, scope: this, fn: this.nextPage}]
         }];
     },
@@ -92,18 +92,18 @@ Ext.extend(minishop.page.UpdateCategory, MODx.page.UpdateResource, {
     },
 
 });
-Ext.reg('minishop-page-category-update', minishop.page.UpdateCategory);
+Ext.reg('ms3-page-category-update', ms3.page.UpdateCategory);
 
 
-minishop.panel.UpdateCategory = function (config) {
+ms3.panel.UpdateCategory = function (config) {
     config = config || {};
-    minishop.panel.UpdateCategory.superclass.constructor.call(this, config);
+    ms3.panel.UpdateCategory.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.UpdateCategory, minishop.panel.Category, {
+Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
 
     getFields: function (config) {
         const fields = [];
-        const originals = minishop.panel.Category.prototype.getFields.call(this, config);
+        const originals = ms3.panel.Category.prototype.getFields.call(this, config);
         for (const i in originals) {
             if (!originals.hasOwnProperty(i)) {
                 continue;
@@ -145,11 +145,11 @@ Ext.extend(minishop.panel.UpdateCategory, minishop.panel.Category, {
 
     getProducts: function (config) {
         return {
-            title: _('ms_tab_products'),
-            id: 'modx-minishop-products',
+            title: _('ms3_tab_products'),
+            id: 'modx-ms3-products',
             layout: 'anchor',
             items: [{
-                xtype: 'minishop-grid-products',
+                xtype: 'ms3-grid-products',
                 resource: config.resource,
                 border: false,
                 listeners: {
@@ -163,11 +163,11 @@ Ext.extend(minishop.panel.UpdateCategory, minishop.panel.Category, {
         return [{
             layout: 'form',
             items: [items, {
-                html: String.format('<h3>{0}</h3>', _('ms_product_options')),
+                html: String.format('<h3>{0}</h3>', _('ms3_product_options')),
                 style: 'margin-top: 20px',
                 border: false,
             }, {
-                xtype: 'minishop-grid-category-option',
+                xtype: 'ms3-grid-category-option',
                 border: false,
                 record: config['record'],
             }]
@@ -188,4 +188,4 @@ Ext.extend(minishop.panel.UpdateCategory, minishop.panel.Category, {
     },
 
 });
-Ext.reg('minishop-panel-category-update', minishop.panel.UpdateCategory);
+Ext.reg('ms3-panel-category-update', ms3.panel.UpdateCategory);

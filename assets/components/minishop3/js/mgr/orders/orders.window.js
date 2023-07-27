@@ -1,16 +1,16 @@
-minishop.window.UpdateOrder = function (config) {
+ms3.window.UpdateOrder = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_menu_update'),
+        title: _('ms3_menu_update'),
         width: 750,
         baseParams: {
             action: 'MiniShop3\\Processors\\Order\\Update',
         },
     });
-    minishop.window.UpdateOrder.superclass.constructor.call(this, config);
+    ms3.window.UpdateOrder.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
+Ext.extend(ms3.window.UpdateOrder, ms3.window.Default, {
 
     getFields: function (config) {
         return {
@@ -20,7 +20,7 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
             deferredRender: false,
             autoHeight: true,
             stateful: true,
-            stateId: 'minishop-window-order-update',
+            stateId: 'ms3-window-order-update',
             stateEvents: ['tabchange'],
             getState: function () {
                 return {activeTab: this.items.indexOf(this.getActiveTab())};
@@ -31,13 +31,13 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
 
     getTabs: function (config) {
         const tabs = [{
-            title: _('ms_order'),
+            title: _('ms3_order'),
             hideMode: 'offsets',
             defaults: {msgTarget: 'under', border: false},
             items: this.getOrderFields(config)
         }, {
-            xtype: 'minishop-grid-order-products',
-            title: _('ms_order_products'),
+            xtype: 'ms3-grid-order-products',
+            title: _('ms3_order_products'),
             order_id: config.record.id
         }];
 
@@ -45,7 +45,7 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
         if (address.length > 0) {
             tabs.push({
                 layout: 'form',
-                title: _('ms_address'),
+                title: _('ms3_address'),
                 hideMode: 'offsets',
                 bodyStyle: 'padding:5px 0;',
                 defaults: {msgTarget: 'under', border: false},
@@ -54,8 +54,8 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
         }
 
         tabs.push({
-            xtype: 'minishop-grid-order-logs',
-            title: _('ms_order_log'),
+            xtype: 'ms3-grid-order-logs',
+            title: _('ms3_order_log'),
             order_id: config.record.id
         });
 
@@ -74,9 +74,9 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
                 columnWidth: .5,
                 layout: 'form',
                 items: [{
-                    xtype: 'minishop-combo-user',
+                    xtype: 'ms3-combo-user',
                     name: 'user_id',
-                    fieldLabel: _('ms_user'),
+                    fieldLabel: _('ms3_user'),
                     anchor: '95%',
                 }]
             }, {
@@ -85,7 +85,7 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
                 items: [{
                     xtype: 'displayfield',
                     name: 'cost',
-                    fieldLabel: _('ms_order_cost'),
+                    fieldLabel: _('ms3_order_cost'),
                     anchor: '100%',
                     style: 'font-size:1.1em;'
                 }]
@@ -99,22 +99,22 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
                 columnWidth: .33,
                 layout: 'form',
                 items: [
-                    {xtype: 'displayfield', name: 'num', fieldLabel: _('ms_num'), anchor: '100%'},
-                    {xtype: 'displayfield', name: 'cart_cost', fieldLabel: _('ms_cart_cost'), anchor: '100%'}
+                    {xtype: 'displayfield', name: 'num', fieldLabel: _('ms3_num'), anchor: '100%'},
+                    {xtype: 'displayfield', name: 'cart_cost', fieldLabel: _('ms3_cart_cost'), anchor: '100%'}
                 ]
             }, {
                 columnWidth: .33,
                 layout: 'form',
                 items: [
-                    {xtype: 'displayfield', name: 'createdon', fieldLabel: _('ms_createdon'), anchor: '100%'},
-                    {xtype: 'displayfield', name: 'delivery_cost', fieldLabel: _('ms_delivery_cost'), anchor: '100%'}
+                    {xtype: 'displayfield', name: 'createdon', fieldLabel: _('ms3_createdon'), anchor: '100%'},
+                    {xtype: 'displayfield', name: 'delivery_cost', fieldLabel: _('ms3_delivery_cost'), anchor: '100%'}
                 ]
             }, {
                 columnWidth: .33,
                 layout: 'form',
                 items: [
-                    {xtype: 'displayfield', name: 'updatedon', fieldLabel: _('ms_updatedon'), anchor: '100%'},
-                    {xtype: 'displayfield', name: 'weight', fieldLabel: _('ms_weight'), anchor: '100%'}
+                    {xtype: 'displayfield', name: 'updatedon', fieldLabel: _('ms3_updatedon'), anchor: '100%'},
+                    {xtype: 'displayfield', name: 'weight', fieldLabel: _('ms3_weight'), anchor: '100%'}
                 ]
             }]
         }, {
@@ -125,20 +125,20 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
                 columnWidth: .48,
                 layout: 'form',
                 items: [{
-                    xtype: 'minishop-combo-status',
+                    xtype: 'ms3-combo-status',
                     name: 'status',
-                    fieldLabel: _('ms_status'),
+                    fieldLabel: _('ms3_status'),
                     anchor: '100%',
                     order_id: config.record.id
                 }, {
-                    xtype: 'minishop-combo-delivery',
+                    xtype: 'ms3-combo-delivery',
                     name: 'delivery',
-                    fieldLabel: _('ms_delivery'),
+                    fieldLabel: _('ms3_delivery'),
                     anchor: '100%'
                 }, {
-                    xtype: 'minishop-combo-payment',
+                    xtype: 'ms3-combo-payment',
                     name: 'payment',
-                    fieldLabel: _('ms_payment'),
+                    fieldLabel: _('ms3_payment'),
                     anchor: '100%',
                     delivery_id: config.record.delivery
                 }]
@@ -146,7 +146,7 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
                 columnWidth: .5,
                 layout: 'form',
                 items: [
-                    {xtype: 'textarea', name: 'order_comment', fieldLabel: _('ms_order_comment'), anchor: '100%', height: 170}
+                    {xtype: 'textarea', name: 'order_comment', fieldLabel: _('ms3_order_comment'), anchor: '100%', height: 170}
                 ]
             }]
         }];
@@ -168,13 +168,13 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
             floor: {},
         };
         const fields = [], tmp = [];
-        for (let i = 0; i < minishop.config['order_address_fields'].length; i++) {
-            const field = minishop.config['order_address_fields'][i];
+        for (let i = 0; i < ms3.config['order_address_fields'].length; i++) {
+            const field = ms3.config['order_address_fields'][i];
             if (all[field]) {
                 Ext.applyIf(all[field], {
                     xtype: 'textfield',
                     name: 'addr_' + field,
-                    fieldLabel: _('ms_' + field)
+                    fieldLabel: _('ms3_' + field)
                 });
                 all[field].anchor = '100%';
                 tmp.push(all[field]);
@@ -216,24 +216,24 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
                 }
                 fields[n].items[i % 2].items.push(tmp[i]);
             }
-            if (minishop.config['order_address_fields'].in_array('text_address')) {
+            if (ms3.config['order_address_fields'].in_array('text_address')) {
                 fields.push(
                     {
                         xtype: 'textarea',
                         name: 'addr_text_address',
-                        fieldLabel: _('ms_text_address'),
+                        fieldLabel: _('ms3_text_address'),
                         anchor: '98%',
                         style: 'min-height: 50px;border:1px solid #efefef;width:95%;'
                     }
                 );
             }
 
-            if (minishop.config['order_address_fields'].in_array('comment')) {
+            if (ms3.config['order_address_fields'].in_array('comment')) {
                 fields.push(
                     {
                         xtype: 'displayfield',
                         name: 'addr_comment',
-                        fieldLabel: _('ms_comment'),
+                        fieldLabel: _('ms3_comment'),
                         anchor: '98%',
                         style: 'min-height: 50px;border:1px solid #efefef;width:95%;'
                     }
@@ -254,4 +254,4 @@ Ext.extend(minishop.window.UpdateOrder, minishop.window.Default, {
     },
 
 });
-Ext.reg('minishop-window-order-update', minishop.window.UpdateOrder);
+Ext.reg('ms3-window-order-update', ms3.window.UpdateOrder);

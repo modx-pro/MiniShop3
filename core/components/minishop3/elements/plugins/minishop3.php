@@ -5,6 +5,7 @@
 use MiniShop3\Model\msCustomerProfile;
 use MiniShop3\Model\msOrder;
 use MODX\Revolution\modUser;
+use MODX\Revolution\modSystemEvent;
 
 switch ($modx->event->name) {
     case 'OnMODXInit':
@@ -23,7 +24,7 @@ switch ($modx->event->name) {
         }
         /** @var \MiniShop3\MiniShop3 $ms3 */
         if ($ms3 = $modx->services->get('ms3')) {
-            $response = $ms3->handleRequest($_REQUEST['ms_action'], @$_POST);
+            $response = $ms3->handleRequest($_REQUEST['ms3_action'], @$_POST);
             @session_write_close();
             exit($response);
         }
@@ -33,21 +34,21 @@ switch ($modx->event->name) {
         /** @var \MiniShop3\MiniShop3 $ms3 */
         if ($ms3 = $modx->services->get('ms3')) {
             $modx->controller->addLexiconTopic('minishop3:default');
-            $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms.manager.js');
+            $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms3.manager.js');
         }
         break;
 
     case 'OnLoadWebDocument':
         /** @var \MiniShop3\MiniShop3 $ms3 */
         $ms3 = $modx->services->get('ms3');
-        $registerFrontend = $modx->getOption('ms_register_frontend', null, '1');
+        $registerFrontend = $modx->getOption('ms3_register_frontend', null, '1');
         if ($ms3 && $registerFrontend) {
             $ms3->registerFrontend();
         }
         // Handle non-ajax requests
         if (!empty($_REQUEST['ms_action'])) {
             if ($ms3) {
-                $ms3->handleRequest($_REQUEST['ms_action'], @$_POST);
+                $ms3->handleRequest($_REQUEST['ms3_action'], @$_POST);
             }
         }
         // Set product fields as [[*resource]] tags
@@ -65,9 +66,9 @@ switch ($modx->event->name) {
     case 'OnWebPageInit':
         // Set referrer cookie
         /** @var msCustomerProfile $profile */
-        $referrerVar = $modx->getOption('ms_referrer_code_var', null, 'msfrom', true);
-        $cookieVar = $modx->getOption('ms_referrer_cookie_var', null, 'msreferrer', true);
-        $cookieTime = $modx->getOption('ms_referrer_time', null, 86400 * 365, true);
+        $referrerVar = $modx->getOption('ms3_referrer_code_var', null, 'msfrom', true);
+        $cookieVar = $modx->getOption('ms3_referrer_cookie_var', null, 'msreferrer', true);
+        $cookieTime = $modx->getOption('ms3_referrer_time', null, 86400 * 365, true);
 
         if (!$modx->user->isAuthenticated() && !empty($_REQUEST[$referrerVar])) {
             $code = trim($_REQUEST[$referrerVar]);
@@ -83,8 +84,8 @@ switch ($modx->event->name) {
         /** @var string $mode */
         if ($mode == modSystemEvent::MODE_NEW) {
             /** @var modUser $user */
-            $cookieVar = $modx->getOption('ms_referrer_cookie_var', null, 'msreferrer', true);
-            $cookieTime = $modx->getOption('ms_referrer_time', null, 86400 * 365, true);
+            $cookieVar = $modx->getOption('ms3_referrer_cookie_var', null, 'msreferrer', true);
+            $cookieTime = $modx->getOption('ms3_referrer_time', null, 86400 * 365, true);
             if ($modx->context->key != 'mgr' && !empty($_COOKIE[$cookieVar])) {
                 if ($profile = $modx->getObject('msCustomerProfile', ['id' => $user->get('id')])) {
                     if (!$profile->get('referrer_id') && $_COOKIE[$cookieVar] != $user->get('id')) {

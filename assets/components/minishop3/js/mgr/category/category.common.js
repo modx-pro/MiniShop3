@@ -1,8 +1,8 @@
-minishop.panel.Category = function (config) {
+ms3.panel.Category = function (config) {
     config = config || {};
-    minishop.panel.Category.superclass.constructor.call(this, config);
+    ms3.panel.Category.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
+Ext.extend(ms3.panel.Category, MODx.panel.Resource, {
 
     getFields: function (config) {
         const fields = [];
@@ -14,11 +14,11 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
             }
             const item = originals[i];
             if (item.id === "modx-header-breadcrumbs") {
-                item.items[0].html = _('ms_category_new');
+                item.items[0].html = _('ms3_category_new');
             }
             if (item.id === 'modx-resource-tabs') {
-                // item.stateful = MODx.config['ms_category_remember_tabs'] === 1;
-                // item.stateId = 'minishop-category-' + config.mode + '-tabpanel';
+                // item.stateful = MODx.config['ms3_category_remember_tabs'] === 1;
+                // item.stateId = 'ms3-category-' + config.mode + '-tabpanel';
                 // item.stateEvents = ['tabchange'];
                 // item.collapsible = false;
                 // item.getState = function () {
@@ -31,7 +31,7 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
                     }
                     const tab = item.items[i2];
                     if (tab.id === 'modx-resource-settings') {
-                        tab.title = _('ms_tab_category');
+                        tab.title = _('ms3_tab_category');
                         tab.layout = "form";
                         //tab.items.push(this.getContent(config));
                     }
@@ -82,11 +82,11 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
                     item_j.itemCls = 'contentblocks_replacement';
                     item_j.msgTarget = "under";
                     item_j.description = '<b>[[*content]]</b>';
-                    if (MODx.config['ms_category_content_default'] && config['mode'] === 'create') {
-                        item_j.value = MODx.config['ms_category_content_default'];
+                    if (MODx.config['ms3_category_content_default'] && config['mode'] === 'create') {
+                        item_j.value = MODx.config['ms3_category_content_default'];
                     }
                     item_j.value = "<p></p>"
-                    //item_j.hidden = minishop.config.isHideContent;
+                    //item_j.hidden = ms3.config.isHideContent;
                     item_j.hidden = false;
                 }
                 fields.push(item_j);
@@ -140,4 +140,4 @@ Ext.extend(minishop.panel.Category, MODx.panel.Resource, {
     },
 
 });
-Ext.reg('minishop-panel-category', minishop.panel.Category);
+Ext.reg('ms3-panel-category', ms3.panel.Category);

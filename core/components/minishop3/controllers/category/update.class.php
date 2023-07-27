@@ -78,10 +78,10 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.tv.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.js');
         $this->addJavascript($mgrUrl . 'assets/modext/sections/resource/update.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/minishop.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.combo.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/minishop3.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/strftime-min-1.3.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms.utils.js');
+        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/category.common.js');
@@ -107,7 +107,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             //'isHideContent' => $this->isHideContent(),
         );
         $ready = array(
-            'xtype' => 'minishop-page-category-update',
+            'xtype' => 'ms3-page-category-update',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
             'publish_document' => $this->canPublish,
@@ -133,7 +133,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             MODx.config.publish_document = "' . $this->canPublish . '";
             MODx.onDocFormRender = "' . $this->onDocFormRender . '";
             MODx.ctx = "' . $this->ctx . '";
-            minishop.config = ' . json_encode($config) . ';
+            ms3.config = ' . json_encode($config) . ';
             Ext.onReady(function() {
                 MODx.load(' . json_encode($ready) . ');
             });

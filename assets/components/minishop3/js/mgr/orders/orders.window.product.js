@@ -1,17 +1,17 @@
-minishop.window.OrderProduct = function (config) {
+ms3.window.OrderProduct = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_menu_update'),
+        title: _('ms3_menu_update'),
         width: 600,
         baseParams: {
             action: config.action || 'MiniShop3\\Processors\\Order\\Product\\Update',
         },
         modal: true,
     });
-    minishop.window.OrderProduct.superclass.constructor.call(this, config);
+    ms3.window.OrderProduct.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
+Ext.extend(ms3.window.OrderProduct, ms3.window.Default, {
 
     getFields: function (config) {
         const options = this.getOptionsFields(config);
@@ -29,7 +29,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
                     border: false,
                     items: [{
                         xtype: 'numberfield',
-                        fieldLabel: _('ms_product_count'),
+                        fieldLabel: _('ms3_product_count'),
                         name: 'count',
                         anchor: '100%',
                         allowNegative: false,
@@ -42,7 +42,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
                     border: false,
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_name'),
+                        fieldLabel: _('ms3_name'),
                         name: 'name',
                         anchor: '100%'
                     }]
@@ -59,7 +59,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
                     items: [{
                         xtype: 'numberfield',
                         decimalPrecision: 2,
-                        fieldLabel: _('ms_product_price'),
+                        fieldLabel: _('ms3_product_price'),
                         name: 'price',
                         anchor: '100%'
                     }]
@@ -71,7 +71,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
                     items: [{
                         xtype: 'numberfield',
                         decimalPrecision: 3,
-                        fieldLabel: _('ms_product_weight'),
+                        fieldLabel: _('ms3_product_weight'),
                         name: 'weight',
                         anchor: '100%'
                     }]
@@ -79,7 +79,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
             },
             {
                 xtype: 'textarea',
-                fieldLabel: _('ms_product_options'),
+                fieldLabel: _('ms3_product_options'),
                 name: 'options',
                 height: 100,
                 anchor: '100%'
@@ -105,7 +105,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
             const options = JSON.parse(config.record.options);
             let i = 0;
             for (let key in options) {
-                if (!Array.isArray(options[key]) && minishop.config['order_product_options_fields'].includes(key)) {
+                if (!Array.isArray(options[key]) && ms3.config['order_product_options_fields'].includes(key)) {
                     items.push(
                         {
                             columnWidth: 0.5,
@@ -114,7 +114,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
                             border: false,
                             items: [{
                                 xtype: 'textfield',
-                                fieldLabel: _('ms_frontend_' + key) || key,
+                                fieldLabel: _('ms3_frontend_' + key) || key,
                                 name: 'option-' + key,
                                 anchor: '100%',
                             }]
@@ -128,7 +128,7 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
 
         return {
             xtype: 'fieldset',
-            title: _('ms_product_options'),
+            title: _('ms3_product_options'),
             layout: 'column',
             style: 'padding:15px 5px;text-align:center;',
             defaults: {msgTarget: 'under', border: false},
@@ -140,4 +140,4 @@ Ext.extend(minishop.window.OrderProduct, minishop.window.Default, {
         };
     },
 });
-Ext.reg('minishop-window-orderproduct-update', minishop.window.OrderProduct);
+Ext.reg('ms3-window-orderproduct-update', ms3.window.OrderProduct);

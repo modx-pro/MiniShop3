@@ -1,15 +1,15 @@
-minishop.panel.Gallery = function (config) {
+ms3.panel.Gallery = function (config) {
     config = config || {};
 
     Ext.apply(config, {
         border: false,
-        id: 'minishop-gallery-page',
+        id: 'ms3-gallery-page',
         baseCls: 'x-panel',
         items: [{
             border: false,
             style: {padding: '10px 5px'},
-            xtype: 'minishop-gallery-page-toolbar',
-            id: 'minishop-gallery-page-toolbar',
+            xtype: 'ms3-gallery-page-toolbar',
+            id: 'ms3-gallery-page-toolbar',
             record: config.record,
         }, {
             border: false,
@@ -17,15 +17,15 @@ minishop.panel.Gallery = function (config) {
             layout: 'anchor',
             items: [{
                 border: false,
-                xtype: 'minishop-gallery-images-panel',
-                id: 'minishop-gallery-images-panel',
+                xtype: 'ms3-gallery-images-panel',
+                id: 'ms3-gallery-images-panel',
                 cls: 'modx-pb-view-ct',
                 product_id: config.record.id,
                 pageSize: config.pageSize
             }]
         }]
     });
-    minishop.panel.Gallery.superclass.constructor.call(this, config);
+    ms3.panel.Gallery.superclass.constructor.call(this, config);
 
     this.on('afterrender', function () {
         const gallery = this;
@@ -34,7 +34,7 @@ minishop.panel.Gallery = function (config) {
         }, 100);
     });
 };
-Ext.extend(minishop.panel.Gallery, MODx.Panel, {
+Ext.extend(ms3.panel.Gallery, MODx.Panel, {
     errors: '',
     progress: null,
 
@@ -70,19 +70,19 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
         };
 
         this.uploader = new plupload.Uploader({
-            url: minishop.config.connector_url + '?' + Ext.urlEncode(params),
-            browse_button: 'minishop-resource-upload-btn',
+            url: ms3.config.connector_url + '?' + Ext.urlEncode(params),
+            browse_button: 'ms3-resource-upload-btn',
             container: this.id,
             drop_element: this.id,
             multipart: true,
-            max_file_size: minishop.config.media_source.maxUploadSize || MODx.config.upload_maxsize || 10485760,
+            max_file_size: ms3.config.media_source.maxUploadSize || MODx.config.upload_maxsize || 10485760,
             filters: [{
                 title: "Image files",
-                extensions: minishop.config.media_source.allowedFileTypes || MODx.config.upload_images || 'jpg,jpeg,png,gif,webp'
+                extensions: ms3.config.media_source.allowedFileTypes || MODx.config.upload_images || 'jpg,jpeg,png,gif,webp'
             }],
             resize: {
-                width: minishop.config.media_source.maxUploadWidth || 1920,
-                height: minishop.config.media_source.maxUploadHeight || 1080
+                width: ms3.config.media_source.maxUploadWidth || 1920,
+                height: ms3.config.media_source.maxUploadHeight || 1080
             }
         });
 
@@ -138,12 +138,12 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
         }
         this.resetUploader();
 
-        const panel = Ext.getCmp('minishop-gallery-images-panel');
+        const panel = Ext.getCmp('ms3-gallery-images-panel');
         if (panel) {
             panel.view.getStore().reload();
             // Update thumbnail
             MODx.Ajax.request({
-                url: minishop.config.connector_url,
+                url: ms3.config.connector_url,
                 params: {
                     action: 'MiniShop3\\Processors\\Product\\Get',
                     id: this.record.id
@@ -192,4 +192,4 @@ Ext.extend(minishop.panel.Gallery, MODx.Panel, {
     */
 
 });
-Ext.reg('minishop-gallery-page', minishop.panel.Gallery);
+Ext.reg('ms3-gallery-page', ms3.panel.Gallery);

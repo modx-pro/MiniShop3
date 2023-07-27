@@ -5,7 +5,7 @@ return [
         'description' => 'A policy for create and update MiniShop3 categories and products.',
         'parent' => 0,
         'class' => '',
-        'lexicon' => 'minishop:permissions',
+        'lexicon' => 'minishop3:permissions',
         'data' => json_encode(array(
             'mscategory_save' => true,
             'msproduct_save' => true,

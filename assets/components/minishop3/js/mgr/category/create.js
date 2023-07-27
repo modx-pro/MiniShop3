@@ -1,15 +1,15 @@
-minishop.page.CreateCategory = function (config) {
+ms3.page.CreateCategory = function (config) {
     config = config || {record: {}};
     config.record = config.record || {};
-    console.log('minishop.page.CreateCategory')
+    console.log('ms3.page.CreateCategory')
 
     Ext.applyIf(config, {
-        panelXType: 'minishop-panel-category-create',
+        panelXType: 'ms3-panel-category-create',
         mode: 'create'
     });
-    minishop.page.CreateCategory.superclass.constructor.call(this, config);
+    ms3.page.CreateCategory.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.page.CreateCategory, MODx.page.CreateResource, {
+Ext.extend(ms3.page.CreateCategory, MODx.page.CreateResource, {
 
     getButtons: function (config) {
         const buttons = [];
@@ -47,12 +47,12 @@ Ext.extend(minishop.page.CreateCategory, MODx.page.CreateResource, {
     },
 
 });
-Ext.reg('minishop-page-category-create', minishop.page.CreateCategory);
+Ext.reg('ms3-page-category-create', ms3.page.CreateCategory);
 
 
-minishop.panel.CreateCategory = function (config) {
+ms3.panel.CreateCategory = function (config) {
     config = config || {};
-    minishop.panel.CreateCategory.superclass.constructor.call(this, config);
+    ms3.panel.CreateCategory.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.CreateCategory, minishop.panel.Category);
-Ext.reg('minishop-panel-category-create', minishop.panel.CreateCategory);
+Ext.extend(ms3.panel.CreateCategory, ms3.panel.Category);
+Ext.reg('ms3-panel-category-create', ms3.panel.CreateCategory);

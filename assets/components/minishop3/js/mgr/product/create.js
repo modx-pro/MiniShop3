@@ -1,15 +1,15 @@
-minishop.page.CreateProduct = function (config) {
+ms3.page.CreateProduct = function (config) {
     config = config || {record: {}};
     config.record = config.record || {};
 
     Ext.applyIf(config, {
-        panelXType: 'minishop-panel-product-create',
+        panelXType: 'ms3-panel-product-create',
         mode: 'create',
-        url: minishop.config.connector_url
+        url: ms3.config.connector_url
     });
-    minishop.page.CreateProduct.superclass.constructor.call(this, config);
+    ms3.page.CreateProduct.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.page.CreateProduct, MODx.page.CreateResource, {
+Ext.extend(ms3.page.CreateProduct, MODx.page.CreateResource, {
 
     getButtons: function (config) {
         const buttons = [];
@@ -47,20 +47,20 @@ Ext.extend(minishop.page.CreateProduct, MODx.page.CreateResource, {
     },
 
 });
-Ext.reg('minishop-page-product-create', minishop.page.CreateProduct);
+Ext.reg('ms3-page-product-create', ms3.page.CreateProduct);
 
 
-minishop.panel.CreateProduct = function (config) {
+ms3.panel.CreateProduct = function (config) {
     config = config || {};
-    minishop.panel.CreateProduct.superclass.constructor.call(this, config);
+    ms3.panel.CreateProduct.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.panel.CreateProduct, minishop.panel.Product, {
+Ext.extend(ms3.panel.CreateProduct, ms3.panel.Product, {
     formatMainPanelTitle(formId, record, realtimeValue = null, returnBaseTitle = false) {
 
     },
     getFields: function (config) {
         const fields = [];
-        const originals = minishop.panel.Product.prototype.getFields.call(this, config);
+        const originals = ms3.panel.Product.prototype.getFields.call(this, config);
         for (const i in originals) {
             if (!originals.hasOwnProperty(i)) {
                 continue;
@@ -77,7 +77,7 @@ Ext.extend(minishop.panel.CreateProduct, minishop.panel.Product, {
         //     const item = originals[i];
         //     if (item.id == 'modx-resource-tabs') {
         //         // Additional "Gallery" tab
-        //         if (minishop.config['show_gallery'] != 0) {
+        //         if (ms3.config['show_gallery'] != 0) {
         //             item.items.push(this.getGallery(config));
         //
         //             // Get the "Resource Groups" tab and move it to the end
@@ -99,16 +99,16 @@ Ext.extend(minishop.panel.CreateProduct, minishop.panel.Product, {
 
     getGallery: function (config) {
         return {
-            title: _('ms_tab_product_gallery'),
+            title: _('ms3_tab_product_gallery'),
             disabled: true,
             listeners: {
                 afterrender: function (p) {
                     Ext.get(p.tabEl).on('click', function () {
-                        MODx.msg.alert(_('warning'), _('ms_gallery_unavailablemsg'));
+                        MODx.msg.alert(_('warning'), _('ms3_gallery_unavailablemsg'));
                     });
                 }
             }
         };
     },
 });
-Ext.reg('minishop-panel-product-create', minishop.panel.CreateProduct);
+Ext.reg('ms3-panel-product-create', ms3.panel.CreateProduct);

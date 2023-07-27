@@ -8,7 +8,7 @@ use MODX\Revolution\Processors\Model\RemoveProcessor;
 class Remove extends RemoveProcessor
 {
     public $classKey = msOption::class;
-    public $objectType = 'ms_option';
+    public $objectType = 'ms3_option';
     public $languageTopics = ['minishop3:default'];
     public $permission = 'mssetting_save';
 

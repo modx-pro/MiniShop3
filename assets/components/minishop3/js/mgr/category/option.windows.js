@@ -1,21 +1,21 @@
-minishop.window.AddOption = function (config) {
+ms3.window.AddOption = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_category_option_add'),
+        title: _('ms3_category_option_add'),
         width: 600,
         baseParams: {
             action: 'MiniShop3\\Processors\\Category\\Option\\Add',
         },
     });
-    minishop.window.AddOption.superclass.constructor.call(this, config);
+    ms3.window.AddOption.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.AddOption, minishop.window.Default, {
+Ext.extend(ms3.window.AddOption, ms3.window.Default, {
     getFields: function () {
         return [
             {xtype: 'hidden', name: 'category_id'},
             {
-                xtype: 'minishop-combo-extra-options',
+                xtype: 'ms3-combo-extra-options',
                 anchor: '99%',
                 name: 'option_id',
                 hiddenName: 'option_id'
@@ -23,14 +23,14 @@ Ext.extend(minishop.window.AddOption, minishop.window.Default, {
             xtype: 'textfield',
             anchor: '99%',
             name: 'value',
-            fieldLabel: _('ms_default_value')
+            fieldLabel: _('ms3_default_value')
         }, {
             xtype: 'checkboxgroup',
-            fieldLabel: _('ms_options'),
+            fieldLabel: _('ms3_options'),
             columns: 1,
             items: [
-                {xtype: 'xcheckbox', boxLabel: _('ms_active'), name: 'active'},
-                {xtype: 'xcheckbox', boxLabel: _('ms_required'), name: 'required'}
+                {xtype: 'xcheckbox', boxLabel: _('ms3_active'), name: 'active'},
+                {xtype: 'xcheckbox', boxLabel: _('ms3_required'), name: 'required'}
             ]
         }
         ];
@@ -47,28 +47,28 @@ Ext.extend(minishop.window.AddOption, minishop.window.Default, {
         }];
     }
 });
-Ext.reg('minishop-window-option-add', minishop.window.AddOption);
+Ext.reg('ms3-window-option-add', ms3.window.AddOption);
 
 
-minishop.window.CopyCategory = function (config) {
+ms3.window.CopyCategory = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_category_option_copy'),
+        title: _('ms3_category_option_copy'),
         width: 600,
         baseParams: {
             action: 'MiniShop3\\Processors\\Category\\Option\\Duplicate',
         },
     });
-    minishop.window.CopyCategory.superclass.constructor.call(this, config);
+    ms3.window.CopyCategory.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.CopyCategory, minishop.window.Default, {
+Ext.extend(ms3.window.CopyCategory, ms3.window.Default, {
 
     getFields: function () {
         return [
             {xtype: 'hidden', name: 'category_to'},
             {
-                xtype: 'minishop-combo-category',
+                xtype: 'ms3-combo-category',
                 anchor: '99%',
                 name: 'category_from',
                 hiddenName: 'category_from'
@@ -87,4 +87,4 @@ Ext.extend(minishop.window.CopyCategory, minishop.window.Default, {
         }];
     }
 });
-Ext.reg('minishop-window-copy-category', minishop.window.CopyCategory);
+Ext.reg('ms3-window-copy-category', ms3.window.CopyCategory);

@@ -1,5 +1,6 @@
 <?php
 
+use \xPDO\Om\xPDOQuery;
 class msResourceCreateController extends ResourceCreateManagerController
 {
     /** @var MiniShop3\MiniShop3 $ms3 */

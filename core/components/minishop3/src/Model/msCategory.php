@@ -58,7 +58,7 @@ class msCategory extends modResource
     public static function getControllerPath(xPDO &$modx)
     {
         $corePath = $modx->getOption(
-            'minishop.core_path',
+            'ms3.core_path',
             null,
             $modx->getOption('core_path') . 'components/minishop3/'
         );
@@ -74,8 +74,8 @@ class msCategory extends modResource
         $this->xpdo->lexicon->load('minishop3:default');
 
         return [
-            'text_create' => $this->xpdo->lexicon('ms_category'),
-            'text_create_here' => $this->xpdo->lexicon('ms_category_create_here'),
+            'text_create' => $this->xpdo->lexicon('ms3_category'),
+            'text_create_here' => $this->xpdo->lexicon('ms3_category_create_here'),
         ];
     }
 
@@ -104,7 +104,7 @@ class msCategory extends modResource
     {
         $this->xpdo->lexicon->load('minishop3:default');
 
-        return $this->xpdo->lexicon('ms_category_type');
+        return $this->xpdo->lexicon('ms3_category_type');
     }
 
     /**

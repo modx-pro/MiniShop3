@@ -10,7 +10,7 @@ class Get extends  GetProcessor
     /** @var msDelivery $object */
     public $object;
     public $classKey = msDelivery::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_view';
 
 

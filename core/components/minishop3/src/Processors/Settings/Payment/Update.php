@@ -10,7 +10,7 @@ class Update extends UpdateProcessor
     /** @var msPayment $object */
     public $object;
     public $classKey = msPayment::class;
-    public $languageTopics = ['minishop'];
+    public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
 
 
@@ -45,7 +45,7 @@ class Update extends UpdateProcessor
             ['name' => $name, 'id:!=' => $this->object->get('id')]
         );
         if (!empty($count)) {
-            $this->modx->error->addField('name', $this->modx->lexicon('ms_err_ae'));
+            $this->modx->error->addField('name', $this->modx->lexicon('ms3_err_ae'));
         }
 
         $prices = ['price'];

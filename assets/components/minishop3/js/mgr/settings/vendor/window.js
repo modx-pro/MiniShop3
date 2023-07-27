@@ -1,16 +1,16 @@
-minishop.window.CreateVendor = function (config) {
+ms3.window.CreateVendor = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_menu_create'),
+        title: _('ms3_menu_create'),
         width: 600,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Vendor\\Create',
         }
     });
-    minishop.window.CreateVendor.superclass.constructor.call(this, config);
+    ms3.window.CreateVendor.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
+Ext.extend(ms3.window.CreateVendor, ms3.window.Default, {
 
     getFields: function (config) {
         return [
@@ -23,7 +23,7 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                     defaults: {msgTarget: 'under'},
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_name'),
+                        fieldLabel: _('ms3_name'),
                         name: 'name',
                         anchor: '99%',
                         id: config.id + '-name'
@@ -33,7 +33,7 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                     layout: 'form',
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_country'),
+                        fieldLabel: _('ms3_country'),
                         name: 'country',
                         anchor: '99%',
                         id: config.id + '-country'
@@ -46,7 +46,7 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                     layout: 'form',
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_email'),
+                        fieldLabel: _('ms3_email'),
                         name: 'email',
                         anchor: '99%',
                         id: config.id + '-email'
@@ -55,16 +55,16 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                     columnWidth: .6,
                     layout: 'form',
                     items: [{
-                        xtype: 'minishop-combo-resource',
-                        fieldLabel: _('ms_resource'),
+                        xtype: 'ms3-combo-resource',
+                        fieldLabel: _('ms3_resource'),
                         name: 'resource',
                         anchor: '99%',
                         id: config.id + '-resource'
                     }],
                 }]
             }, {
-                xtype: 'minishop-combo-browser',
-                fieldLabel: _('ms_logo'),
+                xtype: 'ms3-combo-browser',
+                fieldLabel: _('ms3_logo'),
                 name: 'logo',
                 anchor: '99%',
                 id: config.id + '-logo',
@@ -72,7 +72,7 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                 allowedFileTypes: config.allowedFileTypes || MODx.config.upload_images
             }, {
                 xtype: 'textarea',
-                fieldLabel: _('ms_address'),
+                fieldLabel: _('ms3_address'),
                 name: 'address',
                 anchor: '99%',
                 id: config.id + '-address'
@@ -83,7 +83,7 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                     layout: 'form',
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_phone'),
+                        fieldLabel: _('ms3_phone'),
                         name: 'phone',
                         anchor: '99%',
                         id: config.id + '-phone'
@@ -93,7 +93,7 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                     layout: 'form',
                     items: [{
                         xtype: 'textfield',
-                        fieldLabel: _('ms_fax'),
+                        fieldLabel: _('ms3_fax'),
                         name: 'fax',
                         anchor: '99%',
                         id: config.id + '-fax'
@@ -101,7 +101,7 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
                 }]
             }, {
                 xtype: 'textarea',
-                fieldLabel: _('ms_description'),
+                fieldLabel: _('ms3_description'),
                 name: 'description',
                 anchor: '99%',
                 id: config.id + '-description'
@@ -110,19 +110,19 @@ Ext.extend(minishop.window.CreateVendor, minishop.window.Default, {
     }
 
 });
-Ext.reg('minishop-window-vendor-create', minishop.window.CreateVendor);
+Ext.reg('ms3-window-vendor-create', ms3.window.CreateVendor);
 
 
-minishop.window.UpdateVendor = function (config) {
+ms3.window.UpdateVendor = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_menu_update'),
+        title: _('ms3_menu_update'),
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Vendor\\Update',
         },
     });
-    minishop.window.UpdateVendor.superclass.constructor.call(this, config);
+    ms3.window.UpdateVendor.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.UpdateVendor, minishop.window.CreateVendor);
-Ext.reg('minishop-window-vendor-update', minishop.window.UpdateVendor);
+Ext.extend(ms3.window.UpdateVendor, ms3.window.CreateVendor);
+Ext.reg('ms3-window-vendor-update', ms3.window.UpdateVendor);

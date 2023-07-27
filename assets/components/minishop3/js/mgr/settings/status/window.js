@@ -1,16 +1,16 @@
-minishop.window.CreateStatus = function (config) {
+ms3.window.CreateStatus = function (config) {
     config = config || {};
     this.ident = config.ident || 'mecitem' + Ext.id();
     Ext.applyIf(config, {
-        title: _('ms_menu_create'),
+        title: _('ms3_menu_create'),
         width: 800,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Status\\Create',
         },
     });
-    minishop.window.CreateStatus.superclass.constructor.call(this, config);
+    ms3.window.CreateStatus.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
+Ext.extend(ms3.window.CreateStatus, ms3.window.Default, {
 
     getFields: function (config) {
         return [
@@ -19,11 +19,11 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
             {
                 xtype: 'textfield',
                 id: config.id + '-name',
-                fieldLabel: _('ms_name'),
+                fieldLabel: _('ms3_name'),
                 name: 'name',
                 anchor: '99%',
         }, {
-            xtype: 'colorpalette', fieldLabel: _('ms_color'),
+            xtype: 'colorpalette', fieldLabel: _('ms3_color'),
             id: config.id + '-color-palette',
             listeners: {
                 select: function (palette, color) {
@@ -43,7 +43,7 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
                 items: [{
                     xtype: 'xcheckbox',
                     id: config.id + '-email-user',
-                    boxLabel: _('ms_email_user'),
+                    boxLabel: _('ms3_email_user'),
                     name: 'email_user',
                     listeners: {
                         check: {
@@ -60,12 +60,12 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
                 }, {
                     xtype: 'textfield',
                     id: config.id + '-subject-user',
-                    fieldLabel: _('ms_subject_user'),
+                    fieldLabel: _('ms3_subject_user'),
                     name: 'subject_user',
                     anchor: '99%'
                 }, {
                     xtype: 'textfield',
-                    fieldLabel: _('ms_body_user'),
+                    fieldLabel: _('ms3_body_user'),
                     name: 'body_user',
                     id: config.id + '-body-user',
                     anchor: '99%'
@@ -76,7 +76,7 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
                 items: [{
                     xtype: 'xcheckbox',
                     id: config.id + '-email-manager',
-                    boxLabel: _('ms_email_manager'),
+                    boxLabel: _('ms3_email_manager'),
                     name: 'email_manager',
                     listeners: {
                         check: {
@@ -93,13 +93,13 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
                 }, {
                     xtype: 'textfield',
                     id: config.id + '-subject-manager',
-                    fieldLabel: _('ms_subject_manager'),
+                    fieldLabel: _('ms3_subject_manager'),
                     name: 'subject_manager',
                     anchor: '99%'
                 }, {
                     xtype: 'textfield',
                     id: config.id + '-body-manager',
-                    fieldLabel: _('ms_body_manager'),
+                    fieldLabel: _('ms3_body_manager'),
                     name: 'body_manager',
                     anchor: '99%'
                 }],
@@ -107,7 +107,7 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
         }, {
             xtype: 'textarea',
             id: config.id + '-description',
-            fieldLabel: _('ms_description'),
+            fieldLabel: _('ms3_description'),
             name: 'description',
             anchor: '99%',
         }, {
@@ -117,21 +117,21 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
             items: [{
                 xtype: 'xcheckbox',
                 id: config.id + '-active',
-                boxLabel: _('ms_active'),
+                boxLabel: _('ms3_active'),
                 name: 'active',
                 checked: parseInt(config.record['active']),
             }, {
                 xtype: 'xcheckbox',
                 id: config.id + '-final',
-                boxLabel: _('ms_status_final'),
-                description: _('ms_status_final_help'),
+                boxLabel: _('ms3_status_final'),
+                description: _('ms3_status_final_help'),
                 name: 'final',
                 checked: parseInt(config.record['final']),
             }, {
                 xtype: 'xcheckbox',
                 id: config.id + '-fixed',
-                boxLabel: _('ms_status_fixed'),
-                description: _('ms_status_fixed_help'),
+                boxLabel: _('ms3_status_fixed'),
+                description: _('ms3_status_fixed_help'),
                 name: 'fixed',
                 checked: parseInt(config.record['fixed']),
             }]
@@ -154,19 +154,19 @@ Ext.extend(minishop.window.CreateStatus, minishop.window.Default, {
     },
 
 });
-Ext.reg('minishop-window-status-create', minishop.window.CreateStatus);
+Ext.reg('ms3-window-status-create', ms3.window.CreateStatus);
 
 
-minishop.window.UpdateStatus = function (config) {
+ms3.window.UpdateStatus = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        title: _('ms_menu_update'),
+        title: _('ms3_menu_update'),
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Status\\Update',
         },
     });
-    minishop.window.UpdateStatus.superclass.constructor.call(this, config);
+    ms3.window.UpdateStatus.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.window.UpdateStatus, minishop.window.CreateStatus);
-Ext.reg('minishop-window-status-update', minishop.window.UpdateStatus);
+Ext.extend(ms3.window.UpdateStatus, ms3.window.CreateStatus);
+Ext.reg('ms3-window-status-update', ms3.window.UpdateStatus);

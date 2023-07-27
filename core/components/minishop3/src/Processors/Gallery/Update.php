@@ -2,7 +2,6 @@
 
 namespace MiniShop3\Processors\Gallery;
 
-use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductFile;
 use MODX\Revolution\Processors\Model\UpdateProcessor;
@@ -35,7 +34,7 @@ class Update extends UpdateProcessor
     public function beforeSet()
     {
         if (!$this->getProperty('id')) {
-            return $this->failure($this->modx->lexicon('ms_gallery_err_ns'));
+            return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
         }
 
         foreach (['file', 'name'] as $v) {

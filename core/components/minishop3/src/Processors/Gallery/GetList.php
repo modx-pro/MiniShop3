@@ -39,7 +39,7 @@ class GetList extends GetListProcessor
             $data = $product->getOne('Data');
             if ($data) {
                 /** @var modMediaSource $source */
-                $source = $this->modx->getObject(modMediaSource::class, (int)$data->get('source'));
+                $source = $this->modx->getObject(modMediaSource::class, (int)$data->get('source_id'));
                 if ($source) {
                     $properties = $source->getProperties();
                     $thumbnails = [];
@@ -62,7 +62,7 @@ class GetList extends GetListProcessor
             }
         }
         if (!$this->thumb) {
-            $this->thumb = $this->modx->getOption('ms_product_thumbnail_size', null, 'small', true);
+            $this->thumb = $this->modx->getOption('ms3_product_thumbnail_size', null, 'small', true);
         }
 
         return parent::initialize();
@@ -172,7 +172,7 @@ class GetList extends GetListProcessor
         if (empty($row['thumbnail'])) {
             if ($row['type'] !== 'image') {
                 $row['thumbnail'] = (file_exists(
-                    MODX_ASSETS_PATH . 'components/minishop2/img/mgr/extensions/' . $row['type'] . '.png'
+                    MODX_ASSETS_PATH . 'components/minishop3/img/mgr/extensions/' . $row['type'] . '.png'
                 ))
                     ? MODX_ASSETS_URL . 'components/minishop3/img/mgr/extensions/' . $row['type'] . '.png'
                     : MODX_ASSETS_URL . 'components/minishop3/img/mgr/extensions/other.png';
@@ -190,7 +190,7 @@ class GetList extends GetListProcessor
         $row['actions'][] = [
             'cls' => '',
             'icon' => 'icon icon-edit',
-            'title' => $this->modx->lexicon('ms_gallery_file_update'),
+            'title' => $this->modx->lexicon('ms3_gallery_file_update'),
             'action' => 'updateFile',
             'button' => false,
             'menu' => true,
@@ -199,7 +199,7 @@ class GetList extends GetListProcessor
         $row['actions'][] = [
             'cls' => '',
             'icon' => 'icon icon-share',
-            'title' => $this->modx->lexicon('ms_gallery_file_show'),
+            'title' => $this->modx->lexicon('ms3_gallery_file_show'),
             'action' => 'showFile',
             'button' => false,
             'menu' => true,
@@ -209,8 +209,8 @@ class GetList extends GetListProcessor
             $row['actions'][] = [
                 'cls' => '',
                 'icon' => 'icon icon-refresh',
-                'title' => $this->modx->lexicon('ms_gallery_file_generate_thumbs'),
-                'multiple' => $this->modx->lexicon('ms_gallery_file_generate_thumbs'),
+                'title' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
+                'multiple' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
                 'action' => 'generateThumbs',
                 'button' => false,
                 'menu' => true,
@@ -220,8 +220,8 @@ class GetList extends GetListProcessor
         $row['actions'][] = [
             'cls' => '',
             'icon' => 'icon icon-trash-o action-red',
-            'title' => $this->modx->lexicon('ms_gallery_file_delete'),
-            'multiple' => $this->modx->lexicon('ms_gallery_file_delete_multiple'),
+            'title' => $this->modx->lexicon('ms3_gallery_file_delete'),
+            'multiple' => $this->modx->lexicon('ms3_gallery_file_delete_multiple'),
             'action' => 'deleteFiles',
             'button' => false,
             'menu' => true,

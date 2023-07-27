@@ -11,7 +11,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
     */
     public function getPageTitle()
     {
-        return $this->modx->lexicon('ms_orders') . ' | MiniShop3';
+        return $this->modx->lexicon('ms3_orders') . ' | MiniShop3';
     }
 
 
@@ -31,12 +31,12 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
     {
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.grid.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.window.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/strftime-min-1.3.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms.utils.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms.combo.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.utils.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.combo.js');
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/orders/orders.form.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/orders/orders.grid.js');
@@ -50,7 +50,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $this->addJavascript(MODX_MANAGER_URL . 'assets/modext/util/datetime.js');
 
         $grid_fields = array_map('trim', explode(',', $this->getOption(
-            'ms_order_grid_fields',
+            'ms3_order_grid_fields',
             null,
             'id,customer,num,status,cost,weight,delivery,payment,createdon,updatedon,comment',
             true
@@ -59,12 +59,12 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
             'id', 'user_id', 'num', 'type', 'actions', 'color'
         ))));
 
-        $address_fields = array_map('trim', explode(',', $this->getOption('ms_order_address_fields')));
-        $product_fields = array_map('trim', explode(',', $this->getOption('ms_order_product_fields', null, '')));
+        $address_fields = array_map('trim', explode(',', $this->getOption('ms3_order_address_fields')));
+        $product_fields = array_map('trim', explode(',', $this->getOption('ms3_order_product_fields', null, '')));
         $product_fields = array_values(array_unique(array_merge($product_fields, array(
             'id', 'product_id', 'name', 'actions'
         ))));
-        $product_options = array_map('trim', explode(',', $this->getOption('ms_order_product_options')));
+        $product_options = array_map('trim', explode(',', $this->getOption('ms3_order_product_options')));
 
         $config = $this->ms3->config;
         $config['order_grid_fields'] = $grid_fields;
@@ -73,12 +73,12 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $config['order_product_options_fields'] = $product_options;
         $this->addHtml('
             <script>
-                minishop.config = ' . json_encode($config) . ';
+                ms3.config = ' . json_encode($config) . ';
 
                 MODx.perm.mssetting_list = ' . ($this->modx->hasPermission('mssetting_list') ? 1 : 0) . ';
 
                 Ext.onReady(function() {
-                    MODx.add({xtype: "minishop-panel-orders"});
+                    MODx.add({xtype: "ms3-panel-orders"});
                 });
             </script>');
 

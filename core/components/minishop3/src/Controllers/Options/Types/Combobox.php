@@ -5,7 +5,7 @@ namespace MiniShop3\Controllers\Options\Types;
 class Combobox extends msOptionType
 {
     public static $script = 'combobox.grid.js';
-    public static $xtype = 'minishop-grid-combobox-options';
+    public static $xtype = 'ms3-grid-combobox-options';
 
     /**
      * @param $field

@@ -13,7 +13,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
      */
     public function getPageTitle()
     {
-        return $this->modx->lexicon('ms_settings') . ' | MiniShop3';
+        return $this->modx->lexicon('ms3_settings') . ' | MiniShop3';
     }
 
     /**
@@ -31,12 +31,12 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
     {
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.grid.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.window.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/strftime-min-1.3.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms.utils.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms.combo.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.utils.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.combo.js');
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/delivery/grid.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/delivery/window.js');
@@ -72,12 +72,12 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $config = $this->ms3->config;
         $config['default_thumb'] = $this->ms3->config['defaultThumb'];
         $this->addHtml('<script>
-            minishop.config = ' . json_encode($config) . ';
+            ms3.config = ' . json_encode($config) . ';
 
             MODx.perm.msorder_list = ' . ($this->modx->hasPermission('msorder_list') ? 1 : 0) . ';
 
             Ext.onReady(function() {
-                MODx.add({xtype: "minishop-page-settings"});
+                MODx.add({xtype: "ms3-page-settings"});
             });
         </script>');
 

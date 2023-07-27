@@ -96,13 +96,13 @@ class Update extends UpdateProcessor
     {
         foreach (['status_id', 'delivery_id', 'payment_id'] as $v) {
             if (!$this->$v = $this->getProperty($v)) {
-                $this->addFieldError($v, $this->modx->lexicon('ms_err_ns'));
+                $this->addFieldError($v, $this->modx->lexicon('ms3_err_ns'));
             }
         }
 
         if ($status = $this->modx->getObject('msOrderStatus')) {
             if ($status->get('final')) {
-                return $this->modx->lexicon('ms_err_status_final');
+                return $this->modx->lexicon('ms3_err_status_final');
             }
         }
         // set "old status"

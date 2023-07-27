@@ -1,11 +1,11 @@
-minishop.tree.Categories = function (config) {
+ms3.tree.Categories = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'minishop-categories-tree';
+        config.id = 'ms3-categories-tree';
     }
 
     Ext.applyIf(config, {
-        url: minishop.config.connector_url,
+        url: ms3.config.connector_url,
         title: '',
         name: 'categories',
         anchor: '100%',
@@ -24,9 +24,9 @@ minishop.tree.Categories = function (config) {
         listeners: this.getListeners(config)
     });
 
-    minishop.tree.Categories.superclass.constructor.call(this, config);
+    ms3.tree.Categories.superclass.constructor.call(this, config);
 };
-Ext.extend(minishop.tree.Categories, MODx.tree.Tree, {
+Ext.extend(ms3.tree.Categories, MODx.tree.Tree, {
 
     getListeners: function () {
         return {
@@ -83,7 +83,7 @@ Ext.extend(minishop.tree.Categories, MODx.tree.Tree, {
                 this.cm.activeNode.collapse(true);
             }
         },{
-            text: '<i class="x-menu-item-icon icon icon-check-square-o"></i> ' + _('ms_menu_select_all'),
+            text: '<i class="x-menu-item-icon icon icon-check-square-o"></i> ' + _('ms3_menu_select_all'),
             handler: function () {
                 const activeNode = this.cm.activeNode;
                 const checkchange = this.getListeners().checkchange;
@@ -101,7 +101,7 @@ Ext.extend(minishop.tree.Categories, MODx.tree.Tree, {
                 massCheck(activeNode);
             }
         },{
-            text: '<i class="x-menu-item-icon icon icon-square-o"></i> ' + _('ms_menu_clear_all'),
+            text: '<i class="x-menu-item-icon icon icon-square-o"></i> ' + _('ms3_menu_clear_all'),
             handler: function () {
                 const activeNode = this.cm.activeNode;
                 const checkchange = this.getListeners().checkchange;
@@ -123,4 +123,4 @@ Ext.extend(minishop.tree.Categories, MODx.tree.Tree, {
     },
 
 });
-Ext.reg('minishop-tree-categories', minishop.tree.Categories);
+Ext.reg('ms3-tree-categories', ms3.tree.Categories);

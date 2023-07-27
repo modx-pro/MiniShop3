@@ -1,6 +1,6 @@
 <?php
 
-if (empty($_REQUEST['action']) && empty($_REQUEST['ms_action'])) {
+if (empty($_REQUEST['action']) && empty($_REQUEST['ms3_action'])) {
     http_response_code(403);
 }
 

@@ -24,7 +24,7 @@ class Format
      */
     public function date($date = '')
     {
-        $df = $this->modx->getOption('ms_date_format', null, '%d.%m.%Y %H:%M');
+        $df = $this->modx->getOption('ms3_date_format', null, '%d.%m.%Y %H:%M');
 
         return (!empty($date) && $date !== '0000-00-00 00:00:00')
             ? strftime($df, strtotime($date))
@@ -41,13 +41,13 @@ class Format
      */
     public function price($price = 0)
     {
-        $format = json_decode($this->modx->getOption('ms_price_format', null, '[2, ".", " "]'), true);
+        $format = json_decode($this->modx->getOption('ms3_price_format', null, '[2, ".", " "]'), true);
         if (!$format) {
             $format = array(2, '.', ' ');
         }
         $price = number_format($price, $format[0], $format[1], $format[2]);
 
-        if ($this->modx->getOption('ms_price_format_no_zeros', null, true)) {
+        if ($this->modx->getOption('ms3_price_format_no_zeros', null, true)) {
             $tmp = explode($format[1], $price);
             $tmp[1] = rtrim(rtrim(@$tmp[1], '0'), '.');
             $price = !empty($tmp[1])
@@ -67,13 +67,13 @@ class Format
      */
     public function weight($weight = 0)
     {
-        $format = json_decode($this->modx->getOption('ms_weight_format', null, '[3, ".", " "]'), true);
+        $format = json_decode($this->modx->getOption('ms3_weight_format', null, '[3, ".", " "]'), true);
         if (!$format) {
             $format = array(3, '.', ' ');
         }
         $weight = number_format($weight, $format[0], $format[1], $format[2]);
 
-        if ($this->modx->getOption('ms_weight_format_no_zeros', null, true)) {
+        if ($this->modx->getOption('ms3_weight_format_no_zeros', null, true)) {
             $tmp = explode($format[1], $weight);
             $tmp[1] = rtrim(rtrim(@$tmp[1], '0'), '.');
             $weight = !empty($tmp[1])
