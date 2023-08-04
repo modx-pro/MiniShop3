@@ -15,7 +15,7 @@ foreach ($files as $file) {
     }
 }
 
-$_lang['miniShop3'] = 'MiniShop3';
+$_lang['ms3_header'] = 'MiniShop3';
 $_lang['ms3_menu_desc'] = 'Продвинутый интернет-магазин';
 $_lang['ms3_order'] = 'Заказ';
 $_lang['ms3_orders'] = 'Заказы';

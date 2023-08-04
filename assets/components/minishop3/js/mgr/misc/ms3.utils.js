@@ -419,5 +419,5 @@ ms3.utils.renderBadge = function (value, cell, row) {
     //noinspection CssInvalidPropertyValue
     return row.data.hasOwnProperty('active') && !row.data.active
         ? value
-        : String.format('<span class="minishop3-row-badge" style="background-color:#{0};color:#{1}">{2}</span>', color, textColor, value);
+        : String.format('<span class="ms3-row-badge" style="background-color:#{0};color:#{1}">{2}</span>', color, textColor, value);
 };

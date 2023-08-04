@@ -65,9 +65,6 @@ class GetList extends GetListProcessor
             ];
         } else {
             $data = $object->toArray();
-            if (!$data['resource']) {
-                $data['resource'] = null;
-            }
             $data['actions'] = [];
 
             $data['actions'][] = [

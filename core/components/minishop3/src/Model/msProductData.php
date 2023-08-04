@@ -180,10 +180,15 @@ class msProductData extends xPDOSimpleObject
             $this->loadProductOptionInstance();
         }
 
-        $options = array_merge(
-            $this->getArraysValues(),
-            parent::get('options')
-        );
+        $dataOptions = $this->getArraysValues();
+        $originalOptions = parent::get('options');
+        $options = [];
+        if (!empty($dataOptions)) {
+            $options = $dataOptions;
+        }
+        if (!empty($originalOptions)) {
+            $options = array_merge($options, $originalOptions);
+        }
         $this->msProductOptionInstance->saveProductOptions(parent::get('id'), $options);
     }
 

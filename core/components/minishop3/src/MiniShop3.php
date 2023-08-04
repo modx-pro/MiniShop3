@@ -50,14 +50,14 @@ class MiniShop3
     public function __construct(modX $modx, array $config = [])
     {
         $this->modx = $modx;
-        $corePath = $this->modx->getOption('ms3.core_path', $config, MODX_CORE_PATH . 'components/minishop3/');
+        $corePath = $this->modx->getOption('ms3_core_path', $config, MODX_CORE_PATH . 'components/minishop3/');
         $assetsPath = $this->modx->getOption(
             'ms3.assets_path',
             $config,
             MODX_ASSETS_PATH . 'components/minishop3/'
         );
-        $assetsUrl = $this->modx->getOption('ms3.assets_url', $config, MODX_ASSETS_URL . 'components/minishop3/');
-        $actionUrl = $this->modx->getOption('ms3.action_url', $config, $assetsUrl . 'action.php');
+        $assetsUrl = $this->modx->getOption('ms3_assets_url', $config, MODX_ASSETS_URL . 'components/minishop3/');
+        $actionUrl = $this->modx->getOption('ms3_action_url', $config, $assetsUrl . 'action.php');
         $connectorUrl = $assetsUrl . 'connector.php';
         $this->config = array_merge([
             'corePath' => $corePath,

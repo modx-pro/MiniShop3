@@ -89,11 +89,10 @@ class msProduct extends modResource
     public static function getControllerPath(xPDO &$modx)
     {
         $path = $modx->getOption(
-            'ms3.core_path',
+            'ms3_core_path',
             null,
             $modx->getOption('core_path') . 'components/minishop3/'
         );
-
         return $path . 'controllers/product/';
     }
 

@@ -122,9 +122,9 @@ Ext.extend(ms3.window.CreateOption, ms3.window.Default, {
                 items: [{
                     xtype: 'modx-combo-category',
                     fieldLabel: _('ms3_ft_group'),
-                    name: 'category',
+                    name: 'category_id',
                     anchor: '99%',
-                    id: config.id + '-category',
+                    id: config.id + '-category_id',
                 }]
             }]
         }, {

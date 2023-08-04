@@ -26,16 +26,16 @@ ms3.grid.Default = function (config) {
             getRowClass: function (rec) {
                 const cls = [];
                 if (rec.data['published'] !== undefined && rec.data['published'] == 0) {
-                    cls.push('minishop3-row-unpublished');
+                    cls.push('ms3-row-unpublished');
                 }
                 if (rec.data['active'] !== undefined && rec.data['active'] == 0) {
-                    cls.push('minishop3-row-inactive');
+                    cls.push('ms3-row-inactive');
                 }
                 if (rec.data['deleted'] !== undefined && rec.data['deleted'] == 1) {
-                    cls.push('minishop3-row-deleted');
+                    cls.push('ms3-row-deleted');
                 }
                 if (rec.data['required'] !== undefined && rec.data['required'] == 1) {
-                    cls.push('minishop3-row-required');
+                    cls.push('ms3-row-required');
                 }
                 return cls.join(' ');
             }
@@ -64,7 +64,7 @@ Ext.extend(ms3.grid.Default, MODx.grid.Grid, {
             width: 35,
             sortable: true,
         }, {
-            header: _('minishop_actions'),
+            header: _('ms3_actions'),
             dataIndex: 'actions',
             renderer: ms3.utils.renderActions,
             sortable: false,

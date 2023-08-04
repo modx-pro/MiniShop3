@@ -33,6 +33,9 @@ class Create extends  CreateProcessor
         }
         $this->setProperty('key', $key);
 
+        $category = $this->getProperty('category');
+        $this->setProperty('category_id', $category);
+
         return parent::beforeSet();
     }
 

@@ -4,7 +4,7 @@ ms3.panel.Orders = function (config) {
     Ext.apply(config, {
         cls: 'container',
         items: [{
-            html: '<h2>' + _('miniShop3') + ' :: ' + _('ms3_orders') + '</h2>',
+            html: '<h2>' + _('ms3_header') + ' :: ' + _('ms3_orders') + '</h2>',
             cls: 'modx-page-header',
         },{
             xtype: 'modx-tabs',

@@ -3,7 +3,8 @@ ms3.grid.Vendor = function (config) {
     if (!config.id) {
         config.id = 'ms3-grid-vendor';
     }
-
+    config.disableContextMenuAction = true;
+    
     Ext.applyIf(config, {
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Vendor\\GetList',

@@ -26,7 +26,7 @@ class Multiple extends ModelProcessor
         }
 
         foreach ($ids as $id) {
-            $this->modx->runProcessor('MiniShop3\\Processors\\Settings\\Status\\' . $method, $id);
+            $this->modx->runProcessor('MiniShop3\\Processors\\Settings\\Status\\' . $method, ['id' => $id]);
         }
 
         return $this->success();

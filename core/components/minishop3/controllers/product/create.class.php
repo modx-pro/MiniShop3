@@ -8,14 +8,6 @@ if (!class_exists('msResourceCreateController')) {
 
 class msProductCreateManagerController extends msResourceCreateController
 {
-    /**
-     *
-     */
-    public function initialize()
-    {
-        parent::initialize();
-    }
-
     /** @var msProduct $resource */
     public $resource;
 

@@ -5,7 +5,7 @@ if (empty($_REQUEST['action']) && empty($_REQUEST['ms3_action'])) {
 }
 
 if (!empty($_REQUEST['action'])) {
-    $_REQUEST['ms_action'] = $_REQUEST['action'];
+    $_REQUEST['ms3_action'] = $_REQUEST['action'];
 }
 
 /** @noinspection PhpIncludeInspection */
