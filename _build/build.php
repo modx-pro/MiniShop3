@@ -106,12 +106,12 @@ class MiniShop3Package
         $this->builder->putVehicle($vehicle);
 
         $this->builder->setPackageAttributes([
-//            'changelog' => file_get_contents($this->config['core'] . 'docs/changelog.txt'),
-//            'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
-//            'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
+            'changelog' => file_get_contents($this->config['core'] . 'docs/changelog.txt'),
+            'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
+            'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
             'requires' => [
-                'php' => '>=8.0.0',
-                'modx' => '>=3.0.0',
+                'php' => '>=8.1.0',
+                'modx' => '>=3.0.3',
                 //'pdoTools' => '>=3.0.0'
             ],
         ]);
