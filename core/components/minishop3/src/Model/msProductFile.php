@@ -318,6 +318,7 @@ class msProductFile extends xPDOSimpleObject
         ]);
         $c->limit(1);
         $c->sortby('position', 'ASC');
+        $c->sortby('`id`', 'ASC');
         $c->select('id,url');
 
         $res = [];

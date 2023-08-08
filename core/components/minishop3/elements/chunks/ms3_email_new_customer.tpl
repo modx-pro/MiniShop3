@@ -1,7 +1,7 @@
 {extends 'tpl.msEmail'}
 
 {block 'title'}
-    {'ms3_email_subject_new_user' | lexicon : $order}
+    {'ms3_email_subject_new_customer' | lexicon : $order}
 {/block}
 
 {block 'products'}

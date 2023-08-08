@@ -53,7 +53,7 @@ Ext.extend(ms3.grid.PaymentDeliveries, ms3.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Settings\\Payment\\Deliveries\\Multiple',
                 method: method,

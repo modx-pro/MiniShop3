@@ -135,6 +135,7 @@ class Upload extends ModelProcessor
             'createdby' => $this->modx->user->get('id'),
             'hash' => $data['hash'],
             'properties' => $data['properties'],
+            'description' => $this->getProperty('description'),
         ]);
 
         $this->mediaSource->createContainer($uploaded_file->get('path'), '/');

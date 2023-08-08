@@ -13,6 +13,8 @@ class Create extends CreateProcessor
     public $classKey = msVendor::class;
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
+    public $beforeSaveEvent = 'msOnBeforeVendorCreate';
+    public $afterSaveEvent = 'msOnAfterVendorCreate';
 
 
     /**

@@ -129,7 +129,7 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
         }
 
         MODx.Ajax.request({
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Category\\Option\\Multiple',
                 method: method,

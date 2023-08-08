@@ -186,11 +186,11 @@ Ext.extend(ms3.grid.Products, ms3.grid.Default, {
 
     getTopBar: function () {
         return [{
-            text: (MODx.config.ms3_add_icon_product ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.ms3_add_icon_product)) : '') + _('ms3_product_create'),
+            text: (MODx.config.mgr_tree_icon_msproduct ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.mgr_tree_icon_msproduct)) : '') + _('ms3_product_create'),
             handler: this.createProduct,
             scope: this
         }, '-', {
-            text: (MODx.config.ms3_add_icon_category ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.ms3_add_icon_category)) : '') + _('ms3_category_create'),
+            text: (MODx.config.mgr_tree_icon_mscategory ? String.format('<i class="{0}"></i> ', Ext.util.Format.htmlEncode(MODx.config.mgr_tree_icon_mscategory)) : '') + _('ms3_category_create'),
             handler: this.createCategory,
             scope: this
         }, '-', {
@@ -226,7 +226,7 @@ Ext.extend(ms3.grid.Products, ms3.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Product\\Multiple',
                 method: method,
@@ -317,10 +317,11 @@ Ext.extend(ms3.grid.Products, ms3.grid.Default, {
             return false;
         }
         MODx.Ajax.request({
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             params: {
-                action: 'MiniShop3\\Processors\\Gallery\\GenerateAll',
-                product_id: ids,
+                action: 'MiniShop3\\Processors\\Gallery\\Multiple',
+                method: 'GenerateAll',
+                ids: Ext.util.JSON.encode(ids),
             },
             listeners: {
                 success: {

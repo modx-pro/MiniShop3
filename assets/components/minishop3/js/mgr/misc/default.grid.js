@@ -7,7 +7,7 @@ ms3.grid.Default = function (config) {
     }
 
     Ext.applyIf(config, {
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {},
         cls: config['cls'] || 'main-wrapper ms3-grid',
         autoHeight: true,
@@ -25,16 +25,16 @@ ms3.grid.Default = function (config) {
             scrollOffset: -10,
             getRowClass: function (rec) {
                 const cls = [];
-                if (rec.data['published'] !== undefined && rec.data['published'] == 0) {
+                if (rec.data['published'] !== undefined && parseInt(rec.data['published']) === 0) {
                     cls.push('ms3-row-unpublished');
                 }
-                if (rec.data['active'] !== undefined && rec.data['active'] == 0) {
+                if (rec.data['active'] !== undefined && parseInt(rec.data['active']) === 0) {
                     cls.push('ms3-row-inactive');
                 }
-                if (rec.data['deleted'] !== undefined && rec.data['deleted'] == 1) {
+                if (rec.data['deleted'] !== undefined && parseInt(rec.data['deleted']) === 1) {
                     cls.push('ms3-row-deleted');
                 }
-                if (rec.data['required'] !== undefined && rec.data['required'] == 1) {
+                if (rec.data['required'] !== undefined && parseInt(rec.data['required']) === 1) {
                     cls.push('ms3-row-required');
                 }
                 return cls.join(' ');

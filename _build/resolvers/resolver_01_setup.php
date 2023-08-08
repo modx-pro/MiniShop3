@@ -2,10 +2,12 @@
 
 use MODX\Revolution\Transport\modTransportPackage;
 use MODX\Revolution\Transport\modTransportProvider;
+use xPDO\Transport\xPDOTransport;
+use MODX\Revolution\modX;
 
-/** @var xPDO\Transport\xPDOTransport $transport */
+/** @var xPDOTransport $transport */
 /** @var array $options */
-/** @var  MODX\Revolution\modX $modx */
+/** @var  modX $modx */
 if (!$transport->xpdo || !($transport instanceof xPDOTransport)) {
     return false;
 }
@@ -13,7 +15,7 @@ if (!$transport->xpdo || !($transport instanceof xPDOTransport)) {
 $modx = $transport->xpdo;
 $packages = [
     'pdoTools' => [
-        'version' => '3.0.1-pl',
+        'version' => '3.0.2-pl',
         'service_url' => 'modstore.pro',
     ],
 ];

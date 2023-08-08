@@ -55,8 +55,8 @@ class msPayment extends \MiniShop3\Model\msPayment
                     ],
                 'position' =>
                     [
-                        'dbtype' => 'tinyint',
-                        'precision' => '1',
+                        'dbtype' => 'int',
+                        'precision' => '10',
                         'attributes' => 'unsigned',
                         'phptype' => 'integer',
                         'null' => true,

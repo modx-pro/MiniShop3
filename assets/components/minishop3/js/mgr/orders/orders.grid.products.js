@@ -107,7 +107,7 @@ Ext.extend(ms3.grid.OrderProducts, ms3.grid.Default, {
         combo.reset();
 
         MODx.Ajax.request({
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Product\\Get',
                 id: id
@@ -153,7 +153,7 @@ Ext.extend(ms3.grid.OrderProducts, ms3.grid.Default, {
         const id = this.menu.record.id;
 
         MODx.Ajax.request({
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Order\\Product\\Get',
                 id: id
@@ -198,7 +198,7 @@ Ext.extend(ms3.grid.OrderProducts, ms3.grid.Default, {
         MODx.msg.confirm({
             title: _('ms3_menu_remove'),
             text: _('ms3_menu_remove_confirm'),
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             params: {
                 action: 'MiniShop3\\Processors\\Order\\Product\\Remove',
                 id: this.menu.record.id

@@ -202,7 +202,7 @@
         <field key="logo" dbtype="varchar" precision="255" phptype="string" null="true"/>
         <field key="position" dbtype="tinyint" precision="1" attributes="unsigned" phptype="integer" null="true"
                default="0"/>
-        <field key="active" dbtype="tinyint" precision="1" attributes="unsigned" phptype="integer" null="true"
+        <field key="active" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"
                default="1"/>
         <field key="class" dbtype="varchar" precision="50" phptype="string" null="true"/>
         <field key="properties" dbtype="text" phptype="json" null="true"/>
@@ -270,7 +270,7 @@
         <aggregate alias="Delivery" class="MiniShop3\Model\msDelivery" local="delivery_id" foreign="id" cardinality="one" owner="foreign"/>
         <aggregate alias="Payment" class="MiniShop3\Model\msPayment" local="payment_id" foreign="id" cardinality="one" owner="foreign"/>
         <composite alias="Address" class="MiniShop3\Model\msOrderAddress" local="address_id" foreign="id" cardinality="one"
-                   owner="foreign"/>
+                   owner="local"/>
         <composite alias="Products" class="MiniShop3\Model\msOrderProduct" local="id" foreign="order_id" cardinality="many"
                    owner="local"/>
         <composite alias="Log" class="MiniShop3\Model\msOrderLog" local="id" foreign="order_id" cardinality="many" owner="local"/>

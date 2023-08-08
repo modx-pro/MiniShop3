@@ -3,6 +3,8 @@
 namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msProduct;
+use MiniShop3\Model\msVendor;
+use MiniShop3\Utils\Utils;
 use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 
 class Create extends CreateProcessor
@@ -14,7 +16,6 @@ class Create extends CreateProcessor
     public $afterSaveEvent = 'OnDocFormSave';
     /** @var msProduct $object */
     public $object;
-
 
     /**
      * @return string
@@ -30,7 +31,6 @@ class Create extends CreateProcessor
         }
         return $alias;
     }
-
 
     /**
      * @return array|string
@@ -57,9 +57,16 @@ class Create extends CreateProcessor
             }
         }
         $this->setProperty('options', $options);
+
+        if (!empty($properties['vendor'])) {
+            $vendor_id = Utils::getVendorId($this->modx, $properties['vendor']);
+            if ($vendor_id) {
+                $this->setProperty('vendor_id', $vendor_id);
+            }
+        }
+
         return parent::beforeSet();
     }
-
 
     /**
      * @return mixed
@@ -69,7 +76,6 @@ class Create extends CreateProcessor
         $this->object->set('isfolder', false);
         return parent::beforeSave();
     }
-
 
     /**
      * @return mixed

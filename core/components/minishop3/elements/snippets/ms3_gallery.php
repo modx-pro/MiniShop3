@@ -1,16 +1,17 @@
 <?php
 
-use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MODX\Revolution\modX;
+use MiniShop3\MiniShop3;
 use ModxPro\PdoTools\Fetch;
 
 /** @var modX $modx */
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
+
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
-/** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
@@ -22,10 +23,8 @@ $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGallery');
 $product = !empty($product) && $product != $modx->resource->id
     ? $modx->getObject('msProduct', ['id' => $product])
     : $modx->resource;
-if (!$product || !($product instanceof msProduct)) {
-    return $modx->lexicon('ms_err_gallery_is_not_msproduct', [
-        'id' => $product->id
-    ]);
+if (!($product instanceof msProduct)) {
+    return "[msGallery] The resource with id = {$product->id} is not instance of msProduct.";
 }
 
 $where = [
@@ -56,7 +55,6 @@ foreach (['where'] as $v) {
     unset($scriptProperties[$v]);
 }
 $pdoFetch->addTime('Conditions prepared');
-
 $default = [
     'class' => 'msProductFile',
     'where' => $where,
@@ -66,12 +64,17 @@ $default = [
     'sortdir' => 'ASC',
     'fastMode' => false,
     'return' => 'data',
-    'nestedChunkPrefix' => 'ms3_',
+    'nestedChunkPrefix' => 'minishop3_',
 ];
+if ($scriptProperties['return'] === 'tpl') {
+    unset($scriptProperties['return']);
+}
 // Merge all properties and run!
 $pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
 $rows = $pdoFetch->run();
-
+if ($scriptProperties['return'] === 'sql' || $scriptProperties['return'] === 'json') {
+    return $rows;
+}
 $pdoFetch->addTime('Fetching thumbnails');
 
 $resolution = [];
@@ -122,8 +125,13 @@ foreach ($rows as $row) {
     $files[] = $row;
 }
 
+if ($scriptProperties['return'] === 'data') {
+    return $files;
+}
+
 $output = $pdoFetch->getChunk($tpl, [
     'files' => $files,
+    'scriptProperties' => $scriptProperties
 ]);
 
 if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {

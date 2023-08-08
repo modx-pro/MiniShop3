@@ -126,12 +126,16 @@ class OrderStatus
 
     private function sendEmails($order, $status)
     {
+        $tv_list = $this->modx->getOption('ms3_order_tv_list', null, '');
         $pls = $order->toArray();
         $pls['cost'] = $this->ms3->format->price($pls['cost']);
         $pls['cart_cost'] = $this->ms3->format->price($pls['cart_cost']);
         $pls['delivery_cost'] = $this->ms3->format->price($pls['delivery_cost']);
         $pls['weight'] = $this->ms3->format->weight($pls['weight']);
         $pls['payment_link'] = '';
+        if (!empty($tv_list)) {
+            $pls['includeTVs'] = $tv_list;
+        }
         $payment = $order->getOne('Payment');
         if ($payment) {
             $class = $payment->get('class');
@@ -155,10 +159,13 @@ class OrderStatus
                 $tpl = $chunk->get('name');
             }
             $body = $this->modx->runSnippet('msGetOrder', array_merge($pls, ['tpl' => $tpl]));
-            $emails = array_map('trim', explode(
-                ',',
-                $this->modx->getOption('ms_email_manager', null, $this->modx->getOption('emailsender'))
-            ));
+            $emails = array_map(
+                'trim',
+                explode(
+                    ',',
+                    $this->modx->getOption('ms_email_manager', null, $this->modx->getOption('emailsender'))
+                )
+            );
             if (!empty($subject)) {
                 foreach ($emails as $email) {
                     if (preg_match('#.*?@.*#', $email)) {

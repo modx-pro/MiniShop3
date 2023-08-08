@@ -100,7 +100,7 @@ ms3.combo.User = function (config) {
         typeAhead: false,
         editable: true,
         allowBlank: false,
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\User\\GetList',
             combo: true,
@@ -137,7 +137,7 @@ ms3.combo.Category = function (config) {
         name: 'parent-cmb',
         hiddenName: 'parent-cmp',
         allowBlank: false,
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Category\\GetCats',
             combo: true,
@@ -204,7 +204,7 @@ ms3.combo.Autocomplete = function (config) {
         fields: [config.name],
         //pageSize: 20,
         forceSelection: false,
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         typeAhead: true,
         editable: true,
         allowBlank: true,
@@ -234,12 +234,13 @@ ms3.combo.Vendor = function (config) {
         anchor: '99%',
         fields: ['name', 'id'],
         pageSize: 20,
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         typeAhead: true,
         editable: true,
         allowBlank: true,
         emptyText: _('no'),
         minChars: 1,
+        forceSelection: false,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Vendor\\GetList',
             combo: true,
@@ -308,7 +309,7 @@ ms3.combo.Options = function (config) {
             autoSave: false,
             totalProperty: 'total',
             fields: ['value'],
-            url: ms3.config['connector_url'],
+            url: ms3.config.connector_url,
             baseParams: {
                 action: 'MiniShop3\\Processors\\Product\\GetOptions',
                 key: config.name
@@ -517,7 +518,7 @@ ms3.combo.Chunk = function (config) {
         pageSize: 20,
         emptyText: _('ms3_combo_select'),
         hideMode: 'offsets',
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\Element\\Chunk\\GetList',
             mode: 'chunks'
@@ -553,7 +554,7 @@ ms3.combo.Resource = function (config) {
         pageSize: 20,
         emptyText: _('ms3_combo_select'),
         hideMode: 'offsets',
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\Element\\Resource\\GetList',
             combo: true
@@ -577,7 +578,7 @@ ms3.combo.Context = function (config) {
         pageSize: 20,
         emptyText: _('ms3_combo_select'),
         hideMode: 'offsets',
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\System\\Element\\Context\\GetList',
             combo: true
@@ -690,7 +691,7 @@ ms3.combo.Status = function (config) {
         fields: ['id', 'name'],
         pageSize: 10,
         emptyText: _('ms3_combo_select_status'),
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Status\\GetList',
             combo: true,
@@ -717,7 +718,7 @@ ms3.combo.Delivery = function (config) {
         fields: ['id', 'name'],
         pageSize: 10,
         emptyText: _('ms3_combo_select'),
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Delivery\\GetList',
             combo: true
@@ -742,7 +743,7 @@ ms3.combo.Payment = function (config) {
         fields: ['id', 'name'],
         pageSize: 10,
         emptyText: _('ms3_combo_select'),
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Payment\\GetList',
             combo: true,
@@ -804,7 +805,7 @@ ms3.combo.Link = function (config) {
         pageSize: 10,
         editable: true,
         emptyText: _('ms3_combo_select'),
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Link\\GetList',
             combo: true
@@ -827,7 +828,7 @@ ms3.combo.Product = function (config) {
         name: 'product',
         hiddenName: 'product',
         allowBlank: false,
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Product\\GetList',
             combo: true,
@@ -867,7 +868,7 @@ ms3.combo.ExtraOptions = function (config) {
         valueField: 'id',
         pageSize: 20,
         fields: ['id', 'key', 'caption', 'type'],
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Option\\GetList',
         },
@@ -897,7 +898,7 @@ ms3.combo.OptionTypes = function (config) {
         valueField: 'name',
         pageSize: 20,
         fields: ['name', 'caption', 'xtype'],
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\Option\\GetTypes',
         },
@@ -921,7 +922,7 @@ ms3.combo.Classes = function (config) {
         valueField: 'class',
         pageSize: 20,
         fields: ['type', 'class'],
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\GetClass',
             type: config.type || '',
@@ -946,7 +947,7 @@ ms3.combo.ModCategory = function (config) {
         anchor: '99%',
         fields: ['category', 'id'],
         pageSize: 20,
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         typeAhead: false,
         editable: false,
         allowBlank: true,

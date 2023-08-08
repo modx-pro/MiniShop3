@@ -12,6 +12,8 @@ class Update extends UpdateProcessor
     public $classKey = msVendor::class;
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
+    public $beforeSaveEvent = 'msOnBeforeVendorUpdate';
+    public $afterSaveEvent = 'msOnAfterVendorUpdate';
 
 
     /**

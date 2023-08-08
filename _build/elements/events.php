@@ -10,7 +10,6 @@ return [
     'msOnBeforeEmptyCart',
     'msOnEmptyCart',
     'msOnGetStatusCart',
-
     'msOnBeforeAddToOrder',
     'msOnAddToOrder',
     'msOnBeforeValidateOrderValue',
@@ -26,26 +25,30 @@ return [
     'msOnChangeOrderStatus',
     'msOnBeforeGetOrderCustomer',
     'msOnGetOrderCustomer',
-
     'msOnBeforeCreateOrder',
+    'msOnBeforeMgrCreateOrder',
     'msOnCreateOrder',
+    'msOnMgrCreateOrder',
     'msOnBeforeUpdateOrder',
     'msOnUpdateOrder',
     'msOnBeforeSaveOrder',
     'msOnSaveOrder',
     'msOnBeforeRemoveOrder',
     'msOnRemoveOrder',
-
     'msOnBeforeCreateOrderProduct',
     'msOnCreateOrderProduct',
     'msOnBeforeUpdateOrderProduct',
     'msOnUpdateOrderProduct',
     'msOnBeforeRemoveOrderProduct',
     'msOnRemoveOrderProduct',
-
     'msOnGetProductPrice',
     'msOnGetProductWeight',
     'msOnGetProductFields',
-
     'msOnManagerCustomCssJs',
+    'msOnBeforeVendorCreate',
+    'msOnAfterVendorCreate',
+    'msOnBeforeVendorUpdate',
+    'msOnAfterVendorUpdate',
+    'msOnBeforeVendorDelete',
+    'msOnAfterVendorDelete',
 ];

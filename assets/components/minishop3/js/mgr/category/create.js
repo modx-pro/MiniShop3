@@ -1,7 +1,6 @@
 ms3.page.CreateCategory = function (config) {
     config = config || {record: {}};
     config.record = config.record || {};
-    console.log('ms3.page.CreateCategory')
 
     Ext.applyIf(config, {
         panelXType: 'ms3-panel-category-create',

@@ -10,6 +10,8 @@ class Remove extends RemoveProcessor
     public $classKey = msVendor::class;
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
+    public $beforeRemoveEvent = 'msOnBeforeVendorDelete';
+    public $afterRemoveEvent = 'msOnAfterVendorDelete';
 
 
     /**

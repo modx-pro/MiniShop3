@@ -27,4 +27,16 @@ return [
         'action' => 'system/settings',
         'params' => '&ns=minishop3',
     ],
+    'ms3_help' => [
+        'description' => 'ms3_help_desc',
+        'parent' => 'miniShop3',
+        'menuindex' => 3,
+        'action' => 'mgr/help',
+    ],
+    'ms3_utilities' => [
+        'description' => 'ms3_utilities_desc',
+        'parent' => 'miniShop3',
+        'menuindex' => 4,
+        'action' => 'mgr/utilities',
+    ],
 ];

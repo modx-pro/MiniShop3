@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Utils\Utils;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\Processor;
 use MODX\Revolution\Processors\Resource\Update as UpdateProcessor;
@@ -48,6 +49,13 @@ class Update extends UpdateProcessor
         }
         if (!empty($options)) {
             $this->setProperty('options', $options);
+        }
+
+        if (!empty($properties['vendor'])) {
+            $vendor_id = Utils::getVendorId($this->modx, $properties['vendor']);
+            if ($vendor_id) {
+                $this->setProperty('vendor_id', $vendor_id);
+            }
         }
 
         return parent::beforeSet();

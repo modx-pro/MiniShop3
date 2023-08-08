@@ -2,9 +2,7 @@
 
 namespace MiniShop3\Processors\Gallery;
 
-use MiniShop3\MiniShop3;
 use MODX\Revolution\Processors\ModelProcessor;
-use MODX\Revolution\Processors\ProcessorResponse;
 
 class Multiple extends ModelProcessor
 {
@@ -24,9 +22,13 @@ class Multiple extends ModelProcessor
         }
 
         foreach ($ids as $id) {
-            $this->modx->runProcessor('MiniShop3\\Processors\\Gallery\\' . $method, [
-                'id' => $id,
-            ]);
+            $data = ['id' => $id];
+
+            if ($method === 'GenerateAll') {
+                $data = ['product_id' => $id];
+            }
+
+            $this->modx->runProcessor('MiniShop3\\Processors\\Gallery\\' . $method, $data);
         }
 
         return $this->success();

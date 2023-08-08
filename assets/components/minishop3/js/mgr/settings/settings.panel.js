@@ -17,9 +17,25 @@ ms3.panel.Settings = function (config) {
                     activeTab: this.items.indexOf(this.getActiveTab())
                 };
             },
+            listeners: {
+                tabchange: function (tabPanel, tab) {
+                    window.location.hash = '#tab-' + tab.id;
+                },
+                render: function (tabPanel) {
+                    let tabHash = window.location.hash.substring(1);
+                    if (tabHash) {
+                        let tabId = tabHash.replace("tab-", "");
+                        let tab = tabPanel.get(tabId);
+                        if (tab) {
+                            tabPanel.setActiveTab(tab);
+                        }
+                    }
+                }
+            },
             items: [{
                 title: _('ms3_deliveries'),
                 layout: 'anchor',
+                id: 'deliveries',
                 items: [{
                     html: _('ms3_deliveries_intro'),
                     bodyCssClass: 'panel-desc',
@@ -30,6 +46,7 @@ ms3.panel.Settings = function (config) {
             }, {
                 title: _('ms3_payments'),
                 layout: 'anchor',
+                id: 'payments',
                 items: [{
                     html: _('ms3_payments_intro'),
                     bodyCssClass: 'panel-desc',
@@ -40,6 +57,7 @@ ms3.panel.Settings = function (config) {
             }, {
                 title: _('ms3_statuses'),
                 layout: 'anchor',
+                id: 'statuses',
                 items: [{
                     html: _('ms3_statuses_intro'),
                     bodyCssClass: 'panel-desc',
@@ -50,6 +68,7 @@ ms3.panel.Settings = function (config) {
             }, {
                 title: _('ms3_vendors'),
                 layout: 'anchor',
+                id: 'vendors',
                 items: [{
                     html: _('ms3_vendors_intro'),
                     bodyCssClass: 'panel-desc',
@@ -60,6 +79,7 @@ ms3.panel.Settings = function (config) {
             }, {
                 title: _('ms3_links'),
                 layout: 'anchor',
+                id: 'links',
                 items: [{
                     html: _('ms3_links_intro'),
                     bodyCssClass: 'panel-desc',
@@ -70,6 +90,7 @@ ms3.panel.Settings = function (config) {
             }, {
                 title: _('ms3_options'),
                 layout: 'anchor',
+                id: 'options',
                 items: [{
                     html: _('ms3_options_intro'),
                     bodyCssClass: 'panel-desc',

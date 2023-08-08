@@ -55,7 +55,7 @@ class Delivery implements DeliveryInterface
             $add_price = $delivery->get('price');
             if (preg_match('/%$/', $add_price)) {
                 $add_price = str_replace('%', '', $add_price);
-                $add_price = $cost / 100 * $add_price;
+                $add_price = $cart['total_cost'] / 100 * $add_price;
             }
         }
 

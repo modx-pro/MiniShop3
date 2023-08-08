@@ -24,9 +24,9 @@
     {block 'logo'}
         <a href="{$site_url}">
             <img style="{$style.logo}"
-                src="{$site_url}{$assets_url}components/minishop3/img/web/ms3_small@2x.png"
-                alt="{$site_url}"
-                width="120" height="90"/>
+                 src="{$site_url}{$assets_url}components/minishop3/img/web/ms3_small@2x.png"
+                 alt="{$site_url}"
+                 width="120" height="90"/>
         </a>
     {/block}
     <!-- body -->
@@ -40,7 +40,7 @@
                             <td>
                                 <h3 style="{$style.h}{$style.h3}">
                                     {block 'title'}
-                                        minishop3
+                                        MiniShop3
                                     {/block}
                                 </h3>
 
@@ -60,20 +60,20 @@
                                                 <td style="{$style.th}">
                                                     {if $product.thumb?}
                                                         <img src="{$site_url}{$product.thumb}"
-                                                            alt="{$product.pagetitle}"
-                                                            title="{$product.pagetitle}"
-                                                            width="120" height="90"/>
+                                                             alt="{$product.pagetitle}"
+                                                             title="{$product.pagetitle}"
+                                                             width="120" height="90"/>
                                                     {else}
                                                         <img src="{$site_url}{$assets_url}components/minishop3/img/web/ms3_small@2x.png"
-                                                            alt="{$product.pagetitle}"
-                                                            title="{$product.pagetitle}"
-                                                            width="120" height="90"/>
+                                                             alt="{$product.pagetitle}"
+                                                             title="{$product.pagetitle}"
+                                                             width="120" height="90"/>
                                                     {/if}
                                                 </td>
                                                 <td style="{$style.th}">
                                                     {if $product.id?}
                                                         <a href="{$product.id | url : ['scheme' => 'full']}"
-                                                            style="{$style.a}">
+                                                           style="{$style.a}">
                                                             {$product.name}
                                                         </a>
                                                     {else}
@@ -122,6 +122,26 @@
             </td>
             <td></td>
         </tr>
+        <tr>
+            <td></td>
+            <td>{block 'address'}{/block}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>{block 'payment'}{/block}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>{block 'delivery'}{/block}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>{block 'link'}{/block}</td>
+            <td></td>
+        </tr>
     </table>
     <!-- /body -->
     <!-- footer -->
@@ -136,9 +156,9 @@
                             <td align="center">
                                 <p style="{$style.p}">
                                     {block 'footer'}
-                                    <a href="{$site_url}" style="color: #999999;">
-                                        {'site_name' | option}
-                                    </a>
+                                        <a href="{$site_url}" style="color: #999999;">
+                                            {'site_name' | option}
+                                        </a>
                                     {/block}
                                 </p>
                             </td>

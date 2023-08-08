@@ -282,8 +282,9 @@ class GetList extends GetListProcessor
                 'cls' => '',
                 'icon' => 'icon icon-refresh',
                 'title' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
+                'multiple' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
                 'action' => 'generatePreview',
-                'button' => false,
+                'button' => true,
                 'menu' => true,
             ];
             // Edit

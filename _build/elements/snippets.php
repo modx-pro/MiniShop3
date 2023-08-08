@@ -211,6 +211,10 @@ return [
                 'type' => 'textfield',
                 'value' => '',
             ],
+            'return' => array(
+                'type' => 'textfield',
+                'value' => 'tpl',
+            ),
         ],
     ],
     'msOptions' => [

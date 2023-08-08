@@ -100,6 +100,7 @@ a.x-menu-item .x-menu-item-text .icon { line-height: 16px; top: auto; }
 .ms3-panel .x-tree-root-ct input,
 .ms3-window .x-tree-root-ct input { vertical-align: top; }
 /* Orders */
+#ms3-form-orders .x-toolbar-left-row td:first-of-type .x-btn {margin-left: 1px;}
 #ms3-form-orders { padding-top: 10px; padding-bottom: 0; }
 #ms3-grid-orders { padding-top: 0px; }
 #ms3-orders-info {

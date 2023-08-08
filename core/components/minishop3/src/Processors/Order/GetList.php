@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Order;
 
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\modUser;
@@ -60,20 +61,24 @@ class GetList extends GetListProcessor
         $c->leftJoin(msOrderStatus::class, 'Status');
         $c->leftJoin(msDelivery::class, 'Delivery');
         $c->leftJoin(msPayment::class, 'Payment');
+        $c->leftJoin(msOrderAddress::class, 'Address');
 
         $query = trim($this->getProperty('query'));
         if (!empty($query)) {
             if (is_numeric($query)) {
                 $c->andCondition([
                     'id' => $query,
+                    'OR:Address.phone:LIKE' => "%{$query}%",
                 ]);
             } else {
                 $c->where([
                     'num:LIKE' => "{$query}%",
-                    'OR:comment:LIKE' => "%{$query}%",
+                    'OR:order_comment:LIKE' => "%{$query}%",
+                    'OR:Address.comment:LIKE' => "%{$query}%",
                     'OR:User.username:LIKE' => "%{$query}%",
                     'OR:UserProfile.fullname:LIKE' => "%{$query}%",
                     'OR:UserProfile.email:LIKE' => "%{$query}%",
+                    'OR:Address.phone:LIKE' => "%{$query}%",
                 ]);
             }
         }
@@ -131,7 +136,12 @@ class GetList extends GetListProcessor
         $q = clone $c;
         $q->query['columns'] = ['SQL_CALC_FOUND_ROWS msOrder.id, fullname as customer'];
         $sortClassKey = $this->getSortClassKey();
-        $sortKey = $this->modx->getSelectColumns($sortClassKey, $this->getProperty('sortAlias', $sortClassKey), '', [$this->getProperty('sort')]);
+        $sortKey = $this->modx->getSelectColumns(
+            $sortClassKey,
+            $this->getProperty('sortAlias', $sortClassKey),
+            '',
+            [$this->getProperty('sort')]
+        );
         if (empty($sortKey)) {
             $sortKey = $this->getProperty('sort');
         }
@@ -146,9 +156,11 @@ class GetList extends GetListProcessor
             $total = $this->modx->query('SELECT FOUND_ROWS()')->fetchColumn();
         }
         $ids = empty($ids) ? "(0)" : "(" . implode(',', $ids) . ")";
-        $c->query['where'] = [[
-            new xPDOQueryCondition(['sql' => 'msOrder.id IN ' . $ids, 'conjunction' => 'AND']),
-        ]];
+        $c->query['where'] = [
+            [
+                new xPDOQueryCondition(['sql' => 'msOrder.id IN ' . $ids, 'conjunction' => 'AND']),
+            ]
+        ];
         $c->sortby($sortKey, $this->getProperty('dir'));
 
         $this->setProperty('total', $total);

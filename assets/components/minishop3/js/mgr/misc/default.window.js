@@ -3,7 +3,7 @@ ms3.window.Default = function (config) {
 
     Ext.applyIf(config, {
         title: '',
-        url: ms3.config['connector_url'],
+        url: ms3.config.connector_url,
         cls: 'ms3-window ' || config['cls'],
         width: 600,
         autoHeight: true,

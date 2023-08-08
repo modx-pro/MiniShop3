@@ -14,17 +14,6 @@ return [
         'key' => 'mgr_tree_icon_msproduct',
     ],
 
-    'ms3_add_icon_category' => [
-        'value' => 'icon icon-folder-open',
-        'xtype' => 'textfield',
-        'area' => 'ms3_category',
-    ],
-    'ms3_add_icon_product' => [
-        'value' => 'icon icon-tag',
-        'xtype' => 'textfield',
-        'area' => 'ms3_category',
-    ],
-
     'ms3_services' => [
         'value' => '{"cart":[],"order":[],"payment":[],"delivery":[]}',
         'xtype' => 'textarea',
@@ -192,7 +181,6 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_cart',
     ],
-
     'ms3_order_format_num' => [
         'value' => '%y%m',
         'xtype' => 'textfield',
@@ -223,7 +211,11 @@ return [
         'value' => 'size,color',
         'area' => 'ms3_order',
     ],
-
+    'ms3_order_tv_list' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_order',
+    ],
     'ms3_order_handler_class' => [
         'value' => 'msOrderHandler',
         'xtype' => 'textfield',
@@ -274,5 +266,40 @@ return [
         'value' => true,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_frontend',
+    ],
+    'ms3_status_draft' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_utility_import_fields' => [
+        'value' => 'pagetitle,parent,price,article',
+        'xtype' => 'textfield',
+        'area' => 'ms3_import',
+    ],
+    'ms3_utility_import_fields_delimiter' => [
+        'value' => ';',
+        'xtype' => 'textfield',
+        'area' => 'ms3_import',
+    ],
+    'ms3_status_new' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_status_paid' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_status_canceled' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_status_for_stat' => [
+        'value' => '2,3',
+        'xtype' => 'textfield',
+        'area' => 'ms3_statuses',
     ],
 ];

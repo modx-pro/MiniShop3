@@ -22,93 +22,7 @@ if ($transport->xpdo) {
         case xPDOTransport::ACTION_INSTALL:
         case xPDOTransport::ACTION_UPGRADE:
             $modx->addPackage('MiniShop3\Model', MODX_CORE_PATH . 'components/minishop3/src/', null, 'MiniShop3\\');
-            $lang = $modx->getOption('manager_language') === 'en' ? 1 : 0;
-
-            $statuses = [
-                1 => [
-                    'name' => !$lang ? 'Новый' : 'New',
-                    'color' => '000000',
-                    'email_user' => 1,
-                    'email_manager' => 1,
-                    'subject_user' => '[[%ms3_email_subject_new_user]]',
-                    'subject_manager' => '[[%ms3_email_subject_new_manager]]',
-                    'body_user' => 'tpl.msEmail.new.user',
-                    'body_manager' => 'tpl.msEmail.new.manager',
-                    'final' => 0,
-                    'fixed' => 1,
-                ],
-                2 => [
-                    'name' => !$lang ? 'Оплачен' : 'Paid',
-                    'color' => '008000',
-                    'email_user' => 1,
-                    'email_manager' => 1,
-                    'subject_user' => '[[%ms3_email_subject_paid_user]]',
-                    'subject_manager' => '[[%ms3_email_subject_paid_manager]]',
-                    'body_user' => 'tpl.msEmail.paid.user',
-                    'body_manager' => 'tpl.msEmail.paid.manager',
-                    'final' => 0,
-                    'fixed' => 1,
-                ],
-                3 => [
-                    'name' => !$lang ? 'Отправлен' : 'Sent',
-                    'color' => '003366',
-                    'email_user' => 1,
-                    'email_manager' => 0,
-                    'subject_user' => '[[%ms3_email_subject_sent_user]]',
-                    'subject_manager' => '',
-                    'body_user' => 'tpl.msEmail.sent.user',
-                    'body_manager' => '',
-                    'final' => 1,
-                    'fixed' => 1,
-                ],
-                4 => [
-                    'name' => !$lang ? 'Отменён' : 'Cancelled',
-                    'color' => '800000',
-                    'email_user' => 1,
-                    'email_manager' => 0,
-                    'subject_user' => '[[%ms3_email_subject_cancelled_user]]',
-                    'subject_manager' => '',
-                    'body_user' => 'tpl.msEmail.cancelled.user',
-                    'body_manager' => '',
-                    'final' => 1,
-                    'fixed' => 1,
-                ],
-                5 => [
-                    'name' => !$lang ? 'Черновик' : 'Draft',
-                    'color' => 'C0C0C0',
-                    'email_user' => 0,
-                    'email_manager' => 0,
-                    'subject_user' => '',
-                    'subject_manager' => '',
-                    'body_user' => '',
-                    'body_manager' => '',
-                    'final' => 0,
-                    'fixed' => 0,
-                ],
-            ];
-
-            foreach ($statuses as $id => $properties) {
-                if (!$status = $modx->getCount(msOrderStatus::class, ['id' => $id])) {
-                    $status = $modx->newObject(msOrderStatus::class, array_merge([
-                        'editable' => 0,
-                        'active' => 1,
-                        'position' => $id - 1,
-                    ], $properties));
-                    $status->set('id', $id);
-                    /*@var modChunk $chunk */
-                    if (!empty($properties['body_user'])) {
-                        if ($chunk = $modx->getObject(modChunk::class, ['name' => $properties['body_user']])) {
-                            $status->set('body_user', $chunk->get('id'));
-                        }
-                    }
-                    if (!empty($properties['body_manager'])) {
-                        if ($chunk = $modx->getObject(modChunk::class, ['name' => $properties['body_manager']])) {
-                            $status->set('body_manager', $chunk->get('id'));
-                        }
-                    }
-                    $status->save();
-                }
-            }
+            $modx->lexicon->load('minishop3:manager');
 
             /** @var msDelivery $delivery */
             $delivery = $modx->getObject(msDelivery::class, 1);
@@ -116,7 +30,7 @@ if ($transport->xpdo) {
                 $delivery = $modx->newObject(msDelivery::class);
                 $delivery->fromArray([
                     'id' => 1,
-                    'name' => !$lang ? 'Самовывоз' : 'Self-delivery',
+                    'name' => $modx->lexicon('ms3_order_delivery_self'),
                     'price' => 0,
                     'weight_price' => 0,
                     'distance_price' => 0,
@@ -133,7 +47,7 @@ if ($transport->xpdo) {
                 $payment = $modx->newObject(msPayment::class);
                 $payment->fromArray([
                     'id' => 1,
-                    'name' => !$lang ? 'Оплата наличными' : 'Cash',
+                    'name' => $modx->lexicon('ms3_order_payment_cash'),
                     'active' => 1,
                     'position' => 0,
                 ], '', true);
@@ -182,24 +96,24 @@ if ($transport->xpdo) {
             }
 
             $chunks_descriptions = [
-                'msProduct.content' => !$lang ? 'Чанк вывода карточки товара.' : 'Chunk for displaying card of MiniShop3 product.',
-                'tpl.msProducts.row' => !$lang ? 'Чанк товара MiniShop3.' : 'Chunk for listing MiniShop3 catalog.',
+                'msProduct.content' => $modx->lexicon('ms3_chunk_description_msproduct_content'),
+                'tpl.msProducts.row' => $modx->lexicon('ms3_chunk_description_msproduct_row'),
 
-                'tpl.msCart' => !$lang ? 'Чанк вывода корзины MiniShop3.' : 'Chunk for MiniShop3 cart.',
-                'tpl.msMiniCart' => !$lang ? 'Чанк вывода мини корзины MiniShop3.' : 'Chunk for MiniShop3 mini cart.',
-                'tpl.msOrder' => !$lang ? 'Чанк вывода формы оформления заказа MiniShop3.' : 'Chunk for displaying order form of MiniShop3.',
-                'tpl.msGetOrder' => !$lang ? 'Чанк вывода заказа MiniShop3.' : 'Chunk for displaying order of MiniShop3.',
-                'tpl.msOptions' => !$lang ? 'Чанк вывода дополнительных свойств товара MiniShop3.' : 'Chunk for displaying additional product characteristics of MiniShop3 product.',
-                'tpl.msProductOptions' => !$lang ? 'Чанк вывода дополнительных опций товара MiniShop3.' : 'Chunk for displaying additional product options of MiniShop3 product.',
-                'tpl.msGallery' => !$lang ? 'Чанк вывода галереи товара MiniShop3.' : 'Chunk for displaying gallery of MiniShop3 product.',
+                'tpl.msCart' => $modx->lexicon('ms3_chunk_description_mscart'),
 
-                'tpl.msEmail' => !$lang ? 'Базовый чанк оформления писем MiniShop3.' : 'Basic mail chunk of MiniShop3 mail.',
-                'tpl.msEmail.new.user' => !$lang ? 'Чанк письма нового заказа пользователю.' : 'User new order mail chunk.',
-                'tpl.msEmail.new.manager' => !$lang ? 'Чанк письма нового заказа менеджеру.' : 'Manager new order mail chunk.',
-                'tpl.msEmail.paid.user' => !$lang ? 'Чанк письма оплаченного заказа пользователю.' : 'User paid order mail chunk.',
-                'tpl.msEmail.paid.manager' => !$lang ? 'Чанк письма оплаченного заказа менеджеру.' : 'Manager paid order mail chunk.',
-                'tpl.msEmail.sent.user' => !$lang ? 'Чанк письма отправленного заказа пользователю.' : 'User sent order mail chunk.',
-                'tpl.msEmail.cancelled.user' => !$lang ? 'Чанк письма отмененного заказа пользователю.' : 'User cancelled order mail chunk.',
+                'tpl.msOrder' => $modx->lexicon('ms3_chunk_description_msorder'),
+                'tpl.msGetOrder' => $modx->lexicon('ms3_chunk_description_msgetorder'),
+                'tpl.msOptions' => $modx->lexicon('ms3_chunk_description_msoptions'),
+                'tpl.msProductOptions' => $modx->lexicon('ms3_chunk_description_msproductoptions'),
+                'tpl.msGallery' => $modx->lexicon('ms3_chunk_description_msgallery'),
+
+                'tpl.msEmail' => $modx->lexicon('ms3_chunk_description_msemail'),
+                'tpl.msEmail.new.customer' => $modx->lexicon('ms3_chunk_description_msemail_new_customer'),
+                'tpl.msEmail.new.manager' => $modx->lexicon('ms3_chunk_description_msemail_new_manager'),
+                'tpl.msEmail.paid.customer' => $modx->lexicon('ms3_chunk_description_msemail_paid_customer'),
+                'tpl.msEmail.paid.manager' => $modx->lexicon('ms3_chunk_description_msemail_paid_manager'),
+                'tpl.msEmail.sent.customer' => $modx->lexicon('ms3_chunk_description_msemail_sent_customer'),
+                'tpl.msEmail.cancelled.customer' => $modx->lexicon('ms3_chunk_description_msemail_cancelled_customer'),
             ];
 
             foreach ($chunks_descriptions as $name => $description) {
