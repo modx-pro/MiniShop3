@@ -30,11 +30,11 @@ class Cart
         $this->ms3 = $ms3;
         $this->modx = $ms3->modx;
 
-        $this->storage = $this->modx->getOption('ms_tmp_storage', null, 'session');
+        $this->storage = $this->modx->getOption('ms3_tmp_storage', null, 'session');
         $this->storageInit();
 
         $this->config = array_merge([
-            'max_count' => $this->modx->getOption('ms_cart_max_count', null, 1000, true),
+            'max_count' => $this->modx->getOption('ms3_cart_max_count', null, 1000, true),
             'allow_deleted' => false,
             'allow_unpublished' => false,
         ], $config);
@@ -49,7 +49,7 @@ class Cart
      */
     public function initialize($ctx = 'web')
     {
-        $ms2_cart_context = (bool)$this->modx->getOption('ms_cart_context', null, '0', true);
+        $ms2_cart_context = (bool)$this->modx->getOption('ms3_cart_context', null, '0', true);
         if ($ms2_cart_context) {
             $ctx = 'web';
         }

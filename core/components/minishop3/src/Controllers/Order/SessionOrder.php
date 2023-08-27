@@ -148,18 +148,18 @@ class SessionOrder extends Order implements OrderInterface
             }
         }
         if (!empty($errors)) {
-            return $this->error('ms_order_err_requires', $errors);
+            return $this->error('ms3_order_err_requires', $errors);
         }
 
         $customer = new Customer($this->ms3);
         $user_id = $customer->getId();
         if (empty($user_id) || !is_int($user_id)) {
-            return $this->error(is_string($user_id) ? $user_id : 'ms_err_user_nf');
+            return $this->error(is_string($user_id) ? $user_id : 'ms3_err_user_nf');
         }
 
         $cart_status = $this->ms3->cart->status();
         if (empty($cart_status['total_count'])) {
-            return $this->error('ms_order_err_empty');
+            return $this->error('ms3_order_err_empty');
         }
 
         $delivery_cost = $this->getCost(false, true);

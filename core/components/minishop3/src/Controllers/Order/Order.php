@@ -31,7 +31,7 @@ class Order
         $this->ms3 = $ms3;
         $this->modx = $ms3->modx;
 
-        $this->storage = $this->modx->getOption('ms_tmp_storage', null, 'session');
+        $this->storage = $this->modx->getOption('ms3_tmp_storage', null, 'session');
         $this->storageInit();
 
         $this->config = array_merge([], $config);
@@ -163,7 +163,7 @@ class Order
         /** @var msDelivery $delivery */
         $delivery = $this->modx->getObject(msDelivery::class, ['id' => $id, 'active' => 1]);
         if (!$delivery) {
-            return $this->error('ms_order_err_delivery', ['delivery']);
+            return $this->error('ms3_order_err_delivery', ['delivery']);
         }
         $requires = $delivery->get('requires');
         $requires = empty($requires)
@@ -197,17 +197,17 @@ class Order
      */
     protected function getNum()
     {
-        $format = htmlspecialchars($this->modx->getOption('ms_order_format_num', null, '%y%m'));
+        $format = htmlspecialchars($this->modx->getOption('ms3_order_format_num', null, 'ym'));
         $separator = trim(
             preg_replace(
                 "/[^,\/\-]/",
                 '',
-                $this->modx->getOption('ms_order_format_num_separator', null, '/')
+                $this->modx->getOption('ms3_order_format_num_separator', null, '/')
             )
         );
         $separator = $separator ?: '/';
 
-        $cur = $format ? strftime($format) : date('ym');
+        $cur = $format ? date($format) : date('ym');
 
         $count = $num = 0;
 

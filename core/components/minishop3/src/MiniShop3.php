@@ -245,7 +245,8 @@ class MiniShop3
         $this->config['ctx'] = $ctx;
         $this->modx->lexicon->load('minishop3:default');
 
-        $load = $this->services->load($ctx);
+        //$load = $this->services->load($ctx);
+        $load = true;
         $this->initialized[$ctx] = $load;
 
         return $load;

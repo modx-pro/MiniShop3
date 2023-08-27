@@ -19,7 +19,7 @@ $product = !empty($product) && $product != $modx->resource->id
     ? $modx->getObject('msProduct', ['id' => $product])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
-    return $modx->lexicon('ms_err_gallery_is_not_msproduct', [
+    return $modx->lexicon('ms3_err_gallery_is_not_msproduct', [
         'id' => $product->id
     ]);
 }

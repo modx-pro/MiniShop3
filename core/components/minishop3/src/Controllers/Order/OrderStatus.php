@@ -45,7 +45,7 @@ class OrderStatus
         /** @var msOrder $order */
         $order = $this->modx->getObject(msOrder::class, ['id' => $order_id], false);
         if (!$order) {
-            return $this->modx->lexicon('ms_err_order_nf');
+            return $this->modx->lexicon('ms3_err_order_nf');
         }
 
         $ctx = $order->get('context');
@@ -56,7 +56,7 @@ class OrderStatus
         /** @var msOrderStatus $status */
         $status = $this->modx->getObject(msOrderStatus::class, ['id' => $status_id, 'active' => 1]);
         if (!$status) {
-            return $this->modx->lexicon('ms_err_status_nf');
+            return $this->modx->lexicon('ms3_err_status_nf');
         }
         /** @var msOrderStatus $old_status */
         $old_status = $this->modx->getObject(
@@ -65,17 +65,17 @@ class OrderStatus
         );
         if ($old_status) {
             if ($old_status->get('final')) {
-                return $this->modx->lexicon('ms_err_status_final');
+                return $this->modx->lexicon('ms3_err_status_final');
             }
             if ($old_status->get('fixed')) {
                 if ($status->get('position') <= $old_status->get('position')) {
-                    return $this->modx->lexicon('ms_err_status_fixed');
+                    return $this->modx->lexicon('ms3_err_status_fixed');
                 }
             }
         }
 
         if ($order->get('status_id') == $status_id) {
-            return $this->modx->lexicon('ms_err_status_same');
+            return $this->modx->lexicon('ms3_err_status_same');
         }
 
         $eventParams = [
@@ -163,7 +163,7 @@ class OrderStatus
                 'trim',
                 explode(
                     ',',
-                    $this->modx->getOption('ms_email_manager', null, $this->modx->getOption('emailsender'))
+                    $this->modx->getOption('ms3_email_manager', null, $this->modx->getOption('emailsender'))
                 )
             );
             if (!empty($subject)) {

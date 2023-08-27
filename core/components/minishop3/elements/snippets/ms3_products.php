@@ -1,7 +1,14 @@
 <?php
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Model\msProductFile;
+use MiniShop3\Model\msProductLink;
+use MiniShop3\Model\msProductOption;
+use MiniShop3\Model\msVendor;
+use MODX\Revolution\modPlugin;
+use MODX\Revolution\modPluginEvent;
 use ModxPro\PdoTools\Fetch;
 
 /** @var modX $modx */
@@ -27,7 +34,7 @@ if ($scriptProperties['return'] === 'ids') {
 
 // Start build "where" expression
 $where = [
-    'class_key' => 'msProduct',
+    'class_key' => msProduct::class,
 ];
 if (empty($showZeroPrice)) {
     $where['Data.price:>'] = 0;
@@ -39,16 +46,16 @@ $groupby = [
 
 // Join tables
 $leftJoin = [
-    'Data' => ['class' => 'msProductData'],
-    'Vendor' => ['class' => 'msVendor', 'on' => 'Data.vendor=Vendor.id'],
+    'Data' => ['class' => msProductData::class],
+    'Vendor' => ['class' => msVendor::class, 'on' => '`Data`.vendor_id=Vendor.id'],
 ];
 
 $select = [
     'msProduct' => !empty($includeContent)
-        ? $modx->getSelectColumns('msProduct', 'msProduct')
-        : $modx->getSelectColumns('msProduct', 'msProduct', '', ['content'], true),
-    'Data' => $modx->getSelectColumns('msProductData', 'Data', '', ['id'], true),
-    'Vendor' => $modx->getSelectColumns('msVendor', 'Vendor', 'vendor.', ['id'], true),
+        ? $modx->getSelectColumns(msProduct::class, 'msProduct')
+        : $modx->getSelectColumns(msProduct::class, 'msProduct', '', ['content'], true),
+    'Data' => $modx->getSelectColumns(msProductData::class, '`Data`', '', ['id'], true),
+    'Vendor' => $modx->getSelectColumns(msVendor::class, '`Vendor`', 'vendor.', ['id'], true),
 ];
 
 // Include thumbnails
@@ -59,8 +66,8 @@ if (!empty($includeThumbs)) {
             continue;
         }
         $leftJoin[$thumb] = [
-            'class' => 'msProductFile',
-            'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.`rank` = 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%'",
+            'class' => msProductFile::class,
+            'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.`position` = 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%'",
         ];
         $select[$thumb] = "`{$thumb}`.url as `{$thumb}`";
         $groupby[] = "`{$thumb}`.url";
@@ -71,13 +78,15 @@ if (!empty($includeThumbs)) {
 $innerJoin = [];
 if (!empty($link) && !empty($master)) {
     $innerJoin['Link'] = [
-        'class' => 'msProductLink',
+        'class' => msProductLink::class,
+        'alias' => 'Link',
         'on' => 'msProduct.id = Link.slave AND Link.link = ' . $link,
     ];
     $where['Link.master'] = $master;
 } elseif (!empty($link) && !empty($slave)) {
     $innerJoin['Link'] = [
-        'class' => 'msProductLink',
+        'class' => msProductLink::class,
+        'alias' => 'Link',
         'on' => 'msProduct.id = Link.master AND Link.link = ' . $link,
     ];
     $where['Link.slave'] = $slave;
@@ -101,7 +110,11 @@ $pdoFetch->addTime('Conditions prepared');
 // Add filters by options
 $joinedOptions = [];
 if (!empty($scriptProperties['optionFilters'])) {
-    $filters = json_decode($scriptProperties['optionFilters'], true);
+    $filters = $scriptProperties['optionFilters'];
+    if (!is_array($scriptProperties['optionFilters'])) {
+        $filters = json_decode($scriptProperties['optionFilters'], true);
+    }
+
     foreach ($filters as $key => $value) {
         $components = explode(':', $key, 2);
 
@@ -116,7 +129,7 @@ if (!empty($scriptProperties['optionFilters'])) {
 
         if (!in_array($option, $joinedOptions)) {
             $leftJoin[$option] = [
-                'class' => 'msProductOption',
+                'class' => msProductOption::class,
                 'on' => "`{$option}`.product_id = Data.id AND `{$option}`.key = '{$option}'",
             ];
             $joinedOptions[] = $option;
@@ -163,7 +176,7 @@ if (!empty($scriptProperties['sortbyOptions'])) {
 
         if (!in_array($option, $joinedOptions)) {
             $leftJoin[$option] = [
-                'class' => 'msProductOption',
+                'class' => msProductOption::class,
                 'on' => "`{$option}`.product_id = Data.id AND `{$option}`.key = '{$option}'",
             ];
             $joinedOptions[] = $option;
@@ -172,7 +185,7 @@ if (!empty($scriptProperties['sortbyOptions'])) {
 }
 
 $default = [
-    'class' => 'msProduct',
+    'class' => msProduct::class,
     'where' => $where,
     'leftJoin' => $leftJoin,
     'innerJoin' => $innerJoin,
@@ -187,26 +200,36 @@ $default = [
 $pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
 $rows = $pdoFetch->run();
 
-if ($scriptProperties['return'] == 'json') {
+if ($scriptProperties['return'] === 'json') {
     $rows = json_decode($rows, true);
 }
 
 // Process rows
 $output = $additionalPlaceholders = [];
 if (!empty($rows) && is_array($rows)) {
-    $c = $modx->newQuery('modPluginEvent', ['event:IN' => ['msOnGetProductPrice', 'msOnGetProductWeight', 'msOnGetProductFields']]);
-    $c->innerJoin('modPlugin', 'modPlugin', 'modPlugin.id = modPluginEvent.pluginid');
+    $c = $modx->newQuery(
+        modPluginEvent::class,
+        ['event:IN' => ['msOnGetProductPrice', 'msOnGetProductWeight', 'msOnGetProductFields']]
+    );
+    $c->innerJoin(modPlugin::class, 'modPlugin', 'modPlugin.id = modPluginEvent.pluginid');
     $c->where('modPlugin.disabled = 0');
 
-    $modifications = $modx->getOption('ms_price_snippet', null, false, true) ||
-        $modx->getOption('ms_weight_snippet', null, false, true) || $modx->getCount('modPluginEvent', $c);
+    $modifications = $modx->getOption('ms3_price_snippet', null, false, true) ||
+        $modx->getOption('ms3_weight_snippet', null, false, true) || $modx->getCount(modPluginEvent::class, $c);
     if ($modifications) {
         /** @var msProductData $product */
-        $product = $modx->newObject('msProductData');
+        $product = $modx->newObject(msProductData::class);
     }
     $pdoFetch->addTime('Checked the active modifiers');
 
     $opt_time = 0;
+    $includedOptionKeys = [];
+    $msProductOption = null;
+    if (!empty($includeOptions)) {
+        $includedOptionKeys = array_map('trim', explode(',', $includeOptions));
+        $msProductOption = $modx->newObject(msProductOption::class);
+    }
+
     foreach ($rows as $k => $row) {
         if ($modifications) {
             $product->fromArray($row, '', true, true);
@@ -219,18 +242,24 @@ if (!empty($rows) && is_array($rows)) {
             }
             $row = $product->modifyFields($row);
         }
-        $row['price'] = $ms3->format->price($row['price']);
-        $row['old_price'] = $ms3->format->price($row['old_price']);
-        $row['weight'] = $ms3->format->price($row['weight']);
+//        $row['price'] = $ms3->format->price($row['price']);
+//        $row['old_price'] = $ms3->format->price($row['old_price']);
+//        $row['weight'] = $ms3->format->price($row['weight']);
         $row['idx'] = $pdoFetch->idx++;
 
         $opt_time_start = microtime(true);
-        $options = $modx->call('msProductOption', 'loadOptions', [$modx, $row['id']]);
+        $options = [];
+        if (!empty($includeOptions)) {
+            $options = $msProductOption->getForProduct($row['id'], $includedOptionKeys);
+        }
+
         $rows[$k] = $row = array_merge($additionalPlaceholders, $row, $options);
         $opt_time += microtime(true) - $opt_time_start;
 
-        $tpl = $pdoFetch->defineChunk($row);
-        $output[] = $pdoFetch->getChunk($tpl, $row);
+        if ($scriptProperties['return'] == 'data') {
+            $tpl = $pdoFetch->defineChunk($row);
+            $output[] = $pdoFetch->getChunk($tpl, $row);
+        }
     }
     $pdoFetch->addTime('Time to load products options', $opt_time);
 }

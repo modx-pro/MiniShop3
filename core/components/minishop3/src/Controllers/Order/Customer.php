@@ -90,7 +90,7 @@ class Customer
                     $customer->addMany($setting);
                     if (!$customer->save()) {
                         $customer = null;
-                    } elseif ($groups = $this->modx->getOption('ms_order_user_groups', null, false)) {
+                    } elseif ($groups = $this->modx->getOption('ms3_order_user_groups', null, false)) {
                         $groupRoles = array_map('trim', explode(',', $groups));
                         foreach ($groupRoles as $groupRole) {
                             $groupRole = explode(':', $groupRole);

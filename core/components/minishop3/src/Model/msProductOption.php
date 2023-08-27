@@ -126,19 +126,19 @@ class msProductOption extends xPDOObject
         $fields = [];
         /** @var xPDOQuery $c */
         $c = $this->prepareOptionListCriteria($product_id);
+        $c->sortby('msCategoryOption.position');
 
         $c->select([
-            $this->xpdo->getSelectColumns(msOption::class, 'msOption'),
+            $this->xpdo->getSelectColumns(msOption::class, '`msOption`'),
             $this->xpdo->getSelectColumns(
                 msCategoryOption::class,
-                'msCategoryOption',
+                '`msCategoryOption`',
                 '',
                 ['id', 'option_id', 'category_id'],
                 true
             ),
-            'Category.category AS category_name',
+            '`Category`.category AS `category_name`',
         ]);
-
         $options = $this->xpdo->getIterator(msOption::class, $c);
 
         /** @var msOption $option */
@@ -162,10 +162,7 @@ class msProductOption extends xPDOObject
     {
         /** @var xPDOQuery $c */
         $c = $this->prepareOptionListCriteria($product_id);
-
-        $c->groupby('msOption.id');
         $c->select('msOption.key');
-
         return $c->prepare() && $c->stmt->execute()
             ? $c->stmt->fetchAll(\PDO::FETCH_COLUMN)
             : [];
@@ -175,11 +172,16 @@ class msProductOption extends xPDOObject
      * @param int $product_id
      * @return array
      */
-    public function getForProduct($product_id)
+    public function getForProduct($product_id, $keys = [])
     {
         $c = $this->xpdo->newQuery(msProductOption::class, ['product_id' => $product_id]);
         $c->select('key,value');
         $c->sortby('value');
+        if (!empty($keys)) {
+            $c->where([
+                'key:IN' => $keys
+            ]);
+        }
         $value = [];
         if ($c->prepare() && $c->stmt->execute()) {
             while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -212,14 +214,13 @@ class msProductOption extends xPDOObject
         $categories = array_unique($categories);
 
         $c = $this->xpdo->newQuery(msOption::class);
-        $c->leftJoin(msCategoryOption::class, 'msCategoryOption', 'msCategoryOption.option_id = msOption.id');
-        $c->leftJoin(modCategory::class, 'Category', 'Category.id = msOption.category_id');
-        $c->sortby('msCategoryOption.position');
+        $c->leftJoin(msCategoryOption::class, '`msCategoryOption`', '`msCategoryOption`.option_id = `msOption`.id');
+        $c->leftJoin(modCategory::class, '`Category`', '`Category`.id = `msOption`.category_id');
         $c->where(['msCategoryOption.active' => 1]);
         if (!empty($categories[0])) {
-            $c->where(['msCategoryOption.category_id:IN' => $categories]);
+            $c->where(['`msCategoryOption`.category_id:IN' => $categories]);
         }
-        $c->groupby('msOption.id');
+        $c->groupby('`msOption`.id');
 
         return $c;
     }

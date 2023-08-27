@@ -44,7 +44,7 @@ class SessionCart extends Cart implements CartInterface
     {
         $cart = $this->get();
         if (empty($id) || !is_numeric($id)) {
-            return $this->error('ms_cart_add_err_id');
+            return $this->error('ms3_cart_add_err_id');
         }
         $count = intval($count);
         if (is_string($options)) {
@@ -64,11 +64,11 @@ class SessionCart extends Cart implements CartInterface
         /** @var msProduct $product */
         $product = $this->modx->getObject(msProduct::class, $filter);
         if (!$product) {
-            return $this->error('ms_cart_add_err_nf', $this->status());
+            return $this->error('ms3_cart_add_err_nf', $this->status());
         }
 
         if ($count > $this->config['max_count'] || $count <= 0) {
-            return $this->error('ms_cart_add_err_count', $this->status(), ['count' => $count]);
+            return $this->error('ms3_cart_add_err_count', $this->status(), ['count' => $count]);
         }
 
         /* You can prevent add of product to cart by adding some text to $modx->event->_output
@@ -110,8 +110,8 @@ class SessionCart extends Cart implements CartInterface
         }
 
         $ctx_key = 'web';
-        $ms_cart_context = (bool)$this->modx->getOption('ms_cart_context', null, '0', true);
-        if (!$ms_cart_context) {
+        $ms3_cart_context = (bool)$this->modx->getOption('ms3_cart_context', null, '0', true);
+        if (!$ms3_cart_context) {
             $ctx_key = $this->ctx;
         }
 
@@ -140,7 +140,7 @@ class SessionCart extends Cart implements CartInterface
 
         $status = $this->status(['key' => $key]);
         return $this->success(
-            'ms_cart_add_success',
+            'ms3_cart_add_success',
             $status,
             ['count' => $count]
         );
@@ -157,14 +157,14 @@ class SessionCart extends Cart implements CartInterface
         $cart = $this->get();
         $status = [];
         if (!array_key_exists($key, $cart)) {
-            return $this->error('ms_cart_change_error', $this->status($status));
+            return $this->error('ms3_cart_change_error', $this->status($status));
         }
         if ($count <= 0) {
             return $this->remove($key);
         }
 
         if ($count > $this->config['max_count']) {
-            return $this->error('ms_cart_add_err_count', $this->status(), ['count' => $count]);
+            return $this->error('ms3_cart_add_err_count', $this->status(), ['count' => $count]);
         }
 
         $eventParams = [
@@ -190,7 +190,7 @@ class SessionCart extends Cart implements CartInterface
         $status['cost'] = $count * $cart[$key]['price'];
 
         return $this->success(
-            'ms_cart_change_success',
+            'ms3_cart_change_success',
             $this->status($status),
             ['count' => $count]
         );
@@ -205,7 +205,7 @@ class SessionCart extends Cart implements CartInterface
     {
         $cart = $this->get();
         if (!array_key_exists($key, $cart)) {
-            return $this->error('ms_cart_remove_error');
+            return $this->error('ms3_cart_remove_error');
         }
         $eventParams = [
             'key' => $key,
@@ -222,7 +222,7 @@ class SessionCart extends Cart implements CartInterface
             return $this->error($response['message']);
         }
 
-        return $this->success('ms_cart_remove_success', $this->status());
+        return $this->success('ms3_cart_remove_success', $this->status());
     }
 
     /**
@@ -247,7 +247,7 @@ class SessionCart extends Cart implements CartInterface
             return $this->error($response['message']);
         }
 
-        return $this->success('ms_cart_clean_success', $this->status());
+        return $this->success('ms3_cart_clean_success', $this->status());
     }
 
     /**

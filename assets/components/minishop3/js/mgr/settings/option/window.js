@@ -46,7 +46,7 @@ Ext.extend(ms3.window.CreateOption, ms3.window.Default, {
                     const catField = Ext.getCmp(config.id + '-categories');
                     if (node && catField) {
                         let value;
-                        if (catField.getValue() == '[]') {
+                        if (catField.getValue() === '[]') {
                             value = {};
                         } else {
                             value = Ext.util.JSON.decode(catField.getValue());
@@ -123,6 +123,7 @@ Ext.extend(ms3.window.CreateOption, ms3.window.Default, {
                     xtype: 'modx-combo-category',
                     fieldLabel: _('ms3_ft_group'),
                     name: 'category_id',
+                    hiddenName: 'category_id',
                     anchor: '99%',
                     id: config.id + '-category_id',
                 }]

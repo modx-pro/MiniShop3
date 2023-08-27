@@ -21,14 +21,14 @@
             <meta itemprop="category" content="{$parent | resource: "pagetitle"}">
             <meta itemprop="name" content="{$pagetitle}">
             <meta itemprop="offerCount" content="1">
-            <meta itemprop="price" content="{$price | replace:" ":""}">
-            <meta itemprop="lowPrice" content="{$price | replace:" ":""}">
+            <meta itemprop="price" content="{$price}">
+            <meta itemprop="lowPrice" content="{$price}">
             <meta itemprop="priceCurrency" content="RUR">
 
             <div class="col-12 col-md-8 mt-2 mt-md-0 flex-grow-1">
                 <div class="d-flex justify-content-around justify-content-md-start">
                     <a href="{$id | url}" class="font-weight-bold">{$pagetitle}</a>
-                    <span class="price ml-md-3">{$price} {'ms3_frontend_currency' | lexicon}</span>
+                    <span class="price ml-md-3">{$price | } {'ms3_frontend_currency' | lexicon}</span>
                     {if $old_price?}
                         <span class="old_price ml-md-3">{$old_price} {'ms3_frontend_currency' | lexicon}</span>
                     {/if}

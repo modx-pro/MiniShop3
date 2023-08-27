@@ -296,7 +296,7 @@ ms3.utils.getExtField = function (config, key, option, context) {
         allowBlank: Boolean(1 - parseInt(option.required || 0)),
         enableKeyEvents: true,
         listeners: config.listeners || {},
-        category: option.category,
+        category_id: option.category_id,
         category_name: option.category_name,
         msgTarget: 'under',
     });

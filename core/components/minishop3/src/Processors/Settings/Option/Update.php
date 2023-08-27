@@ -50,6 +50,12 @@ class Update extends UpdateProcessor
         }
         $this->setProperty('key', $key);
 
+        $category = $this->getProperty('category');
+        $this->unsetProperty('category');
+        if (!empty($category)) {
+            $this->setProperty('category_id', $category);
+        }
+
         return parent::beforeSet();
     }
 

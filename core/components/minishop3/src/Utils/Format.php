@@ -24,13 +24,15 @@ class Format
      */
     public function date($date = '')
     {
-        $df = $this->modx->getOption('ms3_date_format', null, '%d.%m.%Y %H:%M');
+        $df = $this->modx->getOption('ms3_date_format', null, 'd.m.Y H:M');
 
-        return (!empty($date) && $date !== '0000-00-00 00:00:00')
-            ? strftime($df, strtotime($date))
-            : '&nbsp;';
+        if (!empty($date) && $date !== '0000-00-00 00:00:00') {
+            $date = date_create($date);
+            return date_format($date, $df);
+        }
+
+        return '&nbsp;';
     }
-
 
     /**
      * Function for price format
@@ -43,7 +45,7 @@ class Format
     {
         $format = json_decode($this->modx->getOption('ms3_price_format', null, '[2, ".", " "]'), true);
         if (!$format) {
-            $format = array(2, '.', ' ');
+            $format = [2, '.', ' '];
         }
         $price = number_format($price, $format[0], $format[1], $format[2]);
 
@@ -69,7 +71,7 @@ class Format
     {
         $format = json_decode($this->modx->getOption('ms3_weight_format', null, '[3, ".", " "]'), true);
         if (!$format) {
-            $format = array(3, '.', ' ');
+            $format = [3, '.', ' '];
         }
         $weight = number_format($weight, $format[0], $format[1], $format[2]);
 

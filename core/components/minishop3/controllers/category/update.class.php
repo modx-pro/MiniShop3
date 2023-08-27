@@ -42,7 +42,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $assetsUrl = $this->ms3->config['assetsUrl'];
 
         $category_option_keys = array();
-        $showOptions = (bool)$this->getOption('ms_category_show_options', null, true);
+        $showOptions = (bool)$this->getOption('ms3_category_show_options', null, true);
         if ($showOptions) {
             $category_option_keys = $this->resource->getOptionKeys();
         }
@@ -55,7 +55,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             array('actions', 'preview_url', 'cls', 'vendor_name', 'category_name')
         );
 
-        $category_grid_fields = $this->getOption('ms_category_grid_fields');
+        $category_grid_fields = $this->getOption('ms3_category_grid_fields');
         if (!$category_grid_fields) {
             $category_grid_fields = 'id,pagetitle,article,price,weight,image';
         }

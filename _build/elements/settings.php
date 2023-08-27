@@ -76,7 +76,7 @@ return [
         'area' => 'ms3_category',
     ],
     'ms3_product_extra_fields' => [
-        'value' => 'price,old_price,article,weight,color,size,vendor,made_in,tags,new,popular,favorite',
+        'value' => 'price,old_price,article,weight,color,size,vendor_id,made_in,tags,new,popular,favorite',
         'xtype' => 'textarea',
         'area' => 'ms3_product',
     ],
@@ -101,7 +101,7 @@ return [
         'area' => 'ms3_product',
     ],
     'ms3_product_thumbnail_default' => [
-        'value' => '{assets_url}components/minishop3/img/mgr/ms3_thumb.png',
+        'value' => '{assets_url}components/minishop3/img/mgr/ms3_small.png',
         'xtype' => 'textfield',
         'area' => 'ms3_product',
     ],
@@ -227,7 +227,7 @@ return [
         'area' => 'ms3_order',
     ],
     'ms3_date_format' => [
-        'value' => '%d.%m.%y <span class="gray">%H:%M</span>',
+        'value' => 'd.m.y H:M',
         'xtype' => 'textfield',
         'area' => 'ms3_order',
     ],

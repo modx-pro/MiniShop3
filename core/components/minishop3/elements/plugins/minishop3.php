@@ -1,6 +1,6 @@
 <?php
 
-/** @var modX $modx */
+/** @var \MODX\Revolution\modX $modx */
 
 use MiniShop3\Model\msCustomerProfile;
 use MiniShop3\Model\msOrder;
@@ -11,7 +11,8 @@ switch ($modx->event->name) {
     case 'OnMODXInit':
         // Load extensions
         /** @var \MiniShop3\MiniShop3 $ms3 */
-        if ($ms3 = $modx->services->get('ms3')) {
+        $ms3 = $modx->services->get('ms3');
+        if ($ms3) {
             $ms3->loadMap();
         }
         break;
@@ -19,11 +20,12 @@ switch ($modx->event->name) {
     case 'OnHandleRequest':
         // Handle ajax requests
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
-        if (empty($_REQUEST['ms_action']) || !$isAjax) {
+        if (empty($_REQUEST['ms3_action']) || !$isAjax) {
             return;
         }
         /** @var \MiniShop3\MiniShop3 $ms3 */
-        if ($ms3 = $modx->services->get('ms3')) {
+        $ms3 = $modx->services->get('ms3');
+        if ($ms3) {
             $response = $ms3->handleRequest($_REQUEST['ms3_action'], @$_POST);
             @session_write_close();
             exit($response);
@@ -46,7 +48,7 @@ switch ($modx->event->name) {
             $ms3->registerFrontend();
         }
         // Handle non-ajax requests
-        if (!empty($_REQUEST['ms_action'])) {
+        if (!empty($_REQUEST['ms3_action'])) {
             if ($ms3) {
                 $ms3->handleRequest($_REQUEST['ms3_action'], @$_POST);
             }

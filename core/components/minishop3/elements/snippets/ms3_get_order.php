@@ -23,7 +23,7 @@ if (empty($id)) {
 }
 /** @var msOrder $order */
 if (!$order = $modx->getObject('msOrder', compact('id'))) {
-    return $modx->lexicon('ms_err_order_nf');
+    return $modx->lexicon('ms3_err_order_nf');
 }
 $canView = (!empty($_SESSION['ms3']['orders']) && in_array($id, $_SESSION['ms3']['orders'])) ||
     $order->get('user_id') == $modx->user->id || $modx->user->hasSessionContext('mgr') || !empty($scriptProperties['id']);

@@ -72,8 +72,9 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
                 tabs.push(this.getProductCategories(config))
 
                 const optionsTab = this.getProductOptions(config)
+                console.log(optionsTab)
                 if (optionsTab) {
-                  tabs.push()
+                  tabs.push(optionsTab)
                 }
               }
 
@@ -146,17 +147,19 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
   getProductOptions: function (config) {
     const options = this.getOptionFields(config)
 
+    console.log(options)
+
     if (!options.length) {
       return false
     }
     const option_groups = []
     for (let i = 0; i < options.length; i++) {
-      let newGroup = true
+      let newGroup = true;
       for (let j = 0; j < option_groups.length; j++) {
-        if (option_groups[j].category == options[i].category) {
-          option_groups[j].items.push(options[i])
-          newGroup = false
-          break
+        if (option_groups[j].category === options[i].category) {
+          option_groups[j].items.push(options[i]);
+          newGroup = false;
+          break;
         }
       }
       if (newGroup) {
@@ -170,7 +173,7 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
             : _('ms3_ft_nogroup'),
           bodyCssClass: 'main-wrapper',
           items: [options[i]],
-        })
+        });
       }
     }
 
