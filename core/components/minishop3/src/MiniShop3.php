@@ -3,8 +3,8 @@
 namespace MiniShop3;
 
 use MiniShop3\Controllers\Cart\Cart;
+use MiniShop3\Controllers\Customer\Customer;
 use MiniShop3\Controllers\Options\Options;
-use MiniShop3\Controllers\Order\Customer;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
 use MiniShop3\Utils\Format;
@@ -26,6 +26,8 @@ class MiniShop3
     public $cart;
     /** @var Order $order */
     public $order;
+    /** @var Customer $customer */
+    public $customer;
     /** @var array $initialized */
     public $initialized = [];
 
@@ -39,7 +41,7 @@ class MiniShop3
     public $format;
 
     /** @var Services $services */
-    public $services;
+    private $services;
 
     /** @var Plugins $plugins */
     public $plugins;
@@ -86,78 +88,62 @@ class MiniShop3
 
         $this->utils = new Utils($this);
         $this->format = new Format($this);
-        //$this->services = new Services($this->modx);
+        $this->services = new Services($this);
         //$this->plugins = new Plugins($this);
         $this->options = new Options($this);
     }
 
+    public function setController($type, $controller)
+    {
+        $this->$type = $controller;
+    }
+
     public function registerFrontend($ctx = 'web')
     {
-        if ($ctx != 'mgr' && (!defined('MODX_API_MODE') || !MODX_API_MODE)) {
+        if ($ctx !== 'mgr' && (!defined('MODX_API_MODE') || !MODX_API_MODE)) {
             $this->modx->lexicon->load('minishop3:default');
 
             $config = $this->pdoFetch->makePlaceholders($this->config);
 
-            // Register CSS
-            $css = trim($this->modx->getOption('ms3_frontend_css'));
-            if (!empty($css) && preg_match('/\.css/i', $css)) {
-                if (preg_match('/\.css$/i', $css)) {
-                    $css .= '?v=' . substr(md5($this->version), 0, 10);
+            $assets = json_decode($this->modx->getOption('ms3_frontend_assets', null, '[]'), true);
+
+            if (!empty($assets)) {
+                foreach ($assets as $file) {
+                    if (!empty($file) && preg_match('/\.js/i', $file)) {
+                        $file = str_replace($config['pl'], $config['vl'], $file);
+                        //fix trouble with caching regClientScript
+                        if (!str_contains($this->modx->getRegisteredClientScripts(), $file)) {
+                            if (preg_match('/\.js$/i', $file)) {
+                                $file .= '?v=' . date('dmYHi', filemtime(MODX_BASE_PATH . ltrim($file, '/')));
+                            }
+                            $this->modx->regClientScript('<script src="' . $file . '" defer></script>', true);
+                        }
+                    }
+
+                    if (!empty($file) && preg_match('/\.css/i', $file)) {
+                        if (preg_match('/\.css$/i', $file)) {
+                            $file .= '?v=' . date('dmYHi', filemtime($file));
+                            $this->modx->regClientCSS(str_replace($config['pl'], $config['vl'], $file));
+                        }
+                    }
                 }
-                $this->modx->regClientCSS(str_replace($config['pl'], $config['vl'], $css));
             }
 
-            // Register notify plugin CSS
-            $message_css = trim($this->modx->getOption('ms3_frontend_message_css'));
-            if (!empty($message_css) && preg_match('/\.css/i', $message_css)) {
-                $this->modx->regClientCSS(str_replace($config['pl'], $config['vl'], $message_css));
-            }
+            $registerGlobalConfig = json_decode($this->modx->getOption('ms3_register_global_config', null, true), true);
+            if ($registerGlobalConfig) {
+                $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
+                $js_setting = [
+                    //'actionUrl' => rtrim($this->modx->getOption('site_url'), '/') . $this->config['actionUrl'],
+                    'actionUrl' => $this->modx->getOption('site_url'),
+                    'ctx' => $ctx,
+                    'tokenName' => $tokenName
+                ];
 
-            // Register JS
-            $js = trim($this->modx->getOption('ms3_frontend_js'));
-            if (!empty($js) && preg_match('/\.js/i', $js)) {
-                if (preg_match('/\.js$/i', $js)) {
-                    $js .= '?v=' . substr(md5($this->version), 0, 10);
-                }
-                $this->modx->regClientScript(str_replace($config['pl'], $config['vl'], $js));
-            }
-
-            $message_setting = [
-                'close_all_message' => $this->modx->lexicon('ms3_message_close_all'),
-            ];
-
-            $js_setting = [
-                'cssUrl' => $this->config['cssUrl'] . 'web/',
-                'jsUrl' => $this->config['jsUrl'] . 'web/',
-                'actionUrl' => $this->config['actionUrl'],
-                'ctx' => $ctx,
-                'price_format' => json_decode(
-                    $this->modx->getOption('ms3_price_format', null, '[2, ".", " "]'),
+                $data = json_encode($js_setting, JSON_UNESCAPED_UNICODE);
+                $this->modx->regClientStartupScript(
+                    '<script>ms3Config = ' . $data . ';</script>',
                     true
-                ),
-                'price_format_no_zeros' => (bool)$this->modx->getOption('ms3_price_format_no_zeros', null, true),
-                'weight_format' => json_decode(
-                    $this->modx->getOption('ms3_weight_format', null, '[3, ".", " "]'),
-                    true
-                ),
-                'weight_format_no_zeros' => (bool)$this->modx->getOption('ms3_weight_format_no_zeros', null, true),
-            ];
-
-            $data = json_encode(array_merge($message_setting, $js_setting), true);
-            $this->modx->regClientStartupScript(
-                '<script>miniShopConfig = ' . $data . ';</script>',
-                true
-            );
-
-            // Register notify plugin JS
-            $message_js = trim($this->modx->getOption('ms3_frontend_message_js'));
-            if (!empty($message_js) && preg_match('/\.js/i', $message_js)) {
-                $this->modx->regClientScript(str_replace($config['pl'], $config['vl'], $message_js));
-            }
-
-            $message_settings_js = trim($this->modx->getOption('ms3_frontend_message_js_settings'));
-            if (!empty($message_settings_js) && preg_match('/\.js/i', $message_settings_js)) {
-                $this->modx->regClientScript(str_replace($config['pl'], $config['vl'], $message_settings_js));
+                );
             }
         }
     }
@@ -178,10 +164,12 @@ class MiniShop3
         if ($ctx != 'web') {
             $this->modx->switchContext($ctx);
         }
-        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
-        $this->initialize($ctx, ['json_response' => $isAjax]);
+        $this->initialize($ctx);
 
         switch ($action) {
+            case 'customer/token/get':
+                $response = $this->customer->generateToken();
+                break;
             case 'cart/add':
                 $response = $this->cart->add(@$data['id'], @$data['count'], @$data['options']);
                 break;
@@ -222,7 +210,7 @@ class MiniShop3
                 $message = ($data['ms3_action'] != $action)
                     ? 'ms3_err_register_globals'
                     : 'ms3_err_unknown';
-                $response = $this->error($message);
+                $response = $this->utils->error($message);
         }
 
         return $response;
@@ -245,8 +233,7 @@ class MiniShop3
         $this->config['ctx'] = $ctx;
         $this->modx->lexicon->load('minishop3:default');
 
-        //$load = $this->services->load($ctx);
-        $load = true;
+        $load = $this->services->load($ctx);
         $this->initialized[$ctx] = $load;
 
         return $load;
@@ -278,72 +265,22 @@ class MiniShop3
 //                }
 //            }
         } else {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, 'pdoTools not installed, metadata for miniShop3 objects not loaded');
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                'pdoTools not installed, metadata for miniShop3 objects not loaded'
+            );
         }
     }
 
-    public function changeOrderStatus($order_id, $status_id)
-    {
-        $orderStatus = new OrderStatus($this);
-        $orderStatus->change($order_id, $status_id);
-    }
+//    public function changeOrderStatus($order_id, $status_id)
+//    {
+//        $orderStatus = new OrderStatus($this);
+//        $orderStatus->change($order_id, $status_id);
+//    }
 
-    public function getCustomerId()
-    {
-        $customer = new Customer($this);
-        return $customer->getId();
-    }
-
-    /**
-     * Load custom classes from specified directory
-     *
-     * @return void
-     * @var string $type Type of class
-     *
-     */
-    public function loadCustomClasses($type)
-    {
-        // Original classes
-//        $files = scandir($this->config['customPath'] . $type);
-//        foreach ($files as $file) {
-//            if (preg_match('/.*?\.class\.php$/i', $file)) {
-//                include_once($this->config['customPath'] . $type . '/' . $file);
-//            }
-//        }
-//
-//        // 3rd party classes
-//        $type = strtolower($type);
-//        $placeholders = [
-//            'base_path' => MODX_BASE_PATH,
-//            'core_path' => MODX_CORE_PATH,
-//            'assets_path' => MODX_ASSETS_PATH,
-//        ];
-//        $pl1 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[+', ']]', false);
-//        $pl2 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[++', ']]', false);
-//        $pl3 = $this->pdoFetch->makePlaceholders($placeholders, '', '{', '}', false);
-//        $services = $this->services->get();
-//        if (!empty($services[$type]) && is_array($services[$type])) {
-//            foreach ($services[$type] as $controller) {
-//                if (is_string($controller)) {
-//                    $file = $controller;
-//                } elseif (is_array($controller) && !empty($controller['controller'])) {
-//                    $file = $controller['controller'];
-//                } else {
-//                    continue;
-//                }
-//
-//                $file = str_replace($pl1['pl'], $pl1['vl'], $file);
-//                $file = str_replace($pl2['pl'], $pl2['vl'], $file);
-//                $file = str_replace($pl3['pl'], $pl3['vl'], $file);
-//                if (strpos($file, MODX_BASE_PATH) === false && strpos($file, MODX_CORE_PATH) === false) {
-//                    $file = MODX_BASE_PATH . ltrim($file, '/');
-//                }
-//                if (file_exists($file)) {
-//                    include_once($file);
-//                } else {
-//                    $this->modx->log(modX::LOG_LEVEL_ERROR, "[miniShop3] Could not load custom class at \"$file\"");
-//                }
-//            }
-//        }
-    }
+//    public function getCustomerId()
+//    {
+//        $customer = new Customer($this);
+//        return $customer->getId();
+//    }
 }

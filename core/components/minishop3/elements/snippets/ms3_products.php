@@ -47,7 +47,6 @@ $groupby = [
 // Join tables
 $leftJoin = [
     'Data' => ['class' => msProductData::class],
-    'Vendor' => ['class' => msVendor::class, 'on' => '`Data`.vendor_id=Vendor.id'],
 ];
 
 $select = [
@@ -55,8 +54,18 @@ $select = [
         ? $modx->getSelectColumns(msProduct::class, 'msProduct')
         : $modx->getSelectColumns(msProduct::class, 'msProduct', '', ['content'], true),
     'Data' => $modx->getSelectColumns(msProductData::class, '`Data`', '', ['id'], true),
-    'Vendor' => $modx->getSelectColumns(msVendor::class, '`Vendor`', 'vendor.', ['id'], true),
 ];
+
+if (!empty($scriptProperties['includeVendor'])) {
+    $includeVendorKeys = array_map('trim', explode(',', $scriptProperties['includeVendor']));
+    $leftJoin['Vendor'] = ['class' => msVendor::class, 'on' => '`Data`.vendor_id=Vendor.id'];
+
+    if ($includeVendorKeys[0] === '*') {
+        $select['Vendor'] = $modx->getSelectColumns(msVendor::class, '`Vendor`', 'vendor_', ['id'], true);
+    } else {
+        $select['Vendor'] = $modx->getSelectColumns(msVendor::class, '`Vendor`', 'vendor_', $includeVendorKeys);
+    }
+}
 
 // Include thumbnails
 if (!empty($includeThumbs)) {

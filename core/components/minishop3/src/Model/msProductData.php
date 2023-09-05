@@ -487,7 +487,7 @@ class msProductData extends xPDOSimpleObject
             'data' => $data,
             'price' => $price,
         ];
-        $response = $this->ms3->invokeEvent('msOnGetProductPrice', $params);
+        $response = $this->ms3->utils->invokeEvent('msOnGetProductPrice', $params);
         if ($response['success']) {
             $price = $params['price'] = $response['data']['price'];
         }
@@ -513,7 +513,7 @@ class msProductData extends xPDOSimpleObject
             'data' => $data,
             'weight' => $weight,
         ];
-        $response = $this->ms3->invokeEvent('msOnGetProductWeight', $params);
+        $response = $this->ms3->utils->invokeEvent('msOnGetProductWeight', $params);
         if ($response['success']) {
             $weight = $params['weight'] = $response['data']['weight'];
         }
@@ -534,7 +534,7 @@ class msProductData extends xPDOSimpleObject
             'product' => $this,
             'data' => $data,
         ];
-        $response = $this->ms3->invokeEvent('msOnGetProductFields', $params);
+        $response = $this->ms3->utils->invokeEvent('msOnGetProductFields', $params);
         if ($response['success']) {
             unset($response['data']['product']);
             $data = array_merge($data, $response['data']);

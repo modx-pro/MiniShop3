@@ -27,8 +27,10 @@ switch ($modx->event->name) {
         $ms3 = $modx->services->get('ms3');
         if ($ms3) {
             $response = $ms3->handleRequest($_REQUEST['ms3_action'], @$_POST);
-            @session_write_close();
-            exit($response);
+
+            $modx->log(1, print_r($response, 1));
+            echo $response;
+            exit();
         }
         break;
 
@@ -43,8 +45,8 @@ switch ($modx->event->name) {
     case 'OnLoadWebDocument':
         /** @var \MiniShop3\MiniShop3 $ms3 */
         $ms3 = $modx->services->get('ms3');
-        $registerFrontend = $modx->getOption('ms3_register_frontend', null, '1');
-        if ($ms3 && $registerFrontend) {
+        if ($ms3) {
+            $ms3->initialize();
             $ms3->registerFrontend();
         }
         // Handle non-ajax requests

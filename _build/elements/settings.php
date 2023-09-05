@@ -29,11 +29,6 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_main',
     ],
-    'ms3_tmp_storage' => [
-        'value' => 'session',
-        'xtype' => 'textfield',
-        'area' => 'ms3_main',
-    ],
 
     'ms3_category_grid_fields' => [
         'value' => 'id,menuindex,pagetitle,article,price,thumb,new,favorite,popular',
@@ -41,11 +36,6 @@ return [
         'area' => 'ms3_category',
     ],
     'ms3_category_show_nested_products' => [
-        'value' => true,
-        'xtype' => 'combo-boolean',
-        'area' => 'ms3_category',
-    ],
-    'ms3_category_show_comments' => [
         'value' => true,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_category',
@@ -78,11 +68,6 @@ return [
     'ms3_product_extra_fields' => [
         'value' => 'price,old_price,article,weight,color,size,vendor_id,made_in,tags,new,popular,favorite',
         'xtype' => 'textarea',
-        'area' => 'ms3_product',
-    ],
-    'ms3_product_show_comments' => [
-        'value' => true,
-        'xtype' => 'combo-boolean',
         'area' => 'ms3_product',
     ],
     'ms3_template_product_default' => [
@@ -172,7 +157,7 @@ return [
         'area' => 'ms3_cart',
     ],
     'ms3_cart_context' => [
-        'value' => '',
+        'value' => false,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_cart',
     ],
@@ -182,7 +167,7 @@ return [
         'area' => 'ms3_cart',
     ],
     'ms3_order_format_num' => [
-        'value' => '%y%m',
+        'value' => 'ym',
         'xtype' => 'textfield',
         'area' => 'ms3_order',
     ],
@@ -237,31 +222,31 @@ return [
         'area' => 'ms3_order',
     ],
 
-    'ms3_frontend_css' => [
-        'value' => '[[+cssUrl]]web/default.css',
-        'xtype' => 'textfield',
-        'area' => 'ms3_frontend',
-    ],
-    'ms3_frontend_message_css' => [
-        'value' => '[[+cssUrl]]web/lib/jquery.jgrowl.min.css',
-        'xtype' => 'textfield',
-        'area' => 'ms3_frontend',
-    ],
-    'ms3_frontend_js' => [
-        'value' => '[[+jsUrl]]web/default.js',
-        'xtype' => 'textfield',
-        'area' => 'ms3_frontend',
-    ],
-    'ms3_frontend_message_js' => [
-        'value' => '[[+jsUrl]]web/lib/jquery.jgrowl.min.js',
-        'xtype' => 'textfield',
-        'area' => 'ms3_frontend',
-    ],
-    'ms3_frontend_message_js_settings' => [
-        'value' => '[[+jsUrl]]web/message_settings.js',
-        'xtype' => 'textfield',
-        'area' => 'ms3_frontend',
-    ],
+//    'ms3_frontend_css' => [
+//        'value' => '[[+cssUrl]]web/default.css',
+//        'xtype' => 'textfield',
+//        'area' => 'ms3_frontend',
+//    ],
+//    'ms3_frontend_message_css' => [
+//        'value' => '[[+cssUrl]]web/lib/jquery.jgrowl.min.css',
+//        'xtype' => 'textfield',
+//        'area' => 'ms3_frontend',
+//    ],
+//    'ms3_frontend_js' => [
+//        'value' => '[[+jsUrl]]web/default.js',
+//        'xtype' => 'textfield',
+//        'area' => 'ms3_frontend',
+//    ],
+//    'ms3_frontend_message_js' => [
+//        'value' => '[[+jsUrl]]web/lib/jquery.jgrowl.min.js',
+//        'xtype' => 'textfield',
+//        'area' => 'ms3_frontend',
+//    ],
+//    'ms3_frontend_message_js_settings' => [
+//        'value' => '[[+jsUrl]]web/message_settings.js',
+//        'xtype' => 'textfield',
+//        'area' => 'ms3_frontend',
+//    ],
     'ms3_register_frontend' => [
         'value' => true,
         'xtype' => 'combo-boolean',
