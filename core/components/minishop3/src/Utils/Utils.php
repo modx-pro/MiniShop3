@@ -110,15 +110,15 @@ class Utils
      */
     public function error($message = '', $data = [], $placeholders = [])
     {
-        $response = [
+        return [
             'success' => false,
             'message' => $this->modx->lexicon($message, $placeholders),
             'data' => $data,
         ];
 
-        return $this->ms3->config['json_response']
-            ? json_encode($response)
-            : $response;
+//        return $this->ms3->config['json_response']
+//            ? json_encode($response)
+//            : $response;
     }
 
     /**
@@ -132,15 +132,14 @@ class Utils
      */
     public function success($message = '', $data = [], $placeholders = [])
     {
-        $response = [
+        return [
             'success' => true,
             'message' => $this->modx->lexicon($message, $placeholders),
             'data' => $data,
         ];
-
-        return $this->ms3->config['json_response']
-            ? json_encode($response)
-            : $response;
+//        return $this->ms3->config['json_response']
+//            ? json_encode($response)
+//            : $response;
     }
 
     /**

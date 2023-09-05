@@ -233,7 +233,7 @@
 
     <object class="msOrder" table="ms3_orders" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
-        <field key="session_id" dbtype="varchar" precision="32" phptype="string" null="false" default=""/>
+        <field key="token" dbtype="varchar" precision="32" phptype="string" null="false" default=""/>
         <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="updatedon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="num" dbtype="varchar" precision="20" phptype="string" null="true" default=""/>
@@ -254,8 +254,8 @@
         <index alias="user_id" name="user_id" primary="false" unique="false" type="BTREE">
             <column key="user_id" length="" collation="A" null="false"/>
         </index>
-        <index alias="session_id" name="session_id" primary="false" unique="false" type="BTREE">
-            <column key="session_id" length="" collation="A" null="false"/>
+        <index alias="token" name="token" primary="false" unique="false" type="BTREE">
+            <column key="token" length="" collation="A" null="false"/>
         </index>
         <index alias="status_id" name="status_id" primary="false" unique="false" type="BTREE">
             <column key="status_id" length="" collation="A" null="false"/>
@@ -369,6 +369,7 @@
     <object class="msOrderProduct" table="ms3_order_products" extends="xPDO\Om\xPDOSimpleObject">
         <field key="product_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false"/>
         <field key="order_id" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false"/>
+        <field key="product_key" dbtype="varchar" precision="34" phptype="string" null="false"/>
         <field key="name" dbtype="varchar" precision="255" phptype="string" null="true"/>
         <field key="count" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="true" default="1"/>
         <field key="price" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>

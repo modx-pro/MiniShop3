@@ -15,8 +15,8 @@ class msOrder extends \MiniShop3\Model\msOrder
             ],
         'fields' =>
             [
-                'user_id' => null,
-                'session_id' => '',
+                'user_id' => 0,
+                'token' => '',
                 'createdon' => null,
                 'updatedon' => null,
                 'num' => '',
@@ -39,15 +39,15 @@ class msOrder extends \MiniShop3\Model\msOrder
                         'precision' => '10',
                         'attributes' => 'unsigned',
                         'phptype' => 'integer',
-                        'null' => false,
+                        'null' => true,
+                        'default' => 0,
                     ],
-                'session_id' =>
+                'token' =>
                     [
                         'dbtype' => 'varchar',
                         'precision' => '32',
                         'phptype' => 'string',
                         'null' => false,
-                        'default' => '',
                     ],
                 'createdon' =>
                     [
@@ -167,15 +167,15 @@ class msOrder extends \MiniShop3\Model\msOrder
                                     ],
                             ],
                     ],
-                'session_id' =>
+                'token' =>
                     [
-                        'alias' => 'session_id',
+                        'alias' => 'token',
                         'primary' => false,
                         'unique' => false,
                         'type' => 'BTREE',
                         'columns' =>
                             [
-                                'session_id' =>
+                                'token' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',

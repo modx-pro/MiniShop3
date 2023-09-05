@@ -27,8 +27,10 @@ switch ($modx->event->name) {
         $ms3 = $modx->services->get('ms3');
         if ($ms3) {
             $response = $ms3->handleRequest($_REQUEST['ms3_action'], @$_POST);
-
             $modx->log(1, print_r($response, 1));
+            if (is_array($response)) {
+                $response = json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
             echo $response;
             exit();
         }

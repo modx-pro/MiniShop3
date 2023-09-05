@@ -17,6 +17,7 @@ class msOrderProduct extends \MiniShop3\Model\msOrderProduct
             [
                 'product_id' => null,
                 'order_id' => null,
+                'product_key' => null,
                 'name' => null,
                 'count' => 1,
                 'price' => 0.0,
@@ -41,6 +42,13 @@ class msOrderProduct extends \MiniShop3\Model\msOrderProduct
                         'precision' => '10',
                         'phptype' => 'integer',
                         'attributes' => 'unsigned',
+                        'null' => false,
+                    ],
+                'product_key' =>
+                    [
+                        'dbtype' => 'varchar',
+                        'precision' => '34',
+                        'phptype' => 'string',
                         'null' => false,
                     ],
                 'name' =>
@@ -123,6 +131,22 @@ class msOrderProduct extends \MiniShop3\Model\msOrderProduct
                         'columns' =>
                             [
                                 'order_id' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                            ],
+                    ],
+                'product_key' =>
+                    [
+                        'alias' => 'product_key',
+                        'primary' => false,
+                        'unique' => false,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'product_key' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',

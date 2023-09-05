@@ -1,6 +1,6 @@
 <?php
 
-namespace MiniShop3\Controllers\Order;
+namespace MiniShop3\Controllers\Customer;
 
 use MiniShop3\MiniShop3;
 use MODX\Revolution\modUser;
@@ -14,13 +14,31 @@ class Customer
     public $modx;
     /** @var MiniShop3 $ms3 */
     public $ms3;
+    /** @var array $config */
+    public $config = [];
 
-    public function __construct(MiniShop3 $ms3)
+    /**
+     * Cart constructor.
+     *
+     * @param MiniShop3 $ms3
+     * @param array $config
+     */
+    public function __construct(MiniShop3 $ms3, array $config = [])
     {
         $this->ms3 = $ms3;
         $this->modx = $ms3->modx;
 
-        $this->modx->lexicon->load('minishop3:default');
+        $this->config = array_merge([
+
+        ], $config);
+        //$this->modx->lexicon->load('minishop3:cart');
+    }
+
+    public function generateToken()
+    {
+        $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
+        $token = md5(rand() . $tokenName);
+        return $this->success('', ['token' => $token]);
     }
 
     /**
@@ -121,5 +139,33 @@ class Customer
         return $customer instanceof modUser
             ? $customer->get('id')
             : 0;
+    }
+
+    /**
+     * Shorthand for ms3 error method
+     *
+     * @param string $message
+     * @param array $data
+     * @param array $placeholders
+     *
+     * @return array|string
+     */
+    protected function error($message = '', $data = [], $placeholders = [])
+    {
+        return $this->ms3->utils->error($message, $data, $placeholders);
+    }
+
+    /**
+     * Shorthand for ms3 success method
+     *
+     * @param string $message
+     * @param array $data
+     * @param array $placeholders
+     *
+     * @return array|string
+     */
+    protected function success($message = '', $data = [], $placeholders = [])
+    {
+        return $this->ms3->utils->success($message, $data, $placeholders);
     }
 }
