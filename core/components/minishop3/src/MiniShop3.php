@@ -12,7 +12,9 @@ use MiniShop3\Utils\Plugins;
 use MiniShop3\Utils\Services;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\modX;
+use ModxPro\PdoTools\CoreTools;
 use ModxPro\PdoTools\Fetch;
+use xPDO\xPDO;
 
 class MiniShop3
 {
@@ -22,6 +24,8 @@ class MiniShop3
     public $modx;
     /** @var Fetch $pdoFetch */
     public $pdoFetch;
+    /** @var CoreTools $pdoTools */
+    public $pdoTools;
     /** @var Cart $cart */
     public $cart;
     /** @var Order $order */
@@ -85,6 +89,12 @@ class MiniShop3
         if ($this->pdoFetch) {
             $this->pdoFetch->setConfig($this->config);
         }
+        if ($this->modx->services->has(CoreTools::class)) {
+            $this->pdoTools = $this->modx->services->get(CoreTools::class);
+        }
+        if ($this->pdoFetch) {
+            $this->pdoTools->setConfig($this->config);
+        }
 
         $this->utils = new Utils($this);
         $this->format = new Format($this);
@@ -136,7 +146,10 @@ class MiniShop3
                     //'actionUrl' => rtrim($this->modx->getOption('site_url'), '/') . $this->config['actionUrl'],
                     'actionUrl' => $this->modx->getOption('site_url'),
                     'ctx' => $ctx,
-                    'tokenName' => $tokenName
+                    'tokenName' => $tokenName,
+                    'render' => [
+                        'cart' => []
+                    ]
                 ];
 
                 $data = json_encode($js_setting, JSON_UNESCAPED_UNICODE);
@@ -166,26 +179,34 @@ class MiniShop3
         }
         $this->initialize($ctx);
 
+        $token = !empty($_SERVER['HTTP_MS3TOKEN']) ? $_SERVER['HTTP_MS3TOKEN'] : '';
+
         switch ($action) {
             case 'customer/token/get':
                 $response = $this->customer->generateToken();
                 break;
             case 'cart/add':
+                $this->cart->initialize($ctx, $token);
                 $response = $this->cart->add(@$data['id'], @$data['count'], @$data['options']);
                 break;
             case 'cart/change':
-                $response = $this->cart->change(@$data['key'], @$data['count']);
+                $this->cart->initialize($ctx, $token);
+                $response = $this->cart->change(@$data['product_key'], @$data['count']);
                 break;
             case 'cart/changeOption':
-                $response = $this->cart->changeOption(@$data['key'], @$data['count']);
+                $this->cart->initialize($ctx, $token);
+                $response = $this->cart->changeOption(@$data['product_key'], @$data['count']);
                 break;
             case 'cart/remove':
-                $response = $this->cart->remove(@$data['key']);
+                $this->cart->initialize($ctx, $token);
+                $response = $this->cart->remove(@$data['product_key']);
                 break;
             case 'cart/clean':
+                $this->cart->initialize($ctx, $token);
                 $response = $this->cart->clean();
                 break;
             case 'cart/get':
+                $this->cart->initialize($ctx, $token);
                 $response = $this->cart->get();
                 break;
             case 'order/add':
@@ -283,4 +304,27 @@ class MiniShop3
 //        $customer = new Customer($this);
 //        return $customer->getId();
 //    }
+
+    public function registerSnippet($scriptProperties)
+    {
+        //TODO секрет в системные настройки, плюс в билдер
+        $secret = 'modx64ca89bab06551.54872401';
+        $token = 'ms3' . md5(json_encode($scriptProperties) . $secret);
+
+        $propertiesExists = $this->modx->cacheManager->get($token, [xPDO::OPT_CACHE_KEY => 'ms3/msCart']);
+        if (!$propertiesExists) {
+            $options = [
+                xPDO::OPT_CACHE_KEY => 'ms3/msCart',
+            ];
+
+            //TODO Время хранения кэша в системные настройки
+            $this->modx->cacheManager->set($token, $scriptProperties, 0, $options);
+        }
+
+        $selector = '".msCartWrapper"';
+        $this->modx->regClientStartupScript(
+            '<script>ms3Config.render.cart.push({token:"' . $token . '", selector: ' . $selector . '})</script>',
+            true
+        );
+    }
 }

@@ -1,16 +1,6 @@
 ms3.request = {
     headers: {},
     baseurl: '',
-    init () {
-        document.addEventListener('submit', event => {
-            if (event.target.classList.contains('ms3_form')) {
-                event.preventDefault()
-                const form = event.target
-                const formData = new FormData(form)
-                ms3.request.send(formData)
-            }
-        })
-    },
     async send (formData) {
         const response = await this.post(formData)
         console.log(response)
@@ -21,7 +11,6 @@ ms3.request = {
             this.setHeaders()
             const url = new URL(this.baseurl)
             url.search = new URLSearchParams(formData).toString()
-            console.log(this.headers)
             const response = await fetch(url, {
                 method: 'GET',
                 headers: this.headers

@@ -1,6 +1,11 @@
 <?php
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msProduct;
+use MiniShop3\Model\msProductData;
+use MiniShop3\Model\msProductFile;
+use MiniShop3\Model\msProductOption;
+use MiniShop3\Model\msVendor;
 use ModxPro\PdoTools\Fetch;
 
 /** @var modX $modx */
@@ -9,6 +14,14 @@ use ModxPro\PdoTools\Fetch;
 
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
+$token = $_SESSION['ms3']['customer_token'];
+if (empty($token)) {
+    $response = $ms3->customer->generateToken();
+    $token = $response['data']['token'];
+}
+$ms3->cart->initialize($modx->context->key, $token);
+//TODO Как то передать название сниппета, в т.ч путь для файлового
+$ms3->registerSnippet($scriptProperties);
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
@@ -29,28 +42,29 @@ $where = [
     'msProduct.id:IN' => [],
 ];
 foreach ($cart as $entry) {
-    $where['msProduct.id:IN'][] = $entry['id'];
+    $where['msProduct.id:IN'][] = $entry['product_id'];
 }
 $where['msProduct.id:IN'] = array_unique($where['msProduct.id:IN']);
 
 // Include products properties
 $leftJoin = [
     'Data' => [
-        'class' => 'msProductData',
+        'class' => msProductData::class,
     ],
     'Vendor' => [
-        'class' => 'msVendor',
-        'on' => 'Data.vendor = Vendor.id',
+        'class' => msVendor::class,
+        'on' => 'Data.vendor_id = Vendor.id',
     ],
 ];
 
+//TODO Поля вендор сделать выборочными
 // Select columns
 $select = [
     'msProduct' => !empty($includeContent)
-        ? $modx->getSelectColumns('msProduct', 'msProduct')
-        : $modx->getSelectColumns('msProduct', 'msProduct', '', ['content'], true),
-    'Data' => $modx->getSelectColumns('msProductData', 'Data', '', ['id'], true),
-    'Vendor' => $modx->getSelectColumns('msVendor', 'Vendor', 'vendor.', ['id'], true),
+        ? $modx->getSelectColumns(msProduct::class, 'msProduct')
+        : $modx->getSelectColumns(msProduct::class, 'msProduct', '', ['content'], true),
+    'Data' => $modx->getSelectColumns(msProductData::class, 'Data', '', ['id'], true),
+    'Vendor' => $modx->getSelectColumns(msVendor::class, 'Vendor', 'vendor.', ['id'], true),
 ];
 
 // Include products thumbnails
@@ -59,8 +73,8 @@ if (!empty($includeThumbs)) {
     if (!empty($thumbs[0])) {
         foreach ($thumbs as $thumb) {
             $leftJoin[$thumb] = [
-                'class' => 'msProductFile',
-                'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.parent != 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%' AND `{$thumb}`.`rank` = 0",
+                'class' => msProductFile::class,
+                'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.parent_id != 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%' AND `{$thumb}`.`position` = 0",
             ];
             $select[$thumb] = "`{$thumb}`.url as '{$thumb}'";
         }
@@ -84,7 +98,7 @@ foreach (['where', 'leftJoin', 'select'] as $v) {
 $pdoFetch->addTime('Conditions prepared');
 
 $default = [
-    'class' => 'msProduct',
+    'class' => msProduct::class,
     'where' => $where,
     'leftJoin' => $leftJoin,
     'select' => $select,
@@ -108,12 +122,12 @@ foreach ($tmp as $row) {
 $products = [];
 $total = ['count' => 0, 'weight' => 0, 'cost' => 0, 'discount' => 0];
 foreach ($cart as $key => $entry) {
-    if (!isset($rows[$entry['id']])) {
+    if (!isset($rows[$entry['product_id']])) {
         continue;
     }
-    $product = $rows[$entry['id']];
+    $product = $rows[$entry['product_id']];
 
-    $product['key'] = $key;
+    $product['product_key'] = $key;
     $product['count'] = $entry['count'];
     $old_price = $product['old_price'];
     if ($product['price'] > $entry['price'] && empty($product['old_price'])) {
@@ -121,12 +135,13 @@ foreach ($cart as $key => $entry) {
     }
     $discount_price = $old_price > 0 ? $old_price - $entry['price'] : 0;
 
-    $product['old_price'] = $ms3->format->price($old_price);
-    $product['price'] = $ms3->format->price($entry['price']);
-    $product['weight'] = $ms3->format->weight($entry['weight']);
-    $product['cost'] = $ms3->format->price($entry['count'] * $entry['price']);
+    $product['old_price'] = $old_price;
+    $product['price'] = $entry['price'];
+    $product['weight'] = $entry['weight'];
+    $product['cost'] = $entry['count'] * $entry['price'];
     $product['discount_price'] = $ms3->format->price($discount_price);
-    $product['discount_cost'] = $ms3->format->price($entry['count'] * $discount_price);
+    $product['discount_price'] = $discount_price;
+    $product['discount_cost'] = $entry['count'] * $discount_price;
 
     // Additional properties of product in cart
     if (!empty($entry['options']) && is_array($entry['options'])) {
@@ -137,7 +152,7 @@ foreach ($cart as $key => $entry) {
     }
 
     // Add option values
-    $options = $modx->call('msProductOption', 'loadOptions', [$modx, $product['id']]);
+    $options = $modx->call(msProductOption::class, 'loadOptions', [$modx, $product['product_id']]);
     $products[] = array_merge($product, $options);
 
     // Count total
@@ -146,9 +161,6 @@ foreach ($cart as $key => $entry) {
     $total['weight'] += $entry['count'] * $entry['weight'];
     $total['discount'] += $entry['count'] * $discount_price;
 }
-$total['cost'] = $ms3->format->price($total['cost']);
-$total['discount'] = $ms3->format->price($total['discount']);
-$total['weight'] = $ms3->format->weight($total['weight']);
 
 $output = $pdoFetch->getChunk($tpl, [
     'total' => $total,

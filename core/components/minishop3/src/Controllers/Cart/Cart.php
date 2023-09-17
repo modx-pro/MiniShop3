@@ -8,6 +8,7 @@ use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
 use MODX\Revolution\modX;
+use xPDO\xPDO;
 
 class Cart
 {
@@ -20,6 +21,9 @@ class Cart
     /** @var array $cart */
     protected $cart;
     protected $ctx = 'web';
+    /** @var msOrder $draft */
+    protected $token = '';
+    protected $draft;
 
     /**
      * Cart constructor.
@@ -52,14 +56,54 @@ class Cart
      *
      * @return bool
      */
-    public function initialize($ctx = 'web')
+    public function initialize($ctx = 'web', $token = '')
     {
+        if (empty($token)) {
+            return false;
+        }
         $ms3_cart_context = (bool)$this->modx->getOption('ms3_cart_context', null, '0', true);
         if ($ms3_cart_context) {
             $ctx = 'web';
         }
         $this->ctx = $ctx;
+        $this->token = $token;
         return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function initDraft()
+    {
+        if (empty($this->token)) {
+            return false;
+        }
+        $this->draft = $this->getDraft($this->token);
+        if (empty($this->draft)) {
+            $this->draft = $this->newDraft($this->token);
+        }
+        $this->cart = $this->loadCart($this->draft);
+        return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function get()
+    {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+        $this->initDraft();
+
+        $cart = [];
+        foreach ($this->cart as $key => $item) {
+            if (empty($item['ctx']) || $item['ctx'] == $this->ctx) {
+                $cart[$key] = $item;
+            }
+        }
+
+        return $cart;
     }
 
     /**
@@ -71,15 +115,10 @@ class Cart
      */
     public function add($id, $count = 1, $options = [])
     {
-        if (empty($_SERVER['HTTP_MS3TOKEN'])) {
+        if (empty($this->token)) {
             return $this->error('ms3_err_token');
         }
-        /** @var msOrder $draft */
-        $draft = $this->getDraft($_SERVER['HTTP_MS3TOKEN']);
-        if (empty($draft)) {
-            $draft = $this->newDraft($_SERVER['HTTP_MS3TOKEN']);
-        }
-        $cart = $this->loadCart($draft);
+        $this->initDraft();
         if (empty($id) || !is_numeric($id)) {
             return $this->error('ms3_cart_add_err_id');
         }
@@ -101,11 +140,11 @@ class Cart
         /** @var msProduct $msProduct */
         $msProduct = $this->modx->getObject(msProduct::class, $filter);
         if (!$msProduct) {
-            //return $this->error('ms3_cart_add_err_nf', $this->status());
+            return $this->error('ms3_cart_add_err_nf', $this->status());
         }
 
         if ($count > $this->config['max_count'] || $count <= 0) {
-            //return $this->error('ms3_cart_add_err_count', $this->status(), ['count' => $count]);
+            return $this->error('ms3_cart_add_err_count', $this->status(), ['count' => $count]);
         }
 
         $response = $this->invokeEvent('msOnBeforeAddToCart', [
@@ -124,10 +163,10 @@ class Cart
         $options = $response['data']['options'];
         $discount_price = $oldPrice > 0 ? $oldPrice - $price : 0;
         $discount_cost = $discount_price * $count;
-        $key = $this->getProductKey($msProduct->toArray(), $options);
+        $product_key = $this->getProductKey($msProduct->toArray(), $options);
 
-        if (array_key_exists($key, $cart)) {
-            return $this->change($key, $cart[$key]['count'] + $count);
+        if (array_key_exists($product_key, $this->cart)) {
+            return $this->change($product_key, $this->cart[$product_key]['count'] + $count);
         }
         $ctx_key = 'web';
         $ms3_cart_context = (bool)$this->modx->getOption('ms3_cart_context', null, '0', true);
@@ -148,7 +187,7 @@ class Cart
 
         $productData = [
             'product_id' => $id,
-            'product_key' => $key,
+            'product_key' => $product_key,
             'name' => $msProduct->get('pagetitle'),
             'count' => $count,
             'price' => $price,
@@ -160,46 +199,53 @@ class Cart
         $msOrderProduct->fromArray($productData);
 
         $products[] = $msOrderProduct;
-        $draft->addMany($products);
-        $draft->save();
+        $this->draft->addMany($products);
+        $this->draft->save();
 
-        $this->restrictDraft($draft);
+        $this->restrictDraft($this->draft);
+        $this->cart = $this->get();
 
-        $response = $this->invokeEvent('msOnAddToCart', ['key' => $key, 'cart' => $this]);
+        $response = $this->invokeEvent('msOnAddToCart', ['key' => $product_key, 'cart' => $this]);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
 
+        $data = [];
+
+        if (!empty($_POST['render'])) {
+            $renderItems = json_decode($_POST['render'], true);
+            if (is_array($renderItems) && !empty($renderItems['cart'])) {
+                foreach ($renderItems['cart'] as $item) {
+                    $data['render']['cart'][$item['token']]['render'] = $this->render($item['token']);
+                    $data['render']['cart'][$item['token']]['selector'] = $item['selector'];
+                }
+            }
+        }
+
+//        $data['key'] = $key;
+//        $data['cart'] = $this->cart;
+//        $data['row'] = $this->cart[$key];
+
         return $this->success(
             'ms3_cart_add_success',
-            $this->status([
-                'key' => $key,
-                'cart' => $cart,
-                'row' => $cart[$key]
-            ]),
+            $this->status($data),
             ['count' => $count]
         );
     }
 
-    public function change($key, $count)
+    public function change($product_key, $count)
     {
-        if (empty($_SERVER['HTTP_MS3TOKEN'])) {
+        if (empty($this->token)) {
             return $this->error('ms3_err_token');
         }
-        /** @var msOrder $draft */
-        $draft = $this->getDraft($_SERVER['HTTP_MS3TOKEN']);
-        if (empty($draft)) {
-            $draft = $this->newDraft($_SERVER['HTTP_MS3TOKEN']);
-        }
-
-        $cart = $this->loadCart($draft);
+        $this->initDraft();
         $status = [];
-        if (!array_key_exists($key, $cart)) {
+        if (!array_key_exists($product_key, $this->cart)) {
             return $this->error('ms3_cart_change_error', $this->status($status));
         }
 
         if ($count <= 0) {
-            return $this->remove($key);
+            return $this->remove($product_key);
         }
 
         if ($count > $this->config['max_count']) {
@@ -208,45 +254,164 @@ class Cart
 
         $response = $this->invokeEvent(
             'msOnBeforeChangeInCart',
-            ['key' => $key, 'count' => $count, 'cart' => $this]
+            ['product_key' => $product_key, 'count' => $count, 'cart' => $this]
         );
         if (!$response['success']) {
             return $this->error($response['message']);
         }
         $count = $response['data']['count'];
 
-        foreach ($draft->getMany('Products') as $product) {
-            if ($key === $product->get('product_key')) {
+        foreach ($this->draft->getMany('Products') as $product) {
+            if ($product_key === $product->get('product_key')) {
                 $price = $product->get('price');
                 $product->set('count', $count);
                 $product->set('cost', $price * $count);
                 $product->save();
+                break;
             }
         }
-        $draft->save();
-        $this->restrictDraft($draft);
+        $this->draft->save();
+        $this->restrictDraft($this->draft);
+        $this->cart = $this->get();
 
         $response = $this->invokeEvent(
             'msOnChangeInCart',
-            ['key' => $key, 'count' => $count, 'cart' => $this]
+            ['product_key' => $product_key, 'count' => $count, 'cart' => $this]
         );
         if (!$response['success']) {
             return $this->error($response['message']);
         }
-        $status['key'] = $key;
-        $status['cost'] = $count * $cart[$key]['price'];
-        $status['cart'] = $cart;
-        $status['row'] = $cart[$key];
+
+        $data = [];
+
+        if (!empty($_POST['render'])) {
+            $renderItems = json_decode($_POST['render'], true);
+            if (is_array($renderItems) && !empty($renderItems['cart'])) {
+                foreach ($renderItems['cart'] as $item) {
+                    $data['render']['cart'][$item['token']]['render'] = $this->render($item['token']);
+                    $data['render']['cart'][$item['token']]['selector'] = $item['selector'];
+                }
+            }
+        }
+
+//        $status['key'] = $key;
+//        $status['cost'] = $count * $this->cart[$key]['price'];
+//        $status['cart'] = $this->cart;
+//        $status['row'] = $this->cart[$key];
 
         return $this->success(
             'ms3_cart_change_success',
-            $this->status($status),
+            $data,
             ['count' => $count]
         );
     }
 
-    public function remove($key)
+    public function remove($product_key)
     {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+        $this->initDraft();
+        $status = [];
+        if (!array_key_exists($product_key, $this->cart)) {
+            return $this->error('ms3_cart_change_error', $this->status($status));
+        }
+
+        $response = $this->ms3->utils->invokeEvent(
+            'msOnBeforeRemoveFromCart',
+            ['product_key' => $product_key, 'cart' => $this]
+        );
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
+
+        foreach ($this->draft->getMany('Products') as $product) {
+            if ($product_key === $product->get('product_key')) {
+                $product->remove();
+                break;
+            }
+        }
+
+        $count = $this->modx->getCount(msOrderProduct::class, ['order_id' => $this->draft->get('id')]);
+        if ($count === 0) {
+            $this->draft->remove();
+        } else {
+            $this->draft->save();
+            $this->restrictDraft($this->draft);
+        }
+        $this->cart = $this->get();
+
+        $response = $this->ms3->utils->invokeEvent(
+            'msOnRemoveFromCart',
+            ['product_key' => $product_key, 'cart' => $this]
+        );
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
+
+        $data = [];
+
+        if (!empty($_POST['render'])) {
+            $renderItems = json_decode($_POST['render'], true);
+            if (is_array($renderItems) && !empty($renderItems['cart'])) {
+                foreach ($renderItems['cart'] as $item) {
+                    $data['render']['cart'][$item['token']]['render'] = $this->render($item['token']);
+                    $data['render']['cart'][$item['token']]['selector'] = $item['selector'];
+                }
+            }
+        }
+
+//        $status['key'] = $key;
+//        $status['cost'] = $count * $this->cart[$key]['price'];
+//        $status['cart'] = $this->cart;
+//        $status['row'] = $this->cart[$key];
+
+        return $this->success(
+            'ms3_cart_remove_success',
+            $data,
+            ['count' => $count]
+        );
+    }
+
+    public function clean()
+    {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+        $this->initDraft();
+
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeEmptyCart', ['cart' => $this]);
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
+
+        if ($this->draft) {
+            $this->draft->remove();
+        }
+
+        $this->cart = [];
+
+        $response = $this->ms3->utils->invokeEvent('msOnEmptyCart', ['cart' => $this]);
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
+
+        $data = [];
+
+        if (!empty($_POST['render'])) {
+            $renderItems = json_decode($_POST['render'], true);
+            if (is_array($renderItems) && !empty($renderItems['cart'])) {
+                foreach ($renderItems['cart'] as $item) {
+                    $data['render']['cart'][$item['token']]['render'] = $this->render($item['token']);
+                    $data['render']['cart'][$item['token']]['selector'] = $item['selector'];
+                }
+            }
+        }
+
+        return $this->success(
+            'ms3_cart_clean_success',
+            $data
+        );
     }
 
     /**
@@ -261,7 +426,7 @@ class Cart
             'total_cost' => 0,
             'total_weight' => 0,
             'total_discount' => 0,
-            'total_positions' => count([]),
+            'total_positions' => count($this->cart),
         ];
         foreach ($this->cart as $item) {
             if (empty($item['ctx']) || $item['ctx'] == $this->ctx) {
@@ -326,6 +491,7 @@ class Cart
     protected function newDraft($token)
     {
         $status_draft = $this->modx->getOption('ms3_status_draft', null, 1);
+        /** @var msOrder $msOrder */
         $msOrder = $this->modx->newObject(msOrder::class);
         $data = [
             'token' => $token,
@@ -356,7 +522,7 @@ class Cart
      * @param msOrder $draft
      * @return []
      */
-    protected function loadCart($draft)
+    public function loadCart($draft)
     {
         $output = [];
         //TODO Оптимизировать через newQUery
@@ -372,7 +538,7 @@ class Cart
         return $output;
     }
 
-    protected function restrictDraft($draft)
+    public function restrictDraft($draft)
     {
         //TODO событие до перерасчета заказа
         $products = $draft->getMany('Products');
@@ -434,5 +600,16 @@ class Cart
     protected function invokeEvent(string $eventName, array $params = [])
     {
         return $this->ms3->utils->invokeEvent($eventName, $params);
+    }
+
+    protected function render($token)
+    {
+        $properties = $this->modx->cacheManager->get($token, [xPDO::OPT_CACHE_KEY => 'ms3/msCart']);
+        if ($properties) {
+            //TODO Текущий контекст
+            $this->modx->context->key = 'web';
+            return $this->ms3->pdoTools->runSnippet('msCart', $properties);
+        }
+        return '';
     }
 }

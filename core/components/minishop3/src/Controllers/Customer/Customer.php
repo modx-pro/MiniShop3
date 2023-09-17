@@ -38,6 +38,7 @@ class Customer
     {
         $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
         $token = md5(rand() . $tokenName);
+        $_SESSION['ms3']['customer_token'] = $token;
         return $this->success('', ['token' => $token]);
     }
 
