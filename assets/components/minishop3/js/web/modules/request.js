@@ -3,7 +3,9 @@ ms3.request = {
     baseurl: '',
     async send (formData) {
         const response = await this.post(formData)
-        console.log(response)
+        const event = new Event('ms3_send_success')
+        document.dispatchEvent(event)
+        return response;
     },
     async get (formData = new FormData()) {
         try {

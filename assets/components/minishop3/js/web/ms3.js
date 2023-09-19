@@ -4,6 +4,7 @@ const ms3 = {
         this.config = window.ms3Config
         this.checkToken()
         ms3.form.init();
+        ms3.cart.init();
     },
     checkToken () {
         let ms3Token = localStorage.getItem(ms3.config.tokenName)
@@ -27,5 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 document.addEventListener('ms3_send_success', () => {
-    ms3.init()
+    //Время на перерисовку DOM
+    setTimeout(() => {
+        ms3.cart.init();
+    }, 300)
 })

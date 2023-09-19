@@ -414,6 +414,97 @@ class Cart
         );
     }
 
+    public function changeOption($product_key, $options)
+    {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+        $this->initDraft();
+        $status = [];
+        if (!array_key_exists($product_key, $this->cart)) {
+            return $this->error('ms3_cart_change_error', $this->status($status));
+        }
+
+        if (empty($options)) {
+            return $this->error('ms3_cart_change_options_error', $this->status($status));
+        }
+
+        //TODO добавить событие в базу
+        $response = $this->invokeEvent(
+            'msOnBeforeChangeOptionsInCart',
+            ['product_key' => $product_key, 'options' => $options, 'cart' => $this]
+        );
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
+        $count = $response['data']['count'];
+
+        foreach ($this->draft->getMany('Products') as $product) {
+            if ($product_key === $product->get('product_key')) {
+                $orderProductOptions = $product->get('options');
+                $count = $product->get('count');
+
+                foreach ($options as $key => $value) {
+                    if (!empty($value)) {
+                        $orderProductOptions[$key] = $value;
+                    } else {
+                        unset($orderProductOptions[$key]);
+                    }
+                }
+
+                $product_key = $this->getProductKey($product->Product->toArray(), $orderProductOptions);
+
+                if (array_key_exists($product_key, $this->cart)) {
+                    $product->remove();
+                    return $this->change($product_key, $this->cart[$product_key]['count'] + $count);
+                }
+
+                $product->set('product_key', $product_key);
+                $product->set('options', $orderProductOptions);
+                $product->save();
+
+                break;
+            }
+        }
+
+        $this->draft->save();
+        $this->restrictDraft($this->draft);
+        $this->cart = $this->get();
+
+        //TODO добавить событие в базу
+        //TODO добавить старый ключ, новый ключ ?
+        $response = $this->invokeEvent(
+            'msOnChangeOptionInCart',
+            ['product_key' => $product_key, 'options' => $options, 'cart' => $this]
+        );
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
+
+        $data = [];
+
+        if (!empty($_POST['render'])) {
+            $renderItems = json_decode($_POST['render'], true);
+            if (is_array($renderItems) && !empty($renderItems['cart'])) {
+                foreach ($renderItems['cart'] as $item) {
+                    $data['render']['cart'][$item['token']]['render'] = $this->render($item['token']);
+                    $data['render']['cart'][$item['token']]['selector'] = $item['selector'];
+                }
+            }
+        }
+
+//        $status['key'] = $key;
+//        $status['cost'] = $count * $this->cart[$key]['price'];
+//        $status['cart'] = $this->cart;
+//        $status['row'] = $this->cart[$key];
+
+        return $this->success(
+            'ms3_cart_change_success',
+            $data,
+            ['count' => $count]
+        );
+    }
+
     /**
      * @param array $data
      *

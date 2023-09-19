@@ -195,7 +195,7 @@ class MiniShop3
                 break;
             case 'cart/changeOption':
                 $this->cart->initialize($ctx, $token);
-                $response = $this->cart->changeOption(@$data['product_key'], @$data['count']);
+                $response = $this->cart->changeOption(@$data['product_key'], @$data['options']);
                 break;
             case 'cart/remove':
                 $this->cart->initialize($ctx, $token);
