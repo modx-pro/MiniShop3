@@ -321,9 +321,21 @@ class MiniShop3
             $this->modx->cacheManager->set($token, $scriptProperties, 0, $options);
         }
 
-        $selector = '".msCartWrapper"';
+        $output = [];
+        $output['token'] = $token;
+
+        if ($scriptProperties['selector']) {
+            $selector = $scriptProperties['selector'];
+            $output['selector'] = $selector;
+        }
+
+//        $this->modx->regClientStartupScript(
+//            '<script>ms3Config.render.cart.push({token:"' . $token . '", selector: ' . $selector . '})</script>',
+//            true
+//        );
+
         $this->modx->regClientStartupScript(
-            '<script>ms3Config.render.cart.push({token:"' . $token . '", selector: ' . $selector . '})</script>',
+            '<script>ms3Config.render.cart.push( ' . json_encode($output) . ')</script>',
             true
         );
     }

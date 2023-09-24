@@ -222,36 +222,32 @@ return [
         'area' => 'ms3_order',
     ],
 
-//    'ms3_frontend_css' => [
-//        'value' => '[[+cssUrl]]web/default.css',
-//        'xtype' => 'textfield',
-//        'area' => 'ms3_frontend',
-//    ],
-//    'ms3_frontend_message_css' => [
-//        'value' => '[[+cssUrl]]web/lib/jquery.jgrowl.min.css',
-//        'xtype' => 'textfield',
-//        'area' => 'ms3_frontend',
-//    ],
-//    'ms3_frontend_js' => [
-//        'value' => '[[+jsUrl]]web/default.js',
-//        'xtype' => 'textfield',
-//        'area' => 'ms3_frontend',
-//    ],
-//    'ms3_frontend_message_js' => [
-//        'value' => '[[+jsUrl]]web/lib/jquery.jgrowl.min.js',
-//        'xtype' => 'textfield',
-//        'area' => 'ms3_frontend',
-//    ],
-//    'ms3_frontend_message_js_settings' => [
-//        'value' => '[[+jsUrl]]web/message_settings.js',
-//        'xtype' => 'textfield',
-//        'area' => 'ms3_frontend',
-//    ],
-    'ms3_register_frontend' => [
+    'ms3_token_name' => [
+        'value' => 'ms3_token',
+        'xtype' => 'textfield',
+        'area' => 'ms3_frontend',
+    ],
+    'ms3_register_global_config' => [
         'value' => true,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_frontend',
     ],
+    'ms3_frontend_assets' => [
+        'value' => '[
+            "[[+jsUrl]]web\/ms3.js",
+            "[[+jsUrl]]web\/modules\/form.js",
+            "[[+jsUrl]]web\/modules\/request.js", 
+            "[[+jsUrl]]web\/modules\/callback.js", 
+            "[[+jsUrl]]web\/modules\/cart.js"
+        ]',
+        'xtype' => 'textarea',
+        'area' => 'ms3_frontend',
+    ],
+//    'ms3_register_frontend' => [
+//        'value' => true,
+//        'xtype' => 'combo-boolean',
+//        'area' => 'ms3_frontend',
+//    ],
     'ms3_status_draft' => [
         'value' => 0,
         'xtype' => 'numberfield',

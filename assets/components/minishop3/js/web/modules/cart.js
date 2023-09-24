@@ -12,32 +12,37 @@ ms3.cart = {
         }
     },
     async add (formData) {
+        formData.append('ms3_action', 'cart/add')
         const response = await ms3.request.send(formData)
-        if (response.data.render.cart !== undefined) {
+        if (response.data.render !== undefined && response.data.render.cart !== undefined) {
             ms3.callback.cart.render(response)
         }
     },
     async change (formData) {
+        formData.append('ms3_action', 'cart/change')
         const response = await ms3.request.send(formData)
-        if (response.data.render.cart !== undefined) {
+        if (response.data.render !== undefined && response.data.render.cart !== undefined) {
             ms3.callback.cart.render(response)
         }
     },
     async remove (formData) {
+        formData.append('ms3_action', 'cart/remove')
         const response = await ms3.request.send(formData)
-        if (response.data.render.cart !== undefined) {
+        if (response.data.render !== undefined && response.data.render.cart !== undefined) {
             ms3.callback.cart.render(response)
         }
     },
     async clean (formData) {
+        formData.append('ms3_action', 'cart/clean')
         const response = await ms3.request.send(formData)
-        if (response.data.render.cart !== undefined) {
+        if (response.data.render !== undefined && response.data.render.cart !== undefined) {
             ms3.callback.cart.render(response)
         }
     },
     async changeOption (formData) {
+        formData.append('ms3_action', 'cart/changeOption')
         const response =  await ms3.request.send(formData)
-        if (response.data.render.cart !== undefined) {
+        if (response.data.render !== undefined && response.data.render.cart !== undefined) {
             ms3.callback.cart.render(response)
         }
     },

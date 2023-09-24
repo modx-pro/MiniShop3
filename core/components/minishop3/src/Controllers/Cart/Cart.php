@@ -429,7 +429,6 @@ class Cart
             return $this->error('ms3_cart_change_options_error', $this->status($status));
         }
 
-        //TODO добавить событие в базу
         $response = $this->invokeEvent(
             'msOnBeforeChangeOptionsInCart',
             ['product_key' => $product_key, 'options' => $options, 'cart' => $this]
@@ -471,7 +470,6 @@ class Cart
         $this->restrictDraft($this->draft);
         $this->cart = $this->get();
 
-        //TODO добавить событие в базу
         //TODO добавить старый ключ, новый ключ ?
         $response = $this->invokeEvent(
             'msOnChangeOptionInCart',
@@ -699,7 +697,9 @@ class Cart
         if ($properties) {
             //TODO Текущий контекст
             $this->modx->context->key = 'web';
-            return $this->ms3->pdoTools->runSnippet('msCart', $properties);
+            // TODO запуск сниппета, изначально указанного при вызове
+            $snippet = !empty($properties['runSnippet']) ? $properties['runSnippet'] : 'msCart';
+            return $this->ms3->pdoTools->runSnippet($snippet, $properties);
         }
         return '';
     }
