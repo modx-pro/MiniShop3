@@ -115,13 +115,13 @@ if ($transport->xpdo) {
                     $key = '';
                     switch ($id) {
                         case '1':
-                            $key = 'ms2_status_draft';
+                            $key = 'ms3_status_draft';
                             break;
                         case '2':
-                            $key = 'ms2_status_new';
+                            $key = 'ms3_status_new';
                             break;
                         case '3':
-                            $key = 'ms2_status_paid';
+                            $key = 'ms3_status_paid';
                             break;
                     }
                     if (empty($key)) {
@@ -141,7 +141,7 @@ if ($transport->xpdo) {
             break;
 
         case xPDOTransport::ACTION_UNINSTALL:
-            $modx->removeCollection('msOrderStatus', []);
+            $modx->removeCollection(msOrderStatus::class, []);
             break;
     }
 }

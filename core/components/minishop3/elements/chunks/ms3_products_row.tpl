@@ -6,6 +6,7 @@
         <input type="hidden" name="id" value="{$id}">
         <input type="hidden" name="count" value="1">
         <input type="hidden" name="options" value="[]">
+        <input type="hidden" name="ms3_action" value="cart/add">
         <div class="col-md-2 text-center text-md-left">
             <a href="{$id | url}">
                 {if $thumb?}
@@ -28,7 +29,7 @@
             <div class="col-12 col-md-8 mt-2 mt-md-0 flex-grow-1">
                 <div class="d-flex justify-content-around justify-content-md-start">
                     <a href="{$id | url}" class="font-weight-bold">{$pagetitle}</a>
-                    <span class="price ml-md-3">{$price | } {'ms3_frontend_currency' | lexicon}</span>
+                    <span class="price ml-md-3">{$price} {'ms3_frontend_currency' | lexicon}</span>
                     {if $old_price?}
                         <span class="old_price ml-md-3">{$old_price} {'ms3_frontend_currency' | lexicon}</span>
                     {/if}
@@ -51,7 +52,7 @@
                 {/if}
             </div>
             <div class="col-12 col-md-4 mt-2 mt-md-0 text-center text-md-right">
-                <button class="btn btn-primary" type="submit" name="ms3_action" value="cart/add">
+                <button class="btn btn-primary" type="submit">
                     {'ms3_frontend_add_to_cart' | lexicon}
                 </button>
             </div>

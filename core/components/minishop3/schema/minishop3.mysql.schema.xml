@@ -457,7 +457,7 @@
         <index alias="caption_ft" name="caption_ft" primary="false" unique="false" type="FULLTEXT">
             <column key="caption" length="" collation="A" null="false"/>
         </index>
-        <index alias="category" name="category_id" primary="false" unique="false" type="BTREE">
+        <index alias="category_id" name="category_id" primary="false" unique="false" type="BTREE">
             <column key="category_id" length="" collation="A" null="false"/>
         </index>
         <index alias="type" name="key" primary="false" unique="false" type="BTREE">

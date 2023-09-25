@@ -168,7 +168,7 @@ $_lang['ms3_tab_product_gallery'] = 'Галерея';
 $_lang['ms3_order_status_draft'] = 'Черновик';
 $_lang['ms3_order_status_new'] = 'Новый';
 $_lang['ms3_order_status_paid'] = 'Оплачен';
-$_lang['ms3_order_status_send'] = 'Отправлен';
+$_lang['ms3_order_status_sent'] = 'Отправлен';
 $_lang['ms3_order_status_cancelled'] = 'Отменен';
 
 $_lang['ms3_order_delivery_self'] = 'Самовывоз';

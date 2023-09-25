@@ -113,15 +113,15 @@ class msOption extends \MiniShop3\Model\msOption
                                     ],
                             ],
                     ],
-                'category' =>
+                'category_id' =>
                     [
-                        'alias' => 'category',
+                        'alias' => 'category_id',
                         'primary' => false,
                         'unique' => false,
                         'type' => 'BTREE',
                         'columns' =>
                             [
-                                'category' =>
+                                'category_id' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',

@@ -208,6 +208,7 @@ class MiniShop3
             case 'cart/get':
                 $this->cart->initialize($ctx, $token);
                 $response = $this->cart->get();
+                $response = $this->utils->success($response);
                 break;
             case 'order/add':
                 $response = $this->order->add(@$data['key'], @$data['value']);
