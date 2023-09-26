@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'msOnBeforeGetCart',
+    'msOnGetCart',
     'msOnBeforeAddToCart',
     'msOnAddToCart',
     'msOnBeforeChangeInCart',
