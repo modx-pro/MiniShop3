@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Processors\Order;
 
+use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MODX\Revolution\Processors\Model\UpdateProcessor;
 use MODX\Revolution\Validation\modValidator;
@@ -36,6 +37,7 @@ class Update extends UpdateProcessor
      */
     public function process()
     {
+        /** @var MiniShop3 $ms3 */
         $ms3 = $this->modx->services->get('ms3');
 
         /* Run the beforeSet method before setting the fields, and allow stoppage */
@@ -75,10 +77,11 @@ class Update extends UpdateProcessor
 
         // set "new status"
         if ($this->object->get('status_id') != $this->status_id) {
-            $change_status = $ms3->changeOrderStatus($this->object->get('id'), $this->status_id);
-            if ($change_status !== true) {
-                return $this->failure($change_status);
-            }
+            //TODO Реализовать ChangeOrderStatus
+//            $change_status = $ms3->changeOrderStatus($this->object->get('id'), $this->status_id);
+//            if ($change_status !== true) {
+//                return $this->failure($change_status);
+//            }
             $this->object = $this->modx->getObject($this->classKey, $this->object->get('id'), false);
         }
 

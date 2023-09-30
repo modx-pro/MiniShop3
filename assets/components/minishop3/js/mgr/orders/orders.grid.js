@@ -3,6 +3,7 @@ ms3.grid.Orders = function (config) {
     if (!config.id) {
         config.id = 'ms3-grid-orders';
     }
+    config.disableContextMenuAction = true;
 
     Ext.applyIf(config, {
         baseParams: {

@@ -683,9 +683,9 @@ ms3.combo.Status = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        name: 'status',
+        name: 'status_id',
         id: 'ms3-combo-status',
-        hiddenName: 'status',
+        hiddenName: 'status_id',
         displayField: 'name',
         valueField: 'id',
         fields: ['id', 'name'],
@@ -693,7 +693,7 @@ ms3.combo.Status = function (config) {
         emptyText: _('ms3_combo_select_status'),
         url: ms3.config.connector_url,
         baseParams: {
-            action: 'MiniShop3\\Processors\\Status\\GetList',
+            action: 'MiniShop3\\Processors\\Settings\\Status\\GetList',
             combo: true,
             addall: config.addall || 0,
             order_id: config.order_id || 0
@@ -710,9 +710,9 @@ ms3.combo.Delivery = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        name: 'delivery',
+        name: 'delivery_id',
         id: 'ms3-combo-delivery',
-        hiddenName: 'delivery',
+        hiddenName: 'delivery_id',
         displayField: 'name',
         valueField: 'id',
         fields: ['id', 'name'],
@@ -735,9 +735,9 @@ ms3.combo.Payment = function (config) {
     config = config || {};
 
     Ext.applyIf(config, {
-        name: 'payment',
+        name: 'payment_id',
         id: 'ms3-combo-payment',
-        hiddenName: 'payment',
+        hiddenName: 'payment_id',
         displayField: 'name',
         valueField: 'id',
         fields: ['id', 'name'],

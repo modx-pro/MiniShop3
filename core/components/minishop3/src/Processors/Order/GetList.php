@@ -43,8 +43,10 @@ class GetList extends GetListProcessor
         $c = $this->modx->newQuery($this->classKey);
         $c = $this->prepareQueryBeforeCount($c);
         $c = $this->prepareQueryAfterCount($c);
+
+        $c->prepare();
         return [
-            'results' => ($c->prepare() && $c->stmt->execute()) ? $c->stmt->fetchAll(\PDO::FETCH_ASSOC) : [],
+            'results' => ( $c->stmt->execute()) ? $c->stmt->fetchAll(\PDO::FETCH_ASSOC) : [],
             'total' => (int)$this->getProperty('total'),
         ];
     }
@@ -61,7 +63,7 @@ class GetList extends GetListProcessor
         $c->leftJoin(msOrderStatus::class, 'Status');
         $c->leftJoin(msDelivery::class, 'Delivery');
         $c->leftJoin(msPayment::class, 'Payment');
-        $c->leftJoin(msOrderAddress::class, 'Address');
+        $c->leftJoin(msOrderAddress::class, 'Address', 'Address.order_id = msOrder.id');
 
         $query = trim($this->getProperty('query'));
         if (!empty($query)) {
@@ -113,11 +115,11 @@ class GetList extends GetListProcessor
         $exclude = ['status_id', 'delivery_id', 'payment_id'];
         $c->select(
             $this->modx->getSelectColumns(msOrder::class, 'msOrder', '', $exclude, true) . ',
-            msOrder.status_id, msOrder.delivery_id, msOrder.payment_id,
-            UserProfile.fullname as customer, User.username as customer_username,
-            Status.name as status_name, Status.color, Delivery.name as delivery_name, Payment.name as payment_name'
+            `msOrder`.status_id, `msOrder`.delivery_id, `msOrder`.payment_id,
+            `UserProfile`.fullname as `customer`, `User`.username as `customer_username`,
+            `Status`.name as `status_name`, `Status`.color, `Delivery`.name as `delivery_name`, `Payment`.name as `payment_name`'
         );
-        $c->groupby($this->classKey . '.id');
+        $c->groupby('msOrder.id');
 
         return $c;
     }
@@ -138,13 +140,14 @@ class GetList extends GetListProcessor
         $sortClassKey = $this->getSortClassKey();
         $sortKey = $this->modx->getSelectColumns(
             $sortClassKey,
-            $this->getProperty('sortAlias', $sortClassKey),
+            $this->getProperty('sortAlias', 'msOrder'),
             '',
             [$this->getProperty('sort')]
         );
         if (empty($sortKey)) {
             $sortKey = $this->getProperty('sort');
         }
+
         $q->sortby($sortKey, $this->getProperty('dir'));
         if ($limit > 0) {
             $q->limit($limit, $start);

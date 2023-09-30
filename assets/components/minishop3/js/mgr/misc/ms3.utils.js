@@ -7,8 +7,7 @@ ms3.utils.formatDate = function (string) {
         const date = /^[0-9]+$/.test(string)
             ? new Date(string * 1000)
             : new Date(string.replace(/(\d+)-(\d+)-(\d+)/, '$2/$3/$1'));
-
-        return date.strftime(MODx.config['ms3_date_format']);
+        return date.toLocaleDateString()
     } else {
         return '&nbsp;';
     }

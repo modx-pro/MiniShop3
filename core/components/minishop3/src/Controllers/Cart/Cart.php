@@ -693,6 +693,7 @@ class Cart
         $cost = $cart_cost + $delivery_cost;
 
         //TODO событие перерасчета заказа
+        $draft->set('updatedon', time());
         $draft->set('cart_cost', $cart_cost);
         $draft->set('cost', $cost);
         $draft->set('weight', $weight);

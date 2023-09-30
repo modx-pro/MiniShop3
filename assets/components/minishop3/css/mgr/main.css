@@ -195,3 +195,8 @@ a.x-menu-item .x-menu-item-text .icon { line-height: 16px; top: auto; }
 .option-in-extra-column.option-xdatetime.x-no-time .x-datetime-wrap {
     margin-top: 0px;
 }
+.ms3-window .x-tab-strip-active {
+    border-left: 1px solid #F4F4F4;
+    border-right: 1px solid #F4F4F4;
+    box-shadow: 0 -3px 0 #3697cd, -1px 0 0 transparent;
+}
