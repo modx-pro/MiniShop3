@@ -180,6 +180,12 @@ class MiniShop3
         $this->initialize($ctx);
 
         $token = !empty($_SERVER['HTTP_MS3TOKEN']) ? $_SERVER['HTTP_MS3TOKEN'] : '';
+        if (!empty($token)) {
+            if (empty($_SESSION['ms3'])) {
+                $_SESSION['ms3'] = [];
+            }
+            $_SESSION['ms3']['customer_token'] = $token;
+        }
 
         switch ($action) {
             case 'customer/token/get':

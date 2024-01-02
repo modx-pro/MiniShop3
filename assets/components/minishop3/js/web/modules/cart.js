@@ -60,6 +60,7 @@ ms3.cart = {
         const $btn = event.target
         const form = $btn.closest('.ms3_form')
         const input = form.querySelector('.qty-input')
+
         let quantity = parseInt(input.value)
         if ($btn.classList.contains('inc-qty')) {
             quantity = quantity + 1

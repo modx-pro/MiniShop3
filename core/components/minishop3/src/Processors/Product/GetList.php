@@ -279,7 +279,7 @@ class GetList extends GetListProcessor
             }
             //Regenerate image
             $array['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-refresh',
                 'title' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
                 'multiple' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),

@@ -194,7 +194,6 @@ class Cart
         $discount_price = $oldPrice > 0 ? $oldPrice - $price : 0;
         $discount_cost = $discount_price * $count;
         $product_key = $this->getProductKey($msProduct->toArray(), $options);
-
         if (array_key_exists($product_key, $this->cart)) {
             return $this->change($product_key, $this->cart[$product_key]['count'] + $count);
         }
@@ -255,6 +254,7 @@ class Cart
         $data['last_key'] = $product_key;
         $data['cart'] = $this->cart;
         $data['status'] = $this->status();
+
         return $this->success(
             'ms3_cart_add_success',
             $data,
@@ -290,6 +290,7 @@ class Cart
         }
         $count = $response['data']['count'];
 
+        /** @var msOrderProduct $product */
         foreach ($this->draft->getMany('Products') as $product) {
             if ($product_key === $product->get('product_key')) {
                 $price = $product->get('price');
@@ -301,6 +302,7 @@ class Cart
         }
         $this->draft->save();
         $this->restrictDraft($this->draft);
+        $this->loadCart($this->draft);
         $this->cart = $this->getCart();
 
         $response = $this->invokeEvent(
@@ -657,6 +659,7 @@ class Cart
             return $output;
         }
 
+        /** @var msOrderProduct $item */
         foreach ($orderProducts as $item) {
             $output[$item->get('product_key')] = $item->toArray();
         }

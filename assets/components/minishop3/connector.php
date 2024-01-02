@@ -30,6 +30,10 @@ if (!empty($_REQUEST['class_key'])) {
             $_REQUEST['action'] = 'MiniShop3\Processors\Category\\' . $action;
             break;
     }
+
+    if ($action === 'Reload') {
+        $_REQUEST['action'] = 'Resource/Reload';
+    }
 }
 
 /** @var modConnectorRequest $request */

@@ -12,10 +12,15 @@ use ModxPro\PdoTools\Fetch;
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 
+if (isset($_POST['render'])) {
+    unset($_POST['render']);
+}
+
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
-$token = $_SESSION['ms3']['customer_token'];
-if (empty($token)) {
+if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
+    $token = $_SESSION['ms3']['customer_token'];
+} else {
     $response = $ms3->customer->generateToken();
     $token = $response['data']['token'];
 }
@@ -27,14 +32,20 @@ $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msCart');
-$cart = $ms3->cart->get();
-$status = $ms3->cart->status();
+$response = $ms3->cart->get();
+$cart = $response['data']['cart'];
+$status = $response['data']['status'];
+$products = [];
+$total = ['count' => 0, 'weight' => 0, 'cost' => 0, 'discount' => 0, 'positions' => 0];
 
 // Do not show empty cart when displaying order details
 if (!empty($_GET['msorder'])) {
     return '';
 } elseif (empty($status['total_count'])) {
-    return $pdoFetch->getChunk($tpl);
+    return $pdoFetch->getChunk($tpl, compact('total', 'products'));
+}
+if (empty($cart)) {
+    return $pdoFetch->getChunk($tpl, compact('total', 'products'));
 }
 
 // Select cart products
@@ -119,8 +130,6 @@ foreach ($tmp as $row) {
 }
 
 // Process products in cart
-$products = [];
-$total = ['count' => 0, 'weight' => 0, 'cost' => 0, 'discount' => 0];
 foreach ($cart as $key => $entry) {
     if (!isset($rows[$entry['product_id']])) {
         continue;
@@ -129,6 +138,7 @@ foreach ($cart as $key => $entry) {
 
     $product['product_key'] = $key;
     $product['count'] = $entry['count'];
+    $product['options'] = $entry['options'];
     $old_price = $product['old_price'];
     if ($product['price'] > $entry['price'] && empty($product['old_price'])) {
         $old_price = $product['price'];
@@ -147,7 +157,7 @@ foreach ($cart as $key => $entry) {
     if (!empty($entry['options']) && is_array($entry['options'])) {
         $product['options'] = $entry['options'];
         foreach ($entry['options'] as $option => $value) {
-            $product['option.' . $option] = $value;
+            $product['option_' . $option] = $value;
         }
     }
 
@@ -160,6 +170,7 @@ foreach ($cart as $key => $entry) {
     $total['cost'] += $entry['count'] * $entry['price'];
     $total['weight'] += $entry['count'] * $entry['weight'];
     $total['discount'] += $entry['count'] * $discount_price;
+    $total['positions']++;
 }
 
 $output = $pdoFetch->getChunk($tpl, [
