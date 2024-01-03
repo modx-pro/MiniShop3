@@ -128,17 +128,17 @@ $rows = [];
 foreach ($tmp as $row) {
     $rows[$row['id']] = $row;
 }
-
 // Process products in cart
 foreach ($cart as $key => $entry) {
     if (!isset($rows[$entry['product_id']])) {
         continue;
     }
-    $product = $rows[$entry['product_id']];
+    //TODO Возможно для сущностей корзины будет лучше сделать префикс cart_
+    $product = array_merge($rows[$entry['product_id']], $entry);
 
-    $product['product_key'] = $key;
-    $product['count'] = $entry['count'];
-    $product['options'] = $entry['options'];
+//    $product['product_key'] = $key;
+//    $product['count'] = $entry['count'];
+//    $product['options'] = $entry['options'];
     $old_price = $product['old_price'];
     if ($product['price'] > $entry['price'] && empty($product['old_price'])) {
         $old_price = $product['price'];
@@ -146,11 +146,10 @@ foreach ($cart as $key => $entry) {
     $discount_price = $old_price > 0 ? $old_price - $entry['price'] : 0;
 
     $product['old_price'] = $old_price;
-    $product['price'] = $entry['price'];
-    $product['weight'] = $entry['weight'];
-    $product['cost'] = $entry['count'] * $entry['price'];
+//    $product['price'] = $entry['price'];
+//    $product['weight'] = $entry['weight'];
+//    $product['cost'] = $entry['count'] * $entry['price'];
     $product['discount_price'] = $ms3->format->price($discount_price);
-    $product['discount_price'] = $discount_price;
     $product['discount_cost'] = $entry['count'] * $discount_price;
 
     // Additional properties of product in cart

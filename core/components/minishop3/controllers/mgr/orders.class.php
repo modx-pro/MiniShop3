@@ -1,5 +1,7 @@
 <?php
 
+use MODX\Revolution\modSystemSetting;
+
 if (!class_exists('msManagerController')) {
     require_once dirname(__FILE__, 2) . '/manager.class.php';
 }
@@ -71,6 +73,11 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $config['order_address_fields'] = $address_fields;
         $config['order_product_fields'] = $product_fields;
         $config['order_product_options_fields'] = $product_options;
+
+        $item = $this->modx->getObject(modSystemSetting::class, [
+            'key' => 'ms3_order_show_drafts'
+        ]);
+        $config['order_show_drafts'] = (boolean)$item->get('value');
         $this->addHtml('
             <script>
                 ms3.config = ' . json_encode($config) . ';

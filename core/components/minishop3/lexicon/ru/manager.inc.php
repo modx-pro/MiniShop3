@@ -153,6 +153,8 @@ $_lang['ms3_orders_form_month_sum'] = 'на сумму, руб.';
 $_lang['ms3_orders_form_submit'] = 'Отправить';
 $_lang['ms3_orders_form_reset'] = 'Сброс';
 $_lang['ms3_orders_create_order'] = 'Создать заказ';
+$_lang['ms3_orders_show_drafts'] = 'Показывать черновики';
+$_lang['ms3_orders_hide_drafts'] = 'Скрыть черновики';
 
 $_lang['ms3_tab_category'] = 'Категория';
 $_lang['ms3_tab_products'] = 'Товары';

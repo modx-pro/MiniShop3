@@ -560,7 +560,7 @@ class Cart
                     $status['total_count'] += $item['count'];
                     $status['total_cost'] += $item['price'] * $item['count'];
                     $status['total_weight'] += $item['weight'] * $item['count'];
-                    $status['total_discount'] += $item['discount_price'] * $item['count'];
+                    $status['total_discount'] += $item['properties']['discount_price'] * $item['count'];
                 }
             }
         }

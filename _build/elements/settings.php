@@ -211,6 +211,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_order',
     ],
+    'ms3_order_show_drafts' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_order',
+    ],
     'ms3_date_format' => [
         'value' => 'd.m.y H:M',
         'xtype' => 'textfield',
