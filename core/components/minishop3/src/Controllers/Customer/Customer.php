@@ -2,11 +2,18 @@
 
 namespace MiniShop3\Controllers\Customer;
 
+$autoload = dirname(__FILE__, 4) . '/vendor/autoload.php';
+
+require_once($autoload);
+
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msCustomer;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
 use MODX\Revolution\modX;
+
+use Rakit\Validation\Validator;
 
 class Customer
 {
@@ -51,6 +58,140 @@ class Customer
         $_SESSION['ms3']['customer_token'] = $token;
         $lifetime = $this->modx->getOption('session_gc_maxlifetime', null, '604800');
         return $this->success('', compact('token', 'lifetime'));
+    }
+
+    public function get()
+    {
+    }
+
+    public function set()
+    {
+    }
+
+    public function add($key, $value)
+    {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+
+        if (empty($key)) {
+            return $this->error('ms3_customer_key_empty');
+        }
+
+        //TODO Реализовать событие ПередДобавлениемПоля
+
+        // $response = $$this->ms3->utils->invokeEvent('msOnBeforeAddToOrder', [
+        //            'key' => $key,
+        //            'value' => $value,
+        //            'order' => $this,
+        //        ]);
+        //        if (!$response['success']) {
+        //            return $this->error($response['message']);
+        //        }
+        //        $value = $response['data']['value'];
+
+        $response = $this->validate($key, $value);
+        if (is_array($response)) {
+            return $this->error($response[$key]);
+        }
+
+        $validated = $response;
+
+        $msCustomer = $this->modx->getObject(msCustomer::class, [
+            'token' => $this->token
+        ]);
+        if ($msCustomer) {
+            $msCustomer->set($key, $validated);
+        } else {
+            $userId = 0;
+
+            // TODO как правильно определить текущего системного пользователя, если тот авторизован?
+            if ($this->modx->user->hasSessionContext($this->ms3->config['ctx'])) {
+                $userId = $this->modx->user->get('id');
+            }
+            $msCustomer = $this->modx->newObject(msCustomer::class, [
+                'token' => $this->token,
+                $key => $validated,
+                'user_id' => $userId
+            ]);
+        }
+        $msCustomer->save();
+
+        //TODO Реализовать событие ПослеДобавлениемПоля
+
+        //$response = $$this->ms3->utils->invokeEvent('msOnAddToCustomer', [
+        //                    'key' => $key,
+        //                    'value' => $validated,
+        //                    'customer' => $this,
+//                                'mode' => 'new'
+        //                ]);
+        //                if (!$response['success']) {
+        //                    return $this->error($response['message']);
+        //                }
+        //                $validated = $response['data']['value'];
+
+        return ($validated === false)
+            ? $this->error('', [$key => $value])
+            : $this->success('', [$key => $validated]);
+    }
+
+    public function validate($key, $value)
+    {
+        $validator = new Validator();
+
+        $validationRules = [
+            'first_name' => 'required|min:2',
+            'last_name' => 'required|min:3',
+            'email' => 'required|email',
+            'phone' => 'required|min:10'
+        ];
+
+        $messages = [
+            'required' => 'Обязательно для заполнения',
+            'email' => 'Не является email',
+            'min' => 'Минимум :min символов',
+        ];
+
+        $validation = $validator->validate(
+            [$key => $value],
+            [$key => $validationRules[$key]],
+            $messages
+        );
+
+        $validation->validate();
+
+        if ($validation->fails()) {
+            // handling errors
+            $errors = $validation->errors();
+            return $errors->firstOfAll();
+        } else {
+            return $value;
+        }
+
+        // TODO валидировать наличие $key в модели msCustomer + разрешение на запись
+        //TODO реализовать событие ДоВалидации
+
+        // $eventParams = [
+        //            'key' => $key,
+        //            'value' => $value,
+        //            'customer' => $this,
+        //        ];
+        //        $response = $this->invokeEvent('msOnBeforeValidateCustomerValue', $eventParams);
+        //        $value = $response['data']['value'];
+
+        // TODO валидировать $value
+
+        // TODO реализовать событие ПослеВалидации
+
+        //$eventParams = [
+        //            'key' => $key,
+        //            'value' => $value,
+        //            'customer' => $this,
+        //        ];
+        //        $response = $this->invokeEvent('msOnValidateCustomerValue', $eventParams);
+        //        return $response['data']['value'];
+
+        return $value;
     }
 
     /**
@@ -103,7 +244,8 @@ class Customer
                 $c->where($filter);
                 $c->select('modUser.id');
                 if (!$customer = $this->modx->getObject(modUser::class, $c)) {
-                    $customer = $this->modx->newObject(modUser::class, ['username' => $email, 'password' => md5(rand())]);
+                    $customer = $this->modx->newObject(modUser::class, ['username' => $email, 'password' => md5(rand())]
+                    );
                     $profile = $this->modx->newObject(modUserProfile::class, [
                         'email' => $email,
                         'fullname' => $receiver,

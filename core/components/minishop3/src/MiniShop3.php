@@ -191,6 +191,10 @@ class MiniShop3
             case 'customer/token/get':
                 $response = $this->customer->generateToken();
                 break;
+            case 'customer/add':
+                $this->customer->initialize($token);
+                $response = $this->customer->add(@$data['key'], @$data['value']);
+                break;
             case 'cart/add':
                 $this->cart->initialize($ctx, $token);
                 $response = $this->cart->add(@$data['id'], @$data['count'], @$data['options']);
@@ -330,7 +334,7 @@ class MiniShop3
         $output = [];
         $output['token'] = $token;
 
-        if ($scriptProperties['selector']) {
+        if (isset($scriptProperties['selector'])) {
             $selector = $scriptProperties['selector'];
             $output['selector'] = $selector;
         }

@@ -24,6 +24,7 @@ $xpdo_meta_map = [
                     'MiniShop3\\Model\\msOrderAddress',
                     'MiniShop3\\Model\\msOrderProduct',
                     'MiniShop3\\Model\\msLink',
+                    'MiniShop3\\Model\\msCustomer',
                     'MiniShop3\\Model\\msCustomerProfile',
                     'MiniShop3\\Model\\msOption',
                 ],
