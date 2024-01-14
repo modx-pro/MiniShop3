@@ -16,6 +16,7 @@ class Customer
     public $ms3;
     /** @var array $config */
     public $config = [];
+    protected $token = '';
 
     /**
      * Cart constructor.
@@ -31,7 +32,16 @@ class Customer
         $this->config = array_merge([
 
         ], $config);
-        //$this->modx->lexicon->load('minishop3:cart');
+        $this->modx->lexicon->load('minishop3:customer');
+    }
+
+    public function initialize($token = '')
+    {
+        if (empty($token)) {
+            return false;
+        }
+        $this->token = $token;
+        return true;
     }
 
     public function generateToken()
@@ -39,7 +49,8 @@ class Customer
         $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
         $token = md5(rand() . $tokenName);
         $_SESSION['ms3']['customer_token'] = $token;
-        return $this->success('', ['token' => $token]);
+        $lifetime = $this->modx->getOption('session_gc_maxlifetime', null, '604800');
+        return $this->success('', compact('token', 'lifetime'));
     }
 
     /**
