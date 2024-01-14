@@ -5,7 +5,7 @@ ms3.request = {
         const response = await this.post(formData)
         const event = new Event('ms3_send_success')
         document.dispatchEvent(event)
-        return response;
+        return response
     },
     async get (formData = new FormData()) {
         try {
@@ -47,7 +47,8 @@ ms3.request = {
         }
         const ms3Token = localStorage.getItem(ms3.config.tokenName)
         if (ms3Token !== null) {
-            this.headers.ms3Token = ms3Token
+            const ms3TokenData = JSON.parse(ms3Token)
+            this.headers.ms3Token = ms3TokenData.token
         }
         this.headers = Object.assign(this.headers, headers)
     },
