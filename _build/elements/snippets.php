@@ -239,6 +239,16 @@ return [
             ],
         ],
     ],
+    'msCustomer' => [
+        'file' => 'ms3_customer',
+        'description' => '',
+        'properties' => [
+            'tpl' => [
+                'type' => 'textfield',
+                'value' => 'tpl.msCustomerForm',
+            ],
+        ],
+    ],
     'msOrder' => [
         'file' => 'ms3_order',
         'description' => '',

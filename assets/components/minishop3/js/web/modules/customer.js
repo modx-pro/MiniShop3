@@ -17,19 +17,23 @@ ms3.customer = {
     },
     changeInputListener (input) {
         input.addEventListener('change', async () => {
+            const form = input.closest('.ms3_customer_form')
+            form.classList.remove('was-validated')
+            input.classList.remove('is-invalid')
+            input.closest('div').querySelector('.invalid-feedback').textContent = ''
+
             const formData = new FormData()
             formData.append('key', input.name)
             formData.append('value', input.value)
             const response = await ms3.customer.add(formData)
-            console.log(response)
             if (response.success === true) {
                 input.value = response.data[input.name]
             } else {
-                const form = input.closest('.ms3_customer_form')
+
                 form.classList.add('was-validated')
+                input.classList.add('is-invalid')
                 input.closest('div').querySelector('.invalid-feedback').textContent = response.message
             }
-
         })
     },
     async add (formData) {

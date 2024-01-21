@@ -117,6 +117,7 @@ $_lang['ms3_frontend_delivery_select'] = 'Выберите доставку';
 $_lang['ms3_frontend_payment_select'] = 'Выберите оплату';
 $_lang['ms3_frontend_credentials'] = 'Данные получателя';
 $_lang['ms3_frontend_address'] = 'Адрес доставки';
+$_lang['ms3_frontend_customer'] = 'Покупатель';
 
 $_lang['ms3_frontend_comment'] = 'Комментарий';
 $_lang['ms3_frontend_receiver'] = 'Получатель';
@@ -132,9 +133,12 @@ $_lang['ms3_frontend_room'] = 'Кв.';
 $_lang['ms3_frontend_entrance'] = 'Подъезд';
 $_lang['ms3_frontend_floor'] = 'Этаж';
 $_lang['ms3_frontend_text_address'] = 'Адрес одной строкой';
+$_lang['ms3_frontend_first_name'] = 'Имя';
+$_lang['ms3_frontend_last_name'] = 'Фамилия';
 
 $_lang['ms3_frontend_order_cost'] = 'Итого, с доставкой';
-$_lang['ms3_frontend_order_submit'] = 'Сделать заказ!';
+$_lang['ms3_frontend_order_submit'] = 'Сделать заказ';
+$_lang['ms3_frontend_save'] = 'Сохранить';
 $_lang['ms3_frontend_order_cancel'] = 'Очистить форму';
 $_lang['ms3_frontend_order_success'] = 'Спасибо за оформление заказа <b>#[[+num]]</b> на нашем сайте <b>[[++site_name]]</b>!';
 
@@ -148,6 +152,7 @@ $_lang['ms3_err_user_nf'] = 'Пользователь не найден.';
 $_lang['ms3_err_order_nf'] = 'Заказ с таким идентификатором не найден.';
 $_lang['ms3_err_status_nf'] = 'Статус с таким идентификатором не найден.';
 $_lang['ms3_err_delivery_nf'] = 'Способ доставки с таким идентификатором не найден.';
+$_lang['ms3_err_payment_nf'] = 'Способ оплаты с таким идентификатором не найден.';
 $_lang['ms3_err_payment_nf'] = 'Способ оплаты с таким идентификатором не найден.';
 $_lang['ms3_err_status_final'] = 'Установлен финальный статус. Его нельзя менять.';
 $_lang['ms3_err_status_fixed'] = 'Установлен фиксирующий статус. Вы не можете сменить его на более ранний.';

@@ -24,6 +24,8 @@ class Customer
     /** @var array $config */
     public $config = [];
     protected $token = '';
+    protected $validationRules = [];
+    protected $validationMessages = [];
 
     /**
      * Cart constructor.
@@ -48,6 +50,13 @@ class Customer
             return false;
         }
         $this->token = $token;
+
+        if (!empty($_SESSION['ms3']['validation']['rules'])) {
+            $this->validationRules = $_SESSION['ms3']['validation']['rules'];
+        }
+        if (!empty($_SESSION['ms3']['validation']['messages'])) {
+            $this->validationMessages = $_SESSION['ms3']['validation']['messages'];
+        }
         return true;
     }
 
@@ -56,16 +65,61 @@ class Customer
         $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
         $token = md5(rand() . $tokenName);
         $_SESSION['ms3']['customer_token'] = $token;
-        $lifetime = $this->modx->getOption('session_gc_maxlifetime', null, '604800');
+        $lifetime = $this->modx->getOption('session_gc_maxlifetime', null, '604800') * 1000;
         return $this->success('', compact('token', 'lifetime'));
+    }
+
+    public function registerValidation($rules = [], $messages = [])
+    {
+        $this->validationRules = [
+            'first_name' => 'required|min:2',
+            'last_name' => 'required|min:3',
+            'email' => 'required|email',
+            'phone' => 'required|min:10'
+        ];
+
+        $this->validationMessages = [
+            'required' => 'Обязательно для заполнения',
+            'email' => 'Не является email',
+            'min' => 'Минимум :min символов',
+        ];
+
+        if (!empty($rules)) {
+            $this->validationRules = $rules;
+        }
+
+        if (!empty($messages)) {
+            $this->validationMessages = $messages;
+        }
+
+        $_SESSION['ms3']['validation']['rules'] = $this->validationRules;
+        $_SESSION['ms3']['validation']['messages'] = $this->validationMessages;
     }
 
     public function get()
     {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+        $msCustomer = $this->modx->getObject(msCustomer::class, [
+            'token' => $this->token,
+        ]);
+        if (!$msCustomer) {
+            return [];
+        }
+        return $msCustomer->toArray();
     }
 
-    public function set()
+    public function set($data = [])
     {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+        foreach ($data as $key => $value) {
+            $this->add($key, $value);
+        }
+
+        return $this->get();
     }
 
     public function add($key, $value)
@@ -139,23 +193,10 @@ class Customer
     {
         $validator = new Validator();
 
-        $validationRules = [
-            'first_name' => 'required|min:2',
-            'last_name' => 'required|min:3',
-            'email' => 'required|email',
-            'phone' => 'required|min:10'
-        ];
-
-        $messages = [
-            'required' => 'Обязательно для заполнения',
-            'email' => 'Не является email',
-            'min' => 'Минимум :min символов',
-        ];
-
         $validation = $validator->validate(
             [$key => $value],
-            [$key => $validationRules[$key]],
-            $messages
+            [$key => $this->validationRules[$key]],
+            $this->validationMessages
         );
 
         $validation->validate();
