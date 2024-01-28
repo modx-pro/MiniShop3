@@ -45,7 +45,7 @@ class MiniShop3
     public $format;
 
     /** @var Services $services */
-    private $services;
+    public Services $services;
 
     /** @var Plugins $plugins */
     public $plugins;
