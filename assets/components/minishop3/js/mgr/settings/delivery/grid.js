@@ -25,7 +25,7 @@ Ext.extend(ms3.grid.Delivery, ms3.grid.Default, {
     getFields: function () {
         return [
             'id', 'name', 'price', 'weight_price', 'distance_price', 'position', 'payments',
-            'logo', 'active', 'class', 'description', 'requires', 'actions', 'free_delivery_amount'
+            'logo', 'active', 'class', 'description', 'validation_rules', 'actions', 'free_delivery_amount'
         ];
     },
 
@@ -115,9 +115,9 @@ Ext.extend(ms3.grid.Delivery, ms3.grid.Default, {
         });
         w.fp.getForm().reset();
         w.fp.getForm().setValues({
-            price: 0,
-            weight_price: 0,
-            distance_price: 0,
+            //price: 0,
+            //weight_price: 0,
+            //distance_price: 0,
             active: true,
         });
         w.show(e.target);
@@ -132,22 +132,38 @@ Ext.extend(ms3.grid.Delivery, ms3.grid.Default, {
         if (w) {
             w.close();
         }
-        w = MODx.load({
-            xtype: 'ms3-window-delivery-update',
-            id: 'ms3-window-delivery-update',
-            record: this.menu.record,
-            title: this.menu.record['name'],
+
+        var id = this.menu.record.id;
+        MODx.Ajax.request({
+            url: this.config.url,
+            params: {
+                action: 'MiniShop3\\Processors\\Settings\\Delivery\\Get',
+                id: id
+            },
             listeners: {
                 success: {
-                    fn: function () {
-                        this.refresh();
-                    }, scope: this
-                }
+                    fn: function (r) {
+                        w = MODx.load({
+                            xtype: 'ms3-window-delivery-update',
+                            id: 'ms3-window-delivery-update',
+                            record: r.object,
+                            title: r.object.name,
+                            listeners: {
+                                success: {
+                                    fn: function () {
+                                        this.refresh();
+                                    }, scope: this
+                                }
+                            }
+                        });
+                        w.fp.getForm().reset();
+                        w.fp.getForm().setValues(r.object);
+                        w.show(e.target);
+                    }
+                }, scope: this
             }
         });
-        w.fp.getForm().reset();
-        w.fp.getForm().setValues(this.menu.record);
-        w.show(e.target);
+        
     },
 
     enableDelivery: function () {

@@ -23,7 +23,7 @@ use xPDO\xPDO;
  * @property integer $active
  * @property string $class
  * @property array $properties
- * @property string $requires
+ * @property string $validation_rules
  * @property float $free_delivery_amount
  *
  * @package MiniShop3\Model

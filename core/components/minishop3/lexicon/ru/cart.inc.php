@@ -40,5 +40,5 @@ $_lang['ms3_cart_clean'] = 'Очистить корзину';
 
 $_lang['ms3_order_err_empty'] = 'Невозможно оформить пустой заказ';
 $_lang['ms3_order_err_delivery'] = 'Вы должны выбрать способ доставки';
-$_lang['ms3_order_err_requires'] = 'Вы должны заполнить требуемые поля';
+$_lang['ms3_order_err_validation_rules'] = 'Вы должны корректно заполнить требуемые поля';
 $_lang['ms3_err_token'] = 'Не указан токен';

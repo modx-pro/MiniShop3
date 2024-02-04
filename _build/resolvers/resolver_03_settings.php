@@ -35,7 +35,7 @@ if ($transport->xpdo) {
                     'weight_price' => 0,
                     'distance_price' => 0,
                     'active' => 1,
-                    'requires' => 'email,receiver',
+                    'validation_rules' => '{"receiver":"required", "email":"required|email"}',
                     'position' => 0,
                 ], '', true);
                 $delivery->save();
