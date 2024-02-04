@@ -18,82 +18,17 @@ Ext.extend(ms3.window.CreateDelivery, ms3.window.Default, {
             name: 'id',
             id: config.id + '-id'
         }, {
-            layout: 'column',
-            items: [{
-                columnWidth: .7,
-                layout: 'form',
-                defaults: {msgTarget: 'under'},
-                items: [{
-                    xtype: 'textfield',
-                    fieldLabel: _('ms3_name'),
-                    name: 'name',
-                    anchor: '99%',
-                    id: config.id + '-name'
-                }]
-            }, {
-                columnWidth: .3,
-                layout: 'form',
-                defaults: {msgTarget: 'under'},
-                items: [{
-                    xtype: 'textfield',
-                    fieldLabel: _('ms3_add_cost'),
-                    name: 'price',
-                    description: _('ms3_add_cost_help'),
-                    anchor: '99%',
-                    id: config.id + '-price'
-                }],
-            }]
-        }, {
-            xtype: 'numberfield',
-            fieldLabel: _('ms3_free_delivery_amount'),
-            name: 'free_delivery_amount',
-            description: _('ms3_free_delivery_amount_help'),
+            xtype: 'textfield',
+            fieldLabel: _('ms3_name'),
+            name: 'name',
             anchor: '99%',
-            decimalPrecision: 2,
-            id: config.id + '-free-delivery-amount'
+            id: config.id + '-name'
         }, {
-            layout: 'column',
-            items: [{
-                columnWidth: .5,
-                layout: 'form',
-                defaults: {msgTarget: 'under'},
-                items: [{
-                    xtype: 'numberfield',
-                    fieldLabel: _('ms3_weight_price'),
-                    description: _('ms3_weight_price_help'),
-                    name: 'weight_price',
-                    decimalPrecision: 2,
-                    anchor: '99%',
-                    id: config.id + '-weight-price'
-                }, {
-                    xtype: 'textfield',
-                    fieldLabel: _('ms3_order_requires'),
-                    description: _('ms3_order_requires_help'),
-                    name: 'requires',
-                    anchor: '99%',
-                    id: config.id + '-requires'
-                }]
-            }, {
-                columnWidth: .5,
-                layout: 'form',
-                defaults: {msgTarget: 'under'},
-                items: [{
-                    xtype: 'numberfield',
-                    fieldLabel: _('ms3_distance_price'),
-                    description: _('ms3_distance_price_help'),
-                    name: 'distance_price',
-                    decimalPrecision: 2,
-                    anchor: '99%',
-                    id: config.id + '-distance-price'
-                }, {
-                    xtype: 'ms3-combo-classes',
-                    type: 'delivery',
-                    fieldLabel: _('ms3_class'),
-                    name: 'class',
-                    anchor: '99%',
-                    id: config.id + '-class'
-                }],
-            }]
+            xtype: 'textarea',
+            fieldLabel: _('ms3_description'),
+            name: 'description',
+            anchor: '99%',
+            id: config.id + '-description'
         }, {
             xtype: 'ms3-combo-browser',
             fieldLabel: _('ms3_logo'),
@@ -102,12 +37,6 @@ Ext.extend(ms3.window.CreateDelivery, ms3.window.Default, {
             id: config.id + '-logo',
             triggerClass: 'x-form-image-trigger',
             allowedFileTypes: config.allowedFileTypes || MODx.config.upload_images
-        }, {
-            xtype: 'textarea',
-            fieldLabel: _('ms3_description'),
-            name: 'description',
-            anchor: '99%',
-            id: config.id + '-description'
         }, {
             xtype: 'xcheckbox',
             boxLabel: _('ms3_active'),
@@ -140,6 +69,73 @@ Ext.extend(ms3.window.UpdateDelivery, ms3.window.CreateDelivery, {
                 title: _('ms3_delivery'),
                 layout: 'form',
                 items: ms3.window.CreateDelivery.prototype.getFields.call(this, config),
+            },{
+                title: _('ms3_settings'),
+                layout: 'form',
+                items: [ {
+                    xtype: 'ms3-combo-classes',
+                    type: 'delivery',
+                    fieldLabel: _('ms3_class'),
+                    name: 'class',
+                    anchor: '99%',
+                    id: config.id + '-class'
+                }, {
+                    xtype: 'textarea',
+                    fieldLabel: _('ms3_order_validation_rules'),
+                    description: _('ms3_order_validation_rules_help'),
+                    name: 'validation_rules',
+                    anchor: '99%',
+                    id: config.id + '-validation_rules'
+                },{
+                    layout: 'column',
+                    items: [{
+                        columnWidth: .5,
+                        layout: 'form',
+                        defaults: {msgTarget: 'under'},
+                        items: [
+                            {
+                                xtype: 'textfield',
+                                fieldLabel: _('ms3_add_cost'),
+                                name: 'price',
+                                description: _('ms3_add_cost_help'),
+                                anchor: '99%',
+                                id: config.id + '-price'
+                            }, {
+                                xtype: 'numberfield',
+                                fieldLabel: _('ms3_free_delivery_amount'),
+                                name: 'free_delivery_amount',
+                                description: _('ms3_free_delivery_amount_help'),
+                                anchor: '99%',
+                                decimalPrecision: 2,
+                                id: config.id + '-free-delivery-amount'
+                            }
+                        ]
+                    }, {
+                        columnWidth: .5,
+                        layout: 'form',
+                        defaults: {msgTarget: 'under'},
+                        pack: 'center',
+                        items: [
+                            {
+                                xtype: 'numberfield',
+                                fieldLabel: _('ms3_weight_price'),
+                                description: _('ms3_weight_price_help'),
+                                name: 'weight_price',
+                                decimalPrecision: 2,
+                                anchor: '99%',
+                                id: config.id + '-weight-price'
+                            }, {
+                                xtype: 'numberfield',
+                                fieldLabel: _('ms3_distance_price'),
+                                description: _('ms3_distance_price_help'),
+                                name: 'distance_price',
+                                decimalPrecision: 2,
+                                anchor: '99%',
+                                id: config.id + '-distance-price'
+                            }
+                        ]
+                    }]
+                }],
             }, {
                 title: _('ms3_payments'),
                 items: [{

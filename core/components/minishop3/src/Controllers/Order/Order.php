@@ -157,6 +157,9 @@ class Order
      */
     public function getDeliveryRequiresFields($id = 0)
     {
+        // TODO: данный метод (getDeliveryRequiresFields) нуждается в переработке:
+        // 1. Смена названия, т.к. теперь вместо списка requires полей мы работаем с правилами валидации (validation_rules)
+        // 2. Вероятно, нужно заменить логику с get fields сразу на validate с использованием Rakit\Validation\Validator;
         if (empty($id)) {
             $id = $this->order['delivery'];
         }

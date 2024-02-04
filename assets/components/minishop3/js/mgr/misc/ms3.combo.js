@@ -918,10 +918,10 @@ ms3.combo.Classes = function (config) {
         fieldLabel: _('ms3_class'),
         name: 'class',
         hiddenName: 'class',
-        displayField: 'class',
+        fields: ['name', 'class'],
+        displayField: 'name',
         valueField: 'class',
         pageSize: 20,
-        fields: ['type', 'class'],
         url: ms3.config.connector_url,
         baseParams: {
             action: 'MiniShop3\\Processors\\Settings\\GetClass',

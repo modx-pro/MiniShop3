@@ -23,7 +23,7 @@ use xPDO\xPDO;
  * @property integer $active
  * @property string $class
  * @property array $properties
- * @property string $requires
+ * @property string $validation_rules
  * @property float $free_delivery_amount
  *
  * @package MiniShop3\Model
@@ -32,8 +32,12 @@ class msDelivery extends xPDOSimpleObject
 {
     /** @var Delivery $controller */
     public $controller;
+
     /** @var MiniShop3 $ms3 */
     public $ms3;
+
+    /** @var string $defaultControllerClass */
+    private string $defaultControllerClass = 'MiniShop3\\Controllers\\Delivery\\Delivery';
 
     /**
      * msDelivery constructor.
@@ -49,25 +53,27 @@ class msDelivery extends xPDOSimpleObject
     }
 
     /**
-     * Loads delivery handler class
+     * Loads delivery controller class
      *
      * @return bool
      */
-    public function loadHandler()
+    public function loadController()
     {
+        // TODO: проверить, нужно ли подключение
         require_once dirname(__FILE__, 2) . '/Controllers/Delivery/Delivery.php';
 
-        if (!$class = $this->get('class')) {
-            $class = 'Delivery';
+        if (!$class = $this->get('class') || $class == 'Delivery') {
+            $class = $this->defaultControllerClass;
         }
 
-        if ($class !== 'Delivery') {
-            $this->ms3->loadCustomClasses('delivery');
+        if ($class !== $this->defaultControllerClass) {
+            // TODO: ждём новой реализации
+            //$this->ms3->loadCustomClasses('delivery');
         }
 
         if (!class_exists($class)) {
             $this->xpdo->log(modX::LOG_LEVEL_ERROR, 'Delivery controller class "' . $class . '" not found.');
-            $class = 'Delivery';
+            $class = $this->defaultControllerClass;
         }
 
         $this->controller = new $class($this, []);
@@ -91,7 +97,7 @@ class msDelivery extends xPDOSimpleObject
     public function getCost(OrderInterface $order, $cost = 0.0)
     {
         if (!is_object($this->controller) || !($this->controller instanceof DeliveryInterface)) {
-            if (!$this->loadHandler()) {
+            if (!$this->loadController()) {
                 return 0.0;
             }
         }

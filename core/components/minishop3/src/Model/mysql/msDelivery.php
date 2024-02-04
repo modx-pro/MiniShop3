@@ -25,7 +25,7 @@ class msDelivery extends \MiniShop3\Model\msDelivery
                 'active' => 1,
                 'class' => null,
                 'properties' => null,
-                'requires' => 'email,receiver',
+                'validation_rules' => null,
                 'free_delivery_amount' => 0.0,
             ],
         'fieldMeta' =>
@@ -104,13 +104,11 @@ class msDelivery extends \MiniShop3\Model\msDelivery
                         'phptype' => 'json',
                         'null' => true,
                     ],
-                'requires' =>
+                'validation_rules' =>
                     [
-                        'dbtype' => 'varchar',
-                        'precision' => '255',
+                        'dbtype' => 'text',
                         'phptype' => 'string',
                         'null' => true,
-                        'default' => 'email,receiver',
                     ],
                 'free_delivery_amount' =>
                     [
