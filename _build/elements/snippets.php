@@ -127,16 +127,6 @@ return [
             ],
         ],
     ],
-    'msMiniCart' => [
-        'file' => 'ms3_minicart',
-        'description' => '',
-        'properties' => [
-            'tpl' => [
-                'type' => 'textfield',
-                'value' => 'tpl.msMiniCart',
-            ],
-        ],
-    ],
     'msCart' => [
         'file' => 'ms3_cart',
         'description' => '',

@@ -8,11 +8,6 @@
  */
 
 $_lang['ms3_cart'] = 'Корзина';
-$_lang['ms3_minicart'] = 'Корзина';
-
-$_lang['ms3_minicart_goods'] = 'Всего товаров:';
-$_lang['ms3_minicart_cost'] = 'на сумму:';
-$_lang['ms3_minicart_is_empty'] = 'Вы еще ничего не выбрали';
 
 $_lang['ms3_cart_title'] = 'Наименование';
 $_lang['ms3_cart_price'] = 'Цена';
