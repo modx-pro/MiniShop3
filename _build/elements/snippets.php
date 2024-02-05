@@ -267,6 +267,10 @@ return [
                 'type' => 'textfield',
                 'value' => '*',
             ],
+            'return' => [
+                'type' => 'textfield',
+                'value' => 'tpl',
+            ],
         ],
     ],
     'msGetOrder' => [

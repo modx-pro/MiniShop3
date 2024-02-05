@@ -104,7 +104,49 @@ $default = [
 // Merge all properties and run!
 $pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
 $rows = $pdoFetch->run();
-return $rows;
+
+$deliveries = $payments = [];
+foreach ($rows as $row) {
+    $delivery = [];
+    $payment = [];
+    foreach ($row as $key => $value) {
+        if (strpos($key, 'delivery_') === 0) {
+            $delivery[substr($key, 9)] = $value;
+        } else {
+            $payment[substr($key, 8)] = $value;
+        }
+    }
+
+    if (!isset($deliveries[$delivery['id']])) {
+        $delivery['payments'] = [];
+        $deliveries[$delivery['id']] = $delivery;
+    }
+    if (!empty($payment['id'])) {
+        $deliveries[$delivery['id']]['payments'][] = (int)$payment['id'];
+        if (!isset($payments[$payment['id']])) {
+            $payments[$payment['id']] = $payment;
+        }
+    }
+}
+
+$outputData = [
+    //    'order' => $order,
+//    'form' => $form,
+    'deliveries' => $deliveries,
+    'payments' => $payments,
+//    'errors' => $errors,
+];
+
+if ($scriptProperties['return'] === 'data') {
+    return $outputData;
+}
+$output = $pdoFetch->getChunk($tpl, $outputData);
+
+if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
+    $output .= '<pre class="msOrderLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';
+}
+
+return $output;
 
 
 //
