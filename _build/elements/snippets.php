@@ -69,6 +69,10 @@ return [
                 'type' => 'textfield',
                 'value' => '',
             ],
+            'includeVendor' => [
+                'type' => 'textfield',
+                'value' => '*',
+            ],
             'optionFilters' => [
                 'type' => 'textfield',
                 'value' => '',
@@ -254,6 +258,14 @@ return [
             'showLog' => [
                 'type' => 'combo-boolean',
                 'value' => false,
+            ],
+            'includeDelivery' => [
+                'type' => 'textfield',
+                'value' => '*',
+            ],
+            'includePayment' => [
+                'type' => 'textfield',
+                'value' => '*',
             ],
         ],
     ],
