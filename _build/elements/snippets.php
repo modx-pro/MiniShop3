@@ -69,7 +69,7 @@ return [
                 'type' => 'textfield',
                 'value' => '',
             ],
-            'includeVendor' => [
+            'includeVendorFields' => [
                 'type' => 'textfield',
                 'value' => '*',
             ],
@@ -259,11 +259,11 @@ return [
                 'type' => 'combo-boolean',
                 'value' => false,
             ],
-            'includeDelivery' => [
+            'includeDeliveryFields' => [
                 'type' => 'textfield',
                 'value' => '*',
             ],
-            'includePayment' => [
+            'includePaymentFields' => [
                 'type' => 'textfield',
                 'value' => '*',
             ],

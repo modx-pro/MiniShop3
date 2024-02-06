@@ -56,8 +56,8 @@ $select = [
     'Data' => $modx->getSelectColumns(msProductData::class, '`Data`', '', ['id'], true),
 ];
 
-if (!empty($scriptProperties['includeVendor'])) {
-    $includeVendorKeys = array_map('trim', explode(',', $scriptProperties['includeVendor']));
+if (!empty($scriptProperties['includeVendorFields'])) {
+    $includeVendorKeys = array_map('trim', explode(',', $scriptProperties['includeVendorFields']));
     $leftJoin['Vendor'] = ['class' => msVendor::class, 'on' => '`Data`.vendor_id=Vendor.id'];
 
     if ($includeVendorKeys[0] === '*') {

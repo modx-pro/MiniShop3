@@ -16,10 +16,18 @@ $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrder');
 
+$order = $ms3->order->get();
+
 // Do not show order form when displaying details of existing order
 if (!empty($_GET['msorder'])) {
     return '';
 }
+
+$cost = $ms3->order->getCost();
+$order['cost'] = $ms3->format->price($cost['data']['cost']);
+$order['cart_cost'] = $ms3->format->price($cost['data']['cart_cost']);
+$order['delivery_cost'] = $ms3->format->price($cost['data']['delivery_cost']);
+$order['discount_cost'] = $ms3->format->price($cost['data']['discount_cost']);
 
 // We need only active methods
 $where = [
@@ -39,8 +47,9 @@ $leftJoin = [
 ];
 
 // Select columns
-if (!empty($scriptProperties['includeDelivery'])) {
-    $includeDeliveryKeys = array_map('trim', explode(',', $scriptProperties['includeDelivery']));
+if (!empty($scriptProperties['includeDeliveryFields'])) {
+    $includeDeliveryKeys = array_map('trim', explode(',', $scriptProperties['includeDeliveryFields']));
+    $includeDeliveryKeys = array_merge($includeDeliveryKeys, ['id']);
 
     if ($includeDeliveryKeys[0] === '*') {
         $select['msDelivery'] = $modx->getSelectColumns(msDelivery::class, '`msDelivery`', 'delivery_', ['id'], true);
@@ -54,8 +63,9 @@ if (!empty($scriptProperties['includeDelivery'])) {
     }
 }
 
-if (!empty($scriptProperties['includePayment'])) {
-    $includePaymentKeys = array_map('trim', explode(',', $scriptProperties['includePayment']));
+if (!empty($scriptProperties['includePaymentFields'])) {
+    $includePaymentKeys = array_map('trim', explode(',', $scriptProperties['includePaymentFields']));
+    $includePaymentKeys = array_merge($includePaymentKeys, ['id']);
 
     if ($includePaymentKeys[0] === '*') {
         $select['msPayment'] = $modx->getSelectColumns(msPayment::class, '`msPayment`', 'payment_', ['id'], true);
@@ -68,11 +78,6 @@ if (!empty($scriptProperties['includePayment'])) {
         );
     }
 }
-
-//$select = [
-//    'msDelivery' => $modx->getSelectColumns(msDelivery::class, 'msDelivery', 'delivery_'),
-//    'msPayment' => $modx->getSelectColumns(msPayment::class, 'msPayment', 'payment_'),
-//];
 
 // Add user parameters
 foreach (['where', 'leftJoin', 'select'] as $v) {
@@ -130,7 +135,7 @@ foreach ($rows as $row) {
 }
 
 $outputData = [
-    //    'order' => $order,
+    'order' => $order,
 //    'form' => $form,
     'deliveries' => $deliveries,
     'payments' => $payments,
