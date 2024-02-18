@@ -268,11 +268,10 @@ Ext.extend(ms3.panel.OrdersForm, MODx.FormPanel, {
             listeners: {
                 success: {
                     fn: function () {
-                        ms3.config.order_show_drafts = !ms3.config.order_show_drafts
-                        const buttons = this.getButtons()
-                        this.buttons[1].text = buttons[1].text
-                        this.buttons[1].el.dom.innerHTML = buttons[1].text
-                        this.submit()
+                        ms3.config.order_show_drafts = !ms3.config.order_show_drafts;
+                        const buttons = this.getButtons();
+                        this.buttons[1].setText(buttons[1].text);
+                        this.submit();
                     }, scope: this
                 },
                 failure: {
