@@ -7,6 +7,7 @@ use MiniShop3\Controllers\Customer\Customer;
 use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
+use MiniShop3\Model\msOrder;
 use MiniShop3\Utils\Format;
 use MiniShop3\Utils\Plugins;
 use MiniShop3\Utils\Services;
@@ -101,6 +102,8 @@ class MiniShop3
         $this->services = new Services($this);
         //$this->plugins = new Plugins($this);
         $this->options = new Options($this);
+
+        $this->deleteOldDraft();
     }
 
     public function setController($type, $controller)
@@ -356,5 +359,27 @@ class MiniShop3
             '<script>ms3Config.render.cart.push( ' . json_encode($output) . ')</script>',
             true
         );
+    }
+
+    //TODO Перенести метод в контроллер заказов
+    private function deleteOldDraft()
+    {
+        // Every 30 minutes, run the cleanup for old tasks
+        if (date('i') % 30 === 0) {
+            $deleteAfter = $this->modx->getOption('ms3_delete_drafts_after', null, '');
+            $deleteAfter = !empty($deleteAfter) ? strtotime($deleteAfter) : null;
+            if ($deleteAfter) {
+                $statusDraft = $this->modx->getOption('ms3_status_draft', null, 1);
+                $orders = $this->modx->getIterator(msOrder::class, [
+                    'status_id' => $statusDraft,
+                    'createdon:<' => date('Y-m-d H:i:00', $deleteAfter)
+                ]);
+                if (iterator_count($orders) > 0) {
+                    foreach ($orders as $order) {
+                        $order->remove();
+                    }
+                }
+            }
+        }
     }
 }

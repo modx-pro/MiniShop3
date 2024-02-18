@@ -226,6 +226,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_order',
     ],
+    'ms3_delete_drafts_after' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_order',
+    ],
 
     'ms3_token_name' => [
         'value' => 'ms3_token',
