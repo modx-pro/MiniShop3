@@ -8,6 +8,7 @@ use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
+use MiniShop3\Controllers\Storage\DB\DBOrder;
 
 class Order
 {
@@ -17,8 +18,7 @@ class Order
     public $ms3;
     /** @var array $config */
     public $config = [];
-    protected $storage = 'session';
-    protected $storageHandler;
+    protected $storage;
 
     /**
      * Order constructor.
@@ -31,23 +31,21 @@ class Order
         $this->ms3 = $ms3;
         $this->modx = $ms3->modx;
 
-        $this->storage = $this->modx->getOption('ms3_tmp_storage', null, 'session');
-        $this->storageInit();
-
         $this->config = array_merge([], $config);
 
         $this->modx->lexicon->load('minishop3:cart');
+
+        $this->storage = new DBOrder($this->modx, $this->ms3);
     }
 
-    /**
-     * @param string $ctx
-     *
-     * @return bool
-     */
-    public function initialize($ctx = 'web')
+    public function initialize($token = '')
     {
-        $this->storageHandler->setContext($ctx);
-        return true;
+        return $this->storage->initialize($token, $this->config);
+    }
+
+    public function get()
+    {
+        return $this->storage->get();
     }
 
     /**
@@ -58,10 +56,6 @@ class Order
      */
     public function validate($key, $value)
     {
-        if ($key != 'comment') {
-            $value = preg_replace('/\s+/', ' ', trim($value));
-        }
-
         $eventParams = [
             'key' => $key,
             'value' => $value,
@@ -70,54 +64,8 @@ class Order
         $response = $this->invokeEvent('msOnBeforeValidateOrderValue', $eventParams);
         $value = $response['data']['value'];
 
-        $old_value = $this->order[$key] ?? '';
-        switch ($key) {
-            case 'email':
-                $value = preg_match('/^[^@а-яА-Я]+@[^@а-яА-Я]+(?<!\.)\.[^\.а-яА-Я]{2,}$/m', $value)
-                    ? $value
-                    : false;
-                break;
-            case 'receiver':
-                // Transforms string from "nikolaj -  coster--Waldau jr." to "Nikolaj Coster-Waldau Jr."
-                $tmp = preg_replace(
-                    ['/[^-a-zа-яёґєіїўäëïöüçàéèîôûäüöÜÖÄÁČĎĚÍŇÓŘŠŤÚŮÝŽ\s\.\'’ʼ`"]/iu', '/\s+/', '/\-+/', '/\.+/', '/[\'’ʼ`"]/iu', '/\'+/'],
-                    ['', ' ', '-', '.', '\'', '\''],
-                    $value
-                );
-                $tmp = preg_split('/\s/', $tmp, -1, PREG_SPLIT_NO_EMPTY);
-                $tmp = array_map([$this, 'ucfirst'], $tmp);
-                $value = preg_replace('/\s+/', ' ', implode(' ', $tmp));
-                if (empty($value)) {
-                    $value = false;
-                }
-                break;
-            case 'phone':
-                $value = substr(preg_replace('/[^-+()0-9]/u', '', $value), 0, 16);
-                break;
-            case 'delivery':
-                /** @var msDelivery $delivery */
-                $delivery = $this->modx->getObject(msDelivery::class, ['id' => $value, 'active' => 1]);
-                if (!$delivery) {
-                    $value = $old_value;
-                    break;
-                }
-                if (!empty($this->order['payment'])) {
-                    if (!$this->hasPayment($value, $this->order['payment'])) {
-                        $this->order['payment'] = $delivery->getFirstPayment();
-                    };
-                }
-                break;
-            case 'payment':
-                if (!empty($this->order['delivery'])) {
-                    $value = $this->hasPayment($this->order['delivery'], $value)
-                        ? $value
-                        : $old_value;
-                }
-                break;
-            case 'index':
-                $value = substr(preg_replace('/[^-\da-z]/iu', '', $value), 0, 10);
-                break;
-        }
+       //TODO Validate with delivery's validation riles
+
 
         $eventParams = [
             'key' => $key,
@@ -174,23 +122,6 @@ class Order
             : array_map('trim', explode(',', $requires));
 
         return $this->success('', ['requires' => $requires]);
-    }
-
-    /**
-     * Set controller for Order
-     */
-    protected function storageInit()
-    {
-        switch ($this->storage) {
-            case 'session':
-                require_once dirname(__FILE__) . '/storage/session/ordersessionhandler.class.php';
-                $this->storageHandler = new OrderSessionHandler($this->modx, $this->ms3);
-                break;
-            case 'db':
-                require_once dirname(__FILE__) . '/storage/db/orderdbhandler.class.php';
-                $this->storageHandler = new OrderDBHandler($this->modx, $this->ms3);
-                break;
-        }
     }
 
     /**
@@ -254,32 +185,6 @@ class Order
     protected function success($message = '', $data = [], $placeholders = [])
     {
         return $this->ms3->utils->success($message, $data, $placeholders);
-    }
-
-    /**
-     * Ucfirst function with support of cyrillic
-     *
-     * @param string $str
-     *
-     * @return string
-     */
-    protected function ucfirst($str = '')
-    {
-        if (strpos($str, '-') !== false) {
-            $tmp = array_map([$this, __FUNCTION__], explode('-', $str));
-
-            return implode('-', $tmp);
-        }
-
-        if (function_exists('mb_substr') && preg_match('/[а-я-яёґєіїўäëïöüçàéèîôû]/iu', $str)) {
-            $tmp = mb_strtolower($str, 'utf-8');
-            $str = mb_substr(mb_strtoupper($tmp, 'utf-8'), 0, 1, 'utf-8') .
-                mb_substr($tmp, 1, mb_strlen($tmp) - 1, 'utf-8');
-        } else {
-            $str = ucfirst(strtolower($str));
-        }
-
-        return $str;
     }
 
     /**

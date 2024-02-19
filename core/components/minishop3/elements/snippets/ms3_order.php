@@ -10,13 +10,22 @@ use MiniShop3\Model\msDeliveryMember;
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 $ms3 = $modx->services->get('ms3');
+$ms3->initialize($modx->context->key);
+if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
+    $token = $_SESSION['ms3']['customer_token'];
+} else {
+    $response = $ms3->customer->generateToken();
+    $token = $response['data']['token'];
+}
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrder');
 
+$ms3->order->initialize($token);
 $order = $ms3->order->get();
+$modx->log(1, print_r($order, 1));
 
 // Do not show order form when displaying details of existing order
 if (!empty($_GET['msorder'])) {

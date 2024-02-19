@@ -3,6 +3,7 @@
 namespace MiniShop3\Utils;
 
 use MiniShop3\Controllers\Cart\Cart;
+use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Customer\Customer;
 use MODX\Revolution\modX;
 use MiniShop3\MiniShop3;
@@ -43,7 +44,7 @@ class Services
 //            require_once dirname(__FILE__, 2) . '/Controllers/Customer/Customer.php';
 //        }
 
-        // Custom cart class
+        // Load cart class
         $cartController = $this->modx->getOption(
             'ms3_cart_controller',
             null,
@@ -60,57 +61,23 @@ class Services
         $this->ms3->setController('cart', $cart);
 
 
-//        $cart_class = $this->modx->getOption('ms3_cart_handler_class', null, 'msCartHandler');
-//        if ($cart_class != 'msCartHandler') {
-//            $this->loadCustomClasses('cart');
-//        }
-//        if (!class_exists($cart_class)) {
-//            $cart_class = 'msCartHandler';
-//        }
-//
-//        $this->cart = new $cart_class($this, $this->config);
-//        if (!($this->cart instanceof msCartInterface) || $this->cart->initialize($ctx) !== true) {
-//            $this->modx->log(
-//                modX::LOG_LEVEL_ERROR,
-//                'Could not initialize miniShop3 cart handler class: "' . $cart_class . '"'
-//            );
-//
-//            return false;
-//        }
+        // Load Order class
+        $orderController = $this->modx->getOption(
+            'ms3_order_controller',
+            null,
+            '\\MiniShop3\\Controllers\\Order\\Order'
+        );
+        if ($orderController !== '\\MiniShop3\\Controllers\\Order\\Order') {
+            $this->loadCustomClasses('order');
+        }
+        if (!class_exists($orderController)) {
+            $orderController = Cart::class;
+        }
 
-        // Custom order class
-//        $orderController = $this->modx->getOption(
-//            'ms3_order_controller',
-//            null,
-//            '\\MiniShop3\\Controllers\\Order\\Order'
-//        );
-//        if ($orderController !== '\\MiniShop3\\Controllers\\Order\\Order') {
-//            $this->loadCustomClasses('order');
-//        }
-//        if (!class_exists($orderController)) {
-//            $orderController = Cart::class;
-//        }
-//
-//        $cart = new $orderController($this->ms3, $this->ms3->config);
-//        $this->ms3->setController('order', $cart);
-//        $order_class = $this->modx->getOption('ms3_order_handler_class', null, 'msOrderHandler');
-//        if ($order_class != 'msOrderHandler') {
-//            $this->loadCustomClasses('order');
-//        }
-//        if (!class_exists($order_class)) {
-//            $order_class = 'msOrderHandler';
-//        }
-//
-//        $this->order = new $order_class($this, $this->config);
-//        if (!($this->order instanceof msOrderInterface) || $this->order->initialize($ctx) !== true) {
-//            $this->modx->log(
-//                modX::LOG_LEVEL_ERROR,
-//                'Could not initialize miniShop3 order handler class: "' . $order_class . '"'
-//            );
-//
-//            return false;
-//        }
+        $order = new $orderController($this->ms3, $this->ms3->config);
+        $this->ms3->setController('order', $order);
 
+        // Load Customer class
         $customerController = $this->modx->getOption(
             'ms3_customer_controller',
             null,

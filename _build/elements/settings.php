@@ -15,7 +15,7 @@ return [
     ],
 
     'ms3_services' => [
-        'value' => '{"cart":[],"order":[],"payment":[],"delivery":["MiniShop3\\\\Controllers\\\\Delivery\\\\Delivery"]}',
+        'value' => '{"cart":["MiniShop3\\\\Controllers\\\\Cart\\\\Cart"],"order":["MiniShop3\\\\Controllers\\\\Order\\\\Order"],"payment":[],"delivery":["MiniShop3\\\\Controllers\\\\Delivery\\\\Delivery"]}',
         'xtype' => 'textarea',
         'area' => 'ms3_main',
     ],
