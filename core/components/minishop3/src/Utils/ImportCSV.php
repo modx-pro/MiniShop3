@@ -5,27 +5,26 @@ namespace MiniShop3\Utils;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
-use MODX\Revolution\Processors\ProcessorResponse;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 
 class ImportCSV
 {
     /**
-     * @var modX
+     * @var modX $modx
      */
-    private $modx;
+    private modX $modx;
     /**
-     * @var MiniShop3
+     * @var MiniShop3 $ms3
      */
-    private $ms3;
+    private MiniShop3 $ms3;
     private $rows = 0;
     private $created = 0;
     private $updated = 0;
 
     private $params;
 
-    public function __construct(modX $modx)
+    public function __construct(modX &$modx)
     {
         $this->modx = $modx;
         $this->ms3 = $this->modx->services->get('ms3');
@@ -52,12 +51,12 @@ class ImportCSV
         if (empty($this->params['fields'])) {
             $error = $this->modx->lexicon('ms3_utilities_import_fields_ns');
             $this->modx->log(modX::LOG_LEVEL_ERROR, $error);
-            return $this->ms3->error($error);
+            return $this->ms3->utils->error($error);
         }
         if (empty($this->params['key'])) {
             $error = $this->modx->lexicon('ms3_utilities_import_key_ns');
             $this->modx->log(modX::LOG_LEVEL_ERROR, $error);
-            return $this->ms3->error($error);
+            return $this->ms3->utils->error($error);
         }
 
         $this->params['keys'] = array_map('trim', explode(',', strtolower($this->params['fields'])));
@@ -72,18 +71,18 @@ class ImportCSV
         if (empty($this->params['file'])) {
             $error = $this->modx->lexicon('ms3_utilities_import_file_ns');
             $this->modx->log(modX::LOG_LEVEL_ERROR, $error);
-            return $this->ms3->error($error);
+            return $this->ms3->utils->error($error);
         } elseif (!preg_match('/\.csv$/i', $this->params['file'])) {
             $error = $this->modx->lexicon('ms3_utilities_import_file_ext_err');
             $this->modx->log(modX::LOG_LEVEL_ERROR, $error);
-            return $this->ms3->error($error);
+            return $this->ms3->utils->error($error);
         }
 
         $this->params['file'] = str_replace('//', '/', MODX_BASE_PATH . $this->params['file']);
         if (!file_exists($this->params['file'])) {
             $error = $this->modx->lexicon('ms3_utilities_import_file_nf', ['path' => $this->params['file']]);
             $this->modx->log(modX::LOG_LEVEL_ERROR, $error);
-            return $this->ms3->error($error);
+            return $this->ms3->utils->error($error);
         }
 
         $requiredFields = [
@@ -94,7 +93,7 @@ class ImportCSV
         foreach ($requiredFields as $rf) {
             if (!in_array($rf, $this->params['keys'])) {
                 $error = $this->modx->lexicon('ms3_utilities_import_required_field', ['field' => $rf]);
-                return $this->ms3->error($error);
+                return $this->ms3->utils->error($error);
             }
         }
 
@@ -105,7 +104,7 @@ class ImportCSV
             'created' => $this->created,
             'updated' => $this->updated
         ]);
-        return $this->ms3->success($message);
+        return $this->ms3->utils->success($message);
     }
 
     private function import()
@@ -159,10 +158,10 @@ class ImportCSV
 
         // Set default values
         if (empty($data['class_key'])) {
-            $data['class_key'] = 'msProduct';
+            $data['class_key'] = msProduct::class;
         }
         if (empty($data['context_key'])) {
-            $parent = $this->modx->getObject('modResource', ['id' => $data['parent']]);
+            $parent = $this->modx->getObject(modResource::class, ['id' => $data['parent']]);
             if (isset($data['parent']) && $parent) {
                 $data['context_key'] = $parent->get('context_key');
             } elseif (isset($this->modx->resource) && isset($this->modx->context)) {
@@ -176,13 +175,15 @@ class ImportCSV
 
         // Duplicate check
         $q = $this->modx->newQuery($data['class_key']);
+        $classAlias = strtolower($data['class_key']) === strtolower(msProduct::class) ? 'msProduct' : 'modResource';
+        $q->setClassAlias($classAlias);
         $q->where([
             'deleted' => 0,
             'class_key' => $data['class_key']
         ]);
-        $q->select($data['class_key'] . '.id');
-        if (strtolower($data['class_key']) === msProduct::class) {
-            $q->innerJoin(msProductData::class, 'Data', $data['class_key'] . '.id = Data.id');
+        $q->select($classAlias . '.id');
+        if (strtolower($data['class_key']) === strtolower(msProduct::class)) {
+            $q->innerJoin(msProductData::class, 'Data', $classAlias . '.id = Data.id');
             $is_product = true;
         }
         $tmp = $this->modx->getFields($data['class_key']);
@@ -195,7 +196,7 @@ class ImportCSV
         $q->prepare();
         $this->modx->log(modX::LOG_LEVEL_INFO, "SQL query for check for duplicate: \n" . $q->toSql());
 
-        $action = 'create';
+        $action = 'Create';
         /** @var modResource $exists */
         $exists = $this->modx->getObject($data['class_key'], $q);
         if ($exists) {
@@ -216,7 +217,7 @@ class ImportCSV
                     return true;
                 }
             } else {
-                $action = 'update';
+                $action = 'Update';
                 $data['id'] = $exists->id;
             }
         }
@@ -228,11 +229,11 @@ class ImportCSV
     {
         $this->modx->error->reset();
         /** @var ProcessorResponse::class $response */
-        $response = $this->modx->runProcessor('resource/' . $action, $data);
+        $response = $this->modx->runProcessor('MODX\\Revolution\\Processors\\Resource\\' . $action, $data);
         if ($response->isError()) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, "Error on $action: \n" . print_r($response->getAllErrors(), 1));
         } else {
-            if ($action == 'update') {
+            if ($action == 'Update') {
                 $this->updated++;
             } else {
                 $this->created++;
@@ -264,9 +265,9 @@ class ImportCSV
                     );
                 } else {
                     $response = $this->modx->runProcessor(
-                        'gallery/upload',
+                        'MiniShop3\\Processors\\Gallery\\Upload',
                         ['id' => $resource['id'], 'name' => $v, 'file' => $image],
-                        ['processors_path' => MODX_CORE_PATH . 'components/minishop3/processors/mgr/']
+                        ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
                     );
                     if ($response->isError()) {
                         $this->modx->log(

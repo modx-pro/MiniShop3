@@ -203,7 +203,7 @@ $_lang['ms3_utilities_gallery_done'] = 'Завершено';
 $_lang['ms3_utilities_gallery_done_message'] = 'Обновление превью изображений успешно завершено.';
 $_lang['ms3_utilities_gallery_err_noproducts'] = 'В каталоге нет товаров';
 $_lang['ms3_utilities_gallery_for_step'] = 'Обработать товаров за 1 шаг';
-$_lang['ms3_utilities_gallery_information'] = 'Выбранный источник файлов: <strong>{0}</strong> <a href="?a=source/update&id={1}" target="_blank"><i class="icon icon-cog"></i></a><br>Всего товаров: <strong>{2} шт.</strong> <br> Изображений: <strong>{3} шт.</strong> ';
+$_lang['ms3_utilities_gallery_information'] = 'Всего товаров: <strong>{2} шт.</strong> <br> Изображений: <strong>{3} шт.</strong><br>Выбранный источник файлов: <strong>{0} ({1})</strong> <a href="?a=source/update&id={1}" target="_blank"><i class="icon icon-cog"></i></a>';
 $_lang['ms3_utilities_gallery_intro'] = 'Обновление всех изображений товаров согласно указанным параметрам. <br>Данная операция является трудозатратной, поэтому не указывайте большое число для одной итерации.';
 $_lang['ms3_utilities_gallery_refresh'] = 'Обновить';
 $_lang['ms3_utilities_gallery_updating'] = 'Обновлению превью';

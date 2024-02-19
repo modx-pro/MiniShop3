@@ -36,7 +36,7 @@ ms3.panel.UtilitiesGallery = function (config) {
 					cls: 'x-fieldset-checkbox-toggle',
 					style: 'margin: 5px 0 15px ',
 					collapsible: true,
-					collapsed: true,
+					collapsed: false,
 					stateful: true,
 					labelAlign: 'top',
 					stateEvents: ['collapse', 'expand'],
@@ -112,25 +112,25 @@ ms3.panel.UtilitiesGallery = function (config) {
 Ext.extend(ms3.panel.UtilitiesGallery, MODx.FormPanel, {
 
 	updateProgress: function (data) {
-		const progressblock = document.getElementById('ms3-utility-gallery-range_outer');
-		const progresslabel = document.getElementById('ms3-utility-gallery-label');
-		const progressbar = document.getElementById('ms3-utility-gallery-progress-bar');
-		const progressiteration = document.getElementById('ms3-utility-gallery-iteration');
-		progressblock.style.visibility = 'visible';
+		const progressBlock = document.getElementById('ms3-utility-gallery-range_outer');
+		const progressLabel = document.getElementById('ms3-utility-gallery-label');
+		const progressBar = document.getElementById('ms3-utility-gallery-progress-bar');
+		const progressIteration = document.getElementById('ms3-utility-gallery-iteration');
+		progressBlock.style.visibility = 'visible';
 
 		if (data.done) {
-			progresslabel.innerHTML = '100%';
-			progressbar.style.width = '100%';
-			progressiteration.style.visibility = 'hidden';
+			progressLabel.innerHTML = '100%';
+			progressBar.style.width = '100%';
+			progressIteration.style.visibility = 'hidden';
 		} else {
 			let progress = (parseFloat((data.offset / data.total) * 100)).toFixed(2);
-			progresslabel.innerHTML = progress + '%';
-			progressbar.style.width = progress + '%';
+			progressLabel.innerHTML = progress + '%';
+			progressBar.style.width = progress + '%';
 
 			// count iterations
 			const totalIterations = Math.ceil(data.total / data.limit);
 			const currentIteration = data.offset / data.limit;
-			progressiteration.innerHTML = currentIteration + "/" + totalIterations;
+			progressIteration.innerHTML = currentIteration + "/" + totalIterations;
 		}
 	}
 });

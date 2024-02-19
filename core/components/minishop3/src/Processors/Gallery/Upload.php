@@ -5,6 +5,7 @@ namespace MiniShop3\Processors\Gallery;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductFile;
+use MODX\Revolution\modX;
 use MODX\Revolution\Processors\ModelProcessor;
 use MODX\Revolution\Sources\modFileMediaSource;
 use MODX\Revolution\Sources\modMediaSource;
@@ -208,6 +209,7 @@ class Upload extends ModelProcessor
 
         clearstatcache(true, $tf);
         if (file_exists($tf) && !empty($name) && $size = filesize($tf)) {
+            /** @var msProductFile $o */
             $hash = ($o = $this->modx->newObject($this->classKey)) ? $o->generateHash($tf) : '';
             $data = [
                 'name' => $name,

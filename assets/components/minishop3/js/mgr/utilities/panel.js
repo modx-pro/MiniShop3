@@ -3,7 +3,7 @@ ms3.panel.Utilities = function (config) {
     Ext.apply(config, {
         cls: 'container',
         items: [{
-            html: '<h2>' + _('ms3') + ' :: ' + _('ms3_utilities') + '</h2>',
+            html: '<h2>' + _('ms3_header') + ' :: ' + _('ms3_utilities') + '</h2>',
             cls: 'modx-page-header',
         }, {
             xtype: 'modx-tabs',

@@ -1,5 +1,9 @@
 <?php
 
+use MiniShop3\Model\msProduct;
+use MiniShop3\Model\msProductFile;
+use MODX\Revolution\Sources\modMediaSource;
+
 if (!class_exists('msManagerController')) {
     require_once dirname(__FILE__, 2) . '/manager.class.php';
 }
@@ -28,7 +32,8 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
     public function loadCustomCssJs()
     {
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/utilities/gallery.css');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/ms3.js');
+
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/gallery/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/import/panel.js');
@@ -37,7 +42,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         // get source properties
         $productSource = $this->getOption('ms3_product_source_default', null, 1);
-        if ($source = $this->modx->getObject('modMediaSource', $productSource)) {
+        if ($source = $this->modx->getObject(modMediaSource::class, $productSource)) {
             $config['utility_gallery_source_id'] = $productSource;
             $config['utility_gallery_source_name'] = $source->get('name');
 
@@ -50,8 +55,8 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         }
 
         // get information about products and files
-        $config['utility_gallery_total_products'] = $this->modx->getCount('msProduct', ['class_key' => 'msProduct']);
-        $config['utility_gallery_total_products_files'] = $this->modx->getCount('msProductFile', ['parent' => 0]);
+        $config['utility_gallery_total_products'] = $this->modx->getCount(msProduct::class, ['class_key' => msProduct::class]);
+        $config['utility_gallery_total_products_files'] = $this->modx->getCount(msProductFile::class, ['parent_id' => 0]);
 
         // get params for import
         $config['utility_import_fields'] = $this->getOption('ms3_utility_import_fields', null, 'pagetitle,parent,price,article', true);
@@ -59,7 +64,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         $this->addHtml(
             '<script>
-            miniShop2.config = ' . json_encode($config) . ';
+            ms3.config = ' . json_encode($config) . ';
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-utilities"});
             });
