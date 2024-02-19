@@ -103,25 +103,44 @@ class Order
      *
      * @return array|string
      */
-    public function getDeliveryRequiresFields($id = 0)
+    public function getDeliveryRequiresFields($deliveryId = 0)
     {
-        // TODO: данный метод (getDeliveryRequiresFields) нуждается в переработке:
-        // 1. Смена названия, т.к. теперь вместо списка requires полей мы работаем с правилами валидации (validation_rules)
-        // 2. Вероятно, нужно заменить логику с get fields сразу на validate с использованием Rakit\Validation\Validator;
-        if (empty($id)) {
-            $id = $this->order['delivery'];
+        /** @var array $validationRules */
+        $validationRules = $this->getDeliveryValidationRules($deliveryId);
+        if (!$validationRules['success']) {
+            return $this->error('ms3_order_err_delivery', ['delivery']);
+        }
+
+        $requires = array_filter($validationRules['validation_rules'], function($rules) {
+            return in_array('required', array_map('trim', explode("|", $rules)));
+        }, ARRAY_FILTER_USE_BOTH);
+        
+        return $this->success('', ['requires' => $requires]);
+    }
+
+    /**
+     * Returns the validation rules for delivery
+     *
+     * @param integer $deliveryId
+     * @return void
+     */
+    public function getDeliveryValidationRules($deliveryId = 0) {
+        if (empty($deliveryId)) {
+            // TODO: ждем реализации, чтобы корректно получать order
+            $deliveryId = $this->order['delivery_id'];
         }
         /** @var msDelivery $delivery */
-        $delivery = $this->modx->getObject(msDelivery::class, ['id' => $id, 'active' => 1]);
+        $delivery = $this->modx->getObject(msDelivery::class, ['id' => $deliveryId, 'active' => 1]);
         if (!$delivery) {
             return $this->error('ms3_order_err_delivery', ['delivery']);
         }
-        $requires = $delivery->get('requires');
-        $requires = empty($requires)
-            ? []
-            : array_map('trim', explode(',', $requires));
 
-        return $this->success('', ['requires' => $requires]);
+        $rules = $delivery->get('validation_rules');
+        $rules = empty($rules)
+            ? []
+            : $this->modx->fromJSON($rules, true);
+
+        return $this->success('', ['validation_rules' => $rules]);
     }
 
     /**
