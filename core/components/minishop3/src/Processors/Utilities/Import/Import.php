@@ -52,26 +52,22 @@ class Import extends ModelProcessor
             'skip_header' => $this->properties['skip_header'],
         ];
 
-        $scheduler = $this->getProperty('scheduler', 0);
-        if (empty($scheduler)) {
+        $useScheduler = $this->getProperty('scheduler', 0);
+        if (empty($useScheduler)) {
             $importCSV = new ImportCSV($this->modx);
             return $importCSV->process($importParams);
         }
         
-        // TODO: Поддержка Scheduler в альфа версии еще не реализована.
-        return $this->failure('Scheduler support is not yet implemented!');
-
-        /** @var Scheduler $scheduler */
-        /*$path = $this->modx->getOption(
+        $schedulerPath = $this->modx->getOption(
             'scheduler.core_path',
             null,
             $this->modx->getOption('core_path') . 'components/scheduler/'
         );
-        $scheduler = $this->modx->getService('scheduler', 'Scheduler', $path . 'model/scheduler/');
-        if (!$scheduler) {
-            $this->modx->log(1, 'not found Scheduler extra');
+        if(!file_exists($schedulerPath . 'model/scheduler/scheduler.class.php')) {
             return $this->failure($this->modx->lexicon('ms3_utilities_scheduler_nf'));
         }
+        require_once $schedulerPath . 'model/scheduler/scheduler.class.php';
+        $scheduler = new \Scheduler($this->modx);
         $task = $scheduler->getTask('MiniShop3', 'ms3_csv_import');
         if (!$task) {
             $task = $this->createImportTask();
@@ -82,7 +78,7 @@ class Import extends ModelProcessor
 
         $task->schedule('+1 second', $importParams);
 
-        return $this->success($this->modx->lexicon('ms3_utilities_scheduler_success'));*/
+        return $this->success($this->modx->lexicon('ms3_utilities_scheduler_success'));
     }
 
     /**
