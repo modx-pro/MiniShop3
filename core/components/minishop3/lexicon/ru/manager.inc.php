@@ -135,6 +135,7 @@ $_lang['ms3_ft_numberfield'] = 'Числовое поле';
 $_lang['ms3_ft_textarea'] = 'Текстовая область';
 $_lang['ms3_ft_combobox'] = 'Выпадающий список';
 $_lang['ms3_ft_comboBoolean'] = 'Да/Нет';
+$_lang['ms3_ft_comboColors'] = 'Множественный список цветов';
 $_lang['ms3_ft_comboMultiple'] = 'Множественный список';
 $_lang['ms3_ft_comboOptions'] = 'Список с автодополнением';
 $_lang['ms3_ft_checkbox'] = 'Флажок';
