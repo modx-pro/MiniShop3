@@ -1,17 +1,17 @@
 <?php
 
-namespace MiniShop3\Processors\Utilites\Gallery;
+namespace MiniShop3\Processors\Utilities\Gallery;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
-use MODX\Revolution\Processors\Model\UpdateProcessor;
+use MODX\Revolution\Processors\Processor;
 use PDO;
 
-class Update extends UpdateProcessor
+class Update extends Processor
 {
-    public $classKey = 'msProductFile';
+    public $classKey = msProductFile::class;
     public $languageTopics = ['minishop3:default', 'minishop3:manager'];
     public $permission = 'msproductfile_generate';
 
@@ -28,13 +28,18 @@ class Update extends UpdateProcessor
      */
     public function initialize()
     {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
+        $this->ms3 = $this->modx->services->get('ms3');
 
         return parent::initialize();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function checkPermissions()
+    {
+        return !empty($this->permission) ? $this->modx->hasPermission($this->permission) : true;
+    }
 
     /**
      * {@inheritDoc}
@@ -55,7 +60,7 @@ class Update extends UpdateProcessor
 
         $c = $this->modx->newQuery(msProduct::class);
         $c->sortby('id', 'ASC');
-        $c->where(['class_key' => 'msProduct']);
+        $c->where(['class_key' => msProduct::class]);
         $c->select('msProduct.id');
 
         $this->total = $this->modx->getCount(msProduct::class, $c);
@@ -95,7 +100,7 @@ class Update extends UpdateProcessor
             return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
         }
 
-        $files = $this->modx->getCollection('msProductFile', ['product_id' => $product_id, 'parent' => 0]);
+        $files = $this->modx->getCollection(msProductFile::class, ['product_id' => $product_id, 'parent_id' => 0]);
         /** @var msProductFile $file */
         foreach ($files as $file) {
             $children = $file->getMany('Children');
@@ -110,7 +115,7 @@ class Update extends UpdateProcessor
         $product = $this->modx->getObject(msProductData::class, ['id' => $product_id]);
         if ($product) {
             $thumb = $product->updateProductImage();
-            if (empty($thumb) && $this->ms3 = $this->modx->services->get('ms3')) {
+            if (empty($thumb) && $this->ms3) {
                 $thumb = $this->ms3->config['defaultThumb'];
             }
             return $this->success('', ['thumb' => $thumb]);

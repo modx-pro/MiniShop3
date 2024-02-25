@@ -1,10 +1,11 @@
 <?php
 
-namespace MiniShop3\Processors\Utilites\Import;
+namespace MiniShop3\Processors\Utilities\Import;
 
-use MODX\Revolution\Processors\ModelProcessor;
+use MODX\Revolution\modSystemSetting;
+use MODX\Revolution\Processors\Processor;
 
-class SaveConfig extends ModelProcessor
+class SaveConfig extends Processor
 {
 
     public $languageTopics = ['minishop3:default', 'minishop3:manager'];
@@ -17,11 +18,15 @@ class SaveConfig extends ModelProcessor
      */
     public function initialize()
     {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
         return parent::initialize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function checkPermissions()
+    {
+        return !empty($this->permission) ? $this->modx->hasPermission($this->permission) : true;
     }
 
 
@@ -43,13 +48,13 @@ class SaveConfig extends ModelProcessor
         $this->delimiter = $this->getProperty('delimiter', ';');
 
         // save fields to system settings
-        if ($settingFields = $this->modx->getObject('modSystemSetting', 'ms3_utility_import_fields')) {
+        if ($settingFields = $this->modx->getObject(modSystemSetting::class, 'ms3_utility_import_fields')) {
             $settingFields->set('value', $this->fields);
             $settingFields->save();
         }
 
         // save delimiter to system settings
-        if ($settingDelimiter = $this->modx->getObject('modSystemSetting', 'ms3_utility_import_fields_delimiter')) {
+        if ($settingDelimiter = $this->modx->getObject(modSystemSetting::class, 'ms3_utility_import_fields_delimiter')) {
             $settingDelimiter->set('value', $this->delimiter);
             $settingDelimiter->save();
         }

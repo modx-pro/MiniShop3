@@ -1,15 +1,17 @@
 <?php
 
-namespace MiniShop3\Processors\Utilites\Import;
+namespace MiniShop3\Processors\Utilities\Import;
 
 use MiniShop3\Utils\ImportCSV;
 use MODX\Revolution\Processors\ModelProcessor;
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msProduct;
 
 class Import extends ModelProcessor
 {
 
-    public $classKey = 'msProduct';
+    public $classKey = msProduct::class;
+    public $objectType = 'msProduct';
     public $languageTopics = ['minishop3:default', 'minishop3:manager'];
     public $permission = 'msproduct_save';
     public $properties = [];
@@ -17,30 +19,15 @@ class Import extends ModelProcessor
     /** @var MiniShop3 $ms3 */
     protected $ms3;
 
-
     /**
      * @return bool|null|string
      */
     public function initialize()
     {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
         $this->properties = $this->getProperties();
 
         return parent::initialize();
     }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getLanguageTopics()
-    {
-        return $this->languageTopics;
-    }
-
 
     /**
      * {@inheritDoc}
@@ -65,24 +52,22 @@ class Import extends ModelProcessor
             'skip_header' => $this->properties['skip_header'],
         ];
 
-        $scheduler = $this->getProperty('scheduler', 0);
-        if (empty($scheduler)) {
+        $useScheduler = $this->getProperty('scheduler', 0);
+        if (empty($useScheduler)) {
             $importCSV = new ImportCSV($this->modx);
             return $importCSV->process($importParams);
         }
-
-
-        /** @var Scheduler $scheduler */
-        $path = $this->modx->getOption(
+        
+        $schedulerPath = $this->modx->getOption(
             'scheduler.core_path',
             null,
             $this->modx->getOption('core_path') . 'components/scheduler/'
         );
-        $scheduler = $this->modx->getService('scheduler', 'Scheduler', $path . 'model/scheduler/');
-        if (!$scheduler) {
-            $this->modx->log(1, 'not found Scheduler extra');
+        if(!file_exists($schedulerPath . 'model/scheduler/scheduler.class.php')) {
             return $this->failure($this->modx->lexicon('ms3_utilities_scheduler_nf'));
         }
+        require_once $schedulerPath . 'model/scheduler/scheduler.class.php';
+        $scheduler = new \Scheduler($this->modx);
         $task = $scheduler->getTask('MiniShop3', 'ms3_csv_import');
         if (!$task) {
             $task = $this->createImportTask();
