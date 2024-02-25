@@ -29,9 +29,9 @@ class Sort extends ModelProcessor
     public function process()
     {
         /** @var msProductFile $source */
-        $source = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('source')]);
+        $source = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('source_id')]);
         /** @var msProductFile $target */
-        $target = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('target')]);
+        $target = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('target_id')]);
         /** @var msProductData $product */
         $product = $this->modx->getObject(msProductData::class, ['id' => $this->getProperty('product_id')]);
         $product_id = $product->get('id');

@@ -166,8 +166,8 @@ Ext.extend(ms3.view.Images, MODx.DataView, {
             params: {
                 action: 'MiniShop3\\Processors\\Gallery\\Sort',
                 product_id: this.config.product_id,
-                source: o.source.id,
-                target: o.target.id
+                source_id: o.source.id,
+                target_id: o.target.id
             },
             listeners: {
                 success: {
