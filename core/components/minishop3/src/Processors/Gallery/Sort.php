@@ -29,7 +29,7 @@ class Sort extends ModelProcessor
     public function process()
     {
         /** @var msProductFile $source */
-        $source = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('source_id')]);
+        $source = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('source')]);
         /** @var msProductFile $target */
         $target = $this->modx->getObject(msProductFile::class, ['id' => $this->getProperty('target')]);
         /** @var msProductData $product */
@@ -57,8 +57,8 @@ class Sort extends ModelProcessor
             ";
         }
         $this->modx->exec($sql);
-        $newRank = $target->get('position');
-        $source->set('position', $newRank);
+        $newPosition = $target->get('position');
+        $source->set('position', $newPosition);
         $source->save();
 
         $thumb = $product->updateProductImage();

@@ -119,7 +119,7 @@ ms3.view.Images = function (config) {
         url: ms3.config.connector_url,
         fields: [
             'id', 'product_id', 'name', 'description', 'url', 'createdon', 'createdby', 'file',
-            'thumbnail', 'source', 'source_name', 'type', 'rank', 'active', 'properties', 'class',
+            'thumbnail', 'source', 'source_name', 'type', 'position', 'active', 'properties', 'class',
             'add', 'alt', 'actions'
         ],
         id: 'ms3-gallery-images-view',
@@ -392,7 +392,7 @@ Ext.extend(ms3.view.Images, MODx.DataView, {
                     <div class="modx-browser-thumb modx-pb-thumb ms3-gallery-thumb">\
                         <img src="{thumbnail}" title="{name}" />\
                     </div>\
-                    <small>{rank}. {shortName}</small>\
+                    <small>{position}. {shortName}</small>\
                 </div>\
             </tpl>'
         );
