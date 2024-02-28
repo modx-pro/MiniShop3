@@ -175,7 +175,7 @@ a.x-menu-item .x-menu-item-text .icon { line-height: 16px; top: auto; }
 /* Images list */
 .ms3-gallery-images { float: left; }
 #ms3-gallery-images-view { min-height: 150px; }
-.ms3-gallery-thumb-wrap:hover { border: 1px solid #aaa; }
+.ms3-gallery-thumb-wrap:hover .modx-browser-thumb { border: 1px solid #aaa; }
 .ms3-gallery-thumb { width: 120px; height: 90px; }
 .ms3-gallery-thumb img { max-width: 120px; max-height: 90px; display: block; margin: auto; }
 .ms3-gallery-window-thumb { border: 1px solid #e4e4e4; border-radius: 2px; background: #fdfdfd; }

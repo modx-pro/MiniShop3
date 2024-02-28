@@ -5,7 +5,6 @@ namespace MiniShop3\Processors\Settings\Option;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
-use MiniShop3\Model\msPayment;
 use MODX\Revolution\Processors\Model\GetProcessor;
 
 class Get extends GetProcessor

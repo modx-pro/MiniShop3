@@ -14,7 +14,7 @@ class GetList extends GetListProcessor
 {
     public $classKey = msProductFile::class;
     public $shortClassKey = 'msProductFile';
-    public $languageTopics = ['default', 'minishop3:default'];
+    public $languageTopics = ['default', 'minishop3:product'];
     public $defaultSortField = 'position';
     public $defaultSortDirection = 'ASC';
     public $permission = 'msproductfile_list';
