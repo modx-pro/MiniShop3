@@ -34,38 +34,42 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
     getFields: function () {
         return [
             'id', 'key', 'caption', 'description', 'measure_unit',
-            'category', 'type', 'properties', 'rank', 'actions'
+            'category_id', 'type', 'properties', 'rank', 'actions'
         ];
     },
 
     getColumns: function () {
         return [
-            {header: _('id'), dataIndex: 'id', width: 30, sortable: true},
             {
+                header: _('id'),
+                dataIndex: 'id',
+                width: 30,
+                sortable: true
+            }, {
                 header: _('ms3_ft_name'),
                 dataIndex: 'key',
                 width: 100,
                 sortable: true
-        }, {
-            header: _('ms3_ft_caption'),
-            dataIndex: 'caption',
-            width: 100,
-            sortable: true
-        }, {
-            header: _('ms3_ft_type'),
-            dataIndex: 'type',
-            width: 100,
-            sortable: true,
-            renderer: function (v) {
-                return _('ms3_ft_' + v)
+            }, {
+                header: _('ms3_ft_caption'),
+                dataIndex: 'caption',
+                width: 100,
+                sortable: true
+            }, {
+                header: _('ms3_ft_type'),
+                dataIndex: 'type',
+                width: 100,
+                sortable: true,
+                renderer: function (v) {
+                    return _('ms3_ft_' + v)
+                }
+            }, {
+                header: _('ms3_actions'),
+                dataIndex: 'actions',
+                id: 'actions',
+                width: 70,
+                renderer: ms3.utils.renderActions
             }
-        }, {
-            header: _('ms3_actions'),
-            dataIndex: 'actions',
-            id: 'actions',
-            width: 70,
-            renderer: ms3.utils.renderActions
-        }
         ];
     },
 
@@ -103,7 +107,7 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
         };
     },
 
-    actionsColumnRenderer: function(value, metaData, record, rowIndex, colIndex, store) {
+    actionsColumnRenderer: function (value, metaData, record, rowIndex, colIndex, store) {
         const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
         return this._getActionsColumnTpl().apply({
             actions: actions
@@ -137,7 +141,7 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
     },
 
     updateOption: function (btn, e, row) {
-        if (typeof(row) != 'undefined') {
+        if (typeof (row) != 'undefined') {
             this.menu.record = row.data;
         }
 
@@ -228,7 +232,7 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
                 }
             }
         });
-        w.fp.getForm().setValues({options: options});
+        w.fp.getForm().setValues({ options: options });
         w.show(e.target);
     },
 

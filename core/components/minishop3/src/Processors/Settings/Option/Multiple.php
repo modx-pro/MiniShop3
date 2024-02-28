@@ -4,7 +4,6 @@ namespace MiniShop3\Processors\Settings\Option;
 
 use MiniShop3\MiniShop3;
 use MODX\Revolution\Processors\ModelProcessor;
-use MODX\Revolution\Processors\ProcessorResponse;
 
 class Multiple extends ModelProcessor
 {

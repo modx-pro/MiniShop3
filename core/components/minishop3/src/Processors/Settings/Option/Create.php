@@ -2,9 +2,7 @@
 
 namespace MiniShop3\Processors\Settings\Option;
 
-use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOption;
-use MiniShop3\Model\msPayment;
 use MODX\Revolution\Processors\Model\CreateProcessor;
 
 class Create extends  CreateProcessor
@@ -32,9 +30,6 @@ class Create extends  CreateProcessor
             $this->addFieldError('key', $this->modx->lexicon($this->objectType . '_err_ae', ['key' => $key]));
         }
         $this->setProperty('key', $key);
-
-        $category = $this->getProperty('category');
-        $this->setProperty('category_id', $category);
 
         return parent::beforeSet();
     }
