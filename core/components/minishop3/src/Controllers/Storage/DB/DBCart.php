@@ -129,7 +129,7 @@ class DBCart extends DBStorage
             'msProduct' => $msProduct,
             'count' => $count,
             'options' => $options,
-            'cart' => $this,
+            'controller' => $this,
         ]);
         if (!($response['success'])) {
             return $this->error($response['message']);
@@ -182,7 +182,7 @@ class DBCart extends DBStorage
         $this->restrictDraft($this->draft);
         $this->cart = $this->getCart();
 
-        $response = $this->invokeEvent('msOnAddToCart', ['product_key' => $product_key, 'cart' => $this]);
+        $response = $this->invokeEvent('msOnAddToCart', ['product_key' => $product_key, 'controller' => $this]);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
@@ -232,7 +232,7 @@ class DBCart extends DBStorage
 
         $response = $this->invokeEvent(
             'msOnBeforeChangeInCart',
-            ['product_key' => $product_key, 'count' => $count, 'cart' => $this]
+            ['product_key' => $product_key, 'count' => $count, 'controller' => $this]
         );
         if (!$response['success']) {
             return $this->error($response['message']);
@@ -256,7 +256,7 @@ class DBCart extends DBStorage
 
         $response = $this->invokeEvent(
             'msOnChangeInCart',
-            ['product_key' => $product_key, 'count' => $count, 'cart' => $this]
+            ['product_key' => $product_key, 'count' => $count, 'controller' => $this]
         );
         if (!$response['success']) {
             return $this->error($response['message']);
@@ -388,7 +388,7 @@ class DBCart extends DBStorage
 
         $response = $this->ms3->utils->invokeEvent(
             'msOnBeforeRemoveFromCart',
-            ['product_key' => $product_key, 'cart' => $this]
+            ['product_key' => $product_key, 'controller' => $this]
         );
         if (!$response['success']) {
             return $this->error($response['message']);
@@ -412,7 +412,7 @@ class DBCart extends DBStorage
 
         $response = $this->ms3->utils->invokeEvent(
             'msOnRemoveFromCart',
-            ['product_key' => $product_key, 'cart' => $this]
+            ['product_key' => $product_key, 'controller' => $this]
         );
         if (!$response['success']) {
             return $this->error($response['message']);
@@ -449,7 +449,7 @@ class DBCart extends DBStorage
         $this->initDraft();
         $this->cart = $this->loadCart($this->draft);
 
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeEmptyCart', ['cart' => $this]);
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeEmptyCart', ['controller' => $this]);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
@@ -460,7 +460,7 @@ class DBCart extends DBStorage
 
         $this->cart = [];
 
-        $response = $this->ms3->utils->invokeEvent('msOnEmptyCart', ['cart' => $this]);
+        $response = $this->ms3->utils->invokeEvent('msOnEmptyCart', ['controller' => $this]);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
@@ -522,7 +522,7 @@ class DBCart extends DBStorage
 
         $response = $this->invokeEvent('msOnGetStatusCart', [
             'status' => $status,
-            'cart' => $this,
+            'controller' => $this,
         ]);
         if ($response['success']) {
             $status = $response['data']['status'];
