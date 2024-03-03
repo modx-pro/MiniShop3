@@ -79,7 +79,7 @@ class OrderStatus
         }
 
         $eventParams = [
-            'order' => $order,
+            'msOrder' => $order,
             'status_id' => $order->get('status_id'),
         ];
         $response = $this->ms3->utils->invokeEvent('msOnBeforeChangeOrderStatus', $eventParams);
@@ -92,7 +92,7 @@ class OrderStatus
         if ($order->save()) {
             $this->orderLogController->process($order->get('id'), 'status', $status_id);
             $response = $this->ms3->utils->invokeEvent('msOnChangeOrderStatus', [
-                'order' => $order,
+                'msOrder' => $order,
                 'status_id' => $status_id,
             ]);
             if (!$response['success']) {

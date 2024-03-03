@@ -31,7 +31,7 @@ class SessionOrder extends Order implements OrderInterface
         $eventParams = [
             'key' => $key,
             'value' => $value,
-            'order' => $this,
+            'controller' => $this,
         ];
         $response = $this->invokeEvent('msOnBeforeAddToOrder', $eventParams);
         if (!$response['success']) {
@@ -49,7 +49,7 @@ class SessionOrder extends Order implements OrderInterface
                 $eventParams = [
                     'key' => $key,
                     'value' => $validated,
-                    'order' => $this,
+                    'controller' => $this,
                 ];
                 $response = $this->invokeEvent('msOnAddToOrder', $eventParams);
                 if (!$response['success']) {
@@ -78,7 +78,7 @@ class SessionOrder extends Order implements OrderInterface
         if ($exists) {
             $eventParams = [
                 'key' => $key,
-                'order' => $this,
+                'controller' => $this,
             ];
             $response = $this->invokeEvent('msOnBeforeRemoveFromOrder', $eventParams);
             if (!$response['success']) {
@@ -122,7 +122,7 @@ class SessionOrder extends Order implements OrderInterface
         $order =& $_SESSION['ms3']['order'];
         $eventParams = [
             'data' => $data,
-            'order' => $this,
+            'controller' => $this,
         ];
         $response = $this->invokeEvent('msOnSubmitOrder', $eventParams);
         if (!$response['success']) {
@@ -212,7 +212,7 @@ class SessionOrder extends Order implements OrderInterface
 
         $eventParams = [
             'msOrder' => $msOrder,
-            'order' => $this,
+            'controller' => $this,
         ];
         $response = $this->invokeEvent('msOnBeforeCreateOrder', $eventParams);
         if (!$response['success']) {
@@ -296,13 +296,13 @@ class SessionOrder extends Order implements OrderInterface
      */
     public function clean()
     {
-        $response = $this->invokeEvent('msOnBeforeEmptyOrder', ['order' => $this]);
+        $response = $this->invokeEvent('msOnBeforeEmptyOrder', ['controller' => $this]);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
 
         unset($_SESSION['ms3']['order']);
-        $response = $this->invokeEvent('msOnEmptyOrder', ['order' => $this]);
+        $response = $this->invokeEvent('msOnEmptyOrder', ['controller' => $this]);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
@@ -319,7 +319,7 @@ class SessionOrder extends Order implements OrderInterface
     public function getCost($with_cart = true, $only_cost = false)
     {
         $eventParams = [
-            'order' => $this,
+            'controller' => $this,
             'cart' => $this->ms3->cart,
             'with_cart' => $with_cart,
             'only_cost' => $only_cost,
@@ -359,7 +359,7 @@ class SessionOrder extends Order implements OrderInterface
         }
 
         $eventParams = [
-            'order' => $this,
+            'controller' => $this,
             'cart' => $this->ms3->cart,
             'with_cart' => $with_cart,
             'only_cost' => $only_cost,
