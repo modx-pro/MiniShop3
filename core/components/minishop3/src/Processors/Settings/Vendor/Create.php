@@ -14,7 +14,7 @@ class Create extends CreateProcessor
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
     public $beforeSaveEvent = 'msOnBeforeVendorCreate';
-    public $afterSaveEvent = 'msOnAfterVendorCreate';
+    public $afterSaveEvent = 'msOnVendorCreate';
 
 
     /**

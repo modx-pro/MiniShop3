@@ -13,7 +13,7 @@ class Update extends UpdateProcessor
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
     public $beforeSaveEvent = 'msOnBeforeVendorUpdate';
-    public $afterSaveEvent = 'msOnAfterVendorUpdate';
+    public $afterSaveEvent = 'msOnVendorUpdate';
 
 
     /**
