@@ -182,7 +182,7 @@ class DBCart extends DBStorage
         $this->restrictDraft($this->draft);
         $this->cart = $this->getCart();
 
-        $response = $this->invokeEvent('msOnAddToCart', ['key' => $product_key, 'cart' => $this]);
+        $response = $this->invokeEvent('msOnAddToCart', ['product_key' => $product_key, 'cart' => $this]);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
