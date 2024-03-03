@@ -11,6 +11,7 @@ use xPDO\Om\xPDOQuery;
 class GetList extends GetListProcessor
 {
     public $classKey = msVendor::class;
+    public $objectType = 'msVendor';
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'asc';
     public $permission = 'mssetting_list';

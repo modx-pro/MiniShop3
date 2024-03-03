@@ -30,7 +30,7 @@ class Multiple extends ModelProcessor
 
         foreach ($ids as $id) {
             /** @var ProcessorResponse $response */
-            $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Vendor\\' . $method, ['id' => $id]);
+            $response = $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Vendor\\' . $method, ['id' => $id]);
             if ($response->isError()) {
                 return $response->getResponse();
             }

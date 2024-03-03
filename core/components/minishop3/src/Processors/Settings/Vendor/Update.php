@@ -7,9 +7,8 @@ use MODX\Revolution\Processors\Model\UpdateProcessor;
 
 class Update extends UpdateProcessor
 {
-    /** @var msVendor $object */
-    public $object;
     public $classKey = msVendor::class;
+    public $objectType = 'msVendor';
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
     public $beforeSaveEvent = 'msOnBeforeVendorUpdate';
@@ -42,7 +41,7 @@ class Update extends UpdateProcessor
             }
         }
         $name = $this->getProperty('name');
-        if ($this->modx->getCount($this->classKey, ['name' => $name, 'id:!=' => $this->object->get('id')])) {
+        if ($this->doesAlreadyExist(['name' => $name, 'id:!=' => $this->object->get('id')])) {
             $this->modx->error->addField('name', $this->modx->lexicon('ms3_err_ae'));
         }
 

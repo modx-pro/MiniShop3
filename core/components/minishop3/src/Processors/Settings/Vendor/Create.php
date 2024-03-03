@@ -2,15 +2,13 @@
 
 namespace MiniShop3\Processors\Settings\Vendor;
 
-use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msVendor;
 use MODX\Revolution\Processors\Model\CreateProcessor;
 
 class Create extends CreateProcessor
 {
-    /** @var msVendor $object */
-    public $object;
     public $classKey = msVendor::class;
+    public $objectType = 'msVendor';
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
     public $beforeSaveEvent = 'msOnBeforeVendorCreate';
@@ -35,14 +33,6 @@ class Create extends CreateProcessor
     public function beforeSet()
     {
         $required = ['name'];
-        if ($this->getProperty('email_user')) {
-            $required[] = 'subject_user';
-            $required[] = 'body_user';
-        }
-        if ($this->getProperty('email_manager')) {
-            $required[] = 'subject_manager';
-            $required[] = 'body_manager';
-        }
         foreach ($required as $field) {
             if (!$tmp = trim($this->getProperty($field))) {
                 $this->addFieldError($field, $this->modx->lexicon('field_required'));
@@ -50,7 +40,7 @@ class Create extends CreateProcessor
                 $this->setProperty($field, $tmp);
             }
         }
-        if ($this->modx->getCount($this->classKey, ['name' => $this->getProperty('name')])) {
+        if ($this->doesAlreadyExist(['name' => $this->getProperty('name')])) {
             $this->modx->error->addField('name', $this->modx->lexicon('ms3_err_ae'));
         }
 
@@ -64,8 +54,7 @@ class Create extends CreateProcessor
     public function beforeSave()
     {
         $this->object->fromArray([
-            'rank' => $this->modx->getCount($this->classKey),
-            'editable' => true,
+            'position' => $this->modx->getCount($this->classKey),
         ]);
 
         return parent::beforeSave();
