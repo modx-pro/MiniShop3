@@ -8,11 +8,11 @@ use MODX\Revolution\Processors\Model\RemoveProcessor;
 class Remove extends RemoveProcessor
 {
     public $classKey = msVendor::class;
+    public $objectType = 'msVendor';
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
     public $beforeRemoveEvent = 'msOnBeforeVendorDelete';
-    public $afterRemoveEvent = 'msOnAfterVendorDelete';
-
+    public $afterRemoveEvent = 'msOnVendorDelete';
 
     /**
      * @return bool|null|string

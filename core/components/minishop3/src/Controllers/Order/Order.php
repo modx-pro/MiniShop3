@@ -59,7 +59,7 @@ class Order
         $eventParams = [
             'key' => $key,
             'value' => $value,
-            'order' => $this,
+            'controller' => $this,
         ];
         $response = $this->invokeEvent('msOnBeforeValidateOrderValue', $eventParams);
         $value = $response['data']['value'];
@@ -70,7 +70,7 @@ class Order
         $eventParams = [
             'key' => $key,
             'value' => $value,
-            'order' => $this,
+            'controller' => $this,
         ];
         $response = $this->invokeEvent('msOnValidateOrderValue', $eventParams);
         return $response['data']['value'];

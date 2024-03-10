@@ -50,9 +50,9 @@ return [
     'msOnGetProductFields',
     'msOnManagerCustomCssJs',
     'msOnBeforeVendorCreate',
-    'msOnAfterVendorCreate',
+    'msOnVendorCreate',
     'msOnBeforeVendorUpdate',
-    'msOnAfterVendorUpdate',
+    'msOnVendorUpdate',
     'msOnBeforeVendorDelete',
-    'msOnAfterVendorDelete',
+    'msOnVendorDelete',
 ];
