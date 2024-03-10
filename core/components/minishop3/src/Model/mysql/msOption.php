@@ -19,7 +19,7 @@ class msOption extends \MiniShop3\Model\msOption
                 'caption' => '',
                 'description' => null,
                 'measure_unit' => null,
-                'category_id' => null,
+                'modcategory_id' => null,
                 'type' => '',
                 'properties' => null,
             ],
@@ -55,7 +55,7 @@ class msOption extends \MiniShop3\Model\msOption
                         'phptype' => 'string',
                         'null' => true,
                     ],
-                'category_id' =>
+                'modcategory_id' =>
                     [
                         'dbtype' => 'int',
                         'precision' => '10',
@@ -113,15 +113,15 @@ class msOption extends \MiniShop3\Model\msOption
                                     ],
                             ],
                     ],
-                'category_id' =>
+                'modcategory_id' =>
                     [
-                        'alias' => 'category_id',
+                        'alias' => 'modcategory_id',
                         'primary' => false,
                         'unique' => false,
                         'type' => 'BTREE',
                         'columns' =>
                             [
-                                'category_id' =>
+                                'modcategory_id' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',
@@ -154,7 +154,7 @@ class msOption extends \MiniShop3\Model\msOption
                 'Category' =>
                     [
                         'class' => 'MODX\\Revolution\\modCategory',
-                        'local' => 'category_id',
+                        'local' => 'modcategory_id',
                         'foreign' => 'id',
                         'owner' => 'foreign',
                         'cardinality' => 'one',
