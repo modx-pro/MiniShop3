@@ -69,13 +69,13 @@ class GetList extends GetListProcessor
 
         if (is_numeric($mod_category)) {
             if ($mod_category > 0) {
-                $c->leftJoin(modCategory::class, 'modCategory', 'modCategory.id=msOption.category_id');
+                $c->leftJoin(modCategory::class, 'modCategory', 'modCategory.id=msOption.modcategory_id');
                 $c->where([
                     'modCategory.id' => $mod_category,
                 ]);
             } else {
                 $c->where([
-                    'msOption.category_id' => $mod_category,
+                    'msOption.modcategory_id' => $mod_category,
                 ]);
             }
         }

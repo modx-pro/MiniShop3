@@ -34,7 +34,7 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
     getFields: function () {
         return [
             'id', 'key', 'caption', 'description', 'measure_unit',
-            'category_id', 'type', 'properties', 'rank', 'actions'
+            'modcategory_id', 'type', 'properties', 'rank', 'actions'
         ];
     },
 

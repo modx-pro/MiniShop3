@@ -12,7 +12,7 @@ class GetCategories extends GetListProcessor
     public $classKey = modCategory::class;
     public $defaultSortField = 'category';
     public $permission = 'view_category';
-    public $languageTopics = ['category'];
+    public $languageTopics = ['default'];
 
 
     /**
@@ -23,7 +23,7 @@ class GetCategories extends GetListProcessor
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
 
-        $c->innerJoin(msOption::class, 'msOption', 'msOption.category_id=modCategory.id');
+        $c->innerJoin(msOption::class, 'msOption', 'msOption.modcategory_id=modCategory.id');
 
         return $c;
     }
@@ -38,7 +38,7 @@ class GetCategories extends GetListProcessor
     {
         array_unshift($list, [
             'id' => 0,
-            'category_id' => $this->modx->lexicon('no_category'),
+            'category' => $this->modx->lexicon('no_category'),
         ]);
 
         return $list;
