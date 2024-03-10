@@ -5,7 +5,7 @@ namespace MiniShop3\Processors\Category\Option;
 use MODX\Revolution\Processors\Model\RemoveProcessor;
 use MiniShop3\Model\msCategoryOption;
 
-class Delete extends RemoveProcessor
+class Remove extends RemoveProcessor
 {
     public $classKey = msCategoryOption::class;
     public $objectType = 'ms3_option';

@@ -4,15 +4,16 @@ namespace MiniShop3\Processors\Category;
 
 use MiniShop3\Model\msCategory;
 use MODX\Revolution\Processors\Model\GetListProcessor;
+use xPDO\Om\xPDOObject;
 use xPDO\Om\xPDOQuery;
 
-class GetCasts extends GetListProcessor
+class GetCats extends GetListProcessor
 {
     public $classKey = msCategory::class;
+    public $objectType = 'msCategory';
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'ASC';
     protected int $item_id = 0;
-
 
     /**
      * @return bool
@@ -22,70 +23,8 @@ class GetCasts extends GetListProcessor
         if ($this->getProperty('combo') && !$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
             $this->item_id = $id;
         }
-        $this->setDefaultProperties([
-            'start' => 0,
-            'limit' => 20,
-            'sort' => $this->defaultSortField,
-            'dir' => $this->defaultSortDirection,
-            'combo' => false,
-            'query' => '',
-        ]);
-
-        return true;
-    }
-
-
-    /**
-     * @return array|string
-     */
-    public function process()
-    {
-        $beforeQuery = $this->beforeQuery();
-        if ($beforeQuery !== true) {
-            return $this->failure($beforeQuery);
-        }
-        $data = $this->getData();
-        $list = $this->iterate($data);
-
-        return $this->outputArray($list, $data['total']);
-    }
-
-
-    /**
-     * @return array
-     */
-    public function getData()
-    {
-        $data = [];
-        $limit = intval($this->getProperty('limit'));
-        $start = intval($this->getProperty('start'));
-
-        /* query for chunks */
-        $c = $this->modx->newQuery($this->classKey);
-        $c = $this->prepareQueryBeforeCount($c);
-        $data['total'] = $this->modx->getCount($this->classKey, $c);
-        $c = $this->prepareQueryAfterCount($c);
-
-        $sortClassKey = $this->getSortClassKey();
-        $sortKey = $this->modx->getSelectColumns(
-            $sortClassKey,
-            $this->getProperty('sortAlias', $sortClassKey),
-            '',
-            [$this->getProperty('sort')]
-        );
-        if (empty($sortKey)) {
-            $sortKey = $this->getProperty('sort');
-        }
-        $c->sortby($sortKey, $this->getProperty('dir'));
-        if ($limit > 0) {
-            $c->limit($limit, $start);
-        }
-
-        if ($c->prepare() && $c->stmt->execute()) {
-            $data['results'] = $c->stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
-
-        return $data;
+        
+        return parent::initialize();
     }
 
     /**
@@ -97,7 +36,7 @@ class GetCasts extends GetListProcessor
     {
         $c->select('id,parent,pagetitle,context_key');
         $c->where([
-            'class_key' => 'msCategory',
+            'class_key' => $this->classKey
         ]);
 
         if ($this->item_id) {
@@ -120,7 +59,9 @@ class GetCasts extends GetListProcessor
         $list = $this->beforeIteration($list);
         $this->currentIndex = 0;
         foreach ($data['results'] as $array) {
-            $objectArray = $this->prepareResult($array);
+            // TODO: Этот метод iterate() отличается от базового отсутствием проверок доступов.
+            // Проверить, правда ли это нужно.
+            $objectArray = $this->prepareRow($array);
             if (!empty($objectArray) && is_array($objectArray)) {
                 $list[] = $objectArray;
                 $this->currentIndex++;
@@ -130,21 +71,26 @@ class GetCasts extends GetListProcessor
     }
 
     /**
-     * @param array $resourceArray
+     * Prepare the row for iteration
+     *
+     * @param xPDOObject $object
      *
      * @return array
      */
-    public function prepareResult(array $resourceArray)
+    public function prepareRow(xPDOObject $object)
     {
-        $resourceArray['parents'] = [];
         $parents = $this->modx->getParentIds(
-            $resourceArray['id'],
+            $object->get('id'),
             2,
-            ['context' => $resourceArray['context_key']]
+            ['context' => $object->get('context_key')]
         );
         if ($parents[count($parents) - 1] == 0) {
             unset($parents[count($parents) - 1]);
         }
+
+        $resourceArray = $object->toArray();
+        $resourceArray['parents'] = [];
+
         if (!empty($parents) && is_array($parents)) {
             $q = $this->modx->newQuery(msCategory::class, ['id:IN' => $parents]);
             $q->select('id,pagetitle');

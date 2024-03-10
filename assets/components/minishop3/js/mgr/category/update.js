@@ -125,7 +125,7 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
                         // Get the "Settings" and "Resource Groups" tabs
                         if (tab.id === 'modx-page-settings') {
                             // Add "Product Options" inside the "Settings" tab
-                            //tab.items = this.addOptions(config, tab.items);
+                            tab.items = this.addOptions(config, tab.items);
                             pageSettingsTab = tab;
                         }
                         if (tab.id === 'modx-resource-access-permissions') {

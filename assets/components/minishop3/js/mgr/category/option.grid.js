@@ -8,10 +8,12 @@ ms3.grid.CategoryOption = function (config) {
         cls: 'ms3-grid' || config['cls'],
         baseParams: {
             action: 'MiniShop3\\Processors\\Category\\Option\\GetList',
-            category: config.record['id'],
-            sort: 'rank',
+            category_id: config.record['id'],
+            sort: 'position',
             dir: 'asc',
         },
+        // TODO: временно отключена серверная сортировка. Не смог выяснить, почему неверное передается sort: 'rank'
+        remoteSort: false,
         multi_select: true,
         stateful: true,
         stateId: config.id,
@@ -27,7 +29,7 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
 
     getFields: function () {
         return [
-            'id', 'key', 'caption', 'type', 'active', 'required', 'rank', 'value',
+            'id', 'key', 'caption', 'type', 'active', 'required', 'position', 'value',
             'category_id', 'option_id', 'actions'
         ];
     },
@@ -39,7 +41,7 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
             {header: _('ms3_ft_caption'), dataIndex: 'caption', width: 75, sortable: true},
             {header: _('ms3_ft_type'), dataIndex: 'type', width: 75, renderer: this._renderType},
             {header: _('ms3_default_value'), dataIndex: 'value', width: 75, editor: {xtype: 'textfield'}},
-            {header: _('ms3_ft_rank'), dataIndex: 'rank', width: 50, editor: {xtype: 'numberfield'}, hidden: true, sortable: true},
+            {header: _('ms3_ft_position'), dataIndex: 'position', width: 50, editor: {xtype: 'numberfield'}, hidden: true, sortable: true},
             {
                 header: _('ms3_actions'),
                 width: 75,
@@ -95,7 +97,9 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
 
         const f = w.fp.getForm();
         f.reset();
-        f.setValues({category_id: MODx.request.id});
+        f.setValues({
+            category_id: this.config.record.id
+        });
         w.show(e.target);
     },
 
@@ -118,7 +122,9 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
 
         const f = w.fp.getForm();
         f.reset();
-        f.setValues({category_to: MODx.request.id});
+        f.setValues({
+            category_to: this.config.record.id
+        });
         w.show(e.target);
     },
 
@@ -162,15 +168,16 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
     },
 
     requireOption: function () {
-        this.optionAction('Require');
+        this.optionAction('Required');
     },
 
     unrequireOption: function () {
-        this.optionAction('Unrequire');
+        this.optionAction('Unrequired');
     },
 
-    deleteOption: function () {
-        this.optionAction('Delete');
+    removeOption: function () {
+        // TODO: Возможно, здесь нужен confirm на удаление?
+        this.optionAction('Remove');
     },
 
     onAfterRowMove: function () {
@@ -183,7 +190,7 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
         }
         for (let x = 0; x < size; x++) {
             const brec = s.getAt(x);
-            brec.set('rank', start + x);
+            brec.set('position', start + x);
             brec.commit();
             this.saveRecord({record: brec});
         }
