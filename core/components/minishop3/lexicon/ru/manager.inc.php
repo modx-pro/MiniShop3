@@ -119,9 +119,9 @@ $_lang['ms3_ft_nogroup'] = 'Без группы';
 $_lang['ms3_ft_name'] = 'Ключ';
 $_lang['ms3_ft_required'] = 'Обязательна';
 $_lang['ms3_ft_type'] = 'Тип характеристики';
-$_lang['ms3_ft_rank'] = 'Порядок сортировки';
+$_lang['ms3_ft_position'] = 'Порядок сортировки';
 
-$_lang['ms3_ft_selected_delete'] = 'Убрать';
+$_lang['ms3_ft_selected_remove'] = 'Убрать';
 $_lang['ms3_ft_selected_activate'] = 'Включить';
 $_lang['ms3_ft_selected_deactivate'] = 'Выключить';
 $_lang['ms3_ft_selected_require'] = 'Сделать обязательной';

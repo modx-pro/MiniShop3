@@ -10,8 +10,8 @@ use xPDO\Om\xPDOQuery;
 
 class GetList extends GetListProcessor
 {
-    public $classKey = 'msCategoryOption';
-    public $defaultSortField = 'msCategoryOption.position';
+    public $classKey = msCategoryOption::class;
+    public $defaultSortField = 'position';
     public $defaultSortDirection = 'asc';
     public $languageTopics = ['minishop3:default'];
 
@@ -23,13 +23,13 @@ class GetList extends GetListProcessor
      */
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
-        $category = (int)$this->getProperty('category', 0);
+        $category_id = (int)$this->getProperty('category_id', 0);
         $c->where([
-            'category_id' => $category,
+            'category_id' => $category_id,
         ]);
         $c->innerJoin(msOption::class, 'Option');
         $c->select($this->modx->getSelectColumns(msCategoryOption::class, 'msCategoryOption'));
-        $c->select($this->modx->getSelectColumns(msOption::class, 'Option'));
+        $c->select($this->modx->getSelectColumns(msOption::class, 'Option', '', ['key', 'caption', 'description', 'type']));
 
         $query = trim($this->getProperty('query'));
         if (!empty($query)) {
@@ -55,7 +55,7 @@ class GetList extends GetListProcessor
 
         if (!$array['active']) {
             $array['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-power-off action-green',
                 'title' => $this->modx->lexicon('ms3_ft_selected_activate'),
                 'multiple' => $this->modx->lexicon('ms3_ft_selected_activate'),
@@ -65,7 +65,7 @@ class GetList extends GetListProcessor
             ];
         } else {
             $array['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-power-off action-gray',
                 'title' => $this->modx->lexicon('ms3_ft_selected_deactivate'),
                 'multiple' => $this->modx->lexicon('ms3_ft_selected_deactivate'),
@@ -77,7 +77,7 @@ class GetList extends GetListProcessor
 
         if (!$array['required']) {
             $array['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-bolt action-yellow',
                 'title' => $this->modx->lexicon('ms3_ft_selected_require'),
                 'multiple' => $this->modx->lexicon('ms3_ft_selected_require'),
@@ -87,7 +87,7 @@ class GetList extends GetListProcessor
             ];
         } else {
             $array['actions'][] = [
-                'cls' => '',
+                'cls' => 'fw-900',
                 'icon' => 'icon icon-bolt action-gray',
                 'title' => $this->modx->lexicon('ms3_ft_selected_unrequire'),
                 'multiple' => $this->modx->lexicon('ms3_ft_selected_unrequire'),
@@ -99,11 +99,14 @@ class GetList extends GetListProcessor
 
 
         $array['actions'][] = [
-            'cls' => '',
+            'cls' => [
+                'menu' => 'red',
+                'button' => 'red',
+            ],
             'icon' => 'icon icon-trash-o',
-            'title' => $this->modx->lexicon('ms3_ft_selected_delete'),
-            'multiple' => $this->modx->lexicon('ms3_ft_selected_delete'),
-            'action' => 'deleteOption',
+            'title' => $this->modx->lexicon('ms3_ft_selected_remove'),
+            'multiple' => $this->modx->lexicon('ms3_ft_selected_remove'),
+            'action' => 'removeOption',
             'button' => true,
             'menu' => true,
         ];

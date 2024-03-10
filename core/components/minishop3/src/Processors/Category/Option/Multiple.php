@@ -2,8 +2,6 @@
 
 namespace MiniShop3\Processors\Category\Option;
 
-use MiniShop3\MiniShop3;
-use MODX\Revolution\Processors\ProcessorResponse;
 use MODX\Revolution\Processors\ModelProcessor;
 
 class Multiple extends ModelProcessor
