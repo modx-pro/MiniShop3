@@ -205,8 +205,8 @@ class msOrder extends \MiniShop3\Model\msOrder
                 'Address' =>
                     [
                         'class' => 'MiniShop3\\Model\\msOrderAddress',
-                        'local' => 'address_id',
-                        'foreign' => 'id',
+                        'local' => 'id',
+                        'foreign' => 'order_id',
                         'cardinality' => 'one',
                         'owner' => 'local',
                     ],
