@@ -535,4 +535,21 @@
                    owner="foreign"/>
         <aggregate alias="Option" class="MiniShop3\Model\msOption" local="option_id" foreign="id" cardinality="one" owner="foreign"/>
     </object>
+
+    <object class="msExtraField" table="ms3_extra_fields" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="class" dbtype="varchar" precision="191" phptype="string" null="true" />
+        <field key="key" dbtype="varchar" precision="64" phptype="string" null="true" />
+        <field key="label" dbtype="varchar" precision="191" phptype="string" null="true" />
+
+        <field key="dbtype" dbtype="varchar" precision="100" phptype="string" null="true" />
+        <field key="precision" dbtype="varchar" precision="100" phptype="string" null="true" />
+        <field key="phptype" dbtype="varchar" precision="100" phptype="string" null="true" />
+        <field key="null" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="1"/>
+        <field key="default" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
+        <field key="attributes" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
+        
+        <!--TODO: index-->
+
+        <field key="active" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="0"/>
+    </object>
 </model>
