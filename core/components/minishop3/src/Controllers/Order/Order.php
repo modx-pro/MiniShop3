@@ -49,6 +49,28 @@ class Order
     }
 
     /**
+     * @param bool $with_cart
+     * @param bool $only_cost
+     *
+     * @return array|string
+     */
+    public function getCost($with_cart = true, $only_cost = false)
+    {
+        return $this->storage->getCost($with_cart, $only_cost);
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     *
+     * @return array|string
+     */
+    public function add($key, $value = '')
+    {
+        return $this->storage->add($key, $value);
+    }
+
+    /**
      * @param string $key
      * @param string $value
      *
@@ -56,24 +78,27 @@ class Order
      */
     public function validate($key, $value)
     {
-        $eventParams = [
-            'key' => $key,
-            'value' => $value,
-            'controller' => $this,
-        ];
-        $response = $this->invokeEvent('msOnBeforeValidateOrderValue', $eventParams);
-        $value = $response['data']['value'];
+        return $this->storage->validate($key, $value);
+    }
 
-       //TODO Validate with delivery's validation riles
+    /**
+     * @param string $key
+     *
+     * @return array|bool|string
+     */
+    public function remove($key)
+    {
+        return $this->storage->remove($key);
+    }
 
-
-        $eventParams = [
-            'key' => $key,
-            'value' => $value,
-            'controller' => $this,
-        ];
-        $response = $this->invokeEvent('msOnValidateOrderValue', $eventParams);
-        return $response['data']['value'];
+    /**
+     * @param array $order
+     *
+     * @return array
+     */
+    public function set(array $order)
+    {
+        return $this->storage->set($order);
     }
 
     /**
@@ -111,10 +136,10 @@ class Order
             return $this->error('ms3_order_err_delivery', ['delivery']);
         }
 
-        $requires = array_filter($validationRules['validation_rules'], function($rules) {
+        $requires = array_filter($validationRules['validation_rules'], function ($rules) {
             return in_array('required', array_map('trim', explode("|", $rules)));
         }, ARRAY_FILTER_USE_BOTH);
-        
+
         return $this->success('', ['requires' => $requires]);
     }
 
@@ -124,7 +149,8 @@ class Order
      * @param integer $deliveryId
      * @return void
      */
-    public function getDeliveryValidationRules($deliveryId = 0) {
+    public function getDeliveryValidationRules($deliveryId = 0)
+    {
         if (empty($deliveryId)) {
             // TODO: ждем реализации, чтобы корректно получать order
             $deliveryId = $this->order['delivery_id'];
