@@ -38,6 +38,17 @@ ms3.panel.Utilities = function (config) {
                     xtype: 'ms3-utilities-import',
                     cls: 'main-wrapper',
                 }]
+            },
+            {
+                title: 'Дополнительные поля', //_('ms3_utilities_import'),
+                layout: 'anchor',
+                items: [{
+                    html: 'Здесь вы можете создать дополнительные поля', //_('ms3_utilities_import_intro'),
+                    bodyCssClass: 'panel-desc',
+                }, {
+                    xtype: 'ms3-grid-extra-field',
+                    cls: 'main-wrapper',
+                }]
             }
             ]
         }]
