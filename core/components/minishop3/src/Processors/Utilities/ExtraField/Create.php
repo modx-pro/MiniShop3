@@ -41,6 +41,8 @@ class Create extends CreateProcessor
             }
         }
 
+        // TODO: добавить проверку, что в таблице нет колонки с таким названием (из стандартных от ms3)
+
         $doesAlreasyExistCriteria = [
             'class' => $this->getProperty('class'),
             'key' => $this->getProperty('key')

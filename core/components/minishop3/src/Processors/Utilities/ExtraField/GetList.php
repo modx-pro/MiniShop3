@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
+use MiniShop3\Utils\DBManager;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use PDO;
 use xPDO\Om\xPDOObject;
@@ -14,6 +15,19 @@ class GetList extends GetListProcessor
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'asc';
     public $permission = 'mssetting_list';
+
+    private DBManager $dbManager;
+
+    /**
+     * {@inheritDoc}
+     * @return boolean
+     */
+    public function initialize()
+    {
+        $this->dbManager = new DBManager($this->modx);
+
+        return parent::initialize();
+    }
 
     /**
      * @param xPDOQuery $c
@@ -53,7 +67,7 @@ class GetList extends GetListProcessor
             ];
         } else {
             $data = $object->toArray();
-            $data['exists'] = $this->existsInDatabase($data['class'], $data['key']);
+            $data['exists'] = $this->dbManager->hasColumn($data['class'], $data['key']);
             $data['dbtype'] = sprintf("%s (%s)", $data['dbtype'], $data['precision']);
 
             $data['actions'] = [];
@@ -82,20 +96,5 @@ class GetList extends GetListProcessor
         }
 
         return $data;
-    }
-
-    private function existsInDatabase($class, $column): bool
-    {
-        if (!empty($class)) {
-            $c = $this->modx->prepare("SHOW COLUMNS IN {$this->modx->getTableName($class)}");
-            $c->execute();
-            while ($cl = $c->fetch(PDO::FETCH_ASSOC)) {
-                if($column === $cl['Field']) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }

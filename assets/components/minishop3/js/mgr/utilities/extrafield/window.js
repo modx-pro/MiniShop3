@@ -14,12 +14,13 @@ ms3.window.CreateExtraField = function (config) {
 Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
 
     getFields: function (config) {
+        const existsInDatabase = (config.record !== undefined) ? config.record.exists : false;
         return [
             {
                 xtype: 'hidden',
                 name: 'id',
                 id: config.id + '-id'
-            }, {
+            },{
                 xtype: 'ms3-combo-combobox-default',
                 fieldLabel: 'class',//_('ms3_class'),
                 name: 'class',
@@ -27,6 +28,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                 anchor: '99%',
                 id: config.id + '-class',
                 allowBlank: true,
+                disabled: existsInDatabase,
                 mode: 'local',
                 displayField: 'class',
                 valueField: 'class',
@@ -41,7 +43,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
             }, {
                 layout: 'column',
                 items: [{
-                    columnWidth: .6,
+                    columnWidth: .33,
                     layout: 'form',
                     defaults: { msgTarget: 'under' },
                     items: [{
@@ -50,10 +52,11 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         name: 'key',
                         anchor: '99%',
                         id: config.id + '-key',
-                        allowBlank: true
+                        allowBlank: true,
+                        disabled: existsInDatabase
                     }],
                 }, {
-                    columnWidth: .4,
+                    columnWidth: .33,
                     layout: 'form',
                     items: [{
                         xtype: 'textfield',
@@ -61,14 +64,57 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         name: 'label',
                         anchor: '99%',
                         id: config.id + '-label',
-                        allowBlank: true
+                        allowBlank: true,
+                        disabled: existsInDatabase
+                    }],
+                }, {
+                    columnWidth: .33,
+                    layout: 'form',
+                    items: [{
+                        xtype: 'xcheckbox',
+                        fieldLabel: _('ms3_active'),
+                        boxLabel: _('ms3_active'),
+                        name: 'active',
+                        anchor: '99%',
+                        id: config.id + '-active',
+                        style: { paddingTop: '10px' },
+                        disabled: !existsInDatabase
                     }],
                 }]
             }, {
+                xtype: 'displayfield',
+                cls: 'text-success',
+                html: 'Столбец <strong>website</strong> существует в таблице <strong>modx_ms3_products</strong>, редактирование большинства полей недоступно.',
+                id: config.id + '-exists-message',
+                hidden: !existsInDatabase
+            },{
+                id: config.id + '-create',
+                name: 'create',
+                xtype: 'hidden',
+                value: false
+            }, {
                 xtype: 'fieldset',
-                title: 'Конфиг БД',//_('ms3_key'),
+                title: 'Создать колонку в БД',//_('ms3_key'),
                 layout: 'column',
                 defaults: { msgTarget: 'under', border: false },
+                checkboxToggle: !existsInDatabase,
+                cls: existsInDatabase ? '' : 'x-fieldset-checkbox-toggle',
+                collapsed: !existsInDatabase,
+                listeners: {
+                    expand: {
+                        fn: function (p) {
+                            Ext.getCmp(config.id + '-create').setValue(true);
+                            Ext.getCmp(config.id + '-active').enable();
+                       }, scope: this
+                    },
+                    collapse: {
+                        fn: function (p) {
+                            Ext.getCmp(config.id + '-create').setValue(false);
+                            Ext.getCmp(config.id + '-active').disable();
+                            Ext.getCmp(config.id + '-active').setValue(false);
+                        }, scope: this
+                    }
+                },
                 items: [{
                     columnWidth: 1,
                     layout: 'form',
@@ -86,6 +132,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                                 anchor: '99%',
                                 id: config.id + '-dbtype',
                                 allowBlank: true,
+                                disabled: existsInDatabase,
                                 mode: 'local',
                                 displayField: 'value',
                                 valueField: 'value',
@@ -125,7 +172,8 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                                 name: 'precision',
                                 anchor: '99%',
                                 id: config.id + '-precision',
-                                allowBlank: true
+                                allowBlank: true,
+                                disabled: existsInDatabase
                             }]
                         }, {
                             columnWidth: .33,
@@ -138,6 +186,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                                 anchor: '99%',
                                 id: config.id + '-phptype',
                                 allowBlank: true,
+                                //disabled: existsInDatabase,
                                 mode: 'local',
                                 displayField: 'value',
                                 valueField: 'value',
@@ -169,6 +218,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                                 anchor: '99%',
                                 id: config.id + '-attributes',
                                 allowBlank: true,
+                                disabled: existsInDatabase,
                                 mode: 'local',
                                 displayField: 'title',
                                 valueField: 'value',
@@ -195,6 +245,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                                 anchor: '99%',
                                 id: config.id + '-default',
                                 allowBlank: true,
+                                disabled: existsInDatabase,
                                 mode: 'local',
                                 displayField: 'title',
                                 valueField: 'value',
@@ -230,7 +281,8 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                                 name: 'default_value',
                                 anchor: '99%',
                                 id: config.id + '-default_value',
-                                allowBlank: true
+                                allowBlank: true,
+                                disabled: existsInDatabase
                             }],
                         }]
                     }, {
@@ -240,22 +292,10 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         name: 'null',
                         anchor: '99%',
                         id: config.id + '-null',
-                        allowBlank: true
+                        allowBlank: true,
+                        disabled: existsInDatabase
                     }]
                 }]
-            }, {
-                xtype: 'xcheckbox',
-                boxLabel: 'create_column',//_('ms3_key'),
-                name: 'create_column',
-                anchor: '99%',
-                id: config.id + '-create_column'
-            },
-            {
-                xtype: 'xcheckbox',
-                boxLabel: _('ms3_active'),
-                name: 'active',
-                anchor: '99%',
-                id: config.id + '-active'
             }
         ];
     },

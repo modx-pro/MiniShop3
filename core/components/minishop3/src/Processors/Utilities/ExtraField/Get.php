@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
+use MiniShop3\Utils\DBManager;
 use MODX\Revolution\Processors\Model\GetProcessor;
 
 class Get extends GetProcessor
@@ -24,5 +25,21 @@ class Get extends GetProcessor
         }
 
         return parent::initialize();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return mixed
+     */
+    public function beforeOutput()
+    {
+        $dbManager = new DBManager($this->modx);
+
+        $class = $this->object->get('class');
+        $column = $this->object->get('key');
+        $exists = $dbManager->hasColumn($class, $column);
+        $this->object->set('exists',  $exists);
+
+        parent::beforeOutput();
     }
 }

@@ -40,6 +40,8 @@ class Update extends UpdateProcessor
             }
         }
 
+        // TODO: добавить проверку, что в таблице нет колонки с таким названием (из стандартных от ms3)
+
         $doesAlreasyExistCriteria = [
             'id:!=' => $this->object->get('id'),
             'class' => $this->getProperty('class'),
