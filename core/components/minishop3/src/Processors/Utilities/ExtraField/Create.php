@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
+use MiniShop3\Utils\DBManager;
 use MODX\Revolution\Processors\Model\CreateProcessor;
 
 class Create extends CreateProcessor
@@ -13,6 +14,7 @@ class Create extends CreateProcessor
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
 
+    private $createColumn = false;
 
     /**
      * @return bool|null|string
@@ -32,7 +34,12 @@ class Create extends CreateProcessor
      */
     public function beforeSet()
     {
-        $required = ['class', 'key', 'dbtype', 'phptype'];
+        $this->createColumn = filter_var($this->getProperty('create'), FILTER_VALIDATE_BOOLEAN);
+
+        $required = ['class', 'key'];
+        if ($this->createColumn) {
+            $required = array_merge($required, ['dbtype', 'phptype']);
+        }
         foreach ($required as $field) {
             if (!$tmp = trim($this->getProperty($field))) {
                 $this->addFieldError($field, $this->modx->lexicon('field_required'));
@@ -41,7 +48,18 @@ class Create extends CreateProcessor
             }
         }
 
-        // TODO: добавить проверку, что в таблице нет колонки с таким названием (из стандартных от ms3)
+        if ($this->hasErrors()) {
+            return false;
+        }
+
+        $className = $this->getProperty('class');
+        $key = $this->getProperty('key');
+        $classFields = $this->modx->getFields($className);
+        if (!empty($classFields)) {
+            if (array_key_exists($key, $classFields)) {
+                $this->addFieldError('key', $this->modx->lexicon('ms3_err_ae'));
+            }
+        }
 
         $doesAlreasyExistCriteria = [
             'class' => $this->getProperty('class'),
@@ -52,5 +70,26 @@ class Create extends CreateProcessor
         }
 
         return !$this->hasErrors();
+    }
+
+    /**
+     * @return array
+     */
+    public function beforeSave()
+    {
+        if ($this->createColumn) {
+            $dbManager = new DBManager($this->modx);
+            $class = $this->object->get('class');
+            $key = $this->object->get('key');
+            // TODO: Не однозначное поведение, если в базе существует столбец, а пользователь создаст с другим dbtype
+            if (!$dbManager->hasField($class, $key)) {
+                if (!$dbManager->addField($this->object)) {
+                    // TODO: заменить текст ошибки на "Ошибка добавления поля"
+                    $this->modx->error->addField('key', $this->modx->lexicon('ms3_err_unknown'));
+                }
+            }
+        }
+
+        return parent::beforeSave();
     }
 }

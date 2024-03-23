@@ -3,7 +3,11 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
+use MiniShop3\Model\msProductData;
+use MiniShop3\Model\msVendor;
+use MiniShop3\Utils\DBManager;
 use MODX\Revolution\Processors\Model\UpdateProcessor;
+use xPDO\xPDO;
 
 class Update extends UpdateProcessor
 {
@@ -13,6 +17,7 @@ class Update extends UpdateProcessor
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_save';
 
+    private $createColumn = false;
 
     /**
      * @return bool|null|string
@@ -31,7 +36,28 @@ class Update extends UpdateProcessor
      */
     public function beforeSet()
     {
-        $required = ['class', 'key', 'dbtype', 'phptype'];
+        $dbManager = new DBManager($this->modx);
+        $existsInDb = $dbManager->hasField($this->object->get('class'), $this->object->get('key'));
+        if ($existsInDb) {
+            $this->createColumn = false;
+            $required = [];
+            // We cannot change these fields if the field exists in the database
+            $this->unsetProperty('class');
+            $this->unsetProperty('key');
+            $this->unsetProperty('dbtype');
+            $this->unsetProperty('precision');
+            $this->unsetProperty('null');
+            $this->unsetProperty('default');
+            $this->unsetProperty('default_value');
+            $this->unsetProperty('attributes');
+        } else {
+            $this->createColumn = filter_var($this->getProperty('create'), FILTER_VALIDATE_BOOLEAN);
+            $required = ['class', 'key'];
+            if ($this->createColumn) {
+                $required = array_merge($required, ['dbtype', 'phptype']);
+            }
+        }
+
         foreach ($required as $field) {
             if (!$tmp = trim($this->getProperty($field))) {
                 $this->addFieldError($field, $this->modx->lexicon('field_required'));
@@ -40,17 +66,70 @@ class Update extends UpdateProcessor
             }
         }
 
-        // TODO: добавить проверку, что в таблице нет колонки с таким названием (из стандартных от ms3)
+        if ($this->hasErrors()) {
+            return false;
+        }
 
-        $doesAlreasyExistCriteria = [
-            'id:!=' => $this->object->get('id'),
-            'class' => $this->getProperty('class'),
-            'key' => $this->getProperty('key')
-        ];
-        if ($this->doesAlreadyExist($doesAlreasyExistCriteria)) {
-            $this->modx->error->addField('key', $this->modx->lexicon('ms3_err_ae'));
+        if (!$existsInDb) {
+            $key = $this->getProperty('key');
+            $doesAlreasyExistCriteria = [
+                'id:!=' => $this->object->get('id'),
+                'class' => $this->getProperty('class'),
+                'key' => $key
+            ];
+            if ($this->doesAlreadyExist($doesAlreasyExistCriteria) || $this->doesBuiltIn($key)) {
+                $this->modx->error->addField('key', $this->modx->lexicon('ms3_err_ae'));
+            }
         }
 
         return !$this->hasErrors();
+    }
+
+    /**
+     * @return array
+     */
+    public function beforeSave()
+    {
+        if ($this->createColumn) {
+            $dbManager = new DBManager($this->modx);
+            $class = $this->object->get('class');
+            $key = $this->object->get('key');
+            // TODO: Не однозначное поведение, если в базе существует столбец, а пользователь создаст с другим dbtype
+            if (!$dbManager->hasField($class, $key)) {
+                if (!$dbManager->addField($this->object)) {
+                    // TODO: заменить текст ошибки на "Ошибка добавления поля"
+                    $this->modx->error->addField('key', $this->modx->lexicon('ms3_err_unknown'));
+                }
+            }
+        }
+
+        return parent::beforeSave();
+    }
+
+
+    /**
+     * Checks if the specified field is built-in.
+     *
+     * @param string $key
+     * @return boolean
+     */
+    private function doesBuiltIn(string $className, string $fieldName): bool
+    {
+        $builtInFields = [
+            msProductData::class => [
+                'id', 'article', 'price', 'old_price', 'weight', 'image', 'thumb', 'vendor_id',
+                'made_in', 'new', 'popular', 'favorite', 'tags', 'color', 'size', 'source_id'
+            ],
+            msVendor::class => [
+                'id', 'position', 'name', 'resource_id', 'country', 'logo', 'address', 'phone', 'email',
+                'description', 'properties'
+            ]
+        ];
+        if (!array_key_exists($className, $builtInFields)) {
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'The specified class is not supported: ' . $className);
+            return false;
+        }
+        $normalizedFieldName = strtolower(trim($fieldName));
+        return in_array($normalizedFieldName, $builtInFields[$className]);
     }
 }

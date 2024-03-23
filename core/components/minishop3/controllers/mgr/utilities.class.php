@@ -44,6 +44,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/gallery/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/import/panel.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/tree.classes.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/grid.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/window.js');
 

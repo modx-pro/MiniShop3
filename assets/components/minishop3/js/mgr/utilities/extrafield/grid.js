@@ -1,9 +1,10 @@
 ms3.grid.ExtraField = function (config) {
     config = config || {};
     if (!config.id) {
-        config.id = 'ms3-grid-extra-field';
+        config.id = 'ms3-grid-extrafields';
     }
     config.disableContextMenuAction = true;
+    config.class_key = null;
 
     Ext.applyIf(config, {
         baseParams: {
@@ -41,7 +42,8 @@ Ext.extend(ms3.grid.ExtraField, ms3.grid.Default, {
                 header: 'class', //_('ms3_class'),
                 dataIndex: 'class',
                 width: 150,
-                sortable: true
+                sortable: true,
+                hidden: true
             }, {
                 header: 'key', //_('ms3_key'),
                 dataIndex: 'key',
@@ -73,7 +75,7 @@ Ext.extend(ms3.grid.ExtraField, ms3.grid.Default, {
                 header: _('ms3_actions'),
                 dataIndex: 'actions',
                 id: 'actions',
-                width: 50,
+                width: 70,
                 renderer: ms3.utils.renderActions
             }
         ];
@@ -135,6 +137,7 @@ Ext.extend(ms3.grid.ExtraField, ms3.grid.Default, {
         w.setValues({
             attributes: '',
             default: '',
+            class: this.config.class_key
         });
         w.show(e.target);
     },
@@ -198,4 +201,4 @@ Ext.extend(ms3.grid.ExtraField, ms3.grid.Default, {
     },
 
 });
-Ext.reg('ms3-grid-extra-field', ms3.grid.ExtraField);
+Ext.reg('ms3-grid-extrafields', ms3.grid.ExtraField);

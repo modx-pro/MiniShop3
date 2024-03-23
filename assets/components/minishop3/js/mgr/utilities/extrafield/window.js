@@ -15,12 +15,13 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
 
     getFields: function (config) {
         const existsInDatabase = (config.record !== undefined) ? config.record.exists : false;
+        const existsMessage = (config.record !== undefined) ? config.record.exists_message : '';
         return [
             {
                 xtype: 'hidden',
                 name: 'id',
                 id: config.id + '-id'
-            },{
+            }, {
                 xtype: 'ms3-combo-combobox-default',
                 fieldLabel: 'class',//_('ms3_class'),
                 name: 'class',
@@ -53,7 +54,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         anchor: '99%',
                         id: config.id + '-key',
                         allowBlank: true,
-                        disabled: existsInDatabase
+                        disabled: existsInDatabase,
                     }],
                 }, {
                     columnWidth: .33,
@@ -65,7 +66,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         anchor: '99%',
                         id: config.id + '-label',
                         allowBlank: true,
-                        disabled: existsInDatabase
+                        disabled: existsInDatabase,
                     }],
                 }, {
                     columnWidth: .33,
@@ -78,16 +79,16 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         anchor: '99%',
                         id: config.id + '-active',
                         style: { paddingTop: '10px' },
-                        disabled: !existsInDatabase
+                        disabled: !existsInDatabase,
                     }],
                 }]
             }, {
                 xtype: 'displayfield',
                 cls: 'text-success',
-                html: 'Столбец <strong>website</strong> существует в таблице <strong>modx_ms3_products</strong>, редактирование большинства полей недоступно.',
+                html: existsMessage,
                 id: config.id + '-exists-message',
                 hidden: !existsInDatabase
-            },{
+            }, {
                 id: config.id + '-create',
                 name: 'create',
                 xtype: 'hidden',
@@ -105,7 +106,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         fn: function (p) {
                             Ext.getCmp(config.id + '-create').setValue(true);
                             Ext.getCmp(config.id + '-active').enable();
-                       }, scope: this
+                        }, scope: this
                     },
                     collapse: {
                         fn: function (p) {
@@ -282,7 +283,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                                 anchor: '99%',
                                 id: config.id + '-default_value',
                                 allowBlank: true,
-                                disabled: existsInDatabase
+                                disabled: existsInDatabase,
                             }],
                         }]
                     }, {
@@ -293,7 +294,7 @@ Ext.extend(ms3.window.CreateExtraField, ms3.window.Default, {
                         anchor: '99%',
                         id: config.id + '-null',
                         allowBlank: true,
-                        disabled: existsInDatabase
+                        disabled: existsInDatabase,
                     }]
                 }]
             }
@@ -335,10 +336,10 @@ Ext.extend(ms3.window.UpdateExtraField, ms3.window.CreateExtraField, {
             if (!fields.hasOwnProperty(i)) {
                 continue;
             }
-            const field = fields[i];
-            if (field.name === 'type') {
-                field.disabled = true;
-            }
+            //const field = fields[i];
+            //if (field.name === 'type') {
+            //    field.disabled = true;
+            //}
         }
 
         return fields;

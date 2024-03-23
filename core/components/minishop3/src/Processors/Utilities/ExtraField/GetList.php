@@ -42,6 +42,11 @@ class GetList extends GetListProcessor
         if ($id = (int)$this->getProperty('id')) {
             $c->where(['id' => $id]);
         }
+
+        if ($class = trim($this->getProperty('class'))) {
+            $c->where(['class' => $class]);
+        }
+
         if ($query = trim($this->getProperty('query'))) {
             $c->where([
                 'key:LIKE' => "%{$query}%",
@@ -67,8 +72,10 @@ class GetList extends GetListProcessor
             ];
         } else {
             $data = $object->toArray();
-            $data['exists'] = $this->dbManager->hasColumn($data['class'], $data['key']);
-            $data['dbtype'] = sprintf("%s (%s)", $data['dbtype'], $data['precision']);
+            $data['exists'] = $this->dbManager->hasField($data['class'], $data['key']);
+            $data['dbtype'] = empty($data['precision'])
+                ? $data['dbtype']
+                : sprintf("%s (%s)", $data['dbtype'], $data['precision']);
 
             $data['actions'] = [];
 

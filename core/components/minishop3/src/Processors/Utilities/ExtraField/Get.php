@@ -35,10 +35,18 @@ class Get extends GetProcessor
     {
         $dbManager = new DBManager($this->modx);
 
-        $class = $this->object->get('class');
-        $column = $this->object->get('key');
-        $exists = $dbManager->hasColumn($class, $column);
+        $className = $this->object->get('class');
+        $columnName = $this->object->get('key');
+        $table = $this->modx->getTableName($className);
+        $exists = $dbManager->hasField($className, $columnName);
+
         $this->object->set('exists',  $exists);
+        $existsMessage = '';
+        if ($exists) {
+            $existsMessageTpl = 'Столбец <strong>%s</strong> существует в таблице <strong>%s</strong>, редактирование большинства полей недоступно.';
+            $existsMessage = sprintf($existsMessageTpl, $columnName, $table);
+        }
+        $this->object->set('exists_message', $existsMessage);
 
         parent::beforeOutput();
     }
