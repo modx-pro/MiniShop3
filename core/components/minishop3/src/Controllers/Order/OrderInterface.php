@@ -9,12 +9,11 @@ interface OrderInterface
      * Initializes order to context
      * Here you can load custom javascript or styles
      *
-     * @param string $ctx Context for initialization
-     *
+     * @param string $token
+     * @param array $config
      * @return boolean
      */
-    public function initialize($ctx = 'web');
-
+    public function initialize(string $token = '', array $config = []): bool;
 
     /**
      * Add one field to order
@@ -24,8 +23,7 @@ interface OrderInterface
      *
      * @return boolean
      */
-    public function add($key, $value);
-
+    public function add(string $key, mixed $value): bool;
 
     /**
      * Validates field before it set
@@ -35,8 +33,7 @@ interface OrderInterface
      *
      * @return boolean|mixed
      */
-    public function validate($key, $value);
-
+    public function validate(string $key, mixed $value): mixed;
 
     /**
      * Removes field from order
@@ -45,16 +42,14 @@ interface OrderInterface
      *
      * @return boolean
      */
-    public function remove($key);
-
+    public function remove(string $key): bool;
 
     /**
      * Returns the whole order
      *
      * @return array $order
      */
-    public function get();
-
+    public function get(): array;
 
     /**
      * Returns the one field of order
@@ -63,29 +58,26 @@ interface OrderInterface
      *
      * @return array $order
      */
-    public function set(array $order);
-
+    public function set(array $order): array;
 
     /**
      * Submit the order. It will create record in database and redirect user to payment, if set.
      *
      * @return array $status Array with order status
      */
-    public function submit();
-
+    public function submit(): array;
 
     /**
      * Cleans the order
      *
      * @return boolean
      */
-    public function clean();
-
+    public function clean(): bool;
 
     /**
      * Returns the cost of delivery depending on its settings and the goods in a cart
      *
      * @return array $response
      */
-    public function getCost();
+    public function getCost(): array;
 }

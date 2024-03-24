@@ -32,6 +32,7 @@ $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msCart');
+$return = $modx->getOption('return', $scriptProperties, 'tpl');
 $response = $ms3->cart->get();
 $cart = $response['data']['cart'];
 $status = $response['data']['status'];
@@ -120,6 +121,9 @@ $default = [
     'return' => 'data',
     'nestedChunkPrefix' => 'ms3_',
 ];
+if ($scriptProperties['return'] === 'tpl') {
+    unset($scriptProperties['return']);
+}
 // Merge all properties and run!
 $pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
 
@@ -172,10 +176,16 @@ foreach ($cart as $key => $entry) {
     $total['positions']++;
 }
 
-$output = $pdoFetch->getChunk($tpl, [
+$outputData = [
     'total' => $total,
     'products' => $products,
-]);
+];
+
+if ($return === 'data') {
+    return $outputData;
+}
+
+$output = $pdoFetch->getChunk($tpl, $outputData);
 
 if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
     $output .= '<pre class="msCartLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';

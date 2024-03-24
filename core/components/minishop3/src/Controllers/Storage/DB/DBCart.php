@@ -76,7 +76,12 @@ class DBCart extends DBStorage
         }
 
         $data['cart'] = $this->cart;
-        $data['status'] = $this->status();
+        $response = $this->status();
+        $status = [];
+        if ($response['success']) {
+            $status = $response['data'];
+        }
+        $data['status'] = $status;
         return $this->success(
             'ms3_cart_get_success',
             $data
@@ -206,7 +211,12 @@ class DBCart extends DBStorage
 
         $data['last_key'] = $product_key;
         $data['cart'] = $this->cart;
-        $data['status'] = $this->status();
+        $response = $this->status();
+        $status = [];
+        if ($response['success']) {
+            $status = $response['data'];
+        }
+        $data['status'] = $status;
 
         return $this->success(
             'ms3_cart_add_success',
@@ -289,7 +299,12 @@ class DBCart extends DBStorage
 
         $data['last_key'] = $product_key;
         $data['cart'] = $this->cart;
-        $data['status'] = $this->status();
+        $response = $this->status();
+        $status = [];
+        if ($response['success']) {
+            $status = $response['data'];
+        }
+        $data['status'] = $status;
 
         return $this->success(
             'ms3_cart_change_success',
@@ -386,7 +401,12 @@ class DBCart extends DBStorage
 
         $data['last_key'] = $product_key;
         $data['cart'] = $this->cart;
-        $data['status'] = $this->status();
+        $response = $this->status();
+        $status = [];
+        if ($response['success']) {
+            $status = $response['data'];
+        }
+        $data['status'] = $status;
 
         return $this->success(
             'ms3_cart_change_success',
@@ -459,7 +479,12 @@ class DBCart extends DBStorage
 
         $data['last_key'] = $product_key;
         $data['cart'] = $this->cart;
-        $data['status'] = $this->status();
+        $response = $this->status();
+        $status = [];
+        if ($response['success']) {
+            $status = $response['data'];
+        }
+        $data['status'] = $status;
 
         return $this->success(
             'ms3_cart_remove_success',
@@ -504,7 +529,12 @@ class DBCart extends DBStorage
             }
         }
 
-        $data['status'] = $this->status();
+        $response = $this->status();
+        $status = [];
+        if ($response['success']) {
+            $status = $response['data'];
+        }
+        $data['status'] = $status;
 
         return $this->success(
             'ms3_cart_clean_success',
@@ -555,7 +585,10 @@ class DBCart extends DBStorage
             $status = $response['data']['status'];
         }
 
-        return $status;
+        return $this->success(
+            'ms3_cart_status_success',
+            $status
+        );
     }
 
     /**
