@@ -3,7 +3,7 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
-use MiniShop3\Utils\DBManager;
+use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\Processors\Model\GetProcessor;
 
 class Get extends GetProcessor
@@ -33,12 +33,12 @@ class Get extends GetProcessor
      */
     public function beforeOutput()
     {
-        $dbManager = new DBManager($this->modx);
+        $extraFieldsManager = new ExtraFields($this->modx);
 
         $className = $this->object->get('class');
         $columnName = $this->object->get('key');
         $table = $this->modx->getTableName($className);
-        $exists = $dbManager->hasField($className, $columnName);
+        $exists = $extraFieldsManager->columnExists($className, $columnName);
 
         $this->object->set('exists',  $exists);
         $existsMessage = '';

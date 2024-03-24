@@ -5,7 +5,7 @@ namespace MiniShop3\Processors\Utilities\ExtraField;
 use MiniShop3\Model\msExtraField;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msVendor;
-use MiniShop3\Utils\DBManager;
+use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\Processors\Model\UpdateProcessor;
 use xPDO\xPDO;
 
@@ -19,6 +19,9 @@ class Update extends UpdateProcessor
 
     private $createColumn = false;
 
+    /** @var ExtraFields $extraFields */
+    private $extraFields;
+
     /**
      * @return bool|null|string
      */
@@ -28,6 +31,8 @@ class Update extends UpdateProcessor
             return $this->modx->lexicon('access_denied');
         }
 
+        $this->extraFields = new ExtraFields($this->modx);
+
         return parent::initialize();
     }
 
@@ -36,8 +41,7 @@ class Update extends UpdateProcessor
      */
     public function beforeSet()
     {
-        $dbManager = new DBManager($this->modx);
-        $existsInDb = $dbManager->hasField($this->object->get('class'), $this->object->get('key'));
+        $existsInDb = $this->extraFields->columnExists($this->object->get('class'), $this->object->get('key'));
         if ($existsInDb) {
             $this->createColumn = false;
             $required = [];
@@ -71,13 +75,14 @@ class Update extends UpdateProcessor
         }
 
         if (!$existsInDb) {
+            $class = $this->getProperty('class');
             $key = $this->getProperty('key');
             $doesAlreasyExistCriteria = [
                 'id:!=' => $this->object->get('id'),
-                'class' => $this->getProperty('class'),
+                'class' => $class,
                 'key' => $key
             ];
-            if ($this->doesAlreadyExist($doesAlreasyExistCriteria) || $this->doesBuiltIn($key)) {
+            if ($this->doesAlreadyExist($doesAlreasyExistCriteria) || $this->doesBuiltIn($class, $key)) {
                 $this->modx->error->addField('key', $this->modx->lexicon('ms3_err_ae'));
             }
         }
@@ -91,12 +96,11 @@ class Update extends UpdateProcessor
     public function beforeSave()
     {
         if ($this->createColumn) {
-            $dbManager = new DBManager($this->modx);
             $class = $this->object->get('class');
             $key = $this->object->get('key');
             // TODO: Не однозначное поведение, если в базе существует столбец, а пользователь создаст с другим dbtype
-            if (!$dbManager->hasField($class, $key)) {
-                if (!$dbManager->addField($this->object)) {
+            if (!$this->extraFields->columnExists($class, $key)) {
+                if (!$this->extraFields->createColumn($this->object)) {
                     // TODO: заменить текст ошибки на "Ошибка добавления поля"
                     $this->modx->error->addField('key', $this->modx->lexicon('ms3_err_unknown'));
                 }
@@ -104,6 +108,12 @@ class Update extends UpdateProcessor
         }
 
         return parent::beforeSave();
+    }
+
+    public function afterSave()
+    {
+        $this->extraFields->deleteCache();
+        return parent::afterSave();
     }
 
 

@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
+use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\Processors\Model\RemoveProcessor;
 
 class Remove extends RemoveProcessor
@@ -22,5 +23,13 @@ class Remove extends RemoveProcessor
         }
 
         return parent::initialize();
+    }
+
+    public function afterRemove()
+    {
+        $extraFields = new ExtraFields($this->modx);
+        $extraFields->deleteCache();
+
+        return parent::afterRemove();
     }
 }

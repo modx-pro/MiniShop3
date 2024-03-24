@@ -8,6 +8,7 @@ use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
 use MiniShop3\Utils\Plugins;
 use MiniShop3\Utils\Services;
@@ -50,6 +51,9 @@ class MiniShop3
 
     /** @var Plugins $plugins */
     public $plugins;
+
+    /** @var ExtraFields $extraFields */
+    public $extraFields;
 
     /** @var Options $options */
     public $options;
@@ -101,6 +105,7 @@ class MiniShop3
         $this->format = new Format($this);
         $this->services = new Services($this);
         //$this->plugins = new Plugins($this);
+        $this->extraFields = new ExtraFields($this->modx);
         $this->options = new Options($this);
 
         $this->deleteOldDraft();
@@ -286,6 +291,7 @@ class MiniShop3
      */
     public function loadMap()
     {
+        $this->extraFields->loadMap();
         if (method_exists($this->pdoFetch, 'makePlaceholders')) {
 //            $plugins = $this->plugins->load();
 //            foreach ($plugins as $plugin) {

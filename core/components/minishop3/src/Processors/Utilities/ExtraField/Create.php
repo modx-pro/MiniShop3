@@ -3,7 +3,7 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
-use MiniShop3\Utils\DBManager;
+use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\Processors\Model\CreateProcessor;
 
 class Create extends CreateProcessor
@@ -16,6 +16,9 @@ class Create extends CreateProcessor
 
     private $createColumn = false;
 
+    /** @var ExtraFields $extraFields */
+    private $extraFields;
+
     /**
      * @return bool|null|string
      */
@@ -24,6 +27,8 @@ class Create extends CreateProcessor
         if (!$this->modx->hasPermission($this->permission)) {
             return $this->modx->lexicon('access_denied');
         }
+
+        $this->extraFields = new ExtraFields($this->modx);
 
         return parent::initialize();
     }
@@ -78,12 +83,12 @@ class Create extends CreateProcessor
     public function beforeSave()
     {
         if ($this->createColumn) {
-            $dbManager = new DBManager($this->modx);
+            
             $class = $this->object->get('class');
             $key = $this->object->get('key');
             // TODO: Не однозначное поведение, если в базе существует столбец, а пользователь создаст с другим dbtype
-            if (!$dbManager->hasField($class, $key)) {
-                if (!$dbManager->addField($this->object)) {
+            if (!$this->extraFields->columnExists($class, $key)) {
+                if (!$this->extraFields->createColumn($this->object)) {
                     // TODO: заменить текст ошибки на "Ошибка добавления поля"
                     $this->modx->error->addField('key', $this->modx->lexicon('ms3_err_unknown'));
                 }
@@ -91,5 +96,11 @@ class Create extends CreateProcessor
         }
 
         return parent::beforeSave();
+    }
+
+    public function afterSave()
+    {
+        $this->extraFields->deleteCache();
+        return parent::afterSave();
     }
 }

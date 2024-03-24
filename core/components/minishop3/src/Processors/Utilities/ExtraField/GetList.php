@@ -3,7 +3,7 @@
 namespace MiniShop3\Processors\Utilities\ExtraField;
 
 use MiniShop3\Model\msExtraField;
-use MiniShop3\Utils\DBManager;
+use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use PDO;
 use xPDO\Om\xPDOObject;
@@ -16,7 +16,7 @@ class GetList extends GetListProcessor
     public $defaultSortDirection = 'asc';
     public $permission = 'mssetting_list';
 
-    private DBManager $dbManager;
+    private ExtraFields $extraFieldsManager;
 
     /**
      * {@inheritDoc}
@@ -24,7 +24,7 @@ class GetList extends GetListProcessor
      */
     public function initialize()
     {
-        $this->dbManager = new DBManager($this->modx);
+        $this->extraFieldsManager = new ExtraFields($this->modx);
 
         return parent::initialize();
     }
@@ -72,7 +72,7 @@ class GetList extends GetListProcessor
             ];
         } else {
             $data = $object->toArray();
-            $data['exists'] = $this->dbManager->hasField($data['class'], $data['key']);
+            $data['exists'] = $this->extraFieldsManager->columnExists($data['class'], $data['key']);
             $data['dbtype'] = empty($data['precision'])
                 ? $data['dbtype']
                 : sprintf("%s (%s)", $data['dbtype'], $data['precision']);
