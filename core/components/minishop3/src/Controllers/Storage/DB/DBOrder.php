@@ -8,18 +8,19 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
+use MiniShop3\Controllers\Order\OrderInterface;
 
-class DBOrder extends DBStorage
+class DBOrder extends DBStorage implements OrderInterface
 {
     private $config;
     private $order;
 
     /**
-     * @param string $ctx
-     *
+     * @param string $token
+     * @param $config
      * @return bool
      */
-    public function initialize($token, $config = [])
+    public function initialize(string $token = '', $config = []): bool
     {
         if (empty($token)) {
             return false;
@@ -29,7 +30,7 @@ class DBOrder extends DBStorage
         return true;
     }
 
-    public function get()
+    public function get(): array
     {
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
@@ -68,7 +69,7 @@ class DBOrder extends DBStorage
         );
     }
 
-    public function getCost($with_cart = true, $only_cost = false)
+    public function getCost($with_cart = true, $only_cost = false): array
     {
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetOrderCost', [
             'controller' => $this,
@@ -81,6 +82,8 @@ class DBOrder extends DBStorage
         }
 
         $cost = 0;
+        $cart = [];
+        $this->ms3->cart->initialize($this->ms3->config['ctx'], $this->token);
         $response = $this->ms3->cart->status();
         if ($response['success']) {
             $cart = $response['data'];
@@ -91,30 +94,27 @@ class DBOrder extends DBStorage
 
         $delivery_cost = 0;
         if (!empty($this->order['delivery_id'])) {
-            $delivery = $this->modx->getObject(
+            /** @var msDelivery $msDelivery */
+            $msDelivery = $this->modx->getObject(
                 msDelivery::class,
                 ['id' => $this->order['delivery_id']]
             );
-            if ($delivery) {
+            if ($msDelivery) {
                 // TODO проработать после реализации контроллеров Доставки
-                //$cost = $delivery->getCost($this, $cost);
-                //Временное равенство.
-                $cost = $cart['total_cost'];
+                $cost = $msDelivery->getCost($this, $cost);
                 $delivery_cost = $cost - $cart['total_cost'];
                 $this->setDeliveryCost($delivery_cost);
             }
         }
 
         if (!empty($this->order['payment_id'])) {
-            $payment = $this->modx->getObject(
+            $msPayment = $this->modx->getObject(
                 msDelivery::class,
                 ['id' => $this->order['payment_id']]
             );
-            if ($payment) {
+            if ($msPayment) {
                 // TODO проработать после реализации контроллеров Платежей
-//                $cost = $payment->getCost($this, $cost);
-                // Временно приравнял 0
-                $cost = 0;
+//                $cost = $msPayment->getCost($this, $cost);
             }
         }
 
@@ -147,7 +147,7 @@ class DBOrder extends DBStorage
         );
     }
 
-    public function add($key, $value = '')
+    public function add($key, $value = ''): bool
     {
         $response = $this->ms3->utils->invokeEvent('msOnBeforeAddToOrder', [
             'key' => $key,
@@ -185,7 +185,7 @@ class DBOrder extends DBStorage
             : $this->success('', [$key => $validated]);
     }
 
-    public function validate($key, $value)
+    public function validate($key, $value): mixed
     {
         $eventParams = [
             'key' => $key,
@@ -206,7 +206,7 @@ class DBOrder extends DBStorage
         return $response['data']['value'];
     }
 
-    public function remove($key)
+    public function remove($key): bool
     {
         if ($exists = array_key_exists($key, $this->order)) {
             $response = $this->ms3->utils->invokeEvent('msOnBeforeRemoveFromOrder', [
@@ -230,7 +230,7 @@ class DBOrder extends DBStorage
         return $exists;
     }
 
-    public function set(array $order)
+    public function set(array $order): array
     {
         //TODO учесть поля Customer
         foreach ($order as $key => $value) {
@@ -238,6 +238,16 @@ class DBOrder extends DBStorage
         }
 
         return $this->get();
+    }
+
+    public function submit(): array
+    {
+        return [];
+    }
+
+    public function clean(): bool
+    {
+        return true;
     }
 
     protected function getOrder()

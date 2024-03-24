@@ -38,7 +38,7 @@ interface PaymentInterface
      *
      * @return integer
      */
-    public function getCost(OrderInterface $order, msPayment $payment, $cost = 0.0);
+    public function getCost(OrderInterface $order, msPayment $payment, float $cost = 0.0);
 
     /**
      * Returns failure response

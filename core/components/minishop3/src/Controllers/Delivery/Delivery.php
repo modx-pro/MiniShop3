@@ -16,13 +16,13 @@ class Delivery implements DeliveryInterface
     public $ms3;
 
     /**
-     * @param xPDOObject $object
+     * @param MiniShop3 $ms3
      * @param array $config
      */
-    public function __construct(xPDOObject $object, $config = [])
+    public function __construct(MiniShop3 $ms3, $config = [])
     {
-        $this->modx = $object->xpdo;
-        $this->ms3 = $object->xpdo->services->get('ms3');
+        $this->ms3 = $ms3;
+        $this->modx = $ms3->modx;
     }
 
     /**
@@ -34,7 +34,7 @@ class Delivery implements DeliveryInterface
      *
      * @return float|integer
      */
-    public function getCost(OrderInterface $order, msDelivery $delivery, $cost = 0.0)
+    public function getCost(OrderInterface $order, msDelivery $delivery, float $cost = 0.0): float|int
     {
         if (empty($this->ms3) && $this->modx->services->has('ms3')) {
             $this->ms3 = $this->modx->services->get('ms3');
@@ -42,7 +42,14 @@ class Delivery implements DeliveryInterface
         if (empty($this->ms3->cart)) {
             $this->ms3->loadServices($this->ms3->config['ctx']);
         }
-        $cart = $this->ms3->cart->status();
+        $response = $this->ms3->cart->status();
+        $cart = [
+            'total_weight' => 0,
+            'total_cost' => 0
+        ];
+        if ($response['success']) {
+            $cart = $response['data'];
+        }
         $weight_price = $delivery->get('weight_price');
 
         $cart_weight = $cart['total_weight'];
@@ -53,7 +60,7 @@ class Delivery implements DeliveryInterface
             $add_price = 0;
         } else {
             $add_price = $delivery->get('price');
-            if (preg_match('/%$/', $add_price)) {
+            if (str_ends_with($add_price, '%')) {
                 $add_price = str_replace('%', '', $add_price);
                 $add_price = $cart['total_cost'] / 100 * $add_price;
             }
@@ -71,7 +78,7 @@ class Delivery implements DeliveryInterface
      *
      * @return array|string
      */
-    public function error(string $message = '', array $data = [], array $placeholders = [])
+    public function error(string $message = '', array $data = [], array $placeholders = []): array|string
     {
         if (empty($this->ms3) && $this->modx->services->has('ms3')) {
             $this->ms3 = $this->modx->services->get('ms3');
@@ -87,7 +94,7 @@ class Delivery implements DeliveryInterface
      *
      * @return array|string
      */
-    public function success(string $message = '', array $data = [], array $placeholders = [])
+    public function success(string $message = '', array $data = [], array $placeholders = []): array|string
     {
         if (empty($this->ms3) && $this->modx->services->has('ms3')) {
             $this->ms3 = $this->modx->services->get('ms3');

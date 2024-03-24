@@ -10,7 +10,7 @@ use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
 use MiniShop3\Controllers\Storage\DB\DBOrder;
 
-class Order
+class Order implements OrderInterface
 {
     /** @var modX $modx */
     public $modx;
@@ -38,12 +38,12 @@ class Order
         $this->storage = new DBOrder($this->modx, $this->ms3);
     }
 
-    public function initialize($token = '')
+    public function initialize(string $token = '', array $config = []): bool
     {
         return $this->storage->initialize($token, $this->config);
     }
 
-    public function get()
+    public function get(): array
     {
         return $this->storage->get();
     }
@@ -54,7 +54,7 @@ class Order
      *
      * @return array|string
      */
-    public function getCost($with_cart = true, $only_cost = false)
+    public function getCost($with_cart = true, $only_cost = false): array
     {
         return $this->storage->getCost($with_cart, $only_cost);
     }
@@ -65,7 +65,7 @@ class Order
      *
      * @return array|string
      */
-    public function add($key, $value = '')
+    public function add($key, $value = ''): bool
     {
         return $this->storage->add($key, $value);
     }
@@ -76,7 +76,7 @@ class Order
      *
      * @return bool|mixed|string
      */
-    public function validate($key, $value)
+    public function validate($key, $value): mixed
     {
         return $this->storage->validate($key, $value);
     }
@@ -86,7 +86,7 @@ class Order
      *
      * @return array|bool|string
      */
-    public function remove($key)
+    public function remove($key): bool
     {
         return $this->storage->remove($key);
     }
@@ -96,7 +96,7 @@ class Order
      *
      * @return array
      */
-    public function set(array $order)
+    public function set(array $order): array
     {
         return $this->storage->set($order);
     }
@@ -167,6 +167,16 @@ class Order
             : $this->modx->fromJSON($rules, true);
 
         return $this->success('', ['validation_rules' => $rules]);
+    }
+
+    public function submit(): array
+    {
+        return [];
+    }
+
+    public function clean(): bool
+    {
+        return true;
     }
 
     /**

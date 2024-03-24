@@ -4,6 +4,7 @@ namespace MiniShop3;
 
 use MiniShop3\Controllers\Cart\Cart;
 use MiniShop3\Controllers\Customer\Customer;
+use MiniShop3\Controllers\Delivery\DeliveryInterface;
 use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
@@ -33,6 +34,8 @@ class MiniShop3
     public $order;
     /** @var Customer $customer */
     public $customer;
+    /** @var DeliveryInterface $delivery */
+    public $delivery;
     /** @var array $initialized */
     public $initialized = [];
 
