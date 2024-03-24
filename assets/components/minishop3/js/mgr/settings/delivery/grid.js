@@ -128,12 +128,7 @@ Ext.extend(ms3.grid.Delivery, ms3.grid.Default, {
             this.menu.record = row.data;
         }
 
-        let w = Ext.getCmp('ms3-window-delivery-update');
-        if (w) {
-            w.close();
-        }
-
-        var id = this.menu.record.id;
+        const id = this.menu.record.id;
         MODx.Ajax.request({
             url: this.config.url,
             params: {
@@ -143,6 +138,11 @@ Ext.extend(ms3.grid.Delivery, ms3.grid.Default, {
             listeners: {
                 success: {
                     fn: function (r) {
+                        let w = Ext.getCmp('ms3-window-delivery-update');
+                        if (w) {
+                            w.close();
+                        }
+
                         w = MODx.load({
                             xtype: 'ms3-window-delivery-update',
                             id: 'ms3-window-delivery-update',
@@ -159,11 +159,10 @@ Ext.extend(ms3.grid.Delivery, ms3.grid.Default, {
                         w.fp.getForm().reset();
                         w.fp.getForm().setValues(r.object);
                         w.show(e.target);
-                    }
-                }, scope: this
+                    }, scope: this
+                }
             }
         });
-        
     },
 
     enableDelivery: function () {
