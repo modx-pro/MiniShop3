@@ -56,7 +56,7 @@ if ($transport->xpdo) {
                         }
                     }
                     foreach ($tableFields as $field) {
-                        $manager->removeField($class, $field);
+                        //$manager->removeField($class, $field);
                     }
                     // 2. Operate with indexes
                     $indexes = [];
