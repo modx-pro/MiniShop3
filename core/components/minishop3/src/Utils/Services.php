@@ -3,6 +3,7 @@
 namespace MiniShop3\Utils;
 
 use MiniShop3\Controllers\Cart\Cart;
+use MiniShop3\Controllers\Delivery\Delivery;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Customer\Customer;
 use MODX\Revolution\modX;
@@ -71,7 +72,7 @@ class Services
             $this->loadCustomClasses('order');
         }
         if (!class_exists($orderController)) {
-            $orderController = Cart::class;
+            $orderController = Order::class;
         }
 
         $order = new $orderController($this->ms3, $this->ms3->config);
@@ -100,6 +101,23 @@ class Services
 //
 //            return false;
 //        }
+
+
+        // Load delivery class
+        $deliveryController = $this->modx->getOption(
+            'ms3_delivery_controller',
+            null,
+            '\\MiniShop3\\Controllers\\Delivery\\Delivery'
+        );
+        if ($deliveryController !== '\\MiniShop3\\Controllers\\Delivery\\Delivery') {
+            $this->loadCustomClasses('Delivery');
+        }
+        if (!class_exists($deliveryController)) {
+            $deliveryController = Delivery::class;
+        }
+
+        $delivery = new $deliveryController($this->ms3, $this->ms3->config);
+        $this->ms3->setController('delivery', $delivery);
 
         return true;
     }

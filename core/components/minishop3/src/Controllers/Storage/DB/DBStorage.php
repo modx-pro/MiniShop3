@@ -65,7 +65,7 @@ class DBStorage
         $where = [
             'token' => $token,
             'status_id' => $status_draft,
-            'context' => $this->ctx
+            'context' => $this->ms3->config['ctx']
         ];
         return $this->modx->getObject(msOrder::class, $where);
     }

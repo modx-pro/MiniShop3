@@ -155,6 +155,10 @@ return [
                 'type' => 'combo-boolean',
                 'value' => false,
             ],
+            'return' => [
+                'type' => 'textfield',
+                'value' => 'tpl',
+            ],
         ],
     ],
     'msGallery' => [

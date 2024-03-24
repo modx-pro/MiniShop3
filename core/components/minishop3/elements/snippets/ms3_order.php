@@ -17,11 +17,13 @@ if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
     $response = $ms3->customer->generateToken();
     $token = $response['data']['token'];
 }
+
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOrder');
+$return = $modx->getOption('return', $scriptProperties, 'tpl');
 
 $ms3->order->initialize($token);
 $response = $ms3->order->get();
@@ -214,7 +216,7 @@ $outputData = [
 //    'errors' => $errors,
 ];
 
-if ($scriptProperties['return'] === 'data') {
+if ($return === 'data') {
     return $outputData;
 }
 $output = $pdoFetch->getChunk($tpl, $outputData);

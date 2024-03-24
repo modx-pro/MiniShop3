@@ -56,7 +56,7 @@ class Payment implements PaymentInterface
      *
      * @return float|int
      */
-    public function getCost(OrderInterface $order, msPayment $payment, $cost = 0.0)
+    public function getCost(OrderInterface $order, msPayment $payment, float $cost = 0.0)
     {
         $add_price = $payment->get('price');
         if (preg_match('/%$/', $add_price)) {

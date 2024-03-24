@@ -17,7 +17,7 @@ interface DeliveryInterface
      *
      * @return float|integer
      */
-    public function getCost(OrderInterface $order, msDelivery $delivery, float $cost = 0.0);
+    public function getCost(OrderInterface $order, msDelivery $delivery, float $cost = 0.0): float|int;
 
     /**
      * Returns failure response
@@ -28,7 +28,7 @@ interface DeliveryInterface
      *
      * @return array|string
      */
-    public function error(string $message = '', array $data = [], array $placeholders = []);
+    public function error(string $message = '', array $data = [], array $placeholders = []): array|string;
 
     /**
      * Returns success response
@@ -39,5 +39,5 @@ interface DeliveryInterface
      *
      * @return array|string
      */
-    public function success(string $message = '', array $data = [], array $placeholders = []);
+    public function success(string $message = '', array $data = [], array $placeholders = []): array|string;
 }
