@@ -119,6 +119,22 @@ class Services
         $delivery = new $deliveryController($this->ms3, $this->ms3->config);
         $this->ms3->setController('delivery', $delivery);
 
+        // Load payment class
+        $paymentController = $this->modx->getOption(
+            'ms3_payment_controller',
+            null,
+            '\\MiniShop3\\Controllers\\Payment\\Payment'
+        );
+        if ($paymentController !== '\\MiniShop3\\Controllers\\Payment\\Payment') {
+            $this->loadCustomClasses('Payment');
+        }
+        if (!class_exists($paymentController)) {
+            $paymentController = Delivery::class;
+        }
+
+        $payment = new $paymentController($this->ms3, $this->ms3->config);
+        $this->ms3->setController('payment', $payment);
+
         return true;
     }
 

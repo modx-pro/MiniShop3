@@ -2,8 +2,6 @@
 
 namespace MiniShop3\Model;
 
-use MiniShop3\Controllers\Delivery\DeliveryInterface;
-use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderInterface;
 use MiniShop3\Controllers\Payment\Payment;
 use MiniShop3\Controllers\Payment\PaymentInterface;
@@ -33,6 +31,9 @@ class msPayment extends xPDOSimpleObject
     /** @var MiniShop3 $ms3 */
     public $ms3;
 
+    /** @var string $defaultControllerClass */
+    private string $defaultControllerClass = 'MiniShop3\\Controllers\\Payment\\Payment';
+
     /**
      * msPayment constructor.
      *
@@ -53,22 +54,20 @@ class msPayment extends xPDOSimpleObject
      */
     public function loadHandler()
     {
-        require_once dirname(__FILE__, 2) . '/Controllers/Payment/Payment.php';
-
-        if (!$class = $this->get('class')) {
-            $class = 'Payment';
+        $class = $this->get('class');
+        if (!$class || $class === 'Payment') {
+            $class = $this->defaultControllerClass;
         }
 
-        if ($class !== 'Payment') {
+        if ($class !== $this->defaultControllerClass) {
+            // TODO: ждём новой реализации
             //$this->ms3->loadCustomClasses('payment');
         }
-
         if (!class_exists($class)) {
             $this->xpdo->log(modX::LOG_LEVEL_ERROR, 'Payment controller class "' . $class . '" not found.');
-            $class = 'Payment';
+            $class = $this->defaultControllerClass;
         }
-
-        $this->controller = new $class($this, []);
+        $this->controller = new $class($this->ms3, []);
         if (!($this->controller instanceof PaymentInterface)) {
             $this->xpdo->log(modX::LOG_LEVEL_ERROR, 'Could not initialize payment controller class: "' . $class . '"');
 
@@ -117,19 +116,18 @@ class msPayment extends xPDOSimpleObject
     /**
      * Returns an additional cost depending on the method of payment
      *
-     * @param OrderInterface|Order $order
+     * @param OrderInterface $order
      * @param float $cost Current cost of order
      *
      * @return float|integer
      */
-    public function getCost(OrderInterface $order, $cost = 0.0)
+    public function getCost(OrderInterface $order, float $cost = 0.0)
     {
-        if (!is_object($this->controller) || !($this->controller instanceof DeliveryInterface)) {
+        if (!is_object($this->controller) || !($this->controller instanceof PaymentInterface)) {
             if (!$this->loadHandler()) {
                 return false;
             }
         }
-
         return $this->controller->getCost($order, $this, $cost);
     }
 
