@@ -8,6 +8,7 @@ use MiniShop3\Controllers\Delivery\DeliveryInterface;
 use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
+use MiniShop3\Controllers\Payment\PaymentInterface;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
@@ -37,6 +38,8 @@ class MiniShop3
     public $customer;
     /** @var DeliveryInterface $delivery */
     public $delivery;
+    /** @var PaymentInterface $payment */
+    public $payment;
     /** @var array $initialized */
     public $initialized = [];
 
