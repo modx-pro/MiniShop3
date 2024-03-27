@@ -89,11 +89,12 @@ a.x-menu-item .x-menu-item-text .icon { line-height: 16px; top: auto; }
 .ms3-btn-action {padding: 3px 20px 3px 6px!important;}
 .ms3-btn-action i.icon {padding-right: 3px;width: 15px;}
 /* Windows */
-.ms3-window .x-form-label-top .x-form-item label.x-form-item-label { padding-top: 15px !important; }
+/*.ms3-window .x-form-label-top .x-form-item label.x-form-item-label { padding-top: 15px !important; }*/
 .ms3-window .x-panel-mc,
 .ms3-window .x-tab-panel-bwrap > .x-tab-panel-body > .x-panel { margin-top: -14px; }
 .ms3-window .x-window-body.tabs { padding: 5px 10px 0 10px; }
 .ms3-window .desc { font-style: italic; padding-top: 5px; color: #555555; }
+.ms3-window .text-success { color: green; }
 /* Tree */
 .ms3-panel .x-tree-root-ct,
 .ms3-window .x-tree-root-ct { overflow: visible; }

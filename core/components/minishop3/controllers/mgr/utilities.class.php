@@ -31,12 +31,22 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
      */
     public function loadCustomCssJs()
     {
+        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
+        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/utilities/gallery.css');
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.grid.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.window.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.utils.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.combo.js');
+
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/gallery/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/import/panel.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/tree.classes.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/grid.js');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/window.js');
 
         $config = $this->ms3->config;
 
