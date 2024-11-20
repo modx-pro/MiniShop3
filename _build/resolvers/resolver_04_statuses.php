@@ -36,6 +36,8 @@ if ($transport->xpdo) {
                     'body_manager' => '',
                     'final' => 0,
                     'fixed' => 0,
+                    'rank' => 999,
+                    'id' => 1,
                 ],
                 2 => [
                     'name' => $modx->lexicon('ms3_order_status_new'),
@@ -48,6 +50,8 @@ if ($transport->xpdo) {
                     'body_manager' => 'tpl.msEmail.new.manager',
                     'final' => 0,
                     'fixed' => 1,
+                    'rank' => 1,
+                    'id' => 2,
                 ],
                 3 => [
                     'name' => $modx->lexicon('ms3_order_status_paid'),
@@ -60,6 +64,8 @@ if ($transport->xpdo) {
                     'body_manager' => 'tpl.msEmail.paid.manager',
                     'final' => 0,
                     'fixed' => 1,
+                    'rank' => 2,
+                    'id' => 3,
                 ],
                 4 => [
                     'name' => $modx->lexicon('ms3_order_status_sent'),
@@ -72,6 +78,8 @@ if ($transport->xpdo) {
                     'body_manager' => '',
                     'final' => 1,
                     'fixed' => 1,
+                    'rank' => 3,
+                    'id' => 4,
                 ],
                 5 => [
                     'name' => $modx->lexicon('ms3_order_status_cancelled'),
@@ -84,6 +92,8 @@ if ($transport->xpdo) {
                     'body_manager' => '',
                     'final' => 1,
                     'fixed' => 1,
+                    'rank' => 4,
+                    'id' => 5,
                 ],
             ];
 
