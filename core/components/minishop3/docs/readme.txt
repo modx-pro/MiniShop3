@@ -8,6 +8,6 @@ With questions and problems - contact the https://modx.pro  AND  https://t.me/ru
 --------------------
 
 Feel free to suggest ideas/improvements/bugs on GitHub:
-https://github.com/modx-pro/miniShop2
+https://github.com/modx-pro/MiniShop3/issues
 
 

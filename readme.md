@@ -19,6 +19,7 @@ git clone https://github.com/modx-pro/MiniShop3.git
 2. Перейти в корень репозитория и установить необходимые для работы Composer зависимости
 
 ``` 
+cd MiniShop3/core/components/minishop3/
 composer update
 ```
 

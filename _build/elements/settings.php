@@ -183,7 +183,7 @@ return [
     ],
     'ms3_order_address_fields' => [
         'xtype' => 'textarea',
-        'value' => 'first_name,last_name,phone,index,country,region,city,metro,street,building,entrance,floor,room,comment,text_address',
+        'value' => 'first_name,last_name,email,phone,index,country,region,city,metro,street,building,entrance,floor,room,comment,text_address',
         'area' => 'ms3_order',
     ],
     'ms3_order_product_fields' => [

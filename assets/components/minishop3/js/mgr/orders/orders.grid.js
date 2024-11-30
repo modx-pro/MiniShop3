@@ -28,8 +28,8 @@ Ext.extend(ms3.grid.Orders, ms3.grid.Default, {
         const all = {
             id: {width: 35},
             customer: {width: 100, renderer: function (val, cell, row) {
-                return ms3.utils.userLink(val, row.data['user_id'], true);
-            }},
+                return row.data['customer'];
+              }},
             num: {width: 50},
             first_name: {width: 100},
             last_name: {width: 100},

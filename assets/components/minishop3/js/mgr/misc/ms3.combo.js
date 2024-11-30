@@ -124,6 +124,43 @@ ms3.combo.User = function (config) {
 Ext.extend(ms3.combo.User, ms3.combo.ComboBoxDefault);
 Ext.reg('ms3-combo-user', ms3.combo.User);
 
+ms3.combo.Customer = function (config) {
+    config = config || {};
+    Ext.applyIf(config, {
+        name: 'customer_id',
+        fieldLabel: config.name || 'createdby',
+        hiddenName: config.name || 'createdby',
+        displayField: 'fullname',
+        valueField: 'id',
+        anchor: '99%',
+        fields: ['id', 'fullname'],
+        pageSize: 20,
+        typeAhead: false,
+        editable: true,
+        allowBlank: false,
+        url: ms3.config.connector_url,
+        baseParams: {
+            action: 'MiniShop3\\Processors\\Customer\\GetListCombobox',
+            combo: true,
+        },
+        tpl: new Ext.XTemplate(
+            '\
+            <tpl for=".">\
+                <div class="x-combo-list-item">\
+                    <span>\
+                        <small>({id})</small>\
+                        <b>{fullname}</b>\
+                    </span>\
+                </div>\
+            </tpl>',
+            {compiled: true}
+        ),
+    });
+    ms3.combo.Customer.superclass.constructor.call(this, config);
+};
+Ext.extend(ms3.combo.Customer, ms3.combo.ComboBoxDefault);
+Ext.reg('ms3-combo-customer', ms3.combo.Customer);
+
 
 ms3.combo.Category = function (config) {
     config = config || {};

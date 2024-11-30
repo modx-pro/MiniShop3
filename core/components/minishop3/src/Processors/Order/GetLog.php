@@ -116,7 +116,6 @@ class GetLog extends GetListProcessor
      */
     public function prepareArray(array $data)
     {
-        $this->modx->log(1, print_r($data, 1));
         if ($data['action'] === 'status') {
             $q = $this->modx->newQuery(msOrderStatus::class);
             $q->where(['id' => $data['entry']]);

@@ -37,7 +37,7 @@
                 <div class="col-6 col-md-9">
                     {$price} {'ms3_frontend_currency' | lexicon}
                     {if $old_price != 0}
-                    <span class="old_price ml-2">{$old_price} {'ms3_frontend_currency' | lexicon}</span>
+                    <span class="old_price ml-2 text-decoration-line-through text-danger">{$old_price} {'ms3_frontend_currency' | lexicon}</span>
                     {/if}
                 </div>
             </div>
@@ -72,9 +72,10 @@
 
             {'msProductOptions' | snippet : []}
 
-            <div class="form-group row align-items-center">
+            <div class="form-group row align-items-center mt-4">
                 <div class="col-12 offset-md-3 col-md-9 text-center text-md-left">
-                    <button type="submit" class="btn btn-primary" name="ms3_action" value="cart/add">
+                    <input type="hidden" name="ms3_action" value="cart/add">
+                    <button type="submit" class="btn btn-primary">
                         {'ms3_frontend_add_to_cart' | lexicon}
                     </button>
                 </div>

@@ -40,6 +40,7 @@ class DBCart extends DBStorage
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
         }
+        $this->draft = $this->getDraft($this->token);
         $this->cart = $this->loadCart($this->draft);
         $response = $this->invokeEvent('msOnBeforeGetCart', [
             'draft' => $this->draft,
@@ -631,7 +632,7 @@ class DBCart extends DBStorage
 
     /**
      * @param msOrder $draft
-     * @return []
+     * @return array
      */
     public function loadCart($draft)
     {

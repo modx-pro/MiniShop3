@@ -21,6 +21,7 @@ use xPDO\xPDO;
  */
 class msCategory extends modResource
 {
+    public $showInContextMenu = true;
     /**
      * msCategory constructor.
      *

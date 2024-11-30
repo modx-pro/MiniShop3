@@ -11,6 +11,7 @@ class Window
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+        $this->modx->lexicon->load('minishop3:manager');
     }
 
     public function getCreate(): array

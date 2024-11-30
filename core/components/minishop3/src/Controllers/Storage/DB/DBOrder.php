@@ -175,7 +175,6 @@ class DBOrder extends DBStorage
         if ($cartCostResponse['success']) {
             $cartCost = $cartCostResponse['data']['cost'];
         }
-        //TODO пересмотреть модель доставки и ее методы
         $costWithDelivery = $msDelivery->getCost($this->ms3->order, $cartCost);
         $deliveryCost = $costWithDelivery - $cartCost;
 

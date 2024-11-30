@@ -2,6 +2,7 @@
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Model\msProductFile;
 use MODX\Revolution\modX;
 use MiniShop3\MiniShop3;
 use ModxPro\PdoTools\Fetch;
@@ -21,7 +22,7 @@ $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGallery');
 
 /** @var msProduct $product */
 $product = !empty($product) && $product != $modx->resource->id
-    ? $modx->getObject('msProduct', ['id' => $product])
+    ? $modx->getObject(msProduct::class, ['id' => $product])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return "[msGallery] The resource with id = {$product->id} is not instance of msProduct.";
@@ -29,7 +30,7 @@ if (!($product instanceof msProduct)) {
 
 $where = [
     'product_id' => $product->id,
-    'parent' => 0,
+    'parent_id' => 0,
 ];
 if (!empty($filetype)) {
     $where['type:IN'] = array_map('trim', explode(',', $filetype));
@@ -38,7 +39,7 @@ if (empty($showInactive)) {
     $where['active'] = 1;
 }
 $select = [
-    'msProductFile' => '*',
+    'msProductFile' => $modx->getSelectColumns(msProductFile::class, 'msProductFile')
 ];
 
 // Add user parameters
@@ -56,11 +57,11 @@ foreach (['where'] as $v) {
 }
 $pdoFetch->addTime('Conditions prepared');
 $default = [
-    'class' => 'msProductFile',
+    'class' => msProductFile::class,
     'where' => $where,
     'select' => $select,
     'limit' => $limit,
-    'sortby' => '`rank`',
+    'sortby' => '`position`',
     'sortdir' => 'ASC',
     'fastMode' => false,
     'return' => 'data',
@@ -101,7 +102,7 @@ if ($data = $product->getOne('Data')) {
 $files = [];
 foreach ($rows as $row) {
     if (isset($row['type']) && $row['type'] == 'image') {
-        $c = $modx->newQuery('msProductFile', ['parent' => $row['id']]);
+        $c = $modx->newQuery(msProductFile::class, ['parent_id' => $row['id']]);
         $c->select('product_id,url');
         $tstart = microtime(true);
         if ($c->prepare() && $c->stmt->execute()) {

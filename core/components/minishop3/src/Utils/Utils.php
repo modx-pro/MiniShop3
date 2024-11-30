@@ -222,8 +222,7 @@ class Utils
         $this->modx->getParser()->processElementTags('', $body, true, false, '[[', ']]', [], 10);
         $this->modx->getParser()->processElementTags('', $body, true, true, '[[', ']]', [], 10);
 
-        /** @var modPHPMailer $mail */
-        $mail = $this->modx->services->get('modPHPMailer');
+        $mail = new modPHPMailer($this->modx);
         $mail->setHTML(true);
 
         $mail->address('to', trim($email));

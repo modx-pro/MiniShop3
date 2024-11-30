@@ -192,6 +192,10 @@ class Order implements OrderInterface
             return $response['message'];
         }
 
+        if (!empty($response['data']['user']) && $response['data']['user'] instanceof modUser) {
+            $modUser = $response['data']['user'];
+        }
+
         if (!$modUser) {
             $orderResponse = $this->ms3->order->get();
             if (!$orderResponse['success']) {

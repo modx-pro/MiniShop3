@@ -32,6 +32,9 @@ $return = $modx->getOption('return', $scriptProperties, 'tpl');
 $includeDeliveryFields = $modx->getOption('includeDeliveryFields', $scriptProperties, 'id');
 $includeDeliveryKeys = array_map('trim', explode(',', $includeDeliveryFields));
 $includeDeliveryKeys = array_unique(array_merge($includeDeliveryKeys, ['id']));
+$includePaymentFields = $modx->getOption('includePaymentFields', $scriptProperties, '*');
+$includePaymentKeys = array_map('trim', explode(',', $includePaymentFields));
+$includePaymentKeys = array_unique(array_merge($includePaymentKeys, ['id']));
 $includeCustomerAddresses = $modx->getOption('includeCustomerAddresses', $scriptProperties, true);
 
 $ms3->order->initialize($token);
@@ -84,17 +87,16 @@ if ($includeDeliveryKeys[0] === '*') {
 if (!empty($scriptProperties['includePaymentFields'])) {
     $includePaymentKeys = array_map('trim', explode(',', $scriptProperties['includePaymentFields']));
     $includePaymentKeys = array_unique(array_merge($includePaymentKeys, ['id']));
-
-    if ($includePaymentKeys[0] === '*') {
-        $select['msPayment'] = $modx->getSelectColumns(msPayment::class, '`msPayment`', 'payment_', ['id'], true);
-    } else {
-        $select['msPayment'] = $modx->getSelectColumns(
-            msPayment::class,
-            '`msPayment`',
-            'payment_',
-            $includePaymentKeys
-        );
-    }
+}
+if ($includePaymentKeys[0] === '*') {
+    $select['msPayment'] = $modx->getSelectColumns(msPayment::class, '`msPayment`', 'payment_');
+} else {
+    $select['msPayment'] = $modx->getSelectColumns(
+        msPayment::class,
+        '`msPayment`',
+        'payment_',
+        $includePaymentKeys
+    );
 }
 
 // Add user parameters
@@ -130,7 +132,6 @@ if ($scriptProperties['return'] === 'tpl') {
 // Merge all properties and run!
 $pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
 $rows = $pdoFetch->run();
-
 $deliveries = $payments = [];
 foreach ($rows as $row) {
     $delivery = [];
@@ -164,6 +165,12 @@ $form = [];
 if (!empty($order['properties']['address_hash'])) {
     $form['address_hash'] = $order['properties']['address_hash'];
 }
+foreach ($order as $key => $value) {
+    if (str_starts_with($key, 'address_')) {
+        unset($order[$key]);
+        $form[substr($key, 8)] = $value;
+    }
+}
 //TODO здесь применить еще модель msCustomer
 // Get user data
 $profile = [];
@@ -175,16 +182,16 @@ $fields = [
 //    'phone' => 'phone',
 //    'email' => 'email',
     'address_comment' => 'extended[comment]',
-    'address_index' => 'zip',
-    'address_country' => 'country',
-    'address_region' => 'state',
-    'address_city' => 'city',
-    'address_street' => 'address',
-    'address_building' => 'extended[building]',
-    'address_room' => 'extended[room]',
-    'address_entrance' => 'extended[entrance]',
-    'address_floor' => 'extended[floor]',
-    'address_text_address' => 'extended[address]',
+    'index' => 'zip',
+    'country' => 'country',
+    'region' => 'state',
+    'city' => 'city',
+    'street' => 'address',
+    'building' => 'extended[building]',
+    'room' => 'extended[room]',
+    'entrance' => 'extended[entrance]',
+    'floor' => 'extended[floor]',
+    'text_address' => 'extended[address]',
 ];
 // Apply custom fields
 if (!empty($userFields)) {
@@ -218,12 +225,26 @@ foreach ($fields as $key => $value) {
     }
 }
 
+// Check for errors
+$errors = [];
+if (!empty($_POST)) {
+    $response = $ms3->order->getDeliveryRequiresFields();
+//    if ($requires = $response['data']['requires']) {
+//        foreach ($_POST as $field => $val) {
+//            $validated = $ms3->order->validate($field, $val);
+//            if ((in_array($field, $requires) && empty($validated))) {
+//                $errors[] = $field;
+//            }
+//        }
+//    }
+}
+
 $outputData = [
     'order' => $order,
     'form' => $form,
     'deliveries' => $deliveries,
     'payments' => $payments,
-//    'errors' => $errors,
+    'errors' => $errors,
 ];
 
 if (!empty($includeCustomerAddresses)) {
@@ -240,31 +261,3 @@ if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
 }
 
 return $output;
-
-//// Check for errors
-//$errors = [];
-//if (!empty($_POST)) {
-//    $response = $ms3->order->getDeliveryRequiresFields();
-//    if ($requires = $response['data']['requires']) {
-//        foreach ($_POST as $field => $val) {
-//            $validated = $ms3->order->validate($field, $val);
-//            if ((in_array($field, $requires) && empty($validated))) {
-//                $errors[] = $field;
-//            }
-//        }
-//    }
-//}
-//
-//$output = $pdoFetch->getChunk($tpl, [
-//    'order' => $order,
-//    'form' => $form,
-//    'deliveries' => $deliveries,
-//    'payments' => $payments,
-//    'errors' => $errors,
-//]);
-//
-//if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
-//    $output .= '<pre class="msOrderLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';
-//}
-//
-//return $output;
