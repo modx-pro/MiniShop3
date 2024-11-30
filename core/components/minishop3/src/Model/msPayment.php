@@ -59,14 +59,6 @@ class msPayment extends xPDOSimpleObject
             $class = $this->defaultControllerClass;
         }
 
-        if ($class !== $this->defaultControllerClass) {
-            // TODO: ждём новой реализации
-            //$this->ms3->loadCustomClasses('payment');
-        }
-        if (!class_exists($class)) {
-            $this->xpdo->log(modX::LOG_LEVEL_ERROR, 'Payment controller class "' . $class . '" not found.');
-            $class = $this->defaultControllerClass;
-        }
         $this->controller = new $class($this->ms3, []);
         if (!($this->controller instanceof PaymentInterface)) {
             $this->xpdo->log(modX::LOG_LEVEL_ERROR, 'Could not initialize payment controller class: "' . $class . '"');
