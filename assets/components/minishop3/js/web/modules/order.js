@@ -83,13 +83,58 @@ ms3.order = {
     })
   },
   async add (formData) {
-    formData.append('ms3_action', 'order/add')
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'order/add')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeAddOrder', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
     const response = await ms3.request.send(formData)
-    // TODO callback, event
+    await ms3.hooks.runHooks('afterAddOrder', { formData, response })
     return response
   },
   async remove (formData) {
-    formData.append('ms3_action', 'order/remove')
-    await ms3.request.send(formData)
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'order/remove')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeRemoveOrder', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
+    const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterRemoveOrder', { formData, response })
+    return response
+  },
+  async clean (formData) {
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'order/clean')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeCleanOrder', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
+    const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterCleanOrder', { formData, response })
+    return response
+  },
+  async submit (formData) {
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'order/submit')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeSubmitOrder', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
+    const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterSubmitOrder', { formData, response })
+    if (response.data.redirect) {
+      location.href = response.data.redirect
+    }
+    return response
   }
 }

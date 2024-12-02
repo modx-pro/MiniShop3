@@ -10,42 +10,95 @@ ms3.cart = {
   },
 
   async add (formData) {
-    formData.append('ms3_action', 'cart/add')
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'cart/add')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeAddCart', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
     const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterAddCart', { formData, response })
     if (response.shouldRender) {
-      ms3.callback.cart.render(response)
+      ms3.cart.render(response)
     }
   },
 
   async change (formData) {
-    formData.append('ms3_action', 'cart/change')
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'cart/change')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeChangeCart', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
     const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterChangeCart', { formData, response })
     if (response.shouldRender) {
-      ms3.callback.cart.render(response)
+      ms3.cart.render(response)
     }
   },
 
   async remove (formData) {
-    formData.append('ms3_action', 'cart/remove')
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'cart/remove')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeRemoveCart', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
     const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterRemoveCart', { formData, response })
     if (response.shouldRender) {
-      ms3.callback.cart.render(response)
+      ms3.cart.render(response)
     }
   },
 
   async clean (formData) {
-    formData.append('ms3_action', 'cart/clean')
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'cart/clean')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeCleanCart', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
     const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterRemoveCart', { formData, response })
     if (response.shouldRender) {
-      ms3.callback.cart.render(response)
+      ms3.cart.render(response)
     }
   },
 
   async changeOption (formData) {
-    formData.append('ms3_action', 'cart/changeOption')
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'cart/changeOption')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeChangeOptionCart', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
     const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterChangeOptionCart', { formData, response })
     if (response.shouldRender) {
-      ms3.callback.cart.render(response)
+      ms3.cart.render(response)
+    }
+  },
+
+  render: function (response) {
+    const cartRender = response.data.render.cart
+
+    for (const key in cartRender) {
+      const { selector, render } = cartRender[key]
+      const $element = document.querySelector(selector)
+
+      if ($element) {
+        $element.innerHTML = render
+      }
     }
   },
 

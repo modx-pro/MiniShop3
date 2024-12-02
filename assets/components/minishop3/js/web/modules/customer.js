@@ -33,12 +33,30 @@ ms3.customer = {
   },
 
   async add (formData) {
-    formData.append('ms3_action', 'customer/add')
-    return await ms3.request.send(formData)
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'customer/add')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeAddCustomer', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
+    const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterAddCustomer', { formData, response })
+    return response
   },
 
   async changeAddress (formData) {
-    formData.append('ms3_action', 'customer/changeAddress')
-    return await ms3.request.send(formData)
+    if (!formData.get('ms3_action')) {
+      formData.append('ms3_action', 'customer/changeAddress')
+    }
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeChangeAddressCustomer', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
+    const response = await ms3.request.send(formData)
+    await ms3.hooks.runHooks('afterChangeAddressCustomer', { formData, response })
+    return response
   }
 }

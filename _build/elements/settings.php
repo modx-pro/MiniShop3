@@ -255,9 +255,9 @@ return [
     'ms3_frontend_assets' => [
         'value' => '[
             "[[+jsUrl]]web\/ms3.js",
+            "[[+jsUrl]]web\/modules\/hooks.js",
             "[[+jsUrl]]web\/modules\/form.js",
             "[[+jsUrl]]web\/modules\/request.js", 
-            "[[+jsUrl]]web\/modules\/callback.js", 
             "[[+jsUrl]]web\/modules\/cart.js",
             "[[+jsUrl]]web\/modules\/customer.js",
             "[[+jsUrl]]web\/modules\/order.js"

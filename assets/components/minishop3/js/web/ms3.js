@@ -34,29 +34,41 @@ const ms3 = {
     this.request.setHeaders()
     const formData = new FormData()
     formData.append('ms3_action', 'customer/token/get')
-    const { success, data } = await this.request.get(formData)
-    if (success === true) {
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeGetTokenCustomer', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
+    const response = await this.request.get(formData)
+    if (response.success === true) {
       const now = new Date()
       const tokenData = {
-        token: data.token,
-        expiry: now.getTime() + parseInt(data.lifetime)
+        token: response.data.token,
+        expiry: now.getTime() + parseInt(response.data.lifetime)
       }
       localStorage.setItem(ms3.config.tokenName, JSON.stringify(tokenData))
     }
+    await ms3.hooks.runHooks('afterGetTokenCustomer', { formData, response })
   },
   async updateToken () {
     this.request.setHeaders()
     const formData = new FormData()
     formData.append('ms3_action', 'customer/token/update')
-    const { success, data } = await this.request.post(formData)
-    if (success === true) {
+    const hooksData = { formData }
+    await ms3.hooks.runHooks('beforeUpdateTokenCustomer', hooksData)
+    if (hooksData.cancel) {
+      return false
+    }
+    const response = await this.request.post(formData)
+    if (response.success === true) {
       const now = new Date()
       const tokenData = {
-        token: data.token,
-        expiry: now.getTime() + parseInt(data.lifetime)
+        token: response.data.token,
+        expiry: now.getTime() + parseInt(response.data.lifetime)
       }
       localStorage.setItem(ms3.config.tokenName, JSON.stringify(tokenData))
     }
+    await ms3.hooks.runHooks('afterGetTokenCustomer', { formData, response })
   },
   isJSON (str) {
     try {
@@ -70,11 +82,4 @@ const ms3 = {
 
 document.addEventListener('DOMContentLoaded', () => {
   ms3.init()
-})
-
-document.addEventListener('ms3_send_success', () => {
-  // Время на перерисовку DOM
-  setTimeout(() => {
-    ms3.cart.init()
-  }, 300)
 })
