@@ -53,10 +53,17 @@ ms3.order = {
             }
           }
         })
+
+        if (message !== '') {
+          ms3.message.success(message)
+        }
       } else {
         parent.classList.add('was-validated')
         input.classList.add('is-invalid')
         parent.querySelector('.invalid-feedback').textContent = message
+        if (message !== '') {
+          ms3.message.error(message)
+        }
       }
     })
   },
@@ -75,10 +82,17 @@ ms3.order = {
         parent.classList.add('was-validated')
         // TODO не менять radio, checkbox, select
         input.value = data[input.name]
+
+        if (message !== '') {
+          ms3.message.success(message)
+        }
       } else {
         parent.classList.add('was-validated')
         input.classList.add('is-invalid')
         parent.querySelector('.invalid-feedback').textContent = message
+        if (message !== '') {
+          ms3.message.error(message)
+        }
       }
     })
   },
@@ -93,6 +107,12 @@ ms3.order = {
     }
     const response = await ms3.request.send(formData)
     await ms3.hooks.runHooks('afterAddOrder', { formData, response })
+    if (response.success && response.message !== '') {
+      ms3.message.success(response.message)
+    }
+    if (!response.success && response.message !== '') {
+      ms3.message.error(response.message)
+    }
     return response
   },
   async remove (formData) {
@@ -106,6 +126,12 @@ ms3.order = {
     }
     const response = await ms3.request.send(formData)
     await ms3.hooks.runHooks('afterRemoveOrder', { formData, response })
+    if (response.success && response.message !== '') {
+      ms3.message.success(response.message)
+    }
+    if (!response.success && response.message !== '') {
+      ms3.message.error(response.message)
+    }
     return response
   },
   async clean (formData) {
@@ -119,6 +145,12 @@ ms3.order = {
     }
     const response = await ms3.request.send(formData)
     await ms3.hooks.runHooks('afterCleanOrder', { formData, response })
+    if (response.success && response.message !== '') {
+      ms3.message.success(response.message)
+    }
+    if (!response.success && response.message !== '') {
+      ms3.message.error(response.message)
+    }
     return response
   },
   async submit (formData) {
@@ -134,6 +166,12 @@ ms3.order = {
     await ms3.hooks.runHooks('afterSubmitOrder', { formData, response })
     if (response.data.redirect) {
       location.href = response.data.redirect
+    }
+    if (response.success && response.message !== '') {
+      ms3.message.success(response.message)
+    }
+    if (!response.success && response.message !== '') {
+      ms3.message.error(response.message)
     }
     return response
   }

@@ -24,10 +24,17 @@ ms3.customer = {
 
       if (success === true) {
         input.value = data[input.name]
+
+        if (message !== '') {
+          ms3.message.success(message)
+        }
       } else {
         form.classList.add('was-validated')
         input.classList.add('is-invalid')
         input.closest('div').querySelector('.invalid-feedback').textContent = message
+        if (message !== '') {
+          ms3.message.error(message)
+        }
       }
     })
   },
@@ -43,6 +50,12 @@ ms3.customer = {
     }
     const response = await ms3.request.send(formData)
     await ms3.hooks.runHooks('afterAddCustomer', { formData, response })
+    if (response.success && response.message !== '') {
+      ms3.message.success(response.message)
+    }
+    if (!response.success && response.message !== '') {
+      ms3.message.error(response.message)
+    }
     return response
   },
 
@@ -57,6 +70,12 @@ ms3.customer = {
     }
     const response = await ms3.request.send(formData)
     await ms3.hooks.runHooks('afterChangeAddressCustomer', { formData, response })
+    if (response.success && response.message !== '') {
+      ms3.message.success(response.message)
+    }
+    if (!response.success && response.message !== '') {
+      ms3.message.error(response.message)
+    }
     return response
   }
 }

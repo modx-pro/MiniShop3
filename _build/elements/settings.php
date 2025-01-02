@@ -254,13 +254,16 @@ return [
     ],
     'ms3_frontend_assets' => [
         'value' => '[
+            "[[+cssUrl]]web\/lib\/izitoast\/iziToast.min.css",
+            "[[+jsUrl]]web\/lib\/izitoast\/iziToast.js",
             "[[+jsUrl]]web\/ms3.js",
             "[[+jsUrl]]web\/modules\/hooks.js",
             "[[+jsUrl]]web\/modules\/form.js",
             "[[+jsUrl]]web\/modules\/request.js", 
             "[[+jsUrl]]web\/modules\/cart.js",
             "[[+jsUrl]]web\/modules\/customer.js",
-            "[[+jsUrl]]web\/modules\/order.js"
+            "[[+jsUrl]]web\/modules\/order.js",
+            "[[+jsUrl]]web\/modules\/message.js",
         ]',
         'xtype' => 'textarea',
         'area' => 'ms3_frontend',
