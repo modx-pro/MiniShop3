@@ -5,14 +5,22 @@ ms3.request = {
 
   async send (formData) {
     const hooksData = { formData, success: true }
-    await ms3.hooks.runHooks('beforeSendRequest', hooksData)
+    try {
+      await ms3.hooks.runHooks('beforeSendRequest', hooksData)
+    } catch (error) {
+      console.error('Error when executing a hook beforeSendRequest:', error)
+    }
     if (!hooksData.success) {
       return false
     }
     const response = await this.post(formData)
     const event = new Event('ms3_send_success')
     document.dispatchEvent(event)
-    await ms3.hooks.runHooks('afterSendRequest', { formData, response })
+    try {
+      await ms3.hooks.runHooks('afterSendRequest', { formData, response })
+    } catch (error) {
+      console.error('Error when executing a hook afterSendRequest:', error)
+    }
 
     return {
       ...response,

@@ -10,7 +10,11 @@ ms3.hooks = {
       if (context.cancel) {
         return false
       }
-      await fn(context)
+      try {
+        await fn(context)
+      } catch (error) {
+        console.error('Error when executing a hook :' + name, error)
+      }
     }
   }
 }

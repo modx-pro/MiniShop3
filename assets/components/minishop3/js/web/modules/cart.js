@@ -18,16 +18,20 @@ ms3.cart = {
     if (hooksData.cancel) {
       return false
     }
-    const response = await ms3.request.send(formData)
-    await ms3.hooks.runHooks('afterAddCart', { formData, response })
-    if (response.shouldRender) {
-      ms3.cart.render(response)
-    }
-    if (response.success && response.message !== '') {
-      ms3.message.success(response.message)
-    }
-    if (!response.success && response.message !== '') {
-      ms3.message.error(response.message)
+    try {
+      const response = await ms3.request.send(formData)
+      await ms3.hooks.runHooks('afterAddCart', { formData, response })
+      if (response.shouldRender) {
+        ms3.cart.render(response)
+      }
+      if (response.success && response.message !== '') {
+        ms3.message.success(response.message)
+      }
+      if (!response.success && response.message !== '') {
+        ms3.message.error(response.message)
+      }
+    } catch (error) {
+      console.error('Error when executing method cart/add:', error)
     }
   },
 
@@ -40,16 +44,20 @@ ms3.cart = {
     if (hooksData.cancel) {
       return false
     }
-    const response = await ms3.request.send(formData)
-    await ms3.hooks.runHooks('afterChangeCart', { formData, response })
-    if (response.shouldRender) {
-      ms3.cart.render(response)
-    }
-    if (response.success && response.message !== '') {
-      ms3.message.success(response.message)
-    }
-    if (!response.success && response.message !== '') {
-      ms3.message.error(response.message)
+    try {
+      const response = await ms3.request.send(formData)
+      await ms3.hooks.runHooks('afterChangeCart', { formData, response })
+      if (response.shouldRender) {
+        ms3.cart.render(response)
+      }
+      if (response.success && response.message !== '') {
+        ms3.message.success(response.message)
+      }
+      if (!response.success && response.message !== '') {
+        ms3.message.error(response.message)
+      }
+    } catch (error) {
+      console.error('Error when executing method cart/change:', error)
     }
   },
 
@@ -62,16 +70,20 @@ ms3.cart = {
     if (hooksData.cancel) {
       return false
     }
-    const response = await ms3.request.send(formData)
-    await ms3.hooks.runHooks('afterRemoveCart', { formData, response })
-    if (response.shouldRender) {
-      ms3.cart.render(response)
-    }
-    if (response.success && response.message !== '') {
-      ms3.message.success(response.message)
-    }
-    if (!response.success && response.message !== '') {
-      ms3.message.error(response.message)
+    try {
+      const response = await ms3.request.send(formData)
+      await ms3.hooks.runHooks('afterRemoveCart', { formData, response })
+      if (response.shouldRender) {
+        ms3.cart.render(response)
+      }
+      if (response.success && response.message !== '') {
+        ms3.message.success(response.message)
+      }
+      if (!response.success && response.message !== '') {
+        ms3.message.error(response.message)
+      }
+    } catch (error) {
+      console.error('Error when executing method cart/remove:', error)
     }
   },
 
@@ -84,16 +96,20 @@ ms3.cart = {
     if (hooksData.cancel) {
       return false
     }
-    const response = await ms3.request.send(formData)
-    await ms3.hooks.runHooks('afterRemoveCart', { formData, response })
-    if (response.shouldRender) {
-      ms3.cart.render(response)
-    }
-    if (response.success && response.message !== '') {
-      ms3.message.success(response.message)
-    }
-    if (!response.success && response.message !== '') {
-      ms3.message.error(response.message)
+    try {
+      const response = await ms3.request.send(formData)
+      await ms3.hooks.runHooks('afterRemoveCart', { formData, response })
+      if (response.shouldRender) {
+        ms3.cart.render(response)
+      }
+      if (response.success && response.message !== '') {
+        ms3.message.success(response.message)
+      }
+      if (!response.success && response.message !== '') {
+        ms3.message.error(response.message)
+      }
+    } catch (error) {
+      console.error('Error when executing method cart/clean:', error)
     }
   },
 
@@ -106,16 +122,20 @@ ms3.cart = {
     if (hooksData.cancel) {
       return false
     }
-    const response = await ms3.request.send(formData)
-    await ms3.hooks.runHooks('afterChangeOptionCart', { formData, response })
-    if (response.shouldRender) {
-      ms3.cart.render(response)
-    }
-    if (response.success && response.message !== '') {
-      ms3.message.success(response.message)
-    }
-    if (!response.success && response.message !== '') {
-      ms3.message.error(response.message)
+    try {
+      const response = await ms3.request.send(formData)
+      await ms3.hooks.runHooks('afterChangeOptionCart', { formData, response })
+      if (response.shouldRender) {
+        ms3.cart.render(response)
+      }
+      if (response.success && response.message !== '') {
+        ms3.message.success(response.message)
+      }
+      if (!response.success && response.message !== '') {
+        ms3.message.error(response.message)
+      }
+    } catch (error) {
+      console.error('Error when executing method cart/changeOption:', error)
     }
   },
 

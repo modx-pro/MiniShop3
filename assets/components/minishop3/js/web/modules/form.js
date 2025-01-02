@@ -25,7 +25,11 @@ ms3.form = {
         if (hooksData.cancel) {
           return false
         }
-        await this.send(formData)
+        try {
+          await this.send(formData)
+        } catch (error) {
+          console.error(error)
+        }
         await ms3.hooks.runHooks('afterSend', { formData })
       }
     })
