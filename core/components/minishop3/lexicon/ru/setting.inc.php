@@ -127,9 +127,9 @@ $_lang['setting_ms3_weight_snippet_desc'] = 'Здесь вы можете ука
 $_lang['setting_ms3_token_name'] = 'Имя токена';
 $_lang['setting_ms3_token_name_desc'] = 'Имя токена, используемого для идентификации посетителя. По умолчанию <strong>ms3_token</strong>';
 $_lang['setting_ms3_register_global_config'] = 'Регистрировать глобальный конфиг настроек в DOM';
-$_lang['setting_ms3_register_global_config_desc'] = '';
-$_lang['setting_ms3_frontend_assets'] = 'Регистрировать глобальный конфиг настроек в DOM';
-$_lang['setting_ms3_frontend_assets_desc'] = '';
+$_lang['setting_ms3_register_global_config_desc'] = 'Регистрирует в DOM json массив важных настроек для использования скриптами';
+$_lang['setting_ms3_frontend_assets'] = 'Перечень подключаемых CSS/JS файлов';
+$_lang['setting_ms3_frontend_assets_desc'] = 'CSS файлы будут подключены в head, JS файлы будут подключены в конце html, с атрибутом defer';
 
 
 $_lang['setting_ms3_order_format_num'] = 'Формат нумерации заказа';
