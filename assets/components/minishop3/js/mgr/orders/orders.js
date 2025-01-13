@@ -16,10 +16,16 @@ Ext.extend(ms3.page.Orders, MODx.Component, {
 
         if (MODx.perm.mssetting_list) {
             b.push({
-                text: _('ms3_settings')
-                ,id: 'ms2-abtn-settings'
-                ,handler: function () {
+                text: _('ms3_settings'),
+                id: 'ms2-abtn-settings',
+                handler: function () {
                     MODx.loadPage('?', 'a=mgr/settings&namespace=minishop3');
+                }
+            }, {
+                text: _('ms3_utilities'),
+                id: 'ms2-abtn-utilities',
+                handler: function () {
+                    MODx.loadPage('?', 'a=mgr/utilities&namespace=minishop3');
                 }
             });
         }
