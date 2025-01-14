@@ -246,13 +246,13 @@ class Utils
             'OR:name:=' => $name
         ];
 
-        $vendor = $modx->getObject('msVendor', $criteria);
+        $vendor = $modx->getObject('MiniShop3\Model\msVendor', $criteria);
 
         if ($vendor) {
             return $vendor->get('id');
         }
 
-        $vendor = $modx->newObject('msVendor');
+        $vendor = $modx->newObject('MiniShop3\Model\msVendor');
         $vendor->set('name', $name);
         $vendor->save();
 
