@@ -210,14 +210,8 @@ class Utils
 
     /**
      * Function for sending email
-     *
-     * @param string $email
-     * @param string $subject
-     * @param string $body
-     *
-     * @return void
      */
-    public function sendEmail($email, $subject, $body = '')
+    public function sendEmail(string $email, string $subject, string $body = ''): void
     {
         $this->modx->getParser()->processElementTags('', $body, true, false, '[[', ']]', [], 10);
         $this->modx->getParser()->processElementTags('', $body, true, true, '[[', ']]', [], 10);

@@ -11,6 +11,7 @@ use MODX\Revolution\modContextSetting;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
 use MODX\Revolution\modX;
+use Scheduler\Model\sTask;
 
 class OrderStatus
 {
@@ -101,12 +102,11 @@ class OrderStatus
                 return $response['message'];
             }
             $pls = $this->preparePls($msOrder);
-            //TODO  create Scheduler instance for MODX3
             $this->useScheduler = $this->modx->getOption('ms3_use_scheduler', null, false);
             $this->schedulerTask = null;
-//            if ($this->useScheduler) {
-//                $this->setSchedulerTask();
-//            }
+            if ($this->useScheduler) {
+                $this->setSchedulerTask();
+            }
 
             //TODO  добавить другие контроллеры связи SMS, telegram
             if ($status->get('email_manager')) {
@@ -121,7 +121,7 @@ class OrderStatus
         return true;
     }
 
-    public function createEmailManager($pls, $status)
+    public function createEmailManager(array $pls, msOrderStatus $status): void
     {
         $subject = $this->ms3->pdoTools->getChunk('@INLINE ' . $status->get('subject_manager'), $pls);
         $tpl = '';
@@ -140,7 +140,7 @@ class OrderStatus
         if (!empty($subject)) {
             foreach ($emails as $email) {
                 if (preg_match('#.*?@#', $email)) {
-                    if ($this->useScheduler && $this->schedulerTask instanceof \sTask) {
+                    if ($this->useScheduler && $this->schedulerTask instanceof sTask) {
                         $this->schedulerTask->schedule('+1 second', [
                             'email' => $email,
                             'subject' => $subject,
@@ -168,7 +168,7 @@ class OrderStatus
             $body = $this->modx->runSnippet('msGetOrder', array_merge($pls, ['tpl' => $tpl]));
             $email = $profile->get('email');
             if (!empty($subject) && preg_match('#.*?@#', $email)) {
-                if ($this->useScheduler && $this->schedulerTask instanceof \sTask) {
+                if ($this->useScheduler && $this->schedulerTask instanceof sTask) {
                     $this->schedulerTask->schedule('+1 second', [
                         'email' => $email,
                         'subject' => $subject,
@@ -247,16 +247,10 @@ class OrderStatus
         return '';
     }
 
-    protected function setSchedulerTask()
+    protected function setSchedulerTask(): void
     {
-        /** @var \Scheduler $scheduler */
-        $path = $this->modx->getOption(
-            'scheduler.core_path',
-            null,
-            $this->modx->getOption('core_path') . 'components/scheduler/'
-        );
-        $scheduler = $this->modx->getService('scheduler', 'Scheduler', $path . 'model/scheduler/');
-        if ($scheduler) {
+        if ($this->modx->services->has('scheduler')) {
+            $scheduler = $this->modx->services->get('scheduler');
             $this->schedulerTask = $scheduler->getTask('MiniShop3', 'ms3_send_email');
             if (!$this->schedulerTask) {
                 $this->schedulerTask = $this->createEmailTask();
@@ -269,9 +263,8 @@ class OrderStatus
 
     /**
      * Creating Scheduler's task for sending email
-     * @return false|object|null
      */
-    protected function createEmailTask()
+    protected function createEmailTask(): false|object|null
     {
         $task = $this->modx->newObject(\sFileTask::class);
         $task->fromArray([
