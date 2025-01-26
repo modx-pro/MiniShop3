@@ -308,7 +308,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_statuses',
     ],
-
+    'ms3_use_scheduler' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_main',
+    ],
     'ms3_customer_grid_fields' => [
         'value' => 'id,first_name,last_name,email,phone',
         'xtype' => 'textarea',

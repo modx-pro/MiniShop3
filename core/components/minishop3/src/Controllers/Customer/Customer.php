@@ -14,7 +14,6 @@ use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
 use MODX\Revolution\modX;
 
-use MongoDB\BSON\ObjectId;
 use Rakit\Validation\Validator;
 
 class Customer
@@ -308,6 +307,7 @@ class Customer
                 'last_name' => $orderData['address_last_name'],
                 'phone' => $orderData['address_phone'],
                 'email' => $orderData['address_email'],
+                'token' => $this->token,
             ];
 
             $msCustomer = $this->create($customerData);

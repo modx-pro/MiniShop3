@@ -133,7 +133,6 @@ class Order implements OrderInterface
     public function hasPayment($delivery, $payment)
     {
         //TODO перенесен из ms2 - не используется, проверить
-        $this->modx->log(1, 'OrderController::hasPayment');
         $q = $this->modx->newQuery(msPayment::class, ['id' => $payment, 'active' => 1]);
         $q->innerJoin(
             msDeliveryMember::class,

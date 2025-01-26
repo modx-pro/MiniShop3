@@ -11,7 +11,6 @@ use MODX\Revolution\modContextSetting;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
 use MODX\Revolution\modX;
-use Scheduler\Model\sTask;
 
 class OrderStatus
 {
@@ -101,13 +100,14 @@ class OrderStatus
             if (!$response['success']) {
                 return $response['message'];
             }
-            $pls = $this->preparePls($msOrder);
+
             $this->useScheduler = $this->modx->getOption('ms3_use_scheduler', null, false);
             $this->schedulerTask = null;
             if ($this->useScheduler) {
                 $this->setSchedulerTask();
             }
 
+            $pls = $this->preparePls($msOrder);
             //TODO  добавить другие контроллеры связи SMS, telegram
             if ($status->get('email_manager')) {
                 $this->createEmailManager($pls, $status);
@@ -139,17 +139,7 @@ class OrderStatus
         );
         if (!empty($subject)) {
             foreach ($emails as $email) {
-                if (preg_match('#.*?@#', $email)) {
-                    if ($this->useScheduler && $this->schedulerTask instanceof sTask) {
-                        $this->schedulerTask->schedule('+1 second', [
-                            'email' => $email,
-                            'subject' => $subject,
-                            'body' => $body
-                        ]);
-                    } else {
-                        $this->ms3->utils->sendEmail($email, $subject, $body);
-                    }
-                }
+                $this->sendEmail($email, $subject, $body);
             }
         }
     }
@@ -167,22 +157,28 @@ class OrderStatus
             }
             $body = $this->modx->runSnippet('msGetOrder', array_merge($pls, ['tpl' => $tpl]));
             $email = $profile->get('email');
-            if (!empty($subject) && preg_match('#.*?@#', $email)) {
-                if ($this->useScheduler && $this->schedulerTask instanceof sTask) {
-                    $this->schedulerTask->schedule('+1 second', [
-                        'email' => $email,
-                        'subject' => $subject,
-                        'body' => $body
-                    ]);
-                } else {
-                    $this->ms3->utils->sendEmail($email, $subject, $body);
-                }
+            $this->sendEmail($email, $subject, $body);
+        }
+    }
+
+    public function sendEmail(string $email, string $subject, string $body): void
+    {
+        if (preg_match('#.*?@#', $email)) {
+            if ($this->useScheduler && $this->schedulerTask instanceof \sTask) {
+                $this->schedulerTask->schedule('+1 second', [
+                    'email' => $email,
+                    'subject' => $subject,
+                    'body' => $body
+                ]);
+            } else {
+                $this->ms3->utils->sendEmail($email, $subject, $body);
             }
         }
     }
 
     protected function preparePls($msOrder)
     {
+        // TODO у разных получателей может быть разный язык. Не привязываться к языку заказа, если назначен язык получателя
         $lang = $this->getLang($msOrder);
 
         $this->modx->setOption('cultureKey', $lang);
@@ -249,15 +245,14 @@ class OrderStatus
 
     protected function setSchedulerTask(): void
     {
+        $this->useScheduler = false;
         if ($this->modx->services->has('scheduler')) {
+            /** @var \Scheduler $scheduler */
             $scheduler = $this->modx->services->get('scheduler');
-            $this->schedulerTask = $scheduler->getTask('MiniShop3', 'ms3_send_email');
+            $this->schedulerTask = $scheduler->getTask('minishop3', 'ms3_send_email');
             if (!$this->schedulerTask) {
                 $this->schedulerTask = $this->createEmailTask();
             }
-        } else {
-            $this->useScheduler = false;
-            $this->modx->log(1, 'not found Scheduler extra');
         }
     }
 
@@ -269,8 +264,8 @@ class OrderStatus
         $task = $this->modx->newObject(\sFileTask::class);
         $task->fromArray([
             'class_key' => 'sFileTask',
-            'content' => '/tasks/sendEmail.php',
-            'namespace' => 'MiniShop3',
+            'content' => 'elements/tasks/sendEmail.php',
+            'namespace' => 'minishop3',
             'reference' => 'ms3_send_email',
             'description' => 'MiniShop3 Email'
         ]);

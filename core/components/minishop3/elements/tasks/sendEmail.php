@@ -1,11 +1,8 @@
 <?php
 
-use Scheduler\Model\sFileTask;
-use Scheduler\Model\sTaskRun;
-
 /** @var modX $modx */
-/** @var sFileTask $task */
-/** @var sTaskRun $run */
+/** @var \sFileTask $task */
+/** @var \sTaskRun $run */
 /** @var array $scriptProperties */
 
 if (empty($scriptProperties['email']) || empty($scriptProperties['subject']) || empty($scriptProperties['body'])) {

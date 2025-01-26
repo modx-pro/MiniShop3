@@ -21,12 +21,7 @@ class DBOrder extends DBStorage
     protected $deliverValidationRules;
     protected $log;
 
-    /**
-     * @param string $token
-     * @param $config
-     * @return bool
-     */
-    public function initialize(string $token = '', $config = []): bool
+    public function initialize(string $token = '', array $config = []): bool
     {
         if (empty($token)) {
             return false;
@@ -537,6 +532,12 @@ class DBOrder extends DBStorage
         $addressData = [
             'updatedon' => time(),
         ];
+
+        if (empty($this->draft->Customer)) {
+            $this->draft->set('customer_id', $customer_id);
+            $this->draft->save();
+        }
+
         //TODO  тут возможно понадобится получить клиента через $this->ms3->customer->getFields
         if (empty($this->order['address_first_name']) && !empty($this->draft->Customer->get('last_name'))) {
             $this->add('first_name', $this->draft->Customer->get('first_name'));
@@ -550,6 +551,7 @@ class DBOrder extends DBStorage
         if (empty($this->order['address_phone']) && !empty($this->draft->Customer->get('phone'))) {
             $this->add('phone', $this->draft->Customer->get('phone'));
         }
+
         // reload order after additional data
         $response = $this->get();
         if ($response['success']) {

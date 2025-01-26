@@ -390,7 +390,7 @@ class MiniShop3
         );
     }
 
-    //TODO Перенести метод в контроллер заказов
+    //TODO Перенести метод в контроллер заказов  (Или трейт скорее)
     private function deleteOldDraft()
     {
         // Every 30 minutes, run the cleanup for old tasks
