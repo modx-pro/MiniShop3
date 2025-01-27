@@ -51,8 +51,8 @@ class Update extends UpdateProcessor
             $this->setProperty('options', $options);
         }
 
-        if (!empty($properties['vendor'])) {
-            $vendor_id = Utils::getVendorId($this->modx, $properties['vendor']);
+        if (!empty($properties['vendor_id'])) {
+            $vendor_id = Utils::getVendorId($this->modx, $properties['vendor_id']);
             if ($vendor_id) {
                 $this->setProperty('vendor_id', $vendor_id);
             }
