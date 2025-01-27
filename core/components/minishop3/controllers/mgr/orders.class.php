@@ -85,7 +85,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
                 MODx.perm.mssetting_list = ' . ($this->modx->hasPermission('mssetting_list') ? 1 : 0) . ';
 
                 Ext.onReady(function() {
-                    MODx.add({xtype: "ms3-panel-orders"});
+                    MODx.add({xtype: "ms3-page-orders"});
                 });
             </script>');
 
