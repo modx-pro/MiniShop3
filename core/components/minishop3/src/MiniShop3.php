@@ -103,7 +103,7 @@ class MiniShop3
         if ($this->modx->services->has(CoreTools::class)) {
             $this->pdoTools = $this->modx->services->get(CoreTools::class);
         }
-        if ($this->pdoFetch) {
+        if ($this->pdoTools) {
             $this->pdoTools->setConfig($this->config);
         }
 
@@ -315,7 +315,7 @@ class MiniShop3
     public function loadMap()
     {
         $this->extraFields->loadMap();
-        if (method_exists($this->pdoFetch, 'makePlaceholders')) {
+        if ($this->pdoTools && method_exists($this->pdoTools, 'makePlaceholders')) {
 //            $plugins = $this->plugins->load();
 //            foreach ($plugins as $plugin) {
 //                // For legacy plugins
