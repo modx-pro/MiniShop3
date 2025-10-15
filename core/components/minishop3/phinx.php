@@ -5,24 +5,33 @@
  * This config integrates Phinx migrations with MODX database settings
  */
 
-// Загрузка MODX конфига
-$modxConfigPath = dirname(__FILE__, 4) . '/config.core.php';
+// Проверяем, передан ли $modx из родительского scope (резолвер)
+// или нужно инициализировать (CLI режим)
+if (!isset($modx)) {
+    // CLI режим или первый запуск - загружаем MODX
+    $modxConfigPath = dirname(__FILE__, 4) . '/config.core.php';
 
-if (!file_exists($modxConfigPath)) {
-    die('MODX config.core.php not found. Please ensure MODX is properly installed.');
+    if (!file_exists($modxConfigPath)) {
+        die('MODX config.core.php not found. Please ensure MODX is properly installed.');
+    }
+
+    if (!defined('MODX_CORE_PATH')) {
+        require_once $modxConfigPath;
+    }
+
+    if (!defined('MODX_CORE_PATH')) {
+        die('MODX_CORE_PATH not defined in config.core.php');
+    }
+
+    if (!class_exists('modX')) {
+        require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
+    }
+
+    // Инициализация MODX
+    $modx = new modX();
+    $modx->initialize('mgr');
 }
-
-require_once $modxConfigPath;
-
-if (!defined('MODX_CORE_PATH')) {
-    die('MODX_CORE_PATH not defined in config.core.php');
-}
-
-require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
-
-// Инициализация MODX
-$modx = new modX();
-$modx->initialize('mgr');
+// Иначе используем $modx из родительского scope (резолвер передал его)
 
 // Настройки подключения к БД из MODX
 $dbConfig = [
@@ -39,8 +48,8 @@ $dbConfig = [
 
 return [
     'paths' => [
-        'migrations' => '%%PHINX_CONFIG_DIR%%/migrations',
-        'seeds' => '%%PHINX_CONFIG_DIR%%/seeds'
+        'migrations' => __DIR__ . '/migrations',
+        'seeds' => __DIR__ . '/seeds'
     ],
     'environments' => [
         'default_migration_table' => 'ms3_migrations',

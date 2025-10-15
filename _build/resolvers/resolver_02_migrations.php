@@ -51,6 +51,7 @@ if ($transport->xpdo) {
                 }
 
                 // Загрузка конфигурации Phinx
+                // $modx автоматически доступен в scope загружаемого файла
                 $configArray = require $phinxConfig;
 
                 // Проверяем корректность конфигурации
@@ -68,13 +69,11 @@ if ($transport->xpdo) {
                 // Создание менеджера миграций
                 $manager = new Manager($config, $input, $output);
 
-                $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] ===== Starting database migrations =====');
-                $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Migrations path: ' . $configArray['paths']['migrations']);
+                $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Starting database migrations...');
 
                 // Выполнение всех pending миграций
                 try {
                     $manager->migrate('production');
-                    $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Migrate command executed');
                 } catch (Exception $migrateEx) {
                     $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Migration execution failed: ' . $migrateEx->getMessage());
                     throw $migrateEx;
@@ -83,17 +82,14 @@ if ($transport->xpdo) {
                 // Получение вывода Phinx
                 $outputText = $output->fetch();
                 if (!empty($outputText)) {
-                    $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Phinx output:');
                     foreach (explode("\n", $outputText) as $line) {
                         if (!empty(trim($line))) {
                             $modx->log(modX::LOG_LEVEL_INFO, '  ' . $line);
                         }
                     }
-                } else {
-                    $modx->log(modX::LOG_LEVEL_WARN, '[MiniShop3] Phinx produced no output');
                 }
 
-                $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] ===== Database migrations completed =====');
+                $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Database migrations completed');
 
             } catch (Exception $e) {
                 $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Migration error: ' . $e->getMessage());
