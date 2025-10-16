@@ -1,6 +1,7 @@
 {
     "require": {
         "rakit/validation": "^1.4",
-        "robmorgan/phinx": "^0.16"
+        "robmorgan/phinx": "^0.16",
+        "nikic/fast-route": "^1.3"
     }
 }
