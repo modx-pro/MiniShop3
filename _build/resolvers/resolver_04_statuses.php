@@ -141,7 +141,9 @@ if ($transport->xpdo) {
             break;
 
         case xPDOTransport::ACTION_UNINSTALL:
-            $modx->removeCollection(msOrderStatus::class, []);
+            // Оставляем статусы заказов в БД для возможной переустановки
+            // При необходимости можно удалить вручную: DELETE FROM ms3_order_statuses
+            $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Order statuses preserved in database');
             break;
     }
 }
