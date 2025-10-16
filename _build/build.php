@@ -18,15 +18,16 @@ use xPDO\Transport\xPDOTransport;
 
 class MiniShop3Package
 {
-    private $modx;
-    private $config = [];
-    private $category;
-    private $category_attributes = [];
+    // readonly для $modx - он устанавливается один раз и не меняется
+    private readonly modX $modx;
+    private array $config = [];
+    private modCategory $category;
+    private array $category_attributes = [];
 
     /**
-     * @var modPackageBuilder;
+     * @var modPackageBuilder
      */
-    public $builder;
+    public modPackageBuilder $builder;
 
     /**
      * MiniShop3Package constructor.
@@ -63,16 +64,17 @@ class MiniShop3Package
     /**
      * @return modPackageBuilder
      */
-    public function process()
+    public function process(): modPackageBuilder
     {
         //$this->buildModel();
 
-        // Add elements
-        $elements = scandir($this->config['elements']);
+        // Add elements - используем array_filter вместо foreach с continue
+        $elements = array_filter(
+            scandir($this->config['elements']),
+            fn($element) => !in_array($element[0], ['_', '.'], true)
+        );
+
         foreach ($elements as $element) {
-            if (in_array($element[0], ['_', '.'])) {
-                continue;
-            }
             $name = preg_replace('#\.php$#', '', $element);
             if (method_exists($this, $name)) {
                 $this->{$name}();
@@ -92,12 +94,13 @@ class MiniShop3Package
             'target' => "return MODX_ASSETS_PATH . 'components/';",
         ]);
 
-        // Add resolvers into vehicle
-        $resolvers = scandir($this->config['resolvers']);
+        // Add resolvers into vehicle - используем array_filter вместо foreach с continue
+        $resolvers = array_filter(
+            scandir($this->config['resolvers']),
+            fn($resolver) => !in_array($resolver[0], ['_', '.'], true)
+        );
+
         foreach ($resolvers as $resolver) {
-            if (in_array($resolver[0], ['_', '.'])) {
-                continue;
-            }
             if ($vehicle->resolve('php', ['source' => $this->config['resolvers'] . $resolver])) {
                 $this->modx->log(modX::LOG_LEVEL_INFO, 'Added resolver ' . preg_replace('#\.php$#', '', $resolver));
             }
@@ -106,9 +109,9 @@ class MiniShop3Package
         $this->builder->putVehicle($vehicle);
 
         $this->builder->setPackageAttributes([
-            'changelog' => file_get_contents($this->config['core'] . 'docs/changelog.txt'),
-            'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
-            'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
+            'changelog' => $this->readDocFile('changelog.txt'),
+            'license' => $this->readDocFile('license.txt'),
+            'readme' => $this->readDocFile('readme.txt'),
             'requires' => [
                 'php' => '>=8.1.0',
                 'modx' => '>=3.0.3',
@@ -130,7 +133,7 @@ class MiniShop3Package
     /**
      * Initialize package builder
      */
-    private function initialize()
+    private function initialize(): void
     {
         $this->builder = new modPackageBuilder($this->modx);
         $this->builder->createPackage($this->config['name_lower'], $this->config['version'], $this->config['release']);
@@ -152,11 +155,17 @@ class MiniShop3Package
     /**
      * Update the model
      */
-    private function buildModel()
+    private function buildModel(): void
     {
         $schemaFile = $this->config['core'] . 'schema/' . $this->config['name_lower'] . '.mysql.schema.xml';
         $outputDir = $this->config['core'] . 'src/';
-        if (!file_exists($schemaFile) || empty(file_get_contents($schemaFile))) {
+        if (!file_exists($schemaFile)) {
+            return;
+        }
+
+        $content = file_get_contents($schemaFile);
+        if ($content === false || empty($content)) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Failed to read schema file: ' . $schemaFile);
             return;
         }
 
@@ -178,13 +187,11 @@ class MiniShop3Package
     /**
      *  Install package
      */
-    private function install()
+    private function install(): void
     {
         $signature = $this->builder->getSignature();
         $sig = explode('-', $signature);
         $versionSignature = explode('.', $sig[1]);
-
-        $this->modx->log(3, 'signature: ' . $signature);
 
         /** @var modTransportPackage $package */
         $package = $this->modx->getObject(modTransportPackage::class, ['signature' => $signature]);
@@ -224,7 +231,7 @@ class MiniShop3Package
     /**
      * Add settings
      */
-    private function settings()
+    private function settings(): void
     {
         /** @noinspection PhpIncludeInspection */
         $settings = include($this->config['elements'] . 'settings.php');
@@ -254,7 +261,7 @@ class MiniShop3Package
     /**
      * Add menus
      */
-    private function menus()
+    private function menus(): void
     {
         /** @noinspection PhpIncludeInspection */
         $menus = include($this->config['elements'] . 'menus.php');
@@ -290,7 +297,7 @@ class MiniShop3Package
     /**
      * Add plugins
      */
-    private function plugins()
+    private function plugins(): void
     {
         /** @noinspection PhpIncludeInspection */
         $plugins = include($this->config['elements'] . 'plugins.php');
@@ -320,8 +327,8 @@ class MiniShop3Package
             $plugin->fromArray(array_merge([
                 'name' => $name,
                 'category' => 0,
-                'description' => @$data['description'],
-                'plugincode' => $this::getFileContent($filepath),
+                'description' => $data['description'] ?? '',
+                'plugincode' => $this->getFileContent($filepath),
                 'static' => !empty($this->config['static']['plugins']),
                 'source' => 1,
                 'static_file' => 'core/components/' . $this->config['name_lower'] . '/elements/plugins/' . $data['file'] . '.php',
@@ -352,7 +359,7 @@ class MiniShop3Package
     /**
      * Add Events
      */
-    public function events()
+    public function events(): void
     {
         $events = include($this->config['elements'] . 'events.php');
         if (!is_array($events)) {
@@ -381,7 +388,7 @@ class MiniShop3Package
     /**
      * Add snippets
      */
-    private function snippets()
+    private function snippets(): void
     {
         /** @noinspection PhpIncludeInspection */
         $snippets = include($this->config['elements'] . 'snippets.php');
@@ -402,14 +409,14 @@ class MiniShop3Package
             $objects[$name]->fromArray(array_merge([
                 'id' => 0,
                 'name' => $name,
-                'description' => @$data['description'],
-                'snippet' => $this::getFileContent($filepath),
+                'description' => $data['description'] ?? '',
+                'snippet' => $this->getFileContent($filepath),
                 'static' => !empty($this->config['static']['snippets']),
                 'source' => 1,
                 'static_file' => 'core/components/' . $this->config['name_lower'] . '/elements/snippets/' . $data['file'] . '.php',
             ], $data), '', true, true);
             $properties = [];
-            foreach (@$data['properties'] as $k => $v) {
+            foreach ($data['properties'] ?? [] as $k => $v) {
                 $properties[] = array_merge([
                     'name' => $k,
                     'desc' => 'ms_prop_' . $k,
@@ -425,7 +432,7 @@ class MiniShop3Package
     /**
      * Add chunks
      */
-    private function chunks()
+    private function chunks(): void
     {
         /** @noinspection PhpIncludeInspection */
         $chunks = include($this->config['elements'] . 'chunks.php');
@@ -448,7 +455,7 @@ class MiniShop3Package
                 'id' => 0,
                 'name' => $name,
                 'description' => '',
-                'snippet' => $this::getFileContent($filepath),
+                'snippet' => $this->getFileContent($filepath),
                 'static' => !empty($this->config['static']['chunks']),
                 'source' => 1,
                 'static_file' => 'core/components/' . $this->config['name_lower'] . '/elements/chunks/' . $file . '.tpl',
@@ -461,7 +468,7 @@ class MiniShop3Package
     /**
      * Add access policy
      */
-    private function policies()
+    private function policies(): void
     {
         /** @noinspection PhpIncludeInspection */
         $policies = include($this->config['elements'] . 'policies.php');
@@ -494,7 +501,7 @@ class MiniShop3Package
     /**
      * Add policy templates
      */
-    private function policyTemplates()
+    private function policyTemplates(): void
     {
         /** @noinspection PhpIncludeInspection */
         $policy_templates = include($this->config['elements'] . 'policyTemplates.php');
@@ -547,21 +554,51 @@ class MiniShop3Package
     }
 
     /**
-     * @param $filename
+     * Read documentation file with error handling
      *
+     * @param string $filename
      * @return string
      */
-    private function getFileContent($filename)
+    private function readDocFile(string $filename): string
     {
-        if (file_exists($filename)) {
-            $file = trim(file_get_contents($filename));
+        $filepath = $this->config['core'] . 'docs/' . $filename;
 
-            return preg_match('#\<\?php(.*)#is', $file, $data)
-                ? rtrim(rtrim(trim(@$data[1]), '?>'))
-                : $file;
+        if (!file_exists($filepath)) {
+            $this->modx->log(modX::LOG_LEVEL_WARN, 'Documentation file not found: ' . $filepath);
+            return '';
         }
 
-        return '';
+        $content = file_get_contents($filepath);
+        if ($content === false) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Failed to read documentation file: ' . $filepath);
+            return '';
+        }
+
+        return $content;
+    }
+
+    /**
+     * @param string $filename
+     * @return string
+     */
+    private function getFileContent(string $filename): string
+    {
+        if (!file_exists($filename)) {
+            $this->modx->log(modX::LOG_LEVEL_WARN, 'Element file not found: ' . $filename);
+            return '';
+        }
+
+        $content = file_get_contents($filename);
+        if ($content === false) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Failed to read element file: ' . $filename);
+            return '';
+        }
+
+        $file = trim($content);
+
+        return preg_match('#\<\?php(.*)#is', $file, $data)
+            ? rtrim(rtrim(trim($data[1] ?? ''), '?>'))
+            : $file;
     }
 }
 

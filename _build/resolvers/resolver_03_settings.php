@@ -21,48 +21,38 @@ if ($transport->xpdo) {
     switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         case xPDOTransport::ACTION_INSTALL:
         case xPDOTransport::ACTION_UPGRADE:
-            $modx->addPackage('MiniShop3\Model', MODX_CORE_PATH . 'components/minishop3/src/', null, 'MiniShop3\\');
             $modx->lexicon->load('minishop3:manager');
 
-            /** @var msDelivery $delivery */
-            $delivery = $modx->getObject(msDelivery::class, 1);
-            if (!$delivery) {
-                $delivery = $modx->newObject(msDelivery::class);
-                $delivery->fromArray([
-                    'id' => 1,
-                    'name' => $modx->lexicon('ms3_order_delivery_self'),
-                    'price' => 0,
-                    'weight_price' => 0,
-                    'distance_price' => 0,
-                    'active' => 1,
-                    'validation_rules' => '{"first_name":"required","last_name":"required", "email":"required|email"}',
-                    'position' => 0,
-                ], '', true);
-                $delivery->save();
+            // Создаём начальные данные через SQL, т.к. модели ещё не загружены
+            $prefix = $modx->config['table_prefix'];
+
+            // Проверяем и создаём доставку
+            $stmt = $modx->prepare("SELECT COUNT(*) FROM {$prefix}ms3_deliveries WHERE id = 1");
+            $stmt->execute();
+            if ($stmt->fetchColumn() == 0) {
+                $stmt = $modx->prepare("INSERT INTO {$prefix}ms3_deliveries (id, name, price, weight_price, distance_price, active, validation_rules, position) VALUES (1, :name, 0, 0, 0, 1, :rules, 0)");
+                $stmt->execute([
+                    ':name' => $modx->lexicon('ms3_order_delivery_self'),
+                    ':rules' => '{\"first_name\":\"required\",\"last_name\":\"required\", \"email\":\"required|email\"}'
+                ]);
             }
 
-            /** @var msPayment $payment */
-            $payment = $modx->getObject(msPayment::class, 1);
-            if (!$payment) {
-                $payment = $modx->newObject(msPayment::class);
-                $payment->fromArray([
-                    'id' => 1,
-                    'name' => $modx->lexicon('ms3_order_payment_cash'),
-                    'active' => 1,
-                    'position' => 0,
-                ], '', true);
-                $payment->save();
+            // Проверяем и создаём оплату
+            $stmt = $modx->prepare("SELECT COUNT(*) FROM {$prefix}ms3_payments WHERE id = 1");
+            $stmt->execute();
+            if ($stmt->fetchColumn() == 0) {
+                $stmt = $modx->prepare("INSERT INTO {$prefix}ms3_payments (id, name, active, position) VALUES (1, :name, 1, 0)");
+                $stmt->execute([
+                    ':name' => $modx->lexicon('ms3_order_payment_cash')
+                ]);
             }
 
-            /** @var msDeliveryMember $member */
-            $member = $modx->getObject(msDeliveryMember::class, ['payment_id' => 1, 'delivery_id' => 1]);
-            if (!$member) {
-                $member = $modx->newObject(msDeliveryMember::class);
-                $member->fromArray([
-                    'payment_id' => 1,
-                    'delivery_id' => 1,
-                ], '', true);
-                $member->save();
+            // Проверяем и создаём связь доставка-оплата
+            $stmt = $modx->prepare("SELECT COUNT(*) FROM {$prefix}ms3_delivery_members WHERE payment_id = 1 AND delivery_id = 1");
+            $stmt->execute();
+            if ($stmt->fetchColumn() == 0) {
+                $stmt = $modx->prepare("INSERT INTO {$prefix}ms3_delivery_members (payment_id, delivery_id) VALUES (1, 1)");
+                $stmt->execute();
             }
 
             $setting = $modx->getObject(modSystemSetting::class, ['key' => 'ms3_order_product_fields']);

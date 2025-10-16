@@ -1,5 +1,6 @@
 {
     "require": {
-        "rakit/validation": "^1.4"
+        "rakit/validation": "^1.4",
+        "robmorgan/phinx": "^0.16"
     }
 }
