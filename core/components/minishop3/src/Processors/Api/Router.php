@@ -42,13 +42,26 @@ class Router extends Processor
             // Создаём роутер
             $router = new ApiRouter($this->modx);
 
-            // Загружаем роуты
-            $routesFile = $componentPath . 'config/routes.php';
-            if (!file_exists($routesFile)) {
-                return $this->failure('Routes configuration not found', ['code' => 500]);
+            // 1. Загружаем СИСТЕМНЫЕ роуты (перезаписываются при обновлении)
+            $systemRoutesFile = MODX_CORE_PATH . 'config/ms3_routes.php';
+
+            // Fallback на example файл (для разработки/тестирования)
+            if (!file_exists($systemRoutesFile)) {
+                $systemRoutesFile = $componentPath . 'config/routes.example.php';
             }
 
-            $router->loadRoutes($routesFile);
+            if (!file_exists($systemRoutesFile)) {
+                return $this->failure('System routes not found. Expected at: core/config/ms3_routes.php', ['code' => 500]);
+            }
+
+            $router->loadRoutes($systemRoutesFile);
+
+            // 2. Загружаем ПОЛЬЗОВАТЕЛЬСКИЕ роуты (НЕ перезаписываются, опционально)
+            $customRoutesFile = MODX_CORE_PATH . 'config/ms3_routes.custom.php';
+
+            if (file_exists($customRoutesFile)) {
+                $router->loadRoutes($customRoutesFile);
+            }
 
             // Строим dispatcher
             $router->build();

@@ -1,10 +1,26 @@
 <?php
 /**
- * API Routes для MiniShop3
+ * СИСТЕМНЫЕ API Routes для MiniShop3
+ *
+ * ⚠️ ВНИМАНИЕ: Этот файл копируется в core/config/ms3_routes.php
+ *              и ПЕРЕЗАПИСЫВАЕТСЯ при каждом обновлении компонента!
+ *
+ * ❌ НЕ редактируйте core/config/ms3_routes.php напрямую!
+ * ✅ Для своих роутов используйте: core/config/ms3_routes.custom.php
+ *
+ * При обновлении компонента:
+ * - core/config/ms3_routes.php - ПЕРЕЗАПИСЫВАЕТСЯ (новые системные роуты)
+ * - core/config/ms3_routes.custom.php - НЕ ТРОГАЕТСЯ (ваши роуты в безопасности)
+ *
+ * Если нужно изменить/отключить системный роут:
+ * - Скопируйте его в ms3_routes.custom.php
+ * - Измените/переопределите там
  *
  * Доступ к переменным:
  * @var \MiniShop3\Router\Router $router
  * @var \MODX\Revolution\modX $modx
+ *
+ * @version 1.0.0
  */
 
 use MiniShop3\Router\Middleware\AuthMiddleware;
