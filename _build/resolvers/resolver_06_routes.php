@@ -4,11 +4,10 @@ use xPDO\Transport\xPDOTransport;
 use MODX\Revolution\modX;
 
 /**
- * Резолвер для управления файлами роутов MiniShop3
+ * Резолвер для создания файла пользовательских роутов
  *
- * Два типа файлов:
- * 1. ms3_routes.php - СИСТЕМНЫЕ роуты (ПЕРЕЗАПИСЫВАЮТСЯ при обновлении)
- * 2. ms3_routes.custom.php - ПОЛЬЗОВАТЕЛЬСКИЕ роуты (НЕ ТРОГАЮТСЯ никогда)
+ * Системные роуты находятся в: core/components/minishop3/config/routes.php
+ * Пользовательские роуты создаются в: core/config/ms3_routes.custom.php
  *
  * @var xPDOTransport $transport
  * @var array $options
@@ -27,50 +26,7 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
     case xPDOTransport::ACTION_INSTALL:
     case xPDOTransport::ACTION_UPGRADE:
 
-        // ==========================================
-        // 1. СИСТЕМНЫЕ РОУТЫ (ВСЕГДА обновляются)
-        // ==========================================
-        $systemTarget = MODX_CORE_PATH . 'config/ms3_routes.php';
-        $systemSource = $componentPath . 'config/routes.example.php';
-
-        if (!file_exists($systemSource)) {
-            $modx->log(modX::LOG_LEVEL_ERROR,
-                '[MiniShop3] System routes source not found: ' . $systemSource
-            );
-            $success = false;
-            break;
-        }
-
-        $isUpgrade = file_exists($systemTarget);
-
-        // Копируем/перезаписываем системный файл
-        if (copy($systemSource, $systemTarget)) {
-            if ($isUpgrade) {
-                $modx->log(modX::LOG_LEVEL_WARN,
-                    '⚠️ [MiniShop3] System routes UPDATED at core/config/ms3_routes.php'
-                );
-                $modx->log(modX::LOG_LEVEL_WARN,
-                    '   This file was OVERWRITTEN with new system routes.'
-                );
-                $modx->log(modX::LOG_LEVEL_INFO,
-                    '   Your custom routes in ms3_routes.custom.php are safe!'
-                );
-            } else {
-                $modx->log(modX::LOG_LEVEL_INFO,
-                    '✅ [MiniShop3] System routes created at core/config/ms3_routes.php'
-                );
-            }
-        } else {
-            $modx->log(modX::LOG_LEVEL_ERROR,
-                '[MiniShop3] Failed to copy system routes to: ' . $systemTarget
-            );
-            $success = false;
-            break;
-        }
-
-        // ==========================================
-        // 2. ПОЛЬЗОВАТЕЛЬСКИЕ РОУТЫ (создаём только если нет)
-        // ==========================================
+        // Создаём файл ПОЛЬЗОВАТЕЛЬСКИХ роутов (только при первой установке)
         $customTarget = MODX_CORE_PATH . 'config/ms3_routes.custom.php';
         $customSource = $componentPath . 'config/routes.custom.example.php';
 
@@ -83,10 +39,13 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
             // Создаём файл впервые
             if (file_exists($customSource) && copy($customSource, $customTarget)) {
                 $modx->log(modX::LOG_LEVEL_INFO,
-                    '✅ [MiniShop3] Custom routes file created at core/config/ms3_routes.custom.php'
+                    '✅ [MiniShop3] Custom routes file created at: core/config/ms3_routes.custom.php'
                 );
                 $modx->log(modX::LOG_LEVEL_INFO,
                     '   This file will NEVER be overwritten. Safe to customize!'
+                );
+                $modx->log(modX::LOG_LEVEL_INFO,
+                    '   System routes are in: core/components/minishop3/config/routes.php'
                 );
             } else {
                 // Не критично - файл опциональный
@@ -99,15 +58,9 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         break;
 
     case xPDOTransport::ACTION_UNINSTALL:
-        // При удалении НЕ трогаем файлы - пусть пользователь сам решает
+        // При удалении НЕ трогаем файл - пусть пользователь сам решает
         $modx->log(modX::LOG_LEVEL_INFO,
-            '[MiniShop3] Routes files were NOT removed:'
-        );
-        $modx->log(modX::LOG_LEVEL_INFO,
-            '   - core/config/ms3_routes.php'
-        );
-        $modx->log(modX::LOG_LEVEL_INFO,
-            '   - core/config/ms3_routes.custom.php'
+            '[MiniShop3] Custom routes file was NOT removed: core/config/ms3_routes.custom.php'
         );
         $modx->log(modX::LOG_LEVEL_INFO,
             '   Remove manually if needed.'

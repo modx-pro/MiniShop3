@@ -93,7 +93,6 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
     return fields
 
   },
-
   getProductFields: function (config) {
       ms3.config.layout.product.data.left.forEach(field => {
           field.value = config.record[field.name]
