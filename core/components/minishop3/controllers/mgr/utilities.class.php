@@ -79,7 +79,8 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-page-utilities"});
             });
-        </script>'
+        </script>
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/utilities/fields-management.min.js"></script>'
         );
     }
 }

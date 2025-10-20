@@ -8,7 +8,7 @@ import 'primeicons/primeicons.css'
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
-import VueFieldsManagement from './components/FieldsManagement.vue'
+import VueProductDataFields from './components/ProductDataFields.vue'
 
 /**
  * MiniShop3 Vue Manager
@@ -59,42 +59,44 @@ function createVueApp(rootComponent) {
 }
 
 /**
- * Обработчик события переключения вкладок ExtJS
+ * Обработчик события для монтирования ProductDataFields
  *
- * Ленивая инициализация Vue приложений при активации соответствующих вкладок
+ * Вызывается из product.common.js при переключении на вкладку "Данные товара (Vue)"
  */
-document.addEventListener('tabchange', (e) => {
-  if (e.detail.name === 'fields') {
-    setTimeout(() => {
-      const $fieldsManagement = document.querySelector('#vue-fields-management');
+document.addEventListener('ms3:mountVueProductFields', (e) => {
+  console.log('[Vue] Mount event received:', e.detail)
 
-      // Проверяем что элемент существует и еще не был инициализирован
-      if ($fieldsManagement && $fieldsManagement.dataset.vApp === undefined) {
-        const app = createVueApp(VueFieldsManagement);
-        app.mount('#vue-fields-management');
+  setTimeout(() => {
+    const { targetId, productId } = e.detail
+    const $target = document.querySelector(targetId)
 
-        // Помечаем что приложение инициализировано
-        $fieldsManagement.dataset.vApp = 'true';
-      }
-    }, 300);
-  }
+    if ($target && $target.dataset.vApp === undefined) {
+      console.log('[Vue] Mounting ProductDataFields to:', targetId)
+
+      // Создаём Vue приложение
+      const app = createVueApp(VueProductDataFields)
+
+      // Передаём props через provide/inject
+      app.provide('productId', productId)
+      app.provide('pageKey', 'product_data')
+
+      // Монтируем
+      app.mount(targetId)
+
+      // Помечаем что приложение инициализировано
+      $target.dataset.vApp = 'true'
+
+      console.log('[Vue] ProductDataFields mounted successfully')
+    } else {
+      console.warn('[Vue] Target not found or already mounted:', targetId)
+    }
+  }, 100)
 })
 
-/**
- * Режим разработки (Vite dev server)
- *
- * Автоматически инициализирует Vue приложения для удобства разработки
- */
-const isDev = location.hostname === 'localhost';
-if (isDev) {
-  const $fields = document.querySelector('#vue-fields-management');
-  if ($fields) {
-    // Эмулируем событие переключения вкладки
-    const event = new CustomEvent('tabchange', {
-      detail: { name: 'fields' }
-    });
-    document.dispatchEvent(event);
-  }
-}
+console.log('[Vue Manager] main.js loaded')
+console.log('[Vue Manager] ms3.config available:', typeof window.ms3 !== 'undefined' && typeof window.ms3.config !== 'undefined')
+
+// Обработчики для других компонентов (FieldsManagement, ApiTest)
+// вынесены в отдельные entry points: fields-management.js, api-test.js
 
 

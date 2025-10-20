@@ -49,3 +49,5 @@ assets/customScript.js
 # Claude Code
 .claude/
 nul
+sync-exclude.txt
+copy-dist-exclude.txt

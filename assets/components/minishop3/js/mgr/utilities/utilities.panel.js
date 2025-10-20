@@ -40,6 +40,30 @@ ms3.panel.Utilities = function (config) {
                     }]
                 },
                 {
+                    title: 'Управление полями товара',
+                    id: 'ms3-utilities-fields-management-tab',
+                    layout: 'fit',
+                    autoScroll: true,
+                    items: [{
+                        xtype: 'panel',
+                        id: 'ms3-vue-fields-management-panel',
+                        border: false,
+                        autoHeight: true,
+                        html: '<div id="ms3-vue-fields-management" style="min-height: 600px;"></div>',
+                        listeners: {
+                            afterrender: function() {
+                                // Монтируем Vue приложение после рендера панели
+                                const event = new CustomEvent('ms3:mountVueFieldsManagement', {
+                                    detail: {
+                                        targetId: '#ms3-vue-fields-management'
+                                    }
+                                });
+                                document.dispatchEvent(event);
+                            }
+                        }
+                    }]
+                },
+                {
                     title: _('ms3_extrafields'),
                     layout: 'form',
                     autoHeight: true,

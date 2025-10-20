@@ -75,6 +75,9 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
                 if (optionsTab) {
                   tabs.push(optionsTab)
                 }
+
+                // Vue вкладка с данными товара
+                tabs.push(this.getVueProductFields(config))
               }
 
               break
@@ -178,6 +181,31 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
       items: [{
         xtype: 'ms3-product-links',
         record: config.record,
+      }]
+    }
+  },
+
+  getVueProductFields: function (config) {
+    return {
+      title: _('ms3_product_data_vue'),
+      layout: 'fit',
+      items: [{
+        xtype: 'panel',
+        border: false,
+        id: 'ms3-vue-product-fields-panel',
+        html: '<div id="ms3-vue-product-fields"></div>',
+        listeners: {
+          afterrender: function () {
+            // Отправляем событие для монтирования Vue приложения
+            const event = new CustomEvent('ms3:mountVueProductFields', {
+              detail: {
+                targetId: '#ms3-vue-product-fields',
+                productId: config.record.id
+              }
+            })
+            document.dispatchEvent(event)
+          }
+        }
       }]
     }
   },

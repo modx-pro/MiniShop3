@@ -17,7 +17,8 @@ const DevInput = {
 }
 
 const ProdInput = {
-  'fields-management': 'src/main.js'
+  'fields-management': 'src/entries/fields-management.js',
+  'main': 'src/main.js'
 }
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {

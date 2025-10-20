@@ -1,0 +1,52 @@
+# MODX Transport Package Ignore File
+#
+# Файлы и директории, перечисленные здесь, будут игнорироваться
+# при создании backup'а (.preserved.zip) и при упаковке в транспортный пакет
+
+# Composer зависимости (будут переустановлены через resolver)
+composer.lock
+vendor/
+
+# Node.js зависимости (не нужны в production)
+node_modules/
+
+# Build артефакты
+.vite/
+dist/
+
+# IDE настройки
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS файлы
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Временные файлы
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Тесты (если будут)
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Documentation source (собранная версия уже в docs/)
+README.md
+CHANGELOG.md
+CONTRIBUTING.md

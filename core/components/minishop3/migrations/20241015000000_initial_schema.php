@@ -42,7 +42,7 @@ class InitialSchema extends AbstractMigration
     public function up()
     {
         // Get MODX instance
-        $modxConfigPath = dirname(__FILE__, 3) . '/config.core.php';
+        $modxConfigPath = dirname(__FILE__, 5) . '/config.core.php';
         if (!file_exists($modxConfigPath)) {
             $this->output->writeln('<error>MODX config.core.php not found</error>');
             return;

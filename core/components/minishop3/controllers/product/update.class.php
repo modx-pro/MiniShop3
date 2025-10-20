@@ -159,7 +159,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
         });
         MODx.perm.tree_show_resource_ids = ' . ($this->modx->hasPermission('tree_show_resource_ids') ? 1 : 0) . ';
         // ]]>
-        </script>');
+        </script>
+        <script type="module" src="' . $assetsUrl . 'js/mgr/utilities/main.min.js"></script>');
 
         // load RTE
         $this->loadRichTextEditor();

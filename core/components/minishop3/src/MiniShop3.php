@@ -112,6 +112,14 @@ class MiniShop3
         $this->services = new Services($this);
         //$this->plugins = new Plugins($this);
         $this->extraFields = new ExtraFields($this->modx);
+
+        // Регистрируем ConfigManager как сервис
+        $modx = $this->modx;
+        if (!$this->modx->services->has('config_manager')) {
+            $this->modx->services->add('config_manager', function() use ($modx) {
+                return new \MiniShop3\Services\ConfigManager($modx);
+            });
+        }
         $this->options = new Options($this);
 
         $this->deleteOldDraft();

@@ -47,6 +47,116 @@ $router->group('/api/mgr', function($router) use ($modx) {
         ]);
     })->middleware(new AuthMiddleware($modx, 'mgr'));
 
+    // Группа роутов для конфигурации
+    $router->group('/config', function($router) use ($modx) {
+
+        // GET /api/mgr/config/page-fields/{page_key}
+        // Получить конфигурацию полей с примененными переопределениями
+        $router->get('/page-fields/{page_key}', function($params) use ($modx) {
+            $pageKey = $params['page_key'] ?? '';
+
+            if (empty($pageKey)) {
+                return Response::error('Page key is required', 400);
+            }
+
+            try {
+                /** @var \MiniShop3\Services\ConfigManager $configManager */
+                $configManager = $modx->services->get('config_manager');
+                $config = $configManager->getPageFieldsConfig($pageKey);
+
+                return Response::success($config);
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
+                return Response::error('Failed to load config: ' . $e->getMessage(), 500);
+            }
+        });
+
+        // GET /api/mgr/config/page-fields/{page_key}/all
+        // Получить ВСЕ доступные поля (включая скрытые)
+        $router->get('/page-fields/{page_key}/all', function($params) use ($modx) {
+            $pageKey = $params['page_key'] ?? '';
+
+            if (empty($pageKey)) {
+                return Response::error('Page key is required', 400);
+            }
+
+            try {
+                /** @var \MiniShop3\Services\ConfigManager $configManager */
+                $configManager = $modx->services->get('config_manager');
+                $fields = $configManager->getAllFields($pageKey);
+
+                return Response::success(['fields' => $fields]);
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
+                return Response::error('Failed to load fields: ' . $e->getMessage(), 500);
+            }
+        });
+
+        // PUT /api/mgr/config/page-fields/{page_key}
+        // Сохранить массовые переопределения полей
+        $router->put('/page-fields/{page_key}', function($params) use ($modx) {
+            $pageKey = $params['page_key'] ?? '';
+
+            if (empty($pageKey)) {
+                return Response::error('Page key is required', 400);
+            }
+
+            // Получаем данные из body запроса
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+
+            if (!isset($data['fields']) || !is_array($data['fields'])) {
+                return Response::error('Fields array is required', 400);
+            }
+
+            try {
+                /** @var \MiniShop3\Services\ConfigManager $configManager */
+                $configManager = $modx->services->get('config_manager');
+                $success = $configManager->saveFieldsConfig($pageKey, $data['fields']);
+
+                if ($success) {
+                    return Response::success([
+                        'message' => 'Configuration saved successfully',
+                    ]);
+                } else {
+                    return Response::error('Failed to save configuration', 500);
+                }
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
+                return Response::error('Failed to save config: ' . $e->getMessage(), 500);
+            }
+        });
+
+        // DELETE /api/mgr/config/page-fields/{page_key}/{field_name}
+        // Удалить переопределение для конкретного поля
+        $router->delete('/page-fields/{page_key}/{field_name}', function($params) use ($modx) {
+            $pageKey = $params['page_key'] ?? '';
+            $fieldName = $params['field_name'] ?? '';
+
+            if (empty($pageKey) || empty($fieldName)) {
+                return Response::error('Page key and field name are required', 400);
+            }
+
+            try {
+                /** @var \MiniShop3\Services\ConfigManager $configManager */
+                $configManager = $modx->services->get('config_manager');
+                $success = $configManager->removeFieldOverride($pageKey, $fieldName);
+
+                if ($success) {
+                    return Response::success([
+                        'message' => 'Override removed successfully',
+                    ]);
+                } else {
+                    return Response::error('Failed to remove override', 500);
+                }
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
+                return Response::error('Failed to remove override: ' . $e->getMessage(), 500);
+            }
+        });
+
+    });
+
     // Группа роутов с общей авторизацией и правами
     $router->group('/products', function($router) use ($modx) {
 

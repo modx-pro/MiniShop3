@@ -153,3 +153,5 @@ $_lang['ms3_gallery_file_delete_multiple'] = 'Удалить файлы';
 $_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Вы действительно хотите удалить эти файлы со всеми их уменьшенными копиями?<br/>Эта операция необратима.';
 
 $_lang['ms3_gallery_errors'] = 'Ошибки при загрузке';
+
+$_lang['ms3_product_data_vue'] = 'Данные товара (Vue)';

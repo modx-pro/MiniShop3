@@ -9,8 +9,6 @@
  */
 class Request {
   constructor() {
-    this.connectorUrl = null;
-    this.modAuthToken = null;
     this.headers = {};
     this.init();
   }
@@ -19,22 +17,29 @@ class Request {
    * Инициализация: получение конфигурации из MODX
    */
   init() {
-    // Получаем connector URL из конфигурации MiniShop3
-    if (window.ms3?.config?.connector_url) {
-      this.connectorUrl = window.ms3.config.connector_url;
-    } else {
-      console.warn('[Request] ms3.config.connector_url not found, using default');
-      this.connectorUrl = '/assets/components/minishop3/connector.php';
-    }
-
-    // Получаем HTTP_MODAUTH токен из MODX
-    if (window.MODx?.config?.MODAUTH) {
-      this.modAuthToken = window.MODx.config.MODAUTH;
-    } else {
-      console.warn('[Request] MODx.config.MODAUTH not found');
-    }
-
+    // Не инициализируем здесь - connector URL и MODAUTH токен
+    // получаем динамически при каждом запросе через геттеры
     this.setHeaders();
+  }
+
+  /**
+   * Получить connector URL (динамически)
+   */
+  getConnectorUrl() {
+    if (typeof ms3 !== 'undefined' && ms3?.config?.connector_url) {
+      return ms3.config.connector_url;
+    }
+    return '/assets/components/minishop3/connector.php';
+  }
+
+  /**
+   * Получить MODAUTH токен (динамически)
+   */
+  getModAuthToken() {
+    if (typeof MODx !== 'undefined' && MODx?.siteId) {
+      return MODx.siteId;
+    }
+    return null;
   }
 
   /**
@@ -45,11 +50,6 @@ class Request {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     };
-
-    // Добавляем HTTP_MODAUTH если доступен
-    if (this.modAuthToken) {
-      this.headers['HTTP_MODAUTH'] = this.modAuthToken;
-    }
   }
 
   /**
@@ -60,11 +60,17 @@ class Request {
    * @returns {string} - Полный URL
    */
   buildUrl(route, params = {}) {
-    const url = new URL(this.connectorUrl, window.location.origin);
+    const url = new URL(this.getConnectorUrl(), window.location.origin);
 
     // Базовые параметры для connector
-    url.searchParams.set('action', 'api');
+    url.searchParams.set('action', 'MiniShop3\\Processors\\Api\\Index');
     url.searchParams.set('route', route);
+
+    // Добавляем HTTP_MODAUTH токен
+    const modAuthToken = this.getModAuthToken();
+    if (modAuthToken) {
+      url.searchParams.set('HTTP_MODAUTH', modAuthToken);
+    }
 
     // Добавляем дополнительные параметры
     Object.entries(params).forEach(([key, value]) => {
@@ -130,6 +136,17 @@ class Request {
         );
       }
 
+      // MODX процессор возвращает данные в object или data
+      // Извлекаем данные из правильного места
+      if (responseData.object && Object.keys(responseData.object).length > 0) {
+        return responseData.object;
+      } else if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
+        return responseData.data;
+      } else if (responseData.data && !Array.isArray(responseData.data)) {
+        return responseData.data;
+      }
+
+      // Если ни object, ни data не содержат данных, возвращаем весь ответ
       return responseData;
 
     } catch (error) {

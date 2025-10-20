@@ -1,0 +1,34 @@
+{
+  "fields": [
+    {
+      "name": "article",
+      "label": "Артикул",
+      "xtype": "textfield",
+      "description": "Артикул товара"
+    },
+    {
+      "name": "price",
+      "label": "Цена",
+      "xtype": "numberfield",
+      "description": "Цена товара"
+    },
+    {
+      "name": "old_price",
+      "label": "Старая цена",
+      "xtype": "numberfield",
+      "description": "Старая цена товара"
+    },
+    {
+      "name": "weight",
+      "label": "Вес",
+      "xtype": "numberfield",
+      "description": "Вес товара в граммах"
+    },
+    {
+      "name": "vendor_id",
+      "label": "Производитель",
+      "xtype": "ms3-combo-vendor",
+      "description": "Производитель товара"
+    }
+  ]
+}
