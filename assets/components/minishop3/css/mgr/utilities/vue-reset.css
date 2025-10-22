@@ -1,0 +1,12 @@
+/**
+ * Глобальный сброс box-sizing для изоляции Vue компонентов от ExtJS
+ * Этот файл ДОЛЖЕН подключаться ДО компилированных стилей Vue
+ */
+
+* {
+  box-sizing: content-box !important;
+}
+
+*, ::before, ::after {
+  box-sizing: inherit !important;
+}

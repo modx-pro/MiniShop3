@@ -4,6 +4,7 @@
     <InputText
       v-if="fieldConfig.xtype === 'textfield'"
       :id="fieldConfig.id"
+      :name="fieldConfig.name"
       v-model="localValue"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
@@ -15,6 +16,7 @@
     <InputNumber
       v-else-if="fieldConfig.xtype === 'numberfield'"
       :id="fieldConfig.id"
+      :name="fieldConfig.name"
       v-model="localValue"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
@@ -46,6 +48,7 @@
     <Textarea
       v-else-if="fieldConfig.xtype === 'textarea'"
       :id="fieldConfig.id"
+      :name="fieldConfig.name"
       v-model="localValue"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
@@ -96,6 +99,15 @@
         Неизвестный тип поля: {{ fieldConfig.xtype }}
       </Message>
     </div>
+
+    <!-- Скрытое поле для сложных типов (combobox, datefield, colorpicker, chips, multiselect) -->
+    <!-- Эти поля требуют сериализацию в JSON для передачи в ExtJS форму -->
+    <input
+      v-if="isComplexField"
+      type="hidden"
+      :name="fieldConfig.name"
+      :value="serializedValue"
+    />
   </div>
 </template>
 
@@ -115,6 +127,7 @@ const props = defineProps({
    * Field configuration object
    * {
    *   id: string,
+   *   name: string,
    *   xtype: string,
    *   label: string,
    *   description: string,
@@ -144,6 +157,39 @@ const props = defineProps({
     type: Boolean,
     default: false
   }
+})
+
+/**
+ * Определить, является ли поле простым типом (не требует скрытого input)
+ */
+const isSimpleField = computed(() => {
+  const simpleTypes = ['textfield', 'numberfield', 'textarea', 'switch', 'checkbox']
+  return simpleTypes.includes(props.fieldConfig.xtype)
+})
+
+/**
+ * Определить, является ли поле сложным типом (требует скрытое поле с JSON)
+ */
+const isComplexField = computed(() => {
+  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect']
+  return complexTypes.includes(props.fieldConfig.xtype)
+})
+
+/**
+ * Сериализовать значение для скрытого поля
+ */
+const serializedValue = computed(() => {
+  if (localValue.value === null || localValue.value === undefined) {
+    return ''
+  }
+
+  // Для сложных объектов и массивов - JSON
+  if (typeof localValue.value === 'object') {
+    return JSON.stringify(localValue.value)
+  }
+
+  // Для простых значений - как есть
+  return String(localValue.value)
 })
 
 const emit = defineEmits(['update:modelValue', 'blur'])

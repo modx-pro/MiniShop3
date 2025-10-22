@@ -1,5 +1,5 @@
 import './scss/primevue.scss'
-import { createApp } from 'vue'
+import { createApp, h } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
@@ -46,7 +46,18 @@ function createVueApp(rootComponent) {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none' // Отключаем автоматическую темную тему
+        darkModeSelector: 'none', // Отключаем автоматическую темную тему
+        cssLayer: false, // Отключаем CSS Layer
+        // Указываем селектор для CSS переменных вместо :root
+        prefix: 'p'
+      }
+    },
+    // Добавляем wrapper класс ко всем компонентам
+    pt: {
+      directives: {
+        tooltip: {
+          root: { class: 'vueApp-tooltip' }
+        }
       }
     }
   });
@@ -64,37 +75,33 @@ function createVueApp(rootComponent) {
  * Вызывается из product.common.js при переключении на вкладку "Данные товара (Vue)"
  */
 document.addEventListener('ms3:mountVueProductFields', (e) => {
-  console.log('[Vue] Mount event received:', e.detail)
-
   setTimeout(() => {
     const { targetId, productId } = e.detail
     const $target = document.querySelector(targetId)
 
     if ($target && $target.dataset.vApp === undefined) {
-      console.log('[Vue] Mounting ProductDataFields to:', targetId)
+      // Создаём wrapper компонент с props
+      const WrapperComponent = {
+        render() {
+          return h(VueProductDataFields, {
+            productId: productId
+          })
+        }
+      }
 
-      // Создаём Vue приложение
-      const app = createVueApp(VueProductDataFields)
-
-      // Передаём props через provide/inject
-      app.provide('productId', productId)
-      app.provide('pageKey', 'product_data')
+      // Создаём Vue приложение с wrapper
+      const app = createVueApp(WrapperComponent)
 
       // Монтируем
       app.mount(targetId)
 
       // Помечаем что приложение инициализировано
       $target.dataset.vApp = 'true'
-
-      console.log('[Vue] ProductDataFields mounted successfully')
     } else {
       console.warn('[Vue] Target not found or already mounted:', targetId)
     }
   }, 100)
 })
-
-console.log('[Vue Manager] main.js loaded')
-console.log('[Vue Manager] ms3.config available:', typeof window.ms3 !== 'undefined' && typeof window.ms3.config !== 'undefined')
 
 // Обработчики для других компонентов (FieldsManagement, ApiTest)
 // вынесены в отдельные entry points: fields-management.js, api-test.js

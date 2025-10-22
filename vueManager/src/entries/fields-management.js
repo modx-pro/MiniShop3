@@ -65,7 +65,6 @@ export function init(selector = '#vue-fields-management') {
   app.mount(selector);
   $el.dataset.vApp = 'true';
 
-  console.info('[Fields Management] Mounted successfully');
   return app;
 }
 
@@ -73,7 +72,6 @@ export function init(selector = '#vue-fields-management') {
  * Слушаем событие монтирования от ExtJS
  */
 document.addEventListener('ms3:mountVueFieldsManagement', (e) => {
-  console.log('[Fields Management] Mount event received', e.detail);
   const targetId = e.detail?.targetId || '#ms3-vue-fields-management';
   init(targetId);
 });

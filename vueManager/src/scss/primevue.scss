@@ -1,9 +1,2 @@
-.primevue-app {
-  * {
-    box-sizing: border-box !important;
-  }
-}
-
-*, ::before, ::after {
-  box-sizing: inherit !important;
-}
+// Глобальные правила box-sizing и переопределение для Vue находятся в main.css
+// Этот файл больше не содержит правил box-sizing

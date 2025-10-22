@@ -66,7 +66,15 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
                 }
               })
               tabs.push(tab)
-              tabs.push(this.getProductFields(config))
+
+              // Vue вкладка "Товар" - вторая позиция после "Документ"
+              if (config.mode !== 'create') {
+                tabs.push(this.getVueProductFields(config))
+              }
+
+              // Старая ExtJS вкладка "Данные товара" - УДАЛЕНА, используем Vue вкладку
+              // tabs.push(this.getProductFields(config))
+
               if (config.mode !== 'create') {
                 tabs.push(this.getProductLinks(config))
                 tabs.push(this.getProductCategories(config))
@@ -75,9 +83,6 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
                 if (optionsTab) {
                   tabs.push(optionsTab)
                 }
-
-                // Vue вкладка с данными товара
-                tabs.push(this.getVueProductFields(config))
               }
 
               break
@@ -187,13 +192,13 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
 
   getVueProductFields: function (config) {
     return {
-      title: _('ms3_product_data_vue'),
+      title: _('ms3_tab_product'),
       layout: 'fit',
       items: [{
         xtype: 'panel',
         border: false,
         id: 'ms3-vue-product-fields-panel',
-        html: '<div id="ms3-vue-product-fields"></div>',
+        html: '<div id="ms3-vue-product-fields" class="vueApp"></div>',
         listeners: {
           afterrender: function () {
             // Отправляем событие для монтирования Vue приложения

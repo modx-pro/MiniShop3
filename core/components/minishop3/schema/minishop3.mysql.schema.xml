@@ -25,6 +25,7 @@
         <field key="article" dbtype="varchar" precision="50" phptype="string" null="true"/>
         <field key="price" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>
         <field key="old_price" dbtype="decimal" precision="12,2" phptype="float" null="true" default="0"/>
+        <field key="stock" dbtype="decimal" precision="13,3" phptype="float" null="true" default="0"/>
         <field key="weight" dbtype="decimal" precision="13,3" phptype="float" null="true" default="0"/>
         <field key="image" dbtype="varchar" precision="255" phptype="string" null="true"/>
         <field key="thumb" dbtype="varchar" precision="255" phptype="string" null="true"/>
@@ -51,6 +52,9 @@
         </index>
         <index alias="old_price" name="old_price" primary="false" unique="false" type="BTREE">
             <column key="old_price" length="" collation="A" null="false"/>
+        </index>
+        <index alias="stock" name="stock" primary="false" unique="false" type="BTREE">
+            <column key="stock" length="" collation="A" null="false"/>
         </index>
         <index alias="vendor_id" name="vendor_id" primary="false" unique="false" type="BTREE">
             <column key="vendor_id" length="" collation="A" null="false"/>
@@ -579,6 +583,53 @@
         <index alias="idx_page_context" name="idx_page_context" primary="false" unique="false" type="BTREE">
             <column key="page_key" length="" collation="A" null="false"/>
             <column key="context_key" length="" collation="A" null="false"/>
+        </index>
+    </object>
+
+    <object class="msPageSection" table="ms3_page_sections" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="page_key" dbtype="varchar" precision="100" phptype="string" null="false" />
+        <field key="section_key" dbtype="varchar" precision="100" phptype="string" null="false" />
+        <field key="hidden" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
+        <field key="sort_order" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
+        <field key="config" dbtype="text" phptype="json" null="true" />
+        <field key="is_default" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
+        <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
+        <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
+
+        <index alias="idx_page_section" name="idx_page_section" primary="false" unique="true" type="BTREE">
+            <column key="page_key" length="" collation="A" null="false"/>
+            <column key="section_key" length="" collation="A" null="false"/>
+        </index>
+        <index alias="idx_page_key" name="idx_page_key" primary="false" unique="false" type="BTREE">
+            <column key="page_key" length="" collation="A" null="false"/>
+        </index>
+    </object>
+
+    <object class="msProductField" table="ms3_product_fields" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="name" dbtype="varchar" precision="100" phptype="string" null="false" />
+        <field key="label" dbtype="varchar" precision="255" phptype="string" null="true" />
+        <field key="xtype" dbtype="varchar" precision="50" phptype="string" null="false" default="textfield"/>
+        <field key="section" dbtype="varchar" precision="100" phptype="string" null="true" />
+        <field key="visible" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
+        <field key="required" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
+        <field key="sort_order" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
+        <field key="width" dbtype="int" precision="10" phptype="integer" null="false" default="4"/>
+        <field key="description" dbtype="text" phptype="string" null="true" />
+        <field key="config" dbtype="text" phptype="json" null="true" />
+        <field key="is_system" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
+        <field key="is_default" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
+        <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
+        <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
+
+        <index alias="idx_unique_name" name="idx_unique_name" primary="false" unique="true" type="BTREE">
+            <column key="name" length="" collation="A" null="false"/>
+        </index>
+        <index alias="idx_section" name="idx_section" primary="false" unique="false" type="BTREE">
+            <column key="section" length="" collation="A" null="false"/>
+        </index>
+        <index alias="idx_visible_sort" name="idx_visible_sort" primary="false" unique="false" type="BTREE">
+            <column key="visible" length="" collation="A" null="false"/>
+            <column key="sort_order" length="" collation="A" null="false"/>
         </index>
     </object>
 </model>

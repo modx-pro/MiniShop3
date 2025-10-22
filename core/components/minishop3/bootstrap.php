@@ -5,6 +5,9 @@
  * @var array $namespace
  */
 
+// Load composer autoload
+require_once $namespace['path'] . 'vendor/autoload.php';
+
 // Load the classes
 $modx->addPackage('MiniShop3\Model', $namespace['path'] . 'src/', null, 'MiniShop3\\');
 

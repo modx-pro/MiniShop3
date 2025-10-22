@@ -2,7 +2,8 @@
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
-use MiniShop3\Controllers\Config\Product\Layout;
+// Layout больше не используется - переход на Vue вкладку
+// use MiniShop3\Controllers\Config\Product\Layout;
 
 if (!class_exists('msResourceUpdateController')) {
     require_once dirname(__FILE__, 2) . '/resource_update.class.php';
@@ -37,14 +38,16 @@ class msProductUpdateManagerController extends msResourceUpdateController
      */
     public function loadCustomCssJs()
     {
-        $layoutController = new Layout($this->modx);
-        $layout = $layoutController->getLayout();
+        // Layout больше не используется - переход на Vue вкладку
+        // $layoutController = new Layout($this->modx);
+        // $layout = $layoutController->getLayout();
 
         $mgrUrl = $this->getOption('manager_url', null, MODX_MANAGER_URL);
         $assetsUrl = $this->ms3->config['assetsUrl'];
 
         $this->addCss($assetsUrl . 'css/mgr/bootstrap.buttons.css');
         $this->addCss($assetsUrl . 'css/mgr/main.css');
+        $this->addCss($assetsUrl . 'css/mgr/extjs-boxmodel-fix.css'); // Фикс box-sizing для ExtJS vs PrimeVue
         $this->addJavascript($mgrUrl . 'assets/modext/util/datetime.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/element/modx.panel.tv.renders.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.grid.resource.security.local.js');
@@ -102,6 +105,9 @@ class msProductUpdateManagerController extends msResourceUpdateController
             $neighborhood = $this->resource->getNeighborhood();
         }
 
+        // Загружаем лексикон явно для гарантии
+        $this->modx->lexicon->load('minishop3:product');
+
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
@@ -119,6 +125,9 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'additional_fields' => [],
             'media_source' => $this->getSourceProperties(),
             'isHideContent' => $this->isHideContent(),
+            'lexicon' => [
+                'ms3_product_data_vue' => $this->modx->lexicon('ms3_product_data_vue'),
+            ],
         ];
 
         $ready = [
@@ -153,13 +162,14 @@ class msProductUpdateManagerController extends msResourceUpdateController
         MODx.onDocFormRender = "' . $this->onDocFormRender . '";
         MODx.ctx = "' . $this->ctx . '";
         ms3.config = ' . json_encode($config) . ';
-        ms3.config.layout = ' . json_encode($layout) . ';
+        // ms3.config.layout = ' . json_encode($layout) . ';
         Ext.onReady(function() {
             MODx.load(' . json_encode($ready) . ');
         });
         MODx.perm.tree_show_resource_ids = ' . ($this->modx->hasPermission('tree_show_resource_ids') ? 1 : 0) . ';
         // ]]>
         </script>
+        <link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/utilities/main.min.css">
         <script type="module" src="' . $assetsUrl . 'js/mgr/utilities/main.min.js"></script>');
 
         // load RTE

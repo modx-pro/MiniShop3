@@ -3,6 +3,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import prefixSelector from 'postcss-prefix-selector'
 
 
 const output = {
@@ -22,6 +23,52 @@ const ProdInput = {
 }
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
+  // Общая конфигурация PostCSS для изоляции стилей Vue
+  // Все стили будут работать только внутри контейнеров с классом .vueApp
+  const cssConfig = {
+    postcss: {
+      plugins: [
+        prefixSelector({
+          prefix: '.vueApp',
+          // Исключаем селекторы, которые не должны иметь префикс
+          exclude: [
+            // Псевдо-элементы и состояния
+            /^:root/,
+            /^html/,
+            /^body/,
+            // Глобальные селекторы для box-sizing
+            /^\*/,
+            /^::before/,
+            /^::after/,
+            // Keyframes анимации
+            /^@keyframes/,
+            /^@-webkit-keyframes/,
+            // Font-face
+            /^@font-face/,
+            // Медиа-запросы (префикс добавится к вложенным селекторам)
+            /^@media/,
+            // Уже префиксованные селекторы (избегаем дублирования)
+            /^\.vueApp/,
+            // PrimeIcons - не префиксируем иконочные классы
+            /^\.pi/,
+            /^\[class\^=["']pi-/,
+            /^\[class\*=["'] pi-/,
+            // PrimeVue компоненты - не префиксируем (Dialog рендерится в body)
+            /^\.p-/
+          ],
+          // Трансформация селектора
+          transform: function (prefix, selector, prefixToIgnore) {
+            // Специальная обработка для :root - заменяем на .vueApp
+            if (selector === ':root') {
+              return '.vueApp'
+            }
+            return prefix + ' ' + selector
+          }
+        })
+      ]
+    }
+  }
+
   if (command === 'serve') {
     return {
       build: {
@@ -36,6 +83,7 @@ export default defineConfig(({ command }) => {
           '@': fileURLToPath(new URL('./src', import.meta.url))
         },
       },
+      css: cssConfig.postcss ? { postcss: cssConfig.postcss } : undefined
     }
   } else {
     // command === 'build'
@@ -44,7 +92,9 @@ export default defineConfig(({ command }) => {
         rollupOptions: {
           output,
           input: ProdInput
-        }
+        },
+        cssMinify: false, // Отключаем минификацию CSS чтобы сохранить Unicode символы в PrimeIcons
+        minify: 'esbuild'
       },
       plugins: [vue()],
       resolve: {
@@ -52,6 +102,7 @@ export default defineConfig(({ command }) => {
           '@': fileURLToPath(new URL('./src', import.meta.url))
         },
       },
+      css: cssConfig.postcss ? { postcss: cssConfig.postcss } : undefined
     }
   }
 })

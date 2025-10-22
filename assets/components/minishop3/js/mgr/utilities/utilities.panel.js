@@ -49,7 +49,7 @@ ms3.panel.Utilities = function (config) {
                         id: 'ms3-vue-fields-management-panel',
                         border: false,
                         autoHeight: true,
-                        html: '<div id="ms3-vue-fields-management" style="min-height: 600px;"></div>',
+                        html: '<div id="ms3-vue-fields-management" class="vueApp" style="min-height: 600px;"></div>',
                         listeners: {
                             afterrender: function() {
                                 // Монтируем Vue приложение после рендера панели

@@ -51,6 +51,33 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         $config = $this->ms3->config;
 
+        // Загружаем лексикон для Vue виджета
+        // Принудительно загружаем русский лексикон, если язык пользователя не установлен
+        $language = $this->modx->user ? $this->modx->user->getOption('manager_language') : null;
+        if (!$language) {
+            $language = $this->modx->getOption('cultureKey', null, 'ru');
+        }
+
+        // Загружаем отдельный топик для Vue виджетов
+        $this->modx->lexicon->load($language . ':minishop3:vue');
+
+        // Добавляем лексиконы для Vue виджета
+        $lexiconKeys = [
+            'sections', 'fields', 'section_add', 'section_delete',
+            'section_delete_confirm_title', 'section_delete_confirm_message',
+            'section_delete_btn', 'section_cancel_btn', 'save_changes',
+            'save_success', 'save_error', 'sections_saved', 'section_deleted',
+            'loading', 'error_loading_sections', 'error_deleting_section',
+            'error_saving_sections', 'visible', 'section_key', 'section_label', 'actions'
+        ];
+
+        $config['lexicon'] = [];
+        foreach ($lexiconKeys as $key) {
+            $lexiconValue = $this->modx->lexicon('ms3_vue_' . $key);
+            // Защита от null/empty значений
+            $config['lexicon'][$key] = $lexiconValue ?: $key;
+        }
+
         // get source properties
         $productSource = $this->getOption('ms3_product_source_default', null, 1);
         if ($source = $this->modx->getObject(modMediaSource::class, $productSource)) {
@@ -73,14 +100,18 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $config['utility_import_fields'] = $this->getOption('ms3_utility_import_fields', null, 'pagetitle,parent,price,article', true);
         $config['utility_import_fields_delimiter'] = $this->getOption('ms3_utility_import_fields_delimiter', null, ';', true);
 
+        // ВАЖНО: Сначала конфигурация, потом Vue модули
+        $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
+
         $this->addHtml(
-            '<script>
-            ms3.config = ' . json_encode($config) . ';
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/_plugin-vue_export-helper.min.css">
+        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/fields-management.min.css">
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/utilities/fields-management.min.js"></script>
+        <script>
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-page-utilities"});
             });
-        </script>
-        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/utilities/fields-management.min.js"></script>'
+        </script>'
         );
     }
 }

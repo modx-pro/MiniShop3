@@ -16,6 +16,13 @@ $_lang['ms3_product_sections'] = 'Разделы';
 $_lang['ms3_product_properties'] = 'Основные свойства';
 $_lang['ms3_product_tv'] = 'Дополнительные свойства';
 
+// Секции полей товара
+$_lang['ms3_section_general'] = 'Общие поля';
+$_lang['ms3_section_main'] = 'Основные данные';
+$_lang['ms3_section_pricing'] = 'Цены и склад';
+$_lang['ms3_section_seo'] = 'SEO';
+$_lang['ms3_section_additional'] = 'Дополнительно';
+
 $_lang['ms3_product_id'] = 'ID';
 $_lang['ms3_product_pagetitle'] = 'Название';
 $_lang['ms3_product_parent'] = 'Категория';
@@ -101,6 +108,8 @@ $_lang['ms3_product_popular'] = 'Популярный';
 $_lang['ms3_product_popular_help'] = '';
 $_lang['ms3_product_source'] = 'Источник файлов';
 $_lang['ms3_product_source_help'] = 'Источник файлов, который хранит изображения товара.';
+$_lang['ms3_product_source_id'] = 'Источник файлов';
+$_lang['ms3_product_source_id_help'] = 'Источник файлов, который хранит изображения товара.';
 $_lang['ms3_product_change_source_confirm'] = 'Вы уверены, что хотите изменить источник файлов? ВНИМАНИЕ: При этом будут сохранены все изменения, убедитесь, что вы готовы сделать это перед продолжением.';
 $_lang['ms3_product_count'] = 'Количество';
 $_lang['ms3_product_options'] = 'Опции товаров';
@@ -155,3 +164,26 @@ $_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Вы действител�
 $_lang['ms3_gallery_errors'] = 'Ошибки при загрузке';
 
 $_lang['ms3_product_data_vue'] = 'Данные товара (Vue)';
+
+// Vue виджет управления полями
+$_lang['ms3_vue_sections'] = 'Секции';
+$_lang['ms3_vue_fields'] = 'Поля';
+$_lang['ms3_vue_section_add'] = 'Добавить секцию';
+$_lang['ms3_vue_section_delete'] = 'Удалить';
+$_lang['ms3_vue_section_delete_confirm_title'] = 'Подтверждение удаления';
+$_lang['ms3_vue_section_delete_confirm_message'] = 'Вы уверены, что хотите удалить эту секцию?';
+$_lang['ms3_vue_section_delete_btn'] = 'Да, удалить';
+$_lang['ms3_vue_section_cancel_btn'] = 'Отмена';
+$_lang['ms3_vue_save_changes'] = 'Сохранить изменения';
+$_lang['ms3_vue_save_success'] = 'Успешно';
+$_lang['ms3_vue_save_error'] = 'Ошибка';
+$_lang['ms3_vue_sections_saved'] = 'Секции сохранены';
+$_lang['ms3_vue_section_deleted'] = 'Секция удалена';
+$_lang['ms3_vue_loading'] = 'Загрузка...';
+$_lang['ms3_vue_error_loading_sections'] = 'Ошибка загрузки секций';
+$_lang['ms3_vue_error_deleting_section'] = 'Ошибка удаления секции';
+$_lang['ms3_vue_error_saving_sections'] = 'Ошибка сохранения секций';
+$_lang['ms3_vue_visible'] = 'Видимость';
+$_lang['ms3_vue_section_key'] = 'Ключ';
+$_lang['ms3_vue_section_label'] = 'Название';
+$_lang['ms3_vue_actions'] = 'Действия';

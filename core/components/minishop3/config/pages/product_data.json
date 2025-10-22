@@ -1,34 +1,39 @@
 {
-  "fields": [
-    {
-      "name": "article",
-      "label": "Артикул",
-      "xtype": "textfield",
-      "description": "Артикул товара"
+  "model_alias": "product_data",
+  "fields": {
+    "article": {
+      "section": "main",
+      "width": 4,
+      "label_key": "ms3_product_article",
+      "description_key": "ms3_product_article_help"
     },
-    {
-      "name": "price",
-      "label": "Цена",
+    "price": {
+      "section": "pricing",
+      "width": 4,
       "xtype": "numberfield",
-      "description": "Цена товара"
+      "label_key": "ms3_product_price",
+      "description_key": "ms3_product_price_help"
     },
-    {
-      "name": "old_price",
-      "label": "Старая цена",
+    "old_price": {
+      "section": "pricing",
+      "width": 4,
       "xtype": "numberfield",
-      "description": "Старая цена товара"
+      "label_key": "ms3_product_old_price",
+      "description_key": "ms3_product_old_price_help"
     },
-    {
-      "name": "weight",
-      "label": "Вес",
+    "weight": {
+      "section": "additional",
+      "width": 4,
       "xtype": "numberfield",
-      "description": "Вес товара в граммах"
+      "label_key": "ms3_product_weight",
+      "description_key": "ms3_product_weight_help"
     },
-    {
-      "name": "vendor_id",
-      "label": "Производитель",
-      "xtype": "ms3-combo-vendor",
-      "description": "Производитель товара"
+    "vendor_id": {
+      "section": "main",
+      "width": 4,
+      "xtype": "numberfield",
+      "label_key": "ms3_product_vendor_id",
+      "description_key": "ms3_product_vendor_id_help"
     }
-  ]
+  }
 }

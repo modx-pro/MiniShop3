@@ -53,117 +53,105 @@ $router->group('/api/mgr', function($router) use ($modx) {
         // GET /api/mgr/config/page-fields/{page_key}
         // Получить конфигурацию полей с примененными переопределениями
         $router->get('/page-fields/{page_key}', function($params) use ($modx) {
-            $pageKey = $params['page_key'] ?? '';
-
-            if (empty($pageKey)) {
-                return Response::error('Page key is required', 400);
-            }
-
-            try {
-                /** @var \MiniShop3\Services\ConfigManager $configManager */
-                $configManager = $modx->services->get('config_manager');
-                $config = $configManager->getPageFieldsConfig($pageKey);
-
-                return Response::success($config);
-            } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
-                return Response::error('Failed to load config: ' . $e->getMessage(), 500);
-            }
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->getPageFields($params);
         });
 
         // GET /api/mgr/config/page-fields/{page_key}/all
-        // Получить ВСЕ доступные поля (включая скрытые)
+        // Получить ВСЕ доступные поля (включая скрытые) из модели
         $router->get('/page-fields/{page_key}/all', function($params) use ($modx) {
-            $pageKey = $params['page_key'] ?? '';
-
-            if (empty($pageKey)) {
-                return Response::error('Page key is required', 400);
-            }
-
-            try {
-                /** @var \MiniShop3\Services\ConfigManager $configManager */
-                $configManager = $modx->services->get('config_manager');
-                $fields = $configManager->getAllFields($pageKey);
-
-                return Response::success(['fields' => $fields]);
-            } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
-                return Response::error('Failed to load fields: ' . $e->getMessage(), 500);
-            }
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->getAllPageFields($params);
         });
 
         // PUT /api/mgr/config/page-fields/{page_key}
         // Сохранить массовые переопределения полей
         $router->put('/page-fields/{page_key}', function($params) use ($modx) {
-            $pageKey = $params['page_key'] ?? '';
-
-            if (empty($pageKey)) {
-                return Response::error('Page key is required', 400);
-            }
-
-            // Получаем данные из body запроса
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true);
-
-            if (!isset($data['fields']) || !is_array($data['fields'])) {
-                return Response::error('Fields array is required', 400);
-            }
-
-            try {
-                /** @var \MiniShop3\Services\ConfigManager $configManager */
-                $configManager = $modx->services->get('config_manager');
-                $success = $configManager->saveFieldsConfig($pageKey, $data['fields']);
-
-                if ($success) {
-                    return Response::success([
-                        'message' => 'Configuration saved successfully',
-                    ]);
-                } else {
-                    return Response::error('Failed to save configuration', 500);
-                }
-            } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
-                return Response::error('Failed to save config: ' . $e->getMessage(), 500);
-            }
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->updatePageFields($params);
         });
 
         // DELETE /api/mgr/config/page-fields/{page_key}/{field_name}
         // Удалить переопределение для конкретного поля
         $router->delete('/page-fields/{page_key}/{field_name}', function($params) use ($modx) {
-            $pageKey = $params['page_key'] ?? '';
-            $fieldName = $params['field_name'] ?? '';
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->deleteFieldOverride($params);
+        });
 
-            if (empty($pageKey) || empty($fieldName)) {
-                return Response::error('Page key and field name are required', 400);
+        // GET /api/mgr/config/sections/{page_key}
+        // Получить секции страницы с переводами из лексикона
+        $router->get('/sections/{page_key}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->getSections($params);
+        });
+
+        // PUT /api/mgr/config/sections/{page_key}
+        // Сохранить секции (порядок, видимость)
+        $router->put('/sections/{page_key}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->updateSections($params);
+        });
+
+        // DELETE /api/mgr/config/sections/{page_key}/{section_key}
+        // Удалить секцию (только кастомные)
+        $router->delete('/sections/{page_key}/{section_key}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->deleteSection($params);
+        });
+
+    });
+
+    // Группа роутов для работы с моделями
+    $router->group('/models', function($router) use ($modx) {
+
+        // GET /api/mgr/models/{alias}/fields
+        // Получить все поля модели (сырые, без конфигурации)
+        $router->get('/{alias}/fields', function($params) use ($modx) {
+            $alias = $params['alias'] ?? '';
+
+            if (empty($alias)) {
+                return Response::error('Model alias is required', 400);
             }
 
             try {
-                /** @var \MiniShop3\Services\ConfigManager $configManager */
-                $configManager = $modx->services->get('config_manager');
-                $success = $configManager->removeFieldOverride($pageKey, $fieldName);
+                /** @var \MiniShop3\Services\FieldConfigManager $fieldConfigManager */
+                $fieldConfigManager = $modx->services->get('ms3_field_config_manager');
 
-                if ($success) {
-                    return Response::success([
-                        'message' => 'Override removed successfully',
-                    ]);
-                } else {
-                    return Response::error('Failed to remove override', 500);
+                $modelClass = $fieldConfigManager->getModelClassByAlias($alias);
+
+                if (!$modelClass) {
+                    return Response::error("Model alias not found: {$alias}", 404);
                 }
+
+                $fields = $fieldConfigManager->getModelFields($modelClass);
+
+                return Response::success([
+                    'model_alias' => $alias,
+                    'model_class' => $modelClass,
+                    'fields' => $fields,
+                ]);
             } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigManager] ' . $e->getMessage());
-                return Response::error('Failed to remove override: ' . $e->getMessage(), 500);
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[FieldConfigManager] ' . $e->getMessage());
+                return Response::error('Failed to load model fields: ' . $e->getMessage(), 500);
             }
         });
 
     });
 
-    // Группа роутов с общей авторизацией и правами
-    $router->group('/products', function($router) use ($modx) {
+    // Группа роутов для работы с данными товара (msProductData)
+    $router->group('/product-data', function($router) use ($modx) {
 
-        // GET /api/mgr/products - список товаров
-        // PUT /api/mgr/products/{id} - обновление товара
-        // DELETE /api/mgr/products/{id} - удаление товара
-        // Здесь будут добавляться роуты для работы с товарами
+        // GET /api/mgr/product-data/{id} - получение данных товара
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ProductDataController($modx);
+            return $controller->get($params);
+        });
+
+        // PUT /api/mgr/product-data/{id} - обновление данных товара
+        $router->put('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ProductDataController($modx);
+            return $controller->update($params);
+        });
 
     }, [
         new AuthMiddleware($modx, 'mgr'),
