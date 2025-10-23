@@ -27,9 +27,11 @@ class InitialSchema extends AbstractMigration
         'msOrderLog',
         'msOrderProduct',
         'msOrderStatus',
+        'msPageSection',
         'msPayment',
         'msProduct',
         'msProductData',
+        'msProductField',
         'msProductFile',
         'msProductLink',
         'msProductOption',
@@ -60,15 +62,25 @@ class InitialSchema extends AbstractMigration
         $modx = new \MODX\Revolution\modX();
         $modx->initialize('mgr');
 
-        // Add MiniShop3 package
-        $modx->addPackage('MiniShop3\\Model', MODX_CORE_PATH . 'components/minishop3/src/', null, 'MiniShop3\\');
+        // Add MiniShop3 package with correct path
+        $modelPath = MODX_CORE_PATH . 'components/minishop3/src/Model/';
+        $modx->addPackage('MiniShop3\\Model', $modelPath, null, 'MiniShop3\\');
 
         $manager = $modx->getManager();
 
         $this->output->writeln('<info>Creating MiniShop3 tables...</info>');
+        $this->output->writeln("<comment>Model path: {$modelPath}</comment>");
 
         foreach ($this->modelClasses as $className) {
             $fullClassName = 'MiniShop3\\Model\\' . $className;
+
+            // Check if model class exists
+            $mysqlClass = 'MiniShop3\\Model\\mysql\\' . $className;
+            if (!class_exists($mysqlClass)) {
+                $this->output->writeln("<error>  ✗ Model class not found: {$mysqlClass}</error>");
+                continue;
+            }
+
             $tableName = $modx->getTableName($fullClassName);
 
             // Check if table already exists
@@ -82,14 +94,54 @@ class InitialSchema extends AbstractMigration
             }
 
             // Create table
-            if ($manager->createObjectContainer($fullClassName)) {
+            $created = $manager->createObjectContainer($fullClassName);
+            if ($created) {
                 $this->output->writeln("<info>  ✓ Created table: {$tableName}</info>");
             } else {
                 $this->output->writeln("<error>  ✗ Failed to create table: {$tableName}</error>");
+
+                // Log xPDO errors
+                $errors = $modx->errorHandler->errors;
+                if (!empty($errors)) {
+                    foreach ($errors as $error) {
+                        $this->output->writeln("<error>    " . print_r($error, true) . "</error>");
+                    }
+                }
             }
         }
 
         $this->output->writeln('<info>MiniShop3 schema creation completed!</info>');
+
+        // Add foreign keys after all tables are created
+        $this->addForeignKeys();
+    }
+
+    /**
+     * Add foreign key constraints
+     */
+    protected function addForeignKeys()
+    {
+        $this->output->writeln('<info>Adding foreign key constraints...</info>');
+
+        $prefix = $this->adapter->getOption('table_prefix');
+
+        // msProductField.section -> msPageSection.id
+        if ($this->hasTable($prefix . 'ms3_product_fields') && $this->hasTable($prefix . 'ms3_page_sections')) {
+            try {
+                $table = $this->table($prefix . 'ms3_product_fields');
+                $table->addForeignKey('section', $prefix . 'ms3_page_sections', 'id', [
+                    'delete' => 'RESTRICT',
+                    'update' => 'CASCADE',
+                    'constraint' => 'fk_product_fields_section',
+                ])->update();
+
+                $this->output->writeln('<info>  ✓ Added FK: ms3_product_fields.section -> ms3_page_sections.id</info>');
+            } catch (\Exception $e) {
+                $this->output->writeln('<comment>  ⚠ FK already exists or error: ' . $e->getMessage() . '</comment>');
+            }
+        }
+
+        $this->output->writeln('<info>Foreign keys setup completed!</info>');
     }
 
     /**

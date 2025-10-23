@@ -33,6 +33,25 @@
       @blur="handleBlur"
     />
 
+    <!-- Checkbox (ExtJS xcheckbox) -->
+    <div v-else-if="fieldConfig.xtype === 'xcheckbox' || fieldConfig.xtype === 'checkbox'">
+      <Checkbox
+        :inputId="fieldConfig.name"
+        v-model="localValue"
+        :disabled="disabled"
+        :binary="true"
+        :trueValue="fieldConfig.inputValue ?? 1"
+        :falseValue="0"
+        @change="handleBlur"
+      />
+      <!-- Скрытое поле для передачи правильного значения в форму -->
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="localValue"
+      />
+    </div>
+
     <!-- Switch / Toggle -->
     <InputSwitch
       v-else-if="fieldConfig.xtype === 'switch'"
@@ -115,6 +134,7 @@
 import { ref, watch, computed } from 'vue'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
+import Checkbox from 'primevue/checkbox'
 import InputSwitch from 'primevue/inputswitch'
 import Textarea from 'primevue/textarea'
 import Dropdown from 'primevue/dropdown'
@@ -163,7 +183,7 @@ const props = defineProps({
  * Определить, является ли поле простым типом (не требует скрытого input)
  */
 const isSimpleField = computed(() => {
-  const simpleTypes = ['textfield', 'numberfield', 'textarea', 'switch', 'checkbox']
+  const simpleTypes = ['textfield', 'numberfield', 'textarea', 'switch', 'checkbox', 'xcheckbox']
   return simpleTypes.includes(props.fieldConfig.xtype)
 })
 

@@ -66,7 +66,7 @@ class MiniShop3Package
      */
     public function process(): modPackageBuilder
     {
-        $this->buildModel();
+//        $this->buildModel();
 
         // Add elements - используем array_filter вместо foreach с continue
         $elements = array_filter(

@@ -20,7 +20,6 @@ class msPageSection extends \MiniShop3\Model\msPageSection
             'engine' => 'InnoDB',
         ],
         'fields' => [
-            'id' => null,
             'page_key' => null,
             'section_key' => null,
             'hidden' => 0,
@@ -31,16 +30,6 @@ class msPageSection extends \MiniShop3\Model\msPageSection
             'updated_at' => null,
         ],
         'fieldMeta' => [
-            'id' => [
-                'dbtype' => 'int',
-                'precision' => '10',
-                'attributes' => 'unsigned',
-                'phptype' => 'integer',
-                'null' => false,
-                'index' => 'pk',
-                'generated' => 'native',
-                'extra' => 'auto_increment',
-            ],
             'page_key' => [
                 'dbtype' => 'varchar',
                 'precision' => '100',
@@ -92,24 +81,46 @@ class msPageSection extends \MiniShop3\Model\msPageSection
                 'extra' => 'on update CURRENT_TIMESTAMP',
             ],
         ],
-        'indexes' => [
-            'PRIMARY' => [
-                'alias' => 'PRIMARY',
-                'primary' => true,
-                'unique' => true,
-                'columns' => ['id'],
+        'composites' => [
+            'ProductFields' => [
+                'class' => 'MiniShop3\\Model\\msProductField',
+                'local' => 'id',
+                'foreign' => 'section',
+                'cardinality' => 'many',
+                'owner' => 'local',
             ],
+        ],
+        'indexes' => [
             'idx_page_section' => [
                 'alias' => 'idx_page_section',
                 'primary' => false,
                 'unique' => true,
-                'columns' => ['page_key', 'section_key'],
+                'type' => 'BTREE',
+                'columns' => [
+                    'page_key' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => false,
+                    ],
+                    'section_key' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => false,
+                    ],
+                ],
             ],
             'idx_page_key' => [
                 'alias' => 'idx_page_key',
                 'primary' => false,
                 'unique' => false,
-                'columns' => ['page_key'],
+                'type' => 'BTREE',
+                'columns' => [
+                    'page_key' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => false,
+                    ],
+                ],
             ],
         ],
     ];

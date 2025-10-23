@@ -19,7 +19,7 @@ class msProductCreateManagerController extends msResourceCreateController
      */
     public function getLanguageTopics()
     {
-        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager'];
+        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager', 'minishop3:vue'];
     }
 
     /**
@@ -109,6 +109,10 @@ class msProductCreateManagerController extends msResourceCreateController
         // Загружаем лексикон явно для гарантии
         $this->modx->lexicon->load('minishop3:product');
 
+        // Загружаем конфигурацию полей из БД через ConfigService
+        $configService = new \MiniShop3\Services\ConfigService($this->modx);
+        $fieldsConfig = $configService->getAllPageFields('product_data');
+
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
@@ -130,6 +134,7 @@ class msProductCreateManagerController extends msResourceCreateController
             'lexicon' => [
                 'ms3_product_data_vue' => $this->modx->lexicon('ms3_product_data_vue'),
             ],
+            'fields_config' => $fieldsConfig, // Конфигурация полей из БД
         ];
 
         $ready = [

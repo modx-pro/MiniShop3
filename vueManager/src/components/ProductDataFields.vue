@@ -91,11 +91,34 @@ async function loadConfig() {
       configResponse.fields.forEach(field => {
         const fieldName = field.name
         if (productDataResponse && productDataResponse[fieldName] !== undefined) {
-          fieldValues.value[fieldName] = productDataResponse[fieldName]
+          let value = productDataResponse[fieldName]
+
+          // Для чекбоксов преобразуем значение в число
+          if (field.xtype === 'xcheckbox' || field.xtype === 'checkbox') {
+            const originalValue = value
+            // Обрабатываем boolean, string и number
+            if (typeof value === 'boolean') {
+              value = value ? 1 : 0
+            } else if (typeof value === 'string') {
+              value = (value === 'true' || value === '1') ? 1 : 0
+            } else {
+              value = parseInt(value) || 0
+            }
+            console.log(`[ProductDataFields] Checkbox ${fieldName}: original="${originalValue}" (type: ${typeof originalValue}), converted=${value}`)
+          }
+
+          fieldValues.value[fieldName] = value
         } else {
-          fieldValues.value[fieldName] = null
+          // Для чекбоксов по умолчанию 0, для остальных null
+          if (field.xtype === 'xcheckbox' || field.xtype === 'checkbox') {
+            fieldValues.value[fieldName] = 0
+          } else {
+            fieldValues.value[fieldName] = null
+          }
         }
       })
+
+      console.log('[ProductDataFields] All field values:', fieldValues.value)
     } else {
       console.error('[ProductDataFields] Invalid response:', configResponse)
       toast.add({
@@ -235,23 +258,45 @@ onMounted(() => {
               <div
                 v-for="field in section.fields"
                 :key="field.name"
-                :class="['field-item', `col-${field.width || 4}`]"
+                :class="['field-item', `col-${field.width || 4}`, { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' }]"
               >
-                <label :for="field.name" class="field-label">
-                  {{ field.label }}
-                  <span v-if="field.required" class="required">*</span>
-                </label>
+                <!-- Checkbox layout: checkbox + label в одну линию -->
+                <template v-if="field.xtype === 'xcheckbox' || field.xtype === 'checkbox'">
+                  <div class="checkbox-wrapper">
+                    <DynamicField
+                      :field-config="field"
+                      v-model="fieldValues[field.name]"
+                      :disabled="loading || saving"
+                      @blur="handleFieldChange(field.name, $event.value)"
+                    />
+                    <label :for="field.name" class="field-label checkbox-label">
+                      {{ field.label }}
+                      <span v-if="field.required" class="required">*</span>
+                    </label>
+                  </div>
+                  <small v-if="field.description" class="field-description">
+                    {{ field.description }}
+                  </small>
+                </template>
 
-                <DynamicField
-                  :field-config="field"
-                  v-model="fieldValues[field.name]"
-                  :disabled="loading || saving"
-                  @blur="handleFieldChange(field.name, $event.value)"
-                />
+                <!-- Обычное поле: label сверху, поле снизу -->
+                <template v-else>
+                  <label :for="field.name" class="field-label">
+                    {{ field.label }}
+                    <span v-if="field.required" class="required">*</span>
+                  </label>
 
-                <small v-if="field.description" class="field-description">
-                  {{ field.description }}
-                </small>
+                  <DynamicField
+                    :field-config="field"
+                    v-model="fieldValues[field.name]"
+                    :disabled="loading || saving"
+                    @blur="handleFieldChange(field.name, $event.value)"
+                  />
+
+                  <small v-if="field.description" class="field-description">
+                    {{ field.description }}
+                  </small>
+                </template>
               </div>
             </div>
           </Fieldset>
@@ -325,6 +370,23 @@ onMounted(() => {
 .field-label .required {
   color: #e24c4c;
   margin-left: 2px;
+}
+
+/* Чекбокс: горизонтальное расположение */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-wrapper :deep(.field-wrapper) {
+  width: auto;
+}
+
+.checkbox-label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
 }
 
 .field-description {

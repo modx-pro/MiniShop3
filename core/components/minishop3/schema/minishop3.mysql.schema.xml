@@ -565,27 +565,6 @@
         </index>
     </object>
 
-    <object class="msFieldConfigOverride" table="ms3_field_config_overrides" extends="xPDO\Om\xPDOSimpleObject">
-        <field key="page_key" dbtype="varchar" precision="100" phptype="string" null="false" />
-        <field key="field_name" dbtype="varchar" precision="100" phptype="string" null="false" />
-        <field key="hidden" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
-        <field key="sort_order" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
-        <field key="config" dbtype="text" phptype="json" null="true" />
-        <field key="context_key" dbtype="varchar" precision="50" phptype="string" null="false" default="web"/>
-        <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
-        <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
-
-        <index alias="idx_page_field_context" name="idx_page_field_context" primary="false" unique="true" type="BTREE">
-            <column key="page_key" length="" collation="A" null="false"/>
-            <column key="field_name" length="" collation="A" null="false"/>
-            <column key="context_key" length="" collation="A" null="false"/>
-        </index>
-        <index alias="idx_page_context" name="idx_page_context" primary="false" unique="false" type="BTREE">
-            <column key="page_key" length="" collation="A" null="false"/>
-            <column key="context_key" length="" collation="A" null="false"/>
-        </index>
-    </object>
-
     <object class="msPageSection" table="ms3_page_sections" extends="xPDO\Om\xPDOSimpleObject">
         <field key="page_key" dbtype="varchar" precision="100" phptype="string" null="false" />
         <field key="section_key" dbtype="varchar" precision="100" phptype="string" null="false" />
@@ -595,6 +574,8 @@
         <field key="is_default" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
         <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
         <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
+
+        <composite alias="ProductFields" class="MiniShop3\Model\msProductField" local="id" foreign="section" cardinality="many" owner="local"/>
 
         <index alias="idx_page_section" name="idx_page_section" primary="false" unique="true" type="BTREE">
             <column key="page_key" length="" collation="A" null="false"/>
@@ -609,7 +590,7 @@
         <field key="name" dbtype="varchar" precision="100" phptype="string" null="false" />
         <field key="label" dbtype="varchar" precision="255" phptype="string" null="true" />
         <field key="xtype" dbtype="varchar" precision="50" phptype="string" null="false" default="textfield"/>
-        <field key="section" dbtype="varchar" precision="100" phptype="string" null="true" />
+        <field key="section" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" />
         <field key="visible" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
         <field key="required" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
         <field key="sort_order" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
@@ -620,6 +601,8 @@
         <field key="is_default" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
         <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
         <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
+
+        <aggregate alias="Section" class="MiniShop3\Model\msPageSection" local="section" foreign="id" cardinality="one" owner="foreign"/>
 
         <index alias="idx_unique_name" name="idx_unique_name" primary="false" unique="true" type="BTREE">
             <column key="name" length="" collation="A" null="false"/>

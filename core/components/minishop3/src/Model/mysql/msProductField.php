@@ -20,7 +20,6 @@ class msProductField extends \MiniShop3\Model\msProductField
             'engine' => 'InnoDB',
         ],
         'fields' => [
-            'id' => null,
             'name' => null,
             'label' => null,
             'xtype' => 'textfield',
@@ -37,16 +36,6 @@ class msProductField extends \MiniShop3\Model\msProductField
             'updated_at' => null,
         ],
         'fieldMeta' => [
-            'id' => [
-                'dbtype' => 'int',
-                'precision' => '10',
-                'attributes' => 'unsigned',
-                'phptype' => 'integer',
-                'null' => false,
-                'index' => 'pk',
-                'generated' => 'native',
-                'extra' => 'auto_increment',
-            ],
             'name' => [
                 'dbtype' => 'varchar',
                 'precision' => '100',
@@ -67,10 +56,11 @@ class msProductField extends \MiniShop3\Model\msProductField
                 'default' => 'textfield',
             ],
             'section' => [
-                'dbtype' => 'varchar',
-                'precision' => '100',
-                'phptype' => 'string',
-                'null' => true,
+                'dbtype' => 'int',
+                'precision' => '10',
+                'attributes' => 'unsigned',
+                'phptype' => 'integer',
+                'null' => false,
             ],
             'visible' => [
                 'dbtype' => 'tinyint',
@@ -137,30 +127,59 @@ class msProductField extends \MiniShop3\Model\msProductField
                 'extra' => 'on update CURRENT_TIMESTAMP',
             ],
         ],
-        'indexes' => [
-            'PRIMARY' => [
-                'alias' => 'PRIMARY',
-                'primary' => true,
-                'unique' => true,
-                'columns' => ['id'],
+        'aggregates' => [
+            'Section' => [
+                'class' => 'MiniShop3\\Model\\msPageSection',
+                'local' => 'section',
+                'foreign' => 'id',
+                'cardinality' => 'one',
+                'owner' => 'foreign',
             ],
+        ],
+        'indexes' => [
             'idx_unique_name' => [
                 'alias' => 'idx_unique_name',
                 'primary' => false,
                 'unique' => true,
-                'columns' => ['name'],
+                'type' => 'BTREE',
+                'columns' => [
+                    'name' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => false,
+                    ],
+                ],
             ],
             'idx_section' => [
                 'alias' => 'idx_section',
                 'primary' => false,
                 'unique' => false,
-                'columns' => ['section'],
+                'type' => 'BTREE',
+                'columns' => [
+                    'section' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => false,
+                    ],
+                ],
             ],
             'idx_visible_sort' => [
                 'alias' => 'idx_visible_sort',
                 'primary' => false,
                 'unique' => false,
-                'columns' => ['visible', 'sort_order'],
+                'type' => 'BTREE',
+                'columns' => [
+                    'visible' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => false,
+                    ],
+                    'sort_order' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => false,
+                    ],
+                ],
             ],
         ],
     ];

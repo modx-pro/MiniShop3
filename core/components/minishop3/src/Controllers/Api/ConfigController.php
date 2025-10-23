@@ -96,7 +96,7 @@ class ConfigController extends BaseApiController
                 return Response::success([
                     'message' => 'Configuration saved successfully',
                 ]);
-            } else {
+            } else{
                 return Response::error('Failed to save configuration', 500);
             }
         } catch (\Exception $e) {

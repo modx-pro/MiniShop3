@@ -30,6 +30,7 @@ class ConfigService
 
     /**
      * Получить конфигурацию полей страницы с примененными переопределениями
+     * Возвращает только ВИДИМЫЕ поля и секции для отображения в форме
      *
      * @param string $pageKey Ключ страницы (product_data, product_gallery и т.д.)
      * @param string $contextKey Ключ контекста (по умолчанию: web)
@@ -38,17 +39,29 @@ class ConfigService
      */
     public function getPageFields(string $pageKey, string $contextKey = 'web'): array
     {
-        // Загружаем JSON конфиг, чтобы получить model_alias
-        $jsonConfigPath = MODX_CORE_PATH . 'components/minishop3/config/pages/' . $pageKey . '.json';
-        $modelAlias = null;
+        // Получаем все поля из БД
+        $allFields = $this->getAllPageFields($pageKey, $contextKey);
 
-        if (file_exists($jsonConfigPath)) {
-            $jsonContent = file_get_contents($jsonConfigPath);
-            $jsonConfig = json_decode($jsonContent, true);
-            $modelAlias = $jsonConfig['model_alias'] ?? null;
+        // Фильтруем только видимые поля (hidden = false)
+        $visibleFields = array_filter($allFields['fields'], function($field) {
+            return !($field['hidden'] ?? false);
+        });
+
+        // Загружаем секции
+        $sections = $this->getSections($pageKey, $contextKey);
+
+        // Преобразуем секции в ассоциативный массив по ID для быстрого доступа
+        $sectionsById = [];
+        foreach ($sections as $section) {
+            if (!($section['hidden'] ?? false)) { // Только видимые секции
+                $sectionsById[$section['id']] = $section;
+            }
         }
 
-        return $this->fieldConfigManager->getPageFieldsConfig($pageKey, $modelAlias);
+        return [
+            'fields' => array_values($visibleFields), // Перенумеровываем индексы
+            'sections' => $sectionsById
+        ];
     }
 
     /**
@@ -78,16 +91,45 @@ class ConfigService
                 $config = [];
             }
 
+            $fieldName = $field->get('name');
+            $labelFromDb = $field->get('label');
+            $descriptionFromDb = $field->get('description');
+
+            // Приоритет: 1) БД, 2) лексикон, 3) fallback (name)
+
+            // Label с учетом приоритетов
+            if (!empty($labelFromDb)) {
+                // Приоритет 1: из колонки label в БД
+                $label = $labelFromDb;
+            } else {
+                // Приоритет 2-3: из лексикона или fallback на name
+                $lexiconKey = 'ms3_product_' . $fieldName;
+                $labelFromLexicon = $this->getLexiconValue($lexiconKey, 'minishop3', 'product');
+                $label = ($labelFromLexicon === $lexiconKey) ? $fieldName : $labelFromLexicon;
+            }
+
+            // Description с учетом приоритетов
+            if (!empty($descriptionFromDb)) {
+                // Приоритет 1: из колонки description в БД
+                $description = $descriptionFromDb;
+            } else {
+                // Приоритет 2: из лексикона или пустая строка
+                $lexiconKey = 'ms3_product_' . $fieldName . '_help';
+                $descriptionFromLexicon = $this->getLexiconValue($lexiconKey, 'minishop3', 'product');
+                $description = ($descriptionFromLexicon === $lexiconKey) ? '' : $descriptionFromLexicon;
+            }
+
             $fieldData = [
-                'name' => $field->get('name'),
-                'label' => $field->get('label'),
+                'name' => $fieldName,
+                'label' => $label,
                 'xtype' => $field->get('xtype'),
                 'section' => $field->get('section'),
-                'hidden' => !(bool)$field->get('visible'), // Преобразуем visible → hidden для фронтенда
+                'hidden' => !(bool)$field->get('visible'), // Legacy для обратной совместимости
+                'visible' => (bool)$field->get('visible'), // Новый формат
                 'required' => (bool)$field->get('required'),
                 'sort_order' => (int)$field->get('sort_order'),
                 'width' => (int)$field->get('width'),
-                'description' => $field->get('description'),
+                'description' => $description,
                 'is_system' => (bool)$field->get('is_system'),
                 'is_default' => (bool)$field->get('is_default'),
             ];
@@ -137,9 +179,13 @@ class ConfigService
                 }
 
                 // Обновляем основные параметры
-                if (isset($fieldData['hidden'])) {
-                    // Преобразуем hidden → visible для БД
-                    $field->set('visible', !(bool)$fieldData['hidden']);
+                // Поддерживаем оба варианта: hidden (legacy) и visible (новый)
+                if (isset($fieldData['visible'])) {
+                    // Преобразуем в integer для БД (0 или 1)
+                    $field->set('visible', $fieldData['visible'] ? 1 : 0);
+                } elseif (isset($fieldData['hidden'])) {
+                    // Преобразуем hidden → visible для БД (обратная совместимость)
+                    $field->set('visible', $fieldData['hidden'] ? 0 : 1);
                 }
 
                 if (isset($fieldData['sort_order'])) {
@@ -201,6 +247,7 @@ class ConfigService
     /**
      * Удалить переопределение для конкретного поля
      *
+     * @deprecated Таблица ms3_field_config_overrides удалена. Используйте ms3_product_fields для управления полями
      * @param string $pageKey Ключ страницы
      * @param string $fieldName Имя поля
      * @param string $contextKey Ключ контекста (по умолчанию: web)
@@ -208,7 +255,11 @@ class ConfigService
      */
     public function removeFieldOverride(string $pageKey, string $fieldName, string $contextKey = 'web'): bool
     {
-        return $this->configManager->removeFieldOverride($pageKey, $fieldName, $contextKey);
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            'ConfigService::removeFieldOverride() is deprecated. Table ms3_field_config_overrides has been removed. Use ms3_product_fields instead.'
+        );
+        return true;
     }
 
     /**
@@ -284,6 +335,7 @@ class ConfigService
             $config = is_array($configRaw) ? $configRaw : (is_string($configRaw) ? json_decode($configRaw, true) : []);
 
             $section = [
+                'id' => (int)$item->get('id'),
                 'key' => $item->get('section_key'),
                 'lexicon_key' => $config['lexicon_key'] ?? '',
                 'sort_order' => (int)$item->get('sort_order'),

@@ -3,7 +3,6 @@
 namespace MiniShop3\Services;
 
 use MODX\Revolution\modX;
-use MiniShop3\Model\msFieldConfigOverride;
 
 /**
  * Сервис для работы с конфигурацией полей
@@ -82,22 +81,9 @@ class ConfigManager
      */
     protected function loadOverrides(string $pageKey, string $contextKey): array
     {
-        $overrides = [];
-
-        $items = $this->modx->getIterator(msFieldConfigOverride::class, [
-            'page_key' => $pageKey,
-            'context_key' => $contextKey,
-        ]);
-
-        foreach ($items as $item) {
-            $overrides[$item->get('field_name')] = [
-                'hidden' => (bool)$item->get('hidden'),
-                'sort_order' => (int)$item->get('sort_order'),
-                'config' => $item->getConfig(),
-            ];
-        }
-
-        return $overrides;
+        // msFieldConfigOverride таблица удалена - переопределения больше не поддерживаются
+        // Используйте ms3_product_fields для управления полями
+        return [];
     }
 
     /**
@@ -206,6 +192,7 @@ class ConfigManager
     /**
      * Сохранить переопределение для поля
      *
+     * @deprecated Таблица ms3_field_config_overrides удалена. Используйте ms3_product_fields для управления полями
      * @param string $pageKey Ключ страницы
      * @param string $fieldName Имя поля
      * @param array $override Данные переопределения
@@ -214,39 +201,17 @@ class ConfigManager
      */
     public function saveFieldOverride(string $pageKey, string $fieldName, array $override, string $contextKey = 'web'): bool
     {
-        // Ищем существующее переопределение
-        $existing = $this->modx->getObject(msFieldConfigOverride::class, [
-            'page_key' => $pageKey,
-            'field_name' => $fieldName,
-            'context_key' => $contextKey,
-        ]);
-
-        if (!$existing) {
-            $existing = $this->modx->newObject(msFieldConfigOverride::class);
-            $existing->set('page_key', $pageKey);
-            $existing->set('field_name', $fieldName);
-            $existing->set('context_key', $contextKey);
-        }
-
-        // Устанавливаем значения
-        if (isset($override['hidden'])) {
-            $existing->set('hidden', (bool)$override['hidden']);
-        }
-
-        if (isset($override['sort_order'])) {
-            $existing->set('sort_order', (int)$override['sort_order']);
-        }
-
-        if (isset($override['config']) && is_array($override['config'])) {
-            $existing->setConfig($override['config']);
-        }
-
-        return $existing->save();
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            'ConfigManager::saveFieldOverride() is deprecated. Table ms3_field_config_overrides has been removed. Use ms3_product_fields instead.'
+        );
+        return true;
     }
 
     /**
      * Удалить переопределение для поля
      *
+     * @deprecated Таблица ms3_field_config_overrides удалена. Используйте ms3_product_fields для управления полями
      * @param string $pageKey Ключ страницы
      * @param string $fieldName Имя поля
      * @param string $contextKey Ключ контекста
@@ -254,22 +219,17 @@ class ConfigManager
      */
     public function removeFieldOverride(string $pageKey, string $fieldName, string $contextKey = 'web'): bool
     {
-        $existing = $this->modx->getObject(msFieldConfigOverride::class, [
-            'page_key' => $pageKey,
-            'field_name' => $fieldName,
-            'context_key' => $contextKey,
-        ]);
-
-        if ($existing) {
-            return $existing->remove();
-        }
-
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            'ConfigManager::removeFieldOverride() is deprecated. Table ms3_field_config_overrides has been removed. Use ms3_product_fields instead.'
+        );
         return true;
     }
 
     /**
      * Сохранить массовые переопределения (например, при сортировке)
      *
+     * @deprecated Таблица ms3_field_config_overrides удалена. Используйте ms3_product_fields для управления полями
      * @param string $pageKey Ключ страницы
      * @param array $fields Массив полей с переопределениями
      * @param string $contextKey Ключ контекста
@@ -277,33 +237,10 @@ class ConfigManager
      */
     public function saveFieldsConfig(string $pageKey, array $fields, string $contextKey = 'web'): bool
     {
-        $success = true;
-
-        foreach ($fields as $index => $field) {
-            $fieldName = $field['name'] ?? null;
-            if (!$fieldName) {
-                continue;
-            }
-
-            $override = [
-                'sort_order' => $index,
-                'hidden' => $field['hidden'] ?? false,
-                'config' => [],
-            ];
-
-            // Собираем дополнительные переопределения
-            $configKeys = ['label', 'xtype', 'description', 'width'];
-            foreach ($configKeys as $key) {
-                if (isset($field[$key])) {
-                    $override['config'][$key] = $field[$key];
-                }
-            }
-
-            if (!$this->saveFieldOverride($pageKey, $fieldName, $override, $contextKey)) {
-                $success = false;
-            }
-        }
-
-        return $success;
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            'ConfigManager::saveFieldsConfig() is deprecated. Table ms3_field_config_overrides has been removed. Use ms3_product_fields instead.'
+        );
+        return true;
     }
 }

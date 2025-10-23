@@ -23,7 +23,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
      */
     public function getLanguageTopics()
     {
-        return ['minishop3:default', 'minishop3:product', 'minishop3:manager'];
+        return ['minishop3:default', 'minishop3:product', 'minishop3:manager', 'minishop3:vue'];
     }
 
     /**
@@ -51,15 +51,9 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         $config = $this->ms3->config;
 
-        // Загружаем лексикон для Vue виджета
-        // Принудительно загружаем русский лексикон, если язык пользователя не установлен
-        $language = $this->modx->user ? $this->modx->user->getOption('manager_language') : null;
-        if (!$language) {
-            $language = $this->modx->getOption('cultureKey', null, 'ru');
-        }
-
-        // Загружаем отдельный топик для Vue виджетов
-        $this->modx->lexicon->load($language . ':minishop3:vue');
+        // Принудительно перезагружаем топик vue
+        $this->modx->lexicon->clearCache('minishop3:vue');
+        $this->modx->lexicon->load('minishop3:vue');
 
         // Добавляем лексиконы для Vue виджета
         $lexiconKeys = [
@@ -68,7 +62,16 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
             'section_delete_btn', 'section_cancel_btn', 'save_changes',
             'save_success', 'save_error', 'sections_saved', 'section_deleted',
             'loading', 'error_loading_sections', 'error_deleting_section',
-            'error_saving_sections', 'visible', 'section_key', 'section_label', 'actions'
+            'error_saving_sections', 'visible', 'section_key', 'section_label', 'actions',
+            // Редактирование поля
+            'field_edit_title', 'field_xtype', 'field_xtype_readonly',
+            'field_section', 'field_section_help', 'field_section_placeholder',
+            'field_label', 'field_label_placeholder', 'field_label_help',
+            'field_width', 'field_width_placeholder', 'field_width_help',
+            'field_placeholder', 'field_placeholder_placeholder',
+            'field_description', 'field_description_placeholder',
+            'field_visible', 'field_visible_help',
+            'field_save', 'field_cancel', 'field_saved'
         ];
 
         $config['lexicon'] = [];

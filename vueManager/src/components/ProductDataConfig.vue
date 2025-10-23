@@ -44,17 +44,6 @@ const newSection = ref({
   sort_order: 999
 })
 
-// Опции для выбора типа поля
-const xtypeOptions = [
-  { label: 'Текстовое поле', value: 'textfield' },
-  { label: 'Число', value: 'numberfield' },
-  { label: 'Текстовая область', value: 'textarea' },
-  { label: 'Переключатель', value: 'switch' },
-  { label: 'Выпадающий список', value: 'combobox' },
-  { label: 'Дата', value: 'datefield' },
-  { label: 'Цвет', value: 'colorpicker' }
-]
-
 /**
  * Опции для выбора секции (computed)
  * Формируется из загруженных секций, показываем только !hidden
@@ -67,12 +56,21 @@ const availableSectionOptions = computed(() => {
     .forEach(section => {
       options.push({
         label: section.label || section.key,
-        value: section.key
+        value: section.id  // Используем ID вместо key, т.к. в БД section - это FK на id
       })
     })
 
   return options
 })
+
+/**
+ * Получить label секции по ID
+ */
+function getSectionLabel(sectionId) {
+  if (!sectionId) return 'Без секции'
+  const section = sections.value.find(s => s.id === sectionId)
+  return section ? (section.label || section.key) : `ID: ${sectionId}`
+}
 
 /**
  * Загрузить секции из конфига
@@ -305,7 +303,11 @@ async function loadFields() {
 
     if (response && response.fields) {
       // API уже возвращает поля с hidden и sort_order
-      fields.value = response.fields
+      // Убеждаемся, что все поля имеют visible (дефолт true)
+      fields.value = response.fields.map(field => ({
+        ...field,
+        visible: field.visible !== undefined ? field.visible : true
+      }))
     } else {
       console.error('[ProductDataConfig] Invalid response:', response)
       toast.add({
@@ -388,7 +390,14 @@ function onRowReorder(event) {
  */
 function openEditDialog(field, index) {
   // Создаем копию поля для редактирования
-  editingField.value = { ...field }
+  editingField.value = {
+    ...field,
+    // Преобразуем visible: 0/1 (number) или true/false (boolean) в boolean
+    // По умолчанию true если не задано
+    visible: field.visible !== undefined && field.visible !== null
+      ? Boolean(Number(field.visible))
+      : true
+  }
   editingFieldIndex.value = index
   editDialogVisible.value = true
 }
@@ -403,21 +412,51 @@ function closeEditDialog() {
 }
 
 /**
- * Применить изменения (без сохранения на сервер)
+ * Сохранить изменения поля в БД
  */
-function applyFieldChanges() {
+async function saveFieldChanges() {
   if (editingFieldIndex.value >= 0 && editingField.value) {
-    // Обновляем поле в массиве
-    fields.value[editingFieldIndex.value] = { ...editingField.value }
+    saving.value = true
 
-    toast.add({
-      severity: 'success',
-      summary: 'Изменения применены',
-      detail: 'Не забудьте сохранить конфигурацию',
-      life: 3000
-    })
+    try {
+      // Обновляем поле в массиве
+      fields.value[editingFieldIndex.value] = { ...editingField.value }
 
-    closeEditDialog()
+      // Сохраняем всю конфигурацию на сервер
+      const fieldsToSave = fields.value.map((field, index) => ({
+        ...field,
+        sort_order: index,
+        // Убеждаемся, что visible присутствует во всех полях (дефолт true)
+        visible: field.visible !== undefined ? field.visible : true
+      }))
+
+      const response = await request.put(
+        `/api/mgr/config/page-fields/${pageKey}`,
+        { fields: fieldsToSave }
+      )
+
+      toast.add({
+        severity: 'success',
+        summary: _('save_success'),
+        detail: _('field_saved'),
+        life: 3000
+      })
+
+      closeEditDialog()
+
+      // Перезагружаем поля для синхронизации с БД
+      await loadFields()
+    } catch (error) {
+      console.error('[ProductDataConfig] Error saving:', error)
+      toast.add({
+        severity: 'error',
+        summary: 'Ошибка',
+        detail: error.message || 'Ошибка сохранения',
+        life: 5000
+      })
+    } finally {
+      saving.value = false
+    }
   }
 }
 
@@ -535,7 +574,13 @@ onMounted(() => {
 
           <Column field="label" header="Название" style="width: 200px;" />
 
-          <Column field="xtype" header="Тип" style="width: 200px;" />
+          <Column field="xtype" header="Тип" style="width: 150px;" />
+
+          <Column header="Секция" style="width: 150px;">
+            <template #body="{ data }">
+              {{ getSectionLabel(data.section) }}
+            </template>
+          </Column>
 
           <Column field="description" header="Описание" />
 
@@ -635,85 +680,100 @@ onMounted(() => {
     <Dialog
       v-model:visible="editDialogVisible"
       modal
-      :header="editingField ? `Редактирование поля: ${editingField.name}` : 'Редактирование поля'"
+      :header="editingField ? `${_('field_edit_title')}: ${editingField.name}` : _('field_edit_title')"
       :style="{ width: '600px' }"
     >
       <div v-if="editingField" class="edit-field-form">
         <div class="form-grid">
-          <!-- Тип поля -->
+          <!-- Тип поля (только для чтения) -->
           <div class="field col-6">
-            <label for="field-xtype">Тип поля</label>
-            <Dropdown
+            <label for="field-xtype">{{ _('field_xtype') }}</label>
+            <InputText
               id="field-xtype"
               v-model="editingField.xtype"
-              :options="xtypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Выберите тип поля"
+              disabled
               class="w-full"
             />
+            <small>{{ _('field_xtype_readonly') }}</small>
           </div>
 
           <!-- Секция -->
           <div class="field col-6">
-            <label for="field-section">Секция</label>
+            <label for="field-section">{{ _('field_section') }}</label>
             <Dropdown
               id="field-section"
               v-model="editingField.section"
               :options="availableSectionOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Выберите секцию"
+              :placeholder="_('field_section_placeholder')"
               showClear
               class="w-full"
             />
-            <small>Группировка полей в Fieldset'ы</small>
+            <small>{{ _('field_section_help') }}</small>
           </div>
 
           <!-- Название (Label) -->
           <div class="field col-6">
-            <label for="field-label">Название</label>
+            <label for="field-label">{{ _('field_label') }}</label>
             <InputText
               id="field-label"
               v-model="editingField.label"
-              placeholder="Отображаемое название поля"
+              :placeholder="_('field_label_placeholder')"
               class="w-full"
             />
-            <small>Переопределяет перевод из лексикона</small>
+            <small>{{ _('field_label_help') }}</small>
           </div>
 
           <!-- Ширина -->
           <div class="field col-6">
-            <label for="field-width">Ширина (колонки)</label>
+            <label for="field-width">{{ _('field_width') }}</label>
             <InputNumber
               id="field-width"
               v-model="editingField.width"
               :min="1"
               :max="12"
-              placeholder="1-12 (по умолчанию: 4)"
+              :placeholder="_('field_width_placeholder')"
               class="w-full"
             />
-            <small>12-колоночная сетка (4 = 33.33% ширины)</small>
+            <small>{{ _('field_width_help') }}</small>
           </div>
 
           <!-- Placeholder -->
           <div class="field col-6">
-            <label for="field-placeholder">Placeholder</label>
+            <label for="field-placeholder">{{ _('field_placeholder') }}</label>
             <InputText
               id="field-placeholder"
               v-model="editingField.placeholder"
-              placeholder="Текст-подсказка в пустом поле"
+              :placeholder="_('field_placeholder_placeholder')"
               class="w-full"
             />
           </div>
 
+          <!-- Видимость -->
+          <div class="field col-6 field-checkbox">
+            <div class="checkbox-wrapper">
+              <Checkbox
+                inputId="field-visible"
+                v-model="editingField.visible"
+                :binary="true"
+                :trueValue="true"
+                :falseValue="false"
+              />
+              <label for="field-visible" class="field-label checkbox-label">
+                {{ _('field_visible') }}
+              </label>
+            </div>
+            <small>{{ _('field_visible_help') }}</small>
+          </div>
+
           <!-- Описание - на всю ширину -->
           <div class="field col-12">
-            <label for="field-description">Описание</label>
+            <label for="field-description">{{ _('field_description') }}</label>
             <Textarea
               id="field-description"
               v-model="editingField.description"
-              placeholder="Подсказка для пользователя"
+              :placeholder="_('field_description_placeholder')"
               :rows="3"
               class="w-full"
             />
@@ -723,15 +783,17 @@ onMounted(() => {
 
       <template #footer>
         <Button
-          label="Отмена"
+          :label="_('field_cancel')"
           icon="pi pi-times"
           severity="secondary"
           @click="closeEditDialog"
+          :disabled="saving"
         />
         <Button
-          label="Применить"
-          icon="pi pi-check"
-          @click="applyFieldChanges"
+          :label="_('field_save')"
+          icon="pi pi-save"
+          @click="saveFieldChanges"
+          :loading="saving"
         />
       </template>
     </Dialog>
@@ -811,5 +873,20 @@ p {
 .p-dialog .col-12 {
   flex: 0 0 calc(100% - 16px);
   max-width: calc(100% - 16px);
+}
+
+/* Чекбокс в модальном окне */
+.vueApp .edit-field-form .checkbox-wrapper,
+.p-dialog .edit-field-form .checkbox-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.vueApp .edit-field-form .checkbox-label,
+.p-dialog .edit-field-form .checkbox-label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
 }
 </style>

@@ -3,7 +3,6 @@
 namespace MiniShop3\Services;
 
 use MODX\Revolution\modX;
-use MiniShop3\Model\msFieldConfigOverride;
 
 /**
  * Универсальный сервис для работы с полями моделей
@@ -243,12 +242,8 @@ class FieldConfigManager
         // 3. Мерджим: поля модели + переопределения из JSON
         $baseFields = $this->mergeModelWithJson($modelFields, $jsonFields);
 
-        // 4. Применяем переопределения из БД
-        $overrides = $this->loadDatabaseOverrides($pageKey, $contextKey);
-        $finalFields = $this->applyDatabaseOverrides($baseFields, $overrides);
-
-        // 5. Применяем лексикон к label и description
-        $finalFields = $this->applyLexicon($finalFields);
+        // 4. Применяем лексикон к label и description
+        $finalFields = $this->applyLexicon($baseFields);
 
         // 6. Загружаем и обрабатываем секции
         $sections = $this->processSections($jsonConfig['sections'] ?? []);
@@ -290,33 +285,6 @@ class FieldConfigManager
     }
 
     /**
-     * Загрузить переопределения из БД
-     *
-     * @param string $pageKey
-     * @param string $contextKey
-     * @return array
-     */
-    protected function loadDatabaseOverrides(string $pageKey, string $contextKey): array
-    {
-        $overrides = [];
-
-        $items = $this->modx->getIterator(msFieldConfigOverride::class, [
-            'page_key' => $pageKey,
-            'context_key' => $contextKey,
-        ]);
-
-        foreach ($items as $item) {
-            $overrides[$item->get('field_name')] = [
-                'hidden' => (bool)$item->get('hidden'),
-                'sort_order' => (int)$item->get('sort_order'),
-                'config' => $item->getConfig(),
-            ];
-        }
-
-        return $overrides;
-    }
-
-    /**
      * Мерджить поля модели с JSON конфигом
      *
      * @param array $modelFields Поля из модели
@@ -354,55 +322,9 @@ class FieldConfigManager
     }
 
     /**
-     * Применить переопределения из БД
-     *
-     * @param array $fields
-     * @param array $overrides
-     * @return array
-     */
-    protected function applyDatabaseOverrides(array $fields, array $overrides): array
-    {
-        $result = [];
-
-        foreach ($fields as $field) {
-            $fieldName = $field['name'] ?? null;
-            if (!$fieldName) {
-                continue;
-            }
-
-            // Применяем override из БД, если существует
-            if (isset($overrides[$fieldName])) {
-                $override = $overrides[$fieldName];
-
-                // Пропускаем скрытые поля
-                if ($override['hidden']) {
-                    continue;
-                }
-
-                // Применяем config из БД
-                if (!empty($override['config'])) {
-                    $field = array_merge($field, $override['config']);
-                }
-
-                $field['sort_order'] = $override['sort_order'];
-            } else {
-                $field['sort_order'] = $field['sort_order'] ?? 0;
-            }
-
-            $result[] = $field;
-        }
-
-        // Сортируем по sort_order
-        usort($result, function($a, $b) {
-            return ($a['sort_order'] ?? 0) <=> ($b['sort_order'] ?? 0);
-        });
-
-        return $result;
-    }
-
-    /**
      * Сохранить конфигурацию полей в БД
      *
+     * @deprecated Таблица ms3_field_config_overrides удалена. Используйте ConfigService::saveFieldsConfig() для работы с ms3_product_fields
      * @param string $pageKey
      * @param array $fields
      * @param string $contextKey
@@ -410,7 +332,11 @@ class FieldConfigManager
      */
     public function saveFieldsConfig(string $pageKey, array $fields, string $contextKey = 'web'): bool
     {
-        return $this->configManager->saveFieldsConfig($pageKey, $fields, $contextKey);
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            'FieldConfigManager::saveFieldsConfig() is deprecated. Use ConfigService::saveFieldsConfig() for ms3_product_fields instead.'
+        );
+        return true;
     }
 
     /**

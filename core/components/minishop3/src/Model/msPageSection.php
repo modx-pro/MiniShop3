@@ -7,6 +7,7 @@ use xPDO\Om\xPDOSimpleObject;
 /**
  * Class msPageSection
  *
+ * @property int $id
  * @property string $page_key
  * @property string $section_key
  * @property bool $hidden
@@ -15,6 +16,8 @@ use xPDO\Om\xPDOSimpleObject;
  * @property bool $is_default
  * @property string $created_at
  * @property string $updated_at
+ *
+ * @property msProductField[] $ProductFields Related product fields in this section
  *
  * @package MiniShop3\Model
  */

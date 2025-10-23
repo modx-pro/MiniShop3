@@ -11,7 +11,7 @@ use xPDO\Om\xPDOSimpleObject;
  * @property string $name
  * @property string|null $label
  * @property string $xtype
- * @property string|null $section
+ * @property int $section Foreign key to msPageSection
  * @property bool $visible
  * @property bool $required
  * @property int $sort_order
@@ -22,6 +22,8 @@ use xPDO\Om\xPDOSimpleObject;
  * @property bool $is_default
  * @property string $created_at
  * @property string|null $updated_at
+ *
+ * @property msPageSection $Section Related section object
  *
  * @package MiniShop3\Model
  */
