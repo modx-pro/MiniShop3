@@ -104,7 +104,6 @@ async function loadConfig() {
             } else {
               value = parseInt(value) || 0
             }
-            console.log(`[ProductDataFields] Checkbox ${fieldName}: original="${originalValue}" (type: ${typeof originalValue}), converted=${value}`)
           }
 
           fieldValues.value[fieldName] = value
@@ -117,8 +116,6 @@ async function loadConfig() {
           }
         }
       })
-
-      console.log('[ProductDataFields] All field values:', fieldValues.value)
     } else {
       console.error('[ProductDataFields] Invalid response:', configResponse)
       toast.add({

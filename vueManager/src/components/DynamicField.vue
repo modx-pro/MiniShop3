@@ -22,10 +22,10 @@
       :disabled="disabled"
       :min="fieldConfig.props?.min"
       :max="fieldConfig.props?.max"
-      :minFractionDigits="fieldConfig.props?.minFractionDigits"
-      :maxFractionDigits="fieldConfig.props?.maxFractionDigits"
-      :useGrouping="fieldConfig.props?.useGrouping ?? true"
-      :locale="fieldConfig.props?.locale ?? 'ru-RU'"
+      :minFractionDigits="fieldConfig.props?.minFractionDigits ?? 0"
+      :maxFractionDigits="fieldConfig.props?.maxFractionDigits ?? 2"
+      :useGrouping="false"
+      :locale="fieldConfig.props?.locale ?? 'en-US'"
       :mode="fieldConfig.props?.mode ?? 'decimal'"
       :currency="fieldConfig.props?.currency"
       :suffix="fieldConfig.props?.suffix"
@@ -112,6 +112,71 @@
       @change="handleBlur"
     />
 
+    <!-- Vendor combo (ms3-combo-vendor) -->
+    <template v-else-if="fieldConfig.xtype === 'ms3-combo-vendor'">
+      <VendorCombo
+        :inputId="fieldConfig.name"
+        v-model="localValue"
+        :placeholder="fieldConfig.placeholder || 'Выберите производителя'"
+        :disabled="disabled"
+        @change="handleBlur"
+      />
+      <!-- Скрытое поле для отправки значения в ExtJS форму -->
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="localValue || ''"
+      />
+    </template>
+
+    <!-- Autocomplete combo (ms3-combo-autocomplete) -->
+    <template v-else-if="fieldConfig.xtype === 'ms3-combo-autocomplete'">
+      <AutocompleteCombo
+        :inputId="fieldConfig.name"
+        :fieldName="fieldConfig.name"
+        v-model="localValue"
+        :placeholder="fieldConfig.placeholder || 'Начните вводить...'"
+        :disabled="disabled"
+        @change="handleBlur"
+      />
+      <!-- Скрытое поле для отправки значения в ExtJS форму -->
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="localValue || ''"
+      />
+    </template>
+
+    <!-- Options chips (ms3-combo-options) -->
+    <template v-else-if="fieldConfig.xtype === 'ms3-combo-options'">
+      <OptionsChips
+        :inputId="fieldConfig.name"
+        :optionKey="fieldConfig.name"
+        v-model="localValue"
+        :placeholder="fieldConfig.placeholder || 'Добавьте опции...'"
+        :disabled="disabled"
+        @change="handleBlur"
+      />
+      <!-- Скрытые поля для отправки массива значений в ExtJS форму -->
+      <template v-if="Array.isArray(localValue) && localValue.length > 0">
+        <input
+          v-for="(val, index) in localValue"
+          :key="index"
+          type="hidden"
+          :name="`${fieldConfig.name}[]`"
+          :value="val"
+        />
+      </template>
+    </template>
+
+    <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
+    <!-- For now, we display them as simple text info since editing happens in ExtJS form -->
+    <div v-else-if="isExtJSComboField" class="extjs-combo-info">
+      <Message severity="info">
+        {{ getExtJSComboLabel(fieldConfig.xtype) }}
+      </Message>
+    </div>
+
     <!-- Unknown field type -->
     <div v-else class="unknown-field">
       <Message severity="warn">
@@ -141,6 +206,9 @@ import Dropdown from 'primevue/dropdown'
 import Calendar from 'primevue/calendar'
 import ColorPicker from 'primevue/colorpicker'
 import Message from 'primevue/message'
+import VendorCombo from './VendorCombo.vue'
+import AutocompleteCombo from './AutocompleteCombo.vue'
+import OptionsChips from './OptionsChips.vue'
 
 const props = defineProps({
   /**
@@ -194,6 +262,30 @@ const isComplexField = computed(() => {
   const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect']
   return complexTypes.includes(props.fieldConfig.xtype)
 })
+
+/**
+ * Определить, является ли поле ExtJS combo (ms3-combo-*)
+ */
+const isExtJSComboField = computed(() => {
+  return props.fieldConfig.xtype && props.fieldConfig.xtype.startsWith('ms3-combo-')
+})
+
+/**
+ * Получить описание ExtJS combo поля
+ */
+const getExtJSComboLabel = (xtype) => {
+  const labels = {
+    'ms3-combo-vendor': 'Выбор производителя (ExtJS combo)',
+    'ms3-combo-category': 'Выбор категории (ExtJS combo)',
+    'ms3-combo-user': 'Выбор пользователя (ExtJS combo)',
+    'ms3-combo-customer': 'Выбор покупателя (ExtJS combo)',
+    'ms3-combo-source': 'Выбор источника медиа (ExtJS combo)',
+    'ms3-combo-options': 'Опции товара (ExtJS combo)',
+    'ms3-combo-autocomplete': 'Автодополнение (ExtJS combo)'
+  }
+
+  return labels[xtype] || `ExtJS виджет: ${xtype}`
+}
 
 /**
  * Сериализовать значение для скрытого поля

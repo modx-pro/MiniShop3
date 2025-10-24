@@ -192,7 +192,7 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
 
   getVueProductFields: function (config) {
     return {
-      title: _('ms3_tab_product'),
+      title: _('ms3_tab_product_data'),
       layout: 'fit',
       items: [{
         xtype: 'panel',

@@ -158,6 +158,29 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'msproduct_save')
     ]);
 
+    // Группа роутов для справочников (vendors, categories и т.д.)
+    $router->group('/references', function($router) use ($modx) {
+
+        // GET /api/mgr/references/vendors - получить список производителей
+        $router->get('/vendors', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->getVendors($params);
+        });
+
+        // GET /api/mgr/references/autocomplete - получить автодополнение для поля
+        $router->get('/autocomplete', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->getAutocomplete($params);
+        });
+
+        // GET /api/mgr/references/options - получить опции товара (для chips/multiselect)
+        $router->get('/options', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->getOptions($params);
+        });
+
+    });
+
 }, [
     // Middleware для всей группы /api/mgr
     new AuthMiddleware($modx, 'mgr')

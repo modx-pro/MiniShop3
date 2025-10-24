@@ -212,6 +212,10 @@ a.x-menu-item .x-menu-item-text .icon { line-height: 16px; top: auto; }
 }
 
 /* Vue components - override to border-box */
-.primevue-app *, .vueApp *, .p-dialog *, .p-confirm-dialog *, .p-toast * {
+.primevue-app *, .vueApp *, .p-dialog *, .p-confirm-dialog *, .p-toast *, .p-component, .p-component * {
     box-sizing: border-box !important;
+}
+
+.p-select-filter {
+    width: 90% !important;
 }
