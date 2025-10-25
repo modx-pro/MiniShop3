@@ -1,0 +1,66 @@
+/**
+ * Фикс box-sizing для ExtJS после загрузки PrimeVue
+ *
+ * Проблема: PrimeVue добавляет глобальные inline стили:
+ * *, ::before, ::after { box-sizing: border-box; }
+ *
+ * Это ломает ExtJS который ожидает content-box.
+ *
+ * Решение: Переопределяем для ExtJS элементов с !important
+ */
+
+/* Восстанавливаем content-box для всех ExtJS элементов */
+.x-panel,
+.x-panel *,
+.x-panel ::before,
+.x-panel ::after,
+.x-window,
+.x-window *,
+.x-window ::before,
+.x-window ::after,
+.x-grid3,
+.x-grid3 *,
+.x-grid3 ::before,
+.x-grid3 ::after,
+.x-form-item,
+.x-form-item *,
+.x-form-item ::before,
+.x-form-item ::after,
+.x-tab-panel,
+.x-tab-panel *,
+.x-tab-panel ::before,
+.x-tab-panel ::after,
+.x-tab-strip,
+.x-tab-strip *,
+.x-tab-strip ::before,
+.x-tab-strip ::after,
+.x-toolbar,
+.x-toolbar *,
+.x-toolbar ::before,
+.x-toolbar ::after,
+.x-btn,
+.x-btn *,
+.x-btn ::before,
+.x-btn ::after,
+.ext-el-mask,
+.ext-el-mask *,
+.ext-el-mask ::before,
+.ext-el-mask ::after,
+[class^="x-"],
+[class^="x-"] *,
+[class^="x-"] ::before,
+[class^="x-"] ::after,
+[class*=" x-"],
+[class*=" x-"] *,
+[class*=" x-"] ::before,
+[class*=" x-"] ::after {
+  box-sizing: content-box !important;
+}
+
+/* Для Vue контейнеров возвращаем border-box */
+.vueApp,
+.vueApp *,
+.vueApp ::before,
+.vueApp ::after {
+  box-sizing: border-box !important;
+}

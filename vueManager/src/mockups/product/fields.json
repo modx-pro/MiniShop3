@@ -1,0 +1,109 @@
+{
+  "product": {
+    "data": {
+      "left": [
+        {
+          "name": "price",
+          "xtype": "numberfield",
+          "decimalPrecision": 2,
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "article",
+          "xtype": "textfield",
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "color",
+          "xtype": "ms3-combo-options",
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "vendor_id",
+          "xtype": "ms3-combo-vendor",
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "tags",
+          "xtype": "ms3-combo-options",
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        }
+      ],
+      "right": [
+        {
+          "name": "old_price",
+          "xtype": "numberfield",
+          "decimalPrecision": 2,
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "weight",
+          "xtype": "numberfield",
+          "decimalPrecision": 3,
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "size",
+          "xtype": "ms3-combo-options",
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "made_in",
+          "xtype": "ms3-combo-autocomplete",
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null
+        },
+        {
+          "name": "new",
+          "xtype": "xcheckbox",
+          "inputValue": 1,
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null,
+          "hideLabel": true,
+          "boxLabel": null,
+          "checked": 0
+        },
+        {
+          "name": "favorite",
+          "xtype": "xcheckbox",
+          "inputValue": 1,
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null,
+          "hideLabel": true,
+          "boxLabel": null,
+          "checked": 0
+        },
+        {
+          "name": "popular",
+          "xtype": "xcheckbox",
+          "inputValue": 1,
+          "fieldLabel": null,
+          "anchor": "100%",
+          "description": null,
+          "hideLabel": true,
+          "boxLabel": null,
+          "checked": 0
+        }
+      ]
+    }
+  }
+}

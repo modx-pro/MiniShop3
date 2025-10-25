@@ -112,6 +112,36 @@ class MiniShop3
         $this->services = new Services($this);
         //$this->plugins = new Plugins($this);
         $this->extraFields = new ExtraFields($this->modx);
+
+        // Регистрируем сервисы MiniShop3 с префиксом ms3_
+        $modx = $this->modx;
+        if (!$this->modx->services->has('ms3_config_manager')) {
+            $this->modx->services->add('ms3_config_manager', function() use ($modx) {
+                return new \MiniShop3\Services\ConfigManager($modx);
+            });
+        }
+
+        // Регистрируем FieldConfigManager как сервис
+        if (!$this->modx->services->has('ms3_field_config_manager')) {
+            $this->modx->services->add('ms3_field_config_manager', function() use ($modx) {
+                return new \MiniShop3\Services\FieldConfigManager($modx);
+            });
+        }
+
+        // Регистрируем ConfigService (фасад над FieldConfigManager и ConfigManager)
+        if (!$this->modx->services->has('ms3_config_service')) {
+            $this->modx->services->add('ms3_config_service', function() use ($modx) {
+                return new \MiniShop3\Services\ConfigService($modx);
+            });
+        }
+
+        // Регистрируем ProductDataService для работы с msProductData
+        if (!$this->modx->services->has('ms3_product_data_service')) {
+            $this->modx->services->add('ms3_product_data_service', function() use ($modx) {
+                return new \MiniShop3\Services\ProductDataService($modx);
+            });
+        }
+
         $this->options = new Options($this);
 
         $this->deleteOldDraft();

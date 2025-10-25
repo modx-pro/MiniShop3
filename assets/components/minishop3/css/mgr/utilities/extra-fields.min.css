@@ -1,0 +1,67 @@
+
+.vueApp .extra-fields-manager[data-v-38b8b37d] {
+  padding: 1rem;
+}
+
+/* Стили для модального окна - работают как в .vueApp так и в .p-dialog */
+.vueApp .edit-field-form,
+.p-dialog .edit-field-form {
+  padding: 10px 0;
+}
+.vueApp .form-grid,
+.p-dialog .form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: -8px;
+}
+.vueApp .edit-field-form .field,
+.p-dialog .edit-field-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.vueApp .edit-field-form .field label,
+.p-dialog .edit-field-form .field label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+.vueApp .edit-field-form .field small,
+.p-dialog .edit-field-form .field small {
+  color: #666;
+  font-size: 12px;
+  margin-top: -2px;
+}
+.vueApp .edit-field-form .w-full,
+.p-dialog .edit-field-form .w-full {
+  width: 100%;
+}
+
+/* Сетка для модального окна */
+.vueApp .col-6,
+.p-dialog .col-6 {
+  flex: 0 0 calc(50% - 16px);
+  max-width: calc(50% - 16px);
+}
+.vueApp .col-12,
+.p-dialog .col-12 {
+  flex: 0 0 calc(100% - 16px);
+  max-width: calc(100% - 16px);
+}
+
+/* Чекбокс в модальном окне */
+.vueApp .edit-field-form .checkbox-wrapper,
+.p-dialog .edit-field-form .checkbox-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.vueApp .edit-field-form .checkbox-label,
+.p-dialog .edit-field-form .checkbox-label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}

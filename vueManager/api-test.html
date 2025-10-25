@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Widget - MiniShop3</title>
+</head>
+<body>
+<div id="vue-api-test"></div>
+
+<script>
+  // Mock MODX и MiniShop3 конфигурации для dev режима
+  window.MODx = {
+    config: {
+      MODAUTH: 'dev-token-12345',
+      user_id: 1,
+      username: 'admin',
+      context_key: 'mgr',
+      debug: true
+    },
+    lang: {
+      'ms3_product_name': 'Название продукта',
+      'ms3_btn_save': 'Сохранить',
+      'success': 'Успешно',
+      'error': 'Ошибка',
+      'warning': 'Предупреждение',
+      'info': 'Информация'
+    },
+    _: function(key, placeholders) {
+      return this.lang[key] || key;
+    },
+    msg: {
+      status: function(config) {
+        console.log('[MODX Status]', config);
+        alert(config.title + ': ' + config.message);
+      },
+      alert: function(title, message) {
+        console.log('[MODX Alert]', title, message);
+        alert(title + ': ' + message);
+      },
+      confirm: function(config) {
+        console.log('[MODX Confirm]', config);
+        if (window.confirm(config.text)) {
+          config.fn('yes');
+        } else {
+          config.fn('no');
+        }
+      }
+    }
+  };
+
+  window.ms3 = {
+    config: {
+      connector_url: 'http://your-modx-site.local/assets/components/minishop3/connector.php',
+      assetsUrl: '/assets/components/minishop3/',
+      version: '3.0.0-dev'
+    }
+  };
+
+  // Mock разрешения
+  window.MODx.config.permissions = {
+    'new_document': true,
+    'save_document': true,
+    'delete_document': true,
+    'publish_document': true,
+    'msproduct_save': true,
+    'msproduct_remove': true,
+    'msorder_list': true,
+    'msorder_save': true
+  };
+</script>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

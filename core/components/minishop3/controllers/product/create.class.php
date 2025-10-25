@@ -1,7 +1,8 @@
 <?php
 
 use MiniShop3\Model\msProduct;
-use MiniShop3\Controllers\Config\Product\Layout;
+// Layout больше не используется - переход на Vue вкладку
+// use MiniShop3\Controllers\Config\Product\Layout;
 
 if (!class_exists('msResourceCreateController')) {
     require_once dirname(__FILE__, 2) . '/resource_create.class.php';
@@ -18,7 +19,7 @@ class msProductCreateManagerController extends msResourceCreateController
      */
     public function getLanguageTopics()
     {
-        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager'];
+        return ['resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager', 'minishop3:vue'];
     }
 
     /**
@@ -64,13 +65,15 @@ class msProductCreateManagerController extends msResourceCreateController
      */
     public function loadCustomCssJs()
     {
-        $layoutController = new Layout($this->modx);
-        $layout = $layoutController->getLayout();
+        // Layout больше не используется - переход на Vue вкладку
+        // $layoutController = new Layout($this->modx);
+        // $layout = $layoutController->getLayout();
 
         $mgrUrl = $this->getOption('manager_url', null, MODX_MANAGER_URL);
         $assetsUrl = $this->ms3->config['assetsUrl'];
 
         $this->addCss($assetsUrl . 'css/mgr/main.css');
+        $this->addCss($assetsUrl . 'css/mgr/extjs-boxmodel-fix.css'); // Фикс box-sizing для ExtJS vs PrimeVue
         $this->addJavascript($mgrUrl . 'assets/modext/util/datetime.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/element/modx.panel.tv.renders.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.grid.resource.security.local.js');
@@ -103,6 +106,13 @@ class msProductCreateManagerController extends msResourceCreateController
         $product_extra_fields = array_values(array_intersect($product_extra_fields, $product_fields));
         $product_option_fields = $this->resource->loadData()->getOptionFields();
 
+        // Загружаем лексикон явно для гарантии
+        $this->modx->lexicon->load('minishop3:product');
+
+        // Загружаем конфигурацию полей из БД через ConfigService
+        $configService = new \MiniShop3\Services\ConfigService($this->modx);
+        $fieldsConfig = $configService->getAllPageFields('product_data');
+
         $config = [
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
@@ -121,6 +131,10 @@ class msProductCreateManagerController extends msResourceCreateController
             'data_fields' => $product_data_fields,
             'additional_fields' => [],
             'isHideContent' => $this->isHideContent(),
+            'lexicon' => [
+                'ms3_product_data_vue' => $this->modx->lexicon('ms3_product_data_vue'),
+            ],
+            'fields_config' => $fieldsConfig, // Конфигурация полей из БД
         ];
 
         $ready = [
@@ -145,7 +159,7 @@ class msProductCreateManagerController extends msResourceCreateController
         MODx.onDocFormRender = "' . $this->onDocFormRender . '";
         MODx.ctx = "' . $this->ctx . '";
         ms3.config = ' . json_encode($config) . ';
-        ms3.config.layout = ' . json_encode($layout) . ';
+        // ms3.config.layout = ' . json_encode($layout) . ';
         Ext.onReady(function() {
             MODx.load(' . json_encode($ready) . ');
         });

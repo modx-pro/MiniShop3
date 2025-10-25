@@ -16,6 +16,13 @@ $_lang['ms3_product_sections'] = 'Разделы';
 $_lang['ms3_product_properties'] = 'Основные свойства';
 $_lang['ms3_product_tv'] = 'Дополнительные свойства';
 
+// Секции полей товара
+$_lang['ms3_section_general'] = 'Общие поля';
+$_lang['ms3_section_main'] = 'Основные данные';
+$_lang['ms3_section_pricing'] = 'Цены и склад';
+$_lang['ms3_section_seo'] = 'SEO';
+$_lang['ms3_section_additional'] = 'Дополнительно';
+
 $_lang['ms3_product_id'] = 'ID';
 $_lang['ms3_product_pagetitle'] = 'Название';
 $_lang['ms3_product_parent'] = 'Категория';
@@ -71,6 +78,8 @@ $_lang['ms3_product_price'] = 'Цена';
 $_lang['ms3_product_price_help'] = '';
 $_lang['ms3_product_old_price'] = 'Старая цена';
 $_lang['ms3_product_old_price_help'] = '';
+$_lang['ms3_product_stock'] = 'Остаток на складе';
+$_lang['ms3_product_stock_help'] = 'Количество товара на складе';
 $_lang['ms3_product_weight'] = 'Вес';
 $_lang['ms3_product_weight_help'] = '';
 $_lang['ms3_product_color'] = 'Цвет';
@@ -101,6 +110,8 @@ $_lang['ms3_product_popular'] = 'Популярный';
 $_lang['ms3_product_popular_help'] = '';
 $_lang['ms3_product_source'] = 'Источник файлов';
 $_lang['ms3_product_source_help'] = 'Источник файлов, который хранит изображения товара.';
+$_lang['ms3_product_source_id'] = 'Источник файлов';
+$_lang['ms3_product_source_id_help'] = 'Источник файлов, который хранит изображения товара.';
 $_lang['ms3_product_change_source_confirm'] = 'Вы уверены, что хотите изменить источник файлов? ВНИМАНИЕ: При этом будут сохранены все изменения, убедитесь, что вы готовы сделать это перед продолжением.';
 $_lang['ms3_product_count'] = 'Количество';
 $_lang['ms3_product_options'] = 'Опции товаров';
@@ -153,3 +164,5 @@ $_lang['ms3_gallery_file_delete_multiple'] = 'Удалить файлы';
 $_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Вы действительно хотите удалить эти файлы со всеми их уменьшенными копиями?<br/>Эта операция необратима.';
 
 $_lang['ms3_gallery_errors'] = 'Ошибки при загрузке';
+
+$_lang['ms3_product_data_vue'] = 'Данные товара (Vue)';

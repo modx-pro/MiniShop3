@@ -1,0 +1,84 @@
+<?php
+
+namespace MiniShop3\Controllers\Api;
+
+use MiniShop3\Router\Response;
+
+/**
+ * API контроллер для работы с данными товара (msProductData)
+ */
+class ProductDataController extends BaseApiController
+{
+    /**
+     * GET /api/mgr/product-data/{id}
+     * Получить данные товара
+     *
+     * @param array $params
+     * @return Response
+     */
+    public function get(array $params): Response
+    {
+        $productId = (int)($params['id'] ?? 0);
+
+        if (!$productId) {
+            return Response::error('Product ID is required', 400);
+        }
+
+        try {
+            /** @var \MiniShop3\Services\ProductDataService */
+            $productDataService = $this->modx->services->get('ms3_product_data_service');
+
+            $data = $productDataService->getProductData($productId);
+
+            if (!$data) {
+                return Response::error('Product data not found', 404);
+            }
+
+            return Response::success($data);
+        } catch (\Exception $e) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
+            return Response::error('Failed to load product data: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * PUT /api/mgr/product-data/{id}
+     * Обновить данные товара
+     *
+     * @param array $params
+     * @return Response
+     */
+    public function update(array $params): Response
+    {
+        $productId = (int)($params['id'] ?? 0);
+
+        if (!$productId) {
+            return Response::error('Product ID is required', 400);
+        }
+
+        $data = $this->getRequestData();
+
+        if (!$data) {
+            return Response::error('Invalid request data', 400);
+        }
+
+        try {
+            /** @var \MiniShop3\Services\ProductDataService */
+            $productDataService = $this->modx->services->get('ms3_product_data_service');
+
+            $result = $productDataService->updateProductData($productId, $data);
+
+            if ($result) {
+                return Response::success([
+                    'updated' => true,
+                    'data' => $result
+                ]);
+            } else {
+                return Response::error('Failed to save product data', 500);
+            }
+        } catch (\Exception $e) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
+            return Response::error('Failed to save product data: ' . $e->getMessage(), 500);
+        }
+    }
+}

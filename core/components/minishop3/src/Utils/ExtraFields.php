@@ -93,10 +93,87 @@ class ExtraFields
             $this->addFieldToMap($meta);
 
             $xpdoManager = $this->modx->getManager();
-            return $xpdoManager->addField($msExtraField->get('class'), $msExtraField->get('key'));
+            $result = $xpdoManager->addField($msExtraField->get('class'), $msExtraField->get('key'));
+
+            // Добавляем индекс если указан
+            if ($result && $msExtraField->hasIndex()) {
+                $this->addIndex($msExtraField);
+            }
+
+            return $result;
         }
 
         return false;
+    }
+
+    /**
+     * Adds an index to a column
+     *
+     * @param msExtraField $msExtraField
+     * @return boolean
+     */
+    public function addIndex(msExtraField $msExtraField): bool
+    {
+        $class = $msExtraField->get('class');
+        $key = $msExtraField->get('key');
+        $indexType = $msExtraField->getIndexType();
+        $indexName = $msExtraField->getIndexName();
+
+        if ($indexType === 'NONE') {
+            return true;
+        }
+
+        $xpdoManager = $this->modx->getManager();
+        $tableName = $this->modx->getTableName($class);
+
+        try {
+            // Формируем параметры индекса
+            $indexDef = [
+                'columns' => [$key => []],
+            ];
+
+            if ($indexType === 'UNIQUE') {
+                $indexDef['unique'] = true;
+            }
+
+            if ($indexType === 'FULLTEXT') {
+                $indexDef['type'] = 'FULLTEXT';
+            }
+
+            // Добавляем индекс через xPDO Manager
+            return $xpdoManager->addIndex($class, $indexName, $indexDef);
+
+        } catch (\Exception $e) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[ExtraFields] Failed to add index '{$indexName}': " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Removes an index from a column
+     *
+     * @param msExtraField $msExtraField
+     * @return boolean
+     */
+    public function removeIndex(msExtraField $msExtraField): bool
+    {
+        if (!$msExtraField->hasIndex()) {
+            return true;
+        }
+
+        $class = $msExtraField->get('class');
+        $indexName = $msExtraField->getIndexName();
+
+        $xpdoManager = $this->modx->getManager();
+
+        try {
+            return $xpdoManager->removeIndex($class, $indexName);
+        } catch (\Exception $e) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[ExtraFields] Failed to remove index '{$indexName}': " . $e->getMessage());
+            return false;
+        }
     }
 
     /**

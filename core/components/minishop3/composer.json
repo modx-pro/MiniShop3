@@ -1,4 +1,9 @@
 {
+    "autoload": {
+        "psr-4": {
+            "MiniShop3\\": "src/"
+        }
+    },
     "require": {
         "rakit/validation": "^1.4",
         "robmorgan/phinx": "^0.16",

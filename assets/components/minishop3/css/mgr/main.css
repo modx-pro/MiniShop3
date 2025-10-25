@@ -201,3 +201,21 @@ a.x-menu-item .x-menu-item-text .icon { line-height: 16px; top: auto; }
     border-right: 1px solid #F4F4F4;
     box-shadow: 0 -3px 0 #3697cd, -1px 0 0 transparent;
 }
+
+/* Vue components isolation - box-sizing reset */
+* {
+    box-sizing: content-box !important;
+}
+
+*, ::before, ::after {
+    box-sizing: inherit !important;
+}
+
+/* Vue components - override to border-box */
+.primevue-app *, .vueApp *, .p-dialog *, .p-confirm-dialog *, .p-toast *, .p-component, .p-component * {
+    box-sizing: border-box !important;
+}
+
+.p-select-filter {
+    width: 90% !important;
+}
