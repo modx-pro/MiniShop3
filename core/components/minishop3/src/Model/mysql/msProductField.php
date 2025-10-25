@@ -60,7 +60,7 @@ class msProductField extends \MiniShop3\Model\msProductField
                 'precision' => '10',
                 'attributes' => 'unsigned',
                 'phptype' => 'integer',
-                'null' => false,
+                'null' => true,
             ],
             'visible' => [
                 'dbtype' => 'tinyint',

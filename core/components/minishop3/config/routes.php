@@ -181,6 +181,149 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
     });
 
+    // Группа роутов для управления дополнительными полями (Extra Fields)
+    // Только для Administrator (permission: ms3_extra_fields_manage)
+    $router->group('/extra-fields', function($router) use ($modx) {
+
+        // GET /api/mgr/extra-fields - получить список всех дополнительных полей
+        $router->get('', function($params) use ($modx) {
+            try {
+                /** @var \MiniShop3\Services\ExtraFieldsService $service */
+                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
+
+                $class = $_GET['class'] ?? null;
+                $criteria = $class ? ['class' => $class] : [];
+
+                $fields = $service->getFields($criteria);
+
+                return Response::success([
+                    'fields' => $fields,
+                    'total' => count($fields)
+                ]);
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
+                return Response::error('Failed to load extra fields: ' . $e->getMessage(), 500);
+            }
+        });
+
+        // GET /api/mgr/extra-fields/{id} - получить информацию о поле
+        $router->get('/{id}', function($params) use ($modx) {
+            $id = (int)($params['id'] ?? 0);
+
+            if (!$id) {
+                return Response::error('Field ID is required', 400);
+            }
+
+            $field = $modx->getObject(\MiniShop3\Model\msExtraField::class, $id);
+
+            if (!$field) {
+                return Response::error('Field not found', 404);
+            }
+
+            $data = $field->toArray();
+
+            // Проверяем существование колонки
+            $extraFieldsUtil = new \MiniShop3\Utils\ExtraFields($modx);
+            $data['column_exists'] = $extraFieldsUtil->columnExists($field->get('class'), $field->get('key'));
+
+            return Response::success(['field' => $data]);
+        });
+
+        // POST /api/mgr/extra-fields - создать новое дополнительное поле
+        $router->post('', function($params) use ($modx) {
+            try {
+                $data = json_decode(file_get_contents('php://input'), true);
+
+                if (empty($data)) {
+                    return Response::error('Request body is empty', 400);
+                }
+
+                /** @var \MiniShop3\Services\ExtraFieldsService $service */
+                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
+
+                $result = $service->createField($data);
+
+                if (!$result['success']) {
+                    return Response::error($result['message'], 400);
+                }
+
+                return Response::success([
+                    'message' => $result['message'],
+                    'field' => $result['data'],
+                    'migration' => $result['migration']
+                ]);
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
+                return Response::error('Failed to create field: ' . $e->getMessage(), 500);
+            }
+        });
+
+        // PUT /api/mgr/extra-fields/{id} - обновить дополнительное поле (только метаданные)
+        $router->put('/{id}', function($params) use ($modx) {
+            $id = (int)($params['id'] ?? 0);
+
+            if (!$id) {
+                return Response::error('Field ID is required', 400);
+            }
+
+            try {
+                $data = json_decode(file_get_contents('php://input'), true);
+
+                if (empty($data)) {
+                    return Response::error('Request body is empty', 400);
+                }
+
+                /** @var \MiniShop3\Services\ExtraFieldsService $service */
+                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
+
+                $result = $service->updateField($id, $data);
+
+                if (!$result['success']) {
+                    return Response::error($result['message'], 400);
+                }
+
+                return Response::success([
+                    'message' => $result['message'],
+                    'field' => $result['data']
+                ]);
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
+                return Response::error('Failed to update field: ' . $e->getMessage(), 500);
+            }
+        });
+
+        // DELETE /api/mgr/extra-fields/{id} - удалить дополнительное поле
+        $router->delete('/{id}', function($params) use ($modx) {
+            $id = (int)($params['id'] ?? 0);
+
+            if (!$id) {
+                return Response::error('Field ID is required', 400);
+            }
+
+            try {
+                /** @var \MiniShop3\Services\ExtraFieldsService $service */
+                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
+
+                $result = $service->deleteField($id);
+
+                if (!$result['success']) {
+                    return Response::error($result['message'], 400);
+                }
+
+                return Response::success([
+                    'message' => $result['message'],
+                    'migration' => $result['migration']
+                ]);
+            } catch (\Exception $e) {
+                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
+                return Response::error('Failed to delete field: ' . $e->getMessage(), 500);
+            }
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save') // TODO: заменить на ms3_extra_fields_manage после создания permission
+    ]);
+
 }, [
     // Middleware для всей группы /api/mgr
     new AuthMiddleware($modx, 'mgr')

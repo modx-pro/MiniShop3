@@ -45,9 +45,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/utilities.panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/gallery/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/import/panel.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/tree.classes.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/grid.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/extrafield/window.js');
+        // Старые ExtJS файлы для extra fields удалены - используется новый Vue виджет
 
         $config = $this->ms3->config;
 
@@ -109,7 +107,9 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $this->addHtml(
             '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/_plugin-vue_export-helper.min.css">
         <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/fields-management.min.css">
+        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/extra-fields.min.css">
         <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/utilities/fields-management.min.js"></script>
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/utilities/extra-fields.min.js"></script>
         <script>
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-page-utilities"});

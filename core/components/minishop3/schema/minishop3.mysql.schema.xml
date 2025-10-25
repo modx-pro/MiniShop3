@@ -557,6 +557,7 @@
         <field key="default" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="default_value" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="attributes" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
+        <field key="index_type" dbtype="varchar" precision="50" phptype="string" null="true" default="NONE"/>
 
         <field key="active" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="0"/>
 
