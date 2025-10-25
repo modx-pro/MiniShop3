@@ -49,35 +49,9 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         $config = $this->ms3->config;
 
-        // Принудительно перезагружаем топик vue
-        $this->modx->lexicon->clearCache('minishop3:vue');
-        $this->modx->lexicon->load('minishop3:vue');
-
-        // Добавляем лексиконы для Vue виджета
-        $lexiconKeys = [
-            'sections', 'fields', 'section_add', 'section_delete',
-            'section_delete_confirm_title', 'section_delete_confirm_message',
-            'section_delete_btn', 'section_cancel_btn', 'save_changes',
-            'save_success', 'save_error', 'sections_saved', 'section_deleted',
-            'loading', 'error_loading_sections', 'error_deleting_section',
-            'error_saving_sections', 'visible', 'section_key', 'section_label', 'actions',
-            // Редактирование поля
-            'field_edit_title', 'field_xtype', 'field_xtype_readonly',
-            'field_section', 'field_section_help', 'field_section_placeholder',
-            'field_label', 'field_label_placeholder', 'field_label_help',
-            'field_width', 'field_width_placeholder', 'field_width_help',
-            'field_placeholder', 'field_placeholder_placeholder',
-            'field_description', 'field_description_placeholder',
-            'field_visible', 'field_visible_help',
-            'field_save', 'field_cancel', 'field_saved'
-        ];
-
-        $config['lexicon'] = [];
-        foreach ($lexiconKeys as $key) {
-            $lexiconValue = $this->modx->lexicon('ms3_vue_' . $key);
-            // Защита от null/empty значений
-            $config['lexicon'][$key] = $lexiconValue ?: $key;
-        }
+        // MODX автоматически загружает все лексиконы из топика 'minishop3:vue'
+        // (указан в getLanguageTopics()) и делает их доступными через window.MODx.lang
+        // Vue компоненты обращаются к ним через useLexicon() composable
 
         // get source properties
         $productSource = $this->getOption('ms3_product_source_default', null, 1);

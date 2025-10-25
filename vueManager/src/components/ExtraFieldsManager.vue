@@ -54,72 +54,72 @@ const fieldForm = ref({
 /**
  * Доступные классы моделей
  */
-const classOptions = [
-  { label: 'msProductData (Товары)', value: 'MiniShop3\\Model\\msProductData' },
-  { label: 'msVendor (Производители)', value: 'MiniShop3\\Model\\msVendor' },
-  { label: 'msOrder (Заказы)', value: 'MiniShop3\\Model\\msOrder' },
-  { label: 'msCategory (Категории)', value: 'MiniShop3\\Model\\msCategory' }
-]
+const classOptions = computed(() => [
+  { label: _('class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
+  { label: _('class_vendor'), value: 'MiniShop3\\Model\\msVendor' },
+  { label: _('class_order'), value: 'MiniShop3\\Model\\msOrder' },
+  { label: _('class_category'), value: 'MiniShop3\\Model\\msCategory' }
+])
 
 /**
  * Типы виджетов (xtype)
  */
-const xtypeOptions = [
-  { label: 'Текстовое поле', value: 'textfield' },
-  { label: 'Числовое поле', value: 'numberfield' },
-  { label: 'Текстовая область', value: 'textarea' },
-  { label: 'Дата', value: 'datefield' },
-  { label: 'Дата и время', value: 'datetimefield' },
-  { label: 'Комбинированный список', value: 'combo' },
-  { label: 'Флажок', value: 'checkbox' }
-]
+const xtypeOptions = computed(() => [
+  { label: _('xtype_textfield'), value: 'textfield' },
+  { label: _('xtype_numberfield'), value: 'numberfield' },
+  { label: _('xtype_textarea'), value: 'textarea' },
+  { label: _('xtype_xcheckbox'), value: 'xcheckbox' },
+  { label: _('xtype_combo_vendor'), value: 'ms3-combo-vendor' },
+  { label: _('xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
+  { label: _('xtype_combo_options'), value: 'ms3-combo-options' }
+])
 
 /**
  * Типы данных БД (dbtype)
  */
-const dbtypeOptions = [
-  { label: 'VARCHAR (строка)', value: 'varchar' },
-  { label: 'TEXT (текст)', value: 'text' },
-  { label: 'INT (целое число)', value: 'int' },
-  { label: 'DECIMAL (число с точностью)', value: 'decimal' },
-  { label: 'DATETIME (дата и время)', value: 'datetime' },
-  { label: 'TIMESTAMP', value: 'timestamp' },
-  { label: 'TINYINT (0/1)', value: 'tinyint' },
-  { label: 'JSON', value: 'json' }
-]
+const dbtypeOptions = computed(() => [
+  { label: _('dbtype_varchar'), value: 'varchar' },
+  { label: _('dbtype_text'), value: 'text' },
+  { label: _('dbtype_int'), value: 'int' },
+  { label: _('dbtype_decimal'), value: 'decimal' },
+  { label: _('dbtype_datetime'), value: 'datetime' },
+  { label: _('dbtype_timestamp'), value: 'timestamp' },
+  { label: _('dbtype_tinyint'), value: 'tinyint' },
+  { label: _('dbtype_json'), value: 'json' }
+])
 
 /**
  * PHP типы (phptype)
  */
-const phptypeOptions = [
-  { label: 'string (строка)', value: 'string' },
-  { label: 'integer (целое)', value: 'integer' },
-  { label: 'float (дробное)', value: 'float' },
-  { label: 'boolean (да/нет)', value: 'boolean' },
-  { label: 'json (массив)', value: 'json' },
-  { label: 'datetime', value: 'datetime' },
-  { label: 'timestamp', value: 'timestamp' }
-]
+const phptypeOptions = computed(() => [
+  { label: _('phptype_string'), value: 'string' },
+  { label: _('phptype_integer'), value: 'integer' },
+  { label: _('phptype_float'), value: 'float' },
+  { label: _('phptype_boolean'), value: 'boolean' },
+  { label: _('phptype_json'), value: 'json' },
+  { label: _('phptype_datetime'), value: 'datetime' },
+  { label: _('phptype_timestamp'), value: 'timestamp' }
+])
 
 /**
  * Типы значений по умолчанию
  */
-const defaultOptions = [
-  { label: 'NULL', value: 'NULL' },
-  { label: 'Текущее время', value: 'CURRENT_TIMESTAMP' },
-  { label: 'Пользовательское значение', value: 'USER_DEFINED' },
-  { label: 'Без значения', value: 'NONE' }
-]
+const defaultOptions = computed(() => [
+  { label: _('default_null'), value: 'NULL' },
+  { label: _('default_current_timestamp'), value: 'CURRENT_TIMESTAMP' },
+  { label: _('default_user_defined'), value: 'USER_DEFINED' },
+  { label: _('default_none'), value: 'NONE' }
+])
 
 /**
  * Типы индексов
  */
-const indexTypeOptions = [
-  { label: 'Без индекса', value: 'NONE' },
-  { label: 'Обычный индекс (INDEX)', value: 'INDEX' },
-  { label: 'Уникальный индекс (UNIQUE)', value: 'UNIQUE' },
-  { label: 'Полнотекстовый (FULLTEXT)', value: 'FULLTEXT' }
-]
+const indexTypeOptions = computed(() => [
+  { label: _('index_none'), value: 'NONE' },
+  { label: _('index_index'), value: 'INDEX' },
+  { label: _('index_unique'), value: 'UNIQUE' },
+  { label: _('index_fulltext'), value: 'FULLTEXT' }
+])
 
 /**
  * Загрузить список полей
@@ -141,8 +141,8 @@ async function loadFields() {
     console.error('[ExtraFieldsManager] Error loading fields:', error)
     toast.add({
       severity: 'error',
-      summary: 'Ошибка загрузки',
-      detail: error.message || 'Не удалось загрузить список полей',
+      summary: _('error_loading'),
+      detail: error.message || _('error_loading_fields'),
       life: 5000
     })
   } finally {
@@ -235,8 +235,8 @@ async function createField() {
     if (!fieldForm.value.key) {
       toast.add({
         severity: 'warn',
-        summary: 'Валидация',
-        detail: 'Укажите имя поля (key)',
+        summary: _('validation'),
+        detail: _('validation_key_required'),
         life: 3000
       })
       return
@@ -245,8 +245,8 @@ async function createField() {
     if (!fieldForm.value.dbtype) {
       toast.add({
         severity: 'warn',
-        summary: 'Валидация',
-        detail: 'Укажите тип данных БД (dbtype)',
+        summary: _('validation'),
+        detail: _('validation_dbtype_required'),
         life: 3000
       })
       return
@@ -264,8 +264,8 @@ async function createField() {
     if (response && response.field) {
       toast.add({
         severity: 'success',
-        summary: 'Успешно',
-        detail: `Поле "${response.field.key}" создано`,
+        summary: _('success'),
+        detail: `${_('table_field_name')} "${response.field.key}" ${_('field_created')}`,
         life: 3000
       })
 
@@ -278,8 +278,8 @@ async function createField() {
     console.error('[ExtraFieldsManager] Error creating field:', error)
     toast.add({
       severity: 'error',
-      summary: 'Ошибка создания',
-      detail: error.message || 'Не удалось создать поле',
+      summary: _('error_creating'),
+      detail: error.message || _('error_creating_field'),
       life: 5000
     })
   }
@@ -307,8 +307,8 @@ async function updateField() {
     if (response && response.field) {
       toast.add({
         severity: 'success',
-        summary: 'Успешно',
-        detail: `Поле "${response.field.key}" обновлено`,
+        summary: _('success'),
+        detail: `${_('table_field_name')} "${response.field.key}" ${_('field_updated')}`,
         life: 3000
       })
 
@@ -321,8 +321,8 @@ async function updateField() {
     console.error('[ExtraFieldsManager] Error updating field:', error)
     toast.add({
       severity: 'error',
-      summary: 'Ошибка обновления',
-      detail: error.message || 'Не удалось обновить поле',
+      summary: _('error_updating'),
+      detail: error.message || _('error_updating_field'),
       life: 5000
     })
   }
@@ -344,11 +344,11 @@ function confirmDelete(field) {
   confirmInProgress = true
 
   confirm.require({
-    message: `Вы уверены, что хотите удалить поле "${field.key}"? Это удалит колонку из таблицы БД!`,
-    header: 'Подтверждение удаления',
+    message: _('delete_confirm_message').replace('{0}', field.key),
+    header: _('delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Да, удалить',
-    rejectLabel: 'Отмена',
+    acceptLabel: _('delete_confirm_yes'),
+    rejectLabel: _('dialog_cancel'),
     acceptClass: 'p-button-danger',
     accept: () => {
       // НЕ делаем await - диалог закроется сразу, а удаление пойдёт в фоне
@@ -376,7 +376,7 @@ async function deleteField(fieldId) {
     if (response && response.message) {
       toast.add({
         severity: 'success',
-        summary: 'Успешно',
+        summary: _('success'),
         detail: response.message,
         life: 5000
       })
@@ -389,8 +389,8 @@ async function deleteField(fieldId) {
     console.error('[ExtraFieldsManager] Error deleting field:', error)
     toast.add({
       severity: 'error',
-      summary: 'Ошибка удаления',
-      detail: error.message || 'Не удалось удалить поле',
+      summary: _('error_deleting'),
+      detail: error.message || _('error_deleting_field'),
       life: 5000
     })
   } finally {
@@ -433,9 +433,9 @@ onMounted(() => {
     <Card>
       <template #title>
         <div class="flex justify-content-between align-items-center">
-          <span>Управление дополнительными полями</span>
+          <span>{{ _('extra_fields_title') }}</span>
           <Button
-            label="Создать поле"
+            :label="_('extra_fields_create')"
             icon="pi pi-plus"
             @click="openCreateDialog"
             :disabled="loading"
@@ -446,14 +446,14 @@ onMounted(() => {
       <template #content>
         <!-- Фильтр по классу -->
         <div class="field mb-4">
-          <label for="class-filter">Класс модели:</label>
+          <label for="class-filter">{{ _('extra_fields_class_filter') }}</label>
           <Dropdown
             id="class-filter"
             v-model="selectedClass"
             :options="classOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Выберите класс"
+            :placeholder="_('extra_fields_select_class')"
             class="w-full md:w-20rem"
             @change="onClassFilterChange"
           />
@@ -472,54 +472,54 @@ onMounted(() => {
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="Показано {first} - {last} из {totalRecords} полей"
         >
-          <Column field="id" header="ID" style="width: 60px" sortable />
+          <Column field="id" :header="_('table_id')" style="width: 60px" sortable />
 
-          <Column field="key" header="Имя поля" sortable>
+          <Column field="key" :header="_('table_field_name')" sortable>
             <template #body="{ data }">
               <strong>{{ data.key }}</strong>
             </template>
           </Column>
 
-          <Column field="label" header="Метка" sortable />
+          <Column field="label" :header="_('table_label')" sortable />
 
-          <Column field="dbtype" header="Тип БД" sortable style="width: 120px">
+          <Column field="dbtype" :header="_('table_dbtype')" sortable style="width: 120px">
             <template #body="{ data }">
               <Tag :value="data.dbtype.toUpperCase()" severity="info" />
             </template>
           </Column>
 
-          <Column field="precision" header="Точность" style="width: 100px" />
+          <Column field="precision" :header="_('table_precision')" style="width: 100px" />
 
-          <Column field="index_type" header="Индекс" style="width: 120px">
+          <Column field="index_type" :header="_('table_index')" style="width: 120px">
             <template #body="{ data }">
               <Tag
                 v-if="data.index_type && data.index_type !== 'NONE'"
                 :value="data.index_type"
                 :severity="data.index_type === 'UNIQUE' ? 'warning' : 'info'"
               />
-              <span v-else class="text-500">Нет</span>
+              <span v-else class="text-500">{{ _('table_no_index') }}</span>
             </template>
           </Column>
 
-          <Column field="column_exists" header="Колонка в БД" style="width: 140px">
+          <Column field="column_exists" :header="_('table_column_exists')" style="width: 140px">
             <template #body="{ data }">
               <Tag
-                :value="data.column_exists ? 'Существует' : 'Не создана'"
+                :value="data.column_exists ? _('table_column_exists_yes') : _('table_column_exists_no')"
                 :severity="getColumnExistsSeverity(data.column_exists)"
               />
             </template>
           </Column>
 
-          <Column field="active" header="Активно" style="width: 100px">
+          <Column field="active" :header="_('table_active')" style="width: 100px">
             <template #body="{ data }">
               <Tag
-                :value="data.active ? 'Да' : 'Нет'"
+                :value="data.active ? _('table_active_yes') : _('table_active_no')"
                 :severity="getActiveSeverity(data.active)"
               />
             </template>
           </Column>
 
-          <Column header="Действия" style="width: 150px">
+          <Column :header="_('table_actions')" style="width: 150px">
             <template #body="{ data }">
               <Button
                 icon="pi pi-pencil"
@@ -527,7 +527,7 @@ onMounted(() => {
                 text
                 rounded
                 @click.stop="openEditDialog(data)"
-                v-tooltip.top="'Редактировать поле'"
+                v-tooltip.top="_('extra_fields_edit')"
                 class="mr-1"
               />
               <Button
@@ -536,14 +536,14 @@ onMounted(() => {
                 text
                 rounded
                 @click.stop="confirmDelete(data)"
-                v-tooltip.top="'Удалить поле'"
+                v-tooltip.top="_('extra_fields_delete')"
               />
             </template>
           </Column>
 
           <template #empty>
             <div class="text-center p-4">
-              Поля не найдены. Создайте первое дополнительное поле.
+              {{ _('table_empty') }}
             </div>
           </template>
         </DataTable>
@@ -553,7 +553,7 @@ onMounted(() => {
     <!-- Диалог создания/редактирования поля -->
     <Dialog
       v-model:visible="dialogVisible"
-      :header="isEditMode ? 'Редактирование поля' : 'Создание дополнительного поля'"
+      :header="isEditMode ? _('dialog_edit_title') : _('dialog_create_title')"
       :modal="true"
       :closable="!saving"
       :style="{ width: '700px' }"
@@ -561,18 +561,18 @@ onMounted(() => {
     >
       <div class="edit-field-form">
         <!-- Основная информация -->
-        <Fieldset legend="Основная информация" class="mb-3">
+        <Fieldset :legend="_('dialog_fieldset_basic')" class="mb-3">
           <div class="form-grid">
             <!-- Класс модели -->
             <div class="field col-12">
-              <label for="field-class">Класс модели *</label>
+              <label for="field-class">{{ _('dialog_class') }}</label>
               <Dropdown
                 id="field-class"
                 v-model="fieldForm.class"
                 :options="classOptions"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="Выберите класс"
+                :placeholder="_('extra_fields_select_class')"
                 class="w-full"
                 :disabled="isEditMode"
               />
@@ -580,31 +580,31 @@ onMounted(() => {
 
             <!-- Имя поля (key) -->
             <div class="field col-6">
-              <label for="field-key">Имя поля (key) *</label>
+              <label for="field-key">{{ _('dialog_key') }}</label>
               <InputText
                 id="field-key"
                 v-model="fieldForm.key"
-                placeholder="warranty_months"
+                :placeholder="_('dialog_key_placeholder')"
                 class="w-full"
                 :disabled="isEditMode"
               />
-              <small class="text-500">Латинские буквы, цифры, подчеркивание. Без пробелов.</small>
+              <small class="text-500">{{ _('dialog_key_help') }}</small>
             </div>
 
             <!-- Метка (label) -->
             <div class="field col-6">
-              <label for="field-label">Метка</label>
+              <label for="field-label">{{ _('dialog_label') }}</label>
               <InputText
                 id="field-label"
                 v-model="fieldForm.label"
-                placeholder="Гарантия (месяцев)"
+                :placeholder="_('dialog_label_placeholder')"
                 class="w-full"
               />
             </div>
 
             <!-- Описание -->
             <div class="field col-12">
-              <label for="field-description">Описание</label>
+              <label for="field-description">{{ _('dialog_description') }}</label>
               <Textarea
                 id="field-description"
                 v-model="fieldForm.description"
@@ -615,14 +615,14 @@ onMounted(() => {
 
             <!-- Тип виджета (xtype) -->
             <div class="field col-12">
-              <label for="field-xtype">Тип виджета (xtype)</label>
+              <label for="field-xtype">{{ _('dialog_xtype') }}</label>
               <Dropdown
                 id="field-xtype"
                 v-model="fieldForm.xtype"
                 :options="xtypeOptions"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="Выберите тип"
+                :placeholder="_('dialog_xtype_select')"
                 class="w-full"
               />
             </div>
@@ -630,18 +630,18 @@ onMounted(() => {
         </Fieldset>
 
         <!-- Параметры БД -->
-        <Fieldset legend="Параметры базы данных" class="mb-3">
+        <Fieldset :legend="_('dialog_fieldset_database')" class="mb-3">
           <div class="form-grid">
           <!-- Тип БД -->
           <div class="field col-6">
-            <label for="field-dbtype">Тип данных БД (dbtype) *</label>
+            <label for="field-dbtype">{{ _('dialog_dbtype') }}</label>
             <Dropdown
               id="field-dbtype"
               v-model="fieldForm.dbtype"
               :options="dbtypeOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Выберите тип"
+              :placeholder="_('dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -649,11 +649,11 @@ onMounted(() => {
 
           <!-- Точность (precision) -->
           <div class="field col-6">
-            <label for="field-precision">Точность (precision)</label>
+            <label for="field-precision">{{ _('dialog_precision') }}</label>
             <InputText
               id="field-precision"
               v-model="fieldForm.precision"
-              placeholder="255 или 12,2 для decimal"
+              :placeholder="_('dialog_precision_placeholder')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -661,14 +661,14 @@ onMounted(() => {
 
           <!-- PHP тип -->
           <div class="field col-6">
-            <label for="field-phptype">PHP тип (phptype) *</label>
+            <label for="field-phptype">{{ _('dialog_phptype') }}</label>
             <Dropdown
               id="field-phptype"
               v-model="fieldForm.phptype"
               :options="phptypeOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Выберите тип"
+              :placeholder="_('dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -676,7 +676,7 @@ onMounted(() => {
 
           <!-- Nullable -->
           <div class="field col-6">
-            <label for="field-null">Разрешить NULL</label>
+            <label for="field-null">{{ _('dialog_null') }}</label>
             <div class="flex align-items-center" style="height: 42px">
               <Checkbox
                 id="field-null"
@@ -684,20 +684,20 @@ onMounted(() => {
                 :binary="true"
                 :disabled="isEditMode"
               />
-              <label for="field-null" class="ml-2 cursor-pointer">Разрешено</label>
+              <label for="field-null" class="ml-2 cursor-pointer">{{ _('dialog_null_label') }}</label>
             </div>
           </div>
 
           <!-- Значение по умолчанию -->
           <div class="field col-6">
-            <label for="field-default">Значение по умолчанию</label>
+            <label for="field-default">{{ _('dialog_default') }}</label>
             <Dropdown
               id="field-default"
               v-model="fieldForm.default"
               :options="defaultOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Выберите тип"
+              :placeholder="_('dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -705,11 +705,11 @@ onMounted(() => {
 
           <!-- Пользовательское значение по умолчанию -->
           <div class="field col-6" v-if="fieldForm.default === 'USER_DEFINED'">
-            <label for="field-default-value">Пользовательское значение</label>
+            <label for="field-default-value">{{ _('dialog_default_value') }}</label>
             <InputText
               id="field-default-value"
               v-model="fieldForm.default_value"
-              placeholder="12"
+              :placeholder="_('dialog_default_value_placeholder')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -717,27 +717,27 @@ onMounted(() => {
 
           <!-- Атрибуты -->
           <div class="field col-6">
-            <label for="field-attributes">Атрибуты (attributes)</label>
+            <label for="field-attributes">{{ _('dialog_attributes') }}</label>
             <InputText
               id="field-attributes"
               v-model="fieldForm.attributes"
-              placeholder="unsigned, auto_increment"
+              :placeholder="_('dialog_attributes_placeholder')"
               class="w-full"
               :disabled="isEditMode"
             />
-            <small class="text-500">Например: unsigned</small>
+            <small class="text-500">{{ _('dialog_attributes_help') }}</small>
           </div>
 
           <!-- Тип индекса -->
           <div class="field col-6">
-            <label for="field-index-type">Тип индекса</label>
+            <label for="field-index-type">{{ _('dialog_index_type') }}</label>
             <Dropdown
               id="field-index-type"
               v-model="fieldForm.index_type"
               :options="indexTypeOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Выберите тип"
+              :placeholder="_('dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -745,14 +745,14 @@ onMounted(() => {
 
           <!-- Активность -->
           <div class="field col-12">
-            <label for="field-active">Активность</label>
+            <label for="field-active">{{ _('dialog_active') }}</label>
             <div class="flex align-items-center" style="height: 42px">
               <Checkbox
                 id="field-active"
                 v-model="fieldForm.active"
                 :binary="true"
               />
-              <label for="field-active" class="ml-2 cursor-pointer">Активировать поле сразу после создания</label>
+              <label for="field-active" class="ml-2 cursor-pointer">{{ _('dialog_active_label') }}</label>
             </div>
           </div>
           </div>
@@ -761,14 +761,14 @@ onMounted(() => {
 
       <template #footer>
         <Button
-          label="Отмена"
+          :label="_('dialog_cancel')"
           icon="pi pi-times"
           text
           @click="dialogVisible = false"
           :disabled="saving"
         />
         <Button
-          :label="isEditMode ? 'Сохранить' : 'Создать поле'"
+          :label="isEditMode ? _('dialog_save') : _('dialog_create')"
           icon="pi pi-check"
           @click="saveField"
           :loading="saving"

@@ -40,7 +40,7 @@ ms3.panel.Utilities = function (config) {
                     }]
                 },
                 {
-                    title: 'Управление полями товара',
+                    title: _('ms3_vue_product_fields_title'),
                     id: 'ms3-utilities-fields-management-tab',
                     layout: 'fit',
                     autoScroll: true,
@@ -64,7 +64,7 @@ ms3.panel.Utilities = function (config) {
                     }]
                 },
                 {
-                    title: 'Расширение объектов (Vue)',
+                    title: 'Расширение объектов',
                     id: 'ms3-utilities-extra-fields-tab',
                     layout: 'fit',
                     autoScroll: true,

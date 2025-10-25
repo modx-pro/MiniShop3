@@ -167,7 +167,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         MODx.onDocFormRender = "' . $this->onDocFormRender . '";
         MODx.ctx = "' . $this->ctx . '";
         ms3.config = ' . json_encode($config) . ';
-        // ms3.config.layout = ' . json_encode($layout) . ';
         Ext.onReady(function() {
             MODx.load(' . json_encode($ready) . ');
         });

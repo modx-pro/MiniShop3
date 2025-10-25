@@ -158,16 +158,16 @@ $_lang['ms3_orders_create_order'] = 'Создать заказ';
 $_lang['ms3_orders_show_drafts'] = 'Показывать черновики';
 $_lang['ms3_orders_hide_drafts'] = 'Скрыть черновики';
 
-$_lang['ms3_tab_category'] = 'Категория';
-$_lang['ms3_tab_products'] = 'Товары';
-$_lang['ms3_tab_options'] = 'Свойства товаров';
-$_lang['ms3_tab_comments'] = 'Комментарии';
-$_lang['ms3_tab_product'] = 'Товар';
-$_lang['ms3_tab_product_data'] = 'Свойства товара';
-$_lang['ms3_tab_product_options'] = 'Опции товара';
-$_lang['ms3_tab_product_links'] = 'Связи';
-$_lang['ms3_tab_product_categories'] = 'Категории';
-$_lang['ms3_tab_product_gallery'] = 'Галерея';
+$_lang['ms3_tab_category'] = 'Category';
+$_lang['ms3_tab_products'] = 'Products';
+$_lang['ms3_tab_options'] = 'Product Properties';
+$_lang['ms3_tab_comments'] = 'Comments';
+$_lang['ms3_tab_product'] = 'Product';
+$_lang['ms3_tab_product_data'] = 'Product Properties';
+$_lang['ms3_tab_product_options'] = 'Product Options';
+$_lang['ms3_tab_product_links'] = 'Links';
+$_lang['ms3_tab_product_categories'] = 'Categories';
+$_lang['ms3_tab_product_gallery'] = 'Gallery';
 
 $_lang['ms3_order_status_draft'] = 'Черновик';
 $_lang['ms3_order_status_new'] = 'Новый';

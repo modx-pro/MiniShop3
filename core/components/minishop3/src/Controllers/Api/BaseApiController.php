@@ -19,7 +19,7 @@ abstract class BaseApiController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
-        $this->ms3 = $modx->getService('MiniShop3', 'MiniShop3', MODX_CORE_PATH . 'components/minishop3/');
+        $this->ms3 = $modx->services->get('ms3');
     }
 
     /**

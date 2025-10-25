@@ -49,7 +49,7 @@ const newSection = ref({
  * Формируется из загруженных секций, показываем только !hidden
  */
 const availableSectionOptions = computed(() => {
-  const options = [{ label: 'Без секции', value: null }]
+  const options = [{ label: _('no_section'), value: null }]
 
   sections.value
     .filter(section => !section.hidden)
@@ -67,7 +67,7 @@ const availableSectionOptions = computed(() => {
  * Получить label секции по ID
  */
 function getSectionLabel(sectionId) {
-  if (!sectionId) return 'Без секции'
+  if (!sectionId) return _('no_section')
   const section = sections.value.find(s => s.id === sectionId)
   return section ? (section.label || section.key) : `ID: ${sectionId}`
 }
@@ -143,8 +143,8 @@ function onSectionReorder(event) {
   sections.value = event.value
   toast.add({
     severity: 'info',
-    summary: 'Порядок изменён',
-    detail: 'Не забудьте сохранить изменения',
+    summary: _('order_changed'),
+    detail: _('save_reminder'),
     life: 3000
   })
 }
@@ -226,8 +226,8 @@ async function addSection() {
   if (!newSection.value.section_key) {
     toast.add({
       severity: 'warn',
-      summary: 'Внимание',
-      detail: 'Укажите ключ секции',
+      summary: _('warning'),
+      detail: _('section_key_required'),
       life: 3000
     })
     return
@@ -238,8 +238,8 @@ async function addSection() {
   if (exists) {
     toast.add({
       severity: 'warn',
-      summary: 'Внимание',
-      detail: 'Секция с таким ключом уже существует',
+      summary: _('warning'),
+      detail: _('section_key_exists'),
       life: 3000
     })
     return
@@ -249,8 +249,8 @@ async function addSection() {
   if (!newSection.value.lexicon_key && !newSection.value.label) {
     toast.add({
       severity: 'warn',
-      summary: 'Внимание',
-      detail: 'Укажите либо ключ лексикона, либо прямой текст подписи',
+      summary: _('warning'),
+      detail: _('section_lexicon_or_label_required'),
       life: 3000
     })
     return
@@ -275,8 +275,8 @@ async function addSection() {
 
     toast.add({
       severity: 'success',
-      summary: 'Успешно',
-      detail: 'Секция добавлена',
+      summary: _('success_title'),
+      detail: _('section_added'),
       life: 3000
     })
 
@@ -285,8 +285,8 @@ async function addSection() {
     console.error('[ProductDataConfig] Error adding section:', error)
     toast.add({
       severity: 'error',
-      summary: 'Ошибка',
-      detail: error.message || 'Ошибка добавления секции',
+      summary: _('error'),
+      detail: error.message || _('error_adding_section_title'),
       life: 5000
     })
   }
@@ -312,8 +312,8 @@ async function loadFields() {
       console.error('[ProductDataConfig] Invalid response:', response)
       toast.add({
         severity: 'error',
-        summary: 'Ошибка',
-        detail: 'Не удалось загрузить поля',
+        summary: _('error'),
+        detail: _('error_loading_fields_detail'),
         life: 5000
       })
     }
@@ -321,8 +321,8 @@ async function loadFields() {
     console.error('[ProductDataConfig] Error loading fields:', error)
     toast.add({
       severity: 'error',
-      summary: 'Ошибка',
-      detail: error.message || 'Ошибка загрузки полей',
+      summary: _('error'),
+      detail: error.message || _('error_loading_fields_message'),
       life: 5000
     })
   } finally {
@@ -352,8 +352,8 @@ async function saveConfig() {
 
     toast.add({
       severity: 'success',
-      summary: 'Успешно',
-      detail: 'Конфигурация сохранена',
+      summary: _('success_title'),
+      detail: _('config_saved'),
       life: 3000
     })
 
@@ -363,8 +363,8 @@ async function saveConfig() {
     console.error('[ProductDataConfig] Error saving:', error)
     toast.add({
       severity: 'error',
-      summary: 'Ошибка',
-      detail: error.message || 'Ошибка сохранения',
+      summary: _('error'),
+      detail: error.message || _('error_saving_title'),
       life: 5000
     })
   } finally {
@@ -379,8 +379,8 @@ function onRowReorder(event) {
   fields.value = event.value
   toast.add({
     severity: 'info',
-    summary: 'Порядок изменён',
-    detail: 'Не забудьте сохранить изменения',
+    summary: _('order_changed'),
+    detail: _('save_reminder'),
     life: 3000
   })
 }
@@ -450,8 +450,8 @@ async function saveFieldChanges() {
       console.error('[ProductDataConfig] Error saving:', error)
       toast.add({
         severity: 'error',
-        summary: 'Ошибка',
-        detail: error.message || 'Ошибка сохранения',
+        summary: _('error'),
+        detail: error.message || _('save_error'),
         life: 5000
       })
     } finally {
@@ -468,8 +468,8 @@ onMounted(() => {
 
 <template>
   <div class="product-data-config">
-    <h2>Управление полями "Данные товара"</h2>
-    <p>Здесь вы можете настроить, какие поля отображаются на вкладке "Данные товара" при редактировании товара</p>
+    <h2>{{ _('product_fields_title') }}</h2>
+    <p>{{ _('product_fields_description') }}</p>
 
     <!-- Таблица секций -->
     <Card style="margin-top: 20px;">
@@ -539,9 +539,9 @@ onMounted(() => {
     <Card style="margin-top: 20px;">
       <template #title>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>Поля конфигурации</span>
+          <span>{{ _('product_properties') }}</span>
           <Button
-            label="Сохранить изменения"
+            :label="_('save_changes')"
             icon="pi pi-save"
             @click="saveConfig"
             :loading="saving"
@@ -559,7 +559,7 @@ onMounted(() => {
         >
           <Column rowReorder headerStyle="width: 3rem" />
 
-          <Column header="Видимо" style="width: 100px;">
+          <Column :header="_('visible_column')" style="width: 100px;">
             <template #body="{ data }">
               <Checkbox
                 v-model="data.hidden"
@@ -570,28 +570,28 @@ onMounted(() => {
             </template>
           </Column>
 
-          <Column field="name" header="Поле" style="width: 200px;" />
+          <Column field="name" :header="_('field_column')" style="width: 200px;" />
 
-          <Column field="label" header="Название" style="width: 200px;" />
+          <Column field="label" :header="_('label_column')" style="width: 200px;" />
 
-          <Column field="xtype" header="Тип" style="width: 150px;" />
+          <Column field="xtype" :header="_('type_column')" style="width: 150px;" />
 
-          <Column header="Секция" style="width: 150px;">
+          <Column :header="_('section_column')" style="width: 150px;">
             <template #body="{ data }">
               {{ getSectionLabel(data.section) }}
             </template>
           </Column>
 
-          <Column field="description" header="Описание" />
+          <Column field="description" :header="_('description_column')" />
 
-          <Column header="Действия" style="width: 120px;">
+          <Column :header="_('actions_column')" style="width: 120px;">
             <template #body="{ data, index }">
               <Button
                 icon="pi pi-pencil"
                 size="small"
                 outlined
                 @click="openEditDialog(data, index)"
-                title="Редактировать поле"
+                :title="_('edit_field_button')"
               />
             </template>
           </Column>
@@ -603,73 +603,73 @@ onMounted(() => {
     <Dialog
       v-model:visible="addSectionDialogVisible"
       modal
-      header="Добавление новой секции"
+      :header="_('add_section_title')"
       :style="{ width: '600px' }"
     >
       <div class="edit-field-form">
         <div class="form-grid">
           <!-- Ключ секции (обязательное) -->
           <div class="field col-12">
-            <label for="section-key">Ключ секции *</label>
+            <label for="section-key">{{ _('section_key_label') }}</label>
             <InputText
               id="section-key"
               v-model="newSection.section_key"
-              placeholder="Например: delivery_info"
+              :placeholder="_('section_key_example')"
               class="w-full"
             />
-            <small>Уникальный идентификатор секции (латиница, snake_case)</small>
+            <small>{{ _('section_key_hint') }}</small>
           </div>
 
           <!-- Ключ лексикона -->
           <div class="field col-6">
-            <label for="section-lexicon-key">Ключ лексикона</label>
+            <label for="section-lexicon-key">{{ _('section_lexicon_key_label') }}</label>
             <InputText
               id="section-lexicon-key"
               v-model="newSection.lexicon_key"
-              placeholder="Например: ms3_section_delivery"
+              :placeholder="_('section_lexicon_key_example')"
               class="w-full"
             />
-            <small>Для мультиязычности (рекомендуется)</small>
+            <small>{{ _('section_lexicon_key_hint') }}</small>
           </div>
 
           <!-- Прямой текст подписи -->
           <div class="field col-6">
-            <label for="section-label">Прямой текст подписи</label>
+            <label for="section-label">{{ _('section_label_label') }}</label>
             <InputText
               id="section-label"
               v-model="newSection.label"
-              placeholder="Например: Доставка"
+              :placeholder="_('section_label_example')"
               class="w-full"
             />
-            <small>Используется если нет ключа лексикона</small>
+            <small>{{ _('section_label_hint') }}</small>
           </div>
 
           <!-- Видимость -->
           <div class="field col-12">
             <div style="display: flex; align-items: center; gap: 8px;">
               <Checkbox
-                id="section-hidden"
+                inputId="section-hidden"
                 v-model="newSection.hidden"
                 :binary="true"
                 :trueValue="false"
                 :falseValue="true"
               />
-              <label for="section-hidden" style="margin: 0; cursor: pointer;">Секция видима</label>
+              <label for="section-hidden" style="margin: 0; cursor: pointer;" @click="newSection.hidden = !newSection.hidden">{{ _('section_visible_label') }}</label>
             </div>
-            <small>Скрытые секции не отображаются в интерфейсе</small>
+            <small>{{ _('section_visibility_hint') }}</small>
           </div>
         </div>
       </div>
 
       <template #footer>
         <Button
-          label="Отмена"
+          :label="_('cancel_button')"
           icon="pi pi-times"
           severity="secondary"
           @click="closeAddSectionDialog"
         />
         <Button
-          label="Добавить"
+          :label="_('add_button')"
           icon="pi pi-check"
           @click="addSection"
         />
@@ -760,7 +760,7 @@ onMounted(() => {
                 :trueValue="true"
                 :falseValue="false"
               />
-              <label for="field-visible" class="field-label checkbox-label">
+              <label for="field-visible" class="field-label checkbox-label" @click="editingField.visible = !editingField.visible">
                 {{ _('field_visible') }}
               </label>
             </div>

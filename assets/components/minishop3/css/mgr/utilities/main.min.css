@@ -169,103 +169,103 @@
   padding: 0.5rem 0;
 }
 
-.vueApp .product-data-fields[data-v-ffa02d85] {
+.vueApp .product-data-fields[data-v-083cb8a0] {
   padding: 20px;
 }
-.vueApp .fields-grid[data-v-ffa02d85] {
+.vueApp .fields-grid[data-v-083cb8a0] {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
   margin: -10px; /* Компенсация padding у полей */
 }
-.vueApp .field-item[data-v-ffa02d85] {
+.vueApp .field-item[data-v-083cb8a0] {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 10px;
   box-sizing: border-box;
 }
-.vueApp .field-item[data-v-ffa02d85] input,
-.vueApp .field-item[data-v-ffa02d85] textarea,
-.vueApp .field-item[data-v-ffa02d85] .p-inputtext,
-.vueApp .field-item[data-v-ffa02d85] .p-inputnumber,
-.vueApp .field-item[data-v-ffa02d85] .p-dropdown {
+.vueApp .field-item[data-v-083cb8a0] input,
+.vueApp .field-item[data-v-083cb8a0] textarea,
+.vueApp .field-item[data-v-083cb8a0] .p-inputtext,
+.vueApp .field-item[data-v-083cb8a0] .p-inputnumber,
+.vueApp .field-item[data-v-083cb8a0] .p-dropdown {
   width: 100%;
 }
 
 /* 12-колоночная grid система */
-.vueApp .col-1[data-v-ffa02d85] { flex: 0 0 calc(8.333% - 20px); max-width: calc(8.333% - 20px);
+.vueApp .col-1[data-v-083cb8a0] { flex: 0 0 calc(8.333% - 20px); max-width: calc(8.333% - 20px);
 }
-.vueApp .col-2[data-v-ffa02d85] { flex: 0 0 calc(16.666% - 20px); max-width: calc(16.666% - 20px);
+.vueApp .col-2[data-v-083cb8a0] { flex: 0 0 calc(16.666% - 20px); max-width: calc(16.666% - 20px);
 }
-.vueApp .col-3[data-v-ffa02d85] { flex: 0 0 calc(25% - 20px); max-width: calc(25% - 20px);
+.vueApp .col-3[data-v-083cb8a0] { flex: 0 0 calc(25% - 20px); max-width: calc(25% - 20px);
 }
-.vueApp .col-4[data-v-ffa02d85] { flex: 0 0 calc(33.333% - 20px); max-width: calc(33.333% - 20px);
+.vueApp .col-4[data-v-083cb8a0] { flex: 0 0 calc(33.333% - 20px); max-width: calc(33.333% - 20px);
 }
-.vueApp .col-5[data-v-ffa02d85] { flex: 0 0 calc(41.666% - 20px); max-width: calc(41.666% - 20px);
+.vueApp .col-5[data-v-083cb8a0] { flex: 0 0 calc(41.666% - 20px); max-width: calc(41.666% - 20px);
 }
-.vueApp .col-6[data-v-ffa02d85] { flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px);
+.vueApp .col-6[data-v-083cb8a0] { flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px);
 }
-.vueApp .col-7[data-v-ffa02d85] { flex: 0 0 calc(58.333% - 20px); max-width: calc(58.333% - 20px);
+.vueApp .col-7[data-v-083cb8a0] { flex: 0 0 calc(58.333% - 20px); max-width: calc(58.333% - 20px);
 }
-.vueApp .col-8[data-v-ffa02d85] { flex: 0 0 calc(66.666% - 20px); max-width: calc(66.666% - 20px);
+.vueApp .col-8[data-v-083cb8a0] { flex: 0 0 calc(66.666% - 20px); max-width: calc(66.666% - 20px);
 }
-.vueApp .col-9[data-v-ffa02d85] { flex: 0 0 calc(75% - 20px); max-width: calc(75% - 20px);
+.vueApp .col-9[data-v-083cb8a0] { flex: 0 0 calc(75% - 20px); max-width: calc(75% - 20px);
 }
-.vueApp .col-10[data-v-ffa02d85] { flex: 0 0 calc(83.333% - 20px); max-width: calc(83.333% - 20px);
+.vueApp .col-10[data-v-083cb8a0] { flex: 0 0 calc(83.333% - 20px); max-width: calc(83.333% - 20px);
 }
-.vueApp .col-11[data-v-ffa02d85] { flex: 0 0 calc(91.666% - 20px); max-width: calc(91.666% - 20px);
+.vueApp .col-11[data-v-083cb8a0] { flex: 0 0 calc(91.666% - 20px); max-width: calc(91.666% - 20px);
 }
-.vueApp .col-12[data-v-ffa02d85] { flex: 0 0 calc(100% - 20px); max-width: calc(100% - 20px);
+.vueApp .col-12[data-v-083cb8a0] { flex: 0 0 calc(100% - 20px); max-width: calc(100% - 20px);
 }
 
 /* Responsive: на планшетах col-4 становится col-6 */
 @media (max-width: 1024px) {
-.vueApp .col-4[data-v-ffa02d85] { flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px);
+.vueApp .col-4[data-v-083cb8a0] { flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px);
 }
 }
 
 /* Responsive: на мобильных все поля на всю ширину */
 @media (max-width: 768px) {
-.vueApp .field-item[data-v-ffa02d85] {
+.vueApp .field-item[data-v-083cb8a0] {
     flex: 0 0 calc(100% - 20px) !important;
     max-width: calc(100% - 20px) !important;
 }
 }
-.vueApp .field-label[data-v-ffa02d85] {
+.vueApp .field-label[data-v-083cb8a0] {
   font-weight: 600;
   font-size: 14px;
   color: #333;
 }
-.vueApp .field-label .required[data-v-ffa02d85] {
+.vueApp .field-label .required[data-v-083cb8a0] {
   color: #e24c4c;
   margin-left: 2px;
 }
 
 /* Чекбокс: горизонтальное расположение */
-.vueApp .checkbox-wrapper[data-v-ffa02d85] {
+.vueApp .checkbox-wrapper[data-v-083cb8a0] {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.vueApp .checkbox-wrapper[data-v-ffa02d85] .field-wrapper {
+.vueApp .checkbox-wrapper[data-v-083cb8a0] .field-wrapper {
   width: auto;
 }
-.vueApp .checkbox-label[data-v-ffa02d85] {
+.vueApp .checkbox-label[data-v-083cb8a0] {
   margin: 0;
   cursor: pointer;
   user-select: none;
 }
-.vueApp .field-description[data-v-ffa02d85] {
+.vueApp .field-description[data-v-083cb8a0] {
   color: #666;
   font-size: 12px;
   margin-top: 4px;
 }
-.vueApp .sections-container[data-v-ffa02d85] {
+.vueApp .sections-container[data-v-083cb8a0] {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-.vueApp .section-fieldset[data-v-ffa02d85] {
+.vueApp .section-fieldset[data-v-083cb8a0] {
   margin-bottom: 0;
 }

@@ -273,13 +273,12 @@ class ExtraFieldsService
             'description' => $extraField->get('description'),
             'xtype' => $extraField->get('xtype') ?: 'textfield',
             'section' => null, // Без секции по умолчанию
-            'visible' => 1,
+            'visible' => $extraField->get('active') ? 1 : 0, // Синхронизируем active -> visible
             'required' => 0,
             'sort_order' => 999, // В конец списка
             'width' => 6,
             'is_system' => 0,
             'is_default' => 0,
-            'active' => $extraField->get('active'),
         ]);
 
         if ($productField->save()) {
@@ -348,7 +347,8 @@ class ExtraFieldsService
             $productField->set('label', $extraField->get('label') ?: $extraField->get('key'));
             $productField->set('description', $extraField->get('description'));
             $productField->set('xtype', $extraField->get('xtype') ?: 'textfield');
-            $productField->set('active', $extraField->get('active'));
+            // Синхронизируем active из extra_fields с visible в product_fields
+            $productField->set('visible', $extraField->get('active') ? 1 : 0);
 
             if ($productField->save()) {
                 $this->modx->log(modX::LOG_LEVEL_INFO,
