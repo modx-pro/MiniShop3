@@ -6,6 +6,7 @@ use MiniShop3\Controllers\Delivery\Delivery;
 use MiniShop3\Controllers\Delivery\DeliveryInterface;
 use MiniShop3\Controllers\Order\OrderInterface;
 use MiniShop3\MiniShop3;
+use MiniShop3\Services\Delivery\DeliveryService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOSimpleObject;
 use xPDO\xPDO;
@@ -36,8 +37,8 @@ class msDelivery extends xPDOSimpleObject
     /** @var MiniShop3 $ms3 */
     public $ms3;
 
-    /** @var string $defaultControllerClass */
-    private string $defaultControllerClass = 'MiniShop3\\Controllers\\Delivery\\Delivery';
+    /** @var DeliveryService|null */
+    protected $deliveryService;
 
     /**
      * msDelivery constructor.
@@ -59,19 +60,8 @@ class msDelivery extends xPDOSimpleObject
      */
     public function loadController()
     {
-        $class = $this->get('class');
-        if (!$class || $class === 'Delivery') {
-            $class = $this->defaultControllerClass;
-        }
-
-        $this->controller = new $class($this->ms3, []);
-        if (!$this->controller instanceof DeliveryInterface) {
-            $this->xpdo->log(modX::LOG_LEVEL_ERROR, 'Could not initialize delivery controller class: "' . $class . '"');
-
-            return false;
-        }
-
-        return true;
+        $this->controller = $this->getDeliveryService()->loadDeliveryController($this);
+        return $this->controller instanceof DeliveryInterface;
     }
 
     /**
@@ -84,12 +74,12 @@ class msDelivery extends xPDOSimpleObject
      */
     public function getCost(OrderInterface $order, $cost = 0.0)
     {
-        if (!is_object($this->controller) || !($this->controller instanceof DeliveryInterface)) {
-            if (!$this->loadController()) {
-                return 0.0;
-            }
-        }
-        return $this->controller->getCost($order, $this, $cost);
+        return $this->getDeliveryService()->calculateDeliveryCost(
+            $this,
+            $this->controller,
+            $order,
+            (float)$cost
+        );
     }
 
     /**
@@ -99,20 +89,7 @@ class msDelivery extends xPDOSimpleObject
      */
     public function getFirstPayment()
     {
-        $this->modx->log(1, 'msDelivery getFirstPayment');
-        $id = 0;
-        $c = $this->xpdo->newQuery(msPayment::class);
-        $c->leftJoin(msDeliveryMember::class, 'Member', msPayment::class . '.id = Member.payment_id');
-        $c->leftJoin(msDelivery::class, 'Delivery', 'Member.delivery_id = Delivery.id');
-        $c->sortby(msPayment::class . '.id', 'ASC');
-        $c->select(msPayment::class . '.id');
-        $c->where([msPayment::class . '.active' => 1, 'Delivery.id' => $this->id]);
-        $c->limit(1);
-        if ($c->prepare() && $c->stmt->execute()) {
-            $id = $c->stmt->fetchColumn();
-        }
-
-        return $id;
+        return $this->getDeliveryService()->getFirstActivePayment($this);
     }
 
     /**
@@ -122,8 +99,25 @@ class msDelivery extends xPDOSimpleObject
      */
     public function remove(array $ancestors = [])
     {
-        $this->xpdo->removeCollection(msDeliveryMember::class, ['delivery_id' => $this->id]);
-
+        $this->getDeliveryService()->removeDelivery($this, $ancestors);
         return parent::remove($ancestors);
+    }
+
+    /**
+     * Получить сервис доставки (lazy loading)
+     *
+     * @return DeliveryService
+     */
+    protected function getDeliveryService(): DeliveryService
+    {
+        if ($this->deliveryService === null) {
+            if ($this->xpdo->services->has('ms3_delivery_service')) {
+                $this->deliveryService = $this->xpdo->services->get('ms3_delivery_service');
+            } else {
+                $this->deliveryService = new DeliveryService($this->xpdo);
+            }
+        }
+
+        return $this->deliveryService;
     }
 }

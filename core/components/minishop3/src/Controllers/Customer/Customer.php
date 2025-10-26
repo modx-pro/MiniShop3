@@ -63,22 +63,32 @@ class Customer
 
     public function generateToken()
     {
-        $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
-        $token = md5(rand() . $tokenName);
-        $_SESSION['ms3']['customer_token'] = $token;
-        $lifetime = $this->modx->getOption('session_gc_maxlifetime', null, '604800') * 1000;
-        return $this->success('', compact('token', 'lifetime'));
+        /** @var \MiniShop3\Services\TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+
+        $result = $tokenService->generateCustomerToken();
+
+        return $this->success('', [
+            'token' => $result['token'],
+            'lifetime' => $result['lifetime'],
+        ]);
     }
 
     public function updateToken($token)
     {
         if (empty($token)) {
-            return false;
+            return $this->generateToken();
         }
-        $this->token = $token;
-        $_SESSION['ms3']['customer_token'] = $token;
-        $lifetime = $this->modx->getOption('session_gc_maxlifetime', null, '604800') * 1000;
-        return $this->success('', compact('token', 'lifetime'));
+
+        /** @var \MiniShop3\Services\TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+
+        $result = $tokenService->updateCustomerToken($token);
+
+        return $this->success('', [
+            'token' => $result['token'],
+            'lifetime' => $result['lifetime'],
+        ]);
     }
 
     public function registerValidation($rules = [], $messages = [])

@@ -3,6 +3,7 @@
 namespace MiniShop3\Model;
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Services\Product\ProductService;
 use MODX\Revolution\modResource;
 use xPDO\Om\xPDOObject;
 use xPDO\xPDO;
@@ -31,6 +32,9 @@ class msProduct extends modResource
     protected $Vendor;
     protected $options = null;
     protected $originalFieldMeta;
+
+    /** @var ProductService|null */
+    protected $productService;
 
     /**
      * msProduct constructor.
@@ -143,12 +147,10 @@ class msProduct extends modResource
      */
     public function save($cacheFlag = null)
     {
-        if (!$this->isNew() && parent::get('class_key') !== msProduct::class) {
-            $this->loadData()->remove();
-            parent::set('show_in_tree', true);
-        } else {
-            $this->loadData();
-        }
+        $oldClassKey = parent::get('class_key');
+
+        // Обрабатываем изменение типа товара через сервис
+        $this->getProductService()->handleProductSave($this, $oldClassKey);
 
         return parent::save($cacheFlag);
     }
@@ -390,15 +392,13 @@ class msProduct extends modResource
      */
     public function duplicate(array $options = [])
     {
-        parent::set('categories', $this->loadData()->get('categories'));
-        parent::set('options', $this->loadData()->get('options'));
-        parent::set('links', $this->loadData()->get('links'));
+        // Дублируем через родительский метод
+        $newProduct = parent::duplicate($options);
 
-        parent::set('image', '');
-        parent::set('thumb', '');
+        // Копируем связанные данные через сервис
+        $this->getProductService()->duplicateProduct($this, $newProduct);
 
-        /** @var msProduct $new */
-        return parent::duplicate($options);
+        return $newProduct;
     }
 
     /**
@@ -408,31 +408,7 @@ class msProduct extends modResource
      */
     public function getNeighborhood()
     {
-        $arr = [];
-
-        $q = $this->xpdo->newQuery(msProduct::class, ['parent' => $this->parent, 'class_key' => msProduct::class]);
-        $q->sortby('menuindex', 'ASC');
-        $q->select('id');
-        if ($q->prepare() && $q->stmt->execute()) {
-            $ids = $q->stmt->fetchAll(\PDO::FETCH_COLUMN);
-            $current = array_search($this->id, $ids);
-
-            $right = $left = [];
-            foreach ($ids as $k => $v) {
-                if ($k > $current) {
-                    $right[] = $v;
-                } elseif ($k < $current) {
-                    $left[] = $v;
-                }
-            }
-
-            $arr = [
-                'left' => array_reverse($left),
-                'right' => $right,
-            ];
-        }
-
-        return $arr;
+        return $this->getProductService()->getNeighborProducts($this);
     }
 
     /**
@@ -440,33 +416,8 @@ class msProduct extends modResource
      */
     public function process()
     {
-        /** @var msProductData $data */
-        if ($data = $this->getOne('Data')) {
-            $pls = $data->toArray();
-            $tmp = $pls['price'];
-            $pls['price'] = $this->getPrice($pls);
-            if ($pls['price'] < $tmp) {
-                $pls['old_price'] = $tmp;
-            }
-            $pls['weight'] = $this->getWeight($pls);
-            $pls = $this->modifyFields($pls);
-            $pls['price'] = $this->ms3->format->price($pls['price']);
-            $pls['old_price'] = $this->ms3->format->price($pls['old_price']);
-            $pls['weight'] = $this->ms3->format->weight($pls['weight']);
-            unset($pls['id']);
-
-            $this->xpdo->setPlaceholders($pls);
-
-            $this->loadOptions();
-            $this->xpdo->setPlaceholders($this->options);
-        }
-        /** @var msVendor $vendor */
-        if ($vendor = $this->getOne('Vendor')) {
-            $this->xpdo->setPlaceholders($vendor->toArray('vendor.'));
-        }
-        $this->xpdo->lexicon->load('minishop3:default');
-        $this->xpdo->lexicon->load('minishop3:cart');
-        $this->xpdo->lexicon->load('minishop3:product');
+        // Обрабатываем товар для вывода через сервис
+        $this->getProductService()->processForDisplay($this);
 
         return parent::process();
     }
@@ -523,5 +474,25 @@ class msProduct extends modResource
     public function modifyFields($data = [])
     {
         return $this->loadData()->modifyFields($data);
+    }
+
+    /**
+     * Получить сервис товаров (lazy loading)
+     *
+     * @return ProductService
+     */
+    protected function getProductService(): ProductService
+    {
+        if ($this->productService === null) {
+            // Пытаемся получить из контейнера, если зарегистрирован
+            if ($this->xpdo->services->has('ms3_product_service')) {
+                $this->productService = $this->xpdo->services->get('ms3_product_service');
+            } else {
+                // Создаем новый экземпляр
+                $this->productService = new ProductService($this->xpdo);
+            }
+        }
+
+        return $this->productService;
     }
 }

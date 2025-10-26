@@ -16,6 +16,10 @@ use ModxPro\PdoTools\Fetch;
 /** @var MiniShop3 $ms3 */
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
+
+// Загружаем дополнительные поля из ms3_extra_fields в xPDO map
+$ms3->loadMap();
+
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
@@ -205,9 +209,22 @@ $default = [
     'return' => 'data',
     'nestedChunkPrefix' => 'ms3_',
 ];
-// Merge all properties and run!
-$pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
-$rows = $pdoFetch->run();
+
+// Merge all properties and run with error handling
+try {
+    $pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
+    $rows = $pdoFetch->run();
+} catch (\Exception $e) {
+    $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ms3_products] Query error: ' . $e->getMessage());
+
+    // В режиме отладки показываем ошибку пользователю
+    if ($modx->getOption('debug', null, false)) {
+        return '<div class="alert alert-danger">Ошибка загрузки товаров: ' . htmlspecialchars($e->getMessage()) . '</div>';
+    }
+
+    // В продакшене возвращаем пустоту
+    $rows = [];
+}
 
 if ($scriptProperties['return'] === 'json') {
     $rows = json_decode($rows, true);
@@ -251,9 +268,21 @@ if (!empty($rows) && is_array($rows)) {
             }
             $row = $product->modifyFields($row);
         }
-//        $row['price'] = $ms3->format->price($row['price']);
-//        $row['old_price'] = $ms3->format->price($row['old_price']);
-//        $row['weight'] = $ms3->format->price($row['weight']);
+
+        // Расчет скидки ДО форматирования (используем числовые значения)
+        $row['discount'] = 0;
+        if (!empty($row['old_price']) && $row['old_price'] > 0 && !empty($row['price']) && $row['price'] > 0) {
+            $row['discount'] = $ms3->format->discount($row['old_price'], $row['price']);
+        }
+
+        // Опциональное форматирование цен (включается параметром &formatPrices=`1`)
+        if (!empty($scriptProperties['formatPrices'])) {
+            $withCurrency = !empty($scriptProperties['withCurrency']);
+            $row['price'] = $ms3->format->price($row['price'], $withCurrency);
+            $row['old_price'] = $ms3->format->price($row['old_price'], $withCurrency);
+            $row['weight'] = $ms3->format->weight($row['weight']);
+        }
+
         $row['idx'] = $pdoFetch->idx++;
 
         $opt_time_start = microtime(true);

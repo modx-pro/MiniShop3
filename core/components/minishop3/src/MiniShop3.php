@@ -22,7 +22,7 @@ use xPDO\xPDO;
 
 class MiniShop3
 {
-    public $version = '1.0.0-alpha.1';
+    public $version = '1.0.0-alpha.2';
 
     /** @var modX $modx */
     public $modx;
@@ -135,10 +135,73 @@ class MiniShop3
             });
         }
 
-        // Регистрируем ProductDataService для работы с msProductData
+        // Регистрируем ProductDataService для работы с данными товара
         if (!$this->modx->services->has('ms3_product_data_service')) {
             $this->modx->services->add('ms3_product_data_service', function() use ($modx) {
-                return new \MiniShop3\Services\ProductDataService($modx);
+                return new \MiniShop3\Services\Product\ProductDataService($modx);
+            });
+        }
+
+        // Регистрируем ProductImageService для работы с изображениями товара
+        if (!$this->modx->services->has('ms3_product_image_service')) {
+            $this->modx->services->add('ms3_product_image_service', function() use ($modx) {
+                return new \MiniShop3\Services\Product\ProductImageService($modx);
+            });
+        }
+
+        // Регистрируем VendorService для работы с производителями
+        if (!$this->modx->services->has('ms3_vendor_service')) {
+            $this->modx->services->add('ms3_vendor_service', function() use ($modx) {
+                return new \MiniShop3\Services\Vendor\VendorService($modx);
+            });
+        }
+
+        // Регистрируем DeliveryService для работы с доставкой
+        if (!$this->modx->services->has('ms3_delivery_service')) {
+            $this->modx->services->add('ms3_delivery_service', function() use ($modx) {
+                return new \MiniShop3\Services\Delivery\DeliveryService($modx);
+            });
+        }
+
+        // Регистрируем PaymentService для работы с оплатой
+        if (!$this->modx->services->has('ms3_payment_service')) {
+            $this->modx->services->add('ms3_payment_service', function() use ($modx) {
+                return new \MiniShop3\Services\Payment\PaymentService($modx);
+            });
+        }
+
+        // Регистрируем OrderService для работы с заказами
+        if (!$this->modx->services->has('ms3_order_service')) {
+            $this->modx->services->add('ms3_order_service', function() use ($modx) {
+                return new \MiniShop3\Services\Order\OrderService($modx);
+            });
+        }
+
+        // Регистрируем TokenService для безопасной работы с токенами
+        if (!$this->modx->services->has('ms3_token_service')) {
+            $this->modx->services->add('ms3_token_service', function() use ($modx) {
+                return new \MiniShop3\Services\TokenService($modx);
+            });
+        }
+
+        // Регистрируем CategoryService для работы с категориями
+        if (!$this->modx->services->has('ms3_category_service')) {
+            $this->modx->services->add('ms3_category_service', function() use ($modx) {
+                return new \MiniShop3\Services\Category\CategoryService($modx);
+            });
+        }
+
+        // Регистрируем CategoryOptionService для работы с опциями категорий
+        if (!$this->modx->services->has('ms3_category_option_service')) {
+            $this->modx->services->add('ms3_category_option_service', function() use ($modx) {
+                return new \MiniShop3\Services\Category\CategoryOptionService($modx);
+            });
+        }
+
+        // Регистрируем ImageService для работы с изображениями (Intervention Image v3)
+        if (!$this->modx->services->has('ms3_image')) {
+            $this->modx->services->add('ms3_image', function() use ($modx) {
+                return new \MiniShop3\Services\ImageService($modx);
             });
         }
 
@@ -387,35 +450,32 @@ class MiniShop3
 
     public function registerSnippet($scriptProperties)
     {
-        //TODO секрет в системные настройки, плюс в билдер
-        $secret = 'modx64ca89bab06551.54872401';
-        $token = 'ms3' . md5(json_encode($scriptProperties) . $secret);
+        /** @var \MiniShop3\Services\TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
 
-        $propertiesExists = $this->modx->cacheManager->get($token, [xPDO::OPT_CACHE_KEY => 'ms3/msCart']);
-        if (!$propertiesExists) {
-            $options = [
-                xPDO::OPT_CACHE_KEY => 'ms3/msCart',
-            ];
+        // Генерируем токен через TokenService (использует безопасный секрет из настроек)
+        $token = $tokenService->generateSnippetToken($scriptProperties);
 
-            //TODO Время хранения кэша в системные настройки
-            $this->modx->cacheManager->set($token, $scriptProperties, 0, $options);
+        // Проверяем кеш
+        $cachedData = $tokenService->getSnippetData($token);
+
+        if ($cachedData === null) {
+            // Кешируем параметры с TTL из системных настроек
+            $tokenService->cacheSnippetData($token, $scriptProperties);
         }
 
-        $output = [];
-        $output['token'] = $token;
+        // Формируем данные для JS
+        $output = [
+            'token' => $token,
+        ];
 
         if (isset($scriptProperties['selector'])) {
-            $selector = $scriptProperties['selector'];
-            $output['selector'] = $selector;
+            $output['selector'] = $scriptProperties['selector'];
         }
 
-//        $this->modx->regClientStartupScript(
-//            '<script>ms3Config.render.cart.push({token:"' . $token . '", selector: ' . $selector . '})</script>',
-//            true
-//        );
-
+        // Регистрируем в глобальном конфиге для JS
         $this->modx->regClientStartupScript(
-            '<script>ms3Config.render.cart.push( ' . json_encode($output) . ')</script>',
+            '<script>ms3Config.render.cart.push(' . json_encode($output) . ');</script>',
             true
         );
     }

@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Model;
 
+use MiniShop3\Services\Vendor\VendorService;
 use xPDO\Om\xPDOSimpleObject;
 
 /**
@@ -22,6 +23,9 @@ use xPDO\Om\xPDOSimpleObject;
  */
 class msVendor extends xPDOSimpleObject
 {
+    /** @var VendorService|null */
+    protected $vendorService;
+
     /**
      * @param array $ancestors
      *
@@ -29,17 +33,25 @@ class msVendor extends xPDOSimpleObject
      */
     public function remove(array $ancestors = [])
     {
-        $c = $this->xpdo->newQuery(msProductData::class);
-        $c->command('UPDATE');
-        $c->set([
-            'vendor_id' => 0,
-        ]);
-        $c->where([
-            'vendor_id' => $this->id,
-        ]);
-        $c->prepare();
-        $c->stmt->execute();
-
+        $this->getVendorService()->removeVendor($this, $ancestors);
         return parent::remove($ancestors);
+    }
+
+    /**
+     * Получить сервис производителей (lazy loading)
+     *
+     * @return VendorService
+     */
+    protected function getVendorService(): VendorService
+    {
+        if ($this->vendorService === null) {
+            if ($this->xpdo->services->has('ms3_vendor_service')) {
+                $this->vendorService = $this->xpdo->services->get('ms3_vendor_service');
+            } else {
+                $this->vendorService = new VendorService($this->xpdo);
+            }
+        }
+
+        return $this->vendorService;
     }
 }

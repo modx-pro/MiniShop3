@@ -6,6 +6,7 @@ use MiniShop3\Controllers\Order\OrderInterface;
 use MiniShop3\Controllers\Payment\Payment;
 use MiniShop3\Controllers\Payment\PaymentInterface;
 use MiniShop3\MiniShop3;
+use MiniShop3\Services\Payment\PaymentService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOSimpleObject;
 use xPDO\xPDO;
@@ -31,8 +32,8 @@ class msPayment extends xPDOSimpleObject
     /** @var MiniShop3 $ms3 */
     public $ms3;
 
-    /** @var string $defaultControllerClass */
-    private string $defaultControllerClass = 'MiniShop3\\Controllers\\Payment\\Payment';
+    /** @var PaymentService|null */
+    protected $paymentService;
 
     /**
      * msPayment constructor.
@@ -54,19 +55,8 @@ class msPayment extends xPDOSimpleObject
      */
     public function loadHandler()
     {
-        $class = $this->get('class');
-        if (!$class || $class === 'Payment') {
-            $class = $this->defaultControllerClass;
-        }
-
-        $this->controller = new $class($this->ms3, []);
-        if (!($this->controller instanceof PaymentInterface)) {
-            $this->xpdo->log(modX::LOG_LEVEL_ERROR, 'Could not initialize payment controller class: "' . $class . '"');
-
-            return false;
-        }
-
-        return true;
+        $this->controller = $this->getPaymentService()->loadPaymentHandler($this);
+        return $this->controller instanceof PaymentInterface;
     }
 
     /**
@@ -78,13 +68,7 @@ class msPayment extends xPDOSimpleObject
      */
     public function send(msOrder $order)
     {
-        if (!is_object($this->controller) || !($this->controller instanceof PaymentInterface)) {
-            if (!$this->loadHandler()) {
-                return false;
-            }
-        }
-
-        return $this->controller->send($order);
+        return $this->getPaymentService()->sendToPaymentGateway($this, $this->controller, $order);
     }
 
     /**
@@ -96,13 +80,7 @@ class msPayment extends xPDOSimpleObject
      */
     public function receive(msOrder $order)
     {
-        if (!is_object($this->controller) || !($this->controller instanceof PaymentInterface)) {
-            if (!$this->loadHandler()) {
-                return false;
-            }
-        }
-
-        return $this->controller->receive($order);
+        return $this->getPaymentService()->receivePayment($this, $this->controller, $order);
     }
 
     /**
@@ -115,12 +93,12 @@ class msPayment extends xPDOSimpleObject
      */
     public function getCost(OrderInterface $order, float $cost = 0.0)
     {
-        if (!is_object($this->controller) || !($this->controller instanceof PaymentInterface)) {
-            if (!$this->loadHandler()) {
-                return false;
-            }
-        }
-        return $this->controller->getCost($order, $this, $cost);
+        return $this->getPaymentService()->calculatePaymentCost(
+            $this,
+            $this->controller,
+            $order,
+            (float)$cost
+        );
     }
 
     /**
@@ -130,7 +108,25 @@ class msPayment extends xPDOSimpleObject
      */
     public function remove(array $ancestors = [])
     {
-        $this->xpdo->removeCollection(msDeliveryMember::class, ['payment_id' => $this->id]);
+        $this->getPaymentService()->removePayment($this, $ancestors);
         return parent::remove($ancestors);
+    }
+
+    /**
+     * Получить сервис оплаты (lazy loading)
+     *
+     * @return PaymentService
+     */
+    protected function getPaymentService(): PaymentService
+    {
+        if ($this->paymentService === null) {
+            if ($this->xpdo->services->has('ms3_payment_service')) {
+                $this->paymentService = $this->xpdo->services->get('ms3_payment_service');
+            } else {
+                $this->paymentService = new PaymentService($this->xpdo);
+            }
+        }
+
+        return $this->paymentService;
     }
 }

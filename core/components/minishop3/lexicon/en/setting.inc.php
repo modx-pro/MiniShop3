@@ -177,3 +177,18 @@ $_lang['ms3_source_imageNameType_desc'] = 'This parameter specifies how to renam
 $_lang['setting_ms3_utility_import_fields'] = 'Import fields list';
 $_lang['setting_ms3_utility_import_fields_delimiter'] = 'Import file columns delimiter';
 
+// Token Security Settings
+$_lang['area_ms3_security'] = 'Security';
+$_lang['setting_ms3_customer_token_ttl'] = 'Customer token Time-To-Live (TTL)';
+$_lang['setting_ms3_customer_token_ttl_desc'] = 'Time in seconds for which the customer token remains valid. Default is 86400 (24 hours). After expiration, the user will receive a new token.';
+$_lang['setting_ms3_snippet_token_secret'] = 'Secret key for snippet tokens';
+$_lang['setting_ms3_snippet_token_secret_desc'] = 'Cryptographically secure secret key for generating snippet tokens. Generated automatically on first run. DO NOT change this value unless necessary!';
+$_lang['setting_ms3_snippet_cache_ttl'] = 'Snippet data cache Time-To-Live (TTL)';
+$_lang['setting_ms3_snippet_cache_ttl_desc'] = 'Time in seconds for which snippet parameters are stored in cache. Default is 3600 (1 hour). Used for cart performance optimization.';
+
+// Currency and Formatting Settings
+$_lang['setting_ms3_currency_symbol'] = 'Currency symbol';
+$_lang['setting_ms3_currency_symbol_desc'] = 'Currency symbol for price display. Default is "₽" (ruble). Examples: $, €, £, ₽, ₴, ¥, ₸.';
+$_lang['setting_ms3_currency_position'] = 'Currency symbol position';
+$_lang['setting_ms3_currency_position_desc'] = 'Where to display currency symbol relative to price. Valid values: "before" (before price: $ 100) or "after" (after price: 100 ₽). Default is "after".';
+

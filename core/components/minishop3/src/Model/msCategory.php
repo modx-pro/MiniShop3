@@ -2,6 +2,8 @@
 
 namespace MiniShop3\Model;
 
+use MiniShop3\Services\Category\CategoryService;
+use MiniShop3\Services\Category\CategoryOptionService;
 use MODX\Revolution\modAccessibleObject;
 use MODX\Revolution\modCategory;
 use MODX\Revolution\modResource;
@@ -22,6 +24,12 @@ use xPDO\xPDO;
 class msCategory extends modResource
 {
     public $showInContextMenu = true;
+
+    /** @var CategoryService|null */
+    protected $categoryService;
+
+    /** @var CategoryOptionService|null */
+    protected $categoryOptionService;
     /**
      * msCategory constructor.
      *
@@ -132,20 +140,12 @@ class msCategory extends modResource
      */
     public function duplicate(array $options = [])
     {
-        $category = parent::duplicate($options);
+        $newCategory = parent::duplicate($options);
 
-        $options = $this->getMany('CategoryOptions');
-        /** @var msCategoryOption $option */
-        foreach ($options as $option) {
-            $option->set('category_id', $category->get('id'));
+        // Дублируем связанные данные через сервис
+        $this->getCategoryService()->duplicateCategory($this, $newCategory);
 
-            /** @var msCategoryOption $new */
-            $new = $this->xpdo->newObject(msCategoryOption::class);
-            $new->fromArray($option->toArray(), '', true, true);
-            $new->save();
-        }
-
-        return $category;
+        return $newCategory;
     }
 
     /**
@@ -155,20 +155,11 @@ class msCategory extends modResource
      */
     public function save($cacheFlag = null)
     {
-        if (!$this->isNew() && parent::get('class_key') != 'msCategory') {
-            parent::set('hide_children_in_tree', false);
-            // Show children
-            $c = $this->xpdo->newQuery(msProduct::class);
-            $c->command('UPDATE');
-            $c->where([
-                'parent' => $this->id,
-                'class_key' => 'msProduct',
-            ]);
-            $c->set([
-                'show_in_tree' => true,
-            ]);
-            $c->prepare();
-            $c->stmt->execute();
+        $oldClassKey = parent::get('class_key');
+
+        // Обрабатываем изменение типа категории через сервис
+        if (!$this->isNew() && $oldClassKey != 'msCategory') {
+            $this->getCategoryService()->handleCategorySave($this, $oldClassKey);
         }
 
         return parent::save($cacheFlag);
@@ -181,33 +172,7 @@ class msCategory extends modResource
      */
     public function getNeighborhood()
     {
-        $arr = [];
-
-        $c = $this->xpdo->newQuery(msCategory::class, ['parent' => $this->parent, 'class_key' => 'msCategory']);
-        $c->sortby('menuindex', 'ASC');
-        $c->select('id');
-        if ($c->prepare() && $c->stmt->execute()) {
-            $ids = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
-            $current = array_search($this->id, $ids);
-
-            $right = $left = [];
-            foreach ($ids as $k => $v) {
-                if ($k > $current) {
-                    $right[] = $v;
-                } else {
-                    if ($k < $current) {
-                        $left[] = $v;
-                    }
-                }
-            }
-
-            $arr = [
-                'left' => array_reverse($left),
-                'right' => $right,
-            ];
-        }
-
-        return $arr;
+        return $this->getCategoryService()->getNeighborCategories($this);
     }
 
     /**
@@ -217,15 +182,7 @@ class msCategory extends modResource
      */
     public function getOptionKeys($force = false)
     {
-        if ($this->optionKeys === null || $force) {
-            $c = $this->prepareOptionListCriteria();
-            $c->groupby('msOption.id');
-            $c->select('msOption.key');
-            $this->optionKeys = $c->prepare() && $c->stmt->execute()
-                ? $c->stmt->fetchAll(\PDO::FETCH_COLUMN)
-                : [];
-        }
-        return $this->optionKeys;
+        return $this->getCategoryOptionService()->getOptionKeys($this, $force);
     }
 
     /**
@@ -233,18 +190,7 @@ class msCategory extends modResource
      */
     public function prepareOptionListCriteria()
     {
-        $categories = [];
-        $categories[] = $this->id;
-
-        $c = $this->xpdo->newQuery(msOption::class);
-        $c->leftJoin(msCategoryOption::class, 'msCategoryOption', 'msCategoryOption.option_id = msOption.id');
-        $c->leftJoin(modCategory::class, 'Category', 'Category.id = msOption.category_id');
-        $c->sortby('msCategoryOption.position');
-        $c->where(['msCategoryOption.active' => 1]);
-        if (!empty($categories[0])) {
-            $c->where(['msCategoryOption.category_id:IN' => $categories]);
-        }
-        return $c;
+        return $this->getCategoryOptionService()->buildOptionQuery($this);
     }
 
     /**
@@ -252,32 +198,46 @@ class msCategory extends modResource
      */
     public function getOptionFields(array $keys = [])
     {
-        $fields = [];
-        $c = $this->prepareOptionListCriteria();
-        $c->select([
-            $this->xpdo->getSelectColumns(msOption::class, 'msOption'),
-            $this->xpdo->getSelectColumns(
-                'msCategoryOption',
-                'msCategoryOption',
-                '',
-                ['id', 'option_id', 'category_id'],
-                true
-            ),
-            'Category.category_id AS category_name',
-        ]);
-        if (!empty($keys)) {
-            $c->where(['msOption.key:IN' => $keys]);
+        return $this->getCategoryOptionService()->getOptionFields($this, $keys);
+    }
+
+    /**
+     * Получить сервис категорий (lazy loading)
+     *
+     * @return CategoryService
+     */
+    protected function getCategoryService(): CategoryService
+    {
+        if ($this->categoryService === null) {
+            // Пытаемся получить из контейнера, если зарегистрирован
+            if ($this->xpdo->services->has('ms3_category_service')) {
+                $this->categoryService = $this->xpdo->services->get('ms3_category_service');
+            } else {
+                // Создаем новый экземпляр
+                $this->categoryService = new CategoryService($this->xpdo);
+            }
         }
 
-        $options = $this->xpdo->getIterator(msOption::class, $c);
-        /** @var msOption $option */
-        foreach ($options as $option) {
-            $field = $option->toArray();
-            $value = $option->getValue(parent::get('id'));
-            $field['value'] = !is_null($value) ? $value : $field['value'];
-            $field['ext_field'] = $option->getManagerField($field);
-            $fields[] = $field;
+        return $this->categoryService;
+    }
+
+    /**
+     * Получить сервис опций категорий (lazy loading)
+     *
+     * @return CategoryOptionService
+     */
+    protected function getCategoryOptionService(): CategoryOptionService
+    {
+        if ($this->categoryOptionService === null) {
+            // Пытаемся получить из контейнера, если зарегистрирован
+            if ($this->xpdo->services->has('ms3_category_option_service')) {
+                $this->categoryOptionService = $this->xpdo->services->get('ms3_category_option_service');
+            } else {
+                // Создаем новый экземпляр
+                $this->categoryOptionService = new CategoryOptionService($this->xpdo);
+            }
         }
-        return $fields;
+
+        return $this->categoryOptionService;
     }
 }

@@ -177,3 +177,18 @@ $_lang['ms3_source_imageNameType_desc'] = 'Этот параметр указы�
 $_lang['setting_ms3_utility_import_fields'] = 'Список полей для импорта';
 $_lang['setting_ms3_utility_import_fields_delimiter'] = 'Разделитель колонок в файле импорта';
 
+// Token Security Settings
+$_lang['area_ms3_security'] = 'Безопасность';
+$_lang['setting_ms3_customer_token_ttl'] = 'Время жизни токена покупателя (TTL)';
+$_lang['setting_ms3_customer_token_ttl_desc'] = 'Время в секундах, в течение которого токен покупателя остается действительным. По умолчанию 86400 (24 часа). После истечения срока пользователь получит новый токен.';
+$_lang['setting_ms3_snippet_token_secret'] = 'Секретный ключ для токенов сниппетов';
+$_lang['setting_ms3_snippet_token_secret_desc'] = 'Криптографически стойкий секретный ключ для генерации токенов сниппетов. Генерируется автоматически при первом запуске. НЕ изменяйте это значение без необходимости!';
+$_lang['setting_ms3_snippet_cache_ttl'] = 'Время кеширования данных сниппетов (TTL)';
+$_lang['setting_ms3_snippet_cache_ttl_desc'] = 'Время в секундах, в течение которого параметры сниппетов хранятся в кеше. По умолчанию 3600 (1 час). Используется для оптимизации производительности корзины.';
+
+// Currency and Formatting Settings
+$_lang['setting_ms3_currency_symbol'] = 'Символ валюты';
+$_lang['setting_ms3_currency_symbol_desc'] = 'Символ валюты для отображения цен. По умолчанию "₽" (рубль). Примеры: $, €, £, ₽, ₴, ¥, ₸.';
+$_lang['setting_ms3_currency_position'] = 'Позиция символа валюты';
+$_lang['setting_ms3_currency_position_desc'] = 'Где показывать символ валюты относительно цены. Допустимые значения: "before" (до цены: $ 100) или "after" (после цены: 100 ₽). По умолчанию "after".';
+

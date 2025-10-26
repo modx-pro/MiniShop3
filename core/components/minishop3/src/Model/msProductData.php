@@ -4,6 +4,8 @@ namespace MiniShop3\Model;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Processors\Gallery\RemoveCatalogs;
+use MiniShop3\Services\Product\ProductDataService;
+use MiniShop3\Services\Product\ProductImageService;
 use MODX\Revolution\Sources\modMediaSource;
 use xPDO\Om\xPDOSimpleObject;
 use xPDO\xPDO;
@@ -45,6 +47,12 @@ class msProductData extends xPDOSimpleObject
     /** @var msProductOption $msProductOptionInstance */
     protected $msProductOptionInstance = null;
 
+    /** @var ProductDataService|null */
+    protected $productDataService;
+
+    /** @var ProductImageService|null */
+    protected $productImageService;
+
     /**
      * msProductData constructor.
      *
@@ -67,13 +75,7 @@ class msProductData extends xPDOSimpleObject
      */
     public function save($cacheFlag = null)
     {
-        $this->prepareObject();
-        $save = parent::save($cacheFlag);
-        $this->saveProductCategories();
-        $this->saveProductOptions();
-        $this->saveProductLinks();
-
-        return $save;
+        return $this->getProductDataService()->handleSave($this, $cacheFlag);
     }
 
     /**
@@ -104,11 +106,7 @@ class msProductData extends xPDOSimpleObject
     public function getOptionKeys($force = false)
     {
         if ($this->optionKeys === null || $force) {
-            if (empty($this->msProductOptionInstance)) {
-                $this->loadProductOptionInstance();
-            }
-
-            $this->optionKeys = $this->msProductOptionInstance->getOptionKeys(parent::get('id'));
+            $this->optionKeys = $this->getProductDataService()->getOptionKeys($this);
         }
 
         return $this->optionKeys;
@@ -119,10 +117,7 @@ class msProductData extends xPDOSimpleObject
      */
     public function getOptionFields()
     {
-        if (empty($this->msProductOptionInstance)) {
-            $this->loadProductOptionInstance();
-        }
-        return $this->msProductOptionInstance->getOptionFields(parent::get('id'));
+        return $this->getProductDataService()->getOptionFields($this);
     }
 
     private function loadProductOptionInstance()
@@ -262,18 +257,7 @@ class msProductData extends xPDOSimpleObject
      */
     public function remove(array $ancestors = [])
     {
-        $this->xpdo->removeCollection(msProductOption::class, ['product_id' => $this->id]);
-        $this->xpdo->removeCollection(msCategoryMember::class, ['product_id' => $this->id]);
-        $this->xpdo->removeCollection(msProductLink::class, ['master' => $this->id, 'OR:slave:=' => $this->id]);
-
-        $files = $this->getMany('Files', ['parent_id' => 0]);
-        /** @var msProductFile $file */
-        foreach ($files as $file) {
-            $file->remove();
-        }
-
-        RemoveCatalogs::process($this->xpdo, $this->id);
-
+        $this->getProductDataService()->removeProduct($this, $ancestors);
         return parent::remove($ancestors);
     }
 
@@ -282,15 +266,7 @@ class msProductData extends xPDOSimpleObject
      */
     public function generateAllThumbnails()
     {
-        $files = $this->xpdo->getIterator(msProductFile::class, [
-            'type' => 'image',
-            'parent_id' => 0,
-        ]);
-
-        /** @var msProductFile $file */
-        foreach ($files as $file) {
-            $file->generateThumbnails();
-        }
+        $this->getProductImageService()->generateAllThumbnails($this);
     }
 
     /**
@@ -300,18 +276,12 @@ class msProductData extends xPDOSimpleObject
      */
     public function initializeMediaSource($ctx = '')
     {
-        if ($this->mediaSource = $this->xpdo->getObject(modMediaSource::class, ['id' => $this->get('source_id')])) {
-            if (empty($ctx)) {
-                $product = $this->getOne('Product');
-                $ctx = $product->get('context_key');
-            }
-            $this->mediaSource->set('ctx', $ctx);
-            $this->mediaSource->initialize();
-
-            return $this->mediaSource;
+        if (empty($ctx)) {
+            $product = $this->getOne('Product');
+            $ctx = $product->get('context_key');
         }
 
-        return false;
+        return $this->getProductImageService()->initializeMediaSource($this, $ctx);
     }
 
     /**
@@ -319,39 +289,8 @@ class msProductData extends xPDOSimpleObject
      */
     public function rankProductImages()
     {
-        // Check if need to update files ranks
-        $c = $this->xpdo->newQuery(msProductFile::class, [
-            'product_id' => $this->get('id'),
-            'parent_id' => 0,
-        ]);
-        $c->select('MAX(`position`) + 1 as max');
-        $c->select('COUNT(id) as total');
-        $c->having('max <> total');
-        if ($c->prepare() && $c->stmt->execute()) {
-            if (!$c->stmt->rowCount()) {
-                return;
-            }
-        }
-
-        // Update ranks
-        $c = $this->xpdo->newQuery(msProductFile::class, [
-            'product_id' => $this->get('id'),
-            'parent_id' => 0,
-        ]);
-        $c->select('id');
-        $c->sortby('position ASC, createdon', 'ASC');
-
-        if ($c->prepare() && $c->stmt->execute()) {
-            $table = $this->xpdo->getTableName(msProductFile::class);
-            $update = $this->xpdo->prepare("UPDATE {$table} SET `position` = ? WHERE (id = ? OR parent_id = ?)");
-            $ids = $c->stmt->fetchAll(\PDO::FETCH_COLUMN);
-            foreach ($ids as $k => $id) {
-                $update->execute([$k, $id, $id]);
-            }
-
-            $alter = $this->xpdo->prepare("ALTER TABLE {$table} ORDER BY `position` ASC");
-            $alter->execute();
-        }
+        // Этот метод сейчас не используется, ранжирование встроено в updateProductImage
+        // Оставлен для обратной совместимости
     }
 
     /**
@@ -359,45 +298,7 @@ class msProductData extends xPDOSimpleObject
      */
     public function updateProductImage()
     {
-        $this->rankProductImages();
-        $c = $this->xpdo->newQuery(msProductFile::class, [
-            'product_id' => $this->id,
-            'parent_id' => 0,
-            'type' => 'image',
-            //'active' => true,
-        ]);
-        $c->sortby('position', 'ASC');
-        $c->limit(1);
-        /** @var msProductFile $file */
-        $file = $this->xpdo->getObject(msProductFile::class, $c);
-        if ($file) {
-            $thumb = $file->getFirstThumbnail();
-            $arr = [
-                'image' => $file->get('url'),
-                'thumb' => !empty($thumb['url'])
-                    ? $thumb['url']
-                    : '',
-            ];
-        } else {
-            $arr = [
-                'image' => null,
-                'thumb' => null,
-            ];
-        }
-
-        $this->fromArray($arr);
-        if (parent::save()) {
-            /** @var msProduct $product */
-            if ($product = $this->getOne('Product')) {
-                $product->clearCache();
-            }
-        }
-
-        if (empty($arr['thumb'])) {
-            $arr['thumb'] = $this->ms3->config['defaultThumb'];
-        }
-
-        return $arr['thumb'];
+        return $this->getProductImageService()->updateProductImage($this);
     }
 
     /**
@@ -478,21 +379,10 @@ class msProductData extends xPDOSimpleObject
      */
     public function getPrice($data = [])
     {
-        $price = parent::get('price');
         if (empty($data)) {
             $data = $this->toArray();
         }
-        $params = [
-            'product' => $this,
-            'data' => $data,
-            'price' => $price,
-        ];
-        $response = $this->ms3->utils->invokeEvent('msOnGetProductPrice', $params);
-        if ($response['success']) {
-            $price = $params['price'] = $response['data']['price'];
-        }
-
-        return $price;
+        return $this->getProductDataService()->getModifiedPrice($this, $data);
     }
 
     /**
@@ -504,21 +394,10 @@ class msProductData extends xPDOSimpleObject
      */
     public function getWeight($data = [])
     {
-        $weight = parent::get('weight');
         if (empty($data)) {
             $data = $this->toArray();
         }
-        $params = [
-            'product' => $this,
-            'data' => $data,
-            'weight' => $weight,
-        ];
-        $response = $this->ms3->utils->invokeEvent('msOnGetProductWeight', $params);
-        if ($response['success']) {
-            $weight = $params['weight'] = $response['data']['weight'];
-        }
-
-        return $weight;
+        return $this->getProductDataService()->getModifiedWeight($this, $data);
     }
 
     /* Returns prepared product fields.
@@ -530,16 +409,42 @@ class msProductData extends xPDOSimpleObject
         if (empty($data)) {
             $data = $this->toArray();
         }
-        $params = [
-            'product' => $this,
-            'data' => $data,
-        ];
-        $response = $this->ms3->utils->invokeEvent('msOnGetProductFields', $params);
-        if ($response['success']) {
-            unset($response['data']['product']);
-            $data = array_merge($data, $response['data']);
+        return $this->getProductDataService()->getModifiedFields($this, $data);
+    }
+
+    /**
+     * Получить сервис данных товара (lazy loading)
+     *
+     * @return ProductDataService
+     */
+    protected function getProductDataService(): ProductDataService
+    {
+        if ($this->productDataService === null) {
+            if ($this->xpdo->services->has('ms3_product_data_service')) {
+                $this->productDataService = $this->xpdo->services->get('ms3_product_data_service');
+            } else {
+                $this->productDataService = new ProductDataService($this->xpdo);
+            }
         }
 
-        return $data;
+        return $this->productDataService;
+    }
+
+    /**
+     * Получить сервис изображений товара (lazy loading)
+     *
+     * @return ProductImageService
+     */
+    protected function getProductImageService(): ProductImageService
+    {
+        if ($this->productImageService === null) {
+            if ($this->xpdo->services->has('ms3_product_image_service')) {
+                $this->productImageService = $this->xpdo->services->get('ms3_product_image_service');
+            } else {
+                $this->productImageService = new ProductImageService($this->xpdo);
+            }
+        }
+
+        return $this->productImageService;
     }
 }

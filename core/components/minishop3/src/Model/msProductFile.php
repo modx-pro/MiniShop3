@@ -188,47 +188,47 @@ class msProductFile extends xPDOSimpleObject
     }
 
     /**
-     * @param array $options
-     * @param array $info
+     * Генерация превью через ImageService
      *
-     * @return bool|null
+     * Заменяет устаревший phpThumb на современный Intervention Image v3
+     * Поддерживает работу с любыми MODX Media Sources (локальные, S3, CDN)
+     *
+     * @param array $options Параметры генерации
+     * @param array $info Данные из $mediaSource->getObjectContents()
+     *
+     * @return string|null Бинарные данные превью или null при ошибке
      */
     public function makeThumbnail($options = [], array $info)
     {
-        $phpThumb = new modPhpThumb($this->xpdo);
-        $phpThumb->initialize();
+        /** @var \MiniShop3\Services\ImageService $imageService */
+        $imageService = $this->xpdo->services->get('ms3_image');
 
-        $tf = tempnam(MODX_BASE_PATH, 'ms3_');
-        file_put_contents($tf, $info['content']);
-        $phpThumb->setSourceFilename($tf);
-
-        foreach ($options as $k => $v) {
-            $phpThumb->setParameter($k, $v);
+        if (!$imageService) {
+            $this->xpdo->log(
+                modX::LOG_LEVEL_ERROR,
+                '[miniShop3] ImageService not found. Make sure it is registered in service container.'
+            );
+            return null;
         }
 
-        $output = false;
-        if ($phpThumb->GenerateThumbnail() && $phpThumb->RenderOutput()) {
+        // Генерируем превью через ImageService
+        $output = $imageService->makeThumbnail($info, $options);
+
+        if ($output) {
             $this->xpdo->log(
                 modX::LOG_LEVEL_INFO,
-                '[miniShop3] phpThumb messages for "' . $this->get('url') .
-                '". ' . print_r($phpThumb->debugmessages, true)
+                '[miniShop3] Thumbnail generated successfully for "' . $this->get('url') . '"'
             );
-            $output = $phpThumb->outputImageData;
         } else {
             $this->xpdo->log(
                 modX::LOG_LEVEL_ERROR,
-                '[miniShop3] Could not generate thumbnail for "' .
-                $this->get('url') . '". ' . print_r($phpThumb->debugmessages, true)
+                '[miniShop3] Could not generate thumbnail for "' . $this->get('url') . '"'
             );
         }
 
-        if (file_exists($phpThumb->sourceFilename)) {
-            @unlink($phpThumb->sourceFilename);
-        }
-        @unlink($tf);
-
         return $output;
     }
+
 
     /**
      * @param $raw_image

@@ -328,4 +328,33 @@ return [
         'xtype' => 'textarea',
         'area' => 'ms3_customers',
     ],
+
+    // Token Security Settings
+    'ms3_customer_token_ttl' => [
+        'value' => 86400, // 24 часа
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_snippet_token_secret' => [
+        'value' => '', // Генерируется автоматически при первом запуске
+        'xtype' => 'textfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_snippet_cache_ttl' => [
+        'value' => 3600, // 1 час
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+
+    // Currency and Formatting Settings
+    'ms3_currency_symbol' => [
+        'value' => '₽',
+        'xtype' => 'textfield',
+        'area' => 'ms3_product',
+    ],
+    'ms3_currency_position' => [
+        'value' => 'after',
+        'xtype' => 'textfield',
+        'area' => 'ms3_product',
+    ],
 ];
