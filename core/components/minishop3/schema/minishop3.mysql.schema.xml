@@ -174,7 +174,6 @@
         <composite alias="Children" class="MiniShop3\Model\msProductFile" local="id" foreign="parent_id" cardinality="many" owner="local"/>
         <aggregate alias="Parent" class="MiniShop3\Model\msProductFile" local="parent_id" foreign="id" cardinality="one" owner="foreign"/>
         <aggregate alias="Product" class="MiniShop3\Model\msProduct" local="product_id" foreign="id" cardinality="one" owner="foreign"/>
-        <aggregate alias="Source" class="MODX\Revolution\Sources\modMediaSource" local="source_id" foreign="id" cardinality="one" owner="foreign" />
     </object>
 
 

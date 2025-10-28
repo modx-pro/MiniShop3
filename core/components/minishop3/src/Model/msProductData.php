@@ -75,7 +75,18 @@ class msProductData extends xPDOSimpleObject
      */
     public function save($cacheFlag = null)
     {
-        return $this->getProductDataService()->handleSave($this, $cacheFlag);
+        $service = $this->getProductDataService();
+        $service->prepareObject($this);
+
+        $save = parent::save($cacheFlag);
+
+        if ($save) {
+            $service->saveCategories($this);
+            $service->saveOptions($this);
+            $service->saveLinks($this);
+        }
+
+        return $save;
     }
 
     /**
@@ -125,90 +136,6 @@ class msProductData extends xPDOSimpleObject
         $this->msProductOptionInstance = $this->xpdo->newObject(msProductOption::class);
     }
 
-    /**
-     * Additional product categories
-     */
-    protected function saveProductCategories()
-    {
-        $categories = parent::get('categories');
-        if (is_string($categories)) {
-            $categories = json_decode($categories, true);
-        }
-        if (is_array($categories)) {
-            $id = parent::get('id');
-            $parent = parent::get('parent');
-
-            $table = $this->xpdo->getTableName(msCategoryMember::class);
-            $remove = $this->xpdo->prepare("DELETE FROM {$table} WHERE product_id = $id AND category_id = ?;");
-            $add = $this->xpdo->prepare("INSERT INTO {$table} (product_id, category_id) VALUES ($id, ?);");
-
-            // Plain array with all product categories
-            if (isset($categories[0])) {
-                if (!parent::isNew()) {
-                    $this->xpdo->removeCollection(msCategoryMember::class, ['product_id' => $id]);
-                }
-                foreach ($categories as $category) {
-                    if ($category != $parent) {
-                        $add->execute([$category]);
-                    }
-                }
-            } // Key-value array with categories to add of remove
-            else {
-                foreach ($categories as $category => $selected) {
-                    if (!$selected) {
-                        $remove->execute([$category]);
-                    } elseif ($category != $parent) {
-                        $add->execute([$category]);
-                    }
-                }
-            }
-            $remove->execute([$parent]);
-        }
-    }
-
-    /**
-     *  Shorthand for msProductOption::saveProductOptions
-     */
-    protected function saveProductOptions()
-    {
-        if (empty($this->msProductOptionInstance)) {
-            $this->loadProductOptionInstance();
-        }
-
-        $dataOptions = $this->getArraysValues();
-        $originalOptions = parent::get('options');
-        $options = [];
-        if (!empty($dataOptions)) {
-            $options = $dataOptions;
-        }
-        if (!empty($originalOptions)) {
-            $options = array_merge($options, $originalOptions);
-        }
-        $this->msProductOptionInstance->saveProductOptions(parent::get('id'), $options);
-    }
-
-    /**
-     *
-     */
-    protected function saveProductLinks()
-    {
-        $links = parent::get('links');
-        if (is_array($links)) {
-            $table = $this->xpdo->getTableName(msProductLink::class);
-            $add = $this->xpdo->prepare("INSERT INTO {$table} (link, master, slave) VALUES (?, ?, ?);");
-            foreach ($links as $type => $values) {
-                foreach ($values as $link => $ids) {
-                    foreach ($ids as $id) {
-                        if ($type == 'master') {
-                            $add->execute([$link, $this->id, $id]);
-                        } elseif ($type == 'slave') {
-                            $add->execute([$link, $id, $this->id]);
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     /**
      * @return array
@@ -438,8 +365,8 @@ class msProductData extends xPDOSimpleObject
     protected function getProductImageService(): ProductImageService
     {
         if ($this->productImageService === null) {
-            if ($this->xpdo->services->has('ms3_product_image_service')) {
-                $this->productImageService = $this->xpdo->services->get('ms3_product_image_service');
+            if ($this->xpdo->services->has('ms3_product_image')) {
+                $this->productImageService = $this->xpdo->services->get('ms3_product_image');
             } else {
                 $this->productImageService = new ProductImageService($this->xpdo);
             }

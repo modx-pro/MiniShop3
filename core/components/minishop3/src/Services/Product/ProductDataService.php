@@ -3,6 +3,7 @@
 namespace MiniShop3\Services\Product;
 
 use MiniShop3\Model\msCategoryMember;
+use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
@@ -29,30 +30,6 @@ class ProductDataService
     }
 
     /**
-     * Обработка сохранения данных товара
-     *
-     * Подготавливает объект, сохраняет основные данные,
-     * затем сохраняет связанные сущности (категории, опции, связи)
-     *
-     * @param msProductData $productData
-     * @param bool|null $cacheFlag
-     * @return bool
-     */
-    public function handleSave(msProductData $productData, ?bool $cacheFlag = null): bool
-    {
-        $this->prepareObject($productData);
-        $save = $productData->xpdo->call(msProductData::class . '::parent::save', [$productData, $cacheFlag]);
-
-        if ($save) {
-            $this->saveCategories($productData);
-            $this->saveOptions($productData);
-            $this->saveLinks($productData);
-        }
-
-        return $save;
-    }
-
-    /**
      * Подготовка объекта перед сохранением
      *
      * Обрабатывает поля weight и price - если они пустые,
@@ -75,7 +52,10 @@ class ProductDataService
      * Сохранение дополнительных категорий товара
      *
      * Синхронизирует таблицу msCategoryMember с массивом категорий из поля 'categories'
-     * Удаляет старые связи и создает новые
+     * Формат ожидаемых данных: JSON массив [3,4,27]
+     *
+     * ВАЖНО: msProductData::get('categories') переопределён и читает из БД,
+     * поэтому используем рефлексию для получения значения из $_fields (POST данные)
      *
      * @param msProductData $productData
      * @return void
@@ -83,24 +63,35 @@ class ProductDataService
     public function saveCategories(msProductData $productData): void
     {
         $productId = $productData->get('id');
-        $categories = $productData->get('categories');
 
-        if (!is_array($categories)) {
-            $categories = $categories
-                ? array_map('trim', explode(',', $categories))
-                : [];
+        // Получаем значение напрямую из $_fields через рефлексию
+        $reflection = new \ReflectionClass($productData);
+        $property = $reflection->getProperty('_fields');
+        $property->setAccessible(true);
+        $fields = $property->getValue($productData);
+        $categories = $fields['categories'] ?? null;
+
+        // Преобразуем в массив ID
+        if (is_string($categories)) {
+            // JSON массив: "[3,4,27]"
+            $categories = json_decode($categories, true);
+            if (!is_array($categories)) {
+                $categories = [];
+            }
+        } elseif (!is_array($categories)) {
+            $categories = [];
         }
 
         // Удаляем все старые связи
         $this->modx->removeCollection(msCategoryMember::class, ['product_id' => $productId]);
 
         // Создаем новые связи
-        foreach ($categories as $category) {
-            if (!empty($category)) {
+        foreach ($categories as $categoryId) {
+            if (!empty($categoryId) && is_numeric($categoryId)) {
                 /** @var msCategoryMember $member */
                 $member = $this->modx->newObject(msCategoryMember::class);
                 $member->set('product_id', $productId);
-                $member->set('category_id', $category);
+                $member->set('category_id', (int)$categoryId);
                 $member->save();
             }
         }
@@ -110,7 +101,7 @@ class ProductDataService
      * Сохранение опций товара
      *
      * Синхронизирует данные из JSON полей с таблицей msProductOption
-     * через статический метод msProductOption::saveOptions()
+     * через метод msProductOption::saveProductOptions()
      *
      * @param msProductData $productData
      * @return void
@@ -128,11 +119,9 @@ class ProductDataService
         }
 
         // Синхронизируем с таблицей опций
-        $this->modx->call(msProductOption::class, 'saveOptions', [
-            $this->modx,
-            $productId,
-            $options
-        ]);
+        /** @var msProductOption $optionInstance */
+        $optionInstance = $this->modx->newObject(msProductOption::class);
+        $optionInstance->saveProductOptions($productId, $options);
     }
 
     /**
@@ -309,10 +298,11 @@ class ProductDataService
      */
     public function getOptionKeys(msProductData $productData): array
     {
-        return $this->modx->call(msProductOption::class, 'getKeys', [
-            $this->modx,
-            $productData->get('id')
-        ]);
+        /** @var msProductOption $option */
+        $option = $this->modx->newObject(msProductOption::class);
+        $option->set('product_id', $productData->get('id'));
+        $result = $option->getOptionKeys($productData->get('id'));
+        return is_array($result) ? $result : [];
     }
 
     /**
@@ -327,10 +317,84 @@ class ProductDataService
      */
     public function getOptionFields(msProductData $productData, array $keys = []): array
     {
-        return $this->modx->call(msProductOption::class, 'getFields', [
-            $this->modx,
-            $productData->get('id'),
-            $keys
-        ]);
+        /** @var msProductOption $option */
+        $option = $this->modx->newObject(msProductOption::class);
+        $option->set('product_id', $productData->get('id'));
+        $result = $option->getOptionFields($productData->get('id'));
+        return is_array($result) ? $result : [];
+    }
+
+    /**
+     * Получить данные товара по ID
+     *
+     * Загружает msProduct и msProductData, объединяет их поля в один массив
+     * Используется в API контроллерах для получения полных данных товара
+     *
+     * @param int $productId ID товара
+     * @return array|null Массив данных или null если не найдено
+     */
+    public function getProductData(int $productId): ?array
+    {
+        // Загружаем товар
+        /** @var msProduct $product */
+        $product = $this->modx->getObject(msProduct::class, $productId);
+
+        if (!$product) {
+            return null;
+        }
+
+        // Загружаем данные товара (msProductData)
+        $productData = $product->loadData();
+
+        if (!$productData) {
+            return null;
+        }
+
+        // Собираем все поля товара (объединяем msProduct и msProductData)
+        $data = array_merge(
+            $product->toArray(),
+            $productData->toArray()
+        );
+
+        return $data;
+    }
+
+    /**
+     * Обновить данные товара
+     *
+     * Загружает товар по ID, обновляет поля msProductData и сохраняет
+     * Используется в API контроллерах для обновления данных товара
+     *
+     * @param int $productId ID товара
+     * @param array $data Данные для обновления
+     * @return array|null Обновленные данные или null при ошибке
+     */
+    public function updateProductData(int $productId, array $data): ?array
+    {
+        // Загружаем товар
+        /** @var msProduct $product */
+        $product = $this->modx->getObject(msProduct::class, $productId);
+
+        if (!$product) {
+            return null;
+        }
+
+        // Загружаем данные товара
+        /** @var msProductData $productData */
+        $productData = $product->loadData();
+
+        if (!$productData) {
+            return null;
+        }
+
+        // Обновляем поля
+        $productData->fromArray($data);
+
+        // Сохраняем
+        if ($productData->save()) {
+            return $productData->toArray();
+        }
+
+        return null;
     }
 }

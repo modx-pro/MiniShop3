@@ -69,8 +69,11 @@ class msProductUpdateManagerController extends msResourceUpdateController
 
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
         if ($show_gallery) {
-            $this->addLastJavascript($assetsUrl . 'js/mgr/misc/plupload/plupload.full.min.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/misc/plupload/i18n.js');
+            // Vue Uppy Gallery Uploader (modern replacement for Plupload)
+            $this->addCss($assetsUrl . 'css/mgr/utilities/gallery-uploader.min.css');
+            $this->addHtml('<script type="module" src="' . $assetsUrl . 'js/mgr/utilities/gallery-uploader.min.js"></script>');
+
+            // ExtJS Gallery components
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/ext.ddview.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.panel.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.toolbar.js');

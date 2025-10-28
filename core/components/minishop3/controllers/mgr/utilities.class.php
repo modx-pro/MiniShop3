@@ -54,8 +54,13 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         // Vue компоненты обращаются к ним через useLexicon() composable
 
         // get source properties
-        $productSource = $this->getOption('ms3_product_source_default', null, 1);
-        if ($source = $this->modx->getObject(modMediaSource::class, $productSource)) {
+        $productSource = (int)$this->getOption('ms3_product_source_default', null, 1);
+        // MODX имеет встроенный метод для получения источников
+        $source = null;
+        if ($productSource > 0) {
+            $source = $this->modx->getObject('sources.modMediaSource', $productSource);
+        }
+        if ($source) {
             $config['utility_gallery_source_id'] = $productSource;
             $config['utility_gallery_source_name'] = $source->get('name');
 

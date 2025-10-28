@@ -143,8 +143,8 @@ class MiniShop3
         }
 
         // Регистрируем ProductImageService для работы с изображениями товара
-        if (!$this->modx->services->has('ms3_product_image_service')) {
-            $this->modx->services->add('ms3_product_image_service', function() use ($modx) {
+        if (!$this->modx->services->has('ms3_product_image')) {
+            $this->modx->services->add('ms3_product_image', function() use ($modx) {
                 return new \MiniShop3\Services\Product\ProductImageService($modx);
             });
         }

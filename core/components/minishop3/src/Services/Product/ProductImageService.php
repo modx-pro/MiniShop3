@@ -66,33 +66,27 @@ class ProductImageService
     {
         $productId = $productData->get('id');
 
+        // Получаем source_id из товара или из настроек по умолчанию
+        $sourceId = (int)$productData->get('source_id');
+        if (!$sourceId) {
+            $sourceId = (int)$this->modx->getOption('ms3_product_source_default', null, 1);
+        }
+
+        // MODX имеет встроенный метод для получения источников
         /** @var modMediaSource $source */
-        if (!$source = $this->modx->getObject(modMediaSource::class, [
-            'class_key' => 'MODX\\Revolution\\Sources\\modFileMediaSource'
-        ])) {
+        $source = $this->modx->getObject('sources.modMediaSource', $sourceId);
+
+        if (!$source) {
             return false;
         }
 
-        $properties = $source->getProperties();
-        $properties['basePath']['value'] = $this->modx->getOption('ms3.gallery.files_path', null, '');
-        $properties['baseUrl']['value'] = $this->modx->getOption('ms3.gallery.files_url', null, '');
-
-        $source->setProperties($properties);
-
+        // Инициализируем источник (НЕ перезаписываем basePath/baseUrl - используем настройки источника)
         if (!$source->initialize($contextKey)) {
             return false;
         }
 
-        $paths = [
-            $productId . '/',
-            $productId . '/source/',
-            $productId . '/thumb/',
-        ];
-
-        // Создаем необходимые каталоги
-        foreach ($paths as $path) {
-            $source->createContainer($path, '/');
-        }
+        // Создаем основную директорию товара
+        $source->createContainer($productId . '/', '/');
 
         return $source;
     }
@@ -146,7 +140,7 @@ class ProductImageService
         /** @var msProductFile $file */
         $file = $this->modx->getObject(msProductFile::class, [
             'product_id' => $productId,
-            'parent' => 0,
+            'parent_id' => 0,
             'type' => 'image'
         ], ['sortby' => 'rank']);
 
@@ -163,5 +157,64 @@ class ProductImageService
 
             return $productData->save();
         }
+    }
+
+    /**
+     * Удаление пустого каталога товара
+     *
+     * Поддерживает любые Media Sources (локальные файлы, S3, CDN, Cloudinary и т.д.)
+     * Проверяет наличие файлов перед удалением
+     *
+     * @param msProductData $productData
+     * @return bool true если каталог удалён, false если есть файлы или ошибка
+     */
+    public function removeProductCatalog(msProductData $productData): bool
+    {
+        $productId = $productData->get('id');
+
+        // Проверяем есть ли файлы у товара
+        $filesCount = $this->modx->getCount(\MiniShop3\Model\msProductFile::class, [
+            'product_id' => $productId,
+            'parent_id' => 0  // Только родительские файлы (не thumbnails)
+        ]);
+
+        if ($filesCount > 0) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_INFO,
+                "[ProductImageService] Cannot remove catalog for product #{$productId} - has {$filesCount} files"
+            );
+            return false;
+        }
+
+        // Инициализируем Media Source
+        $contextKey = $productData->Product->get('context_key');
+        $source = $this->initializeMediaSource($productData, $contextKey);
+
+        if (!$source) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[ProductImageService] Cannot initialize media source for product #{$productId}"
+            );
+            return false;
+        }
+
+        // Удаляем каталог через Media Source API (работает с любым типом источника!)
+        $containerPath = $productId . '/';
+        $result = $source->removeContainer($containerPath, '/');
+
+        if ($result) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_INFO,
+                "[ProductImageService] Successfully removed catalog for product #{$productId}"
+            );
+        } else {
+            $errors = $source->getErrors();
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[ProductImageService] Failed to remove catalog for product #{$productId}: " . print_r($errors, true)
+            );
+        }
+
+        return $result;
     }
 }
