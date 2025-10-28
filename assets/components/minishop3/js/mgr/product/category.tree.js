@@ -48,14 +48,26 @@ Ext.extend(ms3.tree.Categories, MODx.tree.Tree, {
             tag: 'input',
             type: 'hidden',
             name: this.name,
-            value: '{}',
+            value: '[]',
             id: this.id + '-categories'
         });
     },
 
     _handleCheck: function (id, checked) {
         const value = Ext.util.JSON.decode(this.input.getAttribute('value'));
-        value[id] = Number(checked);
+
+        if (checked) {
+            // Добавляем ID в массив, если его там нет
+            if (value.indexOf(id) === -1) {
+                value.push(id);
+            }
+        } else {
+            // Удаляем ID из массива
+            const index = value.indexOf(id);
+            if (index > -1) {
+                value.splice(index, 1);
+            }
+        }
 
         this.input.set({
             'value': Ext.util.JSON.encode(value)
