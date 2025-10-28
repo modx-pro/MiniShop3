@@ -17,27 +17,9 @@
             <div class="row mb-5">
                 {* Галерея товара *}
                 <div class="col-lg-6 mb-4">
-                    <div class="product-gallery">
-                        {* Основное изображение *}
-                        <div class="main-image mb-3">
-                            {if $image}
-                                <img src="{$image}"
-                                     alt="{$_modx->resource.pagetitle}"
-                                     class="img-fluid rounded shadow-sm"
-                                     id="mainProductImage">
-                            {else}
-                                <img src="{'assets_url' | option}components/minishop3/img/web/ms3_large.png"
-                                     alt="{$_modx->resource.pagetitle}"
-                                     class="img-fluid rounded shadow-sm"
-                                     id="mainProductImage">
-                            {/if}
-                        </div>
-
-                        {* Миниатюры (если есть галерея) *}
-                        <div class="thumbnails d-flex gap-2 flex-wrap">
-                            {* Здесь будет галерея через msGallery *}
-                        </div>
-                    </div>
+                    {'!msGallery'|snippet: [
+                        'tpl' => '@FILE chunks/ms3_gallery.tpl'
+                    ]}
                 </div>
 
                 {* Информация о товаре *}
