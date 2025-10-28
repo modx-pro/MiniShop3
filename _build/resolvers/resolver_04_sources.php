@@ -69,7 +69,12 @@ if ($transport->xpdo) {
                         'desc' => 'ms3_source_thumbnails_desc',
                         'type' => 'textarea',
                         'lexicon' => 'MiniShop3:setting',
-                        'value' => '{"small":{"w":120,"h":90,"q":90,"zc":"1","bg":"000000"}, "webp":{"w":120,"h":90,"q":90,"zc":"1","bg":"000000","f":"webp"}}',
+                        // Базовая конфигурация для интернет-магазина (Intervention Image v3)
+                        // thumb (150x150 WebP) - миниатюры в списках
+                        // small (300x300 WebP) - карточки товаров
+                        // medium (600x600 WebP) - галерея на странице товара
+                        // large (1200x1200 JPEG) - zoom/детальный просмотр
+                        'value' => '{"thumb":{"width":150,"height":150,"quality":80,"mode":"cover","format":"webp"},"small":{"width":300,"height":300,"quality":85,"mode":"cover","format":"webp"},"medium":{"width":600,"height":600,"quality":85,"mode":"cover","format":"webp"},"large":{"width":1200,"height":1200,"quality":85,"mode":"max","format":"jpg"}}',
                     ],
                     'maxUploadWidth' => [
                         'name' => 'maxUploadWidth',

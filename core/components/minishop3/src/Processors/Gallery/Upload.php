@@ -160,6 +160,7 @@ class Upload extends ModelProcessor
                 $this->modx->exec($sql);
             }
 
+            // Генерируем thumbnails
             $generate = $uploaded_file->generateThumbnails($this->mediaSource);
             if ($generate !== true) {
                 $this->modx->log(
@@ -167,13 +168,21 @@ class Upload extends ModelProcessor
                     '[miniShop3] Could not generate thumbnails for image with id = ' . $uploaded_file->get('id') .
                     '. ' . $generate
                 );
-
-                return $this->failure($this->modx->lexicon('ms3_err_gallery_thumb'));
-            } else {
-                $this->product->updateProductImage();
-
-                return $this->success('', $uploaded_file);
+                // НЕ прерываем процесс - файл уже загружен, thumbnails можно регенерировать позже
+                // через Utilities → Gallery → Generate Thumbnails
             }
+
+            // Обновляем главное изображение товара через сервис
+            $productData = $this->product->getOne('Data');
+            if ($productData) {
+                /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
+                $imageService = $this->modx->services->get('ms3_product_image');
+                if ($imageService) {
+                    $imageService->updateProductImage($productData);
+                }
+            }
+
+            return $this->success('', $uploaded_file);
         } else {
             return $this->failure($this->modx->lexicon('ms3_err_gallery_save') . ': ' .
                 print_r($this->mediaSource->getErrors(), true));
@@ -233,18 +242,46 @@ class Upload extends ModelProcessor
                     ]
                 );
             } elseif (strpos($data['name'], '.webp') !== false) {
-                $img = imagecreatefromwebp($tf);
-                $width = imagesx($img);
-                $height = imagesy($img);
+                // Используем Intervention Image для WebP (поддержка современных форматов)
+                try {
+                    /** @var \MiniShop3\Services\ImageService $imageService */
+                    $imageService = $this->modx->services->get('ms3_image');
+                    if ($imageService) {
+                        $image = $imageService->imageManager->read($tf);
 
-                $data['properties'] = array_merge(
-                    $data['properties'],
-                    [
-                        'width' => $width,
-                        'height' => $height,
-                        'mime' => 'image/webp',
-                    ]
-                );
+                        $data['properties'] = array_merge(
+                            $data['properties'],
+                            [
+                                'width' => $image->width(),
+                                'height' => $image->height(),
+                                'mime' => 'image/webp',
+                            ]
+                        );
+                    } else {
+                        // Fallback на GD если ImageService недоступен
+                        if (function_exists('imagecreatefromwebp')) {
+                            $img = imagecreatefromwebp($tf);
+                            $width = imagesx($img);
+                            $height = imagesy($img);
+                            imagedestroy($img);
+
+                            $data['properties'] = array_merge(
+                                $data['properties'],
+                                [
+                                    'width' => $width,
+                                    'height' => $height,
+                                    'mime' => 'image/webp',
+                                ]
+                            );
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $this->modx->log(
+                        modX::LOG_LEVEL_ERROR,
+                        "[miniShop3] Failed to read WebP image: {$e->getMessage()}"
+                    );
+                    // Fallback - файл всё равно загрузится, просто без размеров
+                }
             }
             return $data;
         } else {

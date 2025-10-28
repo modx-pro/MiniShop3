@@ -11,6 +11,11 @@
   },
   "dependencies": {
     "@primevue/themes": "^4.3.1",
+    "@uppy/core": "^5.1.1",
+    "@uppy/dashboard": "^5.0.3",
+    "@uppy/drop-target": "^4.0.1",
+    "@uppy/image-editor": "^4.0.2",
+    "@uppy/xhr-upload": "^5.0.2",
     "pinia": "^3.0.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.3.1",

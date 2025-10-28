@@ -263,14 +263,6 @@ class msProductFile extends \MiniShop3\Model\msProductFile
                         'cardinality' => 'one',
                         'owner' => 'foreign',
                     ],
-                'Source' =>
-                    [
-                        'class' => 'MODX\\Revolution\\Sources\\modMediaSource',
-                        'local' => 'source_id',
-                        'foreign' => 'id',
-                        'cardinality' => 'one',
-                        'owner' => 'foreign',
-                    ],
             ],
     ];
 }

@@ -1,0 +1,78 @@
+import { createApp } from 'vue'
+import GalleryUploader from '../components/gallery/GalleryUploader.vue'
+
+/**
+ * Gallery Uploader Entry Point
+ *
+ * Инициализирует Vue приложение с Uppy uploader для галереи товара
+ * Интегрируется в ExtJS панель через DOM монтирование
+ */
+
+// Функция для инициализации uploader
+window.MS3_initGalleryUploader = function(config) {
+  const {
+    containerId = 'ms3-gallery-uploader',
+    productId,
+    sourceId = 1,
+    connectorUrl = ms3.config.connector_url,
+    maxFileSize = 10485760,
+    maxWidth = 1920,
+    maxHeight = 1080,
+    allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic'],
+    onUploadSuccess,
+    onUploadError,
+    onUploadComplete
+  } = config
+
+  const container = document.getElementById(containerId)
+  if (!container) {
+    console.error(`[MS3 Gallery Uploader] Container #${containerId} not found`)
+    return null
+  }
+
+  // Создаем Vue приложение
+  const app = createApp(GalleryUploader, {
+    productId,
+    sourceId,
+    connectorUrl,
+    maxFileSize,
+    maxWidth,
+    maxHeight,
+    allowedFileTypes,
+    onUploadSuccess,
+    onUploadError,
+    onUploadComplete
+  })
+
+  // Монтируем приложение
+  const instance = app.mount(container)
+
+  // Сохраняем ссылку на приложение для возможного демонтирования
+  container.__vueApp__ = app
+  container.__vueInstance__ = instance
+
+  console.log('[MS3 Gallery Uploader] Initialized for product', productId)
+
+  return {
+    app,
+    instance,
+    destroy: () => {
+      app.unmount()
+      delete container.__vueApp__
+      delete container.__vueInstance__
+    }
+  }
+}
+
+// Функция для уничтожения uploader
+window.MS3_destroyGalleryUploader = function(containerId = 'ms3-gallery-uploader') {
+  const container = document.getElementById(containerId)
+  if (container && container.__vueApp__) {
+    container.__vueApp__.unmount()
+    delete container.__vueApp__
+    delete container.__vueInstance__
+    console.log('[MS3 Gallery Uploader] Destroyed')
+  }
+}
+
+console.log('[MS3 Gallery Uploader] Entry point loaded')

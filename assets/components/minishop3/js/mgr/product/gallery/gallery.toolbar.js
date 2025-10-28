@@ -4,9 +4,6 @@ ms3.panel.Toolbar = function (config) {
     Ext.apply(config, {
         id: 'ms3-gallery-page-toolbar',
         items: [{
-            id: 'ms3-resource-upload-btn',
-            text: '<i class="icon icon-upload"></i> ' + _('ms3_gallery_button_upload'),
-        }, {
             text: '<i class="icon icon-cogs"></i> ',
             cls: 'ms3-btn-actions',
             menu: [{

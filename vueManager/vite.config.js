@@ -20,6 +20,7 @@ const DevInput = {
 const ProdInput = {
   'fields-management': 'src/entries/fields-management.js',
   'extra-fields': 'src/entries/extra-fields.js',
+  'gallery-uploader': 'src/entries/gallery-uploader.js',
   'main': 'src/main.js'
 }
 // https://vite.dev/config/

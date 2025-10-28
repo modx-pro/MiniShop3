@@ -46,13 +46,18 @@ class Generate extends ModelProcessor
             }
             $file->generateThumbnails();
 
-            $thumb = $file->getFirstThumbnail();
-            /** @var msProductData $product */
-            $product = $this->modx->getObject(msProductData::class, ['id' => $file->get('product_id')]);
-            $product->set('thumb', $thumb['url']);
-            if ($product->save()) {
-                return $this->success();
+            // Обновляем главное изображение товара через сервис
+            /** @var msProductData $productData */
+            $productData = $this->modx->getObject(msProductData::class, ['id' => $file->get('product_id')]);
+            if ($productData) {
+                /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
+                $imageService = $this->modx->services->get('ms3_product_image');
+                if ($imageService) {
+                    $imageService->updateProductImage($productData);
+                }
             }
+
+            return $this->success();
         }
 
         return $this->success();

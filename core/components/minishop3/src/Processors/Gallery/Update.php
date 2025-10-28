@@ -80,7 +80,14 @@ class Update extends UpdateProcessor
 
         /** @var msProduct $product */
         if ($product = $this->object->getOne('Product')) {
-            $product->updateProductImage();
+            $productData = $product->getOne('Data');
+            if ($productData) {
+                /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
+                $imageService = $this->modx->services->get('ms3_product_image');
+                if ($imageService) {
+                    $imageService->updateProductImage($productData);
+                }
+            }
         }
 
         return parent::afterSave();

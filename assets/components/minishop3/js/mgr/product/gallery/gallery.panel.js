@@ -13,6 +13,10 @@ ms3.panel.Gallery = function (config) {
             record: config.record,
         }, {
             border: false,
+            style: {padding: '10px 5px'},
+            html: '<div id="ms3-gallery-uploader" class="vueApp"></div>'
+        }, {
+            border: false,
             style: {padding: '5px'},
             layout: 'anchor',
             items: [{
@@ -35,123 +39,90 @@ ms3.panel.Gallery = function (config) {
     });
 };
 Ext.extend(ms3.panel.Gallery, MODx.Panel, {
-    errors: '',
-    progress: null,
+    vueUploaderInstance: null,
 
     initialize: function () {
         if (this.initialized) {
             return;
         }
         this._initUploader();
-
-        const el = document.getElementById(this.id);
-        el.addEventListener('dragenter', function () {
-            if (!this.className.match(/drag-over/)) {
-                this.className += ' drag-over';
-            }
-        }, false);
-        el.addEventListener('dragleave', function () {
-            this.className = this.className.replace(' drag-over', '');
-        }, false);
-        el.addEventListener('drop', function () {
-            this.className = this.className.replace(' drag-over', '');
-        }, false);
-
         this.initialized = true;
     },
 
     _initUploader: function () {
-        const params = {
-            action: 'MiniShop3\\Processors\\Gallery\\Upload',
-            id: this.record.id,
-            source: this.record.source,
-            ctx: 'mgr',
-            HTTP_MODAUTH: MODx.siteId
-        };
+        if (typeof window.MS3_initGalleryUploader !== 'function') {
+            console.error('[MS3 Gallery] Vue uploader not loaded. Make sure gallery-uploader.min.js is included.');
+            MODx.msg.alert(_('error'), 'Gallery uploader not loaded. Please refresh the page.');
+            return;
+        }
 
-        this.uploader = new plupload.Uploader({
-            url: ms3.config.connector_url + '?' + Ext.urlEncode(params),
-            browse_button: 'ms3-resource-upload-btn',
-            container: this.id,
-            drop_element: this.id,
-            multipart: true,
-            max_file_size: ms3.config.media_source.maxUploadSize || MODx.config.upload_maxsize || 10485760,
-            filters: [{
-                title: "Image files",
-                extensions: ms3.config.media_source.allowedFileTypes || MODx.config.upload_images || 'jpg,jpeg,png,gif,webp'
-            }],
-            resize: {
-                width: ms3.config.media_source.maxUploadWidth || 1920,
-                height: ms3.config.media_source.maxUploadHeight || 1080
-            }
+        const allowedTypes = ms3.config.media_source.allowedFileTypes || MODx.config.upload_images || 'jpg,jpeg,png,gif,webp';
+        const allowedFileTypes = allowedTypes.split(',').map(ext => {
+            const mimeTypes = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'webp': 'image/webp',
+                'avif': 'image/avif',
+                'heic': 'image/heic'
+            };
+            return mimeTypes[ext.trim()] || 'image/' + ext.trim();
         });
 
-        const uploaderEvents = ['FilesAdded', 'FileUploaded', 'QueueChanged', /*'UploadFile',*/ 'UploadProgress', 'UploadComplete', 'Error'];
-        Ext.each(uploaderEvents, function (v) {
-            const fn = 'on' + v;
-            this.uploader.bind(v, this[fn], this);
-        }, this);
-        this.uploader.init();
-    },
+        this.vueUploaderInstance = window.MS3_initGalleryUploader({
+            containerId: 'ms3-gallery-uploader',
+            productId: this.record.id,
+            sourceId: this.record.source,
+            connectorUrl: ms3.config.connector_url,
+            maxFileSize: ms3.config.media_source.maxUploadSize || MODx.config.upload_maxsize || 10485760,
+            maxWidth: ms3.config.media_source.maxUploadWidth || 1920,
+            maxHeight: ms3.config.media_source.maxUploadHeight || 1080,
+            allowedFileTypes: allowedFileTypes,
+            onUploadSuccess: this.onUploadSuccess.bind(this),
+            onUploadError: this.onUploadError.bind(this),
+            onUploadComplete: this.onUploadComplete.bind(this)
+        });
 
-    onFilesAdded: function () {
-        this.updateList = true;
-    },
-
-    removeFile: function (id) {
-        this.updateList = true;
-        const f = this.uploader.getFile(id);
-        this.uploader.removeFile(f);
-    },
-
-    onQueueChanged: function (up) {
-        if (this.updateList) {
-            if (this.uploader.files.length > 0) {
-                this.progress = Ext.MessageBox.progress(_('please_wait'));
-                this.uploader.start();
-            } else if (this.progress) {
-                this.progress.hide();
-            }
-            up.refresh();
+        if (!this.vueUploaderInstance) {
+            console.error('[MS3 Gallery] Failed to initialize Vue uploader');
         }
     },
 
-    /*
-    onUploadFile: function (uploader, file) {
-    this.updateFile(file);
-    },
-    */
-
-    onUploadProgress: function (uploader, file) {
-        if (this.progress) {
-            this.progress.updateText(file.name);
-            this.progress.updateProgress(file.percent / 100);
-        }
+    onUploadSuccess: function (data) {
+        const file = data.file;
+        const response = data.response;
+        console.log('[MS3 Gallery] Upload success:', file.name, response);
     },
 
-    onUploadComplete: function () {
-        if (this.progress) {
-            this.progress.hide();
-        }
-        if (this.errors.length > 0) {
-            this.fireAlert();
-        }
-        this.resetUploader();
+    onUploadError: function (data) {
+        const file = data.file;
+        const error = data.error;
+        const fileName = file ? file.name : 'File';
+        const errorMsg = error.message || 'Upload failed';
+        console.error('[MS3 Gallery] Upload error:', fileName, error);
+        MODx.msg.alert(_('error'), fileName + ': ' + errorMsg);
+    },
+
+    onUploadComplete: function (result) {
+        console.log('[MS3 Gallery] Upload complete:', result);
 
         const panel = Ext.getCmp('ms3-gallery-images-panel');
         if (panel) {
             panel.view.getStore().reload();
-            // Update thumbnail
+
             MODx.Ajax.request({
                 url: ms3.config.connector_url,
                 params: {
-                    action: 'MiniShop3\\Processors\\Product\\Get',
+                    action: 'MiniShop3\Processors\Product\Get',
                     id: this.record.id
                 },
                 listeners: {
                     success: {
                         fn: function (r) {
-                            panel.view.updateThumb(r.object['thumb']);
+                            if (r.object && r.object.thumb) {
+                                panel.view.updateThumb(r.object.thumb);
+                            }
                         }
                     }
                 }
@@ -159,37 +130,13 @@ Ext.extend(ms3.panel.Gallery, MODx.Panel, {
         }
     },
 
-    onFileUploaded: function (uploader, file, xhr) {
-        const r = Ext.util.JSON.decode(xhr.response);
-        if (!r.success) {
-            this.addError(file.name, r.message);
+    destroy: function () {
+        if (this.vueUploaderInstance && this.vueUploaderInstance.destroy) {
+            this.vueUploaderInstance.destroy();
+            this.vueUploaderInstance = null;
         }
-    },
-
-    onError: function(uploader, error ) {
-        MODx.msg.alert(_('error'), error.message)
-    },
-
-    resetUploader: function () {
-        this.uploader.files = {};
-        this.uploader.destroy();
-        this.errors = '';
-        this._initUploader();
-    },
-
-    addError: function (file, message) {
-        this.errors += file + ': ' + message + '<br/>';
-    },
-
-    fireAlert: function () {
-        MODx.msg.alert(_('ms3_err_gallery_upload'), this.errors);
-    },
-
-    /*
-    updateFile: function(file) {
-    this.uploadGrid.updateFile(file);
-    },
-    */
+        ms3.panel.Gallery.superclass.destroy.call(this);
+    }
 
 });
 Ext.reg('ms3-gallery-page', ms3.panel.Gallery);

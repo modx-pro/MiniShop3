@@ -36,18 +36,30 @@ class Remove extends RemoveProcessor
         /** @var msProduct $product */
         $product = $this->object->getOne('Product');
         $thumb = '';
+
         if ($product) {
-            $thumb = $product->updateProductImage();
+            $productData = $product->getOne('Data');
+
+            if ($productData) {
+                // Обновляем главное изображение через сервис
+                /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
+                $imageService = $this->modx->services->get('ms3_product_image');
+                if ($imageService) {
+                    $imageService->updateProductImage($productData);
+                    $thumb = $productData->get('thumb');
+                }
+
+                // Если файлов не осталось, пробуем удалить пустой каталог
+                if (empty($product->getMany('Files')) && $imageService) {
+                    $imageService->removeProductCatalog($productData);
+                }
+            }
         }
 
         /** @var MiniShop3 $ms3 */
         $ms3 = $this->modx->services->get('ms3');
         if (empty($thumb)) {
             $thumb = $ms3->config['defaultThumb'];
-        }
-
-        if (empty($product->getMany('Files'))) {
-            RemoveCatalogs::process($this->modx, $product->get('id'));
         }
 
         return $this->success('', ['thumb' => $thumb]);
