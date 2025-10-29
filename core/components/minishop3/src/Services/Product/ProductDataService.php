@@ -32,20 +32,31 @@ class ProductDataService
     /**
      * Подготовка объекта перед сохранением
      *
-     * Обрабатывает поля weight и price - если они пустые,
-     * устанавливает значение 0 вместо пустой строки
+     * Выполняет комплексную подготовку данных товара:
+     * - Подготовка array полей (tags, color, size и т.д.) - удаление дубликатов, пустых значений
+     * - Установка source_id для новых товаров
+     * - Приведение числовых полей (price, old_price, weight) к типу float
      *
      * @param msProductData $productData
      * @return void
      */
     public function prepareObject(msProductData $productData): void
     {
-        if ($productData->get('weight') === '') {
-            $productData->set('weight', 0);
+        // Подготовка array полей (tags, color, size и т.д.)
+        foreach ($productData->getArraysValues() as $name => $array) {
+            $array = $productData->prepareOptionValues($array);
+            $productData->set($name, $array);
         }
-        if ($productData->get('price') === '') {
-            $productData->set('price', 0);
+
+        // Установка source_id для новых товаров
+        if ($productData->isNew()) {
+            $productData->set('source_id', $this->modx->getOption('ms3_product_source_default', null, 1));
         }
+
+        // Приведение числовых полей к типу float
+        $productData->set('price', (float)$productData->get('price'));
+        $productData->set('old_price', (float)$productData->get('old_price'));
+        $productData->set('weight', (float)$productData->get('weight'));
     }
 
     /**

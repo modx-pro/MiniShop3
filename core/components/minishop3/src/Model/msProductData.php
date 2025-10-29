@@ -89,25 +89,6 @@ class msProductData extends xPDOSimpleObject
         return $save;
     }
 
-    /**
-     *
-     */
-    public function prepareObject()
-    {
-        // prepare "array" fields
-        foreach ($this->getArraysValues() as $name => $array) {
-            $array = $this->prepareOptionValues($array);
-            parent::set($name, $array);
-        }
-
-        if ($this->isNew()) {
-            parent::set('source_id', $this->xpdo->getOption('ms3_product_source_default', null, 1));
-        }
-
-        parent::set('price', (float)parent::get('price'));
-        parent::set('old_price', (float)parent::get('old_price'));
-        parent::set('weight', (float)parent::get('weight'));
-    }
 
     /**
      * @param bool $force
