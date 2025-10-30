@@ -98,8 +98,12 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $product_extra_fields = array_map('trim', explode(',', $product_extra_fields));
         $product_extra_fields = array_values(array_intersect($product_extra_fields, $product_fields));
 
-        $product_option_keys = $this->resource->loadData()->getOptionKeys();
-        $product_option_fields = $this->resource->loadData()->getOptionFields();
+        $productData = $this->resource->loadData();
+        $product_option_keys = $productData->getOptionKeys();
+        $product_option_fields = $productData->getOptionFields();
+
+        // Добавляем категории в resourceArray для передачи в JavaScript
+        $this->resourceArray['categories'] = $productData->get('categories');
 
         $this->prepareFields();
 

@@ -99,6 +99,29 @@ class Update extends UpdateProcessor
     }
 
     /**
+     * Save product options after successful resource save
+     *
+     * @return bool|string
+     */
+    public function afterSave()
+    {
+        $result = parent::afterSave();
+
+        // Save product options if provided
+        $options = $this->getProperty('options');
+        if (!empty($options) && is_array($options)) {
+            /** @var \MiniShop3\Model\msProductData $productData */
+            $productData = $this->object->loadData();
+            if ($productData) {
+                $service = $this->modx->services->get('ms3_product_data_service');
+                $service->saveOptions($productData, $options);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      *
      */
     public function fixParents()

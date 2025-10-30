@@ -223,6 +223,7 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
         xtype: 'ms3-tree-categories',
         parent: config.record['parent'] || 0,
         resource: config.record['id'] || 0,
+        categories: config.record['categories'] || []
       }]
     }
   },

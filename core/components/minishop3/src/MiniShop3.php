@@ -205,6 +205,13 @@ class MiniShop3
             });
         }
 
+        // Регистрируем OptionService для работы с опциями товаров (EAV система)
+        if (!$this->modx->services->has('ms3_option_service')) {
+            $this->modx->services->add('ms3_option_service', function() use ($modx) {
+                return new \MiniShop3\Services\Option\OptionService($modx);
+            });
+        }
+
         $this->options = new Options($this);
 
         $this->deleteOldDraft();

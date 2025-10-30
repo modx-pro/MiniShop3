@@ -71,31 +71,30 @@ class Update extends UpdateProcessor
                 $this->object->setCategories($enabled);
             }
             if ($disabled) {
-                $this->removeNotAssignedCategories($disabled);
+                // Delegate to OptionCategoryService
+                $service = $this->modx->services->get('ms3_option_service');
+                $categoryService = $service->getCategory();
+                $categoryService->removeFromCategories($this->object->get('id'), $disabled);
             }
             $this->object->set('categories', $categories);
         }
         $this->updateAssignedCategory();
-        $this->updateOldKeys();
+
+        // Delegate key update to OptionSyncService
+        if ($this->oldKey) {
+            $service = $this->modx->services->get('ms3_option_service');
+            $syncService = $service->getSync();
+            $syncService->updateOptionKey($this->oldKey, $this->object->get('key'));
+        }
 
         return parent::afterSave();
     }
 
     /**
-     * @param array $categories
-     */
-    public function removeNotAssignedCategories($categories)
-    {
-        $q = $this->modx->newQuery(msCategoryOption::class);
-        $q->command('DELETE');
-        $q->where(['option_id' => $this->object->get('id')]);
-        $q->where(['category_id:IN' => $categories]);
-        $q->prepare();
-        $q->stmt->execute();
-    }
-
-    /**
+     * Update option settings for specific category assignment
      *
+     * When option is updated from category context,
+     * update the msCategoryOption link settings
      */
     public function updateAssignedCategory()
     {
@@ -112,21 +111,6 @@ class Update extends UpdateProcessor
                 $ftCat->fromArray($this->getProperties());
                 $ftCat->save();
             }
-        }
-    }
-
-    /**
-     *
-     */
-    public function updateOldKeys()
-    {
-        if ($this->oldKey) {
-            $q = $this->modx->newQuery(msProductOption::class);
-            $q->command('UPDATE');
-            $q->where(['key' => $this->oldKey]);
-            $q->set(['key' => $this->object->get('key')]);
-            $q->prepare();
-            $q->stmt->execute();
         }
     }
 }
