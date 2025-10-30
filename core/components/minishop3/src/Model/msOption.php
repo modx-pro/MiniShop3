@@ -54,37 +54,19 @@ class msOption extends xPDOSimpleObject
     }
 
     /**
-     * @param $categories
+     * Assign option to multiple categories
      *
-     * @return array
+     * Delegates to OptionService::assignOptionToCategories()
+     * REFACTORED: 52-line method reduced to service delegation
+     *
+     * @param array $categories Array of category IDs
+     * @return array Array of successfully assigned category IDs
      */
     public function setCategories($categories)
     {
-        $result = [];
-
-        if (!empty($categories)) {
-            foreach ($categories as $category) {
-                $catObj = $this->xpdo->getObject(msCategory::class, ['id' => $category]);
-                if ($catObj) {
-                    /** @var msCategoryOption $catFtObj */
-                    $catFtObj = $this->xpdo->getObject(
-                        msCategoryOption::class,
-                        ['category_id' => $category, 'option_id' => $this->get('id')]
-                    );
-                    if (!$catFtObj) {
-                        $catFtObj = $this->xpdo->newObject(msCategoryOption::class);
-                        $catFtObj->set('category_id', $category);
-                        $catFtObj->set('value', '');
-                        $catFtObj->set('active', true);
-                        $this->addMany($catFtObj);
-                    }
-                    $result[] = $catObj->get('id');
-                }
-            }
-            $this->save();
-        }
-
-        return $result;
+        // Delegate to OptionService
+        $service = $this->xpdo->services->get('ms3_option_service');
+        return $service->assignOptionToCategories($this->get('id'), $categories);
     }
 
     /**

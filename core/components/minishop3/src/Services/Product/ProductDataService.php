@@ -115,17 +115,20 @@ class ProductDataService
      * через метод msProductOption::saveProductOptions()
      *
      * @param msProductData $productData
+     * @param array|null $options Опции для сохранения (если null - собираются из JSON полей)
      * @return void
      */
-    public function saveOptions(msProductData $productData): void
+    public function saveOptions(msProductData $productData, ?array $options = null): void
     {
         $productId = $productData->get('id');
-        $options = [];
 
-        // Собираем все JSON поля в массив опций
-        foreach ($productData->_fieldMeta as $key => $value) {
-            if ($value['phptype'] === 'json' && !empty($productData->get($key))) {
-                $options = array_merge($options, $productData->get($key));
+        // Если опции не переданы, собираем из JSON полей msProductData
+        if ($options === null) {
+            $options = [];
+            foreach ($productData->_fieldMeta as $key => $value) {
+                if ($value['phptype'] === 'json' && !empty($productData->get($key))) {
+                    $options = array_merge($options, $productData->get($key));
+                }
             }
         }
 
@@ -309,10 +312,14 @@ class ProductDataService
      */
     public function getOptionKeys(msProductData $productData): array
     {
+        $productId = $productData->get('id');
+
         /** @var msProductOption $option */
         $option = $this->modx->newObject(msProductOption::class);
-        $option->set('product_id', $productData->get('id'));
-        $result = $option->getOptionKeys($productData->get('id'));
+        $option->set('product_id', $productId);
+
+        $result = $option->getOptionKeys($productId);
+
         return is_array($result) ? $result : [];
     }
 

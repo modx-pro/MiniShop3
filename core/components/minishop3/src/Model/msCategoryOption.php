@@ -19,61 +19,103 @@ use xPDO\Om\xPDOObject;
 class msCategoryOption extends xPDOObject
 {
     /**
-     * Create option values for product in category
+     * Auto-assign option to products in category after save
+     *
+     * Lifecycle hook that triggers auto-assignment of option to all products
+     * when option is added to category or updated.
+     *
+     * Delegates to OptionCategoryService for optimized batch operations
      *
      * @param null $cacheFlag
-     *
      * @return bool
      */
     public function save($cacheFlag = null)
     {
-        $save = parent::save();
-        $q = $this->xpdo->newQuery(msProduct::class, ['parent' => $this->get('category_id')]);
-        $q->select('id');
-        if ($q->prepare() && $q->stmt->execute()) {
-            $products = $q->stmt->fetchAll(\PDO::FETCH_COLUMN);
-            $value = $this->get('value');
-            $key = $this->getOne('Option')->get('key');
-            foreach ($products as $id) {
-                $po = $this->xpdo->getObject(msProductOption::class, ['key' => $key, 'product_id' => $id]);
-                // дефолтные значения применяются только к тем товарам, у которых их еще нет
-                if (!$po) {
-                    /* @TODO вызывать метод msOption для поддержки множественных типов */
-                    $po = $this->xpdo->newObject(msProductOption::class);
-                    $po->set('product_id', $id);
-                    $po->set('key', $key);
-                    $po->set('value', $value);
-                    $po->save();
-                }
-            }
+        // Save the link first
+        $save = parent::save($cacheFlag);
+
+        if (!$save) {
+            return false;
         }
+
+        // Delegate auto-assignment to service (optimized with batch operations)
+        $service = $this->xpdo->services->get('ms3_option_service');
+        $categoryService = $service->getCategory();
+
+        $productIds = $categoryService->getProductsInCategory($this->get('category_id'));
+
+        if (empty($productIds)) {
+            return $save;
+        }
+
+        $option = $this->xpdo->getObject(msOption::class, $this->get('option_id'));
+        if (!$option) {
+            return $save;
+        }
+
+        $key = $option->get('key');
+
+        // Find products that already have this option
+        $existingProductIds = $categoryService->getProductsWithOption($productIds, $key);
+
+        // Add option only to products that don't have it yet (batch INSERT)
+        $newProductIds = array_diff($productIds, $existingProductIds);
+
+        if (!empty($newProductIds)) {
+            $categoryService->batchInsertOptions($newProductIds, $key, $this->get('value'));
+        }
+
         return $save;
     }
 
     /**
-     * Delete option values for product in category while remove option from category
+     * Remove option from category with smart data preservation
+     *
+     * Lifecycle hook that removes option values from products,
+     * but checks if option is still active in other categories first.
+     *
+     * IMPROVEMENT: Prevents data loss when product is in multiple categories
+     * and option is active in more than one.
+     *
+     * Delegates to OptionService::removeOptionFromCategory()
      *
      * @param array $ancestors
-     *
      * @return bool
      */
     public function remove(array $ancestors = [])
     {
-        $q = $this->xpdo->newQuery(msProduct::class, ['parent' => $this->get('category_id')]);
-        $q->select('id');
-        if ($q->prepare() && $q->stmt->execute()) {
-            $products = $q->stmt->fetchAll(\PDO::FETCH_COLUMN);
-            $products = implode(',', $products);
-            $key = $this->getOne('Option')->get('key');
-            $key = $this->xpdo->quote($key);
-            if (!empty($products)) {
-                $sql = "DELETE FROM {$this->xpdo->getTableName(msProductOption::class)} WHERE `product_id` IN ({$products}) AND `key`={$key};";
-                $stmt = $this->xpdo->prepare($sql);
-                $stmt->execute();
-                $stmt->closeCursor();
+        // Delegate to service with smart data preservation
+        $service = $this->xpdo->services->get('ms3_option_service');
+        $categoryService = $service->getCategory();
+
+        $productIds = $categoryService->getProductsInCategory($this->get('category_id'));
+
+        if (!empty($productIds)) {
+            $option = $this->xpdo->getObject(msOption::class, $this->get('option_id'));
+            if ($option) {
+                $key = $option->get('key');
+
+                // ✅ IMPROVEMENT: Check each product if option is active in other categories
+                foreach ($productIds as $productId) {
+                    // Check if option is active in other categories for this product
+                    $otherCategories = $categoryService->getOtherCategoriesWithOption(
+                        $productId,
+                        $this->get('option_id'),
+                        $this->get('category_id')
+                    );
+
+                    // Delete option value only if NOT active in other categories
+                    if (empty($otherCategories)) {
+                        $this->xpdo->removeCollection(msProductOption::class, [
+                            'product_id' => $productId,
+                            'key' => $key
+                        ]);
+                    }
+                }
             }
         }
 
         return parent::remove($ancestors);
     }
+
 }

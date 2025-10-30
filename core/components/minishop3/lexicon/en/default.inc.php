@@ -172,6 +172,7 @@ $_lang['ms3_err_gallery_thumb'] = 'Failed to generate thumbnails. See system log
 $_lang['ms3_err_gallery_upload'] = 'Cannot upload file.';
 $_lang['ms3_err_wrong_image'] = 'File is not a valid image.';
 $_lang['ms3_err_gallery_is_not_msproduct'] = '[msGallery] Resource with id = [[+id]] is not a product.';
+$_lang['ms3_err_options_is_not_msproduct'] = '[msOptions] Resource with id = [[+id]] is not a product.';
 
 $_lang['ms3_email_subject_new_user'] = 'You placed order #[[+num]] on site [[++site_name]]';
 $_lang['ms3_email_subject_new_manager'] = 'You have new order #[[+num]]';

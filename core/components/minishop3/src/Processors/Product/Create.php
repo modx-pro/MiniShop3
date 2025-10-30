@@ -95,6 +95,17 @@ class Create extends CreateProcessor
             $this->modx->context->aliasMap = $results['aliasMap'];
         }
 
+        // Save product options if provided
+        $options = $this->getProperty('options');
+        if (!empty($options) && is_array($options)) {
+            /** @var \MiniShop3\Model\msProductData $productData */
+            $productData = $this->object->loadData();
+            if ($productData) {
+                $service = $this->modx->services->get('ms3_product_data_service');
+                $service->saveOptions($productData, $options);
+            }
+        }
+
         return parent::afterSave();
     }
 }

@@ -17,7 +17,8 @@ ms3.tree.Categories = function (config) {
         baseParams: {
             parent: config.parent || 0,
             resource: config.resource || 0,
-        }
+        },
+        categories: config.categories || []
     });
 
     Ext.apply(config, {
@@ -44,11 +45,14 @@ Ext.extend(ms3.tree.Categories, MODx.tree.Tree, {
             id: this.id + '-wrap'
         });
 
+        // Устанавливаем начальные категории из конфига
+        const initialCategories = this.categories || [];
+
         this.input = this.wrap.createChild({
             tag: 'input',
             type: 'hidden',
             name: this.name,
-            value: '[]',
+            value: Ext.util.JSON.encode(initialCategories),
             id: this.id + '-categories'
         });
     },
