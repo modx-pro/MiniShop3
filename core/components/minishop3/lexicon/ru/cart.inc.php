@@ -37,3 +37,4 @@ $_lang['ms3_order_err_empty'] = 'Невозможно оформить пуст�
 $_lang['ms3_order_err_delivery'] = 'Вы должны выбрать способ доставки';
 $_lang['ms3_order_err_validation_rules'] = 'Вы должны корректно заполнить требуемые поля';
 $_lang['ms3_err_token'] = 'Не указан токен';
+$_lang['ms3_err_rate_limit'] = 'Превышен лимит запросов. Попробуйте позже';
