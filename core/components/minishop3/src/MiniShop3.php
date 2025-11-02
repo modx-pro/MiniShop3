@@ -406,7 +406,79 @@ class MiniShop3
         $load = $this->services->load($ctx);
         $this->initialized[$ctx] = $load;
 
+        // Регистрация сервиса корзины с возможностью подмены
+        $this->registerCartService();
+
         return $load;
+    }
+
+    /**
+     * Регистрация сервиса корзины
+     * Проверяет системную настройку ms3_cart_class для кастомного класса
+     *
+     * @return void
+     */
+    protected function registerCartService(): void
+    {
+        // Получаем имя класса из настройки
+        $cartClass = $this->modx->getOption('ms3_cart_class', null, \MiniShop3\Controllers\Cart\Cart::class);
+
+        // Проверяем существование класса
+        if (!class_exists($cartClass)) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[MiniShop3] Cart class '{$cartClass}' not found, using default Cart class"
+            );
+            $cartClass = \MiniShop3\Controllers\Cart\Cart::class;
+        }
+
+        // Проверяем наследование от базового Cart (для безопасности)
+        if (!is_subclass_of($cartClass, \MiniShop3\Controllers\Cart\Cart::class) && $cartClass !== \MiniShop3\Controllers\Cart\Cart::class) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[MiniShop3] Cart class '{$cartClass}' must extend " . \MiniShop3\Controllers\Cart\Cart::class
+            );
+            $cartClass = \MiniShop3\Controllers\Cart\Cart::class;
+        }
+
+        // Регистрируем в DI контейнере
+        $ms3 = $this;
+        $this->modx->services->add('ms3_cart', function() use ($cartClass, $ms3) {
+            return new $cartClass($ms3);
+        });
+    }
+
+
+    /**
+     * Магический метод для доступа к сервисам через свойства
+     *
+     * @param string $name Имя свойства
+     * @return mixed
+     */
+    public function __get(string $name)
+    {
+        // Доступ к корзине через $ms3->cart
+        if ($name === 'cart') {
+            return $this->getCart();
+        }
+
+        // ... другие сервисы (customer, order и т.д.)
+
+        return null;
+    }
+
+    /**
+     * Получение сервиса корзины (ленивая загрузка)
+     *
+     * @return \MiniShop3\Controllers\Cart\Cart
+     */
+    public function getCart(): \MiniShop3\Controllers\Cart\Cart
+    {
+        if (!$this->modx->services->has('ms3_cart')) {
+            $this->registerCartService();
+        }
+
+        return $this->modx->services->get('ms3_cart');
     }
 
     /**

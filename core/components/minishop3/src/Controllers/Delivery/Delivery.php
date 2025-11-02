@@ -8,7 +8,7 @@ use MiniShop3\Model\msDelivery;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOObject;
 
-class Delivery implements DeliveryInterface
+class Delivery
 {
     /** @var modX $modx */
     public $modx;

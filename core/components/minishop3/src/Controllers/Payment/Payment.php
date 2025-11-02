@@ -8,7 +8,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
 
-class Payment implements PaymentInterface
+class Payment
 {
     /** @var modX $modx */
     public $modx;

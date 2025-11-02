@@ -13,7 +13,7 @@ use MODX\Revolution\modUserSetting;
 use MODX\Revolution\modX;
 use MiniShop3\Controllers\Storage\DB\DBOrder;
 
-class Order implements OrderInterface
+class Order
 {
     /** @var modX $modx */
     public $modx;
