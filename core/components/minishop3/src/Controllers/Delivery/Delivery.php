@@ -71,11 +71,13 @@ abstract class Delivery implements DeliveryProviderInterface
      *
      * @param msOrder $order Заказ для расчета доставки
      * @param msDelivery $delivery Способ доставки
-     * @param float $cost Текущая стоимость заказа
+     * @param float $cost Текущая стоимость заказа (не используется в дефолтной реализации, но может быть нужен кастомным провайдерам)
      * @return float Дополнительная стоимость за доставку
      */
     public function getCost(msOrder $order, msDelivery $delivery, float $cost): float
     {
+        $deliveryCost = 0;
+
         // Получаем данные корзины для расчета веса
         $cart = [
             'total_weight' => 0,
@@ -107,7 +109,7 @@ abstract class Delivery implements DeliveryProviderInterface
             $weightPrice = 0;
         }
 
-        $cost += $weightPrice * $cartWeight;
+        $deliveryCost += $weightPrice * $cartWeight;
 
         // Проверка бесплатной доставки
         $freeDeliveryAmount = (float)$delivery->get('free_delivery_amount');
@@ -115,14 +117,14 @@ abstract class Delivery implements DeliveryProviderInterface
 
         if ($freeDeliveryAmount > 0 && $cartCost >= $freeDeliveryAmount) {
             // Бесплатная доставка при превышении порога
-            return $cost;
+            return 0;
         }
 
         // Базовая стоимость доставки
         $addPrice = $delivery->get('price');
 
         if (empty($addPrice)) {
-            return $cost;
+            return $deliveryCost;
         }
 
         // Процентная стоимость
@@ -135,7 +137,7 @@ abstract class Delivery implements DeliveryProviderInterface
                     modX::LOG_LEVEL_ERROR,
                     "[Delivery] Invalid percent value for delivery #{$delivery->get('id')}: {$percent}%. Must be 0-100%."
                 );
-                return $cost;
+                return $deliveryCost;
             }
 
             $addPrice = $cartCost / 100 * $percent;
@@ -148,11 +150,11 @@ abstract class Delivery implements DeliveryProviderInterface
                     modX::LOG_LEVEL_ERROR,
                     "[Delivery] Invalid fixed price for delivery #{$delivery->get('id')}: {$addPrice}. Must be >= 0."
                 );
-                return $cost;
+                return $deliveryCost;
             }
         }
 
-        return $cost + $addPrice;
+        return $deliveryCost + $addPrice;
     }
 
     /**

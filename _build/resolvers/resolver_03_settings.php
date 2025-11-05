@@ -33,7 +33,7 @@ if ($transport->xpdo) {
                 $stmt = $modx->prepare("INSERT INTO {$prefix}ms3_deliveries (id, name, price, weight_price, distance_price, active, validation_rules, position) VALUES (1, :name, 0, 0, 0, 1, :rules, 0)");
                 $stmt->execute([
                     ':name' => $modx->lexicon('ms3_order_delivery_self'),
-                    ':rules' => '{\"first_name\":\"required\",\"last_name\":\"required\", \"email\":\"required|email\"}'
+                    ':rules' => '{"first_name":"required","last_name":"required","email":"required|email"}'
                 ]);
             }
 

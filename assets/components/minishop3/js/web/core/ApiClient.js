@@ -72,15 +72,14 @@ class ApiClient {
     try {
       const response = await fetch(url.toString(), options)
 
-      // Проверяем успешность HTTP запроса
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
+      // Всегда пытаемся прочитать JSON body (даже при ошибке 4xx/5xx)
       const result = await response.json()
+
+      // Для ошибок 4xx/5xx возвращаем JSON с деталями ошибки
+      // (не выбрасываем исключение, чтобы UI мог обработать message и errors)
       return result
     } catch (error) {
-      console.error('ApiClient request error:', error)
+      // Ошибка парсинга JSON или сетевая ошибка
       throw error
     }
   }

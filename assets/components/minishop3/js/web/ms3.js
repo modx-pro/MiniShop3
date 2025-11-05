@@ -83,7 +83,10 @@ const ms3 = {
     // 10. Инициализация обработчика форм
     this.initFormHandler()
 
-    // 11. Событие готовности (для сторонних скриптов)
+    // 11. Инициализация обработчика кликов по .ms3_link
+    this.initLinkHandler()
+
+    // 12. Событие готовности (для сторонних скриптов)
     document.dispatchEvent(new Event('ms3:ready'))
 
     console.log('MiniShop3 initialized')
@@ -119,6 +122,46 @@ const ms3 = {
       const [entity, method] = action.split('/')
 
       // Вызываем соответствующий обработчик
+      await this.handleFormSubmit(entity, method, formData)
+    })
+  },
+
+  /**
+   * Обработчик кликов по .ms3_link
+   *
+   * Обрабатывает клики по кнопкам/ссылкам с классом .ms3_link
+   * внутри форм .ms3_form. Триггерит submit формы.
+   */
+  initLinkHandler () {
+    document.addEventListener('click', async (event) => {
+      // Проверяем что это наша ссылка/кнопка
+      const link = event.target.closest('.ms3_link')
+      if (!link) {
+        return
+      }
+
+      // Находим родительскую форму
+      const form = link.closest('.ms3_form')
+      if (!form) {
+        console.warn('.ms3_link должна быть внутри .ms3_form')
+        return
+      }
+
+      event.preventDefault()
+
+      // Триггерим submit формы
+      const formData = new FormData(form)
+      const action = formData.get('ms3_action')
+
+      if (!action) {
+        console.warn('ms3_action не указан в форме')
+        return
+      }
+
+      // Парсим action: "cart/add" → entity="cart", method="add"
+      const [entity, method] = action.split('/')
+
+      // Вызываем обработчик
       await this.handleFormSubmit(entity, method, formData)
     })
   },
@@ -160,6 +203,9 @@ const ms3 = {
         order: {
           submit: () => {
             return this.orderUI.handleSubmit()
+          },
+          clean: () => {
+            return this.orderUI.handleClean()
           }
         }
       }

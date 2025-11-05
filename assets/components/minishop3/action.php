@@ -97,16 +97,31 @@ try {
     echo json_encode($responseData, JSON_UNESCAPED_UNICODE);
 
 } catch (\Exception $e) {
-    // Логируем ошибку
-    if (isset($modx)) {
-        $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 Action] ' . $e->getMessage());
-    }
 
     // Возвращаем ошибку
     http_response_code(500);
-    echo json_encode([
+    $response = [
         'success' => false,
         'message' => 'Internal server error',
         'code' => 500
-    ], JSON_UNESCAPED_UNICODE);
+    ];
+
+    // Логируем и показываем детали только если MODX успешно инициализирован
+    if (isset($modx)) {
+        $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 Action] ' . $e->getMessage());
+        $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 Action] Stack trace: ' . $e->getTraceAsString());
+
+        // В режиме разработки показываем детали ошибки
+        if ($modx->getOption('debug', null, false)) {
+            $response['debug'] = [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => explode("\n", $e->getTraceAsString())
+            ];
+        }
+    }
+
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
 }

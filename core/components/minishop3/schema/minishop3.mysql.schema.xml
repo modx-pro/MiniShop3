@@ -237,7 +237,7 @@
     <object class="msOrder" table="ms3_orders" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
-        <field key="token" dbtype="varchar" precision="32" phptype="string" null="false" default=""/>
+        <field key="token" dbtype="varchar" precision="64" phptype="string" null="false" default=""/>
         <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="updatedon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="num" dbtype="varchar" precision="20" phptype="string" null="true" default=""/>
@@ -423,7 +423,7 @@
         <field key="last_name" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="phone" dbtype="varchar" precision="50" phptype="string" null="true" default=""/>
         <field key="email" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
-        <field key="token" dbtype="varchar" precision="32" phptype="string" null="true" default=""/>
+        <field key="token" dbtype="varchar" precision="64" phptype="string" null="true" default=""/>
 
         <index alias="first_name" name="first_name" primary="false" unique="false" type="BTREE">
             <column key="first_name" length="" collation="A" null="false"/>

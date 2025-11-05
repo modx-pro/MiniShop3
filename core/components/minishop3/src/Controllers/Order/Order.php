@@ -46,6 +46,7 @@ class Order
         $this->config = array_merge([], $config);
 
         $this->modx->lexicon->load('minishop3:cart');
+        $this->modx->lexicon->load('minishop3:order');
     }
 
     /**
@@ -285,8 +286,7 @@ class Order
         if ($cartCostResponse['success']) {
             $cartCost = $cartCostResponse['data']['cost'];
         }
-        $costWithDelivery = $msDelivery->getCost($this->draft, $cartCost);
-        $deliveryCost = $costWithDelivery - $cartCost;
+        $deliveryCost = $msDelivery->getCost($this->draft, $cartCost);
 
         $response = $this->ms3->utils->invokeEvent('msOnGetDeliveryCost', [
             'storageController' => $this,
@@ -640,6 +640,7 @@ class Order
             'controller' => $this,
         ]);
         if (!$response['success']) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Order::submit] Event msOnSubmitOrder failed: ' . $response['message']);
             return $this->error($response['message']);
         }
         if (!empty($response['data']['data'])) {
@@ -649,10 +650,12 @@ class Order
         $this->ms3->cart->initialize($this->ctx, $this->token);
         $response = $this->ms3->cart->status();
         if (!$response['success']) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Order::submit] Cart status failed: ' . $response['message']);
             return $this->error($response['message']);
         }
         $cart_status = $response['data'];
         if (empty($cart_status['total_count'])) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Order::submit] Cart is empty');
             return $this->error('ms3_order_err_empty');
         }
 
@@ -694,11 +697,17 @@ class Order
             $this->order = $response['data']['order'];
         }
 
+        // Check if delivery method is selected
+        if (empty($this->order['delivery_id'])) {
+            return $this->error('ms3_order_err_delivery', ['delivery_id']);
+        }
 
         $response = $this->getDeliveryRequiresFields();
+
         if (!$response['success']) {
             return $this->error($response['message']);
         }
+
         $requires = $response['data']['requires'];
         $errors = [];
         foreach ($requires as $k => $v) {
@@ -706,6 +715,7 @@ class Order
                 $errors[] = $k;
             }
         }
+
         if (!empty($errors)) {
             return $this->error('ms3_order_err_requires', $errors);
         }
@@ -964,10 +974,13 @@ class Order
         $q->prepare();
         $q->stmt->execute();
         $rules = $q->stmt->fetch(\PDO::FETCH_COLUMN);
+
         if (empty($rules)) {
             return $this->success('', ['validation_rules' => []]);
         }
+
         $rules = json_decode($rules, true);
+
         if (!is_array($rules)) {
             return $this->success('', ['validation_rules' => []]);
         }

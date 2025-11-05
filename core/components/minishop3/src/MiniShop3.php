@@ -245,9 +245,10 @@ class MiniShop3
                     }
 
                     if (!empty($file) && preg_match('/\.css/i', $file)) {
+                        $file = str_replace($config['pl'], $config['vl'], $file);
                         if (preg_match('/\.css$/i', $file)) {
-                            $file .= '?v=' . date('dmYHi', filemtime($file));
-                            $this->modx->regClientCSS(str_replace($config['pl'], $config['vl'], $file));
+                            $file .= '?v=' . date('dmYHi', filemtime(MODX_BASE_PATH . ltrim($file, '/')));
+                            $this->modx->regClientCSS($file);
                         }
                     }
                 }

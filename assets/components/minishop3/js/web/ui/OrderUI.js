@@ -106,8 +106,6 @@ class OrderUI {
 
       // Отправка данных на сервер (через CustomerAPI)
       // TODO: Требуется доступ к CustomerAPI
-      // Пока просто логируем
-      console.log('Address changed:', input.value)
     })
   }
 
@@ -145,7 +143,6 @@ class OrderUI {
 
       return response
     } catch (error) {
-      console.error('OrderUI.handleAdd error:', error)
       this.message.error('Произошла ошибка')
       return { success: false, message: error.message }
     }
@@ -185,13 +182,96 @@ class OrderUI {
 
       if (!response.success && response.message) {
         this.message.error(response.message)
+
+        // Подсветка незаполненных полей
+        if (response.errors && Array.isArray(response.errors)) {
+          this.highlightErrors(response.errors)
+        }
       }
 
       return response
     } catch (error) {
-      console.error('OrderUI.handleSubmit error:', error)
       this.message.error('Произошла ошибка при оформлении заказа')
       return { success: false }
     }
+  }
+
+  /**
+   * Очистка заказа
+   *
+   * @returns {Promise<Object>}
+   */
+  async handleClean () {
+    // Хук BEFORE
+    const hookData = {}
+    await this.hooks.runHooks('beforeCleanOrder', hookData)
+
+    if (hookData.cancel) {
+      return { success: false }
+    }
+
+    try {
+      // API запрос
+      const response = await this.order.clean()
+
+      // Хук AFTER
+      await this.hooks.runHooks('afterCleanOrder', { response })
+
+      // Уведомление
+      if (response.success && response.message) {
+        this.message.success(response.message)
+      }
+
+      if (!response.success && response.message) {
+        this.message.error(response.message)
+      }
+
+      // Очищаем все поля формы после успешной очистки
+      if (response.success) {
+        document.querySelectorAll('.ms3_order_form').forEach(form => {
+          form.reset()
+        })
+      }
+
+      return response
+    } catch (error) {
+      this.message.error('Произошла ошибка при очистке заказа')
+      return { success: false }
+    }
+  }
+
+  /**
+   * Подсветка полей с ошибками
+   *
+   * @param {Array<string>} errors - Массив имен полей с ошибками
+   */
+  highlightErrors (errors) {
+    // Сначала убираем все существующие подсветки
+    document.querySelectorAll('.ms3_field_error').forEach(el => {
+      el.classList.remove('ms3_field_error')
+    })
+
+    // Подсвечиваем поля из массива errors
+    errors.forEach(fieldName => {
+      // Ищем поле по name (может быть с префиксом address_)
+      const selectors = [
+        `[name="${fieldName}"]`,
+        `[name="address_${fieldName}"]`,
+        `[name="order_${fieldName}"]`
+      ]
+
+      selectors.forEach(selector => {
+        const field = document.querySelector(selector)
+        if (field) {
+          field.classList.add('ms3_field_error')
+
+          // Убираем подсветку при фокусе на поле
+          field.addEventListener('focus', function removeError () {
+            field.classList.remove('ms3_field_error')
+            field.removeEventListener('focus', removeError)
+          }, { once: true })
+        }
+      })
+    })
   }
 }

@@ -91,22 +91,88 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
     // ============================================
     $router->group('/order', function($router) use ($modx) {
 
+        // GET /api/v1/order/get - Получить данные текущего заказа
+        $router->get('/get', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->get($params);
+        });
+
+        // POST /api/v1/order/add - Добавить/обновить поле заказа
+        $router->post('/add', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->add($params);
+        });
+
+        // POST /api/v1/order/set - Установить несколько полей заказа
+        $router->post('/set', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->set($params);
+        });
+
+        // POST /api/v1/order/remove - Удалить поле заказа
+        $router->post('/remove', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->remove($params);
+        });
+
         // POST /api/v1/order/submit - Оформить заказ
         $router->post('/submit', function($params) use ($modx) {
-            // TODO: Реализовать в Controllers\Api\Web\OrderController
-            return Response::success(['message' => 'Order submit endpoint - not implemented yet']);
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->submit($params);
         });
 
         // POST /api/v1/order/clean - Очистить данные заказа
         $router->post('/clean', function($params) use ($modx) {
-            // TODO: Реализовать в Controllers\Api\Web\OrderController
-            return Response::success(['message' => 'Order clean endpoint - not implemented yet']);
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->clean($params);
         });
 
-        // GET /api/v1/order/get - Получить данные текущего заказа
-        $router->get('/get', function($params) use ($modx) {
-            // TODO: Реализовать в Controllers\Api\Web\OrderController
-            return Response::success(['message' => 'Order get endpoint - not implemented yet']);
+        // GET /api/v1/order/cost - Получить полную стоимость заказа
+        $router->get('/cost', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->getCost($params);
+        });
+
+        // GET /api/v1/order/cost/cart - Получить стоимость корзины
+        $router->get('/cost/cart', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->getCartCost($params);
+        });
+
+        // GET /api/v1/order/cost/delivery - Получить стоимость доставки
+        $router->get('/cost/delivery', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->getDeliveryCost($params);
+        });
+
+        // GET /api/v1/order/cost/payment - Получить стоимость оплаты
+        $router->get('/cost/payment', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->getPaymentCost($params);
+        });
+
+        // POST /api/v1/order/address/set - Установить адрес клиента
+        $router->post('/address/set', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->setCustomerAddress($params);
+        });
+
+        // POST /api/v1/order/address/clean - Очистить адрес клиента
+        $router->post('/address/clean', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->cleanCustomerAddress($params);
+        });
+
+        // GET /api/v1/order/delivery/validation-rules - Получить правила валидации для доставки
+        $router->get('/delivery/validation-rules', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->getDeliveryValidationRules($params);
+        });
+
+        // GET /api/v1/order/delivery/required-fields - Получить обязательные поля для доставки
+        $router->get('/delivery/required-fields', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->getDeliveryRequiresFields($params);
         });
 
     }, [$tokenMiddleware]);

@@ -68,7 +68,7 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                 'token' =>
                     [
                         'dbtype' => 'varchar',
-                        'precision' => '32',
+                        'precision' => '64',
                         'phptype' => 'string',
                         'null' => true,
                         'default' => '',
