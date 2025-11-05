@@ -39,7 +39,7 @@ class CartController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401);
+            return Response::error('Token is required', 401)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -126,7 +126,7 @@ class CartController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401);
+            return Response::error('Token is required', 401)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -150,7 +150,7 @@ class CartController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401);
+            return Response::error('Token is required', 401)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -188,10 +188,81 @@ class CartController
      */
     protected function transformResponse(array $result): array
     {
-        if ($result['success']) {
-            return Response::success($result['data'], $result['message'] ?? '');
-        } else {
-            return Response::error($result['message'] ?? 'Unknown error', 400, $result['data'] ?? []);
+        // Проверяем наличие параметра render для SSR
+        $input = $this->getRequestData();
+        $renderTokens = $input['render'] ?? null;
+
+        // Если запрошен SSR рендер - генерируем HTML
+        if (!empty($renderTokens) && $result['success']) {
+            // Получаем токен клиента из запроса
+            $customerToken = $_REQUEST['ms3_token'] ?? '';
+
+            $renderedHtml = $this->renderSnippets($renderTokens, $customerToken);
+            if (!empty($renderedHtml)) {
+                $result['data']['render'] = $renderedHtml;
+            }
         }
+
+        if ($result['success']) {
+            return Response::success($result['data'], $result['message'] ?? '')->getData();
+        } else {
+            return Response::error($result['message'] ?? 'Unknown error', 400, $result['data'] ?? [])->getData();
+        }
+    }
+
+    /**
+     * Рендер HTML для сниппетов корзины (SSR)
+     *
+     * @param string|array $renderTokens Токены сниппетов (JSON строка или массив)
+     * @param string $customerToken Токен клиента для доступа к корзине
+     * @return array Массив ["token" => "html", ...]
+     */
+    protected function renderSnippets($renderTokens, string $customerToken = ''): array
+    {
+        // Декодируем токены если пришла строка
+        if (is_string($renderTokens)) {
+            $tokens = json_decode($renderTokens, true);
+            if (!is_array($tokens)) {
+                return [];
+            }
+        } else {
+            $tokens = $renderTokens;
+        }
+
+        if (empty($tokens)) {
+            return [];
+        }
+
+        /** @var \MiniShop3\Services\TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+
+        $rendered = [];
+
+        foreach ($tokens as $token) {
+            // Получаем параметры сниппета из кеша
+            $snippetParams = $tokenService->getSnippetData($token);
+
+            if (empty($snippetParams)) {
+                $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_WARN,
+                    "[MiniShop3] Snippet parameters not found for token: {$token}"
+                );
+                continue;
+            }
+
+            // ВАЖНО: Добавляем токен клиента в параметры сниппета
+            // Это позволит сниппету получить правильную корзину
+            if (!empty($customerToken)) {
+                $snippetParams['customer_token'] = $customerToken;
+            }
+
+            // Вызываем сниппет msCart с сохраненными параметрами
+            $html = $this->modx->runSnippet('msCart', $snippetParams);
+
+            if (!empty($html)) {
+                $rendered[$token] = $html;
+            }
+        }
+
+        return $rendered;
     }
 }

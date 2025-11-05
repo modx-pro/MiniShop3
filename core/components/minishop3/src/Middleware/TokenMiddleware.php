@@ -53,9 +53,9 @@ class TokenMiddleware implements MiddlewareInterface
         // Получаем токен из заголовка
         $token = $_SERVER['HTTP_MS3TOKEN'] ?? '';
 
-        // Альтернативно можно передать токен в параметре
+        // Альтернативно можно передать токен в параметре (поддержка обоих форматов)
         if (empty($token)) {
-            $token = $_REQUEST['token'] ?? '';
+            $token = $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
         }
 
         // Проверяем наличие токена

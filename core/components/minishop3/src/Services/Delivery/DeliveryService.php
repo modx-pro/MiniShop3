@@ -2,9 +2,9 @@
 
 namespace MiniShop3\Services\Delivery;
 
-use MiniShop3\Controllers\Delivery\DeliveryInterface;
-use MiniShop3\Controllers\Order\OrderInterface;
+use MiniShop3\Controllers\Delivery\DeliveryProviderInterface;
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Model\msPayment;
@@ -25,7 +25,7 @@ class DeliveryService
     protected $ms3;
 
     /** @var string */
-    protected $defaultControllerClass = 'MiniShop3\\Controllers\\Delivery\\Delivery';
+    protected $defaultControllerClass = 'MiniShop3\\Controllers\\Delivery\\DefaultDelivery';
 
     /**
      * @param modX $modx
@@ -43,26 +43,26 @@ class DeliveryService
      * Загрузка контроллера доставки
      *
      * Создает экземпляр контроллера доставки на основе класса из настроек.
-     * Если класс не указан или указан стандартный "Delivery", используется контроллер по умолчанию.
+     * Если класс не указан, используется контроллер по умолчанию (DefaultDelivery).
      *
      * @param msDelivery $delivery
-     * @return DeliveryInterface|null Контроллер доставки или null при ошибке
+     * @return DeliveryProviderInterface|null Контроллер доставки или null при ошибке
      */
-    public function loadDeliveryController(msDelivery $delivery): ?DeliveryInterface
+    public function loadDeliveryController(msDelivery $delivery): ?DeliveryProviderInterface
     {
         $class = $delivery->get('class');
-        if (!$class || $class === 'Delivery') {
+        if (empty($class)) {
             $class = $this->defaultControllerClass;
         }
 
         try {
             $controller = new $class($this->ms3, []);
 
-            if (!$controller instanceof DeliveryInterface) {
+            if (!$controller instanceof DeliveryProviderInterface) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
                     sprintf(
-                        'DeliveryService: Класс "%s" не реализует DeliveryInterface для доставки ID=%d',
+                        'DeliveryService: Класс "%s" не реализует DeliveryProviderInterface для доставки ID=%d',
                         $class,
                         $delivery->get('id')
                     )
@@ -91,18 +91,18 @@ class DeliveryService
      * Контроллер может учитывать вес, расстояние, стоимость заказа и другие факторы.
      *
      * @param msDelivery $delivery Метод доставки
-     * @param DeliveryInterface|null $controller Контроллер доставки (если null - будет загружен)
-     * @param OrderInterface $order Заказ
+     * @param DeliveryProviderInterface|null $controller Контроллер доставки (если null - будет загружен)
+     * @param msOrder $order Заказ
      * @param float $cost Текущая стоимость заказа
      * @return float Стоимость доставки
      */
     public function calculateDeliveryCost(
         msDelivery $delivery,
-        ?DeliveryInterface $controller,
-        OrderInterface $order,
+        ?DeliveryProviderInterface $controller,
+        msOrder $order,
         float $cost = 0.0
     ): float {
-        if (!$controller instanceof DeliveryInterface) {
+        if (!$controller instanceof DeliveryProviderInterface) {
             $controller = $this->loadDeliveryController($delivery);
             if (!$controller) {
                 return 0.0;

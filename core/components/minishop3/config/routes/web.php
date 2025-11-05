@@ -116,10 +116,23 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
     // ============================================
     $router->group('/customer', function($router) use ($modx) {
 
-        // POST /api/v1/customer/token/get - Получить токен покупателя
-        $router->post('/token/get', function($params) use ($modx) {
-            // TODO: Реализовать в Controllers\Api\Web\CustomerController
-            return Response::success(['message' => 'Customer token/get endpoint - not implemented yet']);
+        // GET /api/v1/customer/token/get - Получить токен покупателя (публичный endpoint)
+        $router->get('/token/get', function($params) use ($modx) {
+            /** @var \MiniShop3\MiniShop3 $ms3 */
+            $ms3 = $modx->services->get('ms3');
+            if (!$ms3) {
+                return Response::error('MiniShop3 not initialized', 500);
+            }
+
+            $ms3->initialize();
+            $response = $ms3->customer->generateToken();
+
+            // Преобразуем массив в Response
+            if ($response['success']) {
+                return Response::success($response['data'], $response['message'] ?? '');
+            } else {
+                return Response::error($response['message'] ?? 'Token generation failed', $response['code'] ?? 500);
+            }
         });
 
         // POST /api/v1/customer/token/refresh - Обновить токен покупателя

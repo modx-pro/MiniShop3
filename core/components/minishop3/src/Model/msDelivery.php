@@ -2,9 +2,7 @@
 
 namespace MiniShop3\Model;
 
-use MiniShop3\Controllers\Delivery\Delivery;
-use MiniShop3\Controllers\Delivery\DeliveryInterface;
-use MiniShop3\Controllers\Order\OrderInterface;
+use MiniShop3\Controllers\Delivery\DeliveryProviderInterface;
 use MiniShop3\MiniShop3;
 use MiniShop3\Services\Delivery\DeliveryService;
 use MODX\Revolution\modX;
@@ -31,7 +29,7 @@ use xPDO\xPDO;
  */
 class msDelivery extends xPDOSimpleObject
 {
-    /** @var Delivery $controller */
+    /** @var DeliveryProviderInterface|null $controller */
     public $controller;
 
     /** @var MiniShop3 $ms3 */
@@ -61,18 +59,18 @@ class msDelivery extends xPDOSimpleObject
     public function loadController()
     {
         $this->controller = $this->getDeliveryService()->loadDeliveryController($this);
-        return $this->controller instanceof DeliveryInterface;
+        return $this->controller instanceof DeliveryProviderInterface;
     }
 
     /**
      * Returns an additional cost depending on the method of delivery
      *
-     * @param OrderInterface $order
+     * @param msOrder $order Order object
      * @param float $cost Current cost of order
      *
      * @return float
      */
-    public function getCost(OrderInterface $order, $cost = 0.0)
+    public function getCost(msOrder $order, float $cost = 0.0): float
     {
         return $this->getDeliveryService()->calculateDeliveryCost(
             $this,

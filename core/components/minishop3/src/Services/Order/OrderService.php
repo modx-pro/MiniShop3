@@ -59,47 +59,25 @@ class OrderService
     }
 
     /**
-     * Сохранить заказ с событиями
+     * Обработка сохранения заказа с событиями
      *
-     * Вызывает события msOnBeforeSaveOrder и msOnSaveOrder
-     * для возможности расширения логики плагинами
+     * @deprecated Логика перенесена в msOrder::save(), этот метод оставлен для обратной совместимости
      *
      * @param msOrder $order
      * @param bool|null $cacheFlag
-     * @return bool Результат сохранения
+     * @return bool
      */
     public function handleOrderSave(msOrder $order, ?bool $cacheFlag = null): bool
     {
-        $isNew = $order->isNew();
-
-        if ($this->modx instanceof modX) {
-            $this->modx->invokeEvent('msOnBeforeSaveOrder', [
-                'mode' => $isNew ? modSystemEvent::MODE_NEW : modSystemEvent::MODE_UPD,
-                'object' => $order,
-                'msOrder' => $order,
-                'cacheFlag' => $cacheFlag,
-            ]);
-        }
-
-        $saved = $order->xpdo->call(msOrder::class . '::parent::save', [$order, $cacheFlag]);
-
-        if ($saved && $this->modx instanceof modX) {
-            $this->modx->invokeEvent('msOnSaveOrder', [
-                'mode' => $isNew ? modSystemEvent::MODE_NEW : modSystemEvent::MODE_UPD,
-                'object' => $order,
-                'msOrder' => $order,
-                'cacheFlag' => $cacheFlag,
-            ]);
-        }
-
-        return $saved;
+        // Просто делегируем вызов в msOrder::save()
+        // Он уже содержит всю логику событий
+        return $order->save($cacheFlag);
     }
 
     /**
      * Удалить заказ с событиями
      *
-     * Вызывает события msOnBeforeRemoveOrder и msOnRemoveOrder
-     * для возможности расширения логики плагинами
+     * @deprecated Логика перенесена в msOrder::remove(), этот метод оставлен для обратной совместимости
      *
      * @param msOrder $order
      * @param array $ancestors
@@ -107,27 +85,9 @@ class OrderService
      */
     public function removeOrder(msOrder $order, array $ancestors = []): bool
     {
-        if ($this->modx instanceof modX) {
-            $this->modx->invokeEvent('msOnBeforeRemoveOrder', [
-                'id' => $order->get('id'),
-                'object' => $order,
-                'msOrder' => $order,
-                'ancestors' => $ancestors,
-            ]);
-        }
-
-        $removed = $order->xpdo->call(msOrder::class . '::parent::remove', [$order, $ancestors]);
-
-        if ($this->modx instanceof modX) {
-            $this->modx->invokeEvent('msOnRemoveOrder', [
-                'id' => $order->get('id'),
-                'object' => $order,
-                'msOrder' => $order,
-                'ancestors' => $ancestors,
-            ]);
-        }
-
-        return $removed;
+        // Просто делегируем вызов в msOrder::remove()
+        // Он уже содержит всю логику событий
+        return $order->remove($ancestors);
     }
 
     /**

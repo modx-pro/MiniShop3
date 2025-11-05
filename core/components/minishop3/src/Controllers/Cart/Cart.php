@@ -1,4 +1,3 @@
-
 <?php
 
 namespace MiniShop3\Controllers\Cart;
@@ -94,7 +93,7 @@ class Cart
      * @param string $token Токен покупателя
      * @return bool Успешность инициализации
      */
-    public function initialize($ctx = 'web', $token = ''): bool
+    public function initialize(string $ctx = 'web', string $token = ''): bool
     {
         if (empty($token)) {
             return false;
@@ -154,7 +153,7 @@ class Cart
      * @param array $options Опции товара ['color' => 'red', 'size' => 'L']
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
-    public function add($id, $count = 1, $options = []): array
+    public function add(int $id, int $count = 1, array $options = []): array
     {
         // 1. Валидация токена
         if (empty($this->token)) {
@@ -207,7 +206,7 @@ class Cart
         $cartItem = $this->createCartItem($product, $count, $options, $product_key);
 
         // 8. Сохранение в БД
-        $this->draft->addOne($cartItem);
+        $this->draft->addMany($cartItem, 'Products');
         $this->draft->save();
 
         // 9. Пересчет итогов заказа
@@ -242,7 +241,7 @@ class Cart
      * @param int $count Новое количество
      * @return array Response
      */
-    public function change($product_key, $count): array
+    public function change(string $product_key, int $count): array
     {
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
@@ -301,7 +300,7 @@ class Cart
      * @param array $options Новые опции
      * @return array Response
      */
-    public function changeOption($product_key, $options): array
+    public function changeOption(string $product_key, array $options): array
     {
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
@@ -387,7 +386,7 @@ class Cart
      * @param string $product_key Уникальный ключ товара
      * @return array Response
      */
-    public function remove($product_key): array
+    public function remove(string $product_key): array
     {
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
@@ -498,7 +497,7 @@ class Cart
      * @param array $cart Массив товаров
      * @return void
      */
-    public function set($cart = []): void
+    public function set(array $cart = []): void
     {
         // TODO: Реализовать при необходимости
         // Этот метод может быть полезен для восстановления корзины из внешнего источника

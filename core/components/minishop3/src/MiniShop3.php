@@ -4,11 +4,11 @@ namespace MiniShop3;
 
 use MiniShop3\Controllers\Cart\Cart;
 use MiniShop3\Controllers\Customer\Customer;
-use MiniShop3\Controllers\Delivery\DeliveryInterface;
+use MiniShop3\Controllers\Delivery\Delivery;
 use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
-use MiniShop3\Controllers\Payment\PaymentInterface;
+use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
@@ -36,9 +36,9 @@ class MiniShop3
     public $order;
     /** @var Customer $customer */
     public $customer;
-    /** @var DeliveryInterface $delivery */
+    /** @var Delivery $delivery */
     public $delivery;
-    /** @var PaymentInterface $payment */
+    /** @var PaymentProviderInterface $payment */
     public $payment;
     /** @var array $initialized */
     public $initialized = [];
@@ -257,8 +257,8 @@ class MiniShop3
             if ($registerGlobalConfig) {
                 $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
                 $js_setting = [
-                    //'actionUrl' => rtrim($this->modx->getOption('site_url'), '/') . $this->config['actionUrl'],
-                    'actionUrl' => $this->modx->getOption('site_url'),
+                    'actionUrl' => $this->config['actionUrl'],  // action.php для фронтенд API
+                    'connectorUrl' => $this->config['connectorUrl'],  // connector.php для админки (если нужен)
                     'ctx' => $ctx,
                     'tokenName' => $tokenName,
                     'render' => [

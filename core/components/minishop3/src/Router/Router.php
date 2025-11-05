@@ -222,7 +222,8 @@ class Router
 
         // Выполнить обработчик
         if (is_callable($handler)) {
-            return $handler($vars, $this->modx);
+            $result = $handler($vars, $this->modx);
+            return $this->normalizeResponse($result);
         }
 
         // Формат: 'Controller@method'
@@ -239,10 +240,40 @@ class Router
                 return Response::error("Method not found: {$method}", 500);
             }
 
-            return $controller->$method($vars);
+            $result = $controller->$method($vars);
+            return $this->normalizeResponse($result);
         }
 
         return Response::error('Invalid handler', 500);
+    }
+
+    /**
+     * Нормализовать ответ обработчика
+     * Если обработчик вернул массив, оборачиваем его в Response
+     *
+     * @param mixed $result Результат выполнения обработчика
+     * @return Response
+     */
+    protected function normalizeResponse($result): Response
+    {
+        // Если уже Response - возвращаем как есть
+        if ($result instanceof Response) {
+            return $result;
+        }
+
+        // Если массив - оборачиваем в Response
+        if (is_array($result)) {
+            // Определяем HTTP статус код
+            $statusCode = 200;
+            if (isset($result['success']) && !$result['success']) {
+                $statusCode = $result['code'] ?? 400;
+            }
+
+            return new Response($result, $statusCode);
+        }
+
+        // Для всех остальных типов - создаём ошибку
+        return Response::error('Invalid response type', 500);
     }
 
     /**

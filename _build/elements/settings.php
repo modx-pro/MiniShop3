@@ -15,7 +15,7 @@ return [
     ],
 
     'ms3_services' => [
-        'value' => '{"cart":["MiniShop3\\\\Controllers\\\\Cart\\\\Cart"],"order":["MiniShop3\\\\Controllers\\\\Order\\\\Order"],"payment":["MiniShop3\\\\Controllers\\\\Payment\\\\Payment"],"delivery":["MiniShop3\\\\Controllers\\\\Delivery\\\\Delivery"]}',
+        'value' => '{"cart":["MiniShop3\\\\Controllers\\\\Cart\\\\Cart"],"order":["MiniShop3\\\\Controllers\\\\Order\\\\Order"],"payment":["MiniShop3\\\\Controllers\\\\Payment\\\\DefaultPayment"],"delivery":["MiniShop3\\\\Controllers\\\\Delivery\\\\DefaultDelivery"]}',
         'xtype' => 'textarea',
         'area' => 'ms3_main',
     ],
@@ -256,14 +256,17 @@ return [
         'value' => '[
             "[[+cssUrl]]web\/lib\/izitoast\/iziToast.min.css",
             "[[+jsUrl]]web\/lib\/izitoast\/iziToast.js",
-            "[[+jsUrl]]web\/ms3.js",
             "[[+jsUrl]]web\/modules\/hooks.js",
-            "[[+jsUrl]]web\/modules\/form.js",
-            "[[+jsUrl]]web\/modules\/request.js", 
-            "[[+jsUrl]]web\/modules\/cart.js",
-            "[[+jsUrl]]web\/modules\/customer.js",
-            "[[+jsUrl]]web\/modules\/order.js",
             "[[+jsUrl]]web\/modules\/message.js",
+            "[[+jsUrl]]web\/core\/ApiClient.js",
+            "[[+jsUrl]]web\/core\/TokenManager.js",
+            "[[+jsUrl]]web\/core\/CartAPI.js",
+            "[[+jsUrl]]web\/core\/OrderAPI.js",
+            "[[+jsUrl]]web\/core\/CustomerAPI.js",
+            "[[+jsUrl]]web\/ui\/CartUI.js",
+            "[[+jsUrl]]web\/ui\/OrderUI.js",
+            "[[+jsUrl]]web\/ui\/CustomerUI.js",
+            "[[+jsUrl]]web\/ms3.js"
         ]',
         'xtype' => 'textarea',
         'area' => 'ms3_frontend',

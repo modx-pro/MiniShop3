@@ -216,7 +216,7 @@
     </object>
 
 
-    <object class="msDeliveryMember" table="ms2delivery_payments" extends="xPDO\Om\xPDOObject">
+    <object class="msDeliveryMember" table="ms3_delivery_payments" extends="xPDO\Om\xPDOObject">
         <field key="delivery_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
                index="pk"/>
         <field key="payment_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"

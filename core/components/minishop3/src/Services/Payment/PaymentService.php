@@ -2,8 +2,7 @@
 
 namespace MiniShop3\Services\Payment;
 
-use MiniShop3\Controllers\Order\OrderInterface;
-use MiniShop3\Controllers\Payment\PaymentInterface;
+use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Model\msOrder;
@@ -26,7 +25,7 @@ class PaymentService
     protected $ms3;
 
     /** @var string */
-    protected $defaultControllerClass = 'MiniShop3\\Controllers\\Payment\\Payment';
+    protected $defaultControllerClass = 'MiniShop3\\Controllers\\Payment\\DefaultPayment';
 
     /**
      * @param modX $modx
@@ -44,26 +43,26 @@ class PaymentService
      * Загрузка контроллера оплаты (обработчика платежей)
      *
      * Создает экземпляр контроллера оплаты на основе класса из настроек.
-     * Если класс не указан или указан стандартный "Payment", используется контроллер по умолчанию.
+     * Если класс не указан, используется контроллер по умолчанию (DefaultPayment).
      *
      * @param msPayment $payment
-     * @return PaymentInterface|null Контроллер оплаты или null при ошибке
+     * @return PaymentProviderInterface|null Контроллер оплаты или null при ошибке
      */
-    public function loadPaymentHandler(msPayment $payment): ?PaymentInterface
+    public function loadPaymentHandler(msPayment $payment): ?PaymentProviderInterface
     {
         $class = $payment->get('class');
-        if (!$class || $class === 'Payment') {
+        if (empty($class)) {
             $class = $this->defaultControllerClass;
         }
 
         try {
             $controller = new $class($this->ms3, []);
 
-            if (!$controller instanceof PaymentInterface) {
+            if (!$controller instanceof PaymentProviderInterface) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
                     sprintf(
-                        'PaymentService: Класс "%s" не реализует PaymentInterface для способа оплаты ID=%d',
+                        'PaymentService: Класс "%s" не реализует PaymentProviderInterface для способа оплаты ID=%d',
                         $class,
                         $payment->get('id')
                     )
@@ -92,16 +91,16 @@ class PaymentService
      * Контроллер может сформировать форму автоотправки или вернуть URL для редиректа.
      *
      * @param msPayment $payment Способ оплаты
-     * @param PaymentInterface|null $controller Контроллер оплаты (если null - будет загружен)
+     * @param PaymentProviderInterface|null $controller Контроллер оплаты (если null - будет загружен)
      * @param msOrder $order Заказ
      * @return array|bool Массив с данными для редиректа или false при ошибке
      */
     public function sendToPaymentGateway(
         msPayment $payment,
-        ?PaymentInterface $controller,
+        ?PaymentProviderInterface $controller,
         msOrder $order
     ) {
-        if (!$controller instanceof PaymentInterface) {
+        if (!$controller instanceof PaymentProviderInterface) {
             $controller = $this->loadPaymentHandler($payment);
             if (!$controller) {
                 return false;
@@ -118,16 +117,16 @@ class PaymentService
      * Обычно вызывается при возврате пользователя или через webhook.
      *
      * @param msPayment $payment Способ оплаты
-     * @param PaymentInterface|null $controller Контроллер оплаты (если null - будет загружен)
+     * @param PaymentProviderInterface|null $controller Контроллер оплаты (если null - будет загружен)
      * @param msOrder $order Заказ
      * @return array|bool Результат обработки платежа или false при ошибке
      */
     public function receivePayment(
         msPayment $payment,
-        ?PaymentInterface $controller,
+        ?PaymentProviderInterface $controller,
         msOrder $order
     ) {
-        if (!$controller instanceof PaymentInterface) {
+        if (!$controller instanceof PaymentProviderInterface) {
             $controller = $this->loadPaymentHandler($payment);
             if (!$controller) {
                 return false;
@@ -144,18 +143,18 @@ class PaymentService
      * Контроллер может добавлять комиссию за использование данного способа оплаты.
      *
      * @param msPayment $payment Способ оплаты
-     * @param PaymentInterface|null $controller Контроллер оплаты (если null - будет загружен)
-     * @param OrderInterface $order Заказ
+     * @param PaymentProviderInterface|null $controller Контроллер оплаты (если null - будет загружен)
+     * @param msOrder $order Заказ
      * @param float $cost Текущая стоимость заказа
      * @return float Дополнительная стоимость за способ оплаты
      */
     public function calculatePaymentCost(
         msPayment $payment,
-        ?PaymentInterface $controller,
-        OrderInterface $order,
+        ?PaymentProviderInterface $controller,
+        msOrder $order,
         float $cost = 0.0
     ): float {
-        if (!$controller instanceof PaymentInterface) {
+        if (!$controller instanceof PaymentProviderInterface) {
             $controller = $this->loadPaymentHandler($payment);
             if (!$controller) {
                 return 0.0;

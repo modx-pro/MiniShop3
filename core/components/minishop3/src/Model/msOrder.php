@@ -47,12 +47,60 @@ class msOrder extends xPDOSimpleObject
 
     public function save($cacheFlag = null)
     {
-        return $this->getOrderService()->handleOrderSave($this, $cacheFlag);
+        $isNew = $this->isNew();
+
+        // Событие BEFORE
+        if ($this->xpdo instanceof modX) {
+            $this->xpdo->invokeEvent('msOnBeforeSaveOrder', [
+                'mode' => $isNew ? modSystemEvent::MODE_NEW : modSystemEvent::MODE_UPD,
+                'object' => $this,
+                'msOrder' => $this,
+                'cacheFlag' => $cacheFlag,
+            ]);
+        }
+
+        // Вызов родительского save()
+        $saved = parent::save($cacheFlag);
+
+        // Событие AFTER
+        if ($saved && $this->xpdo instanceof modX) {
+            $this->xpdo->invokeEvent('msOnSaveOrder', [
+                'mode' => $isNew ? modSystemEvent::MODE_NEW : modSystemEvent::MODE_UPD,
+                'object' => $this,
+                'msOrder' => $this,
+                'cacheFlag' => $cacheFlag,
+            ]);
+        }
+
+        return $saved;
     }
 
     public function remove(array $ancestors = [])
     {
-        return $this->getOrderService()->removeOrder($this, $ancestors);
+        // Событие BEFORE
+        if ($this->xpdo instanceof modX) {
+            $this->xpdo->invokeEvent('msOnBeforeRemoveOrder', [
+                'id' => $this->get('id'),
+                'object' => $this,
+                'msOrder' => $this,
+                'ancestors' => $ancestors,
+            ]);
+        }
+
+        // Вызов родительского remove()
+        $removed = parent::remove($ancestors);
+
+        // Событие AFTER
+        if ($removed && $this->xpdo instanceof modX) {
+            $this->xpdo->invokeEvent('msOnRemoveOrder', [
+                'id' => $this->get('id'),
+                'object' => $this,
+                'msOrder' => $this,
+                'ancestors' => $ancestors,
+            ]);
+        }
+
+        return $removed;
     }
 
     /**

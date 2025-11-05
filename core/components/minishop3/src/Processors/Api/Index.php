@@ -13,14 +13,32 @@ use MODX\Revolution\Processors\Processor;
  */
 class Index extends Processor
 {
+    /** @var string $permission Пустая строка = публичный доступ без проверки прав */
+    public $permission = '';
+
+    /**
+     * Проверка прав доступа
+     * Роутер сам проверит права через middleware, поэтому здесь разрешаем всё
+     *
+     * @return bool
+     */
+    public function checkPermissions()
+    {
+        return true;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function process()
     {
+        $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MS3 DEBUG] Api\Index processor called');
+
         try {
             // Получаем маршрут из параметра
             $route = $this->getProperty('route', '');
+
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MS3 DEBUG] Route: ' . $route);
 
             if (empty($route)) {
                 return $this->failure('Route parameter is required', ['code' => 400]);
@@ -51,7 +69,14 @@ class Index extends Processor
 
             $router->loadRoutes($systemRoutesFile);
 
-            // 2. Загружаем ПОЛЬЗОВАТЕЛЬСКИЕ роуты Manager API (из core/config/, опционально)
+            // 2. Загружаем СИСТЕМНЫЕ роуты Web API (корзина, заказы, каталог)
+            $webRoutesFile = $componentPath . 'config/routes/web.php';
+
+            if (file_exists($webRoutesFile)) {
+                $router->loadRoutes($webRoutesFile);
+            }
+
+            // 3. Загружаем ПОЛЬЗОВАТЕЛЬСКИЕ роуты Manager API (из core/config/, опционально)
             $customRoutesFile = MODX_CORE_PATH . 'config/ms3_routes_manager.custom.php';
 
             if (file_exists($customRoutesFile)) {
