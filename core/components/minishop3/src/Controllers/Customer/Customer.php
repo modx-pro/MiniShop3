@@ -45,7 +45,7 @@ class Customer
         $this->modx->lexicon->load('minishop3:customer');
     }
 
-    public function initialize($token = '')
+    public function initialize(string $token = ''): bool
     {
         if (empty($token)) {
             return false;
@@ -61,7 +61,7 @@ class Customer
         return true;
     }
 
-    public function generateToken()
+    public function generateToken(): array
     {
         /** @var \MiniShop3\Services\TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
@@ -74,7 +74,7 @@ class Customer
         ]);
     }
 
-    public function updateToken($token)
+    public function updateToken(string $token = ''): array
     {
         if (empty($token)) {
             return $this->generateToken();
@@ -91,7 +91,7 @@ class Customer
         ]);
     }
 
-    public function registerValidation($rules = [], $messages = [])
+    public function registerValidation(array $rules = [], array $messages = []): void
     {
         $this->validationRules = [
             'first_name' => 'required|min:2',
@@ -146,7 +146,7 @@ class Customer
         return $msCustomer;
     }
 
-    public function getByToken($token)
+    public function getByToken(string $token): ?msCustomer
     {
         if (empty($token)) {
             return null;
@@ -160,7 +160,7 @@ class Customer
         return $msCustomer;
     }
 
-    public function set($data = [])
+    public function set(array $data = []): array
     {
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
@@ -172,7 +172,7 @@ class Customer
         return $this->getFields();
     }
 
-    public function add($key, $value)
+    public function add(string $key, mixed $value): array
     {
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
@@ -239,7 +239,7 @@ class Customer
             : $this->success('', [$key => $validated]);
     }
 
-    public function validate($key, $value)
+    public function validate(string $key, mixed $value): mixed
     {
         $validator = new Validator();
 
@@ -400,7 +400,7 @@ class Customer
      *
      * @return array|string
      */
-    protected function error($message = '', $data = [], $placeholders = [])
+    protected function error(string $message = '', array $data = [], array $placeholders = []): array|string
     {
         return $this->ms3->utils->error($message, $data, $placeholders);
     }
@@ -414,7 +414,7 @@ class Customer
      *
      * @return array|string
      */
-    protected function success($message = '', $data = [], $placeholders = [])
+    protected function success(string $message = '', array $data = [], array $placeholders = []): array|string
     {
         return $this->ms3->utils->success($message, $data, $placeholders);
     }

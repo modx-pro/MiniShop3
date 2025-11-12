@@ -31,6 +31,23 @@
 #msOrder .required .required-star { display: inline; }
 #msOrder .error { border: 1px solid brown !important; }
 
+/* Validation errors highlighting */
+input.ms3_field_error,
+select.ms3_field_error,
+textarea.ms3_field_error {
+    border: 2px solid #d9534f !important;
+    background-color: #ffefef !important;
+    outline: none !important;
+}
+
+input.ms3_field_error:focus,
+select.ms3_field_error:focus,
+textarea.ms3_field_error:focus {
+    border-color: #c9302c !important;
+    background-color: #ffefef !important;
+    box-shadow: 0 0 5px rgba(217, 83, 79, 0.5) !important;
+}
+
 /* Logs */
 .msProductsLog, .msGalleryLog, .msCartLog, .msOrderLog, .msGetOrderLog {
     width: 100%;

@@ -107,13 +107,13 @@ class Services
         $deliveryController = $this->modx->getOption(
             'ms3_delivery_controller',
             null,
-            '\\MiniShop3\\Controllers\\Delivery\\Delivery'
+            '\\MiniShop3\\Controllers\\Delivery\\DefaultDelivery'
         );
-        if ($deliveryController !== '\\MiniShop3\\Controllers\\Delivery\\Delivery') {
+        if ($deliveryController !== '\\MiniShop3\\Controllers\\Delivery\\DefaultDelivery') {
             $this->loadCustomClasses('Delivery');
         }
         if (!class_exists($deliveryController)) {
-            $deliveryController = Delivery::class;
+            $deliveryController = '\\MiniShop3\\Controllers\\Delivery\\DefaultDelivery';
         }
 
         $delivery = new $deliveryController($this->ms3, $this->ms3->config);
@@ -123,13 +123,13 @@ class Services
         $paymentController = $this->modx->getOption(
             'ms3_payment_controller',
             null,
-            '\\MiniShop3\\Controllers\\Payment\\Payment'
+            '\\MiniShop3\\Controllers\\Payment\\DefaultPayment'
         );
-        if ($paymentController !== '\\MiniShop3\\Controllers\\Payment\\Payment') {
+        if ($paymentController !== '\\MiniShop3\\Controllers\\Payment\\DefaultPayment') {
             $this->loadCustomClasses('Payment');
         }
         if (!class_exists($paymentController)) {
-            $paymentController = Delivery::class;
+            $paymentController = '\\MiniShop3\\Controllers\\Payment\\DefaultPayment';
         }
 
         $payment = new $paymentController($this->ms3, $this->ms3->config);

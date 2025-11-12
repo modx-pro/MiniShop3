@@ -216,7 +216,7 @@
     </object>
 
 
-    <object class="msDeliveryMember" table="ms2delivery_payments" extends="xPDO\Om\xPDOObject">
+    <object class="msDeliveryMember" table="ms3_delivery_payments" extends="xPDO\Om\xPDOObject">
         <field key="delivery_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
                index="pk"/>
         <field key="payment_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
@@ -237,7 +237,8 @@
     <object class="msOrder" table="ms3_orders" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
-        <field key="token" dbtype="varchar" precision="32" phptype="string" null="false" default=""/>
+        <field key="token" dbtype="varchar" precision="64" phptype="string" null="false" default=""/>
+        <field key="uuid" dbtype="char" precision="36" phptype="string" null="false" default=""/>
         <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="updatedon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="num" dbtype="varchar" precision="20" phptype="string" null="true" default=""/>
@@ -263,6 +264,9 @@
         </index>
         <index alias="token" name="token" primary="false" unique="false" type="BTREE">
             <column key="token" length="" collation="A" null="false"/>
+        </index>
+        <index alias="uuid" name="uuid" primary="false" unique="true" type="BTREE">
+            <column key="uuid" length="" collation="A" null="false"/>
         </index>
         <index alias="status_id" name="status_id" primary="false" unique="false" type="BTREE">
             <column key="status_id" length="" collation="A" null="false"/>
@@ -423,7 +427,7 @@
         <field key="last_name" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="phone" dbtype="varchar" precision="50" phptype="string" null="true" default=""/>
         <field key="email" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
-        <field key="token" dbtype="varchar" precision="32" phptype="string" null="true" default=""/>
+        <field key="token" dbtype="varchar" precision="64" phptype="string" null="true" default=""/>
 
         <index alias="first_name" name="first_name" primary="false" unique="false" type="BTREE">
             <column key="first_name" length="" collation="A" null="false"/>

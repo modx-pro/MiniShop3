@@ -4,11 +4,11 @@ namespace MiniShop3;
 
 use MiniShop3\Controllers\Cart\Cart;
 use MiniShop3\Controllers\Customer\Customer;
-use MiniShop3\Controllers\Delivery\DeliveryInterface;
+use MiniShop3\Controllers\Delivery\Delivery;
 use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
-use MiniShop3\Controllers\Payment\PaymentInterface;
+use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
@@ -36,9 +36,9 @@ class MiniShop3
     public $order;
     /** @var Customer $customer */
     public $customer;
-    /** @var DeliveryInterface $delivery */
+    /** @var Delivery $delivery */
     public $delivery;
-    /** @var PaymentInterface $payment */
+    /** @var PaymentProviderInterface $payment */
     public $payment;
     /** @var array $initialized */
     public $initialized = [];
@@ -245,9 +245,10 @@ class MiniShop3
                     }
 
                     if (!empty($file) && preg_match('/\.css/i', $file)) {
+                        $file = str_replace($config['pl'], $config['vl'], $file);
                         if (preg_match('/\.css$/i', $file)) {
-                            $file .= '?v=' . date('dmYHi', filemtime($file));
-                            $this->modx->regClientCSS(str_replace($config['pl'], $config['vl'], $file));
+                            $file .= '?v=' . date('dmYHi', filemtime(MODX_BASE_PATH . ltrim($file, '/')));
+                            $this->modx->regClientCSS($file);
                         }
                     }
                 }
@@ -257,8 +258,8 @@ class MiniShop3
             if ($registerGlobalConfig) {
                 $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
                 $js_setting = [
-                    //'actionUrl' => rtrim($this->modx->getOption('site_url'), '/') . $this->config['actionUrl'],
-                    'actionUrl' => $this->modx->getOption('site_url'),
+                    'actionUrl' => $this->config['actionUrl'],  // action.php для фронтенд API
+                    'connectorUrl' => $this->config['connectorUrl'],  // connector.php для админки (если нужен)
                     'ctx' => $ctx,
                     'tokenName' => $tokenName,
                     'render' => [
@@ -406,7 +407,79 @@ class MiniShop3
         $load = $this->services->load($ctx);
         $this->initialized[$ctx] = $load;
 
+        // Регистрация сервиса корзины с возможностью подмены
+        $this->registerCartService();
+
         return $load;
+    }
+
+    /**
+     * Регистрация сервиса корзины
+     * Проверяет системную настройку ms3_cart_class для кастомного класса
+     *
+     * @return void
+     */
+    protected function registerCartService(): void
+    {
+        // Получаем имя класса из настройки
+        $cartClass = $this->modx->getOption('ms3_cart_class', null, \MiniShop3\Controllers\Cart\Cart::class);
+
+        // Проверяем существование класса
+        if (!class_exists($cartClass)) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[MiniShop3] Cart class '{$cartClass}' not found, using default Cart class"
+            );
+            $cartClass = \MiniShop3\Controllers\Cart\Cart::class;
+        }
+
+        // Проверяем наследование от базового Cart (для безопасности)
+        if (!is_subclass_of($cartClass, \MiniShop3\Controllers\Cart\Cart::class) && $cartClass !== \MiniShop3\Controllers\Cart\Cart::class) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[MiniShop3] Cart class '{$cartClass}' must extend " . \MiniShop3\Controllers\Cart\Cart::class
+            );
+            $cartClass = \MiniShop3\Controllers\Cart\Cart::class;
+        }
+
+        // Регистрируем в DI контейнере
+        $ms3 = $this;
+        $this->modx->services->add('ms3_cart', function() use ($cartClass, $ms3) {
+            return new $cartClass($ms3);
+        });
+    }
+
+
+    /**
+     * Магический метод для доступа к сервисам через свойства
+     *
+     * @param string $name Имя свойства
+     * @return mixed
+     */
+    public function __get(string $name)
+    {
+        // Доступ к корзине через $ms3->cart
+        if ($name === 'cart') {
+            return $this->getCart();
+        }
+
+        // ... другие сервисы (customer, order и т.д.)
+
+        return null;
+    }
+
+    /**
+     * Получение сервиса корзины (ленивая загрузка)
+     *
+     * @return \MiniShop3\Controllers\Cart\Cart
+     */
+    public function getCart(): \MiniShop3\Controllers\Cart\Cart
+    {
+        if (!$this->modx->services->has('ms3_cart')) {
+            $this->registerCartService();
+        }
+
+        return $this->modx->services->get('ms3_cart');
     }
 
     /**

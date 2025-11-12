@@ -84,10 +84,6 @@ if ($includeDeliveryKeys[0] === '*') {
     );
 }
 
-if (!empty($scriptProperties['includePaymentFields'])) {
-    $includePaymentKeys = array_map('trim', explode(',', $scriptProperties['includePaymentFields']));
-    $includePaymentKeys = array_unique(array_merge($includePaymentKeys, ['id']));
-}
 if ($includePaymentKeys[0] === '*') {
     $select['msPayment'] = $modx->getSelectColumns(msPayment::class, '`msPayment`', 'payment_');
 } else {

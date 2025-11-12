@@ -4,10 +4,15 @@ use xPDO\Transport\xPDOTransport;
 use MODX\Revolution\modX;
 
 /**
- * Резолвер для создания файла пользовательских роутов
+ * Резолвер для создания файлов пользовательских роутов
  *
- * Системные роуты находятся в: core/components/minishop3/config/routes.php
- * Пользовательские роуты создаются в: core/config/ms3_routes.custom.php
+ * Системные роуты:
+ * - core/components/minishop3/config/routes/manager.php - Manager API (админка)
+ * - core/components/minishop3/config/routes/web.php - Web API (фронтенд)
+ *
+ * Пользовательские роуты создаются в:
+ * - core/config/ms3_routes_manager.custom.php - переопределения Manager API
+ * - core/config/ms3_routes_web.custom.php - переопределения Web API
  *
  * @var xPDOTransport $transport
  * @var array $options
@@ -26,41 +31,78 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
     case xPDOTransport::ACTION_INSTALL:
     case xPDOTransport::ACTION_UPGRADE:
 
-        // Создаём файл ПОЛЬЗОВАТЕЛЬСКИХ роутов (только при первой установке)
-        $customTarget = MODX_CORE_PATH . 'config/ms3_routes.custom.php';
-        $customSource = $componentPath . 'config/routes.custom.example.php';
+        // ============================================
+        // 1. Создаём файл Manager API custom routes
+        // ============================================
+        $managerCustomTarget = MODX_CORE_PATH . 'config/ms3_routes_manager.custom.php';
+        $managerCustomSource = $componentPath . 'config/routes_manager.custom.example.php';
 
-        if (file_exists($customTarget)) {
+        if (file_exists($managerCustomTarget)) {
             // Файл уже существует - НЕ трогаем!
             $modx->log(modX::LOG_LEVEL_INFO,
-                '✅ [MiniShop3] Custom routes file exists (preserved): core/config/ms3_routes.custom.php'
+                '✅ [MiniShop3] Manager API custom routes file exists (preserved): core/config/ms3_routes_manager.custom.php'
             );
         } else {
             // Создаём файл впервые
-            if (file_exists($customSource) && copy($customSource, $customTarget)) {
+            if (file_exists($managerCustomSource) && copy($managerCustomSource, $managerCustomTarget)) {
                 $modx->log(modX::LOG_LEVEL_INFO,
-                    '✅ [MiniShop3] Custom routes file created at: core/config/ms3_routes.custom.php'
+                    '✅ [MiniShop3] Manager API custom routes file created at: core/config/ms3_routes_manager.custom.php'
                 );
                 $modx->log(modX::LOG_LEVEL_INFO,
                     '   This file will NEVER be overwritten. Safe to customize!'
                 );
-                $modx->log(modX::LOG_LEVEL_INFO,
-                    '   System routes are in: core/components/minishop3/config/routes.php'
-                );
             } else {
                 // Не критично - файл опциональный
                 $modx->log(modX::LOG_LEVEL_WARN,
-                    '[MiniShop3] Could not create custom routes example (optional)'
+                    '[MiniShop3] Could not create Manager API custom routes example (optional)'
                 );
             }
         }
 
+        // ============================================
+        // 2. Создаём файл Web API custom routes
+        // ============================================
+        $webCustomTarget = MODX_CORE_PATH . 'config/ms3_routes_web.custom.php';
+        $webCustomSource = $componentPath . 'config/routes_web.custom.example.php';
+
+        if (file_exists($webCustomTarget)) {
+            // Файл уже существует - НЕ трогаем!
+            $modx->log(modX::LOG_LEVEL_INFO,
+                '✅ [MiniShop3] Web API custom routes file exists (preserved): core/config/ms3_routes_web.custom.php'
+            );
+        } else {
+            // Создаём файл впервые
+            if (file_exists($webCustomSource) && copy($webCustomSource, $webCustomTarget)) {
+                $modx->log(modX::LOG_LEVEL_INFO,
+                    '✅ [MiniShop3] Web API custom routes file created at: core/config/ms3_routes_web.custom.php'
+                );
+                $modx->log(modX::LOG_LEVEL_INFO,
+                    '   This file will NEVER be overwritten. Safe to customize!'
+                );
+            } else {
+                // Не критично - файл опциональный
+                $modx->log(modX::LOG_LEVEL_WARN,
+                    '[MiniShop3] Could not create Web API custom routes example (optional)'
+                );
+            }
+        }
+
+        $modx->log(modX::LOG_LEVEL_INFO,
+            '📁 [MiniShop3] System routes are in: core/components/minishop3/config/routes/'
+        );
+
         break;
 
     case xPDOTransport::ACTION_UNINSTALL:
-        // При удалении НЕ трогаем файл - пусть пользователь сам решает
+        // При удалении НЕ трогаем файлы - пусть пользователь сам решает
         $modx->log(modX::LOG_LEVEL_INFO,
-            '[MiniShop3] Custom routes file was NOT removed: core/config/ms3_routes.custom.php'
+            '[MiniShop3] Custom routes files were NOT removed:'
+        );
+        $modx->log(modX::LOG_LEVEL_INFO,
+            '   - core/config/ms3_routes_manager.custom.php'
+        );
+        $modx->log(modX::LOG_LEVEL_INFO,
+            '   - core/config/ms3_routes_web.custom.php'
         );
         $modx->log(modX::LOG_LEVEL_INFO,
             '   Remove manually if needed.'

@@ -33,7 +33,7 @@ if ($transport->xpdo) {
                 $stmt = $modx->prepare("INSERT INTO {$prefix}ms3_deliveries (id, name, price, weight_price, distance_price, active, validation_rules, position) VALUES (1, :name, 0, 0, 0, 1, :rules, 0)");
                 $stmt->execute([
                     ':name' => $modx->lexicon('ms3_order_delivery_self'),
-                    ':rules' => '{\"first_name\":\"required\",\"last_name\":\"required\", \"email\":\"required|email\"}'
+                    ':rules' => '{"first_name":"required","last_name":"required","email":"required|email"}'
                 ]);
             }
 
@@ -48,10 +48,10 @@ if ($transport->xpdo) {
             }
 
             // Проверяем и создаём связь доставка-оплата
-            $stmt = $modx->prepare("SELECT COUNT(*) FROM {$prefix}ms3_delivery_members WHERE payment_id = 1 AND delivery_id = 1");
+            $stmt = $modx->prepare("SELECT COUNT(*) FROM {$prefix}ms3_delivery_payments WHERE payment_id = 1 AND delivery_id = 1");
             $stmt->execute();
             if ($stmt->fetchColumn() == 0) {
-                $stmt = $modx->prepare("INSERT INTO {$prefix}ms3_delivery_members (payment_id, delivery_id) VALUES (1, 1)");
+                $stmt = $modx->prepare("INSERT INTO {$prefix}ms3_delivery_payments (payment_id, delivery_id) VALUES (1, 1)");
                 $stmt->execute();
             }
 

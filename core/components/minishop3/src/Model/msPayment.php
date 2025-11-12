@@ -2,9 +2,7 @@
 
 namespace MiniShop3\Model;
 
-use MiniShop3\Controllers\Order\OrderInterface;
-use MiniShop3\Controllers\Payment\Payment;
-use MiniShop3\Controllers\Payment\PaymentInterface;
+use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\MiniShop3;
 use MiniShop3\Services\Payment\PaymentService;
 use MODX\Revolution\modX;
@@ -27,7 +25,7 @@ use xPDO\xPDO;
  */
 class msPayment extends xPDOSimpleObject
 {
-    /** @var Payment $controller */
+    /** @var PaymentProviderInterface|null $controller */
     public $controller;
     /** @var MiniShop3 $ms3 */
     public $ms3;
@@ -56,7 +54,7 @@ class msPayment extends xPDOSimpleObject
     public function loadHandler()
     {
         $this->controller = $this->getPaymentService()->loadPaymentHandler($this);
-        return $this->controller instanceof PaymentInterface;
+        return $this->controller instanceof PaymentProviderInterface;
     }
 
     /**
@@ -86,12 +84,12 @@ class msPayment extends xPDOSimpleObject
     /**
      * Returns an additional cost depending on the method of payment
      *
-     * @param OrderInterface $order
+     * @param msOrder $order Order object
      * @param float $cost Current cost of order
      *
-     * @return float|integer
+     * @return float
      */
-    public function getCost(OrderInterface $order, float $cost = 0.0)
+    public function getCost(msOrder $order, float $cost = 0.0): float
     {
         return $this->getPaymentService()->calculatePaymentCost(
             $this,

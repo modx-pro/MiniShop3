@@ -18,7 +18,14 @@ if (isset($_POST['render'])) {
 
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
-if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
+
+// Приоритет токена:
+// 1. Из параметров сниппета (для SSR рендера через API)
+// 2. Из сессии (стандартный flow)
+// 3. Генерируем новый
+if (!empty($scriptProperties['customer_token'])) {
+    $token = $scriptProperties['customer_token'];
+} elseif (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
     $token = $_SESSION['ms3']['customer_token'];
 } else {
     $response = $ms3->customer->generateToken();

@@ -37,3 +37,4 @@ $_lang['ms3_order_err_empty'] = 'Cannot place empty order';
 $_lang['ms3_order_err_delivery'] = 'You must select delivery method';
 $_lang['ms3_order_err_validation_rules'] = 'You must correctly fill required fields';
 $_lang['ms3_err_token'] = 'Token not specified';
+$_lang['ms3_err_rate_limit'] = 'Rate limit exceeded. Please try again later';

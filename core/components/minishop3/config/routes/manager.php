@@ -1,11 +1,14 @@
 <?php
 /**
- * СИСТЕМНЫЕ API Routes для MiniShop3
+ * Manager API Routes для MiniShop3
+ *
+ * Маршруты для административного API (connector.php).
+ * Используются в MODX manager для работы ExtJS/Vue интерфейсов.
  *
  * Этот файл является частью компонента и обновляется вместе с ним.
  *
  * ❌ НЕ редактируйте этот файл напрямую!
- * ✅ Для своих роутов используйте: core/config/ms3_routes.custom.php
+ * ✅ Для своих роутов используйте: core/config/ms3_routes_manager.custom.php
  *
  * Пользовательские роуты загружаются ПОСЛЕ системных и могут их переопределять.
  *
@@ -30,7 +33,8 @@ $router->group('/api/mgr', function($router) use ($modx) {
         return Response::success([
             'status' => 'ok',
             'version' => $modx->getOption('ms3_version', null, '1.0.0'),
-            'timestamp' => time()
+            'timestamp' => time(),
+            'api' => 'manager'
         ]);
     });
 
@@ -328,30 +332,3 @@ $router->group('/api/mgr', function($router) use ($modx) {
     // Middleware для всей группы /api/mgr
     new AuthMiddleware($modx, 'mgr')
 ]);
-
-// ============================================
-// API для фронтенда (Web)
-// ============================================
-$router->group('/api/web', function($router) use ($modx) {
-
-    // Публичные роуты (без авторизации)
-    $router->get('/catalog/products', function($params) use ($modx) {
-        // Получение списка товаров для каталога
-        return Response::success([
-            'products' => [],
-            'total' => 0
-        ]);
-    });
-
-    // Защищённые роуты (требуется авторизация пользователя)
-    $router->group('/cart', function($router) use ($modx) {
-
-        // POST /api/web/cart/add - добавить в корзину
-        // GET /api/web/cart - получить корзину
-        // DELETE /api/web/cart/{id} - удалить из корзины
-
-    }, [
-        new AuthMiddleware($modx, 'web')
-    ]);
-
-});
