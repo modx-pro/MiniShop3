@@ -21,15 +21,28 @@ $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGetOrder');
 
-if (empty($id) && !empty($_GET['msorder'])) {
-    $id = (int)$_GET['msorder'];
-}
-if (empty($id)) {
-    return;
+// Получить ID или UUID заказа из параметров или GET
+$orderIdentifier = $scriptProperties['id'] ?? $_GET['msorder'] ?? null;
+
+if (empty($orderIdentifier)) {
+    $modx->log(modX::LOG_LEVEL_WARN, '[msGetOrder] Missing order identifier');
+    return '';
 }
 
 /** @var msOrder $msOrder */
-$msOrder = $modx->getObject(msOrder::class, ['id' => $id]);
+// Если это UUID (36 символов) - ищем по uuid, иначе по id
+if (is_string($orderIdentifier) && strlen($orderIdentifier) === 36) {
+    $msOrder = $modx->getObject(msOrder::class, ['uuid' => $orderIdentifier]);
+    $id = $msOrder ? $msOrder->get('id') : 0;
+} else {
+    $id = (int)$orderIdentifier;
+    if ($id <= 0) {
+        $modx->log(modX::LOG_LEVEL_WARN, '[msGetOrder] Invalid order ID');
+        return '';
+    }
+    $msOrder = $modx->getObject(msOrder::class, ['id' => $id]);
+}
+
 if (!$msOrder) {
     return $modx->lexicon('ms3_err_order_nf');
 }
@@ -42,13 +55,19 @@ if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
     }
 }
 
+// Проверка прав доступа
+// UUID обеспечивает безопасность - знание UUID = доступ к заказу
+$isUuidAccess = is_string($orderIdentifier) && strlen($orderIdentifier) === 36;
+
 $canView = (
         !empty($_SESSION['ms3']['orders']) && in_array($id, $_SESSION['ms3']['orders']))
     || $msOrder->get('user_id') == $modx->user->id
     || !empty($customerId) && $msOrder->get('customer_id') == $customerId
     || $modx->user->hasSessionContext('mgr')
-    || !empty($scriptProperties['id']);
+    || $isUuidAccess;  // UUID доступ всегда разрешен
+
 if (!$canView) {
+    $modx->log(modX::LOG_LEVEL_WARN, "[msGetOrder] Access denied for order {$id}");
     return '';
 }
 
@@ -144,8 +163,13 @@ $default = [
 ];
 // Merge all properties and run!
 $pdoFetch->setConfig(array_merge($default, $scriptProperties), true);
-$rows = $pdoFetch->run();
 
+try {
+    $rows = $pdoFetch->run();
+} catch (\Exception $e) {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[msGetOrder] Error fetching order products: ' . $e->getMessage());
+    return $modx->lexicon('ms3_err_order_load');
+}
 
 $products = [];
 $cart_count = 0;
@@ -179,59 +203,81 @@ foreach ($rows as $product) {
     }
 
     // Add option values
-    $options = $modx->call(msProductOption::class, 'loadOptions', [$modx, $product['product_id']]);
-    $products[] = array_merge($product, $options);
+    try {
+        $options = $modx->call(msProductOption::class, 'loadOptions', [$modx, $product['product_id']]);
+        $products[] = array_merge($product, $options);
+    } catch (\Exception $e) {
+        $modx->log(modX::LOG_LEVEL_WARN, '[msGetOrder] Error loading options for product ' . $product['product_id'] . ': ' . $e->getMessage());
+        $products[] = $product;  // Добавляем товар без опций
+    }
 
     // Count total
     $cart_count += $product['count'];
     $cart_discount_cost += $product['count'] * $discount_price;
 }
 
-$pls = array_merge($scriptProperties, [
-    'order' => $msOrder->toArray(),
-    'products' => $products,
-//    'user' => ($tmp = $msOrder->getOne('User'))
-//        ? array_merge($tmp->getOne('Profile')->toArray(), $tmp->toArray())
-//        : [],
-    'address' => ($tmp = $msOrder->getOne('Address'))
-        ? $tmp->toArray()
-        : [],
-    'delivery' => ($tmp = $msOrder->getOne('Delivery'))
-        ? $tmp->toArray()
-        : [],
-    'payment' => ($payment = $msOrder->getOne('Payment'))
-        ? $payment->toArray()
-        : [],
-    'total' => [
-        'cost' => $ms3->format->price($msOrder->get('cost')),
-        'cart_cost' => $ms3->format->price($msOrder->get('cart_cost')),
-        'delivery_cost' => $ms3->format->price($msOrder->get('delivery_cost')),
-        'weight' => $ms3->format->weight($msOrder->get('weight')),
-        'cart_weight' => $ms3->format->weight($msOrder->get('weight')),
-        'cart_count' => $cart_count,
-        'cart_discount' => $cart_discount_cost
-    ],
-]);
+try {
+    $pls = array_merge($scriptProperties, [
+        'order' => $msOrder->toArray(),
+        'products' => $products,
+    //    'user' => ($tmp = $msOrder->getOne('User'))
+    //        ? array_merge($tmp->getOne('Profile')->toArray(), $tmp->toArray())
+    //        : [],
+        'address' => ($tmp = $msOrder->getOne('Address'))
+            ? $tmp->toArray()
+            : [],
+        'delivery' => ($tmp = $msOrder->getOne('Delivery'))
+            ? $tmp->toArray()
+            : [],
+        'payment' => ($payment = $msOrder->getOne('Payment'))
+            ? $payment->toArray()
+            : [],
+        'total' => [
+            'cost' => $ms3->format->price($msOrder->get('cost')),
+            'cart_cost' => $ms3->format->price($msOrder->get('cart_cost')),
+            'delivery_cost' => $ms3->format->price($msOrder->get('delivery_cost')),
+            'weight' => $ms3->format->weight($msOrder->get('weight')),
+            'cart_weight' => $ms3->format->weight($msOrder->get('weight')),
+            'cart_count' => $cart_count,
+            'cart_discount' => $cart_discount_cost
+        ],
+    ]);
+} catch (\Exception $e) {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[msGetOrder] Error preparing order data: ' . $e->getMessage());
+    return $modx->lexicon('ms3_err_order_load');
+}
 
-// add "payment" link
-if ($payment and $class = $payment->get('class')) {
-    $status = $modx->getOption('payStatus', $scriptProperties, '1');
-    $status = array_map('trim', explode(',', $status));
-    if (in_array($msOrder->get('status'), $status)) {
-        //TODO  докрутить этот момент
-//        $ms3->loadCustomClasses('payment');
-//        if (class_exists($class)) {
-//            /** @var MiniShop3\Controllers\Payment\ $paymentController */
-//            $paymentController = new $class($msOrder);
-//            if (method_exists($paymentController, 'getPaymentLink')) {
-//                $link = $paymentController->getPaymentLink($msOrder);
-//                $pls['payment_link'] = $link;
-//            }
-//        }
+// Add "payment" link for unpaid orders
+if ($payment && $class = $payment->get('class')) {
+    // Статусы заказов, для которых показывать кнопку оплаты (по умолчанию: 1 - Новый)
+    $payStatuses = $modx->getOption('payStatus', $scriptProperties, '1');
+    $payStatuses = array_map('trim', explode(',', $payStatuses));
+
+    if (in_array($msOrder->get('status_id'), $payStatuses)) {
+        try {
+            if (class_exists($class)) {
+                /** @var \MiniShop3\Controllers\Payment\Payment $paymentHandler */
+                $paymentHandler = new $class($ms3, []);
+
+                // Получаем ссылку на оплату через новый метод
+                $link = $paymentHandler->getPaymentLink($msOrder);
+
+                if ($link) {
+                    $pls['payment_link'] = $link;
+                }
+            }
+        } catch (\Exception $e) {
+            $modx->log(modX::LOG_LEVEL_WARN, '[msGetOrder] Error getting payment link: ' . $e->getMessage());
+        }
     }
 }
 
-$output = $pdoFetch->getChunk($tpl, $pls);
+try {
+    $output = $pdoFetch->getChunk($tpl, $pls);
+} catch (\Exception $e) {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[msGetOrder] Error rendering template: ' . $e->getMessage());
+    return $modx->lexicon('ms3_err_order_load');
+}
 
 if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
     $output .= '<pre class="msGetOrderLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';

@@ -174,6 +174,32 @@ abstract class Payment implements PaymentProviderInterface
     }
 
     /**
+     * Получить ссылку на оплату заказа
+     *
+     * Вызывает метод send() и извлекает payment_link из ответа.
+     * Используется для отображения кнопки "Оплатить" на странице заказа.
+     *
+     * Примечание: Метод вызывает send() каждый раз без кэширования.
+     * Для платежных систем с лимитами API рекомендуется добавить кэширование.
+     *
+     * @param msOrder $order Заказ для оплаты
+     * @return string|null Ссылка на оплату или null если не удалось получить
+     */
+    public function getPaymentLink(msOrder $order): ?string
+    {
+        try {
+            $response = $this->send($order);
+            return $response['data']['payment_link'] ?? null;
+        } catch (\Exception $e) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[Payment] Error getting payment link for order #{$order->get('id')}: " . $e->getMessage()
+            );
+            return null;
+        }
+    }
+
+    /**
      * Генерация криптографического хеша заказа
      *
      * Используется для проверки подлинности данных при обработке callback от платежной системы.

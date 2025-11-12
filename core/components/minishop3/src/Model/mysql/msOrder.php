@@ -18,6 +18,7 @@ class msOrder extends \MiniShop3\Model\msOrder
                 'user_id' => 0,
                 'customer_id' => 0,
                 'token' => '',
+                'uuid' => '',
                 'createdon' => null,
                 'updatedon' => null,
                 'num' => '',
@@ -56,6 +57,13 @@ class msOrder extends \MiniShop3\Model\msOrder
                     [
                         'dbtype' => 'varchar',
                         'precision' => '64',
+                        'phptype' => 'string',
+                        'null' => false,
+                    ],
+                'uuid' =>
+                    [
+                        'dbtype' => 'char',
+                        'precision' => '36',
                         'phptype' => 'string',
                         'null' => false,
                     ],
@@ -202,6 +210,22 @@ class msOrder extends \MiniShop3\Model\msOrder
                         'columns' =>
                             [
                                 'token' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                            ],
+                    ],
+                'uuid' =>
+                    [
+                        'alias' => 'uuid',
+                        'primary' => false,
+                        'unique' => true,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'uuid' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',

@@ -27,6 +27,7 @@ $_lang['ms3_order_payment_id_nf'] = 'Payment method not found';
 // Customer and user errors
 $_lang['ms3_err_customer_nf'] = 'Customer not found';
 $_lang['ms3_err_user_nf'] = 'User not found';
+$_lang['ms3_err_order_load'] = 'Error loading order. Please try again later.';
 
 // Token
 $_lang['ms3_err_token'] = 'Token not found or invalid';

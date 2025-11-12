@@ -120,6 +120,7 @@ class Order
         $msOrder = $this->modx->newObject(msOrder::class);
         $data = [
             'token' => $token,
+            'uuid' => \Ramsey\Uuid\Uuid::uuid4()->toString(),
             'status_id' => $status_draft,
             'context' => $this->ctx,
             'createdon' => time(),
@@ -795,7 +796,7 @@ class Order
         $response = $orderStatus->change($this->draft->get('id'), $status_new);
 
         if ($response !== true) {
-            return $this->error($response, ['msorder' => $this->draft->get('id')]);
+            return $this->error($response, ['msorder' => $this->draft->get('uuid')]);
         }
         // Reload order object after changes in OrderStatus::change method
 
@@ -806,7 +807,7 @@ class Order
             ['id' => $msOrder->get('payment_id'), 'active' => 1]
         );
         if (!$msPayment) {
-            return $this->success('', ['msorder' => $msOrder->get('id')]);
+            return $this->success('', ['msorder' => $msOrder->get('uuid')]);
         }
 
         $response = $msPayment->send($msOrder);
@@ -817,7 +818,7 @@ class Order
             return $response;
         }
         $thanks_id = $this->modx->getOption('ms3_order_redirect_thanks_id', null, 1);
-        $redirect = $this->modx->makeUrl($thanks_id, $this->ctx, ['msorder' => $msOrder->get('id')]);
+        $redirect = $this->modx->makeUrl($thanks_id, $this->ctx, ['msorder' => $msOrder->get('uuid')]);
         $response['data']['redirect'] = $redirect;
         return $response;
     }

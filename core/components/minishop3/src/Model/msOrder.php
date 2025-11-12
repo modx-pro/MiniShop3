@@ -13,6 +13,7 @@ use xPDO\Om\xPDOSimpleObject;
  * @property integer $user_id
  * @property integer $customer_id
  * @property string $token
+ * @property string $uuid
  * @property string $createdon
  * @property string $updatedon
  * @property string $num
