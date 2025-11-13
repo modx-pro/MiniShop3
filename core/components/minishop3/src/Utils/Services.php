@@ -45,62 +45,21 @@ class Services
 //            require_once dirname(__FILE__, 2) . '/Controllers/Customer/Customer.php';
 //        }
 
-        // Load cart class
-        $cartController = $this->modx->getOption(
-            'ms3_cart_controller',
-            null,
-            '\\MiniShop3\\Controllers\\Cart\\Cart'
-        );
-        if ($cartController !== '\\MiniShop3\\Controllers\\Cart\\Cart') {
-            $this->loadCustomClasses('cart');
-        }
-        if (!class_exists($cartController)) {
-            $cartController = Cart::class;
-        }
+        // Cart и Order теперь управляются через ServiceRegistry
+        // Доступ: $ms3->cart, $ms3->order (через __get() → getCart()/getOrder())
+        // Конфигурация: core/config/ms3.services.php или ms3.services.d/*.php
 
-        $cart = new $cartController($this->ms3, $this->ms3->config);
-        $this->ms3->setController('cart', $cart);
+        // Cart, Order, Customer теперь управляются через ServiceRegistry
+        // Доступ: $ms3->cart, $ms3->order, $ms3->customer (через __get() → getCart()/getOrder()/getCustomer())
+        // Конфигурация: core/config/ms3.services.php или ms3.services.d/*.php
 
-
-        // Load Order class
-        $orderController = $this->modx->getOption(
-            'ms3_order_controller',
-            null,
-            '\\MiniShop3\\Controllers\\Order\\Order'
-        );
-        if ($orderController !== '\\MiniShop3\\Controllers\\Order\\Order') {
-            $this->loadCustomClasses('order');
-        }
-        if (!class_exists($orderController)) {
-            $orderController = Order::class;
-        }
-
-        $order = new $orderController($this->ms3, $this->ms3->config);
-        $this->ms3->setController('order', $order);
-
-        // Load Customer class
-        $customerController = $this->modx->getOption(
-            'ms3_customer_controller',
-            null,
-            '\\MiniShop3\\Controllers\\Customer\\Customer'
-        );
-        if ($customerController !== '\\MiniShop3\\Controllers\\Customer\\Customer') {
-            $this->loadCustomClasses('customer');
-        }
-        if (!class_exists($customerController)) {
-            $customerController = Customer::class;
-        }
-
-        $customer = new $customerController($this->ms3, $this->ms3->config);
-        $this->ms3->setController('customer', $customer);
-//        if ($this->ms3->customer->initialize($ctx) !== true) {
-//            $this->modx->log(
-//                modX::LOG_LEVEL_ERROR,
-//                'Could not initialize miniShop3 customer controller class: "' . $customerController . '"'
-//            );
-//
-//            return false;
-//        }
+        // DEPRECATED: Старая система через setController больше не используется для cart/order/customer
+        // $cart = new $cartController($this->ms3, $this->ms3->config);
+        // $this->ms3->setController('cart', $cart);
+        // $order = new $orderController($this->ms3, $this->ms3->config);
+        // $this->ms3->setController('order', $order);
+        // $customer = new $customerController($this->ms3, $this->ms3->config);
+        // $this->ms3->setController('customer', $customer);
 
 
         // Load delivery class

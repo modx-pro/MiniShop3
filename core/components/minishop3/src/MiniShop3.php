@@ -10,6 +10,7 @@ use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
 use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\Model\msOrder;
+use MiniShop3\ServiceRegistry;
 use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
 use MiniShop3\Utils\Plugins;
@@ -30,12 +31,11 @@ class MiniShop3
     public $pdoFetch;
     /** @var CoreTools $pdoTools */
     public $pdoTools;
-    /** @var Cart $cart */
-    public $cart;
-    /** @var Order $order */
-    public $order;
-    /** @var Customer $customer */
-    public $customer;
+
+    // ВАЖНО: $cart, $order, $customer НЕ должны быть публичными свойствами!
+    // Они доступны через магические методы __get() → getCart() / getOrder() / getCustomer()
+    // Это позволяет ServiceRegistry управлять их созданием через DI контейнер
+
     /** @var Delivery $delivery */
     public $delivery;
     /** @var PaymentProviderInterface $payment */
@@ -110,107 +110,11 @@ class MiniShop3
         $this->utils = new Utils($this);
         $this->format = new Format($this);
         $this->services = new Services($this);
-        //$this->plugins = new Plugins($this);
         $this->extraFields = new ExtraFields($this->modx);
 
-        // Регистрируем сервисы MiniShop3 с префиксом ms3_
-        $modx = $this->modx;
-        if (!$this->modx->services->has('ms3_config_manager')) {
-            $this->modx->services->add('ms3_config_manager', function() use ($modx) {
-                return new \MiniShop3\Services\ConfigManager($modx);
-            });
-        }
-
-        // Регистрируем FieldConfigManager как сервис
-        if (!$this->modx->services->has('ms3_field_config_manager')) {
-            $this->modx->services->add('ms3_field_config_manager', function() use ($modx) {
-                return new \MiniShop3\Services\FieldConfigManager($modx);
-            });
-        }
-
-        // Регистрируем ConfigService (фасад над FieldConfigManager и ConfigManager)
-        if (!$this->modx->services->has('ms3_config_service')) {
-            $this->modx->services->add('ms3_config_service', function() use ($modx) {
-                return new \MiniShop3\Services\ConfigService($modx);
-            });
-        }
-
-        // Регистрируем ProductDataService для работы с данными товара
-        if (!$this->modx->services->has('ms3_product_data_service')) {
-            $this->modx->services->add('ms3_product_data_service', function() use ($modx) {
-                return new \MiniShop3\Services\Product\ProductDataService($modx);
-            });
-        }
-
-        // Регистрируем ProductImageService для работы с изображениями товара
-        if (!$this->modx->services->has('ms3_product_image')) {
-            $this->modx->services->add('ms3_product_image', function() use ($modx) {
-                return new \MiniShop3\Services\Product\ProductImageService($modx);
-            });
-        }
-
-        // Регистрируем VendorService для работы с производителями
-        if (!$this->modx->services->has('ms3_vendor_service')) {
-            $this->modx->services->add('ms3_vendor_service', function() use ($modx) {
-                return new \MiniShop3\Services\Vendor\VendorService($modx);
-            });
-        }
-
-        // Регистрируем DeliveryService для работы с доставкой
-        if (!$this->modx->services->has('ms3_delivery_service')) {
-            $this->modx->services->add('ms3_delivery_service', function() use ($modx) {
-                return new \MiniShop3\Services\Delivery\DeliveryService($modx);
-            });
-        }
-
-        // Регистрируем PaymentService для работы с оплатой
-        if (!$this->modx->services->has('ms3_payment_service')) {
-            $this->modx->services->add('ms3_payment_service', function() use ($modx) {
-                return new \MiniShop3\Services\Payment\PaymentService($modx);
-            });
-        }
-
-        // Регистрируем OrderService для работы с заказами
-        if (!$this->modx->services->has('ms3_order_service')) {
-            $this->modx->services->add('ms3_order_service', function() use ($modx) {
-                return new \MiniShop3\Services\Order\OrderService($modx);
-            });
-        }
-
-        // Регистрируем TokenService для безопасной работы с токенами
-        if (!$this->modx->services->has('ms3_token_service')) {
-            $this->modx->services->add('ms3_token_service', function() use ($modx) {
-                return new \MiniShop3\Services\TokenService($modx);
-            });
-        }
-
-        // Регистрируем CategoryService для работы с категориями
-        if (!$this->modx->services->has('ms3_category_service')) {
-            $this->modx->services->add('ms3_category_service', function() use ($modx) {
-                return new \MiniShop3\Services\Category\CategoryService($modx);
-            });
-        }
-
-        // Регистрируем CategoryOptionService для работы с опциями категорий
-        if (!$this->modx->services->has('ms3_category_option_service')) {
-            $this->modx->services->add('ms3_category_option_service', function() use ($modx) {
-                return new \MiniShop3\Services\Category\CategoryOptionService($modx);
-            });
-        }
-
-        // Регистрируем ImageService для работы с изображениями (Intervention Image v3)
-        if (!$this->modx->services->has('ms3_image')) {
-            $this->modx->services->add('ms3_image', function() use ($modx) {
-                return new \MiniShop3\Services\ImageService($modx);
-            });
-        }
-
-        // Регистрируем OptionService для работы с опциями товаров (EAV система)
-        if (!$this->modx->services->has('ms3_option_service')) {
-            $this->modx->services->add('ms3_option_service', function() use ($modx) {
-                return new \MiniShop3\Services\Option\OptionService($modx);
-            });
-        }
+        // Регистрируем все сервисы MiniShop3 через ServiceRegistry
+        // Поддерживается переопределение через конфигурационный файл (ms3.services.php)
+        (new ServiceRegistry($this->modx))->register();
 
         $this->options = new Options($this);
 
@@ -407,46 +311,7 @@ class MiniShop3
         $load = $this->services->load($ctx);
         $this->initialized[$ctx] = $load;
 
-        // Регистрация сервиса корзины с возможностью подмены
-        $this->registerCartService();
-
         return $load;
-    }
-
-    /**
-     * Регистрация сервиса корзины
-     * Проверяет системную настройку ms3_cart_class для кастомного класса
-     *
-     * @return void
-     */
-    protected function registerCartService(): void
-    {
-        // Получаем имя класса из настройки
-        $cartClass = $this->modx->getOption('ms3_cart_class', null, \MiniShop3\Controllers\Cart\Cart::class);
-
-        // Проверяем существование класса
-        if (!class_exists($cartClass)) {
-            $this->modx->log(
-                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
-                "[MiniShop3] Cart class '{$cartClass}' not found, using default Cart class"
-            );
-            $cartClass = \MiniShop3\Controllers\Cart\Cart::class;
-        }
-
-        // Проверяем наследование от базового Cart (для безопасности)
-        if (!is_subclass_of($cartClass, \MiniShop3\Controllers\Cart\Cart::class) && $cartClass !== \MiniShop3\Controllers\Cart\Cart::class) {
-            $this->modx->log(
-                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
-                "[MiniShop3] Cart class '{$cartClass}' must extend " . \MiniShop3\Controllers\Cart\Cart::class
-            );
-            $cartClass = \MiniShop3\Controllers\Cart\Cart::class;
-        }
-
-        // Регистрируем в DI контейнере
-        $ms3 = $this;
-        $this->modx->services->add('ms3_cart', function() use ($cartClass, $ms3) {
-            return new $cartClass($ms3);
-        });
     }
 
 
@@ -463,7 +328,17 @@ class MiniShop3
             return $this->getCart();
         }
 
-        // ... другие сервисы (customer, order и т.д.)
+        // Доступ к заказу через $ms3->order
+        if ($name === 'order') {
+            return $this->getOrder();
+        }
+
+        // Доступ к покупателю через $ms3->customer
+        if ($name === 'customer') {
+            return $this->getCustomer();
+        }
+
+        // ... другие сервисы (delivery, payment и т.д.)
 
         return null;
     }
@@ -475,11 +350,27 @@ class MiniShop3
      */
     public function getCart(): \MiniShop3\Controllers\Cart\Cart
     {
-        if (!$this->modx->services->has('ms3_cart')) {
-            $this->registerCartService();
-        }
-
         return $this->modx->services->get('ms3_cart');
+    }
+
+    /**
+     * Получение сервиса заказа (ленивая загрузка)
+     *
+     * @return \MiniShop3\Controllers\Order\Order
+     */
+    public function getOrder(): \MiniShop3\Controllers\Order\Order
+    {
+        return $this->modx->services->get('ms3_order');
+    }
+
+    /**
+     * Получение сервиса покупателя (ленивая загрузка)
+     *
+     * @return \MiniShop3\Controllers\Customer\Customer
+     */
+    public function getCustomer(): \MiniShop3\Controllers\Customer\Customer
+    {
+        return $this->modx->services->get('ms3_customer');
     }
 
     /**

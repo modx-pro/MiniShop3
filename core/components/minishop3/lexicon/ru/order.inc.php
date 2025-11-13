@@ -21,6 +21,7 @@ $_lang['ms3_order_err_empty'] = 'Корзина пуста';
 $_lang['ms3_order_err_requires'] = 'Не заполнены обязательные поля';
 $_lang['ms3_order_err_delivery'] = 'Не выбран способ доставки';
 $_lang['ms3_order_err_payment'] = 'Не выбран способ оплаты';
+$_lang['ms3_order_err_payment_not_found'] = 'Способ оплаты не найден или неактивен';
 $_lang['ms3_order_delivery_id_nf'] = 'Способ доставки не найден';
 $_lang['ms3_order_payment_id_nf'] = 'Способ оплаты не найден';
 
