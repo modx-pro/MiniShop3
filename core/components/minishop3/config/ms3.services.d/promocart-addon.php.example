@@ -1,0 +1,38 @@
+<?php
+/**
+ * Конфиг аддона PromoCart для MiniShop3
+ *
+ * АКТИВАЦИЯ:
+ * ==========
+ * Переименуйте этот файл в promocart-addon.php (без .example)
+ * или создайте через системную настройку / конфиг ms3.services.php
+ *
+ * ОПИСАНИЕ:
+ * =========
+ * Этот конфиг активирует кастомную корзину PromoCart,
+ * которая применяет скидку 50% на все товары.
+ *
+ * КЛАСС:
+ * ======
+ * \MiniShop3\Controllers\Cart\PromoCart
+ * - Наследуется от \MiniShop3\Controllers\Cart\Cart
+ * - Файл: core/components/minishop3/src/Controllers/Cart/PromoCart.php
+ *
+ * ФУНКЦИОНАЛ:
+ * ===========
+ * - Акция 50% на все товары при добавлении в корзину
+ * - Детальное логирование всех операций
+ * - Сохранение оригинальной цены в properties
+ * - Расчёт общей экономии в статусе корзины
+ *
+ * ЛОГИ:
+ * =====
+ * Все операции логируются в core/cache/logs/error.log с префиксом [PromoCart]
+ */
+
+return [
+    'ms3_cart' => [
+        'class' => \MiniShop3\Controllers\Cart\PromoCart::class,
+        'interface' => null,
+    ],
+];

@@ -576,12 +576,26 @@ class Cart
      */
     protected function createDraft(): msOrder
     {
+        // Логирование для отладки
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
+        $caller = '';
+        foreach ($backtrace as $trace) {
+            if (!empty($trace['file'])) {
+                $caller .= basename($trace['file']) . ':' . ($trace['line'] ?? '?') . ' -> ';
+            }
+        }
+        $this->modx->log(
+            \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+            "[Cart::createDraft] Creating new draft order. Token: {$this->token}, Caller: {$caller}"
+        );
+
         $status_draft = $this->modx->getOption('ms3_status_draft', null, 1);
 
         /** @var msOrder $draft */
         $draft = $this->modx->newObject(msOrder::class);
         $draft->fromArray([
             'token' => $this->token,
+            'uuid' => \Ramsey\Uuid\Uuid::uuid4()->toString(),
             'status_id' => $status_draft,
             'createdon' => time(),
             'context' => $this->ctx,

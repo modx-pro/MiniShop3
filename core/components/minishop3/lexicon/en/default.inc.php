@@ -152,6 +152,7 @@ $_lang['ms3_err_json'] = 'This field requires JSON string';
 
 $_lang['ms3_err_user_nf'] = 'User not found.';
 $_lang['ms3_err_order_nf'] = 'Order with this identifier not found.';
+$_lang['ms3_err_order_load'] = 'Error loading order.';
 $_lang['ms3_err_status_nf'] = 'Status with this identifier not found.';
 $_lang['ms3_err_delivery_nf'] = 'Delivery method with this identifier not found.';
 $_lang['ms3_err_payment_nf'] = 'Payment method with this identifier not found.';

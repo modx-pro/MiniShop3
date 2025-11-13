@@ -282,6 +282,17 @@ class Order
             ]);
         }
 
+        // Load delivery controller (provider class)
+        if (!$msDelivery->loadController()) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[Order] Failed to load delivery controller for delivery ID={$msDelivery->get('id')}"
+            );
+            return $this->success('ms3_order_getcost_success', [
+                'cost' => $deliveryCost,
+            ]);
+        }
+
         $cartCostResponse = $this->getCartCost();
         $cartCost = 0;
         if ($cartCostResponse['success']) {
@@ -802,12 +813,20 @@ class Order
 
         /** @var msOrder $msOrder */
         $msOrder = $this->modx->getObject(msOrder::class, ['id' => $this->draft->get('id')]);
+
+        // Check if payment method is selected
+        if (empty($msOrder->get('payment_id'))) {
+            return $this->error('ms3_order_err_payment', ['payment_id']);
+        }
+
         $msPayment = $this->modx->getObject(
             msPayment::class,
             ['id' => $msOrder->get('payment_id'), 'active' => 1]
         );
+
+        // Если метод оплаты не найден или неактивен - ошибка
         if (!$msPayment) {
-            return $this->success('', ['msorder' => $msOrder->get('uuid')]);
+            return $this->error('ms3_order_err_payment_not_found', ['payment_id' => $msOrder->get('payment_id')]);
         }
 
         $response = $msPayment->send($msOrder);

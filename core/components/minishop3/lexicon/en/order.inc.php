@@ -21,6 +21,7 @@ $_lang['ms3_order_err_empty'] = 'Cart is empty';
 $_lang['ms3_order_err_requires'] = 'Required fields are not filled';
 $_lang['ms3_order_err_delivery'] = 'Delivery method is not selected';
 $_lang['ms3_order_err_payment'] = 'Payment method is not selected';
+$_lang['ms3_order_err_payment_not_found'] = 'Payment method not found or inactive';
 $_lang['ms3_order_delivery_id_nf'] = 'Delivery method not found';
 $_lang['ms3_order_payment_id_nf'] = 'Payment method not found';
 
