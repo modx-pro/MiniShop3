@@ -74,7 +74,7 @@ class msPayment extends \MiniShop3\Model\msPayment
                 'class' =>
                     [
                         'dbtype' => 'varchar',
-                        'precision' => '50',
+                        'precision' => '255',
                         'phptype' => 'string',
                         'null' => true,
                     ],

@@ -31,6 +31,12 @@ if (!empty($scriptProperties['customer_token'])) {
     $response = $ms3->customer->generateToken();
     $token = $response['data']['token'];
 }
+// Do not show cart when displaying order details (страница Thanks)
+// Проверяем ДО инициализации корзины, чтобы не создавать лишний draft
+if (!empty($_GET['msorder'])) {
+    return '';
+}
+
 $ms3->cart->initialize($modx->context->key, $token);
 //TODO Как то передать название сниппета, в т.ч путь для файлового
 $ms3->registerSnippet($scriptProperties);
@@ -46,10 +52,7 @@ $status = $response['data']['status'];
 $products = [];
 $total = ['count' => 0, 'weight' => 0, 'cost' => 0, 'discount' => 0, 'positions' => 0];
 
-// Do not show empty cart when displaying order details
-if (!empty($_GET['msorder'])) {
-    return '';
-} elseif (empty($status['total_count'])) {
+if (empty($status['total_count'])) {
     if ($scriptProperties['return'] === 'tpl') {
         return $pdoFetch->getChunk($tpl, compact('total', 'products'));
     }

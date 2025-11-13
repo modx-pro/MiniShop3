@@ -282,6 +282,17 @@ class Order
             ]);
         }
 
+        // Load delivery controller (provider class)
+        if (!$msDelivery->loadController()) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[Order] Failed to load delivery controller for delivery ID={$msDelivery->get('id')}"
+            );
+            return $this->success('ms3_order_getcost_success', [
+                'cost' => $deliveryCost,
+            ]);
+        }
+
         $cartCostResponse = $this->getCartCost();
         $cartCost = 0;
         if ($cartCostResponse['success']) {

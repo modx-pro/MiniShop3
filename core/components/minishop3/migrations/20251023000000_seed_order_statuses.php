@@ -119,6 +119,49 @@ class SeedOrderStatuses extends AbstractMigration
         $this->output->writeln('<info>✓ Inserted ' . count($data) . ' default order statuses</info>');
         $this->output->writeln('<comment>Note: Status names will be replaced with lexicon values when accessed through MODX</comment>');
         $this->output->writeln('<comment>Note: Email template chunks need to be created separately</comment>');
+
+        // Update system settings with status IDs
+        $this->updateSystemSettings($prefix);
+    }
+
+    /**
+     * Update system settings with default status IDs
+     *
+     * @param string $prefix Table prefix
+     */
+    protected function updateSystemSettings(string $prefix)
+    {
+        $this->output->writeln('<info>Updating system settings with status IDs...</info>');
+
+        // Map of setting keys to status IDs
+        $settingsMap = [
+            'ms3_status_draft' => 1,      // Draft
+            'ms3_status_new' => 2,        // New
+            'ms3_status_paid' => 3,       // Paid
+            'ms3_status_sent' => 4,       // Sent
+            'ms3_status_canceled' => 5,   // Cancelled (note: canceled, not cancelled in setting name)
+        ];
+
+        foreach ($settingsMap as $settingKey => $statusId) {
+            // Check if setting exists
+            $setting = $this->fetchRow(
+                "SELECT id, value FROM {$prefix}system_settings WHERE `key` = ?",
+                [$settingKey]
+            );
+
+            if ($setting) {
+                // Update existing setting
+                $this->execute(
+                    "UPDATE {$prefix}system_settings SET value = ? WHERE `key` = ?",
+                    [$statusId, $settingKey]
+                );
+                $this->output->writeln("<info>  ✓ Updated {$settingKey} = {$statusId}</info>");
+            } else {
+                $this->output->writeln("<comment>  ⚠ Setting {$settingKey} not found, skipping</comment>");
+            }
+        }
+
+        $this->output->writeln('<info>✓ System settings updated successfully</info>');
     }
 
     /**
@@ -127,6 +170,26 @@ class SeedOrderStatuses extends AbstractMigration
     public function down()
     {
         $prefix = $this->adapter->getOption('table_prefix');
+
+        // Reset system settings to 0 (or you can set to NULL)
+        $settingKeys = [
+            'ms3_status_draft',
+            'ms3_status_new',
+            'ms3_status_paid',
+            'ms3_status_sent',
+            'ms3_status_canceled',
+        ];
+
+        foreach ($settingKeys as $settingKey) {
+            $this->execute(
+                "UPDATE {$prefix}system_settings SET value = '0' WHERE `key` = ?",
+                [$settingKey]
+            );
+        }
+
+        $this->output->writeln('<info>✓ Reset system settings for order statuses</info>');
+
+        // Remove status records
         $this->execute("DELETE FROM {$prefix}ms3_order_statuses WHERE id IN (1,2,3,4,5)");
         $this->output->writeln('<info>✓ Removed default order statuses</info>');
     }

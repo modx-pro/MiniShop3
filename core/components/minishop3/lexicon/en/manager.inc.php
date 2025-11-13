@@ -1,57 +1,57 @@
 <?php
 
 /**
- * Manager Russian Lexicon Entries for MiniShop3
+ * Manager English Lexicon Entries for MiniShop3
  *
  * @package MiniShop3
  * @subpackage lexicon
  */
 
-$_lang['ms3_menu_create'] = 'Создать';
-$_lang['ms3_menu_copy'] = 'Копировать';
-$_lang['ms3_menu_add'] = 'Добавить';
-$_lang['ms3_menu_update'] = 'Изменить';
-$_lang['ms3_menu_remove'] = 'Удалить';
-$_lang['ms3_menu_remove_multiple'] = 'Удалить выбранное';
-$_lang['ms3_menu_remove_confirm'] = 'Вы уверены, что хотите удалить эту запись?';
-$_lang['ms3_menu_remove_multiple_confirm'] = 'Вы уверены, что хотите удалить все выбранные записи?';
-$_lang['ms3_menu_enable'] = 'Включить';
-$_lang['ms3_menu_disable'] = 'Выключить';
-$_lang['ms3_menu_select_all'] = 'Выделить всё';
-$_lang['ms3_menu_clear_all'] = 'Очистить всё';
+$_lang['ms3_menu_create'] = 'Create';
+$_lang['ms3_menu_copy'] = 'Copy';
+$_lang['ms3_menu_add'] = 'Add';
+$_lang['ms3_menu_update'] = 'Update';
+$_lang['ms3_menu_remove'] = 'Remove';
+$_lang['ms3_menu_remove_multiple'] = 'Remove Selected';
+$_lang['ms3_menu_remove_confirm'] = 'Are you sure you want to delete this entry?';
+$_lang['ms3_menu_remove_multiple_confirm'] = 'Are you sure you want to delete all selected entries?';
+$_lang['ms3_menu_enable'] = 'Enable';
+$_lang['ms3_menu_disable'] = 'Disable';
+$_lang['ms3_menu_select_all'] = 'Select All';
+$_lang['ms3_menu_clear_all'] = 'Clear All';
 
-$_lang['ms3_combo_select'] = 'Нажмите для выбора';
-$_lang['ms3_combo_select_status'] = 'Фильтр по статусу';
+$_lang['ms3_combo_select'] = 'Click to select';
+$_lang['ms3_combo_select_status'] = 'Filter by status';
 
 $_lang['ms3_id'] = 'Id';
-$_lang['ms3_key'] = 'Ключ';
-$_lang['ms3_name'] = 'Имя';
-$_lang['ms3_caption'] = 'Заголовок';
-$_lang['ms3_color'] = 'Цвет';
-$_lang['ms3_country'] = 'Страна';
-$_lang['ms3_logo'] = 'Логотип';
-$_lang['ms3_address'] = 'Адрес';
-$_lang['ms3_phone'] = 'Телефон';
-$_lang['ms3_fax'] = 'Факс';
+$_lang['ms3_key'] = 'Key';
+$_lang['ms3_name'] = 'Name';
+$_lang['ms3_caption'] = 'Caption';
+$_lang['ms3_color'] = 'Color';
+$_lang['ms3_country'] = 'Country';
+$_lang['ms3_logo'] = 'Logo';
+$_lang['ms3_address'] = 'Address';
+$_lang['ms3_phone'] = 'Phone';
+$_lang['ms3_fax'] = 'Fax';
 $_lang['ms3_email'] = 'Email';
-$_lang['ms3_active'] = 'Включен';
-$_lang['ms3_required'] = 'Обязательный';
-$_lang['ms3_class'] = 'Класс-обработчик';
-$_lang['ms3_description'] = 'Описание';
-$_lang['ms3_num'] = 'Номер';
-$_lang['ms3_status'] = 'Статус';
-$_lang['ms3_count'] = 'Количество';
-$_lang['ms3_cost'] = 'Стоимость';
-$_lang['ms3_order_cost'] = 'Стоимость заказа';
-$_lang['ms3_cart_cost'] = 'Стоимость покупок';
-$_lang['ms3_delivery_cost'] = 'Стоимость доставки';
-$_lang['ms3_weight'] = 'Вес';
-$_lang['ms3_createdon'] = 'Дата создания';
-$_lang['ms3_updatedon'] = 'Дата изменения';
-$_lang['ms3_user'] = 'Пользователь';
-$_lang['ms3_timestamp'] = 'Метка времени';
-$_lang['ms3_order_log'] = 'История заказа';
-$_lang['ms3_order_products'] = 'Покупки';
+$_lang['ms3_active'] = 'Active';
+$_lang['ms3_required'] = 'Required';
+$_lang['ms3_class'] = 'Handler Class';
+$_lang['ms3_description'] = 'Description';
+$_lang['ms3_num'] = 'Number';
+$_lang['ms3_status'] = 'Status';
+$_lang['ms3_count'] = 'Quantity';
+$_lang['ms3_cost'] = 'Cost';
+$_lang['ms3_order_cost'] = 'Order Cost';
+$_lang['ms3_cart_cost'] = 'Cart Cost';
+$_lang['ms3_delivery_cost'] = 'Delivery Cost';
+$_lang['ms3_weight'] = 'Weight';
+$_lang['ms3_createdon'] = 'Created On';
+$_lang['ms3_updatedon'] = 'Updated On';
+$_lang['ms3_user'] = 'User';
+$_lang['ms3_timestamp'] = 'Timestamp';
+$_lang['ms3_order_log'] = 'Order History';
+$_lang['ms3_order_products'] = 'Products';
 $_lang['ms3_action'] = 'Действие';
 $_lang['ms3_entry'] = 'Запись';
 $_lang['ms3_username'] = 'Логин';
@@ -73,30 +73,30 @@ $_lang['ms3_text_address'] = 'Адрес одной строкой';
 $_lang['ms3_comment'] = 'Комментарий';
 $_lang['ms3_order_comment'] = 'Комментарий оператора';
 
-$_lang['ms3_email_user'] = 'Письмо покупателю';
-$_lang['ms3_email_manager'] = 'Письмо менеджеру';
-$_lang['ms3_subject_user'] = 'Тема письма покупателю';
-$_lang['ms3_subject_manager'] = 'Тема письма менеджеру';
-$_lang['ms3_body_user'] = 'Чанк письма покупателю';
-$_lang['ms3_body_manager'] = 'Чанк письма менеджеру';
-$_lang['ms3_status_final'] = 'Итоговый';
-$_lang['ms3_status_final_help'] = 'Если статус является итоговым - его нельзя переключить на другой.';
-$_lang['ms3_status_fixed'] = 'Фиксирует';
-$_lang['ms3_status_fixed_help'] = 'Фиксирующий статус запрещает переключение на статусы, которые идут в таблице раньше него.';
-$_lang['ms3_options'] = 'Опции';
-$_lang['ms3_add_cost'] = 'Доп. стоимость';
-$_lang['ms3_add_cost_help'] = 'Дополнительная стоимость доставки или оплаты. Может быть отрицательной, можно указывать проценты.';
-$_lang['ms3_weight_price'] = 'Стоимость ед/вес';
-$_lang['ms3_weight_price_help'] = 'Добавочная стоимость доставки за единицу веса.<br/>Может быть использовано в кастомных классах.';
-$_lang['ms3_distance_price'] = 'Стоимость ед/рст';
-$_lang['ms3_distance_price_help'] = 'Добавочная стоимость доставки за единицу расстояния.<br/>Может быть использовано в кастомных классах.';
-$_lang['ms3_order_validation_rules'] = 'Правила валидации полей';
-$_lang['ms3_order_validation_rules_help'] = 'При оформлении заказа, кастомный класс может проверять поля по указанным правилам.';
-$_lang['ms3_rank'] = 'Порядок';
-$_lang['ms3_free_delivery_amount'] = 'Бесплатная доставка от суммы заказа';
-$_lang['ms3_free_delivery_amount_help'] = 'При достижении суммы заказа данного значения, доставка будет бесплатной. Если класс доставки изменен и/или у вас установлены компоненты, которые могут повлиять на стоимость заказа, то данное поле может не учитываться';
+$_lang['ms3_email_user'] = 'Email to Customer';
+$_lang['ms3_email_manager'] = 'Email to Manager';
+$_lang['ms3_subject_user'] = 'Email Subject for Customer';
+$_lang['ms3_subject_manager'] = 'Email Subject for Manager';
+$_lang['ms3_body_user'] = 'Email Chunk for Customer';
+$_lang['ms3_body_manager'] = 'Email Chunk for Manager';
+$_lang['ms3_status_final'] = 'Final';
+$_lang['ms3_status_final_help'] = 'If status is final - it cannot be changed to another.';
+$_lang['ms3_status_fixed'] = 'Fixed';
+$_lang['ms3_status_fixed_help'] = 'Fixed status prevents switching to earlier statuses.';
+$_lang['ms3_options'] = 'Options';
+$_lang['ms3_add_cost'] = 'Additional Cost';
+$_lang['ms3_add_cost_help'] = 'Additional cost for delivery or payment. Can be negative, percentages allowed.';
+$_lang['ms3_weight_price'] = 'Price per Weight Unit';
+$_lang['ms3_weight_price_help'] = 'Additional delivery cost per weight unit.<br/>Can be used in custom classes.';
+$_lang['ms3_distance_price'] = 'Price per Distance Unit';
+$_lang['ms3_distance_price_help'] = 'Additional delivery cost per distance unit.<br/>Can be used in custom classes.';
+$_lang['ms3_order_validation_rules'] = 'Field Validation Rules';
+$_lang['ms3_order_validation_rules_help'] = 'When placing an order, custom class can validate fields by specified rules.';
+$_lang['ms3_rank'] = 'Order';
+$_lang['ms3_free_delivery_amount'] = 'Free Delivery from Order Amount';
+$_lang['ms3_free_delivery_amount_help'] = 'When order amount reaches this value, delivery will be free. If delivery class is changed and/or you have components that can affect order cost, this field may not be taken into account';
 
-$_lang['ms3_orders_selected_status'] = 'Сменить статус';
+$_lang['ms3_orders_selected_status'] = 'Change Status';
 
 $_lang['ms3_link_name'] = 'Имя связи';
 $_lang['ms3_link_one_to_one'] = 'Один к одному';
