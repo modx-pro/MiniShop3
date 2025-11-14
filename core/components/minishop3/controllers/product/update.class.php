@@ -70,8 +70,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
         if ($show_gallery) {
             // Vue Uppy Gallery Uploader (modern replacement for Plupload)
-            $this->addCss($assetsUrl . 'css/mgr/utilities/gallery-uploader.min.css');
-            $this->addHtml('<script type="module" src="' . $assetsUrl . 'js/mgr/utilities/gallery-uploader.min.js"></script>');
+            $this->addCss($assetsUrl . 'css/mgr/vue-dist/gallery-uploader.min.css');
+            $this->addHtml('<script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/gallery-uploader.min.js"></script>');
 
             // ExtJS Gallery components
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/ext.ddview.js');
@@ -180,8 +180,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
         MODx.perm.tree_show_resource_ids = ' . ($this->modx->hasPermission('tree_show_resource_ids') ? 1 : 0) . ';
         // ]]>
         </script>
-        <link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/utilities/main.min.css">
-        <script type="module" src="' . $assetsUrl . 'js/mgr/utilities/main.min.js"></script>');
+        <link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/vue-dist/main.min.css">
+        <script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/main.min.js"></script>');
 
         // load RTE
         $this->loadRichTextEditor();
