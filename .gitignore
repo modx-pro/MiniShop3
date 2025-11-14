@@ -9,6 +9,8 @@ config.core.php
 # Build artifacts
 _build/*.transport.php
 vueManager/dist/
+assets/components/minishop3/js/mgr/vue-dist/
+assets/components/minishop3/css/mgr/vue-dist/
 
 # IDE
 .idea/

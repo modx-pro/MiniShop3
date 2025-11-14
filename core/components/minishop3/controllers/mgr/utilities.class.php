@@ -84,11 +84,11 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
         $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/_plugin-vue_export-helper.min.css">
-        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/fields-management.min.css">
-        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/utilities/extra-fields.min.css">
-        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/utilities/fields-management.min.js"></script>
-        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/utilities/extra-fields.min.js"></script>
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/_plugin-vue_export-helper.min.css">
+        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/fields-management.min.css">
+        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/extra-fields.min.css">
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/fields-management.min.js"></script>
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/extra-fields.min.js"></script>
         <script>
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-page-utilities"});

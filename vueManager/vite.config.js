@@ -8,9 +8,9 @@ import prefixSelector from 'postcss-prefix-selector'
 
 const output = {
   dir: '../',
-  assetFileNames: 'assets/components/minishop3/css/mgr/utilities/[name].min[extname]', // css files
-  chunkFileNames: 'assets/components/minishop3/js/mgr/utilities/[name].min.js', // js libs and common code
-  entryFileNames: 'assets/components/minishop3/js/mgr/utilities/[name].min.js' // main js file (entry point)
+  assetFileNames: 'assets/components/minishop3/css/mgr/vue-dist/[name].min[extname]', // css files
+  chunkFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js', // js libs and common code
+  entryFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js' // main js file (entry point)
 }
 
 const DevInput = {
