@@ -312,15 +312,76 @@ class Customer
         if (empty($msCustomer)) {
             $orderResponse = $this->ms3->order->get();
             $orderData = $orderResponse['data']['order'];
-            $customerData = [
-                'first_name' => $orderData['address_first_name'],
-                'last_name' => $orderData['address_last_name'],
-                'phone' => $orderData['address_phone'],
-                'email' => $orderData['address_email'],
-                'token' => $this->token,
-            ];
 
-            $msCustomer = $this->create($customerData);
+            $email = $orderData['address_email'] ?? '';
+
+            // Проверяем, может клиент с таким email уже существует
+            if (!empty($email)) {
+                $existingCustomer = $this->modx->getObject(msCustomer::class, ['email' => $email]);
+                if ($existingCustomer) {
+                    // Обновляем токен существующего клиента
+                    $existingCustomer->set('token', $this->token);
+                    $existingCustomer->save();
+                    $msCustomer = $existingCustomer;
+                }
+            }
+
+            // Если клиента нет - создаем через RegisterService или старый метод
+            if (empty($msCustomer)) {
+                $autoRegister = (bool)$this->modx->getOption('ms3_customer_auto_register_on_order', null, true);
+
+                if ($autoRegister && !empty($email)) {
+                    // Используем RegisterService для полноценной регистрации
+                    /** @var \MiniShop3\Services\Customer\RegisterService $registerService */
+                    $registerService = $this->modx->services->get('ms3_register_service');
+
+                    if ($registerService) {
+                        $registerData = [
+                            'first_name' => $orderData['address_first_name'] ?? '',
+                            'last_name' => $orderData['address_last_name'] ?? '',
+                            'phone' => $orderData['address_phone'] ?? '',
+                            'email' => $email,
+                            // Пароль автогенерируется в RegisterService
+                            'token' => $this->token,
+                            // GDPR consent (предполагаем согласие при оформлении заказа)
+                            'privacy_accepted' => true,
+                            'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                        ];
+
+                        $registerResult = $registerService->register($registerData);
+
+                        if ($registerResult['success']) {
+                            $msCustomer = $registerResult['customer'];
+
+                            $this->modx->log(
+                                modX::LOG_LEVEL_INFO,
+                                "[Customer::getId] Auto-registered customer #{$msCustomer->id} ({$email}) during order submit"
+                            );
+                        } else {
+                            // Если регистрация не удалась (например, дублирование), пытаемся найти клиента
+                            $msCustomer = $this->modx->getObject(msCustomer::class, ['email' => $email]);
+
+                            if ($msCustomer) {
+                                $msCustomer->set('token', $this->token);
+                                $msCustomer->save();
+                            }
+                        }
+                    }
+                }
+
+                // Fallback: старый метод создания (без пароля, для обратной совместимости)
+                if (empty($msCustomer)) {
+                    $customerData = [
+                        'first_name' => $orderData['address_first_name'] ?? '',
+                        'last_name' => $orderData['address_last_name'] ?? '',
+                        'phone' => $orderData['address_phone'] ?? '',
+                        'email' => $email,
+                        'token' => $this->token,
+                    ];
+
+                    $msCustomer = $this->create($customerData);
+                }
+            }
         }
 
         $response = $this->ms3->utils->invokeEvent('msOnGetOrderCustomer', [

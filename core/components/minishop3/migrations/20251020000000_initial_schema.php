@@ -17,6 +17,7 @@ class InitialSchema extends AbstractMigration
         'msCategoryOption',
         'msCustomer',
         'msCustomerAddress',
+        'msCustomerToken',
         'msDelivery',
         'msDeliveryMember',
         'msExtraField',

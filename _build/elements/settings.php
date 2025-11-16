@@ -332,6 +332,45 @@ return [
         'area' => 'ms3_customers',
     ],
 
+    // Customer Authentication & Registration
+    'ms3_customer_auto_register_on_order' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_require_email_verification' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_send_welcome_email' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+
+    // Customer Sync with modUser
+    'ms3_customer_sync_enabled' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_sync_create_moduser' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_sync_delete_with_user' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_sync_user_group' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_customers',
+    ],
+
     // Token Security Settings
     'ms3_customer_token_ttl' => [
         'value' => 86400, // 24 часа
@@ -346,6 +385,40 @@ return [
     'ms3_snippet_cache_ttl' => [
         'value' => 3600, // 1 час
         'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+
+    // Login Security
+    'ms3_customer_max_login_attempts' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_customer_block_duration' => [
+        'value' => 300, // 5 минут в секундах
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+
+    // Password Requirements
+    'ms3_password_min_length' => [
+        'value' => 8,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_password_require_uppercase' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_security',
+    ],
+    'ms3_password_require_number' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_security',
+    ],
+    'ms3_password_require_special' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
         'area' => 'ms3_security',
     ],
 

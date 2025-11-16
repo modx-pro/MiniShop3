@@ -167,12 +167,38 @@ foreach ($order as $key => $value) {
         $form[substr($key, 8)] = $value;
     }
 }
-//TODO здесь применить еще модель msCustomer
-// Get user data
+
+// Get msCustomer data (if authenticated)
+$customerData = [];
+if (!empty($_SESSION['ms3']['customer_id'])) {
+    $customerId = $_SESSION['ms3']['customer_id'];
+    $msCustomer = $modx->getObject(\MiniShop3\Model\msCustomer::class, ['id' => $customerId]);
+
+    if ($msCustomer && $msCustomer->get('is_active')) {
+        $customerData = $msCustomer->toArray();
+
+        $modx->log(
+            modX::LOG_LEVEL_DEBUG,
+            "[ms3_order] Auto-filling form for authenticated customer #{$customerId}"
+        );
+    }
+}
+
+// Get modUser data (has higher priority than msCustomer)
 $profile = [];
 if ($modx->user->isAuthenticated($modx->context->key)) {
     $profile = array_merge($modx->user->Profile->toArray(), $modx->user->toArray());
 }
+
+// msCustomer fields mapping (simple 1:1 mapping)
+$customerFields = [
+    'first_name' => 'first_name',
+    'last_name' => 'last_name',
+    'email' => 'email',
+    'phone' => 'phone',
+];
+
+// modUser fields mapping (extended mapping with profile fields)
 $fields = [
 //    'receiver' => 'fullname',
 //    'phone' => 'phone',
@@ -189,6 +215,7 @@ $fields = [
     'floor' => 'extended[floor]',
     'text_address' => 'extended[address]',
 ];
+
 // Apply custom fields
 if (!empty($userFields)) {
     if (!is_array($userFields)) {
@@ -198,7 +225,20 @@ if (!empty($userFields)) {
         $fields = array_merge($fields, $userFields);
     }
 }
-// Set user fields
+
+// 1. First, apply msCustomer data (lowest priority)
+if (!empty($customerData)) {
+    foreach ($customerFields as $orderField => $customerField) {
+        if (!empty($customerData[$customerField]) && empty($form[$orderField])) {
+            $response = $ms3->order->add($orderField, $customerData[$customerField]);
+            if ($response['success'] && !empty($response['data'][$orderField])) {
+                $form[$orderField] = $response['data'][$orderField];
+            }
+        }
+    }
+}
+
+// 2. Then, apply modUser data (higher priority, overrides msCustomer)
 foreach ($fields as $key => $value) {
     if (!empty($profile) && !empty($value)) {
         if (strpos($value, 'extended') !== false) {
@@ -209,7 +249,6 @@ foreach ($fields as $key => $value) {
         } else {
             $value = $profile[$value];
         }
-        //TODO здесь поля наверное нужно передавать в контроллер Customer
         $response = $ms3->order->add($key, $value);
         if ($response['success'] && !empty($response['data'][$key])) {
             $form[$key] = $response['data'][$key];

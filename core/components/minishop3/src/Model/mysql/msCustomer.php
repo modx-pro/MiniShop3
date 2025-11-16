@@ -21,6 +21,20 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                 'email' => '',
                 'phone' => '',
                 'token' => '',
+                'password' => null,
+                'email_verified_at' => null,
+                'is_active' => 1,
+                'is_blocked' => 0,
+                'failed_login_attempts' => 0,
+                'blocked_until' => null,
+                'created_at' => null,
+                'updated_at' => null,
+                'last_login_at' => null,
+                'orders_count' => 0,
+                'total_spent' => 0.00,
+                'last_order_at' => null,
+                'privacy_accepted_at' => null,
+                'privacy_ip' => null,
             ],
         'fieldMeta' =>
             [
@@ -73,9 +87,123 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                         'null' => true,
                         'default' => '',
                     ],
+                'password' =>
+                    [
+                        'dbtype' => 'varchar',
+                        'precision' => '255',
+                        'phptype' => 'string',
+                        'null' => true,
+                    ],
+                'email_verified_at' =>
+                    [
+                        'dbtype' => 'datetime',
+                        'phptype' => 'datetime',
+                        'null' => true,
+                    ],
+                'is_active' =>
+                    [
+                        'dbtype' => 'tinyint',
+                        'precision' => '1',
+                        'phptype' => 'boolean',
+                        'null' => false,
+                        'default' => 1,
+                    ],
+                'is_blocked' =>
+                    [
+                        'dbtype' => 'tinyint',
+                        'precision' => '1',
+                        'phptype' => 'boolean',
+                        'null' => false,
+                        'default' => 0,
+                    ],
+                'failed_login_attempts' =>
+                    [
+                        'dbtype' => 'int',
+                        'precision' => '10',
+                        'phptype' => 'integer',
+                        'null' => false,
+                        'default' => 0,
+                    ],
+                'blocked_until' =>
+                    [
+                        'dbtype' => 'datetime',
+                        'phptype' => 'datetime',
+                        'null' => true,
+                    ],
+                'created_at' =>
+                    [
+                        'dbtype' => 'datetime',
+                        'phptype' => 'datetime',
+                        'null' => false,
+                        'default' => 'CURRENT_TIMESTAMP',
+                    ],
+                'updated_at' =>
+                    [
+                        'dbtype' => 'datetime',
+                        'phptype' => 'datetime',
+                        'null' => true,
+                    ],
+                'last_login_at' =>
+                    [
+                        'dbtype' => 'datetime',
+                        'phptype' => 'datetime',
+                        'null' => true,
+                    ],
+                'orders_count' =>
+                    [
+                        'dbtype' => 'int',
+                        'precision' => '10',
+                        'phptype' => 'integer',
+                        'attributes' => 'unsigned',
+                        'null' => false,
+                        'default' => 0,
+                    ],
+                'total_spent' =>
+                    [
+                        'dbtype' => 'decimal',
+                        'precision' => '12,2',
+                        'phptype' => 'float',
+                        'null' => false,
+                        'default' => 0.00,
+                    ],
+                'last_order_at' =>
+                    [
+                        'dbtype' => 'datetime',
+                        'phptype' => 'datetime',
+                        'null' => true,
+                    ],
+                'privacy_accepted_at' =>
+                    [
+                        'dbtype' => 'datetime',
+                        'phptype' => 'datetime',
+                        'null' => true,
+                    ],
+                'privacy_ip' =>
+                    [
+                        'dbtype' => 'varchar',
+                        'precision' => '45',
+                        'phptype' => 'string',
+                        'null' => true,
+                    ],
             ],
         'indexes' =>
             [
+                'user_id' =>
+                    [
+                        'alias' => 'user_id',
+                        'primary' => false,
+                        'unique' => false,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'user_id' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                            ],
+                    ],
                 'first_name' =>
                     [
                         'alias' => 'first_name',
@@ -166,6 +294,17 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                         'foreign' => 'id',
                         'owner' => 'foreign',
                         'cardinality' => 'one',
+                    ],
+            ],
+        'composites' =>
+            [
+                'Tokens' =>
+                    [
+                        'class' => 'MiniShop3\\Model\\msCustomerToken',
+                        'local' => 'id',
+                        'foreign' => 'customer_id',
+                        'owner' => 'local',
+                        'cardinality' => 'many',
                     ],
             ],
     ];

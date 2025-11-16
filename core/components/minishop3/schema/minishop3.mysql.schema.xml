@@ -428,7 +428,24 @@
         <field key="phone" dbtype="varchar" precision="50" phptype="string" null="true" default=""/>
         <field key="email" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="token" dbtype="varchar" precision="64" phptype="string" null="true" default=""/>
+        <field key="password" dbtype="varchar" precision="255" phptype="string" null="true"/>
+        <field key="email_verified_at" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="is_active" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
+        <field key="is_blocked" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
+        <field key="failed_login_attempts" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
+        <field key="blocked_until" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="created_at" dbtype="datetime" phptype="datetime" null="false" default="CURRENT_TIMESTAMP"/>
+        <field key="updated_at" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="last_login_at" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="orders_count" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0"/>
+        <field key="total_spent" dbtype="decimal" precision="12,2" phptype="float" null="false" default="0.00"/>
+        <field key="last_order_at" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="privacy_accepted_at" dbtype="datetime" phptype="datetime" null="true"/>
+        <field key="privacy_ip" dbtype="varchar" precision="45" phptype="string" null="true"/>
 
+        <index alias="user_id" name="user_id" primary="false" unique="false" type="BTREE">
+            <column key="user_id" length="" collation="A" null="false"/>
+        </index>
         <index alias="first_name" name="first_name" primary="false" unique="false" type="BTREE">
             <column key="first_name" length="" collation="A" null="false"/>
         </index>
@@ -443,6 +460,7 @@
         </index>
 
         <aggregate alias="User" class="MODX\Revolution\modUser" local="user_id" foreign="id" owner="foreign" cardinality="one"/>
+        <composite alias="Tokens" class="MiniShop3\Model\msCustomerToken" local="id" foreign="customer_id" cardinality="many" owner="local"/>
     </object>
 
     <object class="msCustomerAddress" table="ms3_customer_addresses" extends="xPDO\Om\xPDOSimpleObject">
@@ -470,6 +488,28 @@
 
         <index alias="hash" name="hash" primary="false" unique="false" type="BTREE">
             <column key="hash" length="" collation="A" null="false"/>
+        </index>
+
+        <aggregate alias="Customer" class="MiniShop3\Model\msCustomer" local="customer_id" foreign="id" owner="foreign" cardinality="one"/>
+    </object>
+
+    <object class="msCustomerToken" table="ms3_customer_tokens" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0"/>
+        <field key="token" dbtype="varchar" precision="128" phptype="string" null="false" default=""/>
+        <field key="type" dbtype="enum" precision="'api','refresh','magic_link','email_verification'" phptype="string" null="false" default="api"/>
+        <field key="expires_at" dbtype="datetime" phptype="datetime" null="false"/>
+        <field key="created_at" dbtype="datetime" phptype="datetime" null="false" default="CURRENT_TIMESTAMP"/>
+        <field key="used_at" dbtype="datetime" phptype="datetime" null="true"/>
+
+        <index alias="idx_token_unique" name="idx_token_unique" primary="false" unique="true" type="BTREE">
+            <column key="token" length="" collation="A" null="false"/>
+        </index>
+        <index alias="idx_customer_type" name="idx_customer_type" primary="false" unique="false" type="BTREE">
+            <column key="customer_id" length="" collation="A" null="false"/>
+            <column key="type" length="" collation="A" null="false"/>
+        </index>
+        <index alias="idx_expires" name="idx_expires" primary="false" unique="false" type="BTREE">
+            <column key="expires_at" length="" collation="A" null="false"/>
         </index>
 
         <aggregate alias="Customer" class="MiniShop3\Model\msCustomer" local="customer_id" foreign="id" owner="foreign" cardinality="one"/>

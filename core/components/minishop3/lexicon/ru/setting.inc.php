@@ -18,6 +18,7 @@ $_lang['area_ms3_payment'] = 'Платежи';
 $_lang['area_ms3_import'] = 'Импорт';
 $_lang['area_ms3_statuses'] = 'Статусы';
 $_lang['area_ms3_customers'] = 'Клиенты';
+$_lang['area_ms3_security'] = 'Безопасность';
 
 $_lang['setting_ms3_services'] = 'Службы магазина';
 $_lang['setting_ms3_services_desc'] = 'Массив с зарегистрированными классами для корзины, заказа, доставки и оплаты. Используется сторонними дополнениями для загрузки своего функционала.';
@@ -191,4 +192,38 @@ $_lang['setting_ms3_currency_symbol'] = 'Символ валюты';
 $_lang['setting_ms3_currency_symbol_desc'] = 'Символ валюты для отображения цен. По умолчанию "₽" (рубль). Примеры: $, €, £, ₽, ₴, ¥, ₸.';
 $_lang['setting_ms3_currency_position'] = 'Позиция символа валюты';
 $_lang['setting_ms3_currency_position_desc'] = 'Где показывать символ валюты относительно цены. Допустимые значения: "before" (до цены: $ 100) или "after" (после цены: 100 ₽). По умолчанию "after".';
+
+// Customer Authentication & Registration
+$_lang['setting_ms3_customer_auto_register_on_order'] = 'Автоматическая регистрация при оформлении заказа';
+$_lang['setting_ms3_customer_auto_register_on_order_desc'] = 'Автоматически регистрировать клиента с паролем при оформлении заказа, если такого email нет в системе. Пароль генерируется автоматически и отправляется на email.';
+$_lang['setting_ms3_customer_require_email_verification'] = 'Требовать верификацию email';
+$_lang['setting_ms3_customer_require_email_verification_desc'] = 'Требовать подтверждение email адреса после регистрации. Клиент получит письмо со ссылкой для верификации.';
+$_lang['setting_ms3_customer_send_welcome_email'] = 'Отправлять приветственное письмо';
+$_lang['setting_ms3_customer_send_welcome_email_desc'] = 'Отправлять приветственное письмо с паролем при автоматической регистрации через заказ.';
+
+// Customer Sync with modUser
+$_lang['setting_ms3_customer_sync_enabled'] = 'Включить синхронизацию с modUser';
+$_lang['setting_ms3_customer_sync_enabled_desc'] = 'Автоматически создавать/обновлять записи msCustomer при работе с modUser (через плагин msCustomerSync). Позволяет использовать единую базу клиентов и пользователей MODX.';
+$_lang['setting_ms3_customer_sync_create_moduser'] = 'Создавать modUser при регистрации клиента';
+$_lang['setting_ms3_customer_sync_create_moduser_desc'] = 'Автоматически создавать пользователя MODX (modUser) при регистрации msCustomer. Требует включенной синхронизации.';
+$_lang['setting_ms3_customer_sync_delete_with_user'] = 'Удалять клиента при удалении пользователя';
+$_lang['setting_ms3_customer_sync_delete_with_user_desc'] = 'Удалять запись msCustomer при удалении связанного modUser. По умолчанию только отвязывает, сохраняя историю заказов.';
+$_lang['setting_ms3_customer_sync_user_group'] = 'Группа пользователей для новых modUser';
+$_lang['setting_ms3_customer_sync_user_group_desc'] = 'ID группы пользователей MODX, в которую будут автоматически добавляться новые пользователи при создании из msCustomer. 0 = не добавлять в группу.';
+
+// Login Security
+$_lang['setting_ms3_customer_max_login_attempts'] = 'Максимум попыток входа';
+$_lang['setting_ms3_customer_max_login_attempts_desc'] = 'Максимальное количество неудачных попыток входа перед блокировкой. По умолчанию 5.';
+$_lang['setting_ms3_customer_block_duration'] = 'Длительность блокировки (сек)';
+$_lang['setting_ms3_customer_block_duration_desc'] = 'Время блокировки в секундах после превышения лимита попыток входа. По умолчанию 300 (5 минут).';
+
+// Password Requirements
+$_lang['setting_ms3_password_min_length'] = 'Минимальная длина пароля';
+$_lang['setting_ms3_password_min_length_desc'] = 'Минимальная длина пароля в символах. По умолчанию 8.';
+$_lang['setting_ms3_password_require_uppercase'] = 'Требовать заглавные буквы';
+$_lang['setting_ms3_password_require_uppercase_desc'] = 'Пароль должен содержать хотя бы одну заглавную букву (A-Z).';
+$_lang['setting_ms3_password_require_number'] = 'Требовать цифры';
+$_lang['setting_ms3_password_require_number_desc'] = 'Пароль должен содержать хотя бы одну цифру (0-9).';
+$_lang['setting_ms3_password_require_special'] = 'Требовать спецсимволы';
+$_lang['setting_ms3_password_require_special_desc'] = 'Пароль должен содержать хотя бы один специальный символ (!@#$%^&* и т.д.).';
 
