@@ -120,6 +120,24 @@
                     {'ms3_frontend_address' | lexicon}
                 </h4>
 
+                {* Выбор сохранённого адреса (показывается только для авторизованных клиентов) *}
+                {if $isCustomerAuth && $addresses && count($addresses) > 0}
+                <div class="mb-3" id="ms3-saved-addresses-block">
+                    <label class="form-label" for="saved_address_id">
+                        {'ms3_frontend_saved_addresses' | lexicon}
+                    </label>
+                    <select name="saved_address_id" id="saved_address_id" class="form-select">
+                        <option value="">{'ms3_frontend_address_new' | lexicon}</option>
+                        {foreach $addresses as $address}
+                        <option value="{$address.id}" data-address='{$address | json_encode}'>
+                            {$address.name ?: ($address.city ~ ', ' ~ $address.street ~ ', д. ' ~ $address.building)}
+                        </option>
+                        {/foreach}
+                    </select>
+                    <div class="form-text">{'ms3_frontend_saved_addresses_help' | lexicon}</div>
+                </div>
+                {/if}
+
                 <div class="row g-2">
                     <div class="col-4">
                         <label class="form-label" for="index">
@@ -210,6 +228,19 @@
                     <div class="invalid-feedback"></div>
                     <div class="form-text">Укажите дополнительную информацию для доставки</div>
                 </div>
+
+                {* Чекбокс "Сохранить адрес" (показывается только для авторизованных клиентов) *}
+                {if $isCustomerAuth}
+                <div class="mb-0" id="ms3-save-address-block">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="save_address" id="save_address" value="1">
+                        <label class="form-check-label" for="save_address">
+                            {'ms3_frontend_save_address' | lexicon}
+                        </label>
+                    </div>
+                    <div class="form-text">{'ms3_frontend_save_address_help' | lexicon}</div>
+                </div>
+                {/if}
             </div>
         </div>
     </div>
@@ -298,3 +329,4 @@
         font-size: 1.1rem;
     }
 </style>
+

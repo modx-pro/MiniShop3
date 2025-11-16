@@ -37,6 +37,10 @@ $includePaymentKeys = array_map('trim', explode(',', $includePaymentFields));
 $includePaymentKeys = array_unique(array_merge($includePaymentKeys, ['id']));
 $includeCustomerAddresses = $modx->getOption('includeCustomerAddresses', $scriptProperties, true);
 
+// Check if customer is authenticated
+$isCustomerAuth = !empty($_SESSION['ms3']['customer_id']);
+$customerId = $isCustomerAuth ? (int)$_SESSION['ms3']['customer_id'] : 0;
+
 $ms3->order->initialize($token);
 $response = $ms3->order->get();
 $order = [];
@@ -152,9 +156,10 @@ foreach ($rows as $row) {
     }
 }
 
+// Load customer addresses for authenticated customers
 $addresses = [];
-if (!empty($includeCustomerAddresses) && !empty($order['customer_id'])) {
-    $addresses = $ms3->customer->getAddresses($order['customer_id']);
+if (!empty($includeCustomerAddresses) && $isCustomerAuth && $customerId > 0) {
+    $addresses = $ms3->customer->getAddresses($customerId);
 }
 
 $form = [];
@@ -170,8 +175,7 @@ foreach ($order as $key => $value) {
 
 // Get msCustomer data (if authenticated)
 $customerData = [];
-if (!empty($_SESSION['ms3']['customer_id'])) {
-    $customerId = $_SESSION['ms3']['customer_id'];
+if ($isCustomerAuth && $customerId > 0) {
     $msCustomer = $modx->getObject(\MiniShop3\Model\msCustomer::class, ['id' => $customerId]);
 
     if ($msCustomer && $msCustomer->get('is_active')) {
@@ -280,10 +284,17 @@ $outputData = [
     'deliveries' => $deliveries,
     'payments' => $payments,
     'errors' => $errors,
+    'isCustomerAuth' => $isCustomerAuth,
 ];
 
 if (!empty($includeCustomerAddresses)) {
     $outputData['addresses'] = $addresses;
+}
+
+// Include JS module for customer addresses (SSR approach)
+if ($isCustomerAuth && !empty($includeCustomerAddresses)) {
+    $assetsUrl = $modx->getOption('ms3_assets_url', null, $modx->getOption('assets_url') . 'components/minishop3/');
+    $modx->regClientStartupScript($assetsUrl . 'js/web/order-addresses.js');
 }
 
 if ($return === 'data') {

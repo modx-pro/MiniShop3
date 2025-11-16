@@ -180,9 +180,10 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
     // ============================================
     // CUSTOMER API (Покупатели)
     // ============================================
-    $router->group('/customer', function($router) use ($modx) {
+    $router->group('/customer', function($router) use ($modx, $tokenMiddleware) {
 
-        // GET /api/v1/customer/token/get - Получить токен покупателя (публичный endpoint)
+        // Публичные endpoints (без токена)
+        // GET /api/v1/customer/token/get - Получить токен покупателя
         $router->get('/token/get', function($params) use ($modx) {
             /** @var \MiniShop3\MiniShop3 $ms3 */
             $ms3 = $modx->services->get('ms3');
@@ -207,7 +208,44 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             return Response::success(['message' => 'Customer token/refresh endpoint - not implemented yet']);
         });
 
-    }); // Customer endpoints публичные (не требуют токена)
+        // ============================================
+        // CUSTOMER ADDRESSES API (Адреса доставки) - требуют токен
+        // ============================================
+        $router->group('/addresses', function($router) use ($modx) {
+
+            // GET /api/v1/customer/addresses - Получить список адресов клиента
+            $router->get('', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->getList($params);
+            });
+
+            // GET /api/v1/customer/addresses/{id} - Получить конкретный адрес
+            $router->get('/{id}', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->get($params);
+            });
+
+            // POST /api/v1/customer/addresses - Создать новый адрес
+            $router->post('', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->create($params);
+            });
+
+            // PUT /api/v1/customer/addresses/{id} - Обновить адрес
+            $router->put('/{id}', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->update($params);
+            });
+
+            // DELETE /api/v1/customer/addresses/{id} - Удалить адрес
+            $router->delete('/{id}', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->delete($params);
+            });
+
+        }, [$tokenMiddleware]); // Адреса требуют токен
+
+    }); // Customer endpoints (смешанные: публичные + защищённые)
 
     // ============================================
     // PRODUCT API (Каталог товаров) - публичные endpoints

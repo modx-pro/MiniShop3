@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Customer;
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MODX\Revolution\modX;
+use MODX\Revolution\Mail\modMail;
 
 /**
  * RegisterService - сервис регистрации новых клиентов

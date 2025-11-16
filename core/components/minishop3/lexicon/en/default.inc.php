@@ -137,6 +137,11 @@ $_lang['ms3_frontend_room'] = 'Apt.';
 $_lang['ms3_frontend_entrance'] = 'Entrance';
 $_lang['ms3_frontend_floor'] = 'Floor';
 $_lang['ms3_frontend_text_address'] = 'Address in one line';
+$_lang['ms3_frontend_saved_addresses'] = 'Saved addresses';
+$_lang['ms3_frontend_address_new'] = 'Enter new address';
+$_lang['ms3_frontend_saved_addresses_help'] = 'Select from previously saved addresses or enter a new one';
+$_lang['ms3_frontend_save_address'] = 'Save this address for future orders';
+$_lang['ms3_frontend_save_address_help'] = 'The address will be available when placing future orders';
 
 $_lang['ms3_frontend_order_cost'] = 'Total, with delivery';
 $_lang['ms3_frontend_order_submit'] = 'Place order';

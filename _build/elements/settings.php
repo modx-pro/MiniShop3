@@ -338,6 +338,11 @@ return [
         'xtype' => 'combo-boolean',
         'area' => 'ms3_customers',
     ],
+    'ms3_customer_auto_login_on_order' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
     'ms3_customer_require_email_verification' => [
         'value' => false,
         'xtype' => 'combo-boolean',

@@ -137,6 +137,11 @@ $_lang['ms3_frontend_room'] = 'Кв.';
 $_lang['ms3_frontend_entrance'] = 'Подъезд';
 $_lang['ms3_frontend_floor'] = 'Этаж';
 $_lang['ms3_frontend_text_address'] = 'Адрес одной строкой';
+$_lang['ms3_frontend_saved_addresses'] = 'Сохранённые адреса';
+$_lang['ms3_frontend_address_new'] = 'Ввести новый адрес';
+$_lang['ms3_frontend_saved_addresses_help'] = 'Выберите адрес из ранее сохранённых или введите новый';
+$_lang['ms3_frontend_save_address'] = 'Сохранить этот адрес для будущих заказов';
+$_lang['ms3_frontend_save_address_help'] = 'Адрес будет доступен при оформлении следующих заказов';
 
 $_lang['ms3_frontend_order_cost'] = 'Итого, с доставкой';
 $_lang['ms3_frontend_order_submit'] = 'Сделать заказ';
