@@ -23,6 +23,9 @@ class Register extends Processor
      */
     public function process()
     {
+        // Загружаем лексикон
+        $this->modx->lexicon->load('minishop3:customer');
+
         $email = trim($this->getProperty('email', ''));
         $password = $this->getProperty('password', '');
         $firstName = trim($this->getProperty('first_name', ''));
@@ -109,6 +112,19 @@ class Register extends Processor
         // Сбрасываем login rate limiter для этого IP
         $rateLimiter->reset('login', $ip);
 
+        // Определяем URL для редиректа (только если автовход включен)
+        $redirectUrl = '';
+        if ($autoLogin && !$requireEmailVerification) {
+            $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);
+            if (!$redirectPageId) {
+                $redirectPageId = (int)$this->modx->getOption('ms3_customer_redirect_after_login', null, 0);
+            }
+
+            if ($redirectPageId > 0) {
+                $redirectUrl = $this->modx->makeUrl($redirectPageId, '', '', 'full');
+            }
+        }
+
         return $this->success($this->modx->lexicon('ms3_customer_register_success'), [
             'customer' => [
                 'id' => $customer->id,
@@ -120,6 +136,7 @@ class Register extends Processor
             ],
             'token' => $tokenData,
             'email_verification_required' => $requireEmailVerification,
+            'redirect_url' => $redirectUrl,
         ]);
     }
 }

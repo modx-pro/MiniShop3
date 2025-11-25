@@ -30,11 +30,14 @@ $_lang['ms3_customer_entrance'] = 'Подъезд';
 $_lang['ms3_customer_floor'] = 'Этаж';
 
 // Authentication & Registration
+$_lang['ms3_customer_guest'] = 'Гость';
 $_lang['ms3_customer_password'] = 'Пароль';
 $_lang['ms3_customer_password_confirm'] = 'Подтверждение пароля';
 $_lang['ms3_customer_register_success'] = 'Регистрация прошла успешно';
 $_lang['ms3_customer_login_success'] = 'Вы успешно вошли в систему';
+$_lang['ms3_customer_logout'] = 'Выход';
 $_lang['ms3_customer_logout_success'] = 'Вы вышли из системы';
+$_lang['ms3_customer_logout_confirm'] = 'Вы действительно хотите выйти?';
 
 // Errors - Authentication
 $_lang['ms3_customer_err_login_required'] = 'Укажите email и пароль';
@@ -106,3 +109,85 @@ Email: {email}
 
 С уважением,
 {site}';
+
+// Customer Account Pages
+$_lang['ms3_customer_err_invalid_service'] = 'Неизвестный сервис: {service}';
+$_lang['ms3_customer_account_title'] = 'Личный кабинет';
+$_lang['ms3_customer_logout'] = 'Выход';
+$_lang['ms3_customer_err_validation'] = 'Ошибка валидации данных';
+
+// Unauthorized Page
+$_lang['ms3_customer_unauthorized_title'] = 'Требуется авторизация';
+$_lang['ms3_customer_unauthorized_message'] = 'Для доступа к этой странице необходимо войти в систему или зарегистрироваться.';
+$_lang['ms3_customer_login'] = 'Войти';
+$_lang['ms3_customer_register'] = 'Регистрация';
+$_lang['ms3_customer_account'] = 'Личный кабинет';
+
+// Login/Register Forms
+$_lang['ms3_customer_email_placeholder'] = 'example@domain.com';
+$_lang['ms3_customer_password_placeholder'] = 'Введите пароль';
+$_lang['ms3_customer_password_confirm_placeholder'] = 'Повторите пароль';
+$_lang['ms3_customer_first_name_placeholder'] = 'Иван';
+$_lang['ms3_customer_last_name_placeholder'] = 'Иванов';
+$_lang['ms3_customer_phone_placeholder'] = '+7 (900) 123-45-67';
+$_lang['ms3_customer_remember_me'] = 'Запомнить меня';
+$_lang['ms3_customer_forgot_password'] = 'Забыли пароль?';
+$_lang['ms3_customer_password_hint'] = 'Минимум 8 символов';
+$_lang['ms3_customer_privacy_accept'] = 'Я согласен с политикой конфиденциальности';
+$_lang['ms3_customer_err_register_required'] = 'Укажите email и пароль для регистрации';
+
+// Profile Page
+$_lang['ms3_customer_profile_title'] = 'Мой профиль';
+$_lang['ms3_customer_profile_updated'] = 'Профиль успешно обновлён';
+$_lang['ms3_customer_profile_save'] = 'Сохранить изменения';
+$_lang['ms3_customer_birthday'] = 'Дата рождения';
+$_lang['ms3_customer_gender'] = 'Пол';
+$_lang['ms3_customer_gender_not_specified'] = 'Не указан';
+$_lang['ms3_customer_gender_male'] = 'Мужской';
+$_lang['ms3_customer_gender_female'] = 'Женский';
+$_lang['ms3_customer_email_verified'] = 'Подтверждён';
+$_lang['ms3_customer_email_not_verified'] = 'Email не подтверждён';
+$_lang['ms3_customer_email_verified_at'] = 'Подтверждён {date}';
+$_lang['ms3_customer_email_send_verification'] = 'Отправить письмо подтверждения';
+$_lang['ms3_customer_email_sending'] = 'Отправка';
+$_lang['ms3_customer_phone_verified'] = 'Подтверждён';
+$_lang['ms3_customer_phone_not_verified'] = 'Не подтверждён';
+$_lang['ms3_customer_phone_verified_at'] = 'Подтверждён {date}';
+$_lang['ms3_customer_phone_verification_soon'] = 'Функция подтверждения телефона будет доступна в ближайшее время';
+
+// Addresses Page
+$_lang['ms3_customer_addresses_title'] = 'Мои адреса';
+$_lang['ms3_customer_addresses_empty'] = 'У вас пока нет сохранённых адресов';
+$_lang['ms3_customer_address_add'] = 'Добавить адрес';
+$_lang['ms3_customer_address_edit'] = 'Редактировать';
+$_lang['ms3_customer_address_delete'] = 'Удалить';
+$_lang['ms3_customer_address_delete_confirm'] = 'Вы уверены, что хотите удалить этот адрес?';
+$_lang['ms3_customer_address_default'] = 'Основной';
+$_lang['ms3_customer_address_set_default'] = 'Сделать основным';
+$_lang['ms3_customer_address_set_default_confirm'] = 'Сделать этот адрес основным?';
+$_lang['ms3_customer_address_name'] = 'Название адреса';
+$_lang['ms3_customer_address_name_placeholder'] = 'Например: Дом, Работа, Дача';
+$_lang['ms3_customer_address_name_help'] = 'Необязательно. Если не указано, будет сформировано автоматически.';
+$_lang['ms3_customer_address_comment_help'] = 'Дополнительная информация для курьера';
+$_lang['ms3_customer_err_address_not_found'] = 'Адрес не найден';
+$_lang['ms3_customer_cancel'] = 'Отмена';
+$_lang['ms3_customer_save'] = 'Сохранить';
+
+// Orders Page
+$_lang['ms3_customer_orders_title'] = 'Мои заказы';
+$_lang['ms3_customer_orders_empty'] = 'У вас пока нет заказов';
+$_lang['ms3_customer_orders_filter_by_status'] = 'Фильтр по статусу';
+$_lang['ms3_customer_orders_all_statuses'] = 'Все статусы';
+$_lang['ms3_customer_orders_reset_filter'] = 'Сбросить';
+$_lang['ms3_customer_order_num'] = 'Номер заказа';
+$_lang['ms3_customer_order_date'] = 'Дата';
+$_lang['ms3_customer_order_status'] = 'Статус';
+$_lang['ms3_customer_order_total'] = 'Сумма';
+$_lang['ms3_customer_order_view'] = 'Подробнее';
+$_lang['ms3_customer_orders_pagination'] = 'Навигация по заказам';
+$_lang['ms3_customer_orders_prev'] = 'Предыдущая';
+$_lang['ms3_customer_orders_next'] = 'Следующая';
+$_lang['ms3_customer_orders_total'] = 'Всего заказов: {total}';
+$_lang['ms3_customer_orders_back'] = 'Назад к списку';
+$_lang['ms3_customer_order_title'] = 'Заказ';
+$_lang['ms3_customer_order_created'] = 'Дата оформления';

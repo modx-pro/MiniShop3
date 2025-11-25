@@ -63,11 +63,22 @@ class TokenMiddleware implements MiddlewareInterface
             return Response::error('ms3_err_token', 401);
         }
 
-        // Сохраняем токен в сессию для совместимости со старым кодом
+        // Проверяем валидность токена и получаем customer_id
+        $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
+            'token' => $token,
+            'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
+        ]);
+
+        if (!$tokenObj || $tokenObj->isExpired()) {
+            return Response::error('ms3_err_token_invalid', 401);
+        }
+
+        // Сохраняем токен и customer_id в сессию
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
         $_SESSION['ms3']['customer_token'] = $token;
+        $_SESSION['ms3']['customer_id'] = $tokenObj->get('customer_id');
 
         return null; // Продолжить выполнение
     }

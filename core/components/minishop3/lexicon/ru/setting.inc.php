@@ -200,6 +200,14 @@ $_lang['setting_ms3_customer_require_email_verification'] = 'Требовать 
 $_lang['setting_ms3_customer_require_email_verification_desc'] = 'Требовать подтверждение email адреса после регистрации. Клиент получит письмо со ссылкой для верификации.';
 $_lang['setting_ms3_customer_send_welcome_email'] = 'Отправлять приветственное письмо';
 $_lang['setting_ms3_customer_send_welcome_email_desc'] = 'Отправлять приветственное письмо с паролем при автоматической регистрации через заказ.';
+$_lang['setting_ms3_customer_redirect_after_login'] = 'Страница редиректа после входа/регистрации';
+$_lang['setting_ms3_customer_redirect_after_login_desc'] = 'ID страницы, на которую будет перенаправлен клиент после успешного входа или регистрации. 0 = остаться на текущей странице (перезагрузка).';
+$_lang['setting_ms3_customer_profile_page_id'] = 'ID страницы профиля клиента';
+$_lang['setting_ms3_customer_profile_page_id_desc'] = 'ID страницы личного кабинета с профилем клиента. Используется для ссылок в навигации.';
+$_lang['setting_ms3_customer_addresses_page_id'] = 'ID страницы адресов клиента';
+$_lang['setting_ms3_customer_addresses_page_id_desc'] = 'ID страницы управления адресами доставки. Используется для ссылок в навигации.';
+$_lang['setting_ms3_customer_orders_page_id'] = 'ID страницы заказов клиента';
+$_lang['setting_ms3_customer_orders_page_id_desc'] = 'ID страницы истории заказов клиента. Используется для ссылок в навигации.';
 
 // Customer Sync with modUser
 $_lang['setting_ms3_customer_sync_enabled'] = 'Включить синхронизацию с modUser';

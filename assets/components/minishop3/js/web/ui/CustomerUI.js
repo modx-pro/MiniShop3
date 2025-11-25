@@ -160,4 +160,160 @@ class CustomerUI {
       return { success: false }
     }
   }
+
+  /**
+   * Обновление профиля покупателя
+   *
+   * @param {FormData} formData - Данные формы
+   * @returns {Promise<Object>}
+   */
+  async handleProfileUpdate (formData) {
+    // Конвертируем FormData в обычный объект
+    const data = {}
+    for (const [key, value] of formData.entries()) {
+      // Пропускаем служебные поля
+      if (key === 'ms3_action') continue
+      data[key] = value
+    }
+
+    // Хук BEFORE
+    const hookData = { data }
+    await this.hooks.runHooks('beforeUpdateProfile', hookData)
+
+    if (hookData.cancel) {
+      return { success: false }
+    }
+
+    try {
+      // API запрос
+      const response = await this.customer.updateProfile(data)
+
+      // Хук AFTER
+      await this.hooks.runHooks('afterUpdateProfile', { data, response })
+
+      // Уведомление
+      if (response.success) {
+        this.message.success(response.message || 'Профиль успешно обновлен')
+
+        // Перезагрузить страницу через 1 секунду
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+      } else {
+        this.message.error(response.message || 'Ошибка при обновлении профиля')
+      }
+
+      return response
+    } catch (error) {
+      console.error('CustomerUI.handleProfileUpdate error:', error)
+      this.message.error('Произошла ошибка при сохранении')
+      return { success: false, message: error.message }
+    }
+  }
+
+  /**
+   * Создание нового адреса
+   *
+   * @param {FormData} formData - Данные формы
+   * @returns {Promise<Object>}
+   */
+  async handleAddressCreate (formData) {
+    // Конвертируем FormData в обычный объект
+    const data = {}
+    for (const [key, value] of formData.entries()) {
+      // Пропускаем служебные поля
+      if (key === 'ms3_action') continue
+      data[key] = value
+    }
+
+    // Хук BEFORE
+    const hookData = { data }
+    await this.hooks.runHooks('beforeCreateAddress', hookData)
+
+    if (hookData.cancel) {
+      return { success: false }
+    }
+
+    try {
+      // API запрос
+      const response = await this.customer.createAddress(data)
+
+      // Хук AFTER
+      await this.hooks.runHooks('afterCreateAddress', { data, response })
+
+      // Уведомление
+      if (response.success) {
+        this.message.success(response.message || 'Адрес успешно добавлен')
+
+        // Перенаправить на список адресов через 1 секунду
+        setTimeout(() => {
+          window.location.href = window.location.pathname
+        }, 1000)
+      } else {
+        this.message.error(response.message || 'Ошибка при добавлении адреса')
+      }
+
+      return response
+    } catch (error) {
+      console.error('CustomerUI.handleAddressCreate error:', error)
+      this.message.error('Произошла ошибка при сохранении')
+      return { success: false, message: error.message }
+    }
+  }
+
+  /**
+   * Обновление адреса
+   *
+   * @param {FormData} formData - Данные формы
+   * @returns {Promise<Object>}
+   */
+  async handleAddressUpdate (formData) {
+    // Конвертируем FormData в обычный объект
+    const data = {}
+    for (const [key, value] of formData.entries()) {
+      // Пропускаем служебные поля
+      if (key === 'ms3_action') continue
+      data[key] = value
+    }
+
+    const addressId = data.id
+    if (!addressId) {
+      this.message.error('ID адреса не указан')
+      return { success: false, message: 'ID адреса не указан' }
+    }
+
+    // Хук BEFORE
+    const hookData = { addressId, data }
+    await this.hooks.runHooks('beforeUpdateAddress', hookData)
+
+    if (hookData.cancel) {
+      return { success: false }
+    }
+
+    try {
+      // API запрос
+      const response = await this.customer.updateAddress(addressId, data)
+
+      // Хук AFTER
+      await this.hooks.runHooks('afterUpdateAddress', { addressId, data, response })
+
+      // Уведомление
+      if (response.success) {
+        this.message.success(response.message || 'Адрес успешно обновлен')
+
+        // Перенаправить на список адресов через 1 секунду
+        setTimeout(() => {
+          window.location.href = window.location.pathname
+        }, 1000)
+      } else {
+        this.message.error(response.message || 'Ошибка при обновлении адреса')
+      }
+
+      return response
+    } catch (error) {
+      console.error('CustomerUI.handleAddressUpdate error:', error)
+      this.message.error('Произошла ошибка при сохранении')
+      return { success: false, message: error.message }
+    }
+  }
 }

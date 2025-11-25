@@ -30,11 +30,14 @@ $_lang['ms3_customer_entrance'] = 'Entrance';
 $_lang['ms3_customer_floor'] = 'Floor';
 
 // Authentication & Registration
+$_lang['ms3_customer_guest'] = 'Guest';
 $_lang['ms3_customer_password'] = 'Password';
 $_lang['ms3_customer_password_confirm'] = 'Confirm Password';
 $_lang['ms3_customer_register_success'] = 'Registration successful';
 $_lang['ms3_customer_login_success'] = 'You have successfully logged in';
+$_lang['ms3_customer_logout'] = 'Logout';
 $_lang['ms3_customer_logout_success'] = 'You have been logged out';
+$_lang['ms3_customer_logout_confirm'] = 'Are you sure you want to logout?';
 
 // Errors - Authentication
 $_lang['ms3_customer_err_login_required'] = 'Please provide email and password';
@@ -106,3 +109,85 @@ We recommend changing your password after first login.
 
 Best regards,
 {site}';
+
+// Customer Account Pages
+$_lang['ms3_customer_err_invalid_service'] = 'Unknown service: {service}';
+$_lang['ms3_customer_account_title'] = 'My Account';
+$_lang['ms3_customer_logout'] = 'Logout';
+$_lang['ms3_customer_err_validation'] = 'Validation error';
+
+// Unauthorized Page
+$_lang['ms3_customer_unauthorized_title'] = 'Authorization Required';
+$_lang['ms3_customer_unauthorized_message'] = 'You need to log in or register to access this page.';
+$_lang['ms3_customer_login'] = 'Log In';
+$_lang['ms3_customer_register'] = 'Register';
+$_lang['ms3_customer_account'] = 'My Account';
+
+// Login/Register Forms
+$_lang['ms3_customer_email_placeholder'] = 'example@domain.com';
+$_lang['ms3_customer_password_placeholder'] = 'Enter password';
+$_lang['ms3_customer_password_confirm_placeholder'] = 'Repeat password';
+$_lang['ms3_customer_first_name_placeholder'] = 'John';
+$_lang['ms3_customer_last_name_placeholder'] = 'Doe';
+$_lang['ms3_customer_phone_placeholder'] = '+1 (555) 123-4567';
+$_lang['ms3_customer_remember_me'] = 'Remember me';
+$_lang['ms3_customer_forgot_password'] = 'Forgot password?';
+$_lang['ms3_customer_password_hint'] = 'At least 8 characters';
+$_lang['ms3_customer_privacy_accept'] = 'I agree to the privacy policy';
+$_lang['ms3_customer_err_register_required'] = 'Please enter email and password to register';
+
+// Profile Page
+$_lang['ms3_customer_profile_title'] = 'My Profile';
+$_lang['ms3_customer_profile_updated'] = 'Profile successfully updated';
+$_lang['ms3_customer_profile_save'] = 'Save Changes';
+$_lang['ms3_customer_birthday'] = 'Date of Birth';
+$_lang['ms3_customer_gender'] = 'Gender';
+$_lang['ms3_customer_gender_not_specified'] = 'Not specified';
+$_lang['ms3_customer_gender_male'] = 'Male';
+$_lang['ms3_customer_gender_female'] = 'Female';
+$_lang['ms3_customer_email_verified'] = 'Verified';
+$_lang['ms3_customer_email_not_verified'] = 'Email not verified';
+$_lang['ms3_customer_email_verified_at'] = 'Verified on {date}';
+$_lang['ms3_customer_email_send_verification'] = 'Send Verification Email';
+$_lang['ms3_customer_email_sending'] = 'Sending';
+$_lang['ms3_customer_phone_verified'] = 'Verified';
+$_lang['ms3_customer_phone_not_verified'] = 'Not verified';
+$_lang['ms3_customer_phone_verified_at'] = 'Verified on {date}';
+$_lang['ms3_customer_phone_verification_soon'] = 'Phone verification will be available soon';
+
+// Addresses Page
+$_lang['ms3_customer_addresses_title'] = 'My Addresses';
+$_lang['ms3_customer_addresses_empty'] = 'You have no saved addresses yet';
+$_lang['ms3_customer_address_add'] = 'Add Address';
+$_lang['ms3_customer_address_edit'] = 'Edit';
+$_lang['ms3_customer_address_delete'] = 'Delete';
+$_lang['ms3_customer_address_delete_confirm'] = 'Are you sure you want to delete this address?';
+$_lang['ms3_customer_address_default'] = 'Default';
+$_lang['ms3_customer_address_set_default'] = 'Set as default';
+$_lang['ms3_customer_address_set_default_confirm'] = 'Set this address as default?';
+$_lang['ms3_customer_address_name'] = 'Address Name';
+$_lang['ms3_customer_address_name_placeholder'] = 'E.g.: Home, Office, Cottage';
+$_lang['ms3_customer_address_name_help'] = 'Optional. If not specified, will be generated automatically.';
+$_lang['ms3_customer_address_comment_help'] = 'Additional information for courier';
+$_lang['ms3_customer_err_address_not_found'] = 'Address not found';
+$_lang['ms3_customer_cancel'] = 'Cancel';
+$_lang['ms3_customer_save'] = 'Save';
+
+// Orders Page
+$_lang['ms3_customer_orders_title'] = 'My Orders';
+$_lang['ms3_customer_orders_empty'] = 'You have no orders yet';
+$_lang['ms3_customer_orders_filter_by_status'] = 'Filter by status';
+$_lang['ms3_customer_orders_all_statuses'] = 'All statuses';
+$_lang['ms3_customer_orders_reset_filter'] = 'Reset';
+$_lang['ms3_customer_order_num'] = 'Order Number';
+$_lang['ms3_customer_order_date'] = 'Date';
+$_lang['ms3_customer_order_status'] = 'Status';
+$_lang['ms3_customer_order_total'] = 'Total';
+$_lang['ms3_customer_order_view'] = 'View Details';
+$_lang['ms3_customer_orders_pagination'] = 'Order navigation';
+$_lang['ms3_customer_orders_prev'] = 'Previous';
+$_lang['ms3_customer_orders_next'] = 'Next';
+$_lang['ms3_customer_orders_total'] = 'Total orders: {total}';
+$_lang['ms3_customer_orders_back'] = 'Back to list';
+$_lang['ms3_customer_order_title'] = 'Order';
+$_lang['ms3_customer_order_created'] = 'Order date';

@@ -9,8 +9,8 @@
  * - Каталог товаров (публичные данные)
  *
  * Использование:
- * action.php?route=/api/v1/customer/token/get
- * action.php?route=/api/v1/cart/add
+ * api.php?route=/api/v1/customer/token/get
+ * api.php?route=/api/v1/cart/add
  *
  * @package MiniShop3
  */

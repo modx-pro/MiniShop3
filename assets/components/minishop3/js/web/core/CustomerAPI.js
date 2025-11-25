@@ -45,4 +45,69 @@ class CustomerAPI {
   async changeAddress (key, value) {
     return this.api.post('/api/v1/customer/changeAddress', { key, value })
   }
+
+  /**
+   * Обновить профиль покупателя
+   *
+   * PUT /api/v1/customer/profile
+   *
+   * @param {Object} data - Данные профиля (first_name, last_name, email, phone)
+   * @returns {Promise<Object>}
+   *
+   * @example
+   * await customer.updateProfile({
+   *   first_name: 'Иван',
+   *   last_name: 'Иванов',
+   *   email: 'ivan@example.com',
+   *   phone: '+79991234567'
+   * })
+   */
+  async updateProfile (data) {
+    return this.api.put('/api/v1/customer/profile', data)
+  }
+
+  /**
+   * Создать новый адрес
+   *
+   * POST /api/v1/customer/addresses
+   *
+   * @param {Object} data - Данные адреса
+   * @returns {Promise<Object>}
+   *
+   * @example
+   * await customer.createAddress({
+   *   name: 'Домашний адрес',
+   *   city: 'Москва',
+   *   street: 'Тверская',
+   *   building: '1'
+   * })
+   */
+  async createAddress (data) {
+    return this.api.post('/api/v1/customer/addresses', data)
+  }
+
+  /**
+   * Обновить адрес
+   *
+   * PUT /api/v1/customer/addresses/{id}
+   *
+   * @param {number} id - ID адреса
+   * @param {Object} data - Данные адреса
+   * @returns {Promise<Object>}
+   */
+  async updateAddress (id, data) {
+    return this.api.put(`/api/v1/customer/addresses/${id}`, data)
+  }
+
+  /**
+   * Удалить адрес
+   *
+   * DELETE /api/v1/customer/addresses/{id}
+   *
+   * @param {number} id - ID адреса
+   * @returns {Promise<Object>}
+   */
+  async deleteAddress (id) {
+    return this.api.delete(`/api/v1/customer/addresses/${id}`)
+  }
 }

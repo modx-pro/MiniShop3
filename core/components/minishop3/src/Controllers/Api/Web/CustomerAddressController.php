@@ -264,14 +264,24 @@ class CustomerAddressController
         $ms3->initialize();
 
         // Получаем токен клиента
-        $token = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
+        $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
 
-        if (empty($token)) {
+        if (empty($tokenString)) {
             return null;
         }
 
-        // Получаем клиента по токену
-        $customer = $this->modx->getObject(msCustomer::class, ['token' => $token]);
+        // Ищем токен в таблице ms3_customer_tokens
+        $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
+            'token' => $tokenString,
+            'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
+        ]);
+
+        if (!$tokenObj || $tokenObj->isExpired()) {
+            return null;
+        }
+
+        // Получаем клиента по customer_id из токена
+        $customer = $this->modx->getObject(msCustomer::class, $tokenObj->get('customer_id'));
 
         return $customer ?: null;
     }

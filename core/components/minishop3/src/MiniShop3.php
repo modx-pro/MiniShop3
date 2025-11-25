@@ -74,7 +74,7 @@ class MiniShop3
             MODX_ASSETS_PATH . 'components/minishop3/'
         );
         $assetsUrl = $this->modx->getOption('ms3_assets_url', $config, MODX_ASSETS_URL . 'components/minishop3/');
-        $actionUrl = $this->modx->getOption('ms3_action_url', $config, $assetsUrl . 'action.php');
+        $actionUrl = $this->modx->getOption('ms3_action_url', $config, $assetsUrl . 'api.php');
         $connectorUrl = $assetsUrl . 'connector.php';
         $this->config = array_merge([
             'corePath' => $corePath,
@@ -162,7 +162,7 @@ class MiniShop3
             if ($registerGlobalConfig) {
                 $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
                 $js_setting = [
-                    'actionUrl' => $this->config['actionUrl'],  // action.php для фронтенд API
+                    'actionUrl' => $this->config['actionUrl'],  // api.php для фронтенд API
                     'connectorUrl' => $this->config['connectorUrl'],  // connector.php для админки (если нужен)
                     'ctx' => $ctx,
                     'tokenName' => $tokenName,

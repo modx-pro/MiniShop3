@@ -200,6 +200,14 @@ $_lang['setting_ms3_customer_require_email_verification'] = 'Require email verif
 $_lang['setting_ms3_customer_require_email_verification_desc'] = 'Require email address confirmation after registration. Customer will receive an email with a verification link.';
 $_lang['setting_ms3_customer_send_welcome_email'] = 'Send welcome email';
 $_lang['setting_ms3_customer_send_welcome_email_desc'] = 'Send a welcome email with password when automatically registering through order checkout.';
+$_lang['setting_ms3_customer_redirect_after_login'] = 'Redirect page after login/registration';
+$_lang['setting_ms3_customer_redirect_after_login_desc'] = 'Page ID to redirect customer after successful login or registration. 0 = stay on current page (reload).';
+$_lang['setting_ms3_customer_profile_page_id'] = 'Customer profile page ID';
+$_lang['setting_ms3_customer_profile_page_id_desc'] = 'Page ID for customer account profile. Used for navigation links.';
+$_lang['setting_ms3_customer_addresses_page_id'] = 'Customer addresses page ID';
+$_lang['setting_ms3_customer_addresses_page_id_desc'] = 'Page ID for delivery addresses management. Used for navigation links.';
+$_lang['setting_ms3_customer_orders_page_id'] = 'Customer orders page ID';
+$_lang['setting_ms3_customer_orders_page_id_desc'] = 'Page ID for customer order history. Used for navigation links.';
 
 // Customer Sync with modUser
 $_lang['setting_ms3_customer_sync_enabled'] = 'Enable modUser synchronization';

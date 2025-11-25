@@ -21,6 +21,9 @@ class Login extends Processor
      */
     public function process()
     {
+        // Загружаем лексикон
+        $this->modx->lexicon->load('minishop3:customer');
+
         $email = trim($this->getProperty('email', ''));
         $password = $this->getProperty('password', '');
 
@@ -85,6 +88,17 @@ class Login extends Processor
         $_SESSION['ms3']['customer_id'] = $customer->id;
         $_SESSION['ms3']['customer_token'] = $tokenObj->get('token');
 
+        // Определяем URL для редиректа
+        $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);
+        if (!$redirectPageId) {
+            $redirectPageId = (int)$this->modx->getOption('ms3_customer_redirect_after_login', null, 0);
+        }
+
+        $redirectUrl = '';
+        if ($redirectPageId > 0) {
+            $redirectUrl = $this->modx->makeUrl($redirectPageId, '', '', 'full');
+        }
+
         return $this->success('', [
             'customer' => [
                 'id' => $customer->id,
@@ -96,6 +110,7 @@ class Login extends Processor
             ],
             'token' => $tokenObj->get('token'),
             'expires_at' => $tokenObj->get('expires_at'),
+            'redirect_url' => $redirectUrl,
         ]);
     }
 }

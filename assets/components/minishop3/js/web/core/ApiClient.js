@@ -15,11 +15,11 @@
 class ApiClient {
   /**
    * @param {Object} config - Конфигурация клиента
-   * @param {string} config.baseUrl - Базовый URL API (например: '/assets/components/minishop3/action.php')
+   * @param {string} config.baseUrl - Базовый URL API (например: '/assets/components/minishop3/api.php')
    * @param {TokenManager} config.tokenManager - Менеджер токенов
    */
   constructor (config) {
-    this.baseUrl = config.baseUrl || '/assets/components/minishop3/action.php'
+    this.baseUrl = config.baseUrl || '/assets/components/minishop3/api.php'
     this.tokenManager = config.tokenManager
   }
 
@@ -103,6 +103,17 @@ class ApiClient {
    */
   post (endpoint, data) {
     return this.request('POST', endpoint, data)
+  }
+
+  /**
+   * PUT запрос (полное обновление)
+   *
+   * @param {string} endpoint - Endpoint API
+   * @param {Object} data - Данные для отправки
+   * @returns {Promise<Object>}
+   */
+  put (endpoint, data) {
+    return this.request('PUT', endpoint, data)
   }
 
   /**
