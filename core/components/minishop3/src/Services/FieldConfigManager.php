@@ -9,12 +9,10 @@ use MODX\Revolution\modX;
  *
  * Обеспечивает автоматическое чтение полей из xPDO моделей и их конфигурацию
  */
-class FieldConfigManager
 {
     /** @var modX */
     protected $modx;
 
-    /** @var ConfigManager */
     protected $configManager;
 
     /** @var array Кеш загруженных алиасов моделей */
@@ -26,7 +24,6 @@ class FieldConfigManager
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
-        $this->configManager = new ConfigManager($modx);
         $this->loadModelAliases();
     }
 
@@ -334,7 +331,6 @@ class FieldConfigManager
     {
         $this->modx->log(
             modX::LOG_LEVEL_WARN,
-            'FieldConfigManager::saveFieldsConfig() is deprecated. Use ConfigService::saveFieldsConfig() for ms3_product_fields instead.'
         );
         return true;
     }

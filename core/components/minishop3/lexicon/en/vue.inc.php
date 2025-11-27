@@ -9,6 +9,9 @@ $_lang['ms3_vue_product_fields_title'] = 'Product Properties Management';
 $_lang['ms3_vue_product_fields_description'] = 'Here you can configure which fields are displayed on the "Product Data" tab when editing a product';
 $_lang['ms3_vue_product_properties'] = 'Product Properties';
 
+// Grid Fields Config Widget
+$_lang['grid_fields_config_title'] = 'Grid Configuration';
+
 // Common messages
 $_lang['ms3_vue_order_changed'] = 'Order changed';
 $_lang['ms3_vue_save_reminder'] = 'Don\'t forget to save changes';
@@ -234,3 +237,102 @@ $_lang['ms3_vue_delete_confirm_message'] = 'Are you sure you want to delete fiel
 $_lang['ms3_vue_delete_confirm_yes'] = 'Yes, Delete';
 $_lang['ms3_vue_error_deleting'] = 'Deletion Error';
 $_lang['ms3_vue_error_deleting_field'] = 'Failed to delete field';
+
+// Customers Grid Widget
+$_lang['customers_title'] = 'Customers';
+$_lang['customer_name'] = 'Name';
+$_lang['customer_first_name'] = 'First Name';
+$_lang['customer_last_name'] = 'Last Name';
+$_lang['customer_email'] = 'Email';
+$_lang['customer_phone'] = 'Phone';
+$_lang['customer_active'] = 'Active';
+$_lang['customer_blocked'] = 'Blocked';
+$_lang['email_status'] = 'Email Status';
+$_lang['verified'] = 'Verified';
+$_lang['not_verified'] = 'Not Verified';
+$_lang['created_at'] = 'Created At';
+$_lang['actions'] = 'Actions';
+$_lang['edit'] = 'Edit';
+$_lang['delete'] = 'Delete';
+$_lang['save'] = 'Save';
+$_lang['cancel'] = 'Cancel';
+$_lang['search'] = 'Search';
+$_lang['search_placeholder'] = 'Search by name, email, phone...';
+$_lang['edit_customer'] = 'Edit Customer';
+$_lang['customer_updated'] = 'Customer updated successfully';
+$_lang['customer_deleted'] = 'Customer deleted successfully';
+$_lang['customer_delete_confirm_title'] = 'Confirm Deletion';
+$_lang['customer_delete_confirm_message'] = 'Are you sure you want to delete customer {name}?';
+$_lang['success'] = 'Success';
+$_lang['error'] = 'Error';
+$_lang['error_loading_data'] = 'Error loading data';
+$_lang['error_saving_data'] = 'Error saving data';
+$_lang['error_deleting_data'] = 'Error deleting data';
+$_lang['apply_filters'] = 'Apply Filters';
+$_lang['clear_filters'] = 'Clear Filters';
+
+// Grid Fields Config Widget
+$_lang['ms3_grid_fields_config'] = 'Grid Configuration';
+$_lang['grid_fields_config_title'] = 'Grid Fields Configuration';
+$_lang['select_grid'] = 'Select Grid';
+$_lang['grid_customers'] = 'Customers';
+$_lang['grid_orders'] = 'Orders';
+$_lang['grid_products'] = 'Products';
+$_lang['field_name'] = 'Field Name';
+$_lang['field_label'] = 'Label';
+$_lang['visible'] = 'Visible';
+$_lang['sortable'] = 'Sortable';
+$_lang['filterable'] = 'Filterable';
+$_lang['frozen'] = 'Frozen';
+$_lang['width'] = 'Width';
+$_lang['move_up'] = 'Move Up';
+$_lang['move_down'] = 'Move Down';
+$_lang['grid_config_saved'] = 'Grid configuration saved';
+$_lang['order_changed_save_reminder'] = 'Order changed. Don\'t forget to save!';
+$_lang['warning'] = 'Warning';
+$_lang['cannot_delete_system_field'] = 'Cannot delete system field';
+$_lang['delete_field_confirm_title'] = 'Confirm Deletion';
+$_lang['delete_field_confirm_message'] = 'Are you sure you want to delete field "{name}"?';
+$_lang['field_deleted'] = 'Field deleted successfully';
+$_lang['error_deleting_field'] = 'Error deleting field';
+
+// Grid Fields Config - Add Field Dialog
+$_lang['add_field'] = 'Add Field';
+$_lang['add_field_dialog_title'] = 'Add Field';
+$_lang['field_name_placeholder'] = 'Example: discount_percent';
+$_lang['field_label_placeholder'] = 'Example: Discount Percent';
+$_lang['field_type'] = 'Field Type';
+$_lang['field_type_model'] = 'Model Field';
+$_lang['field_type_template'] = 'Template Field';
+$_lang['field_type_relation'] = 'Relation Field';
+$_lang['field_type_computed'] = 'Computed Field';
+$_lang['field_template'] = 'Template';
+$_lang['field_template_placeholder'] = 'Example: {first_name} {last_name}';
+$_lang['field_template_hint'] = 'Use {field_name} for field value substitution';
+$_lang['relation_table'] = 'Table or Model';
+$_lang['relation_table_placeholder'] = 'Example: ms3_vendors or msVendor';
+$_lang['relation_foreign_key'] = 'Foreign Key';
+$_lang['relation_foreign_key_placeholder'] = 'Example: vendor_id';
+$_lang['relation_display_field'] = 'Display Field';
+$_lang['relation_display_field_placeholder'] = 'Example: name or id';
+$_lang['relation_aggregation'] = 'Aggregation';
+$_lang['relation_aggregation_none'] = 'None (field value)';
+$_lang['relation_aggregation_count'] = 'COUNT (count records)';
+$_lang['relation_aggregation_sum'] = 'SUM (sum values)';
+$_lang['relation_aggregation_avg'] = 'AVG (average)';
+$_lang['relation_aggregation_min'] = 'MIN (minimum)';
+$_lang['relation_aggregation_max'] = 'MAX (maximum)';
+$_lang['relation_hint'] = 'Specify table name or xPDO model class. JOIN query is executed once for all rows';
+$_lang['computed_class_name'] = 'Class';
+$_lang['computed_class_name_placeholder'] = 'Example: MiniShop3\\Computed\\DiscountPercent';
+$_lang['computed_class_hint'] = 'Class must implement ComputedFieldInterface';
+$_lang['create'] = 'Create';
+$_lang['field_added'] = 'Field added successfully';
+$_lang['error_adding_field'] = 'Error adding field';
+
+// Edit field dialog
+$_lang['edit'] = 'Edit';
+$_lang['edit_field_dialog_title'] = 'Edit Field';
+$_lang['field_name_readonly_hint'] = 'Field name cannot be changed after creation';
+$_lang['field_updated'] = 'Field updated successfully';
+$_lang['error_updating_field'] = 'Error updating field';

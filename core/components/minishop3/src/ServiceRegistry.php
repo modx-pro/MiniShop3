@@ -132,6 +132,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Customer\RateLimiter::class,
             'interface' => null,
         ],
+        'ms3_grid_config' => [
+            'class' => \MiniShop3\Services\GridConfigService::class,
+            'interface' => null,
+        ],
     ];
 
     /**

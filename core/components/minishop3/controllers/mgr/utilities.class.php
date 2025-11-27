@@ -84,11 +84,13 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
         $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/_plugin-vue_export-helper.min.css">
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/useLexicon.min.css">
         <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/fields-management.min.css">
         <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/extra-fields.min.css">
+        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/grid-fields-config.min.css">
         <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/fields-management.min.js"></script>
         <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/extra-fields.min.js"></script>
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/grid-fields-config.min.js"></script>
         <script>
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-page-utilities"});

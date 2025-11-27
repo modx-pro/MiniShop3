@@ -9,6 +9,9 @@ $_lang['ms3_vue_product_fields_title'] = 'Управление свойства�
 $_lang['ms3_vue_product_fields_description'] = 'Здесь вы можете настроить, какие поля отображаются на вкладке "Данные товара" при редактировании товара';
 $_lang['ms3_vue_product_properties'] = 'Свойства товара';
 
+// Grid Fields Config Widget
+$_lang['grid_fields_config_title'] = 'Конфигурация гридов';
+
 // Общие сообщения
 $_lang['ms3_vue_order_changed'] = 'Порядок изменён';
 $_lang['ms3_vue_save_reminder'] = 'Не забудьте сохранить изменения';
@@ -234,3 +237,102 @@ $_lang['ms3_vue_delete_confirm_message'] = 'Вы уверены, что хоти
 $_lang['ms3_vue_delete_confirm_yes'] = 'Да, удалить';
 $_lang['ms3_vue_error_deleting'] = 'Ошибка удаления';
 $_lang['ms3_vue_error_deleting_field'] = 'Не удалось удалить поле';
+
+// Grid Fields Config Widget
+$_lang['ms3_grid_fields_config'] = 'Конфигурация гридов';
+$_lang['grid_fields_config_title'] = 'Конфигурация полей гридов';
+$_lang['select_grid'] = 'Выберите грид';
+$_lang['grid_customers'] = 'Клиенты';
+$_lang['grid_orders'] = 'Заказы';
+$_lang['grid_products'] = 'Товары';
+$_lang['field_name'] = 'Имя поля';
+$_lang['field_label'] = 'Заголовок';
+$_lang['visible'] = 'Видимое';
+$_lang['sortable'] = 'Сортируемое';
+$_lang['filterable'] = 'Фильтруемое';
+$_lang['frozen'] = 'Закрепленное';
+$_lang['width'] = 'Ширина';
+$_lang['move_up'] = 'Переместить вверх';
+$_lang['move_down'] = 'Переместить вниз';
+$_lang['grid_config_saved'] = 'Конфигурация грида сохранена';
+$_lang['order_changed_save_reminder'] = 'Порядок изменён. Не забудьте сохранить изменения!';
+$_lang['warning'] = 'Предупреждение';
+$_lang['cannot_delete_system_field'] = 'Системное поле нельзя удалить';
+$_lang['delete_field_confirm_title'] = 'Подтверждение удаления';
+$_lang['delete_field_confirm_message'] = 'Вы уверены, что хотите удалить поле "{name}"?';
+$_lang['field_deleted'] = 'Поле успешно удалено';
+$_lang['error_deleting_field'] = 'Ошибка при удалении поля';
+
+// Customers Grid Widget
+$_lang['customers_title'] = 'Клиенты';
+$_lang['customer_name'] = 'Имя';
+$_lang['customer_first_name'] = 'Имя';
+$_lang['customer_last_name'] = 'Фамилия';
+$_lang['customer_email'] = 'Email';
+$_lang['customer_phone'] = 'Телефон';
+$_lang['customer_active'] = 'Активен';
+$_lang['customer_blocked'] = 'Заблокирован';
+$_lang['email_status'] = 'Статус email';
+$_lang['verified'] = 'Подтвержден';
+$_lang['not_verified'] = 'Не подтвержден';
+$_lang['created_at'] = 'Дата создания';
+$_lang['actions'] = 'Действия';
+$_lang['edit'] = 'Редактировать';
+$_lang['delete'] = 'Удалить';
+$_lang['save'] = 'Сохранить';
+$_lang['cancel'] = 'Отмена';
+$_lang['search'] = 'Поиск';
+$_lang['search_placeholder'] = 'Поиск по имени, email, телефону...';
+$_lang['edit_customer'] = 'Редактирование клиента';
+$_lang['customer_updated'] = 'Клиент успешно обновлен';
+$_lang['customer_deleted'] = 'Клиент успешно удален';
+$_lang['customer_delete_confirm_title'] = 'Подтверждение удаления';
+$_lang['customer_delete_confirm_message'] = 'Вы уверены, что хотите удалить клиента {name}?';
+$_lang['success'] = 'Успешно';
+$_lang['error'] = 'Ошибка';
+$_lang['error_loading_data'] = 'Ошибка загрузки данных';
+$_lang['error_saving_data'] = 'Ошибка сохранения данных';
+$_lang['error_deleting_data'] = 'Ошибка удаления данных';
+$_lang['apply_filters'] = 'Применить фильтры';
+$_lang['clear_filters'] = 'Сбросить фильтры';
+
+// Grid Fields Config - Add Field Dialog
+$_lang['add_field'] = 'Добавить поле';
+$_lang['add_field_dialog_title'] = 'Добавление поля';
+$_lang['field_name_placeholder'] = 'Например: discount_percent';
+$_lang['field_label_placeholder'] = 'Например: Процент скидки';
+$_lang['field_type'] = 'Тип поля';
+$_lang['field_type_model'] = 'Модельное поле';
+$_lang['field_type_template'] = 'Шаблонное поле';
+$_lang['field_type_relation'] = 'Связанное поле';
+$_lang['field_type_computed'] = 'Вычисляемое поле';
+$_lang['field_template'] = 'Шаблон';
+$_lang['field_template_placeholder'] = 'Например: {first_name} {last_name}';
+$_lang['field_template_hint'] = 'Используйте {field_name} для подстановки значений полей';
+$_lang['relation_table'] = 'Таблица или модель';
+$_lang['relation_table_placeholder'] = 'Например: ms3_vendors или msVendor';
+$_lang['relation_foreign_key'] = 'Внешний ключ';
+$_lang['relation_foreign_key_placeholder'] = 'Например: vendor_id';
+$_lang['relation_display_field'] = 'Поле для отображения';
+$_lang['relation_display_field_placeholder'] = 'Например: name или id';
+$_lang['relation_aggregation'] = 'Агрегация';
+$_lang['relation_aggregation_none'] = 'Нет (значение поля)';
+$_lang['relation_aggregation_count'] = 'COUNT (количество)';
+$_lang['relation_aggregation_sum'] = 'SUM (сумма)';
+$_lang['relation_aggregation_avg'] = 'AVG (среднее)';
+$_lang['relation_aggregation_min'] = 'MIN (минимум)';
+$_lang['relation_aggregation_max'] = 'MAX (максимум)';
+$_lang['relation_hint'] = 'Укажите имя таблицы или класс модели xPDO. JOIN запрос выполняется один раз для всех строк';
+$_lang['computed_class_name'] = 'Класс';
+$_lang['computed_class_name_placeholder'] = 'Например: MiniShop3\\Computed\\DiscountPercent';
+$_lang['computed_class_hint'] = 'Класс должен реализовывать ComputedFieldInterface';
+$_lang['create'] = 'Создать';
+$_lang['field_added'] = 'Поле успешно добавлено';
+$_lang['error_adding_field'] = 'Ошибка при добавлении поля';
+
+// Edit field dialog
+$_lang['edit'] = 'Редактировать';
+$_lang['edit_field_dialog_title'] = 'Редактирование поля';
+$_lang['field_name_readonly_hint'] = 'Имя поля нельзя изменить после создания';
+$_lang['field_updated'] = 'Поле успешно обновлено';
+$_lang['error_updating_field'] = 'Ошибка при обновлении поля';

@@ -5,17 +5,13 @@ namespace MiniShop3\Services;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для работы с конфигурацией полей (фасад над FieldConfigManager и ConfigManager)
  */
 class ConfigService
 {
     /** @var modX */
     protected $modx;
 
-    /** @var FieldConfigManager */
-    protected $fieldConfigManager;
 
-    /** @var ConfigManager */
     protected $configManager;
 
     /**
@@ -24,8 +20,6 @@ class ConfigService
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
-        $this->fieldConfigManager = new FieldConfigManager($modx);
-        $this->configManager = new ConfigManager($modx);
     }
 
     /**

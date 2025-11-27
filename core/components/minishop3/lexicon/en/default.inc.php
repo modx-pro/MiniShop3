@@ -31,6 +31,7 @@ $_lang['ms3_system_settings'] = 'System settings';
 $_lang['ms3_system_settings_desc'] = 'MiniShop3 system settings';
 $_lang['ms3_utilities'] = 'Utilities';
 $_lang['ms3_utilities_desc'] = 'Developer tools';
+$_lang['ms3_grid_fields_config_desc'] = 'Grid fields configuration';
 $_lang['ms3_payment'] = 'Payment';
 $_lang['ms3_payments'] = 'Payment methods';
 $_lang['ms3_payments_intro'] = 'You can create any payment methods for orders. Payment logic (sending customer to remote service, receiving payment, etc.) is implemented in the class you specify.<br/>For payment methods the "class" parameter is required.';

@@ -328,6 +328,102 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save') // TODO: заменить на ms3_extra_fields_manage после создания permission
     ]);
 
+    // ============================================
+    // CUSTOMERS API (Клиенты)
+    // ============================================
+    $router->group('/customers', function($router) use ($modx) {
+
+        // GET /api/mgr/customers - получить список клиентов с пагинацией и поиском
+        $router->get('', function($params) use ($modx) {
+            // Объединяем параметры из URL path и query string
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
+            return $controller->getList($allParams);
+        });
+
+        // GET /api/mgr/customers/{id} - получить конкретного клиента
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
+            return $controller->get($params);
+        });
+
+        // PUT /api/mgr/customers/{id} - обновить клиента
+        $router->put('/{id}', function($params) use ($modx) {
+            // Читаем JSON body
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
+            return $controller->update($data);
+        });
+
+        // DELETE /api/mgr/customers/{id} - удалить клиента
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
+            return $controller->delete($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'view_document') // TODO: создать специфичное право ms3_customers_view
+    ]);
+
+    // ============================================
+    // GRID CONFIGURATION API (Конфигурация гридов)
+    // ============================================
+    $router->group('/grid-config', function($router) use ($modx) {
+
+        // GET /api/mgr/grid-config/{grid_key} - получить конфигурацию грида
+        $router->get('/{grid_key}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
+            return $controller->getConfig($params);
+        });
+
+        // PUT /api/mgr/grid-config/{grid_key} - сохранить конфигурацию грида
+        $router->put('/{grid_key}', function($params) use ($modx) {
+            // Читаем JSON body
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['grid_key'] = $params['grid_key'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
+            return $controller->saveConfig($data);
+        });
+
+        // POST /api/mgr/grid-config/{grid_key}/field - добавить новое поле
+        $router->post('/{grid_key}/field', function($params) use ($modx) {
+            // Читаем JSON body
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['grid_key'] = $params['grid_key'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
+            return $controller->addField($data);
+        });
+
+        // PUT /api/mgr/grid-config/{grid_key}/field/{field_name} - обновить поле
+        $router->put('/{grid_key}/field/{field_name}', function($params) use ($modx) {
+            // Читаем JSON body
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['grid_key'] = $params['grid_key'] ?? null;
+            $data['field_name'] = $params['field_name'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
+            return $controller->updateField($data);
+        });
+
+        // DELETE /api/mgr/grid-config/{grid_key}/{field_name} - удалить поле
+        $router->delete('/{grid_key}/{field_name}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
+            return $controller->deleteField($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'view_document') // TODO: создать специфичное право ms3_grid_config_manage
+    ]);
+
 }, [
     // Middleware для всей группы /api/mgr
     new AuthMiddleware($modx, 'mgr')
