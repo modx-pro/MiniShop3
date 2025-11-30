@@ -32,13 +32,9 @@ class Index extends Processor
      */
     public function process()
     {
-        $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MS3 DEBUG] Api\Index processor called');
-
         try {
             // Получаем маршрут из параметра
             $route = $this->getProperty('route', '');
-
-            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MS3 DEBUG] Route: ' . $route);
 
             if (empty($route)) {
                 return $this->failure('Route parameter is required', ['code' => 400]);

@@ -74,7 +74,7 @@ class MiniShop3
             MODX_ASSETS_PATH . 'components/minishop3/'
         );
         $assetsUrl = $this->modx->getOption('ms3_assets_url', $config, MODX_ASSETS_URL . 'components/minishop3/');
-        $actionUrl = $this->modx->getOption('ms3_action_url', $config, $assetsUrl . 'action.php');
+        $actionUrl = $this->modx->getOption('ms3_action_url', $config, $assetsUrl . 'api.php');
         $connectorUrl = $assetsUrl . 'connector.php';
         $this->config = array_merge([
             'corePath' => $corePath,
@@ -162,7 +162,7 @@ class MiniShop3
             if ($registerGlobalConfig) {
                 $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
                 $js_setting = [
-                    'actionUrl' => $this->config['actionUrl'],  // action.php для фронтенд API
+                    'actionUrl' => $this->config['actionUrl'],  // api.php для фронтенд API
                     'connectorUrl' => $this->config['connectorUrl'],  // connector.php для админки (если нужен)
                     'ctx' => $ctx,
                     'tokenName' => $tokenName,
@@ -178,117 +178,6 @@ class MiniShop3
                 );
             }
         }
-    }
-
-    /**
-     * Handle frontend requests with actions
-     *
-     * @param $action
-     * @param array $data
-     *
-     * @return array|bool|string
-     */
-    public function handleRequest($action, $data = [])
-    {
-        $ctx = !empty($data['ctx'])
-            ? (string)$data['ctx']
-            : 'web';
-        if ($ctx != 'web') {
-            $this->modx->switchContext($ctx);
-        }
-        $this->initialize($ctx);
-
-        $token = !empty($_SERVER['HTTP_MS3TOKEN']) ? $_SERVER['HTTP_MS3TOKEN'] : '';
-        if (!empty($token)) {
-            if (empty($_SESSION['ms3'])) {
-                $_SESSION['ms3'] = [];
-            }
-            $_SESSION['ms3']['customer_token'] = $token;
-        }
-
-        switch ($action) {
-            case 'customer/token/get':
-                $response = $this->customer->generateToken();
-                break;
-            case 'customer/token/update':
-                $response = $this->customer->updateToken($token);
-                break;
-            case 'customer/get':
-                $this->customer->initialize($token);
-                $response = $this->customer->getFields();
-                break;
-            case 'customer/add':
-                $this->customer->initialize($token);
-                $response = $this->customer->add(@$data['key'], @$data['value']);
-                break;
-            case 'customer/set':
-                $this->customer->initialize($token);
-                $response = $this->customer->set($data);
-                break;
-            case 'customer/changeAddress':
-                $this->order->initialize($token);
-                $response = $this->order->setCustomerAddress(@$data['value']);
-                break;
-            case 'cart/add':
-                $this->cart->initialize($ctx, $token);
-                $response = $this->cart->add(@$data['id'], @$data['count'], @$data['options']);
-                break;
-            case 'cart/change':
-                $this->cart->initialize($ctx, $token);
-                $response = $this->cart->change(@$data['product_key'], @$data['count']);
-                break;
-            case 'cart/changeOption':
-                $this->cart->initialize($ctx, $token);
-                $response = $this->cart->changeOption(@$data['product_key'], @$data['options']);
-                break;
-            case 'cart/remove':
-                $this->cart->initialize($ctx, $token);
-                $response = $this->cart->remove(@$data['product_key']);
-                break;
-            case 'cart/clean':
-                $this->cart->initialize($ctx, $token);
-                $response = $this->cart->clean();
-                break;
-            case 'cart/get':
-                $this->cart->initialize($ctx, $token);
-                $response = $this->cart->get();
-                break;
-            case 'cart/status':
-                $this->cart->initialize($ctx, $token);
-                $response = $this->cart->status(@$data);
-                break;
-            case 'order/add':
-                $this->order->initialize($token);
-                $response = $this->order->add(@$data['key'], @$data['value']);
-                break;
-            case 'order/submit':
-                $this->order->initialize($token);
-                $response = $this->order->submit($data);
-                break;
-            case 'order/getcost':
-                $this->order->initialize($token);
-                $response = $this->order->getCost();
-                break;
-            case 'order/getrequired':
-                $this->order->initialize($token);
-                $response = $this->order->getDeliveryRequiresFields(@$data['id']);
-                break;
-            case 'order/clean':
-                $this->order->initialize($token);
-                $response = $this->order->clean();
-                break;
-            case 'order/get':
-                $this->order->initialize($token);
-                $response = $this->order->get();
-                break;
-            default:
-                $message = ($data['ms3_action'] != $action)
-                    ? 'ms3_err_register_globals'
-                    : 'ms3_err_unknown';
-                $response = $this->utils->error($message);
-        }
-
-        return $response;
     }
 
     /**

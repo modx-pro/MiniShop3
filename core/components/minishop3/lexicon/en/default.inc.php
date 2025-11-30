@@ -31,6 +31,7 @@ $_lang['ms3_system_settings'] = 'System settings';
 $_lang['ms3_system_settings_desc'] = 'MiniShop3 system settings';
 $_lang['ms3_utilities'] = 'Utilities';
 $_lang['ms3_utilities_desc'] = 'Developer tools';
+$_lang['ms3_grid_fields_config_desc'] = 'Grid fields configuration';
 $_lang['ms3_payment'] = 'Payment';
 $_lang['ms3_payments'] = 'Payment methods';
 $_lang['ms3_payments_intro'] = 'You can create any payment methods for orders. Payment logic (sending customer to remote service, receiving payment, etc.) is implemented in the class you specify.<br/>For payment methods the "class" parameter is required.';
@@ -137,12 +138,24 @@ $_lang['ms3_frontend_room'] = 'Apt.';
 $_lang['ms3_frontend_entrance'] = 'Entrance';
 $_lang['ms3_frontend_floor'] = 'Floor';
 $_lang['ms3_frontend_text_address'] = 'Address in one line';
+$_lang['ms3_frontend_saved_addresses'] = 'Saved addresses';
+$_lang['ms3_frontend_address_new'] = 'Enter new address';
+$_lang['ms3_frontend_saved_addresses_help'] = 'Select from previously saved addresses or enter a new one';
+$_lang['ms3_frontend_save_address'] = 'Save this address for future orders';
+$_lang['ms3_frontend_save_address_help'] = 'The address will be available when placing future orders';
 
 $_lang['ms3_frontend_order_cost'] = 'Total, with delivery';
 $_lang['ms3_frontend_order_submit'] = 'Place order';
 $_lang['ms3_frontend_save'] = 'Save';
 $_lang['ms3_frontend_order_cancel'] = 'Clear form';
 $_lang['ms3_frontend_order_success'] = 'Thank you for placing order <b>#[[+num]]</b> on our site <b>[[++site_name]]</b>!';
+
+$_lang['ms3_frontend_article'] = 'Article';
+$_lang['ms3_frontend_cart_total'] = 'Products total';
+$_lang['ms3_frontend_total'] = 'Total to pay';
+$_lang['ms3_frontend_delivery_address'] = 'Delivery address';
+$_lang['ms3_frontend_delivery_method'] = 'Delivery method';
+$_lang['ms3_frontend_payment_method'] = 'Payment method';
 
 $_lang['ms3_message_close_all'] = 'close all';
 $_lang['ms3_err_unknown'] = 'Unknown error';

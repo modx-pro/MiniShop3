@@ -37,6 +37,10 @@ $includePaymentKeys = array_map('trim', explode(',', $includePaymentFields));
 $includePaymentKeys = array_unique(array_merge($includePaymentKeys, ['id']));
 $includeCustomerAddresses = $modx->getOption('includeCustomerAddresses', $scriptProperties, true);
 
+// Check if customer is authenticated
+$isCustomerAuth = !empty($_SESSION['ms3']['customer_id']);
+$customerId = $isCustomerAuth ? (int)$_SESSION['ms3']['customer_id'] : 0;
+
 $ms3->order->initialize($token);
 $response = $ms3->order->get();
 $order = [];
@@ -152,9 +156,10 @@ foreach ($rows as $row) {
     }
 }
 
+// Load customer addresses for authenticated customers
 $addresses = [];
-if (!empty($includeCustomerAddresses) && !empty($order['customer_id'])) {
-    $addresses = $ms3->customer->getAddresses($order['customer_id']);
+if (!empty($includeCustomerAddresses) && $isCustomerAuth && $customerId > 0) {
+    $addresses = $ms3->customer->getAddresses($customerId);
 }
 
 $form = [];
@@ -167,12 +172,37 @@ foreach ($order as $key => $value) {
         $form[substr($key, 8)] = $value;
     }
 }
-//TODO здесь применить еще модель msCustomer
-// Get user data
+
+// Get msCustomer data (if authenticated)
+$customerData = [];
+if ($isCustomerAuth && $customerId > 0) {
+    $msCustomer = $modx->getObject(\MiniShop3\Model\msCustomer::class, ['id' => $customerId]);
+
+    if ($msCustomer && $msCustomer->get('is_active')) {
+        $customerData = $msCustomer->toArray();
+
+        $modx->log(
+            modX::LOG_LEVEL_DEBUG,
+            "[ms3_order] Auto-filling form for authenticated customer #{$customerId}"
+        );
+    }
+}
+
+// Get modUser data (has higher priority than msCustomer)
 $profile = [];
 if ($modx->user->isAuthenticated($modx->context->key)) {
     $profile = array_merge($modx->user->Profile->toArray(), $modx->user->toArray());
 }
+
+// msCustomer fields mapping (simple 1:1 mapping)
+$customerFields = [
+    'first_name' => 'first_name',
+    'last_name' => 'last_name',
+    'email' => 'email',
+    'phone' => 'phone',
+];
+
+// modUser fields mapping (extended mapping with profile fields)
 $fields = [
 //    'receiver' => 'fullname',
 //    'phone' => 'phone',
@@ -189,6 +219,7 @@ $fields = [
     'floor' => 'extended[floor]',
     'text_address' => 'extended[address]',
 ];
+
 // Apply custom fields
 if (!empty($userFields)) {
     if (!is_array($userFields)) {
@@ -198,7 +229,20 @@ if (!empty($userFields)) {
         $fields = array_merge($fields, $userFields);
     }
 }
-// Set user fields
+
+// 1. First, apply msCustomer data (lowest priority)
+if (!empty($customerData)) {
+    foreach ($customerFields as $orderField => $customerField) {
+        if (!empty($customerData[$customerField]) && empty($form[$orderField])) {
+            $response = $ms3->order->add($orderField, $customerData[$customerField]);
+            if ($response['success'] && !empty($response['data'][$orderField])) {
+                $form[$orderField] = $response['data'][$orderField];
+            }
+        }
+    }
+}
+
+// 2. Then, apply modUser data (higher priority, overrides msCustomer)
 foreach ($fields as $key => $value) {
     if (!empty($profile) && !empty($value)) {
         if (strpos($value, 'extended') !== false) {
@@ -209,7 +253,6 @@ foreach ($fields as $key => $value) {
         } else {
             $value = $profile[$value];
         }
-        //TODO здесь поля наверное нужно передавать в контроллер Customer
         $response = $ms3->order->add($key, $value);
         if ($response['success'] && !empty($response['data'][$key])) {
             $form[$key] = $response['data'][$key];
@@ -241,10 +284,17 @@ $outputData = [
     'deliveries' => $deliveries,
     'payments' => $payments,
     'errors' => $errors,
+    'isCustomerAuth' => $isCustomerAuth,
 ];
 
 if (!empty($includeCustomerAddresses)) {
     $outputData['addresses'] = $addresses;
+}
+
+// Include JS module for customer addresses (SSR approach)
+if ($isCustomerAuth && !empty($includeCustomerAddresses)) {
+    $assetsUrl = $modx->getOption('ms3_assets_url', null, $modx->getOption('assets_url') . 'components/minishop3/');
+    $modx->regClientStartupScript($assetsUrl . 'js/web/order-addresses.js');
 }
 
 if ($return === 'data') {

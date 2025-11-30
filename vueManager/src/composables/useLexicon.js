@@ -12,12 +12,21 @@ export function useLexicon() {
    * @returns {string}
    */
   function _(key, fallback = null) {
-    // MODX загружает лексиконы в window.MODx.lang с полным префиксом
-    const fullKey = `ms3_vue_${key}`
     const lexicon = window.MODx?.lang || {}
 
-    // Возвращаем перевод из MODx.lang или fallback или сам ключ
-    return lexicon[fullKey] || fallback || key
+    // Сначала пробуем найти ключ как есть (без префикса)
+    if (lexicon[key]) {
+      return lexicon[key]
+    }
+
+    // Если не найден, пробуем с префиксом ms3_vue_
+    const fullKey = `ms3_vue_${key}`
+    if (lexicon[fullKey]) {
+      return lexicon[fullKey]
+    }
+
+    // Возвращаем fallback или сам ключ
+    return fallback || key
   }
 
   return {

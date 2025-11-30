@@ -32,3 +32,6 @@ $_lang['ms3_err_order_load'] = 'Error loading order. Please try again later.';
 
 // Token
 $_lang['ms3_err_token'] = 'Token not found or invalid';
+
+// General errors
+$_lang['ms3_err_unknown'] = 'Unknown error. Please try again later or contact the administrator.';

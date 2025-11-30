@@ -38,6 +38,17 @@ class TokenService
      */
     public function generateCustomerToken(?int $ttl = null): array
     {
+        // Проверяем, авторизован ли клиент
+        if (empty($_SESSION['ms3']['customer_id'])) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[TokenService] Cannot generate token: customer_id not found in session"
+            );
+            return ['token' => '', 'expires' => 0, 'lifetime' => 0];
+        }
+
+        $customerId = (int)$_SESSION['ms3']['customer_id'];
+
         // Генерируем токен через random_bytes (криптографически стойкий)
         $token = bin2hex(random_bytes(32)); // 64 символа
 
@@ -46,20 +57,36 @@ class TokenService
             $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         }
 
-        $expires = time() + $ttl;
+        $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
-        // Сохраняем в сессию
+        // Создаём запись токена в БД
+        $tokenObj = $this->modx->newObject(\MiniShop3\Model\msCustomerToken::class);
+        $tokenObj->set('customer_id', $customerId);
+        $tokenObj->set('token', $token);
+        $tokenObj->set('type', \MiniShop3\Model\msCustomerToken::TYPE_API);
+        $tokenObj->set('expires_at', $expiresAt);
+        $tokenObj->set('created_at', date('Y-m-d H:i:s'));
+
+        if (!$tokenObj->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[TokenService] Failed to save token to database"
+            );
+            return ['token' => '', 'expires' => 0, 'lifetime' => 0];
+        }
+
+        // Сохраняем в сессию для обратной совместимости
         $_SESSION['ms3']['customer_token'] = $token;
-        $_SESSION['ms3']['customer_token_expires'] = $expires;
+        $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
 
         $this->modx->log(
             modX::LOG_LEVEL_INFO,
-            "[TokenService] Generated customer token, expires: " . date('Y-m-d H:i:s', $expires)
+            "[TokenService] Generated customer token for customer_id={$customerId}, expires: " . $expiresAt
         );
 
         return [
             'token' => $token,
-            'expires' => $expires,
+            'expires' => time() + $ttl,
             'lifetime' => $ttl * 1000, // В миллисекундах для JS
         ];
     }

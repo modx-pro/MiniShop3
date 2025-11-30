@@ -24,6 +24,7 @@ class msExtraField extends \MiniShop3\Model\msExtraField
             'null' => 0,
             'default' => null,
             'attributes' => null,
+            'index_type' => 'NONE',
             'active' => 0,
         ],
         'fieldMeta' => [
@@ -93,6 +94,13 @@ class msExtraField extends \MiniShop3\Model\msExtraField
                 'precision' => '191',
                 'phptype' => 'string',
                 'null' => true,
+            ],
+            'index_type' => [
+                'dbtype' => 'varchar',
+                'precision' => '50',
+                'phptype' => 'string',
+                'null' => true,
+                'default' => 'NONE',
             ],
             'active' => [
                 'dbtype' => 'tinyint',

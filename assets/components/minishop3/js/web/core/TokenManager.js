@@ -117,7 +117,7 @@ class TokenManager {
     }
 
     try {
-      // Создаём URL для получения токена через action.php (фронтенд API)
+      // Создаём URL для получения токена через api.php (фронтенд API)
       const url = new URL(this.apiClient.baseUrl, window.location.origin)
       url.searchParams.set('route', '/api/v1/customer/token/get')
 
@@ -132,7 +132,7 @@ class TokenManager {
       const result = await response.json()
 
       if (result.success && result.data) {
-        // action.php возвращает данные напрямую в result.data
+        // api.php возвращает данные напрямую в result.data
         this.setToken(result.data.token, result.data.lifetime)
       } else {
         console.error('TokenManager: Не удалось получить токен', result)

@@ -111,6 +111,31 @@ class ServiceRegistry
             'class' => \MiniShop3\Controllers\Customer\Customer::class,
             'interface' => null,
         ],
+        // Сервисы аутентификации и регистрации клиентов
+        'ms3_auth_manager' => [
+            'class' => \MiniShop3\Services\Customer\AuthManager::class,
+            'interface' => null,
+        ],
+        'ms3_register_service' => [
+            'class' => \MiniShop3\Services\Customer\RegisterService::class,
+            'interface' => null,
+        ],
+        'ms3_email_verification_service' => [
+            'class' => \MiniShop3\Services\Customer\EmailVerificationService::class,
+            'interface' => null,
+        ],
+        'ms3_sms_verification_service' => [
+            'class' => \MiniShop3\Services\Customer\SmsVerificationService::class,
+            'interface' => null,
+        ],
+        'ms3_rate_limiter' => [
+            'class' => \MiniShop3\Services\Customer\RateLimiter::class,
+            'interface' => null,
+        ],
+        'ms3_grid_config' => [
+            'class' => \MiniShop3\Services\GridConfigService::class,
+            'interface' => null,
+        ],
     ];
 
     /**

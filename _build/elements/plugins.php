@@ -6,9 +6,11 @@ return [
         'description' => '',
         'events' => [
             'OnMODXInit',
-            'OnHandleRequest',
             'OnLoadWebDocument',
             'OnManagerPageBeforeRender',
+            'OnUserSave',
+            'OnBeforeUserFormSave',
+            'OnUserRemove',
         ],
     ],
 ];

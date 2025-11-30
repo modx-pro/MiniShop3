@@ -13,6 +13,7 @@ use xPDO\Om\xPDOQuery;
 class GetList extends GetListProcessor
 {
     public $classKey = msOrderStatus::class;
+    public $languageTopics = ['minishop3:default', 'minishop3:manager'];
     public $defaultSortField = 'position';
     public $defaultSortDirection = 'asc';
     public $permission = 'mssetting_list';
@@ -75,13 +76,23 @@ class GetList extends GetListProcessor
      */
     public function prepareRow(xPDOObject $object)
     {
+        // Перевод названия статуса (если это лексиконный ключ)
+        $name = $object->get('name');
+        if (!empty($name) && str_starts_with($name, 'ms3_order_status_')) {
+            $translated = $this->modx->lexicon($name);
+            if ($translated !== $name) {
+                $name = $translated;
+            }
+        }
+
         if ($this->getProperty('combo')) {
             $data = [
                 'id' => $object->get('id'),
-                'name' => $object->get('name'),
+                'name' => $name,
             ];
         } else {
             $data = $object->toArray();
+            $data['name'] = $name;
             if (!$data['body_user']) {
                 $data['body_user'] = null;
             }

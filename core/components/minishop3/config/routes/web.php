@@ -180,9 +180,71 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
     // ============================================
     // CUSTOMER API (Покупатели)
     // ============================================
-    $router->group('/customer', function($router) use ($modx) {
+    $router->group('/customer', function($router) use ($modx, $tokenMiddleware) {
 
-        // GET /api/v1/customer/token/get - Получить токен покупателя (публичный endpoint)
+        // ============================================
+        // Публичные endpoints (без токена)
+        // ============================================
+
+        // POST /api/v1/customer/login - Вход клиента
+        $router->post('/login', function($params) use ($modx) {
+            // Читаем JSON body
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $email = $data['email'] ?? '';
+            $password = $data['password'] ?? '';
+
+            // Вызываем процессор через process()
+            $response = $modx->runProcessor(
+                'MiniShop3\Processors\Api\Customer\Login',
+                [
+                    'email' => $email,
+                    'password' => $password
+                ]
+            );
+
+            if ($response->isError()) {
+                return Response::error($response->getMessage(), 400);
+            }
+
+            return Response::success($response->getObject(), $response->getMessage());
+        });
+
+        // POST /api/v1/customer/register - Регистрация клиента
+        $router->post('/register', function($params) use ($modx) {
+            // Читаем JSON body
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $email = $data['email'] ?? '';
+            $password = $data['password'] ?? '';
+            $firstName = $data['first_name'] ?? '';
+            $lastName = $data['last_name'] ?? '';
+            $phone = $data['phone'] ?? '';
+            $privacyAccepted = !empty($data['privacy_accepted']);
+
+            // Вызываем процессор через process()
+            $response = $modx->runProcessor(
+                'MiniShop3\Processors\Api\Customer\Register',
+                [
+                    'email' => $email,
+                    'password' => $password,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'phone' => $phone,
+                    'privacy_accepted' => $privacyAccepted
+                ]
+            );
+
+            if ($response->isError()) {
+                return Response::error($response->getMessage(), 400);
+            }
+
+            return Response::success($response->getObject(), $response->getMessage());
+        });
+
+        // GET /api/v1/customer/token/get - Получить токен покупателя
         $router->get('/token/get', function($params) use ($modx) {
             /** @var \MiniShop3\MiniShop3 $ms3 */
             $ms3 = $modx->services->get('ms3');
@@ -207,7 +269,94 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             return Response::success(['message' => 'Customer token/refresh endpoint - not implemented yet']);
         });
 
-    }); // Customer endpoints публичные (не требуют токена)
+        // ============================================
+        // CUSTOMER ADDRESSES API (Адреса доставки) - требуют токен
+        // ============================================
+        $router->group('/addresses', function($router) use ($modx) {
+
+            // GET /api/v1/customer/addresses - Получить список адресов клиента
+            $router->get('', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->getList($params);
+            });
+
+            // GET /api/v1/customer/addresses/{id} - Получить конкретный адрес
+            $router->get('/{id}', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->get($params);
+            });
+
+            // POST /api/v1/customer/addresses - Создать новый адрес
+            $router->post('', function($params) use ($modx) {
+                // Читаем JSON body
+                $input = file_get_contents('php://input');
+                $data = json_decode($input, true) ?: [];
+
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->create($data);
+            });
+
+            // PUT /api/v1/customer/addresses/{id} - Обновить адрес
+            $router->put('/{id}', function($params) use ($modx) {
+                // Читаем JSON body
+                $input = file_get_contents('php://input');
+                $data = json_decode($input, true) ?: [];
+
+                // Добавляем ID из URL
+                $data['id'] = $params['id'] ?? null;
+
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->update($data);
+            });
+
+            // DELETE /api/v1/customer/addresses/{id} - Удалить адрес
+            $router->delete('/{id}', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->delete($params);
+            });
+
+            // PUT /api/v1/customer/addresses/{id}/set-default - Установить адрес по умолчанию
+            $router->put('/{id}/set-default', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->setDefault($params);
+            });
+
+        }, [$tokenMiddleware]); // Адреса требуют токен
+
+        // ============================================
+        // CUSTOMER PROFILE API (Профиль клиента) - требуют токен
+        // ============================================
+
+        // PUT /api/v1/customer/profile - Обновить профиль клиента
+        $router->put('/profile', function($params) use ($modx) {
+            // Читаем JSON body
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $ms3 = $modx->services->get('ms3');
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerProfileController($modx, $ms3);
+            return $controller->update($data);
+        }, [$tokenMiddleware]);
+
+        // ============================================
+        // CUSTOMER EMAIL VERIFICATION API - смешанные
+        // ============================================
+
+        // POST /api/v1/customer/email/resend-verification - Повторная отправка письма (требует токен)
+        $router->post('/email/resend-verification', function($params) use ($modx) {
+            $ms3 = $modx->services->get('ms3');
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
+            return $controller->resendVerification();
+        }, [$tokenMiddleware]);
+
+        // GET /api/v1/customer/email/verify - Проверка токена из письма (публичный)
+        $router->get('/email/verify', function($params) use ($modx) {
+            $ms3 = $modx->services->get('ms3');
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
+            return $controller->verify($params);
+        });
+
+    }); // Customer endpoints (смешанные: публичные + защищённые)
 
     // ============================================
     // PRODUCT API (Каталог товаров) - публичные endpoints

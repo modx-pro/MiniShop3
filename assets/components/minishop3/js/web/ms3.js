@@ -55,7 +55,7 @@ const ms3 = {
 
     // 4. Инициализация ApiClient
     this.apiClient = new ApiClient({
-      baseUrl: this.config.actionUrl || '/assets/components/minishop3/action.php',
+      baseUrl: this.config.actionUrl || '/assets/components/minishop3/api.php',
       tokenManager: this.tokenManager
     })
 
@@ -206,6 +206,17 @@ const ms3 = {
           },
           clean: () => {
             return this.orderUI.handleClean()
+          }
+        },
+        customer: {
+          'update-profile': () => {
+            return this.customerUI.handleProfileUpdate(formData)
+          },
+          'address-create': () => {
+            return this.customerUI.handleAddressCreate(formData)
+          },
+          'address-update': () => {
+            return this.customerUI.handleAddressUpdate(formData)
           }
         }
       }

@@ -50,6 +50,19 @@ class TokenMiddleware implements MiddlewareInterface
             return null; // Продолжить выполнение
         }
 
+        // Проверяем сессию - если клиент уже авторизован, пропускаем
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        if (!empty($_SESSION['ms3']['customer_id'])) {
+            // Клиент авторизован в сессии - проверяем что он существует
+            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
+            if ($customer) {
+                return null; // Продолжить выполнение
+            }
+        }
+
         // Получаем токен из заголовка
         $token = $_SERVER['HTTP_MS3TOKEN'] ?? '';
 
@@ -63,11 +76,34 @@ class TokenMiddleware implements MiddlewareInterface
             return Response::error('ms3_err_token', 401);
         }
 
-        // Сохраняем токен в сессию для совместимости со старым кодом
+        // Проверяем валидность токена и получаем customer_id
+        $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
+            'token' => $token,
+            'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
+        ]);
+
+        if (!$tokenObj) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[TokenMiddleware] Token not found in database. Token: " . substr($token, 0, 16) . "... Length: " . strlen($token)
+            );
+            return Response::error('ms3_err_token_invalid', 401);
+        }
+
+        if ($tokenObj->isExpired()) {
+            $this->modx->log(
+                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                "[TokenMiddleware] Token expired. Expires: " . $tokenObj->get('expires_at') . ", Now: " . date('Y-m-d H:i:s')
+            );
+            return Response::error('ms3_err_token_expired', 401);
+        }
+
+        // Сохраняем токен и customer_id в сессию
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
         $_SESSION['ms3']['customer_token'] = $token;
+        $_SESSION['ms3']['customer_id'] = $tokenObj->get('customer_id');
 
         return null; // Продолжить выполнение
     }
@@ -75,19 +111,23 @@ class TokenMiddleware implements MiddlewareInterface
     /**
      * Проверить, является ли маршрут публичным
      *
-     * @param string $uri URI запроса
+     * @param string $uri URI запроса (не используется, оставлен для совместимости)
      * @return bool
      */
     private function isPublicRoute(string $uri): bool
     {
-        // Удаляем query string
-        $path = parse_url($uri, PHP_URL_PATH);
+        // Получаем route из параметров запроса (api.php?route=/api/v1/...)
+        $route = $_REQUEST['route'] ?? '';
 
-        // Удаляем api.php из начала пути если есть
-        $path = preg_replace('#^/assets/components/minishop3/api\.php#', '', $path);
+        // Если route пустой, пробуем извлечь из URI
+        if (empty($route)) {
+            $path = parse_url($uri, PHP_URL_PATH);
+            // Удаляем api.php из начала пути если есть
+            $route = preg_replace('#^/assets/components/minishop3/api\.php#', '', $path);
+        }
 
         foreach ($this->publicRoutes as $publicRoute) {
-            if (str_starts_with($path, $publicRoute)) {
+            if (str_starts_with($route, $publicRoute)) {
                 return true;
             }
         }

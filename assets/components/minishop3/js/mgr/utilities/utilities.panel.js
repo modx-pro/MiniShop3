@@ -86,6 +86,30 @@ ms3.panel.Utilities = function (config) {
                             }
                         }
                     }]
+                },
+                {
+                    title: _('grid_fields_config_title'),
+                    id: 'ms3-utilities-grid-fields-config-tab',
+                    layout: 'fit',
+                    autoScroll: true,
+                    items: [{
+                        xtype: 'panel',
+                        id: 'ms3-vue-grid-fields-config-panel',
+                        border: false,
+                        autoHeight: true,
+                        html: '<div id="ms3-grid-fields-config-vue-wrapper" class="vueApp" style="min-height: 600px;"></div>',
+                        listeners: {
+                            afterrender: function() {
+                                // Монтируем Vue приложение после рендера панели
+                                const event = new CustomEvent('ms3:mountVueGridFieldsConfig', {
+                                    detail: {
+                                        targetId: '#ms3-grid-fields-config-vue-wrapper'
+                                    }
+                                });
+                                document.dispatchEvent(event);
+                            }
+                        }
+                    }]
                 }
                 // Старая ExtJS вкладка "Расширение объектов" удалена - используется новый Vue виджет
             ]

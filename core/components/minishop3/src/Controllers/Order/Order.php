@@ -671,11 +671,22 @@ class Order
             return $this->error('ms3_order_err_empty');
         }
 
+        // Получение или создание клиента для заказа
         $customer_id = $this->draft->customer_id;
         if (empty($this->draft->customer_id)) {
             $this->ms3->customer->initialize($this->token);
-            $customer_id = $this->ms3->customer->getId();
+
+            // Метод getOrCreate() автоматически:
+            // 1. Ищет клиента по токену
+            // 2. Ищет клиента по email из данных заказа
+            // 3. Создаёт нового клиента (через RegisterService или fallback метод)
+            $customer_id = $this->ms3->customer->getOrCreate();
+
             if (empty($customer_id)) {
+                $this->modx->log(
+                    \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+                    '[Order::submit] Failed to get or create customer. Email may be missing in order data.'
+                );
                 return $this->error('ms3_err_customer_nf');
             }
         }
@@ -831,7 +842,7 @@ class Order
 
         $response = $msPayment->send($msOrder);
         if (!$response['success']) {
-            return $this->error($response['message']);
+            return $this->error($response['message'] ?? null);
         }
         if (!empty($response['data']['redirect'])) {
             return $response;
@@ -1332,9 +1343,19 @@ class Order
 
     /**
      * Shorthand for MS3 error method
+     *
+     * @param string|null $message Сообщение об ошибке (если null, используется 'ms3_err_unknown')
+     * @param array $data Дополнительные данные
+     * @param array $placeholders Плейсхолдеры для замены в сообщении
+     * @return array
      */
-    protected function error(string $message = '', array $data = [], array $placeholders = []): array
+    protected function error(?string $message = '', array $data = [], array $placeholders = []): array
     {
+        // Защита от null: используем fallback сообщение
+        if ($message === null || $message === '') {
+            $message = 'ms3_err_unknown';
+        }
+
         return $this->ms3->utils->error($message, $data, $placeholders);
     }
 

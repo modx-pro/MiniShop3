@@ -18,6 +18,7 @@ $_lang['area_ms3_payment'] = 'Payments';
 $_lang['area_ms3_import'] = 'Import';
 $_lang['area_ms3_statuses'] = 'Statuses';
 $_lang['area_ms3_customers'] = 'Customers';
+$_lang['area_ms3_security'] = 'Security';
 
 $_lang['setting_ms3_services'] = 'Shop services';
 $_lang['setting_ms3_services_desc'] = 'Array of registered classes for cart, order, delivery and payment. Used by third-party components to load their functionality.';
@@ -191,4 +192,46 @@ $_lang['setting_ms3_currency_symbol'] = 'Currency symbol';
 $_lang['setting_ms3_currency_symbol_desc'] = 'Currency symbol for price display. Default is "₽" (ruble). Examples: $, €, £, ₽, ₴, ¥, ₸.';
 $_lang['setting_ms3_currency_position'] = 'Currency symbol position';
 $_lang['setting_ms3_currency_position_desc'] = 'Where to display currency symbol relative to price. Valid values: "before" (before price: $ 100) or "after" (after price: 100 ₽). Default is "after".';
+
+// Customer Authentication & Registration
+$_lang['setting_ms3_customer_auto_register_on_order'] = 'Auto-register customers on checkout';
+$_lang['setting_ms3_customer_auto_register_on_order_desc'] = 'Automatically register a customer with password when placing an order if the email doesn\'t exist in the system. Password is auto-generated and sent via email.';
+$_lang['setting_ms3_customer_require_email_verification'] = 'Require email verification';
+$_lang['setting_ms3_customer_require_email_verification_desc'] = 'Require email address confirmation after registration. Customer will receive an email with a verification link.';
+$_lang['setting_ms3_customer_send_welcome_email'] = 'Send welcome email';
+$_lang['setting_ms3_customer_send_welcome_email_desc'] = 'Send a welcome email with password when automatically registering through order checkout.';
+$_lang['setting_ms3_customer_redirect_after_login'] = 'Redirect page after login/registration';
+$_lang['setting_ms3_customer_redirect_after_login_desc'] = 'Page ID to redirect customer after successful login or registration. 0 = stay on current page (reload).';
+$_lang['setting_ms3_customer_profile_page_id'] = 'Customer profile page ID';
+$_lang['setting_ms3_customer_profile_page_id_desc'] = 'Page ID for customer account profile. Used for navigation links.';
+$_lang['setting_ms3_customer_addresses_page_id'] = 'Customer addresses page ID';
+$_lang['setting_ms3_customer_addresses_page_id_desc'] = 'Page ID for delivery addresses management. Used for navigation links.';
+$_lang['setting_ms3_customer_orders_page_id'] = 'Customer orders page ID';
+$_lang['setting_ms3_customer_orders_page_id_desc'] = 'Page ID for customer order history. Used for navigation links.';
+
+// Customer Sync with modUser
+$_lang['setting_ms3_customer_sync_enabled'] = 'Enable modUser synchronization';
+$_lang['setting_ms3_customer_sync_enabled_desc'] = 'Automatically create/update msCustomer records when working with modUser (via msCustomerSync plugin). Allows unified customer and user database.';
+$_lang['setting_ms3_customer_sync_create_moduser'] = 'Create modUser on customer registration';
+$_lang['setting_ms3_customer_sync_create_moduser_desc'] = 'Automatically create MODX user (modUser) when registering msCustomer. Requires enabled synchronization.';
+$_lang['setting_ms3_customer_sync_delete_with_user'] = 'Delete customer with user';
+$_lang['setting_ms3_customer_sync_delete_with_user_desc'] = 'Delete msCustomer record when deleting associated modUser. By default only unlinks, preserving order history.';
+$_lang['setting_ms3_customer_sync_user_group'] = 'User group for new modUsers';
+$_lang['setting_ms3_customer_sync_user_group_desc'] = 'MODX user group ID to which new users will be automatically added when created from msCustomer. 0 = don\'t add to any group.';
+
+// Login Security
+$_lang['setting_ms3_customer_max_login_attempts'] = 'Maximum login attempts';
+$_lang['setting_ms3_customer_max_login_attempts_desc'] = 'Maximum number of failed login attempts before blocking. Default is 5.';
+$_lang['setting_ms3_customer_block_duration'] = 'Block duration (seconds)';
+$_lang['setting_ms3_customer_block_duration_desc'] = 'Block duration in seconds after exceeding login attempt limit. Default is 300 (5 minutes).';
+
+// Password Requirements
+$_lang['setting_ms3_password_min_length'] = 'Minimum password length';
+$_lang['setting_ms3_password_min_length_desc'] = 'Minimum password length in characters. Default is 8.';
+$_lang['setting_ms3_password_require_uppercase'] = 'Require uppercase letters';
+$_lang['setting_ms3_password_require_uppercase_desc'] = 'Password must contain at least one uppercase letter (A-Z).';
+$_lang['setting_ms3_password_require_number'] = 'Require numbers';
+$_lang['setting_ms3_password_require_number_desc'] = 'Password must contain at least one number (0-9).';
+$_lang['setting_ms3_password_require_special'] = 'Require special characters';
+$_lang['setting_ms3_password_require_special_desc'] = 'Password must contain at least one special character (!@#$%^&* etc.).';
 
