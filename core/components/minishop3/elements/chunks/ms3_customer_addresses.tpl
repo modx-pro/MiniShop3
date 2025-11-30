@@ -8,13 +8,14 @@
 {extends 'tpl.msCustomer.base'}
 
 {block 'content'}
+<script src="{'assets_url' | option}components/minishop3/js/web/modules/customer-addresses.js"></script>
 <div class="ms3-customer-addresses">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">{'ms3_customer_addresses_title' | lexicon}</h5>
             <a href="?mode=create" class="btn btn-sm btn-light">
-                <svg width="16" height="16" fill="currentColor" class="me-1">
-                    <use xlink:href="#icon-plus"/>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                    <path d="M8 3 L8 13 M3 8 L13 8"/>
                 </svg>
                 {'ms3_customer_address_add' | lexicon}
             </a>
@@ -44,4 +45,7 @@
         </div>
     </div>
 </div>
+<script>
+new CustomerAddresses().init()
+</script>
 {/block}

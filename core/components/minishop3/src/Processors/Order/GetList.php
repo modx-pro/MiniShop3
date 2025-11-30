@@ -210,6 +210,14 @@ class GetList extends GetListProcessor
         $registerUser = $this->modx->getOption('ms3_order_register_user_on_submit', null, false);
         $data['register_user'] = $registerUser;
 
+        // Перевод названия статуса (если это лексиконный ключ)
+        if (!empty($data['status_name']) && str_starts_with($data['status_name'], 'ms3_order_status_')) {
+            $translated = $this->modx->lexicon($data['status_name']);
+            if ($translated !== $data['status_name']) {
+                $data['status_name'] = $translated;
+            }
+        }
+
         $data['customer'] = implode(' ', [
             $data['first_name'],
             $data['last_name'],

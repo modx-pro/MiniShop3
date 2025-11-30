@@ -1,3 +1,13 @@
+{*
+ * Страница истории заказов клиента
+ *
+ * Расширяет базовый layout tpl.msCustomer.base
+ * Отображает список заказов клиента с фильтрацией и пагинацией
+ *}
+
+{extends 'tpl.msCustomer.base'}
+
+{block 'content'}
 <div class="ms3-customer-orders">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
@@ -81,7 +91,7 @@
             {/if}
 
             <div class="text-muted small mt-3">
-                {'ms3_customer_orders_total' | lexicon : ['total' => $total]}
+                Всего заказов: {$total}
             </div>
             {else}
             <div class="alert alert-info" role="alert">
@@ -91,3 +101,4 @@
         </div>
     </div>
 </div>
+{/block}

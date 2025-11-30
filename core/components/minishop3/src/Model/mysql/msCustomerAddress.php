@@ -32,6 +32,7 @@ class msCustomerAddress extends \MiniShop3\Model\msCustomerAddress
                 'createdon' => null,
                 'updatedon' => null,
                 'active' => 1,
+                'is_default' => 0,
             ],
         'fieldMeta' =>
             [
@@ -153,6 +154,14 @@ class msCustomerAddress extends \MiniShop3\Model\msCustomerAddress
                         'phptype' => 'integer',
                         'null' => true,
                         'default' => 1,
+                    ],
+                'is_default' =>
+                    [
+                        'dbtype' => 'tinyint',
+                        'precision' => '1',
+                        'phptype' => 'integer',
+                        'null' => false,
+                        'default' => 0,
                     ],
             ],
         'indexes' =>

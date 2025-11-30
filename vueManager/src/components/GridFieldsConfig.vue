@@ -16,6 +16,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import draggable from 'vuedraggable'
 import request from '../request.js'
 import { useLexicon } from '../composables/useLexicon.js'
+import ActionsEditor from './ActionsEditor.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -48,7 +49,8 @@ const newField = ref({
     },
     computed: {
       className: ''
-    }
+    },
+    actions: []
   }
 })
 
@@ -73,7 +75,8 @@ const fieldTypeOptions = computed(() => [
   { label: _('field_type_model'), value: 'model' },
   { label: _('field_type_template'), value: 'template' },
   { label: _('field_type_relation'), value: 'relation' },
-  { label: _('field_type_computed'), value: 'computed' }
+  { label: _('field_type_computed'), value: 'computed' },
+  { label: _('field_type_actions'), value: 'actions' }
 ])
 
 /**
@@ -287,7 +290,11 @@ function openAddDialog() {
       },
       computed: {
         className: ''
-      }
+      },
+      actions: [
+        { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true }
+      ]
     }
   }
   showAddDialog.value = true
@@ -341,6 +348,14 @@ async function addField() {
             className: newField.value.config.computed.className
           }
         }
+        break
+      case 'actions':
+        data.config = {
+          actions: newField.value.config.actions || []
+        }
+        // Для actions отключаем sortable и filterable
+        data.sortable = false
+        data.filterable = false
         break
     }
 
@@ -414,7 +429,11 @@ function openEditDialog(field, index) {
       },
       computed: {
         className: ''
-      }
+      },
+      actions: field.actions || [
+        { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true }
+      ]
     }
   }
 
@@ -475,6 +494,14 @@ async function saveEdit() {
             className: editingField.value.config.computed.className
           }
         }
+        break
+      case 'actions':
+        data.config = {
+          actions: editingField.value.config.actions || []
+        }
+        // Для actions отключаем sortable и filterable
+        data.sortable = false
+        data.filterable = false
         break
     }
 
@@ -760,6 +787,16 @@ onMounted(() => {
         <small class="text-muted">{{ _('computed_class_hint') }}</small>
       </div>
 
+      <!-- Настройка действий для типа actions -->
+      <div v-if="newField.type === 'actions'" class="field mb-3">
+        <label class="mb-2 block font-semibold">{{ _('actions_configuration') }}</label>
+        <ActionsEditor
+          v-model="newField.config.actions"
+          :grid-id="selectedGrid"
+        />
+        <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
+      </div>
+
       <!-- Общие настройки -->
       <div class="field mb-3">
         <label for="new-field-width">{{ _('width') }}</label>
@@ -786,8 +823,9 @@ onMounted(() => {
             input-id="new-field-sortable"
             v-model="newField.sortable"
             :binary="true"
+            :disabled="newField.type === 'actions'"
           />
-          <label for="new-field-sortable" class="ml-2 cursor-pointer">{{ _('sortable') }}</label>
+          <label for="new-field-sortable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': newField.type === 'actions' }">{{ _('sortable') }}</label>
         </div>
 
         <div class="flex align-items-center">
@@ -795,9 +833,9 @@ onMounted(() => {
             input-id="new-field-filterable"
             v-model="newField.filterable"
             :binary="true"
-            :disabled="newField.type === 'template'"
+            :disabled="newField.type === 'template' || newField.type === 'actions'"
           />
-          <label for="new-field-filterable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': newField.type === 'template' }">{{ _('filterable') }}</label>
+          <label for="new-field-filterable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': newField.type === 'template' || newField.type === 'actions' }">{{ _('filterable') }}</label>
         </div>
 
         <div class="flex align-items-center">
@@ -936,6 +974,16 @@ onMounted(() => {
           <small class="text-muted">{{ _('computed_class_hint') }}</small>
         </div>
 
+        <!-- Настройка действий для типа actions -->
+        <div v-if="editingField.type === 'actions'" class="field mb-3">
+          <label class="mb-2 block font-semibold">{{ _('actions_configuration') }}</label>
+          <ActionsEditor
+            v-model="editingField.config.actions"
+            :grid-id="selectedGrid"
+          />
+          <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
+        </div>
+
         <!-- Общие настройки -->
         <div class="field mb-3">
           <label for="edit-field-width">{{ _('width') }}</label>
@@ -962,8 +1010,9 @@ onMounted(() => {
               input-id="edit-field-sortable"
               v-model="editingField.sortable"
               :binary="true"
+              :disabled="editingField.type === 'actions'"
             />
-            <label for="edit-field-sortable" class="ml-2 cursor-pointer">{{ _('sortable') }}</label>
+            <label for="edit-field-sortable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': editingField.type === 'actions' }">{{ _('sortable') }}</label>
           </div>
 
           <div class="flex align-items-center">
@@ -971,9 +1020,9 @@ onMounted(() => {
               input-id="edit-field-filterable"
               v-model="editingField.filterable"
               :binary="true"
-              :disabled="editingField.type === 'template'"
+              :disabled="editingField.type === 'template' || editingField.type === 'actions'"
             />
-            <label for="edit-field-filterable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': editingField.type === 'template' }">{{ _('filterable') }}</label>
+            <label for="edit-field-filterable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': editingField.type === 'template' || editingField.type === 'actions' }">{{ _('filterable') }}</label>
           </div>
 
           <div class="flex align-items-center">

@@ -91,8 +91,11 @@ class OrdersPageService extends CustomerPageService
         // Фильтр по статусу
         $statusFilter = isset($_GET['status']) ? (int)$_GET['status'] : null;
 
-        // Условия выборки
-        $where = ['customer_id' => $this->customerId];
+        // Условия выборки (исключаем Draft статус id=1)
+        $where = [
+            'customer_id' => $this->customerId,
+            'status_id:!=' => 1,
+        ];
         if ($statusFilter) {
             $where['status_id'] = $statusFilter;
         }
@@ -125,19 +128,24 @@ class OrdersPageService extends CustomerPageService
             // Форматирование стоимости
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
 
+            // Перевод названия статуса (если это лексиконный ключ)
+            if (!empty($orderData['status_name'])) {
+                $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
+            }
+
             // Рендеринг строки заказа
             $chunk = $this->pdoFetch->getChunk($orderTpl, $orderData);
             $ordersData[] = is_string($chunk) ? $chunk : '';
         }
 
-        // Получить список статусов для фильтра
-        $statuses = $this->modx->getIterator(msOrderStatus::class, [], ['sortby' => 'rank']);
+        // Получить список статусов для фильтра (исключаем Draft id=1)
+        $statuses = $this->modx->getIterator(msOrderStatus::class, ['id:!=' => 1], ['sortby' => 'rank']);
         $statusesData = [];
         /** @var msOrderStatus $status */
         foreach ($statuses as $status) {
             $statusesData[] = [
                 'id' => $status->get('id'),
-                'name' => $status->get('name'),
+                'name' => $this->translateStatusName($status->get('name')),
                 'color' => $status->get('color'),
                 'selected' => $status->get('id') == $statusFilter,
             ];
@@ -197,7 +205,7 @@ class OrdersPageService extends CustomerPageService
         // Подготовить данные для шаблона (как в ms3_get_order.php)
         $data = [
             'order' => array_merge($order->toArray(), [
-                'status_name' => $status ? $status->get('name') : '',
+                'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
                 'status_color' => $status ? $status->get('color') : '',
                 'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
             ]),
@@ -289,8 +297,11 @@ class OrdersPageService extends CustomerPageService
         // Фильтр по статусу
         $statusFilter = isset($_GET['status']) ? (int)$_GET['status'] : null;
 
-        // Условия выборки
-        $where = ['customer_id' => $this->customerId];
+        // Условия выборки (исключаем Draft статус id=1)
+        $where = [
+            'customer_id' => $this->customerId,
+            'status_id:!=' => 1,
+        ];
         if ($statusFilter) {
             $where['status_id'] = $statusFilter;
         }
@@ -323,17 +334,22 @@ class OrdersPageService extends CustomerPageService
             // Форматирование стоимости
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
 
+            // Перевод названия статуса (если это лексиконный ключ)
+            if (!empty($orderData['status_name'])) {
+                $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
+            }
+
             $ordersData[] = $orderData;
         }
 
-        // Получить список статусов для фильтра
-        $statuses = $this->modx->getIterator(msOrderStatus::class, [], ['sortby' => 'rank']);
+        // Получить список статусов для фильтра (исключаем Draft id=1)
+        $statuses = $this->modx->getIterator(msOrderStatus::class, ['id:!=' => 1], ['sortby' => 'rank']);
         $statusesData = [];
         /** @var msOrderStatus $status */
         foreach ($statuses as $status) {
             $statusesData[] = [
                 'id' => $status->get('id'),
-                'name' => $status->get('name'),
+                'name' => $this->translateStatusName($status->get('name')),
                 'color' => $status->get('color'),
                 'selected' => $status->get('id') == $statusFilter,
             ];
@@ -387,7 +403,7 @@ class OrdersPageService extends CustomerPageService
         // Подготовить данные
         return [
             'order' => array_merge($order->toArray(), [
-                'status_name' => $status ? $status->get('name') : '',
+                'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
                 'status_color' => $status ? $status->get('color') : '',
                 'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
             ]),
@@ -439,5 +455,34 @@ class OrdersPageService extends CustomerPageService
             'prev_offset' => max(0, $offset - $limit),
             'next_offset' => min(($totalPages - 1) * $limit, $offset + $limit),
         ];
+    }
+
+    /**
+     * Перевести название статуса
+     *
+     * Если название - лексиконный ключ (ms3_order_status_*), возвращает перевод.
+     * Если это обычный текст (пользовательский статус), возвращает как есть.
+     *
+     * @param string $name Название статуса или лексиконный ключ
+     * @return string Переведённое название
+     */
+    protected function translateStatusName(string $name): string
+    {
+        // Проверяем, является ли название лексиконным ключом
+        if (str_starts_with($name, 'ms3_order_status_')) {
+            // Загружаем лексикон manager если еще не загружен
+            $this->modx->lexicon->load('minishop3:manager');
+
+            // Получаем перевод
+            $translated = $this->modx->lexicon($name);
+
+            // Если перевод найден (не равен ключу), возвращаем его
+            if ($translated !== $name) {
+                return $translated;
+            }
+        }
+
+        // Возвращаем оригинальное значение для пользовательских статусов
+        return $name;
     }
 }

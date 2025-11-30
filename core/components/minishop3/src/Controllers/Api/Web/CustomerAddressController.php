@@ -207,6 +207,56 @@ class CustomerAddressController
     }
 
     /**
+     * Установка адреса по умолчанию
+     * PUT /api/v1/customer/addresses/{id}/set-default
+     *
+     * @param array $params URL параметры
+     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     */
+    public function setDefault(array $params = []): array
+    {
+        $customer = $this->getAuthorizedCustomer();
+
+        if (!$customer) {
+            return Response::error('Customer not authorized', 401)->getData();
+        }
+
+        $addressId = (int)($params['id'] ?? 0);
+
+        if (!$addressId) {
+            return Response::error('Address ID is required', 400)->getData();
+        }
+
+        $address = $this->modx->getObject(msCustomerAddress::class, [
+            'id' => $addressId,
+            'customer_id' => $customer->get('id'),
+            'active' => 1
+        ]);
+
+        if (!$address) {
+            return Response::error('Address not found', 404)->getData();
+        }
+
+        // Сбрасываем is_default у всех адресов клиента
+        $table = $this->modx->getTableName(msCustomerAddress::class);
+        $sql = "UPDATE {$table} SET is_default = 0 WHERE customer_id = :customer_id";
+        $stmt = $this->modx->prepare($sql);
+        $stmt->execute(['customer_id' => $customer->get('id')]);
+
+        // Устанавливаем is_default для выбранного адреса
+        $address->set('is_default', 1);
+        $address->set('updatedon', date('Y-m-d H:i:s'));
+
+        if (!$address->save()) {
+            return Response::error('Failed to set default address', 500)->getData();
+        }
+
+        $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Set default address #' . $addressId . ' for customer #' . $customer->get('id'));
+
+        return Response::success($this->formatAddress($address), 'Default address set successfully')->getData();
+    }
+
+    /**
      * Удаление адреса (мягкое удаление через active = 0)
      * DELETE /api/v1/customer/addresses/{id}
      *
@@ -312,6 +362,7 @@ class CustomerAddressController
             'createdon' => $address->get('createdon'),
             'updatedon' => $address->get('updatedon'),
             'active' => (int)$address->get('active'),
+            'is_default' => (int)$address->get('is_default'),
         ];
     }
 

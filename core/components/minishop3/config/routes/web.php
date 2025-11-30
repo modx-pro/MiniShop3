@@ -315,6 +315,12 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
                 return $controller->delete($params);
             });
 
+            // PUT /api/v1/customer/addresses/{id}/set-default - Установить адрес по умолчанию
+            $router->put('/{id}/set-default', function($params) use ($modx) {
+                $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
+                return $controller->setDefault($params);
+            });
+
         }, [$tokenMiddleware]); // Адреса требуют токен
 
         // ============================================

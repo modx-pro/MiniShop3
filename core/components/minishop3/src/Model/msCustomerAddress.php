@@ -24,6 +24,7 @@ use xPDO\Om\xPDOSimpleObject;
  * @property string $createdon
  * @property string $updatedon
  * @property int $active
+ * @property int $is_default
  *
  * @package MiniShop3\Model
  */

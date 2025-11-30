@@ -6,13 +6,17 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import InputGroup from 'primevue/inputgroup'
+import InputGroupAddon from 'primevue/inputgroupaddon'
 import Checkbox from 'primevue/checkbox'
+import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import request from '../request.js'
 import { useLexicon } from '../composables/useLexicon.js'
+import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -41,6 +45,19 @@ const searchQuery = ref('')
 const editDialogVisible = ref(false)
 const editingCustomer = ref(null)
 const saving = ref(false)
+
+// Поле пароля
+const newPassword = ref('')
+const showPassword = ref(false)
+
+// Модальное окно адресов
+const addressesDialogVisible = ref(false)
+const currentCustomerForAddresses = ref(null)
+const addresses = ref([])
+const addressesLoading = ref(false)
+const editingAddress = ref(null)
+const addressFormVisible = ref(false)
+const savingAddress = ref(false)
 
 /**
  * Загрузить список клиентов
@@ -112,7 +129,22 @@ function onSearch() {
  */
 function editCustomer(customer) {
   editingCustomer.value = { ...customer }
+  newPassword.value = ''
+  showPassword.value = false
   editDialogVisible.value = true
+}
+
+/**
+ * Сгенерировать случайный пароль
+ */
+function generatePassword() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+  let password = ''
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  newPassword.value = password
+  showPassword.value = true // Показать сгенерированный пароль
 }
 
 /**
@@ -124,7 +156,14 @@ async function saveCustomer() {
   saving.value = true
 
   try {
-    await request.put(`/api/mgr/customers/${editingCustomer.value.id}`, editingCustomer.value)
+    const data = { ...editingCustomer.value }
+
+    // Добавляем пароль если он указан
+    if (newPassword.value) {
+      data.password = newPassword.value
+    }
+
+    await request.put(`/api/mgr/customers/${editingCustomer.value.id}`, data)
 
     toast.add({
       severity: 'success',
@@ -153,7 +192,7 @@ async function saveCustomer() {
  */
 function deleteCustomer(customer) {
   confirm.require({
-    message: _('customer_delete_confirm_message').replace('{name}', `${customer.first_name} ${customer.last_name}`),
+    message: _('customer_delete_confirm_message').replace('{name}', getCustomerDisplayName(customer)),
     header: _('customer_delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
     acceptLabel: _('delete'),
@@ -182,6 +221,186 @@ function deleteCustomer(customer) {
       }
     }
   })
+}
+
+/**
+ * Получить отображаемое имя клиента (имя + фамилия, или email, или ID)
+ */
+function getCustomerDisplayName(customer) {
+  const fullName = [customer.first_name, customer.last_name].filter(Boolean).join(' ').trim()
+  if (fullName) {
+    return fullName
+  }
+  if (customer.email) {
+    return customer.email
+  }
+  return `#${customer.id}`
+}
+
+// ============================================
+// ADDRESSES (Адреса клиента)
+// ============================================
+
+/**
+ * Открыть диалог адресов клиента
+ */
+async function openAddresses(customer) {
+  currentCustomerForAddresses.value = customer
+  addressesDialogVisible.value = true
+  editingAddress.value = null
+  addressFormVisible.value = false
+  await loadAddresses(customer.id)
+}
+
+/**
+ * Загрузить адреса клиента
+ */
+async function loadAddresses(customerId) {
+  addressesLoading.value = true
+
+  try {
+    const response = await request.get(`/api/mgr/customers/${customerId}/addresses`)
+    addresses.value = response.results || []
+  } catch (error) {
+    console.error('[CustomersGrid] Error loading addresses:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_loading_data'),
+      life: 5000
+    })
+    addresses.value = []
+  } finally {
+    addressesLoading.value = false
+  }
+}
+
+/**
+ * Открыть форму создания нового адреса
+ */
+function createAddress() {
+  editingAddress.value = {
+    name: '',
+    country: '',
+    index: '',
+    region: '',
+    city: '',
+    metro: '',
+    street: '',
+    building: '',
+    entrance: '',
+    floor: '',
+    room: '',
+    comment: '',
+    active: true
+  }
+  addressFormVisible.value = true
+}
+
+/**
+ * Открыть форму редактирования адреса
+ */
+function editAddress(address) {
+  editingAddress.value = { ...address }
+  addressFormVisible.value = true
+}
+
+/**
+ * Сохранить адрес (создание или обновление)
+ */
+async function saveAddress() {
+  if (!editingAddress.value || !currentCustomerForAddresses.value) return
+
+  savingAddress.value = true
+
+  try {
+    const customerId = currentCustomerForAddresses.value.id
+
+    if (editingAddress.value.id) {
+      // Обновление
+      await request.put(
+        `/api/mgr/customers/${customerId}/addresses/${editingAddress.value.id}`,
+        editingAddress.value
+      )
+      toast.add({
+        severity: 'success',
+        summary: _('success'),
+        detail: _('address_updated'),
+        life: 3000
+      })
+    } else {
+      // Создание
+      await request.post(
+        `/api/mgr/customers/${customerId}/addresses`,
+        editingAddress.value
+      )
+      toast.add({
+        severity: 'success',
+        summary: _('success'),
+        detail: _('address_created'),
+        life: 3000
+      })
+    }
+
+    addressFormVisible.value = false
+    editingAddress.value = null
+    await loadAddresses(customerId)
+  } catch (error) {
+    console.error('[CustomersGrid] Error saving address:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_saving_data'),
+      life: 5000
+    })
+  } finally {
+    savingAddress.value = false
+  }
+}
+
+/**
+ * Удалить адрес
+ */
+function deleteAddress(address) {
+  confirm.require({
+    message: _('address_delete_confirm_message'),
+    header: _('address_delete_confirm_title'),
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: _('delete'),
+    rejectLabel: _('cancel'),
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        const customerId = currentCustomerForAddresses.value.id
+        await request.delete(`/api/mgr/customers/${customerId}/addresses/${address.id}`)
+
+        toast.add({
+          severity: 'success',
+          summary: _('success'),
+          detail: _('address_deleted'),
+          life: 3000
+        })
+
+        await loadAddresses(customerId)
+      } catch (error) {
+        console.error('[CustomersGrid] Error deleting address:', error)
+        toast.add({
+          severity: 'error',
+          summary: _('error'),
+          detail: error.message || _('error_deleting_data'),
+          life: 5000
+        })
+      }
+    }
+  })
+}
+
+/**
+ * Отменить редактирование адреса
+ */
+function cancelAddressEdit() {
+  editingAddress.value = null
+  addressFormVisible.value = false
 }
 
 /**
@@ -260,13 +479,41 @@ async function loadGridConfig() {
 function getDefaultColumns() {
   return [
     { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px', isSystem: true },
-    { name: 'name', label: _('customer_name'), visible: true, sortable: true, template: '{first_name} {last_name}' },
-    { name: 'email', label: _('customer_email'), visible: true, sortable: true },
-    { name: 'phone', label: _('customer_phone'), visible: true },
-    { name: 'is_active', label: _('customer_active'), visible: true, sortable: true, type: 'boolean', width: '100px' },
-    { name: 'created_at', label: _('created_at'), visible: true, sortable: true, format: 'datetime', width: '180px' },
-    { name: 'actions', label: _('actions'), visible: true, isSystem: true, width: '180px', type: 'actions' },
+    { name: 'customer_name', label: _('customer_name'), visible: true, sortable: false, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '200px' },
+    { name: 'email', label: _('customer_email'), visible: true, sortable: true, filterable: true, type: 'model', minWidth: '200px' },
+    { name: 'phone', label: _('customer_phone'), visible: true, filterable: true, type: 'model', width: '150px', minWidth: '120px' },
+    { name: 'is_active', label: _('customer_active'), visible: true, sortable: true, filterable: true, type: 'boolean', width: '100px' },
+    { name: 'created_at', label: _('created_at'), visible: true, sortable: true, type: 'model', format: 'datetime', width: '180px', minWidth: '150px' },
+    {
+      name: 'actions',
+      label: _('actions'),
+      visible: true,
+      isSystem: true,
+      frozen: true,
+      width: '150px',
+      type: 'actions',
+      actions: [
+        { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
+        { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' }
+      ]
+    }
   ]
+}
+
+/**
+ * Получить конфигурацию действий для колонки
+ */
+function getActionsConfig(column) {
+  // Если actions не указаны, используем дефолтные
+  if (!column.actions || column.actions.length === 0) {
+    return [
+      { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
+      { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' }
+    ]
+  }
+  return column.actions
 }
 
 /**
@@ -369,17 +616,14 @@ onMounted(async () => {
               :style="{ width: column.width }"
             >
               <template #body="{ data }">
-                <Button
-                  icon="pi pi-pencil"
-                  class="p-button-sm p-button-text"
-                  :title="_('edit')"
-                  @click="editCustomer(data)"
-                />
-                <Button
-                  icon="pi pi-trash"
-                  class="p-button-sm p-button-text p-button-danger"
-                  :title="_('delete')"
-                  @click="deleteCustomer(data)"
+                <ActionsColumn
+                  :data="data"
+                  :actions="getActionsConfig(column)"
+                  grid-id="customers"
+                  @edit="editCustomer"
+                  @delete="deleteCustomer"
+                  @addresses="openAddresses"
+                  @refresh="loadCustomers"
                 />
               </template>
             </Column>
@@ -397,7 +641,7 @@ onMounted(async () => {
                 <!-- Boolean поле (checkbox) -->
                 <Checkbox
                   v-if="column.type === 'boolean'"
-                  :model-value="data[column.name]"
+                  :model-value="Boolean(data[column.name])"
                   :binary="true"
                   disabled
                 />
@@ -426,37 +670,86 @@ onMounted(async () => {
       :header="_('edit_customer')"
       :modal="true"
       :closable="true"
-      :style="{ width: '600px' }"
+      :style="{ width: '550px' }"
+      :appendTo="'self'"
     >
-      <div v-if="editingCustomer" class="p-fluid">
-        <div class="field mb-3">
-          <label for="first_name">{{ _('customer_first_name') }}</label>
-          <InputText id="first_name" v-model="editingCustomer.first_name" />
+      <div v-if="editingCustomer" class="customer-form">
+        <!-- Строка 1: Имя и Фамилия -->
+        <div class="form-row">
+          <div class="form-col">
+            <label for="first_name">{{ _('customer_first_name') }}</label>
+            <InputText id="first_name" v-model="editingCustomer.first_name" class="w-full" />
+          </div>
+          <div class="form-col">
+            <label for="last_name">{{ _('customer_last_name') }}</label>
+            <InputText id="last_name" v-model="editingCustomer.last_name" class="w-full" />
+          </div>
         </div>
 
-        <div class="field mb-3">
-          <label for="last_name">{{ _('customer_last_name') }}</label>
-          <InputText id="last_name" v-model="editingCustomer.last_name" />
+        <!-- Строка 2: Email и Телефон -->
+        <div class="form-row">
+          <div class="form-col">
+            <label for="email">{{ _('customer_email') }}</label>
+            <InputText id="email" v-model="editingCustomer.email" type="email" class="w-full" />
+          </div>
+          <div class="form-col">
+            <label for="phone">{{ _('customer_phone') }}</label>
+            <InputText id="phone" v-model="editingCustomer.phone" class="w-full" />
+          </div>
         </div>
 
-        <div class="field mb-3">
-          <label for="email">{{ _('customer_email') }}</label>
-          <InputText id="email" v-model="editingCustomer.email" type="email" />
+        <!-- Строка 3: Новый пароль -->
+        <div class="form-row">
+          <div class="form-col-full">
+            <label for="new_password">{{ _('customer_new_password') }}</label>
+            <InputGroup>
+              <InputText
+                id="new_password"
+                v-model="newPassword"
+                :type="showPassword ? 'text' : 'password'"
+                :placeholder="_('customer_password_placeholder')"
+                class="w-full"
+              />
+              <InputGroupAddon>
+                <Button
+                  :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                  text
+                  @click="showPassword = !showPassword"
+                  :title="showPassword ? _('hide_password') : _('show_password')"
+                />
+              </InputGroupAddon>
+              <InputGroupAddon>
+                <Button
+                  icon="pi pi-refresh"
+                  text
+                  @click="generatePassword"
+                  :title="_('generate_password')"
+                />
+              </InputGroupAddon>
+            </InputGroup>
+            <small class="text-muted">{{ _('customer_password_hint') }}</small>
+          </div>
         </div>
 
-        <div class="field mb-3">
-          <label for="phone">{{ _('customer_phone') }}</label>
-          <InputText id="phone" v-model="editingCustomer.phone" />
-        </div>
-
-        <div class="field-checkbox mb-3">
-          <Checkbox id="is_active" v-model="editingCustomer.is_active" :binary="true" />
-          <label for="is_active">{{ _('customer_active') }}</label>
-        </div>
-
-        <div class="field-checkbox mb-3">
-          <Checkbox id="is_blocked" v-model="editingCustomer.is_blocked" :binary="true" />
-          <label for="is_blocked">{{ _('customer_blocked') }}</label>
+        <!-- Строка 4: Чекбоксы -->
+        <div class="checkboxes-row">
+          <div class="checkbox-col">
+            <Checkbox inputId="is_active" v-model="editingCustomer.is_active" :binary="true" />
+            <label for="is_active">{{ _('customer_active') }}</label>
+          </div>
+          <div class="checkbox-col">
+            <Checkbox inputId="is_blocked" v-model="editingCustomer.is_blocked" :binary="true" />
+            <label for="is_blocked">{{ _('customer_blocked') }}</label>
+          </div>
+          <div class="checkbox-col">
+            <Checkbox
+              inputId="email_verified"
+              :model-value="Boolean(editingCustomer.email_verified_at)"
+              :binary="true"
+              disabled
+            />
+            <label for="email_verified" class="text-muted">{{ _('customer_email_verified') }}</label>
+          </div>
         </div>
       </div>
 
@@ -475,6 +768,165 @@ onMounted(async () => {
         />
       </template>
     </Dialog>
+
+    <!-- Модальное окно адресов клиента -->
+    <Dialog
+      v-model:visible="addressesDialogVisible"
+      :header="currentCustomerForAddresses ? _('customer_addresses_title').replace('{name}', getCustomerDisplayName(currentCustomerForAddresses)) : _('addresses')"
+      :modal="true"
+      :closable="true"
+      :style="{ width: '800px' }"
+      :appendTo="'self'"
+    >
+      <div class="addresses-content">
+        <!-- Список адресов -->
+        <div v-if="!addressFormVisible" class="addresses-list">
+          <div class="addresses-header">
+            <Button
+              :label="_('add_address')"
+              icon="pi pi-plus"
+              @click="createAddress"
+            />
+          </div>
+
+          <div v-if="addressesLoading" class="addresses-loading">
+            <i class="pi pi-spinner pi-spin"></i> {{ _('loading') }}
+          </div>
+
+          <div v-else-if="addresses.length === 0" class="addresses-empty">
+            <i class="pi pi-map-marker"></i>
+            <p>{{ _('no_addresses') }}</p>
+          </div>
+
+          <div v-else class="addresses-items">
+            <div
+              v-for="address in addresses"
+              :key="address.id"
+              class="address-card"
+              :class="{ 'address-inactive': !address.active }"
+            >
+              <div class="address-info">
+                <div class="address-name">
+                  <strong>{{ address.name || _('address_unnamed') }}</strong>
+                  <span v-if="!address.active" class="address-badge inactive">{{ _('inactive') }}</span>
+                </div>
+                <div class="address-formatted">{{ address.formatted }}</div>
+                <div v-if="address.comment" class="address-comment">
+                  <i class="pi pi-comment"></i> {{ address.comment }}
+                </div>
+              </div>
+              <div class="address-actions">
+                <Button
+                  icon="pi pi-pencil"
+                  text
+                  severity="secondary"
+                  @click="editAddress(address)"
+                  :title="_('edit')"
+                />
+                <Button
+                  icon="pi pi-trash"
+                  text
+                  severity="danger"
+                  @click="deleteAddress(address)"
+                  :title="_('delete')"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Форма редактирования/создания адреса -->
+        <div v-else class="address-form">
+          <div class="form-row">
+            <div class="form-col-full">
+              <label for="addr_name">{{ _('address_name') }}</label>
+              <InputText id="addr_name" v-model="editingAddress.name" class="w-full" :placeholder="_('address_name_placeholder')" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label for="addr_country">{{ _('address_country') }}</label>
+              <InputText id="addr_country" v-model="editingAddress.country" class="w-full" />
+            </div>
+            <div class="form-col">
+              <label for="addr_index">{{ _('address_index') }}</label>
+              <InputText id="addr_index" v-model="editingAddress.index" class="w-full" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label for="addr_region">{{ _('address_region') }}</label>
+              <InputText id="addr_region" v-model="editingAddress.region" class="w-full" />
+            </div>
+            <div class="form-col">
+              <label for="addr_city">{{ _('address_city') }}</label>
+              <InputText id="addr_city" v-model="editingAddress.city" class="w-full" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label for="addr_metro">{{ _('address_metro') }}</label>
+              <InputText id="addr_metro" v-model="editingAddress.metro" class="w-full" />
+            </div>
+            <div class="form-col">
+              <label for="addr_street">{{ _('address_street') }}</label>
+              <InputText id="addr_street" v-model="editingAddress.street" class="w-full" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col-sm">
+              <label for="addr_building">{{ _('address_building') }}</label>
+              <InputText id="addr_building" v-model="editingAddress.building" class="w-full" />
+            </div>
+            <div class="form-col-sm">
+              <label for="addr_entrance">{{ _('address_entrance') }}</label>
+              <InputText id="addr_entrance" v-model="editingAddress.entrance" class="w-full" />
+            </div>
+            <div class="form-col-sm">
+              <label for="addr_floor">{{ _('address_floor') }}</label>
+              <InputText id="addr_floor" v-model="editingAddress.floor" class="w-full" />
+            </div>
+            <div class="form-col-sm">
+              <label for="addr_room">{{ _('address_room') }}</label>
+              <InputText id="addr_room" v-model="editingAddress.room" class="w-full" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col-full">
+              <label for="addr_comment">{{ _('address_comment') }}</label>
+              <Textarea id="addr_comment" v-model="editingAddress.comment" class="w-full" rows="2" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="checkbox-col">
+              <Checkbox inputId="addr_active" v-model="editingAddress.active" :binary="true" />
+              <label for="addr_active">{{ _('address_active') }}</label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <Button
+              :label="_('cancel')"
+              icon="pi pi-times"
+              class="p-button-text"
+              @click="cancelAddressEdit"
+            />
+            <Button
+              :label="_('save')"
+              icon="pi pi-check"
+              :loading="savingAddress"
+              @click="saveAddress"
+            />
+          </div>
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -489,5 +941,195 @@ onMounted(async () => {
 
 .text-warning {
   color: #f59e0b;
+}
+
+/* Сетка формы редактирования клиента */
+.customer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-col label,
+.form-col-full label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.form-col-full {
+  flex: 1 1 100%;
+}
+
+.form-col-full small.text-muted {
+  display: block;
+  margin-top: 0.25rem;
+  color: #6c757d;
+  font-size: 0.75rem;
+}
+
+/* Ряд чекбоксов */
+.checkboxes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.checkbox-col {
+  flex: 0 0 calc(25% - 0.75rem);
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-col label {
+  margin-left: 0.5rem;
+  margin-bottom: 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Стили для диалога адресов */
+.addresses-content {
+  min-height: 200px;
+}
+
+.addresses-header {
+  margin-bottom: 1rem;
+}
+
+.addresses-loading,
+.addresses-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.addresses-empty i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.addresses-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.address-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.address-card.address-inactive {
+  opacity: 0.6;
+  background: #f8f9fa;
+}
+
+.address-info {
+  flex: 1;
+}
+
+.address-name {
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.address-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.address-badge.inactive {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.address-formatted {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.address-comment {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.address-comment i {
+  margin-right: 0.25rem;
+}
+
+.address-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+/* Форма адреса */
+.address-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.address-form .form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.address-form .form-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.address-form .form-col-sm {
+  flex: 0 0 calc(25% - 0.75rem);
+  min-width: 0;
+}
+
+.address-form .form-col-full {
+  flex: 1 1 100%;
+}
+
+.address-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
 }
 </style>

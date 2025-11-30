@@ -365,6 +365,45 @@ $router->group('/api/mgr', function($router) use ($modx) {
             return $controller->delete($params);
         });
 
+        // ============================================
+        // ADDRESSES (Адреса клиента)
+        // ============================================
+
+        // GET /api/mgr/customers/{id}/addresses - получить адреса клиента
+        $router->get('/{id}/addresses', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
+            return $controller->getList($params);
+        });
+
+        // POST /api/mgr/customers/{id}/addresses - создать новый адрес
+        $router->post('/{id}/addresses', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['customer_id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
+            return $controller->create($data);
+        });
+
+        // PUT /api/mgr/customers/{id}/addresses/{address_id} - обновить адрес
+        $router->put('/{id}/addresses/{address_id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['customer_id'] = $params['id'] ?? null;
+            $data['id'] = $params['address_id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
+            return $controller->update($data);
+        });
+
+        // DELETE /api/mgr/customers/{id}/addresses/{address_id} - удалить адрес
+        $router->delete('/{id}/addresses/{address_id}', function($params) use ($modx) {
+            $params['address_id'] = $params['address_id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
+            return $controller->delete($params);
+        });
+
     }, [
         new PermissionMiddleware($modx, 'view_document') // TODO: создать специфичное право ms3_customers_view
     ]);

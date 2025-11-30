@@ -183,6 +183,12 @@ class CustomersController
             }
         }
 
+        // Обработка пароля (отдельно, т.к. требует хеширования)
+        if (!empty($data['password'])) {
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+            $customer->set('password', $hashedPassword);
+        }
+
         if (!$customer->save()) {
             return Response::error('Failed to save customer', 500)->getData();
         }

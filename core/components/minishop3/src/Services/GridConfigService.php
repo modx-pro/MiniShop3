@@ -162,7 +162,7 @@ class GridConfigService
 
                 // Обновляем JSON config (дополнительные параметры)
                 $config = [];
-                $configKeys = ['template', 'type', 'format'];
+                $configKeys = ['template', 'type', 'format', 'actions'];
                 foreach ($configKeys as $key) {
                     if (isset($fieldData[$key])) {
                         $config[$key] = $fieldData[$key];
@@ -319,6 +319,13 @@ class GridConfigService
                         return $validation;
                     }
                     break;
+
+                case 'actions':
+                    $validation = $this->validateActionsConfig($config);
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
             }
 
             // Добавляем тип в config
@@ -426,6 +433,12 @@ class GridConfigService
                     break;
                 case 'computed':
                     $validation = $this->validateComputedConfig($config);
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
+                case 'actions':
+                    $validation = $this->validateActionsConfig($config);
                     if (!$validation['success']) {
                         return $validation;
                     }
@@ -580,6 +593,63 @@ class GridConfigService
         $interfaces = class_implements($computed['className']);
         if (!isset($interfaces['MiniShop3\\Interfaces\\ComputedFieldInterface'])) {
             return ['success' => false, 'message' => "Class must implement ComputedFieldInterface"];
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Валидация конфигурации Actions поля
+     *
+     * @param array $config
+     * @return array
+     */
+    protected function validateActionsConfig(array $config): array
+    {
+        $actions = $config['actions'] ?? [];
+
+        // Actions может быть пустым массивом - это допустимо
+        if (!is_array($actions)) {
+            return ['success' => false, 'message' => 'actions must be an array'];
+        }
+
+        // Валидация каждого действия
+        $allowedHandlers = ['edit', 'delete', 'view', 'refresh'];
+        $actionNames = [];
+
+        foreach ($actions as $index => $action) {
+            // Обязательное поле name
+            if (empty($action['name'])) {
+                return ['success' => false, 'message' => "actions[{$index}].name is required"];
+            }
+
+            // Проверка уникальности name
+            if (in_array($action['name'], $actionNames)) {
+                return ['success' => false, 'message' => "Duplicate action name: {$action['name']}"];
+            }
+            $actionNames[] = $action['name'];
+
+            // Обязательное поле handler
+            if (empty($action['handler'])) {
+                return ['success' => false, 'message' => "actions[{$index}].handler is required"];
+            }
+
+            // Handler должен быть либо встроенным, либо начинаться с 'custom:'
+            $handler = $action['handler'];
+            if (!in_array($handler, $allowedHandlers) && strpos($handler, 'custom:') !== 0) {
+                // Разрешаем любые обработчики - они могут быть зарегистрированы плагинами
+                // Но логируем предупреждение
+                $this->modx->log(modX::LOG_LEVEL_INFO,
+                    "[GridConfigService] Custom handler used: {$handler} in action {$action['name']}");
+            }
+
+            // Валидация severity если указан
+            if (!empty($action['severity'])) {
+                $allowedSeverities = ['secondary', 'success', 'info', 'warn', 'danger'];
+                if (!in_array($action['severity'], $allowedSeverities)) {
+                    return ['success' => false, 'message' => "Invalid severity for action {$action['name']}. Allowed: " . implode(', ', $allowedSeverities)];
+                }
+            }
         }
 
         return ['success' => true];

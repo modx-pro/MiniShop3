@@ -9,7 +9,7 @@ class Get extends GetProcessor
 {
     public $object;
     public $classKey = msOrderStatus::class;
-    public $languageTopics = ['minishop3'];
+    public $languageTopics = ['minishop3:default', 'minishop3:manager'];
     public $permission = 'mssetting_view';
 
 
@@ -23,5 +23,23 @@ class Get extends GetProcessor
         }
 
         return parent::initialize();
+    }
+
+    /**
+     * @return array
+     */
+    public function cleanup()
+    {
+        $data = $this->object->toArray();
+
+        // Перевод названия статуса (если это лексиконный ключ)
+        if (!empty($data['name']) && str_starts_with($data['name'], 'ms3_order_status_')) {
+            $translated = $this->modx->lexicon($data['name']);
+            if ($translated !== $data['name']) {
+                $data['name'] = $translated;
+            }
+        }
+
+        return $this->success('', $data);
     }
 }

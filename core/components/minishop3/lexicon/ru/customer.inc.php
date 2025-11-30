@@ -8,6 +8,8 @@
  */
 
 $_lang['ms3_err_token'] = 'Не указан токен';
+$_lang['ms3_err_token_invalid'] = 'Токен не найден или недействителен';
+$_lang['ms3_err_token_expired'] = 'Срок действия токена истёк';
 $_lang['ms3_customer'] = 'Покупатель';
 $_lang['ms3_customer_addresses'] = 'Адреса покупателя';
 $_lang['ms3_customer_key_empty'] = 'Отсутствует ключ запроса';

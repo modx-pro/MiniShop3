@@ -150,6 +150,13 @@ $_lang['ms3_frontend_save'] = 'Save';
 $_lang['ms3_frontend_order_cancel'] = 'Clear form';
 $_lang['ms3_frontend_order_success'] = 'Thank you for placing order <b>#[[+num]]</b> on our site <b>[[++site_name]]</b>!';
 
+$_lang['ms3_frontend_article'] = 'Article';
+$_lang['ms3_frontend_cart_total'] = 'Products total';
+$_lang['ms3_frontend_total'] = 'Total to pay';
+$_lang['ms3_frontend_delivery_address'] = 'Delivery address';
+$_lang['ms3_frontend_delivery_method'] = 'Delivery method';
+$_lang['ms3_frontend_payment_method'] = 'Payment method';
+
 $_lang['ms3_message_close_all'] = 'close all';
 $_lang['ms3_err_unknown'] = 'Unknown error';
 $_lang['ms3_err_ns'] = 'This field is required';

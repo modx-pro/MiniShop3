@@ -150,6 +150,13 @@ $_lang['ms3_frontend_save'] = 'Сохранить';
 $_lang['ms3_frontend_order_cancel'] = 'Очистить форму';
 $_lang['ms3_frontend_order_success'] = 'Спасибо за оформление заказа <b>#[[+num]]</b> на нашем сайте <b>[[++site_name]]</b>!';
 
+$_lang['ms3_frontend_article'] = 'Артикул';
+$_lang['ms3_frontend_cart_total'] = 'Товаров на сумму';
+$_lang['ms3_frontend_total'] = 'Итого к оплате';
+$_lang['ms3_frontend_delivery_address'] = 'Адрес доставки';
+$_lang['ms3_frontend_delivery_method'] = 'Способ доставки';
+$_lang['ms3_frontend_payment_method'] = 'Способ оплаты';
+
 $_lang['ms3_message_close_all'] = 'закрыть все';
 $_lang['ms3_err_unknown'] = 'Неизвестная ошибка';
 $_lang['ms3_err_ns'] = 'Это поле обязательно';

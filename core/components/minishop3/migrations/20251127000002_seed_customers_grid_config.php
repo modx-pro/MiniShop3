@@ -30,17 +30,17 @@ class SeedCustomersGridConfig extends AbstractMigration
             // Name column (composed from first_name + last_name)
             [
                 'grid_key' => 'customers',
-                'field_name' => 'name',
+                'field_name' => 'customer_name',
                 'label' => null,
                 'lexicon_key' => 'customer_name',
                 'visible' => 1,
                 'sort_order' => 1,
-                'sortable' => 1,
+                'sortable' => 0, // Template field - нельзя сортировать
                 'filterable' => 1,
                 'frozen' => 0,
                 'width' => null,
                 'min_width' => '200px',
-                'config' => json_encode(['template' => '{first_name} {last_name}'], JSON_UNESCAPED_UNICODE),
+                'config' => json_encode(['type' => 'template', 'template' => '{first_name} {last_name}'], JSON_UNESCAPED_UNICODE),
                 'is_system' => 0,
                 'is_default' => 1,
             ],
@@ -57,7 +57,7 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'frozen' => 0,
                 'width' => null,
                 'min_width' => '200px',
-                'config' => null,
+                'config' => json_encode(['type' => 'model'], JSON_UNESCAPED_UNICODE),
                 'is_system' => 0,
                 'is_default' => 1,
             ],
@@ -74,7 +74,7 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'frozen' => 0,
                 'width' => '150px',
                 'min_width' => '120px',
-                'config' => null,
+                'config' => json_encode(['type' => 'model'], JSON_UNESCAPED_UNICODE),
                 'is_system' => 0,
                 'is_default' => 1,
             ],
@@ -108,7 +108,7 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'frozen' => 0,
                 'width' => '180px',
                 'min_width' => '150px',
-                'config' => json_encode(['format' => 'datetime'], JSON_UNESCAPED_UNICODE),
+                'config' => json_encode(['type' => 'model', 'format' => 'datetime'], JSON_UNESCAPED_UNICODE),
                 'is_system' => 0,
                 'is_default' => 1,
             ],
@@ -119,13 +119,20 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'label' => null,
                 'lexicon_key' => 'actions',
                 'visible' => 1,
-                'sort_order' => 6,
+                'sort_order' => 99, // Всегда последняя колонка
                 'sortable' => 0,
                 'filterable' => 0,
-                'frozen' => 0,
-                'width' => '120px',
-                'min_width' => '120px',
-                'config' => json_encode(['type' => 'actions'], JSON_UNESCAPED_UNICODE),
+                'frozen' => 1, // Actions всегда видны
+                'width' => '150px',
+                'min_width' => '150px',
+                'config' => json_encode([
+                    'type' => 'actions',
+                    'actions' => [
+                        ['name' => 'addresses', 'handler' => 'addresses', 'icon' => 'pi-map-marker', 'label' => 'addresses'],
+                        ['name' => 'edit', 'handler' => 'edit', 'icon' => 'pi-pencil', 'label' => 'edit'],
+                        ['name' => 'delete', 'handler' => 'delete', 'icon' => 'pi-trash', 'label' => 'delete', 'severity' => 'danger', 'confirm' => true, 'confirmMessage' => 'customer_delete_confirm_message']
+                    ]
+                ], JSON_UNESCAPED_UNICODE),
                 'is_system' => 1,
                 'is_default' => 1,
             ],

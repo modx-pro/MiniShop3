@@ -105,6 +105,11 @@ class AuthForms {
       if (result.success) {
         this.showMessage('login-messages', this.getLexicon('ms3_customer_login_success'), 'success')
 
+        // Сохраняем токен в localStorage
+        if (result.object && result.object.token) {
+          this.saveToken(result.object.token)
+        }
+
         // Редирект через 1 секунду
         setTimeout(() => {
           this.handleRedirect(result.object)
@@ -167,8 +172,9 @@ class AuthForms {
           'success'
         )
 
-        // Если автовход включен - редиректим
+        // Если автовход включен - сохраняем токен и редиректим
         if (result.object && result.object.token) {
+          this.saveToken(result.object.token)
           setTimeout(() => {
             this.handleRedirect(result.object)
           }, 1500)
@@ -213,6 +219,45 @@ class AuthForms {
     } else {
       // Иначе перезагружаем текущую страницу
       window.location.reload()
+    }
+  }
+
+  /**
+   * Сохранить токен авторизации
+   *
+   * @param {string} token - API токен
+   */
+  saveToken (token) {
+    if (!token) return
+
+    // Сохраняем в localStorage
+    localStorage.setItem('ms3_token', token)
+
+    // Также обновляем глобальный объект ms3 если он существует
+    if (window.ms3 && window.ms3.config) {
+      window.ms3.config.token = token
+    }
+
+    console.log('[AuthForms] Token saved, length:', token.length)
+  }
+
+  /**
+   * Получить сохранённый токен
+   *
+   * @returns {string|null} - Токен или null
+   */
+  getToken () {
+    return localStorage.getItem('ms3_token')
+  }
+
+  /**
+   * Удалить токен (при выходе)
+   */
+  clearToken () {
+    localStorage.removeItem('ms3_token')
+
+    if (window.ms3 && window.ms3.config) {
+      window.ms3.config.token = null
     }
   }
 

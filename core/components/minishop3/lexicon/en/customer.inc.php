@@ -8,6 +8,8 @@
  */
 
 $_lang['ms3_err_token'] = 'Token not specified';
+$_lang['ms3_err_token_invalid'] = 'Token not found or invalid';
+$_lang['ms3_err_token_expired'] = 'Token has expired';
 $_lang['ms3_customer'] = 'Customer';
 $_lang['ms3_customer_addresses'] = 'Customer addresses';
 $_lang['ms3_customer_key_empty'] = 'Request key missing';

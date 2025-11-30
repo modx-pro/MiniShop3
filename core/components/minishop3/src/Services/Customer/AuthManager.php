@@ -3,6 +3,7 @@
 namespace MiniShop3\Services\Customer;
 
 use MiniShop3\Controllers\Auth\AuthProviderInterface;
+use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
 use MODX\Revolution\modX;
@@ -48,6 +49,9 @@ class AuthManager
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+
+        // Регистрируем провайдер аутентификации по паролю по умолчанию
+        $this->registerProvider(new PasswordAuthProvider($modx));
     }
 
     /**

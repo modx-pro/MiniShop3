@@ -31,10 +31,12 @@ class SeedOrderStatuses extends AbstractMigration
             return;
         }
 
+        // Status names are lexicon keys - will be translated in admin and frontend
+        // User can override with custom names via admin panel
         $data = [
             [
                 'id' => 1,
-                'name' => 'Draft',  // Will be replaced with lexicon in MODX
+                'name' => 'ms3_order_status_draft',
                 'color' => 'C0C0C0',
                 'email_user' => 0,
                 'email_manager' => 0,
@@ -50,7 +52,7 @@ class SeedOrderStatuses extends AbstractMigration
             ],
             [
                 'id' => 2,
-                'name' => 'New',
+                'name' => 'ms3_order_status_new',
                 'color' => '000000',
                 'email_user' => 1,
                 'email_manager' => 1,
@@ -66,7 +68,7 @@ class SeedOrderStatuses extends AbstractMigration
             ],
             [
                 'id' => 3,
-                'name' => 'Paid',
+                'name' => 'ms3_order_status_paid',
                 'color' => '008000',
                 'email_user' => 1,
                 'email_manager' => 1,
@@ -82,7 +84,7 @@ class SeedOrderStatuses extends AbstractMigration
             ],
             [
                 'id' => 4,
-                'name' => 'Sent',
+                'name' => 'ms3_order_status_sent',
                 'color' => '003366',
                 'email_user' => 1,
                 'email_manager' => 0,
@@ -98,7 +100,7 @@ class SeedOrderStatuses extends AbstractMigration
             ],
             [
                 'id' => 5,
-                'name' => 'Cancelled',
+                'name' => 'ms3_order_status_cancelled',
                 'color' => '800000',
                 'email_user' => 1,
                 'email_manager' => 0,
@@ -143,18 +145,14 @@ class SeedOrderStatuses extends AbstractMigration
         ];
 
         foreach ($settingsMap as $settingKey => $statusId) {
-            // Check if setting exists
-            $setting = $this->fetchRow(
-                "SELECT id, value FROM {$prefix}system_settings WHERE `key` = ?",
-                [$settingKey]
-            );
+            // Check if setting exists (system_settings has no 'id' column, 'key' is the primary key)
+            $sql = "SELECT `key`, `value` FROM {$prefix}system_settings WHERE `key` = '{$settingKey}'";
+            $result = $this->fetchRow($sql);
 
-            if ($setting) {
+            if ($result && isset($result['key'])) {
                 // Update existing setting
-                $this->execute(
-                    "UPDATE {$prefix}system_settings SET value = ? WHERE `key` = ?",
-                    [$statusId, $settingKey]
-                );
+                $updateSql = "UPDATE {$prefix}system_settings SET `value` = '{$statusId}' WHERE `key` = '{$settingKey}'";
+                $this->execute($updateSql);
                 $this->output->writeln("<info>  ✓ Updated {$settingKey} = {$statusId}</info>");
             } else {
                 $this->output->writeln("<comment>  ⚠ Setting {$settingKey} not found, skipping</comment>");
@@ -170,6 +168,7 @@ class SeedOrderStatuses extends AbstractMigration
     public function down()
     {
         $prefix = $this->adapter->getOption('table_prefix');
+        $pdo = $this->getAdapter()->getConnection();
 
         // Reset system settings to 0 (or you can set to NULL)
         $settingKeys = [
@@ -181,10 +180,8 @@ class SeedOrderStatuses extends AbstractMigration
         ];
 
         foreach ($settingKeys as $settingKey) {
-            $this->execute(
-                "UPDATE {$prefix}system_settings SET value = '0' WHERE `key` = ?",
-                [$settingKey]
-            );
+            $stmt = $pdo->prepare("UPDATE {$prefix}system_settings SET value = '0' WHERE `key` = :setting_key");
+            $stmt->execute(['setting_key' => $settingKey]);
         }
 
         $this->output->writeln('<info>✓ Reset system settings for order statuses</info>');
