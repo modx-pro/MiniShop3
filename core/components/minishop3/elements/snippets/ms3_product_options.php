@@ -16,7 +16,7 @@ if (!empty($input) && empty($product)) {
 }
 
 $product = !empty($product) && $product != $modx->resource->id
-    ? $modx->getObject('msProduct', ['id' => $product])
+    ? $modx->getObject(msProduct::class, ['id' => $product])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return $modx->lexicon('ms3_err_options_is_not_msproduct', [

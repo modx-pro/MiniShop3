@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Order;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msOrderStatus;
 use MODX\Revolution\Processors\Model\UpdateProcessor;
 use MODX\Revolution\Validation\modValidator;
 
@@ -75,13 +76,13 @@ class Update extends UpdateProcessor
             return $this->failure($this->modx->lexicon($this->objectType . '_err_save'));
         }
 
-        // set "new status"
+        // set "new status" via OrderStatus controller
         if ($this->object->get('status_id') != $this->status_id) {
-            //TODO Реализовать ChangeOrderStatus
-//            $change_status = $ms3->changeOrderStatus($this->object->get('id'), $this->status_id);
-//            if ($change_status !== true) {
-//                return $this->failure($change_status);
-//            }
+            $orderStatusController = new \MiniShop3\Controllers\Order\OrderStatus($ms3);
+            $change_status = $orderStatusController->change($this->object->get('id'), $this->status_id);
+            if ($change_status !== true) {
+                return $this->failure($change_status);
+            }
             $this->object = $this->modx->getObject($this->classKey, $this->object->get('id'), false);
         }
 
@@ -103,7 +104,8 @@ class Update extends UpdateProcessor
             }
         }
 
-        if ($status = $this->modx->getObject('msOrderStatus')) {
+        // Check if current order status is final (cannot modify orders with final status)
+        if ($status = $this->modx->getObject(msOrderStatus::class, ['id' => $this->object->get('status_id')])) {
             if ($status->get('final')) {
                 return $this->modx->lexicon('ms3_err_status_final');
             }

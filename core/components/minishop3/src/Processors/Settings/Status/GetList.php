@@ -50,7 +50,7 @@ class GetList extends GetListProcessor
 
             if ($order_id = $this->getProperty('order_id')) {
                 /** @var msOrder $order */
-                $order = $this->modx->getObject('msOrder', ['id' => $order_id]);
+                $order = $this->modx->getObject(msOrder::class, ['id' => $order_id]);
                 /** @var msOrderStatus $status */
                 if ($order) {
                     $status = $order->getOne('Status');
@@ -93,12 +93,6 @@ class GetList extends GetListProcessor
         } else {
             $data = $object->toArray();
             $data['name'] = $name;
-            if (!$data['body_user']) {
-                $data['body_user'] = null;
-            }
-            if (!$data['body_manager']) {
-                $data['body_manager'] = null;
-            }
             $data['actions'] = [];
 
             $data['actions'][] = [

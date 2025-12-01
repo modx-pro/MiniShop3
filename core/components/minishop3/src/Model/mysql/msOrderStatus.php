@@ -18,12 +18,6 @@ class msOrderStatus extends \MiniShop3\Model\msOrderStatus
                 'name' => null,
                 'description' => null,
                 'color' => '000000',
-                'email_user' => 0,
-                'email_manager' => 0,
-                'subject_user' => '',
-                'subject_manager' => '',
-                'body_user' => 0,
-                'body_manager' => 0,
                 'active' => 1,
                 'final' => 0,
                 'fixed' => 0,
@@ -52,54 +46,6 @@ class msOrderStatus extends \MiniShop3\Model\msOrderStatus
                         'phptype' => 'string',
                         'null' => true,
                         'default' => '000000',
-                    ],
-                'email_user' =>
-                    [
-                        'dbtype' => 'tinyint',
-                        'precision' => '1',
-                        'phptype' => 'integer',
-                        'null' => true,
-                        'default' => 0,
-                    ],
-                'email_manager' =>
-                    [
-                        'dbtype' => 'tinyint',
-                        'precision' => '1',
-                        'phptype' => 'integer',
-                        'null' => true,
-                        'default' => 0,
-                    ],
-                'subject_user' =>
-                    [
-                        'dbtype' => 'varchar',
-                        'precision' => '255',
-                        'phptype' => 'string',
-                        'null' => true,
-                        'default' => '',
-                    ],
-                'subject_manager' =>
-                    [
-                        'dbtype' => 'varchar',
-                        'precision' => '255',
-                        'phptype' => 'string',
-                        'null' => true,
-                        'default' => '',
-                    ],
-                'body_user' =>
-                    [
-                        'dbtype' => 'varchar',
-                        'precision' => '255',
-                        'phptype' => 'string',
-                        'null' => true,
-                        'default' => null,
-                    ],
-                'body_manager' =>
-                    [
-                        'dbtype' => 'varchar',
-                        'precision' => '255',
-                        'phptype' => 'string',
-                        'null' => true,
-                        'default' => null,
                     ],
                 'active' =>
                     [

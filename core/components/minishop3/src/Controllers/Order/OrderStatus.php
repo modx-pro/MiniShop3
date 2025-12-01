@@ -5,8 +5,10 @@ namespace MiniShop3\Controllers\Order;
 use MiniShop3\Controllers\Payment\Payment;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
-use MiniShop3\Model\msOrderStatus;
-use MODX\Revolution\modChunk;
+use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
+use MiniShop3\Model\msCustomer;
+use MiniShop3\Notifications\NotificationManager;
+use MiniShop3\Notifications\Order\StatusChangedNotification;
 use MODX\Revolution\modContextSetting;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
@@ -18,12 +20,10 @@ class OrderStatus
     public $modx;
     /** @var MiniShop3 */
     public $ms3;
-    /**
-     * @var OrderLog
-     */
+    /** @var OrderLog */
     private $orderLogController;
-    private $useScheduler;
-    private $schedulerTask;
+    /** @var NotificationManager */
+    private $notifications;
 
     public function __construct(MiniShop3 $ms3)
     {
@@ -32,6 +32,19 @@ class OrderStatus
         $this->orderLogController = new OrderLog($ms3);
 
         $this->modx->lexicon->load('minishop3:default');
+    }
+
+    /**
+     * Get NotificationManager (lazy loading)
+     *
+     * @return NotificationManager
+     */
+    protected function getNotificationManager(): NotificationManager
+    {
+        if (!$this->notifications) {
+            $this->notifications = $this->modx->services->get('ms3_notifications');
+        }
+        return $this->notifications;
     }
 
     /**
@@ -53,14 +66,14 @@ class OrderStatus
         $this->modx->switchContext($ctx);
         $this->ms3->initialize($ctx);
 
-        /** @var msOrderStatus $status */
-        $status = $this->modx->getObject(msOrderStatus::class, ['id' => $status_id, 'active' => 1]);
+        /** @var msOrderStatusModel $status */
+        $status = $this->modx->getObject(msOrderStatusModel::class, ['id' => $status_id, 'active' => 1]);
         if (!$status) {
             return $this->modx->lexicon('ms3_err_status_nf');
         }
-        /** @var msOrderStatus $old_status */
+        /** @var msOrderStatusModel $old_status */
         $old_status = $this->modx->getObject(
-            msOrderStatus::class,
+            msOrderStatusModel::class,
             ['id' => $msOrder->get('status_id'), 'active' => 1]
         );
         if ($old_status) {
@@ -101,111 +114,221 @@ class OrderStatus
                 return $response['message'];
             }
 
-            $this->useScheduler = $this->modx->getOption('ms3_use_scheduler', null, false);
-            $this->schedulerTask = null;
-            if ($this->useScheduler) {
-                $this->setSchedulerTask();
-            }
-
-            $pls = $this->preparePls($msOrder);
-            //TODO  добавить другие контроллеры связи SMS, telegram
-            if ($status->get('email_manager')) {
-                $this->createEmailManager($pls, $status);
-            }
-
-            if ($status->get('email_user')) {
-                $this->createEmailCustomer($pls, $status);
-            }
+            // Send notifications via NotificationManager
+            $this->sendNotifications($msOrder, $status, $old_status);
         }
 
         return true;
     }
 
-    public function createEmailManager(array $pls, msOrderStatus $status): void
-    {
-        $subject = $this->ms3->pdoTools->getChunk('@INLINE ' . $status->get('subject_manager'), $pls);
-        $tpl = '';
-        $chunk = $this->modx->getObject(modChunk::class, ['id' => $status->get('body_manager')]);
-        if ($chunk) {
-            $tpl = $chunk->get('name');
-        }
-        $body = $this->modx->runSnippet('msGetOrder', array_merge($pls, ['tpl' => $tpl]));
-        $emails = array_map(
-            'trim',
-            explode(
-                ',',
-                $this->modx->getOption('ms3_email_manager', null, $this->modx->getOption('emailsender'))
-            )
-        );
-        if (!empty($subject)) {
-            foreach ($emails as $email) {
-                $this->sendEmail($email, $subject, $body);
-            }
-        }
-    }
+    /**
+     * Send notifications for status change
+     *
+     * Uses NotificationConfigService to determine which channels are enabled
+     * for each recipient type. Channel selection is configured in ms3_notification_configs table.
+     *
+     * @param msOrder $msOrder
+     * @param msOrderStatusModel $newStatus
+     * @param msOrderStatusModel|null $oldStatus
+     * @return void
+     */
+    protected function sendNotifications(
+        msOrder $msOrder,
+        msOrderStatusModel $newStatus,
+        ?msOrderStatusModel $oldStatus
+    ): void {
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] ====== START sendNotifications() ======');
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Order ID: ' . $msOrder->get('id') . ', New Status ID: ' . $newStatus->get('id'));
 
-    public function createEmailCustomer(array $pls, msOrderStatus $status): void
-    {
-        $pls['user_id'] = 1;
-        $profile = $this->modx->getObject(modUserProfile::class, ['internalKey' => $pls['user_id']]);
-        //TODO  сюда добавить email из msCustomer
-        if ($profile) {
-            $subject = $this->ms3->pdoTools->getChunk('@INLINE ' . $status->get('subject_user'), $pls);
-            $tpl = '';
-            if ($chunk = $this->modx->getObject(modChunk::class, ['id' => $status->get('body_user')])) {
-                $tpl = $chunk->get('name');
-            }
-            $body = $this->modx->runSnippet('msGetOrder', array_merge($pls, ['tpl' => $tpl]));
-            $email = $profile->get('email');
-            $this->sendEmail($email, $subject, $body);
-        }
-    }
-
-    public function sendEmail(string $email, string $subject, string $body): void
-    {
-        if (preg_match('#.*?@#', $email)) {
-            if ($this->useScheduler && $this->schedulerTask instanceof \sTask) {
-                $this->schedulerTask->schedule('+1 second', [
-                    'email' => $email,
-                    'subject' => $subject,
-                    'body' => $body
-                ]);
-            } else {
-                $this->ms3->utils->sendEmail($email, $subject, $body);
-            }
-        }
-    }
-
-    protected function preparePls($msOrder)
-    {
-        // TODO у разных получателей может быть разный язык. Не привязываться к языку заказа, если назначен язык получателя
+        // Prepare language settings
         $lang = $this->getLang($msOrder);
-
         $this->modx->setOption('cultureKey', $lang);
         $this->modx->lexicon->load($lang . ':minishop3:default', $lang . ':minishop3:cart');
 
-        $tv_list = $this->modx->getOption('ms3_order_tv_list', null, '');
-        $pls = $msOrder->toArray();
-        $pls['cost'] = $this->ms3->format->price($pls['cost']);
-        $pls['cart_cost'] = $this->ms3->format->price($pls['cart_cost']);
-        $pls['delivery_cost'] = $this->ms3->format->price($pls['delivery_cost']);
-        $pls['weight'] = $this->ms3->format->weight($pls['weight']);
-        $pls['payment_link'] = '';
-        if (!empty($tv_list)) {
-            $pls['includeTVs'] = $tv_list;
-        }
-        $msPayment = $msOrder->getOne('Payment');
-        if ($msPayment) {
-            //TODO реализовать загрузку классов
-            //$pls['payment_link'] = $this->getPaymentLink($msPayment, $msOrder);
+        // Create notification
+        $notification = new StatusChangedNotification(
+            $this->modx,
+            $msOrder,
+            $newStatus,
+            $oldStatus
+        );
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] StatusChangedNotification created');
+
+        $notificationManager = $this->getNotificationManager();
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] NotificationManager obtained: ' . ($notificationManager ? 'YES' : 'NO'));
+
+        // Send to customer (channels determined by notification config)
+        $customerRecipient = $this->getCustomerRecipient($msOrder);
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Customer recipient: ' . json_encode($customerRecipient));
+        if ($customerRecipient) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Calling sendToCustomer()...');
+            $notificationManager->sendToCustomer($notification, $customerRecipient);
+        } else {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] No customer recipient found!');
         }
 
-        return $pls;
+        // Send to manager(s) (channels determined by notification config)
+        $managerRecipients = $this->getManagerRecipients();
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Manager recipients: ' . json_encode($managerRecipients));
+        foreach ($managerRecipients as $managerRecipient) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Calling sendToManager()...');
+            $notificationManager->sendToManager($notification, $managerRecipient);
+        }
+
+        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] ====== END sendNotifications() ======');
     }
 
-    protected function getLang($msOrder)
+    /**
+     * Get customer recipient data for all notification channels
+     *
+     * Returns all available contact information for the customer:
+     * - email: for EmailChannel
+     * - phone: for SmsChannel
+     * - telegram_id: for TelegramChannel
+     *
+     * @param msOrder $msOrder
+     * @return array|null Returns null only if no contact info available at all
+     */
+    protected function getCustomerRecipient(msOrder $msOrder): ?array
+    {
+        $recipient = [
+            'type' => 'customer',
+            'email' => null,
+            'phone' => null,
+            'telegram_id' => null,
+        ];
+
+        $hasContact = false;
+
+        // Try to get contact info from msCustomer
+        /** @var msCustomer|null $customer */
+        $customer = $msOrder->getOne('Customer');
+        if ($customer) {
+            $recipient['customer'] = $customer->toArray();
+
+            if ($email = $customer->get('email')) {
+                $recipient['email'] = $email;
+                $hasContact = true;
+            }
+            if ($phone = $customer->get('phone')) {
+                $recipient['phone'] = $phone;
+                $hasContact = true;
+            }
+            // telegram_id may be stored in extended fields
+            $extended = $customer->get('extended');
+            if (is_array($extended) && !empty($extended['telegram_id'])) {
+                $recipient['telegram_id'] = $extended['telegram_id'];
+                $hasContact = true;
+            }
+        }
+
+        // Fallback/supplement from modUserProfile
+        $userId = $msOrder->get('user_id');
+        if ($userId) {
+            /** @var modUserProfile|null $profile */
+            $profile = $this->modx->getObject(modUserProfile::class, ['internalKey' => $userId]);
+            if ($profile) {
+                // Only use profile data if customer data is missing
+                if (empty($recipient['email']) && $profile->get('email')) {
+                    $recipient['email'] = $profile->get('email');
+                    $hasContact = true;
+                }
+                if (empty($recipient['phone']) && $profile->get('phone')) {
+                    $recipient['phone'] = $profile->get('phone');
+                    $hasContact = true;
+                }
+                // Check extended for telegram_id
+                $extended = $profile->get('extended');
+                if (empty($recipient['telegram_id']) && is_array($extended) && !empty($extended['telegram_id'])) {
+                    $recipient['telegram_id'] = $extended['telegram_id'];
+                    $hasContact = true;
+                }
+            }
+        }
+
+        return $hasContact ? $recipient : null;
+    }
+
+    /**
+     * Get manager recipients data for all notification channels
+     *
+     * Reads from system settings:
+     * - ms3_email_manager: comma-separated emails
+     * - ms3_phone_manager: comma-separated phones (for SMS)
+     * - ms3_telegram_manager: comma-separated telegram chat IDs
+     *
+     * @return array[]
+     */
+    protected function getManagerRecipients(): array
+    {
+        // Get all contact channels for managers
+        $emails = $this->parseManagerSetting('ms3_email_manager', $this->modx->getOption('emailsender'));
+        $phones = $this->parseManagerSetting('ms3_phone_manager');
+        $telegramIds = $this->parseManagerSetting('ms3_telegram_manager');
+
+        // Determine max count to create recipients
+        $maxCount = max(count($emails), count($phones), count($telegramIds), 1);
+
+        $recipients = [];
+        for ($i = 0; $i < $maxCount; $i++) {
+            $recipient = [
+                'type' => 'manager',
+                'email' => $emails[$i] ?? null,
+                'phone' => $phones[$i] ?? null,
+                'telegram_id' => $telegramIds[$i] ?? null,
+            ];
+
+            // Only add if at least one contact method exists
+            if ($recipient['email'] || $recipient['phone'] || $recipient['telegram_id']) {
+                $recipients[] = $recipient;
+            }
+        }
+
+        // If no structured recipients, try to create at least one with available data
+        if (empty($recipients)) {
+            $recipient = [
+                'type' => 'manager',
+                'email' => $emails[0] ?? null,
+                'phone' => $phones[0] ?? null,
+                'telegram_id' => $telegramIds[0] ?? null,
+            ];
+            if ($recipient['email'] || $recipient['phone'] || $recipient['telegram_id']) {
+                $recipients[] = $recipient;
+            }
+        }
+
+        return $recipients;
+    }
+
+    /**
+     * Parse comma-separated manager setting
+     *
+     * @param string $key Setting key
+     * @param string|null $default Default value
+     * @return array
+     */
+    protected function parseManagerSetting(string $key, ?string $default = null): array
+    {
+        $value = $this->modx->getOption($key, null, $default ?? '');
+        if (empty($value)) {
+            return [];
+        }
+
+        $items = array_map('trim', explode(',', $value));
+        return array_filter($items, fn($item) => !empty($item));
+    }
+
+    /**
+     * Get language for order notifications
+     *
+     * @param msOrder $msOrder
+     * @return string
+     */
+    protected function getLang($msOrder): string
     {
         $lang = $this->modx->getOption('cultureKey', null, 'en', true);
+
+        // Check user setting
         $tmp = $this->modx->getObject(
             modUserSetting::class,
             ['key' => 'cultureKey', 'user' => $msOrder->get('user_id')]
@@ -213,6 +336,7 @@ class OrderStatus
         if ($tmp) {
             $lang = $tmp->get('value');
         } else {
+            // Check context setting
             $tmp = $this->modx->getObject(
                 modContextSetting::class,
                 ['key' => 'cultureKey', 'context_key' => $msOrder->get('context')]
@@ -221,12 +345,18 @@ class OrderStatus
                 $lang = $tmp->get('value');
             }
         }
-        // TODO реализовать запись и проверку языка заказа в самом объекте заказа
 
         return $lang;
     }
 
-    protected function getPaymentLink($msPayment, $msOrder)
+    /**
+     * Get payment link for order
+     *
+     * @param mixed $msPayment
+     * @param msOrder $msOrder
+     * @return string
+     */
+    protected function getPaymentLink($msPayment, $msOrder): string
     {
         $class = $msPayment->get('class');
         if (!empty($class)) {
@@ -241,37 +371,5 @@ class OrderStatus
         }
 
         return '';
-    }
-
-    protected function setSchedulerTask(): void
-    {
-        $this->useScheduler = false;
-        if ($this->modx->services->has('scheduler')) {
-            /** @var \Scheduler $scheduler */
-            $scheduler = $this->modx->services->get('scheduler');
-            $this->schedulerTask = $scheduler->getTask('minishop3', 'ms3_send_email');
-            if (!$this->schedulerTask) {
-                $this->schedulerTask = $this->createEmailTask();
-            }
-        }
-    }
-
-    /**
-     * Creating Scheduler's task for sending email
-     */
-    protected function createEmailTask(): false|object|null
-    {
-        $task = $this->modx->newObject(\sFileTask::class);
-        $task->fromArray([
-            'class_key' => 'sFileTask',
-            'content' => 'elements/tasks/sendEmail.php',
-            'namespace' => 'minishop3',
-            'reference' => 'ms3_send_email',
-            'description' => 'MiniShop3 Email'
-        ]);
-        if (!$task->save()) {
-            return false;
-        }
-        return $task;
     }
 }

@@ -24,6 +24,9 @@ $modx = \MODX\Revolution\modX::getInstance(
     ]
 );
 
+// Инициализация MiniShop3 для регистрации сервисов
+$modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
+
 // Количество товаров (по умолчанию 100)
 $count = isset($argv[1]) ? (int)$argv[1] : 100;
 

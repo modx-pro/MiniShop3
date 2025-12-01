@@ -463,6 +463,60 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'view_document') // TODO: создать специфичное право ms3_grid_config_manage
     ]);
 
+    // ============================================
+    // NOTIFICATIONS API (Центр уведомлений)
+    // ============================================
+    $router->group('/notifications', function($router) use ($modx) {
+
+        // GET /api/mgr/notifications/references - получить справочники для формы
+        $router->get('/references', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\NotificationsController($modx);
+            return $controller->getReferences();
+        });
+
+        // GET /api/mgr/notifications - получить список настроек уведомлений
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\NotificationsController($modx);
+            return $controller->getList($allParams);
+        });
+
+        // GET /api/mgr/notifications/{id} - получить конкретную настройку
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\NotificationsController($modx);
+            return $controller->get($params);
+        });
+
+        // POST /api/mgr/notifications - создать новую настройку
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\NotificationsController($modx);
+            return $controller->create($data);
+        });
+
+        // PUT /api/mgr/notifications/{id} - обновить настройку
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\NotificationsController($modx);
+            return $controller->update($data);
+        });
+
+        // DELETE /api/mgr/notifications/{id} - удалить настройку
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\NotificationsController($modx);
+            return $controller->delete($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save') // Требуется право на управление настройками
+    ]);
+
 }, [
     // Middleware для всей группы /api/mgr
     new AuthMiddleware($modx, 'mgr')

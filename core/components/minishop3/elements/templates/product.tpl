@@ -267,12 +267,6 @@
                                             </td>
                                         </tr>
                                     {/if}
-                                    <tr>
-                                        <td class="text-muted">Доступно в СПб</td>
-                                        <td>
-                                            <span class="badge bg-light text-dark border me-1">{$spb_stock}</span>
-                                        </td>
-                                    </tr>
                                 </tbody>
                             </table>
                         </div>

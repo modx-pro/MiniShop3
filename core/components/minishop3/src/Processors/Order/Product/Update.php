@@ -82,7 +82,7 @@ class Update extends UpdateProcessor
     public function afterSave()
     {
         // Fix "cache"
-        $this->order = $this->modx->getObject('msOrder', $this->order->id, false);
+        $this->order = $this->modx->getObject(msOrder::class, $this->order->id, false);
         if ($this->order) {
             $this->order->updateProducts();
         }

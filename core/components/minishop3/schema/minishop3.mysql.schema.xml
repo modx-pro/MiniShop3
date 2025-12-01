@@ -237,7 +237,7 @@
     <object class="msOrder" table="ms3_orders" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
-        <field key="token" dbtype="varchar" precision="64" phptype="string" null="false" default=""/>
+        <field key="token" dbtype="varchar" precision="128" phptype="string" null="false" default=""/>
         <field key="uuid" dbtype="char" precision="36" phptype="string" null="false" default=""/>
         <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="updatedon" dbtype="datetime" phptype="datetime" null="true" />
@@ -292,12 +292,6 @@
         <field key="name" dbtype="varchar" precision="100" phptype="string" null="false"/>
         <field key="description" dbtype="text" phptype="string" null="true"/>
         <field key="color" dbtype="char" precision="6" phptype="string" null="true" default="000000"/>
-        <field key="email_user" dbtype="tinyint" precision="1" phptype="integer" null="true" default="0"/>
-        <field key="email_manager" dbtype="tinyint" precision="1" phptype="integer" null="true" default="0"/>
-        <field key="subject_user" dbtype="varchar" precision="255" phptype="string" null="true" default=""/>
-        <field key="subject_manager" dbtype="varchar" precision="255" phptype="string" null="true" default=""/>
-        <field key="body_user" dbtype="varchar" precision="255" phptype="string" null="true" default="null"/>
-        <field key="body_manager" dbtype="varchar" precision="255" phptype="string" null="true" default="null"/>
         <field key="active" dbtype="tinyint" precision="1" phptype="integer" null="true" default="1"/>
         <field key="final" dbtype="tinyint" precision="1" phptype="integer" null="true" default="0"/>
         <field key="fixed" dbtype="tinyint" precision="1" phptype="integer" null="true" default="0"/>
@@ -427,7 +421,7 @@
         <field key="last_name" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="phone" dbtype="varchar" precision="50" phptype="string" null="true" default=""/>
         <field key="email" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
-        <field key="token" dbtype="varchar" precision="64" phptype="string" null="true" default=""/>
+        <field key="token" dbtype="varchar" precision="128" phptype="string" null="true" default=""/>
         <field key="password" dbtype="varchar" precision="255" phptype="string" null="true"/>
         <field key="email_verified_at" dbtype="datetime" phptype="datetime" null="true"/>
         <field key="is_active" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
@@ -658,5 +652,33 @@
             <column key="visible" length="" collation="A" null="false"/>
             <column key="sort_order" length="" collation="A" null="false"/>
         </index>
+    </object>
+
+    <object class="msNotificationConfig" table="ms3_notification_configs" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="event" dbtype="varchar" precision="100" phptype="string" null="false"/>
+        <field key="status_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true" default="null"/>
+        <field key="recipient_type" dbtype="varchar" precision="20" phptype="string" null="false"/>
+        <field key="channel" dbtype="varchar" precision="50" phptype="string" null="false"/>
+        <field key="enabled" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
+        <field key="subject" dbtype="varchar" precision="255" phptype="string" null="true"/>
+        <field key="template" dbtype="varchar" precision="255" phptype="string" null="true"/>
+        <field key="delay" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0"/>
+        <field key="config" dbtype="text" phptype="json" null="true"/>
+        <field key="position" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0"/>
+
+        <index alias="event_status_recipient_channel" name="event_status_recipient_channel" primary="false" unique="true" type="BTREE">
+            <column key="event" length="" collation="A" null="false"/>
+            <column key="status_id" length="" collation="A" null="true"/>
+            <column key="recipient_type" length="" collation="A" null="false"/>
+            <column key="channel" length="" collation="A" null="false"/>
+        </index>
+        <index alias="status_id" name="status_id" primary="false" unique="false" type="BTREE">
+            <column key="status_id" length="" collation="A" null="true"/>
+        </index>
+        <index alias="enabled" name="enabled" primary="false" unique="false" type="BTREE">
+            <column key="enabled" length="" collation="A" null="false"/>
+        </index>
+
+        <aggregate alias="Status" class="MiniShop3\Model\msOrderStatus" local="status_id" foreign="id" owner="foreign" cardinality="one"/>
     </object>
 </model>

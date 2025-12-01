@@ -33,21 +33,31 @@ class TokenService
     /**
      * Генерация криптографически стойкого токена для покупателя
      *
+     * Работает как для авторизованных клиентов (с customer_id),
+     * так и для анонимных посетителей (customer_id = 0).
+     * Анонимные токены используются для корзины до регистрации/авторизации.
+     *
      * @param int|null $ttl TTL в секундах (null = из системных настроек)
-     * @return array ['token' => string, 'expires' => int]
+     * @return array ['token' => string, 'expires' => int, 'lifetime' => int]
      */
     public function generateCustomerToken(?int $ttl = null): array
     {
-        // Проверяем, авторизован ли клиент
-        if (empty($_SESSION['ms3']['customer_id'])) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[TokenService] Cannot generate token: customer_id not found in session"
-            );
-            return ['token' => '', 'expires' => 0, 'lifetime' => 0];
+        // Проверяем, есть ли уже валидный токен в сессии
+        $existingToken = $this->getCustomerToken();
+        if ($existingToken) {
+            // Токен уже существует и не истёк - возвращаем его
+            $expires = $_SESSION['ms3']['customer_token_expires'] ?? (time() + 86400);
+            $lifetime = max(0, $expires - time());
+
+            return [
+                'token' => $existingToken,
+                'expires' => $expires,
+                'lifetime' => $lifetime * 1000, // В миллисекундах для JS
+            ];
         }
 
-        $customerId = (int)$_SESSION['ms3']['customer_id'];
+        // customer_id может быть 0 для анонимных пользователей
+        $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
 
         // Генерируем токен через random_bytes (криптографически стойкий)
         $token = bin2hex(random_bytes(32)); // 64 символа
@@ -59,7 +69,7 @@ class TokenService
 
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
-        // Создаём запись токена в БД
+        // Создаём запись токена в БД (customer_id = 0 для анонимных)
         $tokenObj = $this->modx->newObject(\MiniShop3\Model\msCustomerToken::class);
         $tokenObj->set('customer_id', $customerId);
         $tokenObj->set('token', $token);
@@ -75,7 +85,7 @@ class TokenService
             return ['token' => '', 'expires' => 0, 'lifetime' => 0];
         }
 
-        // Сохраняем в сессию для обратной совместимости
+        // Сохраняем в сессию (критически важно для SSR!)
         $_SESSION['ms3']['customer_token'] = $token;
         $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
 
