@@ -1,0 +1,60 @@
+<?php
+
+if (!class_exists('msManagerController')) {
+    require_once dirname(__FILE__, 2) . '/manager.class.php';
+}
+
+class MiniShop3MgrNotificationsManagerController extends msManagerController
+{
+    /**
+     * @return string
+     */
+    public function getPageTitle()
+    {
+        return $this->modx->lexicon('ms3_notifications') . ' | MiniShop3';
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getLanguageTopics()
+    {
+        return array('minishop3:default', 'minishop3:notifications', 'minishop3:manager', 'minishop3:vue');
+    }
+
+
+    /**
+     *
+     */
+    public function loadCustomCssJs()
+    {
+        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
+        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
+
+        // Wrapper для монтирования Vue вместо ExtJS
+        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/notifications/notifications.wrapper.js');
+
+        $config = $this->ms3->config;
+
+        // ВАЖНО: Сначала конфигурация, потом Vue модули
+        $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
+
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/useLexicon.min.css">
+        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/notifications.min.css">
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/notifications.min.js"></script>
+        <script>
+            Ext.onReady(function() {
+                MODx.add({xtype: "ms3-notifications-vue-wrapper"});
+            });
+        </script>'
+        );
+
+        $this->modx->invokeEvent('msOnManagerCustomCssJs', array(
+            'controller' => $this,
+            'page' => 'notifications',
+        ));
+    }
+}

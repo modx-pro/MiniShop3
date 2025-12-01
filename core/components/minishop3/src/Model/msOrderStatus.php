@@ -10,12 +10,6 @@ use xPDO\Om\xPDOSimpleObject;
  * @property string $name
  * @property string $description
  * @property string $color
- * @property integer $email_user
- * @property integer $email_manager
- * @property string $subject_user
- * @property string $subject_manager
- * @property integer $body_user
- * @property integer $body_manager
  * @property integer $active
  * @property integer $final
  * @property integer $fixed

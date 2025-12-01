@@ -24,8 +24,7 @@ Ext.extend(ms3.grid.Status, ms3.grid.Default, {
 
     getFields: function () {
         return [
-            'id', 'name', 'description', 'color', 'email_user', 'email_manager',
-            'subject_user', 'subject_manager', 'body_user', 'body_manager', 'active',
+            'id', 'name', 'description', 'color', 'active',
             'final', 'fixed', 'position', 'editable', 'actions'
         ];
     },
@@ -34,8 +33,6 @@ Ext.extend(ms3.grid.Status, ms3.grid.Default, {
         return [
             {header: _('ms3_id'), dataIndex: 'id', width: 30},
             {header: _('ms3_name'), dataIndex: 'name', width: 50, renderer: ms3.utils.renderBadge},
-            {header: _('ms3_email_user'), dataIndex: 'email_user', width: 50, renderer: this._renderBoolean},
-            {header: _('ms3_email_manager'), dataIndex: 'email_manager', width: 50, renderer: this._renderBoolean},
             {header: _('ms3_status_final'), dataIndex: 'final', width: 50, renderer: this._renderBoolean},
             {header: _('ms3_status_fixed'), dataIndex: 'fixed', width: 50, renderer: this._renderBoolean},
             {header: _('ms3_rank'), dataIndex: 'position', width: 35, hidden: true},

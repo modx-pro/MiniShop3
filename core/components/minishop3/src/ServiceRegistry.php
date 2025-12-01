@@ -136,6 +136,15 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\GridConfigService::class,
             'interface' => null,
         ],
+        // Notification Center
+        'ms3_notifications' => [
+            'class' => \MiniShop3\Notifications\NotificationManager::class,
+            'interface' => null,
+        ],
+        'ms3_notification_config' => [
+            'class' => \MiniShop3\Services\Notification\NotificationConfigService::class,
+            'interface' => null,
+        ],
     ];
 
     /**

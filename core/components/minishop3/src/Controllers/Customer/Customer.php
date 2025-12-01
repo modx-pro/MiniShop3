@@ -421,11 +421,6 @@ class Customer
      */
     public function getOrCreate(?array $orderData = null): int
     {
-        $this->modx->log(
-            modX::LOG_LEVEL_ERROR,
-            '[Customer::getOrCreate] ⏯️ Starting customer retrieval/creation process. Token: ' . substr($this->token ?? 'NONE', 0, 16) . '...'
-        );
-
         $msCustomer = null;
 
         // Событие перед получением клиента (позволяет плагинам переопределить логику)
@@ -434,88 +429,35 @@ class Customer
             'msCustomer' => $msCustomer,
         ]);
         if (!$response['success']) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::getOrCreate] ❌ Event msOnBeforeGetOrderCustomer failed: ' . $response['message']);
             return 0;
         }
 
         // 1. Поиск клиента по токену
-        $this->modx->log(
-            modX::LOG_LEVEL_ERROR,
-            '[Customer::getOrCreate] Step 1: Searching customer by token...'
-        );
-
         $msCustomer = $this->getObject();
-
-        if ($msCustomer) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Customer::getOrCreate] ✅ Found existing customer #{$msCustomer->id} by token. Email: {$msCustomer->get('email')}"
-            );
-        }
 
         // 2. Если не найден по токену - пытаемся найти или создать
         if (empty($msCustomer)) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[Customer::getOrCreate] Step 2: Customer not found by token, proceeding to search/create...'
-            );
-
             // Получаем данные заказа
             if ($orderData === null) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    '[Customer::getOrCreate] Order data not provided, fetching from order->get()...'
-                );
                 $orderResponse = $this->ms3->order->get();
                 $orderData = $orderResponse['data']['order'] ?? [];
             }
 
             $email = $orderData['address_email'] ?? '';
 
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[Customer::getOrCreate] Order email: ' . ($email ?: 'EMPTY')
-            );
-
             // 3. Поиск клиента по email
             if (!empty($email)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[Customer::getOrCreate] Step 3: Searching customer by email: {$email}..."
-                );
-
                 $msCustomer = $this->findByEmail($email);
 
                 if ($msCustomer) {
                     // Обновляем токен существующего клиента
-                    $oldToken = $msCustomer->get('token');
                     $msCustomer->set('token', $this->token);
                     $msCustomer->save();
-
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[Customer::getOrCreate] ✅ Found existing customer #{$msCustomer->id} by email ({$email}), updated token: {$oldToken} → {$this->token}"
-                    );
-
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[Customer::getOrCreate] ⚠️ SECURITY: Existing customer found by email - auto-login SKIPPED (requires password authentication)"
-                    );
-                } else {
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[Customer::getOrCreate] Customer not found by email {$email}"
-                    );
                 }
             }
 
             // 4. Создание нового клиента
             if (empty($msCustomer)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    '[Customer::getOrCreate] Step 4: Creating new customer via createFromOrderData()...'
-                );
-
                 $msCustomer = $this->createFromOrderData($orderData);
             }
         }
@@ -526,27 +468,12 @@ class Customer
             'msCustomer' => $msCustomer,
         ]);
         if (!$response['success']) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::getOrCreate] ❌ Event msOnGetOrderCustomer failed: ' . $response['message']);
             return 0;
         }
 
-        // Финальный лог результата
         if (!empty($msCustomer)) {
-            $customerId = (int)$msCustomer->get('id');
-            $isAuthorized = !empty($_SESSION['ms3']['customer_id']);
-
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Customer::getOrCreate] ✅ Process completed. Customer ID: {$customerId}, Email: {$msCustomer->get('email')}, Authorized: " . ($isAuthorized ? 'YES' : 'NO')
-            );
-
-            return $customerId;
+            return (int)$msCustomer->get('id');
         }
-
-        $this->modx->log(
-            modX::LOG_LEVEL_ERROR,
-            '[Customer::getOrCreate] ❌ Process failed. No customer found or created.'
-        );
 
         return 0;
     }
@@ -581,17 +508,7 @@ class Customer
     {
         $email = $orderData['address_email'] ?? '';
 
-        // Логируем начало процесса
-        $this->modx->log(
-            modX::LOG_LEVEL_ERROR,
-            '[Customer::createFromOrderData] Starting customer creation process. Email: ' . ($email ?: 'EMPTY')
-        );
-
         if (empty($email)) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[Customer::createFromOrderData] ❌ Cannot create customer without email. Order data: ' . json_encode($orderData)
-            );
             return null;
         }
 
@@ -599,135 +516,52 @@ class Customer
         $autoRegister = (bool)$this->modx->getOption('ms3_customer_auto_register_on_order', null, true);
         $autoLogin = (bool)$this->modx->getOption('ms3_customer_auto_login_on_order', null, true);
 
-        $this->modx->log(
-            modX::LOG_LEVEL_ERROR,
-            "[Customer::createFromOrderData] Settings: auto_register={$autoRegister}, auto_login={$autoLogin}, email={$email}"
-        );
-
         // Попытка создания через RegisterService (с паролем)
         if ($autoRegister) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Customer::createFromOrderData] 🔄 Attempting registration via RegisterService for {$email}"
-            );
-
             /** @var \MiniShop3\Services\Customer\RegisterService $registerService */
             $registerService = $this->modx->services->get('ms3_register_service');
 
-            if (!$registerService) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    '[Customer::createFromOrderData] ❌ RegisterService not available in service container'
-                );
-            } else {
+            if ($registerService) {
                 $registerData = [
                     'first_name' => $orderData['address_first_name'] ?? '',
                     'last_name' => $orderData['address_last_name'] ?? '',
                     'phone' => $orderData['address_phone'] ?? '',
                     'email' => $email,
                     'token' => $this->token,
-                    // GDPR consent (предполагаем согласие при оформлении заказа)
                     'privacy_accepted' => true,
                     'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
                 ];
-
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    '[Customer::createFromOrderData] Register data: ' . json_encode([
-                        'email' => $registerData['email'],
-                        'first_name' => $registerData['first_name'],
-                        'last_name' => $registerData['last_name'],
-                        'phone' => $registerData['phone'],
-                        'has_token' => !empty($registerData['token']),
-                    ])
-                );
 
                 $registerResult = $registerService->register($registerData);
 
                 if ($registerResult['success']) {
                     $msCustomer = $registerResult['customer'];
 
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[Customer::createFromOrderData] ✅ Successfully auto-registered customer #{$msCustomer->id} ({$email}) via RegisterService"
-                    );
-
                     // Автоматическая авторизация (если включена настройка)
                     if ($autoLogin) {
                         $_SESSION['ms3']['customer_id'] = $msCustomer->id;
                         $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
-
-                        $this->modx->log(
-                            modX::LOG_LEVEL_ERROR,
-                            "[Customer::createFromOrderData] 🔐 Auto-logged in customer #{$msCustomer->id}. Session: customer_id={$msCustomer->id}, token=" . substr($msCustomer->get('token'), 0, 16) . '...'
-                        );
-                    } else {
-                        $this->modx->log(
-                            modX::LOG_LEVEL_ERROR,
-                            "[Customer::createFromOrderData] ⏭️ Auto-login disabled (ms3_customer_auto_login_on_order=false)"
-                        );
                     }
                 } else {
                     // Если регистрация не удалась (например, email уже занят), пытаемся найти клиента
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[Customer::createFromOrderData] ⚠️ RegisterService failed: {$registerResult['message']}. Trying to find existing customer by email..."
-                    );
-
                     $msCustomer = $this->findByEmail($email);
 
                     if ($msCustomer) {
-                        $this->modx->log(
-                            modX::LOG_LEVEL_ERROR,
-                            "[Customer::createFromOrderData] 🔍 Found existing customer #{$msCustomer->id} by email {$email}"
-                        );
-
-                        $oldToken = $msCustomer->get('token');
                         $msCustomer->set('token', $this->token);
                         $msCustomer->save();
 
-                        $this->modx->log(
-                            modX::LOG_LEVEL_ERROR,
-                            "[Customer::createFromOrderData] 🔄 Updated customer #{$msCustomer->id} token: {$oldToken} → {$this->token}"
-                        );
-
-                        // Автоматическая авторизация для существующего клиента (если включена настройка)
+                        // Автоматическая авторизация для существующего клиента
                         if ($autoLogin) {
                             $_SESSION['ms3']['customer_id'] = $msCustomer->id;
                             $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
-
-                            $this->modx->log(
-                                modX::LOG_LEVEL_ERROR,
-                                "[Customer::createFromOrderData] 🔐 Auto-logged in existing customer #{$msCustomer->id}"
-                            );
-                        } else {
-                            $this->modx->log(
-                                modX::LOG_LEVEL_ERROR,
-                                "[Customer::createFromOrderData] ⏭️ Auto-login disabled for existing customer"
-                            );
                         }
-                    } else {
-                        $this->modx->log(
-                            modX::LOG_LEVEL_ERROR,
-                            "[Customer::createFromOrderData] ❌ Customer not found by email {$email} after RegisterService failure"
-                        );
                     }
                 }
             }
-        } else {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[Customer::createFromOrderData] ⏭️ Auto-register disabled (ms3_customer_auto_register_on_order=false)'
-            );
         }
 
         // Fallback: старый метод создания (без пароля, для обратной совместимости)
         if (empty($msCustomer)) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Customer::createFromOrderData] 🔄 Using fallback method (create without password) for {$email}"
-            );
-
             $customerData = [
                 'first_name' => $orderData['address_first_name'] ?? '',
                 'last_name' => $orderData['address_last_name'] ?? '',
@@ -736,59 +570,12 @@ class Customer
                 'token' => $this->token,
             ];
 
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[Customer::createFromOrderData] Fallback customer data: ' . json_encode([
-                    'email' => $customerData['email'],
-                    'first_name' => $customerData['first_name'],
-                    'last_name' => $customerData['last_name'],
-                    'phone' => $customerData['phone'],
-                    'has_token' => !empty($customerData['token']),
-                ])
-            );
-
             $msCustomer = $this->create($customerData);
 
-            if ($msCustomer) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[Customer::createFromOrderData] ✅ Created customer #{$msCustomer->id} ({$email}) via fallback method (without password)"
-                );
-
-                // Автоматическая авторизация (если включена настройка)
-                if ($autoLogin) {
-                    $_SESSION['ms3']['customer_id'] = $msCustomer->id;
-                    $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
-
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[Customer::createFromOrderData] 🔐 Auto-logged in customer #{$msCustomer->id} (fallback method). Session: customer_id={$msCustomer->id}"
-                    );
-                } else {
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[Customer::createFromOrderData] ⏭️ Auto-login disabled for fallback customer"
-                    );
-                }
-            } else {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[Customer::createFromOrderData] ❌ Failed to create customer with email: {$email} via fallback method"
-                );
+            if ($msCustomer && $autoLogin) {
+                $_SESSION['ms3']['customer_id'] = $msCustomer->id;
+                $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
             }
-        }
-
-        // Финальный лог результата
-        if ($msCustomer) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Customer::createFromOrderData] ✅ Process completed successfully. Customer ID: {$msCustomer->id}, Email: {$email}, Logged in: " . ($autoLogin ? 'YES' : 'NO')
-            );
-        } else {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Customer::createFromOrderData] ❌ Process failed. No customer created for email: {$email}"
-            );
         }
 
         return $msCustomer;

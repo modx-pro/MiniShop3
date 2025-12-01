@@ -56,7 +56,7 @@ class msOrder extends \MiniShop3\Model\msOrder
                 'token' =>
                     [
                         'dbtype' => 'varchar',
-                        'precision' => '64',
+                        'precision' => '128',
                         'phptype' => 'string',
                         'null' => false,
                     ],

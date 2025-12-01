@@ -18,16 +18,22 @@ return [
         'menuindex' => 0,
         'action' => 'mgr/customers',
     ],
+    'ms3_notifications' => [
+        'description' => 'ms3_notifications_desc',
+        'parent' => 'miniShop3',
+        'menuindex' => 1,
+        'action' => 'mgr/notifications',
+    ],
     'ms3_settings' => [
         'description' => 'ms3_settings_desc',
         'parent' => 'miniShop3',
-        'menuindex' => 1,
+        'menuindex' => 2,
         'action' => 'mgr/settings',
     ],
     'ms3_system_settings' => [
         'description' => 'ms3_system_settings_desc',
         'parent' => 'miniShop3',
-        'menuindex' => 2,
+        'menuindex' => 3,
         'namespace' => 'core',
         'permissions' => 'settings',
         'action' => 'system/settings',
@@ -36,13 +42,13 @@ return [
     'ms3_help' => [
         'description' => 'ms3_help_desc',
         'parent' => 'miniShop3',
-        'menuindex' => 3,
+        'menuindex' => 4,
         'action' => 'mgr/help',
     ],
     'ms3_utilities' => [
         'description' => 'ms3_utilities_desc',
         'parent' => 'miniShop3',
-        'menuindex' => 4,
+        'menuindex' => 5,
         'action' => 'mgr/utilities',
     ],
 ];

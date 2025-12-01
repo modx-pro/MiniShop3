@@ -22,6 +22,7 @@ const ProdInput = {
   'extra-fields': 'src/entries/extra-fields.js',
   'gallery-uploader': 'src/entries/gallery-uploader.js',
   'customers': 'src/entries/customers.js',
+  'notifications': 'src/entries/notifications.js',
   'grid-fields-config': 'src/entries/grid-fields-config.js',
   'main': 'src/main.js'
 }

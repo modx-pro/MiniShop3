@@ -32,14 +32,6 @@ class Create extends CreateProcessor
     public function beforeSet()
     {
         $required = ['name'];
-        if ($this->getProperty('email_user')) {
-            $required[] = 'subject_user';
-            $required[] = 'body_user';
-        }
-        if ($this->getProperty('email_manager')) {
-            $required[] = 'subject_manager';
-            $required[] = 'body_manager';
-        }
         foreach ($required as $field) {
             if (!$tmp = trim($this->getProperty($field))) {
                 $this->addFieldError($field, $this->modx->lexicon('field_required'));

@@ -61,4 +61,8 @@ return [
     'msOnVendorUpdate',
     'msOnBeforeVendorDelete',
     'msOnVendorDelete',
+    // Notification events
+    'msOnBeforeSendNotification',
+    'msOnAfterSendNotification',
+    'msOnRegisterNotificationChannels',
 ];
