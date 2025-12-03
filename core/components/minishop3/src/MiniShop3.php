@@ -23,7 +23,7 @@ use xPDO\xPDO;
 
 class MiniShop3
 {
-    public $version = '1.0.0-alpha.3';
+    public $version = '1.0.0-alpha.4';
 
     /** @var modX $modx */
     public $modx;
