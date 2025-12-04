@@ -9,9 +9,9 @@ use MiniShop3\Services\Customer\RegisterService;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * ResetPassword - процессор установки нового пароля по токену
+ * ResetPassword - processor for setting new password via token
  *
- * Проверяет токен из письма и устанавливает новый пароль.
+ * Validates token from email and sets new password.
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -26,7 +26,6 @@ class ResetPassword extends Processor
         $password = $this->getProperty('password', '');
         $passwordConfirm = $this->getProperty('password_confirm', '');
 
-        // Валидация входных данных
         if (empty($token)) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_token_required'));
         }
@@ -42,7 +41,6 @@ class ResetPassword extends Processor
         /** @var AuthManager $authManager */
         $authManager = $this->modx->services->get('ms3_auth_manager');
 
-        // Проверяем токен
         /** @var msCustomer $customer */
         $customer = $authManager->validateToken($token, 'password_reset');
 
@@ -50,7 +48,6 @@ class ResetPassword extends Processor
             return $this->failure($this->modx->lexicon('ms3_customer_err_token_invalid'));
         }
 
-        // Валидация сложности пароля
         /** @var RegisterService $registerService */
         $registerService = $this->modx->services->get('ms3_register_service');
 
@@ -59,11 +56,9 @@ class ResetPassword extends Processor
             return $this->failure($validation['message']);
         }
 
-        // Устанавливаем новый пароль
         $hashedPassword = PasswordAuthProvider::hashPassword($password);
         $customer->set('password', $hashedPassword);
 
-        // Сбрасываем счетчик неудачных попыток и блокировку
         $customer->set('failed_login_attempts', 0);
         $customer->set('is_blocked', false);
         $customer->set('blocked_until', null);
@@ -72,7 +67,6 @@ class ResetPassword extends Processor
             return $this->failure($this->modx->lexicon('ms3_customer_err_save'));
         }
 
-        // Удаляем все существующие токены (для безопасности)
         $authManager->revokeTokens($customer);
 
         $this->modx->log(

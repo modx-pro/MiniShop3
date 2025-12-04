@@ -1,7 +1,7 @@
 /**
- * Entry point для API Test виджета (ES Module)
+ * Entry point for API Test widget (ES Module)
  *
- * Экспортирует функцию инициализации для монтирования Vue приложения
+ * Exports initialization function for mounting Vue application
  */
 
 import '../scss/primevue.scss';
@@ -17,16 +17,14 @@ import ToastService from 'primevue/toastservice';
 import VueApiTest from '../components/ApiTest.vue';
 
 /**
- * Создает и настраивает Vue приложение
+ * Creates and configures Vue application
  */
 function createVueApp() {
   const app = createApp(VueApiTest);
 
-  // Pinia
   const pinia = createPinia();
   app.use(pinia);
 
-  // PrimeVue
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
@@ -36,7 +34,6 @@ function createVueApp() {
     }
   });
 
-  // PrimeVue сервисы
   app.use(ConfirmationService);
   app.use(ToastService);
 
@@ -44,8 +41,8 @@ function createVueApp() {
 }
 
 /**
- * Инициализация виджета
- * Вызывается извне при переключении на вкладку
+ * Widget initialization
+ * Called externally when switching to the tab
  */
 export function init(selector = '#vue-api-test') {
   const $el = document.querySelector(selector);
@@ -55,7 +52,6 @@ export function init(selector = '#vue-api-test') {
     return null;
   }
 
-  // Проверяем, не смонтирован ли уже
   if ($el.dataset.vApp === 'true') {
     console.info('[API Test] Already mounted');
     return null;
@@ -70,10 +66,9 @@ export function init(selector = '#vue-api-test') {
 }
 
 /**
- * Dev режим - автоматическая инициализация для тестирования
+ * Dev mode - automatic initialization for testing
  */
 if (import.meta.env.DEV) {
-  // Ждем готовности DOM
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => init());
   } else {

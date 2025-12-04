@@ -3,17 +3,17 @@
 namespace MiniShop3\Interfaces;
 
 /**
- * Интерфейс для вычисляемых полей грида
+ * Interface for computed grid fields
  *
- * Computed поля выполняются для каждой строки отдельно (row-by-row)
- * и не должны делать дополнительных SQL запросов.
+ * Computed fields are executed for each row separately (row-by-row)
+ * and should not make additional SQL queries.
  *
- * Используются для:
- * - Математических вычислений (скидка, процент, округление)
- * - Форматирования данных (даты, числа, строки)
- * - Логических операций на основе данных строки
+ * Used for:
+ * - Mathematical calculations (discount, percentage, rounding)
+ * - Data formatting (dates, numbers, strings)
+ * - Logical operations based on row data
  *
- * Пример:
+ * Example:
  * ```php
  * class DiscountPercent implements ComputedFieldInterface {
  *     public function compute(array $row): float {
@@ -26,10 +26,10 @@ namespace MiniShop3\Interfaces;
 interface ComputedFieldInterface
 {
     /**
-     * Вычислить значение для одной строки грида
+     * Calculate value for one grid row
      *
-     * @param array $row Данные строки грида
-     * @return mixed Вычисленное значение
+     * @param array $row Grid row data
+     * @return mixed Computed value
      */
     public function compute(array $row): mixed;
 }

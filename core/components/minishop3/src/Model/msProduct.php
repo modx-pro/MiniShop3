@@ -149,7 +149,6 @@ class msProduct extends modResource
     {
         $oldClassKey = parent::get('class_key');
 
-        // Обрабатываем изменение типа товара через сервис
         $this->getProductService()->handleProductSave($this, $oldClassKey);
 
         return parent::save($cacheFlag);
@@ -343,17 +342,6 @@ class msProduct extends modResource
      */
     public function addMany(&$obj, $alias = '')
     {
-        /* TODO корректно не работает
-        if (empty ($alias)) {
-            if ($obj->_alias == $obj->_class) {
-                $aliases = $this->_getAliases($obj->_class, 1);
-                if (!empty($aliases)) {
-                    $obj->_alias = reset($aliases);
-                }
-            }
-            $alias = $obj->_alias;
-        }*/
-
         return in_array($alias, $this->dataRelated)
             ? $this->loadData()->addMany($obj, $alias)
             : parent::addMany($obj, $alias);
@@ -392,10 +380,8 @@ class msProduct extends modResource
      */
     public function duplicate(array $options = [])
     {
-        // Дублируем через родительский метод
         $newProduct = parent::duplicate($options);
 
-        // Копируем связанные данные через сервис
         $this->getProductService()->duplicateProduct($this, $newProduct);
 
         return $newProduct;
@@ -416,7 +402,6 @@ class msProduct extends modResource
      */
     public function process()
     {
-        // Обрабатываем товар для вывода через сервис
         $this->getProductService()->processForDisplay($this);
 
         return parent::process();
@@ -477,18 +462,16 @@ class msProduct extends modResource
     }
 
     /**
-     * Получить сервис товаров (lazy loading)
+     * Get product service (lazy loading)
      *
      * @return ProductService
      */
     protected function getProductService(): ProductService
     {
         if ($this->productService === null) {
-            // Пытаемся получить из контейнера, если зарегистрирован
             if ($this->xpdo->services->has('ms3_product_service')) {
                 $this->productService = $this->xpdo->services->get('ms3_product_service');
             } else {
-                // Создаем новый экземпляр
                 $this->productService = new ProductService($this->xpdo);
             }
         }

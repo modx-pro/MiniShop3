@@ -17,7 +17,7 @@ class MigrationGenerator
     }
 
     /**
-     * Генерирует миграцию для добавления колонки
+     * Generate migration for adding column
      */
     public function generateAddColumnMigration(msExtraField $field): string
     {
@@ -36,7 +36,7 @@ class MigrationGenerator
     }
 
     /**
-     * Генерирует миграцию для удаления колонки
+     * Generate migration for dropping column
      */
     public function generateDropColumnMigration(msExtraField $field): string
     {
@@ -55,7 +55,7 @@ class MigrationGenerator
     }
 
     /**
-     * Шаблон миграции для добавления колонки
+     * Migration template for adding column
      */
     private function renderAddColumnTemplate(string $className, msExtraField $field): string
     {
@@ -68,7 +68,7 @@ class MigrationGenerator
         $attributes = $this->parseAttributes($field);
         $comment = addslashes($field->get('label') ?: $field->get('key'));
 
-        // Генерация кода для индекса
+        // Generate index code
         $indexCode = '';
         if ($field->hasIndex()) {
             $indexName = $field->getIndexName();
@@ -114,7 +114,7 @@ PHP;
     }
 
     /**
-     * Шаблон миграции для удаления колонки
+     * Migration template for dropping column
      */
     private function renderDropColumnTemplate(string $className, msExtraField $field): string
     {
@@ -122,7 +122,7 @@ PHP;
         $columnName = $field->get('key');
         $indexName = $field->hasIndex() ? $field->getIndexName() : '';
 
-        // Если есть индекс, удаляем его перед удалением колонки
+        // If index exists, remove it before dropping column
         $removeIndexCode = '';
         if ($indexName) {
             $removeIndexCode = "\$table->removeIndexByName('{$indexName}');\n        ";
@@ -152,7 +152,7 @@ PHP;
     }
 
     /**
-     * Генерирует имя класса миграции
+     * Generate migration class name
      */
     private function generateClassName(string $action, msExtraField $field): string
     {
@@ -163,7 +163,7 @@ PHP;
     }
 
     /**
-     * Маппинг типов БД из xPDO в Phinx
+     * Map database types from xPDO to Phinx
      */
     private function mapDbTypeToPhinx(string $dbtype): string
     {
@@ -197,7 +197,7 @@ PHP;
     }
 
     /**
-     * Парсит precision (длину/точность)
+     * Parse precision (length/scale)
      */
     private function parsePrecision(msExtraField $field): string
     {
@@ -208,13 +208,13 @@ PHP;
             return '';
         }
 
-        // Для decimal: precision = "12,2" → limit: 12, scale: 2
+        // For decimal: precision = "12,2" → limit: 12, scale: 2
         if (in_array($dbtype, ['decimal', 'float', 'double']) && str_contains($precision, ',')) {
             [$limit, $scale] = explode(',', $precision);
             return "'limit' => " . trim($limit) . ", 'scale' => " . trim($scale) . ",\n            ";
         }
 
-        // Для varchar, char: precision = "255" → limit: 255
+        // For varchar, char: precision = "255" → limit: 255
         if (in_array($dbtype, ['varchar', 'char', 'int', 'tinyint', 'smallint'])) {
             return "'limit' => " . intval($precision) . ",\n            ";
         }
@@ -223,7 +223,7 @@ PHP;
     }
 
     /**
-     * Получает значение по умолчанию
+     * Get default value
      */
     private function getDefaultValue(msExtraField $field): string
     {
@@ -246,7 +246,7 @@ PHP;
     }
 
     /**
-     * Парсит атрибуты (unsigned, auto_increment)
+     * Parse attributes (unsigned, auto_increment)
      */
     private function parseAttributes(msExtraField $field): string
     {
@@ -270,7 +270,7 @@ PHP;
     }
 
     /**
-     * Получает имя таблицы из класса модели
+     * Get table name from model class
      */
     private function getTableName(string $class): string
     {
@@ -288,7 +288,7 @@ PHP;
             return $tableMap[$class];
         }
 
-        // Если класс не в map, пробуем получить из xPDO
+        // If class not in map, try to get from xPDO
         $object = $this->modx->newObject($class);
         if ($object) {
             return $this->modx->getTableName($class);
@@ -298,7 +298,7 @@ PHP;
     }
 
     /**
-     * Получает короткое имя таблицы для класса миграции
+     * Get short table name for migration class
      */
     private function getTableShortName(string $class): string
     {

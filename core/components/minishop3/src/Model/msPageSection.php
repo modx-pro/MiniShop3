@@ -17,14 +17,14 @@ use xPDO\Om\xPDOSimpleObject;
  * @property string $created_at
  * @property string $updated_at
  *
- * @property msProductField[] $ProductFields Related product fields in this section
+ * @property msProductField[] $ProductFields Product fields in this section
  *
  * @package MiniShop3\Model
  */
 class msPageSection extends xPDOSimpleObject
 {
     /**
-     * Получить конфигурацию из JSON
+     * Get configuration from JSON
      *
      * @return array
      */
@@ -40,7 +40,7 @@ class msPageSection extends xPDOSimpleObject
     }
 
     /**
-     * Установить конфигурацию (автоматически конвертирует в JSON)
+     * Set configuration (automatically converts to JSON)
      *
      * @param array $config
      * @return bool

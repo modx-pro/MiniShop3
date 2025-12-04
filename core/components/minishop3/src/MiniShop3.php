@@ -32,9 +32,6 @@ class MiniShop3
     /** @var CoreTools $pdoTools */
     public $pdoTools;
 
-    // ВАЖНО: $cart, $order, $customer НЕ должны быть публичными свойствами!
-    // Они доступны через магические методы __get() → getCart() / getOrder() / getCustomer()
-    // Это позволяет ServiceRegistry управлять их созданием через DI контейнер
 
     /** @var Delivery $delivery */
     public $delivery;
@@ -112,8 +109,6 @@ class MiniShop3
         $this->services = new Services($this);
         $this->extraFields = new ExtraFields($this->modx);
 
-        // Регистрируем все сервисы MiniShop3 через ServiceRegistry
-        // Поддерживается переопределение через конфигурационный файл (ms3.services.php)
         (new ServiceRegistry($this->modx))->register();
 
         $this->options = new Options($this);
@@ -162,8 +157,8 @@ class MiniShop3
             if ($registerGlobalConfig) {
                 $tokenName = $this->modx->getOption('ms3_token_name', null, 'ms3_token');
                 $js_setting = [
-                    'actionUrl' => $this->config['actionUrl'],  // api.php для фронтенд API
-                    'connectorUrl' => $this->config['connectorUrl'],  // connector.php для админки (если нужен)
+                    'actionUrl' => $this->config['actionUrl'],
+                    'connectorUrl' => $this->config['connectorUrl'],
                     'ctx' => $ctx,
                     'tokenName' => $tokenName,
                     'render' => [
@@ -205,35 +200,30 @@ class MiniShop3
 
 
     /**
-     * Магический метод для доступа к сервисам через свойства
+     * Magic method to access services via properties
      *
-     * @param string $name Имя свойства
+     * @param string $name Property name
      * @return mixed
      */
     public function __get(string $name)
     {
-        // Доступ к корзине через $ms3->cart
         if ($name === 'cart') {
             return $this->getCart();
         }
 
-        // Доступ к заказу через $ms3->order
         if ($name === 'order') {
             return $this->getOrder();
         }
 
-        // Доступ к покупателю через $ms3->customer
         if ($name === 'customer') {
             return $this->getCustomer();
         }
-
-        // ... другие сервисы (delivery, payment и т.д.)
 
         return null;
     }
 
     /**
-     * Получение сервиса корзины (ленивая загрузка)
+     * Get cart service (lazy loading)
      *
      * @return \MiniShop3\Controllers\Cart\Cart
      */
@@ -243,7 +233,7 @@ class MiniShop3
     }
 
     /**
-     * Получение сервиса заказа (ленивая загрузка)
+     * Get order service (lazy loading)
      *
      * @return \MiniShop3\Controllers\Order\Order
      */
@@ -253,7 +243,7 @@ class MiniShop3
     }
 
     /**
-     * Получение сервиса покупателя (ленивая загрузка)
+     * Get customer service (lazy loading)
      *
      * @return \MiniShop3\Controllers\Customer\Customer
      */
@@ -313,18 +303,13 @@ class MiniShop3
         /** @var \MiniShop3\Services\TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
 
-        // Генерируем токен через TokenService (использует безопасный секрет из настроек)
         $token = $tokenService->generateSnippetToken($scriptProperties);
-
-        // Проверяем кеш
         $cachedData = $tokenService->getSnippetData($token);
 
         if ($cachedData === null) {
-            // Кешируем параметры с TTL из системных настроек
             $tokenService->cacheSnippetData($token, $scriptProperties);
         }
 
-        // Формируем данные для JS
         $output = [
             'token' => $token,
         ];
@@ -333,14 +318,12 @@ class MiniShop3
             $output['selector'] = $scriptProperties['selector'];
         }
 
-        // Регистрируем в глобальном конфиге для JS
         $this->modx->regClientStartupScript(
             '<script>ms3Config.render.cart.push(' . json_encode($output) . ');</script>',
             true
         );
     }
 
-    //TODO Перенести метод в контроллер заказов  (Или трейт скорее)
     private function deleteOldDraft()
     {
         // Every 30 minutes, run the cleanup for old tasks

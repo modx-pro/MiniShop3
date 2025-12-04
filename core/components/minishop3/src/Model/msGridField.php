@@ -8,23 +8,23 @@ use xPDO\Om\xPDOSimpleObject;
  * Class msGridField
  * @package MiniShop3\Model
  *
- * Модель для хранения конфигурации колонок гридов (customers, orders, products и т.д.)
+ * Model for storing grid column configuration (customers, orders, products, etc.)
  *
  * @property int $id
- * @property string $grid_key Ключ грида (customers, orders, products)
- * @property string $field_name Имя поля
- * @property string|null $label Прямой label (переопределяет lexicon)
- * @property string|null $lexicon_key Ключ лексикона для label
- * @property bool $visible Видимость колонки
- * @property int $sort_order Порядок отображения
- * @property bool $sortable Можно ли сортировать
- * @property bool $filterable Можно ли фильтровать
- * @property bool $frozen Закреплена ли колонка (слева/справа)
- * @property string|null $width Ширина колонки (например: 150px, 20%)
- * @property string|null $min_width Минимальная ширина
- * @property array|null $config Дополнительная конфигурация (template, type, format)
- * @property bool $is_system Системное поле (нельзя удалить)
- * @property bool $is_default Дефолтное поле (из seed)
+ * @property string $grid_key Grid key (customers, orders, products)
+ * @property string $field_name Field name
+ * @property string|null $label Direct label (overrides lexicon)
+ * @property string|null $lexicon_key Lexicon key for label
+ * @property bool $visible Column visibility
+ * @property int $sort_order Display order
+ * @property bool $sortable Whether column is sortable
+ * @property bool $filterable Whether column is filterable
+ * @property bool $frozen Whether column is frozen (left/right)
+ * @property string|null $width Column width (e.g.: 150px, 20%)
+ * @property string|null $min_width Minimum width
+ * @property array|null $config Additional configuration (template, type, format)
+ * @property bool $is_system System field (cannot be deleted)
+ * @property bool $is_default Default field (from seed)
  * @property string $created_at
  * @property string $updated_at
  */

@@ -41,7 +41,6 @@ class GetList extends GetListProcessor
                 $sourceId = (int)$data->get('source_id');
                 $source = null;
                 if ($sourceId > 0) {
-                    // MODX имеет встроенный метод для получения источников
                     /** @var modMediaSource $source */
                     $source = $this->modx->getObject('sources.modMediaSource', $sourceId);
                 }
@@ -54,20 +53,15 @@ class GetList extends GetListProcessor
                         $thumbnails = json_decode($properties['thumbnail']['value'], true);
                     }
                     if (!empty($thumbnails)) {
-                        // Берём первый размер из конфигурации
                         $firstKey = array_key_first($thumbnails);
                         $firstThumb = $thumbnails[$firstKey];
 
-                        // Новый формат (Intervention Image): width/height
                         if (!empty($firstThumb['width']) || !empty($firstThumb['height'])) {
-                            // Используем ключ как название папки (например: "thumb_webp", "small")
                             $this->thumb = $firstKey;
                         }
-                        // Старый формат (phpThumb): w/h - для обратной совместимости
                         elseif (!empty($firstThumb['w']) || !empty($firstThumb['h'])) {
                             $this->thumb = (@$firstThumb['w'] ?: 0) . 'x' . (@$firstThumb['h'] ?: 0);
                         }
-                        // Если ключ не числовой - используем его как название
                         elseif (!is_numeric($firstKey)) {
                             $this->thumb = $firstKey;
                         }
@@ -163,7 +157,6 @@ class GetList extends GetListProcessor
      */
     public function prepareQueryAfterCount(xPDOQuery $c)
     {
-        // Явный JOIN вместо использования связи из schema (избегаем вызова modMediaSource::load())
         $c->leftJoin(
             modMediaSource::class,
             'Source',

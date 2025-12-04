@@ -1,10 +1,10 @@
 /**
- * Менеджер токенов покупателя
+ * Customer token manager
  *
- * Управляет токеном авторизации покупателя:
- * - Хранение в localStorage
- * - Проверка срока действия (expiry)
- * - Автоматическое получение нового токена при отсутствии/истечении
+ * Manages customer authorization token:
+ * - Storage in localStorage
+ * - Expiry validation
+ * - Automatic token retrieval when missing/expired
  *
  * @example
  * const tokenManager = new TokenManager({ tokenName: 'ms3_token' })
@@ -13,16 +13,16 @@
  */
 class TokenManager {
   /**
-   * @param {Object} config - Конфигурация
-   * @param {string} config.tokenName - Ключ для хранения токена в localStorage
+   * @param {Object} config - Configuration
+   * @param {string} config.tokenName - Key for storing token in localStorage
    */
   constructor (config) {
     this.tokenName = config.tokenName || 'ms3_token'
-    this.apiClient = null // Будет установлен позже через setApiClient()
+    this.apiClient = null
   }
 
   /**
-   * Установка ApiClient (для получения нового токена с сервера)
+   * Set ApiClient (for fetching new token from server)
    *
    * @param {ApiClient} apiClient
    */
@@ -31,9 +31,9 @@ class TokenManager {
   }
 
   /**
-   * Получить токен из localStorage
+   * Get token from localStorage
    *
-   * @returns {string|null} - Токен или null если токен отсутствует/истёк
+   * @returns {string|null} - Token or null if missing/expired
    */
   getToken () {
     const tokenData = this.getTokenData()
@@ -41,9 +41,9 @@ class TokenManager {
   }
 
   /**
-   * Получить полные данные токена (token + expiry)
+   * Get full token data (token + expiry)
    *
-   * @returns {Object|null} - { token: string, expiry: number } или null
+   * @returns {Object|null} - { token: string, expiry: number } or null
    */
   getTokenData () {
     const stored = localStorage.getItem(this.tokenName)
@@ -55,7 +55,6 @@ class TokenManager {
       const data = JSON.parse(stored)
       const now = Date.now()
 
-      // Проверяем срок действия
       if (now > data.expiry) {
         this.removeToken()
         return null
@@ -63,17 +62,16 @@ class TokenManager {
 
       return data
     } catch (e) {
-      // Если JSON невалидный - удаляем
       this.removeToken()
       return null
     }
   }
 
   /**
-   * Сохранить токен в localStorage
+   * Save token to localStorage
    *
-   * @param {string} token - Токен
-   * @param {number} lifetime - Время жизни токена в секундах
+   * @param {string} token - Token
+   * @param {number} lifetime - Token lifetime in seconds
    */
   setToken (token, lifetime) {
     const data = {
@@ -84,40 +82,37 @@ class TokenManager {
   }
 
   /**
-   * Удалить токен из localStorage
+   * Remove token from localStorage
    */
   removeToken () {
     localStorage.removeItem(this.tokenName)
   }
 
   /**
-   * Проверить наличие валидного токена, получить новый если нужно
+   * Check for valid token, fetch new if needed
    *
    * @returns {Promise<void>}
    */
   async ensureToken () {
-    // Если токен есть и валиден - ничего не делаем
     if (this.getToken()) {
       return
     }
 
-    // Получаем новый токен с сервера
     await this.fetchNewToken()
   }
 
   /**
-   * Получить новый токен с сервера
+   * Fetch new token from server
    *
    * @returns {Promise<void>}
    */
   async fetchNewToken () {
     if (!this.apiClient) {
-      console.error('TokenManager: ApiClient не установлен. Используйте setApiClient()')
+      console.error('TokenManager: ApiClient not set. Use setApiClient()')
       return
     }
 
     try {
-      // Создаём URL для получения токена через api.php (фронтенд API)
       const url = new URL(this.apiClient.baseUrl, window.location.origin)
       url.searchParams.set('route', '/api/v1/customer/token/get')
 
@@ -132,24 +127,23 @@ class TokenManager {
       const result = await response.json()
 
       if (result.success && result.data) {
-        // api.php возвращает данные напрямую в result.data
         this.setToken(result.data.token, result.data.lifetime)
       } else {
-        console.error('TokenManager: Не удалось получить токен', result)
+        console.error('TokenManager: Failed to get token', result)
       }
     } catch (error) {
-      console.error('TokenManager: Ошибка при получении токена', error)
+      console.error('TokenManager: Error fetching token', error)
     }
   }
 
   /**
-   * Обновить существующий токен (продлить время жизни)
+   * Refresh existing token (extend lifetime)
    *
    * @returns {Promise<void>}
    */
   async refreshToken () {
     if (!this.apiClient) {
-      console.error('TokenManager: ApiClient не установлен')
+      console.error('TokenManager: ApiClient not set')
       return
     }
 
@@ -160,7 +154,7 @@ class TokenManager {
         this.setToken(response.data.token, response.data.lifetime)
       }
     } catch (error) {
-      console.error('TokenManager: Ошибка при обновлении токена', error)
+      console.error('TokenManager: Error refreshing token', error)
     }
   }
 }

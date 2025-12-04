@@ -1,11 +1,11 @@
 <script setup>
 /**
- * ActionsColumn - Универсальный компонент для колонки действий в гридах
+ * ActionsColumn - Universal component for grid action columns
  *
- * Рендерит кнопки действий на основе конфигурации.
- * Поддерживает встроенные и кастомные обработчики через MS3ActionRegistry.
+ * Renders action buttons based on configuration.
+ * Supports built-in and custom handlers via MS3ActionRegistry.
  *
- * Использование:
+ * Usage:
  * <ActionsColumn
  *   :data="rowData"
  *   :actions="actionsConfig"
@@ -15,18 +15,18 @@
  *   @refresh="loadData"
  * />
  *
- * Конфигурация действия:
+ * Action configuration:
  * {
- *   name: 'edit',           // Имя (идентификатор)
- *   handler: 'edit',        // Обработчик из реестра
- *   icon: 'pi-pencil',      // Иконка PrimeIcons
- *   label: 'edit',          // Ключ лексикона или текст
+ *   name: 'edit',           // Name (identifier)
+ *   handler: 'edit',        // Handler from registry
+ *   icon: 'pi-pencil',      // PrimeIcons icon
+ *   label: 'edit',          // Lexicon key or text
  *   severity: null,         // PrimeVue severity: danger, secondary, success, etc.
- *   confirm: false,         // Требуется подтверждение
- *   confirmMessage: '...',  // Сообщение подтверждения (ключ лексикона)
- *   permission: 'ms3_save', // Право доступа (опционально)
- *   visible: true,          // Видимость кнопки
- *   disabled: false         // Отключена
+ *   confirm: false,         // Confirmation required
+ *   confirmMessage: '...',  // Confirmation message (lexicon key)
+ *   permission: 'ms3_save', // Access permission (optional)
+ *   visible: true,          // Button visibility
+ *   disabled: false         // Disabled state
  * }
  */
 import { computed } from 'vue'
@@ -36,7 +36,7 @@ import { useLexicon } from '../composables/useLexicon.js'
 
 const props = defineProps({
   /**
-   * Данные строки грида
+   * Grid row data
    */
   data: {
     type: Object,
@@ -44,7 +44,7 @@ const props = defineProps({
   },
 
   /**
-   * Массив конфигураций действий
+   * Array of action configurations
    */
   actions: {
     type: Array,
@@ -52,7 +52,7 @@ const props = defineProps({
   },
 
   /**
-   * Идентификатор грида
+   * Grid identifier
    */
   gridId: {
     type: String,
@@ -60,7 +60,7 @@ const props = defineProps({
   },
 
   /**
-   * Показывать только иконки (без текста)
+   * Show icons only (without text)
    */
   iconOnly: {
     type: Boolean,
@@ -68,7 +68,7 @@ const props = defineProps({
   },
 
   /**
-   * Размер кнопок: 'small', 'normal', 'large'
+   * Button size: 'small', 'normal', 'large'
    */
   size: {
     type: String,
@@ -80,7 +80,6 @@ const emit = defineEmits(['edit', 'delete', 'view', 'addresses', 'refresh', 'act
 
 const { _ } = useLexicon()
 
-// Создаём контекст действий
 const { executeAction } = useActions({
   gridId: props.gridId,
   onRefresh: () => emit('refresh'),
@@ -92,7 +91,7 @@ const { executeAction } = useActions({
 })
 
 /**
- * Дефолтные конфигурации для встроенных действий
+ * Default configurations for built-in actions
  */
 const defaultActionConfigs = {
   edit: {
@@ -123,7 +122,7 @@ const defaultActionConfigs = {
 }
 
 /**
- * Обработанные действия с применением дефолтов
+ * Processed actions with defaults applied
  */
 const processedActions = computed(() => {
   return props.actions
@@ -136,25 +135,21 @@ const processedActions = computed(() => {
         ...defaults,
         ...action,
         handler: handlerName,
-        // Формируем полную иконку
         iconClass: `pi ${action.icon || defaults.icon || 'pi-cog'}`,
-        // Получаем label из лексикона
         displayLabel: _(action.label || defaults.label || action.name),
-        // Проверяем disabled на основе данных
         isDisabled: checkDisabled(action)
       }
     })
 })
 
 /**
- * Проверка, отключена ли кнопка
+ * Check if button is disabled
  */
 function checkDisabled(action) {
   if (action.disabled === true) return true
   if (typeof action.disabled === 'function') {
     return action.disabled(props.data)
   }
-  // Проверка по полю данных
   if (action.disabledField && props.data[action.disabledField]) {
     return true
   }
@@ -162,20 +157,18 @@ function checkDisabled(action) {
 }
 
 /**
- * Обработчик клика по кнопке действия
+ * Handle action button click
  */
 async function handleActionClick(action) {
   if (action.isDisabled) return
 
   try {
-    // Эмитим общее событие action с деталями
     emit('action', {
       name: action.name,
       handler: action.handler,
       data: props.data
     })
 
-    // Выполняем действие через реестр
     await executeAction(action.handler, props.data, action)
   } catch (error) {
     console.error(`[ActionsColumn] Error executing action "${action.name}":`, error)
@@ -183,7 +176,7 @@ async function handleActionClick(action) {
 }
 
 /**
- * Получить CSS классы для кнопки
+ * Get CSS classes for button
  */
 function getButtonClasses(action) {
   const classes = ['p-button-text']

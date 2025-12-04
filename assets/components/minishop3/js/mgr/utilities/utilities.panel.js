@@ -52,7 +52,7 @@ ms3.panel.Utilities = function (config) {
                         html: '<div id="ms3-vue-fields-management" class="vueApp" style="min-height: 600px;"></div>',
                         listeners: {
                             afterrender: function() {
-                                // Монтируем Vue приложение после рендера панели
+                                // Mount Vue application after panel render
                                 const event = new CustomEvent('ms3:mountVueFieldsManagement', {
                                     detail: {
                                         targetId: '#ms3-vue-fields-management'
@@ -64,7 +64,7 @@ ms3.panel.Utilities = function (config) {
                     }]
                 },
                 {
-                    title: 'Расширение объектов',
+                    title: 'Object Extension',
                     id: 'ms3-utilities-extra-fields-tab',
                     layout: 'fit',
                     autoScroll: true,
@@ -76,7 +76,7 @@ ms3.panel.Utilities = function (config) {
                         html: '<div id="ms3-vue-extra-fields" class="vueApp" style="min-height: 600px;"></div>',
                         listeners: {
                             afterrender: function() {
-                                // Монтируем Vue приложение после рендера панели
+                                // Mount Vue application after panel render
                                 const event = new CustomEvent('ms3:mountVueExtraFields', {
                                     detail: {
                                         targetId: '#ms3-vue-extra-fields'
@@ -100,7 +100,7 @@ ms3.panel.Utilities = function (config) {
                         html: '<div id="ms3-grid-fields-config-vue-wrapper" class="vueApp" style="min-height: 600px;"></div>',
                         listeners: {
                             afterrender: function() {
-                                // Монтируем Vue приложение после рендера панели
+                                // Mount Vue application after panel render
                                 const event = new CustomEvent('ms3:mountVueGridFieldsConfig', {
                                     detail: {
                                         targetId: '#ms3-grid-fields-config-vue-wrapper'
@@ -111,16 +111,16 @@ ms3.panel.Utilities = function (config) {
                         }
                     }]
                 }
-                // Старая ExtJS вкладка "Расширение объектов" удалена - используется новый Vue виджет
+                // Old ExtJS "Object Extension" tab removed - using new Vue widget instead
             ]
         }]
 
     });
     ms3.panel.Utilities.superclass.constructor.call(this, config);
 
-    // fixExtraFieldsPanelHeight метод удалён вместе со старым ExtJS виджетом
+    // fixExtraFieldsPanelHeight method removed along with old ExtJS widget
 };
 Ext.extend(ms3.panel.Utilities, MODx.Panel, {
-    // Старые методы для ExtJS extra fields удалены
+    // Old methods for ExtJS extra fields removed
 });
 Ext.reg('ms3-panel-utilities', ms3.panel.Utilities);

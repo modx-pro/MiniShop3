@@ -142,7 +142,7 @@ class msCategory extends modResource
     {
         $newCategory = parent::duplicate($options);
 
-        // Дублируем связанные данные через сервис
+        // Duplicate related data via service
         $this->getCategoryService()->duplicateCategory($this, $newCategory);
 
         return $newCategory;
@@ -157,7 +157,7 @@ class msCategory extends modResource
     {
         $oldClassKey = parent::get('class_key');
 
-        // Обрабатываем изменение типа категории через сервис
+        // Handle category type change via service
         if (!$this->isNew() && $oldClassKey != 'msCategory') {
             $this->getCategoryService()->handleCategorySave($this, $oldClassKey);
         }
@@ -202,18 +202,18 @@ class msCategory extends modResource
     }
 
     /**
-     * Получить сервис категорий (lazy loading)
+     * Get category service (lazy loading)
      *
      * @return CategoryService
      */
     protected function getCategoryService(): CategoryService
     {
         if ($this->categoryService === null) {
-            // Пытаемся получить из контейнера, если зарегистрирован
+            // Try to get from container if registered
             if ($this->xpdo->services->has('ms3_category_service')) {
                 $this->categoryService = $this->xpdo->services->get('ms3_category_service');
             } else {
-                // Создаем новый экземпляр
+                // Create new instance
                 $this->categoryService = new CategoryService($this->xpdo);
             }
         }
@@ -222,18 +222,18 @@ class msCategory extends modResource
     }
 
     /**
-     * Получить сервис опций категорий (lazy loading)
+     * Get category option service (lazy loading)
      *
      * @return CategoryOptionService
      */
     protected function getCategoryOptionService(): CategoryOptionService
     {
         if ($this->categoryOptionService === null) {
-            // Пытаемся получить из контейнера, если зарегистрирован
+            // Try to get from container if registered
             if ($this->xpdo->services->has('ms3_category_option_service')) {
                 $this->categoryOptionService = $this->xpdo->services->get('ms3_category_option_service');
             } else {
-                // Создаем новый экземпляр
+                // Create new instance
                 $this->categoryOptionService = new CategoryOptionService($this->xpdo);
             }
         }

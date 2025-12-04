@@ -46,7 +46,6 @@ class Generate extends ModelProcessor
             }
             $file->generateThumbnails();
 
-            // Обновляем главное изображение товара через сервис
             /** @var msProductData $productData */
             $productData = $this->modx->getObject(msProductData::class, ['id' => $file->get('product_id')]);
             if ($productData) {

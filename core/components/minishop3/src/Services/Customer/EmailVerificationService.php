@@ -7,22 +7,22 @@ use MiniShop3\Model\msCustomerToken;
 use MODX\Revolution\modX;
 
 /**
- * EmailVerificationService - сервис подтверждения email адресов
+ * EmailVerificationService - email address verification service
  *
- * Генерирует токены подтверждения и отправляет письма.
- * Проверяет токены и активирует email клиентов.
+ * Generates verification tokens and sends emails.
+ * Validates tokens and activates customer emails.
  *
- * Пример использования:
+ * Example usage:
  * ```php
  * $emailService = $modx->services->get('ms3_email_verification_service');
  *
- * // Отправка письма с подтверждением
+ * // Send verification email
  * $emailService->sendVerificationEmail($customer);
  *
- * // Проверка токена из письма
+ * // Verify token from email
  * $customer = $emailService->verifyToken($token);
  * if ($customer) {
- *     echo "Email подтвержден!";
+ *     echo "Email verified!";
  * }
  * ```
  *
@@ -45,7 +45,7 @@ class EmailVerificationService
     }
 
     /**
-     * Установить AuthManager для работы с токенами
+     * Set AuthManager for token operations
      *
      * @param AuthManager $authManager
      * @return void
@@ -56,14 +56,13 @@ class EmailVerificationService
     }
 
     /**
-     * Отправить письмо с подтверждением email
+     * Send email verification message
      *
      * @param msCustomer $customer
-     * @return bool true при успехе
+     * @return bool true on success
      */
     public function sendVerificationEmail(msCustomer $customer): bool
     {
-        // Проверка, что email еще не подтвержден
         if ($customer->get('email_verified_at')) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
@@ -72,18 +71,15 @@ class EmailVerificationService
             return false;
         }
 
-        // Удаляем старые токены подтверждения
         if ($this->authManager) {
             $this->authManager->revokeTokens($customer, 'email_verification');
         }
 
-        // Создаем новый токен (срок действия 24 часа)
         $ttl = (int)$this->modx->getOption('ms3_email_verification_token_ttl', null, 86400);
 
         if ($this->authManager) {
             $tokenObj = $this->authManager->createToken($customer, 'email_verification', $ttl);
         } else {
-            // Fallback если AuthManager не установлен
             /** @var msCustomerToken $tokenObj */
             $tokenObj = $this->modx->newObject(msCustomerToken::class);
             $tokenObj->set('customer_id', $customer->id);
@@ -103,23 +99,20 @@ class EmailVerificationService
 
         $token = $tokenObj->get('token');
 
-        // Генерируем ссылку подтверждения
         $siteUrl = $this->modx->getOption('site_url');
         $verificationUrl = $siteUrl . 'verify-email?token=' . $token;
 
-        // Подготовка письма
         $email = $customer->get('email');
         $siteName = $this->modx->getOption('site_name');
 
         $subject = $this->modx->lexicon('ms3_email_verification_subject', ['site' => $siteName]);
         $body = $this->modx->lexicon('ms3_email_verification_body', [
-            'first_name' => $customer->get('first_name') ?: 'Клиент',
+            'first_name' => $customer->get('first_name') ?: 'Customer',
             'url' => $verificationUrl,
             'site' => $siteName,
             'ttl_hours' => round($ttl / 3600),
         ]);
 
-        // Отправка письма
         $this->modx->getService('mail', 'mail.modPHPMailer');
         $this->modx->mail->set(modMail::MAIL_BODY, $body);
         $this->modx->mail->set(modMail::MAIL_FROM, $this->modx->getOption('emailsender'));
@@ -147,17 +140,16 @@ class EmailVerificationService
     }
 
     /**
-     * Проверить токен подтверждения и активировать email
+     * Verify token and activate email
      *
-     * @param string $token Токен из письма
-     * @return msCustomer|null Клиент при успехе, null при ошибке
+     * @param string $token Token from email
+     * @return msCustomer|null Customer on success, null on error
      */
     public function verifyToken(string $token): ?msCustomer
     {
         if ($this->authManager) {
             $customer = $this->authManager->validateToken($token, 'email_verification');
         } else {
-            // Fallback если AuthManager не установлен
             /** @var msCustomerToken $tokenObj */
             $tokenObj = $this->modx->getObject(msCustomerToken::class, [
                 'token' => $token,
@@ -168,13 +160,11 @@ class EmailVerificationService
                 return null;
             }
 
-            // Проверка истечения
             if (strtotime($tokenObj->get('expires_at')) < time()) {
                 $tokenObj->remove();
                 return null;
             }
 
-            // Проверка использования
             if ($tokenObj->get('used_at')) {
                 return null;
             }
@@ -184,7 +174,6 @@ class EmailVerificationService
                 return null;
             }
 
-            // Отмечаем использование
             $tokenObj->set('used_at', date('Y-m-d H:i:s'));
             $tokenObj->save();
         }
@@ -197,7 +186,6 @@ class EmailVerificationService
             return null;
         }
 
-        // Активируем email
         $customer->set('email_verified_at', date('Y-m-d H:i:s'));
         $customer->save();
 
@@ -210,7 +198,7 @@ class EmailVerificationService
     }
 
     /**
-     * Проверить, подтвержден ли email клиента
+     * Check if customer email is verified
      *
      * @param msCustomer $customer
      * @return bool
@@ -221,14 +209,13 @@ class EmailVerificationService
     }
 
     /**
-     * Повторная отправка письма с подтверждением
+     * Resend verification email
      *
      * @param msCustomer $customer
      * @return array ['success' => bool, 'message' => string]
      */
     public function resendVerificationEmail(msCustomer $customer): array
     {
-        // Проверка, что email еще не подтвержден
         if ($this->isVerified($customer)) {
             return [
                 'success' => false,
@@ -236,9 +223,8 @@ class EmailVerificationService
             ];
         }
 
-        // Rate limiting - не чаще 1 раза в 5 минут
         $lastSent = $_SESSION['ms3_email_verification_sent'][$customer->id] ?? 0;
-        $cooldown = 300; // 5 минут
+        $cooldown = 300;
 
         if (time() - $lastSent < $cooldown) {
             $remaining = $cooldown - (time() - $lastSent);
@@ -248,7 +234,6 @@ class EmailVerificationService
             ];
         }
 
-        // Отправка
         $sent = $this->sendVerificationEmail($customer);
 
         if ($sent) {

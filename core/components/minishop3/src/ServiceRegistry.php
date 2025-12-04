@@ -5,28 +5,28 @@ namespace MiniShop3;
 use MODX\Revolution\modX;
 
 /**
- * Service Registry - централизованная регистрация сервисов MiniShop3
+ * Service Registry - centralized MiniShop3 service registration
  *
- * Управляет регистрацией всех сервисов компонента в DI контейнере MODX.
- * Поддерживает переопределение сервисов пользователем через конфигурационные файлы.
+ * Manages registration of all component services in MODX DI container.
+ * Supports user service overrides via configuration files.
  *
- * Приоритеты загрузки:
- * 1. Дефолтные классы компонента (встроенные)
- * 2. Пользовательский конфиг (core/config/ms3.services.php)
- * 3. Конфиги аддонов (core/config/ms3.services.d/*.php)
+ * Loading priorities:
+ * 1. Component default classes (built-in)
+ * 2. User config (core/config/ms3.services.php)
+ * 3. Addon configs (core/config/ms3.services.d/*.php)
  *
- * Каждый следующий уровень перезаписывает предыдущий.
+ * Each next level overrides the previous one.
  *
- * Архитектура для аддонов:
- * - Каждый аддон создаёт свой файл в ms3.services.d/
- * - Файлы загружаются в алфавитном порядке
- * - Нет конфликтов при установке нескольких аддонов
+ * Architecture for addons:
+ * - Each addon creates its file in ms3.services.d/
+ * - Files are loaded in alphabetical order
+ * - No conflicts when installing multiple addons
  *
- * Особенности:
- * - Валидация классов (существование, интерфейсы, наследование)
- * - Автоматический fallback на дефолтные классы при ошибке
- * - Логирование всех операций для отладки
- * - Lazy loading - сервисы создаются только при обращении
+ * Features:
+ * - Class validation (existence, interfaces, inheritance)
+ * - Automatic fallback to default classes on error
+ * - All operations logging for debugging
+ * - Lazy loading - services are created only on access
  *
  * @package MiniShop3
  */
@@ -36,16 +36,16 @@ class ServiceRegistry
     protected modX $modx;
 
     /**
-     * Дефолтные сервисы (встроенные в компонент)
+     * Default services (built into component)
      *
-     * Формат: [service_key => [class, interface]]
+     * Format: [service_key => [class, interface]]
      *
      * @var array
      */
     protected array $defaultServices = [
         'ms3_config_manager' => [
             'class' => \MiniShop3\Services\ConfigManager::class,
-            'interface' => null, // TODO: создать интерфейс
+            'interface' => null,
         ],
         'ms3_field_config_manager' => [
             'class' => \MiniShop3\Services\FieldConfigManager::class,
@@ -111,7 +111,6 @@ class ServiceRegistry
             'class' => \MiniShop3\Controllers\Customer\Customer::class,
             'interface' => null,
         ],
-        // Сервисы аутентификации и регистрации клиентов
         'ms3_auth_manager' => [
             'class' => \MiniShop3\Services\Customer\AuthManager::class,
             'interface' => null,
@@ -148,14 +147,14 @@ class ServiceRegistry
     ];
 
     /**
-     * Пользовательские переопределения (загружаются из конфига)
+     * User overrides (loaded from config)
      *
      * @var array
      */
     protected array $customServices = [];
 
     /**
-     * Конструктор
+     * Constructor
      *
      * @param modX $modx
      */
@@ -166,27 +165,25 @@ class ServiceRegistry
     }
 
     /**
-     * Загрузка пользовательских переопределений из конфигов
+     * Load user overrides from configs
      *
-     * Загрузка происходит в порядке приоритета:
-     * 1. core/config/ms3.services.php (пользовательский конфиг)
-     * 2. core/config/ms3.services.d/*.php (конфиги аддонов, в алфавитном порядке)
+     * Loading happens in priority order:
+     * 1. core/config/ms3.services.php (user config)
+     * 2. core/config/ms3.services.d/*.php (addon configs, in alphabetical order)
      *
-     * Каждый следующий файл перезаписывает предыдущие значения.
+     * Each next file overwrites previous values.
      *
      * @return void
      */
     protected function loadCustomServices(): void
     {
-        // 1. Загрузка основного пользовательского конфига
         $this->loadMainConfig();
 
-        // 2. Загрузка конфигов аддонов из ms3.services.d/
         $this->loadAddonConfigs();
     }
 
     /**
-     * Загрузка основного пользовательского конфига
+     * Load main user config
      *
      * @return void
      */
@@ -236,10 +233,10 @@ class ServiceRegistry
     }
 
     /**
-     * Загрузка конфигов аддонов из директории ms3.services.d/
+     * Load addon configs from ms3.services.d/ directory
      *
-     * Файлы загружаются в алфавитном порядке.
-     * Это позволяет управлять приоритетами через имена файлов:
+     * Files are loaded in alphabetical order.
+     * This allows priority management via file names:
      * - 01-base.php
      * - 50-mycartaddon.php
      * - 99-override.php
@@ -262,7 +259,6 @@ class ServiceRegistry
             return;
         }
 
-        // Получаем все PHP файлы из директории
         $files = glob($addonsDir . '*.php');
         if (empty($files)) {
             $this->modx->log(
@@ -272,7 +268,6 @@ class ServiceRegistry
             return;
         }
 
-        // Сортируем в алфавитном порядке
         sort($files);
 
         $loadedAddons = 0;
@@ -288,7 +283,6 @@ class ServiceRegistry
                     continue;
                 }
 
-                // Объединяем с уже загруженными сервисами
                 $this->customServices = array_merge($this->customServices, $config);
 
                 $this->modx->log(
@@ -318,16 +312,15 @@ class ServiceRegistry
     }
 
     /**
-     * Регистрация всех сервисов в DI контейнере
+     * Register all services in DI container
      *
-     * Объединяет дефолтные и пользовательские сервисы.
-     * Пользовательские переопределения имеют приоритет.
+     * Merges default and custom services.
+     * Custom overrides have priority.
      *
      * @return void
      */
     public function register(): void
     {
-        // Объединяем дефолтные + кастомные (кастомные перезаписывают дефолтные)
         $services = array_merge($this->defaultServices, $this->customServices);
 
         $registered = 0;
@@ -352,15 +345,14 @@ class ServiceRegistry
     }
 
     /**
-     * Регистрация одного сервиса
+     * Register one service
      *
-     * @param string $serviceKey Ключ сервиса в DI контейнере
-     * @param array $config Конфигурация сервиса [class, interface]
-     * @return bool True если зарегистрирован, false если уже существует
+     * @param string $serviceKey Service key in DI container
+     * @param array $config Service configuration [class, interface]
+     * @return bool True if registered, false if already exists
      */
     protected function registerService(string $serviceKey, array $config): bool
     {
-        // Проверяем не зарегистрирован ли уже
         if ($this->modx->services->has($serviceKey)) {
             return false;
         }
@@ -368,16 +360,12 @@ class ServiceRegistry
         $className = $config['class'];
         $requiredInterface = $config['interface'] ?? null;
 
-        // Получаем fallback класс из дефолтных сервисов
         $fallbackClass = $this->defaultServices[$serviceKey]['class'] ?? $className;
 
-        // Валидация класса
         $validatedClass = $this->validateClass($className, $fallbackClass, $requiredInterface);
 
-        // Регистрируем в DI контейнере с lazy loading
         $modx = $this->modx;
 
-        // Для Cart, Order, Customer нужен MiniShop3 в конструкторе, для остальных - modX
         if (in_array($serviceKey, ['ms3_cart', 'ms3_order', 'ms3_customer'])) {
             $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
                 $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
@@ -393,31 +381,29 @@ class ServiceRegistry
     }
 
     /**
-     * Валидация подменяемого класса
+     * Validate substituted class
      *
-     * Проверяет:
-     * - Существование класса
-     * - Реализацию требуемого интерфейса (если указан)
-     * - Наследование от базового класса
+     * Checks:
+     * - Class existence
+     * - Required interface implementation (if specified)
+     * - Base class inheritance
      *
-     * При ошибках логирует и возвращает fallback класс.
+     * Logs errors and returns fallback class on failures.
      *
-     * @param string $className Проверяемый класс
-     * @param string $fallbackClass Класс по умолчанию (если валидация не прошла)
-     * @param string|null $requiredInterface Требуемый интерфейс (опционально)
-     * @return string Валидированный класс или fallback
+     * @param string $className Class to validate
+     * @param string $fallbackClass Default class (if validation fails)
+     * @param string|null $requiredInterface Required interface (optional)
+     * @return string Validated class or fallback
      */
     protected function validateClass(
         string $className,
         string $fallbackClass,
         ?string $requiredInterface = null
     ): string {
-        // Если это дефолтный класс - пропускаем валидацию
         if ($className === $fallbackClass) {
             return $className;
         }
 
-        // Проверка существования класса
         if (!class_exists($className)) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -426,7 +412,6 @@ class ServiceRegistry
             return $fallbackClass;
         }
 
-        // Проверка реализации интерфейса (если указан)
         if ($requiredInterface) {
             $interfaces = class_implements($className);
             if (!in_array($requiredInterface, $interfaces ?: [])) {
@@ -438,7 +423,6 @@ class ServiceRegistry
             }
         }
 
-        // Проверка наследования от базового класса
         if (!is_subclass_of($className, $fallbackClass)) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -447,7 +431,6 @@ class ServiceRegistry
             return $fallbackClass;
         }
 
-        // Всё ок - класс валиден (логируем только если это кастомный класс)
         if ($className !== $fallbackClass) {
             $this->modx->log(
                 modX::LOG_LEVEL_INFO,
@@ -459,9 +442,9 @@ class ServiceRegistry
     }
 
     /**
-     * Получить список всех зарегистрированных сервисов
+     * Get list of all registered services
      *
-     * @return array Массив ключей сервисов
+     * @return array Array of service keys
      */
     public function getRegisteredServices(): array
     {
@@ -469,10 +452,10 @@ class ServiceRegistry
     }
 
     /**
-     * Получить конфигурацию конкретного сервиса
+     * Get specific service configuration
      *
-     * @param string $serviceKey Ключ сервиса
-     * @return array|null Конфигурация или null если не найден
+     * @param string $serviceKey Service key
+     * @return array|null Configuration or null if not found
      */
     public function getServiceConfig(string $serviceKey): ?array
     {
@@ -481,9 +464,9 @@ class ServiceRegistry
     }
 
     /**
-     * Проверить переопределён ли сервис пользователем
+     * Check if service is overridden by user
      *
-     * @param string $serviceKey Ключ сервиса
+     * @param string $serviceKey Service key
      * @return bool
      */
     public function isCustomService(string $serviceKey): bool

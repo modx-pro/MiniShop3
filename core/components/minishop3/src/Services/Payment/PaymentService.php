@@ -10,11 +10,11 @@ use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для работы с оплатой
+ * Service for working with payments
  *
- * Обрабатывает бизнес-логику связанную с оплатой заказов,
- * включая загрузку контроллеров, отправку на платежный шлюз,
- * прием платежей и расчет стоимости
+ * Handles business logic related to order payments,
+ * including loading controllers, sending to payment gateway,
+ * receiving payments and cost calculation
  */
 class PaymentService
 {
@@ -40,13 +40,13 @@ class PaymentService
     }
 
     /**
-     * Загрузка контроллера оплаты (обработчика платежей)
+     * Load payment controller (payment handler)
      *
-     * Создает экземпляр контроллера оплаты на основе класса из настроек.
-     * Если класс не указан, используется контроллер по умолчанию (DefaultPayment).
+     * Creates payment controller instance based on class from settings.
+     * If class is not specified, uses default controller (DefaultPayment).
      *
      * @param msPayment $payment
-     * @return PaymentProviderInterface|null Контроллер оплаты или null при ошибке
+     * @return PaymentProviderInterface|null Payment controller or null on error
      */
     public function loadPaymentHandler(msPayment $payment): ?PaymentProviderInterface
     {
@@ -62,7 +62,7 @@ class PaymentService
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
                     sprintf(
-                        'PaymentService: Класс "%s" не реализует PaymentProviderInterface для способа оплаты ID=%d',
+                        'PaymentService: Class "%s" does not implement PaymentProviderInterface for payment method ID=%d',
                         $class,
                         $payment->get('id')
                     )
@@ -75,7 +75,7 @@ class PaymentService
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
                 sprintf(
-                    'PaymentService: Ошибка загрузки контроллера оплаты "%s": %s',
+                    'PaymentService: Error loading payment controller "%s": %s',
                     $class,
                     $e->getMessage()
                 )
@@ -85,15 +85,15 @@ class PaymentService
     }
 
     /**
-     * Отправка пользователя на платежный шлюз
+     * Send user to payment gateway
      *
-     * Перенаправляет пользователя на сайт платежной системы для оплаты заказа.
-     * Контроллер может сформировать форму автоотправки или вернуть URL для редиректа.
+     * Redirects user to payment system website for order payment.
+     * Controller can generate auto-submit form or return URL for redirect.
      *
-     * @param msPayment $payment Способ оплаты
-     * @param PaymentProviderInterface|null $controller Контроллер оплаты (если null - будет загружен)
-     * @param msOrder $order Заказ
-     * @return array|bool Массив с данными для редиректа или false при ошибке
+     * @param msPayment $payment Payment method
+     * @param PaymentProviderInterface|null $controller Payment controller (if null - will be loaded)
+     * @param msOrder $order Order
+     * @return array|bool Array with redirect data or false on error
      */
     public function sendToPaymentGateway(
         msPayment $payment,
@@ -111,15 +111,15 @@ class PaymentService
     }
 
     /**
-     * Прием платежа от платежной системы
+     * Receive payment from payment system
      *
-     * Обрабатывает callback от платежного шлюза после оплаты.
-     * Обычно вызывается при возврате пользователя или через webhook.
+     * Handles callback from payment gateway after payment.
+     * Usually called on user return or via webhook.
      *
-     * @param msPayment $payment Способ оплаты
-     * @param PaymentProviderInterface|null $controller Контроллер оплаты (если null - будет загружен)
-     * @param msOrder $order Заказ
-     * @return array|bool Результат обработки платежа или false при ошибке
+     * @param msPayment $payment Payment method
+     * @param PaymentProviderInterface|null $controller Payment controller (if null - will be loaded)
+     * @param msOrder $order Order
+     * @return array|bool Payment processing result or false on error
      */
     public function receivePayment(
         msPayment $payment,
@@ -137,16 +137,16 @@ class PaymentService
     }
 
     /**
-     * Расчет стоимости оплаты
+     * Calculate payment cost
      *
-     * Делегирует расчет стоимости контроллеру оплаты.
-     * Контроллер может добавлять комиссию за использование данного способа оплаты.
+     * Delegates cost calculation to payment controller.
+     * Controller can add commission for using this payment method.
      *
-     * @param msPayment $payment Способ оплаты
-     * @param PaymentProviderInterface|null $controller Контроллер оплаты (если null - будет загружен)
-     * @param msOrder $order Заказ
-     * @param float $cost Текущая стоимость заказа
-     * @return float Дополнительная стоимость за способ оплаты
+     * @param msPayment $payment Payment method
+     * @param PaymentProviderInterface|null $controller Payment controller (if null - will be loaded)
+     * @param msOrder $order Order
+     * @param float $cost Current order cost
+     * @return float Additional cost for payment method
      */
     public function calculatePaymentCost(
         msPayment $payment,
@@ -165,10 +165,10 @@ class PaymentService
     }
 
     /**
-     * Удаление способа оплаты с очисткой связей
+     * Delete payment method with relationship cleanup
      *
-     * Удаляет все связи способа оплаты с доставками
-     * из таблицы msDeliveryMember перед удалением
+     * Removes all payment method relationships with deliveries
+     * from msDeliveryMember table before deletion
      *
      * @param msPayment $payment
      * @param array $ancestors
@@ -178,7 +178,7 @@ class PaymentService
     {
         $paymentId = $payment->get('id');
 
-        // Удаляем все связи способа оплаты с доставками
+        // Remove all payment method relationships with deliveries
         $this->modx->removeCollection(msDeliveryMember::class, [
             'payment_id' => $paymentId
         ]);
@@ -186,7 +186,7 @@ class PaymentService
         $this->modx->log(
             modX::LOG_LEVEL_INFO,
             sprintf(
-                'PaymentService: Удалены связи DeliveryMember для способа оплаты ID=%d "%s"',
+                'PaymentService: Deleted DeliveryMember relationships for payment method ID=%d "%s"',
                 $paymentId,
                 $payment->get('name')
             )

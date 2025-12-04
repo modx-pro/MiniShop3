@@ -5,20 +5,20 @@ namespace MiniShop3\Services;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для безопасной работы с токенами
+ * Service for secure token operations
  *
- * Обеспечивает:
- * - Криптографически стойкую генерацию токенов
- * - TTL (Time-To-Live) для токенов
- * - Централизованное управление секретами
- * - Валидацию и проверку токенов
+ * Provides:
+ * - Cryptographically strong token generation
+ * - TTL (Time-To-Live) for tokens
+ * - Centralized secrets management
+ * - Token validation and verification
  */
 class TokenService
 {
     /** @var modX */
     protected modX $modx;
 
-    /** @var string Тип токена: customer или snippet */
+    /** @var string Token type: customer or snippet */
     const TYPE_CUSTOMER = 'customer';
     const TYPE_SNIPPET = 'snippet';
 
@@ -31,45 +31,39 @@ class TokenService
     }
 
     /**
-     * Генерация криптографически стойкого токена для покупателя
+     * Generate cryptographically strong token for customer
      *
-     * Работает как для авторизованных клиентов (с customer_id),
-     * так и для анонимных посетителей (customer_id = 0).
-     * Анонимные токены используются для корзины до регистрации/авторизации.
+     * Works for both authorized customers (with customer_id),
+     * and anonymous visitors (customer_id = 0).
+     * Anonymous tokens are used for cart before registration/authorization.
      *
-     * @param int|null $ttl TTL в секундах (null = из системных настроек)
+     * @param int|null $ttl TTL in seconds (null = from system settings)
      * @return array ['token' => string, 'expires' => int, 'lifetime' => int]
      */
     public function generateCustomerToken(?int $ttl = null): array
     {
-        // Проверяем, есть ли уже валидный токен в сессии
         $existingToken = $this->getCustomerToken();
         if ($existingToken) {
-            // Токен уже существует и не истёк - возвращаем его
             $expires = $_SESSION['ms3']['customer_token_expires'] ?? (time() + 86400);
             $lifetime = max(0, $expires - time());
 
             return [
                 'token' => $existingToken,
                 'expires' => $expires,
-                'lifetime' => $lifetime * 1000, // В миллисекундах для JS
+                'lifetime' => $lifetime * 1000,
             ];
         }
 
-        // customer_id может быть 0 для анонимных пользователей
         $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
 
-        // Генерируем токен через random_bytes (криптографически стойкий)
-        $token = bin2hex(random_bytes(32)); // 64 символа
+        $token = bin2hex(random_bytes(32));
 
-        // Определяем TTL (по умолчанию 24 часа)
         if ($ttl === null) {
             $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         }
 
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
-        // Создаём запись токена в БД (customer_id = 0 для анонимных)
         $tokenObj = $this->modx->newObject(\MiniShop3\Model\msCustomerToken::class);
         $tokenObj->set('customer_id', $customerId);
         $tokenObj->set('token', $token);
@@ -85,7 +79,6 @@ class TokenService
             return ['token' => '', 'expires' => 0, 'lifetime' => 0];
         }
 
-        // Сохраняем в сессию (критически важно для SSR!)
         $_SESSION['ms3']['customer_token'] = $token;
         $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
 
@@ -97,15 +90,15 @@ class TokenService
         return [
             'token' => $token,
             'expires' => time() + $ttl,
-            'lifetime' => $ttl * 1000, // В миллисекундах для JS
+            'lifetime' => $ttl * 1000,
         ];
     }
 
     /**
-     * Обновление существующего токена покупателя (продление TTL)
+     * Update existing customer token (extend TTL)
      *
-     * @param string $token Существующий токен
-     * @param int|null $ttl TTL в секундах
+     * @param string $token Existing token
+     * @param int|null $ttl TTL in seconds
      * @return array ['token' => string, 'expires' => int]
      */
     public function updateCustomerToken(string $token, ?int $ttl = null): array
@@ -114,14 +107,12 @@ class TokenService
             return $this->generateCustomerToken($ttl);
         }
 
-        // Определяем TTL
         if ($ttl === null) {
             $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         }
 
         $expires = time() + $ttl;
 
-        // Обновляем в сессии
         $_SESSION['ms3']['customer_token'] = $token;
         $_SESSION['ms3']['customer_token_expires'] = $expires;
 
@@ -133,28 +124,25 @@ class TokenService
         return [
             'token' => $token,
             'expires' => $expires,
-            'lifetime' => $ttl * 1000, // В миллисекундах для JS
+            'lifetime' => $ttl * 1000,
         ];
     }
 
     /**
-     * Получить токен покупателя из сессии (с проверкой валидности)
+     * Get customer token from session (with validity check)
      *
-     * @return string|null Токен или null если истёк/не существует
+     * @return string|null Token or null if expired/does not exist
      */
     public function getCustomerToken(): ?string
     {
         $token = $_SESSION['ms3']['customer_token'] ?? null;
         $expires = $_SESSION['ms3']['customer_token_expires'] ?? null;
 
-        // Токен не существует
         if (empty($token)) {
             return null;
         }
 
-        // Проверяем TTL
         if ($expires !== null && $expires < time()) {
-            // Токен истёк
             $this->modx->log(
                 modX::LOG_LEVEL_INFO,
                 "[TokenService] Customer token expired, clearing session"
@@ -170,10 +158,10 @@ class TokenService
     }
 
     /**
-     * Валидация токена покупателя
+     * Validate customer token
      *
-     * @param string $token Токен для проверки
-     * @return bool True если токен валиден
+     * @param string $token Token to validate
+     * @return bool True if token is valid
      */
     public function validateCustomerToken(string $token): bool
     {
@@ -183,41 +171,36 @@ class TokenService
             return false;
         }
 
-        // Сравнение токенов (защита от timing attacks)
         return hash_equals($sessionToken, $token);
     }
 
     /**
-     * Генерация токена для сниппета (кеширование параметров)
+     * Generate token for snippet (parameters caching)
      *
-     * @param array $scriptProperties Параметры сниппета
-     * @return string Токен для кеша
+     * @param array $scriptProperties Snippet parameters
+     * @return string Cache token
      */
     public function generateSnippetToken(array $scriptProperties): string
     {
-        // Получаем секрет из системных настроек (или генерируем)
         $secret = $this->getSnippetSecret();
 
-        // Генерируем токен на основе параметров и секрета
         $token = 'ms3_' . hash('sha256', json_encode($scriptProperties) . $secret);
 
         return $token;
     }
 
     /**
-     * Получить секрет для snippet токенов (или сгенерировать новый)
+     * Get secret for snippet tokens (or generate new one)
      *
-     * @return string Секрет
+     * @return string Secret
      */
     protected function getSnippetSecret(): string
     {
         $secret = $this->modx->getOption('ms3_snippet_token_secret', null, null);
 
-        // Если секрета нет - генерируем и сохраняем
         if (empty($secret)) {
-            $secret = bin2hex(random_bytes(32)); // 64 символа
+            $secret = bin2hex(random_bytes(32));
 
-            // Сохраняем в системные настройки
             $setting = $this->modx->getObject('modSystemSetting', ['key' => 'ms3_snippet_token_secret']);
 
             if (!$setting) {
@@ -236,7 +219,6 @@ class TokenService
                 "[TokenService] Generated new snippet token secret"
             );
 
-            // Очищаем кеш системных настроек
             $this->modx->cacheManager->refresh([
                 'system_settings' => [],
             ]);
@@ -246,17 +228,16 @@ class TokenService
     }
 
     /**
-     * Сохранить данные сниппета в кеш
+     * Save snippet data to cache
      *
-     * @param string $token Токен сниппета
-     * @param array $data Данные для кеширования
-     * @param int|null $ttl TTL в секундах (null = из системных настроек)
-     * @return bool Успешность операции
+     * @param string $token Snippet token
+     * @param array $data Data to cache
+     * @param int|null $ttl TTL in seconds (null = from system settings)
+     * @return bool Operation success
      */
     public function cacheSnippetData(string $token, array $data, ?int $ttl = null): bool
     {
         if ($ttl === null) {
-            // TTL по умолчанию: 1 час
             $ttl = (int)$this->modx->getOption('ms3_snippet_cache_ttl', null, 3600);
         }
 
@@ -277,10 +258,10 @@ class TokenService
     }
 
     /**
-     * Получить данные сниппета из кеша
+     * Get snippet data from cache
      *
-     * @param string $token Токен сниппета
-     * @return array|null Данные или null если не найдены
+     * @param string $token Snippet token
+     * @return array|null Data or null if not found
      */
     public function getSnippetData(string $token): ?array
     {
@@ -294,7 +275,7 @@ class TokenService
     }
 
     /**
-     * Очистить токен покупателя из сессии
+     * Clear customer token from session
      *
      * @return void
      */
@@ -310,9 +291,9 @@ class TokenService
     }
 
     /**
-     * Очистить кеш сниппетов
+     * Clear snippet cache
      *
-     * @param string|null $token Конкретный токен или null для очистки всех
+     * @param string|null $token Specific token or null to clear all
      * @return bool
      */
     public function clearSnippetCache(?string $token = null): bool
@@ -322,10 +303,8 @@ class TokenService
         ];
 
         if ($token !== null) {
-            // Удаляем конкретный токен
             return $this->modx->cacheManager->delete($token, $options);
         } else {
-            // Очищаем весь кеш сниппетов
             return $this->modx->cacheManager->clean($options);
         }
     }

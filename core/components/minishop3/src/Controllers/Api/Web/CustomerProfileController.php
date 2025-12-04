@@ -8,12 +8,12 @@ use MODX\Revolution\modX;
 use Rakit\Validation\Validator;
 
 /**
- * CustomerProfileController - API контроллер управления профилем клиента
+ * CustomerProfileController - Customer profile management API controller
  *
- * Обрабатывает обновление личных данных клиента.
+ * Handles customer personal data updates.
  *
  * Endpoints:
- * - PUT /api/v1/customer/profile - обновить профиль
+ * - PUT /api/v1/customer/profile - update profile
  *
  * @package MiniShop3\Controllers\Api\Web
  */
@@ -37,23 +37,21 @@ class CustomerProfileController
     }
 
     /**
-     * Обновить профиль клиента
+     * Update customer profile
      *
      * PUT /api/v1/customer/profile
      *
-     * @param array $data Данные формы
+     * @param array $data Form data
      * @return array ['success' => bool, 'message' => string, 'data' => array]
      */
     public function update(array $data): array
     {
-        // Проверка авторизации
         if (empty($_SESSION['ms3']['customer_id'])) {
             return $this->error($this->modx->lexicon('ms3_customer_err_login_required'));
         }
 
         $customerId = (int)$_SESSION['ms3']['customer_id'];
 
-        // Загрузить клиента
         /** @var msCustomer $customer */
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
 
@@ -61,7 +59,6 @@ class CustomerProfileController
             return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
         }
 
-        // Валидация данных
         $validator = new Validator();
         $validation = $validator->make($data, [
             'first_name' => 'required|min:2|max:100',
@@ -82,7 +79,6 @@ class CustomerProfileController
             );
         }
 
-        // Проверить уникальность email (если изменился)
         $oldEmail = $customer->get('email');
         $newEmail = trim($data['email']);
 
@@ -99,7 +95,6 @@ class CustomerProfileController
                 return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
             }
 
-            // Если email изменился - сбросить подтверждение
             $customer->set('email_verified_at', null);
 
             $this->modx->log(
@@ -108,18 +103,15 @@ class CustomerProfileController
             );
         }
 
-        // Обновить данные клиента
         $customer->set('first_name', trim($data['first_name']));
         $customer->set('last_name', trim($data['last_name']));
         $customer->set('email', $newEmail);
         $customer->set('phone', trim($data['phone']));
 
-        // Сохранить
         if (!$customer->save()) {
             return $this->error($this->modx->lexicon('ms3_customer_err_save'));
         }
 
-        // Установить флаг успеха для отображения в шаблоне
         $_SESSION['ms3']['customer_profile_success'] = true;
 
         $this->modx->log(
@@ -134,7 +126,7 @@ class CustomerProfileController
     }
 
     /**
-     * Успешный ответ
+     * Success response
      *
      * @param string $message
      * @param array $data
@@ -150,7 +142,7 @@ class CustomerProfileController
     }
 
     /**
-     * Ответ с ошибкой
+     * Error response
      *
      * @param string $message
      * @param array $data

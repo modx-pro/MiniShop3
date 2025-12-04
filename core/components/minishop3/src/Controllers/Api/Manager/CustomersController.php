@@ -7,9 +7,9 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * API контроллер для управления клиентами (Manager API)
+ * API controller for customer management (Manager API)
  *
- * Обрабатывает CRUD операции для клиентов в админке.
+ * Handles CRUD operations for customers in admin panel.
  *
  * @package MiniShop3\Controllers\Api\Manager
  */
@@ -23,10 +23,10 @@ class CustomersController
     }
 
     /**
-     * Получить список клиентов с пагинацией и поиском
+     * Get list of customers with pagination and search
      * GET /api/mgr/customers
      *
-     * @param array $params URL параметры (start, limit, query)
+     * @param array $params URL parameters (start, limit, query)
      * @return array Response
      */
     public function getList(array $params = []): array
@@ -35,18 +35,14 @@ class CustomersController
         $limit = (int)($params['limit'] ?? 20);
         $query = trim($params['query'] ?? '');
 
-        // Загружаем конфигурацию грида для получения relation и computed полей
         $gridConfig = $this->modx->services->get('ms3_grid_config');
         $gridFields = $gridConfig ? $gridConfig->getGridConfig('customers') : [];
 
-        // Находим relation и computed поля
         $relationFields = $this->extractRelationFields($gridFields);
         $computedFields = $this->extractComputedFields($gridFields);
 
-        // Базовый критерий
         $criteria = [];
 
-        // Поиск по имени, фамилии, email, телефону
         if (!empty($query)) {
             $criteria[] = [
                 'first_name:LIKE' => "%{$query}%",
@@ -56,25 +52,20 @@ class CustomersController
             ];
         }
 
-        // Фильтрация по колонкам (filter_email, filter_phone и т.д.)
         foreach ($params as $key => $value) {
             if (strpos($key, 'filter_') === 0 && !empty($value)) {
-                $fieldName = substr($key, 7); // Убираем префикс "filter_"
+                $fieldName = substr($key, 7);
 
-                // Для поля active используем точное совпадение
                 if ($fieldName === 'active') {
                     $criteria['is_active'] = (int)$value;
                 } else {
-                    // Для остальных полей используем LIKE
                     $criteria[$fieldName . ':LIKE'] = "%{$value}%";
                 }
             }
         }
 
-        // Получаем общее количество
         $total = $this->modx->getCount(msCustomer::class, $criteria);
 
-        // Получаем записи с пагинацией
         $customers = $this->modx->getIterator(msCustomer::class, $criteria, [
             'limit' => $limit,
             'offset' => $start,
@@ -84,7 +75,6 @@ class CustomersController
 
         $results = [];
 
-        // Если есть relation или computed поля, обрабатываем их
         if (!empty($relationFields) || !empty($computedFields)) {
             $customerIds = [];
             $customerObjects = [];
@@ -94,22 +84,18 @@ class CustomersController
                 $customerObjects[$customer->get('id')] = $customer;
             }
 
-            // Получаем агрегированные данные для всех relation полей
             $relationData = [];
             if (!empty($relationFields)) {
                 $relationData = $this->fetchRelationData($customerIds, $relationFields);
             }
 
-            // Форматируем результаты с добавлением relation и computed данных
             foreach ($customerObjects as $customerId => $customer) {
                 $formatted = $this->formatCustomer($customer);
 
-                // Добавляем данные из relation полей
                 foreach ($relationFields as $fieldName => $config) {
                     $formatted[$fieldName] = $relationData[$customerId][$fieldName] ?? 0;
                 }
 
-                // Вычисляем computed поля
                 foreach ($computedFields as $fieldName => $config) {
                     $formatted[$fieldName] = $this->computeField($formatted, $config);
                 }
@@ -117,7 +103,6 @@ class CustomersController
                 $results[] = $formatted;
             }
         } else {
-            // Без relation и computed полей - стандартная обработка
             foreach ($customers as $customer) {
                 $results[] = $this->formatCustomer($customer);
             }
@@ -130,10 +115,10 @@ class CustomersController
     }
 
     /**
-     * Получить конкретного клиента
+     * Get specific customer
      * GET /api/mgr/customers/{id}
      *
-     * @param array $params URL параметры (id)
+     * @param array $params URL parameters (id)
      * @return array Response
      */
     public function get(array $params = []): array
@@ -154,10 +139,10 @@ class CustomersController
     }
 
     /**
-     * Обновить клиента
+     * Update customer
      * PUT /api/mgr/customers/{id}
      *
-     * @param array $data Данные для обновления
+     * @param array $data Update data
      * @return array Response
      */
     public function update(array $data = []): array
@@ -174,7 +159,6 @@ class CustomersController
             return Response::error('Customer not found', 404)->getData();
         }
 
-        // Обновляемые поля
         $allowedFields = ['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_blocked'];
 
         foreach ($allowedFields as $field) {
@@ -183,7 +167,6 @@ class CustomersController
             }
         }
 
-        // Обработка пароля (отдельно, т.к. требует хеширования)
         if (!empty($data['password'])) {
             $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
             $customer->set('password', $hashedPassword);
@@ -197,10 +180,10 @@ class CustomersController
     }
 
     /**
-     * Удалить клиента
+     * Delete customer
      * DELETE /api/mgr/customers/{id}
      *
-     * @param array $params URL параметры (id)
+     * @param array $params URL parameters (id)
      * @return array Response
      */
     public function delete(array $params = []): array
@@ -217,20 +200,16 @@ class CustomersController
             return Response::error('Customer not found', 404)->getData();
         }
 
-        // Удаляем связанные записи
-        // Адреса
         $addresses = $this->modx->getIterator(\MiniShop3\Model\msCustomerAddress::class, ['customer_id' => $id]);
         foreach ($addresses as $address) {
             $address->remove();
         }
 
-        // Токены
         $tokens = $this->modx->getIterator(\MiniShop3\Model\msCustomerToken::class, ['customer_id' => $id]);
         foreach ($tokens as $token) {
             $token->remove();
         }
 
-        // Удаляем самого клиента
         if (!$customer->remove()) {
             return Response::error('Failed to delete customer', 500)->getData();
         }
@@ -239,7 +218,7 @@ class CustomersController
     }
 
     /**
-     * Форматировать объект клиента для API ответа
+     * Format customer object for API response
      *
      * @param msCustomer $customer
      * @return array
@@ -264,17 +243,16 @@ class CustomersController
     }
 
     /**
-     * Извлечь relation поля из конфигурации грида
+     * Extract relation fields from grid configuration
      *
-     * @param array $gridFields Конфигурация полей грида
-     * @return array Массив relation полей ['field_name' => config]
+     * @param array $gridFields Grid field configuration
+     * @return array Array of relation fields ['field_name' => config]
      */
     protected function extractRelationFields(array $gridFields): array
     {
         $relationFields = [];
 
         foreach ($gridFields as $field) {
-            // Проверяем что это relation поле
             if (isset($field['type']) && $field['type'] === 'relation') {
                 $fieldName = $field['name'] ?? null;
                 $relation = $field['relation'] ?? [];
@@ -289,17 +267,16 @@ class CustomersController
     }
 
     /**
-     * Извлечь computed поля из конфигурации грида
+     * Extract computed fields from grid configuration
      *
-     * @param array $gridFields Конфигурация полей грида
-     * @return array Массив computed полей ['field_name' => config]
+     * @param array $gridFields Grid field configuration
+     * @return array Array of computed fields ['field_name' => config]
      */
     protected function extractComputedFields(array $gridFields): array
     {
         $computedFields = [];
 
         foreach ($gridFields as $field) {
-            // Проверяем что это computed поле
             if (isset($field['type']) && $field['type'] === 'computed') {
                 $fieldName = $field['name'] ?? null;
                 $computed = $field['computed'] ?? [];
@@ -314,11 +291,11 @@ class CustomersController
     }
 
     /**
-     * Получить агрегированные данные для relation полей
+     * Get aggregated data for relation fields
      *
-     * @param array $customerIds Массив ID клиентов
-     * @param array $relationFields Конфигурация relation полей
-     * @return array Массив [customer_id => [field_name => value]]
+     * @param array $customerIds Array of customer IDs
+     * @param array $relationFields Configuration of relation fields
+     * @return array Array [customer_id => [field_name => value]]
      */
     protected function fetchRelationData(array $customerIds, array $relationFields): array
     {
@@ -328,7 +305,6 @@ class CustomersController
 
         $result = [];
 
-        // Инициализируем результат нулями для всех клиентов и полей
         foreach ($customerIds as $customerId) {
             $result[$customerId] = [];
             foreach ($relationFields as $fieldName => $config) {
@@ -336,10 +312,8 @@ class CustomersController
             }
         }
 
-        // Получаем имя таблицы customers
         $customersTable = $this->modx->getTableName(msCustomer::class);
 
-        // Для каждого relation поля выполняем отдельный запрос
         foreach ($relationFields as $fieldName => $config) {
             $relationTable = $config['resolvedTableName'] ?? $config['table'] ?? null;
             $foreignKey = $config['foreignKey'] ?? null;
@@ -350,14 +324,12 @@ class CustomersController
                 continue;
             }
 
-            // Строим SELECT в зависимости от агрегации
             if ($aggregation) {
                 $selectExpr = "{$aggregation}({$relationTable}.{$displayField})";
             } else {
                 $selectExpr = "{$relationTable}.{$displayField}";
             }
 
-            // Строим SQL запрос
             $sql = "
                 SELECT
                     {$customersTable}.id as customer_id,
@@ -372,12 +344,10 @@ class CustomersController
             $stmt->execute();
             $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-            // Заполняем результат
             foreach ($rows as $row) {
                 $customerId = (int)$row['customer_id'];
                 $value = $row['field_value'];
 
-                // Приводим к нужному типу в зависимости от агрегации
                 if ($aggregation === 'COUNT') {
                     $value = (int)$value;
                 } elseif (in_array($aggregation, ['SUM', 'AVG'])) {
@@ -392,11 +362,11 @@ class CustomersController
     }
 
     /**
-     * Вычислить значение computed поля
+     * Compute value of computed field
      *
-     * @param array $row Данные строки (клиента)
-     * @param array $config Конфигурация computed поля
-     * @return mixed Вычисленное значение
+     * @param array $row Row data (customer)
+     * @param array $config Computed field configuration
+     * @return mixed Computed value
      */
     protected function computeField(array $row, array $config)
     {
@@ -407,13 +377,11 @@ class CustomersController
             return null;
         }
 
-        // Проверяем существование класса
         if (!class_exists($className)) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, "[CustomersController] Computed class not found: {$className}");
             return null;
         }
 
-        // Проверяем реализацию интерфейса
         $interfaces = class_implements($className);
         if (!isset($interfaces['MiniShop3\\Interfaces\\ComputedFieldInterface'])) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, "[CustomersController] Class {$className} must implement ComputedFieldInterface");
@@ -421,7 +389,6 @@ class CustomersController
         }
 
         try {
-            // Создаём экземпляр и вызываем compute()
             $instance = new $className();
             return $instance->compute($row);
         } catch (\Exception $e) {

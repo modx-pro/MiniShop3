@@ -21,9 +21,9 @@ const createVisible = ref(false)
 const types = ref([])
 
 const unUsedFields = ref([
-  { name: 'price', title: 'Цена' },
-  { name: 'eur_price', title: 'Цена в евро' },
-  { name: 'remains', title: 'Остатки' },
+  { name: 'price', title: 'Price' },
+  { name: 'eur_price', title: 'Price in EUR' },
+  { name: 'remains', title: 'Stock' },
 ])
 
 const editedField = ref({})
@@ -100,21 +100,21 @@ async function save () {
 
 const confirmRemove = (field) => {
   confirm.require({
-    message: 'Удаляем запись?',
-    header: 'Удаление',
+    message: 'Delete record?',
+    header: 'Deletion',
     icon: 'pi pi-exclamation-triangle',
     rejectProps: {
-      label: 'Отмена',
+      label: 'Cancel',
       severity: 'secondary',
       outlined: true
     },
     acceptProps: {
-      label: 'Удалить'
+      label: 'Delete'
     },
     accept: () => {
       remove(field.name)
       save()
-      toast.add({ severity: 'success', summary: 'OK', detail: 'Запись удалена', life: 3000 });
+      toast.add({ severity: 'success', summary: 'OK', detail: 'Record deleted', life: 3000 });
     },
   });
 }
@@ -155,18 +155,18 @@ function saveEdit () {
   editVisible.value = false
 
   save()
-  toast.add({ severity: 'success', summary: 'OK', detail: 'Запись сохранена', life: 3000 })
+  toast.add({ severity: 'success', summary: 'OK', detail: 'Record saved', life: 3000 })
 }
 
 const RightReorder = (event) => {
   rightFields.value = event.value;
-  toast.add({ severity: 'success', summary: 'Сортировка сохранена', life: 3000 })
+  toast.add({ severity: 'success', summary: 'Sorting saved', life: 3000 })
   save()
 }
 
 const LeftReorder = (event) => {
   leftFields.value = event.value;
-  toast.add({ severity: 'success', summary: 'Сортировка сохранена', life: 3000 })
+  toast.add({ severity: 'success', summary: 'Sorting saved', life: 3000 })
   save()
 }
 
@@ -194,7 +194,7 @@ function saveCreate () {
   closeCreate()
 
   // save()
-  toast.add({ severity: 'success', summary: 'OK', detail: 'Запись сохранена', life: 3000 })
+  toast.add({ severity: 'success', summary: 'OK', detail: 'Record saved', life: 3000 })
 }
 
 function getXtypeTitle(name) {
@@ -209,20 +209,20 @@ function getXtypeTitle(name) {
 </script>
 
 <template>
-  <h3>Здесь вы можете управлять расположением и отображением свойств товара на странице товара</h3>
+  <h3>Here you can manage the layout and display of product properties on the product page</h3>
   <div style="padding: 40px 0;">
     <Card style="max-width: 840px; margin-bottom: 50px;">
       <template #title>
         <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
-          <span>Левая колонка</span>
+          <span>Left Column</span>
           <Button icon="pi pi-plus"></Button>
         </div>
       </template>
       <template #content>
         <DataTable :value="leftFields" tableStyle="min-width: 50rem" @rowReorder="LeftReorder">
           <Column rowReorder headerStyle="width: 3rem"/>
-          <Column field="name" header="Поле" style="width: 300px;"></Column>
-          <Column field="xtype" header="Тип" style="width: 300px;">
+          <Column field="name" header="Field" style="width: 300px;"></Column>
+          <Column field="xtype" header="Type" style="width: 300px;">
             <template #body="{ data }">
               <span> {{ getXtypeTitle(data.xtype) }}</span>
             </template>
@@ -245,7 +245,7 @@ function getXtypeTitle(name) {
     <Card style="max-width: 840px;">
       <template #title>
         <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
-          <span>Правая колонка</span>
+          <span>Right Column</span>
           <Button icon="pi pi-plus" @click="addField('right')"></Button>
         </div>
       </template>
@@ -254,8 +254,8 @@ function getXtypeTitle(name) {
                    @rowReorder="RightReorder"
         >
           <Column rowReorder headerStyle="width: 3rem"/>
-          <Column field="name" header="Поле" style="width: 300px;"></Column>
-          <Column field="xtype" header="Тип" style="width: 300px;">
+          <Column field="name" header="Field" style="width: 300px;"></Column>
+          <Column field="xtype" header="Type" style="width: 300px;">
             <template #body="{ data }">
               <span> {{ getXtypeTitle(data.xtype) }}</span>
             </template>
@@ -277,40 +277,40 @@ function getXtypeTitle(name) {
     </Card>
   </div>
 
-  <Dialog v-model:visible="editVisible" modal header="Изменить поле" :style="{ width: '25rem' }"
+  <Dialog v-model:visible="editVisible" modal header="Edit Field" :style="{ width: '25rem' }"
           v-if="Object.entries(editedField).length > 0"
   >
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <label for="name" style="width: 50%;">Поле</label>
+      <label for="name" style="width: 50%;">Field</label>
       <InputText id="name" autocomplete="off" disabled readonly :value="editedField.name" style="width: 50%;"/>
     </div>
 
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <label for="name" style="width: 50%;">Тип поля</label>
+      <label for="name" style="width: 50%;">Field Type</label>
 
       <Select v-model="editedField.xtype" :options="types" optionLabel="name" optionValue="xtype" style="width: 58%;"/>
     </div>
 
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <label for="anchor" style="width: 50%;">Ширина поля</label>
+      <label for="anchor" style="width: 50%;">Field Width</label>
       <InputText inputId="anchor" name="anchor" v-model="editedField.anchor" style="width: 50%;"
                  fluid/>
     </div>
 
 
     <div style="display:flex; align-items: center; justify-content: flex-end; gap: 20px; margin-top: 40px;">
-      <Button type="button" label="Отмена" severity="secondary" @click="closeEdit()"></Button>
-      <Button type="button" label="Сохранить" @click="saveEdit()"></Button>
+      <Button type="button" label="Cancel" severity="secondary" @click="closeEdit()"></Button>
+      <Button type="button" label="Save" @click="saveEdit()"></Button>
     </div>
   </Dialog>
 
-  <Dialog v-model:visible="createVisible" modal header="Добавить поле" :style="{ width: '25rem' }">
+  <Dialog v-model:visible="createVisible" modal header="Add Field" :style="{ width: '25rem' }">
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <label for="name" style="width: 50%;">Поле</label>
+      <label for="name" style="width: 50%;">Field</label>
 
       <Select v-model="createdField.name" :options="unUsedFields" optionLabel="title" optionValue="name"
               style="width: 58%;"/>
@@ -318,22 +318,22 @@ function getXtypeTitle(name) {
 
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <label for="name" style="width: 50%;">Тип поля</label>
+      <label for="name" style="width: 50%;">Field Type</label>
 
       <Select v-model="createdField.xtype" :options="types" optionLabel="name" optionValue="xtype" style="width: 58%;"/>
     </div>
 
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-      <label for="anchor" style="width: 50%;">Ширина поля</label>
+      <label for="anchor" style="width: 50%;">Field Width</label>
       <InputText inputId="anchor" name="anchor" v-model="createdField.anchor" style="width: 50%;"
                  fluid/>
     </div>
 
 
     <div style="display:flex; align-items: center; justify-content: flex-end; gap: 20px; margin-top: 40px;">
-      <Button type="button" label="Отмена" severity="secondary" @click="closeCreate()"></Button>
-      <Button type="button" label="Добавить" @click="saveCreate()"></Button>
+      <Button type="button" label="Cancel" severity="secondary" @click="closeCreate()"></Button>
+      <Button type="button" label="Add" @click="saveCreate()"></Button>
     </div>
   </Dialog>
 

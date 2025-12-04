@@ -8,9 +8,9 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * API контроллер для управления настройками уведомлений (Notification Center)
+ * API controller for managing notification settings (Notification Center)
  *
- * Обрабатывает CRUD операции для msNotificationConfig в админке.
+ * Handles CRUD operations for msNotificationConfig in admin panel.
  *
  * @package MiniShop3\Controllers\Api\Manager
  */
@@ -24,10 +24,10 @@ class NotificationsController
     }
 
     /**
-     * Получить список настроек уведомлений
+     * Get notification settings list
      * GET /api/mgr/notifications
      *
-     * @param array $params URL параметры (start, limit, status_id, channel, recipient_type)
+     * @param array $params URL parameters (start, limit, status_id, channel, recipient_type)
      * @return array Response
      */
     public function getList(array $params = []): array
@@ -35,38 +35,29 @@ class NotificationsController
         $start = (int)($params['start'] ?? 0);
         $limit = (int)($params['limit'] ?? 50);
 
-        // Базовый критерий
         $criteria = [];
-
-        // Фильтр по статусу
         if (isset($params['status_id']) && $params['status_id'] !== '') {
             $criteria['status_id'] = (int)$params['status_id'] ?: null;
         }
 
-        // Фильтр по каналу
         if (!empty($params['channel'])) {
             $criteria['channel'] = $params['channel'];
         }
 
-        // Фильтр по типу получателя
         if (!empty($params['recipient_type'])) {
             $criteria['recipient_type'] = $params['recipient_type'];
         }
 
-        // Фильтр по событию
         if (!empty($params['event'])) {
             $criteria['event'] = $params['event'];
         }
 
-        // Фильтр по enabled
         if (isset($params['enabled']) && $params['enabled'] !== '') {
             $criteria['enabled'] = (bool)$params['enabled'];
         }
 
-        // Получаем общее количество
         $total = $this->modx->getCount(msNotificationConfig::class, $criteria);
 
-        // Получаем записи с пагинацией
         $configs = $this->modx->getIterator(msNotificationConfig::class, $criteria, [
             'limit' => $limit,
             'offset' => $start,
@@ -86,10 +77,10 @@ class NotificationsController
     }
 
     /**
-     * Получить конкретную настройку уведомления
+     * Get specific notification setting
      * GET /api/mgr/notifications/{id}
      *
-     * @param array $params URL параметры (id)
+     * @param array $params URL parameters (id)
      * @return array Response
      */
     public function get(array $params = []): array
@@ -110,15 +101,14 @@ class NotificationsController
     }
 
     /**
-     * Создать новую настройку уведомления
+     * Create new notification setting
      * POST /api/mgr/notifications
      *
-     * @param array $data Данные для создания
+     * @param array $data Data to create
      * @return array Response
      */
     public function create(array $data = []): array
     {
-        // Валидация обязательных полей
         $required = ['event', 'recipient_type', 'channel'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
@@ -126,7 +116,6 @@ class NotificationsController
             }
         }
 
-        // Проверка уникальности комбинации
         $exists = $this->modx->getObject(msNotificationConfig::class, [
             'event' => $data['event'],
             'status_id' => $data['status_id'] ?? null,
@@ -141,7 +130,6 @@ class NotificationsController
         /** @var msNotificationConfig $config */
         $config = $this->modx->newObject(msNotificationConfig::class);
 
-        // Заполняем поля
         $config->set('event', $data['event']);
         $config->set('status_id', !empty($data['status_id']) ? (int)$data['status_id'] : null);
         $config->set('recipient_type', $data['recipient_type']);
@@ -152,7 +140,6 @@ class NotificationsController
         $config->set('delay', (int)($data['delay'] ?? 0));
         $config->set('position', (int)($data['position'] ?? 0));
 
-        // Дополнительная конфигурация
         if (!empty($data['config']) && is_array($data['config'])) {
             $config->setConfig($data['config']);
         }
@@ -168,10 +155,10 @@ class NotificationsController
     }
 
     /**
-     * Обновить настройку уведомления
+     * Update notification setting
      * PUT /api/mgr/notifications/{id}
      *
-     * @param array $data Данные для обновления
+     * @param array $data Data to update
      * @return array Response
      */
     public function update(array $data = []): array
@@ -188,14 +175,12 @@ class NotificationsController
             return Response::error('Notification config not found', 404)->getData();
         }
 
-        // Обновляемые поля
         $allowedFields = ['event', 'status_id', 'recipient_type', 'channel', 'enabled', 'subject', 'template', 'delay', 'position'];
 
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $data)) {
                 $value = $data[$field];
 
-                // Преобразование типов
                 if ($field === 'status_id') {
                     $value = !empty($value) ? (int)$value : null;
                 } elseif ($field === 'enabled') {
@@ -208,7 +193,6 @@ class NotificationsController
             }
         }
 
-        // Дополнительная конфигурация
         if (array_key_exists('config', $data)) {
             if (is_array($data['config'])) {
                 $config->setConfig($data['config']);
@@ -231,10 +215,10 @@ class NotificationsController
     }
 
     /**
-     * Удалить настройку уведомления
+     * Delete notification setting
      * DELETE /api/mgr/notifications/{id}
      *
-     * @param array $params URL параметры (id)
+     * @param array $params URL parameters (id)
      * @return array Response
      */
     public function delete(array $params = []): array
@@ -259,19 +243,17 @@ class NotificationsController
     }
 
     /**
-     * Получить справочники для формы
+     * Get references for form
      * GET /api/mgr/notifications/references
      *
      * @return array Response
      */
     public function getReferences(): array
     {
-        // Загружаем нужные лексиконы
         $this->modx->lexicon->load('minishop3:default');
         $this->modx->lexicon->load('minishop3:setting');
         $this->modx->lexicon->load('minishop3:notifications');
 
-        // Статусы заказов
         $statuses = [];
         $statusIterator = $this->modx->getIterator(msOrderStatus::class, [], [
             'sortby' => 'position',
@@ -279,11 +261,9 @@ class NotificationsController
         ]);
         foreach ($statusIterator as $status) {
             $statusName = $status->get('name');
-            // Если имя - ключ лексикона, получаем перевод
             $translatedName = $this->modx->lexicon($statusName);
-            // Если перевод не найден (вернулся тот же ключ), используем оригинал
             if ($translatedName === $statusName && strpos($statusName, 'ms3_') === 0) {
-                $translatedName = $statusName; // оставляем как есть
+                $translatedName = $statusName;
             }
 
             $statuses[] = [
@@ -293,30 +273,26 @@ class NotificationsController
             ];
         }
 
-        // Типы событий
         $events = [
             ['id' => 'order_status_changed', 'name' => $this->modx->lexicon('ms3_notification_event_status_changed')],
             ['id' => 'order_created', 'name' => $this->modx->lexicon('ms3_notification_event_order_created')],
         ];
 
-        // Типы получателей
         $recipientTypes = [
             ['id' => 'customer', 'name' => $this->modx->lexicon('ms3_notification_recipient_customer')],
             ['id' => 'manager', 'name' => $this->modx->lexicon('ms3_notification_recipient_manager')],
         ];
 
-        // Каналы (из зарегистрированных в системе)
         $channels = [
             ['id' => 'email', 'name' => 'Email'],
         ];
 
-        // Добавляем каналы из системы уведомлений если доступны
         if ($this->modx->services->has('ms3_notification_manager')) {
             /** @var \MiniShop3\Notifications\NotificationManager $notificationManager */
             $notificationManager = $this->modx->services->get('ms3_notification_manager');
             foreach ($notificationManager->getChannels() as $channel) {
                 $channelName = $channel->getName();
-                if ($channelName !== 'email') { // email уже добавлен
+                if ($channelName !== 'email') {
                     $channels[] = [
                         'id' => $channelName,
                         'name' => ucfirst($channelName),
@@ -335,7 +311,7 @@ class NotificationsController
     }
 
     /**
-     * Форматировать объект настройки уведомления для API ответа
+     * Format notification config object for API response
      *
      * @param msNotificationConfig $config
      * @return array
@@ -356,7 +332,6 @@ class NotificationsController
             'position' => (int)$config->get('position'),
         ];
 
-        // Добавляем имя статуса если есть
         if ($config->get('status_id')) {
             $status = $config->getOne('Status');
             if ($status) {

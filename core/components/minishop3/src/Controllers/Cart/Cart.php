@@ -10,61 +10,44 @@ use MiniShop3\Model\msProduct;
 use MODX\Revolution\modX;
 
 /**
- * Контроллер корзины товаров
+ * Shopping cart controller
  *
- * Управляет корзиной покупателя: добавление, изменение, удаление товаров.
- * Корзина хранится в БД как черновик заказа (msOrder со статусом draft).
+ * Manages customer cart: adding, changing, removing products.
+ * Cart is stored in DB as draft order (msOrder with draft status).
  *
- * Для переопределения логики:
- * 1. Создайте свой класс, наследующий Cart
- * 2. Переопределите нужные методы (add, remove, change и т.д.)
- * 3. Укажите свой класс в системной настройке: ms3_cart_class = Your\Namespace\MyCart
- *
- * Пример расширения:
- * ```php
- * class MyCart extends \MiniShop3\Controllers\Cart\Cart {
- *     public function add($id, $count = 1, $options = []): array {
- *         // Проверка остатков на складе
- *         $product = $this->validateProduct($id);
- *         if ($product && $product->get('remains') <= 0) {
- *             return $this->error('Товар отсутствует на складе');
- *         }
- *
- *         return parent::add($id, $count, $options);
- *     }
- * }
- * ```
+ * To override logic:
+ * 1. Create your class extending Cart
+ * 2. Override required methods (add, remove, change, etc.)
+ * 3. Set your class in system setting: ms3_cart_class = Your\Namespace\MyCart
  *
  * @package MiniShop3\Controllers\Cart
  */
 class Cart
 {
-    /** @var modX MODX объект */
+    /** @var modX */
     public modX $modx;
 
-    /** @var MiniShop3 MiniShop3 объект */
+    /** @var MiniShop3 */
     public MiniShop3 $ms3;
 
-    /** @var array Конфигурация корзины */
+    /** @var array */
     public array $config = [];
 
-    /** @var string Контекст корзины */
+    /** @var string */
     protected string $ctx = 'web';
 
-    /** @var string Токен покупателя */
+    /** @var string */
     protected string $token = '';
 
-    /** @var msOrder|null Черновик заказа */
+    /** @var msOrder|null */
     protected ?msOrder $draft = null;
 
-    /** @var array Данные корзины (массив товаров) */
+    /** @var array */
     protected array $cart = [];
 
     /**
-     * Конструктор
-     *
-     * @param MiniShop3 $ms3 MiniShop3 объект
-     * @param array $config Дополнительная конфигурация
+     * @param MiniShop3 $ms3
+     * @param array $config
      */
     public function __construct(MiniShop3 $ms3, array $config = [])
     {
@@ -87,11 +70,11 @@ class Cart
     }
 
     /**
-     * Инициализация корзины для контекста
+     * Initialize cart for context
      *
-     * @param string $ctx Контекст MODX (web, mgr и т.д.)
-     * @param string $token Токен покупателя
-     * @return bool Успешность инициализации
+     * @param string $ctx MODX context (web, mgr, etc.)
+     * @param string $token Customer token
+     * @return bool
      */
     public function initialize(string $ctx = 'web', string $token = ''): bool
     {
@@ -99,7 +82,6 @@ class Cart
             return false;
         }
 
-        // Проверяем настройку: использовать ли один контекст для корзины
         $ms3_cart_context = (bool)$this->modx->getOption('ms3_cart_context', null, '0', true);
         $this->ctx = $ms3_cart_context ? 'web' : $ctx;
         $this->token = $token;
@@ -108,7 +90,7 @@ class Cart
     }
 
     /**
-     * Получение корзины
+     * Get cart
      *
      * @return array Response ['success' => bool, 'message' => '', 'data' => ['cart' => [], 'status' => []]]
      */
@@ -121,7 +103,6 @@ class Cart
         $this->initDraft();
         $this->loadCart();
 
-        // Событие BEFORE
         $response = $this->invokeEvent('msOnBeforeGetCart', [
             'draft' => $this->draft,
         ]);
@@ -129,7 +110,6 @@ class Cart
             return $this->error($response['message']);
         }
 
-        // Событие AFTER (может модифицировать данные корзины)
         $response = $this->invokeEvent('msOnGetCart', [
             'draft' => $this->draft,
             'data' => $this->cart,
@@ -146,25 +126,22 @@ class Cart
     }
 
     /**
-     * Добавление товара в корзину
+     * Add product to cart
      *
-     * @param int $id ID товара
-     * @param int $count Количество
-     * @param array $options Опции товара ['color' => 'red', 'size' => 'L']
+     * @param int $id Product ID
+     * @param int $count Quantity
+     * @param array $options Product options ['color' => 'red', 'size' => 'L']
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function add(int $id, int $count = 1, array $options = []): array
     {
-        // 1. Валидация токена
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
         }
 
-        // 2. Инициализация черновика заказа
         $this->initDraft();
         $this->loadCart();
 
-        // 3. Валидация входных данных
         if (empty($id) || !is_numeric($id)) {
             return $this->error('ms3_cart_add_err_id');
         }
@@ -176,13 +153,11 @@ class Cart
             return $this->error('ms3_cart_add_err_count', $this->getStatus(), ['count' => $count]);
         }
 
-        // 4. Получение и валидация товара
         $product = $this->validateProduct($id);
         if (!$product) {
             return $this->error('ms3_cart_add_err_nf', $this->getStatus());
         }
 
-        // 5. Событие BEFORE (разработчик может изменить count/options)
         $response = $this->invokeEvent('msOnBeforeAddToCart', [
             'msProduct' => $product,
             'count' => $count,
@@ -195,27 +170,19 @@ class Cart
         $count = $response['data']['count'];
         $options = $response['data']['options'];
 
-        // 6. Проверка: товар уже в корзине?
         $product_key = $this->getProductKey($product->toArray(), $options);
         if (isset($this->cart[$product_key])) {
-            // Увеличиваем количество существующего товара
             return $this->change($product_key, $this->cart[$product_key]['count'] + $count);
         }
 
-        // 7. Создание позиции корзины
         $cartItem = $this->createCartItem($product, $count, $options, $product_key);
 
-        // 8. Сохранение в БД
         $this->draft->addMany($cartItem, 'Products');
         $this->draft->save();
 
-        // 9. Пересчет итогов заказа
         $this->recalculateDraft();
-
-        // 10. Обновление локального кэша корзины
         $this->loadCart();
 
-        // 11. Событие AFTER
         $response = $this->invokeEvent('msOnAddToCart', [
             'msProduct' => $product,
             'count' => $count,
@@ -226,7 +193,6 @@ class Cart
             return $this->error($response['message']);
         }
 
-        // 12. Формирование ответа
         return $this->success('ms3_cart_add_success', [
             'last_key' => $product_key,
             'cart' => $this->cart,
@@ -235,10 +201,10 @@ class Cart
     }
 
     /**
-     * Изменение количества товара в корзине
+     * Change product quantity in cart
      *
-     * @param string $product_key Уникальный ключ товара в корзине
-     * @param int $count Новое количество
+     * @param string $product_key Unique product key in cart
+     * @param int $count New quantity
      * @return array Response
      */
     public function change(string $product_key, int $count): array
@@ -256,7 +222,6 @@ class Cart
 
         $count = (int)$count;
 
-        // Удаление при count <= 0
         if ($count <= 0) {
             return $this->remove($product_key);
         }
@@ -265,7 +230,6 @@ class Cart
             return $this->error('ms3_cart_add_err_count', $this->getStatus(), ['count' => $count]);
         }
 
-        // Событие BEFORE
         $response = $this->invokeEvent('msOnBeforeChangeInCart', [
             'product_key' => $product_key,
             'count' => $count,
@@ -275,12 +239,10 @@ class Cart
         }
         $count = $response['data']['count'];
 
-        // Обновление в БД
         $this->updateCartItemCount($product_key, $count);
         $this->recalculateDraft();
         $this->loadCart();
 
-        // Событие AFTER
         $this->invokeEvent('msOnChangeInCart', [
             'product_key' => $product_key,
             'count' => $count,
@@ -294,10 +256,10 @@ class Cart
     }
 
     /**
-     * Изменение опций товара в корзине
+     * Change product options in cart
      *
-     * @param string $product_key Уникальный ключ товара
-     * @param array $options Новые опции
+     * @param string $product_key Unique product key
+     * @param array $options New options
      * @return array Response
      */
     public function changeOption(string $product_key, array $options): array
@@ -317,7 +279,6 @@ class Cart
             return $this->error('ms3_cart_change_options_error', $this->getStatus());
         }
 
-        // Событие BEFORE
         $response = $this->invokeEvent('msOnBeforeChangeOptionsInCart', [
             'product_key' => $product_key,
             'options' => $options,
@@ -326,7 +287,6 @@ class Cart
             return $this->error($response['message']);
         }
 
-        // Находим товар в черновике и обновляем опции
         $count = 0;
         $newProductKey = $product_key;
 
@@ -336,7 +296,6 @@ class Cart
                 $orderProductOptions = $product->get('options') ?? [];
                 $count = $product->get('count');
 
-                // Обновляем опции
                 foreach ($options as $key => $value) {
                     if (!empty($value)) {
                         $orderProductOptions[$key] = $value;
@@ -345,16 +304,13 @@ class Cart
                     }
                 }
 
-                // Генерируем новый ключ с учетом измененных опций
                 $newProductKey = $this->getProductKey($product->Product->toArray(), $orderProductOptions);
 
-                // Если товар с такими опциями уже есть - объединяем
                 if ($newProductKey !== $product_key && isset($this->cart[$newProductKey])) {
                     $product->remove();
                     return $this->change($newProductKey, $this->cart[$newProductKey]['count'] + $count);
                 }
 
-                // Обновляем товар
                 $product->set('product_key', $newProductKey);
                 $product->set('options', $orderProductOptions);
                 $product->save();
@@ -366,7 +322,6 @@ class Cart
         $this->recalculateDraft();
         $this->loadCart();
 
-        // Событие AFTER
         $this->invokeEvent('msOnChangeOptionInCart', [
             'old_product_key' => $product_key,
             'product_key' => $newProductKey,
@@ -381,9 +336,9 @@ class Cart
     }
 
     /**
-     * Удаление товара из корзины
+     * Remove product from cart
      *
-     * @param string $product_key Уникальный ключ товара
+     * @param string $product_key Unique product key
      * @return array Response
      */
     public function remove(string $product_key): array
@@ -399,7 +354,6 @@ class Cart
             return $this->error('ms3_cart_change_error', $this->getStatus());
         }
 
-        // Событие BEFORE
         $response = $this->invokeEvent('msOnBeforeRemoveFromCart', [
             'product_key' => $product_key,
         ]);
@@ -407,10 +361,8 @@ class Cart
             return $this->error($response['message']);
         }
 
-        // Удаление из БД
         $this->removeCartItem($product_key);
 
-        // Если корзина пуста - удаляем черновик
         if ($this->isCartEmpty()) {
             $this->draft->remove();
             $this->draft = null;
@@ -420,7 +372,6 @@ class Cart
             $this->loadCart();
         }
 
-        // Событие AFTER
         $this->invokeEvent('msOnRemoveFromCart', [
             'product_key' => $product_key,
         ]);
@@ -433,7 +384,7 @@ class Cart
     }
 
     /**
-     * Очистка корзины
+     * Clear cart
      *
      * @return array Response
      */
@@ -446,13 +397,11 @@ class Cart
         $this->initDraft();
         $this->loadCart();
 
-        // Событие BEFORE
         $response = $this->invokeEvent('msOnBeforeEmptyCart');
         if (!$response['success']) {
             return $this->error($response['message']);
         }
 
-        // Удаление черновика
         if ($this->draft) {
             $this->draft->remove();
             $this->draft = null;
@@ -460,7 +409,6 @@ class Cart
 
         $this->cart = [];
 
-        // Событие AFTER
         $this->invokeEvent('msOnEmptyCart');
 
         return $this->success('ms3_cart_clean_success', [
@@ -470,9 +418,9 @@ class Cart
     }
 
     /**
-     * Получение статуса корзины
+     * Get cart status
      *
-     * @param array $data Дополнительные данные для объединения со статусом
+     * @param array $data Additional data to merge with status
      * @return array Response
      */
     public function status(array $data = []): array
@@ -492,26 +440,25 @@ class Cart
     }
 
     /**
-     * Установка всех товаров корзины одним массивом
+     * Set all cart products at once
      *
-     * @param array $cart Массив товаров
+     * @param array $cart Products array
      * @return void
      */
     public function set(array $cart = []): void
     {
-        // TODO: Реализовать при необходимости
-        // Этот метод может быть полезен для восстановления корзины из внешнего источника
+        // TODO: Implement if needed
     }
 
     /**
-     * Генерация уникального ключа товара в корзине
+     * Generate unique product key in cart
      *
-     * Ключ генерируется на основе полей, указанных в ms3_cart_product_key_fields
-     * По умолчанию: id + options (товар с разными опциями = разные позиции в корзине)
+     * Key is generated based on fields specified in ms3_cart_product_key_fields
+     * Default: id + options (product with different options = different cart positions)
      *
-     * @param array $product Массив данных товара
-     * @param array $options Опции товара
-     * @return string Уникальный ключ (например: "ms3d41d8cd98f00b204e9800998ecf8427e")
+     * @param array $product Product data array
+     * @param array $options Product options
+     * @return string Unique key (e.g. "ms3d41d8cd98f00b204e9800998ecf8427e")
      */
     public function getProductKey(array $product, array $options = []): string
     {
@@ -530,17 +477,15 @@ class Cart
         return 'ms' . md5($key);
     }
 
-    // ========== PROTECTED ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
-
     /**
-     * Инициализация черновика заказа (создание если не существует)
+     * Initialize draft order (create if not exists)
      *
      * @return void
      */
     protected function initDraft(): void
     {
         if ($this->draft !== null) {
-            return; // Уже инициализирован
+            return;
         }
 
         $this->draft = $this->getDraft();
@@ -548,14 +493,13 @@ class Cart
             $this->draft = $this->createDraft();
         }
 
-        // Привязка покупателя к черновику
         if (empty($this->draft->get('customer_id'))) {
             $this->attachCustomer();
         }
     }
 
     /**
-     * Получение существующего черновика заказа
+     * Get existing draft order
      *
      * @return msOrder|null
      */
@@ -570,13 +514,12 @@ class Cart
     }
 
     /**
-     * Создание нового черновика заказа
+     * Create new draft order
      *
      * @return msOrder
      */
     protected function createDraft(): msOrder
     {
-        // Логирование для отладки
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
         $caller = '';
         foreach ($backtrace as $trace) {
@@ -604,16 +547,15 @@ class Cart
 
         $draft->save();
 
-        // Создание адреса доставки
         $this->createOrderAddress($draft);
 
         return $draft;
     }
 
     /**
-     * Создание адреса доставки для заказа
+     * Create delivery address for order
      *
-     * @param msOrder $draft Черновик заказа
+     * @param msOrder $draft Draft order
      * @return void
      */
     protected function createOrderAddress(msOrder $draft): void
@@ -629,7 +571,7 @@ class Cart
     }
 
     /**
-     * Привязка покупателя к черновику заказа
+     * Attach customer to draft order
      *
      * @return void
      */
@@ -646,7 +588,7 @@ class Cart
     }
 
     /**
-     * Загрузка корзины из черновика в массив
+     * Load cart from draft into array
      *
      * @return void
      */
@@ -666,9 +608,9 @@ class Cart
     }
 
     /**
-     * Валидация товара (существование, публикация, удаление)
+     * Validate product (existence, publication, deletion)
      *
-     * @param int $id ID товара
+     * @param int $id Product ID
      * @return msProduct|null
      */
     protected function validateProduct(int $id): ?msProduct
@@ -686,12 +628,12 @@ class Cart
     }
 
     /**
-     * Создание позиции корзины (msOrderProduct)
+     * Create cart item (msOrderProduct)
      *
-     * @param msProduct $product Товар
-     * @param int $count Количество
-     * @param array $options Опции
-     * @param string $product_key Ключ товара
+     * @param msProduct $product Product
+     * @param int $count Quantity
+     * @param array $options Options
+     * @param string $product_key Product key
      * @return msOrderProduct
      */
     protected function createCartItem(msProduct $product, int $count, array $options, string $product_key): msOrderProduct
@@ -724,10 +666,10 @@ class Cart
     }
 
     /**
-     * Обновление количества товара в корзине
+     * Update cart item quantity
      *
-     * @param string $product_key Ключ товара
-     * @param int $count Новое количество
+     * @param string $product_key Product key
+     * @param int $count New quantity
      * @return void
      */
     protected function updateCartItemCount(string $product_key, int $count): void
@@ -739,7 +681,6 @@ class Cart
                 $product->set('count', $count);
                 $product->set('cost', $price * $count);
 
-                // Обновляем discount_cost в properties
                 $properties = $product->get('properties') ?? [];
                 if (isset($properties['discount_price'])) {
                     $properties['discount_cost'] = $properties['discount_price'] * $count;
@@ -755,9 +696,9 @@ class Cart
     }
 
     /**
-     * Удаление товара из корзины
+     * Remove cart item
      *
-     * @param string $product_key Ключ товара
+     * @param string $product_key Product key
      * @return void
      */
     protected function removeCartItem(string $product_key): void
@@ -772,7 +713,7 @@ class Cart
     }
 
     /**
-     * Проверка: пуста ли корзина
+     * Check if cart is empty
      *
      * @return bool
      */
@@ -790,7 +731,7 @@ class Cart
     }
 
     /**
-     * Пересчет итогов черновика (cart_cost, cost, weight)
+     * Recalculate draft totals (cart_cost, cost, weight)
      *
      * @return void
      */
@@ -822,9 +763,9 @@ class Cart
     }
 
     /**
-     * Получение статуса корзины (итоги)
+     * Get cart status (totals)
      *
-     * @return array Массив с итогами (total_count, total_cost, total_weight и т.д.)
+     * @return array Array with totals (total_count, total_cost, total_weight, etc.)
      */
     protected function getStatus(): array
     {
@@ -843,7 +784,6 @@ class Cart
             $status['total_discount'] += ($item['properties']['discount_price'] ?? 0) * $item['count'];
         }
 
-        // Событие для модификации статуса
         $response = $this->invokeEvent('msOnGetStatusCart', [
             'status' => $status,
         ]);
@@ -856,9 +796,9 @@ class Cart
     }
 
     /**
-     * Нормализация опций (преобразование строки JSON в массив)
+     * Normalize options (convert JSON string to array)
      *
-     * @param mixed $options Опции (массив или JSON строка)
+     * @param mixed $options Options (array or JSON string)
      * @return array
      */
     protected function normalizeOptions($options): array
@@ -872,11 +812,11 @@ class Cart
     }
 
     /**
-     * Shorthand для успешного ответа
+     * Shorthand for success response
      *
-     * @param string $message Ключ лексикона
-     * @param array $data Данные ответа
-     * @param array $placeholders Плейсхолдеры для сообщения
+     * @param string $message Lexicon key
+     * @param array $data Response data
+     * @param array $placeholders Message placeholders
      * @return array
      */
     protected function success(string $message = '', array $data = [], array $placeholders = []): array
@@ -885,11 +825,11 @@ class Cart
     }
 
     /**
-     * Shorthand для ответа с ошибкой
+     * Shorthand for error response
      *
-     * @param string $message Ключ лексикона
-     * @param array $data Данные ответа
-     * @param array $placeholders Плейсхолдеры для сообщения
+     * @param string $message Lexicon key
+     * @param array $data Response data
+     * @param array $placeholders Message placeholders
      * @return array
      */
     protected function error(string $message = '', array $data = [], array $placeholders = []): array
@@ -898,10 +838,10 @@ class Cart
     }
 
     /**
-     * Shorthand для вызова события
+     * Shorthand for event invocation
      *
-     * @param string $eventName Имя события
-     * @param array $params Параметры события
+     * @param string $eventName Event name
+     * @param array $params Event parameters
      * @return array
      */
     protected function invokeEvent(string $eventName, array $params = []): array

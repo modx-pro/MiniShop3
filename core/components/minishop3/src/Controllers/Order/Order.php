@@ -128,8 +128,8 @@ class Order
         ];
         $msOrder->fromArray($data);
 
-        //TODO Событие перед созданием черновика
-        //TODO Запись в лог msOrderLog
+        // TODO Event before creating draft
+        // TODO Write to msOrderLog
         $save = $msOrder->save();
         if ($save) {
             $msOrderAddress = $this->modx->newObject(msOrderAddress::class);
@@ -138,7 +138,7 @@ class Order
                 'order_id' => $msOrder->get('id')
             ]);
             $msOrderAddress->save();
-            //TODO Событие по факту созданием черновика
+            // TODO Event after creating draft
         }
 
         return $msOrder;
@@ -149,7 +149,7 @@ class Order
      */
     public function restrictDraft(msOrder $draft): void
     {
-        //TODO событие до перерасчета заказа
+        // TODO event before recalculating order
         $products = $draft->getMany('Products');
         $cart_cost = 0;
         $weight = 0;
@@ -163,7 +163,7 @@ class Order
         $delivery_cost = $draft->get('delivery_cost');
         $cost = $cart_cost + $delivery_cost;
 
-        //TODO событие перерасчета заказа
+        // TODO event on recalculating order
         $draft->set('updatedon', time());
         $draft->set('cart_cost', $cart_cost);
         $draft->set('cost', $cost);
@@ -182,7 +182,7 @@ class Order
 
         $this->draft = $this->getDraft($this->token);
 
-        //TODO Добавить событие?
+        // TODO Add event?
         $this->order = $this->getOrder();
 
         $data = [];
@@ -207,7 +207,7 @@ class Order
             }
         }
 
-        // TODO проверить доступна ли вообще корзина при прямом независимом вызове метода
+        // TODO check if cart is available at all when calling method directly
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetCartCost', [
             'controller' => $this,
             'cart' => $this->ms3->cart,
@@ -254,7 +254,7 @@ class Order
             }
         }
 
-        // TODO проверить доступна ли вообще корзина при прямом независимом вызове метода
+        // TODO check if cart is available at all when calling method directly
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetDeliveryCost', [
             'storageController' => $this,
             'cartController' => $this->ms3->cart,
@@ -334,7 +334,7 @@ class Order
             }
         }
 
-        // TODO проверить доступна ли вообще корзина при прямом независимом вызове метода
+        // TODO check if cart is available at all when calling method directly
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetPaymentCost', [
             'storageController' => $this,
             'cartController' => $this->ms3->cart,
@@ -367,7 +367,7 @@ class Order
         if ($cartCostResponse['success']) {
             $cartCost = $cartCostResponse['data']['cost'];
         }
-        //TODO пересмотреть модель оплаты  и ее методы
+        // TODO review payment model and its methods
         $costWithPayment = $msPayment->getCost($this->draft, $cartCost);
         $paymentCost = $costWithPayment - $cartCost;
 
@@ -494,18 +494,18 @@ class Order
                 $this->order = $response['data']['order'];
             }
         }
-        //TODO реализовать use custom validation rule для проверки существования payment, delivery,
-        // для показа уникального message
+        // TODO implement custom validation rule to check payment, delivery existence
+        // to show unique message
         $this->validationRules = [
             'delivery_id' => 'required|numeric',
             'payment_id' => 'required|numeric',
         ];
 
         $this->validationMessages = [
-            'required' => 'Обязательно для заполнения',
-            'numeric' => 'Требуется число',
-            'min' => 'Минимум :min символов',
-            'email' => 'Email заполнен некорректно'
+            'required' => 'Required',
+            'numeric' => 'Must be a number',
+            'min' => 'Minimum :min characters',
+            'email' => 'Invalid email'
         ];
 
         if (!empty($this->order['delivery_id']) && empty($this->deliverValidationRules)) {
@@ -617,8 +617,8 @@ class Order
                 $this->order = $response['data']['order'];
             }
         }
-        //TODO  Event before set
-        //TODO Сообрать массив возможных ошибок валидации
+        // TODO Event before set
+        // TODO Collect array of possible validation errors
         foreach ($order as $key => $value) {
             $this->add($key, $value);
         }
@@ -671,15 +671,15 @@ class Order
             return $this->error('ms3_order_err_empty');
         }
 
-        // Получение или создание клиента для заказа
+        // Get or create customer for order
         $customer_id = $this->draft->customer_id;
         if (empty($this->draft->customer_id)) {
             $this->ms3->customer->initialize($this->token);
 
-            // Метод getOrCreate() автоматически:
-            // 1. Ищет клиента по токену
-            // 2. Ищет клиента по email из данных заказа
-            // 3. Создаёт нового клиента (через RegisterService или fallback метод)
+            // The getOrCreate() method automatically:
+            // 1. Searches for customer by token
+            // 2. Searches for customer by email from order data
+            // 3. Creates new customer (via RegisterService or fallback method)
             $customer_id = $this->ms3->customer->getOrCreate();
 
             if (empty($customer_id)) {
@@ -700,7 +700,7 @@ class Order
             $this->draft->save();
         }
 
-        //TODO  тут возможно понадобится получить клиента через $this->ms3->customer->getFields
+        // TODO may need to get customer via $this->ms3->customer->getFields
         if (empty($this->order['address_first_name']) && !empty($this->draft->Customer->get('last_name'))) {
             $this->add('first_name', $this->draft->Customer->get('first_name'));
         }
@@ -790,7 +790,7 @@ class Order
             $this->ms3->customer->addAddress($customerAddressData);
         }
 
-        // TODO  а нужно здесь это событие?
+        // TODO is this event needed here?
         $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateOrder', [
             'msOrder' => $this->draft,
             'controller' => $this,
@@ -835,7 +835,6 @@ class Order
             ['id' => $msOrder->get('payment_id'), 'active' => 1]
         );
 
-        // Если метод оплаты не найден или неактивен - ошибка
         if (!$msPayment) {
             return $this->error('ms3_order_err_payment_not_found', ['payment_id' => $msOrder->get('payment_id')]);
         }
@@ -861,7 +860,7 @@ class Order
         if (empty($this->draft)) {
             $this->initDraft();
         }
-        //TODO  Event before clean
+        // TODO Event before clean
         foreach ($this->draft->Address->_fields as $key => $value) {
             switch ($key) {
                 case 'id':
@@ -1086,7 +1085,7 @@ class Order
      */
     public function hasPayment(int $delivery, int $payment): bool
     {
-        //TODO перенесен из ms2 - не используется, проверить
+        // TODO migrated from ms2 - not used, verify
         $q = $this->modx->newQuery(msPayment::class, ['id' => $payment, 'active' => 1]);
         $q->innerJoin(
             msDeliveryMember::class,
@@ -1127,7 +1126,7 @@ class Order
             $lastName = $order['address_last_name'] ?? '';
             $fullName = implode(' ', [$firstName, $lastName]);
             $phone = $order['address_phone'] ?? '';
-            // TODO подумать как сделать формирование данных более гибким, настраиваемым. Хардкор - плохо
+            // TODO think how to make data formation more flexible, configurable. Hardcode is bad
             if (empty($fullName)) {
                 $fullName = $email
                     ? substr($email, 0, strpos($email, '@'))
@@ -1135,7 +1134,7 @@ class Order
                         ? preg_replace('#\D#', '', $phone)
                         : uniqid('user_', false));
             }
-            //TODO username должен быть уникальным, имя не годится
+            // TODO username must be unique, name is not suitable
             $modResource = $this->modx->newObject(\modResource::class);
             $userName = $modResource->cleanAlias($fullName);
             if (empty($email)) {
@@ -1312,7 +1311,7 @@ class Order
         if (!empty($this->draft->get('customer_id'))) {
             $customer = $this->draft->getOne('Customer');
 
-            //TODO  получить текущего customer, если есть сохранить ему поля
+            // TODO get current customer, if exists save fields to it
         }
 
         return false;
@@ -1344,14 +1343,14 @@ class Order
     /**
      * Shorthand for MS3 error method
      *
-     * @param string|null $message Сообщение об ошибке (если null, используется 'ms3_err_unknown')
-     * @param array $data Дополнительные данные
-     * @param array $placeholders Плейсхолдеры для замены в сообщении
+     * @param string|null $message Error message (if null, 'ms3_err_unknown' is used)
+     * @param array $data Additional data
+     * @param array $placeholders Placeholders for message replacement
      * @return array
      */
     protected function error(?string $message = '', array $data = [], array $placeholders = []): array
     {
-        // Защита от null: используем fallback сообщение
+        // Null protection: use fallback message
         if ($message === null || $message === '') {
             $message = 'ms3_err_unknown';
         }

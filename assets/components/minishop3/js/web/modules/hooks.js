@@ -1,25 +1,25 @@
 /**
- * Система хуков для расширения функциональности
+ * Hook system for extending functionality
  *
- * Позволяет разработчикам добавлять свою логику до/после операций:
+ * Allows developers to add custom logic before/after operations:
  * - beforeAddCart / afterAddCart
  * - beforeChangeCart / afterChangeCart
  * - beforeSubmitOrder / afterSubmitOrder
- * - и т.д.
+ * - etc.
  */
 window.ms3Hooks = {
   items: {},
 
   /**
-   * Добавить хук
+   * Add hook
    *
-   * @param {string} name - Название хука (например: 'beforeAddCart')
-   * @param {Function} fn - Функция-обработчик
+   * @param {string} name - Hook name (e.g., 'beforeAddCart')
+   * @param {Function} fn - Handler function
    *
    * @example
    * ms3Hooks.addHook('beforeAddCart', async (context) => {
-   *   console.log('Добавляем товар:', context.id)
-   *   // Можно отменить операцию:
+   *   console.log('Adding product:', context.id)
+   *   // Can cancel operation:
    *   // context.cancel = true
    * })
    */
@@ -29,10 +29,10 @@ window.ms3Hooks = {
   },
 
   /**
-   * Запустить хуки
+   * Run hooks
    *
-   * @param {string} name - Название хука
-   * @param {Object} context - Контекст выполнения (данные доступные в хуке)
+   * @param {string} name - Hook name
+   * @param {Object} context - Execution context (data available in hook)
    */
   async runHooks (name, context) {
     if (!this.items[name]) return
@@ -51,9 +51,7 @@ window.ms3Hooks = {
   }
 }
 
-// Пример хука: переинициализация UI после обновления корзины
 window.ms3Hooks.addHook('afterSendRequest', () => {
-  // Даём время на обновление DOM
   setTimeout(() => {
     if (window.ms3 && window.ms3.cartUI) {
       window.ms3.cartUI.init()

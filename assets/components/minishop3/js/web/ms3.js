@@ -1,14 +1,14 @@
 /**
- * MiniShop3 - Главный объект
+ * MiniShop3 - Main object
  *
- * Инициализирует все компоненты системы:
- * - TokenManager: Управление токенами
- * - ApiClient: HTTP клиент
- * - API модули: CartAPI, OrderAPI, CustomerAPI
- * - UI модули: CartUI, OrderUI, CustomerUI
- * - Утилиты: Hooks, Message
+ * Initializes all system components:
+ * - TokenManager: Token management
+ * - ApiClient: HTTP client
+ * - API modules: CartAPI, OrderAPI, CustomerAPI
+ * - UI modules: CartUI, OrderUI, CustomerUI
+ * - Utilities: Hooks, Message
  *
- * Конфигурация передаётся через window.ms3Config:
+ * Configuration passed via window.ms3Config:
  * {
  *   actionUrl: '/assets/components/minishop3/connector.php',
  *   tokenName: 'ms3_token',
@@ -16,93 +16,75 @@
  * }
  */
 const ms3 = {
-  // Конфигурация
   config: {},
 
-  // Core компоненты
   tokenManager: null,
   apiClient: null,
 
-  // API модули
   cartAPI: null,
   orderAPI: null,
   customerAPI: null,
 
-  // UI модули
   cartUI: null,
   orderUI: null,
   customerUI: null,
 
-  // Утилиты (инициализируются из отдельных файлов)
   hooks: null,
   message: null,
 
   /**
-   * Асинхронная инициализация
+   * Async initialization
    */
   async init () {
-    // 1. Загрузка конфигурации
     this.config = window.ms3Config || {}
 
-    // 2. Инициализация утилит (hooks.js и message.js должны быть подключены)
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
 
-    // 3. Инициализация TokenManager
     this.tokenManager = new TokenManager({
       tokenName: this.config.tokenName || 'ms3_token'
     })
 
-    // 4. Инициализация ApiClient
     this.apiClient = new ApiClient({
       baseUrl: this.config.actionUrl || '/assets/components/minishop3/api.php',
       tokenManager: this.tokenManager
     })
 
-    // 5. Связываем TokenManager с ApiClient
     this.tokenManager.setApiClient(this.apiClient)
 
-    // 6. Получение/проверка токена
     await this.tokenManager.ensureToken()
 
-    // 7. Инициализация API модулей
     this.cartAPI = new CartAPI(this.apiClient)
     this.orderAPI = new OrderAPI(this.apiClient)
     this.customerAPI = new CustomerAPI(this.apiClient)
 
-    // 8. Инициализация UI модулей
     this.cartUI = new CartUI(this.cartAPI, this.hooks, this.message, this.config)
     this.orderUI = new OrderUI(this.orderAPI, this.hooks, this.message, this.config)
     this.customerUI = new CustomerUI(this.customerAPI, this.hooks, this.message, this.config)
 
-    // 9. Инициализация UI обработчиков
     this.cartUI.init()
     this.orderUI.init()
     this.customerUI.init()
 
-    // 10. Инициализация обработчика форм
     this.initFormHandler()
 
-    // 11. Инициализация обработчика кликов по .ms3_link
     this.initLinkHandler()
 
-    // 12. Событие готовности (для сторонних скриптов)
     document.dispatchEvent(new Event('ms3:ready'))
 
     console.log('MiniShop3 initialized')
   },
 
   /**
-   * Обработчик отправки форм .ms3_form
+   * .ms3_form submit handler
    *
-   * Автоматически вызывает нужный метод API на основе ms3_action:
+   * Automatically calls appropriate API method based on ms3_action:
    * - cart/add → cartUI.handleAdd()
    * - order/submit → orderUI.handleSubmit()
-   * - и т.д.
+   * - etc.
    */
   initFormHandler () {
     document.addEventListener('submit', async (event) => {
-      // Проверяем что это наша форма
       if (!event.target.classList.contains('ms3_form')) {
         return
       }
@@ -114,68 +96,60 @@ const ms3 = {
       const action = formData.get('ms3_action')
 
       if (!action) {
-        console.warn('ms3_action не указан в форме')
+        console.warn('ms3_action not specified in form')
         return
       }
 
-      // Парсим action: "cart/add" → entity="cart", method="add"
       const [entity, method] = action.split('/')
 
-      // Вызываем соответствующий обработчик
       await this.handleFormSubmit(entity, method, formData)
     })
   },
 
   /**
-   * Обработчик кликов по .ms3_link
+   * .ms3_link click handler
    *
-   * Обрабатывает клики по кнопкам/ссылкам с классом .ms3_link
-   * внутри форм .ms3_form. Триггерит submit формы.
+   * Handles clicks on buttons/links with .ms3_link class
+   * inside .ms3_form forms. Triggers form submit.
    */
   initLinkHandler () {
-    document.addEventListener('click', async (event) => {
-      // Проверяем что это наша ссылка/кнопка
+    document.addEventListener('click', async (event) {
       const link = event.target.closest('.ms3_link')
       if (!link) {
         return
       }
 
-      // Находим родительскую форму
       const form = link.closest('.ms3_form')
       if (!form) {
-        console.warn('.ms3_link должна быть внутри .ms3_form')
+        console.warn('.ms3_link must be inside .ms3_form')
         return
       }
 
       event.preventDefault()
 
-      // Триггерим submit формы
       const formData = new FormData(form)
       const action = formData.get('ms3_action')
 
       if (!action) {
-        console.warn('ms3_action не указан в форме')
+        console.warn('ms3_action not specified in form')
         return
       }
 
-      // Парсим action: "cart/add" → entity="cart", method="add"
       const [entity, method] = action.split('/')
 
-      // Вызываем обработчик
       await this.handleFormSubmit(entity, method, formData)
     })
   },
 
   /**
-   * Обработка отправки формы
+   * Handle form submission
    *
-   * @param {string} entity - Сущность (cart, order, customer)
-   * @param {string} method - Метод (add, remove, submit и т.д.)
-   * @param {FormData} formData - Данные формы
+   * @param {string} entity - Entity (cart, order, customer)
+   * @param {string} method - Method (add, remove, submit, etc.)
+   * @param {FormData} formData - Form data
    */
   async handleFormSubmit (entity, method, formData) {
     try {
-      // Хук BEFORE
       const hookData = { entity, method, formData }
       await this.hooks.runHooks('beforeFormSubmit', hookData)
 
@@ -183,7 +157,6 @@ const ms3 = {
         return
       }
 
-      // Маппинг entity/method → UI обработчики
       const handlers = {
         cart: {
           add: () => {
@@ -221,23 +194,21 @@ const ms3 = {
         }
       }
 
-      // Вызываем обработчик
       if (handlers[entity] && handlers[entity][method]) {
         await handlers[entity][method]()
       } else {
-        console.warn(`Обработчик для ${entity}/${method} не найден`)
+        console.warn(`Handler for ${entity}/${method} not found`)
       }
 
-      // Хук AFTER
       await this.hooks.runHooks('afterFormSubmit', { entity, method, formData })
     } catch (error) {
       console.error('Form submit error:', error)
-      this.message.error('Произошла ошибка при отправке формы')
+      this.message.error('Form submission error')
     }
   },
 
   /**
-   * Парсинг опций из строки/JSON
+   * Parse options from string/JSON
    *
    * @param {string|Object} options
    * @returns {Object}
@@ -257,7 +228,7 @@ const ms3 = {
   },
 
   /**
-   * Fallback для hooks (если hooks.js не подключен)
+   * Fallback for hooks (if hooks.js not included)
    */
   createFallbackHooks () {
     return {
@@ -281,7 +252,7 @@ const ms3 = {
   },
 
   /**
-   * Fallback для message (если message.js не подключен)
+   * Fallback for message (if message.js not included)
    */
   createFallbackMessage () {
     return {
@@ -295,7 +266,7 @@ const ms3 = {
   },
 
   /**
-   * Хелпер: проверка является ли строка валидным JSON
+   * Helper: check if string is valid JSON
    *
    * @param {string} str
    * @returns {boolean}
@@ -310,12 +281,10 @@ const ms3 = {
   }
 }
 
-// Автоинициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', () => {
   ms3.init()
 })
 
-// Экспорт для использования в других скриптах
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ms3
 }

@@ -8,10 +8,10 @@ use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * ForgotPassword - процессор запроса восстановления пароля
+ * ForgotPassword - password recovery request processor
  *
- * Создает токен для сброса пароля и отправляет письмо с инструкциями.
- * Защищен от спама через RateLimiter.
+ * Creates password reset token and sends email with instructions.
+ * Protected from spam via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -31,13 +31,11 @@ class ForgotPassword extends Processor
         /** @var RateLimiter $rateLimiter */
         $rateLimiter = $this->modx->services->get('ms3_rate_limiter');
 
-        // Rate limiting по IP (не более 3 запросов в час)
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         if (!$rateLimiter->check('forgot_password', $ip, 3, 3600)) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_forgot_password_rate_limit'));
         }
 
-        // Rate limiting по email (не более 1 запроса в 5 минут)
         if (!$rateLimiter->check('forgot_password_email', $email, 1, 300)) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_forgot_password_email_cooldown'));
         }
@@ -45,7 +43,6 @@ class ForgotPassword extends Processor
         /** @var msCustomer $customer */
         $customer = $this->modx->getObject(msCustomer::class, ['email' => $email]);
 
-        // Всегда возвращаем успех (чтобы не раскрывать существование email)
         $message = $this->modx->lexicon('ms3_customer_forgot_password_success');
 
         if (!$customer) {
@@ -56,7 +53,6 @@ class ForgotPassword extends Processor
             return $this->success($message);
         }
 
-        // Проверяем, активен ли клиент
         if (!$customer->get('is_active') || $customer->get('is_blocked')) {
             $this->modx->log(
                 \MODX\Revolution\modX::LOG_LEVEL_WARN,
@@ -68,10 +64,8 @@ class ForgotPassword extends Processor
         /** @var AuthManager $authManager */
         $authManager = $this->modx->services->get('ms3_auth_manager');
 
-        // Удаляем старые токены восстановления
         $authManager->revokeTokens($customer, 'password_reset');
 
-        // Создаем новый токен (срок действия 1 час)
         $ttl = (int)$this->modx->getOption('ms3_password_reset_token_ttl', null, 3600);
         $tokenObj = $authManager->createToken($customer, 'password_reset', $ttl);
 
@@ -80,10 +74,9 @@ class ForgotPassword extends Processor
                 \MODX\Revolution\modX::LOG_LEVEL_ERROR,
                 "[ForgotPassword] Failed to create reset token for customer #{$customer->id}"
             );
-            return $this->success($message); // Не раскрываем ошибку
+            return $this->success($message);
         }
 
-        // Отправляем письмо
         $sent = $this->sendResetEmail($customer, $tokenObj->get('token'), $ttl);
 
         if (!$sent) {
@@ -97,7 +90,7 @@ class ForgotPassword extends Processor
     }
 
     /**
-     * Отправка письма с инструкциями по восстановлению пароля
+     * Send password reset email with instructions
      *
      * @param msCustomer $customer
      * @param string $token
@@ -110,12 +103,11 @@ class ForgotPassword extends Processor
         $siteName = $this->modx->getOption('site_name');
         $siteUrl = $this->modx->getOption('site_url');
 
-        // URL для сброса пароля
         $resetUrl = $siteUrl . 'reset-password?token=' . $token;
 
         $subject = $this->modx->lexicon('ms3_password_reset_subject', ['site' => $siteName]);
         $body = $this->modx->lexicon('ms3_password_reset_body', [
-            'first_name' => $customer->get('first_name') ?: 'Клиент',
+            'first_name' => $customer->get('first_name') ?: 'Customer',
             'url' => $resetUrl,
             'site' => $siteName,
             'ttl_minutes' => round($ttl / 60),

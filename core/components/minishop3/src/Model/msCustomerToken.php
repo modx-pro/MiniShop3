@@ -7,7 +7,7 @@ use xPDO\Om\xPDOSimpleObject;
 /**
  * Class msCustomerToken
  *
- * Модель для хранения токенов аутентификации клиентов
+ * Model for storing customer authentication tokens
  *
  * @property integer $id
  * @property integer $customer_id
@@ -22,7 +22,7 @@ use xPDO\Om\xPDOSimpleObject;
 class msCustomerToken extends xPDOSimpleObject
 {
     /**
-     * Типы токенов
+     * Token types
      */
     const TYPE_API = 'api';
     const TYPE_REFRESH = 'refresh';
@@ -30,9 +30,9 @@ class msCustomerToken extends xPDOSimpleObject
     const TYPE_EMAIL_VERIFICATION = 'email_verification';
 
     /**
-     * Проверка истечения срока действия токена
+     * Check if token is expired
      *
-     * @return bool True если токен истек
+     * @return bool True if token is expired
      */
     public function isExpired()
     {
@@ -41,9 +41,9 @@ class msCustomerToken extends xPDOSimpleObject
     }
 
     /**
-     * Проверка валидности токена
+     * Check token validity
      *
-     * @return bool True если токен валиден (не истек)
+     * @return bool True if token is valid (not expired)
      */
     public function isValid()
     {
@@ -51,7 +51,7 @@ class msCustomerToken extends xPDOSimpleObject
     }
 
     /**
-     * Обновление времени последнего использования
+     * Update last used time
      *
      * @return bool
      */
@@ -62,7 +62,7 @@ class msCustomerToken extends xPDOSimpleObject
     }
 
     /**
-     * Получение клиента по токену
+     * Get customer by token
      *
      * @return msCustomer|null
      */

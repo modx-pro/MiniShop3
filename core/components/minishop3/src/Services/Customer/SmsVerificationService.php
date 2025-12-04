@@ -6,18 +6,18 @@ use MiniShop3\Model\msCustomer;
 use MODX\Revolution\modX;
 
 /**
- * SmsVerificationService - сервис подтверждения телефонных номеров через SMS
+ * SmsVerificationService - phone number verification service via SMS
  *
- * ЗАГЛУШКА для будущей интеграции с SMS провайдерами (Twilio, SMS.ru и т.д.)
+ * STUB for future integration with SMS providers (Twilio, SMS.ru, etc.)
  *
- * В Phase 1 (MVP) этот сервис не реализован полностью.
- * Методы возвращают заглушки для совместимости с архитектурой.
+ * In Phase 1 (MVP) this service is not fully implemented.
+ * Methods return stubs for architecture compatibility.
  *
- * Пример будущей интеграции:
+ * Example of future integration:
  * ```php
  * class SmsRuProvider implements SmsProviderInterface {
  *     public function sendSms(string $phone, string $message): bool {
- *         // Интеграция с SMS.ru API
+ *         // Integration with SMS.ru API
  *         $client = new SmsRuClient($this->apiKey);
  *         return $client->send($phone, $message);
  *     }
@@ -44,7 +44,7 @@ class SmsVerificationService
     }
 
     /**
-     * Отправить код подтверждения по SMS (заглушка)
+     * Send verification code via SMS (stub)
      *
      * @param msCustomer $customer
      * @return array ['success' => bool, 'message' => string, 'code' => string|null]
@@ -66,10 +66,6 @@ class SmsVerificationService
             "[SmsVerificationService] SMS sending not implemented (phone: {$phone})"
         );
 
-        // TODO: Интеграция с SMS провайдером
-        // $code = $this->generateCode();
-        // $sent = $this->provider->sendSms($phone, "Your verification code: {$code}");
-
         return [
             'success' => false,
             'message' => 'SMS verification is not configured',
@@ -78,7 +74,7 @@ class SmsVerificationService
     }
 
     /**
-     * Проверить код подтверждения (заглушка)
+     * Verify code (stub)
      *
      * @param msCustomer $customer
      * @param string $code
@@ -86,7 +82,6 @@ class SmsVerificationService
      */
     public function verifyCode(msCustomer $customer, string $code): bool
     {
-        // TODO: Проверка кода из хранилища (кеш/БД)
         $this->modx->log(
             modX::LOG_LEVEL_WARN,
             "[SmsVerificationService] SMS verification not implemented"
@@ -96,7 +91,7 @@ class SmsVerificationService
     }
 
     /**
-     * Генерация 6-значного кода подтверждения
+     * Generate 6-digit verification code
      *
      * @return string
      */

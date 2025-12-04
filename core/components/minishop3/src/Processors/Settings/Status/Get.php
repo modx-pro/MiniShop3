@@ -32,7 +32,6 @@ class Get extends GetProcessor
     {
         $data = $this->object->toArray();
 
-        // Перевод названия статуса (если это лексиконный ключ)
         if (!empty($data['name']) && str_starts_with($data['name'], 'ms3_order_status_')) {
             $translated = $this->modx->lexicon($data['name']);
             if ($translated !== $data['name']) {

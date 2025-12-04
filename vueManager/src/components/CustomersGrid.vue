@@ -22,35 +22,20 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
-// Конфигурация колонок грида (загружается из API)
 const columns = ref([])
-
-// Состояние таблицы
 const loading = ref(false)
 const customers = ref([])
 const totalRecords = ref(0)
 const first = ref(0)
 const rows = ref(20)
-
-// Фильтры (для формы)
 const filterValues = ref({})
-
-// Фильтруемые колонки (computed)
 const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
-
-// Поиск
 const searchQuery = ref('')
-
-// Модальное окно редактирования
 const editDialogVisible = ref(false)
 const editingCustomer = ref(null)
 const saving = ref(false)
-
-// Поле пароля
 const newPassword = ref('')
 const showPassword = ref(false)
-
-// Модальное окно адресов
 const addressesDialogVisible = ref(false)
 const currentCustomerForAddresses = ref(null)
 const addresses = ref([])
@@ -60,7 +45,7 @@ const addressFormVisible = ref(false)
 const savingAddress = ref(false)
 
 /**
- * Загрузить список клиентов
+ * Load customers list
  */
 async function loadCustomers() {
   loading.value = true
@@ -75,7 +60,6 @@ async function loadCustomers() {
       params.query = searchQuery.value
     }
 
-    // Добавляем фильтры колонок
     Object.keys(filterValues.value).forEach(key => {
       const value = filterValues.value[key]
       if (value !== null && value !== undefined && value !== '') {
@@ -107,7 +91,7 @@ async function loadCustomers() {
 }
 
 /**
- * Обработчик пагинации
+ * Handle pagination
  */
 function onPage(event) {
   first.value = event.first
@@ -115,17 +99,16 @@ function onPage(event) {
   loadCustomers()
 }
 
-
 /**
- * Обработчик поиска
+ * Handle search
  */
 function onSearch() {
-  first.value = 0 // Сбросить на первую страницу
+  first.value = 0
   loadCustomers()
 }
 
 /**
- * Открыть модальное окно редактирования
+ * Open edit modal
  */
 function editCustomer(customer) {
   editingCustomer.value = { ...customer }
@@ -135,7 +118,7 @@ function editCustomer(customer) {
 }
 
 /**
- * Сгенерировать случайный пароль
+ * Generate random password
  */
 function generatePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
@@ -144,11 +127,11 @@ function generatePassword() {
     password += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   newPassword.value = password
-  showPassword.value = true // Показать сгенерированный пароль
+  showPassword.value = true
 }
 
 /**
- * Сохранить изменения клиента
+ * Save customer changes
  */
 async function saveCustomer() {
   if (!editingCustomer.value) return
@@ -158,7 +141,6 @@ async function saveCustomer() {
   try {
     const data = { ...editingCustomer.value }
 
-    // Добавляем пароль если он указан
     if (newPassword.value) {
       data.password = newPassword.value
     }
@@ -188,7 +170,7 @@ async function saveCustomer() {
 }
 
 /**
- * Удалить клиента
+ * Delete customer
  */
 function deleteCustomer(customer) {
   confirm.require({
@@ -224,7 +206,7 @@ function deleteCustomer(customer) {
 }
 
 /**
- * Получить отображаемое имя клиента (имя + фамилия, или email, или ID)
+ * Get customer display name (first + last name, or email, or ID)
  */
 function getCustomerDisplayName(customer) {
   const fullName = [customer.first_name, customer.last_name].filter(Boolean).join(' ').trim()
@@ -237,12 +219,8 @@ function getCustomerDisplayName(customer) {
   return `#${customer.id}`
 }
 
-// ============================================
-// ADDRESSES (Адреса клиента)
-// ============================================
-
 /**
- * Открыть диалог адресов клиента
+ * Open customer addresses dialog
  */
 async function openAddresses(customer) {
   currentCustomerForAddresses.value = customer
@@ -253,7 +231,7 @@ async function openAddresses(customer) {
 }
 
 /**
- * Загрузить адреса клиента
+ * Load customer addresses
  */
 async function loadAddresses(customerId) {
   addressesLoading.value = true
@@ -276,7 +254,7 @@ async function loadAddresses(customerId) {
 }
 
 /**
- * Открыть форму создания нового адреса
+ * Open create new address form
  */
 function createAddress() {
   editingAddress.value = {
@@ -298,7 +276,7 @@ function createAddress() {
 }
 
 /**
- * Открыть форму редактирования адреса
+ * Open edit address form
  */
 function editAddress(address) {
   editingAddress.value = { ...address }
@@ -306,7 +284,7 @@ function editAddress(address) {
 }
 
 /**
- * Сохранить адрес (создание или обновление)
+ * Save address (create or update)
  */
 async function saveAddress() {
   if (!editingAddress.value || !currentCustomerForAddresses.value) return
@@ -317,7 +295,6 @@ async function saveAddress() {
     const customerId = currentCustomerForAddresses.value.id
 
     if (editingAddress.value.id) {
-      // Обновление
       await request.put(
         `/api/mgr/customers/${customerId}/addresses/${editingAddress.value.id}`,
         editingAddress.value
@@ -329,7 +306,6 @@ async function saveAddress() {
         life: 3000
       })
     } else {
-      // Создание
       await request.post(
         `/api/mgr/customers/${customerId}/addresses`,
         editingAddress.value
@@ -359,7 +335,7 @@ async function saveAddress() {
 }
 
 /**
- * Удалить адрес
+ * Delete address
  */
 function deleteAddress(address) {
   confirm.require({
@@ -396,7 +372,7 @@ function deleteAddress(address) {
 }
 
 /**
- * Отменить редактирование адреса
+ * Cancel address editing
  */
 function cancelAddressEdit() {
   editingAddress.value = null
@@ -404,7 +380,7 @@ function cancelAddressEdit() {
 }
 
 /**
- * Форматирование даты
+ * Format date
  */
 function formatDate(dateString) {
   if (!dateString) return '-'
@@ -419,14 +395,14 @@ function formatDate(dateString) {
 }
 
 /**
- * Форматирование статуса email
+ * Format email status
  */
 function formatEmailStatus(customer) {
   return customer.email_verified_at ? _('verified') : _('not_verified')
 }
 
 /**
- * Инициализировать фильтры для колонок
+ * Initialize column filters
  */
 function initFilters() {
   const newFilters = {}
@@ -441,7 +417,7 @@ function initFilters() {
 }
 
 /**
- * Применить фильтры
+ * Apply filters
  */
 function applyFilters() {
   first.value = 0
@@ -449,7 +425,7 @@ function applyFilters() {
 }
 
 /**
- * Сбросить фильтры
+ * Clear filters
  */
 function clearFilters() {
   initFilters()
@@ -458,7 +434,7 @@ function clearFilters() {
 }
 
 /**
- * Загрузить конфигурацию грида
+ * Load grid configuration
  */
 async function loadGridConfig() {
   try {
@@ -467,14 +443,13 @@ async function loadGridConfig() {
     initFilters()
   } catch (error) {
     console.error('[CustomersGrid] Failed to load grid config:', error)
-    // Fallback на дефолтные колонки
     columns.value = getDefaultColumns()
     initFilters()
   }
 }
 
 /**
- * Дефолтные колонки (если API недоступен)
+ * Default columns (if API unavailable)
  */
 function getDefaultColumns() {
   return [
@@ -502,10 +477,9 @@ function getDefaultColumns() {
 }
 
 /**
- * Получить конфигурацию действий для колонки
+ * Get action configuration for column
  */
 function getActionsConfig(column) {
-  // Если actions не указаны, используем дефолтные
   if (!column.actions || column.actions.length === 0) {
     return [
       { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
@@ -517,11 +491,10 @@ function getActionsConfig(column) {
 }
 
 /**
- * Рендерить значение колонки по template
+ * Render column value by template
  */
 function renderField(data, column) {
   if (column.template) {
-    // Поддержка шаблонов вида: "{first_name} {last_name}"
     return column.template.replace(/\{(\w+)\}/g, (match, key) => data[key] || '')
   }
   return data[column.name]
@@ -544,7 +517,7 @@ onMounted(async () => {
       </template>
 
       <template #content>
-        <!-- Поиск -->
+        <!-- Search -->
         <div class="p-inputgroup mb-3">
           <InputText
             v-model="searchQuery"
@@ -558,7 +531,7 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Форма фильтров -->
+        <!-- Filters form -->
         <div v-if="filterableColumns.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
           <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
             <div
@@ -571,7 +544,7 @@ onMounted(async () => {
                 <InputText
                   :id="`filter-${column.name}`"
                   v-model="filterValues[column.name]"
-                  :placeholder="`Фильтр по ${column.label}`"
+                  :placeholder="`Filter by ${column.label}`"
                   style="width: 100%;"
                   @keyup.enter="applyFilters"
                 />
@@ -580,12 +553,12 @@ onMounted(async () => {
           </div>
           <div style="display: flex; gap: 0.5rem;">
             <Button
-              label="Применить фильтры"
+              label="Apply Filters"
               icon="pi pi-filter"
               @click="applyFilters"
             />
             <Button
-              label="Сбросить фильтры"
+              label="Clear Filters"
               icon="pi pi-filter-slash"
               severity="secondary"
               @click="clearFilters"
@@ -593,7 +566,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Таблица -->
+        <!-- Table -->
         <DataTable
           :value="customers"
           :loading="loading"
@@ -605,9 +578,9 @@ onMounted(async () => {
           stripedRows
           responsiveLayout="scroll"
         >
-          <!-- Динамическое отображение колонок -->
+          <!-- Dynamic column rendering -->
           <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
-            <!-- Колонка Actions (специальная обработка) -->
+            <!-- Actions column (special handling) -->
             <Column
               v-if="column.type === 'actions'"
               :header="column.label"
@@ -628,7 +601,7 @@ onMounted(async () => {
               </template>
             </Column>
 
-            <!-- Обычные колонки -->
+            <!-- Regular columns -->
             <Column
               v-else
               :field="column.name"
@@ -638,22 +611,22 @@ onMounted(async () => {
               :style="{ width: column.width }"
             >
               <template #body="{ data }">
-                <!-- Boolean поле (checkbox) -->
+                <!-- Boolean field (checkbox) -->
                 <Checkbox
                   v-if="column.type === 'boolean'"
                   :model-value="Boolean(data[column.name])"
                   :binary="true"
                   disabled
                 />
-                <!-- Datetime поле -->
+                <!-- Datetime field -->
                 <span v-else-if="column.format === 'datetime'">
                   {{ formatDate(data[column.name]) }}
                 </span>
-                <!-- Template поле (например: {first_name} {last_name}) -->
+                <!-- Template field (e.g.: {first_name} {last_name}) -->
                 <span v-else-if="column.template">
                   {{ renderField(data, column) }}
                 </span>
-                <!-- Обычное текстовое поле -->
+                <!-- Regular text field -->
                 <span v-else>
                   {{ data[column.name] }}
                 </span>
@@ -664,7 +637,7 @@ onMounted(async () => {
       </template>
     </Card>
 
-    <!-- Модальное окно редактирования -->
+    <!-- Edit modal window -->
     <Dialog
       v-model:visible="editDialogVisible"
       :header="_('edit_customer')"
@@ -674,7 +647,7 @@ onMounted(async () => {
       :appendTo="'self'"
     >
       <div v-if="editingCustomer" class="customer-form">
-        <!-- Строка 1: Имя и Фамилия -->
+        <!-- Row 1: First and Last Name -->
         <div class="form-row">
           <div class="form-col">
             <label for="first_name">{{ _('customer_first_name') }}</label>
@@ -686,7 +659,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Строка 2: Email и Телефон -->
+        <!-- Row 2: Email and Phone -->
         <div class="form-row">
           <div class="form-col">
             <label for="email">{{ _('customer_email') }}</label>
@@ -698,7 +671,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Строка 3: Новый пароль -->
+        <!-- Row 3: New Password -->
         <div class="form-row">
           <div class="form-col-full">
             <label for="new_password">{{ _('customer_new_password') }}</label>
@@ -731,7 +704,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Строка 4: Чекбоксы -->
+        <!-- Row 4: Checkboxes -->
         <div class="checkboxes-row">
           <div class="checkbox-col">
             <Checkbox inputId="is_active" v-model="editingCustomer.is_active" :binary="true" />
@@ -769,7 +742,7 @@ onMounted(async () => {
       </template>
     </Dialog>
 
-    <!-- Модальное окно адресов клиента -->
+    <!-- Customer addresses modal window -->
     <Dialog
       v-model:visible="addressesDialogVisible"
       :header="currentCustomerForAddresses ? _('customer_addresses_title').replace('{name}', getCustomerDisplayName(currentCustomerForAddresses)) : _('addresses')"
@@ -779,7 +752,7 @@ onMounted(async () => {
       :appendTo="'self'"
     >
       <div class="addresses-content">
-        <!-- Список адресов -->
+        <!-- Addresses list -->
         <div v-if="!addressFormVisible" class="addresses-list">
           <div class="addresses-header">
             <Button
@@ -835,7 +808,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Форма редактирования/создания адреса -->
+        <!-- Address edit/create form -->
         <div v-else class="address-form">
           <div class="form-row">
             <div class="form-col-full">
@@ -943,7 +916,7 @@ onMounted(async () => {
   color: #f59e0b;
 }
 
-/* Сетка формы редактирования клиента */
+/* Customer edit form grid */
 .customer-form {
   display: flex;
   flex-direction: column;
@@ -979,7 +952,7 @@ onMounted(async () => {
   font-size: 0.75rem;
 }
 
-/* Ряд чекбоксов */
+/* Checkboxes row */
 .checkboxes-row {
   display: flex;
   flex-wrap: wrap;
@@ -1005,7 +978,7 @@ onMounted(async () => {
   width: 100%;
 }
 
-/* Стили для диалога адресов */
+/* Styles for addresses dialog */
 .addresses-content {
   min-height: 200px;
 }
@@ -1091,7 +1064,7 @@ onMounted(async () => {
   gap: 0.25rem;
 }
 
-/* Форма адреса */
+/* Address form */
 .address-form {
   display: flex;
   flex-direction: column;

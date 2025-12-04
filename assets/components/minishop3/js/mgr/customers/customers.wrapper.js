@@ -1,10 +1,10 @@
 /**
- * Простой HTML wrapper для Vue приложения управления клиентами
+ * Simple HTML wrapper for Vue customers management application
  *
- * Создает контейнер для монтирования Vue приложения
+ * Creates container for mounting Vue application
  */
 
-// Создаем простой компонент для MODX
+// Create simple component for MODX
 Ext.reg('ms3-customers-vue-wrapper', Ext.extend(Ext.Component, {
     initComponent: function() {
         Ext.apply(this, {

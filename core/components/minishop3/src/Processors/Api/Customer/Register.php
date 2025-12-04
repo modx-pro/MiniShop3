@@ -9,10 +9,10 @@ use MiniShop3\Services\Customer\RegisterService;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * Register - процессор регистрации нового клиента
+ * Register - processor for registering a new customer
  *
- * Создает нового клиента с валидацией и опциональной верификацией email.
- * Защищен от спама через RateLimiter.
+ * Creates a new customer with validation and optional email verification.
+ * Protected from spam via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -23,7 +23,6 @@ class Register extends Processor
      */
     public function process()
     {
-        // Загружаем лексикон
         $this->modx->lexicon->load('minishop3:customer');
 
         $email = trim($this->getProperty('email', ''));
@@ -33,7 +32,6 @@ class Register extends Processor
         $phone = trim($this->getProperty('phone', ''));
         $privacyAccepted = (bool)$this->getProperty('privacy_accepted', false);
 
-        // Валидация обязательных полей
         if (empty($email)) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_email_required'));
         }
@@ -42,7 +40,6 @@ class Register extends Processor
             return $this->failure($this->modx->lexicon('ms3_customer_err_password_required'));
         }
 
-        // GDPR: проверка согласия
         $requirePrivacy = (bool)$this->modx->getOption('ms3_customer_require_privacy_consent', null, true);
         if ($requirePrivacy && !$privacyAccepted) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_privacy_required'));
@@ -51,7 +48,6 @@ class Register extends Processor
         /** @var RateLimiter $rateLimiter */
         $rateLimiter = $this->modx->services->get('ms3_rate_limiter');
 
-        // Rate limiting по IP (не более 3 регистраций в час)
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         if (!$rateLimiter->check('register', $ip, 3, 3600)) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_register_rate_limit'));
@@ -60,12 +56,10 @@ class Register extends Processor
         /** @var RegisterService $registerService */
         $registerService = $this->modx->services->get('ms3_register_service');
 
-        // Устанавливаем EmailVerificationService
         /** @var EmailVerificationService $emailVerification */
         $emailVerification = $this->modx->services->get('ms3_email_verification_service');
         $registerService->setEmailVerification($emailVerification);
 
-        // Регистрация
         $result = $registerService->register([
             'email' => $email,
             'password' => $password,
@@ -81,7 +75,6 @@ class Register extends Processor
 
         $customer = $result['customer'];
 
-        // Автоматический вход после регистрации (опционально)
         $autoLogin = (bool)$this->modx->getOption('ms3_customer_auto_login_after_register', null, true);
         $requireEmailVerification = (bool)$this->modx->getOption('ms3_customer_require_email_verification', null, true);
 
@@ -95,7 +88,6 @@ class Register extends Processor
             $tokenObj = $authManager->createToken($customer, 'api', $ttl);
 
             if ($tokenObj) {
-                // Сохраняем в сессию
                 if (!isset($_SESSION['ms3'])) {
                     $_SESSION['ms3'] = [];
                 }
@@ -109,10 +101,8 @@ class Register extends Processor
             }
         }
 
-        // Сбрасываем login rate limiter для этого IP
         $rateLimiter->reset('login', $ip);
 
-        // Определяем URL для редиректа (только если автовход включен)
         $redirectUrl = '';
         if ($autoLogin && !$requireEmailVerification) {
             $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);

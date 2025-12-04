@@ -1,24 +1,24 @@
 /**
- * UI обработчики для корзины
+ * UI handlers for cart
  *
- * Класс управляет интерактивными элементами корзины:
- * - Кнопки увеличения/уменьшения количества
- * - Поля ввода количества
- * - Селекты опций товара
- * - Кнопки удаления товара
+ * Class manages interactive cart elements:
+ * - Quantity increment/decrement buttons
+ * - Quantity input fields
+ * - Product option selects
+ * - Product removal buttons
  *
- * Разделение ответственности:
- * - CartUI: UI логика (события, DOM)
- * - CartAPI: Запросы к серверу
- * - Hooks: Расширяемость
- * - Message: Уведомления
+ * Separation of concerns:
+ * - CartUI: UI logic (events, DOM)
+ * - CartAPI: Server requests
+ * - Hooks: Extensibility
+ * - Message: Notifications
  */
 class CartUI {
   /**
-   * @param {CartAPI} cartAPI - API для работы с корзиной
-   * @param {Object} hooks - Система хуков
-   * @param {Object} message - Система уведомлений
-   * @param {Object} config - Конфигурация (ms3Config)
+   * @param {CartAPI} cartAPI - Cart API instance
+   * @param {Object} hooks - Hook system
+   * @param {Object} message - Message system
+   * @param {Object} config - Configuration (ms3Config)
    */
   constructor (cartAPI, hooks, message, config) {
     this.cart = cartAPI
@@ -28,7 +28,7 @@ class CartUI {
   }
 
   /**
-   * Инициализация UI обработчиков
+   * Initialize UI handlers
    */
   init () {
     this.initQuantityButtons()
@@ -37,7 +37,7 @@ class CartUI {
   }
 
   /**
-   * Кнопки +/- количества товара
+   * Product quantity +/- buttons
    */
   initQuantityButtons () {
     document.querySelectorAll('.qty-btn').forEach(btn => {
@@ -52,12 +52,10 @@ class CartUI {
 
         let qty = parseInt(input.value) || 0
 
-        // Увеличение
         if (e.target.classList.contains('inc-qty')) {
           qty++
         }
 
-        // Уменьшение
         if (e.target.classList.contains('dec-qty') && qty > 0) {
           qty--
         }
@@ -70,7 +68,7 @@ class CartUI {
   }
 
   /**
-   * Поля ввода количества
+   * Quantity input fields
    */
   initQuantityInputs () {
     document.querySelectorAll('.qty-input').forEach(input => {
@@ -91,7 +89,7 @@ class CartUI {
   }
 
   /**
-   * Селекты опций товара (цвет, размер и т.д.)
+   * Product option selects (color, size, etc.)
    */
   initOptionSelects () {
     document.querySelectorAll('.ms3_cart_options').forEach(select => {
@@ -99,21 +97,18 @@ class CartUI {
         const form = e.target.closest('.ms3_form')
         if (!form) return
 
-        // TODO: Реализовать changeOption через API
-        // Пока что просто логируем
         console.log('Option changed:', e.target.name, e.target.value)
       })
     })
   }
 
   /**
-   * Обработка изменения количества товара
+   * Handle product quantity change
    *
-   * @param {string} productKey - Ключ товара
-   * @param {number} count - Новое количество
+   * @param {string} productKey - Product key
+   * @param {number} count - New quantity
    */
   async handleChange (productKey, count) {
-    // Хук BEFORE
     const hookData = { productKey, count }
     await this.hooks.runHooks('beforeChangeCart', hookData)
 
@@ -122,24 +117,18 @@ class CartUI {
     }
 
     try {
-      // API запрос (с токенами рендера если есть)
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.change(productKey, count, renderTokens)
 
-      // Хук AFTER
       await this.hooks.runHooks('afterChangeCart', { productKey, count, response })
 
-      // Обработка ответа
       if (response.success) {
-        // Рендер HTML если backend прислал
         if (response.data && response.data.render) {
           this.renderCart(response.data.render)
         }
 
-        // Событие для сторонних скриптов
         this.dispatchCartUpdated(response.data)
 
-        // Уведомление
         if (response.message) {
           this.message.success(response.message)
         }
@@ -150,19 +139,18 @@ class CartUI {
       }
     } catch (error) {
       console.error('CartUI.handleChange error:', error)
-      this.message.error('Произошла ошибка при обновлении корзины')
+      this.message.error('Cart update error')
     }
   }
 
   /**
-   * Обработка добавления товара
+   * Handle product addition
    *
-   * @param {number} id - ID товара
-   * @param {number} count - Количество
-   * @param {Object} options - Опции товара
+   * @param {number} id - Product ID
+   * @param {number} count - Quantity
+   * @param {Object} options - Product options
    */
   async handleAdd (id, count = 1, options = {}) {
-    // Хук BEFORE
     const hookData = { id, count, options }
     await this.hooks.runHooks('beforeAddCart', hookData)
 
@@ -171,24 +159,18 @@ class CartUI {
     }
 
     try {
-      // API запрос (с токенами рендера если есть)
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.add(id, count, options, renderTokens)
 
-      // Хук AFTER
       await this.hooks.runHooks('afterAddCart', { id, count, options, response })
 
-      // Обработка ответа
       if (response.success) {
-        // Рендер HTML
         if (response.data && response.data.render) {
           this.renderCart(response.data.render)
         }
 
-        // Событие
         this.dispatchCartUpdated(response.data)
 
-        // Уведомление
         if (response.message) {
           this.message.success(response.message)
         }
@@ -199,17 +181,16 @@ class CartUI {
       }
     } catch (error) {
       console.error('[CartUI] handleAdd error:', error)
-      this.message.error('Произошла ошибка при добавлении товара')
+      this.message.error('Product addition error')
     }
   }
 
   /**
-   * Обработка удаления товара
+   * Handle product removal
    *
-   * @param {string} productKey - Ключ товара
+   * @param {string} productKey - Product key
    */
   async handleRemove (productKey) {
-    // Хук BEFORE
     const hookData = { productKey }
     await this.hooks.runHooks('beforeRemoveCart', hookData)
 
@@ -218,24 +199,18 @@ class CartUI {
     }
 
     try {
-      // API запрос (с токенами рендера если есть)
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.remove(productKey, renderTokens)
 
-      // Хук AFTER
       await this.hooks.runHooks('afterRemoveCart', { productKey, response })
 
-      // Обработка ответа
       if (response.success) {
-        // Рендер HTML
         if (response.data && response.data.render) {
           this.renderCart(response.data.render)
         }
 
-        // Событие
         this.dispatchCartUpdated(response.data)
 
-        // Уведомление
         if (response.message) {
           this.message.success(response.message)
         }
@@ -246,15 +221,14 @@ class CartUI {
       }
     } catch (error) {
       console.error('CartUI.handleRemove error:', error)
-      this.message.error('Произошла ошибка при удалении товара')
+      this.message.error('Product removal error')
     }
   }
 
   /**
-   * Обработка очистки корзины
+   * Handle cart clearing
    */
   async handleClean () {
-    // Хук BEFORE
     const hookData = {}
     await this.hooks.runHooks('beforeCleanCart', hookData)
 
@@ -263,24 +237,18 @@ class CartUI {
     }
 
     try {
-      // API запрос (с токенами рендера если есть)
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.clean(renderTokens)
 
-      // Хук AFTER
       await this.hooks.runHooks('afterCleanCart', { response })
 
-      // Обработка ответа
       if (response.success) {
-        // Рендер HTML
         if (response.data && response.data.render) {
           this.renderCart(response.data.render)
         }
 
-        // Событие
         this.dispatchCartUpdated(response.data)
 
-        // Уведомление
         if (response.message) {
           this.message.success(response.message)
         }
@@ -291,14 +259,14 @@ class CartUI {
       }
     } catch (error) {
       console.error('CartUI.handleClean error:', error)
-      this.message.error('Произошла ошибка при очистке корзины')
+      this.message.error('Cart clearing error')
     }
   }
 
   /**
-   * Получить токены рендера из конфига
+   * Get render tokens from config
    *
-   * @returns {Array|null} Массив токенов или null
+   * @returns {Array|null} Token array or null
    */
   getRenderTokens () {
     if (!this.config || !this.config.render || !this.config.render.cart) {
@@ -311,24 +279,23 @@ class CartUI {
       return null
     }
 
-    // Извлекаем только токены из массива объектов
     const tokens = cartRenderConfig.map(item => item.token).filter(Boolean)
     return tokens
   }
 
   /**
-   * Рендеринг HTML блоков корзины
+   * Render cart HTML blocks
    *
-   * Backend отдаёт HTML по токенам:
+   * Backend returns HTML by tokens:
    * {
-   *   "token1": "<div>HTML корзины 1</div>",
-   *   "token2": "<div>HTML корзины 2</div>"
+   *   "token1": "<div>Cart HTML 1</div>",
+   *   "token2": "<div>Cart HTML 2</div>"
    * }
    *
-   * Сопоставляем токены с селекторами из ms3Config.render.cart:
+   * Map tokens to selectors from ms3Config.render.cart:
    * [{token: "token1", selector: "#headerMiniCart"}, ...]
    *
-   * @param {Object} renderData - Объект {token: html}
+   * @param {Object} renderData - Object {token: html}
    */
   renderCart (renderData) {
     if (!renderData || typeof renderData !== 'object') {
@@ -341,11 +308,9 @@ class CartUI {
 
     const cartRenderConfig = this.config.render.cart
 
-    // Для каждого токена находим селектор и обновляем DOM
     for (const token in renderData) {
       const html = renderData[token]
 
-      // Находим конфигурацию по токену
       const config = cartRenderConfig.find(item => item.token === token)
 
       if (!config || !config.selector) {
@@ -359,22 +324,20 @@ class CartUI {
       }
     }
 
-    // Переинициализация обработчиков после рендера
-    // (т.к. DOM обновился)
     setTimeout(() => {
       this.init()
     }, 100)
   }
 
   /**
-   * Отправка события обновления корзины
+   * Dispatch cart update event
    *
-   * Позволяет сторонним скриптам подписаться на изменения корзины:
+   * Allows external scripts to subscribe to cart changes:
    * document.addEventListener('ms3:cart:updated', (e) => {
-   *   console.log('Корзина обновлена', e.detail)
+   *   console.log('Cart updated', e.detail)
    * })
    *
-   * @param {Object} data - Данные корзины
+   * @param {Object} data - Cart data
    */
   dispatchCartUpdated (data) {
     document.dispatchEvent(new CustomEvent('ms3:cart:updated', {

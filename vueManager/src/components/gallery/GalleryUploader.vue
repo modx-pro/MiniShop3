@@ -11,9 +11,6 @@ import Dashboard from '@uppy/dashboard'
 import XHRUpload from '@uppy/xhr-upload'
 import ImageEditor from '@uppy/image-editor'
 
-// Импортируем стили Uppy напрямую из node_modules
-// (Uppy v4 имеет проблемы с exports в package.json для CSS)
-
 const props = defineProps({
   productId: {
     type: [Number, String],
@@ -60,7 +57,6 @@ onBeforeUnmount(() => {
 })
 
 const initUppy = () => {
-  // Создаем экземпляр Uppy
   uppy = new Uppy({
     id: 'gallery-uploader',
     autoProceed: false,
@@ -73,28 +69,27 @@ const initUppy = () => {
     },
     locale: {
       strings: {
-        // Русская локализация
-        dropPasteFiles: 'Перетащите файлы сюда или %{browse}',
-        browse: 'выберите',
-        uploadComplete: 'Загрузка завершена',
-        uploadFailed: 'Ошибка загрузки',
-        uploading: 'Загрузка...',
-        complete: 'Завершено',
-        cancel: 'Отменить',
-        remove: 'Удалить',
-        edit: 'Редактировать',
-        retry: 'Повторить',
-        addMore: 'Добавить еще',
+        // English localization
+        dropPasteFiles: 'Drop files here or %{browse}',
+        browse: 'browse',
+        uploadComplete: 'Upload complete',
+        uploadFailed: 'Upload failed',
+        uploading: 'Uploading...',
+        complete: 'Complete',
+        cancel: 'Cancel',
+        remove: 'Remove',
+        edit: 'Edit',
+        retry: 'Retry',
+        addMore: 'Add more',
         xFilesSelected: {
-          0: '%{smart_count} файл выбран',
-          1: '%{smart_count} файла выбрано',
-          2: '%{smart_count} файлов выбрано'
+          0: '%{smart_count} file selected',
+          1: '%{smart_count} files selected',
+          2: '%{smart_count} files selected'
         }
       }
     }
   })
 
-  // Подключаем Dashboard
   uppy.use(Dashboard, {
     target: '#uppy-dashboard',
     inline: true,
@@ -103,29 +98,26 @@ const initUppy = () => {
     proudlyDisplayPoweredByUppy: false,
     showProgressDetails: true,
     hideUploadButton: false,
-    note: `Максимальный размер: ${formatBytes(props.maxFileSize)}`,
+    note: `Maximum size: ${formatBytes(props.maxFileSize)}`,
     theme: 'light'
   })
 
-  // Подключаем Image Editor
   uppy.use(ImageEditor, {
     target: Dashboard,
     quality: 0.8
   })
 
-  // Подключаем XHR Upload
   uppy.use(XHRUpload, {
     endpoint: buildUploadUrl(),
     method: 'POST',
     formData: true,
     fieldName: 'file',
-    timeout: 60000, // 60 секунд
+    timeout: 60000, // 60 seconds
     headers: {
       'Accept': 'application/json'
     }
   })
 
-  // События загрузки
   uppy.on('upload-success', (file, response) => {
     console.log('File uploaded:', file.name, response)
     emit('upload-success', { file, response })
@@ -140,7 +132,6 @@ const initUppy = () => {
     console.log('Upload complete:', result)
     emit('upload-complete', result)
 
-    // Очищаем успешно загруженные файлы через 2 секунды
     setTimeout(() => {
       result.successful.forEach(file => {
         uppy.removeFile(file.id)
@@ -150,7 +141,6 @@ const initUppy = () => {
 
   uppy.on('restriction-failed', (file, error) => {
     console.warn('Restriction failed:', file?.name, error)
-    // Uppy сам покажет уведомление
   })
 }
 
@@ -175,14 +165,12 @@ const formatBytes = (bytes, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-// Публичный метод для обновления настроек
 const updateSettings = (newSettings) => {
   if (uppy) {
     uppy.setOptions(newSettings)
   }
 }
 
-// Публичный метод для добавления файлов программно
 const addFiles = (files) => {
   if (uppy) {
     files.forEach(file => {
@@ -191,7 +179,6 @@ const addFiles = (files) => {
   }
 }
 
-// Expose methods for parent components
 defineExpose({
   updateSettings,
   addFiles,
@@ -214,7 +201,6 @@ defineExpose({
   overflow: hidden;
 }
 
-/* Убираем рамку когда Uppy активен */
 .uppy-container :deep(.uppy-Dashboard--isDraggingOver) {
   border-color: #4CAF50;
 }

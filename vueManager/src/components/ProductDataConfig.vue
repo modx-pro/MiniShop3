@@ -21,7 +21,7 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
-// Состояние
+// State
 const loading = ref(false)
 const saving = ref(false)
 const fields = ref([])
@@ -29,12 +29,12 @@ const sections = ref([])
 const loadingSections = ref(false)
 const pageKey = 'product_data'
 
-// Модальное окно редактирования поля
+// Field edit dialog
 const editDialogVisible = ref(false)
 const editingField = ref(null)
 const editingFieldIndex = ref(-1)
 
-// Модальное окно добавления секции
+// Section add dialog
 const addSectionDialogVisible = ref(false)
 const newSection = ref({
   section_key: '',
@@ -45,8 +45,8 @@ const newSection = ref({
 })
 
 /**
- * Опции для выбора секции (computed)
- * Формируется из загруженных секций, показываем только !hidden
+ * Section selection options (computed)
+ * Built from loaded sections, showing only !hidden
  */
 const availableSectionOptions = computed(() => {
   const options = [{ label: _('no_section'), value: null }]
@@ -56,7 +56,7 @@ const availableSectionOptions = computed(() => {
     .forEach(section => {
       options.push({
         label: section.label || section.key,
-        value: section.id  // Используем ID вместо key, т.к. в БД section - это FK на id
+        value: section.id  // Using ID instead of key, since section in DB is FK to id
       })
     })
 
@@ -64,7 +64,7 @@ const availableSectionOptions = computed(() => {
 })
 
 /**
- * Получить label секции по ID
+ * Get section label by ID
  */
 function getSectionLabel(sectionId) {
   if (!sectionId) return _('no_section')
@@ -73,7 +73,7 @@ function getSectionLabel(sectionId) {
 }
 
 /**
- * Загрузить секции из конфига
+ * Load sections from config
  */
 async function loadSections() {
   loadingSections.value = true
@@ -100,7 +100,7 @@ async function loadSections() {
 }
 
 /**
- * Удалить секцию
+ * Delete section
  */
 function deleteSection(sectionKey) {
   confirm.require({
@@ -121,7 +121,7 @@ function deleteSection(sectionKey) {
           life: 3000
         })
 
-        // Перезагружаем секции
+        // Reload sections
         await loadSections()
       } catch (error) {
         console.error('[ProductDataConfig] Error deleting section:', error)
@@ -137,7 +137,7 @@ function deleteSection(sectionKey) {
 }
 
 /**
- * Обработчик изменения порядка секций
+ * Section reorder handler
  */
 function onSectionReorder(event) {
   sections.value = event.value
@@ -150,13 +150,13 @@ function onSectionReorder(event) {
 }
 
 /**
- * Сохранить секции (порядок и видимость)
+ * Save sections (order and visibility)
  */
 async function saveSections() {
   saving.value = true
 
   try {
-    // Обновляем sort_order на основе текущего порядка
+    // Update sort_order based on current order
     const sectionsToSave = sections.value.map((section, index) => ({
       section_key: section.key,
       key: section.key,
@@ -181,7 +181,7 @@ async function saveSections() {
       life: 3000
     })
 
-    // Перезагружаем для синхронизации с БД
+    // Reload for sync with DB
     await loadSections()
   } catch (error) {
     console.error('[ProductDataConfig] Error saving sections:', error)
@@ -197,10 +197,10 @@ async function saveSections() {
 }
 
 /**
- * Открыть модальное окно добавления секции
+ * Open section add dialog
  */
 function openAddSectionDialog() {
-  // Сброс формы
+  // Reset form
   newSection.value = {
     section_key: '',
     lexicon_key: '',
@@ -212,17 +212,17 @@ function openAddSectionDialog() {
 }
 
 /**
- * Закрыть модальное окно добавления секции
+ * Close section add dialog
  */
 function closeAddSectionDialog() {
   addSectionDialogVisible.value = false
 }
 
 /**
- * Добавить новую секцию
+ * Add new section
  */
 async function addSection() {
-  // Валидация
+  // Validation
   if (!newSection.value.section_key) {
     toast.add({
       severity: 'warn',
@@ -233,7 +233,7 @@ async function addSection() {
     return
   }
 
-  // Проверка на дубликаты
+  // Check for duplicates
   const exists = sections.value.find(s => s.key === newSection.value.section_key)
   if (exists) {
     toast.add({
@@ -245,7 +245,7 @@ async function addSection() {
     return
   }
 
-  // Валидация: должен быть либо lexicon_key, либо label
+  // Validation: must have either lexicon_key or label
   if (!newSection.value.lexicon_key && !newSection.value.label) {
     toast.add({
       severity: 'warn',
@@ -257,7 +257,7 @@ async function addSection() {
   }
 
   try {
-    // Добавляем секцию в массив локально
+    // Add section to array locally
     const newSectionData = {
       key: newSection.value.section_key,
       section_key: newSection.value.section_key,
@@ -270,7 +270,7 @@ async function addSection() {
 
     sections.value.push(newSectionData)
 
-    // Сохраняем на сервер
+    // Save to server
     await saveSections()
 
     toast.add({
@@ -293,7 +293,7 @@ async function addSection() {
 }
 
 /**
- * Загрузить все поля (включая скрытые)
+ * Load all fields (including hidden)
  */
 async function loadFields() {
   loading.value = true
@@ -302,8 +302,8 @@ async function loadFields() {
     const response = await request.get(`/api/mgr/config/page-fields/${pageKey}/all`)
 
     if (response && response.fields) {
-      // API уже возвращает поля с hidden и sort_order
-      // Убеждаемся, что все поля имеют visible (дефолт true)
+      // API already returns fields with hidden and sort_order
+      // Make sure all fields have visible (default true)
       fields.value = response.fields.map(field => ({
         ...field,
         visible: field.visible !== undefined ? field.visible : true
@@ -331,13 +331,13 @@ async function loadFields() {
 }
 
 /**
- * Сохранить конфигурацию
+ * Save configuration
  */
 async function saveConfig() {
   saving.value = true
 
   try {
-    // Обновляем sort_order на основе текущего порядка
+    // Update sort_order based on current order
     const fieldsToSave = fields.value.map((field, index) => ({
       ...field,
       sort_order: index
@@ -357,7 +357,7 @@ async function saveConfig() {
       life: 3000
     })
 
-    // Перезагружаем для синхронизации с БД
+    // Reload for sync with DB
     await loadFields()
   } catch (error) {
     console.error('[ProductDataConfig] Error saving:', error)
@@ -373,7 +373,7 @@ async function saveConfig() {
 }
 
 /**
- * Обработчик изменения порядка строк
+ * Row reorder handler
  */
 function onRowReorder(event) {
   fields.value = event.value
@@ -386,14 +386,14 @@ function onRowReorder(event) {
 }
 
 /**
- * Открыть модальное окно редактирования поля
+ * Open field edit dialog
  */
 function openEditDialog(field, index) {
-  // Создаем копию поля для редактирования
+  // Create copy of field for editing
   editingField.value = {
     ...field,
-    // Преобразуем visible: 0/1 (number) или true/false (boolean) в boolean
-    // По умолчанию true если не задано
+    // Convert visible: 0/1 (number) or true/false (boolean) to boolean
+    // Default true if not set
     visible: field.visible !== undefined && field.visible !== null
       ? Boolean(Number(field.visible))
       : true
@@ -403,7 +403,7 @@ function openEditDialog(field, index) {
 }
 
 /**
- * Закрыть модальное окно
+ * Close edit dialog
  */
 function closeEditDialog() {
   editDialogVisible.value = false
@@ -412,21 +412,21 @@ function closeEditDialog() {
 }
 
 /**
- * Сохранить изменения поля в БД
+ * Save field changes to DB
  */
 async function saveFieldChanges() {
   if (editingFieldIndex.value >= 0 && editingField.value) {
     saving.value = true
 
     try {
-      // Обновляем поле в массиве
+      // Update field in array
       fields.value[editingFieldIndex.value] = { ...editingField.value }
 
-      // Сохраняем всю конфигурацию на сервер
+      // Save entire configuration to server
       const fieldsToSave = fields.value.map((field, index) => ({
         ...field,
         sort_order: index,
-        // Убеждаемся, что visible присутствует во всех полях (дефолт true)
+        // Make sure visible is present in all fields (default true)
         visible: field.visible !== undefined ? field.visible : true
       }))
 
@@ -444,7 +444,7 @@ async function saveFieldChanges() {
 
       closeEditDialog()
 
-      // Перезагружаем поля для синхронизации с БД
+      // Reload fields for sync with DB
       await loadFields()
     } catch (error) {
       console.error('[ProductDataConfig] Error saving:', error)
@@ -471,7 +471,7 @@ onMounted(() => {
     <h2>{{ _('product_fields_title') }}</h2>
     <p>{{ _('product_fields_description') }}</p>
 
-    <!-- Таблица секций -->
+    <!-- Sections table -->
     <Card style="margin-top: 20px;">
       <template #title>
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -535,7 +535,7 @@ onMounted(() => {
       </template>
     </Card>
 
-    <!-- Таблица полей -->
+    <!-- Fields table -->
     <Card style="margin-top: 20px;">
       <template #title>
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -599,7 +599,7 @@ onMounted(() => {
       </template>
     </Card>
 
-    <!-- Модальное окно добавления секции -->
+    <!-- Add section dialog -->
     <Dialog
       v-model:visible="addSectionDialogVisible"
       modal
@@ -608,7 +608,7 @@ onMounted(() => {
     >
       <div class="edit-field-form">
         <div class="form-grid">
-          <!-- Ключ секции (обязательное) -->
+          <!-- Section key (required) -->
           <div class="field col-12">
             <label for="section-key">{{ _('section_key_label') }}</label>
             <InputText
@@ -620,7 +620,7 @@ onMounted(() => {
             <small>{{ _('section_key_hint') }}</small>
           </div>
 
-          <!-- Ключ лексикона -->
+          <!-- Lexicon key -->
           <div class="field col-6">
             <label for="section-lexicon-key">{{ _('section_lexicon_key_label') }}</label>
             <InputText
@@ -632,7 +632,7 @@ onMounted(() => {
             <small>{{ _('section_lexicon_key_hint') }}</small>
           </div>
 
-          <!-- Прямой текст подписи -->
+          <!-- Direct label text -->
           <div class="field col-6">
             <label for="section-label">{{ _('section_label_label') }}</label>
             <InputText
@@ -644,7 +644,7 @@ onMounted(() => {
             <small>{{ _('section_label_hint') }}</small>
           </div>
 
-          <!-- Видимость -->
+          <!-- Visibility -->
           <div class="field col-12">
             <div style="display: flex; align-items: center; gap: 8px;">
               <Checkbox
@@ -676,7 +676,7 @@ onMounted(() => {
       </template>
     </Dialog>
 
-    <!-- Модальное окно редактирования поля -->
+    <!-- Edit field dialog -->
     <Dialog
       v-model:visible="editDialogVisible"
       modal
@@ -685,7 +685,7 @@ onMounted(() => {
     >
       <div v-if="editingField" class="edit-field-form">
         <div class="form-grid">
-          <!-- Тип поля (только для чтения) -->
+          <!-- Field type (readonly) -->
           <div class="field col-6">
             <label for="field-xtype">{{ _('field_xtype') }}</label>
             <InputText
@@ -697,7 +697,7 @@ onMounted(() => {
             <small>{{ _('field_xtype_readonly') }}</small>
           </div>
 
-          <!-- Секция -->
+          <!-- Section -->
           <div class="field col-6">
             <label for="field-section">{{ _('field_section') }}</label>
             <Dropdown
@@ -713,7 +713,7 @@ onMounted(() => {
             <small>{{ _('field_section_help') }}</small>
           </div>
 
-          <!-- Название (Label) -->
+          <!-- Label -->
           <div class="field col-6">
             <label for="field-label">{{ _('field_label') }}</label>
             <InputText
@@ -725,7 +725,7 @@ onMounted(() => {
             <small>{{ _('field_label_help') }}</small>
           </div>
 
-          <!-- Ширина -->
+          <!-- Width -->
           <div class="field col-6">
             <label for="field-width">{{ _('field_width') }}</label>
             <InputNumber
@@ -750,7 +750,7 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Видимость -->
+          <!-- Visibility -->
           <div class="field col-6 field-checkbox">
             <div class="checkbox-wrapper">
               <Checkbox
@@ -767,7 +767,7 @@ onMounted(() => {
             <small>{{ _('field_visible_help') }}</small>
           </div>
 
-          <!-- Описание - на всю ширину -->
+          <!-- Description - full width -->
           <div class="field col-12">
             <label for="field-description">{{ _('field_description') }}</label>
             <Textarea
@@ -820,7 +820,7 @@ p {
 </style>
 
 <style>
-/* Стили для модального окна - работают как в .vueApp так и в .p-dialog */
+/* Modal window styles - work in both .vueApp and .p-dialog */
 .vueApp .edit-field-form,
 .p-dialog .edit-field-form {
   padding: 10px 0;
@@ -862,7 +862,7 @@ p {
   width: 100%;
 }
 
-/* Сетка для модального окна */
+/* Grid for modal window */
 .vueApp .col-6,
 .p-dialog .col-6 {
   flex: 0 0 calc(50% - 16px);
@@ -875,7 +875,7 @@ p {
   max-width: calc(100% - 16px);
 }
 
-/* Чекбокс в модальном окне */
+/* Checkbox in modal window */
 .vueApp .edit-field-form .checkbox-wrapper,
 .p-dialog .edit-field-form .checkbox-wrapper {
   display: flex;

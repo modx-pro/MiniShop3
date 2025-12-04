@@ -9,13 +9,13 @@ use MODX\Revolution\modX;
 use MODX\Revolution\Sources\modMediaSource;
 
 /**
- * Сервис для работы с изображениями
+ * Service for working with images
  *
- * Заменяет устаревший phpThumb на современный Intervention Image v3
- * Поддерживает:
- * - WebP, AVIF форматы
- * - Работу с любыми MODX Media Sources (локальные, S3, CDN)
- * - Оптимизированную генерацию превью
+ * Replaces deprecated phpThumb with modern Intervention Image v3
+ * Supports:
+ * - WebP, AVIF formats
+ * - Working with any MODX Media Sources (local, S3, CDN)
+ * - Optimized thumbnail generation
  *
  * @package MiniShop3\Services
  */
@@ -33,7 +33,7 @@ class ImageService
     {
         $this->modx = $modx;
 
-        // Автовыбор драйвера (Imagick предпочтительнее для WebP/AVIF)
+        // Auto-select driver (Imagick is preferred for WebP/AVIF)
         $driver = extension_loaded('imagick') ? new ImagickDriver() : new GdDriver();
         $this->imageManager = new ImageManager($driver);
 
@@ -45,21 +45,21 @@ class ImageService
     }
 
     /**
-     * Генерация превью изображения
+     * Generate image thumbnail
      *
-     * Основной метод для замены msProductFile::makeThumbnail()
-     * Работает с любыми MODX Media Sources через бинарные данные
+     * Main method to replace msProductFile::makeThumbnail()
+     * Works with any MODX Media Sources via binary data
      *
-     * @param array $sourceInfo Данные из $mediaSource->getObjectContents()
-     *                          Обязательные ключи: ['content' => binary_data]
-     * @param array $options Параметры генерации:
-     *                       - 'w' (int): ширина в пикселях
-     *                       - 'h' (int): высота в пикселях
-     *                       - 'q' (int): качество 1-100 (по умолчанию 90)
-     *                       - 'f' или 'fm' (string): формат (jpg, png, webp, avif)
-     *                       - 'zc' или 'fit' (string): режим ресайза (crop, contain, max)
+     * @param array $sourceInfo Data from $mediaSource->getObjectContents()
+     *                          Required keys: ['content' => binary_data]
+     * @param array $options Generation parameters:
+     *                       - 'w' (int): width in pixels
+     *                       - 'h' (int): height in pixels
+     *                       - 'q' (int): quality 1-100 (default 90)
+     *                       - 'f' or 'fm' (string): format (jpg, png, webp, avif)
+     *                       - 'zc' or 'fit' (string): resize mode (crop, contain, max)
      *
-     * @return string|null Бинарные данные превью или null при ошибке
+     * @return string|null Binary thumbnail data or null on error
      *
      * @example
      * ```php
@@ -76,30 +76,30 @@ class ImageService
     public function makeThumbnail(array $sourceInfo, array $options): ?string
     {
         try {
-            // Проверяем наличие бинарных данных
+            // Check for binary data presence
             if (empty($sourceInfo['content'])) {
                 throw new \InvalidArgumentException('Source info must contain "content" key with binary data');
             }
 
-            // Читаем изображение из бинарных данных
+            // Read image from binary data
             $image = $this->imageManager->read($sourceInfo['content']);
 
-            // Извлекаем параметры
+            // Extract parameters
             $width = isset($options['w']) ? (int) $options['w'] : null;
             $height = isset($options['h']) ? (int) $options['h'] : null;
             $quality = isset($options['q']) ? (int) $options['q'] : 90;
             $format = $options['f'] ?? $options['fm'] ?? 'jpg';
             $fit = $options['fit'] ?? $options['zc'] ?? 'crop';
 
-            // Применяем трансформации
+            // Apply transformations
             if ($width || $height) {
                 $this->applyTransformations($image, $width, $height, $fit);
             }
 
-            // Получаем энкодер для нужного формата
+            // Get encoder for required format
             $encoder = $this->getEncoder($format, $quality);
 
-            // Возвращаем бинарные данные
+            // Return binary data
             return $image->encode($encoder)->toString();
 
         } catch (\Exception $e) {
@@ -112,55 +112,55 @@ class ImageService
     }
 
     /**
-     * Применение трансформаций к изображению
+     * Apply transformations to image
      *
-     * Поддерживает различные режимы ресайза для совместимости с phpThumb
+     * Supports various resize modes for phpThumb compatibility
      *
      * @param \Intervention\Image\Interfaces\ImageInterface $image
      * @param int|null $width
      * @param int|null $height
-     * @param string $fit Режим ресайза
+     * @param string $fit Resize mode
      */
     private function applyTransformations($image, ?int $width, ?int $height, string $fit): void
     {
-        // Различные режимы ресайза
+        // Various resize modes
         switch ($fit) {
-            // Crop (обрезка с заполнением)
+            // Crop (crop with fill)
             case 'crop':
             case 'C':
             case 'T': // phpThumb: zc=T (top crop)
                 $image->cover($width, $height);
                 break;
 
-            // Contain (вписывание с сохранением пропорций)
+            // Contain (fit with aspect ratio)
             case 'contain':
             case 'scale':
             case '1': // phpThumb: zc=1
                 $image->scale($width, $height);
                 break;
 
-            // Max (уменьшение если больше, не увеличивает)
+            // Max (shrink if larger, don't upscale)
             case 'max':
             case '2': // phpThumb: zc=2
                 $image->scaleDown($width, $height);
                 break;
 
-            // Stretch (растяжение без сохранения пропорций)
+            // Stretch (stretch without aspect ratio)
             case 'stretch':
             case '3': // phpThumb: zc=3
                 $image->resize($width, $height);
                 break;
 
-            // По умолчанию - crop
+            // Default - crop
             default:
                 $image->cover($width, $height);
         }
     }
 
     /**
-     * Получение энкодера для нужного формата
+     * Get encoder for required format
      *
-     * Поддерживаемые форматы: JPEG, PNG, WebP, AVIF, GIF
+     * Supported formats: JPEG, PNG, WebP, AVIF, GIF
      *
      * @param string $format
      * @param int $quality
@@ -181,17 +181,17 @@ class ImageService
     }
 
     /**
-     * Сохранение превью в Media Source
+     * Save thumbnail to Media Source
      *
-     * Универсальный метод для сохранения превью в любой тип Media Source
-     * (локальные файлы, S3, Cloudinary, Azure и т.д.)
+     * Universal method for saving thumbnails to any Media Source type
+     * (local files, S3, Cloudinary, Azure, etc.)
      *
-     * @param string $thumbnailData Бинарные данные превью
-     * @param string $path Путь для сохранения (например: "products/1/120x90/")
-     * @param string $filename Имя файла (например: "photo.webp")
-     * @param modMediaSource $mediaSource Источник для сохранения
+     * @param string $thumbnailData Binary thumbnail data
+     * @param string $path Path for saving (e.g.: "products/1/120x90/")
+     * @param string $filename File name (e.g.: "photo.webp")
+     * @param modMediaSource $mediaSource Source for saving
      *
-     * @return string|false URL сохраненного превью или false при ошибке
+     * @return string|false URL of saved thumbnail or false on error
      */
     public function saveThumbnailToSource(
         string $thumbnailData,
@@ -200,13 +200,13 @@ class ImageService
         modMediaSource $mediaSource
     ) {
         try {
-            // Создаем контейнер (папку) если нужно
+            // Create container (folder) if needed
             $mediaSource->createContainer($path, '/');
 
-            // Очищаем ошибки перед операцией
+            // Clear errors before operation
             $mediaSource->errors = [];
 
-            // Сохраняем файл в Media Source
+            // Save file to Media Source
             $success = $mediaSource->createObject($path, $filename, $thumbnailData);
 
             if (!$success) {
@@ -218,7 +218,7 @@ class ImageService
                 return false;
             }
 
-            // Получаем URL (может быть CDN URL для S3/Cloudinary!)
+            // Get URL (can be CDN URL for S3/Cloudinary!)
             $url = $mediaSource->getObjectUrl($path . $filename);
 
             $this->modx->log(
@@ -238,7 +238,7 @@ class ImageService
     }
 
     /**
-     * Получить информацию о драйвере
+     * Get driver information
      *
      * @return array
      */

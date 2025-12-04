@@ -10,14 +10,14 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductOption;
 
 /**
- * OrdersPageService - сервис страницы истории заказов клиента
+ * OrdersPageService - customer order history page service
  *
- * Отображает полную информацию о заказах клиента:
- * - Список всех заказов (с пагинацией)
- * - Детальная информация о конкретном заказе
- * - Фильтрация по статусу
+ * Displays complete information about customer orders:
+ * - List of all orders (with pagination)
+ * - Detailed information about specific order
+ * - Filtering by status
  *
- * Пример использования в сниппете:
+ * Example usage in snippet:
  * ```php
  * [[!msCustomer?
  *   &service=`orders`
@@ -32,13 +32,12 @@ use MiniShop3\Model\msProductOption;
 class OrdersPageService extends CustomerPageService
 {
     /**
-     * Получить сырые данные страницы заказов
+     * Get raw order page data
      *
-     * @return array Данные заказов
+     * @return array Order data
      */
     public function getData(): array
     {
-        // Получить ID конкретного заказа для детального просмотра
         $orderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : null;
 
         if ($orderId) {
@@ -49,13 +48,12 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Рендерить страницу истории заказов
+     * Render order history page
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     public function render(): string
     {
-        // Получить ID конкретного заказа для детального просмотра
         $orderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : null;
 
         if ($orderId) {
@@ -66,9 +64,9 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Рендерить список заказов
+     * Render order list
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     protected function renderOrdersList(): string
     {
@@ -84,14 +82,11 @@ class OrdersPageService extends CustomerPageService
             'tpl.msCustomer.order.row'
         );
 
-        // Параметры пагинации
         $limit = (int)$this->modx->getOption('limit', $this->scriptProperties, 20);
         $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 
-        // Фильтр по статусу
         $statusFilter = isset($_GET['status']) ? (int)$_GET['status'] : null;
 
-        // Условия выборки (исключаем Draft статус id=1)
         $where = [
             'customer_id' => $this->customerId,
             'status_id:!=' => 1,
@@ -100,10 +95,10 @@ class OrdersPageService extends CustomerPageService
             $where['status_id'] = $statusFilter;
         }
 
-        // Подсчет общего количества
+        // Count total orders
         $total = $this->modx->getCount(msOrder::class, $where);
 
-        // Получить заказы с JOIN к статусу
+        // Get orders with JOIN to status
         $query = $this->modx->newQuery(msOrder::class);
         $query->where($where);
         $query->leftJoin(msOrderStatus::class, 'Status', 'Status.id = msOrder.status_id');
@@ -122,23 +117,18 @@ class OrdersPageService extends CustomerPageService
         foreach ($orders as $order) {
             $orderData = $order->toArray();
 
-            // Форматирование даты
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
 
-            // Форматирование стоимости
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
 
-            // Перевод названия статуса (если это лексиконный ключ)
             if (!empty($orderData['status_name'])) {
                 $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
             }
 
-            // Рендеринг строки заказа
             $chunk = $this->pdoFetch->getChunk($orderTpl, $orderData);
             $ordersData[] = is_string($chunk) ? $chunk : '';
         }
 
-        // Получить список статусов для фильтра (исключаем Draft id=1)
         $statuses = $this->modx->getIterator(msOrderStatus::class, ['id:!=' => 1], ['sortby' => 'rank']);
         $statusesData = [];
         /** @var msOrderStatus $status */
@@ -151,10 +141,8 @@ class OrdersPageService extends CustomerPageService
             ];
         }
 
-        // Пагинация
         $pagination = $this->buildPagination($total, $limit, $offset);
 
-        // Подготовить данные для шаблона
         $data = [
             'orders' => implode("\n", $ordersData),
             'orders_count' => count($ordersData),
@@ -169,14 +157,13 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Рендерить детальную информацию о заказе
+     * Render detailed order information
      *
-     * @param int $orderId ID заказа
-     * @return string HTML содержимое
+     * @param int $orderId Order ID
+     * @return string HTML content
      */
     protected function renderOrderDetails(int $orderId): string
     {
-        // Загрузить заказ и проверить владельца
         /** @var msOrder $order */
         $order = $this->modx->getObject(msOrder::class, [
             'id' => $orderId,
@@ -193,16 +180,13 @@ class OrdersPageService extends CustomerPageService
             'tpl.msCustomer.order.details'
         );
 
-        // Получить товары заказа
         $products = $this->getOrderProducts($orderId);
 
-        // Получить связанные данные
         $delivery = $order->getOne('Delivery');
         $payment = $order->getOne('Payment');
         $address = $order->getOne('Address');
         $status = $order->getOne('Status');
 
-        // Подготовить данные для шаблона (как в ms3_get_order.php)
         $data = [
             'order' => array_merge($order->toArray(), [
                 'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
@@ -227,14 +211,13 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Получить товары заказа с опциями
+     * Get order products with options
      *
-     * @param int $orderId ID заказа
-     * @return array Массив товаров
+     * @param int $orderId Order ID
+     * @return array Array of products
      */
     protected function getOrderProducts(int $orderId): array
     {
-        // Запрос товаров с JOIN к msProduct
         $query = $this->modx->newQuery(msOrderProduct::class);
         $query->where(['order_id' => $orderId]);
         $query->leftJoin(msProduct::class, 'Product', 'Product.id = msOrderProduct.product_id');
@@ -255,14 +238,12 @@ class OrdersPageService extends CustomerPageService
         foreach ($orderProducts as $orderProduct) {
             $productData = $orderProduct->toArray();
 
-            // Вычислить старую цену
             $old_price = $productData['original_price'] > $productData['price']
                 ? $productData['original_price']
                 : $productData['old_price'];
 
             $discount_price = $old_price > 0 ? $old_price - $productData['price'] : 0;
 
-            // Форматирование цен
             $productData['old_price'] = $this->ms3->format->price($old_price);
             $productData['price'] = $this->ms3->format->price($productData['price']);
             $productData['cost'] = $this->ms3->format->price($productData['cost']);
@@ -270,7 +251,6 @@ class OrdersPageService extends CustomerPageService
             $productData['discount_price'] = $this->ms3->format->price($discount_price);
             $productData['discount_cost'] = $this->ms3->format->price($productData['count'] * $discount_price);
 
-            // Добавить опции товара
             if (!empty($productData['options']) && is_array($productData['options'])) {
                 foreach ($productData['options'] as $option => $value) {
                     $productData['option.' . $option] = $value;
@@ -284,20 +264,17 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Получить данные списка заказов (без рендеринга)
+     * Get order list data (without rendering)
      *
-     * @return array Данные списка заказов
+     * @return array Order list data
      */
     protected function getOrdersListData(): array
     {
-        // Параметры пагинации
         $limit = (int)$this->modx->getOption('limit', $this->scriptProperties, 20);
         $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 
-        // Фильтр по статусу
         $statusFilter = isset($_GET['status']) ? (int)$_GET['status'] : null;
 
-        // Условия выборки (исключаем Draft статус id=1)
         $where = [
             'customer_id' => $this->customerId,
             'status_id:!=' => 1,
@@ -306,10 +283,10 @@ class OrdersPageService extends CustomerPageService
             $where['status_id'] = $statusFilter;
         }
 
-        // Подсчет общего количества
+        // Count total orders
         $total = $this->modx->getCount(msOrder::class, $where);
 
-        // Получить заказы с JOIN к статусу
+        // Get orders with JOIN to status
         $query = $this->modx->newQuery(msOrder::class);
         $query->where($where);
         $query->leftJoin(msOrderStatus::class, 'Status', 'Status.id = msOrder.status_id');
@@ -328,13 +305,10 @@ class OrdersPageService extends CustomerPageService
         foreach ($orders as $order) {
             $orderData = $order->toArray();
 
-            // Форматирование даты
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
 
-            // Форматирование стоимости
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
 
-            // Перевод названия статуса (если это лексиконный ключ)
             if (!empty($orderData['status_name'])) {
                 $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
             }
@@ -342,7 +316,6 @@ class OrdersPageService extends CustomerPageService
             $ordersData[] = $orderData;
         }
 
-        // Получить список статусов для фильтра (исключаем Draft id=1)
         $statuses = $this->modx->getIterator(msOrderStatus::class, ['id:!=' => 1], ['sortby' => 'rank']);
         $statusesData = [];
         /** @var msOrderStatus $status */
@@ -355,10 +328,8 @@ class OrdersPageService extends CustomerPageService
             ];
         }
 
-        // Пагинация
         $pagination = $this->buildPagination($total, $limit, $offset);
 
-        // Подготовить данные
         return [
             'orders' => $ordersData,
             'orders_count' => count($ordersData),
@@ -370,14 +341,13 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Получить данные детального просмотра заказа (без рендеринга)
+     * Get order details data (without rendering)
      *
-     * @param int $orderId ID заказа
-     * @return array Данные заказа
+     * @param int $orderId Order ID
+     * @return array Order data
      */
     protected function getOrderDetailsData(int $orderId): array
     {
-        // Загрузить заказ и проверить владельца
         /** @var msOrder $order */
         $order = $this->modx->getObject(msOrder::class, [
             'id' => $orderId,
@@ -391,16 +361,13 @@ class OrdersPageService extends CustomerPageService
             ];
         }
 
-        // Получить товары заказа
         $products = $this->getOrderProducts($orderId);
 
-        // Получить связанные данные
         $delivery = $order->getOne('Delivery');
         $payment = $order->getOne('Payment');
         $address = $order->getOne('Address');
         $status = $order->getOne('Status');
 
-        // Подготовить данные
         return [
             'order' => array_merge($order->toArray(), [
                 'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
@@ -422,12 +389,12 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Построить пагинацию
+     * Build pagination
      *
-     * @param int $total Общее количество
-     * @param int $limit Лимит на страницу
-     * @param int $offset Текущий офсет
-     * @return array Данные пагинации
+     * @param int $total Total count
+     * @param int $limit Limit per page
+     * @param int $offset Current offset
+     * @return array Pagination data
      */
     protected function buildPagination(int $total, int $limit, int $offset): array
     {
@@ -458,31 +425,26 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
-     * Перевести название статуса
+     * Translate status name
      *
-     * Если название - лексиконный ключ (ms3_order_status_*), возвращает перевод.
-     * Если это обычный текст (пользовательский статус), возвращает как есть.
+     * If name is lexicon key (ms3_order_status_*), returns translation.
+     * If it's plain text (custom status), returns as is.
      *
-     * @param string $name Название статуса или лексиконный ключ
-     * @return string Переведённое название
+     * @param string $name Status name or lexicon key
+     * @return string Translated name
      */
     protected function translateStatusName(string $name): string
     {
-        // Проверяем, является ли название лексиконным ключом
         if (str_starts_with($name, 'ms3_order_status_')) {
-            // Загружаем лексикон manager если еще не загружен
             $this->modx->lexicon->load('minishop3:manager');
 
-            // Получаем перевод
             $translated = $this->modx->lexicon($name);
 
-            // Если перевод найден (не равен ключу), возвращаем его
             if ($translated !== $name) {
                 return $translated;
             }
         }
 
-        // Возвращаем оригинальное значение для пользовательских статусов
         return $name;
     }
 }

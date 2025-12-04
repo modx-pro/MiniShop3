@@ -41,7 +41,6 @@ class Remove extends RemoveProcessor
             $productData = $product->getOne('Data');
 
             if ($productData) {
-                // Обновляем главное изображение через сервис
                 /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
                 $imageService = $this->modx->services->get('ms3_product_image');
                 if ($imageService) {
@@ -49,7 +48,6 @@ class Remove extends RemoveProcessor
                     $thumb = $productData->get('thumb');
                 }
 
-                // Если файлов не осталось, пробуем удалить пустой каталог
                 if (empty($product->getMany('Files')) && $imageService) {
                     $imageService->removeProductCatalog($productData);
                 }

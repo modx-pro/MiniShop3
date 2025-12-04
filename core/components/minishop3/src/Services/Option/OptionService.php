@@ -52,7 +52,7 @@ class OptionService
      *
      * Example:
      * $options = $service->loadOptionsForProduct(123);
-     * // Returns: ['color' => ['Red'], 'size' => ['L'], 'color.caption' => 'Цвет', ...]
+     * // Returns: ['color' => ['Red'], 'size' => ['L'], 'color.caption' => 'Color', ...]
      *
      * @param int $productId Product ID
      * @param bool $includeMetadata Include option metadata (caption, description, etc.)

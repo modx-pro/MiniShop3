@@ -43,7 +43,6 @@ class GenerateAll extends  ModelProcessor
             return $this->failure($this->modx->lexicon('ms3_gallery_err_no_product'));
         }
 
-        // Удаляем все существующие thumbnails
         $files = $this->modx->getCollection(msProductFile::class, ['product_id' => $product_id, 'parent_id' => 0]);
         /** @var msProductFile $file */
         foreach ($files as $file) {
@@ -54,7 +53,6 @@ class GenerateAll extends  ModelProcessor
             }
         }
 
-        // Генерируем все thumbnails через сервис
         /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
         $imageService = $this->modx->services->get('ms3_product_image');
         if ($imageService) {
@@ -62,7 +60,6 @@ class GenerateAll extends  ModelProcessor
             $imageService->updateProductImage($productData);
         }
 
-        // Получаем обновленное изображение
         $thumb = $productData->get('thumb');
         if (empty($thumb)) {
             /** @var MiniShop3 $ms3 */

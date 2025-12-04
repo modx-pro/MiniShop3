@@ -8,20 +8,20 @@ use MiniShop3\Model\msOrder;
 /**
  * Interface DeliveryProviderInterface
  *
- * Определяет контракт для всех провайдеров доставки (СДЭК, Почта России, Курьер и т.д.)
- * Все кастомные классы доставки должны реализовывать этот интерфейс
+ * Defines contract for all delivery providers (CDEK, Russian Post, Courier, etc.)
+ * All custom delivery classes must implement this interface
  *
  * @package MiniShop3\Controllers\Delivery
  */
 interface DeliveryProviderInterface
 {
     /**
-     * Расчет стоимости доставки
+     * Calculate delivery cost
      *
-     * @param msOrder $order Заказ для расчета доставки
-     * @param msDelivery $delivery Способ доставки
-     * @param float $cost Текущая стоимость заказа
-     * @return float Дополнительная стоимость за доставку
+     * @param msOrder $order Order for delivery calculation
+     * @param msDelivery $delivery Delivery method
+     * @param float $cost Current order cost
+     * @return float Additional delivery cost
      */
     public function getCost(msOrder $order, msDelivery $delivery, float $cost): float;
 }

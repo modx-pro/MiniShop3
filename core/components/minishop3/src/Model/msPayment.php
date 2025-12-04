@@ -111,7 +111,7 @@ class msPayment extends xPDOSimpleObject
     }
 
     /**
-     * Получить сервис оплаты (lazy loading)
+     * Get payment service (lazy loading)
      *
      * @return PaymentService
      */

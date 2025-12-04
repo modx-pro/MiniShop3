@@ -3,12 +3,12 @@
 namespace MiniShop3\Services\Customer;
 
 /**
- * ProfilePageService - сервис страницы профиля клиента
+ * ProfilePageService - customer profile page service
  *
- * Отображает личные данные клиента с возможностью редактирования.
- * Показывает статус подтверждения email и кнопку повторной отправки письма.
+ * Displays customer personal data with editing capability.
+ * Shows email verification status and resend button.
  *
- * Пример использования в сниппете:
+ * Example usage in snippet:
  * ```php
  * [[!msCustomer?
  *   &service=`profile`
@@ -21,28 +21,24 @@ namespace MiniShop3\Services\Customer;
 class ProfilePageService extends CustomerPageService
 {
     /**
-     * Получить сырые данные профиля
+     * Get raw profile data
      *
-     * @return array Данные профиля клиента
+     * @return array Customer profile data
      */
     public function getData(): array
     {
-        // Получить данные клиента
         $customerData = $this->customer->toArray();
 
-        // Проверить статус подтверждения email
         $emailVerified = !empty($customerData['email_verified_at']);
         $emailVerifiedAt = $emailVerified
             ? date('d.m.Y H:i', strtotime($customerData['email_verified_at']))
             : null;
 
-        // Проверить статус подтверждения телефона (будущая функциональность)
         $phoneVerified = !empty($customerData['phone_verified_at']);
         $phoneVerifiedAt = $phoneVerified
             ? date('d.m.Y H:i', strtotime($customerData['phone_verified_at']))
             : null;
 
-        // Подготовить данные
         return [
             'customer' => $customerData,
             'email_verified' => $emailVerified,
@@ -55,9 +51,9 @@ class ProfilePageService extends CustomerPageService
     }
 
     /**
-     * Рендерить страницу профиля
+     * Render profile page
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     public function render(): string
     {
@@ -67,10 +63,8 @@ class ProfilePageService extends CustomerPageService
             'tpl.msCustomer.profile'
         );
 
-        // Получить данные через метод getData()
         $data = $this->getData();
 
-        // Очистить flash-сообщения после отображения
         unset($_SESSION['ms3']['customer_profile_errors']);
         unset($_SESSION['ms3']['customer_profile_success']);
 

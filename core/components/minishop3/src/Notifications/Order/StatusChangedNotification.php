@@ -127,8 +127,8 @@ class StatusChangedNotification extends Notification
             $statusName = $this->newStatus->get('name');
 
             $content = $recipientType === 'customer'
-                ? "Статус заказа #{$orderNum} изменён на: <b>{$statusName}</b>"
-                : "Заказ #{$orderNum} переведён в статус: <b>{$statusName}</b>";
+                ? "Order #{$orderNum} status changed to: <b>{$statusName}</b>"
+                : "Order #{$orderNum} moved to status: <b>{$statusName}</b>";
 
             return (new TelegramMessage())
                 ->content($content)
@@ -144,8 +144,8 @@ class StatusChangedNotification extends Notification
             $orderNum = $this->order->get('num');
             $statusName = $this->newStatus->get('name');
             $content = $recipientType === 'customer'
-                ? "Статус заказа #{$orderNum} изменён на: <b>{$statusName}</b>"
-                : "Заказ #{$orderNum} переведён в статус: <b>{$statusName}</b>";
+                ? "Order #{$orderNum} status changed to: <b>{$statusName}</b>"
+                : "Order #{$orderNum} moved to status: <b>{$statusName}</b>";
         }
 
         return (new TelegramMessage())
@@ -167,7 +167,7 @@ class StatusChangedNotification extends Notification
         if ($config && $config->get('template')) {
             $content = $this->renderTemplate($config->get('template'));
         } else {
-            $content = "Заказ #{$orderNum}: {$statusName}";
+            $content = "Order #{$orderNum}: {$statusName}";
         }
 
         return (new SmsMessage())->content($content);

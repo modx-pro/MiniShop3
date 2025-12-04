@@ -6,9 +6,9 @@ use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * VerifyEmail - процессор подтверждения email адреса
+ * VerifyEmail - email address verification processor
  *
- * Проверяет токен из письма и активирует email клиента.
+ * Validates token from email and activates customer's email.
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -28,7 +28,6 @@ class VerifyEmail extends Processor
         /** @var EmailVerificationService $emailService */
         $emailService = $this->modx->services->get('ms3_email_verification_service');
 
-        // Проверяем токен и активируем email
         $customer = $emailService->verifyToken($token);
 
         if (!$customer) {

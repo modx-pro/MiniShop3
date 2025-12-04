@@ -1,4 +1,4 @@
-<?php
+\ъ<?php
 /**
  * Manager API Routes для MiniShop3
  *

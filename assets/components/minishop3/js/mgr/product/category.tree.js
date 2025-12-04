@@ -45,7 +45,7 @@ Ext.extend(ms3.tree.Categories, MODx.tree.Tree, {
             id: this.id + '-wrap'
         });
 
-        // Устанавливаем начальные категории из конфига
+        // Set initial categories from config
         const initialCategories = this.categories || [];
 
         this.input = this.wrap.createChild({
@@ -61,12 +61,12 @@ Ext.extend(ms3.tree.Categories, MODx.tree.Tree, {
         const value = Ext.util.JSON.decode(this.input.getAttribute('value'));
 
         if (checked) {
-            // Добавляем ID в массив, если его там нет
+            // Add ID to array if not present
             if (value.indexOf(id) === -1) {
                 value.push(id);
             }
         } else {
-            // Удаляем ID из массива
+            // Remove ID from array
             const index = value.indexOf(id);
             if (index > -1) {
                 value.splice(index, 1);

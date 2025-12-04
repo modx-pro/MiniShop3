@@ -188,15 +188,15 @@ class msProductFile extends xPDOSimpleObject
     }
 
     /**
-     * Генерация превью через ImageService
+     * Generate thumbnail via ImageService
      *
-     * Заменяет устаревший phpThumb на современный Intervention Image v3
-     * Поддерживает работу с любыми MODX Media Sources (локальные, S3, CDN)
+     * Replaces deprecated phpThumb with modern Intervention Image v3
+     * Supports all MODX Media Sources (local, S3, CDN)
      *
-     * @param array $options Параметры генерации
-     * @param array $info Данные из $mediaSource->getObjectContents()
+     * @param array $options Generation parameters
+     * @param array $info Data from $mediaSource->getObjectContents()
      *
-     * @return string|null Бинарные данные превью или null при ошибке
+     * @return string|null Binary thumbnail data or null on error
      */
     public function makeThumbnail($options = [], array $info)
     {
@@ -211,7 +211,6 @@ class msProductFile extends xPDOSimpleObject
             return null;
         }
 
-        // Генерируем превью через ImageService
         $output = $imageService->makeThumbnail($info, $options);
 
         if ($output) {

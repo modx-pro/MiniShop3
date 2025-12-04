@@ -3,7 +3,7 @@
 namespace MiniShop3\Router;
 
 /**
- * JSON Response класс
+ * JSON Response class
  */
 class Response
 {
@@ -19,7 +19,7 @@ class Response
     }
 
     /**
-     * Создать успешный ответ
+     * Create success response
      */
     public static function success($data = null, string $message = null, int $statusCode = 200): self
     {
@@ -31,7 +31,7 @@ class Response
     }
 
     /**
-     * Создать ответ с ошибкой
+     * Create error response
      */
     public static function error(string $message, int $statusCode = 400, $errors = null): self
     {
@@ -43,7 +43,7 @@ class Response
     }
 
     /**
-     * Установить заголовок
+     * Set header
      */
     public function header(string $name, string $value): self
     {
@@ -52,26 +52,23 @@ class Response
     }
 
     /**
-     * Отправить ответ клиенту
+     * Send response to client
      */
     public function send(): void
     {
-        // Установить HTTP статус
         http_response_code($this->statusCode);
 
-        // Установить заголовки
         header('Content-Type: application/json; charset=utf-8');
         foreach ($this->headers as $name => $value) {
             header("{$name}: {$value}");
         }
 
-        // Вывести JSON
         echo json_encode($this->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
 
     /**
-     * Получить данные ответа
+     * Get response data
      */
     public function getData()
     {
@@ -79,7 +76,7 @@ class Response
     }
 
     /**
-     * Получить статус код
+     * Get status code
      */
     public function getStatusCode(): int
     {

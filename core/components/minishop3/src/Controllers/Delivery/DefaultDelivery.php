@@ -3,22 +3,20 @@
 namespace MiniShop3\Controllers\Delivery;
 
 /**
- * Дефолтная реализация провайдера доставки
+ * Default delivery provider implementation
  *
- * Используется для простых методов доставки без интеграции с внешними API:
- * - Самовывоз
- * - Курьерская доставка с фиксированной стоимостью
- * - Почтовая доставка с расчетом по весу
+ * Used for simple delivery methods without external API integration:
+ * - Pickup
+ * - Courier delivery with fixed cost
+ * - Postal delivery with weight calculation
  *
- * Использует стандартную логику расчета из базового класса Delivery:
- * - Стоимость по весу (weight_price * вес заказа)
- * - Бесплатная доставка при превышении порога (free_delivery_amount)
- * - Фиксированная стоимость или процент от суммы заказа
+ * Uses standard calculation logic from base Delivery class:
+ * - Cost by weight (weight_price * order weight)
+ * - Free delivery when threshold exceeded (free_delivery_amount)
+ * - Fixed cost or percentage of order amount
  *
  * @package MiniShop3\Controllers\Delivery
  */
 class DefaultDelivery extends Delivery
 {
-    // Наследует все методы от Delivery
-    // getCost() использует дефолтную реализацию из родительского класса
 }

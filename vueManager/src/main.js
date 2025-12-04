@@ -13,46 +13,42 @@ import VueProductDataFields from './components/ProductDataFields.vue'
 /**
  * MiniShop3 Vue Manager
  *
- * Инициализация Vue приложений для админки MiniShop3
+ * Initialization of Vue applications for MiniShop3 admin panel
  *
- * Архитектура:
- * - Pinia для state management
- * - Composables для переиспользуемой логики (useApi, useModx, usePermission)
- * - Utils для вспомогательных функций (modx, validation)
- * - Stores для управления состоянием (useProductStore и т.д.)
- * - Request класс для работы с API через connector.php
+ * Architecture:
+ * - Pinia for state management
+ * - Composables for reusable logic (useApi, useModx, usePermission)
+ * - Utils for helper functions (modx, validation)
+ * - Stores for state management (useProductStore, etc.)
+ * - Request class for working with API through connector.php
  *
- * Интеграция с MODX:
- * - Доступ к window.MODx для MODX API
- * - Доступ к window.ms3.config для настроек MiniShop3
- * - HTTP_MODAUTH токен для безопасности
- * - Лексикон для переводов
+ * MODX Integration:
+ * - Access to window.MODx for MODX API
+ * - Access to window.ms3.config for MiniShop3 settings
+ * - HTTP_MODAUTH token for security
+ * - Lexicon for translations
  */
 /**
- * Инициализация Vue приложения с Pinia и сервисами
+ * Initialize Vue application with Pinia and services
  *
- * @param {Object} rootComponent - Корневой компонент
- * @returns {Object} - Экземпляр Vue приложения
+ * @param {Object} rootComponent - Root component
+ * @returns {Object} - Vue application instance
  */
 function createVueApp(rootComponent) {
   const app = createApp(rootComponent);
 
-  // Подключаем Pinia для state management
   const pinia = createPinia();
   app.use(pinia);
 
-  // Подключаем PrimeVue с темой
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none', // Отключаем автоматическую темную тему
-        cssLayer: false, // Отключаем CSS Layer
-        // Указываем селектор для CSS переменных вместо :root
+        darkModeSelector: 'none',
+        cssLayer: false,
         prefix: 'p'
       }
     },
-    // Добавляем wrapper класс ко всем компонентам
     pt: {
       directives: {
         tooltip: {
@@ -62,7 +58,6 @@ function createVueApp(rootComponent) {
     }
   });
 
-  // Подключаем сервисы PrimeVue
   app.use(ConfirmationService);
   app.use(ToastService);
 
@@ -70,9 +65,9 @@ function createVueApp(rootComponent) {
 }
 
 /**
- * Обработчик события для монтирования ProductDataFields
+ * Event handler for mounting ProductDataFields
  *
- * Вызывается из product.common.js при переключении на вкладку "Данные товара (Vue)"
+ * Called from product.common.js when switching to "Product Data (Vue)" tab
  */
 document.addEventListener('ms3:mountVueProductFields', (e) => {
   setTimeout(() => {
@@ -80,7 +75,6 @@ document.addEventListener('ms3:mountVueProductFields', (e) => {
     const $target = document.querySelector(targetId)
 
     if ($target && $target.dataset.vApp === undefined) {
-      // Создаём wrapper компонент с props
       const WrapperComponent = {
         render() {
           return h(VueProductDataFields, {
@@ -89,21 +83,15 @@ document.addEventListener('ms3:mountVueProductFields', (e) => {
         }
       }
 
-      // Создаём Vue приложение с wrapper
       const app = createVueApp(WrapperComponent)
 
-      // Монтируем
       app.mount(targetId)
 
-      // Помечаем что приложение инициализировано
       $target.dataset.vApp = 'true'
     } else {
       console.warn('[Vue] Target not found or already mounted:', targetId)
     }
   }, 100)
 })
-
-// Обработчики для других компонентов (FieldsManagement, ApiTest)
-// вынесены в отдельные entry points: fields-management.js, api-test.js
 
 

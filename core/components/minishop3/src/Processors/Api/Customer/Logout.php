@@ -7,9 +7,9 @@ use MiniShop3\Services\Customer\AuthManager;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * Logout - процессор выхода клиента
+ * Logout - customer logout processor
  *
- * Удаляет API токены и очищает сессию.
+ * Removes API tokens and clears session.
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -20,11 +20,9 @@ class Logout extends Processor
      */
     public function process()
     {
-        // Получаем ID клиента из сессии
         $customerId = $_SESSION['ms3']['customer_id'] ?? null;
 
         if (!$customerId) {
-            // Уже вышел или не был залогинен
             return $this->success($this->modx->lexicon('ms3_customer_logout_success'));
         }
 
@@ -35,7 +33,6 @@ class Logout extends Processor
             /** @var AuthManager $authManager */
             $authManager = $this->modx->services->get('ms3_auth_manager');
 
-            // Удаляем все API токены клиента
             $authManager->revokeTokens($customer, 'api');
 
             $this->modx->log(
@@ -44,7 +41,6 @@ class Logout extends Processor
             );
         }
 
-        // Очищаем сессию
         unset($_SESSION['ms3']['customer_id']);
         unset($_SESSION['ms3']['customer_token']);
 

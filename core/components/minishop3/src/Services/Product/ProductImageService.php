@@ -8,10 +8,10 @@ use MODX\Revolution\modMediaSource;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для работы с изображениями товара
+ * Service for working with product images
  *
- * Отвечает за генерацию превью, управление медиа-источниками,
- * ранжирование изображений и установку главного изображения
+ * Handles thumbnail generation, media source management,
+ * image ranking and setting the main image
  */
 class ProductImageService
 {
@@ -27,10 +27,10 @@ class ProductImageService
     }
 
     /**
-     * Генерация всех превью для всех изображений товара
+     * Generate all thumbnails for all product images
      *
-     * Проходит по всем файлам товара и генерирует thumbnail'ы
-     * согласно настройкам медиа-источника
+     * Iterates through all product files and generates thumbnails
+     * according to media source settings
      *
      * @param msProductData $productData
      * @return void
@@ -53,26 +53,24 @@ class ProductImageService
     }
 
     /**
-     * Инициализация медиа-источника для товара
+     * Initialize media source for product
      *
-     * Находит и инициализирует источник изображений товара,
-     * может быть как стандартный файловый источник, так и кастомный
+     * Finds and initializes the product image source,
+     * can be either standard file source or custom
      *
      * @param msProductData $productData
-     * @param string $contextKey Ключ контекста (web, mgr и т.д.)
+     * @param string $contextKey Context key (web, mgr etc.)
      * @return bool|modMediaSource|null
      */
     public function initializeMediaSource(msProductData $productData, string $contextKey = 'web')
     {
         $productId = $productData->get('id');
 
-        // Получаем source_id из товара или из настроек по умолчанию
         $sourceId = (int)$productData->get('source_id');
         if (!$sourceId) {
             $sourceId = (int)$this->modx->getOption('ms3_product_source_default', null, 1);
         }
 
-        // MODX имеет встроенный метод для получения источников
         /** @var modMediaSource $source */
         $source = $this->modx->getObject('sources.modMediaSource', $sourceId);
 
@@ -80,25 +78,23 @@ class ProductImageService
             return false;
         }
 
-        // Инициализируем источник (НЕ перезаписываем basePath/baseUrl - используем настройки источника)
         if (!$source->initialize($contextKey)) {
             return false;
         }
 
-        // Создаем основную директорию товара
         $source->createContainer($productId . '/', '/');
 
         return $source;
     }
 
     /**
-     * Ранжирование изображений товара
+     * Rank product images
      *
-     * Устанавливает позиции (rank) для изображений согласно массиву file_id
-     * Используется при перетаскивании изображений в галерее
+     * Sets positions (rank) for images according to file_id array
+     * Used when dragging images in gallery
      *
      * @param msProductData $productData
-     * @param array $ranks Массив вида [file_id => position]
+     * @param array $ranks Array in format [file_id => position]
      * @return bool
      */
     public function rankProductImages(msProductData $productData, array $ranks): bool
@@ -124,10 +120,10 @@ class ProductImageService
     }
 
     /**
-     * Обновление главного изображения товара
+     * Update product main image
      *
-     * Находит первое изображение товара (с наименьшим rank) и устанавливает его
-     * как главное (поля image и thumb в msProductData)
+     * Finds the first product image (with lowest rank) and sets it
+     * as main (image and thumb fields in msProductData)
      *
      * @param msProductData $productData
      * @return bool|mixed
@@ -136,7 +132,6 @@ class ProductImageService
     {
         $productId = $productData->get('id');
 
-        // Ищем первое изображение товара
         /** @var msProductFile $file */
         $file = $this->modx->getObject(msProductFile::class, [
             'product_id' => $productId,
@@ -151,7 +146,6 @@ class ProductImageService
 
             return $productData->save();
         } else {
-            // Если нет изображений - очищаем поля
             $productData->set('image', '');
             $productData->set('thumb', '');
 
@@ -160,22 +154,21 @@ class ProductImageService
     }
 
     /**
-     * Удаление пустого каталога товара
+     * Remove empty product catalog
      *
-     * Поддерживает любые Media Sources (локальные файлы, S3, CDN, Cloudinary и т.д.)
-     * Проверяет наличие файлов перед удалением
+     * Supports any Media Sources (local files, S3, CDN, Cloudinary etc.)
+     * Checks for files before deletion
      *
      * @param msProductData $productData
-     * @return bool true если каталог удалён, false если есть файлы или ошибка
+     * @return bool true if catalog removed, false if has files or error
      */
     public function removeProductCatalog(msProductData $productData): bool
     {
         $productId = $productData->get('id');
 
-        // Проверяем есть ли файлы у товара
         $filesCount = $this->modx->getCount(\MiniShop3\Model\msProductFile::class, [
             'product_id' => $productId,
-            'parent_id' => 0  // Только родительские файлы (не thumbnails)
+            'parent_id' => 0
         ]);
 
         if ($filesCount > 0) {
@@ -186,7 +179,6 @@ class ProductImageService
             return false;
         }
 
-        // Инициализируем Media Source
         $contextKey = $productData->Product->get('context_key');
         $source = $this->initializeMediaSource($productData, $contextKey);
 
@@ -198,7 +190,6 @@ class ProductImageService
             return false;
         }
 
-        // Удаляем каталог через Media Source API (работает с любым типом источника!)
         $containerPath = $productId . '/';
         $result = $source->removeContainer($containerPath, '/');
 

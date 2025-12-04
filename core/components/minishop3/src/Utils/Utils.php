@@ -179,7 +179,6 @@ class Utils
      */
     public function pathinfo($path, $part = '')
     {
-        // Russian files
         if (preg_match('#[а-яё]#im', $path)) {
             $path = strtr($path, ['\\' => '/']);
 

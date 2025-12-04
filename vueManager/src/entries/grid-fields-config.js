@@ -1,7 +1,7 @@
 /**
- * Entry point для Grid Fields Config виджета (ES Module)
+ * Entry point for Grid Fields Config widget (ES Module)
  *
- * Экспортирует функцию инициализации для монтирования Vue приложения
+ * Exports initialization function for mounting Vue application
  */
 
 import '../scss/primevue.scss'
@@ -17,16 +17,14 @@ import ToastService from 'primevue/toastservice'
 import GridFieldsConfig from '../components/GridFieldsConfig.vue'
 
 /**
- * Создает и настраивает Vue приложение
+ * Creates and configures Vue application
  */
 function createVueApp() {
   const app = createApp(GridFieldsConfig)
 
-  // Pinia
   const pinia = createPinia()
   app.use(pinia)
 
-  // PrimeVue
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
@@ -36,7 +34,6 @@ function createVueApp() {
     }
   })
 
-  // PrimeVue сервисы
   app.use(ConfirmationService)
   app.use(ToastService)
 
@@ -44,8 +41,8 @@ function createVueApp() {
 }
 
 /**
- * Инициализация виджета
- * Вызывается при загрузке страницы конфигурации гридов
+ * Widget initialization
+ * Called when grid configuration page loads
  */
 export function init(selector = '#ms3-grid-fields-config-vue-wrapper') {
   const $el = document.querySelector(selector)
@@ -54,7 +51,6 @@ export function init(selector = '#ms3-grid-fields-config-vue-wrapper') {
     return null
   }
 
-  // Проверяем, не смонтирован ли уже
   if ($el.dataset.vApp === 'true') {
     return null
   }
@@ -67,8 +63,8 @@ export function init(selector = '#ms3-grid-fields-config-vue-wrapper') {
 }
 
 /**
- * Слушаем кастомное событие от ExtJS панели
- * Монтируем приложение когда вкладка рендерится
+ * Listen for custom event from ExtJS panel
+ * Mount application when tab is rendered
  */
 document.addEventListener('ms3:mountVueGridFieldsConfig', (event) => {
   const targetId = event.detail?.targetId || '#ms3-grid-fields-config-vue-wrapper'

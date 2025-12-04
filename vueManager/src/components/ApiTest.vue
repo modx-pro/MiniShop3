@@ -18,21 +18,18 @@ import TabPanel from 'primevue/tabpanel';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 
-// Composables
 const { get, loading, error, clearError } = useApi();
 const { lexicon, config, ms3Config, userName, userId, isUserAdmin, showMessage } = useModx();
 const { hasPermission, canCreate, canEdit, canDelete, getAvailablePermissions } = usePermission();
 
-// Состояние
 const healthData = ref(null);
 const testResponse = ref(null);
 const activeTab = ref(0);
 
-// Computed
 const availablePermissions = computed(() => getAvailablePermissions());
 
 /**
- * Тест 1: Health check (без авторизации)
+ * Test 1: Health check (without authorization)
  */
 const testHealthCheck = async () => {
   clearError();
@@ -40,14 +37,14 @@ const testHealthCheck = async () => {
 
   try {
     healthData.value = await get('/api/mgr/health');
-    showMessage('Health check успешен', 'success');
+    showMessage('Health check successful', 'success');
   } catch (err) {
-    showMessage(`Health check ошибка: ${err.message}`, 'error');
+    showMessage(`Health check error: ${err.message}`, 'error');
   }
 };
 
 /**
- * Тест 2: Запрос с авторизацией
+ * Test 2: Authorized request
  */
 const testAuthRequest = async () => {
   clearError();
@@ -56,14 +53,14 @@ const testAuthRequest = async () => {
   try {
     const response = await get('/api/mgr/test/info');
     testResponse.value = response;
-    showMessage('Авторизованный запрос успешен', 'success');
+    showMessage('Authorized request successful', 'success');
   } catch (err) {
-    showMessage(`Ошибка: ${err.message}`, 'error');
+    showMessage(`Error: ${err.message}`, 'error');
   }
 };
 
 /**
- * Тест 3: POST запрос с данными
+ * Test 3: POST request with data
  */
 const testPostRequest = async () => {
   clearError();
@@ -77,9 +74,9 @@ const testPostRequest = async () => {
     };
 
     testResponse.value = await get('/api/mgr/test/echo', data);
-    showMessage('POST запрос успешен', 'success');
+    showMessage('POST request successful', 'success');
   } catch (err) {
-    showMessage(`Ошибка: ${err.message}`, 'error');
+    showMessage(`Error: ${err.message}`, 'error');
   }
 };
 </script>
@@ -95,18 +92,18 @@ const testPostRequest = async () => {
       </template>
 
       <template #subtitle>
-        Тестирование новой архитектуры Vue Manager + API Router
+        Testing new Vue Manager + API Router architecture
       </template>
 
       <template #content>
         <TabView v-model:activeIndex="activeTab">
-          <!-- Вкладка 1: Информация о системе -->
-          <TabPanel header="📊 Системная информация">
+          <!-- Tab 1: System Information -->
+          <TabPanel header="📊 System Information">
             <div class="system-info">
               <Panel header="MODX Configuration" :toggleable="true">
                 <div class="info-grid">
                   <div class="info-item">
-                    <strong>Пользователь:</strong>
+                    <strong>User:</strong>
                     <Chip :label="userName" icon="pi pi-user" />
                   </div>
                   <div class="info-item">
@@ -114,9 +111,9 @@ const testPostRequest = async () => {
                     <Badge :value="userId" severity="info" />
                   </div>
                   <div class="info-item">
-                    <strong>Администратор:</strong>
+                    <strong>Administrator:</strong>
                     <Badge
-                      :value="isUserAdmin ? 'Да' : 'Нет'"
+                      :value="isUserAdmin ? 'Yes' : 'No'"
                       :severity="isUserAdmin ? 'success' : 'warning'"
                     />
                   </div>
@@ -168,32 +165,32 @@ const testPostRequest = async () => {
                   :rows="10"
                   size="small"
                 >
-                  <Column field="permission" header="Доступные права" />
+                  <Column field="permission" header="Available Permissions" />
                 </DataTable>
               </Panel>
             </div>
           </TabPanel>
 
-          <!-- Вкладка 2: API Тесты -->
-          <TabPanel header="🚀 API Тесты">
+          <!-- Tab 2: API Tests -->
+          <TabPanel header="🚀 API Tests">
             <div class="api-tests">
               <Message severity="info" :closable="false">
-                Проверка работы Request класса, composables и API Router
+                Testing Request class, composables and API Router
               </Message>
 
               <Divider />
 
-              <!-- Тест 1: Health Check -->
+              <!-- Test 1: Health Check -->
               <Panel header="Test 1: Health Check" :toggleable="true">
                 <template #icons>
                   <Badge value="GET" severity="success" />
                 </template>
 
-                <p>Базовый запрос без специальной авторизации</p>
+                <p>Basic request without special authorization</p>
                 <p><code>GET /api/mgr/health</code></p>
 
                 <Button
-                  label="Выполнить Health Check"
+                  label="Execute Health Check"
                   icon="pi pi-heart"
                   @click="testHealthCheck"
                   :loading="loading"
@@ -209,17 +206,17 @@ const testPostRequest = async () => {
 
               <Divider />
 
-              <!-- Тест 2: Авторизованный запрос -->
-              <Panel header="Test 2: Авторизованный запрос" :toggleable="true">
+              <!-- Test 2: Authorized Request -->
+              <Panel header="Test 2: Authorized Request" :toggleable="true">
                 <template #icons>
                   <Badge value="GET" severity="success" />
                 </template>
 
-                <p>Запрос с HTTP_MODAUTH токеном и проверкой авторизации</p>
+                <p>Request with HTTP_MODAUTH token and authorization check</p>
                 <p><code>GET /api/mgr/test/info</code></p>
 
                 <Button
-                  label="Выполнить авторизованный запрос"
+                  label="Execute Authorized Request"
                   icon="pi pi-lock"
                   @click="testAuthRequest"
                   :loading="loading"
@@ -235,17 +232,17 @@ const testPostRequest = async () => {
 
               <Divider />
 
-              <!-- Тест 3: POST запрос -->
-              <Panel header="Test 3: Echo запрос с параметрами" :toggleable="true">
+              <!-- Test 3: POST Request -->
+              <Panel header="Test 3: Echo Request with Parameters" :toggleable="true">
                 <template #icons>
                   <Badge value="GET" severity="success" />
                 </template>
 
-                <p>Отправка данных и получение их обратно (echo)</p>
+                <p>Send data and get it back (echo)</p>
                 <p><code>GET /api/mgr/test/echo?test=data&timestamp=...</code></p>
 
                 <Button
-                  label="Выполнить Echo запрос"
+                  label="Execute Echo Request"
                   icon="pi pi-send"
                   @click="testPostRequest"
                   :loading="loading"
@@ -259,76 +256,76 @@ const testPostRequest = async () => {
                 </div>
               </Panel>
 
-              <!-- Ошибки -->
+              <!-- Errors -->
               <div v-if="error" class="mt-3">
                 <Message severity="error">
                   <div>
-                    <strong>Ошибка:</strong> {{ error.message }}<br>
-                    <strong>Код:</strong> {{ error.statusCode }}<br>
+                    <strong>Error:</strong> {{ error.message }}<br>
+                    <strong>Code:</strong> {{ error.statusCode }}<br>
                     <small>{{ error.data }}</small>
                   </div>
                 </Message>
               </div>
 
-              <!-- Индикатор загрузки -->
+              <!-- Loading indicator -->
               <div v-if="loading" class="loading-overlay">
                 <ProgressSpinner />
-                <p>Выполняется запрос...</p>
+                <p>Request in progress...</p>
               </div>
             </div>
           </TabPanel>
 
-          <!-- Вкладка 3: Документация -->
-          <TabPanel header="📖 Документация">
+          <!-- Tab 3: Documentation -->
+          <TabPanel header="📖 Documentation">
             <div class="documentation">
-              <h3>Использованные технологии</h3>
+              <h3>Technologies Used</h3>
 
               <Panel header="Composables" :toggleable="true" class="mb-3">
                 <ul>
-                  <li><strong>useApi()</strong> - Реактивные API запросы с состоянием loading/error</li>
-                  <li><strong>useModx()</strong> - Доступ к MODX конфигурации и лексикону</li>
-                  <li><strong>usePermission()</strong> - Проверка прав доступа пользователя</li>
+                  <li><strong>useApi()</strong> - Reactive API requests with loading/error state</li>
+                  <li><strong>useModx()</strong> - Access to MODX configuration and lexicon</li>
+                  <li><strong>usePermission()</strong> - User access rights verification</li>
                 </ul>
               </Panel>
 
               <Panel header="PrimeVue Components" :toggleable="true" class="mb-3">
                 <ul>
-                  <li>Card, Panel, TabView - Контейнеры</li>
-                  <li>Button, Chip, Badge - Интерактивные элементы</li>
-                  <li>Message, Divider - UI элементы</li>
-                  <li>DataTable, Column - Таблицы</li>
-                  <li>ProgressSpinner - Индикаторы загрузки</li>
+                  <li>Card, Panel, TabView - Containers</li>
+                  <li>Button, Chip, Badge - Interactive elements</li>
+                  <li>Message, Divider - UI elements</li>
+                  <li>DataTable, Column - Tables</li>
+                  <li>ProgressSpinner - Loading indicators</li>
                 </ul>
               </Panel>
 
               <Panel header="API Router" :toggleable="true" class="mb-3">
-                <p>Все запросы проходят через:</p>
+                <p>All requests go through:</p>
                 <code>{{ ms3Config.connector_url }}?action=api&route=/api/mgr/...</code>
 
                 <Divider />
 
-                <p><strong>HTTP_MODAUTH токен:</strong> Автоматически добавляется из <code>window.MODx.config.MODAUTH</code></p>
-                <p><strong>Middleware:</strong> AuthMiddleware проверяет авторизацию в mgr контексте</p>
+                <p><strong>HTTP_MODAUTH token:</strong> Automatically added from <code>window.MODx.config.MODAUTH</code></p>
+                <p><strong>Middleware:</strong> AuthMiddleware checks authorization in mgr context</p>
               </Panel>
 
               <Panel header="Request Class" :toggleable="true">
                 <pre class="code-block">
 import request from '@/request.js';
 
-// GET запрос
+// GET request
 const data = await request.get('/api/mgr/health');
 
-// POST запрос
+// POST request
 await request.post('/api/mgr/products', {
   pagetitle: 'New'
 });
 
-// Обработка ошибок
+// Error handling
 try {
   const data = await request.get('/api/mgr/test');
 } catch (error) {
   if (error.isUnauthorized()) {
-    // Редирект на логин
+    // Redirect to login
   }
 }
                 </pre>

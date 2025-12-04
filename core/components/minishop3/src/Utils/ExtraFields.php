@@ -49,7 +49,6 @@ class ExtraFields
      */
     public function clearCache()
     {
-        // TODO: [apha] Проверить, что при общей очистке кеша MODx этот метод сработает
         $this->modx->cacheManager->delete($this->cacheKey, $this->cacheOptions);
     }
 
@@ -95,7 +94,6 @@ class ExtraFields
             $xpdoManager = $this->modx->getManager();
             $result = $xpdoManager->addField($msExtraField->get('class'), $msExtraField->get('key'));
 
-            // Добавляем индекс если указан
             if ($result && $msExtraField->hasIndex()) {
                 $this->addIndex($msExtraField);
             }
@@ -127,7 +125,6 @@ class ExtraFields
         $tableName = $this->modx->getTableName($class);
 
         try {
-            // Формируем параметры индекса
             $indexDef = [
                 'columns' => [$key => []],
             ];
@@ -140,7 +137,6 @@ class ExtraFields
                 $indexDef['type'] = 'FULLTEXT';
             }
 
-            // Добавляем индекс через xPDO Manager
             return $xpdoManager->addIndex($class, $indexName, $indexDef);
 
         } catch (\Exception $e) {

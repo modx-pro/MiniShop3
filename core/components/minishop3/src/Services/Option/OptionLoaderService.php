@@ -40,7 +40,7 @@ class OptionLoaderService
      *
      * @param int $productId Product ID
      * @param bool $includeMetadata Include category metadata (default: true for backward compatibility)
-     * @return array Option data with keys like ['color' => ['Red'], 'color.caption' => 'Цвет']
+     * @return array Option data with keys like ['color' => ['Red'], 'color.caption' => 'Color']
      */
     public function loadForProduct(int $productId, bool $includeMetadata = true): array
     {

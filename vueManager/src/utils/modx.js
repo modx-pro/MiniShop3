@@ -1,43 +1,40 @@
 /**
- * MODX утилиты для работы с форматированием, валидацией и конвертацией данных
+ * MODX utilities for formatting, validation and data conversion
  */
 
 /**
- * Форматирование цены согласно настройкам MODX/MiniShop3
+ * Format price according to MODX/MiniShop3 settings
  *
- * @param {number} price - Цена
- * @param {Object} options - Опции форматирования
- * @returns {string} - Отформатированная цена
+ * @param {number} price - Price
+ * @param {Object} options - Formatting options
+ * @returns {string} - Formatted price
  */
 export function formatPrice(price, options = {}) {
   const {
     decimals = 2,
     decPoint = '.',
     thousandsSep = ' ',
-    currency = window.ms3?.config?.price_format_currency || 'руб.',
+    currency = window.ms3?.config?.price_format_currency || 'USD',
     currencyPosition = window.ms3?.config?.price_format_currency_position || 'right'
   } = options;
 
-  // Конвертация в число
   const numPrice = parseFloat(price) || 0;
 
-  // Форматирование
   const parts = numPrice.toFixed(decimals).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSep);
   const formatted = parts.join(decPoint);
 
-  // Добавление валюты
   return currencyPosition === 'left'
     ? `${currency} ${formatted}`
     : `${formatted} ${currency}`;
 }
 
 /**
- * Форматирование даты в формате MODX
+ * Format date in MODX format
  *
- * @param {string|number|Date} date - Дата
- * @param {string} format - Формат (php-style или готовые варианты)
- * @returns {string} - Отформатированная дата
+ * @param {string|number|Date} date - Date
+ * @param {string} format - Format (php-style or predefined variants)
+ * @returns {string} - Formatted date
  */
 export function formatDate(date, format = 'datetime') {
   if (!date) return '';
@@ -46,7 +43,6 @@ export function formatDate(date, format = 'datetime') {
 
   if (isNaN(d.getTime())) return '';
 
-  // Готовые форматы
   const formats = {
     date: 'd.m.Y',
     datetime: 'd.m.Y H:i',
@@ -56,7 +52,6 @@ export function formatDate(date, format = 'datetime') {
 
   const formatString = formats[format] || format;
 
-  // Простое форматирование (можно расширить)
   const pad = (num) => String(num).padStart(2, '0');
 
   return formatString
@@ -69,11 +64,11 @@ export function formatDate(date, format = 'datetime') {
 }
 
 /**
- * Парсинг MODX TV значения в массив
+ * Parse MODX TV value to array
  *
- * @param {string} value - Значение TV (через ||, @EVAL и т.д.)
- * @param {string} separator - Разделитель
- * @returns {Array} - Массив значений
+ * @param {string} value - TV value (via ||, @EVAL, etc.)
+ * @param {string} separator - Separator
+ * @returns {Array} - Array of values
  */
 export function parseTvValue(value, separator = '||') {
   if (!value) return [];
@@ -86,10 +81,10 @@ export function parseTvValue(value, separator = '||') {
 }
 
 /**
- * Конвертация MODX timestamp в Date объект
+ * Convert MODX timestamp to Date object
  *
- * @param {number|string} timestamp - Unix timestamp или строка даты
- * @returns {Date|null} - Date объект или null
+ * @param {number|string} timestamp - Unix timestamp or date string
+ * @returns {Date|null} - Date object or null
  */
 export function timestampToDate(timestamp) {
   if (!timestamp) return null;
@@ -97,14 +92,14 @@ export function timestampToDate(timestamp) {
   const num = Number(timestamp);
   if (isNaN(num)) return null;
 
-  return new Date(num * 1000); // MODX использует секунды
+  return new Date(num * 1000);
 }
 
 /**
- * Получить иконку типа файла
+ * Get file type icon
  *
- * @param {string} filename - Имя файла
- * @returns {string} - CSS класс иконки
+ * @param {string} filename - File name
+ * @returns {string} - CSS icon class
  */
 export function getFileIcon(filename) {
   if (!filename) return 'pi pi-file';
@@ -112,7 +107,6 @@ export function getFileIcon(filename) {
   const ext = filename.split('.').pop().toLowerCase();
 
   const icons = {
-    // Изображения
     jpg: 'pi pi-image',
     jpeg: 'pi pi-image',
     png: 'pi pi-image',
@@ -120,19 +114,16 @@ export function getFileIcon(filename) {
     webp: 'pi pi-image',
     svg: 'pi pi-image',
 
-    // Документы
     pdf: 'pi pi-file-pdf',
     doc: 'pi pi-file-word',
     docx: 'pi pi-file-word',
     xls: 'pi pi-file-excel',
     xlsx: 'pi pi-file-excel',
 
-    // Архивы
     zip: 'pi pi-file',
     rar: 'pi pi-file',
     '7z': 'pi pi-file',
 
-    // Видео
     mp4: 'pi pi-video',
     avi: 'pi pi-video',
     mov: 'pi pi-video',
@@ -143,10 +134,10 @@ export function getFileIcon(filename) {
 }
 
 /**
- * Проверка является ли значение JSON строкой
+ * Check if value is JSON string
  *
- * @param {string} str - Строка для проверки
- * @returns {boolean} - Результат проверки
+ * @param {string} str - String to check
+ * @returns {boolean} - Check result
  */
 export function isJsonString(str) {
   try {
@@ -158,11 +149,11 @@ export function isJsonString(str) {
 }
 
 /**
- * Безопасный парсинг JSON с fallback
+ * Safe JSON parse with fallback
  *
- * @param {string} str - JSON строка
- * @param {any} defaultValue - Значение по умолчанию
- * @returns {any} - Распарсенное значение или defaultValue
+ * @param {string} str - JSON string
+ * @param {any} defaultValue - Default value
+ * @returns {any} - Parsed value or defaultValue
  */
 export function safeJsonParse(str, defaultValue = null) {
   try {
@@ -173,9 +164,9 @@ export function safeJsonParse(str, defaultValue = null) {
 }
 
 /**
- * Генерация alias из строки (транслитерация)
+ * Generate alias from string (transliteration)
  *
- * @param {string} str - Исходная строка
+ * @param {string} str - Source string
  * @returns {string} - Alias
  */
 export function generateAlias(str) {
@@ -201,11 +192,11 @@ export function generateAlias(str) {
 }
 
 /**
- * Обрезка строки с многоточием
+ * Truncate string with ellipsis
  *
- * @param {string} str - Строка
- * @param {number} maxLength - Максимальная длина
- * @returns {string} - Обрезанная строка
+ * @param {string} str - String
+ * @param {number} maxLength - Maximum length
+ * @returns {string} - Truncated string
  */
 export function truncate(str, maxLength = 50) {
   if (!str || str.length <= maxLength) return str;
@@ -213,10 +204,10 @@ export function truncate(str, maxLength = 50) {
 }
 
 /**
- * Экранирование HTML
+ * Escape HTML
  *
- * @param {string} str - Строка
- * @returns {string} - Экранированная строка
+ * @param {string} str - String
+ * @returns {string} - Escaped string
  */
 export function escapeHtml(str) {
   if (!str) return '';
@@ -233,11 +224,11 @@ export function escapeHtml(str) {
 }
 
 /**
- * Дебаунс функция
+ * Debounce function
  *
- * @param {Function} func - Функция для дебаунса
- * @param {number} wait - Задержка в мс
- * @returns {Function} - Обернутая функция
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Delay in ms
+ * @returns {Function} - Wrapped function
  */
 export function debounce(func, wait = 300) {
   let timeout;

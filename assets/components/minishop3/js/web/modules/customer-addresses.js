@@ -1,9 +1,9 @@
 /**
- * CustomerAddresses - управление адресами в личном кабинете клиента
+ * CustomerAddresses - address management in customer account
  *
- * Обрабатывает действия:
- * - Установка адреса по умолчанию
- * - Удаление адреса
+ * Handles actions:
+ * - Set default address
+ * - Delete address
  *
  * @example
  * const customerAddresses = new CustomerAddresses({
@@ -13,8 +13,8 @@
  */
 class CustomerAddresses {
   /**
-   * @param {Object} config - Конфигурация
-   * @param {string} config.apiUrl - URL API
+   * @param {Object} config - Configuration
+   * @param {string} config.apiUrl - API URL
    */
   constructor (config = {}) {
     this.config = {
@@ -27,7 +27,7 @@ class CustomerAddresses {
   }
 
   /**
-   * Инициализация обработчиков
+   * Initialize handlers
    */
   init () {
     if (document.readyState === 'loading') {
@@ -38,37 +38,35 @@ class CustomerAddresses {
   }
 
   /**
-   * Привязка событий
+   * Bind events
    */
   bindEvents () {
-    // Установка адреса по умолчанию
     document.querySelectorAll(this.config.setDefaultSelector).forEach(btn => {
       btn.addEventListener('click', (e) => this.handleSetDefault(e))
     })
 
-    // Удаление адреса
     document.querySelectorAll(this.config.deleteSelector).forEach(btn => {
       btn.addEventListener('click', (e) => this.handleDelete(e))
     })
   }
 
   /**
-   * Получить тексты из data-атрибутов контейнера
-   * @param {HTMLElement} btn - Кнопка
-   * @returns {Object} - Тексты для confirm и error
+   * Get texts from data attributes
+   * @param {HTMLElement} btn - Button element
+   * @returns {Object} - Texts for confirm and error
    */
   getTexts (btn) {
     const container = btn.closest('.list-group-item')
     return {
-      confirmSetDefault: container?.dataset.confirmSetDefault || 'Сделать этот адрес основным?',
-      confirmDelete: container?.dataset.confirmDelete || 'Вы уверены, что хотите удалить этот адрес?',
-      errorUnknown: container?.dataset.errorUnknown || 'Произошла ошибка'
+      confirmSetDefault: container?.dataset.confirmSetDefault || 'Set this address as default?',
+      confirmDelete: container?.dataset.confirmDelete || 'Are you sure you want to delete this address?',
+      errorUnknown: container?.dataset.errorUnknown || 'An error occurred'
     }
   }
 
   /**
-   * Установка адреса по умолчанию
-   * @param {Event} e - Событие клика
+   * Set default address
+   * @param {Event} e - Click event
    */
   async handleSetDefault (e) {
     const btn = e.currentTarget
@@ -96,8 +94,8 @@ class CustomerAddresses {
   }
 
   /**
-   * Удаление адреса
-   * @param {Event} e - Событие клика
+   * Delete address
+   * @param {Event} e - Click event
    */
   async handleDelete (e) {
     const btn = e.currentTarget
@@ -125,7 +123,6 @@ class CustomerAddresses {
   }
 }
 
-// Экспорт для использования как модуль
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = CustomerAddresses
 }

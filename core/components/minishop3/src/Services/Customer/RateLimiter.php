@@ -5,26 +5,26 @@ namespace MiniShop3\Services\Customer;
 use MODX\Revolution\modX;
 
 /**
- * RateLimiter - сервис ограничения частоты запросов
+ * RateLimiter - request rate limiting service
  *
- * Защита от брутфорса, DDoS и злоупотреблений.
- * Использует кеш MODX для хранения счетчиков попыток.
+ * Protection against bruteforce, DDoS and abuse.
+ * Uses MODX cache to store attempt counters.
  *
- * Примеры использования:
+ * Usage examples:
  * ```php
  * $limiter = $modx->services->get('ms3_rate_limiter');
  *
- * // Проверка перед входом
+ * // Check before login
  * if (!$limiter->check('login', $_SERVER['REMOTE_ADDR'], 5, 300)) {
  *     die('Too many login attempts. Try again in 5 minutes.');
  * }
  *
- * // Проверка отправки email
+ * // Check email sending
  * if (!$limiter->check('email_send', $customerEmail, 3, 3600)) {
  *     die('Too many emails sent. Try again in 1 hour.');
  * }
  *
- * // Сброс счетчика при успешном входе
+ * // Reset counter on successful login
  * $limiter->reset('login', $_SERVER['REMOTE_ADDR']);
  * ```
  *
@@ -35,7 +35,7 @@ class RateLimiter
     /** @var modX */
     protected modX $modx;
 
-    /** @var string Префикс ключей кеша */
+    /** @var string Cache key prefix */
     protected string $prefix = 'ms3_rate_limit_';
 
     /**
@@ -47,22 +47,20 @@ class RateLimiter
     }
 
     /**
-     * Проверить лимит запросов и увеличить счетчик
+     * Check request limit and increment counter
      *
-     * @param string $action Тип действия (login, register, email_send и т.д.)
-     * @param string $identifier Идентификатор (IP, email, customer_id и т.д.)
-     * @param int $maxAttempts Максимальное количество попыток
-     * @param int $windowSeconds Временное окно в секундах
-     * @return bool true, если лимит не превышен
+     * @param string $action Action type (login, register, email_send, etc.)
+     * @param string $identifier Identifier (IP, email, customer_id, etc.)
+     * @param int $maxAttempts Maximum number of attempts
+     * @param int $windowSeconds Time window in seconds
+     * @return bool true if limit not exceeded
      */
     public function check(string $action, string $identifier, int $maxAttempts, int $windowSeconds): bool
     {
         $key = $this->getKey($action, $identifier);
 
-        // Получаем текущий счетчик
         $attempts = (int)$this->modx->cacheManager->get($key);
 
-        // Проверка лимита
         if ($attempts >= $maxAttempts) {
             $this->modx->log(
                 modX::LOG_LEVEL_WARN,
@@ -71,7 +69,6 @@ class RateLimiter
             return false;
         }
 
-        // Увеличиваем счетчик
         $i = $attempts + 1;
         $this->modx->cacheManager->set($key, $i, $windowSeconds);
 
@@ -79,11 +76,11 @@ class RateLimiter
     }
 
     /**
-     * Получить текущее количество попыток
+     * Get current number of attempts
      *
-     * @param string $action Тип действия
-     * @param string $identifier Идентификатор
-     * @return int Количество попыток
+     * @param string $action Action type
+     * @param string $identifier Identifier
+     * @return int Number of attempts
      */
     public function getAttempts(string $action, string $identifier): int
     {
@@ -92,12 +89,12 @@ class RateLimiter
     }
 
     /**
-     * Проверить, заблокирован ли идентификатор
+     * Check if identifier is blocked
      *
-     * @param string $action Тип действия
-     * @param string $identifier Идентификатор
-     * @param int $maxAttempts Максимальное количество попыток
-     * @return bool true, если заблокирован
+     * @param string $action Action type
+     * @param string $identifier Identifier
+     * @param int $maxAttempts Maximum number of attempts
+     * @return bool true if blocked
      */
     public function isBlocked(string $action, string $identifier, int $maxAttempts): bool
     {
@@ -105,12 +102,12 @@ class RateLimiter
     }
 
     /**
-     * Сбросить счетчик попыток
+     * Reset attempt counter
      *
-     * Используется после успешной операции (например, успешного входа)
+     * Used after successful operation (e.g., successful login)
      *
-     * @param string $action Тип действия
-     * @param string $identifier Идентификатор
+     * @param string $action Action type
+     * @param string $identifier Identifier
      * @return void
      */
     public function reset(string $action, string $identifier): void
@@ -125,17 +122,16 @@ class RateLimiter
     }
 
     /**
-     * Получить время до разблокировки (в секундах)
+     * Get time until unblock (in seconds)
      *
-     * @param string $action Тип действия
-     * @param string $identifier Идентификатор
-     * @return int|null Секунды до разблокировки, null если не заблокирован
+     * @param string $action Action type
+     * @param string $identifier Identifier
+     * @return int|null Seconds until unblock, null if not blocked
      */
     public function getTimeUntilUnblock(string $action, string $identifier): ?int
     {
         $key = $this->getKey($action, $identifier);
 
-        // Проверяем TTL кеша
         $cacheOptions = [];
         $value = $this->modx->cacheManager->get($key, $cacheOptions);
 
@@ -143,23 +139,20 @@ class RateLimiter
             return null;
         }
 
-        // Если кеш еще есть, значит блокировка активна
-        // Но у modX cacheManager нет метода getTTL, поэтому возвращаем приблизительное значение
-        // TODO: Улучшить определение TTL (можно хранить timestamp вместе со счетчиком)
         return null;
     }
 
     /**
-     * Проверка с автоматическим увеличением счетчика при превышении лимита
+     * Check with automatic counter increment on limit exceeded
      *
-     * Удобный метод для защиты от брутфорса
+     * Convenient method for bruteforce protection
      *
-     * @param string $action Тип действия
-     * @param string $identifier Идентификатор
-     * @param int $maxAttempts Максимальное количество попыток
-     * @param int $windowSeconds Временное окно в секундах
-     * @param bool $increment Увеличивать счетчик даже при превышении лимита
-     * @return bool true, если лимит не превышен
+     * @param string $action Action type
+     * @param string $identifier Identifier
+     * @param int $maxAttempts Maximum number of attempts
+     * @param int $windowSeconds Time window in seconds
+     * @param bool $increment Increment counter even on limit exceeded
+     * @return bool true if limit not exceeded
      */
     public function attempt(string $action, string $identifier, int $maxAttempts, int $windowSeconds, bool $increment = true): bool
     {
@@ -168,7 +161,6 @@ class RateLimiter
 
         if ($attempts >= $maxAttempts) {
             if ($increment) {
-                // Продлеваем блокировку при каждой новой попытке
                 $i = $attempts + 1;
                 $this->modx->cacheManager->set($key, $i, $windowSeconds);
             }
@@ -185,28 +177,25 @@ class RateLimiter
     }
 
     /**
-     * Генерация ключа кеша
+     * Generate cache key
      *
-     * @param string $action Тип действия
-     * @param string $identifier Идентификатор
+     * @param string $action Action type
+     * @param string $identifier Identifier
      * @return string
      */
     protected function getKey(string $action, string $identifier): string
     {
-        // Используем md5 для identifier, чтобы избежать проблем с спецсимволами в ключах кеша
         return $this->prefix . $action . '_' . md5($identifier);
     }
 
     /**
-     * Очистить все счетчики определенного действия
+     * Clear all counters for specific action
      *
-     * @param string $action Тип действия
+     * @param string $action Action type
      * @return void
      */
     public function clearAction(string $action): void
     {
-        // MODX cacheManager не поддерживает wildcard удаление
-        // Этот метод оставлен для будущей реализации
         $this->modx->log(
             modX::LOG_LEVEL_DEBUG,
             "[RateLimiter] Clear action not fully implemented: {$action}"

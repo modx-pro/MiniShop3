@@ -1,14 +1,14 @@
 /**
- * Утилиты валидации для форм MiniShop3
+ * Validation utilities for MiniShop3 forms
  *
- * Содержит правила валидации совместимые с MODX и PrimeVue
+ * Contains validation rules compatible with MODX and PrimeVue
  */
 
 /**
- * Проверка на пустое значение
+ * Check if value is empty
  *
- * @param {any} value - Значение
- * @returns {boolean} - Результат проверки
+ * @param {any} value - Value
+ * @returns {boolean} - Check result
  */
 export function isEmpty(value) {
   if (value === null || value === undefined) return true;
@@ -19,118 +19,118 @@ export function isEmpty(value) {
 }
 
 /**
- * Проверка обязательного поля
+ * Check required field
  *
- * @param {any} value - Значение
- * @returns {boolean|string} - true если валидно, строка с ошибкой если нет
+ * @param {any} value - Value
+ * @returns {boolean|string} - true if valid, error string if not
  */
 export function required(value) {
-  return !isEmpty(value) || 'Это поле обязательно для заполнения';
+  return !isEmpty(value) || 'This field is required';
 }
 
 /**
- * Проверка минимальной длины
+ * Check minimum length
  *
- * @param {number} min - Минимальная длина
- * @returns {Function} - Функция валидации
+ * @param {number} min - Minimum length
+ * @returns {Function} - Validation function
  */
 export function minLength(min) {
   return (value) => {
-    if (isEmpty(value)) return true; // Используем required для проверки обязательности
-    return value.length >= min || `Минимальная длина ${min} символов`;
+    if (isEmpty(value)) return true;
+    return value.length >= min || `Minimum length ${min} characters`;
   };
 }
 
 /**
- * Проверка максимальной длины
+ * Check maximum length
  *
- * @param {number} max - Максимальная длина
- * @returns {Function} - Функция валидации
+ * @param {number} max - Maximum length
+ * @returns {Function} - Validation function
  */
 export function maxLength(max) {
   return (value) => {
     if (isEmpty(value)) return true;
-    return value.length <= max || `Максимальная длина ${max} символов`;
+    return value.length <= max || `Maximum length ${max} characters`;
   };
 }
 
 /**
- * Проверка email
+ * Check email
  *
  * @param {string} value - Email
- * @returns {boolean|string} - Результат валидации
+ * @returns {boolean|string} - Validation result
  */
 export function email(value) {
   if (isEmpty(value)) return true;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(value) || 'Некорректный email адрес';
+  return emailRegex.test(value) || 'Invalid email address';
 }
 
 /**
- * Проверка числа
+ * Check number
  *
- * @param {any} value - Значение
- * @returns {boolean|string} - Результат валидации
+ * @param {any} value - Value
+ * @returns {boolean|string} - Validation result
  */
 export function numeric(value) {
   if (isEmpty(value)) return true;
-  return !isNaN(Number(value)) || 'Значение должно быть числом';
+  return !isNaN(Number(value)) || 'Value must be a number';
 }
 
 /**
- * Проверка целого числа
+ * Check integer
  *
- * @param {any} value - Значение
- * @returns {boolean|string} - Результат валидации
+ * @param {any} value - Value
+ * @returns {boolean|string} - Validation result
  */
 export function integer(value) {
   if (isEmpty(value)) return true;
-  return Number.isInteger(Number(value)) || 'Значение должно быть целым числом';
+  return Number.isInteger(Number(value)) || 'Value must be an integer';
 }
 
 /**
- * Проверка минимального значения
+ * Check minimum value
  *
- * @param {number} min - Минимальное значение
- * @returns {Function} - Функция валидации
+ * @param {number} min - Minimum value
+ * @returns {Function} - Validation function
  */
 export function minValue(min) {
   return (value) => {
     if (isEmpty(value)) return true;
-    return Number(value) >= min || `Минимальное значение ${min}`;
+    return Number(value) >= min || `Minimum value ${min}`;
   };
 }
 
 /**
- * Проверка максимального значения
+ * Check maximum value
  *
- * @param {number} max - Максимальное значение
- * @returns {Function} - Функция валидации
+ * @param {number} max - Maximum value
+ * @returns {Function} - Validation function
  */
 export function maxValue(max) {
   return (value) => {
     if (isEmpty(value)) return true;
-    return Number(value) <= max || `Максимальное значение ${max}`;
+    return Number(value) <= max || `Maximum value ${max}`;
   };
 }
 
 /**
- * Проверка на положительное число
+ * Check positive number
  *
- * @param {any} value - Значение
- * @returns {boolean|string} - Результат валидации
+ * @param {any} value - Value
+ * @returns {boolean|string} - Validation result
  */
 export function positive(value) {
   if (isEmpty(value)) return true;
-  return Number(value) > 0 || 'Значение должно быть положительным';
+  return Number(value) > 0 || 'Value must be positive';
 }
 
 /**
- * Проверка URL
+ * Check URL
  *
  * @param {string} value - URL
- * @returns {boolean|string} - Результат валидации
+ * @returns {boolean|string} - Validation result
  */
 export function url(value) {
   if (isEmpty(value)) return true;
@@ -139,44 +139,44 @@ export function url(value) {
     new URL(value);
     return true;
   } catch {
-    return 'Некорректный URL';
+    return 'Invalid URL';
   }
 }
 
 /**
- * Проверка alias (только латиница, цифры, дефис)
+ * Check alias (only latin, digits, hyphen)
  *
  * @param {string} value - Alias
- * @returns {boolean|string} - Результат валидации
+ * @returns {boolean|string} - Validation result
  */
 export function alias(value) {
   if (isEmpty(value)) return true;
 
   const aliasRegex = /^[a-z0-9-]+$/;
-  return aliasRegex.test(value) || 'Alias может содержать только латинские буквы, цифры и дефис';
+  return aliasRegex.test(value) || 'Alias can only contain latin letters, digits and hyphen';
 }
 
 /**
- * Проверка артикула (буквы, цифры, дефис, подчеркивание)
+ * Check article (letters, digits, hyphen, underscore)
  *
- * @param {string} value - Артикул
- * @returns {boolean|string} - Результат валидации
+ * @param {string} value - Article
+ * @returns {boolean|string} - Validation result
  */
 export function article(value) {
   if (isEmpty(value)) return true;
 
   const articleRegex = /^[a-zA-Z0-9_-]+$/;
-  return articleRegex.test(value) || 'Артикул может содержать только буквы, цифры, дефис и подчеркивание';
+  return articleRegex.test(value) || 'Article can only contain letters, digits, hyphen and underscore';
 }
 
 /**
- * Проверка на уникальность (асинхронная)
+ * Check uniqueness (async)
  *
- * @param {Function} checkFunction - Функция проверки (должна возвращать Promise<boolean>)
- * @param {string} errorMessage - Сообщение об ошибке
- * @returns {Function} - Функция валидации
+ * @param {Function} checkFunction - Check function (must return Promise<boolean>)
+ * @param {string} errorMessage - Error message
+ * @returns {Function} - Validation function
  */
-export function unique(checkFunction, errorMessage = 'Значение уже используется') {
+export function unique(checkFunction, errorMessage = 'Value already in use') {
   return async (value) => {
     if (isEmpty(value)) return true;
 
@@ -185,19 +185,19 @@ export function unique(checkFunction, errorMessage = 'Значение уже и
       return isUnique || errorMessage;
     } catch (error) {
       console.error('[Validation] Unique check failed:', error);
-      return 'Ошибка проверки уникальности';
+      return 'Uniqueness check error';
     }
   };
 }
 
 /**
- * Проверка соответствия регулярному выражению
+ * Check regex match
  *
- * @param {RegExp} regex - Регулярное выражение
- * @param {string} errorMessage - Сообщение об ошибке
- * @returns {Function} - Функция валидации
+ * @param {RegExp} regex - Regular expression
+ * @param {string} errorMessage - Error message
+ * @returns {Function} - Validation function
  */
-export function matches(regex, errorMessage = 'Некорректный формат') {
+export function matches(regex, errorMessage = 'Invalid format') {
   return (value) => {
     if (isEmpty(value)) return true;
     return regex.test(value) || errorMessage;
@@ -205,30 +205,30 @@ export function matches(regex, errorMessage = 'Некорректный форм
 }
 
 /**
- * Проверка совпадения с другим полем (например, подтверждение пароля)
+ * Check match with another field (e.g., password confirmation)
  *
- * @param {any} otherValue - Значение другого поля
- * @param {string} fieldName - Название другого поля
- * @returns {Function} - Функция валидации
+ * @param {any} otherValue - Other field value
+ * @param {string} fieldName - Other field name
+ * @returns {Function} - Validation function
  */
-export function sameAs(otherValue, fieldName = 'другое поле') {
+export function sameAs(otherValue, fieldName = 'other field') {
   return (value) => {
-    return value === otherValue || `Значение должно совпадать с ${fieldName}`;
+    return value === otherValue || `Value must match ${fieldName}`;
   };
 }
 
 /**
- * Составной валидатор (несколько правил)
+ * Composite validator (multiple rules)
  *
- * @param {Array<Function>} rules - Массив функций валидации
- * @returns {Function} - Функция валидации
+ * @param {Array<Function>} rules - Array of validation functions
+ * @returns {Function} - Validation function
  */
 export function validate(...rules) {
   return async (value) => {
     for (const rule of rules) {
       const result = await rule(value);
       if (result !== true) {
-        return result; // Возвращаем первую ошибку
+        return result;
       }
     }
     return true;
@@ -236,10 +236,10 @@ export function validate(...rules) {
 }
 
 /**
- * Создание правил валидации для PrimeVue формы
+ * Create validation rules for PrimeVue form
  *
- * @param {Object} rulesConfig - Конфигурация правил { fieldName: [rule1, rule2, ...] }
- * @returns {Object} - Правила для PrimeVue
+ * @param {Object} rulesConfig - Rules configuration { fieldName: [rule1, rule2, ...] }
+ * @returns {Object} - Rules for PrimeVue
  */
 export function createValidationRules(rulesConfig) {
   const rules = {};
@@ -250,8 +250,6 @@ export function createValidationRules(rulesConfig) {
 
   return rules;
 }
-
-// Экспорт всех валидаторов как объект
 export default {
   isEmpty,
   required,

@@ -21,12 +21,10 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
-// Состояние таблицы
 const loading = ref(false)
 const notifications = ref([])
 const totalRecords = ref(0)
 
-// Справочники
 const references = ref({
   statuses: [],
   events: [],
@@ -34,19 +32,17 @@ const references = ref({
   channels: []
 })
 
-// Фильтры
 const filterStatusId = ref(null)
 const filterChannel = ref(null)
 const filterRecipientType = ref(null)
 
-// Модальное окно редактирования
 const editDialogVisible = ref(false)
 const editingNotification = ref(null)
 const saving = ref(false)
 const isNewRecord = ref(false)
 
 /**
- * Загрузить справочники
+ * Load references
  */
 async function loadReferences() {
   try {
@@ -60,7 +56,7 @@ async function loadReferences() {
 }
 
 /**
- * Загрузить список уведомлений
+ * Load notifications list
  */
 async function loadNotifications() {
   loading.value = true
@@ -100,16 +96,10 @@ async function loadNotifications() {
   }
 }
 
-/**
- * Применить фильтры
- */
 function applyFilters() {
   loadNotifications()
 }
 
-/**
- * Сбросить фильтры
- */
 function clearFilters() {
   filterStatusId.value = null
   filterChannel.value = null
@@ -117,9 +107,6 @@ function clearFilters() {
   loadNotifications()
 }
 
-/**
- * Открыть модальное окно для создания
- */
 function createNotification() {
   editingNotification.value = {
     event: 'order_status_changed',
@@ -137,18 +124,12 @@ function createNotification() {
   editDialogVisible.value = true
 }
 
-/**
- * Открыть модальное окно редактирования
- */
 function editNotification(notification) {
   editingNotification.value = { ...notification }
   isNewRecord.value = false
   editDialogVisible.value = true
 }
 
-/**
- * Сохранить уведомление
- */
 async function saveNotification() {
   if (!editingNotification.value) return
 
@@ -184,9 +165,6 @@ async function saveNotification() {
   }
 }
 
-/**
- * Удалить уведомление
- */
 function deleteNotification(notification) {
   confirm.require({
     message: _('ms3_notification_delete_confirm'),
@@ -220,9 +198,6 @@ function deleteNotification(notification) {
   })
 }
 
-/**
- * Быстрое переключение enabled
- */
 async function toggleEnabled(notification) {
   try {
     await request.put(`/api/mgr/notifications/${notification.id}`, {
@@ -248,25 +223,16 @@ async function toggleEnabled(notification) {
   }
 }
 
-/**
- * Получить имя события по ID
- */
 function getEventName(eventId) {
   const event = references.value.events?.find(e => e.id === eventId)
   return event?.name || eventId
 }
 
-/**
- * Получить имя типа получателя
- */
 function getRecipientTypeName(type) {
   const rt = references.value.recipient_types?.find(r => r.id === type)
   return rt?.name || type
 }
 
-/**
- * Получить имя статуса
- */
 function getStatusName(statusId) {
   if (!statusId) return _('ms3_notification_all_statuses')
   const status = references.value.statuses?.find(s => s.id === statusId)
@@ -274,9 +240,9 @@ function getStatusName(statusId) {
 }
 
 /**
- * Вычислить контрастный цвет текста (черный или белый) для заданного фона
- * @param {string} hexColor - HEX цвет без # (например: 'FF5722')
- * @returns {string} - '#000000' или '#FFFFFF'
+ * Calculate contrast text color (black or white) for given background
+ * @param {string} hexColor - HEX color without # (e.g., 'FF5722')
+ * @returns {string} - '#000000' or '#FFFFFF'
  */
 function getContrastTextColor(hexColor) {
   if (!hexColor || hexColor.length < 6) return '#000000'
@@ -286,18 +252,13 @@ function getContrastTextColor(hexColor) {
   const g = parseInt(hexColor.substring(2, 4), 16) / 255
   const b = parseInt(hexColor.substring(4, 6), 16) / 255
 
-  // RGB to HSL (нужна только яркость L)
   const cmin = Math.min(r, g, b)
   const cmax = Math.max(r, g, b)
   const l = ((cmax + cmin) / 2) * 100
 
-  // Светлый фон → черный текст, темный фон → белый текст
   return l > 50 ? '#000000' : '#FFFFFF'
 }
 
-/**
- * Получить стили для бейджа статуса
- */
 function getStatusStyle(statusId) {
   if (!statusId) {
     return { backgroundColor: '#888888', color: '#FFFFFF' }
@@ -310,9 +271,6 @@ function getStatusStyle(statusId) {
   }
 }
 
-/**
- * Опции для выбора статуса (с "Все статусы")
- */
 const statusOptions = computed(() => {
   return [
     { id: null, name: _('ms3_notification_all_statuses') },
@@ -337,7 +295,7 @@ onMounted(async () => {
       </template>
 
       <template #content>
-        <!-- Панель инструментов -->
+        <!-- Toolbar -->
         <div class="toolbar mb-3">
           <Button
             :label="_('ms3_notification_add')"
@@ -346,7 +304,7 @@ onMounted(async () => {
           />
         </div>
 
-        <!-- Фильтры -->
+        <!-- Filters -->
         <div class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
           <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
             <div style="flex: 1; min-width: 200px;">
@@ -401,7 +359,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Таблица -->
+        <!-- Table -->
         <DataTable
           :value="notifications"
           :loading="loading"
@@ -488,7 +446,7 @@ onMounted(async () => {
       </template>
     </Card>
 
-    <!-- Модальное окно редактирования -->
+    <!-- Edit dialog -->
     <Dialog
       v-model:visible="editDialogVisible"
       :header="isNewRecord ? _('ms3_notification_add') : _('ms3_notification_edit')"
@@ -498,7 +456,7 @@ onMounted(async () => {
       :appendTo="'self'"
     >
       <div v-if="editingNotification" class="notification-form">
-        <!-- Событие -->
+        <!-- Event -->
         <div class="form-row">
           <div class="form-col">
             <label for="event">{{ _('ms3_notification_event') }} *</label>
@@ -526,7 +484,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Получатель и канал -->
+        <!-- Recipient and channel -->
         <div class="form-row">
           <div class="form-col">
             <label for="recipient_type">{{ _('ms3_notification_recipient') }} *</label>
@@ -552,7 +510,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Тема письма -->
+        <!-- Email subject -->
         <div class="form-row">
           <div class="form-col-full">
             <label for="subject">{{ _('ms3_notification_subject') }}</label>
@@ -566,7 +524,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Шаблон -->
+        <!-- Template -->
         <div class="form-row">
           <div class="form-col-full">
             <label for="template">{{ _('ms3_notification_template') }}</label>
@@ -580,7 +538,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Задержка и позиция -->
+        <!-- Delay and position -->
         <div class="form-row">
           <div class="form-col">
             <label for="delay">{{ _('ms3_notification_delay') }}</label>
@@ -589,7 +547,7 @@ onMounted(async () => {
               v-model="editingNotification.delay"
               class="w-full"
               :min="0"
-              suffix=" сек"
+              suffix=" sec"
             />
           </div>
           <div class="form-col">
@@ -603,7 +561,7 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Включено -->
+        <!-- Enabled -->
         <div class="form-row">
           <div class="checkbox-col">
             <Checkbox inputId="enabled" v-model="editingNotification.enabled" :binary="true" />

@@ -6,23 +6,23 @@ use MODX\Revolution\modX;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * Процессор получения списка доступных классов для Delivery/Payment
+ * Processor for retrieving available classes for Delivery/Payment
  *
- * Автоматически сканирует директории и находит все классы,
- * наследующие базовые интерфейсы/классы MiniShop3.
+ * Automatically scans directories and finds all classes
+ * inheriting from base MiniShop3 interfaces/classes.
  *
- * Поддерживаемые типы:
- * - delivery: Классы доставки (наследуют DeliveryProviderInterface)
- * - payment: Классы оплаты (наследуют PaymentProviderInterface)
+ * Supported types:
+ * - delivery: Delivery classes (inherit DeliveryProviderInterface)
+ * - payment: Payment classes (inherit PaymentProviderInterface)
  *
- * Сканируемые директории:
- * - core/components/minishop3/src/Controllers/{Type}/ (встроенные классы)
- * - Можно расширить через настройку ms3_custom_classes_paths
+ * Scanned directories:
+ * - core/components/minishop3/src/Controllers/{Type}/ (built-in classes)
+ * - Can be extended via ms3_custom_classes_paths setting
  */
 class GetClass extends Processor
 {
     /**
-     * Получить список доступных классов для указанного типа
+     * Get list of available classes for specified type
      *
      * @return string
      */
@@ -40,40 +40,30 @@ class GetClass extends Processor
     }
 
     /**
-     * Автоматическое обнаружение классов доставки/оплаты
+     * Auto-discover delivery/payment classes
      *
-     * @param string $type Тип (delivery или payment)
-     * @return array Массив классов [['name' => 'ClassName', 'class' => 'Full\Namespace\ClassName'], ...]
+     * @param string $type Type (delivery or payment)
+     * @return array Array of classes [['name' => 'ClassName', 'class' => 'Full\Namespace\ClassName'], ...]
      */
     protected function discoverClasses(string $type): array
     {
         $result = [];
 
-        // Определяем базовый класс/интерфейс для валидации
         $baseClass = $this->getBaseClass($type);
         if (!$baseClass) {
             return $result;
         }
 
-        // Сканируем встроенные классы MiniShop3
         $builtInClasses = $this->scanDirectory($type);
         $result = array_merge($result, $builtInClasses);
 
-        // TODO: Можно добавить сканирование кастомных директорий через настройку
-        // $customPaths = $this->modx->getOption('ms3_custom_classes_paths', null, []);
-        // foreach ($customPaths as $path) {
-        //     $customClasses = $this->scanCustomDirectory($path, $type, $baseClass);
-        //     $result = array_merge($result, $customClasses);
-        // }
-
-        // Убираем дубликаты по полному имени класса
         $result = array_values(array_unique($result, SORT_REGULAR));
 
         return $result;
     }
 
     /**
-     * Получить базовый класс/интерфейс для валидации
+     * Get base class/interface for validation
      *
      * @param string $type
      * @return string|null
@@ -89,7 +79,7 @@ class GetClass extends Processor
     }
 
     /**
-     * Сканирование директории с классами MiniShop3
+     * Scan directory with MiniShop3 classes
      *
      * @param string $type
      * @return array
@@ -98,7 +88,6 @@ class GetClass extends Processor
     {
         $result = [];
 
-        // Определяем директорию для сканирования
         $typeCapitalized = ucfirst(strtolower($type));
         $directory = MODX_CORE_PATH . "components/minishop3/src/Controllers/{$typeCapitalized}/";
 
@@ -110,20 +99,17 @@ class GetClass extends Processor
             return $result;
         }
 
-        // Сканируем PHP файлы
         $files = glob($directory . '*.php');
 
         foreach ($files as $file) {
             $className = basename($file, '.php');
 
-            // Пропускаем интерфейсы и абстрактные классы
             if (str_ends_with($className, 'Interface') || $className === ucfirst($type)) {
                 continue;
             }
 
             $fullClassName = "\\MiniShop3\\Controllers\\{$typeCapitalized}\\{$className}";
 
-            // Проверяем существование класса
             if (!class_exists($fullClassName)) {
                 $this->modx->log(
                     modX::LOG_LEVEL_DEBUG,
@@ -132,13 +118,11 @@ class GetClass extends Processor
                 continue;
             }
 
-            // Проверяем наследование (для не-абстрактных классов)
             $reflection = new \ReflectionClass($fullClassName);
             if ($reflection->isAbstract()) {
                 continue;
             }
 
-            // Проверяем реализацию интерфейса
             $baseClass = $this->getBaseClass($type);
             if (!is_subclass_of($fullClassName, $baseClass) && !in_array($baseClass, class_implements($fullClassName) ?: [])) {
                 $this->modx->log(
@@ -148,7 +132,6 @@ class GetClass extends Processor
                 continue;
             }
 
-            // Добавляем в результат
             $result[] = [
                 'name' => $className,
                 'class' => $fullClassName,

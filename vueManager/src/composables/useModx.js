@@ -1,47 +1,42 @@
 /**
- * Composable для работы с MODX интеграцией
+ * Composable for MODX integration
  *
- * Предоставляет доступ к:
- * - MODX конфигурации (window.MODx)
- * - MiniShop3 конфигурации (window.ms3)
- * - Лексиконам (переводы)
- * - Системной информации
+ * Provides access to:
+ * - MODX configuration (window.MODx)
+ * - MiniShop3 configuration (window.ms3)
+ * - Lexicon (translations)
+ * - System information
  *
- * Пример использования:
+ * Usage example:
  * ```js
  * const { config, lexicon, ms3Config, isUserAdmin } = useModx();
  *
- * console.log(config.user_id); // ID текущего пользователя
- * console.log(lexicon('ms3_product_name')); // Получить перевод
+ * console.log(config.user_id); // Current user ID
+ * console.log(lexicon('ms3_product_name')); // Get translation
  * ```
  */
 
 import { ref, computed, readonly } from 'vue';
 
 export function useModx() {
-  // MODX конфигурация (readonly)
   const config = readonly(ref(window.MODx?.config || {}));
 
-  // MiniShop3 конфигурация (readonly)
   const ms3Config = readonly(ref(window.ms3?.config || {}));
 
   /**
-   * Получить значение из лексикона (перевод)
+   * Get value from lexicon (translation)
    *
-   * @param {string} key - Ключ лексикона
-   * @param {Object} placeholders - Плейсхолдеры для подстановки
-   * @returns {string} - Переведенная строка
+   * @param {string} key - Lexicon key
+   * @param {Object} placeholders - Placeholders for substitution
+   * @returns {string} - Translated string
    */
   const lexicon = (key, placeholders = {}) => {
-    // Если доступен MODx._
     if (window.MODx?._ && typeof window.MODx._ === 'function') {
       return window.MODx._(key, placeholders);
     }
 
-    // Fallback на прямой доступ к лексикону
     let value = window.MODx?.lang?.[key] || key;
 
-    // Подставляем плейсхолдеры
     Object.entries(placeholders).forEach(([placeholder, val]) => {
       value = value.replace(`[[+${placeholder}]]`, val);
     });
@@ -50,28 +45,27 @@ export function useModx() {
   };
 
   /**
-   * Получить значение из системных настроек
+   * Get value from system settings
    *
-   * @param {string} key - Ключ настройки
-   * @param {any} defaultValue - Значение по умолчанию
-   * @returns {any} - Значение настройки
+   * @param {string} key - Setting key
+   * @param {any} defaultValue - Default value
+   * @returns {any} - Setting value
    */
   const getConfig = (key, defaultValue = null) => {
     return config.value[key] ?? defaultValue;
   };
 
   /**
-   * Получить значение из MiniShop3 конфигурации
+   * Get value from MiniShop3 configuration
    *
-   * @param {string} key - Ключ настройки
-   * @param {any} defaultValue - Значение по умолчанию
-   * @returns {any} - Значение настройки
+   * @param {string} key - Setting key
+   * @param {any} defaultValue - Default value
+   * @returns {any} - Setting value
    */
   const getMs3Config = (key, defaultValue = null) => {
     return ms3Config.value[key] ?? defaultValue;
   };
 
-  // Computed свойства для часто используемых данных
   const userId = computed(() => config.value.user_id || null);
   const userName = computed(() => config.value.username || 'Guest');
   const contextKey = computed(() => config.value.context_key || 'mgr');
@@ -79,24 +73,24 @@ export function useModx() {
   const assetsUrl = computed(() => ms3Config.value.assetsUrl || '');
 
   /**
-   * Проверка является ли пользователь администратором
+   * Check if user is administrator
    */
   const isUserAdmin = computed(() => {
     return config.value.is_admin === true || config.value.is_admin === 1;
   });
 
   /**
-   * Проверка является ли контекст mgr
+   * Check if context is mgr
    */
   const isMgrContext = computed(() => {
     return contextKey.value === 'mgr';
   });
 
   /**
-   * Показать MODX сообщение (если доступно)
+   * Show MODX message (if available)
    *
-   * @param {string} message - Текст сообщения
-   * @param {string} type - Тип: success, error, warning, info
+   * @param {string} message - Message text
+   * @param {string} type - Type: success, error, warning, info
    */
   const showMessage = (message, type = 'info') => {
     if (window.MODx && typeof window.MODx.msg === 'object') {
@@ -114,16 +108,15 @@ export function useModx() {
           window.MODx.msg.alert(lexicon('info'), message);
       }
     } else {
-      // Fallback на alert
       alert(`[${type.toUpperCase()}] ${message}`);
     }
   };
 
   /**
-   * Показать диалог подтверждения
+   * Show confirmation dialog
    *
-   * @param {string} message - Текст сообщения
-   * @param {Function} callback - Функция при подтверждении
+   * @param {string} message - Message text
+   * @param {Function} callback - Callback on confirmation
    */
   const confirm = (message, callback) => {
     if (window.MODx && typeof window.MODx.msg.confirm === 'function') {
@@ -137,7 +130,6 @@ export function useModx() {
         }
       });
     } else {
-      // Fallback на встроенный confirm
       if (window.confirm(message)) {
         callback();
       }
@@ -145,9 +137,9 @@ export function useModx() {
   };
 
   /**
-   * Логирование (отладка)
+   * Logging (debug)
    *
-   * @param {...any} args - Аргументы для вывода
+   * @param {...any} args - Arguments to output
    */
   const log = (...args) => {
     if (config.value.debug === true || config.value.debug === 1) {
@@ -156,16 +148,13 @@ export function useModx() {
   };
 
   return {
-    // Конфигурация
     config: config.value,
     ms3Config: ms3Config.value,
 
-    // Методы
     lexicon,
     getConfig,
     getMs3Config,
 
-    // Computed свойства
     userId,
     userName,
     contextKey,
@@ -174,7 +163,6 @@ export function useModx() {
     isUserAdmin,
     isMgrContext,
 
-    // UI утилиты
     showMessage,
     confirm,
     log

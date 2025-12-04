@@ -1,18 +1,18 @@
 /**
- * Composable для работы с правами доступа MODX
+ * Composable for working with MODX access permissions
  *
- * Предоставляет методы для проверки пермишенов пользователя
+ * Provides methods for checking user permissions
  *
- * Пример использования:
+ * Usage example:
  * ```js
  * const { hasPermission, canCreate, canEdit, canDelete } = usePermission();
  *
  * if (hasPermission('save_document')) {
- *   // Пользователь может сохранять документы
+ *   // User can save documents
  * }
  *
  * if (canEdit()) {
- *   // Пользователь может редактировать
+ *   // User can edit
  * }
  * ```
  */
@@ -24,33 +24,31 @@ export function usePermission() {
   const { config, isUserAdmin } = useModx();
 
   /**
-   * Получить список разрешений пользователя
+   * Get user permissions list
    */
   const permissions = computed(() => {
     return config.permissions || {};
   });
 
   /**
-   * Проверить наличие конкретного пермишена
+   * Check if specific permission exists
    *
-   * @param {string} permission - Название пермишена
-   * @returns {boolean} - Есть ли разрешение
+   * @param {string} permission - Permission name
+   * @returns {boolean} - Whether permission exists
    */
   const hasPermission = (permission) => {
-    // Админы имеют все права
     if (isUserAdmin.value) {
       return true;
     }
 
-    // Проверяем в списке разрешений
     return permissions.value[permission] === true || permissions.value[permission] === 1;
   };
 
   /**
-   * Проверить наличие хотя бы одного из списка пермишенов
+   * Check if at least one permission from list exists
    *
-   * @param {string[]} permissionList - Массив названий пермишенов
-   * @returns {boolean} - Есть ли хотя бы одно разрешение
+   * @param {string[]} permissionList - Array of permission names
+   * @returns {boolean} - Whether at least one permission exists
    */
   const hasAnyPermission = (permissionList) => {
     if (isUserAdmin.value) {
@@ -61,10 +59,10 @@ export function usePermission() {
   };
 
   /**
-   * Проверить наличие всех пермишенов из списка
+   * Check if all permissions from list exist
    *
-   * @param {string[]} permissionList - Массив названий пермишенов
-   * @returns {boolean} - Есть ли все разрешения
+   * @param {string[]} permissionList - Array of permission names
+   * @returns {boolean} - Whether all permissions exist
    */
   const hasAllPermissions = (permissionList) => {
     if (isUserAdmin.value) {
@@ -74,90 +72,84 @@ export function usePermission() {
     return permissionList.every(permission => hasPermission(permission));
   };
 
-  // Стандартные пермишены для MiniShop3
-
   /**
-   * Может ли пользователь создавать
+   * Can user create
    */
   const canCreate = () => {
     return hasPermission('new_document') || hasPermission('msproduct_save');
   };
 
   /**
-   * Может ли пользователь редактировать
+   * Can user edit
    */
   const canEdit = () => {
     return hasPermission('save_document') || hasPermission('msproduct_save');
   };
 
   /**
-   * Может ли пользователь удалять
+   * Can user delete
    */
   const canDelete = () => {
     return hasPermission('delete_document') || hasPermission('msproduct_remove');
   };
 
   /**
-   * Может ли пользователь публиковать
+   * Can user publish
    */
   const canPublish = () => {
     return hasPermission('publish_document');
   };
 
   /**
-   * Может ли пользователь снимать с публикации
+   * Can user unpublish
    */
   const canUnpublish = () => {
     return hasPermission('unpublish_document');
   };
 
   /**
-   * Может ли пользователь работать с настройками
+   * Can user manage settings
    */
   const canManageSettings = () => {
     return hasPermission('settings') || hasPermission('mssetting_save');
   };
 
   /**
-   * Может ли пользователь работать с заказами
+   * Can user manage orders
    */
   const canManageOrders = () => {
     return hasPermission('msorder_list') || hasPermission('msorder_save');
   };
 
   /**
-   * Может ли пользователь видеть заказы
+   * Can user view orders
    */
   const canViewOrders = () => {
     return hasPermission('msorder_list') || hasPermission('msorder_view');
   };
 
   /**
-   * Получить список всех доступных пермишенов
+   * Get list of all available permissions
    */
   const getAvailablePermissions = () => {
     return Object.keys(permissions.value).filter(key => permissions.value[key]);
   };
 
   return {
-    // Базовые методы
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
 
-    // CRUD операции
     canCreate,
     canEdit,
     canDelete,
     canPublish,
     canUnpublish,
 
-    // MiniShop3 специфичные
     canManageSettings,
     canManageOrders,
     canViewOrders,
 
-    // Утилиты
     getAvailablePermissions,
     isUserAdmin
   };

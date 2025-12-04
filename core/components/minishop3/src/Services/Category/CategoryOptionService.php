@@ -10,17 +10,17 @@ use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
 /**
- * Сервис для работы с опциями категорий
+ * Service for working with category options
  *
- * Отвечает за загрузку, обработку и кеширование опций товаров
- * привязанных к категориям
+ * Handles loading, processing and caching of product options
+ * linked to categories
  */
 class CategoryOptionService
 {
     /** @var modX */
     protected $modx;
 
-    /** @var array Кеш ключей опций по категориям */
+    /** @var array Cache of option keys by categories */
     protected $optionKeysCache = [];
 
     /**
@@ -32,10 +32,10 @@ class CategoryOptionService
     }
 
     /**
-     * Получить ключи опций для категории
+     * Get option keys for category
      *
      * @param msCategory $category
-     * @param bool $force Принудительно обновить кеш
+     * @param bool $force Force cache refresh
      * @return array
      */
     public function getOptionKeys(msCategory $category, bool $force = false): array
@@ -56,7 +56,7 @@ class CategoryOptionService
     }
 
     /**
-     * Построить запрос для выборки опций категории
+     * Build query for selecting category options
      *
      * @param msCategory $category
      * @return xPDOQuery
@@ -78,13 +78,13 @@ class CategoryOptionService
     }
 
     /**
-     * Получить поля опций для категории
+     * Get option fields for category
      *
-     * Возвращает массив опций со всеми их параметрами,
-     * включая текущие значения и ExtJS поля для редактирования
+     * Returns array of options with all their parameters,
+     * including current values and ExtJS fields for editing
      *
      * @param msCategory $category
-     * @param array $keys Фильтр по ключам опций (если пусто - все опции)
+     * @param array $keys Filter by option keys (empty for all options)
      * @return array
      */
     public function getOptionFields(msCategory $category, array $keys = []): array
@@ -114,11 +114,9 @@ class CategoryOptionService
         foreach ($options as $option) {
             $field = $option->toArray();
 
-            // Получаем значение опции для текущей категории
             $value = $option->getValue($category->get('id'));
             $field['value'] = !is_null($value) ? $value : $field['value'];
 
-            // Получаем ExtJS поле для менеджера
             $field['ext_field'] = $option->getManagerField($field);
 
             $fields[] = $field;
@@ -128,9 +126,9 @@ class CategoryOptionService
     }
 
     /**
-     * Очистить кеш опций для категории
+     * Clear option cache for category
      *
-     * @param int|null $categoryId ID категории или null для очистки всего кеша
+     * @param int|null $categoryId Category ID or null to clear all cache
      * @return void
      */
     public function clearCache(?int $categoryId = null): void

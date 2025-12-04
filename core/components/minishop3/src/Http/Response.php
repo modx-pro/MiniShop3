@@ -5,10 +5,10 @@ namespace MiniShop3\Http;
 use MODX\Revolution\modX;
 
 /**
- * HTTP Response helper для Web API
+ * HTTP Response helper for Web API
  *
- * Формирует JSON ответы с правильными HTTP статус-кодами.
- * Заменяет старые методы Utils::success() и Utils::error().
+ * Forms JSON responses with proper HTTP status codes.
+ * Replaces old Utils::success() and Utils::error() methods.
  */
 class Response
 {
@@ -16,7 +16,7 @@ class Response
     private modX $modx;
 
     /**
-     * HTTP статус-коды
+     * HTTP status codes
      */
     public const HTTP_OK = 200;
     public const HTTP_CREATED = 201;
@@ -30,7 +30,7 @@ class Response
     public const HTTP_INTERNAL_SERVER_ERROR = 500;
 
     /**
-     * @param modX $modx Экземпляр MODX для доступа к lexicon
+     * @param modX $modx MODX instance for lexicon access
      */
     public function __construct(modX $modx)
     {
@@ -38,10 +38,10 @@ class Response
     }
 
     /**
-     * Отправить JSON ответ с указанным статус-кодом
+     * Send JSON response with specified status code
      *
-     * @param array $data Данные для JSON
-     * @param int $status HTTP статус-код
+     * @param array $data Data for JSON
+     * @param int $status HTTP status code
      * @return void
      */
     public function json(array $data, int $status = self::HTTP_OK): void
@@ -53,12 +53,12 @@ class Response
     }
 
     /**
-     * Успешный ответ
+     * Success response
      *
-     * @param string $message Ключ лексикона или текст сообщения
-     * @param array $data Дополнительные данные
-     * @param array $placeholders Плейсхолдеры для лексикона
-     * @param int $status HTTP статус-код (по умолчанию 200)
+     * @param string $message Lexicon key or message text
+     * @param array $data Additional data
+     * @param array $placeholders Placeholders for lexicon
+     * @param int $status HTTP status code (default 200)
      * @return void
      */
     public function success(
@@ -75,11 +75,11 @@ class Response
     }
 
     /**
-     * Ответ об успешном создании ресурса
+     * Resource created response
      *
-     * @param string $message Ключ лексикона или текст сообщения
-     * @param array $data Данные созданного ресурса
-     * @param array $placeholders Плейсхолдеры для лексикона
+     * @param string $message Lexicon key or message text
+     * @param array $data Created resource data
+     * @param array $placeholders Placeholders for lexicon
      * @return void
      */
     public function created(
@@ -91,7 +91,7 @@ class Response
     }
 
     /**
-     * Ответ без содержимого (например, при успешном удалении)
+     * No content response (e.g., after successful deletion)
      *
      * @return void
      */
@@ -102,12 +102,12 @@ class Response
     }
 
     /**
-     * Ответ с ошибкой
+     * Error response
      *
-     * @param string $message Ключ лексикона или текст сообщения
-     * @param array $errors Детали ошибок (для валидации)
-     * @param array $placeholders Плейсхолдеры для лексикона
-     * @param int $status HTTP статус-код (по умолчанию 400)
+     * @param string $message Lexicon key or message text
+     * @param array $errors Error details (for validation)
+     * @param array $placeholders Placeholders for lexicon
+     * @param int $status HTTP status code (default 400)
      * @return void
      */
     public function error(
@@ -129,11 +129,11 @@ class Response
     }
 
     /**
-     * Ответ 400 Bad Request
+     * 400 Bad Request response
      *
-     * @param string $message Сообщение об ошибке
-     * @param array $errors Детали ошибок
-     * @param array $placeholders Плейсхолдеры для лексикона
+     * @param string $message Error message
+     * @param array $errors Error details
+     * @param array $placeholders Placeholders for lexicon
      * @return void
      */
     public function badRequest(
@@ -145,9 +145,9 @@ class Response
     }
 
     /**
-     * Ответ 401 Unauthorized
+     * 401 Unauthorized response
      *
-     * @param string $message Сообщение об ошибке (по умолчанию "ms3_err_token")
+     * @param string $message Error message (default "ms3_err_token")
      * @return void
      */
     public function unauthorized(string $message = 'ms3_err_token'): void
@@ -156,9 +156,9 @@ class Response
     }
 
     /**
-     * Ответ 403 Forbidden
+     * 403 Forbidden response
      *
-     * @param string $message Сообщение об ошибке
+     * @param string $message Error message
      * @return void
      */
     public function forbidden(string $message = 'ms3_err_permission_denied'): void
@@ -167,10 +167,10 @@ class Response
     }
 
     /**
-     * Ответ 404 Not Found
+     * 404 Not Found response
      *
-     * @param string $message Сообщение об ошибке
-     * @param array $placeholders Плейсхолдеры для лексикона
+     * @param string $message Error message
+     * @param array $placeholders Placeholders for lexicon
      * @return void
      */
     public function notFound(string $message, array $placeholders = []): void
@@ -179,10 +179,10 @@ class Response
     }
 
     /**
-     * Ответ 422 Unprocessable Entity (ошибки валидации)
+     * 422 Unprocessable Entity response (validation errors)
      *
-     * @param string $message Общее сообщение об ошибке
-     * @param array $errors Детали ошибок валидации
+     * @param string $message General error message
+     * @param array $errors Validation error details
      * @return void
      */
     public function validationError(string $message, array $errors = []): void
@@ -191,10 +191,10 @@ class Response
     }
 
     /**
-     * Ответ 429 Too Many Requests
+     * 429 Too Many Requests response
      *
-     * @param string $message Сообщение об ошибке
-     * @param int $retryAfter Через сколько секунд можно повторить запрос
+     * @param string $message Error message
+     * @param int $retryAfter Seconds after which request can be retried
      * @return void
      */
     public function tooManyRequests(string $message = 'ms3_err_rate_limit', int $retryAfter = 60): void
@@ -204,10 +204,10 @@ class Response
     }
 
     /**
-     * Ответ 500 Internal Server Error
+     * 500 Internal Server Error response
      *
-     * @param string $message Сообщение об ошибке
-     * @param array $details Детали ошибки (только в dev режиме)
+     * @param string $message Error message
+     * @param array $details Error details (only in dev mode)
      * @return void
      */
     public function serverError(string $message = 'ms3_err_unknown', array $details = []): void
@@ -217,7 +217,7 @@ class Response
             'message' => $this->translate($message),
         ];
 
-        // В dev режиме добавляем детали ошибки
+        // Add error details in dev mode
         if (!empty($details) && $this->modx->getOption('debug', null, false)) {
             $response['details'] = $details;
         }
@@ -226,10 +226,10 @@ class Response
     }
 
     /**
-     * Перевести ключ лексикона или вернуть текст как есть
+     * Translate lexicon key or return text as is
      *
-     * @param string $message Ключ лексикона или текст
-     * @param array $placeholders Плейсхолдеры для лексикона
+     * @param string $message Lexicon key or text
+     * @param array $placeholders Placeholders for lexicon
      * @return string
      */
     private function translate(string $message, array $placeholders = []): string
@@ -238,11 +238,11 @@ class Response
             return '';
         }
 
-        // Попытаться перевести как ключ лексикона
+        // Try to translate as lexicon key
         $translated = $this->modx->lexicon($message, $placeholders);
 
-        // Если ключ не найден, lexicon() вернёт сам ключ
-        // В этом случае вернём оригинальное сообщение
+        // If key not found, lexicon() will return the key itself
+        // In this case return original message
         return $translated;
     }
 }

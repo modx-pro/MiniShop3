@@ -5,13 +5,13 @@ namespace MiniShop3\Controllers\Api;
 use MiniShop3\Router\Response;
 
 /**
- * API контроллер для работы со справочниками (vendors, categories, etc)
+ * API controller for working with reference data (vendors, categories, etc)
  */
 class ReferencesController extends BaseApiController
 {
     /**
      * GET /api/mgr/references/vendors
-     * Получить список производителей для combo/select
+     * Get list of vendors for combo/select
      *
      * @param array $params
      * @return Response
@@ -21,13 +21,10 @@ class ReferencesController extends BaseApiController
         try {
             $query = $this->modx->newQuery('MiniShop3\\Model\\msVendor');
 
-            // Получаем только нужные поля
             $query->select(['id', 'name']);
 
-            // Сортировка по имени
             $query->sortby('name', 'ASC');
 
-            // Поиск по query параметру (если передан)
             $searchQuery = $_GET['query'] ?? null;
             if (!empty($searchQuery)) {
                 $query->where([
@@ -58,7 +55,7 @@ class ReferencesController extends BaseApiController
 
     /**
      * GET /api/mgr/references/autocomplete
-     * Получить уникальные значения из колонки для автодополнения
+     * Get unique column values for autocomplete
      *
      * @param array $params
      * @return Response
@@ -73,16 +70,13 @@ class ReferencesController extends BaseApiController
                 return Response::error('Field name is required', 400);
             }
 
-            // Проверяем, что поле существует в таблице msProductData
             $modelMeta = $this->modx->getFields('MiniShop3\\Model\\msProductData');
             if (!isset($modelMeta[$fieldName])) {
                 return Response::error("Field '{$fieldName}' not found in msProductData", 400);
             }
 
-            // Используем прямой SQL запрос для получения уникальных значений
             $tableName = $this->modx->getTableName('MiniShop3\\Model\\msProductData');
 
-            // Проверяем, что имя поля содержит только допустимые символы (защита от SQL-инъекций)
             if (!preg_match('/^[a-zA-Z0-9_]+$/', $fieldName)) {
                 return Response::error("Invalid field name", 400);
             }
@@ -94,7 +88,6 @@ class ReferencesController extends BaseApiController
 
             $params = [];
 
-            // Фильтруем по query параметру
             if (!empty($searchQuery)) {
                 $sql .= " AND `{$fieldName}` LIKE :searchQuery";
                 $params['searchQuery'] = "%{$searchQuery}%";
@@ -115,7 +108,6 @@ class ReferencesController extends BaseApiController
                 }
             }
 
-            // Если введён текст поиска и его нет в результатах - добавляем
             if (!empty($searchQuery)) {
                 $found = false;
                 foreach ($values as $v) {
@@ -141,7 +133,7 @@ class ReferencesController extends BaseApiController
 
     /**
      * GET /api/mgr/references/options
-     * Получить опции товара для множественного выбора (chips/multiselect)
+     * Get product options for multiple selection (chips/multiselect)
      *
      * @param array $params
      * @return Response
@@ -157,10 +149,8 @@ class ReferencesController extends BaseApiController
                 return Response::error('Option key is required', 400);
             }
 
-            // Убираем префикс "options-" если он есть
             $key = preg_replace('#^options-#', '', $key);
 
-            // Получаем уникальные значения из таблицы msProductOption
             $tableName = $this->modx->getTableName('MiniShop3\\Model\\msProductOption');
 
             $sql = "SELECT DISTINCT `value`
@@ -171,7 +161,6 @@ class ReferencesController extends BaseApiController
 
             $params = ['key' => $key];
 
-            // Фильтруем по query параметру
             if (!empty($searchQuery)) {
                 $sql .= " AND `value` LIKE :searchQuery";
                 $params['searchQuery'] = "%{$searchQuery}%";
@@ -192,7 +181,6 @@ class ReferencesController extends BaseApiController
                 }
             }
 
-            // Если введён текст поиска и его нет в результатах - добавляем
             if (!empty($searchQuery)) {
                 $found = false;
                 foreach ($values as $v) {

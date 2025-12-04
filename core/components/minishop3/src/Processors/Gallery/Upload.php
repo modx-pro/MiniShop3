@@ -160,7 +160,6 @@ class Upload extends ModelProcessor
                 $this->modx->exec($sql);
             }
 
-            // Генерируем thumbnails
             $generate = $uploaded_file->generateThumbnails($this->mediaSource);
             if ($generate !== true) {
                 $this->modx->log(
@@ -168,11 +167,8 @@ class Upload extends ModelProcessor
                     '[miniShop3] Could not generate thumbnails for image with id = ' . $uploaded_file->get('id') .
                     '. ' . $generate
                 );
-                // НЕ прерываем процесс - файл уже загружен, thumbnails можно регенерировать позже
-                // через Utilities → Gallery → Generate Thumbnails
             }
 
-            // Обновляем главное изображение товара через сервис
             $productData = $this->product->getOne('Data');
             if ($productData) {
                 /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
@@ -242,7 +238,6 @@ class Upload extends ModelProcessor
                     ]
                 );
             } elseif (strpos($data['name'], '.webp') !== false) {
-                // Используем Intervention Image для WebP (поддержка современных форматов)
                 try {
                     /** @var \MiniShop3\Services\ImageService $imageService */
                     $imageService = $this->modx->services->get('ms3_image');
@@ -258,7 +253,6 @@ class Upload extends ModelProcessor
                             ]
                         );
                     } else {
-                        // Fallback на GD если ImageService недоступен
                         if (function_exists('imagecreatefromwebp')) {
                             $img = imagecreatefromwebp($tf);
                             $width = imagesx($img);
@@ -280,7 +274,6 @@ class Upload extends ModelProcessor
                         modX::LOG_LEVEL_ERROR,
                         "[miniShop3] Failed to read WebP image: {$e->getMessage()}"
                     );
-                    // Fallback - файл всё равно загрузится, просто без размеров
                 }
             }
             return $data;

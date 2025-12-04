@@ -23,52 +23,47 @@ class ConfigService
     }
 
     /**
-     * Получить конфигурацию полей страницы с примененными переопределениями
-     * Возвращает только ВИДИМЫЕ поля и секции для отображения в форме
+     * Get page field configuration with applied overrides
+     * Returns only VISIBLE fields and sections for display in form
      *
-     * @param string $pageKey Ключ страницы (product_data, product_gallery и т.д.)
-     * @param string $contextKey Ключ контекста (по умолчанию: web)
+     * @param string $pageKey Page key (product_data, product_gallery, etc.)
+     * @param string $contextKey Context key (default: web)
      * @return array
      * @throws \Exception
      */
     public function getPageFields(string $pageKey, string $contextKey = 'web'): array
     {
-        // Получаем все поля из БД
         $allFields = $this->getAllPageFields($pageKey, $contextKey);
 
-        // Фильтруем только видимые поля (hidden = false)
         $visibleFields = array_filter($allFields['fields'], function($field) {
             return !($field['hidden'] ?? false);
         });
 
-        // Загружаем секции
         $sections = $this->getSections($pageKey, $contextKey);
 
-        // Преобразуем секции в ассоциативный массив по ID для быстрого доступа
         $sectionsById = [];
         foreach ($sections as $section) {
-            if (!($section['hidden'] ?? false)) { // Только видимые секции
+            if (!($section['hidden'] ?? false)) {
                 $sectionsById[$section['id']] = $section;
             }
         }
 
         return [
-            'fields' => array_values($visibleFields), // Перенумеровываем индексы
+            'fields' => array_values($visibleFields),
             'sections' => $sectionsById
         ];
     }
 
     /**
-     * Получить ВСЕ доступные поля (включая скрытые) из таблицы ms3_product_fields
+     * Get ALL available fields (including hidden) from ms3_product_fields table
      *
-     * @param string $pageKey Ключ страницы
-     * @param string $contextKey Ключ контекста (по умолчанию: web)
+     * @param string $pageKey Page key
+     * @param string $contextKey Context key (default: web)
      * @return array
      * @throws \Exception
      */
     public function getAllPageFields(string $pageKey, string $contextKey = 'web'): array
     {
-        // Загружаем все поля из таблицы ms3_product_fields
         $query = $this->modx->newQuery('MiniShop3\\Model\\msProductField');
         $query->sortby('sort_order', 'ASC');
 
@@ -78,7 +73,6 @@ class ConfigService
         foreach ($collection as $field) {
             $config = $field->get('config');
 
-            // xPDO 3 с phptype='json' может вернуть массив или строку
             if (is_string($config)) {
                 $config = json_decode($config, true) ?: [];
             } elseif (!is_array($config)) {
@@ -89,25 +83,17 @@ class ConfigService
             $labelFromDb = $field->get('label');
             $descriptionFromDb = $field->get('description');
 
-            // Приоритет: 1) БД, 2) лексикон, 3) fallback (name)
-
-            // Label с учетом приоритетов
             if (!empty($labelFromDb)) {
-                // Приоритет 1: из колонки label в БД
                 $label = $labelFromDb;
             } else {
-                // Приоритет 2-3: из лексикона или fallback на name
                 $lexiconKey = 'ms3_product_' . $fieldName;
                 $labelFromLexicon = $this->getLexiconValue($lexiconKey, 'minishop3', 'product');
                 $label = ($labelFromLexicon === $lexiconKey) ? $fieldName : $labelFromLexicon;
             }
 
-            // Description с учетом приоритетов
             if (!empty($descriptionFromDb)) {
-                // Приоритет 1: из колонки description в БД
                 $description = $descriptionFromDb;
             } else {
-                // Приоритет 2: из лексикона или пустая строка
                 $lexiconKey = 'ms3_product_' . $fieldName . '_help';
                 $descriptionFromLexicon = $this->getLexiconValue($lexiconKey, 'minishop3', 'product');
                 $description = ($descriptionFromLexicon === $lexiconKey) ? '' : $descriptionFromLexicon;
@@ -118,8 +104,8 @@ class ConfigService
                 'label' => $label,
                 'xtype' => $field->get('xtype'),
                 'section' => $field->get('section'),
-                'hidden' => !(bool)$field->get('visible'), // Legacy для обратной совместимости
-                'visible' => (bool)$field->get('visible'), // Новый формат
+                'hidden' => !(bool)$field->get('visible'),
+                'visible' => (bool)$field->get('visible'),
                 'required' => (bool)$field->get('required'),
                 'sort_order' => (int)$field->get('sort_order'),
                 'width' => (int)$field->get('width'),
@@ -128,7 +114,6 @@ class ConfigService
                 'is_default' => (bool)$field->get('is_default'),
             ];
 
-            // Мержим дополнительные настройки из config JSON (decimalPrecision, inputValue, etc)
             if (is_array($config) && !empty($config)) {
                 $fieldData = array_merge($fieldData, $config);
             }
@@ -142,11 +127,11 @@ class ConfigService
     }
 
     /**
-     * Сохранить массовые изменения полей в таблицу ms3_product_fields
+     * Save bulk field changes to ms3_product_fields table
      *
-     * @param string $pageKey Ключ страницы
-     * @param array $fields Массив полей с настройками
-     * @param string $contextKey Ключ контекста (по умолчанию: web)
+     * @param string $pageKey Page key
+     * @param array $fields Array of fields with settings
+     * @param string $contextKey Context key (default: web)
      * @return bool
      */
     public function saveFieldsConfig(string $pageKey, array $fields, string $contextKey = 'web'): bool
@@ -161,7 +146,6 @@ class ConfigService
                     continue;
                 }
 
-                // Находим поле в таблице
                 $field = $this->modx->getObject('MiniShop3\\Model\\msProductField', [
                     'name' => $fieldName
                 ]);
@@ -172,13 +156,9 @@ class ConfigService
                     continue;
                 }
 
-                // Обновляем основные параметры
-                // Поддерживаем оба варианта: hidden (legacy) и visible (новый)
                 if (isset($fieldData['visible'])) {
-                    // Преобразуем в integer для БД (0 или 1)
                     $field->set('visible', $fieldData['visible'] ? 1 : 0);
                 } elseif (isset($fieldData['hidden'])) {
-                    // Преобразуем hidden → visible для БД (обратная совместимость)
                     $field->set('visible', $fieldData['hidden'] ? 0 : 1);
                 }
 
@@ -210,7 +190,6 @@ class ConfigService
                     $field->set('required', (bool)$fieldData['required']);
                 }
 
-                // Обновляем JSON config (дополнительные параметры)
                 $config = [];
                 $configKeys = ['decimalPrecision', 'inputValue', 'allowNegative', 'placeholder', 'allowBlank'];
                 foreach ($configKeys as $key) {
@@ -239,12 +218,12 @@ class ConfigService
     }
 
     /**
-     * Удалить переопределение для конкретного поля
+     * Remove field override
      *
-     * @deprecated Таблица ms3_field_config_overrides удалена. Используйте ms3_product_fields для управления полями
-     * @param string $pageKey Ключ страницы
-     * @param string $fieldName Имя поля
-     * @param string $contextKey Ключ контекста (по умолчанию: web)
+     * @deprecated Table ms3_field_config_overrides removed. Use ms3_product_fields for field management
+     * @param string $pageKey Page key
+     * @param string $fieldName Field name
+     * @param string $contextKey Context key (default: web)
      * @return bool
      */
     public function removeFieldOverride(string $pageKey, string $fieldName, string $contextKey = 'web'): bool
@@ -257,27 +236,25 @@ class ConfigService
     }
 
     /**
-     * Получить значение из лексикона с fallback логикой
+     * Get value from lexicon with fallback logic
      *
-     * Логика:
-     * 1. Попробовать загрузить для текущего языка админки
-     * 2. Если не найдено - попробовать английский (en)
-     * 3. Если не найдено - вернуть сам ключ
+     * Logic:
+     * 1. Try to load for current admin language
+     * 2. If not found - try English (en)
+     * 3. If not found - return the key itself
      *
-     * @param string $key Ключ лексикона
-     * @param string $namespace Namespace лексикона (по умолчанию: minishop3)
-     * @param string $topic Topic лексикона (по умолчанию: default)
+     * @param string $key Lexicon key
+     * @param string $namespace Lexicon namespace (default: minishop3)
+     * @param string $topic Lexicon topic (default: default)
      * @return string
      */
     protected function getLexiconValue(string $key, string $namespace = 'minishop3', string $topic = 'default'): string
     {
-        // Определяем текущий язык админки
         $currentLanguage = $this->modx->getOption('cultureKey', null, 'en');
         if (!empty($this->modx->cultureKey)) {
             $currentLanguage = $this->modx->cultureKey;
         }
 
-        // Прямая загрузка лексикона из файла (обход кеша MODX)
         $lexiconPath = MODX_CORE_PATH . "components/{$namespace}/lexicon/{$currentLanguage}/{$topic}.inc.php";
 
         if (file_exists($lexiconPath)) {
@@ -289,7 +266,6 @@ class ConfigService
             }
         }
 
-        // Если не найдено в текущем языке и это не английский - пробуем английский
         if ($currentLanguage !== 'en') {
             $lexiconPathEn = MODX_CORE_PATH . "components/{$namespace}/lexicon/en/{$topic}.inc.php";
 
@@ -303,15 +279,14 @@ class ConfigService
             }
         }
 
-        // Если нигде не найдено - вернём сам ключ
         return $key;
     }
 
     /**
-     * Получить секции страницы из БД с переводами из лексикона
+     * Get page sections from database with translations from lexicon
      *
-     * @param string $pageKey Ключ страницы (product_data и т.д.)
-     * @param string $contextKey Ключ контекста (не используется пока, для будущего расширения)
+     * @param string $pageKey Page key (product_data, etc.)
+     * @param string $contextKey Context key (not used yet, for future extension)
      * @return array
      */
     public function getSections(string $pageKey, string $contextKey = 'web'): array
@@ -325,7 +300,6 @@ class ConfigService
         foreach ($items as $item) {
             $configRaw = $item->get('config');
 
-            // xPDO 3 с phptype='json' автоматически десериализует JSON в массив
             $config = is_array($configRaw) ? $configRaw : (is_string($configRaw) ? json_decode($configRaw, true) : []);
 
             $section = [
@@ -337,7 +311,6 @@ class ConfigService
                 'is_default' => (bool)$item->get('is_default'),
             ];
 
-            // Переводим lexicon_key или используем прямой label
             if (!empty($section['lexicon_key'])) {
                 $section['label'] = $this->getLexiconValue($section['lexicon_key'], 'minishop3', 'product');
             } else if (isset($config['label'])) {
@@ -349,7 +322,6 @@ class ConfigService
             $sections[] = $section;
         }
 
-        // Сортируем по sort_order
         usort($sections, function($a, $b) {
             return ($a['sort_order'] ?? 0) <=> ($b['sort_order'] ?? 0);
         });
@@ -359,10 +331,10 @@ class ConfigService
 
 
     /**
-     * Сохранить секции (порядок, видимость)
+     * Save sections (order, visibility)
      *
      * @param string $pageKey
-     * @param array $sections Массив секций с настройками
+     * @param array $sections Array of sections with settings
      * @return bool
      */
     public function saveSections(string $pageKey, array $sections): bool
@@ -377,27 +349,23 @@ class ConfigService
 
                 $isDefault = $section['is_default'] ?? false;
                 $hidden = isset($section['hidden']) ? (bool)$section['hidden'] : false;
-                $sortOrder = $index; // Порядок определяется позицией в массиве
+                $sortOrder = $index;
 
-                // Ищем существующую запись
                 $override = $this->modx->getObject('MiniShop3\\Model\\msPageSection', [
                     'page_key' => $pageKey,
                     'section_key' => $sectionKey,
                 ]);
 
                 if (!$override) {
-                    // Создаём новую запись
                     $override = $this->modx->newObject('MiniShop3\\Model\\msPageSection');
                     $override->set('page_key', $pageKey);
                     $override->set('section_key', $sectionKey);
                     $override->set('is_default', $isDefault);
                 }
 
-                // Обновляем параметры
                 $override->set('hidden', $hidden);
                 $override->set('sort_order', $sortOrder);
 
-                // Сохраняем дополнительную конфигурацию в JSON
                 $config = [];
                 if (isset($section['lexicon_key'])) {
                     $config['lexicon_key'] = $section['lexicon_key'];
@@ -426,7 +394,7 @@ class ConfigService
     }
 
     /**
-     * Удалить секцию из БД
+     * Delete section from database
      *
      * @param string $pageKey
      * @param string $sectionKey
@@ -441,7 +409,7 @@ class ConfigService
             ]);
 
             if (!$section) {
-                return true; // Секции не существует
+                return true;
             }
 
             return $section->remove();

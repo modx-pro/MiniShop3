@@ -1,7 +1,7 @@
 /**
- * Entry point для Notification Center виджета (ES Module)
+ * Entry point for Notification Center widget (ES Module)
  *
- * Экспортирует функцию инициализации для монтирования Vue приложения
+ * Exports initialization function for mounting Vue application
  */
 
 import '../scss/primevue.scss';
@@ -17,16 +17,14 @@ import ToastService from 'primevue/toastservice';
 import NotificationsGrid from '../components/NotificationsGrid.vue';
 
 /**
- * Создает и настраивает Vue приложение
+ * Creates and configures Vue application
  */
 function createVueApp() {
   const app = createApp(NotificationsGrid);
 
-  // Pinia
   const pinia = createPinia();
   app.use(pinia);
 
-  // PrimeVue
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
@@ -36,7 +34,6 @@ function createVueApp() {
     }
   });
 
-  // PrimeVue сервисы
   app.use(ConfirmationService);
   app.use(ToastService);
 
@@ -44,8 +41,8 @@ function createVueApp() {
 }
 
 /**
- * Инициализация виджета
- * Вызывается при загрузке страницы Notification Center
+ * Widget initialization
+ * Called when Notification Center page loads
  */
 export function init(selector = '#ms3-notifications-vue-wrapper') {
   const $el = document.querySelector(selector);
@@ -54,7 +51,6 @@ export function init(selector = '#ms3-notifications-vue-wrapper') {
     return null;
   }
 
-  // Проверяем, не смонтирован ли уже
   if ($el.dataset.vApp === 'true') {
     return null;
   }
@@ -67,8 +63,8 @@ export function init(selector = '#ms3-notifications-vue-wrapper') {
 }
 
 /**
- * Ждем, пока ExtJS создаст DOM элемент
- * Используем MutationObserver для отслеживания появления элемента
+ * Wait for ExtJS to create DOM element
+ * Uses MutationObserver to track element appearance
  */
 function waitForElement(selector, callback) {
   const element = document.querySelector(selector);
@@ -93,7 +89,7 @@ function waitForElement(selector, callback) {
 }
 
 /**
- * Автоматическая инициализация при загрузке DOM
+ * Automatic initialization on DOM load
  */
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {

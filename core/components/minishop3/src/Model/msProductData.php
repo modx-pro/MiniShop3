@@ -144,11 +144,9 @@ class msProductData extends xPDOSimpleObject
             if (!is_array($values)) {
                 $values = [$values];
             }
-            // fix duplicate, empty option values
             $values = array_map('trim', $values);
             $values = array_keys(array_flip($values));
             $values = array_diff($values, ['']);
-            //sort($values);
 
             if (empty($values)) {
                 $values = null;
@@ -197,8 +195,6 @@ class msProductData extends xPDOSimpleObject
      */
     public function rankProductImages()
     {
-        // Этот метод сейчас не используется, ранжирование встроено в updateProductImage
-        // Оставлен для обратной совместимости
     }
 
     /**
@@ -321,7 +317,7 @@ class msProductData extends xPDOSimpleObject
     }
 
     /**
-     * Получить сервис данных товара (lazy loading)
+     * Get product data service (lazy loading)
      *
      * @return ProductDataService
      */
@@ -339,7 +335,7 @@ class msProductData extends xPDOSimpleObject
     }
 
     /**
-     * Получить сервис изображений товара (lazy loading)
+     * Get product image service (lazy loading)
      *
      * @return ProductImageService
      */

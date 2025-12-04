@@ -11,7 +11,7 @@
       :loading="loading"
       :showClear="showClear"
       :filter="enableFilter"
-      filterPlaceholder="Поиск производителя..."
+      filterPlaceholder="Search vendor..."
       :emptyMessage="emptyMessage"
       :emptyFilterMessage="emptyFilterMessage"
       class="w-full"
@@ -53,7 +53,7 @@ const props = defineProps({
    */
   placeholder: {
     type: String,
-    default: 'Выберите производителя'
+    default: 'Select vendor'
   },
 
   /**
@@ -92,12 +92,12 @@ const wrapperRef = ref(null)
 // Computed
 const emptyMessage = computed(() => {
   return vendors.value.length === 0
-    ? 'Производители не найдены. Добавьте производителя в настройках компонента.'
-    : 'Нет результатов'
+    ? 'No vendors found. Add a vendor in component settings.'
+    : 'No results'
 })
 
 const emptyFilterMessage = computed(() => {
-  return 'Производитель не найден'
+  return 'Vendor not found'
 })
 
 /**
@@ -177,7 +177,7 @@ onMounted(() => {
 </style>
 
 <style>
-/* Глобальные стили для dropdown empty message */
+/* Global styles for dropdown empty message */
 .vendor-combo-wrapper .p-dropdown-panel {
   min-width: 400px !important;
   max-width: 500px !important;
@@ -195,7 +195,7 @@ onMounted(() => {
   max-width: 100%;
 }
 
-/* Строка поиска в dropdown */
+/* Search line in dropdown */
 .vendor-combo-wrapper .p-dropdown-panel .p-dropdown-filter-container {
   width: 100% !important;
   padding: 0.5rem;
@@ -208,7 +208,7 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-/* Для панели dropdown */
+/* For dropdown panel */
 .p-dropdown-panel .p-dropdown-items-wrapper {
   overflow-wrap: break-word;
   max-width: 100%;
@@ -219,7 +219,7 @@ onMounted(() => {
   word-wrap: break-word !important;
 }
 
-/* Контейнер элементов списка */
+/* List items container */
 .vendor-combo-wrapper .p-dropdown-panel .p-dropdown-items {
   max-width: 100%;
 }

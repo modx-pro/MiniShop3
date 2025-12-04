@@ -101,9 +101,9 @@ class Customer
         ];
 
         $this->validationMessages = [
-            'required' => 'Обязательно для заполнения',
-            'email' => 'Не является email',
-            'min' => 'Минимум :min символов',
+            'required' => 'Required',
+            'email' => 'Invalid email',
+            'min' => 'Minimum :min characters',
         ];
 
         if (!empty($rules)) {
@@ -182,8 +182,6 @@ class Customer
             return $this->error('ms3_customer_key_empty');
         }
 
-        //TODO Реализовать событие ПередДобавлениемПоля
-
         // $response = $$this->ms3->utils->invokeEvent('msOnBeforeAddToOrder', [
         //            'key' => $key,
         //            'value' => $value,
@@ -209,7 +207,7 @@ class Customer
         } else {
             $userId = 0;
 
-            // TODO как правильно определить текущего системного пользователя, если тот авторизован?
+            // TODO how to correctly determine current system user if authenticated?
             if ($this->modx->user->hasSessionContext($this->ms3->config['ctx'])) {
                 $userId = $this->modx->user->get('id');
             }
@@ -221,7 +219,7 @@ class Customer
         }
         $msCustomer->save();
 
-        //TODO Реализовать событие ПослеДобавлениемПоля
+        // TODO Implement event after adding field
 
         //$response = $$this->ms3->utils->invokeEvent('msOnAddToCustomer', [
         //                    'key' => $key,
@@ -259,9 +257,6 @@ class Customer
             return $value;
         }
 
-        // TODO валидировать наличие $key в модели msCustomer + разрешение на запись
-        //TODO реализовать событие ДоВалидации
-
         // $eventParams = [
         //            'key' => $key,
         //            'value' => $value,
@@ -269,10 +264,6 @@ class Customer
         //        ];
         //        $response = $this->invokeEvent('msOnBeforeValidateCustomerValue', $eventParams);
         //        $value = $response['data']['value'];
-
-        // TODO валидировать $value
-
-        // TODO реализовать событие ПослеВалидации
 
         //$eventParams = [
         //            'key' => $key,
@@ -286,37 +277,28 @@ class Customer
     }
 
     /**
-     * Returns id for current customer. If customer is not exists, registers him and returns id.
+     * Get customer ID for order (legacy method)
      *
-     * @return integer $id
-     */
-    /**
-     * Получить ID клиента для заказа (legacy метод)
-     *
-     * @deprecated Используйте getOrCreate() вместо этого метода
-     * @return int ID клиента или 0 если не удалось найти/создать
+     * @deprecated Use getOrCreate() instead
+     * @return int Customer ID or 0 if not found/created
      */
     public function getId(): int
     {
-        // Делегируем вызов новому методу getOrCreate()
         return $this->getOrCreate();
     }
 
     public function create(array $customerData): msCustomer|null
     {
-        //TODO  event msOnBeforeCreateCustomer
         $msCustomer = $this->modx->newObject(msCustomer::class, $customerData);
         $save = $msCustomer->save();
         if (!$save) {
             return null;
         }
-        //TODO  event msOnCreateCustomer
         return $msCustomer;
     }
 
     public function addAddress(array $customerAddressData): bool
     {
-        // Валидация обязательных полей
         if (empty($customerAddressData['customer_id'])) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Customer::addAddress] customer_id is required');
             return false;
@@ -332,7 +314,6 @@ class Customer
             return false;
         }
 
-        // Генерация имени адреса (если не передано)
         if (empty($customerAddressData['name'])) {
             $nameParts = array_filter([
                 $customerAddressData['city'] ?? '',
@@ -342,11 +323,9 @@ class Customer
             $customerAddressData['name'] = implode(', ', $nameParts);
         }
 
-        // Генерация хеша для определения дубликатов
         $addressHash = $this->generateAddressHash($customerAddressData);
         $customerAddressData['hash'] = $addressHash;
 
-        // Проверка дубликата по хешу и customer_id
         $isExists = $this->modx->getCount(msCustomerAddress::class, [
             'customer_id' => $customerAddressData['customer_id'],
             'hash' => $addressHash,
@@ -357,12 +336,10 @@ class Customer
             return false;
         }
 
-        // Добавление timestamp
         if (empty($customerAddressData['createdon'])) {
             $customerAddressData['createdon'] = date('Y-m-d H:i:s');
         }
 
-        // Создание адреса
         $msCustomerAddress = $this->modx->newObject(msCustomerAddress::class, $customerAddressData);
 
         if (!$msCustomerAddress->save()) {
@@ -376,10 +353,10 @@ class Customer
     }
 
     /**
-     * Генерация хеша адреса для определения дубликатов
+     * Generate address hash for duplicate detection
      *
-     * @param array $data Данные адреса
-     * @return string MD5 хеш адреса
+     * @param array $data Address data
+     * @return string MD5 hash of address
      */
     protected function generateAddressHash(array $data): string
     {
@@ -407,23 +384,22 @@ class Customer
     }
 
     /**
-     * Получить или создать клиента для заказа
+     * Get or create customer for order
      *
-     * Основной метод для получения customer_id при оформлении заказа.
-     * Последовательность поиска/создания:
-     * 1. Поиск по токену
-     * 2. Поиск по email из данных заказа
-     * 3. Создание через RegisterService (если включена автоматическая регистрация)
-     * 4. Создание без пароля (fallback для обратной совместимости)
+     * Main method to get customer_id during checkout.
+     * Search/creation sequence:
+     * 1. Search by token
+     * 2. Search by email from order data
+     * 3. Create via RegisterService (if auto-registration enabled)
+     * 4. Create without password (fallback for backward compatibility)
      *
-     * @param array|null $orderData Данные заказа (если null, будут получены из order->get())
-     * @return int ID клиента или 0 если не удалось найти/создать
+     * @param array|null $orderData Order data (if null, will be fetched from order->get())
+     * @return int Customer ID or 0 if not found/created
      */
     public function getOrCreate(?array $orderData = null): int
     {
         $msCustomer = null;
 
-        // Событие перед получением клиента (позволяет плагинам переопределить логику)
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetOrderCustomer', [
             'controller' => $this->ms3->order,
             'msCustomer' => $msCustomer,
@@ -432,12 +408,9 @@ class Customer
             return 0;
         }
 
-        // 1. Поиск клиента по токену
         $msCustomer = $this->getObject();
 
-        // 2. Если не найден по токену - пытаемся найти или создать
         if (empty($msCustomer)) {
-            // Получаем данные заказа
             if ($orderData === null) {
                 $orderResponse = $this->ms3->order->get();
                 $orderData = $orderResponse['data']['order'] ?? [];
@@ -445,24 +418,20 @@ class Customer
 
             $email = $orderData['address_email'] ?? '';
 
-            // 3. Поиск клиента по email
             if (!empty($email)) {
                 $msCustomer = $this->findByEmail($email);
 
                 if ($msCustomer) {
-                    // Обновляем токен существующего клиента
                     $msCustomer->set('token', $this->token);
                     $msCustomer->save();
                 }
             }
 
-            // 4. Создание нового клиента
             if (empty($msCustomer)) {
                 $msCustomer = $this->createFromOrderData($orderData);
             }
         }
 
-        // Событие после получения клиента
         $response = $this->ms3->utils->invokeEvent('msOnGetOrderCustomer', [
             'controller' => $this->ms3->order,
             'msCustomer' => $msCustomer,
@@ -479,10 +448,10 @@ class Customer
     }
 
     /**
-     * Поиск клиента по email
+     * Find customer by email
      *
-     * @param string $email Email клиента
-     * @return msCustomer|null Объект клиента или null
+     * @param string $email Customer email
+     * @return msCustomer|null Customer object or null
      */
     protected function findByEmail(string $email): ?msCustomer
     {
@@ -494,15 +463,15 @@ class Customer
     }
 
     /**
-     * Создание клиента из данных заказа
+     * Create customer from order data
      *
-     * Логика:
-     * 1. Если включена автоматическая регистрация (ms3_customer_auto_register_on_order = true)
-     *    → создаёт через RegisterService (с паролем, верификацией email)
-     * 2. Fallback: создаёт без пароля (для обратной совместимости)
+     * Logic:
+     * 1. If auto-registration enabled (ms3_customer_auto_register_on_order = true)
+     *    → creates via RegisterService (with password, email verification)
+     * 2. Fallback: creates without password (for backward compatibility)
      *
-     * @param array $orderData Данные заказа
-     * @return msCustomer|null Созданный клиент или null
+     * @param array $orderData Order data
+     * @return msCustomer|null Created customer or null
      */
     protected function createFromOrderData(array $orderData): ?msCustomer
     {
@@ -516,7 +485,6 @@ class Customer
         $autoRegister = (bool)$this->modx->getOption('ms3_customer_auto_register_on_order', null, true);
         $autoLogin = (bool)$this->modx->getOption('ms3_customer_auto_login_on_order', null, true);
 
-        // Попытка создания через RegisterService (с паролем)
         if ($autoRegister) {
             /** @var \MiniShop3\Services\Customer\RegisterService $registerService */
             $registerService = $this->modx->services->get('ms3_register_service');
@@ -537,20 +505,17 @@ class Customer
                 if ($registerResult['success']) {
                     $msCustomer = $registerResult['customer'];
 
-                    // Автоматическая авторизация (если включена настройка)
                     if ($autoLogin) {
                         $_SESSION['ms3']['customer_id'] = $msCustomer->id;
                         $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
                     }
                 } else {
-                    // Если регистрация не удалась (например, email уже занят), пытаемся найти клиента
                     $msCustomer = $this->findByEmail($email);
 
                     if ($msCustomer) {
                         $msCustomer->set('token', $this->token);
                         $msCustomer->save();
 
-                        // Автоматическая авторизация для существующего клиента
                         if ($autoLogin) {
                             $_SESSION['ms3']['customer_id'] = $msCustomer->id;
                             $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
@@ -560,7 +525,6 @@ class Customer
             }
         }
 
-        // Fallback: старый метод создания (без пароля, для обратной совместимости)
         if (empty($msCustomer)) {
             $customerData = [
                 'first_name' => $orderData['address_first_name'] ?? '',

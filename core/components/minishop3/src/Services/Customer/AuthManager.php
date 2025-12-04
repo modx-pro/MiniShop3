@@ -9,20 +9,20 @@ use MiniShop3\Model\msCustomerToken;
 use MODX\Revolution\modX;
 
 /**
- * AuthManager - центральный сервис аутентификации
+ * AuthManager - central authentication service
  *
- * Управляет регистрацией и использованием провайдеров аутентификации.
- * Паттерн: Strategy + Registry.
+ * Manages registration and usage of authentication providers.
+ * Pattern: Strategy + Registry.
  *
- * Пример использования:
+ * Example usage:
  * ```php
  * $authManager = $modx->services->get('ms3_auth_manager');
  *
- * // Регистрация провайдера
+ * // Register provider
  * $authManager->registerProvider(new PasswordAuthProvider($modx));
  * $authManager->registerProvider(new SmsAuthProvider($modx));
  *
- * // Аутентификация (автоматически выберет подходящий провайдер)
+ * // Authenticate (automatically selects suitable provider)
  * $customer = $authManager->authenticate([
  *     'email' => 'user@example.com',
  *     'password' => 'secret123'
@@ -40,7 +40,7 @@ class AuthManager
     /** @var modX */
     protected modX $modx;
 
-    /** @var AuthProviderInterface[] Зарегистрированные провайдеры аутентификации */
+    /** @var AuthProviderInterface[] Registered authentication providers */
     protected array $providers = [];
 
     /**
@@ -50,12 +50,11 @@ class AuthManager
     {
         $this->modx = $modx;
 
-        // Регистрируем провайдер аутентификации по паролю по умолчанию
         $this->registerProvider(new PasswordAuthProvider($modx));
     }
 
     /**
-     * Регистрация провайдера аутентификации
+     * Register authentication provider
      *
      * @param AuthProviderInterface $provider
      * @return void
@@ -72,9 +71,9 @@ class AuthManager
     }
 
     /**
-     * Получить провайдер по имени
+     * Get provider by name
      *
-     * @param string $name Имя провайдера (password, sms, oauth_google и т.д.)
+     * @param string $name Provider name (password, sms, oauth_google, etc.)
      * @return AuthProviderInterface|null
      */
     public function getProvider(string $name): ?AuthProviderInterface
@@ -83,7 +82,7 @@ class AuthManager
     }
 
     /**
-     * Получить все зарегистрированные провайдеры
+     * Get all registered providers
      *
      * @return AuthProviderInterface[]
      */
@@ -93,13 +92,13 @@ class AuthManager
     }
 
     /**
-     * Аутентификация с автоматическим выбором провайдера
+     * Authenticate with automatic provider selection
      *
-     * Перебирает зарегистрированные провайдеры, находит первый, который
-     * поддерживает переданные credentials (через метод supports()), и вызывает его.
+     * Iterates through registered providers, finds the first one that
+     * supports the provided credentials (via supports() method), and invokes it.
      *
-     * @param array $credentials Данные для аутентификации
-     * @return msCustomer|null Клиент при успехе, null при ошибке
+     * @param array $credentials Authentication data
+     * @return msCustomer|null Customer on success, null on error
      */
     public function authenticate(array $credentials): ?msCustomer
     {
@@ -113,7 +112,6 @@ class AuthManager
                 $customer = $provider->authenticate($credentials);
 
                 if ($customer) {
-                    // Проверяем, не заблокирован ли клиент
                     if ($customer->get('is_blocked')) {
                         $blockedUntil = $customer->get('blocked_until');
                         if ($blockedUntil && strtotime($blockedUntil) > time()) {
@@ -123,14 +121,12 @@ class AuthManager
                             );
                             return null;
                         }
-                        // Блокировка истекла - снимаем
                         $customer->set('is_blocked', false);
                         $customer->set('blocked_until', null);
                         $customer->set('failed_login_attempts', 0);
                         $customer->save();
                     }
 
-                    // Проверяем, активен ли клиент
                     if (!$customer->get('is_active')) {
                         $this->modx->log(
                             modX::LOG_LEVEL_WARN,
@@ -139,7 +135,6 @@ class AuthManager
                         return null;
                     }
 
-                    // Успешная аутентификация - обновляем статистику
                     $customer->set('last_login_at', date('Y-m-d H:i:s'));
                     $customer->set('failed_login_attempts', 0);
                     $customer->save();
@@ -163,11 +158,11 @@ class AuthManager
     }
 
     /**
-     * Создать токен для клиента
+     * Create token for customer
      *
      * @param msCustomer $customer
-     * @param string $type Тип токена (api, refresh, magic_link, email_verification)
-     * @param int $ttl TTL в секундах (по умолчанию 24 часа)
+     * @param string $type Token type (api, refresh, magic_link, email_verification)
+     * @param int $ttl TTL in seconds (default 24 hours)
      * @return msCustomerToken|null
      */
     public function createToken(msCustomer $customer, string $type = 'api', int $ttl = 86400): ?msCustomerToken
@@ -175,7 +170,7 @@ class AuthManager
         /** @var msCustomerToken $token */
         $token = $this->modx->newObject(msCustomerToken::class);
 
-        $tokenString = bin2hex(random_bytes(64)); // 128 символов
+        $tokenString = bin2hex(random_bytes(64));
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
         $token->set('customer_id', $customer->id);
@@ -200,10 +195,10 @@ class AuthManager
     }
 
     /**
-     * Проверить токен и получить клиента
+     * Validate token and get customer
      *
-     * @param string $tokenString Строка токена
-     * @param string $type Тип токена (api, refresh, magic_link, email_verification)
+     * @param string $tokenString Token string
+     * @param string $type Token type (api, refresh, magic_link, email_verification)
      * @return msCustomer|null
      */
     public function validateToken(string $tokenString, string $type = 'api'): ?msCustomer
@@ -222,7 +217,6 @@ class AuthManager
             return null;
         }
 
-        // Проверка истечения срока
         $expiresAt = strtotime($token->get('expires_at'));
         if ($expiresAt < time()) {
             $this->modx->log(
@@ -233,7 +227,6 @@ class AuthManager
             return null;
         }
 
-        // Проверка использования (для одноразовых токенов)
         if (in_array($type, ['magic_link', 'email_verification']) && $token->get('used_at')) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
@@ -253,7 +246,6 @@ class AuthManager
             return null;
         }
 
-        // Отмечаем использование для одноразовых токенов
         if (in_array($type, ['magic_link', 'email_verification'])) {
             $token->set('used_at', date('Y-m-d H:i:s'));
             $token->save();
@@ -263,11 +255,11 @@ class AuthManager
     }
 
     /**
-     * Удалить все токены клиента определенного типа
+     * Revoke all customer tokens of specific type
      *
      * @param msCustomer $customer
-     * @param string|null $type Тип токена (null = все типы)
-     * @return int Количество удаленных токенов
+     * @param string|null $type Token type (null = all types)
+     * @return int Number of revoked tokens
      */
     public function revokeTokens(msCustomer $customer, ?string $type = null): int
     {
@@ -294,9 +286,9 @@ class AuthManager
     }
 
     /**
-     * Очистить истекшие токены (для cron)
+     * Clean up expired tokens (for cron)
      *
-     * @return int Количество удаленных токенов
+     * @return int Number of deleted tokens
      */
     public function cleanupExpiredTokens(): int
     {
@@ -324,9 +316,9 @@ class AuthManager
     }
 
     /**
-     * Обработать неудачную попытку входа
+     * Handle failed login attempt
      *
-     * Увеличивает счетчик неудачных попыток, блокирует клиента при превышении лимита
+     * Increments failed attempts counter, blocks customer when limit exceeded
      *
      * @param msCustomer $customer
      * @return void
@@ -334,7 +326,7 @@ class AuthManager
     public function handleFailedLogin(msCustomer $customer): void
     {
         $maxAttempts = (int)$this->modx->getOption('ms3_customer_max_login_attempts', null, 5);
-        $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 3600); // 1 час
+        $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 3600);
 
         $attempts = $customer->get('failed_login_attempts') + 1;
         $customer->set('failed_login_attempts', $attempts);

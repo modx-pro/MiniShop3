@@ -1,14 +1,14 @@
 /**
- * UI обработчики для заказа
+ * UI handlers for order
  *
- * Управляет формами заказа: автосохранение полей, валидация, оформление.
+ * Manages order forms: auto-save fields, validation, submission.
  */
 class OrderUI {
   /**
-   * @param {OrderAPI} orderAPI - API для работы с заказом
-   * @param {Object} hooks - Система хуков
-   * @param {Object} message - Система уведомлений
-   * @param {Object} config - Конфигурация
+   * @param {OrderAPI} orderAPI - Order API instance
+   * @param {Object} hooks - Hook system
+   * @param {Object} message - Message system
+   * @param {Object} config - Configuration
    */
   constructor (orderAPI, hooks, message, config) {
     this.order = orderAPI
@@ -18,25 +18,23 @@ class OrderUI {
   }
 
   /**
-   * Инициализация UI обработчиков
+   * Initialize UI handlers
    */
   init () {
-    // Находим все формы заказа
     document.querySelectorAll('.ms3_order_form').forEach(form => {
       this.initForm(form)
     })
   }
 
   /**
-   * Инициализация одной формы
+   * Initialize single form
    *
-   * @param {HTMLFormElement} form - Форма заказа
+   * @param {HTMLFormElement} form - Order form
    */
   initForm (form) {
     const inputs = form.querySelectorAll('input, textarea, select')
 
     inputs.forEach(input => {
-      // Разные обработчики для разных типов полей
       if (input.name === 'address_hash') {
         this.initAddressInput(input)
       } else {
@@ -46,16 +44,15 @@ class OrderUI {
   }
 
   /**
-   * Обработчик для обычных полей (автосохранение при изменении)
+   * Handler for regular fields (auto-save on change)
    *
-   * @param {HTMLInputElement} input - Поле ввода
+   * @param {HTMLInputElement} input - Input field
    */
   initRegularInput (input) {
     input.addEventListener('change', async () => {
       const parent = input.closest('div')
       if (!parent) return
 
-      // Сброс состояния валидации
       parent.classList.remove('was-validated')
       input.classList.remove('is-invalid')
       const feedback = parent.querySelector('.invalid-feedback')
@@ -63,32 +60,29 @@ class OrderUI {
         feedback.textContent = ''
       }
 
-      // Отправка данных на сервер
       const response = await this.handleAdd(input.name, input.value)
 
       if (response.success) {
         parent.classList.add('was-validated')
 
-        // Обновляем значение поля ответом от сервера
         if (response.data && response.data[input.name] !== undefined) {
           input.value = response.data[input.name]
         }
       } else {
-        // Показываем ошибку валидации
         parent.classList.add('was-validated')
         input.classList.add('is-invalid')
 
         if (feedback) {
-          feedback.textContent = response.message || 'Ошибка валидации'
+          feedback.textContent = response.message || 'Validation error'
         }
       }
     })
   }
 
   /**
-   * Обработчик для поля адреса
+   * Handler for address field
    *
-   * @param {HTMLInputElement} input - Поле адреса
+   * @param {HTMLInputElement} input - Address field
    */
   initAddressInput (input) {
     input.addEventListener('change', async () => {
@@ -96,28 +90,23 @@ class OrderUI {
       const parent = input.closest('div')
       if (!parent) return
 
-      // Сброс состояния валидации
       parent.classList.remove('was-validated')
       input.classList.remove('is-invalid')
       const feedback = parent.querySelector('.invalid-feedback')
       if (feedback) {
         feedback.textContent = ''
       }
-
-      // Отправка данных на сервер (через CustomerAPI)
-      // TODO: Требуется доступ к CustomerAPI
     })
   }
 
   /**
-   * Добавление/обновление поля заказа
+   * Add/update order field
    *
-   * @param {string} key - Ключ поля
-   * @param {string} value - Значение
+   * @param {string} key - Field key
+   * @param {string} value - Value
    * @returns {Promise<Object>}
    */
   async handleAdd (key, value) {
-    // Хук BEFORE
     const hookData = { key, value }
     await this.hooks.runHooks('beforeAddOrder', hookData)
 
@@ -126,13 +115,10 @@ class OrderUI {
     }
 
     try {
-      // API запрос
       const response = await this.order.add(key, value)
 
-      // Хук AFTER
       await this.hooks.runHooks('afterAddOrder', { key, value, response })
 
-      // Уведомление
       if (response.success && response.message) {
         this.message.success(response.message)
       }
@@ -143,18 +129,17 @@ class OrderUI {
 
       return response
     } catch (error) {
-      this.message.error('Произошла ошибка')
+      this.message.error('An error occurred')
       return { success: false, message: error.message }
     }
   }
 
   /**
-   * Оформление заказа
+   * Submit order
    *
    * @returns {Promise<Object>}
    */
   async handleSubmit () {
-    // Хук BEFORE
     const hookData = {}
     await this.hooks.runHooks('beforeSubmitOrder', hookData)
 
@@ -163,19 +148,15 @@ class OrderUI {
     }
 
     try {
-      // API запрос
       const response = await this.order.submit()
 
-      // Хук AFTER
       await this.hooks.runHooks('afterSubmitOrder', { response })
 
-      // Редирект если сервер прислал
       if (response.success && response.data && response.data.redirect) {
         window.location.href = response.data.redirect
         return response
       }
 
-      // Уведомление
       if (response.success && response.message) {
         this.message.success(response.message)
       }
@@ -183,7 +164,6 @@ class OrderUI {
       if (!response.success && response.message) {
         this.message.error(response.message)
 
-        // Подсветка незаполненных полей
         if (response.errors && Array.isArray(response.errors)) {
           this.highlightErrors(response.errors)
         }
@@ -191,18 +171,17 @@ class OrderUI {
 
       return response
     } catch (error) {
-      this.message.error('Произошла ошибка при оформлении заказа')
+      this.message.error('Order submission error')
       return { success: false }
     }
   }
 
   /**
-   * Очистка заказа
+   * Clear order
    *
    * @returns {Promise<Object>}
    */
   async handleClean () {
-    // Хук BEFORE
     const hookData = {}
     await this.hooks.runHooks('beforeCleanOrder', hookData)
 
@@ -211,13 +190,10 @@ class OrderUI {
     }
 
     try {
-      // API запрос
       const response = await this.order.clean()
 
-      // Хук AFTER
       await this.hooks.runHooks('afterCleanOrder', { response })
 
-      // Уведомление
       if (response.success && response.message) {
         this.message.success(response.message)
       }
@@ -226,7 +202,6 @@ class OrderUI {
         this.message.error(response.message)
       }
 
-      // Очищаем все поля формы после успешной очистки
       if (response.success) {
         document.querySelectorAll('.ms3_order_form').forEach(form => {
           form.reset()
@@ -235,25 +210,22 @@ class OrderUI {
 
       return response
     } catch (error) {
-      this.message.error('Произошла ошибка при очистке заказа')
+      this.message.error('Order clearing error')
       return { success: false }
     }
   }
 
   /**
-   * Подсветка полей с ошибками
+   * Highlight fields with errors
    *
-   * @param {Array<string>} errors - Массив имен полей с ошибками
+   * @param {Array<string>} errors - Array of field names with errors
    */
   highlightErrors (errors) {
-    // Сначала убираем все существующие подсветки
     document.querySelectorAll('.ms3_field_error').forEach(el => {
       el.classList.remove('ms3_field_error')
     })
 
-    // Подсвечиваем поля из массива errors
     errors.forEach(fieldName => {
-      // Ищем поле по name (может быть с префиксом address_)
       const selectors = [
         `[name="${fieldName}"]`,
         `[name="address_${fieldName}"]`,
@@ -265,7 +237,6 @@ class OrderUI {
         if (field) {
           field.classList.add('ms3_field_error')
 
-          // Убираем подсветку при фокусе на поле
           field.addEventListener('focus', function removeError () {
             field.classList.remove('ms3_field_error')
             field.removeEventListener('focus', removeError)

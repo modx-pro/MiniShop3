@@ -1,19 +1,19 @@
 /**
- * Pinia Store для работы с продуктами MiniShop3
+ * Pinia Store for working with MiniShop3 products
  *
- * Пример использования в компоненте:
+ * Usage example in component:
  * ```js
  * import { useProductStore } from '@/stores/useProductStore';
  *
  * const productStore = useProductStore();
  *
- * // Загрузить список продуктов
+ * // Fetch product list
  * await productStore.fetchProducts({ limit: 20 });
  *
- * // Получить продукт по ID
+ * // Fetch product by ID
  * await productStore.fetchProduct(123);
  *
- * // Создать продукт
+ * // Create product
  * await productStore.createProduct({ pagetitle: 'New Product', price: 100 });
  * ```
  */
@@ -23,42 +23,37 @@ import { useApi } from '../composables/useApi';
 
 export const useProductStore = defineStore('product', {
   state: () => ({
-    // Список продуктов
     products: [],
     total: 0,
-
-    // Текущий продукт
     currentProduct: null,
-
-    // Состояния загрузки
     loading: false,
     error: null
   }),
 
   getters: {
     /**
-     * Получить продукт по ID из state
+     * Get product by ID from state
      */
     getProductById: (state) => (id) => {
       return state.products.find(product => product.id === id);
     },
 
     /**
-     * Проверка есть ли загруженные продукты
+     * Check if products are loaded
      */
     hasProducts: (state) => state.products.length > 0,
 
     /**
-     * Проверка загружен ли текущий продукт
+     * Check if current product is loaded
      */
     hasCurrentProduct: (state) => state.currentProduct !== null
   },
 
   actions: {
     /**
-     * Загрузить список продуктов
+     * Fetch product list
      *
-     * @param {Object} params - Параметры фильтрации (limit, offset, query, category_id и т.д.)
+     * @param {Object} params - Filter parameters (limit, offset, query, category_id, etc.)
      * @returns {Promise<void>}
      */
     async fetchProducts(params = {}) {
@@ -69,7 +64,6 @@ export const useProductStore = defineStore('product', {
         const { get } = useApi();
         const response = await get('/api/mgr/products', params);
 
-        // Предполагаем что API возвращает { results: [], total: N }
         if (response.results) {
           this.products = response.results;
           this.total = response.total || response.results.length;
@@ -91,9 +85,9 @@ export const useProductStore = defineStore('product', {
     },
 
     /**
-     * Загрузить один продукт по ID
+     * Fetch single product by ID
      *
-     * @param {number} id - ID продукта
+     * @param {number} id - Product ID
      * @returns {Promise<void>}
      */
     async fetchProduct(id) {
@@ -106,7 +100,6 @@ export const useProductStore = defineStore('product', {
 
         this.currentProduct = response;
 
-        // Также добавляем/обновляем в списке
         const index = this.products.findIndex(p => p.id === id);
         if (index !== -1) {
           this.products[index] = response;
@@ -124,10 +117,10 @@ export const useProductStore = defineStore('product', {
     },
 
     /**
-     * Создать новый продукт
+     * Create new product
      *
-     * @param {Object} data - Данные продукта
-     * @returns {Promise<Object>} - Созданный продукт
+     * @param {Object} data - Product data
+     * @returns {Promise<Object>} - Created product
      */
     async createProduct(data) {
       this.loading = true;
@@ -137,7 +130,6 @@ export const useProductStore = defineStore('product', {
         const { post } = useApi();
         const response = await post('/api/mgr/products', data);
 
-        // Добавляем в список
         if (response.id) {
           this.products.unshift(response);
           this.total++;
@@ -155,11 +147,11 @@ export const useProductStore = defineStore('product', {
     },
 
     /**
-     * Обновить существующий продукт
+     * Update existing product
      *
-     * @param {number} id - ID продукта
-     * @param {Object} data - Данные для обновления
-     * @returns {Promise<Object>} - Обновленный продукт
+     * @param {number} id - Product ID
+     * @param {Object} data - Data to update
+     * @returns {Promise<Object>} - Updated product
      */
     async updateProduct(id, data) {
       this.loading = true;
@@ -169,13 +161,11 @@ export const useProductStore = defineStore('product', {
         const { put } = useApi();
         const response = await put(`/api/mgr/products/${id}`, data);
 
-        // Обновляем в списке
         const index = this.products.findIndex(p => p.id === id);
         if (index !== -1) {
           this.products[index] = response;
         }
 
-        // Обновляем текущий продукт если это он
         if (this.currentProduct?.id === id) {
           this.currentProduct = response;
         }
@@ -192,9 +182,9 @@ export const useProductStore = defineStore('product', {
     },
 
     /**
-     * Удалить продукт
+     * Delete product
      *
-     * @param {number} id - ID продукта
+     * @param {number} id - Product ID
      * @returns {Promise<void>}
      */
     async deleteProduct(id) {
@@ -205,14 +195,12 @@ export const useProductStore = defineStore('product', {
         const { delete: del } = useApi();
         await del(`/api/mgr/products/${id}`);
 
-        // Удаляем из списка
         const index = this.products.findIndex(p => p.id === id);
         if (index !== -1) {
           this.products.splice(index, 1);
           this.total--;
         }
 
-        // Очищаем текущий продукт если это он
         if (this.currentProduct?.id === id) {
           this.currentProduct = null;
         }
@@ -227,21 +215,21 @@ export const useProductStore = defineStore('product', {
     },
 
     /**
-     * Очистить текущий продукт
+     * Clear current product
      */
     clearCurrentProduct() {
       this.currentProduct = null;
     },
 
     /**
-     * Очистить ошибки
+     * Clear errors
      */
     clearError() {
       this.error = null;
     },
 
     /**
-     * Сбросить весь state
+     * Reset entire state
      */
     $reset() {
       this.products = [];

@@ -11,10 +11,10 @@ use MiniShop3\Processors\RemoveCatalogs;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для работы с данными товара
+ * Service for working with product data
  *
- * Обрабатывает сохранение, удаление и модификацию данных msProductData,
- * включая категории, опции, связи и плагин-модификаторы
+ * Handles saving, deleting and modifying msProductData,
+ * including categories, options, links and plugin modifiers
  */
 class ProductDataService
 {
@@ -30,43 +30,40 @@ class ProductDataService
     }
 
     /**
-     * Подготовка объекта перед сохранением
+     * Prepare object before saving
      *
-     * Выполняет комплексную подготовку данных товара:
-     * - Подготовка array полей (tags, color, size и т.д.) - удаление дубликатов, пустых значений
-     * - Установка source_id для новых товаров
-     * - Приведение числовых полей (price, old_price, weight) к типу float
+     * Performs comprehensive product data preparation:
+     * - Prepare array fields (tags, color, size etc.) - remove duplicates, empty values
+     * - Set source_id for new products
+     * - Cast numeric fields (price, old_price, weight) to float type
      *
      * @param msProductData $productData
      * @return void
      */
     public function prepareObject(msProductData $productData): void
     {
-        // Подготовка array полей (tags, color, size и т.д.)
         foreach ($productData->getArraysValues() as $name => $array) {
             $array = $productData->prepareOptionValues($array);
             $productData->set($name, $array);
         }
 
-        // Установка source_id для новых товаров
         if ($productData->isNew()) {
             $productData->set('source_id', $this->modx->getOption('ms3_product_source_default', null, 1));
         }
 
-        // Приведение числовых полей к типу float
         $productData->set('price', (float)$productData->get('price'));
         $productData->set('old_price', (float)$productData->get('old_price'));
         $productData->set('weight', (float)$productData->get('weight'));
     }
 
     /**
-     * Сохранение дополнительных категорий товара
+     * Save additional product categories
      *
-     * Синхронизирует таблицу msCategoryMember с массивом категорий из поля 'categories'
-     * Формат ожидаемых данных: JSON массив [3,4,27]
+     * Synchronizes msCategoryMember table with categories array from 'categories' field
+     * Expected data format: JSON array [3,4,27]
      *
-     * ВАЖНО: msProductData::get('categories') переопределён и читает из БД,
-     * поэтому используем рефлексию для получения значения из $_fields (POST данные)
+     * IMPORTANT: msProductData::get('categories') is overridden and reads from DB,
+     * so we use reflection to get the value from $_fields (POST data)
      *
      * @param msProductData $productData
      * @return void
@@ -75,16 +72,13 @@ class ProductDataService
     {
         $productId = $productData->get('id');
 
-        // Получаем значение напрямую из $_fields через рефлексию
         $reflection = new \ReflectionClass($productData);
         $property = $reflection->getProperty('_fields');
         $property->setAccessible(true);
         $fields = $property->getValue($productData);
         $categories = $fields['categories'] ?? null;
 
-        // Преобразуем в массив ID
         if (is_string($categories)) {
-            // JSON массив: "[3,4,27]"
             $categories = json_decode($categories, true);
             if (!is_array($categories)) {
                 $categories = [];
@@ -93,10 +87,8 @@ class ProductDataService
             $categories = [];
         }
 
-        // Удаляем все старые связи
         $this->modx->removeCollection(msCategoryMember::class, ['product_id' => $productId]);
 
-        // Создаем новые связи
         foreach ($categories as $categoryId) {
             if (!empty($categoryId) && is_numeric($categoryId)) {
                 /** @var msCategoryMember $member */
@@ -109,20 +101,19 @@ class ProductDataService
     }
 
     /**
-     * Сохранение опций товара
+     * Save product options
      *
-     * Синхронизирует данные из JSON полей с таблицей msProductOption
-     * через метод msProductOption::saveProductOptions()
+     * Synchronizes data from JSON fields with msProductOption table
+     * via msProductOption::saveProductOptions() method
      *
      * @param msProductData $productData
-     * @param array|null $options Опции для сохранения (если null - собираются из JSON полей)
+     * @param array|null $options Options to save (if null - collected from JSON fields)
      * @return void
      */
     public function saveOptions(msProductData $productData, ?array $options = null): void
     {
         $productId = $productData->get('id');
 
-        // Если опции не переданы, собираем из JSON полей msProductData
         if ($options === null) {
             $options = [];
             foreach ($productData->_fieldMeta as $key => $value) {
@@ -132,17 +123,16 @@ class ProductDataService
             }
         }
 
-        // Синхронизируем с таблицей опций
         /** @var msProductOption $optionInstance */
         $optionInstance = $this->modx->newObject(msProductOption::class);
         $optionInstance->saveProductOptions($productId, $options);
     }
 
     /**
-     * Сохранение связей товара
+     * Save product links
      *
-     * Синхронизирует таблицу msProductLink с массивом связей из поля 'links'
-     * Связи бывают master->slave (товар является мастером) и slave->master (товар зависимый)
+     * Synchronizes msProductLink table with links array from 'links' field
+     * Links can be master->slave (product is master) and slave->master (product is dependent)
      *
      * @param msProductData $productData
      * @return void
@@ -156,10 +146,8 @@ class ProductDataService
             return;
         }
 
-        // Удаляем все старые связи где товар - master
         $this->modx->removeCollection(msProductLink::class, ['master' => $productId]);
 
-        // Создаем новые связи
         foreach ($links as $link) {
             if (!empty($link['slave']) && !empty($link['link'])) {
                 /** @var msProductLink $productLink */
@@ -173,10 +161,10 @@ class ProductDataService
     }
 
     /**
-     * Удаление товара со всеми связанными данными
+     * Remove product with all related data
      *
-     * Удаляет опции, категории, связи, файлы и каталоги медиа-источников
-     * Очищает базу от всех следов товара
+     * Deletes options, categories, links, files and media source directories
+     * Cleans database from all product traces
      *
      * @param msProductData $productData
      * @param array $ancestors
@@ -186,19 +174,15 @@ class ProductDataService
     {
         $productId = $productData->get('id');
 
-        // Удаляем опции товара
         $this->modx->removeCollection(msProductOption::class, ['product_id' => $productId]);
 
-        // Удаляем привязки к дополнительным категориям
         $this->modx->removeCollection(msCategoryMember::class, ['product_id' => $productId]);
 
-        // Удаляем связи товара (где товар и master, и slave)
         $this->modx->removeCollection(msProductLink::class, [
             'master' => $productId,
             'OR:slave:=' => $productId
         ]);
 
-        // Удаляем файлы товара (изображения, документы и т.д.)
         if ($productData->xpdo->getCount('msProductFile', ['product_id' => $productId]) > 0) {
             $source = $productData->initializeMediaSource($productData->Product->get('context_key'));
             if ($source) {
@@ -210,19 +194,18 @@ class ProductDataService
             }
         }
 
-        // Удаляем каталоги медиа-источников
         RemoveCatalogs::process($productData->xpdo, $productId);
 
         return true;
     }
 
     /**
-     * Получить цену товара с учетом модификаторов плагинов
+     * Get product price with plugin modifiers
      *
-     * Вызывает событие msOnGetProductPrice для модификации цены
+     * Invokes msOnGetProductPrice event for price modification
      *
      * @param msProductData $productData
-     * @param array $data Дополнительные данные товара
+     * @param array $data Additional product data
      * @return mixed|string
      */
     public function getModifiedPrice(msProductData $productData, array $data = [])
@@ -248,12 +231,12 @@ class ProductDataService
     }
 
     /**
-     * Получить вес товара с учетом модификаторов плагинов
+     * Get product weight with plugin modifiers
      *
-     * Вызывает событие msOnGetProductWeight для модификации веса
+     * Invokes msOnGetProductWeight event for weight modification
      *
      * @param msProductData $productData
-     * @param array $data Дополнительные данные товара
+     * @param array $data Additional product data
      * @return mixed|string
      */
     public function getModifiedWeight(msProductData $productData, array $data = [])
@@ -279,13 +262,13 @@ class ProductDataService
     }
 
     /**
-     * Модифицировать поля товара через плагины
+     * Modify product fields via plugins
      *
-     * Вызывает событие msOnGetProductFields для кастомной обработки полей товара
+     * Invokes msOnGetProductFields event for custom product field processing
      *
      * @param msProductData $productData
-     * @param array $data Поля товара
-     * @return array Модифицированные поля
+     * @param array $data Product fields
+     * @return array Modified fields
      */
     public function getModifiedFields(msProductData $productData, array $data = []): array
     {
@@ -303,9 +286,9 @@ class ProductDataService
     }
 
     /**
-     * Получить ключи опций товара
+     * Get product option keys
      *
-     * Делегирует вызов к msProductOption для получения списка ключей всех опций
+     * Delegates call to msProductOption to get list of all option keys
      *
      * @param msProductData $productData
      * @return array
@@ -324,13 +307,13 @@ class ProductDataService
     }
 
     /**
-     * Получить поля опций товара
+     * Get product option fields
      *
-     * Делегирует вызов к msProductOption для получения полей опций
-     * с текущими значениями и ExtJS метаданными
+     * Delegates call to msProductOption to get option fields
+     * with current values and ExtJS metadata
      *
      * @param msProductData $productData
-     * @param array $keys Фильтр по ключам опций
+     * @param array $keys Filter by option keys
      * @return array
      */
     public function getOptionFields(msProductData $productData, array $keys = []): array
@@ -343,17 +326,16 @@ class ProductDataService
     }
 
     /**
-     * Получить данные товара по ID
+     * Get product data by ID
      *
-     * Загружает msProduct и msProductData, объединяет их поля в один массив
-     * Используется в API контроллерах для получения полных данных товара
+     * Loads msProduct and msProductData, merges their fields into one array
+     * Used in API controllers to get complete product data
      *
-     * @param int $productId ID товара
-     * @return array|null Массив данных или null если не найдено
+     * @param int $productId Product ID
+     * @return array|null Data array or null if not found
      */
     public function getProductData(int $productId): ?array
     {
-        // Загружаем товар
         /** @var msProduct $product */
         $product = $this->modx->getObject(msProduct::class, $productId);
 
@@ -361,14 +343,12 @@ class ProductDataService
             return null;
         }
 
-        // Загружаем данные товара (msProductData)
         $productData = $product->loadData();
 
         if (!$productData) {
             return null;
         }
 
-        // Собираем все поля товара (объединяем msProduct и msProductData)
         $data = array_merge(
             $product->toArray(),
             $productData->toArray()
@@ -378,18 +358,17 @@ class ProductDataService
     }
 
     /**
-     * Обновить данные товара
+     * Update product data
      *
-     * Загружает товар по ID, обновляет поля msProductData и сохраняет
-     * Используется в API контроллерах для обновления данных товара
+     * Loads product by ID, updates msProductData fields and saves
+     * Used in API controllers to update product data
      *
-     * @param int $productId ID товара
-     * @param array $data Данные для обновления
-     * @return array|null Обновленные данные или null при ошибке
+     * @param int $productId Product ID
+     * @param array $data Data to update
+     * @return array|null Updated data or null on error
      */
     public function updateProductData(int $productId, array $data): ?array
     {
-        // Загружаем товар
         /** @var msProduct $product */
         $product = $this->modx->getObject(msProduct::class, $productId);
 
@@ -397,7 +376,6 @@ class ProductDataService
             return null;
         }
 
-        // Загружаем данные товара
         /** @var msProductData $productData */
         $productData = $product->loadData();
 
@@ -405,10 +383,8 @@ class ProductDataService
             return null;
         }
 
-        // Обновляем поля
         $productData->fromArray($data);
 
-        // Сохраняем
         if ($productData->save()) {
             return $productData->toArray();
         }

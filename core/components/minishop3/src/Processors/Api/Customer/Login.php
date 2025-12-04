@@ -7,10 +7,10 @@ use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * Login - процессор входа клиента
+ * Login - customer login processor
  *
- * Аутентифицирует клиента и создает API токен для сессии.
- * Защищен от брутфорса через RateLimiter.
+ * Authenticates customer and creates API token for session.
+ * Protected from brute-force via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -21,13 +21,11 @@ class Login extends Processor
      */
     public function process()
     {
-        // Загружаем лексикон
         $this->modx->lexicon->load('minishop3:customer');
 
         $email = trim($this->getProperty('email', ''));
         $password = $this->getProperty('password', '');
 
-        // Валидация входных данных
         if (empty($email) || empty($password)) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_login_required'));
         }
@@ -35,10 +33,9 @@ class Login extends Processor
         /** @var RateLimiter $rateLimiter */
         $rateLimiter = $this->modx->services->get('ms3_rate_limiter');
 
-        // Rate limiting по IP
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $maxAttempts = 5;
-        $windowSeconds = 300; // 5 минут
+        $windowSeconds = 300;
 
         if (!$rateLimiter->check('login', $ip, $maxAttempts, $windowSeconds)) {
             $attempts = $rateLimiter->getAttempts('login', $ip);
@@ -54,14 +51,12 @@ class Login extends Processor
         /** @var AuthManager $authManager */
         $authManager = $this->modx->services->get('ms3_auth_manager');
 
-        // Аутентификация
         $customer = $authManager->authenticate([
             'email' => $email,
             'password' => $password,
         ]);
 
         if (!$customer) {
-            // Неудачная попытка - увеличиваем счетчик
             $this->modx->log(
                 \MODX\Revolution\modX::LOG_LEVEL_WARN,
                 "[Login] Failed login attempt for email: {$email} from IP: {$ip}"
@@ -70,25 +65,21 @@ class Login extends Processor
             return $this->failure($this->modx->lexicon('ms3_customer_err_login_invalid'));
         }
 
-        // Успешный вход - сбрасываем rate limiter
         $rateLimiter->reset('login', $ip);
 
-        // Создаем API токен для сессии
-        $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400); // 24 часа
+        $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400);
         $tokenObj = $authManager->createToken($customer, 'api', $ttl);
 
         if (!$tokenObj) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
         }
 
-        // Сохраняем в сессию
         if (!isset($_SESSION['ms3'])) {
             $_SESSION['ms3'] = [];
         }
         $_SESSION['ms3']['customer_id'] = $customer->id;
         $_SESSION['ms3']['customer_token'] = $tokenObj->get('token');
 
-        // Определяем URL для редиректа
         $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);
         if (!$redirectPageId) {
             $redirectPageId = (int)$this->modx->getOption('ms3_customer_redirect_after_login', null, 0);

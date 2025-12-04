@@ -1,14 +1,13 @@
 /**
  * MiniShop3 - Order Addresses Module
  *
- * Обработка выбора сохранённых адресов клиента в форме оформления заказа.
- * Работает по принципу SSR - адреса загружаются на сервере и рендерятся в select.
- * JavaScript только обрабатывает выбор адреса и заполнение полей формы.
+ * Handles selection of customer's saved addresses in order checkout form.
+ * Works on SSR principle - addresses are loaded on server and rendered in select.
+ * JavaScript only handles address selection and fills form fields.
  */
 (function () {
   'use strict'
 
-  // Конфигурация
   const config = {
     addressSelect: null,
     addressFields: [
@@ -27,10 +26,9 @@
   }
 
   /**
-   * Инициализация при загрузке DOM
+   * Initialize on DOM load
    */
   function init () {
-    // Находим select с адресами
     config.addressSelect = document.getElementById('saved_address_id')
 
     if (!config.addressSelect) {
@@ -40,25 +38,22 @@
 
     console.log('[MS3 Order Addresses] Initializing address selection handler')
 
-    // Обработчик выбора адреса
     config.addressSelect.addEventListener('change', handleAddressChange)
   }
 
   /**
-   * Обработчик изменения выбранного адреса
+   * Handle selected address change
    */
   function handleAddressChange (event) {
     const selectedOption = event.target.selectedOptions[0]
     const addressId = selectedOption.value
 
     if (!addressId) {
-      // Выбран "Новый адрес" - очищаем поля
       console.log('[MS3 Order Addresses] New address selected, clearing fields')
       clearAddressFields()
       return
     }
 
-    // Получаем данные адреса из data-атрибута
     const addressData = selectedOption.getAttribute('data-address')
 
     if (!addressData) {
@@ -76,7 +71,7 @@
   }
 
   /**
-   * Заполнение полей формы данными адреса
+   * Fill form fields with address data
    */
   function fillAddressFields (address) {
     config.addressFields.forEach(function (fieldName) {
@@ -86,21 +81,19 @@
         return
       }
 
-      // Устанавливаем значение поля (если есть в данных адреса)
       if (address[fieldName] !== undefined && address[fieldName] !== null) {
         input.value = address[fieldName]
       } else {
         input.value = ''
       }
 
-      // Триггерим событие change для валидации и обновления UI
       const event = new Event('change', { bubbles: true })
       input.dispatchEvent(event)
     })
   }
 
   /**
-   * Очистка полей адреса
+   * Clear address fields
    */
   function clearAddressFields () {
     config.addressFields.forEach(function (fieldName) {
@@ -112,17 +105,14 @@
 
       input.value = ''
 
-      // Триггерим событие change для валидации и обновления UI
       const event = new Event('change', { bubbles: true })
       input.dispatchEvent(event)
     })
   }
 
-  // Инициализация при загрузке DOM
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
   } else {
-    // DOM уже загружен
     init()
   }
 })()

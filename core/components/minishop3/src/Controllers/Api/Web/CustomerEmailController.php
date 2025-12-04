@@ -8,13 +8,13 @@ use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\modX;
 
 /**
- * CustomerEmailController - API контроллер подтверждения email
+ * CustomerEmailController - Email verification API controller
  *
- * Обрабатывает отправку и проверку писем подтверждения email.
+ * Handles sending and verification of email confirmation.
  *
  * Endpoints:
- * - POST /api/v1/customer/email/resend-verification - повторная отправка письма
- * - GET /api/v1/customer/email/verify - проверка токена из письма
+ * - POST /api/v1/customer/email/resend-verification - resend verification email
+ * - GET /api/v1/customer/email/verify - verify token from email
  *
  * @package MiniShop3\Controllers\Api\Web
  */
@@ -39,12 +39,11 @@ class CustomerEmailController
         $this->ms3 = $ms3;
         $this->modx->lexicon->load('minishop3:customer');
 
-        // Получить сервис верификации email
         $this->emailVerification = $this->modx->services->get('ms3_email_verification_service');
     }
 
     /**
-     * Повторная отправка письма подтверждения
+     * Resend verification email
      *
      * POST /api/v1/customer/email/resend-verification
      *
@@ -52,14 +51,12 @@ class CustomerEmailController
      */
     public function resendVerification(): array
     {
-        // Проверка авторизации
         if (empty($_SESSION['ms3']['customer_id'])) {
             return $this->error($this->modx->lexicon('ms3_customer_err_login_required'));
         }
 
         $customerId = (int)$_SESSION['ms3']['customer_id'];
 
-        // Загрузить клиента
         /** @var msCustomer $customer */
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
 
@@ -67,7 +64,6 @@ class CustomerEmailController
             return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
         }
 
-        // Использовать метод resendVerificationEmail из сервиса
         $result = $this->emailVerification->resendVerificationEmail($customer);
 
         if ($result['success']) {
@@ -81,11 +77,11 @@ class CustomerEmailController
     }
 
     /**
-     * Проверка токена подтверждения из письма
+     * Verify confirmation token from email
      *
      * GET /api/v1/customer/email/verify?token={token}
      *
-     * @param array $params Параметры запроса
+     * @param array $params Request parameters
      * @return array ['success' => bool, 'message' => string]
      */
     public function verify(array $params): array
@@ -96,14 +92,12 @@ class CustomerEmailController
             return $this->error($this->modx->lexicon('ms3_customer_err_token_required'));
         }
 
-        // Проверить токен через сервис
         $customer = $this->emailVerification->verifyToken($token);
 
         if (!$customer) {
             return $this->error($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
         }
 
-        // Автоматически авторизовать клиента после подтверждения email
         $_SESSION['ms3']['customer_id'] = $customer->id;
         $_SESSION['ms3']['customer_token'] = $customer->get('token');
 
@@ -119,7 +113,7 @@ class CustomerEmailController
     }
 
     /**
-     * Успешный ответ
+     * Success response
      *
      * @param string $message
      * @param array $data
@@ -135,7 +129,7 @@ class CustomerEmailController
     }
 
     /**
-     * Ответ с ошибкой
+     * Error response
      *
      * @param string $message
      * @param array $data

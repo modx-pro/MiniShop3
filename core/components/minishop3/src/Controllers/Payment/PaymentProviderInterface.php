@@ -6,52 +6,52 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
 
 /**
- * Интерфейс провайдера платежной системы
+ * Payment system provider interface
  *
- * Определяет контракт для всех платежных провайдеров (ЮKassa, Stripe, PayPal и т.д.)
+ * Defines contract for all payment providers (YooKassa, Stripe, PayPal, etc.)
  *
  * @package MiniShop3\Controllers\Payment
  */
 interface PaymentProviderInterface
 {
     /**
-     * Отправка заказа в платежную систему
+     * Send order to payment system
      *
-     * Генерирует платежную ссылку для редиректа покупателя на страницу оплаты.
+     * Generates payment link to redirect customer to payment page.
      *
-     * @param msOrder $order Заказ для оплаты
+     * @param msOrder $order Order for payment
      * @return array Response ['success' => true, 'data' => ['payment_link' => '...', 'payment_id' => '...']]
      */
     public function send(msOrder $order): array;
 
     /**
-     * Обработка callback от платежной системы
+     * Process callback from payment system
      *
-     * Принимает уведомление о статусе оплаты от платежной системы (webhook).
-     * Проверяет подпись, валидирует данные, обновляет статус заказа.
+     * Receives payment status notification from payment system (webhook).
+     * Verifies signature, validates data, updates order status.
      *
-     * @param msOrder $order Заказ для проверки
+     * @param msOrder $order Order to check
      * @return array Response ['success' => true/false, 'message' => '...']
      */
     public function receive(msOrder $order): array;
 
     /**
-     * Расчет стоимости с учетом комиссии платежной системы
+     * Calculate cost including payment system fee
      *
-     * @param msOrder $order Заказ (может использоваться для расчета комиссии)
-     * @param msPayment $payment Способ оплаты с настройками комиссии
-     * @param float $cost Текущая стоимость заказа
-     * @return float Стоимость с учетом комиссии
+     * @param msOrder $order Order (can be used for fee calculation)
+     * @param msPayment $payment Payment method with fee settings
+     * @param float $cost Current order cost
+     * @return float Cost including fee
      */
     public function getCost(msOrder $order, msPayment $payment, float $cost): float;
 
     /**
-     * Генерация криптографического хеша заказа
+     * Generate cryptographic order hash
      *
-     * Используется для проверки подлинности данных при обработке callback.
+     * Used to verify data authenticity when processing callback.
      *
-     * @param msOrder $order Заказ для хеширования
-     * @return string Хеш заказа
+     * @param msOrder $order Order to hash
+     * @return string Order hash
      */
     public function getOrderHash(msOrder $order): string;
 }

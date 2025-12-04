@@ -7,10 +7,10 @@ use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * ResendVerification - процессор повторной отправки письма с подтверждением
+ * ResendVerification - processor for resending verification email
  *
- * Отправляет новое письмо с токеном подтверждения email.
- * Защищен от спама через cooldown в EmailVerificationService.
+ * Sends new email with email confirmation token.
+ * Protected from spam via cooldown in EmailVerificationService.
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -31,14 +31,12 @@ class ResendVerification extends Processor
         $customer = $this->modx->getObject(msCustomer::class, ['email' => $email]);
 
         if (!$customer) {
-            // Не раскрываем существование email
             return $this->success($this->modx->lexicon('ms3_email_verification_sent'));
         }
 
         /** @var EmailVerificationService $emailService */
         $emailService = $this->modx->services->get('ms3_email_verification_service');
 
-        // Повторная отправка (с проверкой cooldown и верификации)
         $result = $emailService->resendVerificationEmail($customer);
 
         if (!$result['success']) {

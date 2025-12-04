@@ -6,28 +6,28 @@ use MiniShop3\Router\Middleware\MiddlewareInterface;
 use MiniShop3\Router\Response;
 
 /**
- * Middleware для ограничения частоты запросов (Rate Limiting)
+ * Middleware for request rate limiting
  *
- * Защита от DDoS атак и злоупотреблений API.
- * Использует простой механизм на основе файлового кеша.
+ * Protection against DDoS attacks and API abuse.
+ * Uses simple file-based cache mechanism.
  *
- * TODO: В продакшене рекомендуется использовать Redis/Memcached для rate limiting
+ * TODO: In production it's recommended to use Redis/Memcached for rate limiting
  */
 class RateLimitMiddleware implements MiddlewareInterface
 {
-    /** @var int Максимальное количество запросов */
+    /** @var int Maximum number of requests */
     private int $maxAttempts;
 
-    /** @var int Период времени в секундах */
+    /** @var int Time period in seconds */
     private int $decaySeconds;
 
-    /** @var string Путь к директории для хранения данных rate limit */
+    /** @var string Path to directory for storing rate limit data */
     private string $storagePath;
 
     /**
-     * @param int $maxAttempts Максимальное количество запросов (по умолчанию 60)
-     * @param int $decaySeconds Период времени в секундах (по умолчанию 60 - 1 минута)
-     * @param string $storagePath Путь к директории хранения (по умолчанию sys_get_temp_dir())
+     * @param int $maxAttempts Maximum number of requests (default 60)
+     * @param int $decaySeconds Time period in seconds (default 60 - 1 minute)
+     * @param string $storagePath Path to storage directory (default sys_get_temp_dir())
      */
     public function __construct(
         int $maxAttempts = 60,
@@ -40,10 +40,10 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Обработать запрос
+     * Handle request
      *
-     * @param array $params URL параметры из роутера
-     * @return Response|null Вернуть Response для прерывания, или null для продолжения
+     * @param array $params URL parameters from router
+     * @return Response|null Return Response to stop execution, or null to continue
      */
     public function handle(array $params)
     {
@@ -52,36 +52,36 @@ class RateLimitMiddleware implements MiddlewareInterface
         $attempts = $this->getAttempts($key);
         $resetTime = $this->getResetTime($key);
 
-        // Если время истекло, сбрасываем счётчик
+        // If time expired, reset counter
         if (time() >= $resetTime) {
             $this->resetAttempts($key);
             $attempts = 0;
         }
 
-        // Проверяем лимит
+        // Check limit
         if ($attempts >= $this->maxAttempts) {
             $retryAfter = $resetTime - time();
             header("Retry-After: $retryAfter");
             return Response::error('ms3_err_rate_limit', 429);
         }
 
-        // Увеличиваем счётчик
+        // Increment counter
         $this->incrementAttempts($key);
 
-        // Устанавливаем заголовки rate limit
+        // Set rate limit headers
         $this->setRateLimitHeaders($attempts + 1, $resetTime);
 
-        return null; // Продолжить выполнение
+        return null; // Continue execution
     }
 
     /**
-     * Получить ключ для идентификации клиента
+     * Get key for client identification
      *
      * @return string
      */
     private function resolveRequestKey(): string
     {
-        // Используем комбинацию IP и токена (если есть)
+        // Use combination of IP and token (if available)
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $token = $_SERVER['HTTP_MS3TOKEN'] ?? '';
 
@@ -89,9 +89,9 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Получить количество попыток
+     * Get number of attempts
      *
-     * @param string $key Ключ
+     * @param string $key Key
      * @return int
      */
     private function getAttempts(string $key): int
@@ -107,9 +107,9 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Получить время сброса счётчика
+     * Get counter reset time
      *
-     * @param string $key Ключ
+     * @param string $key Key
      * @return int Unix timestamp
      */
     private function getResetTime(string $key): int
@@ -125,9 +125,9 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Увеличить счётчик попыток
+     * Increment attempts counter
      *
-     * @param string $key Ключ
+     * @param string $key Key
      * @return void
      */
     private function incrementAttempts(string $key): void
@@ -135,7 +135,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         $attempts = $this->getAttempts($key) + 1;
         $resetTime = $this->getResetTime($key);
 
-        // Если это первая попытка в периоде, устанавливаем время сброса
+        // If this is first attempt in period, set reset time
         if ($attempts === 1) {
             $resetTime = time() + $this->decaySeconds;
         }
@@ -145,9 +145,9 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Сбросить счётчик попыток
+     * Reset attempts counter
      *
-     * @param string $key Ключ
+     * @param string $key Key
      * @return void
      */
     private function resetAttempts(string $key): void
@@ -157,10 +157,10 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Получить путь к файлу для хранения данных
+     * Get file path for data storage
      *
-     * @param string $key Ключ
-     * @param string $type Тип данных (attempts или reset)
+     * @param string $key Key
+     * @param string $type Data type (attempts or reset)
      * @return string
      */
     private function getFilePath(string $key, string $type): string
@@ -169,10 +169,10 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Установить заголовки rate limit
+     * Set rate limit headers
      *
-     * @param int $attempts Текущее количество попыток
-     * @param int $resetTime Время сброса счётчика
+     * @param int $attempts Current number of attempts
+     * @param int $resetTime Counter reset time
      * @return void
      */
     private function setRateLimitHeaders(int $attempts, int $resetTime): void

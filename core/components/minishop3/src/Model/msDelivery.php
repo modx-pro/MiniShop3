@@ -102,7 +102,7 @@ class msDelivery extends xPDOSimpleObject
     }
 
     /**
-     * Получить сервис доставки (lazy loading)
+     * Get delivery service (lazy loading)
      *
      * @return DeliveryService
      */

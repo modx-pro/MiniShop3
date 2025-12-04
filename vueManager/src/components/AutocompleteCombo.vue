@@ -51,7 +51,7 @@ const props = defineProps({
    */
   placeholder: {
     type: String,
-    default: 'Начните вводить...'
+    default: 'Start typing...'
   },
 
   /**
@@ -85,7 +85,7 @@ async function search(event) {
     })
 
     if (response && response.values) {
-      // AutoComplete ожидает массив простых значений (strings)
+      // AutoComplete expects array of simple values (strings)
       filteredValues.value = response.values.map(v => v.value)
     } else {
       console.error('[AutocompleteCombo] Invalid response:', response)
@@ -148,7 +148,7 @@ onMounted(() => {
 </style>
 
 <style>
-/* Глобальные стили для autocomplete panel */
+/* Global styles for autocomplete panel */
 .autocomplete-combo-wrapper .p-autocomplete-panel {
   min-width: 300px;
   max-width: 500px;

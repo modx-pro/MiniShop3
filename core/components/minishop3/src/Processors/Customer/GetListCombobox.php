@@ -55,7 +55,6 @@ class GetListCombobox extends GetListProcessor
         $array = $object->toArray();
 
         if ($this->getProperty('combo')) {
-            //TODO вынести в системные настройки список объединямых полей,для формирование настраеваемого именования
             $fullname = implode(' ', [$array['first_name'], $array['last_name']]);
             $array = [
                 'id' => $array['id'],

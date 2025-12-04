@@ -5,13 +5,13 @@ namespace MiniShop3\Controllers\Api;
 use MiniShop3\Router\Response;
 
 /**
- * API контроллер для работы с данными товара (msProductData)
+ * API controller for working with product data (msProductData)
  */
 class ProductDataController extends BaseApiController
 {
     /**
      * GET /api/mgr/product-data/{id}
-     * Получить данные товара
+     * Get product data
      *
      * @param array $params
      * @return Response
@@ -43,7 +43,7 @@ class ProductDataController extends BaseApiController
 
     /**
      * PUT /api/mgr/product-data/{id}
-     * Обновить данные товара
+     * Update product data
      *
      * @param array $params
      * @return Response

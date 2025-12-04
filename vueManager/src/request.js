@@ -1,11 +1,11 @@
 /**
- * API Request класс для работы с MiniShop3 API через MODX connector
+ * API Request class for working with MiniShop3 API through MODX connector
  *
- * Особенности:
- * - Использует MODX connector.php для всех запросов
- * - Автоматически добавляет HTTP_MODAUTH токен для безопасности
- * - Поддерживает все HTTP методы (GET, POST, PUT, DELETE, PATCH)
- * - Обработка ошибок с детальной информацией
+ * Features:
+ * - Uses MODX connector.php for all requests
+ * - Automatically adds HTTP_MODAUTH token for security
+ * - Supports all HTTP methods (GET, POST, PUT, DELETE, PATCH)
+ * - Error handling with detailed information
  */
 class Request {
   constructor() {
@@ -14,16 +14,14 @@ class Request {
   }
 
   /**
-   * Инициализация: получение конфигурации из MODX
+   * Initialize: get configuration from MODX
    */
   init() {
-    // Не инициализируем здесь - connector URL и MODAUTH токен
-    // получаем динамически при каждом запросе через геттеры
     this.setHeaders();
   }
 
   /**
-   * Получить connector URL (динамически)
+   * Get connector URL (dynamically)
    */
   getConnectorUrl() {
     if (typeof ms3 !== 'undefined' && ms3?.config?.connector_url) {
@@ -33,7 +31,7 @@ class Request {
   }
 
   /**
-   * Получить MODAUTH токен (динамически)
+   * Get MODAUTH token (dynamically)
    */
   getModAuthToken() {
     if (typeof MODx !== 'undefined' && MODx?.siteId) {
@@ -43,7 +41,7 @@ class Request {
   }
 
   /**
-   * Установка заголовков по умолчанию
+   * Set default headers
    */
   setHeaders() {
     this.headers = {
@@ -53,26 +51,23 @@ class Request {
   }
 
   /**
-   * Построение URL для connector запроса
+   * Build URL for connector request
    *
-   * @param {string} route - API роут (например: /api/mgr/products)
-   * @param {Object} params - Дополнительные GET параметры
-   * @returns {string} - Полный URL
+   * @param {string} route - API route (e.g.: /api/mgr/products)
+   * @param {Object} params - Additional GET parameters
+   * @returns {string} - Full URL
    */
   buildUrl(route, params = {}) {
     const url = new URL(this.getConnectorUrl(), window.location.origin);
 
-    // Базовые параметры для connector
     url.searchParams.set('action', 'MiniShop3\\Processors\\Api\\Index');
     url.searchParams.set('route', route);
 
-    // Добавляем HTTP_MODAUTH токен
     const modAuthToken = this.getModAuthToken();
     if (modAuthToken) {
       url.searchParams.set('HTTP_MODAUTH', modAuthToken);
     }
 
-    // Добавляем дополнительные параметры
     Object.entries(params).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         url.searchParams.set(key, value);
@@ -83,31 +78,29 @@ class Request {
   }
 
   /**
-   * Основной метод для выполнения запросов
+   * Main method for executing requests
    *
-   * @param {string} method - HTTP метод
-   * @param {string} route - API роут
-   * @param {Object} data - Данные для отправки
-   * @param {Object} options - Дополнительные опции
-   * @returns {Promise<Object>} - Ответ от API
+   * @param {string} method - HTTP method
+   * @param {string} route - API route
+   * @param {Object} data - Data to send
+   * @param {Object} options - Additional options
+   * @returns {Promise<Object>} - API response
    */
   async request(method, route, data = null, options = {}) {
     try {
       const fetchOptions = {
         method,
         headers: { ...this.headers, ...options.headers },
-        credentials: 'same-origin' // Важно для MODX сессий
+        credentials: 'same-origin'
       };
 
       let url;
 
-      // Для GET запросов данные передаем через URL параметры
       if (method === 'GET' && data) {
         url = this.buildUrl(route, data);
       } else {
         url = this.buildUrl(route);
 
-        // Для остальных методов - в body
         if (data) {
           fetchOptions.body = JSON.stringify(data);
         }
@@ -115,10 +108,8 @@ class Request {
 
       const response = await fetch(url, fetchOptions);
 
-      // Получаем тело ответа
       const responseData = await response.json();
 
-      // Проверяем успешность через MODX processor формат
       if (responseData.success === false) {
         throw new RequestError(
           responseData.message || 'Request failed',
@@ -127,7 +118,6 @@ class Request {
         );
       }
 
-      // Если статус HTTP не успешный
       if (!response.ok) {
         throw new RequestError(
           responseData.message || `HTTP error! status: ${response.status}`,
@@ -136,8 +126,6 @@ class Request {
         );
       }
 
-      // MODX процессор возвращает данные в object или data
-      // Извлекаем данные из правильного места
       if (responseData.object && Object.keys(responseData.object).length > 0) {
         return responseData.object;
       } else if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
@@ -146,16 +134,13 @@ class Request {
         return responseData.data;
       }
 
-      // Если ни object, ни data не содержат данных, возвращаем весь ответ
       return responseData;
 
     } catch (error) {
-      // Если это уже RequestError, пробрасываем дальше
       if (error instanceof RequestError) {
         throw error;
       }
 
-      // Иначе оборачиваем в RequestError
       throw new RequestError(
         error.message || 'Network error',
         0,
@@ -165,35 +150,35 @@ class Request {
   }
 
   /**
-   * GET запрос
+   * GET request
    */
   async get(route, params = null, options = {}) {
     return this.request('GET', route, params, options);
   }
 
   /**
-   * POST запрос
+   * POST request
    */
   async post(route, data = null, options = {}) {
     return this.request('POST', route, data, options);
   }
 
   /**
-   * PUT запрос
+   * PUT request
    */
   async put(route, data = null, options = {}) {
     return this.request('PUT', route, data, options);
   }
 
   /**
-   * DELETE запрос
+   * DELETE request
    */
   async delete(route, data = null, options = {}) {
     return this.request('DELETE', route, data, options);
   }
 
   /**
-   * PATCH запрос
+   * PATCH request
    */
   async patch(route, data = null, options = {}) {
     return this.request('PATCH', route, data, options);
@@ -201,7 +186,7 @@ class Request {
 }
 
 /**
- * Кастомный класс ошибки для API запросов
+ * Custom error class for API requests
  */
 class RequestError extends Error {
   constructor(message, statusCode, data = {}) {
@@ -212,28 +197,26 @@ class RequestError extends Error {
   }
 
   /**
-   * Проверка является ли ошибка ошибкой авторизации
+   * Check if error is unauthorized
    */
   isUnauthorized() {
     return this.statusCode === 401;
   }
 
   /**
-   * Проверка является ли ошибка ошибкой доступа
+   * Check if error is forbidden
    */
   isForbidden() {
     return this.statusCode === 403;
   }
 
   /**
-   * Проверка является ли ошибка ошибкой валидации
+   * Check if error is validation error
    */
   isValidationError() {
     return this.statusCode === 422;
   }
 }
-
-// Экспортируем singleton instance
 const request = new Request();
 
 export default request;

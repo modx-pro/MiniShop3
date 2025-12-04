@@ -1,7 +1,7 @@
 <template>
   <div class="options-chips-wrapper" ref="wrapperRef">
     <div class="chips-container" @click="focusInput">
-      <!-- Отображение выбранных чипов -->
+      <!-- Display selected chips -->
       <div
         v-for="(chip, index) in localValue"
         :key="index"
@@ -15,7 +15,7 @@
         >×</span>
       </div>
 
-      <!-- Поле ввода для добавления новых значений -->
+      <!-- Input field for adding new values -->
       <input
         ref="inputRef"
         v-model="searchQuery"
@@ -32,7 +32,7 @@
       />
     </div>
 
-    <!-- Dropdown с подсказками -->
+    <!-- Dropdown with suggestions -->
     <div
       v-if="showSuggestions && filteredOptions.length > 0"
       class="suggestions-panel"
@@ -68,7 +68,7 @@ const props = defineProps({
   },
   placeholder: {
     type: String,
-    default: 'Добавьте опции...'
+    default: 'Add options...'
   },
   disabled: {
     type: Boolean,
@@ -157,7 +157,7 @@ function addChip(value) {
     showSuggestions.value = false
     emitChange()
 
-    // Возвращаем фокус на input
+    // Return focus to input
     nextTick(() => {
       inputRef.value?.focus()
     })
@@ -195,11 +195,11 @@ function focusInput() {
  * Handle blur event
  */
 function handleBlur() {
-  // Небольшая задержка, чтобы клик по suggestion успел отработать
+  // Small delay to allow click on suggestion to process
   setTimeout(() => {
     showSuggestions.value = false
 
-    // Добавляем введенное значение при потере фокуса, если что-то введено
+    // Add entered value on blur if something is typed
     const value = searchQuery.value.trim()
     if (value && !localValue.value.includes(value)) {
       localValue.value.push(value)

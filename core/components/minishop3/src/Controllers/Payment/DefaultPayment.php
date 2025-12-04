@@ -5,40 +5,37 @@ namespace MiniShop3\Controllers\Payment;
 use MiniShop3\Model\msOrder;
 
 /**
- * Дефолтный провайдер оплаты (заглушка)
+ * Default payment provider (stub)
  *
- * Используется для методов оплаты без интеграции с внешними платежными системами:
- * - Оплата наличными при получении
- * - Оплата по счету
- * - Банковский перевод
- * - И т.д.
+ * Used for payment methods without external payment system integration:
+ * - Cash on delivery
+ * - Invoice payment
+ * - Bank transfer
+ * - etc.
  *
- * Просто помечает заказ как ожидающий оплаты и редиректит на страницу успеха.
+ * Simply marks order as pending payment and redirects to success page.
  *
  * @package MiniShop3\Controllers\Payment
  */
 class DefaultPayment extends Payment
 {
     /**
-     * Отправка заказа (заглушка)
+     * Send order (stub)
      *
-     * Для дефолтного провайдера просто возвращает ссылку на страницу успеха
-     * без реального взаимодействия с платежной системой.
+     * For default provider just returns link to success page
+     * without real payment system interaction.
      *
-     * @param msOrder $order Заказ для оплаты
-     * @return array Response с ссылкой на страницу успеха
+     * @param msOrder $order Order for payment
+     * @return array Response with link to success page
      */
     public function send(msOrder $order): array
     {
-        // ID страницы успешного оформления заказа
         $successPageId = (int)$this->modx->getOption('ms3_order_success_page_id', null, 0);
 
         if (empty($successPageId)) {
-            // Если страница не настроена - редирект на главную
             $successPageId = $this->modx->getOption('site_start');
         }
 
-        // Генерируем URL страницы успеха с номером заказа
         $paymentLink = $this->modx->makeUrl($successPageId, '', [
             'msorder' => $order->get('num'),
         ], 'full');
@@ -51,13 +48,13 @@ class DefaultPayment extends Payment
     }
 
     /**
-     * Обработка callback (заглушка)
+     * Process callback (stub)
      *
-     * Для дефолтного провайдера не требуется обработка callback,
-     * т.к. нет внешней платежной системы.
+     * For default provider callback processing is not required
+     * since there is no external payment system.
      *
-     * @param msOrder $order Заказ для проверки
-     * @return array Response об успехе
+     * @param msOrder $order Order to check
+     * @return array Success response
      */
     public function receive(msOrder $order): array
     {

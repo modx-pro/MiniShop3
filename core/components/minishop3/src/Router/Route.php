@@ -3,7 +3,7 @@
 namespace MiniShop3\Router;
 
 /**
- * Класс роута
+ * Route class
  */
 class Route
 {
@@ -22,7 +22,7 @@ class Route
     }
 
     /**
-     * Добавить middleware к роуту
+     * Add middleware to route
      */
     public function middleware($middleware): self
     {
@@ -36,7 +36,7 @@ class Route
     }
 
     /**
-     * Установить имя роута
+     * Set route name
      */
     public function name(string $name): self
     {
@@ -45,7 +45,7 @@ class Route
     }
 
     /**
-     * Получить массив данных роута
+     * Get route data array
      */
     public function toArray(): array
     {

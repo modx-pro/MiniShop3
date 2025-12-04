@@ -1,44 +1,44 @@
 /**
- * API для работы с заказом
+ * API for order management
  *
- * Управление данными заказа: получение, обновление, оформление.
+ * Manages order data: fetching, updating, submitting.
  *
  * @example
  * const order = new OrderAPI(apiClient)
- * await order.add('receiver', 'Иван Иванов')
+ * await order.add('receiver', 'John Doe')
  * await order.submit()
  */
 class OrderAPI {
   /**
-   * @param {ApiClient} apiClient - HTTP клиент
+   * @param {ApiClient} apiClient - HTTP client
    */
   constructor (apiClient) {
     this.api = apiClient
   }
 
   /**
-   * Добавить/обновить поле заказа
+   * Add/update order field
    *
    * POST /api/v1/order/add
    *
-   * @param {string} key - Ключ поля (receiver, email, phone и т.д.)
-   * @param {string} value - Значение поля
+   * @param {string} key - Field key (receiver, email, phone, etc.)
+   * @param {string} value - Field value
    * @returns {Promise<Object>}
    *
    * @example
-   * await order.add('receiver', 'Иван Иванов')
-   * await order.add('email', 'ivan@example.com')
+   * await order.add('receiver', 'John Doe')
+   * await order.add('email', 'john@example.com')
    */
   async add (key, value) {
     return this.api.post('/api/v1/order/add', { key, value })
   }
 
   /**
-   * Удалить поле заказа
+   * Remove order field
    *
    * POST /api/v1/order/remove
    *
-   * @param {string} key - Ключ поля
+   * @param {string} key - Field key
    * @returns {Promise<Object>}
    */
   async remove (key) {
@@ -46,7 +46,7 @@ class OrderAPI {
   }
 
   /**
-   * Очистить заказ
+   * Clear order
    *
    * POST /api/v1/order/clean
    *
@@ -57,7 +57,7 @@ class OrderAPI {
   }
 
   /**
-   * Оформить заказ (финальная отправка)
+   * Submit order (final submission)
    *
    * POST /api/v1/order/submit
    *
@@ -68,7 +68,7 @@ class OrderAPI {
   }
 
   /**
-   * Получить текущий заказ
+   * Get current order
    *
    * GET /api/v1/order/get
    *

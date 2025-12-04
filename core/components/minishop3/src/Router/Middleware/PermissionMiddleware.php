@@ -6,7 +6,7 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * Middleware для проверки прав доступа
+ * Middleware for access permission check
  */
 class PermissionMiddleware implements MiddlewareInterface
 {
@@ -15,7 +15,7 @@ class PermissionMiddleware implements MiddlewareInterface
 
     /**
      * @param modX $modx
-     * @param string $permission Название права доступа
+     * @param string $permission Permission name
      */
     public function __construct(modX $modx, string $permission)
     {

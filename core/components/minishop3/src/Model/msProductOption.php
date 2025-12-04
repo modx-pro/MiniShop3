@@ -26,7 +26,7 @@ class msProductOption extends xPDOObject
      * @param xPDO $xpdo
      * @param int $product_id
      *
-     * @return array Option data with keys like ['color' => ['Red'], 'color.caption' => 'Цвет']
+     * @return array Option data with keys like ['color' => ['Red'], 'color.caption' => 'Color']
      */
     public static function loadOptions(xPDO $xpdo, $product_id)
     {

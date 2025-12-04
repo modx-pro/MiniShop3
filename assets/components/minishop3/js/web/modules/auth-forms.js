@@ -1,24 +1,23 @@
 /**
- * AuthForms - обработка форм авторизации и регистрации
+ * AuthForms - login and registration form handling
  *
- * Работает с формами через connector.php (MODX процессоры).
- * Не зависит от ApiClient, использует прямые вызовы через Fetch API.
+ * Works with forms via connector.php (MODX processors).
+ * Independent from ApiClient, uses direct Fetch API calls.
  *
  * @example
- * // Автоинициализация при загрузке DOM
  * const authForms = new AuthForms({
- *   connectorUrl: '/assets/components/minishop3/connector.php',
- *   loginAction: 'MiniShop3\\Processors\\Api\\Customer\\Login',
- *   registerAction: 'MiniShop3\\Processors\\Api\\Customer\\Register'
+ *   apiUrl: '/assets/components/minishop3/api.php',
+ *   loginRoute: '/api/v1/customer/login',
+ *   registerRoute: '/api/v1/customer/register'
  * })
  * authForms.init()
  */
 class AuthForms {
   /**
-   * @param {Object} config - Конфигурация
+   * @param {Object} config - Configuration
    * @param {string} config.apiUrl - URL api.php (frontend API)
-   * @param {string} config.loginRoute - Роут для входа
-   * @param {string} config.registerRoute - Роут для регистрации
+   * @param {string} config.loginRoute - Login route
+   * @param {string} config.registerRoute - Registration route
    */
   constructor (config = {}) {
     this.config = {
@@ -37,10 +36,9 @@ class AuthForms {
   }
 
   /**
-   * Инициализация обработчиков
+   * Initialize handlers
    */
   init () {
-    // Инициализация после загрузки DOM
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.bindEvents())
     } else {
@@ -49,35 +47,31 @@ class AuthForms {
   }
 
   /**
-   * Привязка событий к формам
+   * Bind form events
    */
   bindEvents () {
-    // Форма входа
     this.forms.login = document.getElementById(this.config.loginFormId)
     if (this.forms.login) {
       this.forms.login.addEventListener('submit', (e) => this.handleLogin(e))
     }
 
-    // Форма регистрации
     this.forms.register = document.getElementById(this.config.registerFormId)
     if (this.forms.register) {
       this.forms.register.addEventListener('submit', (e) => this.handleRegister(e))
     }
 
-    // Обработчик "Забыли пароль?" (заглушка)
     const forgotPasswordLink = document.getElementById('forgot-password-link')
     if (forgotPasswordLink) {
       forgotPasswordLink.addEventListener('click', (e) => this.handleForgotPassword(e))
     }
 
-    // Поддержка табов если нет Bootstrap JS
     this.initTabSupport()
   }
 
   /**
-   * Обработчик формы входа
+   * Login form handler
    *
-   * @param {Event} event - Submit событие
+   * @param {Event} event - Submit event
    */
   async handleLogin (event) {
     event.preventDefault()
@@ -85,7 +79,6 @@ class AuthForms {
     const form = event.target
     const data = this.serializeForm(form)
 
-    // Валидация на клиенте
     if (!data.email || !data.password) {
       this.showMessage('login-messages', this.getLexicon('ms3_customer_err_login_required'), 'danger')
       return
@@ -105,12 +98,10 @@ class AuthForms {
       if (result.success) {
         this.showMessage('login-messages', this.getLexicon('ms3_customer_login_success'), 'success')
 
-        // Сохраняем токен в localStorage
         if (result.object && result.object.token) {
           this.saveToken(result.object.token)
         }
 
-        // Редирект через 1 секунду
         setTimeout(() => {
           this.handleRedirect(result.object)
         }, 1000)
@@ -125,9 +116,9 @@ class AuthForms {
   }
 
   /**
-   * Обработчик формы регистрации
+   * Registration form handler
    *
-   * @param {Event} event - Submit событие
+   * @param {Event} event - Submit event
    */
   async handleRegister (event) {
     event.preventDefault()
@@ -135,7 +126,6 @@ class AuthForms {
     const form = event.target
     const data = this.serializeForm(form)
 
-    // Валидация на клиенте
     if (!data.email || !data.password) {
       this.showMessage('register-messages', this.getLexicon('ms3_customer_err_register_required'), 'danger')
       return
@@ -172,14 +162,12 @@ class AuthForms {
           'success'
         )
 
-        // Если автовход включен - сохраняем токен и редиректим
         if (result.object && result.object.token) {
           this.saveToken(result.object.token)
           setTimeout(() => {
             this.handleRedirect(result.object)
           }, 1500)
         } else {
-          // Иначе переключаем на форму входа через 2 секунды
           setTimeout(() => {
             this.switchTab('login-tab')
             form.reset()
@@ -197,43 +185,38 @@ class AuthForms {
   }
 
   /**
-   * Обработчик "Забыли пароль?"
+   * Forgot password handler
    *
-   * @param {Event} event - Click событие
+   * @param {Event} event - Click event
    */
   handleForgotPassword (event) {
     event.preventDefault()
-    // TODO: Реализовать в будущем
-    alert('Функция восстановления пароля будет реализована в следующей версии')
+    alert('Password recovery feature will be implemented in the next version')
   }
 
   /**
-   * Обработка редиректа после успешной авторизации/регистрации
+   * Handle redirect after successful login/registration
    *
-   * @param {Object} responseObject - Объект ответа от backend
+   * @param {Object} responseObject - Response object from backend
    */
   handleRedirect (responseObject) {
-    // Если backend вернул redirect_url - используем его
     if (responseObject && responseObject.redirect_url) {
       window.location.href = responseObject.redirect_url
     } else {
-      // Иначе перезагружаем текущую страницу
       window.location.reload()
     }
   }
 
   /**
-   * Сохранить токен авторизации
+   * Save authorization token
    *
-   * @param {string} token - API токен
+   * @param {string} token - API token
    */
   saveToken (token) {
     if (!token) return
 
-    // Сохраняем в localStorage
     localStorage.setItem('ms3_token', token)
 
-    // Также обновляем глобальный объект ms3 если он существует
     if (window.ms3 && window.ms3.config) {
       window.ms3.config.token = token
     }
@@ -242,16 +225,16 @@ class AuthForms {
   }
 
   /**
-   * Получить сохранённый токен
+   * Get saved token
    *
-   * @returns {string|null} - Токен или null
+   * @returns {string|null} - Token or null
    */
   getToken () {
     return localStorage.getItem('ms3_token')
   }
 
   /**
-   * Удалить токен (при выходе)
+   * Remove token (on logout)
    */
   clearToken () {
     localStorage.removeItem('ms3_token')
@@ -262,11 +245,11 @@ class AuthForms {
   }
 
   /**
-   * Отправка данных к Frontend API через api.php
+   * Send data to Frontend API via api.php
    *
-   * @param {string} route - API роут (например: /api/v1/customer/login)
-   * @param {Object} data - Данные для отправки
-   * @returns {Promise<Object>} - Ответ от API
+   * @param {string} route - API route (e.g., /api/v1/customer/login)
+   * @param {Object} data - Data to send
+   * @returns {Promise<Object>} - API response
    */
   async sendToApi (route, data) {
     const url = new URL(this.config.apiUrl, window.location.origin)
@@ -276,7 +259,7 @@ class AuthForms {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json'
       },
       body: JSON.stringify(data)
     })
@@ -285,11 +268,11 @@ class AuthForms {
   }
 
   /**
-   * Показать сообщение в контейнере
+   * Show message in container
    *
-   * @param {string} containerId - ID контейнера для сообщений
-   * @param {string} message - Текст сообщения
-   * @param {string} type - Тип (success, danger, warning, info)
+   * @param {string} containerId - Message container ID
+   * @param {string} message - Message text
+   * @param {string} type - Type (success, danger, warning, info)
    */
   showMessage (containerId, message, type = 'danger') {
     const container = document.getElementById(containerId)
@@ -306,7 +289,6 @@ class AuthForms {
     container.innerHTML = ''
     container.appendChild(alertDiv)
 
-    // Автоматическое закрытие через 5 секунд для success сообщений
     if (type === 'success') {
       setTimeout(() => {
         alertDiv.classList.remove('show')
@@ -316,9 +298,9 @@ class AuthForms {
   }
 
   /**
-   * Очистить сообщения
+   * Clear messages
    *
-   * @param {string} containerId - ID контейнера
+   * @param {string} containerId - Container ID
    */
   clearMessages (containerId) {
     const container = document.getElementById(containerId)
@@ -328,10 +310,10 @@ class AuthForms {
   }
 
   /**
-   * Установить состояние загрузки для кнопки
+   * Set button loading state
    *
-   * @param {string} buttonId - ID кнопки
-   * @param {boolean} isLoading - true для включения загрузки
+   * @param {string} buttonId - Button ID
+   * @param {boolean} isLoading - true to enable loading
    */
   setButtonLoading (buttonId, isLoading) {
     const btn = document.getElementById(buttonId)
@@ -347,17 +329,16 @@ class AuthForms {
   }
 
   /**
-   * Сериализация формы в объект
+   * Serialize form to object
    *
-   * @param {HTMLFormElement} form - Форма
-   * @returns {Object} - Объект с данными формы
+   * @param {HTMLFormElement} form - Form
+   * @returns {Object} - Object with form data
    */
   serializeForm (form) {
     const formData = new FormData(form)
     const data = {}
 
     for (const [key, value] of formData.entries()) {
-      // Чекбоксы
       if (form.elements[key] && form.elements[key].type === 'checkbox') {
         data[key] = form.elements[key].checked
       } else {
@@ -369,9 +350,9 @@ class AuthForms {
   }
 
   /**
-   * Переключить таб
+   * Switch tab
    *
-   * @param {string} tabId - ID кнопки таба
+   * @param {string} tabId - Tab button ID
    */
   switchTab (tabId) {
     const tabButton = document.getElementById(tabId)
@@ -381,36 +362,30 @@ class AuthForms {
   }
 
   /**
-   * Инициализация поддержки табов (fallback если нет Bootstrap JS)
+   * Initialize tab support (fallback if Bootstrap JS is missing)
    */
   initTabSupport () {
-    // Проверка наличия Bootstrap
     if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-      return // Bootstrap уже инициализирован
+      return
     }
 
-    // Fallback: ручная реализация табов
     const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]')
     tabButtons.forEach((tabButton) => {
       tabButton.addEventListener('click', (e) => {
         e.preventDefault()
 
-        // Убрать активность со всех табов
         document.querySelectorAll('.nav-link').forEach((link) => {
           link.classList.remove('active')
           link.setAttribute('aria-selected', 'false')
         })
 
-        // Убрать активность со всех панелей
         document.querySelectorAll('.tab-pane').forEach((pane) => {
           pane.classList.remove('show', 'active')
         })
 
-        // Активировать текущий таб
         tabButton.classList.add('active')
         tabButton.setAttribute('aria-selected', 'true')
 
-        // Активировать соответствующую панель
         const targetId = tabButton.getAttribute('data-bs-target')
         const targetPane = document.querySelector(targetId)
         if (targetPane) {
@@ -421,18 +396,16 @@ class AuthForms {
   }
 
   /**
-   * Получить лексикон (из глобального объекта или fallback)
+   * Get lexicon (from global object or fallback)
    *
-   * @param {string} key - Ключ лексикона
-   * @returns {string} - Значение
+   * @param {string} key - Lexicon key
+   * @returns {string} - Value
    */
   getLexicon (key) {
-    // Если есть глобальный объект с лексиконами
     if (window.ms3Lexicon && window.ms3Lexicon[key]) {
       return window.ms3Lexicon[key]
     }
 
-    // Fallback значения (английский)
     const fallbacks = {
       ms3_customer_err_login_required: 'Please enter email and password',
       ms3_customer_login_success: 'You have successfully logged in',
@@ -447,10 +420,8 @@ class AuthForms {
   }
 }
 
-// Экспорт для использования в других скриптах
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = AuthForms
 }
 
-// Глобальный объект для доступа из других скриптов
 window.AuthForms = AuthForms

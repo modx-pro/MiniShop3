@@ -1,8 +1,8 @@
 /**
- * HTTP клиент для работы с MiniShop3 REST API
+ * HTTP client for MiniShop3 REST API
  *
- * Простая обёртка над fetch() для взаимодействия с backend API.
- * Автоматически добавляет токен авторизации и обрабатывает JSON.
+ * Simple wrapper over fetch() for backend API interaction.
+ * Automatically adds authorization token and handles JSON.
  *
  * @example
  * const client = new ApiClient({
@@ -14,9 +14,9 @@
  */
 class ApiClient {
   /**
-   * @param {Object} config - Конфигурация клиента
-   * @param {string} config.baseUrl - Базовый URL API (например: '/assets/components/minishop3/api.php')
-   * @param {TokenManager} config.tokenManager - Менеджер токенов
+   * @param {Object} config - Client configuration
+   * @param {string} config.baseUrl - Base API URL (e.g., '/assets/components/minishop3/api.php')
+   * @param {TokenManager} config.tokenManager - Token manager instance
    */
   constructor (config) {
     this.baseUrl = config.baseUrl || '/assets/components/minishop3/api.php'
@@ -24,46 +24,37 @@ class ApiClient {
   }
 
   /**
-   * Базовый метод для выполнения HTTP запросов
+   * Base method for executing HTTP requests
    *
-   * @param {string} method - HTTP метод (GET, POST и т.д.)
-   * @param {string} endpoint - Endpoint API (например: '/cart/get')
-   * @param {Object|null} data - Данные для отправки (для POST/PATCH)
-   * @returns {Promise<Object>} - Ответ от сервера
+   * @param {string} method - HTTP method (GET, POST, etc.)
+   * @param {string} endpoint - API endpoint (e.g., '/cart/get')
+   * @param {Object|null} data - Data to send (for POST/PATCH)
+   * @returns {Promise<Object>} - Server response
    */
   async request (method, endpoint, data = null) {
-    // Формируем URL с параметрами
     const url = new URL(this.baseUrl, window.location.origin)
 
-    // Добавляем route как параметр
     url.searchParams.set('route', endpoint)
 
-    // Получаем токен из TokenManager
     const token = this.tokenManager.getToken()
     if (token) {
       url.searchParams.set('ms3_token', token)
     }
 
-    // Формируем заголовки
     const headers = {
       Accept: 'application/json',
       'X-Requested-With': 'XMLHttpRequest'
     }
 
-    // Опции запроса
     const options = {
       method,
       headers
     }
 
-    // Если есть данные для отправки - добавляем body
     if (data && (method === 'POST' || method === 'PATCH' || method === 'PUT')) {
-      // Проверяем тип данных
       if (data instanceof FormData) {
-        // FormData отправляем как есть (без Content-Type, браузер сам установит)
         options.body = data
       } else {
-        // Обычный объект - отправляем как JSON
         headers['Content-Type'] = 'application/json'
         options.body = JSON.stringify(data)
       }
@@ -71,23 +62,17 @@ class ApiClient {
 
     try {
       const response = await fetch(url.toString(), options)
-
-      // Всегда пытаемся прочитать JSON body (даже при ошибке 4xx/5xx)
       const result = await response.json()
-
-      // Для ошибок 4xx/5xx возвращаем JSON с деталями ошибки
-      // (не выбрасываем исключение, чтобы UI мог обработать message и errors)
       return result
     } catch (error) {
-      // Ошибка парсинга JSON или сетевая ошибка
       throw error
     }
   }
 
   /**
-   * GET запрос
+   * GET request
    *
-   * @param {string} endpoint - Endpoint API
+   * @param {string} endpoint - API endpoint
    * @returns {Promise<Object>}
    */
   get (endpoint) {
@@ -95,10 +80,10 @@ class ApiClient {
   }
 
   /**
-   * POST запрос
+   * POST request
    *
-   * @param {string} endpoint - Endpoint API
-   * @param {Object|FormData} data - Данные для отправки
+   * @param {string} endpoint - API endpoint
+   * @param {Object|FormData} data - Data to send
    * @returns {Promise<Object>}
    */
   post (endpoint, data) {
@@ -106,10 +91,10 @@ class ApiClient {
   }
 
   /**
-   * PUT запрос (полное обновление)
+   * PUT request (full update)
    *
-   * @param {string} endpoint - Endpoint API
-   * @param {Object} data - Данные для отправки
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Data to send
    * @returns {Promise<Object>}
    */
   put (endpoint, data) {
@@ -117,10 +102,10 @@ class ApiClient {
   }
 
   /**
-   * PATCH запрос (частичное обновление)
+   * PATCH request (partial update)
    *
-   * @param {string} endpoint - Endpoint API
-   * @param {Object} data - Данные для отправки
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Data to send
    * @returns {Promise<Object>}
    */
   patch (endpoint, data) {
@@ -128,9 +113,9 @@ class ApiClient {
   }
 
   /**
-   * DELETE запрос
+   * DELETE request
    *
-   * @param {string} endpoint - Endpoint API
+   * @param {string} endpoint - API endpoint
    * @returns {Promise<Object>}
    */
   delete (endpoint) {

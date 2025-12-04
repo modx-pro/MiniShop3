@@ -1,17 +1,17 @@
 /**
- * API для работы с корзиной
+ * API for cart management
  *
- * Простая обёртка над REST endpoints корзины.
- * Все методы возвращают Promise с ответом от сервера.
+ * Simple wrapper over cart REST endpoints.
+ * All methods return Promise with server response.
  *
- * Формат ответа сервера:
+ * Server response format:
  * {
  *   success: true/false,
- *   message: "Сообщение",
+ *   message: "Message",
  *   data: {
- *     cart: [],           // Массив товаров
- *     status: {},         // Итоги корзины (total_cost, total_count и т.д.)
- *     render: {}          // HTML блоки для рендера (если запрошено)
+ *     cart: [],           // Product array
+ *     status: {},         // Cart totals (total_cost, total_count, etc.)
+ *     render: {}          // HTML blocks for rendering (if requested)
  *   }
  * }
  *
@@ -19,52 +19,50 @@
  * const cart = new CartAPI(apiClient)
  * const response = await cart.add(123, 2, { color: 'red' })
  * if (response.success) {
- *   console.log('Товар добавлен', response.data.cart)
+ *   console.log('Product added', response.data.cart)
  * }
  */
 class CartAPI {
   /**
-   * @param {ApiClient} apiClient - HTTP клиент
+   * @param {ApiClient} apiClient - HTTP client
    */
   constructor (apiClient) {
     this.api = apiClient
   }
 
   /**
-   * Получить корзину
+   * Get cart
    *
    * GET /api/v1/cart/get
    *
-   * @param {Object} params - Дополнительные параметры
-   * @param {Object} params.render - Конфигурация рендера (селекторы для обновления HTML)
+   * @param {Object} params - Additional parameters
+   * @param {Object} params.render - Render configuration (selectors for HTML update)
    * @returns {Promise<Object>} - { success, message, data: { cart, status, render } }
    *
    * @example
    * const response = await cart.get()
-   * console.log(response.data.cart) // Массив товаров
-   * console.log(response.data.status.total_cost) // Общая стоимость
+   * console.log(response.data.cart)
+   * console.log(response.data.status.total_cost)
    */
   async get (params = {}) {
     const endpoint = '/api/v1/cart/get'
 
-    // Если нужен рендер - передаём параметр
     if (params.render) {
-      // TODO: добавить поддержку render параметра в backend
-      // Пока просто возвращаем данные
+      // TODO: add render parameter support in backend
     }
 
     return this.api.get(endpoint)
   }
 
   /**
-   * Добавить товар в корзину
+   * Add product to cart
    *
    * POST /api/v1/cart/add
    *
-   * @param {number} id - ID товара
-   * @param {number} count - Количество (по умолчанию 1)
-   * @param {Object} options - Опции товара (цвет, размер и т.д.)
-   * @param {Object} render - Конфигурация рендера
+   * @param {number} id - Product ID
+   * @param {number} count - Quantity (default 1)
+   * @param {Object} options - Product options (color, size, etc.)
+   * @param {Object} render - Render configuration
    * @returns {Promise<Object>}
    *
    * @example
@@ -85,13 +83,13 @@ class CartAPI {
   }
 
   /**
-   * Изменить количество товара
+   * Change product quantity
    *
    * POST /api/v1/cart/change
    *
-   * @param {string} productKey - Уникальный ключ товара в корзине
-   * @param {number} count - Новое количество (0 = удалить)
-   * @param {Object} render - Конфигурация рендера
+   * @param {string} productKey - Unique product key in cart
+   * @param {number} count - New quantity (0 = remove)
+   * @param {Object} render - Render configuration
    * @returns {Promise<Object>}
    *
    * @example
@@ -111,12 +109,12 @@ class CartAPI {
   }
 
   /**
-   * Удалить товар из корзины
+   * Remove product from cart
    *
    * POST /api/v1/cart/remove
    *
-   * @param {string} productKey - Уникальный ключ товара
-   * @param {Object} render - Конфигурация рендера
+   * @param {string} productKey - Unique product key
+   * @param {Object} render - Render configuration
    * @returns {Promise<Object>}
    *
    * @example
@@ -135,11 +133,11 @@ class CartAPI {
   }
 
   /**
-   * Очистить корзину (удалить все товары)
+   * Clear cart (remove all products)
    *
    * POST /api/v1/cart/clean
    *
-   * @param {Object} render - Конфигурация рендера
+   * @param {Object} render - Render configuration
    * @returns {Promise<Object>}
    *
    * @example

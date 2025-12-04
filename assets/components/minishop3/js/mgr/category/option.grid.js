@@ -12,7 +12,7 @@ ms3.grid.CategoryOption = function (config) {
             sort: 'position',
             dir: 'asc',
         },
-        // TODO: временно отключена серверная сортировка. Не смог выяснить, почему неверное передается sort: 'rank'
+        // TODO: server-side sorting temporarily disabled. Unable to determine why incorrect sort: 'rank' is passed
         remoteSort: false,
         multi_select: true,
         stateful: true,
@@ -176,7 +176,7 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
     },
 
     removeOption: function () {
-        // TODO: Возможно, здесь нужен confirm на удаление?
+        // TODO: Should we add confirmation dialog for deletion?
         this.optionAction('Remove');
     },
 

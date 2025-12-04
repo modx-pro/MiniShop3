@@ -1,16 +1,16 @@
 /**
- * MS3ActionRegistry - Реестр обработчиков действий для гридов
+ * MS3ActionRegistry - Action handlers registry for grids
  *
- * Позволяет:
- * - Регистрировать кастомные обработчики действий
- * - Использовать встроенные действия (edit, delete, view)
- * - Расширять функциональность через плагины
+ * Features:
+ * - Register custom action handlers
+ * - Use built-in actions (edit, delete, view)
+ * - Extend functionality through plugins
  *
- * Использование в плагинах:
+ * Plugin usage:
  * ```javascript
  * MS3ActionRegistry.register('blockCustomer', async (data, context) => {
  *   await fetch(`/api/mgr/customers/${data.id}/block`, { method: 'POST' })
- *   context.refresh() // Обновить грид
+ *   context.refresh()
  * })
  * ```
  */
@@ -21,50 +21,44 @@ class ActionRegistry {
     this.beforeHooks = new Map()
     this.afterHooks = new Map()
 
-    // Регистрируем встроенные действия
     this._registerBuiltinActions()
   }
 
   /**
-   * Регистрация встроенных действий
+   * Register built-in actions
    * @private
    */
   _registerBuiltinActions() {
-    // Edit - эмитит событие для открытия диалога редактирования
     this.register('edit', (data, context) => {
       context.emit('edit', data)
     })
 
-    // Delete - эмитит событие для удаления с подтверждением
     this.register('delete', (data, context) => {
       context.emit('delete', data)
     })
 
-    // View - эмитит событие для просмотра
     this.register('view', (data, context) => {
       context.emit('view', data)
     })
 
-    // Addresses - эмитит событие для управления адресами
     this.register('addresses', (data, context) => {
       context.emit('addresses', data)
     })
 
-    // Refresh - обновить грид
     this.register('refresh', (data, context) => {
       context.refresh()
     })
   }
 
   /**
-   * Регистрация обработчика действия
+   * Register action handler
    *
-   * @param {string} name - Имя действия (например: 'edit', 'delete', 'blockCustomer')
-   * @param {Function} handler - Функция обработчик: (data, context) => void
-   *   - data: объект данных строки грида
-   *   - context: объект контекста {emit, refresh, toast, confirm, gridId}
-   * @param {Object} options - Дополнительные опции
-   *   - override: boolean - разрешить перезапись существующего обработчика
+   * @param {string} name - Action name (e.g.: 'edit', 'delete', 'blockCustomer')
+   * @param {Function} handler - Handler function: (data, context) => void
+   *   - data: grid row data object
+   *   - context: context object {emit, refresh, toast, confirm, gridId}
+   * @param {Object} options - Additional options
+   *   - override: boolean - allow overriding existing handler
    */
   register(name, handler, options = {}) {
     if (typeof handler !== 'function') {
@@ -82,11 +76,10 @@ class ActionRegistry {
   }
 
   /**
-   * Удаление обработчика
-   * @param {string} name - Имя действия
+   * Unregister handler
+   * @param {string} name - Action name
    */
   unregister(name) {
-    // Защита встроенных действий
     const builtins = ['edit', 'delete', 'view', 'refresh']
     if (builtins.includes(name)) {
       console.warn(`[MS3ActionRegistry] Cannot unregister builtin action "${name}"`)
@@ -97,27 +90,27 @@ class ActionRegistry {
   }
 
   /**
-   * Проверка наличия обработчика
-   * @param {string} name - Имя действия
+   * Check if handler exists
+   * @param {string} name - Action name
    */
   has(name) {
     return this.handlers.has(name)
   }
 
   /**
-   * Получение обработчика
-   * @param {string} name - Имя действия
+   * Get handler
+   * @param {string} name - Action name
    */
   get(name) {
     return this.handlers.get(name)
   }
 
   /**
-   * Выполнение действия
+   * Execute action
    *
-   * @param {string} name - Имя действия
-   * @param {Object} data - Данные строки грида
-   * @param {Object} context - Контекст выполнения
+   * @param {string} name - Action name
+   * @param {Object} data - Grid row data
+   * @param {Object} context - Execution context
    * @returns {Promise<any>}
    */
   async execute(name, data, context) {
@@ -129,19 +122,16 @@ class ActionRegistry {
     }
 
     try {
-      // Выполняем before hooks
       const beforeHooks = this.beforeHooks.get(name) || []
       for (const hook of beforeHooks) {
         const shouldContinue = await hook(data, context)
         if (shouldContinue === false) {
-          return null // Hook отменил выполнение
+          return null
         }
       }
 
-      // Выполняем основной обработчик
       const result = await handler(data, context)
 
-      // Выполняем after hooks
       const afterHooks = this.afterHooks.get(name) || []
       for (const hook of afterHooks) {
         await hook(data, context, result)
@@ -151,12 +141,11 @@ class ActionRegistry {
     } catch (error) {
       console.error(`[MS3ActionRegistry] Error executing "${name}":`, error)
 
-      // Показываем toast с ошибкой если доступен
       if (context.toast) {
         context.toast.add({
           severity: 'error',
-          summary: 'Ошибка',
-          detail: error.message || 'Произошла ошибка при выполнении действия',
+          summary: 'Error',
+          detail: error.message || 'An error occurred while executing action',
           life: 5000
         })
       }
@@ -166,11 +155,11 @@ class ActionRegistry {
   }
 
   /**
-   * Регистрация хука before (выполняется до действия)
+   * Register before hook (executed before action)
    *
-   * @param {string} actionName - Имя действия
-   * @param {Function} hook - Функция хука: (data, context) => boolean
-   *   Возврат false отменяет выполнение действия
+   * @param {string} actionName - Action name
+   * @param {Function} hook - Hook function: (data, context) => boolean
+   *   Return false to cancel action execution
    */
   registerBeforeHook(actionName, hook) {
     if (!this.beforeHooks.has(actionName)) {
@@ -180,10 +169,10 @@ class ActionRegistry {
   }
 
   /**
-   * Регистрация хука after (выполняется после действия)
+   * Register after hook (executed after action)
    *
-   * @param {string} actionName - Имя действия
-   * @param {Function} hook - Функция хука: (data, context, result) => void
+   * @param {string} actionName - Action name
+   * @param {Function} hook - Hook function: (data, context, result) => void
    */
   registerAfterHook(actionName, hook) {
     if (!this.afterHooks.has(actionName)) {
@@ -193,7 +182,7 @@ class ActionRegistry {
   }
 
   /**
-   * Получение списка всех зарегистрированных действий
+   * Get list of all registered actions
    * @returns {string[]}
    */
   getRegisteredActions() {
@@ -201,14 +190,13 @@ class ActionRegistry {
   }
 
   /**
-   * Получение информации о действии для UI
-   * @param {string} name - Имя действия
+   * Get action info for UI
+   * @param {string} name - Action name
    * @returns {Object|null}
    */
   getActionInfo(name) {
     if (!this.handlers.has(name)) return null
 
-    // Встроенные действия с метаданными
     const builtinMeta = {
       edit: { icon: 'pi-pencil', labelKey: 'edit', severity: null },
       delete: { icon: 'pi-trash', labelKey: 'delete', severity: 'danger' },
@@ -221,13 +209,9 @@ class ActionRegistry {
   }
 }
 
-// Создаём синглтон
 const actionRegistry = new ActionRegistry()
 
-// Экспортируем для использования в Vue компонентах
 export default actionRegistry
-
-// Регистрируем глобально для доступа из плагинов
 if (typeof window !== 'undefined') {
   window.MS3ActionRegistry = actionRegistry
 }

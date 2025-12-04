@@ -4,11 +4,10 @@ import GalleryUploader from '../components/gallery/GalleryUploader.vue'
 /**
  * Gallery Uploader Entry Point
  *
- * Инициализирует Vue приложение с Uppy uploader для галереи товара
- * Интегрируется в ExtJS панель через DOM монтирование
+ * Initializes Vue application with Uppy uploader for product gallery
+ * Integrates into ExtJS panel via DOM mounting
  */
 
-// Функция для инициализации uploader
 window.MS3_initGalleryUploader = function(config) {
   const {
     containerId = 'ms3-gallery-uploader',
@@ -30,7 +29,6 @@ window.MS3_initGalleryUploader = function(config) {
     return null
   }
 
-  // Создаем Vue приложение
   const app = createApp(GalleryUploader, {
     productId,
     sourceId,
@@ -44,10 +42,8 @@ window.MS3_initGalleryUploader = function(config) {
     onUploadComplete
   })
 
-  // Монтируем приложение
   const instance = app.mount(container)
 
-  // Сохраняем ссылку на приложение для возможного демонтирования
   container.__vueApp__ = app
   container.__vueInstance__ = instance
 
@@ -64,7 +60,6 @@ window.MS3_initGalleryUploader = function(config) {
   }
 }
 
-// Функция для уничтожения uploader
 window.MS3_destroyGalleryUploader = function(containerId = 'ms3-gallery-uploader') {
   const container = document.getElementById(containerId)
   if (container && container.__vueApp__) {

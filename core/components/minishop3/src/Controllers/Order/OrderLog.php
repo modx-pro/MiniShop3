@@ -43,9 +43,6 @@ class OrderLog
             $this->modx->getRequest();
         }
 
-        //TODO белый список разрешенных действий с управлением из админки
-        //TODO автором может быть не user, а customer, Предусмотреть его ID
-
         $user_id = ($action === 'status' && $entry == 1) || !$this->modx->user->id
             ? $msOrder->get('user_id')
             : $this->modx->user->id;

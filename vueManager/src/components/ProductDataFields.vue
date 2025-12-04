@@ -22,27 +22,27 @@ const props = defineProps({
 const toast = useToast()
 const { _ } = useLexicon()
 
-// Состояние загрузки
+// Loading state
 const loading = ref(false)
 const saving = ref(false)
 
-// Конфигурация полей и секций
+// Fields and sections configuration
 const fieldsConfig = ref({
   fields: [],
   sections: {}
 })
 
-// Значения полей
+// Field values
 const fieldValues = ref({})
 
-// Данные товара
+// Product data
 const productData = ref({})
 
-// Ключ страницы
+// Page key
 const pageKey = 'product_data'
 
 /**
- * Загрузить данные товара
+ * Load product data
  */
 async function loadProductData() {
   try {
@@ -74,13 +74,13 @@ async function loadProductData() {
 }
 
 /**
- * Загрузить конфигурацию полей
+ * Load fields configuration
  */
 async function loadConfig() {
   loading.value = true
 
   try {
-    // Загружаем конфигурацию полей и данные товара параллельно
+    // Load fields configuration and product data in parallel
     const [configResponse, productDataResponse] = await Promise.all([
       request.get(`/api/mgr/config/page-fields/${pageKey}`),
       loadProductData()
@@ -89,16 +89,16 @@ async function loadConfig() {
     if (configResponse && configResponse.fields) {
       fieldsConfig.value = configResponse
 
-      // Инициализировать значения полей из загруженных данных товара
+      // Initialize field values from loaded product data
       configResponse.fields.forEach(field => {
         const fieldName = field.name
         if (productDataResponse && productDataResponse[fieldName] !== undefined) {
           let value = productDataResponse[fieldName]
 
-          // Для чекбоксов преобразуем значение в число
+          // For checkboxes convert value to number
           if (field.xtype === 'xcheckbox' || field.xtype === 'checkbox') {
             const originalValue = value
-            // Обрабатываем boolean, string и number
+            // Handle boolean, string and number
             if (typeof value === 'boolean') {
               value = value ? 1 : 0
             } else if (typeof value === 'string') {
@@ -110,7 +110,7 @@ async function loadConfig() {
 
           fieldValues.value[fieldName] = value
         } else {
-          // Для чекбоксов по умолчанию 0, для остальных null
+          // For checkboxes default 0, for others null
           if (field.xtype === 'xcheckbox' || field.xtype === 'checkbox') {
             fieldValues.value[fieldName] = 0
           } else {
@@ -141,7 +141,7 @@ async function loadConfig() {
 }
 
 /**
- * Сохранить данные товара
+ * Save product data
  */
 async function saveProductData() {
   saving.value = true
@@ -180,22 +180,22 @@ async function saveProductData() {
 }
 
 /**
- * Обработать изменение поля
+ * Handle field change
  */
 function handleFieldChange(fieldId, value) {
   fieldValues.value[fieldId] = value
 }
 
 /**
- * Получить только видимые поля
+ * Get only visible fields
  */
 const visibleFields = computed(() => {
   return fieldsConfig.value.fields.filter(field => field.visible !== false)
 })
 
 /**
- * Группировка полей по секциям
- * Показываем только !hidden секции
+ * Group fields by sections
+ * Show only !hidden sections
  */
 const fieldsBySections = computed(() => {
   const sections = {}
@@ -204,7 +204,7 @@ const fieldsBySections = computed(() => {
     const sectionKey = field.section || 'default'
     const sectionConfig = fieldsConfig.value.sections[sectionKey]
 
-    // Пропускаем скрытые секции
+    // Skip hidden sections
     if (sectionConfig && sectionConfig.hidden === true) {
       return
     }
@@ -222,7 +222,7 @@ const fieldsBySections = computed(() => {
   return sections
 })
 
-// При монтировании загрузить конфигурацию
+// Load configuration on mount
 onMounted(() => {
   loadConfig()
 })
@@ -259,7 +259,7 @@ onMounted(() => {
                 :key="field.name"
                 :class="['field-item', `col-${field.width || 4}`, { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' }]"
               >
-                <!-- Checkbox layout: checkbox + label в одну линию -->
+                <!-- Checkbox layout: checkbox + label in one line -->
                 <template v-if="field.xtype === 'xcheckbox' || field.xtype === 'checkbox'">
                   <div class="checkbox-wrapper">
                     <DynamicField
@@ -278,7 +278,7 @@ onMounted(() => {
                   </small>
                 </template>
 
-                <!-- Обычное поле: label сверху, поле снизу -->
+                <!-- Regular field: label on top, field below -->
                 <template v-else>
                   <label :for="field.name" class="field-label">
                     {{ field.label }}
@@ -314,7 +314,7 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  margin: -10px; /* Компенсация padding у полей */
+  margin: -10px; /* Compensate field padding */
 }
 
 .field-item {
@@ -333,7 +333,7 @@ onMounted(() => {
   width: 100%;
 }
 
-/* 12-колоночная grid система */
+/* 12-column grid system */
 .col-1 { flex: 0 0 calc(8.333% - 20px); max-width: calc(8.333% - 20px); }
 .col-2 { flex: 0 0 calc(16.666% - 20px); max-width: calc(16.666% - 20px); }
 .col-3 { flex: 0 0 calc(25% - 20px); max-width: calc(25% - 20px); }
@@ -347,12 +347,12 @@ onMounted(() => {
 .col-11 { flex: 0 0 calc(91.666% - 20px); max-width: calc(91.666% - 20px); }
 .col-12 { flex: 0 0 calc(100% - 20px); max-width: calc(100% - 20px); }
 
-/* Responsive: на планшетах col-4 становится col-6 */
+/* Responsive: on tablets col-4 becomes col-6 */
 @media (max-width: 1024px) {
   .col-4 { flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px); }
 }
 
-/* Responsive: на мобильных все поля на всю ширину */
+/* Responsive: on mobile all fields full width */
 @media (max-width: 768px) {
   .field-item {
     flex: 0 0 calc(100% - 20px) !important;
@@ -371,7 +371,7 @@ onMounted(() => {
   margin-left: 2px;
 }
 
-/* Чекбокс: горизонтальное расположение */
+/* Checkbox: horizontal layout */
 .checkbox-wrapper {
   display: flex;
   align-items: center;

@@ -44,7 +44,7 @@
         :falseValue="0"
         @change="handleBlur"
       />
-      <!-- Скрытое поле для передачи правильного значения в форму -->
+      <!-- Hidden field to pass correct value to form -->
       <input
         type="hidden"
         :name="fieldConfig.name"
@@ -117,11 +117,11 @@
       <VendorCombo
         :inputId="fieldConfig.name"
         v-model="localValue"
-        :placeholder="fieldConfig.placeholder || 'Выберите производителя'"
+        :placeholder="fieldConfig.placeholder || 'Select vendor'"
         :disabled="disabled"
         @change="handleBlur"
       />
-      <!-- Скрытое поле для отправки значения в ExtJS форму -->
+      <!-- Hidden field to send value to ExtJS form -->
       <input
         type="hidden"
         :name="fieldConfig.name"
@@ -135,11 +135,11 @@
         :inputId="fieldConfig.name"
         :fieldName="fieldConfig.name"
         v-model="localValue"
-        :placeholder="fieldConfig.placeholder || 'Начните вводить...'"
+        :placeholder="fieldConfig.placeholder || 'Start typing...'"
         :disabled="disabled"
         @change="handleBlur"
       />
-      <!-- Скрытое поле для отправки значения в ExtJS форму -->
+      <!-- Hidden field to send value to ExtJS form -->
       <input
         type="hidden"
         :name="fieldConfig.name"
@@ -153,11 +153,11 @@
         :inputId="fieldConfig.name"
         :optionKey="fieldConfig.name"
         v-model="localValue"
-        :placeholder="fieldConfig.placeholder || 'Добавьте опции...'"
+        :placeholder="fieldConfig.placeholder || 'Add options...'"
         :disabled="disabled"
         @change="handleBlur"
       />
-      <!-- Скрытые поля для отправки массива значений в ExtJS форму -->
+      <!-- Hidden fields to send array values to ExtJS form -->
       <template v-if="Array.isArray(localValue) && localValue.length > 0">
         <input
           v-for="(val, index) in localValue"
@@ -180,12 +180,12 @@
     <!-- Unknown field type -->
     <div v-else class="unknown-field">
       <Message severity="warn">
-        Неизвестный тип поля: {{ fieldConfig.xtype }}
+        Unknown field type: {{ fieldConfig.xtype }}
       </Message>
     </div>
 
-    <!-- Скрытое поле для сложных типов (combobox, datefield, colorpicker, chips, multiselect) -->
-    <!-- Эти поля требуют сериализацию в JSON для передачи в ExtJS форму -->
+    <!-- Hidden field for complex types (combobox, datefield, colorpicker, chips, multiselect) -->
+    <!-- These fields require JSON serialization to pass to ExtJS form -->
     <input
       v-if="isComplexField"
       type="hidden"
@@ -248,7 +248,7 @@ const props = defineProps({
 })
 
 /**
- * Определить, является ли поле простым типом (не требует скрытого input)
+ * Determine if field is simple type (doesn't require hidden input)
  */
 const isSimpleField = computed(() => {
   const simpleTypes = ['textfield', 'numberfield', 'textarea', 'switch', 'checkbox', 'xcheckbox']
@@ -256,7 +256,7 @@ const isSimpleField = computed(() => {
 })
 
 /**
- * Определить, является ли поле сложным типом (требует скрытое поле с JSON)
+ * Determine if field is complex type (requires hidden field with JSON)
  */
 const isComplexField = computed(() => {
   const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect']
@@ -264,43 +264,43 @@ const isComplexField = computed(() => {
 })
 
 /**
- * Определить, является ли поле ExtJS combo (ms3-combo-*)
+ * Determine if field is ExtJS combo (ms3-combo-*)
  */
 const isExtJSComboField = computed(() => {
   return props.fieldConfig.xtype && props.fieldConfig.xtype.startsWith('ms3-combo-')
 })
 
 /**
- * Получить описание ExtJS combo поля
+ * Get ExtJS combo field description
  */
 const getExtJSComboLabel = (xtype) => {
   const labels = {
-    'ms3-combo-vendor': 'Выбор производителя (ExtJS combo)',
-    'ms3-combo-category': 'Выбор категории (ExtJS combo)',
-    'ms3-combo-user': 'Выбор пользователя (ExtJS combo)',
-    'ms3-combo-customer': 'Выбор покупателя (ExtJS combo)',
-    'ms3-combo-source': 'Выбор источника медиа (ExtJS combo)',
-    'ms3-combo-options': 'Опции товара (ExtJS combo)',
-    'ms3-combo-autocomplete': 'Автодополнение (ExtJS combo)'
+    'ms3-combo-vendor': 'Vendor selection (ExtJS combo)',
+    'ms3-combo-category': 'Category selection (ExtJS combo)',
+    'ms3-combo-user': 'User selection (ExtJS combo)',
+    'ms3-combo-customer': 'Customer selection (ExtJS combo)',
+    'ms3-combo-source': 'Media source selection (ExtJS combo)',
+    'ms3-combo-options': 'Product options (ExtJS combo)',
+    'ms3-combo-autocomplete': 'Autocomplete (ExtJS combo)'
   }
 
-  return labels[xtype] || `ExtJS виджет: ${xtype}`
+  return labels[xtype] || `ExtJS widget: ${xtype}`
 }
 
 /**
- * Сериализовать значение для скрытого поля
+ * Serialize value for hidden field
  */
 const serializedValue = computed(() => {
   if (localValue.value === null || localValue.value === undefined) {
     return ''
   }
 
-  // Для сложных объектов и массивов - JSON
+  // For complex objects and arrays - JSON
   if (typeof localValue.value === 'object') {
     return JSON.stringify(localValue.value)
   }
 
-  // Для простых значений - как есть
+  // For simple values - as is
   return String(localValue.value)
 })
 

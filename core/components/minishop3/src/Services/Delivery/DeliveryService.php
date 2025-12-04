@@ -11,10 +11,10 @@ use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для работы с доставкой
+ * Service for working with delivery
  *
- * Обрабатывает бизнес-логику связанную с доставкой заказов,
- * включая загрузку контроллеров, расчет стоимости и управление связями
+ * Handles business logic related to order delivery,
+ * including loading controllers, cost calculation and managing relations
  */
 class DeliveryService
 {
@@ -40,13 +40,13 @@ class DeliveryService
     }
 
     /**
-     * Загрузка контроллера доставки
+     * Load delivery controller
      *
-     * Создает экземпляр контроллера доставки на основе класса из настроек.
-     * Если класс не указан, используется контроллер по умолчанию (DefaultDelivery).
+     * Creates delivery controller instance based on class from settings.
+     * If class not specified, uses default controller (DefaultDelivery).
      *
      * @param msDelivery $delivery
-     * @return DeliveryProviderInterface|null Контроллер доставки или null при ошибке
+     * @return DeliveryProviderInterface|null Delivery controller or null on error
      */
     public function loadDeliveryController(msDelivery $delivery): ?DeliveryProviderInterface
     {
@@ -62,7 +62,7 @@ class DeliveryService
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
                     sprintf(
-                        'DeliveryService: Класс "%s" не реализует DeliveryProviderInterface для доставки ID=%d',
+                        'DeliveryService: Class "%s" does not implement DeliveryProviderInterface for delivery ID=%d',
                         $class,
                         $delivery->get('id')
                     )
@@ -75,7 +75,7 @@ class DeliveryService
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
                 sprintf(
-                    'DeliveryService: Ошибка загрузки контроллера доставки "%s": %s',
+                    'DeliveryService: Error loading delivery controller "%s": %s',
                     $class,
                     $e->getMessage()
                 )
@@ -85,16 +85,16 @@ class DeliveryService
     }
 
     /**
-     * Расчет стоимости доставки
+     * Calculate delivery cost
      *
-     * Делегирует расчет стоимости контроллеру доставки.
-     * Контроллер может учитывать вес, расстояние, стоимость заказа и другие факторы.
+     * Delegates cost calculation to delivery controller.
+     * Controller can consider weight, distance, order cost and other factors.
      *
-     * @param msDelivery $delivery Метод доставки
-     * @param DeliveryProviderInterface|null $controller Контроллер доставки (если null - будет загружен)
-     * @param msOrder $order Заказ
-     * @param float $cost Текущая стоимость заказа
-     * @return float Стоимость доставки
+     * @param msDelivery $delivery Delivery method
+     * @param DeliveryProviderInterface|null $controller Delivery controller (if null - will be loaded)
+     * @param msOrder $order Order
+     * @param float $cost Current order cost
+     * @return float Delivery cost
      */
     public function calculateDeliveryCost(
         msDelivery $delivery,
@@ -113,13 +113,13 @@ class DeliveryService
     }
 
     /**
-     * Получить первый активный способ оплаты для доставки
+     * Get first active payment method for delivery
      *
-     * Возвращает ID первого активного способа оплаты,
-     * связанного с данным методом доставки
+     * Returns ID of first active payment method
+     * linked to this delivery method
      *
      * @param msDelivery $delivery
-     * @return int ID способа оплаты или 0 если не найден
+     * @return int Payment method ID or 0 if not found
      */
     public function getFirstActivePayment(msDelivery $delivery): int
     {
@@ -145,10 +145,10 @@ class DeliveryService
     }
 
     /**
-     * Удаление доставки с очисткой связей
+     * Remove delivery with relation cleanup
      *
-     * Удаляет все связи доставки со способами оплаты
-     * из таблицы msDeliveryMember перед удалением доставки
+     * Removes all delivery relations with payment methods
+     * from msDeliveryMember table before delivery removal
      *
      * @param msDelivery $delivery
      * @param array $ancestors
@@ -158,7 +158,6 @@ class DeliveryService
     {
         $deliveryId = $delivery->get('id');
 
-        // Удаляем все связи доставки со способами оплаты
         $this->modx->removeCollection(msDeliveryMember::class, [
             'delivery_id' => $deliveryId
         ]);
@@ -166,7 +165,7 @@ class DeliveryService
         $this->modx->log(
             modX::LOG_LEVEL_INFO,
             sprintf(
-                'DeliveryService: Удалены связи DeliveryMember для доставки ID=%d "%s"',
+                'DeliveryService: Removed DeliveryMember relations for delivery ID=%d "%s"',
                 $deliveryId,
                 $delivery->get('name')
             )
@@ -176,13 +175,13 @@ class DeliveryService
     }
 
     /**
-     * Получить список доступных способов оплаты для доставки
+     * Get list of available payment methods for delivery
      *
-     * Возвращает массив активных способов оплаты,
-     * связанных с данным методом доставки
+     * Returns array of active payment methods
+     * linked to this delivery method
      *
      * @param msDelivery $delivery
-     * @return array Массив объектов msPayment
+     * @return array Array of msPayment objects
      */
     public function getAvailablePayments(msDelivery $delivery): array
     {

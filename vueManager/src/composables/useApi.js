@@ -1,13 +1,13 @@
 /**
- * Composable для работы с API через улучшенный Request класс
+ * Composable for working with API through enhanced Request class
  *
- * Предоставляет:
- * - Реактивное состояние загрузки (loading)
- * - Обработку ошибок (error)
- * - Удобные методы для CRUD операций
- * - Автоматическую обработку MODX processor ответов
+ * Provides:
+ * - Reactive loading state
+ * - Error handling
+ * - Convenient methods for CRUD operations
+ * - Automatic MODX processor response handling
  *
- * Пример использования:
+ * Usage example:
  * ```js
  * const { get, post, loading, error } = useApi();
  *
@@ -24,10 +24,10 @@ export function useApi() {
   const error = ref(null);
 
   /**
-   * Обертка для выполнения запроса с обработкой состояния
+   * Wrapper for executing request with state handling
    *
-   * @param {Function} requestFn - Функция запроса
-   * @returns {Promise<any>} - Результат запроса
+   * @param {Function} requestFn - Request function
+   * @returns {Promise<any>} - Request result
    */
   const executeRequest = async (requestFn) => {
     loading.value = true;
@@ -36,23 +36,19 @@ export function useApi() {
     try {
       const response = await requestFn();
 
-      // Если это MODX processor ответ с полем data - возвращаем его
       if (response.object && response.object.data !== undefined) {
         return response.object.data;
       }
 
-      // Если есть поле data на верхнем уровне
       if (response.data !== undefined) {
         return response.data;
       }
 
-      // Иначе возвращаем весь ответ
       return response;
 
     } catch (err) {
       error.value = err;
 
-      // Логируем ошибку для отладки
       console.error('[useApi] Request failed:', {
         message: err.message,
         status: err.statusCode,
@@ -67,49 +63,49 @@ export function useApi() {
   };
 
   /**
-   * GET запрос
+   * GET request
    */
   const get = (route, params = null, options = {}) => {
     return executeRequest(() => request.get(route, params, options));
   };
 
   /**
-   * POST запрос
+   * POST request
    */
   const post = (route, data = null, options = {}) => {
     return executeRequest(() => request.post(route, data, options));
   };
 
   /**
-   * PUT запрос
+   * PUT request
    */
   const put = (route, data = null, options = {}) => {
     return executeRequest(() => request.put(route, data, options));
   };
 
   /**
-   * DELETE запрос
+   * DELETE request
    */
   const del = (route, data = null, options = {}) => {
     return executeRequest(() => request.delete(route, data, options));
   };
 
   /**
-   * PATCH запрос
+   * PATCH request
    */
   const patch = (route, data = null, options = {}) => {
     return executeRequest(() => request.patch(route, data, options));
   };
 
   /**
-   * Сброс состояния ошибки
+   * Clear error state
    */
   const clearError = () => {
     error.value = null;
   };
 
   /**
-   * Проверка типа ошибки
+   * Check error type
    */
   const isUnauthorized = () => {
     return error.value instanceof RequestError && error.value.isUnauthorized();
@@ -124,18 +120,15 @@ export function useApi() {
   };
 
   return {
-    // Состояние
     loading,
     error,
 
-    // Методы запросов
     get,
     post,
     put,
-    delete: del, // delete - зарезервированное слово
+    delete: del,
     patch,
 
-    // Утилиты
     clearError,
     isUnauthorized,
     isForbidden,

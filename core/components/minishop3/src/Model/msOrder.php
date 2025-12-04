@@ -50,7 +50,6 @@ class msOrder extends xPDOSimpleObject
     {
         $isNew = $this->isNew();
 
-        // Событие BEFORE
         if ($this->xpdo instanceof modX) {
             $this->xpdo->invokeEvent('msOnBeforeSaveOrder', [
                 'mode' => $isNew ? modSystemEvent::MODE_NEW : modSystemEvent::MODE_UPD,
@@ -60,10 +59,8 @@ class msOrder extends xPDOSimpleObject
             ]);
         }
 
-        // Вызов родительского save()
         $saved = parent::save($cacheFlag);
 
-        // Событие AFTER
         if ($saved && $this->xpdo instanceof modX) {
             $this->xpdo->invokeEvent('msOnSaveOrder', [
                 'mode' => $isNew ? modSystemEvent::MODE_NEW : modSystemEvent::MODE_UPD,
@@ -78,7 +75,6 @@ class msOrder extends xPDOSimpleObject
 
     public function remove(array $ancestors = [])
     {
-        // Событие BEFORE
         if ($this->xpdo instanceof modX) {
             $this->xpdo->invokeEvent('msOnBeforeRemoveOrder', [
                 'id' => $this->get('id'),
@@ -88,10 +84,8 @@ class msOrder extends xPDOSimpleObject
             ]);
         }
 
-        // Вызов родительского remove()
         $removed = parent::remove($ancestors);
 
-        // Событие AFTER
         if ($removed && $this->xpdo instanceof modX) {
             $this->xpdo->invokeEvent('msOnRemoveOrder', [
                 'id' => $this->get('id'),
@@ -105,7 +99,7 @@ class msOrder extends xPDOSimpleObject
     }
 
     /**
-     * Получить сервис заказов (lazy loading)
+     * Get order service (lazy loading)
      *
      * @return OrderService
      */

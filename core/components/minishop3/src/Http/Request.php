@@ -3,34 +3,34 @@
 namespace MiniShop3\Http;
 
 /**
- * HTTP Request wrapper для Web API
+ * HTTP Request wrapper for Web API
  *
- * Инкапсулирует данные запроса и предоставляет удобный API для доступа к ним.
- * Не является полноценной PSR-7 реализацией, но следует тем же принципам.
+ * Encapsulates request data and provides convenient API to access it.
+ * Not a full PSR-7 implementation, but follows the same principles.
  */
 class Request
 {
-    /** @var array Данные запроса (POST/GET параметры) */
+    /** @var array Request data (POST/GET parameters) */
     private array $data;
 
-    /** @var array HTTP заголовки */
+    /** @var array HTTP headers */
     private array $headers;
 
-    /** @var array Параметры маршрута из FastRoute */
+    /** @var array Route parameters from FastRoute */
     private array $routeParams;
 
-    /** @var string HTTP метод */
+    /** @var string HTTP method */
     private string $method;
 
-    /** @var string URI запроса */
+    /** @var string Request URI */
     private string $uri;
 
     /**
-     * @param array $data POST/GET данные
-     * @param array $headers HTTP заголовки
-     * @param array $routeParams Параметры из маршрута
-     * @param string $method HTTP метод
-     * @param string $uri URI запроса
+     * @param array $data POST/GET data
+     * @param array $headers HTTP headers
+     * @param array $routeParams Route parameters
+     * @param string $method HTTP method
+     * @param string $uri Request URI
      */
     public function __construct(
         array $data = [],
@@ -47,7 +47,7 @@ class Request
     }
 
     /**
-     * Создать Request из глобальных переменных PHP
+     * Create Request from PHP global variables
      *
      * @return self
      */
@@ -55,7 +55,6 @@ class Request
     {
         $data = $_REQUEST;
 
-        // Получаем заголовки
         $headers = [];
         foreach ($_SERVER as $key => $value) {
             if (str_starts_with($key, 'HTTP_')) {
@@ -64,7 +63,6 @@ class Request
             }
         }
 
-        // Добавляем Content-Type если есть
         if (isset($_SERVER['CONTENT_TYPE'])) {
             $headers['Content-Type'] = $_SERVER['CONTENT_TYPE'];
         }
@@ -76,10 +74,10 @@ class Request
     }
 
     /**
-     * Получить значение из данных запроса
+     * Get value from request data
      *
-     * @param string $key Ключ
-     * @param mixed $default Значение по умолчанию
+     * @param string $key Key
+     * @param mixed $default Default value
      * @return mixed
      */
     public function input(string $key, $default = null)
@@ -88,7 +86,7 @@ class Request
     }
 
     /**
-     * Получить все данные запроса
+     * Get all request data
      *
      * @return array
      */
@@ -98,9 +96,9 @@ class Request
     }
 
     /**
-     * Получить только указанные ключи из данных
+     * Get only specified keys from data
      *
-     * @param array $keys Массив ключей
+     * @param array $keys Array of keys
      * @return array
      */
     public function only(array $keys): array
@@ -109,9 +107,9 @@ class Request
     }
 
     /**
-     * Получить все данные кроме указанных ключей
+     * Get all data except specified keys
      *
-     * @param array $keys Массив ключей для исключения
+     * @param array $keys Array of keys to exclude
      * @return array
      */
     public function except(array $keys): array
@@ -120,9 +118,9 @@ class Request
     }
 
     /**
-     * Проверить наличие ключа в данных
+     * Check if key exists in data
      *
-     * @param string $key Ключ
+     * @param string $key Key
      * @return bool
      */
     public function has(string $key): bool
@@ -131,10 +129,10 @@ class Request
     }
 
     /**
-     * Получить значение заголовка
+     * Get header value
      *
-     * @param string $key Имя заголовка (регистронезависимо)
-     * @param mixed $default Значение по умолчанию
+     * @param string $key Header name (case-insensitive)
+     * @param mixed $default Default value
      * @return mixed
      */
     public function header(string $key, $default = null)
@@ -143,7 +141,7 @@ class Request
     }
 
     /**
-     * Получить все заголовки
+     * Get all headers
      *
      * @return array
      */
@@ -153,10 +151,10 @@ class Request
     }
 
     /**
-     * Получить параметр маршрута из FastRoute
+     * Get route parameter from FastRoute
      *
-     * @param string $key Имя параметра
-     * @param mixed $default Значение по умолчанию
+     * @param string $key Parameter name
+     * @param mixed $default Default value
      * @return mixed
      */
     public function route(string $key, $default = null)
@@ -165,9 +163,9 @@ class Request
     }
 
     /**
-     * Установить параметры маршрута (вызывается из роутера)
+     * Set route parameters (called from router)
      *
-     * @param array $params Параметры маршрута
+     * @param array $params Route parameters
      * @return void
      */
     public function setRouteParams(array $params): void
@@ -176,7 +174,7 @@ class Request
     }
 
     /**
-     * Получить HTTP метод
+     * Get HTTP method
      *
      * @return string
      */
@@ -186,7 +184,7 @@ class Request
     }
 
     /**
-     * Получить URI запроса
+     * Get request URI
      *
      * @return string
      */
@@ -196,7 +194,7 @@ class Request
     }
 
     /**
-     * Проверить, является ли запрос AJAX
+     * Check if request is AJAX
      *
      * @return bool
      */
@@ -206,7 +204,7 @@ class Request
     }
 
     /**
-     * Проверить, является ли метод POST
+     * Check if method is POST
      *
      * @return bool
      */
@@ -216,7 +214,7 @@ class Request
     }
 
     /**
-     * Проверить, является ли метод GET
+     * Check if method is GET
      *
      * @return bool
      */
@@ -226,7 +224,7 @@ class Request
     }
 
     /**
-     * Проверить, является ли метод PUT
+     * Check if method is PUT
      *
      * @return bool
      */
@@ -236,7 +234,7 @@ class Request
     }
 
     /**
-     * Проверить, является ли метод DELETE
+     * Check if method is DELETE
      *
      * @return bool
      */

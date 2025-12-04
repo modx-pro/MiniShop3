@@ -7,10 +7,10 @@ use MiniShop3\Model\msVendor;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для работы с производителями
+ * Service for working with vendors
  *
- * Обрабатывает бизнес-логику связанную с производителями товаров,
- * включая удаление и управление связями с товарами
+ * Handles business logic related to product vendors,
+ * including deletion and managing product associations
  */
 class VendorService
 {
@@ -26,11 +26,11 @@ class VendorService
     }
 
     /**
-     * Удаление производителя с обнулением связей в товарах
+     * Remove vendor with resetting product associations
      *
-     * При удалении производителя обнуляет поле vendor_id у всех товаров,
-     * которые были связаны с этим производителем, чтобы избежать
-     * битых связей в базе данных
+     * When removing vendor, resets vendor_id field in all products
+     * that were associated with this vendor to avoid
+     * broken references in database
      *
      * @param msVendor $vendor
      * @param array $ancestors
@@ -40,20 +40,18 @@ class VendorService
     {
         $vendorId = $vendor->get('id');
 
-        // Обнуляем vendor_id у всех товаров этого производителя
         $query = $this->modx->newQuery(msProductData::class);
         $query->command('UPDATE');
         $query->set(['vendor_id' => 0]);
         $query->where(['vendor_id' => $vendorId]);
 
         if ($query->prepare() && $query->stmt->execute()) {
-            // Логируем количество обновленных товаров
             $affectedRows = $query->stmt->rowCount();
             if ($affectedRows > 0) {
                 $this->modx->log(
                     modX::LOG_LEVEL_INFO,
                     sprintf(
-                        'VendorService: Обнулен vendor_id у %d товаров при удалении производителя ID=%d',
+                        'VendorService: Reset vendor_id for %d products when deleting vendor ID=%d',
                         $affectedRows,
                         $vendorId
                     )
@@ -65,9 +63,9 @@ class VendorService
     }
 
     /**
-     * Получить статистику по производителю
+     * Get vendor statistics
      *
-     * Возвращает количество товаров, привязанных к производителю
+     * Returns number of products associated with vendor
      *
      * @param msVendor $vendor
      * @return array ['total_products' => int]
@@ -86,10 +84,10 @@ class VendorService
     }
 
     /**
-     * Проверка возможности удаления производителя
+     * Check if vendor can be removed
      *
-     * Проверяет, можно ли безопасно удалить производителя
-     * Можно использовать для предупреждения пользователя
+     * Checks whether vendor can be safely removed
+     * Can be used to warn user
      *
      * @param msVendor $vendor
      * @return array ['can_remove' => bool, 'products_count' => int, 'warnings' => array]
@@ -101,14 +99,14 @@ class VendorService
 
         if ($stats['total_products'] > 0) {
             $warnings[] = sprintf(
-                'У производителя "%s" есть %d товаров. При удалении производителя у них будет обнулен vendor_id.',
+                'Vendor "%s" has %d products. When deleting vendor their vendor_id will be reset.',
                 $vendor->get('name'),
                 $stats['total_products']
             );
         }
 
         return [
-            'can_remove' => true, // Всегда можно удалить, но с предупреждениями
+            'can_remove' => true,
             'products_count' => $stats['total_products'],
             'warnings' => $warnings,
         ];

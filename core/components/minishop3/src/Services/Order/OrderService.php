@@ -8,10 +8,10 @@ use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 
 /**
- * Сервис для работы с заказами
+ * Service for working with orders
  *
- * Обрабатывает бизнес-логику связанную с заказами,
- * включая пересчет стоимости, события сохранения и удаления
+ * Handles business logic related to orders,
+ * including cost recalculation, save and delete events
  */
 class OrderService
 {
@@ -27,13 +27,13 @@ class OrderService
     }
 
     /**
-     * Пересчитать товары в заказе
+     * Recalculate products in order
      *
-     * Пересчитывает общую стоимость корзины, вес и итоговую стоимость заказа
-     * на основе всех товаров в заказе
+     * Recalculates total cart cost, weight and final order cost
+     * based on all products in order
      *
      * @param msOrder $order
-     * @return bool Результат сохранения заказа
+     * @return bool Order save result
      */
     public function updateProducts(msOrder $order): bool
     {
@@ -59,9 +59,9 @@ class OrderService
     }
 
     /**
-     * Обработка сохранения заказа с событиями
+     * Handle order save with events
      *
-     * @deprecated Логика перенесена в msOrder::save(), этот метод оставлен для обратной совместимости
+     * @deprecated Logic moved to msOrder::save(), this method kept for backward compatibility
      *
      * @param msOrder $order
      * @param bool|null $cacheFlag
@@ -69,31 +69,31 @@ class OrderService
      */
     public function handleOrderSave(msOrder $order, ?bool $cacheFlag = null): bool
     {
-        // Просто делегируем вызов в msOrder::save()
-        // Он уже содержит всю логику событий
+        // Simply delegate call to msOrder::save()
+        // It already contains all event logic
         return $order->save($cacheFlag);
     }
 
     /**
-     * Удалить заказ с событиями
+     * Delete order with events
      *
-     * @deprecated Логика перенесена в msOrder::remove(), этот метод оставлен для обратной совместимости
+     * @deprecated Logic moved to msOrder::remove(), this method kept for backward compatibility
      *
      * @param msOrder $order
      * @param array $ancestors
-     * @return bool Результат удаления
+     * @return bool Deletion result
      */
     public function removeOrder(msOrder $order, array $ancestors = []): bool
     {
-        // Просто делегируем вызов в msOrder::remove()
-        // Он уже содержит всю логику событий
+        // Simply delegate call to msOrder::remove()
+        // It already contains all event logic
         return $order->remove($ancestors);
     }
 
     /**
-     * Получить статистику по заказу
+     * Get order statistics
      *
-     * Возвращает количество товаров и общий вес
+     * Returns product count and total weight
      *
      * @param msOrder $order
      * @return array

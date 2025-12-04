@@ -7,39 +7,39 @@ use MiniShop3\Model\msCustomer;
 /**
  * Interface AuthProviderInterface
  *
- * Определяет контракт для всех провайдеров аутентификации
- * (Password, SMS, OAuth, MagicLink и т.д.)
+ * Defines contract for all authentication providers
+ * (Password, SMS, OAuth, MagicLink, etc.)
  *
- * Все кастомные классы аутентификации должны реализовывать этот интерфейс.
- * Паттерн аналогичен DeliveryProviderInterface.
+ * All custom authentication classes must implement this interface.
+ * Pattern is similar to DeliveryProviderInterface.
  *
  * @package MiniShop3\Controllers\Auth
  */
 interface AuthProviderInterface
 {
     /**
-     * Аутентификация пользователя по предоставленным данным
+     * Authenticate user with provided credentials
      *
-     * @param array $credentials Данные для аутентификации (email/password, phone/code и т.д.)
-     * @return msCustomer|null Объект клиента при успешной аутентификации, null при ошибке
+     * @param array $credentials Authentication data (email/password, phone/code, etc.)
+     * @return msCustomer|null Customer object on successful authentication, null on error
      */
     public function authenticate(array $credentials): ?msCustomer;
 
     /**
-     * Получить название провайдера
+     * Get provider name
      *
-     * @return string Уникальное имя провайдера (password, sms, oauth_google, magic_link и т.д.)
+     * @return string Unique provider name (password, sms, oauth_google, magic_link, etc.)
      */
     public function getName(): string;
 
     /**
-     * Проверить, поддерживает ли провайдер данные credentials
+     * Check if provider supports given credentials
      *
-     * Например, PasswordAuthProvider проверит наличие 'email' и 'password',
-     * SmsAuthProvider проверит наличие 'phone' и 'code'
+     * For example, PasswordAuthProvider will check for 'email' and 'password',
+     * SmsAuthProvider will check for 'phone' and 'code'
      *
-     * @param array $credentials Данные для проверки
-     * @return bool true, если провайдер может обработать эти данные
+     * @param array $credentials Data to check
+     * @return bool true if provider can handle these credentials
      */
     public function supports(array $credentials): bool;
 }

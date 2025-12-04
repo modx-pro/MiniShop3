@@ -59,8 +59,6 @@ class GetCats extends GetListProcessor
         $list = $this->beforeIteration($list);
         $this->currentIndex = 0;
         foreach ($data['results'] as $array) {
-            // TODO: Этот метод iterate() отличается от базового отсутствием проверок доступов.
-            // Проверить, правда ли это нужно.
             $objectArray = $this->prepareRow($array);
             if (!empty($objectArray) && is_array($objectArray)) {
                 $list[] = $objectArray;

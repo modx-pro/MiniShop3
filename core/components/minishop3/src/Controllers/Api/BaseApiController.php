@@ -6,7 +6,7 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * Базовый API контроллер
+ * Base API controller
  */
 abstract class BaseApiController
 {
@@ -23,7 +23,7 @@ abstract class BaseApiController
     }
 
     /**
-     * Получить параметры из запроса
+     * Get request parameters
      */
     protected function getRequestData(): array
     {
@@ -39,14 +39,12 @@ abstract class BaseApiController
             case 'DELETE':
                 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 
-                // JSON
                 if (strpos($contentType, 'application/json') !== false) {
                     $rawData = file_get_contents('php://input');
                     $data = json_decode($rawData, true);
                     return $data ?: [];
                 }
 
-                // Form data
                 return $_POST;
 
             default:
@@ -55,7 +53,7 @@ abstract class BaseApiController
     }
 
     /**
-     * Получить ID текущего пользователя
+     * Get current user ID
      */
     protected function getUserId(): int
     {
@@ -63,7 +61,7 @@ abstract class BaseApiController
     }
 
     /**
-     * Проверить, авторизован ли пользователь
+     * Check if user is authenticated
      */
     protected function isAuthenticated(string $context = 'web'): bool
     {

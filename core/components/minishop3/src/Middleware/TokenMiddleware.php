@@ -7,17 +7,17 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * Middleware для проверки токена авторизации (Web API)
+ * Middleware for authorization token verification (Web API)
  *
- * Проверяет наличие токена в заголовке HTTP_MS3TOKEN и сохраняет его в сессию.
- * Для публичных endpoints (cart/get, product/get) токен опционален.
+ * Checks for token in HTTP_MS3TOKEN header and saves it to session.
+ * For public endpoints (cart/get, product/get) token is optional.
  */
 class TokenMiddleware implements MiddlewareInterface
 {
     /** @var modX */
     private modX $modx;
 
-    /** @var array Маршруты, не требующие токена */
+    /** @var array Routes that don't require token */
     private array $publicRoutes = [
         '/api/v1/cart/get',
         '/api/v1/product/get',
@@ -28,7 +28,7 @@ class TokenMiddleware implements MiddlewareInterface
     ];
 
     /**
-     * @param modX $modx Экземпляр MODX
+     * @param modX $modx MODX instance
      */
     public function __construct(modX $modx)
     {
@@ -36,47 +36,47 @@ class TokenMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Обработать запрос
+     * Handle request
      *
-     * @param array $params URL параметры из роутера
-     * @return Response|null Вернуть Response для прерывания, или null для продолжения
+     * @param array $params URL parameters from router
+     * @return Response|null Return Response to stop execution, or null to continue
      */
     public function handle(array $params)
     {
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
 
-        // Публичные endpoints не требуют токена
+        // Public endpoints don't require token
         if ($this->isPublicRoute($uri)) {
-            return null; // Продолжить выполнение
+            return null; // Continue execution
         }
 
-        // Проверяем сессию - если клиент уже авторизован, пропускаем
+        // Check session - if customer is already authenticated, pass through
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
 
         if (!empty($_SESSION['ms3']['customer_id'])) {
-            // Клиент авторизован в сессии - проверяем что он существует
+            // Customer is authenticated in session - check that they exist
             $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
             if ($customer) {
-                return null; // Продолжить выполнение
+                return null; // Continue execution
             }
         }
 
-        // Получаем токен из заголовка
+        // Get token from header
         $token = $_SERVER['HTTP_MS3TOKEN'] ?? '';
 
-        // Альтернативно можно передать токен в параметре (поддержка обоих форматов)
+        // Alternatively token can be passed in parameter (support both formats)
         if (empty($token)) {
             $token = $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
         }
 
-        // Проверяем наличие токена
+        // Check token presence
         if (empty($token)) {
             return Response::error('ms3_err_token', 401);
         }
 
-        // Проверяем валидность токена и получаем customer_id
+        // Check token validity and get customer_id
         $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
             'token' => $token,
             'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
@@ -98,31 +98,31 @@ class TokenMiddleware implements MiddlewareInterface
             return Response::error('ms3_err_token_expired', 401);
         }
 
-        // Сохраняем токен и customer_id в сессию
+        // Save token and customer_id to session
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
         $_SESSION['ms3']['customer_token'] = $token;
         $_SESSION['ms3']['customer_id'] = $tokenObj->get('customer_id');
 
-        return null; // Продолжить выполнение
+        return null; // Continue execution
     }
 
     /**
-     * Проверить, является ли маршрут публичным
+     * Check if route is public
      *
-     * @param string $uri URI запроса (не используется, оставлен для совместимости)
+     * @param string $uri Request URI (not used, kept for compatibility)
      * @return bool
      */
     private function isPublicRoute(string $uri): bool
     {
-        // Получаем route из параметров запроса (api.php?route=/api/v1/...)
+        // Get route from request parameters (api.php?route=/api/v1/...)
         $route = $_REQUEST['route'] ?? '';
 
-        // Если route пустой, пробуем извлечь из URI
+        // If route is empty, try to extract from URI
         if (empty($route)) {
             $path = parse_url($uri, PHP_URL_PATH);
-            // Удаляем api.php из начала пути если есть
+            // Remove api.php from path beginning if present
             $route = preg_replace('#^/assets/components/minishop3/api\.php#', '', $path);
         }
 
@@ -136,9 +136,9 @@ class TokenMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Добавить публичный маршрут
+     * Add public route
      *
-     * @param string $route Маршрут
+     * @param string $route Route
      * @return void
      */
     public function addPublicRoute(string $route): void
@@ -147,9 +147,9 @@ class TokenMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Установить список публичных маршрутов
+     * Set list of public routes
      *
-     * @param array $routes Массив маршрутов
+     * @param array $routes Array of routes
      * @return void
      */
     public function setPublicRoutes(array $routes): void

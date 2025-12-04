@@ -30,7 +30,7 @@ use xPDO\Om\xPDOSimpleObject;
 class msProductField extends xPDOSimpleObject
 {
     /**
-     * Получить конфигурацию из JSON
+     * Get configuration from JSON
      *
      * @return array
      */
@@ -41,7 +41,6 @@ class msProductField extends xPDOSimpleObject
             return [];
         }
 
-        // xPDO 3 с phptype='json' может вернуть массив или строку
         if (is_array($config)) {
             return $config;
         }
@@ -51,7 +50,7 @@ class msProductField extends xPDOSimpleObject
     }
 
     /**
-     * Установить конфигурацию (автоматически конвертирует в JSON)
+     * Set configuration (automatically converts to JSON)
      *
      * @param array $config
      * @return bool

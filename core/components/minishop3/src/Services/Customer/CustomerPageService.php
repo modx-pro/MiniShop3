@@ -8,17 +8,17 @@ use MODX\Revolution\modX;
 use ModxPro\PdoTools\Fetch;
 
 /**
- * CustomerPageService - базовый класс для страниц личного кабинета клиента
+ * CustomerPageService - base class for customer account pages
  *
- * Обеспечивает общую логику для всех страниц ЛК:
- * - Проверка авторизации
- * - Загрузка данных клиента
- * - Рендеринг через Fenom
+ * Provides common logic for all account pages:
+ * - Authentication check
+ * - Customer data loading
+ * - Rendering via Fenom
  *
- * Используется как базовый класс для:
- * - ProfilePageService (профиль клиента)
- * - AddressesPageService (управление адресами)
- * - OrdersPageService (история заказов)
+ * Used as base class for:
+ * - ProfilePageService (customer profile)
+ * - AddressesPageService (address management)
+ * - OrdersPageService (order history)
  *
  * @package MiniShop3\Services\Customer
  */
@@ -33,19 +33,19 @@ abstract class CustomerPageService
     /** @var Fetch */
     protected Fetch $pdoFetch;
 
-    /** @var int|null ID авторизованного клиента */
+    /** @var int|null ID of authenticated customer */
     protected ?int $customerId = null;
 
-    /** @var msCustomer|null Объект авторизованного клиента */
+    /** @var msCustomer|null Authenticated customer object */
     protected ?msCustomer $customer = null;
 
-    /** @var array Параметры сниппета */
+    /** @var array Snippet parameters */
     protected array $scriptProperties = [];
 
     /**
      * @param modX $modx
      * @param MiniShop3 $ms3
-     * @param array $scriptProperties Параметры из сниппета
+     * @param array $scriptProperties Parameters from snippet
      */
     public function __construct(modX $modx, MiniShop3 $ms3, array $scriptProperties = [])
     {
@@ -56,19 +56,17 @@ abstract class CustomerPageService
         /** @var Fetch $pdoFetch */
         $this->pdoFetch = $this->modx->services->get(Fetch::class);
 
-        // Загрузить лексиконы
         $this->modx->lexicon->load('minishop3:customer');
         $this->modx->lexicon->load('minishop3:default');
     }
 
     /**
-     * Проверить авторизацию клиента
+     * Check customer authentication
      *
-     * @return bool true если клиент авторизован
+     * @return bool true if customer is authenticated
      */
     public function checkAuth(): bool
     {
-        // Проверка сессии
         if (empty($_SESSION['ms3']['customer_id'])) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
@@ -79,7 +77,6 @@ abstract class CustomerPageService
 
         $this->customerId = (int)$_SESSION['ms3']['customer_id'];
 
-        // Загрузка объекта клиента
         $this->customer = $this->modx->getObject(msCustomer::class, $this->customerId);
 
         if (!$this->customer) {
@@ -94,7 +91,7 @@ abstract class CustomerPageService
     }
 
     /**
-     * Получить ID авторизованного клиента
+     * Get authenticated customer ID
      *
      * @return int|null
      */
@@ -104,7 +101,7 @@ abstract class CustomerPageService
     }
 
     /**
-     * Получить объект авторизованного клиента
+     * Get authenticated customer object
      *
      * @return msCustomer|null
      */
@@ -114,9 +111,9 @@ abstract class CustomerPageService
     }
 
     /**
-     * Рендерить страницу для неавторизованного пользователя
+     * Render page for unauthenticated user
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     public function renderUnauthorized(): string
     {
@@ -139,32 +136,30 @@ abstract class CustomerPageService
     }
 
     /**
-     * Рендерить страницу (абстрактный метод для переопределения в дочерних классах)
+     * Render page (abstract method for overriding in child classes)
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     abstract public function render(): string;
 
     /**
-     * Получить сырые данные страницы без рендеринга (для CLI, API, тестов)
+     * Get raw page data without rendering (for CLI, API, tests)
      *
-     * @return array Данные страницы
+     * @return array Page data
      */
     abstract public function getData(): array;
 
     /**
-     * Точка входа для обработки и рендеринга страницы
+     * Entry point for processing and rendering page
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     public function process(): string
     {
-        // Проверка авторизации
         if (!$this->checkAuth()) {
             return $this->renderUnauthorized();
         }
 
-        // Рендеринг страницы
         return $this->render();
     }
 }

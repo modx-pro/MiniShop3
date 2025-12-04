@@ -76,7 +76,6 @@ class GetList extends GetListProcessor
      */
     public function prepareRow(xPDOObject $object)
     {
-        // Перевод названия статуса (если это лексиконный ключ)
         $name = $object->get('name');
         if (!empty($name) && str_starts_with($name, 'ms3_order_status_')) {
             $translated = $this->modx->lexicon($name);

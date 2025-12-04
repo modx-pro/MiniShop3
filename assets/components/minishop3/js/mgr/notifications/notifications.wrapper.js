@@ -1,10 +1,10 @@
 /**
- * HTML wrapper для Vue приложения Notification Center
+ * HTML wrapper for Vue Notification Center application
  *
- * Создает контейнер для монтирования Vue приложения
+ * Creates container for mounting Vue application
  */
 
-// Создаем простой компонент для MODX
+// Create simple component for MODX
 Ext.reg('ms3-notifications-vue-wrapper', Ext.extend(Ext.Component, {
     initComponent: function() {
         Ext.apply(this, {

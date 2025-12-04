@@ -1,7 +1,7 @@
 /**
- * Entry point для Extra Fields Manager виджета (ES Module)
+ * Entry point for Extra Fields Manager widget (ES Module)
  *
- * Экспортирует функцию инициализации для монтирования Vue приложения
+ * Exports initialization function for mounting Vue application
  */
 
 import '../scss/primevue.scss';
@@ -18,16 +18,14 @@ import Tooltip from 'primevue/tooltip';
 import VueExtraFieldsManager from '../components/ExtraFieldsManager.vue';
 
 /**
- * Создает и настраивает Vue приложение
+ * Creates and configures Vue application
  */
 function createVueApp() {
   const app = createApp(VueExtraFieldsManager);
 
-  // Pinia
   const pinia = createPinia();
   app.use(pinia);
 
-  // PrimeVue
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
@@ -37,19 +35,17 @@ function createVueApp() {
     }
   });
 
-  // PrimeVue сервисы
   app.use(ConfirmationService);
   app.use(ToastService);
 
-  // Directives
   app.directive('tooltip', Tooltip);
 
   return app;
 }
 
 /**
- * Инициализация виджета
- * Вызывается извне при переключении на вкладку
+ * Widget initialization
+ * Called externally when switching to the tab
  */
 export function init(selector = '#ms3-vue-extra-fields') {
   const $el = document.querySelector(selector);
@@ -59,7 +55,6 @@ export function init(selector = '#ms3-vue-extra-fields') {
     return null;
   }
 
-  // Проверяем, не смонтирован ли уже
   if ($el.dataset.vApp === 'true') {
     console.info('[Extra Fields Manager] Already mounted');
     return null;
@@ -75,8 +70,7 @@ export function init(selector = '#ms3-vue-extra-fields') {
 }
 
 /**
- * Слушаем событие монтирования от ExtJS
- * { once: true } - гарантирует, что обработчик сработает только один раз
+ * Listen for mount event from ExtJS
  */
 document.addEventListener('ms3:mountVueExtraFields', (e) => {
   const targetId = e.detail?.targetId || '#ms3-vue-extra-fields';
@@ -84,10 +78,9 @@ document.addEventListener('ms3:mountVueExtraFields', (e) => {
 }, { once: true });
 
 /**
- * Dev режим - автоматическая инициализация для тестирования
+ * Dev mode - automatic initialization for testing
  */
 if (import.meta.env.DEV) {
-  // Ждем готовности DOM
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => init());
   } else {

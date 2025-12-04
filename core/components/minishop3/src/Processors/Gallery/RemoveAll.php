@@ -36,7 +36,6 @@ class RemoveAll extends ModelProcessor
             return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
         }
 
-        // Удаляем все файлы товара
         $files = $this->modx->getCollection(msProductFile::class, ['product_id' => $product_id, 'parent_id' => 0]);
         /** @var msProductFile $file */
         foreach ($files as $file) {
@@ -46,13 +45,10 @@ class RemoveAll extends ModelProcessor
         /** @var msProductData $product */
         $product = $this->modx->getObject(msProductData::class, ['id' => $product_id]);
         if ($product) {
-            // Обновляем превью товара через сервис
             /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
             $imageService = $this->modx->services->get('ms3_product_image');
             if ($imageService) {
                 $imageService->updateProductImage($product);
-
-                // Удаляем каталог товара со всеми эскизами (если файлов не осталось)
                 $imageService->removeProductCatalog($product);
             }
 

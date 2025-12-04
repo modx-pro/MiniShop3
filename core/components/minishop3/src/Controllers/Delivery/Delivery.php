@@ -8,20 +8,20 @@ use MiniShop3\Model\msOrder;
 use MODX\Revolution\modX;
 
 /**
- * Базовый абстрактный класс для провайдеров доставки
+ * Base abstract class for delivery providers
  *
- * Предоставляет общую функциональность для всех методов доставки.
- * Кастомные провайдеры (СДЭК, Почта России, DPD и т.д.) могут наследовать
- * этот класс и переопределять метод getCost() для своей логики расчета.
+ * Provides common functionality for all delivery methods.
+ * Custom providers (CDEK, Russian Post, DPD, etc.) can inherit
+ * this class and override getCost() method for their calculation logic.
  *
- * Пример создания провайдера для СДЭК:
+ * Example of creating a CDEK provider:
  * ```php
  * class CdekDelivery extends Delivery {
  *     public function getCost(msOrder $order, msDelivery $delivery, float $cost): float {
  *         $address = $order->getOne('Address');
  *         $cityTo = $address->get('city');
  *
- *         // Вызов API СДЭК для расчета стоимости
+ *         // Call CDEK API to calculate cost
  *         $cdekApi = new CdekApiClient();
  *         $tariff = $cdekApi->calculate([
  *             'city_to' => $cityTo,
@@ -59,37 +59,37 @@ abstract class Delivery implements DeliveryProviderInterface
     }
 
     /**
-     * Расчет стоимости доставки (дефолтная реализация)
+     * Calculate delivery cost (default implementation)
      *
-     * Стандартная логика расчета включает:
-     * - Стоимость по весу (weight_price * вес заказа)
-     * - Бесплатная доставка при превышении порога (free_delivery_amount)
-     * - Фиксированная стоимость или процент от суммы заказа
+     * Standard calculation logic includes:
+     * - Cost by weight (weight_price * order weight)
+     * - Free delivery when threshold exceeded (free_delivery_amount)
+     * - Fixed cost or percentage of order amount
      *
-     * Кастомные провайдеры могут переопределить этот метод для
-     * интеграции с внешними API (СДЭК, Почта России и т.д.)
+     * Custom providers can override this method for
+     * integration with external APIs (CDEK, Russian Post, etc.)
      *
-     * @param msOrder $order Заказ для расчета доставки
-     * @param msDelivery $delivery Способ доставки
-     * @param float $cost Текущая стоимость заказа (не используется в дефолтной реализации, но может быть нужен кастомным провайдерам)
-     * @return float Дополнительная стоимость за доставку
+     * @param msOrder $order Order for delivery calculation
+     * @param msDelivery $delivery Delivery method
+     * @param float $cost Current order cost (not used in default implementation, but may be needed by custom providers)
+     * @return float Additional delivery cost
      */
     public function getCost(msOrder $order, msDelivery $delivery, float $cost): float
     {
         $deliveryCost = 0;
 
-        // Получаем данные корзины для расчета веса
+        // Get cart data for weight calculation
         $cart = [
             'total_weight' => 0,
             'total_cost' => 0
         ];
 
-        // Загружаем контроллеры если еще не загружены
+        // Load controllers if not loaded yet
         if (empty($this->ms3->cart)) {
             $this->ms3->services->load($this->ms3->config['ctx'] ?? 'web');
         }
 
-        // Получаем данные корзины если контроллер доступен
+        // Get cart data if controller is available
         if (!empty($this->ms3->cart)) {
             $response = $this->ms3->cart->status();
             if ($response['success']) {
@@ -97,7 +97,7 @@ abstract class Delivery implements DeliveryProviderInterface
             }
         }
 
-        // Стоимость по весу
+        // Cost by weight
         $weightPrice = (float)$delivery->get('weight_price');
         $cartWeight = (float)($cart['total_weight'] ?? 0);
 
@@ -111,27 +111,26 @@ abstract class Delivery implements DeliveryProviderInterface
 
         $deliveryCost += $weightPrice * $cartWeight;
 
-        // Проверка бесплатной доставки
+        // Check free delivery threshold
         $freeDeliveryAmount = (float)$delivery->get('free_delivery_amount');
         $cartCost = (float)($cart['total_cost'] ?? 0);
 
         if ($freeDeliveryAmount > 0 && $cartCost >= $freeDeliveryAmount) {
-            // Бесплатная доставка при превышении порога
             return 0;
         }
 
-        // Базовая стоимость доставки
+        // Base delivery cost
         $addPrice = $delivery->get('price');
 
         if (empty($addPrice)) {
             return $deliveryCost;
         }
 
-        // Процентная стоимость
+        // Percentage cost
         if (str_ends_with($addPrice, '%')) {
             $percent = (float)str_replace('%', '', $addPrice);
 
-            // Валидация диапазона 0-100%
+            // Validate 0-100% range
             if ($percent < 0 || $percent > 100) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
@@ -142,7 +141,7 @@ abstract class Delivery implements DeliveryProviderInterface
 
             $addPrice = $cartCost / 100 * $percent;
         } else {
-            // Фиксированная стоимость
+            // Fixed cost
             $addPrice = (float)$addPrice;
 
             if ($addPrice < 0) {
@@ -158,12 +157,12 @@ abstract class Delivery implements DeliveryProviderInterface
     }
 
     /**
-     * Вспомогательный метод для возврата ошибки
+     * Helper method to return error response
      *
-     * @param string $message Код сообщения из лексикона
-     * @param array $data Дополнительные данные
-     * @param array $placeholders Плейсхолдеры для сообщения
-     * @return array Массив с success=false
+     * @param string $message Lexicon key
+     * @param array $data Additional data
+     * @param array $placeholders Placeholders for message
+     * @return array Array with success=false
      */
     protected function error(string $message = '', array $data = [], array $placeholders = []): array
     {
@@ -171,12 +170,12 @@ abstract class Delivery implements DeliveryProviderInterface
     }
 
     /**
-     * Вспомогательный метод для возврата успеха
+     * Helper method to return success response
      *
-     * @param string $message Код сообщения из лексикона
-     * @param array $data Дополнительные данные
-     * @param array $placeholders Плейсхолдеры для сообщения
-     * @return array Массив с success=true
+     * @param string $message Lexicon key
+     * @param array $data Additional data
+     * @param array $placeholders Placeholders for message
+     * @return array Array with success=true
      */
     protected function success(string $message = '', array $data = [], array $placeholders = []): array
     {

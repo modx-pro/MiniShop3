@@ -22,18 +22,18 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
-// Состояние
+// State
 const loading = ref(false)
 const saving = ref(false)
 const fields = ref([])
 const selectedClass = ref('MiniShop3\\Model\\msProductData')
 
-// Диалог создания/редактирования поля
+// Create/edit field dialog
 const dialogVisible = ref(false)
 const editingField = ref(null)
 const isEditMode = ref(false)
 
-// Форма нового/редактируемого поля
+// New/edited field form
 const fieldForm = ref({
   class: 'MiniShop3\\Model\\msProductData',
   key: '',
@@ -52,7 +52,7 @@ const fieldForm = ref({
 })
 
 /**
- * Доступные классы моделей
+ * Available model classes
  */
 const classOptions = computed(() => [
   { label: _('class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
@@ -62,7 +62,7 @@ const classOptions = computed(() => [
 ])
 
 /**
- * Типы виджетов (xtype)
+ * Widget types (xtype)
  */
 const xtypeOptions = computed(() => [
   { label: _('xtype_textfield'), value: 'textfield' },
@@ -75,7 +75,7 @@ const xtypeOptions = computed(() => [
 ])
 
 /**
- * Типы данных БД (dbtype)
+ * Database data types (dbtype)
  */
 const dbtypeOptions = computed(() => [
   { label: _('dbtype_varchar'), value: 'varchar' },
@@ -89,7 +89,7 @@ const dbtypeOptions = computed(() => [
 ])
 
 /**
- * PHP типы (phptype)
+ * PHP types (phptype)
  */
 const phptypeOptions = computed(() => [
   { label: _('phptype_string'), value: 'string' },
@@ -102,7 +102,7 @@ const phptypeOptions = computed(() => [
 ])
 
 /**
- * Типы значений по умолчанию
+ * Default value types
  */
 const defaultOptions = computed(() => [
   { label: _('default_null'), value: 'NULL' },
@@ -112,7 +112,7 @@ const defaultOptions = computed(() => [
 ])
 
 /**
- * Типы индексов
+ * Index types
  */
 const indexTypeOptions = computed(() => [
   { label: _('index_none'), value: 'NONE' },
@@ -122,7 +122,7 @@ const indexTypeOptions = computed(() => [
 ])
 
 /**
- * Загрузить список полей
+ * Load fields list
  */
 async function loadFields() {
   loading.value = true
@@ -151,13 +151,13 @@ async function loadFields() {
 }
 
 /**
- * Открыть диалог создания поля
+ * Open create field dialog
  */
 function openCreateDialog() {
   isEditMode.value = false
   editingField.value = null
 
-  // Сбросить форму
+  // Reset form
   fieldForm.value = {
     class: selectedClass.value,
     key: '',
@@ -179,13 +179,13 @@ function openCreateDialog() {
 }
 
 /**
- * Открыть диалог редактирования поля
+ * Open edit field dialog
  */
 function openEditDialog(field) {
   isEditMode.value = true
   editingField.value = field
 
-  // Заполнить форму данными существующего поля
+  // Fill form with existing field data
   fieldForm.value = {
     id: field.id,
     class: field.class,
@@ -208,17 +208,17 @@ function openEditDialog(field) {
 }
 
 /**
- * Сохранить поле (создать или обновить)
+ * Save field (create or update)
  */
 async function saveField() {
   saving.value = true
 
   try {
     if (isEditMode.value) {
-      // Режим редактирования
+      // Edit mode
       await updateField()
     } else {
-      // Режим создания
+      // Create mode
       await createField()
     }
   } finally {
@@ -227,11 +227,11 @@ async function saveField() {
 }
 
 /**
- * Создать новое поле
+ * Create new field
  */
 async function createField() {
   try {
-    // Валидация
+    // Validation
     if (!fieldForm.value.key) {
       toast.add({
         severity: 'warn',
@@ -252,7 +252,7 @@ async function createField() {
       return
     }
 
-    // Преобразуем null из строки в boolean
+    // Convert null from string to boolean
     const payload = {
       ...fieldForm.value,
       null: fieldForm.value.null === true || fieldForm.value.null === 'true' || fieldForm.value.null === 1,
@@ -272,7 +272,7 @@ async function createField() {
       dialogVisible.value = false
       await loadFields()
     } else {
-      throw new Error('Неверный формат ответа от сервера')
+      throw new Error('Invalid server response format')
     }
   } catch (error) {
     console.error('[ExtraFieldsManager] Error creating field:', error)
@@ -286,15 +286,15 @@ async function createField() {
 }
 
 /**
- * Обновить существующее поле (только метаданные)
+ * Update existing field (metadata only)
  */
 async function updateField() {
   try {
     if (!fieldForm.value.id) {
-      throw new Error('ID поля не указан')
+      throw new Error('Field ID not specified')
     }
 
-    // Отправляем только редактируемые поля (метаданные)
+    // Send only editable fields (metadata)
     const payload = {
       label: fieldForm.value.label || '',
       description: fieldForm.value.description || '',
@@ -315,7 +315,7 @@ async function updateField() {
       dialogVisible.value = false
       await loadFields()
     } else {
-      throw new Error('Неверный формат ответа от сервера')
+      throw new Error('Invalid server response format')
     }
   } catch (error) {
     console.error('[ExtraFieldsManager] Error updating field:', error)
@@ -328,14 +328,14 @@ async function updateField() {
   }
 }
 
-// Флаг для предотвращения двойного открытия confirm диалога
+// Flag to prevent double opening of confirm dialog
 let confirmInProgress = false
 
 /**
- * Удалить поле
+ * Delete field
  */
 function confirmDelete(field) {
-  // Защита от двойного клика
+  // Protection against double click
   if (confirmInProgress) {
     console.warn('[ExtraFieldsManager] Confirm dialog already open, ignoring duplicate call')
     return
@@ -351,7 +351,7 @@ function confirmDelete(field) {
     rejectLabel: _('dialog_cancel'),
     acceptClass: 'p-button-danger',
     accept: () => {
-      // НЕ делаем await - диалог закроется сразу, а удаление пойдёт в фоне
+      // Do NOT await - dialog will close immediately, deletion happens in background
       deleteField(field.id)
       confirmInProgress = false
     },
@@ -365,7 +365,7 @@ function confirmDelete(field) {
 }
 
 /**
- * Удалить поле (выполнение)
+ * Delete field (execution)
  */
 async function deleteField(fieldId) {
   loading.value = true
@@ -383,7 +383,7 @@ async function deleteField(fieldId) {
 
       await loadFields()
     } else {
-      throw new Error('Неверный формат ответа от сервера')
+      throw new Error('Invalid server response format')
     }
   } catch (error) {
     console.error('[ExtraFieldsManager] Error deleting field:', error)
@@ -399,27 +399,27 @@ async function deleteField(fieldId) {
 }
 
 /**
- * Получить severity для Tag (статус активности)
+ * Get severity for Tag (active status)
  */
 function getActiveSeverity(active) {
   return active ? 'success' : 'danger'
 }
 
 /**
- * Получить severity для Tag (существование колонки)
+ * Get severity for Tag (column existence)
  */
 function getColumnExistsSeverity(exists) {
   return exists ? 'success' : 'warn'
 }
 
 /**
- * Фильтр по классу изменён
+ * Class filter changed
  */
 async function onClassFilterChange() {
   await loadFields()
 }
 
-// Загрузка при монтировании
+// Load on mount
 onMounted(() => {
   loadFields()
 })
@@ -444,7 +444,7 @@ onMounted(() => {
       </template>
 
       <template #content>
-        <!-- Фильтр по классу -->
+        <!-- Class filter -->
         <div class="field mb-4">
           <label for="class-filter">{{ _('extra_fields_class_filter') }}</label>
           <Dropdown
@@ -459,7 +459,7 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Таблица полей -->
+        <!-- Fields table -->
         <DataTable
           :value="fields"
           :loading="loading"
@@ -470,7 +470,7 @@ onMounted(() => {
           :rows="10"
           :rowsPerPageOptions="[10, 20, 50]"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="Показано {first} - {last} из {totalRecords} полей"
+          currentPageReportTemplate="Showing {first} - {last} of {totalRecords} fields"
         >
           <Column field="id" :header="_('table_id')" style="width: 60px" sortable />
 
@@ -550,7 +550,7 @@ onMounted(() => {
       </template>
     </Card>
 
-    <!-- Диалог создания/редактирования поля -->
+    <!-- Create/Edit field dialog -->
     <Dialog
       v-model:visible="dialogVisible"
       :header="isEditMode ? _('dialog_edit_title') : _('dialog_create_title')"
@@ -560,10 +560,10 @@ onMounted(() => {
       @hide="saving = false"
     >
       <div class="edit-field-form">
-        <!-- Основная информация -->
+        <!-- Basic information -->
         <Fieldset :legend="_('dialog_fieldset_basic')" class="mb-3">
           <div class="form-grid">
-            <!-- Класс модели -->
+            <!-- Model class -->
             <div class="field col-12">
               <label for="field-class">{{ _('dialog_class') }}</label>
               <Dropdown
@@ -578,7 +578,7 @@ onMounted(() => {
               />
             </div>
 
-            <!-- Имя поля (key) -->
+            <!-- Field name (key) -->
             <div class="field col-6">
               <label for="field-key">{{ _('dialog_key') }}</label>
               <InputText
@@ -591,7 +591,7 @@ onMounted(() => {
               <small class="text-500">{{ _('dialog_key_help') }}</small>
             </div>
 
-            <!-- Метка (label) -->
+            <!-- Label -->
             <div class="field col-6">
               <label for="field-label">{{ _('dialog_label') }}</label>
               <InputText
@@ -602,7 +602,7 @@ onMounted(() => {
               />
             </div>
 
-            <!-- Описание -->
+            <!-- Description -->
             <div class="field col-12">
               <label for="field-description">{{ _('dialog_description') }}</label>
               <Textarea
@@ -613,7 +613,7 @@ onMounted(() => {
               />
             </div>
 
-            <!-- Тип виджета (xtype) -->
+            <!-- Widget type (xtype) -->
             <div class="field col-12">
               <label for="field-xtype">{{ _('dialog_xtype') }}</label>
               <Dropdown
@@ -629,10 +629,10 @@ onMounted(() => {
           </div>
         </Fieldset>
 
-        <!-- Параметры БД -->
+        <!-- Database parameters -->
         <Fieldset :legend="_('dialog_fieldset_database')" class="mb-3">
           <div class="form-grid">
-          <!-- Тип БД -->
+          <!-- DB type -->
           <div class="field col-6">
             <label for="field-dbtype">{{ _('dialog_dbtype') }}</label>
             <Dropdown
@@ -647,7 +647,7 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Точность (precision) -->
+          <!-- Precision -->
           <div class="field col-6">
             <label for="field-precision">{{ _('dialog_precision') }}</label>
             <InputText
@@ -659,7 +659,7 @@ onMounted(() => {
             />
           </div>
 
-          <!-- PHP тип -->
+          <!-- PHP type -->
           <div class="field col-6">
             <label for="field-phptype">{{ _('dialog_phptype') }}</label>
             <Dropdown
@@ -688,7 +688,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Значение по умолчанию -->
+          <!-- Default value -->
           <div class="field col-6">
             <label for="field-default">{{ _('dialog_default') }}</label>
             <Dropdown
@@ -703,7 +703,7 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Пользовательское значение по умолчанию -->
+          <!-- User-defined default value -->
           <div class="field col-6" v-if="fieldForm.default === 'USER_DEFINED'">
             <label for="field-default-value">{{ _('dialog_default_value') }}</label>
             <InputText
@@ -715,7 +715,7 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Атрибуты -->
+          <!-- Attributes -->
           <div class="field col-6">
             <label for="field-attributes">{{ _('dialog_attributes') }}</label>
             <InputText
@@ -728,7 +728,7 @@ onMounted(() => {
             <small class="text-500">{{ _('dialog_attributes_help') }}</small>
           </div>
 
-          <!-- Тип индекса -->
+          <!-- Index type -->
           <div class="field col-6">
             <label for="field-index-type">{{ _('dialog_index_type') }}</label>
             <Dropdown
@@ -743,7 +743,7 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Активность -->
+          <!-- Active status -->
           <div class="field col-12">
             <label for="field-active">{{ _('dialog_active') }}</label>
             <div class="flex align-items-center" style="height: 42px">
@@ -785,7 +785,7 @@ onMounted(() => {
 </style>
 
 <style>
-/* Стили для модального окна - работают как в .vueApp так и в .p-dialog */
+/* Modal window styles - work in both .vueApp and .p-dialog */
 .vueApp .edit-field-form,
 .p-dialog .edit-field-form {
   padding: 10px 0;
@@ -827,7 +827,7 @@ onMounted(() => {
   width: 100%;
 }
 
-/* Сетка для модального окна */
+/* Grid for modal window */
 .vueApp .col-6,
 .p-dialog .col-6 {
   flex: 0 0 calc(50% - 16px);
@@ -840,7 +840,7 @@ onMounted(() => {
   max-width: calc(100% - 16px);
 }
 
-/* Чекбокс в модальном окне */
+/* Checkbox in modal window */
 .vueApp .edit-field-form .checkbox-wrapper,
 .p-dialog .edit-field-form .checkbox-wrapper {
   display: flex;

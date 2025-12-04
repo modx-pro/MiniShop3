@@ -33,35 +33,6 @@ class Services
      */
     public function load($ctx = 'web')
     {
-        // Default classes
-//        if (!class_exists('msCartHandler')) {
-//            require_once dirname(__FILE__, 3) . '/handlers/mscarthandler.class.php';
-//        }
-//        if (!class_exists('msOrderHandler')) {
-//            require_once dirname(__FILE__, 3) . '/handlers/msorderhandler.class.php';
-//        }
-
-//        if (!class_exists(\MiniShop3\Controllers\Customer\Customer::class)) {
-//            require_once dirname(__FILE__, 2) . '/Controllers/Customer/Customer.php';
-//        }
-
-        // Cart и Order теперь управляются через ServiceRegistry
-        // Доступ: $ms3->cart, $ms3->order (через __get() → getCart()/getOrder())
-        // Конфигурация: core/config/ms3.services.php или ms3.services.d/*.php
-
-        // Cart, Order, Customer теперь управляются через ServiceRegistry
-        // Доступ: $ms3->cart, $ms3->order, $ms3->customer (через __get() → getCart()/getOrder()/getCustomer())
-        // Конфигурация: core/config/ms3.services.php или ms3.services.d/*.php
-
-        // DEPRECATED: Старая система через setController больше не используется для cart/order/customer
-        // $cart = new $cartController($this->ms3, $this->ms3->config);
-        // $this->ms3->setController('cart', $cart);
-        // $order = new $orderController($this->ms3, $this->ms3->config);
-        // $this->ms3->setController('order', $order);
-        // $customer = new $customerController($this->ms3, $this->ms3->config);
-        // $this->ms3->setController('customer', $customer);
-
-
         // Load delivery class
         $deliveryController = $this->modx->getOption(
             'ms3_delivery_controller',
@@ -156,53 +127,10 @@ class Services
     /**
      * Load custom classes from specified directory
      *
+     * @param string $type Type of class
      * @return void
-     * @var string $type Type of class
-     *
      */
     public function loadCustomClasses($type)
     {
-        // Original classes
-//        $files = scandir($this->config['customPath'] . $type);
-//        foreach ($files as $file) {
-//            if (preg_match('/.*?\.class\.php$/i', $file)) {
-//                include_once($this->config['customPath'] . $type . '/' . $file);
-//            }
-//        }
-//
-//        // 3rd party classes
-//        $type = strtolower($type);
-//        $placeholders = [
-//            'base_path' => MODX_BASE_PATH,
-//            'core_path' => MODX_CORE_PATH,
-//            'assets_path' => MODX_ASSETS_PATH,
-//        ];
-//        $pl1 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[+', ']]', false);
-//        $pl2 = $this->pdoFetch->makePlaceholders($placeholders, '', '[[++', ']]', false);
-//        $pl3 = $this->pdoFetch->makePlaceholders($placeholders, '', '{', '}', false);
-//        $services = $this->services->get();
-//        if (!empty($services[$type]) && is_array($services[$type])) {
-//            foreach ($services[$type] as $controller) {
-//                if (is_string($controller)) {
-//                    $file = $controller;
-//                } elseif (is_array($controller) && !empty($controller['controller'])) {
-//                    $file = $controller['controller'];
-//                } else {
-//                    continue;
-//                }
-//
-//                $file = str_replace($pl1['pl'], $pl1['vl'], $file);
-//                $file = str_replace($pl2['pl'], $pl2['vl'], $file);
-//                $file = str_replace($pl3['pl'], $pl3['vl'], $file);
-//                if (strpos($file, MODX_BASE_PATH) === false && strpos($file, MODX_CORE_PATH) === false) {
-//                    $file = MODX_BASE_PATH . ltrim($file, '/');
-//                }
-//                if (file_exists($file)) {
-//                    include_once($file);
-//                } else {
-//                    $this->modx->log(modX::LOG_LEVEL_ERROR, "[miniShop3] Could not load custom class at \"$file\"");
-//                }
-//            }
-//        }
     }
 }

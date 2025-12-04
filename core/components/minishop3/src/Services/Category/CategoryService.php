@@ -9,10 +9,10 @@ use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
 /**
- * Сервис для работы с категориями
+ * Service for working with categories
  *
- * Выносим бизнес-логику из модели msCategory в отдельный сервис
- * для улучшения тестируемости и разделения ответственности
+ * Extracts business logic from msCategory model into separate service
+ * for improved testability and separation of concerns
  */
 class CategoryService
 {
@@ -28,23 +28,20 @@ class CategoryService
     }
 
     /**
-     * Обработка сохранения категории
+     * Handle category save
      *
-     * Если категория меняет тип (была не msCategory, стала msCategory),
-     * то показываем все дочерние товары в дереве
+     * If category changes type (was not msCategory, became msCategory),
+     * show all child products in tree
      *
      * @param msCategory $category
-     * @param string $oldClassKey Старый class_key до сохранения
+     * @param string $oldClassKey Old class_key before save
      * @return bool
      */
     public function handleCategorySave(msCategory $category, string $oldClassKey): bool
     {
-        // Если категория была другим типом ресурса и стала msCategory
         if (!$category->isNew() && $oldClassKey !== 'msCategory') {
-            // Показываем дочерние элементы в дереве
             $category->set('hide_children_in_tree', false);
 
-            // Обновляем все дочерние товары - показываем их в дереве
             $this->showChildProductsInTree($category->get('id'));
         }
 
@@ -52,7 +49,7 @@ class CategoryService
     }
 
     /**
-     * Показать дочерние товары категории в дереве
+     * Show category child products in tree
      *
      * @param int $categoryId
      * @return bool
@@ -78,22 +75,21 @@ class CategoryService
     }
 
     /**
-     * Дублирование категории со всеми связанными данными
+     * Duplicate category with all related data
      *
-     * @param msCategory $category Исходная категория
-     * @param msCategory $newCategory Новая категория (уже дублированная родителем)
+     * @param msCategory $category Source category
+     * @param msCategory $newCategory New category (already duplicated by parent)
      * @return msCategory
      */
     public function duplicateCategory(msCategory $category, msCategory $newCategory): msCategory
     {
-        // Копируем опции категории
         $this->duplicateCategoryOptions($category, $newCategory);
 
         return $newCategory;
     }
 
     /**
-     * Копирование опций категории
+     * Copy category options
      *
      * @param msCategory $sourceCategory
      * @param msCategory $targetCategory
@@ -123,9 +119,9 @@ class CategoryService
     }
 
     /**
-     * Получить соседние категории (левые и правые)
+     * Get neighbor categories (left and right)
      *
-     * Используется для навигации по категориям одного уровня
+     * Used for navigation between categories of the same level
      *
      * @param msCategory $category
      * @return array ['left' => [id1, id2, ...], 'right' => [id3, id4, ...]]

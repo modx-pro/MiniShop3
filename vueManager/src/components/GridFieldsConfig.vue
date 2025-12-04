@@ -22,13 +22,11 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
-// Состояние
 const loading = ref(false)
 const saving = ref(false)
 const fields = ref([])
 const selectedGrid = ref('customers')
 
-// Состояние для добавления поля
 const showAddDialog = ref(false)
 const newField = ref({
   field_name: '',
@@ -54,13 +52,12 @@ const newField = ref({
   }
 })
 
-// Состояние для редактирования поля
 const showEditDialog = ref(false)
 const editingField = ref(null)
 const editingFieldIndex = ref(null)
 
 /**
- * Доступные гриды
+ * Available grids
  */
 const gridOptions = computed(() => [
   { label: _('grid_customers'), value: 'customers' },
@@ -69,7 +66,7 @@ const gridOptions = computed(() => [
 ])
 
 /**
- * Типы полей
+ * Field types
  */
 const fieldTypeOptions = computed(() => [
   { label: _('field_type_model'), value: 'model' },
@@ -80,7 +77,7 @@ const fieldTypeOptions = computed(() => [
 ])
 
 /**
- * Типы агрегации для relation полей
+ * Aggregation types for relation fields
  */
 const aggregationOptions = computed(() => [
   { label: _('relation_aggregation_none'), value: null },
@@ -92,7 +89,7 @@ const aggregationOptions = computed(() => [
 ])
 
 /**
- * Загрузить конфигурацию полей грида
+ * Load grid fields configuration
  */
 async function loadFields() {
   loading.value = true
@@ -101,7 +98,6 @@ async function loadFields() {
     const response = await request.get(`/api/mgr/grid-config/${selectedGrid.value}`)
 
     if (response && response.columns) {
-      // Преобразуем в формат для редактирования
       fields.value = response.columns.map((col, index) => ({
         name: col.name,
         label: col.label,
@@ -113,7 +109,6 @@ async function loadFields() {
         minWidth: col.minWidth || '',
         isSystem: col.isSystem === true,
         sort_order: index,
-        // Сохраняем дополнительные поля из config
         template: col.template || '',
         type: col.type || '',
         format: col.format || ''
@@ -136,13 +131,12 @@ async function loadFields() {
 }
 
 /**
- * Сохранить конфигурацию
+ * Save configuration
  */
 async function saveConfig() {
   saving.value = true
 
   try {
-    // Подготавливаем данные для отправки
     const fieldsData = fields.value.map((field, index) => {
       const data = {
         name: field.name,
@@ -156,7 +150,6 @@ async function saveConfig() {
         minWidth: field.minWidth || null
       }
 
-      // Добавляем дополнительные поля если они есть
       if (field.template) data.template = field.template
       if (field.type) data.type = field.type
       if (field.format) data.format = field.format
@@ -188,7 +181,7 @@ async function saveConfig() {
 }
 
 /**
- * Обработчик изменения порядка строк (VueDraggable)
+ * Handle row order change (VueDraggable)
  */
 function onDragEnd() {
   toast.add({
@@ -200,10 +193,9 @@ function onDragEnd() {
 }
 
 /**
- * Удалить поле
+ * Delete field
  */
 function deleteField(field, index) {
-  // Защита системных полей
   if (field.isSystem) {
     toast.add({
       severity: 'warn',
@@ -214,8 +206,6 @@ function deleteField(field, index) {
     return
   }
 
-  // Подготавливаем переводы ДО передачи в confirm.require()
-  // ConfirmDialog рендерится вне Vue контекста, поэтому нужно получить переводы заранее
   const confirmMessage = _('delete_field_confirm_message').replace('{name}', field.label || field.name)
   const confirmHeader = _('delete_field_confirm_title')
   const deleteLabel = _('delete')
@@ -234,10 +224,8 @@ function deleteField(field, index) {
     acceptClass: 'p-button-danger',
     accept: async () => {
       try {
-        // Отправляем DELETE запрос на backend
         await request.delete(`/api/mgr/grid-config/${selectedGrid.value}/${field.name}`)
 
-        // После успешного удаления - убираем из массива
         fields.value.splice(index, 1)
 
         toast.add({
@@ -259,18 +247,11 @@ function deleteField(field, index) {
   })
 }
 
-/**
- * При смене грида - перезагрузить поля
- */
 function onGridChange() {
   loadFields()
 }
 
-/**
- * Открыть диалог добавления поля
- */
 function openAddDialog() {
-  // Сброс формы
   newField.value = {
     field_name: '',
     label: '',
@@ -300,19 +281,15 @@ function openAddDialog() {
   showAddDialog.value = true
 }
 
-/**
- * Закрыть диалог добавления
- */
 function closeAddDialog() {
   showAddDialog.value = false
 }
 
 /**
- * Добавить новое поле
+ * Add new field
  */
 async function addField() {
   try {
-    // Подготовка данных по типу
     const data = {
       field_name: newField.value.field_name,
       label: newField.value.label,
@@ -325,7 +302,6 @@ async function addField() {
       config: {}
     }
 
-    // Добавляем специфичные настройки по типу
     switch (newField.value.type) {
       case 'template':
         data.config = {
@@ -353,16 +329,13 @@ async function addField() {
         data.config = {
           actions: newField.value.config.actions || []
         }
-        // Для actions отключаем sortable и filterable
         data.sortable = false
         data.filterable = false
         break
     }
 
-    // Отправляем на backend
     const result = await request.post(`/api/mgr/grid-config/${selectedGrid.value}/field`, data)
 
-    // Добавляем в массив локально
     if (result.field) {
       fields.value.push({
         name: result.field.field_name,
@@ -401,13 +374,11 @@ async function addField() {
 }
 
 /**
- * Открыть диалог редактирования поля
+ * Open edit field dialog
  */
 function openEditDialog(field, index) {
   editingFieldIndex.value = index
 
-  // Копируем данные поля в editingField
-  // Нужно правильно извлечь тип и config из поля
   const fieldType = field.type || 'model'
 
   editingField.value = {
@@ -437,28 +408,17 @@ function openEditDialog(field, index) {
     }
   }
 
-  // Если поле имеет дополнительные данные конфигурации, загружаем их
-  // Для этого нужно получить полную конфигурацию поля с сервера
-  // Пока используем данные из локального состояния
-
   showEditDialog.value = true
 }
 
-/**
- * Закрыть диалог редактирования
- */
 function closeEditDialog() {
   showEditDialog.value = false
   editingField.value = null
   editingFieldIndex.value = null
 }
 
-/**
- * Сохранить изменения поля
- */
 async function saveEdit() {
   try {
-    // Подготовка данных по типу
     const data = {
       field_name: editingField.value.field_name,
       label: editingField.value.label,
@@ -471,7 +431,6 @@ async function saveEdit() {
       config: {}
     }
 
-    // Добавляем специфичные настройки по типу
     switch (editingField.value.type) {
       case 'template':
         data.config = {
@@ -499,16 +458,13 @@ async function saveEdit() {
         data.config = {
           actions: editingField.value.config.actions || []
         }
-        // Для actions отключаем sortable и filterable
         data.sortable = false
         data.filterable = false
         break
     }
 
-    // Отправляем на backend
     const result = await request.put(`/api/mgr/grid-config/${selectedGrid.value}/field/${editingField.value.field_name}`, data)
 
-    // Обновляем в массиве локально
     if (editingFieldIndex.value !== null && result.field) {
       fields.value[editingFieldIndex.value] = {
         name: result.field.field_name,
@@ -562,7 +518,7 @@ onMounted(() => {
       </template>
 
       <template #content>
-        <!-- Выбор грида -->
+        <!-- Grid selector -->
         <div class="field mb-4">
           <label for="grid-select">{{ _('select_grid') }}</label>
           <Dropdown
@@ -576,7 +532,7 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Кнопка добавления поля -->
+        <!-- Add field button -->
         <div class="mb-3">
           <Button
             :label="_('add_field')"
@@ -586,7 +542,7 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Таблица полей с VueDraggable -->
+        <!-- Fields table with VueDraggable -->
         <div class="p-datatable p-component p-datatable-striped" v-if="!loading">
           <div class="p-datatable-wrapper">
             <table class="p-datatable-table">
@@ -663,12 +619,12 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Индикатор загрузки -->
+        <!-- Loading indicator -->
         <div v-if="loading" class="loading-indicator">
           <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
         </div>
 
-        <!-- Кнопка сохранения -->
+        <!-- Save button -->
         <div class="flex justify-content-end">
           <Button
             :label="_('save')"
@@ -680,7 +636,7 @@ onMounted(() => {
       </template>
     </Card>
 
-    <!-- Dialog добавления поля -->
+    <!-- Add field dialog -->
     <Dialog
       v-model:visible="showAddDialog"
       :header="_('add_field_dialog_title')"
@@ -721,7 +677,7 @@ onMounted(() => {
         />
       </div>
 
-      <!-- Динамические поля в зависимости от типа -->
+      <!-- Dynamic fields based on type -->
       <div v-if="newField.type === 'template'" class="field mb-3">
         <label for="new-field-template" class="required">{{ _('field_template') }}</label>
         <Textarea
@@ -787,7 +743,7 @@ onMounted(() => {
         <small class="text-muted">{{ _('computed_class_hint') }}</small>
       </div>
 
-      <!-- Настройка действий для типа actions -->
+      <!-- Actions configuration for actions type -->
       <div v-if="newField.type === 'actions'" class="field mb-3">
         <label class="mb-2 block font-semibold">{{ _('actions_configuration') }}</label>
         <ActionsEditor
@@ -797,7 +753,7 @@ onMounted(() => {
         <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
       </div>
 
-      <!-- Общие настройки -->
+      <!-- General settings -->
       <div class="field mb-3">
         <label for="new-field-width">{{ _('width') }}</label>
         <InputText
@@ -865,7 +821,7 @@ onMounted(() => {
       </template>
     </Dialog>
 
-    <!-- Dialog редактирования поля -->
+    <!-- Edit field dialog -->
     <Dialog
       v-model:visible="showEditDialog"
       :header="_('edit_field_dialog_title')"
@@ -908,7 +864,7 @@ onMounted(() => {
           />
         </div>
 
-        <!-- Динамические поля в зависимости от типа -->
+        <!-- Dynamic fields based on type -->
         <div v-if="editingField.type === 'template'" class="field mb-3">
           <label for="edit-field-template" class="required">{{ _('field_template') }}</label>
           <Textarea
@@ -974,7 +930,7 @@ onMounted(() => {
           <small class="text-muted">{{ _('computed_class_hint') }}</small>
         </div>
 
-        <!-- Настройка действий для типа actions -->
+        <!-- Actions configuration for actions type -->
         <div v-if="editingField.type === 'actions'" class="field mb-3">
           <label class="mb-2 block font-semibold">{{ _('actions_configuration') }}</label>
           <ActionsEditor
@@ -984,7 +940,7 @@ onMounted(() => {
           <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
         </div>
 
-        <!-- Общие настройки -->
+        <!-- General settings -->
         <div class="field mb-3">
           <label for="edit-field-width">{{ _('width') }}</label>
           <InputText
@@ -1060,7 +1016,6 @@ onMounted(() => {
   padding: 20px;
 }
 
-/* VueDraggable стили */
 .drag-handle-cell {
   text-align: center;
   vertical-align: middle;
@@ -1083,20 +1038,17 @@ onMounted(() => {
   cursor: grabbing;
 }
 
-/* Ghost row - показывается на месте перетаскиваемой строки */
 :deep(.ghost-row) {
   opacity: 0.5;
   background: #f8f9fa;
 }
 
-/* Перетаскиваемая строка */
 :deep(.sortable-drag) {
   opacity: 0.8;
   background: #e9ecef;
   cursor: grabbing !important;
 }
 
-/* Индикатор загрузки */
 .loading-indicator {
   display: flex;
   justify-content: center;
@@ -1105,7 +1057,6 @@ onMounted(() => {
   color: #6c757d;
 }
 
-/* Чередующиеся строки (striped) */
 :deep(.p-datatable-tbody tr:nth-child(even)) {
   background: #f8f9fa;
 }
@@ -1114,7 +1065,6 @@ onMounted(() => {
   background: #e9ecef;
 }
 
-/* Dialog стили */
 label.required::after {
   content: ' *';
   color: #dc3545;

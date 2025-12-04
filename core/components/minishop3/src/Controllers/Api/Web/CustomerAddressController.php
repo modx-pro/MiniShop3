@@ -8,10 +8,10 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * API контроллер для работы с адресами клиентов (Web API)
+ * API controller for customer addresses (Web API)
  *
- * Управление адресами доставки для авторизованных клиентов.
- * Поддерживает CRUD операции и выбор адреса при оформлении заказа.
+ * Manages delivery addresses for authorized customers.
+ * Supports CRUD operations and address selection during checkout.
  *
  * @package MiniShop3\Controllers\Api\Web
  */
@@ -25,10 +25,10 @@ class CustomerAddressController
     }
 
     /**
-     * Получение списка адресов клиента
+     * Get customer address list
      * GET /api/v1/customer/addresses
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function getList(array $params = []): array
@@ -39,7 +39,6 @@ class CustomerAddressController
             return Response::error('Customer not authorized', 401)->getData();
         }
 
-        // Получаем все активные адреса клиента
         $addresses = $this->modx->getIterator(msCustomerAddress::class, [
             'customer_id' => $customer->get('id'),
             'active' => 1
@@ -54,10 +53,10 @@ class CustomerAddressController
     }
 
     /**
-     * Получение конкретного адреса
+     * Get specific address
      * GET /api/v1/customer/addresses/{id}
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function get(array $params = []): array
@@ -87,10 +86,10 @@ class CustomerAddressController
     }
 
     /**
-     * Создание нового адреса
+     * Create new address
      * POST /api/v1/customer/addresses
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function create(array $params = []): array
@@ -103,7 +102,6 @@ class CustomerAddressController
 
         $input = $this->getRequestData();
 
-        // Валидация обязательных полей
         $required = ['name', 'city', 'street'];
         foreach ($required as $field) {
             if (empty($input[$field])) {
@@ -111,7 +109,6 @@ class CustomerAddressController
             }
         }
 
-        // Проверка дубликата по хешу адреса
         $addressHash = $this->generateAddressHash($input);
         $exists = $this->modx->getObject(msCustomerAddress::class, [
             'customer_id' => $customer->get('id'),
@@ -124,13 +121,11 @@ class CustomerAddressController
             ])->getData();
         }
 
-        // Создание нового адреса
         $address = $this->modx->newObject(msCustomerAddress::class);
         $address->set('customer_id', $customer->get('id'));
         $address->set('hash', $addressHash);
         $address->set('createdon', date('Y-m-d H:i:s'));
 
-        // Установка полей адреса
         $fields = ['name', 'country', 'index', 'region', 'city', 'metro', 'street', 'building', 'entrance', 'floor', 'room', 'comment'];
         foreach ($fields as $field) {
             if (isset($input[$field])) {
@@ -148,10 +143,10 @@ class CustomerAddressController
     }
 
     /**
-     * Обновление адреса
+     * Update address
      * PUT /api/v1/customer/addresses/{id}
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function update(array $params = []): array
@@ -179,7 +174,6 @@ class CustomerAddressController
 
         $input = $this->getRequestData();
 
-        // Обновление полей адреса
         $fields = ['name', 'country', 'index', 'region', 'city', 'metro', 'street', 'building', 'entrance', 'floor', 'room', 'comment'];
         $hasChanges = false;
 
@@ -191,7 +185,6 @@ class CustomerAddressController
         }
 
         if ($hasChanges) {
-            // Обновление хеша при изменении ключевых полей
             $addressHash = $this->generateAddressHash($input);
             $address->set('hash', $addressHash);
             $address->set('updatedon', date('Y-m-d H:i:s'));
@@ -207,10 +200,10 @@ class CustomerAddressController
     }
 
     /**
-     * Установка адреса по умолчанию
+     * Set default address
      * PUT /api/v1/customer/addresses/{id}/set-default
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function setDefault(array $params = []): array
@@ -237,13 +230,11 @@ class CustomerAddressController
             return Response::error('Address not found', 404)->getData();
         }
 
-        // Сбрасываем is_default у всех адресов клиента
         $table = $this->modx->getTableName(msCustomerAddress::class);
         $sql = "UPDATE {$table} SET is_default = 0 WHERE customer_id = :customer_id";
         $stmt = $this->modx->prepare($sql);
         $stmt->execute(['customer_id' => $customer->get('id')]);
 
-        // Устанавливаем is_default для выбранного адреса
         $address->set('is_default', 1);
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
@@ -257,10 +248,10 @@ class CustomerAddressController
     }
 
     /**
-     * Удаление адреса (мягкое удаление через active = 0)
+     * Delete address (soft delete via active = 0)
      * DELETE /api/v1/customer/addresses/{id}
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function delete(array $params = []): array
@@ -286,7 +277,6 @@ class CustomerAddressController
             return Response::error('Address not found', 404)->getData();
         }
 
-        // Мягкое удаление
         $address->set('active', 0);
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
@@ -300,7 +290,7 @@ class CustomerAddressController
     }
 
     /**
-     * Получение авторизованного клиента из сессии
+     * Get authorized customer from session
      *
      * @return msCustomer|null
      */
@@ -313,14 +303,12 @@ class CustomerAddressController
 
         $ms3->initialize();
 
-        // Получаем токен клиента
         $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
 
         if (empty($tokenString)) {
             return null;
         }
 
-        // Ищем токен в таблице ms3_customer_tokens
         $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
             'token' => $tokenString,
             'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
@@ -330,14 +318,13 @@ class CustomerAddressController
             return null;
         }
 
-        // Получаем клиента по customer_id из токена
         $customer = $this->modx->getObject(msCustomer::class, $tokenObj->get('customer_id'));
 
         return $customer ?: null;
     }
 
     /**
-     * Форматирование адреса для API ответа
+     * Format address for API response
      *
      * @param msCustomerAddress $address
      * @return array
@@ -367,7 +354,7 @@ class CustomerAddressController
     }
 
     /**
-     * Генерация хеша адреса для определения дубликатов
+     * Generate address hash for duplicate detection
      *
      * @param array $data
      * @return string
@@ -385,7 +372,7 @@ class CustomerAddressController
     }
 
     /**
-     * Получение данных из тела запроса (POST/PUT)
+     * Get request body data (POST/PUT)
      *
      * @return array
      */
@@ -398,19 +385,17 @@ class CustomerAddressController
     }
 
     /**
-     * Преобразование ответа из старого формата в новый
+     * Transform response from old format to new
      *
      * @param array $result
      * @return array
      */
     protected function transformResponse(array $result): array
     {
-        // Если ответ уже в правильном формате, возвращаем как есть
         if (isset($result['success'])) {
             return $result;
         }
 
-        // Преобразование старого формата
         return Response::success($result)->getData();
     }
 }

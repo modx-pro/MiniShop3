@@ -5,16 +5,16 @@ namespace MiniShop3\Services\Customer;
 use MiniShop3\Model\msCustomerAddress;
 
 /**
- * AddressesPageService - сервис страницы управления адресами клиента
+ * AddressesPageService - customer address management page service
  *
- * Отображает список сохранённых адресов с CRUD функционалом:
- * - Просмотр списка адресов
- * - Добавление нового адреса
- * - Редактирование существующего
- * - Удаление адреса
- * - Установка адреса по умолчанию
+ * Displays list of saved addresses with CRUD functionality:
+ * - View address list
+ * - Add new address
+ * - Edit existing address
+ * - Delete address
+ * - Set default address
  *
- * Пример использования в сниппете:
+ * Example usage in snippet:
  * ```php
  * [[!msCustomer?
  *   &service=`addresses`
@@ -28,23 +28,20 @@ use MiniShop3\Model\msCustomerAddress;
 class AddressesPageService extends CustomerPageService
 {
     /**
-     * Получить сырые данные страницы адресов
+     * Get raw address page data
      *
-     * @return array Данные адресов
+     * @return array Address data
      */
     public function getData(): array
     {
-        // Получить режим отображения (list, edit, create)
         $mode = $_GET['mode'] ?? 'list';
         $addressId = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-        // Базовые данные
         $data = [
             'mode' => $mode,
             'customer' => $this->customer->toArray(),
         ];
 
-        // Данные в зависимости от режима
         switch ($mode) {
             case 'edit':
                 if ($addressId) {
@@ -78,13 +75,12 @@ class AddressesPageService extends CustomerPageService
                 foreach ($addresses as $address) {
                     $addressData = $address->toArray();
 
-                    // Сформировать человекочитаемое название адреса
                     if (empty($addressData['name'])) {
                         $parts = array_filter([
                             $addressData['city'],
                             $addressData['street'],
-                            $addressData['building'] ? 'д. ' . $addressData['building'] : null,
-                            $addressData['room'] ? 'кв. ' . $addressData['room'] : null,
+                            $addressData['building'] ? 'building ' . $addressData['building'] : null,
+                            $addressData['room'] ? 'room ' . $addressData['room'] : null,
                         ]);
                         $addressData['display_name'] = implode(', ', $parts);
                     } else {
@@ -105,17 +101,15 @@ class AddressesPageService extends CustomerPageService
     }
 
     /**
-     * Рендерить страницу управления адресами
+     * Render address management page
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     public function render(): string
     {
-        // Получить режим отображения (list, edit, create)
         $mode = $_GET['mode'] ?? 'list';
         $addressId = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-        // Рендеринг в зависимости от режима
         switch ($mode) {
             case 'edit':
                 return $this->renderEditForm($addressId);
@@ -127,9 +121,9 @@ class AddressesPageService extends CustomerPageService
     }
 
     /**
-     * Рендерить список адресов
+     * Render address list
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     protected function renderList(): string
     {
@@ -145,7 +139,6 @@ class AddressesPageService extends CustomerPageService
             'tpl.msCustomer.address.row'
         );
 
-        // Получить все адреса клиента
         $addresses = $this->modx->getIterator(msCustomerAddress::class, [
             'customer_id' => $this->customerId,
         ]);
@@ -155,25 +148,22 @@ class AddressesPageService extends CustomerPageService
         foreach ($addresses as $address) {
             $addressData = $address->toArray();
 
-            // Сформировать человекочитаемое название адреса
             if (empty($addressData['name'])) {
                 $parts = array_filter([
                     $addressData['city'],
                     $addressData['street'],
-                    $addressData['building'] ? 'д. ' . $addressData['building'] : null,
-                    $addressData['room'] ? 'кв. ' . $addressData['room'] : null,
+                    $addressData['building'] ? 'building ' . $addressData['building'] : null,
+                    $addressData['room'] ? 'room ' . $addressData['room'] : null,
                 ]);
                 $addressData['display_name'] = implode(', ', $parts);
             } else {
                 $addressData['display_name'] = $addressData['name'];
             }
 
-            // Рендеринг строки адреса
             $chunk = $this->pdoFetch->getChunk($addressTpl, $addressData);
             $addressesData[] = is_string($chunk) ? $chunk : '';
         }
 
-        // Подготовить данные для шаблона
         $data = [
             'addresses' => implode("\n", $addressesData),
             'addresses_count' => count($addressesData),
@@ -182,7 +172,6 @@ class AddressesPageService extends CustomerPageService
             'error' => $_SESSION['ms3']['addresses_error'] ?? null,
         ];
 
-        // Очистить flash-сообщения
         unset($_SESSION['ms3']['addresses_success']);
         unset($_SESSION['ms3']['addresses_error']);
 
@@ -191,9 +180,9 @@ class AddressesPageService extends CustomerPageService
     }
 
     /**
-     * Рендерить форму создания адреса
+     * Render address creation form
      *
-     * @return string HTML содержимое
+     * @return string HTML content
      */
     protected function renderCreateForm(): string
     {
@@ -210,7 +199,6 @@ class AddressesPageService extends CustomerPageService
             'customer' => $this->customer->toArray(),
         ];
 
-        // Очистить данные формы
         unset($_SESSION['ms3']['address_form_data']);
         unset($_SESSION['ms3']['address_form_errors']);
 
@@ -219,10 +207,10 @@ class AddressesPageService extends CustomerPageService
     }
 
     /**
-     * Рендерить форму редактирования адреса
+     * Render address edit form
      *
-     * @param int|null $addressId ID адреса для редактирования
-     * @return string HTML содержимое
+     * @param int|null $addressId Address ID to edit
+     * @return string HTML content
      */
     protected function renderEditForm(?int $addressId): string
     {
@@ -230,7 +218,6 @@ class AddressesPageService extends CustomerPageService
             return $this->modx->lexicon('ms3_customer_err_address_not_found');
         }
 
-        // Загрузить адрес и проверить владельца
         /** @var msCustomerAddress $address */
         $address = $this->modx->getObject(msCustomerAddress::class, [
             'id' => $addressId,
@@ -254,7 +241,6 @@ class AddressesPageService extends CustomerPageService
             'customer' => $this->customer->toArray(),
         ];
 
-        // Очистить ошибки формы
         unset($_SESSION['ms3']['address_form_errors']);
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);

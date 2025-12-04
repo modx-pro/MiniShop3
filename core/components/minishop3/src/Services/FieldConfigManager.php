@@ -5,17 +5,18 @@ namespace MiniShop3\Services;
 use MODX\Revolution\modX;
 
 /**
- * Универсальный сервис для работы с полями моделей
+ * Universal service for working with model fields
  *
- * Обеспечивает автоматическое чтение полей из xPDO моделей и их конфигурацию
+ * Provides automatic reading of fields from xPDO models and their configuration
  */
+class FieldConfigManager
 {
     /** @var modX */
     protected $modx;
 
     protected $configManager;
 
-    /** @var array Кеш загруженных алиасов моделей */
+    /** @var array Cache of loaded model aliases */
     protected $modelAliases = [];
 
     /**
@@ -28,7 +29,7 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Загрузить маппинг alias → model class
+     * Load alias → model class mapping
      */
     protected function loadModelAliases(): void
     {
@@ -40,7 +41,7 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Получить полный класс модели по alias
+     * Get full model class by alias
      *
      * @param string $alias
      * @return string|null
@@ -51,7 +52,7 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Загрузить поля из таблицы ms3_product_fields
+     * Load fields from ms3_product_fields table
      *
      * @return array
      */
@@ -67,7 +68,6 @@ use MODX\Revolution\modX;
         foreach ($collection as $field) {
             $configRaw = $field->get('config');
 
-            // xPDO 3 с phptype='json' автоматически десериализует JSON в массив
             if (is_array($configRaw)) {
                 $config = $configRaw;
             } elseif (is_string($configRaw) && !empty($configRaw)) {
@@ -90,7 +90,6 @@ use MODX\Revolution\modX;
                 'is_default' => (bool)$field->get('is_default'),
             ];
 
-            // Мерджим дополнительные настройки из config JSON
             if (is_array($config)) {
                 $fieldData = array_merge($fieldData, $config);
             }
@@ -102,27 +101,24 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Получить все поля модели с автоматическим определением типов
+     * Get all model fields with automatic type detection
      *
-     * @param string $modelClass Полное имя класса модели
-     * @return array Массив полей из модели
+     * @param string $modelClass Full model class name
+     * @return array Array of fields from model
      * @throws \Exception
      */
     public function getModelFields(string $modelClass): array
     {
-        // Получаем метамап модели
         if (!class_exists($modelClass)) {
             throw new \Exception("Model class not found: {$modelClass}");
         }
 
-        // Для xPDO 3 используем MySQL generated класс
         $mysqlClass = str_replace('\\Model\\', '\\Model\\mysql\\', $modelClass);
 
         if (!class_exists($mysqlClass)) {
             throw new \Exception("MySQL model class not found: {$mysqlClass}");
         }
 
-        // Для MySQL моделей используем статический $metaMap
         $metaMap = $mysqlClass::$metaMap ?? null;
 
         if (!$metaMap || !isset($metaMap['fields'])) {
@@ -133,7 +129,6 @@ use MODX\Revolution\modX;
         $fieldMeta = $metaMap['fieldMeta'] ?? [];
 
         foreach ($metaMap['fields'] as $fieldName => $defaultValue) {
-            // Пропускаем служебные поля id
             if ($fieldName === 'id') {
                 continue;
             }
@@ -142,10 +137,10 @@ use MODX\Revolution\modX;
 
             $fields[] = [
                 'name' => $fieldName,
-                'label_key' => 'ms3_product_' . $fieldName, // Ключ лексикона
-                'description_key' => 'ms3_product_' . $fieldName . '_help', // Ключ описания
+                'label_key' => 'ms3_product_' . $fieldName,
+                'description_key' => 'ms3_product_' . $fieldName . '_help',
                 'xtype' => $this->guessXtype($meta),
-                'width' => 4, // По умолчанию 1/3 экрана (4 из 12 колонок)
+                'width' => 4,
                 'visible' => true,
                 'editable' => true,
                 'required' => !($meta['null'] ?? true),
@@ -159,9 +154,9 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Определить xtype виджета по метаданным поля
+     * Determine widget xtype from field metadata
      *
-     * @param array $fieldMeta Метаданные поля из $metaMap['fieldMeta']
+     * @param array $fieldMeta Field metadata from $metaMap['fieldMeta']
      * @return string
      */
     protected function guessXtype(array $fieldMeta): string
@@ -170,56 +165,50 @@ use MODX\Revolution\modX;
         $dbtype = $fieldMeta['dbtype'] ?? '';
         $precision = $fieldMeta['precision'] ?? '';
 
-        // Boolean: tinyint(1) или phptype=boolean
         if ($phptype === 'boolean' || ($dbtype === 'tinyint' && $precision === '1')) {
             return 'checkbox';
         }
 
-        // Numeric: float, decimal, int с длиной > 1
         if (in_array($phptype, ['float', 'integer']) || in_array($dbtype, ['decimal', 'int'])) {
             return 'numberfield';
         }
 
-        // JSON: text + phptype=json
         if ($phptype === 'json') {
             return 'textarea';
         }
 
-        // Text fields
         if ($dbtype === 'text') {
             return 'textarea';
         }
 
-        // Default
         return 'textfield';
     }
 
     /**
-     * Сгенерировать читаемый label из имени поля
+     * Generate readable label from field name
      *
      * @param string $fieldName
      * @return string
      */
     protected function generateLabel(string $fieldName): string
     {
-        // Преобразуем snake_case в Title Case
         $words = explode('_', $fieldName);
         $words = array_map('ucfirst', $words);
         return implode(' ', $words);
     }
 
     /**
-     * Получить полную конфигурацию полей для страницы с учетом модели, JSON и БД
+     * Get complete field configuration for page with model, JSON and DB
      *
-     * @param string $pageKey Ключ страницы (product_data, order, etc)
-     * @param string|null $modelAlias Alias модели (если null, берется из JSON конфига)
-     * @param string $contextKey Контекст MODX
+     * @param string $pageKey Page key (product_data, order, etc)
+     * @param string|null $modelAlias Model alias (if null, taken from JSON config)
+     * @param string $contextKey MODX context
      * @return array
      * @throws \Exception
      */
     public function getPageFieldsConfig(string $pageKey, ?string $modelAlias = null, string $contextKey = 'web'): array
     {
-        // 1. Если modelAlias указан, читаем поля напрямую из модели
+        // 1. If modelAlias is specified, read fields directly from model
         if ($modelAlias) {
             $modelClass = $this->getModelClassByAlias($modelAlias);
             if (!$modelClass) {
@@ -228,21 +217,21 @@ use MODX\Revolution\modX;
 
             $modelFields = $this->getModelFields($modelClass);
         } else {
-            // Пока модель не указана, используем старую логику (только JSON)
+            // While model is not specified, use old logic (JSON only)
             $modelFields = [];
         }
 
-        // 2. Загружаем JSON конфиг (если существует)
+        // 2. Load JSON config (if exists)
         $jsonConfig = $this->loadJsonConfig($pageKey);
         $jsonFields = $jsonConfig['fields'] ?? [];
 
-        // 3. Мерджим: поля модели + переопределения из JSON
+        // 3. Merge: model fields + JSON overrides
         $baseFields = $this->mergeModelWithJson($modelFields, $jsonFields);
 
-        // 4. Применяем лексикон к label и description
+        // 4. Apply lexicon to label and description
         $finalFields = $this->applyLexicon($baseFields);
 
-        // 6. Загружаем и обрабатываем секции
+        // 5. Load and process sections
         $sections = $this->processSections($jsonConfig['sections'] ?? []);
 
         return [
@@ -254,7 +243,7 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Загрузить JSON конфиг (опционально, может не существовать)
+     * Load JSON config (optional, may not exist)
      *
      * @param string $pageKey
      * @return array
@@ -282,31 +271,31 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Мерджить поля модели с JSON конфигом
+     * Merge model fields with JSON config
      *
-     * @param array $modelFields Поля из модели
-     * @param array|object $jsonFields Поля из JSON (может быть объектом или массивом)
+     * @param array $modelFields Fields from model
+     * @param array|object $jsonFields Fields from JSON (can be object or array)
      * @return array
      */
     protected function mergeModelWithJson(array $modelFields, $jsonFields): array
     {
-        // Преобразуем массив полей в ассоциативный массив по имени
+        // Convert field array to associative array by name
         $fieldsMap = [];
         foreach ($modelFields as $field) {
             $fieldsMap[$field['name']] = $field;
         }
 
-        // Если JSON содержит объект (новый формат), применяем переопределения
+        // If JSON contains object (new format), apply overrides
         if (is_array($jsonFields) && !isset($jsonFields[0])) {
-            // Новый формат: { "price": { "xtype": "numberfield", "label": "Цена" } }
+            // New format: { "price": { "xtype": "numberfield", "label": "Price" } }
             foreach ($jsonFields as $fieldName => $override) {
                 if (isset($fieldsMap[$fieldName])) {
                     $fieldsMap[$fieldName] = array_merge($fieldsMap[$fieldName], $override);
                 }
             }
         } else {
-            // Старый формат: массив полей
-            // В этом случае просто добавляем поля из JSON, которых нет в модели
+            // Old format: array of fields
+            // In this case, just add fields from JSON that are not in model
             foreach ($jsonFields as $jsonField) {
                 $name = $jsonField['name'] ?? null;
                 if ($name && !isset($fieldsMap[$name])) {
@@ -319,9 +308,9 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Сохранить конфигурацию полей в БД
+     * Save field configuration to database
      *
-     * @deprecated Таблица ms3_field_config_overrides удалена. Используйте ConfigService::saveFieldsConfig() для работы с ms3_product_fields
+     * @deprecated Table ms3_field_config_overrides removed. Use ConfigService::saveFieldsConfig() for ms3_product_fields
      * @param string $pageKey
      * @param array $fields
      * @param string $contextKey
@@ -336,27 +325,27 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Получить значение из лексикона с fallback логикой
+     * Get lexicon value with fallback logic
      *
-     * Логика:
-     * 1. Попробовать загрузить для текущего языка админки
-     * 2. Если не найдено - попробовать английский (en)
-     * 3. Если не найдено - вернуть сам ключ
+     * Logic:
+     * 1. Try to load for current admin language
+     * 2. If not found - try English (en)
+     * 3. If not found - return the key itself
      *
-     * @param string $key Ключ лексикона
-     * @param string $namespace Namespace лексикона (по умолчанию: minishop3)
-     * @param string $topic Topic лексикона (по умолчанию: default)
+     * @param string $key Lexicon key
+     * @param string $namespace Lexicon namespace (default: minishop3)
+     * @param string $topic Lexicon topic (default: default)
      * @return string
      */
     protected function getLexiconValue(string $key, string $namespace = 'minishop3', string $topic = 'default'): string
     {
-        // Определяем текущий язык админки
+        // Determine current admin language
         $currentLanguage = $this->modx->getOption('cultureKey', null, 'en');
         if (!empty($this->modx->cultureKey)) {
             $currentLanguage = $this->modx->cultureKey;
         }
 
-        // Прямая загрузка лексикона из файла (обход кеша MODX)
+        // Direct lexicon loading from file (bypass MODX cache)
         $lexiconPath = MODX_CORE_PATH . "components/{$namespace}/lexicon/{$currentLanguage}/{$topic}.inc.php";
 
         if (file_exists($lexiconPath)) {
@@ -368,7 +357,7 @@ use MODX\Revolution\modX;
             }
         }
 
-        // Если не найдено в текущем языке и это не английский - пробуем английский
+        // If not found in current language and it's not English - try English
         if ($currentLanguage !== 'en') {
             $lexiconPathEn = MODX_CORE_PATH . "components/{$namespace}/lexicon/en/{$topic}.inc.php";
 
@@ -382,12 +371,12 @@ use MODX\Revolution\modX;
             }
         }
 
-        // Если нигде не найдено - вернём сам ключ
+        // If not found anywhere - return the key itself
         return $key;
     }
 
     /**
-     * Применить лексикон к полям (преобразовать label_key и description_key в label и description)
+     * Apply lexicon to fields (convert label_key and description_key to label and description)
      *
      * @param array $fields
      * @return array
@@ -395,32 +384,32 @@ use MODX\Revolution\modX;
     public function applyLexicon(array $fields): array
     {
         foreach ($fields as &$field) {
-            // Преобразуем label_key в label с fallback логикой
+            // Convert label_key to label with fallback logic
             if (isset($field['label_key'])) {
                 $field['label'] = $this->getLexiconValue($field['label_key'], 'minishop3', 'product');
-                // Если лексикон вернул ключ (не найден перевод), используем auto-generated label
+                // If lexicon returned key (translation not found), use auto-generated label
                 if ($field['label'] === $field['label_key']) {
                     $field['label'] = $this->generateLabel($field['name'] ?? '');
                 }
                 unset($field['label_key']);
             }
 
-            // Преобразуем description_key в description с fallback логикой
+            // Convert description_key to description with fallback logic
             if (isset($field['description_key'])) {
                 $field['description'] = $this->getLexiconValue($field['description_key'], 'minishop3', 'product');
-                // Если лексикон вернул ключ (не найден перевод), оставляем пустым
+                // If lexicon returned key (translation not found), leave empty
                 if ($field['description'] === $field['description_key']) {
                     $field['description'] = '';
                 }
                 unset($field['description_key']);
             }
 
-            // Если нет ни label_key, ни label - генерируем
+            // If no label_key or label - generate
             if (!isset($field['label'])) {
                 $field['label'] = $this->generateLabel($field['name'] ?? '');
             }
 
-            // Если нет description - пустая строка
+            // If no description - empty string
             if (!isset($field['description'])) {
                 $field['description'] = '';
             }
@@ -430,7 +419,7 @@ use MODX\Revolution\modX;
     }
 
     /**
-     * Обработать секции: применить лексикон к label
+     * Process sections: apply lexicon to label
      *
      * @param array $sections
      * @return array
@@ -442,27 +431,27 @@ use MODX\Revolution\modX;
         $result = [];
 
         foreach ($sections as $key => $section) {
-            // Применяем лексикон к label секции
+            // Apply lexicon to section label
             if (isset($section['label_key'])) {
                 $section['label'] = $this->modx->lexicon($section['label_key']);
-                // Если лексикон не найден, используем ключ как есть
+                // If lexicon not found, use key as is
                 if ($section['label'] === $section['label_key']) {
                     $section['label'] = ucfirst(str_replace('_', ' ', $key));
                 }
                 unset($section['label_key']);
             }
 
-            // Добавляем ключ секции
+            // Add section key
             $section['key'] = $key;
 
-            // Устанавливаем defaults
+            // Set defaults
             $section['collapsed'] = $section['collapsed'] ?? false;
             $section['order'] = $section['order'] ?? 0;
 
             $result[$key] = $section;
         }
 
-        // Сортируем по order
+        // Sort by order
         uasort($result, function($a, $b) {
             return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
         });

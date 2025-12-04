@@ -5,25 +5,25 @@ namespace MiniShop3\Computed;
 use MiniShop3\Interfaces\ComputedFieldInterface;
 
 /**
- * Вычисляемое поле: Категоризация клиентов по сумме покупок
+ * Computed field: Customer categorization by purchase amount
  *
- * Определяет уровень клиента на основе общей суммы покупок:
+ * Determines customer level based on total purchase amount:
  * - VIP: >= 100,000
  * - Regular: >= 10,000
  * - New: < 10,000
  *
- * Используется для сегментации клиентов, персонализации предложений,
- * VIP-обслуживания и маркетинговых кампаний.
+ * Used for customer segmentation, personalized offers,
+ * VIP service and marketing campaigns.
  *
  * @package MiniShop3\Computed
  */
 class CustomerTier implements ComputedFieldInterface
 {
     /**
-     * Вычислить категорию клиента
+     * Calculate customer tier
      *
-     * @param array $row Данные строки грида (клиента)
-     * @return string Категория: 'VIP', 'Regular' или 'New'
+     * @param array $row Grid row data (customer)
+     * @return string Tier: 'VIP', 'Regular' or 'New'
      */
     public function compute(array $row): string
     {

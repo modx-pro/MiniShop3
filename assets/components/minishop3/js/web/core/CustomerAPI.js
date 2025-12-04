@@ -1,7 +1,7 @@
 /**
- * API для работы с данными покупателя
+ * API for customer data management
  *
- * Управление профилем покупателя: контактные данные, адреса.
+ * Manages customer profile: contact details, addresses.
  *
  * @example
  * const customer = new CustomerAPI(apiClient)
@@ -10,19 +10,19 @@
  */
 class CustomerAPI {
   /**
-   * @param {ApiClient} apiClient - HTTP клиент
+   * @param {ApiClient} apiClient - HTTP client
    */
   constructor (apiClient) {
     this.api = apiClient
   }
 
   /**
-   * Добавить/обновить поле покупателя
+   * Add/update customer field
    *
    * POST /api/v1/customer/add
    *
-   * @param {string} key - Ключ поля (email, phone, fullname и т.д.)
-   * @param {string} value - Значение поля
+   * @param {string} key - Field key (email, phone, fullname, etc.)
+   * @param {string} value - Field value
    * @returns {Promise<Object>}
    *
    * @example
@@ -34,12 +34,12 @@ class CustomerAPI {
   }
 
   /**
-   * Изменить адрес доставки
+   * Change delivery address
    *
    * POST /api/v1/customer/changeAddress
    *
-   * @param {string} key - Ключ (обычно 'address_hash')
-   * @param {string} value - Хэш адреса
+   * @param {string} key - Key (usually 'address_hash')
+   * @param {string} value - Address hash
    * @returns {Promise<Object>}
    */
   async changeAddress (key, value) {
@@ -47,18 +47,18 @@ class CustomerAPI {
   }
 
   /**
-   * Обновить профиль покупателя
+   * Update customer profile
    *
    * PUT /api/v1/customer/profile
    *
-   * @param {Object} data - Данные профиля (first_name, last_name, email, phone)
+   * @param {Object} data - Profile data (first_name, last_name, email, phone)
    * @returns {Promise<Object>}
    *
    * @example
    * await customer.updateProfile({
-   *   first_name: 'Иван',
-   *   last_name: 'Иванов',
-   *   email: 'ivan@example.com',
+   *   first_name: 'John',
+   *   last_name: 'Doe',
+   *   email: 'john@example.com',
    *   phone: '+79991234567'
    * })
    */
@@ -67,18 +67,18 @@ class CustomerAPI {
   }
 
   /**
-   * Создать новый адрес
+   * Create new address
    *
    * POST /api/v1/customer/addresses
    *
-   * @param {Object} data - Данные адреса
+   * @param {Object} data - Address data
    * @returns {Promise<Object>}
    *
    * @example
    * await customer.createAddress({
-   *   name: 'Домашний адрес',
-   *   city: 'Москва',
-   *   street: 'Тверская',
+   *   name: 'Home address',
+   *   city: 'Moscow',
+   *   street: 'Tverskaya',
    *   building: '1'
    * })
    */
@@ -87,12 +87,12 @@ class CustomerAPI {
   }
 
   /**
-   * Обновить адрес
+   * Update address
    *
    * PUT /api/v1/customer/addresses/{id}
    *
-   * @param {number} id - ID адреса
-   * @param {Object} data - Данные адреса
+   * @param {number} id - Address ID
+   * @param {Object} data - Address data
    * @returns {Promise<Object>}
    */
   async updateAddress (id, data) {
@@ -100,11 +100,11 @@ class CustomerAPI {
   }
 
   /**
-   * Удалить адрес
+   * Delete address
    *
    * DELETE /api/v1/customer/addresses/{id}
    *
-   * @param {number} id - ID адреса
+   * @param {number} id - Address ID
    * @returns {Promise<Object>}
    */
   async deleteAddress (id) {

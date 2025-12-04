@@ -1,8 +1,8 @@
 <script setup>
 /**
- * ActionsEditor - Редактор действий для колонки actions
+ * ActionsEditor - Editor for actions column
  *
- * Позволяет добавлять, удалять и редактировать действия в колонке грида
+ * Allows adding, removing and editing actions in grid column
  */
 import { ref, computed, watch } from 'vue'
 import Button from 'primevue/button'
@@ -17,7 +17,7 @@ import actionRegistry from '../actionRegistry.js'
 
 const props = defineProps({
   /**
-   * Массив конфигураций действий
+   * Array of action configurations
    */
   modelValue: {
     type: Array,
@@ -25,7 +25,7 @@ const props = defineProps({
   },
 
   /**
-   * Идентификатор грида (для фильтрации доступных handlers)
+   * Grid identifier (for filtering available handlers)
    */
   gridId: {
     type: String,
@@ -37,21 +37,18 @@ const emit = defineEmits(['update:modelValue'])
 
 const { _ } = useLexicon()
 
-// Локальная копия actions
 const localActions = ref([])
 
-// Синхронизация с modelValue
 watch(() => props.modelValue, (newVal) => {
   localActions.value = JSON.parse(JSON.stringify(newVal || []))
 }, { immediate: true, deep: true })
 
-// Dialog состояние
 const showDialog = ref(false)
 const editingAction = ref(null)
 const editingIndex = ref(null)
 
 /**
- * Доступные обработчики из реестра
+ * Available handlers from registry
  */
 const availableHandlers = computed(() => {
   const handlers = actionRegistry.getRegisteredActions()
@@ -66,7 +63,7 @@ const availableHandlers = computed(() => {
 })
 
 /**
- * Доступные severity для кнопок
+ * Available severity options for buttons
  */
 const severityOptions = [
   { value: null, label: _('severity_default') },
@@ -78,7 +75,7 @@ const severityOptions = [
 ]
 
 /**
- * Популярные иконки
+ * Popular icons
  */
 const iconOptions = [
   { value: 'pi-pencil', label: 'Pencil' },
@@ -101,7 +98,7 @@ const iconOptions = [
 ]
 
 /**
- * Открыть диалог добавления
+ * Open add dialog
  */
 function openAddDialog() {
   editingAction.value = {
@@ -119,7 +116,7 @@ function openAddDialog() {
 }
 
 /**
- * Открыть диалог редактирования
+ * Open edit dialog
  */
 function openEditDialog(action, index) {
   editingAction.value = { ...action }
@@ -128,7 +125,7 @@ function openEditDialog(action, index) {
 }
 
 /**
- * Сохранить действие
+ * Save action
  */
 function saveAction() {
   if (!editingAction.value.name) return
@@ -136,10 +133,8 @@ function saveAction() {
   const newActions = [...localActions.value]
 
   if (editingIndex.value !== null) {
-    // Редактирование
     newActions[editingIndex.value] = { ...editingAction.value }
   } else {
-    // Добавление
     newActions.push({ ...editingAction.value })
   }
 
@@ -149,7 +144,7 @@ function saveAction() {
 }
 
 /**
- * Удалить действие
+ * Remove action
  */
 function removeAction(index) {
   const newActions = localActions.value.filter((_, i) => i !== index)
@@ -158,7 +153,7 @@ function removeAction(index) {
 }
 
 /**
- * Переместить действие вверх
+ * Move action up
  */
 function moveUp(index) {
   if (index === 0) return
@@ -169,7 +164,7 @@ function moveUp(index) {
 }
 
 /**
- * Переместить действие вниз
+ * Move action down
  */
 function moveDown(index) {
   if (index === localActions.value.length - 1) return
@@ -180,7 +175,7 @@ function moveDown(index) {
 }
 
 /**
- * Закрыть диалог
+ * Close dialog
  */
 function closeDialog() {
   showDialog.value = false
@@ -191,7 +186,7 @@ function closeDialog() {
 
 <template>
   <div class="actions-editor">
-    <!-- Таблица текущих действий -->
+    <!-- Current actions table -->
     <DataTable :value="localActions" size="small" class="mb-2">
       <Column field="name" :header="_('action_name')" style="width: 150px">
         <template #body="{ data }">
@@ -252,7 +247,7 @@ function closeDialog() {
       </Column>
     </DataTable>
 
-    <!-- Кнопка добавления -->
+    <!-- Add button -->
     <Button
       :label="_('add_action')"
       icon="pi pi-plus"
@@ -260,7 +255,7 @@ function closeDialog() {
       @click="openAddDialog"
     />
 
-    <!-- Диалог редактирования действия -->
+    <!-- Action edit dialog -->
     <Dialog
       v-model:visible="showDialog"
       :header="editingIndex !== null ? _('edit_action') : _('add_action')"
@@ -268,7 +263,7 @@ function closeDialog() {
       :style="{ width: '550px' }"
     >
       <div v-if="editingAction" class="action-form">
-        <!-- Строка 1: Имя и Обработчик -->
+        <!-- Row 1: Name and Handler -->
         <div class="form-row">
           <div class="form-col">
             <label for="action-name" class="required">{{ _('action_name') }}</label>
@@ -301,7 +296,7 @@ function closeDialog() {
           </div>
         </div>
 
-        <!-- Строка 2: Label -->
+        <!-- Row 2: Label -->
         <div class="form-row">
           <div class="form-col-full">
             <label for="action-label">{{ _('action_label') }}</label>
@@ -315,7 +310,7 @@ function closeDialog() {
           </div>
         </div>
 
-        <!-- Строка 3: Иконка и Стиль -->
+        <!-- Row 3: Icon and Style -->
         <div class="form-row">
           <div class="form-col">
             <label for="action-icon">{{ _('action_icon') }}</label>
@@ -355,7 +350,7 @@ function closeDialog() {
           </div>
         </div>
 
-        <!-- Строка 4: Подтверждение -->
+        <!-- Row 4: Confirmation -->
         <div class="form-row">
           <div class="form-col-full">
             <div class="confirm-checkbox">
@@ -369,7 +364,7 @@ function closeDialog() {
           </div>
         </div>
 
-        <!-- Строка 5: Сообщение подтверждения (условно) -->
+        <!-- Row 5: Confirmation message (conditional) -->
         <div v-if="editingAction.confirm" class="form-row">
           <div class="form-col-full">
             <label for="action-confirm-message">{{ _('action_confirm_message') }}</label>
@@ -411,7 +406,7 @@ function closeDialog() {
   padding: 0.5rem;
 }
 
-/* Сетка формы */
+/* Form grid */
 .action-form {
   display: flex;
   flex-direction: column;

@@ -7,7 +7,7 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * API Controller для управления конфигурацией гридов
+ * API Controller for grid configuration management
  */
 class GridConfigController
 {
@@ -27,7 +27,7 @@ class GridConfigController
     }
 
     /**
-     * Получить конфигурацию грида
+     * Get grid configuration
      *
      * GET /api/mgr/grid-config/{grid_key}
      *
@@ -48,7 +48,7 @@ class GridConfigController
     }
 
     /**
-     * Сохранить конфигурацию грида
+     * Save grid configuration
      *
      * PUT /api/mgr/grid-config/{grid_key}
      *
@@ -78,7 +78,7 @@ class GridConfigController
     }
 
     /**
-     * Добавить новое поле в конфигурацию грида
+     * Add new field to grid configuration
      *
      * POST /api/mgr/grid-config/{grid_key}/field
      *
@@ -106,7 +106,7 @@ class GridConfigController
     }
 
     /**
-     * Обновить существующее поле в конфигурации грида
+     * Update existing field in grid configuration
      *
      * PUT /api/mgr/grid-config/{grid_key}/field/{field_name}
      *
@@ -135,7 +135,7 @@ class GridConfigController
     }
 
     /**
-     * Удалить поле из конфигурации грида
+     * Delete field from grid configuration
      *
      * DELETE /api/mgr/grid-config/{grid_key}/{field_name}
      *

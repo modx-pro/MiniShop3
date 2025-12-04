@@ -966,8 +966,8 @@ ms3.combo.Classes = function (config) {
         },
         allowBlank: true,
         editable: true,
-        forceSelection: false,  // Разрешаем ввод произвольного значения
-        typeAhead: false,       // Отключаем автодополнение при вводе
+        forceSelection: false,  // Allow custom value input
+        typeAhead: false,       // Disable type-ahead autocomplete
     });
     ms3.combo.Classes.superclass.constructor.call(this, config);
 };

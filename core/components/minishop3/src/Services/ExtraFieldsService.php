@@ -25,57 +25,49 @@ class ExtraFieldsService
     }
 
     /**
-     * Создать дополнительное поле с миграцией
+     * Create extra field with migration
      */
     public function createField(array $data): array
     {
-        // 1. Валидация
         $validation = $this->validateFieldData($data);
         if (!$validation['success']) {
             return $validation;
         }
 
-        // 2. Создаём запись msExtraField
         /** @var msExtraField $field */
         $field = $this->modx->newObject(msExtraField::class);
         $field->fromArray($data);
 
         if (!$field->save()) {
-            return ['success' => false, 'message' => 'Ошибка создания поля в базе данных'];
+            return ['success' => false, 'message' => 'Failed to create field in database'];
         }
 
-        // 3. Генерируем миграцию
         try {
             $migrationFile = $this->migrationGenerator->generateAddColumnMigration($field);
         } catch (\Exception $e) {
             $field->remove();
-            return ['success' => false, 'message' => 'Ошибка генерации миграции: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Migration generation error: ' . $e->getMessage()];
         }
 
-        // 4. Запускаем миграцию
         $migrationResult = $this->runMigrations();
 
         if (!$migrationResult['success']) {
-            // Откатываем создание поля
             $field->remove();
             @unlink($migrationFile);
             return $migrationResult;
         }
 
-        // 5. Удаляем файл миграции (она уже применена и записана в phinxlog)
         @unlink($migrationFile);
         $this->modx->log(modX::LOG_LEVEL_INFO, "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile));
 
-        // 6. Обновляем xPDO map
         $this->extraFieldsUtil->loadMap();
         $this->extraFieldsUtil->clearCache();
 
-        // 7. АВТОМАТИЧЕСКИ создаём msProductField
         $this->createProductFieldFromExtra($field);
 
         return [
             'success' => true,
-            'message' => 'Поле успешно создано',
+            'message' => 'Field created successfully',
             'data' => $field->toArray(),
             'migration' => basename($migrationFile),
             'output' => $migrationResult['output'] ?? ''
@@ -83,7 +75,7 @@ class ExtraFieldsService
     }
 
     /**
-     * Удалить дополнительное поле
+     * Delete extra field
      */
     public function deleteField(int $id): array
     {
@@ -91,17 +83,15 @@ class ExtraFieldsService
         $field = $this->modx->getObject(msExtraField::class, $id);
 
         if (!$field) {
-            return ['success' => false, 'message' => 'Поле не найдено'];
+            return ['success' => false, 'message' => 'Field not found'];
         }
 
-        // 1. Генерируем миграцию для удаления колонки
         try {
             $migrationFile = $this->migrationGenerator->generateDropColumnMigration($field);
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Ошибка генерации миграции: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Migration generation error: ' . $e->getMessage()];
         }
 
-        // 2. Запускаем миграцию
         $migrationResult = $this->runMigrations();
 
         if (!$migrationResult['success']) {
@@ -109,29 +99,25 @@ class ExtraFieldsService
             return $migrationResult;
         }
 
-        // 3. Удаляем файл миграции (она уже применена и записана в phinxlog)
         @unlink($migrationFile);
         $this->modx->log(modX::LOG_LEVEL_INFO, "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile));
 
-        // 4. Удаляем связанные msProductField (CASCADE)
         $this->deleteProductFieldsByName($field->get('key'));
 
-        // 5. Удаляем msExtraField
         $field->remove();
 
-        // 6. Очищаем кеш
         $this->extraFieldsUtil->clearCache();
 
         return [
             'success' => true,
-            'message' => 'Поле успешно удалено',
+            'message' => 'Field deleted successfully',
             'migration' => basename($migrationFile),
             'output' => $migrationResult['output'] ?? ''
         ];
     }
 
     /**
-     * Получить список всех дополнительных полей
+     * Get list of all extra fields
      */
     public function getFields(array $criteria = []): array
     {
@@ -149,7 +135,6 @@ class ExtraFieldsService
         foreach ($fields as $field) {
             $data = $field->toArray();
 
-            // Проверяем существование колонки в БД
             $data['column_exists'] = $this->extraFieldsUtil->columnExists(
                 $field->get('class'),
                 $field->get('key')
@@ -162,7 +147,7 @@ class ExtraFieldsService
     }
 
     /**
-     * Валидация данных поля
+     * Validate field data
      */
     private function validateFieldData(array $data): array
     {
@@ -172,13 +157,12 @@ class ExtraFieldsService
             if (empty($data[$fieldName])) {
                 return [
                     'success' => false,
-                    'message' => "Поле '{$fieldName}' обязательно для заполнения",
+                    'message' => "Field '{$fieldName}' is required",
                     'field' => $fieldName
                 ];
             }
         }
 
-        // Проверка уникальности key в рамках class
         $exists = $this->modx->getObject(msExtraField::class, [
             'class' => $data['class'],
             'key' => $data['key']
@@ -187,16 +171,15 @@ class ExtraFieldsService
         if ($exists) {
             return [
                 'success' => false,
-                'message' => "Поле с именем '{$data['key']}' уже существует для класса '{$data['class']}'",
+                'message' => "Field with name '{$data['key']}' already exists for class '{$data['class']}'",
                 'field' => 'key'
             ];
         }
 
-        // Проверка что колонка не существует в БД
         if ($this->extraFieldsUtil->columnExists($data['class'], $data['key'])) {
             return [
                 'success' => false,
-                'message' => "Колонка '{$data['key']}' уже существует в таблице",
+                'message' => "Column '{$data['key']}' already exists in table",
                 'field' => 'key'
             ];
         }
@@ -205,7 +188,7 @@ class ExtraFieldsService
     }
 
     /**
-     * Запускает все pending миграции
+     * Run all pending migrations
      */
     private function runMigrations(): array
     {
@@ -215,31 +198,26 @@ class ExtraFieldsService
             $phinxConfig = $componentPath . 'phinx.php';
 
             if (!file_exists($vendorAutoload)) {
-                return ['success' => false, 'message' => 'Phinx не установлен. Запустите composer install'];
+                return ['success' => false, 'message' => 'Phinx is not installed. Run composer install'];
             }
 
             if (!file_exists($phinxConfig)) {
-                return ['success' => false, 'message' => 'Конфигурация Phinx не найдена'];
+                return ['success' => false, 'message' => 'Phinx configuration not found'];
             }
 
-            // Загружаем конфиг Phinx
             $configArray = require $phinxConfig;
             $config = new Config($configArray);
 
-            // Создаём input/output (эмуляция CLI)
             $input = new StringInput('');
             $output = new BufferedOutput();
 
-            // Создаём менеджер миграций
             $manager = new Manager($config, $input, $output);
 
-            // Запускаем миграции БЕЗ exec()
             $manager->migrate('production');
 
-            // Получаем вывод
             $outputText = $output->fetch();
 
-            $this->modx->log(modX::LOG_LEVEL_INFO, '[ExtraFieldsService] Миграции выполнены успешно');
+            $this->modx->log(modX::LOG_LEVEL_INFO, '[ExtraFieldsService] Migrations executed successfully');
 
             return [
                 'success' => true,
@@ -247,24 +225,21 @@ class ExtraFieldsService
             ];
 
         } catch (\Exception $e) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[ExtraFieldsService] Ошибка миграции: ' . $e->getMessage());
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[ExtraFieldsService] Migration error: ' . $e->getMessage());
 
             return [
                 'success' => false,
-                'message' => 'Ошибка выполнения миграции: ' . $e->getMessage(),
+                'message' => 'Migration execution error: ' . $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ];
         }
     }
 
     /**
-     * АВТОМАТИЧЕСКИ создаёт msProductField при создании msExtraField
+     * Automatically create msProductField when creating msExtraField
      */
     private function createProductFieldFromExtra(msExtraField $extraField): void
     {
-        // Пока создаём без секции (section = NULL)
-        // В будущем можно добавить логику определения секции
-
         /** @var msProductField $productField */
         $productField = $this->modx->newObject(msProductField::class);
         $productField->fromArray([
@@ -272,10 +247,10 @@ class ExtraFieldsService
             'label' => $extraField->get('label') ?: $extraField->get('key'),
             'description' => $extraField->get('description'),
             'xtype' => $extraField->get('xtype') ?: 'textfield',
-            'section' => null, // Без секции по умолчанию
-            'visible' => $extraField->get('active') ? 1 : 0, // Синхронизируем active -> visible
+            'section' => null,
+            'visible' => $extraField->get('active') ? 1 : 0,
             'required' => 0,
-            'sort_order' => 999, // В конец списка
+            'sort_order' => 999,
             'width' => 6,
             'is_system' => 0,
             'is_default' => 0,
@@ -291,10 +266,10 @@ class ExtraFieldsService
     }
 
     /**
-     * Обновить дополнительное поле (только метаданные, без изменения структуры БД)
+     * Update extra field (metadata only, without DB structure changes)
      *
-     * @param int $id ID поля
-     * @param array $data Данные для обновления
+     * @param int $id Field ID
+     * @param array $data Data to update
      * @return array
      */
     public function updateField(int $id, array $data): array
@@ -303,10 +278,9 @@ class ExtraFieldsService
         $field = $this->modx->getObject(msExtraField::class, $id);
 
         if (!$field) {
-            return ['success' => false, 'message' => 'Поле не найдено'];
+            return ['success' => false, 'message' => 'Field not found'];
         }
 
-        // Разрешаем изменять только метаданные (не требующие миграции БД)
         $allowedFields = ['label', 'description', 'xtype', 'active'];
 
         foreach ($allowedFields as $fieldName) {
@@ -316,38 +290,34 @@ class ExtraFieldsService
         }
 
         if (!$field->save()) {
-            return ['success' => false, 'message' => 'Ошибка обновления поля в базе данных'];
+            return ['success' => false, 'message' => 'Failed to update field in database'];
         }
 
-        // Обновляем связанную запись msProductField (если существует)
         $this->updateProductFieldFromExtra($field);
 
-        // Очищаем кеш
         $this->extraFieldsUtil->clearCache();
 
         return [
             'success' => true,
-            'message' => 'Поле успешно обновлено',
+            'message' => 'Field updated successfully',
             'data' => $field->toArray()
         ];
     }
 
     /**
-     * Обновляет msProductField на основе msExtraField
+     * Update msProductField based on msExtraField
      *
      * @param msExtraField $extraField
      * @return void
      */
     private function updateProductFieldFromExtra(msExtraField $extraField): void
     {
-        // Находим связанную запись msProductField по имени
         $productField = $this->modx->getObject(msProductField::class, ['name' => $extraField->get('key')]);
 
         if ($productField) {
             $productField->set('label', $extraField->get('label') ?: $extraField->get('key'));
             $productField->set('description', $extraField->get('description'));
             $productField->set('xtype', $extraField->get('xtype') ?: 'textfield');
-            // Синхронизируем active из extra_fields с visible в product_fields
             $productField->set('visible', $extraField->get('active') ? 1 : 0);
 
             if ($productField->save()) {
@@ -361,7 +331,7 @@ class ExtraFieldsService
     }
 
     /**
-     * Удаляет msProductField по имени (CASCADE delete)
+     * Delete msProductField by name (CASCADE delete)
      */
     private function deleteProductFieldsByName(string $fieldName): void
     {

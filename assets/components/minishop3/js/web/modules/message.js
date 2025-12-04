@@ -1,20 +1,18 @@
 /**
- * Система уведомлений
+ * Notification system
  *
- * Показывает сообщения пользователю через iziToast (если подключен)
- * или через нативные alert.
+ * Shows messages to user via iziToast (if available) or native alert.
  */
 window.ms3Message = {
   /**
-   * Показать уведомление
+   * Show notification
    *
-   * @param {string} type - Тип уведомления (success, error, info, warning)
-   * @param {string} message - Текст сообщения
+   * @param {string} type - Notification type (success, error, info, warning)
+   * @param {string} message - Message text
    */
   show (type, message) {
     if (!message || message === '') return
 
-    // Используем iziToast если доступен
     if (typeof iziToast !== 'undefined') {
       // eslint-disable-next-line no-undef
       iziToast[type]({
@@ -23,13 +21,12 @@ window.ms3Message = {
         timeout: 3000
       })
     } else {
-      // Fallback на нативный alert
       alert(message)
     }
   },
 
   /**
-   * Успешное уведомление (зелёное)
+   * Success notification (green)
    *
    * @param {string} message
    */
@@ -38,7 +35,7 @@ window.ms3Message = {
   },
 
   /**
-   * Ошибка (красное)
+   * Error notification (red)
    *
    * @param {string} message
    */
@@ -47,7 +44,7 @@ window.ms3Message = {
   },
 
   /**
-   * Информационное (синее)
+   * Info notification (blue)
    *
    * @param {string} message
    */
@@ -56,7 +53,7 @@ window.ms3Message = {
   },
 
   /**
-   * Предупреждение (жёлтое)
+   * Warning notification (yellow)
    *
    * @param {string} message
    */

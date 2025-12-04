@@ -38,7 +38,7 @@ class msVendor extends xPDOSimpleObject
     }
 
     /**
-     * Получить сервис производителей (lazy loading)
+     * Get vendor service (lazy loading)
      *
      * @return VendorService
      */

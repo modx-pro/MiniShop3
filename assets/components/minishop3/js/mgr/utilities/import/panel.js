@@ -146,7 +146,7 @@ ms3.panel.UtilitiesImport = function (config) {
                 items: [
                     {
                         xtype: 'fieldset',
-                        title: 'Инструкция',
+                        title: 'Instructions',
                         id: 'ms3-utilities-import-instruction',
                         cls: 'x-fieldset-checkbox-toggle',
                         style: 'margin: 5px 0 15px; padding: 20px; ',

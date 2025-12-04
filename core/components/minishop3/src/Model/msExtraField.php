@@ -27,7 +27,7 @@ use xPDO\Om\xPDOSimpleObject;
 class msExtraField extends xPDOSimpleObject
 {
     /**
-     * Получить тип индекса
+     * Get index type
      */
     public function getIndexType(): string
     {
@@ -36,7 +36,7 @@ class msExtraField extends xPDOSimpleObject
     }
 
     /**
-     * Проверить нужно ли создавать индекс
+     * Check if index should be created
      */
     public function hasIndex(): bool
     {
@@ -44,7 +44,7 @@ class msExtraField extends xPDOSimpleObject
     }
 
     /**
-     * Получить имя индекса
+     * Get index name
      */
     public function getIndexName(): string
     {

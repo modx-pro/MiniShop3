@@ -6,10 +6,10 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * API контроллер для работы с заказами (Web API)
+ * API controller for working with orders (Web API)
  *
- * Тонкая обёртка над Order контроллером для REST API endpoints.
- * Извлекает параметры из HTTP запроса и передает их в Order.
+ * Thin wrapper over Order controller for REST API endpoints.
+ * Extracts parameters from HTTP request and passes them to Order.
  *
  * @package MiniShop3\Controllers\Api\Web
  */
@@ -23,10 +23,10 @@ class OrderController
     }
 
     /**
-     * Получение черновика заказа
+     * Get draft order
      * GET /api/v1/order/get
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function get(array $params = []): array
@@ -47,10 +47,10 @@ class OrderController
     }
 
     /**
-     * Добавление/обновление поля заказа
+     * Add/update order field
      * POST /api/v1/order/add
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function add(array $params = []): array
@@ -79,10 +79,10 @@ class OrderController
     }
 
     /**
-     * Установка нескольких полей заказа
+     * Set multiple order fields
      * POST /api/v1/order/set
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function set(array $params = []): array
@@ -110,10 +110,10 @@ class OrderController
     }
 
     /**
-     * Удаление поля заказа
+     * Remove order field
      * POST /api/v1/order/remove
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function remove(array $params = []): array
@@ -145,10 +145,10 @@ class OrderController
     }
 
     /**
-     * Отправка заказа (submit)
+     * Submit order
      * POST /api/v1/order/submit
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function submit(array $params = []): array
@@ -172,10 +172,10 @@ class OrderController
     }
 
     /**
-     * Очистка заказа
+     * Clean order
      * POST /api/v1/order/clean
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function clean(array $params = []): array
@@ -196,10 +196,10 @@ class OrderController
     }
 
     /**
-     * Получение полной стоимости заказа (cart + delivery + payment)
+     * Get total order cost (cart + delivery + payment)
      * GET /api/v1/order/cost
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function getCost(array $params = []): array
@@ -220,10 +220,10 @@ class OrderController
     }
 
     /**
-     * Получение стоимости корзины
+     * Get cart cost
      * GET /api/v1/order/cost/cart
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function getCartCost(array $params = []): array
@@ -244,10 +244,10 @@ class OrderController
     }
 
     /**
-     * Получение стоимости доставки
+     * Get delivery cost
      * GET /api/v1/order/cost/delivery
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function getDeliveryCost(array $params = []): array
@@ -268,10 +268,10 @@ class OrderController
     }
 
     /**
-     * Получение стоимости оплаты
+     * Get payment cost
      * GET /api/v1/order/cost/payment
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function getPaymentCost(array $params = []): array
@@ -292,10 +292,10 @@ class OrderController
     }
 
     /**
-     * Установка адреса клиента из сохраненных адресов
+     * Set customer address from saved addresses
      * POST /api/v1/order/address/set
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function setCustomerAddress(array $params = []): array
@@ -319,10 +319,10 @@ class OrderController
     }
 
     /**
-     * Очистка адреса клиента
+     * Clean customer address
      * POST /api/v1/order/address/clean
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function cleanCustomerAddress(array $params = []): array
@@ -343,10 +343,10 @@ class OrderController
     }
 
     /**
-     * Получение правил валидации для доставки
+     * Get validation rules for delivery
      * GET /api/v1/order/delivery/validation-rules
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function getDeliveryValidationRules(array $params = []): array
@@ -370,10 +370,10 @@ class OrderController
     }
 
     /**
-     * Получение обязательных полей для доставки
+     * Get required fields for delivery
      * GET /api/v1/order/delivery/required-fields
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function getDeliveryRequiresFields(array $params = []): array
@@ -397,7 +397,7 @@ class OrderController
     }
 
     /**
-     * Получение данных из запроса (POST/GET)
+     * Get data from request (POST/GET)
      *
      * @return array
      */
@@ -415,10 +415,10 @@ class OrderController
     }
 
     /**
-     * Преобразование ответа Order в формат API
+     * Transform Order response to API format
      *
-     * @param array $result Ответ от Order контроллера
-     * @return array Response в формате API ['success' => bool, 'message' => '', 'data' => [...]]
+     * @param array $result Response from Order controller
+     * @return array Response in API format ['success' => bool, 'message' => '', 'data' => [...]]
      */
     protected function transformResponse(array $result): array
     {

@@ -8,9 +8,9 @@ use MODX\Revolution\modX;
 use function FastRoute\simpleDispatcher;
 
 /**
- * API Router для MiniShop3
+ * API Router for MiniShop3
  *
- * Использует FastRoute для маршрутизации API запросов
+ * Uses FastRoute for API request routing
  */
 class Router
 {
@@ -35,7 +35,7 @@ class Router
     }
 
     /**
-     * Загрузить роуты из файла конфигурации
+     * Load routes from configuration file
      *
      * @param string $routesFile
      * @return self
@@ -46,7 +46,7 @@ class Router
             throw new \RuntimeException("Routes file not found: {$routesFile}");
         }
 
-        $modx = $this->modx; // Для доступа в файле routes
+        $modx = $this->modx;
         $router = $this;
 
         require $routesFile;
@@ -55,7 +55,7 @@ class Router
     }
 
     /**
-     * Создать dispatcher из зарегистрированных роутов
+     * Build dispatcher from registered routes
      *
      * @return self
      */
@@ -78,20 +78,18 @@ class Router
     }
 
     /**
-     * Добавить роут
+     * Add route
      *
-     * @param string|array $method HTTP метод (GET, POST, PUT, DELETE) или массив методов
-     * @param string $pattern URL паттерн
-     * @param callable|string $handler Обработчик (замыкание или строка 'Controller@method')
-     * @param array $middlewares Массив middleware
+     * @param string|array $method HTTP method (GET, POST, PUT, DELETE) or array of methods
+     * @param string $pattern URL pattern
+     * @param callable|string $handler Handler (closure or string 'Controller@method')
+     * @param array $middlewares Middleware array
      * @return Route
      */
     public function addRoute($method, string $pattern, $handler, array $middlewares = []): Route
     {
-        // Применяем префикс группы к паттерну
         $fullPattern = ($this->currentPrefix ?? '') . $pattern;
 
-        // Объединяем middleware группы с middleware роута
         $allMiddlewares = array_merge($this->currentMiddlewares ?? [], $middlewares);
 
         $route = new Route($method, $fullPattern, $handler, $allMiddlewares);
@@ -101,7 +99,7 @@ class Router
     }
 
     /**
-     * GET роут
+     * GET route
      */
     public function get(string $pattern, $handler, array $middlewares = []): Route
     {
@@ -109,7 +107,7 @@ class Router
     }
 
     /**
-     * POST роут
+     * POST route
      */
     public function post(string $pattern, $handler, array $middlewares = []): Route
     {
@@ -117,7 +115,7 @@ class Router
     }
 
     /**
-     * PUT роут
+     * PUT route
      */
     public function put(string $pattern, $handler, array $middlewares = []): Route
     {
@@ -125,7 +123,7 @@ class Router
     }
 
     /**
-     * DELETE роут
+     * DELETE route
      */
     public function delete(string $pattern, $handler, array $middlewares = []): Route
     {
@@ -133,7 +131,7 @@ class Router
     }
 
     /**
-     * PATCH роут
+     * PATCH route
      */
     public function patch(string $pattern, $handler, array $middlewares = []): Route
     {
@@ -141,11 +139,11 @@ class Router
     }
 
     /**
-     * Группа роутов с общим префиксом и middleware
+     * Route group with common prefix and middleware
      *
-     * @param string $prefix Префикс для всех роутов группы
-     * @param callable $callback Замыкание с определением роутов
-     * @param array $middlewares Middleware для всей группы
+     * @param string $prefix Prefix for all routes in group
+     * @param callable $callback Closure with route definitions
+     * @param array $middlewares Middleware for the entire group
      */
     public function group(string $prefix, callable $callback, array $middlewares = []): void
     {
@@ -162,10 +160,10 @@ class Router
     }
 
     /**
-     * Обработать текущий HTTP запрос
+     * Dispatch current HTTP request
      *
-     * @param string|null $uri Опциональный URI (если null - берется из $_SERVER['REQUEST_URI'])
-     * @param string|null $method Опциональный HTTP метод (если null - берется из $_SERVER['REQUEST_METHOD'])
+     * @param string|null $uri Optional URI (if null - taken from $_SERVER['REQUEST_URI'])
+     * @param string|null $method Optional HTTP method (if null - taken from $_SERVER['REQUEST_METHOD'])
      * @return Response
      */
     public function dispatch(?string $uri = null, ?string $method = null): Response
@@ -173,7 +171,6 @@ class Router
         $httpMethod = $method ?? $_SERVER['REQUEST_METHOD'];
         $uri = $uri ?? $_SERVER['REQUEST_URI'];
 
-        // Убрать query string
         if (false !== $pos = strpos($uri, '?')) {
             $uri = substr($uri, 0, $pos);
         }
@@ -199,10 +196,10 @@ class Router
     }
 
     /**
-     * Выполнить обработчик роута с middleware
+     * Execute route handler with middleware
      *
      * @param array $routeData
-     * @param array $vars URL параметры
+     * @param array $vars URL parameters
      * @return Response
      */
     protected function executeRoute(array $routeData, array $vars): Response
@@ -210,23 +207,20 @@ class Router
         $handler = $routeData['handler'];
         $middlewares = $routeData['middlewares'] ?? [];
 
-        // Выполнить middleware
         foreach ($middlewares as $middleware) {
             $middlewareInstance = $this->resolveMiddleware($middleware);
             $result = $middlewareInstance->handle($vars);
 
             if ($result instanceof Response) {
-                return $result; // Middleware прервал выполнение
+                return $result;
             }
         }
 
-        // Выполнить обработчик
         if (is_callable($handler)) {
             $result = $handler($vars, $this->modx);
             return $this->normalizeResponse($result);
         }
 
-        // Формат: 'Controller@method'
         if (is_string($handler) && strpos($handler, '@') !== false) {
             [$controllerClass, $method] = explode('@', $handler);
 
@@ -248,22 +242,19 @@ class Router
     }
 
     /**
-     * Нормализовать ответ обработчика
-     * Если обработчик вернул массив, оборачиваем его в Response
+     * Normalize handler response
+     * If handler returns array, wrap it in Response
      *
-     * @param mixed $result Результат выполнения обработчика
+     * @param mixed $result Handler execution result
      * @return Response
      */
     protected function normalizeResponse($result): Response
     {
-        // Если уже Response - возвращаем как есть
         if ($result instanceof Response) {
             return $result;
         }
 
-        // Если массив - оборачиваем в Response
         if (is_array($result)) {
-            // Определяем HTTP статус код
             $statusCode = 200;
             if (isset($result['success']) && !$result['success']) {
                 $statusCode = $result['code'] ?? 400;
@@ -272,12 +263,11 @@ class Router
             return new Response($result, $statusCode);
         }
 
-        // Для всех остальных типов - создаём ошибку
         return Response::error('Invalid response type', 500);
     }
 
     /**
-     * Создать экземпляр middleware
+     * Create middleware instance
      *
      * @param string|object $middleware
      * @return Middleware\MiddlewareInterface

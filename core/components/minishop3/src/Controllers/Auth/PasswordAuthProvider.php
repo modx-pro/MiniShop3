@@ -6,12 +6,12 @@ use MiniShop3\Model\msCustomer;
 use MODX\Revolution\modX;
 
 /**
- * PasswordAuthProvider - провайдер аутентификации по email и паролю
+ * PasswordAuthProvider - authentication provider for email and password
  *
- * Самый распространенный метод аутентификации.
- * Использует bcrypt для проверки паролей (password_verify).
+ * Most common authentication method.
+ * Uses bcrypt for password verification (password_verify).
  *
- * Пример использования:
+ * Usage example:
  * ```php
  * $provider = new PasswordAuthProvider($modx);
  *
@@ -41,9 +41,9 @@ class PasswordAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * Аутентификация по email и паролю
+     * Authenticate by email and password
      *
-     * @param array $credentials Должен содержать 'email' и 'password'
+     * @param array $credentials Must contain 'email' and 'password'
      * @return msCustomer|null
      */
     public function authenticate(array $credentials): ?msCustomer
@@ -59,7 +59,7 @@ class PasswordAuthProvider implements AuthProviderInterface
             return null;
         }
 
-        // Поиск клиента по email
+        // Find customer by email
         /** @var msCustomer $customer */
         $customer = $this->modx->getObject(msCustomer::class, [
             'email' => $email,
@@ -73,7 +73,7 @@ class PasswordAuthProvider implements AuthProviderInterface
             return null;
         }
 
-        // Проверка пароля
+        // Verify password
         $hashedPassword = $customer->get('password');
 
         if (empty($hashedPassword)) {
@@ -92,7 +92,7 @@ class PasswordAuthProvider implements AuthProviderInterface
             return null;
         }
 
-        // Проверка, нужно ли обновить хеш пароля (если изменились настройки bcrypt)
+        // Check if password hash needs to be updated (if bcrypt settings changed)
         if (password_needs_rehash($hashedPassword, PASSWORD_BCRYPT)) {
             $newHash = password_hash($password, PASSWORD_BCRYPT);
             $customer->set('password', $newHash);
@@ -113,7 +113,7 @@ class PasswordAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * Получить имя провайдера
+     * Get provider name
      *
      * @return string
      */
@@ -123,9 +123,9 @@ class PasswordAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * Проверить поддержку credentials
+     * Check credentials support
      *
-     * Провайдер поддерживает credentials, если есть 'email' и 'password'
+     * Provider supports credentials if 'email' and 'password' are present
      *
      * @param array $credentials
      * @return bool
@@ -136,10 +136,10 @@ class PasswordAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * Хеширование пароля (вспомогательный метод для регистрации)
+     * Hash password (helper method for registration)
      *
-     * @param string $password Открытый пароль
-     * @return string Хешированный пароль
+     * @param string $password Plain password
+     * @return string Hashed password
      */
     public static function hashPassword(string $password): string
     {

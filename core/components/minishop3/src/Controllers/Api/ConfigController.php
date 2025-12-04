@@ -5,13 +5,13 @@ namespace MiniShop3\Controllers\Api;
 use MiniShop3\Router\Response;
 
 /**
- * API контроллер для управления конфигурацией полей
+ * API controller for field configuration management
  */
 class ConfigController extends BaseApiController
 {
     /**
      * GET /api/mgr/config/page-fields/{page_key}
-     * Получить конфигурацию полей страницы с примененными переопределениями
+     * Get page field configuration with applied overrides
      *
      * @param array $params
      * @return Response
@@ -39,7 +39,7 @@ class ConfigController extends BaseApiController
 
     /**
      * GET /api/mgr/config/page-fields/{page_key}/all
-     * Получить ВСЕ доступные поля (включая скрытые) из модели с переопределениями
+     * Get ALL available fields (including hidden) from model with overrides
      *
      * @param array $params
      * @return Response
@@ -67,7 +67,7 @@ class ConfigController extends BaseApiController
 
     /**
      * PUT /api/mgr/config/page-fields/{page_key}
-     * Сохранить массовые переопределения полей
+     * Save bulk field overrides
      *
      * @param array $params
      * @return Response
@@ -107,7 +107,7 @@ class ConfigController extends BaseApiController
 
     /**
      * DELETE /api/mgr/config/page-fields/{page_key}/{field_name}
-     * Удалить переопределение для конкретного поля
+     * Delete override for specific field
      *
      * @param array $params
      * @return Response
@@ -142,7 +142,7 @@ class ConfigController extends BaseApiController
 
     /**
      * GET /api/mgr/config/sections/{page_key}
-     * Получить секции страницы с переводами из лексикона
+     * Get page sections with lexicon translations
      *
      * @param array $params
      * @return Response
@@ -172,7 +172,7 @@ class ConfigController extends BaseApiController
 
     /**
      * PUT /api/mgr/config/sections/{page_key}
-     * Сохранить секции (порядок, видимость)
+     * Save sections (order, visibility)
      *
      * @param array $params
      * @return Response
@@ -212,7 +212,7 @@ class ConfigController extends BaseApiController
 
     /**
      * DELETE /api/mgr/config/sections/{page_key}/{section_key}
-     * Удалить секцию (только кастомные)
+     * Delete section (custom sections only)
      *
      * @param array $params
      * @return Response

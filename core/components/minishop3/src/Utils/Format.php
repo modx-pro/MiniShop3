@@ -5,13 +5,13 @@ namespace MiniShop3\Utils;
 use MiniShop3\MiniShop3;
 
 /**
- * Класс для форматирования данных (цены, веса, даты)
+ * Data formatting class (prices, weights, dates)
  *
- * Оптимизирован для массового использования:
- * - Кеширование настроек при инициализации
- * - Единый метод formatNumber() для price/weight (DRY)
- * - Поддержка валютных символов
- * - Корректная обработка ошибок дат
+ * Optimized for mass usage:
+ * - Settings caching on initialization
+ * - Single formatNumber() method for price/weight (DRY)
+ * - Currency symbols support
+ * - Proper date error handling
  */
 class Format
 {
@@ -21,26 +21,25 @@ class Format
     /** @var MiniShop3 */
     private $ms3;
 
-    // Кешированные настройки форматирования
     /** @var array [decimals, decimal_separator, thousands_separator] */
     private $priceFormat;
 
-    /** @var bool Удалять ли нули после запятой для цен */
+    /** @var bool Remove trailing zeros for prices */
     private $priceNoZeros;
 
     /** @var array [decimals, decimal_separator, thousands_separator] */
     private $weightFormat;
 
-    /** @var bool Удалять ли нули после запятой для веса */
+    /** @var bool Remove trailing zeros for weights */
     private $weightNoZeros;
 
-    /** @var string Формат даты (PHP date format) */
+    /** @var string Date format (PHP date format) */
     private $dateFormat;
 
-    /** @var string Символ валюты */
+    /** @var string Currency symbol */
     private $currencySymbol;
 
-    /** @var string Позиция символа валюты (before/after) */
+    /** @var string Currency symbol position (before/after) */
     private $currencyPosition;
 
     /**
@@ -51,57 +50,49 @@ class Format
         $this->ms3 = $ms3;
         $this->modx = $this->ms3->modx;
 
-        // Загружаем все настройки форматирования один раз при создании объекта
         $this->loadSettings();
     }
 
     /**
-     * Загружает настройки форматирования из системных настроек
-     * Вызывается один раз при инициализации класса
+     * Load formatting settings from system settings
+     * Called once on class initialization
      *
      * @return void
      */
     private function loadSettings(): void
     {
-        // Настройки форматирования цен
         $priceFormatRaw = $this->modx->getOption('ms3_price_format', null, '[2, ".", " "]');
         $this->priceFormat = json_decode($priceFormatRaw, true) ?: [2, '.', ' '];
         $this->priceNoZeros = (bool)$this->modx->getOption('ms3_price_format_no_zeros', null, true);
 
-        // Настройки форматирования веса
         $weightFormatRaw = $this->modx->getOption('ms3_weight_format', null, '[3, ".", " "]');
         $this->weightFormat = json_decode($weightFormatRaw, true) ?: [3, '.', ' '];
         $this->weightNoZeros = (bool)$this->modx->getOption('ms3_weight_format_no_zeros', null, true);
 
-        // Настройки даты (ИСПРАВЛЕНО: H:M → H:i)
         $this->dateFormat = $this->modx->getOption('ms3_date_format', null, 'd.m.Y H:i');
 
-        // Настройки валюты
         $this->currencySymbol = $this->modx->getOption('ms3_currency_symbol', null, '₽');
         $this->currencyPosition = $this->modx->getOption('ms3_currency_position', null, 'after');
     }
 
     /**
-     * Универсальный метод для форматирования чисел
+     * Universal method for number formatting
      *
-     * @param float|int $value Число для форматирования
+     * @param float|int $value Number to format
      * @param array $format [decimals, decimal_separator, thousands_separator]
-     * @param bool $removeZeros Удалять ли нули после запятой
-     * @return string Отформатированное число
+     * @param bool $removeZeros Remove trailing zeros
+     * @return string Formatted number
      */
     private function formatNumber($value, array $format, bool $removeZeros = true): string
     {
-        // number_format(число, количество_знаков_после_запятой, разделитель_дробной_части, разделитель_тысяч)
         $formatted = number_format((float)$value, $format[0], $format[1], $format[2]);
 
         if ($removeZeros) {
             $parts = explode($format[1], $formatted);
 
-            // Убираем нули справа от дробной части
             if (isset($parts[1])) {
                 $parts[1] = rtrim($parts[1], '0');
 
-                // Если после удаления нулей дробная часть пустая - убираем разделитель
                 $formatted = !empty($parts[1])
                     ? $parts[0] . $format[1] . $parts[1]
                     : $parts[0];
@@ -112,17 +103,16 @@ class Format
     }
 
     /**
-     * Форматирование цены
+     * Format price
      *
-     * @param float|int $price Цена
-     * @param bool $withCurrency Добавить символ валюты
-     * @return string Отформатированная цена
+     * @param float|int $price Price
+     * @param bool $withCurrency Add currency symbol
+     * @return string Formatted price
      */
     public function price($price = 0, bool $withCurrency = false): string
     {
         $formatted = $this->formatNumber($price, $this->priceFormat, $this->priceNoZeros);
 
-        // Добавляем символ валюты, если запрошено
         if ($withCurrency && !empty($this->currencySymbol)) {
             $formatted = $this->currencyPosition === 'before'
                 ? $this->currencySymbol . ' ' . $formatted
@@ -133,10 +123,10 @@ class Format
     }
 
     /**
-     * Форматирование веса
+     * Format weight
      *
-     * @param float|int $weight Вес
-     * @return string Отформатированный вес
+     * @param float|int $weight Weight
+     * @return string Formatted weight
      */
     public function weight($weight = 0): string
     {
@@ -144,21 +134,19 @@ class Format
     }
 
     /**
-     * Расчет процента скидки
+     * Calculate discount percentage
      *
-     * @param float|int $oldPrice Старая цена
-     * @param float|int $newPrice Новая цена
-     * @param int $decimals Количество десятичных знаков (по умолчанию 0)
-     * @return float|int Процент скидки (или 0 если нет скидки)
+     * @param float|int $oldPrice Old price
+     * @param float|int $newPrice New price
+     * @param int $decimals Number of decimal places (default 0)
+     * @return float|int Discount percentage (or 0 if no discount)
      */
     public function discount($oldPrice = 0, $newPrice = 0, int $decimals = 0)
     {
-        // Защита от деления на ноль и некорректных данных
         if (empty($oldPrice) || empty($newPrice) || $oldPrice <= 0 || $newPrice <= 0) {
             return 0;
         }
 
-        // Если новая цена больше или равна старой - скидки нет
         if ($newPrice >= $oldPrice) {
             return 0;
         }
@@ -169,14 +157,13 @@ class Format
     }
 
     /**
-     * Форматирование даты
+     * Format date
      *
-     * @param string $date Исходная дата
-     * @return string Отформатированная дата или &nbsp; при ошибке
+     * @param string $date Source date
+     * @return string Formatted date or &nbsp; on error
      */
     public function date($date = ''): string
     {
-        // Проверка на пустую дату
         if (empty($date) || $date === '0000-00-00 00:00:00' || $date === '0000-00-00') {
             return '&nbsp;';
         }
@@ -204,7 +191,7 @@ class Format
     }
 
     /**
-     * Получить символ валюты
+     * Get currency symbol
      *
      * @return string
      */
@@ -214,8 +201,8 @@ class Format
     }
 
     /**
-     * Получить настройки форматирования для JavaScript
-     * Полезно для синхронизации форматирования на фронтенде
+     * Get formatting settings for JavaScript
+     * Useful for frontend formatting synchronization
      *
      * @return array
      */

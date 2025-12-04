@@ -20,7 +20,6 @@ class Window
 
     public function getUpdate(): array
     {
-        // Собираю вкладки
         $output = [];
         $output['info'] = $this->getInfoLayout();
         $output['settings'] = $this->getSettingsLayout();

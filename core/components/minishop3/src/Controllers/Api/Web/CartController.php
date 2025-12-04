@@ -6,10 +6,10 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * API контроллер для работы с корзиной (Web API)
+ * API controller for cart operations (Web API)
  *
- * Тонкая обёртка над Cart контроллером для REST API endpoints.
- * Извлекает параметры из HTTP запроса и передает их в Cart.
+ * Thin wrapper over Cart controller for REST API endpoints.
+ * Extracts parameters from HTTP request and passes them to Cart.
  *
  * @package MiniShop3\Controllers\Api\Web
  */
@@ -23,10 +23,10 @@ class CartController
     }
 
     /**
-     * Добавление товара в корзину
+     * Add product to cart
      * POST /api/v1/cart/add
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function add(array $params = []): array
@@ -52,10 +52,10 @@ class CartController
     }
 
     /**
-     * Изменение количества товара
+     * Change product quantity
      * POST /api/v1/cart/change
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function change(array $params = []): array
@@ -84,10 +84,10 @@ class CartController
     }
 
     /**
-     * Удаление товара из корзины
+     * Remove product from cart
      * POST /api/v1/cart/remove
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function remove(array $params = []): array
@@ -115,10 +115,10 @@ class CartController
     }
 
     /**
-     * Получение корзины
+     * Get cart
      * GET /api/v1/cart/get
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function get(array $params = []): array
@@ -139,10 +139,10 @@ class CartController
     }
 
     /**
-     * Очистка корзины
+     * Clean cart
      * POST /api/v1/cart/clean
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
      */
     public function clean(array $params = []): array
@@ -163,7 +163,7 @@ class CartController
     }
 
     /**
-     * Получение данных из запроса (POST/GET)
+     * Get request data (POST/GET)
      *
      * @return array
      */
@@ -181,20 +181,17 @@ class CartController
     }
 
     /**
-     * Преобразование ответа Cart в формат API
+     * Transform Cart response to API format
      *
-     * @param array $result Ответ от Cart контроллера
-     * @return array Response в формате API ['success' => bool, 'message' => '', 'data' => [...]]
+     * @param array $result Response from Cart controller
+     * @return array Response in API format ['success' => bool, 'message' => '', 'data' => [...]]
      */
     protected function transformResponse(array $result): array
     {
-        // Проверяем наличие параметра render для SSR
         $input = $this->getRequestData();
         $renderTokens = $input['render'] ?? null;
 
-        // Если запрошен SSR рендер - генерируем HTML
         if (!empty($renderTokens) && $result['success']) {
-            // Получаем токен клиента из запроса
             $customerToken = $_REQUEST['ms3_token'] ?? '';
 
             $renderedHtml = $this->renderSnippets($renderTokens, $customerToken);
@@ -211,15 +208,14 @@ class CartController
     }
 
     /**
-     * Рендер HTML для сниппетов корзины (SSR)
+     * Render HTML for cart snippets (SSR)
      *
-     * @param string|array $renderTokens Токены сниппетов (JSON строка или массив)
-     * @param string $customerToken Токен клиента для доступа к корзине
-     * @return array Массив ["token" => "html", ...]
+     * @param string|array $renderTokens Snippet tokens (JSON string or array)
+     * @param string $customerToken Customer token for cart access
+     * @return array Array ["token" => "html", ...]
      */
     protected function renderSnippets($renderTokens, string $customerToken = ''): array
     {
-        // Декодируем токены если пришла строка
         if (is_string($renderTokens)) {
             $tokens = json_decode($renderTokens, true);
             if (!is_array($tokens)) {
@@ -239,7 +235,6 @@ class CartController
         $rendered = [];
 
         foreach ($tokens as $token) {
-            // Получаем параметры сниппета из кеша
             $snippetParams = $tokenService->getSnippetData($token);
 
             if (empty($snippetParams)) {
@@ -249,13 +244,10 @@ class CartController
                 continue;
             }
 
-            // ВАЖНО: Добавляем токен клиента в параметры сниппета
-            // Это позволит сниппету получить правильную корзину
             if (!empty($customerToken)) {
                 $snippetParams['customer_token'] = $customerToken;
             }
 
-            // Вызываем сниппет msCart с сохраненными параметрами
             $html = $this->modx->runSnippet('msCart', $snippetParams);
 
             if (!empty($html)) {

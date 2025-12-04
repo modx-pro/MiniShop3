@@ -6,7 +6,7 @@ use MODX\Revolution\modX;
 use MiniShop3\Model\msGridField;
 
 /**
- * Сервис для управления конфигурацией гридов
+ * Service for managing grid configurations
  */
 class GridConfigService
 {
@@ -22,9 +22,9 @@ class GridConfigService
     }
 
     /**
-     * Получить конфигурацию колонок грида
+     * Get grid columns configuration
      *
-     * @param string $gridKey Ключ грида (customers, orders, products и т.д.)
+     * @param string $gridKey Grid key (customers, orders, products, etc.)
      * @return array
      */
     public function getGridConfig(string $gridKey): array
@@ -42,7 +42,7 @@ class GridConfigService
         foreach ($collection as $field) {
             $config = $field->get('config');
 
-            // xPDO 3 с phptype='json' автоматически десериализует JSON в массив
+            // xPDO 3 with phptype='json' automatically deserializes JSON to array
             if (is_string($config)) {
                 $config = json_decode($config, true) ?: [];
             } elseif (!is_array($config)) {
@@ -61,7 +61,7 @@ class GridConfigService
                 'isSystem' => (bool)$field->get('is_system'),
             ];
 
-            // Мерджим дополнительную конфигурацию из JSON
+            // Merge additional configuration from JSON
             if (!empty($config)) {
                 $fieldData = array_merge($fieldData, $config);
             }
@@ -73,14 +73,14 @@ class GridConfigService
     }
 
     /**
-     * Получить label с учетом lexicon_key
+     * Get label considering lexicon_key
      *
      * @param msGridField $field
      * @return string
      */
     protected function resolveLabel(msGridField $field): string
     {
-        // Приоритет: прямой label > lexicon_key > field_name
+        // Priority: direct label > lexicon_key > field_name
         $label = $field->get('label');
         if (!empty($label)) {
             return $label;
@@ -91,7 +91,7 @@ class GridConfigService
             $this->modx->lexicon->load('minishop3:vue');
             $translated = $this->modx->lexicon($lexiconKey);
 
-            // Если перевод найден (не вернулся сам ключ)
+            // If translation found (key itself not returned)
             if ($translated !== $lexiconKey) {
                 return $translated;
             }
@@ -102,7 +102,7 @@ class GridConfigService
     }
 
     /**
-     * Сохранить конфигурацию грида
+     * Save grid configuration
      *
      * @param string $gridKey
      * @param array $fields
@@ -111,7 +111,7 @@ class GridConfigService
     public function saveGridConfig(string $gridKey, array $fields): bool
     {
         try {
-            // Получаем список имён полей, которые нужно сохранить
+            // Get list of field names to keep
             $fieldNamesToKeep = [];
 
             foreach ($fields as $index => $fieldData) {
@@ -134,14 +134,14 @@ class GridConfigService
                     continue;
                 }
 
-                // Обновляем базовые параметры
+                // Update basic parameters
                 if (isset($fieldData['label'])) {
                     $field->set('label', $fieldData['label']);
                 }
                 if (isset($fieldData['visible'])) {
                     $field->set('visible', (bool)$fieldData['visible']);
                 }
-                // Используем индекс массива как sort_order для сохранения порядка drag & drop
+                // Use array index as sort_order to preserve drag & drop order
                 $field->set('sort_order', $index);
 
                 if (isset($fieldData['sortable'])) {
@@ -160,7 +160,7 @@ class GridConfigService
                     $field->set('min_width', $fieldData['minWidth']);
                 }
 
-                // Обновляем JSON config (дополнительные параметры)
+                // Update JSON config (additional parameters)
                 $config = [];
                 $configKeys = ['template', 'type', 'format', 'actions'];
                 foreach ($configKeys as $key) {
@@ -180,11 +180,11 @@ class GridConfigService
                 }
             }
 
-            // Удаляем поля, которых нет в новом списке (только НЕ системные)
+            // Delete fields not in new list (only non-system)
             $fieldsToDelete = $this->modx->getCollection(msGridField::class, [
                 'grid_key' => $gridKey,
                 'field_name:NOT IN' => $fieldNamesToKeep,
-                'is_system' => false, // Защита системных полей
+                'is_system' => false, // Protect system fields
             ]);
 
             foreach ($fieldsToDelete as $field) {
@@ -207,7 +207,7 @@ class GridConfigService
     }
 
     /**
-     * Удалить поле из конфигурации грида
+     * Delete field from grid configuration
      *
      * @param string $gridKey
      * @param string $fieldName
@@ -228,7 +228,7 @@ class GridConfigService
                 ];
             }
 
-            // Защита системных полей
+            // Protect system fields
             if ($field->get('is_system')) {
                 return [
                     'success' => false,
@@ -262,7 +262,7 @@ class GridConfigService
     }
 
     /**
-     * Добавить новое поле в конфигурацию грида
+     * Add new field to grid configuration
      *
      * @param string $gridKey
      * @param array $data
@@ -271,7 +271,7 @@ class GridConfigService
     public function addField(string $gridKey, array $data): array
     {
         try {
-            // Базовая валидация
+            // Basic validation
             if (empty($data['field_name'])) {
                 return ['success' => false, 'message' => 'field_name is required'];
             }
@@ -280,7 +280,7 @@ class GridConfigService
                 return ['success' => false, 'message' => 'field_name must contain only letters, numbers and underscores'];
             }
 
-            // Проверка уникальности
+            // Check uniqueness
             $exists = $this->modx->getObject(msGridField::class, [
                 'grid_key' => $gridKey,
                 'field_name' => $data['field_name'],
@@ -290,7 +290,7 @@ class GridConfigService
                 return ['success' => false, 'message' => 'Field with this name already exists'];
             }
 
-            // Валидация по типу
+            // Validation by type
             $type = $data['type'] ?? 'model';
             $config = $data['config'] ?? [];
 
@@ -307,7 +307,7 @@ class GridConfigService
                     if (!$validation['success']) {
                         return $validation;
                     }
-                    // Используем обновленный config с resolvedTableName
+                    // Use updated config with resolvedTableName
                     if (isset($validation['config'])) {
                         $config = $validation['config'];
                     }
@@ -328,10 +328,10 @@ class GridConfigService
                     break;
             }
 
-            // Добавляем тип в config
+            // Add type to config
             $config['type'] = $type;
 
-            // Получаем максимальный sort_order
+            // Get maximum sort_order
             $maxSortOrder = 0;
             $query = $this->modx->newQuery(msGridField::class);
             $query->where(['grid_key' => $gridKey]);
@@ -342,7 +342,7 @@ class GridConfigService
                 $maxSortOrder = (int)$lastField->get('sort_order');
             }
 
-            // Создаём поле
+            // Create field
             $field = $this->modx->newObject(msGridField::class);
             $field->fromArray([
                 'grid_key' => $gridKey,
@@ -384,7 +384,7 @@ class GridConfigService
     }
 
     /**
-     * Обновить существующее поле в конфигурации грида
+     * Update existing field in grid configuration
      *
      * @param string $gridKey
      * @param string $fieldName
@@ -394,7 +394,7 @@ class GridConfigService
     public function updateField(string $gridKey, string $fieldName, array $data): array
     {
         try {
-            // Находим существующее поле
+            // Find existing field
             $field = $this->modx->getObject(msGridField::class, [
                 'grid_key' => $gridKey,
                 'field_name' => $fieldName,
@@ -404,16 +404,16 @@ class GridConfigService
                 return ['success' => false, 'message' => "Field not found: {$gridKey}.{$fieldName}"];
             }
 
-            // Защита системных полей от изменения типа
+            // Protect system fields from type changes
             if ($field->get('is_system')) {
                 return ['success' => false, 'message' => 'Cannot modify system field'];
             }
 
-            // Получаем тип поля
+            // Get field type
             $type = $data['type'] ?? 'model';
             $config = $data['config'] ?? [];
 
-            // Валидация по типу
+            // Validation by type
             switch ($type) {
                 case 'template':
                     $validation = $this->validateTemplateConfig($config);
@@ -426,7 +426,7 @@ class GridConfigService
                     if (!$validation['success']) {
                         return $validation;
                     }
-                    // Используем обновленный config с resolvedTableName
+                    // Use updated config with resolvedTableName
                     if (isset($validation['config'])) {
                         $config = $validation['config'];
                     }
@@ -445,10 +445,10 @@ class GridConfigService
                     break;
             }
 
-            // Добавляем тип в config
+            // Add type to config
             $config['type'] = $type;
 
-            // Обновляем поле
+            // Update field
             if (isset($data['label'])) {
                 $field->set('label', $data['label']);
             }
@@ -468,7 +468,7 @@ class GridConfigService
                 $field->set('width', $data['width'] ?: null);
             }
 
-            // Обновляем JSON config
+            // Update JSON config
             $field->set('config', json_encode($config, JSON_UNESCAPED_UNICODE));
 
             if ($field->save()) {
@@ -496,7 +496,7 @@ class GridConfigService
     }
 
     /**
-     * Валидация конфигурации Template поля
+     * Validate Template field configuration
      *
      * @param array $config
      * @return array
@@ -515,7 +515,7 @@ class GridConfigService
     }
 
     /**
-     * Валидация конфигурации Relation поля
+     * Validate Relation field configuration
      *
      * @param array $config
      * @return array
@@ -536,7 +536,7 @@ class GridConfigService
             return ['success' => false, 'message' => 'relation.displayField is required'];
         }
 
-        // Валидация агрегации
+        // Validate aggregation
         $aggregation = $relation['aggregation'] ?? null;
         $allowedAggregations = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX'];
 
@@ -544,12 +544,12 @@ class GridConfigService
             return ['success' => false, 'message' => "Invalid aggregation type. Allowed: " . implode(', ', $allowedAggregations)];
         }
 
-        // Определяем тип: модель или прямое имя таблицы
+        // Determine type: model or direct table name
         $tableOrModel = $relation['table'];
         $isModel = strpos($tableOrModel, '\\') !== false || strpos($tableOrModel, '::') !== false;
 
         if ($isModel) {
-            // Это класс модели - получаем имя таблицы
+            // This is model class - get table name
             try {
                 $tableName = $this->modx->getTableName($tableOrModel);
 
@@ -557,13 +557,13 @@ class GridConfigService
                     return ['success' => false, 'message' => "Unable to get table name for model: {$tableOrModel}"];
                 }
 
-                // Сохраняем разрешенное имя таблицы в конфиг для использования в query
+                // Save resolved table name in config for query usage
                 $config['relation']['resolvedTableName'] = $tableName;
             } catch (\Exception $e) {
                 return ['success' => false, 'message' => "Invalid model class: {$tableOrModel}. " . $e->getMessage()];
             }
         } else {
-            // Это прямое имя таблицы - используем как есть
+            // This is direct table name - use as is
             $config['relation']['resolvedTableName'] = $tableOrModel;
         }
 
@@ -571,7 +571,7 @@ class GridConfigService
     }
 
     /**
-     * Валидация конфигурации Computed поля
+     * Validate Computed field configuration
      *
      * @param array $config
      * @return array
@@ -584,12 +584,12 @@ class GridConfigService
             return ['success' => false, 'message' => 'computed.className is required'];
         }
 
-        // Проверяем что класс существует
+        // Check that class exists
         if (!class_exists($computed['className'])) {
             return ['success' => false, 'message' => "Class {$computed['className']} not found"];
         }
 
-        // Проверяем что класс реализует нужный интерфейс
+        // Check that class implements required interface
         $interfaces = class_implements($computed['className']);
         if (!isset($interfaces['MiniShop3\\Interfaces\\ComputedFieldInterface'])) {
             return ['success' => false, 'message' => "Class must implement ComputedFieldInterface"];
@@ -599,7 +599,7 @@ class GridConfigService
     }
 
     /**
-     * Валидация конфигурации Actions поля
+     * Validate Actions field configuration
      *
      * @param array $config
      * @return array
@@ -608,42 +608,42 @@ class GridConfigService
     {
         $actions = $config['actions'] ?? [];
 
-        // Actions может быть пустым массивом - это допустимо
+        // Actions can be empty array - this is allowed
         if (!is_array($actions)) {
             return ['success' => false, 'message' => 'actions must be an array'];
         }
 
-        // Валидация каждого действия
+        // Validate each action
         $allowedHandlers = ['edit', 'delete', 'view', 'refresh'];
         $actionNames = [];
 
         foreach ($actions as $index => $action) {
-            // Обязательное поле name
+            // Required field name
             if (empty($action['name'])) {
                 return ['success' => false, 'message' => "actions[{$index}].name is required"];
             }
 
-            // Проверка уникальности name
+            // Check name uniqueness
             if (in_array($action['name'], $actionNames)) {
                 return ['success' => false, 'message' => "Duplicate action name: {$action['name']}"];
             }
             $actionNames[] = $action['name'];
 
-            // Обязательное поле handler
+            // Required field handler
             if (empty($action['handler'])) {
                 return ['success' => false, 'message' => "actions[{$index}].handler is required"];
             }
 
-            // Handler должен быть либо встроенным, либо начинаться с 'custom:'
+            // Handler must be either built-in or start with 'custom:'
             $handler = $action['handler'];
             if (!in_array($handler, $allowedHandlers) && strpos($handler, 'custom:') !== 0) {
-                // Разрешаем любые обработчики - они могут быть зарегистрированы плагинами
-                // Но логируем предупреждение
+                // Allow any handlers - they can be registered by plugins
+                // But log warning
                 $this->modx->log(modX::LOG_LEVEL_INFO,
                     "[GridConfigService] Custom handler used: {$handler} in action {$action['name']}");
             }
 
-            // Валидация severity если указан
+            // Validate severity if specified
             if (!empty($action['severity'])) {
                 $allowedSeverities = ['secondary', 'success', 'info', 'warn', 'danger'];
                 if (!in_array($action['severity'], $allowedSeverities)) {

@@ -14,7 +14,6 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
         'tableMeta' => [
             'engine' => 'InnoDB',
         ],
-        // НЕ добавляем 'id' - xPDOSimpleObject добавляет его автоматически
         'fields' => [
             'customer_id' => 0,
             'token' => '',
@@ -23,7 +22,6 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
             'created_at' => null,
             'used_at' => null,
         ],
-        // НЕ добавляем 'id' в fieldMeta - xPDOSimpleObject добавляет его автоматически
         'fieldMeta' => [
             'customer_id' => [
                 'dbtype' => 'int',
@@ -64,7 +62,6 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
                 'null' => true,
             ],
         ],
-        // НЕ добавляем PRIMARY KEY - xPDOSimpleObject добавляет его автоматически
         'indexes' => [
             'idx_token_unique' => [
                 'alias' => 'idx_token_unique',

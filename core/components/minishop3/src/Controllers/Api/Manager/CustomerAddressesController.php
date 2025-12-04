@@ -8,7 +8,7 @@ use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
 /**
- * API контроллер для управления адресами клиентов (Manager API)
+ * API controller for managing customer addresses (Manager API)
  *
  * @package MiniShop3\Controllers\Api\Manager
  */
@@ -22,10 +22,10 @@ class CustomerAddressesController
     }
 
     /**
-     * Получить список адресов клиента
+     * Get customer address list
      * GET /api/mgr/customers/{id}/addresses
      *
-     * @param array $params URL параметры (id - customer_id)
+     * @param array $params URL parameters (id - customer_id)
      * @return array Response
      */
     public function getList(array $params = []): array
@@ -36,7 +36,6 @@ class CustomerAddressesController
             return Response::error('Customer ID is required', 400)->getData();
         }
 
-        // Проверяем существование клиента
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
         if (!$customer) {
             return Response::error('Customer not found', 404)->getData();
@@ -62,10 +61,10 @@ class CustomerAddressesController
     }
 
     /**
-     * Создать новый адрес
+     * Create new address
      * POST /api/mgr/customers/{id}/addresses
      *
-     * @param array $data Данные адреса
+     * @param array $data Address data
      * @return array Response
      */
     public function create(array $data = []): array
@@ -76,7 +75,6 @@ class CustomerAddressesController
             return Response::error('Customer ID is required', 400)->getData();
         }
 
-        // Проверяем существование клиента
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
         if (!$customer) {
             return Response::error('Customer not found', 404)->getData();
@@ -87,7 +85,6 @@ class CustomerAddressesController
 
         $address->set('customer_id', $customerId);
 
-        // Заполняем поля
         $allowedFields = [
             'name', 'country', 'index', 'region', 'city', 'metro',
             'street', 'building', 'entrance', 'floor', 'room', 'comment', 'active'
@@ -99,7 +96,6 @@ class CustomerAddressesController
             }
         }
 
-        // Генерируем hash для адреса
         $address->set('hash', $this->generateAddressHash($data));
         $address->set('createdon', date('Y-m-d H:i:s'));
 
@@ -114,10 +110,10 @@ class CustomerAddressesController
     }
 
     /**
-     * Обновить адрес
+     * Update address
      * PUT /api/mgr/customers/{id}/addresses/{address_id}
      *
-     * @param array $data Данные для обновления
+     * @param array $data Data to update
      * @return array Response
      */
     public function update(array $data = []): array
@@ -138,7 +134,6 @@ class CustomerAddressesController
             return Response::error('Address not found', 404)->getData();
         }
 
-        // Обновляем поля
         $allowedFields = [
             'name', 'country', 'index', 'region', 'city', 'metro',
             'street', 'building', 'entrance', 'floor', 'room', 'comment', 'active'
@@ -150,7 +145,6 @@ class CustomerAddressesController
             }
         }
 
-        // Обновляем hash
         $address->set('hash', $this->generateAddressHash($data));
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
@@ -165,10 +159,10 @@ class CustomerAddressesController
     }
 
     /**
-     * Удалить адрес
+     * Delete address
      * DELETE /api/mgr/customers/{id}/addresses/{address_id}
      *
-     * @param array $params URL параметры
+     * @param array $params URL parameters
      * @return array Response
      */
     public function delete(array $params = []): array
@@ -197,7 +191,7 @@ class CustomerAddressesController
     }
 
     /**
-     * Форматировать объект адреса для API ответа
+     * Format address object for API response
      *
      * @param msCustomerAddress $address
      * @return array
@@ -222,13 +216,12 @@ class CustomerAddressesController
             'active' => (bool)$address->get('active'),
             'createdon' => $address->get('createdon'),
             'updatedon' => $address->get('updatedon'),
-            // Форматированный адрес для отображения
             'formatted' => $this->formatAddressString($address),
         ];
     }
 
     /**
-     * Генерировать hash адреса для дедупликации
+     * Generate address hash for deduplication
      *
      * @param array $data
      * @return string
@@ -249,7 +242,7 @@ class CustomerAddressesController
     }
 
     /**
-     * Форматировать адрес в строку
+     * Format address as string
      *
      * @param msCustomerAddress $address
      * @return string
@@ -262,8 +255,8 @@ class CustomerAddressesController
             $address->get('region'),
             $address->get('city'),
             $address->get('street'),
-            $address->get('building') ? 'д. ' . $address->get('building') : null,
-            $address->get('room') ? 'кв. ' . $address->get('room') : null,
+            $address->get('building') ? 'bldg. ' . $address->get('building') : null,
+            $address->get('room') ? 'apt. ' . $address->get('room') : null,
         ]);
 
         return implode(', ', $parts);

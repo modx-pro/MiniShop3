@@ -8,19 +8,19 @@ use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
 
 /**
- * Базовый абстрактный класс для платежных провайдеров
+ * Base abstract class for payment providers
  *
- * Предоставляет базовую функциональность для интеграции с платежными системами:
- * - Расчет комиссии (процент/фиксированная)
- * - Генерация безопасного хеша заказа
- * - Вспомогательные методы success/error
+ * Provides basic functionality for payment system integration:
+ * - Fee calculation (percentage/fixed)
+ * - Secure order hash generation
+ * - Helper methods success/error
  *
- * Для создания собственного провайдера:
- * 1. Создайте класс, наследующий Payment
- * 2. Реализуйте обязательные методы send() и receive()
- * 3. При необходимости переопределите getCost() для нестандартной логики комиссии
+ * To create custom provider:
+ * 1. Create class extending Payment
+ * 2. Implement required methods send() and receive()
+ * 3. Override getCost() if needed for custom fee logic
  *
- * Пример создания провайдера для ЮKassa:
+ * Example of creating YooKassa provider:
  * ```php
  * class YooKassaPayment extends Payment {
  *     protected string $shopId;
@@ -33,14 +33,14 @@ use MODX\Revolution\modX;
  *     }
  *
  *     public function send(msOrder $order): array {
- *         // Создание платежа через API ЮKassa
+ *         // Create payment via YooKassa API
  *         $client = new \YooKassa\Client();
  *         $client->setAuth($this->shopId, $this->secretKey);
  *
  *         $payment = $client->createPayment([
  *             'amount' => ['value' => $order->get('cost'), 'currency' => 'RUB'],
  *             'confirmation' => ['type' => 'redirect', 'return_url' => '...'],
- *             'description' => "Заказ #{$order->get('num')}",
+ *             'description' => "Order #{$order->get('num')}",
  *             'metadata' => ['order_hash' => $this->getOrderHash($order)],
  *         ]);
  *
@@ -51,17 +51,17 @@ use MODX\Revolution\modX;
  *     }
  *
  *     public function receive(msOrder $order): array {
- *         // Обработка webhook от ЮKassa
+ *         // Process webhook from YooKassa
  *         $json = file_get_contents('php://input');
  *         $data = json_decode($json, true);
  *
- *         // Проверка хеша заказа
+ *         // Verify order hash
  *         if (!hash_equals($this->getOrderHash($order), $data['metadata']['order_hash'])) {
  *             return $this->error('Invalid order hash');
  *         }
  *
  *         if ($data['status'] === 'succeeded') {
- *             $order->set('status', 2); // Оплачен
+ *             $order->set('status', 2); // Paid
  *             $order->save();
  *             return $this->success('Payment confirmed');
  *         }
@@ -75,20 +75,20 @@ use MODX\Revolution\modX;
  */
 abstract class Payment implements PaymentProviderInterface
 {
-    /** @var modX MODX объект */
+    /** @var modX MODX instance */
     protected modX $modx;
 
-    /** @var MiniShop3 MiniShop3 объект */
+    /** @var MiniShop3 MiniShop3 instance */
     protected MiniShop3 $ms3;
 
-    /** @var array Конфигурация провайдера */
+    /** @var array Provider configuration */
     protected array $config = [];
 
     /**
-     * Конструктор
+     * Constructor
      *
-     * @param MiniShop3 $ms3 MiniShop3 объект
-     * @param array $config Дополнительная конфигурация провайдера
+     * @param MiniShop3 $ms3 MiniShop3 instance
+     * @param array $config Additional provider configuration
      */
     public function __construct(MiniShop3 $ms3, array $config = [])
     {
@@ -100,53 +100,52 @@ abstract class Payment implements PaymentProviderInterface
     }
 
     /**
-     * Отправка заказа в платежную систему (абстрактный метод)
+     * Send order to payment system (abstract method)
      *
-     * Должен быть реализован в наследнике для создания платежа
-     * и получения ссылки для редиректа на страницу оплаты.
+     * Must be implemented in child class to create payment
+     * and get redirect link to payment page.
      *
-     * @param msOrder $order Заказ для оплаты
+     * @param msOrder $order Order for payment
      * @return array Response ['success' => true, 'data' => ['payment_link' => '...', 'payment_id' => '...']]
      */
     abstract public function send(msOrder $order): array;
 
     /**
-     * Обработка callback от платежной системы (абстрактный метод)
+     * Process callback from payment system (abstract method)
      *
-     * Должен быть реализован в наследнике для обработки уведомлений
-     * от платежной системы о статусе оплаты (webhook).
+     * Must be implemented in child class to handle notifications
+     * from payment system about payment status (webhook).
      *
-     * @param msOrder $order Заказ для проверки
+     * @param msOrder $order Order to check
      * @return array Response ['success' => true/false, 'message' => '...']
      */
     abstract public function receive(msOrder $order): array;
 
     /**
-     * Расчет стоимости с учетом комиссии платежной системы
+     * Calculate cost including payment system fee
      *
-     * Поддерживает два формата комиссии:
-     * - Процентная: "3%" - комиссия 3% от суммы заказа
-     * - Фиксированная: "50" - комиссия 50 рублей
+     * Supports two fee formats:
+     * - Percentage: "3%" - 3% fee of order amount
+     * - Fixed: "50" - 50 rubles fee
      *
-     * @param msOrder $order Заказ (может использоваться для расчета комиссии)
-     * @param msPayment $payment Способ оплаты с настройками комиссии
-     * @param float $cost Текущая стоимость заказа
-     * @return float Стоимость с учетом комиссии
+     * @param msOrder $order Order (can be used for fee calculation)
+     * @param msPayment $payment Payment method with fee settings
+     * @param float $cost Current order cost
+     * @return float Cost including fee
      */
     public function getCost(msOrder $order, msPayment $payment, float $cost): float
     {
         $add_price = $payment->get('price');
 
-        // Если комиссия не указана - возвращаем исходную стоимость
         if (empty($add_price)) {
             return $cost;
         }
 
-        // Процентная комиссия
+        // Percentage fee
         if (str_ends_with($add_price, '%')) {
             $percent = (float)str_replace('%', '', $add_price);
 
-            // Валидация диапазона 0-100%
+            // Validate 0-100% range
             if ($percent < 0 || $percent > 100) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
@@ -157,10 +156,10 @@ abstract class Payment implements PaymentProviderInterface
 
             $add_price = $cost / 100 * $percent;
         } else {
-            // Фиксированная комиссия
+            // Fixed fee
             $add_price = (float)$add_price;
 
-            // Валидация неотрицательности
+            // Validate non-negative
             if ($add_price < 0) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
@@ -174,16 +173,16 @@ abstract class Payment implements PaymentProviderInterface
     }
 
     /**
-     * Получить ссылку на оплату заказа
+     * Get payment link for order
      *
-     * Вызывает метод send() и извлекает payment_link из ответа.
-     * Используется для отображения кнопки "Оплатить" на странице заказа.
+     * Calls send() method and extracts payment_link from response.
+     * Used to display "Pay" button on order page.
      *
-     * Примечание: Метод вызывает send() каждый раз без кэширования.
-     * Для платежных систем с лимитами API рекомендуется добавить кэширование.
+     * Note: Method calls send() each time without caching.
+     * For payment systems with API limits caching is recommended.
      *
-     * @param msOrder $order Заказ для оплаты
-     * @return string|null Ссылка на оплату или null если не удалось получить
+     * @param msOrder $order Order for payment
+     * @return string|null Payment link or null if failed
      */
     public function getPaymentLink(msOrder $order): ?string
     {
@@ -200,22 +199,21 @@ abstract class Payment implements PaymentProviderInterface
     }
 
     /**
-     * Генерация криптографического хеша заказа
+     * Generate cryptographic order hash
      *
-     * Используется для проверки подлинности данных при обработке callback от платежной системы.
-     * Использует безопасный алгоритм HMAC-SHA256 с секретным ключом.
+     * Used to verify data authenticity when processing callback from payment system.
+     * Uses secure HMAC-SHA256 algorithm with secret key.
      *
-     * Для работы необходимо установить системную настройку ms3_payment_secret.
-     * Если настройка не задана, будет использован site_id как fallback.
+     * System setting ms3_payment_secret must be configured.
+     * If not set, site_id will be used as fallback.
      *
-     * @param msOrder $order Заказ для хеширования
-     * @return string Хеш заказа (64 символа hex)
+     * @param msOrder $order Order to hash
+     * @return string Order hash (64 hex characters)
      */
     public function getOrderHash(msOrder $order): string
     {
         $secret = $this->modx->getOption('ms3_payment_secret', null, '');
 
-        // Если секрет не установлен - используем site_id как fallback
         if (empty($secret)) {
             $secret = $this->modx->getOption('site_id');
             $this->modx->log(
@@ -224,8 +222,8 @@ abstract class Payment implements PaymentProviderInterface
             );
         }
 
-        // Используем | как разделитель для предотвращения коллизий
-        // (избегаем ситуации когда "123" + "456" == "12" + "3456")
+        // Use | as separator to prevent collisions
+        // (avoid situation when "123" + "456" == "12" + "3456")
         $data = implode('|', [
             $order->get('id'),
             $order->get('num'),
@@ -233,16 +231,16 @@ abstract class Payment implements PaymentProviderInterface
             $order->get('createdon')
         ]);
 
-        // HMAC-SHA256 - безопасный алгоритм с секретным ключом
+        // HMAC-SHA256 - secure algorithm with secret key
         return hash_hmac('sha256', $data, $secret);
     }
 
     /**
-     * Возврат ответа об ошибке
+     * Return error response
      *
-     * @param string $message Сообщение об ошибке (ключ лексикона или текст)
-     * @param array $data Дополнительные данные
-     * @param array $placeholders Плейсхолдеры для подстановки в сообщение
+     * @param string $message Error message (lexicon key or text)
+     * @param array $data Additional data
+     * @param array $placeholders Placeholders for message
      * @return array ['success' => false, 'message' => '...', 'data' => [...]]
      */
     protected function error(string $message = '', array $data = [], array $placeholders = []): array
@@ -251,11 +249,11 @@ abstract class Payment implements PaymentProviderInterface
     }
 
     /**
-     * Возврат успешного ответа
+     * Return success response
      *
-     * @param string $message Сообщение об успехе (ключ лексикона или текст)
-     * @param array $data Дополнительные данные
-     * @param array $placeholders Плейсхолдеры для подстановки в сообщение
+     * @param string $message Success message (lexicon key or text)
+     * @param array $data Additional data
+     * @param array $placeholders Placeholders for message
      * @return array ['success' => true, 'message' => '...', 'data' => [...]]
      */
     protected function success(string $message = '', array $data = [], array $placeholders = []): array
