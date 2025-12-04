@@ -1,16 +1,16 @@
 <?php
 /**
- * ПОЛЬЗОВАТЕЛЬСКИЕ Manager API Routes для MiniShop3
+ * CUSTOM Manager API Routes for MiniShop3
  *
- * ✅ Этот файл НЕ перезаписывается при обновлении компонента!
- * ✅ Здесь можно безопасно добавлять свои роуты для админки
+ * This file is NOT overwritten during component updates!
+ * You can safely add your custom admin routes here.
  *
- * При установке компонента этот файл копируется в:
+ * During component installation, this file is copied to:
  * core/config/ms3_routes_manager.custom.php
  *
- * Загружается ПОСЛЕ системных роутов Manager API, поэтому можно переопределять.
+ * Loaded AFTER system Manager API routes, so you can override them.
  *
- * Доступ к переменным:
+ * Available variables:
  * @var \MiniShop3\Router\Router $router
  * @var \MODX\Revolution\modX $modx
  */
@@ -18,19 +18,11 @@
 use MiniShop3\Router\Middleware\AuthMiddleware;
 use MiniShop3\Router\Middleware\PermissionMiddleware;
 use MiniShop3\Router\Response;
-
-// ============================================
-// Примеры пользовательских Manager API роутов
-// ============================================
-
-// Пример 1: Простой роут для админки (требуется авторизация)
 // $router->get('/api/mgr/my-custom-route', function() use ($modx) {
 //     return Response::success(['message' => 'Custom Manager route works!']);
 // }, [
 //     new AuthMiddleware($modx, 'mgr')
 // ]);
-
-// Пример 2: Группа роутов для своего модуля в админке
 // $router->group('/api/mgr/my-module', function($router) use ($modx) {
 //
 //     $router->get('/dashboard', function() use ($modx) {
@@ -43,7 +35,6 @@ use MiniShop3\Router\Response;
 //     });
 //
 //     $router->post('/settings/save', function($params) use ($modx) {
-//         // Ваша логика сохранения настроек
 //         $data = json_decode(file_get_contents('php://input'), true);
 //         return Response::success(['saved' => true, 'data' => $data]);
 //     });
@@ -52,9 +43,6 @@ use MiniShop3\Router\Response;
 //     new AuthMiddleware($modx, 'mgr'),
 //     new PermissionMiddleware($modx, 'your_custom_permission')
 // ]);
-
-// Пример 3: Переопределение системного роута Manager API
-// Если нужно изменить поведение системного роута - скопируйте его сюда
 // $router->get('/api/mgr/health', function() use ($modx) {
 //     return Response::success([
 //         'status' => 'custom_ok',
@@ -62,8 +50,6 @@ use MiniShop3\Router\Response;
 //         'custom' => true
 //     ]);
 // });
-
-// Пример 4: Роут с параметрами
 // $router->get('/api/mgr/my-resource/{id}', function($params) use ($modx) {
 //     $id = $params['id'] ?? 0;
 //

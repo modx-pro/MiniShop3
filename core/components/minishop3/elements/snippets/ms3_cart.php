@@ -19,10 +19,6 @@ if (isset($_POST['render'])) {
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 
-// Приоритет токена:
-// 1. Из параметров сниппета (для SSR рендера через API)
-// 2. Из сессии (стандартный flow)
-// 3. Генерируем новый
 if (!empty($scriptProperties['customer_token'])) {
     $token = $scriptProperties['customer_token'];
 } elseif (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
@@ -31,14 +27,11 @@ if (!empty($scriptProperties['customer_token'])) {
     $response = $ms3->customer->generateToken();
     $token = $response['data']['token'];
 }
-// Do not show cart when displaying order details (страница Thanks)
-// Проверяем ДО инициализации корзины, чтобы не создавать лишний draft
 if (!empty($_GET['msorder'])) {
     return '';
 }
 
 $ms3->cart->initialize($modx->context->key, $token);
-//TODO Как то передать название сниппета, в т.ч путь для файлового
 $ms3->registerSnippet($scriptProperties);
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
@@ -85,7 +78,6 @@ $leftJoin = [
     ],
 ];
 
-//TODO Поля вендор сделать выборочными
 // Select columns
 $select = [
     'msProduct' => !empty($includeContent)
@@ -153,12 +145,8 @@ foreach ($cart as $key => $entry) {
     if (!isset($rows[$entry['product_id']])) {
         continue;
     }
-    //TODO Возможно для сущностей корзины будет лучше сделать префикс cart_
     $product = array_merge($rows[$entry['product_id']], $entry);
 
-//    $product['product_key'] = $key;
-//    $product['count'] = $entry['count'];
-//    $product['options'] = $entry['options'];
     $old_price = $product['old_price'];
     if ($product['price'] > $entry['price'] && empty($product['old_price'])) {
         $old_price = $product['price'];
@@ -166,9 +154,6 @@ foreach ($cart as $key => $entry) {
     $discount_price = $old_price > 0 ? $old_price - $entry['price'] : 0;
 
     $product['old_price'] = $old_price;
-//    $product['price'] = $entry['price'];
-//    $product['weight'] = $entry['weight'];
-//    $product['cost'] = $entry['count'] * $entry['price'];
     $product['discount_price'] = $ms3->format->price($discount_price);
     $product['discount_cost'] = $entry['count'] * $discount_price;
 

@@ -2,32 +2,27 @@
 /**
  * Cron script for cleaning up expired customer tokens
  *
- * Удаляет истекшие токены из таблицы ms3_customer_tokens.
- * Рекомендуется запускать 1 раз в час.
+ * Deletes expired tokens from ms3_customer_tokens table.
+ * Recommended to run once per hour.
  *
- * Установка в crontab:
+ * Crontab setup:
  * ```
- * # Очистка токенов каждый час
+ * # Clean up tokens every hour
  * 0 * * * * /usr/bin/php8.3 /path/to/core/components/minishop3/cron/cleanup-tokens.php
  * ```
  *
- * Или через системные настройки MODX (scheduler addon).
+ * Or via MODX system settings (scheduler addon).
  *
  * @package MiniShop3
  */
-
-// Определяем путь к MODX
 if (!defined('MODX_CORE_PATH')) {
-    $depth = dirname(__FILE__, 5); // core/components/minishop3/cron -> core
+    $depth = dirname(__FILE__, 5);
     define('MODX_CORE_PATH', $depth . '/');
 }
-
-// Загружаем MODX
 require_once MODX_CORE_PATH . 'bootstrap.php';
 
 use MODX\Revolution\modX;
 
-// Инициализируем MODX
 $modx = new modX();
 $modx->initialize('web');
 $modx->getService('error', 'error.modError');
@@ -46,7 +41,6 @@ try {
         exit(1);
     }
 
-    // Очистка истекших токенов
     $deletedCount = $authManager->cleanupExpiredTokens();
 
     $duration = round((microtime(true) - $startTime) * 1000, 2);

@@ -39,9 +39,9 @@ class SeedDeliveryAndPayment extends AbstractMigration
                 INSERT INTO {$prefix}ms3_deliveries
                 (id, name, price, weight_price, distance_price, active, validation_rules, position)
                 VALUES
-                (1, 'Самовывоз', 0, 0, 0, 1, '{\"first_name\":\"required\",\"last_name\":\"required\", \"email\":\"required|email\"}', 0)
+                (1, 'Self-pickup', 0, 0, 0, 1, '{\"first_name\":\"required\",\"last_name\":\"required\", \"email\":\"required|email\"}', 0)
             ");
-            $this->output->writeln('<info>✓ Created default delivery: Самовывоз</info>');
+            $this->output->writeln('<info>✓ Created default delivery: Self-pickup</info>');
         } else {
             $this->output->writeln('<comment>Default delivery already exists, skipping</comment>');
         }
@@ -55,9 +55,9 @@ class SeedDeliveryAndPayment extends AbstractMigration
                 INSERT INTO {$prefix}ms3_payments
                 (id, name, active, position)
                 VALUES
-                (1, 'Наличные', 1, 0)
+                (1, 'Cash', 1, 0)
             ");
-            $this->output->writeln('<info>✓ Created default payment: Наличные</info>');
+            $this->output->writeln('<info>✓ Created default payment: Cash</info>');
         } else {
             $this->output->writeln('<comment>Default payment already exists, skipping</comment>');
         }

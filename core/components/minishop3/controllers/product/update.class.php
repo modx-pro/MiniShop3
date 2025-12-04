@@ -2,8 +2,6 @@
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
-// Layout больше не используется - переход на Vue вкладку
-// use MiniShop3\Controllers\Config\Product\Layout;
 
 if (!class_exists('msResourceUpdateController')) {
     require_once dirname(__FILE__, 2) . '/resource_update.class.php';
@@ -38,16 +36,12 @@ class msProductUpdateManagerController extends msResourceUpdateController
      */
     public function loadCustomCssJs()
     {
-        // Layout больше не используется - переход на Vue вкладку
-        // $layoutController = new Layout($this->modx);
-        // $layout = $layoutController->getLayout();
-
         $mgrUrl = $this->getOption('manager_url', null, MODX_MANAGER_URL);
         $assetsUrl = $this->ms3->config['assetsUrl'];
 
         $this->addCss($assetsUrl . 'css/mgr/bootstrap.buttons.css');
         $this->addCss($assetsUrl . 'css/mgr/main.css');
-        $this->addCss($assetsUrl . 'css/mgr/extjs-boxmodel-fix.css'); // Фикс box-sizing для ExtJS vs PrimeVue
+        $this->addCss($assetsUrl . 'css/mgr/extjs-boxmodel-fix.css');
         $this->addJavascript($mgrUrl . 'assets/modext/util/datetime.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/element/modx.panel.tv.renders.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.grid.resource.security.local.js');
@@ -69,11 +63,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
 
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
         if ($show_gallery) {
-            // Vue Uppy Gallery Uploader (modern replacement for Plupload)
             $this->addCss($assetsUrl . 'css/mgr/vue-dist/gallery-uploader.min.css');
             $this->addHtml('<script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/gallery-uploader.min.js"></script>');
-
-            // ExtJS Gallery components
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/ext.ddview.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.panel.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.toolbar.js');
@@ -102,7 +93,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $product_option_keys = $productData->getOptionKeys();
         $product_option_fields = $productData->getOptionFields();
 
-        // Добавляем категории в resourceArray для передачи в JavaScript
         $this->resourceArray['categories'] = $productData->get('categories');
 
         $this->prepareFields();
@@ -112,10 +102,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             $neighborhood = $this->resource->getNeighborhood();
         }
 
-        // Загружаем лексикон явно для гарантии
         $this->modx->lexicon->load('minishop3:product');
-
-        // Загружаем конфигурацию полей из БД через ConfigService
         $configService = new \MiniShop3\Services\ConfigService($this->modx);
         $fieldsConfig = $configService->getAllPageFields('product_data');
 
@@ -139,7 +126,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'lexicon' => [
                 'ms3_product_data_vue' => $this->modx->lexicon('ms3_product_data_vue'),
             ],
-            'fields_config' => $fieldsConfig, // Конфигурация полей из БД
+            'fields_config' => $fieldsConfig,
         ];
 
         $ready = [
@@ -183,7 +170,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         <link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/vue-dist/main.min.css">
         <script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/main.min.js"></script>');
 
-        // load RTE
         $this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', ['controller' => $this, 'page' => 'product_update']);
         $this->loadPlugins();
@@ -226,7 +212,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
     }
 
     /**
-     * Loads media source properties
+     * Load media source properties
      *
      * @return array
      */

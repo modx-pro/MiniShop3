@@ -5,10 +5,7 @@
  * This config integrates Phinx migrations with MODX database settings
  */
 
-// Проверяем, передан ли $modx из родительского scope (резолвер)
-// или нужно инициализировать (CLI режим)
 if (!isset($modx)) {
-    // CLI режим или первый запуск - загружаем MODX
     $modxConfigPath = dirname(__FILE__, 4) . '/config.core.php';
 
     if (!file_exists($modxConfigPath)) {
@@ -27,13 +24,9 @@ if (!isset($modx)) {
         require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
     }
 
-    // Инициализация MODX
     $modx = new modX();
     $modx->initialize('mgr');
 }
-// Иначе используем $modx из родительского scope (резолвер передал его)
-
-// Настройки подключения к БД из MODX
 $dbConfig = [
     'adapter' => 'mysql',
     'host' => $modx->getOption('host', null, 'localhost'),
@@ -55,7 +48,7 @@ return [
         'default_migration_table' => 'ms3_migrations',
         'default_environment' => 'production',
         'production' => $dbConfig,
-        'development' => $dbConfig, // Можно использовать отдельную БД для разработки
+        'development' => $dbConfig,
     ],
     'version_order' => 'creation',
     'templates' => [

@@ -3,7 +3,7 @@
 use Phinx\Migration\AbstractMigration;
 
 /**
- * Seed дефолтной конфигурации для грида клиентов
+ * Seed default configuration for customers grid
  */
 class SeedCustomersGridConfig extends AbstractMigration
 {
@@ -35,7 +35,7 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'lexicon_key' => 'customer_name',
                 'visible' => 1,
                 'sort_order' => 1,
-                'sortable' => 0, // Template field - нельзя сортировать
+                'sortable' => 0, // Template field - cannot be sorted
                 'filterable' => 1,
                 'frozen' => 0,
                 'width' => null,
@@ -119,10 +119,10 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'label' => null,
                 'lexicon_key' => 'actions',
                 'visible' => 1,
-                'sort_order' => 99, // Всегда последняя колонка
+                'sort_order' => 99, // Always the last column
                 'sortable' => 0,
                 'filterable' => 0,
-                'frozen' => 1, // Actions всегда видны
+                'frozen' => 1, // Actions are always visible
                 'width' => '150px',
                 'min_width' => '150px',
                 'config' => json_encode([

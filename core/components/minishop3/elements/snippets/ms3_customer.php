@@ -12,17 +12,13 @@ use ModxPro\PdoTools\Fetch;
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 
-// Загрузить pdoTools для рендеринга Fenom чанков
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
 
-// Загрузить лексиконы
 $modx->lexicon->load('minishop3:customer');
 $modx->lexicon->load('minishop3:default');
 
-// ОБРАБОТКА LOGOUT
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
-    // Удаляем токен из БД
     if (!empty($_SESSION['ms3']['customer_token'])) {
         $token = $_SESSION['ms3']['customer_token'];
         $tokenObj = $modx->getObject(\MiniShop3\Model\msCustomerToken::class, ['token' => $token]);
@@ -31,20 +27,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         }
     }
 
-    // Очищаем сессию клиента
     if (isset($_SESSION['ms3'])) {
         unset($_SESSION['ms3']['customer_id']);
         unset($_SESSION['ms3']['customer_token']);
         unset($_SESSION['ms3']['customer_token_expires']);
     }
 
-    // Редирект на страницу входа
     $loginPageId = $modx->getOption('ms3_customer_login_page_id', null, 1);
     $modx->sendRedirect($modx->makeUrl($loginPageId));
     exit;
 }
 
-// 1. РОУТИНГ НА НУЖНЫЙ СЕРВИС
 $service = $modx->getOption('service', $scriptProperties, 'profile');
 $return = $modx->getOption('return', $scriptProperties, 'tpl');
 
@@ -58,11 +51,9 @@ try {
         ),
     };
 
-    // 2. СОЗДАТЬ ЭКЗЕМПЛЯР СЕРВИСА И ПРОВЕРИТЬ АВТОРИЗАЦИЮ
     /** @var \MiniShop3\Services\Customer\CustomerPageService $pageService */
     $pageService = new $serviceClass($modx, $ms3, $scriptProperties);
 
-    // Проверка авторизации (загружает объект клиента + проверяет сессию)
     if (!$pageService->checkAuth()) {
         if ($return === 'data') {
             return [
@@ -78,7 +69,6 @@ try {
         return $pageService->renderUnauthorized();
     }
 
-    // 3. ВЕРНУТЬ СЫРЫЕ ДАННЫЕ (для CLI, API, тестов)
     if ($return === 'data') {
         $data = $pageService->getData();
         $data['authorized'] = true;
@@ -86,7 +76,6 @@ try {
         return $data;
     }
 
-    // 4. РЕНДЕРИНГ HTML
     return $pageService->render();
 
 } catch (\InvalidArgumentException $e) {

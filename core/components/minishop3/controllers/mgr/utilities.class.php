@@ -45,17 +45,10 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/utilities.panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/gallery/panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/import/panel.js');
-        // Старые ExtJS файлы для extra fields удалены - используется новый Vue виджет
 
         $config = $this->ms3->config;
 
-        // MODX автоматически загружает все лексиконы из топика 'minishop3:vue'
-        // (указан в getLanguageTopics()) и делает их доступными через window.MODx.lang
-        // Vue компоненты обращаются к ним через useLexicon() composable
-
-        // get source properties
         $productSource = (int)$this->getOption('ms3_product_source_default', null, 1);
-        // MODX имеет встроенный метод для получения источников
         $source = null;
         if ($productSource > 0) {
             $source = $this->modx->getObject('sources.modMediaSource', $productSource);
@@ -76,11 +69,8 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         $config['utility_gallery_total_products'] = $this->modx->getCount(msProduct::class, ['class_key' => msProduct::class]);
         $config['utility_gallery_total_products_files'] = $this->modx->getCount(msProductFile::class, ['parent_id' => 0]);
 
-        // get params for import
         $config['utility_import_fields'] = $this->getOption('ms3_utility_import_fields', null, 'pagetitle,parent,price,article', true);
         $config['utility_import_fields_delimiter'] = $this->getOption('ms3_utility_import_fields_delimiter', null, ';', true);
-
-        // ВАЖНО: Сначала конфигурация, потом Vue модули
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
         $this->addHtml(

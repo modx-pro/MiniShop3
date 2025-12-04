@@ -2,13 +2,13 @@
 /**
  * MiniShop3 Plugin
  *
- * События:
- * - OnMODXInit: Загрузка дополнительных полей через ExtraFields
- * - OnLoadWebDocument: Инициализация фронтенда, регистрация product fields как [[*resource]] tags
- * - OnManagerPageBeforeRender: Подключение лексикона и JS в админке
- * - OnUserSave: Синхронизация msCustomer ↔ modUser (создание/обновление)
- * - OnBeforeUserFormSave: Синхронизация msCustomer при изменении профиля modUser
- * - OnUserRemove: Отвязка msCustomer от удалённого modUser
+ * Events:
+ * - OnMODXInit: Load extra fields through ExtraFields
+ * - OnLoadWebDocument: Initialize frontend, register product fields as [[*resource]] tags
+ * - OnManagerPageBeforeRender: Load lexicon and JS in admin panel
+ * - OnUserSave: Synchronize msCustomer ↔ modUser (create/update)
+ * - OnBeforeUserFormSave: Synchronize msCustomer when modUser profile changes
+ * - OnUserRemove: Unlink msCustomer from deleted modUser
  *
  * @var \MODX\Revolution\modX $modx
  * @var array $scriptProperties
@@ -35,7 +35,6 @@ switch ($modx->event->name) {
             $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms3.manager.js');
         }
 
-        // Загрузка лексикона для синхронизации клиентов
         $syncEnabled = (bool)$modx->getOption('ms3_customer_sync_enabled', null, false);
         if ($syncEnabled && $modx->user && $modx->user->hasSessionContext('mgr')) {
             $modx->lexicon->load('minishop3:customer');
@@ -51,7 +50,6 @@ switch ($modx->event->name) {
         }
 
         // Set product fields as [[*resource]] tags
-        // Позволяет использовать [[*price]], [[*article]] и т.д. в шаблонах продуктов
         if ($modx->resource->get('class_key') == MiniShop3\Model\msProduct::class) {
             if ($dataMeta = $modx->getFieldMeta(MiniShop3\Model\msProductData::class)) {
                 unset($dataMeta['id']);
@@ -64,16 +62,15 @@ switch ($modx->event->name) {
         break;
 
     /**
-     * OnUserSave / OnBeforeUserFormSave - создание/обновление msCustomer при сохранении modUser
+     * OnUserSave / OnBeforeUserFormSave - create/update msCustomer when modUser is saved
      *
-     * Обеспечивает гибридную синхронизацию msCustomer ↔ modUser:
-     * 1. Автоматическое создание msCustomer при регистрации modUser
-     * 2. Синхронизация данных (email, имя, телефон, активность)
-     * 3. Связывание существующего msCustomer с modUser по email
+     * Provides hybrid synchronization between msCustomer ↔ modUser:
+     * 1. Automatic msCustomer creation on modUser registration
+     * 2. Data synchronization (email, name, phone, active status)
+     * 3. Link existing msCustomer to modUser by email
      */
     case 'OnUserSave':
     case 'OnBeforeUserFormSave':
-        // Проверка, включена ли синхронизация
         $syncEnabled = (bool)$modx->getOption('ms3_customer_sync_enabled', null, false);
         if (!$syncEnabled) {
             break;
@@ -86,7 +83,7 @@ switch ($modx->event->name) {
 
         $userId = $user->get('id');
         if (!$userId) {
-            break; // Пользователь еще не создан
+            break;
         }
 
         /** @var modUserProfile $profile */
@@ -97,19 +94,16 @@ switch ($modx->event->name) {
 
         $email = $profile->get('email');
         if (empty($email)) {
-            break; // Email обязателен для msCustomer
+            break;
         }
 
-        // Поиск существующего msCustomer
         /** @var msCustomer $customer */
         $customer = $modx->getObject(msCustomer::class, ['user_id' => $userId]);
 
         if (!$customer) {
-            // Поиск по email (возможно, клиент создан раньше)
             $customer = $modx->getObject(msCustomer::class, ['email' => $email]);
 
             if ($customer) {
-                // Связываем существующего клиента с modUser
                 $customer->set('user_id', $userId);
                 $modx->log(
                     modX::LOG_LEVEL_INFO,
@@ -118,7 +112,6 @@ switch ($modx->event->name) {
             }
         }
 
-        // Создание нового msCustomer, если не найден
         if (!$customer) {
             $customer = $modx->newObject(msCustomer::class);
             $customer->set('user_id', $userId);
@@ -132,25 +125,21 @@ switch ($modx->event->name) {
             );
         }
 
-        // Синхронизация данных профиля
         $customer->set('first_name', $profile->get('fullname') ?: '');
-        $customer->set('last_name', ''); // modUser не имеет отдельного last_name
+        $customer->set('last_name', '');
         $customer->set('phone', $profile->get('phone') ?: '');
-
-        // Синхронизация активности
         $customer->set('is_active', $user->get('active'));
 
         $customer->save();
         break;
 
     /**
-     * OnUserRemove - отвязка msCustomer от удалённого modUser
+     * OnUserRemove - unlink msCustomer from deleted modUser
      *
-     * При удалении modUser отвязывает связанного msCustomer (user_id = 0),
-     * но НЕ удаляет его, чтобы сохранить историю заказов.
+     * When modUser is deleted, unlinks the associated msCustomer (user_id = 0),
+     * but does NOT delete it to preserve order history.
      */
     case 'OnUserRemove':
-        // Проверка, включена ли синхронизация
         $syncEnabled = (bool)$modx->getOption('ms3_customer_sync_enabled', null, false);
         if (!$syncEnabled) {
             break;
@@ -172,7 +161,6 @@ switch ($modx->event->name) {
         $customer = $modx->getObject(msCustomer::class, ['user_id' => $userId]);
 
         if ($customer) {
-            // Отвязываем от modUser вместо удаления (сохраняем историю заказов)
             $customer->set('user_id', 0);
             $customer->save();
 

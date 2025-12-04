@@ -35,16 +35,9 @@ class MiniShop3MgrCustomersManagerController extends msManagerController
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
 
-        // Wrapper для монтирования Vue вместо ExtJS
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/customers/customers.wrapper.js');
 
         $config = $this->ms3->config;
-
-        // MODX автоматически загружает все лексиконы из топика 'minishop3:vue'
-        // (указан в getLanguageTopics()) и делает их доступными через window.MODx.lang
-        // Vue компоненты обращаются к ним через useLexicon() composable
-
-        // ВАЖНО: Сначала конфигурация, потом Vue модули
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
         $this->addHtml(

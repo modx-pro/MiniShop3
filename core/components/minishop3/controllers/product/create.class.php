@@ -1,8 +1,6 @@
 <?php
 
 use MiniShop3\Model\msProduct;
-// Layout больше не используется - переход на Vue вкладку
-// use MiniShop3\Controllers\Config\Product\Layout;
 
 if (!class_exists('msResourceCreateController')) {
     require_once dirname(__FILE__, 2) . '/resource_create.class.php';
@@ -65,15 +63,11 @@ class msProductCreateManagerController extends msResourceCreateController
      */
     public function loadCustomCssJs()
     {
-        // Layout больше не используется - переход на Vue вкладку
-        // $layoutController = new Layout($this->modx);
-        // $layout = $layoutController->getLayout();
-
         $mgrUrl = $this->getOption('manager_url', null, MODX_MANAGER_URL);
         $assetsUrl = $this->ms3->config['assetsUrl'];
 
         $this->addCss($assetsUrl . 'css/mgr/main.css');
-        $this->addCss($assetsUrl . 'css/mgr/extjs-boxmodel-fix.css'); // Фикс box-sizing для ExtJS vs PrimeVue
+        $this->addCss($assetsUrl . 'css/mgr/extjs-boxmodel-fix.css');
         $this->addJavascript($mgrUrl . 'assets/modext/util/datetime.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/element/modx.panel.tv.renders.js');
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.grid.resource.security.local.js');
@@ -106,10 +100,7 @@ class msProductCreateManagerController extends msResourceCreateController
         $product_extra_fields = array_values(array_intersect($product_extra_fields, $product_fields));
         $product_option_fields = $this->resource->loadData()->getOptionFields();
 
-        // Загружаем лексикон явно для гарантии
         $this->modx->lexicon->load('minishop3:product');
-
-        // Загружаем конфигурацию полей из БД через ConfigService
         $configService = new \MiniShop3\Services\ConfigService($this->modx);
         $fieldsConfig = $configService->getAllPageFields('product_data');
 
@@ -134,7 +125,7 @@ class msProductCreateManagerController extends msResourceCreateController
             'lexicon' => [
                 'ms3_product_data_vue' => $this->modx->lexicon('ms3_product_data_vue'),
             ],
-            'fields_config' => $fieldsConfig, // Конфигурация полей из БД
+            'fields_config' => $fieldsConfig,
         ];
 
         $ready = [
@@ -165,22 +156,7 @@ class msProductCreateManagerController extends msResourceCreateController
         // ]]>
         </script>');
 
-        // load RTE
         $this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', ['controller' => &$this, 'page' => 'product_create']);
-        //$this->loadPlugins();
     }
-
-//    /**
-//     * Loads additional scripts for product form from miniShop2 plugins
-//     */
-//    public function loadPlugins()
-//    {
-//        $plugins = $this->ms3->plugins->load();
-//        foreach ($plugins as $plugin) {
-//            if (!empty($plugin['manager']['msProductData'])) {
-//                $this->addJavascript($plugin['manager']['msProductData']);
-//            }
-//        }
-//    }
 }

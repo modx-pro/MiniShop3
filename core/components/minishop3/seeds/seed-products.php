@@ -1,11 +1,11 @@
 <?php
 /**
- * Seeder для создания тестовых товаров (Products)
+ * Seeder for creating test products
  *
- * Создает 100 товаров с случайными категориями и производителями
+ * Creates 100 products with random categories and vendors
  *
- * Запуск: php _build/seeders/seed-products.php
- * С параметром количества: php _build/seeders/seed-products.php 200
+ * Usage: php _build/seeders/seed-products.php
+ * With count parameter: php _build/seeders/seed-products.php 200
  */
 
 use MiniShop3\Model\msProduct;
@@ -13,7 +13,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msVendor;
 
-// Подключаем MODX в CLI режиме
+// Initialize MODX in CLI mode
 define('MODX_API_MODE', true);
 require_once dirname(__DIR__, 4) . '/index.php';
 
@@ -24,21 +24,21 @@ $modx = \MODX\Revolution\modX::getInstance(
     ]
 );
 
-// Инициализация MiniShop3 для регистрации сервисов
+// Initialize MiniShop3 to register services
 $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
 
-// Количество товаров (по умолчанию 100)
+// Product count (default 100)
 $count = isset($argv[1]) ? (int)$argv[1] : 100;
 
 echo "\n";
 echo "===========================================\n";
-echo sprintf("  Seeding Products (Товары): %d\n", $count);
+echo sprintf("  Seeding Products: %d\n", $count);
 echo "===========================================\n\n";
 
-// Получаем все категории
+// Get all categories
 $categories = $modx->getCollection(msCategory::class);
 if (empty($categories)) {
-    echo "  [ERROR] Категории не найдены! Сначала запустите seed-categories.php\n\n";
+    echo "  [ERROR] Categories not found! Run seed-categories.php first\n\n";
     exit(1);
 }
 
@@ -46,12 +46,12 @@ $categoryIds = [];
 foreach ($categories as $category) {
     $categoryIds[] = $category->id;
 }
-echo "  [INFO] Найдено категорий: " . count($categoryIds) . "\n";
+echo "  [INFO] Found categories: " . count($categoryIds) . "\n";
 
-// Получаем всех производителей
+// Get all vendors
 $vendors = $modx->getCollection(msVendor::class);
 if (empty($vendors)) {
-    echo "  [ERROR] Производители не найдены! Сначала запустите seed-vendors.php\n\n";
+    echo "  [ERROR] Vendors not found! Run seed-vendors.php first\n\n";
     exit(1);
 }
 
@@ -61,33 +61,33 @@ foreach ($vendors as $vendor) {
     $vendorIds[] = $vendor->id;
     $vendorNames[$vendor->id] = $vendor->name;
 }
-echo "  [INFO] Найдено производителей: " . count($vendorIds) . "\n\n";
+echo "  [INFO] Found vendors: " . count($vendorIds) . "\n\n";
 
-// Шаблоны названий товаров
+// Product name templates
 $productTemplates = [
-    'Смартфон %s %s %dGB',
-    'Ноутбук %s %s %d"',
-    'Планшет %s %s %dGB',
-    'Наушники %s %s',
-    'Часы %s %s',
-    'Клавиатура %s %s',
-    'Мышь %s %s',
-    'Монитор %s %s %d"',
-    'Колонка %s %s',
-    'Зарядка %s %s',
+    'Smartphone %s %s %dGB',
+    'Laptop %s %s %d"',
+    'Tablet %s %s %dGB',
+    'Headphones %s %s',
+    'Watch %s %s',
+    'Keyboard %s %s',
+    'Mouse %s %s',
+    'Monitor %s %s %d"',
+    'Speaker %s %s',
+    'Charger %s %s',
 ];
 
 $models = ['Pro', 'Max', 'Ultra', 'Lite', 'Plus', 'Mini', 'Air', 'Edge', 'Prime', 'Neo'];
-$colors = ['Черный', 'Белый', 'Серый', 'Синий', 'Красный', 'Золотой', 'Серебристый', 'Зеленый'];
+$colors = ['Black', 'White', 'Gray', 'Blue', 'Red', 'Gold', 'Silver', 'Green'];
 $sizes = ['S', 'M', 'L', 'XL', '42', '44', '46', '48'];
-$countries = ['Китай', 'США', 'Южная Корея', 'Япония', 'Тайвань', 'Вьетнам'];
+$countries = ['China', 'USA', 'South Korea', 'Japan', 'Taiwan', 'Vietnam'];
 
 $created = 0;
 $errors = 0;
 
 for ($i = 0; $i < $count; $i++) {
     try {
-        // Генерируем случайные данные
+        // Generate random data
         $vendorId = $vendorIds[array_rand($vendorIds)];
         $vendorName = $vendorNames[$vendorId];
         $categoryId = $categoryIds[array_rand($categoryIds)];
@@ -95,44 +95,44 @@ for ($i = 0; $i < $count; $i++) {
         $template = $productTemplates[array_rand($productTemplates)];
         $model = $models[array_rand($models)];
 
-        // Генерируем название в зависимости от шаблона
+        // Generate title based on template
         if (strpos($template, '%d"') !== false) {
-            // Для мониторов и ноутбуков с диагональю
+            // For monitors and laptops with screen size
             $pagetitle = sprintf($template, $vendorName, $model, rand(13, 32));
         } elseif (strpos($template, '%dGB') !== false) {
-            // Для устройств с памятью
+            // For devices with memory
             $pagetitle = sprintf($template, $vendorName, $model, rand(64, 512));
         } else {
-            // Для остальных товаров
+            // For other products
             $pagetitle = sprintf($template, $vendorName, $model);
         }
 
-        // Генерируем alias
+        // Generate alias
         $alias = strtolower(str_replace(' ', '-', transliterate($pagetitle)));
 
-        // Проверяем уникальность alias
+        // Check alias uniqueness
         $existing = $modx->getObject(msProduct::class, ['alias' => $alias]);
         if ($existing) {
             $alias .= '-' . time() . '-' . rand(100, 999);
         }
 
-        // Случайные цены и флаги
+        // Random prices and flags
         $price = rand(5000, 150000);
-        $hasDiscount = rand(0, 100) < 30; // 30% товаров со скидкой
+        $hasDiscount = rand(0, 100) < 30; // 30% of products with discount
         $oldPrice = $hasDiscount ? $price + rand(1000, 20000) : 0;
         $isNew = rand(0, 100) < 20 ? 1 : 0;
         $isPopular = rand(0, 100) < 15 ? 1 : 0;
         $isFavorite = rand(0, 100) < 10 ? 1 : 0;
 
-        // Создаем товар (msProduct extends modResource)
-        // xPDO автоматически сохранит данные в обе таблицы по class_key
+        // Create product (msProduct extends modResource)
+        // xPDO will automatically save data to both tables by class_key
         $product = $modx->newObject(msProduct::class);
         $product->fromArray([
-            // Поля modResource (modx_site_content)
+            // modResource fields (modx_site_content)
             'pagetitle' => $pagetitle,
             'alias' => $alias,
-            'description' => 'Описание товара ' . $pagetitle,
-            'introtext' => 'Краткое описание товара ' . $pagetitle,
+            'description' => 'Product description ' . $pagetitle,
+            'introtext' => 'Short product description ' . $pagetitle,
             'parent' => $categoryId,
             'published' => 1,
             'hidemenu' => 0,
@@ -146,8 +146,8 @@ for ($i = 0; $i < $count; $i++) {
             'deleted' => 0,
             'menuindex' => $i,
 
-            // Поля msProductData (ms3_products)
-            'article' => 'ART-' . rand(100000, 999999), // Временный, обновим после сохранения
+            // msProductData fields (ms3_products)
+            'article' => 'ART-' . rand(100000, 999999), // Temporary, will update after save
             'price' => $price,
             'old_price' => $oldPrice,
             'stock' => rand(0, 100),
@@ -157,16 +157,16 @@ for ($i = 0; $i < $count; $i++) {
             'new' => $isNew,
             'popular' => $isPopular,
             'favorite' => $isFavorite,
-            'tags' => ['товар', 'новинка', $vendorName], // Массив → JSON → ms3_product_options
-            'color' => array_slice($colors, 0, rand(2, 5)), // Массив → JSON → ms3_product_options
-            'size' => array_slice($sizes, 0, rand(2, 4)), // Массив → JSON → ms3_product_options
+            'tags' => ['product', 'new', $vendorName], // Array → JSON → ms3_product_options
+            'color' => array_slice($colors, 0, rand(2, 5)), // Array → JSON → ms3_product_options
+            'size' => array_slice($sizes, 0, rand(2, 4)), // Array → JSON → ms3_product_options
             'source_id' => 1,
             'image' => '',
             'thumb' => '',
         ]);
 
         if ($product->save()) {
-            // Обновляем артикул с правильным ID
+            // Update article with correct ID
             $product->set('article', 'ART-' . str_pad($product->id, 6, '0', STR_PAD_LEFT));
             $product->save();
 
@@ -191,24 +191,24 @@ for ($i = 0; $i < $count; $i++) {
             );
         } else {
             $errors++;
-            echo "  [ERROR] [$pagetitle] Ошибка сохранения Product\n";
+            echo "  [ERROR] [$pagetitle] Product save error\n";
         }
     } catch (Exception $e) {
         $errors++;
-        echo "  [ERROR] Исключение: " . $e->getMessage() . "\n";
+        echo "  [ERROR] Exception: " . $e->getMessage() . "\n";
     }
 }
 
 echo "\n";
 echo "-------------------------------------------\n";
-echo "  Результаты:\n";
+echo "  Results:\n";
 echo "-------------------------------------------\n";
-echo sprintf("  Создано:    %d\n", $created);
-echo sprintf("  Ошибок:     %d\n", $errors);
+echo sprintf("  Created:    %d\n", $created);
+echo sprintf("  Errors:     %d\n", $errors);
 echo "-------------------------------------------\n";
 echo "\n";
 
-// Вспомогательная функция транслитерации
+// Helper function for transliteration
 function transliterate($string) {
     $converter = [
         'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd',

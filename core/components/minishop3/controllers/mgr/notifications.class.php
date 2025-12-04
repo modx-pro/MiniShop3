@@ -33,12 +33,9 @@ class MiniShop3MgrNotificationsManagerController extends msManagerController
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
 
-        // Wrapper для монтирования Vue вместо ExtJS
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/notifications/notifications.wrapper.js');
 
         $config = $this->ms3->config;
-
-        // ВАЖНО: Сначала конфигурация, потом Vue модули
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
         $this->addHtml(

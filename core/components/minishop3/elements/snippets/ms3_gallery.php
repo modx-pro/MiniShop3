@@ -19,7 +19,7 @@
     $extensionsDir = $modx->getOption('extensionsDir', $scriptProperties, 'components/minishop3/img/mgr/extensions/', true);
     $limit = $modx->getOption('limit', $scriptProperties, 0);
     $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGallery');
-    $thumbnailsFilter = $modx->getOption('thumbnails', $scriptProperties, ''); // Фильтр размеров: "thumb,small" или пусто = все
+    $thumbnailsFilter = $modx->getOption('thumbnails', $scriptProperties, '');
 
     /** @var msProduct $product */
     $product = !empty($product) && $product != $modx->resource->id
@@ -69,7 +69,6 @@
         'return' => 'data',
         'nestedChunkPrefix' => 'minishop3_',
     ];
-    // Сохраняем тип возврата перед слиянием
     $returnType = !empty($scriptProperties['return']) ? $scriptProperties['return'] : 'data';
     if ($returnType === 'tpl') {
         unset($scriptProperties['return']);
@@ -85,7 +84,6 @@
     $resolution = [];
     /** @var msProductData $data */
     if ($data = $product->getOne('Data')) {
-        // Используем ProductImageService для инициализации Media Source
         /** @var \MiniShop3\Services\Product\ProductImageService $imageService */
         $imageService = $modx->services->get('ms3_product_image');
         if ($imageService && $source = $imageService->initializeMediaSource($data, $modx->context->key)) {
@@ -93,19 +91,15 @@
             if (isset($properties['thumbnails']['value'])) {
                 $fileTypes = json_decode($properties['thumbnails']['value'], true);
                 foreach ($fileTypes as $k => $v) {
-                    // Новый формат (Intervention Image): используем ключ как название
                     if (!is_numeric($k)) {
                         $resolution[] = $k;
                     }
-                    // Старый формат с именем
                     elseif (!empty($v['name'])) {
                         $resolution[] = $v['name'];
                     }
-                    // Новый Intervention Image формат (width/height)
                     elseif (isset($v['width']) || isset($v['height'])) {
                         $resolution[] = ($v['width'] ?? 0) . 'x' . ($v['height'] ?? 0);
                     }
-                    // Старый phpThumb формат (w/h) - для обратной совместимости
                     elseif (isset($v['w']) || isset($v['h'])) {
                         $resolution[] = ($v['w'] ?? 0) . 'x' . ($v['h'] ?? 0);
                     }
@@ -114,7 +108,6 @@
         }
     }
 
-    // Предзагружаем thumbnails одним запросом (оптимизация N+1 problem)
     $imageIds = [];
     foreach ($rows as $row) {
         if (isset($row['type']) && $row['type'] == 'image') {
@@ -122,7 +115,6 @@
         }
     }
 
-    // Парсим фильтр размеров thumbnails
     $requestedSizes = [];
     if (!empty($thumbnailsFilter)) {
         $requestedSizes = array_map('trim', explode(',', $thumbnailsFilter));
@@ -140,9 +132,8 @@
                 if (preg_match("#/{$thumb['product_id']}/(.*?)/#", $thumb['url'], $size)) {
                     $thumbSize = $size[1];
 
-                    // Если указан фильтр размеров, проверяем соответствие
                     if (!empty($requestedSizes) && !in_array($thumbSize, $requestedSizes)) {
-                        continue; // Пропускаем не нужные размеры
+                        continue;
                     }
 
                     if (!isset($thumbnails[$thumb['parent_id']])) {
@@ -155,11 +146,9 @@
     }
     $pdoFetch->addTime('Thumbnails loaded');
 
-    // Processing rows
     $files = [];
     foreach ($rows as $row) {
         if (isset($row['type']) && $row['type'] == 'image') {
-            // Применяем предзагруженные thumbnails
             if (isset($thumbnails[$row['id']])) {
                 $row = array_merge($row, $thumbnails[$row['id']]);
             }

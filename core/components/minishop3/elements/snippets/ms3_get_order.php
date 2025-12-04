@@ -25,7 +25,6 @@ $pdoFetch->addTime('pdoTools loaded.');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGetOrder');
 
-// Получить ID или UUID заказа из параметров или GET
 $orderIdentifier = $scriptProperties['id'] ?? $_GET['msorder'] ?? null;
 
 if (empty($orderIdentifier)) {
@@ -34,7 +33,6 @@ if (empty($orderIdentifier)) {
 }
 
 /** @var msOrder $msOrder */
-// Если это UUID (36 символов) - ищем по uuid, иначе по id
 if (is_string($orderIdentifier) && strlen($orderIdentifier) === 36) {
     $msOrder = $modx->getObject(msOrder::class, ['uuid' => $orderIdentifier]);
     $id = $msOrder ? $msOrder->get('id') : 0;
@@ -59,8 +57,6 @@ if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
     }
 }
 
-// Проверка прав доступа
-// UUID обеспечивает безопасность - знание UUID = доступ к заказу
 $isUuidAccess = is_string($orderIdentifier) && strlen($orderIdentifier) === 36;
 
 $canView = (
@@ -68,7 +64,7 @@ $canView = (
     || $msOrder->get('user_id') == $modx->user->id
     || !empty($customerId) && $msOrder->get('customer_id') == $customerId
     || $modx->user->hasSessionContext('mgr')
-    || $isUuidAccess;  // UUID доступ всегда разрешен
+    || $isUuidAccess;
 
 if (!$canView) {
     $modx->log(modX::LOG_LEVEL_WARN, "[msGetOrder] Access denied for order {$id}");
@@ -96,8 +92,6 @@ $leftJoin = [
     ],
 ];
 
-// Select columns
-//TODO Поля вендор сделать выборочными
 $select = [
     'msProduct' => !empty($includeContent)
         ? $modx->getSelectColumns(msProduct::class, 'msProduct')
@@ -199,23 +193,20 @@ foreach ($rows as $product) {
         $product['pagetitle'] = $product['name'];
     }
 
-    // Additional properties of product
     if (!empty($product['options']) && is_array($product['options'])) {
         foreach ($product['options'] as $option => $value) {
             $product['option.' . $option] = $value;
         }
     }
 
-    // Add option values
     try {
         $options = $modx->call(msProductOption::class, 'loadOptions', [$modx, $product['product_id']]);
         $products[] = array_merge($product, $options);
     } catch (\Exception $e) {
         $modx->log(modX::LOG_LEVEL_WARN, '[msGetOrder] Error loading options for product ' . $product['product_id'] . ': ' . $e->getMessage());
-        $products[] = $product;  // Добавляем товар без опций
+        $products[] = $product;
     }
 
-    // Count total
     $cart_count += $product['count'];
     $cart_discount_cost += $product['count'] * $discount_price;
 }
@@ -251,9 +242,7 @@ try {
     return $modx->lexicon('ms3_err_order_load');
 }
 
-// Add "payment" link for unpaid orders
 if ($payment && $class = $payment->get('class')) {
-    // Статусы заказов, для которых показывать кнопку оплаты (по умолчанию: 1 - Новый)
     $payStatuses = $modx->getOption('payStatus', $scriptProperties, '1');
     $payStatuses = array_map('trim', explode(',', $payStatuses));
 
@@ -263,7 +252,6 @@ if ($payment && $class = $payment->get('class')) {
                 /** @var \MiniShop3\Controllers\Payment\Payment $paymentHandler */
                 $paymentHandler = new $class($ms3, []);
 
-                // Получаем ссылку на оплату через новый метод
                 $link = $paymentHandler->getPaymentLink($msOrder);
 
                 if ($link) {

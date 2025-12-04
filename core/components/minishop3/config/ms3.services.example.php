@@ -1,56 +1,56 @@
 <?php
 /**
- * Пример пользовательского конфига для переопределения сервисов MiniShop3
+ * Example custom configuration for overriding MiniShop3 services
  *
- * ИНСТРУКЦИЯ ПО ИСПОЛЬЗОВАНИЮ:
+ * USAGE INSTRUCTIONS:
  * =============================
  *
- * 1. Скопируйте этот файл в core/config/ms3.services.php
- *    (или любое другое место, указанное в системной настройке ms3_services_config)
+ * 1. Copy this file to core/config/ms3.services.php
+ *    (or any other location specified in the ms3_services_config system setting)
  *
- * 2. Раскомментируйте и настройте только те сервисы, которые хотите переопределить
+ * 2. Uncomment and configure only the services you want to override
  *
- * 3. Убедитесь что ваши классы:
- *    - Существуют и доступны через автозагрузчик
- *    - Наследуются от базовых классов MiniShop3
- *    - Реализуют требуемые интерфейсы (если есть)
+ * 3. Make sure your classes:
+ *    - Exist and are accessible via autoloader
+ *    - Extend base MiniShop3 classes
+ *    - Implement required interfaces (if any)
  *
- * 4. При ошибках валидации будет использован дефолтный класс + запись в лог
+ * 4. On validation errors, the default class will be used + log entry
  *
- * ВАЖНО:
- * - Не изменяйте этот файл напрямую! Используйте копию в core/config/
- * - Переопределяйте только нужные сервисы, остальные будут дефолтными
- * - Ваши классы должны быть совместимы с интерфейсом базовых классов
+ * IMPORTANT:
+ * - Do not modify this file directly! Use a copy in core/config/
+ * - Override only needed services, others will use defaults
+ * - Your classes must be compatible with base class interfaces
  *
- * АРХИТЕКТУРА ДЛЯ АДДОНОВ:
- * - Если вы разрабатываете аддон для MiniShop3, используйте директорию core/config/ms3.services.d/
- * - Создайте там файл с именем вашего аддона: mycartaddon.php
- * - Файлы загружаются в алфавитном порядке, что позволяет управлять приоритетами
+ * ADDON ARCHITECTURE:
+ * - If you are developing an addon for MiniShop3, use the core/config/ms3.services.d/ directory
+ * - Create a file there with your addon name: mycartaddon.php
+ * - Files are loaded in alphabetical order, allowing priority management
  *
  * =============================
  */
 
 return [
     // =========================================================================
-    // ПРИМЕРЫ ПЕРЕОПРЕДЕЛЕНИЯ СЕРВИСОВ
+    // SERVICE OVERRIDE EXAMPLES
     // =========================================================================
 
     /**
-     * Пример 1: Подмена класса корзины (Cart Controller)
+     * Example 1: Override Cart Controller
      *
-     * ВАЖНО: Это НЕ сервис, а контроллер корзины!
-     * Базовый класс: \MiniShop3\Controllers\Cart\Cart
+     * IMPORTANT: This is NOT a service, but a cart controller!
+     * Base class: \MiniShop3\Controllers\Cart\Cart
      *
-     * Используйте для реализации кастомной логики корзины:
-     * - Акционные цены и скидки
-     * - Особые правила расчёта стоимости
-     * - Кастомная валидация товаров
-     * - Проверка остатков на складе
-     * - Минимальная/максимальная сумма заказа
+     * Use for implementing custom cart logic:
+     * - Promotional prices and discounts
+     * - Special cost calculation rules
+     * - Custom product validation
+     * - Stock availability checks
+     * - Minimum/maximum order amount
      *
-     * Доступ: $ms3->cart или $modx->services->get('ms3_cart')
+     * Access: $ms3->cart or $modx->services->get('ms3_cart')
      *
-     * Пример см. в: core/components/minishop3/src/Controllers/Cart/PromoCart.php
+     * Example: core/components/minishop3/src/Controllers/Cart/PromoCart.php
      */
     // 'ms3_cart' => [
     //     'class' => \MyProject\Controllers\CustomCart::class,
@@ -58,19 +58,19 @@ return [
     // ],
 
     /**
-     * Пример 2: Подмена класса заказа (Order Controller)
+     * Example 2: Override Order Controller
      *
-     * ВАЖНО: Это НЕ сервис, а контроллер заказа!
-     * Базовый класс: \MiniShop3\Controllers\Order\Order
+     * IMPORTANT: This is NOT a service, but an order controller!
+     * Base class: \MiniShop3\Controllers\Order\Order
      *
-     * Используйте для:
-     * - Кастомных workflow обработки заказов
-     * - Интеграции с CRM/ERP системами
-     * - Особых бизнес-правил оформления заказов
-     * - Дополнительной валидации полей заказа
-     * - Автоматической обработки после оформления
+     * Use for:
+     * - Custom order processing workflows
+     * - CRM/ERP system integration
+     * - Special order business rules
+     * - Additional order field validation
+     * - Automated post-order processing
      *
-     * Доступ: $ms3->order или $modx->services->get('ms3_order')
+     * Access: $ms3->order or $modx->services->get('ms3_order')
      */
     // 'ms3_order' => [
     //     'class' => \MyProject\Controllers\CustomOrder::class,
@@ -78,16 +78,16 @@ return [
     // ],
 
     /**
-     * Пример 3: Подмена класса покупателя (Customer Controller)
+     * Example 3: Override Customer Controller
      *
-     * Базовый класс: \MiniShop3\Controllers\Customer\Customer
+     * Base class: \MiniShop3\Controllers\Customer\Customer
      *
-     * Используйте для:
-     * - Интеграции с системами лояльности
-     * - Дополнительной валидации данных покупателя
-     * - Особых правил регистрации/авторизации
+     * Use for:
+     * - Loyalty system integration
+     * - Additional customer data validation
+     * - Special registration/authentication rules
      *
-     * Доступ: $ms3->customer или $modx->services->get('ms3_customer')
+     * Access: $ms3->customer or $modx->services->get('ms3_customer')
      */
     // 'ms3_customer' => [
     //     'class' => \MyProject\Controllers\CustomCustomer::class,
@@ -95,14 +95,14 @@ return [
     // ],
 
     /**
-     * Пример 4: Подмена сервиса заказов (Order Service)
+     * Example 4: Override Order Service
      *
-     * ВАЖНО: Это сервис, а не контроллер!
-     * Используется для бизнес-логики работы с заказами.
+     * IMPORTANT: This is a service, not a controller!
+     * Used for order business logic.
      *
-     * Используйте для:
-     * - Кастомных операций с заказами
-     * - Интеграции с внешними системами
+     * Use for:
+     * - Custom order operations
+     * - External system integration
      */
     // 'ms3_order_service' => [
     //     'class' => \MyProject\Services\CustomOrderService::class,
@@ -110,12 +110,12 @@ return [
     // ],
 
     /**
-     * Пример 5: Подмена сервиса доставки
+     * Example 5: Override Delivery Service
      *
-     * Используйте для:
-     * - Интеграции с внешними службами доставки
-     * - Особых алгоритмов расчёта стоимости
-     * - Кастомной валидации адресов доставки
+     * Use for:
+     * - External delivery service integration
+     * - Special cost calculation algorithms
+     * - Custom delivery address validation
      */
     // 'ms3_delivery_service' => [
     //     'class' => \MyProject\Services\CustomDeliveryService::class,
@@ -123,12 +123,12 @@ return [
     // ],
 
     /**
-     * Пример 5: Подмена сервиса оплаты
+     * Example 6: Override Payment Service
      *
-     * Используйте для:
-     * - Добавления нестандартных платёжных провайдеров
-     * - Кастомной логики обработки платежей
-     * - Особых правил валидации платёжных данных
+     * Use for:
+     * - Adding custom payment providers
+     * - Custom payment processing logic
+     * - Special payment data validation rules
      */
     // 'ms3_payment_service' => [
     //     'class' => \MyProject\Services\CustomPaymentService::class,
@@ -136,12 +136,12 @@ return [
     // ],
 
     /**
-     * Пример 6: Подмена сервиса работы с данными товаров
+     * Example 7: Override Product Data Service
      *
-     * Используйте для:
-     * - Кастомной обработки опций товаров
-     * - Интеграции с внешними каталогами
-     * - Особых правил валидации данных
+     * Use for:
+     * - Custom product options processing
+     * - External catalog integration
+     * - Special data validation rules
      */
     // 'ms3_product_data_service' => [
     //     'class' => \MyProject\Services\CustomProductDataService::class,
@@ -149,77 +149,77 @@ return [
     // ],
 
     /**
-     * Пример 7: Подмена сервиса изображений
+     * Example 8: Override Product Image Service
      *
-     * Используйте для:
-     * - Кастомных алгоритмов обработки изображений
-     * - Интеграции с CDN или внешним хранилищем
-     * - Особых настроек водяных знаков
+     * Use for:
+     * - Custom image processing algorithms
+     * - CDN or external storage integration
+     * - Special watermark settings
      */
     // 'ms3_product_image' => [
     //     'class' => \MyProject\Services\CustomProductImageService::class,
     // ],
 
     // =========================================================================
-    // ПОЛНЫЙ СПИСОК ДОСТУПНЫХ СЕРВИСОВ
+    // COMPLETE LIST OF AVAILABLE SERVICES
     // =========================================================================
 
     /*
-     * Конфигурация:
+     * Configuration:
      * -------------
-     * 'ms3_config_manager'          - Менеджер конфигураций
-     * 'ms3_field_config_manager'    - Менеджер конфигураций полей
-     * 'ms3_config_service'          - Фасад над конфиг-менеджерами
+     * 'ms3_config_manager'          - Configuration manager
+     * 'ms3_field_config_manager'    - Field configuration manager
+     * 'ms3_config_service'          - Facade over config managers
      *
-     * Товары:
+     * Products:
      * -------
-     * 'ms3_product_data_service'    - Работа с данными товаров
-     * 'ms3_product_image'           - Обработка изображений товаров
+     * 'ms3_product_data_service'    - Product data operations
+     * 'ms3_product_image'           - Product image processing
      *
-     * Поставщики:
+     * Vendors:
      * -----------
-     * 'ms3_vendor_service'          - Работа с производителями
+     * 'ms3_vendor_service'          - Vendor operations
      *
-     * Доставка и оплата:
+     * Delivery and Payment:
      * ------------------
-     * 'ms3_delivery_service'        - Сервис доставки
-     * 'ms3_payment_service'         - Сервис оплаты
+     * 'ms3_delivery_service'        - Delivery service
+     * 'ms3_payment_service'         - Payment service
      *
-     * Заказы:
+     * Orders:
      * -------
-     * 'ms3_order_service'           - Работа с заказами
+     * 'ms3_order_service'           - Order operations
      *
-     * Категории:
+     * Categories:
      * ----------
-     * 'ms3_category_service'        - Работа с категориями
-     * 'ms3_category_option_service' - Опции категорий
+     * 'ms3_category_service'        - Category operations
+     * 'ms3_category_option_service' - Category options
      *
-     * Опции товаров:
+     * Product Options:
      * --------------
-     * 'ms3_option_service'          - EAV система опций
+     * 'ms3_option_service'          - EAV options system
      *
-     * Утилиты:
+     * Utilities:
      * --------
-     * 'ms3_token_service'           - Работа с токенами
-     * 'ms3_image'                   - Обработка изображений (Intervention Image)
+     * 'ms3_token_service'           - Token operations
+     * 'ms3_image'                   - Image processing (Intervention Image)
      */
 
     // =========================================================================
-    // ПРИМЕР РЕАЛЬНОГО КОНФИГА ДЛЯ ПРОЕКТА
+    // REAL PROJECT CONFIG EXAMPLE
     // =========================================================================
 
     /*
-    // Реальный пример для интеграции с внешней CRM:
+    // Real example for external CRM integration:
     'ms3_order_service' => [
         'class' => \MyCompany\Integration\CRMOrderService::class,
     ],
 
-    // Кастомная обработка корзины с промо-кодами:
+    // Custom cart processing with promo codes:
     'ms3_cart' => [
         'class' => \MyCompany\Cart\PromoCodeCart::class,
     ],
 
-    // Интеграция с СДЭК для доставки:
+    // CDEK delivery integration:
     'ms3_delivery_service' => [
         'class' => \MyCompany\Delivery\CdekDeliveryService::class,
     ],

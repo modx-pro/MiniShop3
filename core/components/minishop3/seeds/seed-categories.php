@@ -1,15 +1,15 @@
 <?php
 /**
- * Seeder для создания тестовых категорий (Categories)
+ * Seeder for creating test categories
  *
- * Создает 20 категорий с уровнем вложенности 0-3
+ * Creates 20 categories with nesting level 0-3
  *
- * Запуск: php _build/seeders/seed-categories.php
+ * Usage: php _build/seeders/seed-categories.php
  */
 
 use MiniShop3\Model\msCategory;
 
-// Подключаем MODX в CLI режиме
+// Initialize MODX in CLI mode
 define('MODX_API_MODE', true);
 require_once dirname(__DIR__, 4) . '/index.php';
 
@@ -22,52 +22,52 @@ $modx = \MODX\Revolution\modX::getInstance(
 
 echo "\n";
 echo "===========================================\n";
-echo "  Seeding Categories (Категории)\n";
+echo "  Seeding Categories\n";
 echo "===========================================\n\n";
 
-// Иерархическая структура категорий
-// parent => 0 означает корневую категорию
+// Hierarchical category structure
+// parent => 0 means root category
 $categoriesTree = [
-    // Уровень 0 (корневые категории)
-    ['pagetitle' => 'Электроника', 'parent' => 0, 'alias' => 'electronics', 'description' => 'Электроника и техника'],
-    ['pagetitle' => 'Одежда и обувь', 'parent' => 0, 'alias' => 'clothing', 'description' => 'Одежда, обувь и аксессуары'],
-    ['pagetitle' => 'Дом и сад', 'parent' => 0, 'alias' => 'home-garden', 'description' => 'Товары для дома и сада'],
-    ['pagetitle' => 'Спорт и отдых', 'parent' => 0, 'alias' => 'sport', 'description' => 'Спортивные товары'],
+    // Level 0 (root categories)
+    ['pagetitle' => 'Electronics', 'parent' => 0, 'alias' => 'electronics', 'description' => 'Electronics and gadgets'],
+    ['pagetitle' => 'Clothing & Shoes', 'parent' => 0, 'alias' => 'clothing', 'description' => 'Clothing, shoes and accessories'],
+    ['pagetitle' => 'Home & Garden', 'parent' => 0, 'alias' => 'home-garden', 'description' => 'Home and garden products'],
+    ['pagetitle' => 'Sports & Recreation', 'parent' => 0, 'alias' => 'sport', 'description' => 'Sports goods'],
 
-    // Уровень 1 (дочерние для "Электроника")
-    ['pagetitle' => 'Смартфоны', 'parent' => 'electronics', 'alias' => 'smartphones', 'description' => 'Мобильные телефоны и смартфоны'],
-    ['pagetitle' => 'Ноутбуки', 'parent' => 'electronics', 'alias' => 'laptops', 'description' => 'Ноутбуки и ультрабуки'],
-    ['pagetitle' => 'Планшеты', 'parent' => 'electronics', 'alias' => 'tablets', 'description' => 'Планшетные компьютеры'],
-    ['pagetitle' => 'Аудио', 'parent' => 'electronics', 'alias' => 'audio', 'description' => 'Наушники, колонки, аудиосистемы'],
+    // Level 1 (children of "Electronics")
+    ['pagetitle' => 'Smartphones', 'parent' => 'electronics', 'alias' => 'smartphones', 'description' => 'Mobile phones and smartphones'],
+    ['pagetitle' => 'Laptops', 'parent' => 'electronics', 'alias' => 'laptops', 'description' => 'Laptops and ultrabooks'],
+    ['pagetitle' => 'Tablets', 'parent' => 'electronics', 'alias' => 'tablets', 'description' => 'Tablet computers'],
+    ['pagetitle' => 'Audio', 'parent' => 'electronics', 'alias' => 'audio', 'description' => 'Headphones, speakers, audio systems'],
 
-    // Уровень 2 (дочерние для "Смартфоны")
-    ['pagetitle' => 'Android', 'parent' => 'smartphones', 'alias' => 'android-phones', 'description' => 'Смартфоны на Android'],
+    // Level 2 (children of "Smartphones")
+    ['pagetitle' => 'Android', 'parent' => 'smartphones', 'alias' => 'android-phones', 'description' => 'Android smartphones'],
     ['pagetitle' => 'iPhone', 'parent' => 'smartphones', 'alias' => 'iphones', 'description' => 'Apple iPhone'],
-    ['pagetitle' => 'Аксессуары', 'parent' => 'smartphones', 'alias' => 'phone-accessories', 'description' => 'Чехлы, защитные стекла, зарядки'],
+    ['pagetitle' => 'Accessories', 'parent' => 'smartphones', 'alias' => 'phone-accessories', 'description' => 'Cases, screen protectors, chargers'],
 
-    // Уровень 1 (дочерние для "Одежда и обувь")
-    ['pagetitle' => 'Мужская одежда', 'parent' => 'clothing', 'alias' => 'mens-clothing', 'description' => 'Одежда для мужчин'],
-    ['pagetitle' => 'Женская одежда', 'parent' => 'clothing', 'alias' => 'womens-clothing', 'description' => 'Одежда для женщин'],
-    ['pagetitle' => 'Обувь', 'parent' => 'clothing', 'alias' => 'shoes', 'description' => 'Обувь для всей семьи'],
+    // Level 1 (children of "Clothing & Shoes")
+    ['pagetitle' => 'Men\'s Clothing', 'parent' => 'clothing', 'alias' => 'mens-clothing', 'description' => 'Clothing for men'],
+    ['pagetitle' => 'Women\'s Clothing', 'parent' => 'clothing', 'alias' => 'womens-clothing', 'description' => 'Clothing for women'],
+    ['pagetitle' => 'Shoes', 'parent' => 'clothing', 'alias' => 'shoes', 'description' => 'Shoes for the whole family'],
 
-    // Уровень 2 (дочерние для "Мужская одежда")
-    ['pagetitle' => 'Рубашки', 'parent' => 'mens-clothing', 'alias' => 'shirts', 'description' => 'Мужские рубашки'],
-    ['pagetitle' => 'Брюки', 'parent' => 'mens-clothing', 'alias' => 'pants', 'description' => 'Мужские брюки'],
+    // Level 2 (children of "Men's Clothing")
+    ['pagetitle' => 'Shirts', 'parent' => 'mens-clothing', 'alias' => 'shirts', 'description' => 'Men\'s shirts'],
+    ['pagetitle' => 'Pants', 'parent' => 'mens-clothing', 'alias' => 'pants', 'description' => 'Men\'s pants'],
 
-    // Уровень 1 (дочерние для "Дом и сад")
-    ['pagetitle' => 'Мебель', 'parent' => 'home-garden', 'alias' => 'furniture', 'description' => 'Мебель для дома'],
-    ['pagetitle' => 'Освещение', 'parent' => 'home-garden', 'alias' => 'lighting', 'description' => 'Светильники и лампы'],
+    // Level 1 (children of "Home & Garden")
+    ['pagetitle' => 'Furniture', 'parent' => 'home-garden', 'alias' => 'furniture', 'description' => 'Home furniture'],
+    ['pagetitle' => 'Lighting', 'parent' => 'home-garden', 'alias' => 'lighting', 'description' => 'Lamps and lights'],
 
-    // Уровень 1 (дочерние для "Спорт и отдых")
-    ['pagetitle' => 'Фитнес', 'parent' => 'sport', 'alias' => 'fitness', 'description' => 'Товары для фитнеса'],
-    ['pagetitle' => 'Туризм', 'parent' => 'sport', 'alias' => 'tourism', 'description' => 'Товары для туризма и кемпинга'],
+    // Level 1 (children of "Sports & Recreation")
+    ['pagetitle' => 'Fitness', 'parent' => 'sport', 'alias' => 'fitness', 'description' => 'Fitness products'],
+    ['pagetitle' => 'Tourism', 'parent' => 'sport', 'alias' => 'tourism', 'description' => 'Tourism and camping products'],
 ];
 
 $created = 0;
 $errors = 0;
 $categoryMap = []; // alias => id
 
-// Функция для получения ID категории по alias
+// Function to get category ID by alias
 function getCategoryId($modx, $alias, &$categoryMap) {
     if (isset($categoryMap[$alias])) {
         return $categoryMap[$alias];
@@ -82,7 +82,7 @@ function getCategoryId($modx, $alias, &$categoryMap) {
     return 0;
 }
 
-// Функция для определения уровня вложенности
+// Function to determine nesting level
 function getCategoryLevel($parent) {
     if ($parent === 0 || $parent === '0') return 0;
 
@@ -114,24 +114,24 @@ function getCategoryLevel($parent) {
 
 foreach ($categoriesTree as $i => $catData) {
     try {
-        // Проверяем, существует ли уже категория
+        // Check if category already exists
         $existing = $modx->getObject(msCategory::class, ['alias' => $catData['alias']]);
         if ($existing) {
             $categoryMap[$catData['alias']] = $existing->id;
-            echo "  [SKIP] [{$catData['pagetitle']}] уже существует (ID: {$existing->id})\n";
+            echo "  [SKIP] [{$catData['pagetitle']}] already exists (ID: {$existing->id})\n";
             continue;
         }
 
-        // Определяем parent_id
+        // Determine parent_id
         $parentId = 0;
         if ($catData['parent'] !== 0) {
             $parentId = getCategoryId($modx, $catData['parent'], $categoryMap);
             if ($parentId === 0) {
-                echo "  [WARN] [{$catData['pagetitle']}] родительская категория '{$catData['parent']}' не найдена, используем parent=0\n";
+                echo "  [WARN] [{$catData['pagetitle']}] parent category '{$catData['parent']}' not found, using parent=0\n";
             }
         }
 
-        // Создаем категорию
+        // Create category
         $category = $modx->newObject(msCategory::class);
         $category->fromArray([
             'pagetitle' => $catData['pagetitle'],
@@ -170,21 +170,21 @@ foreach ($categoriesTree as $i => $catData) {
             );
         } else {
             $errors++;
-            echo "  [ERROR] [{$catData['pagetitle']}] Ошибка сохранения\n";
+            echo "  [ERROR] [{$catData['pagetitle']}] Save error\n";
         }
     } catch (Exception $e) {
         $errors++;
-        echo "  [ERROR] [{$catData['pagetitle']}] Исключение: " . $e->getMessage() . "\n";
+        echo "  [ERROR] [{$catData['pagetitle']}] Exception: " . $e->getMessage() . "\n";
     }
 }
 
 echo "\n";
 echo "-------------------------------------------\n";
-echo "  Результаты:\n";
+echo "  Results:\n";
 echo "-------------------------------------------\n";
-echo sprintf("  Создано:    %d\n", $created);
-echo sprintf("  Пропущено:  %d\n", count($categoriesTree) - $created - $errors);
-echo sprintf("  Ошибок:     %d\n", $errors);
+echo sprintf("  Created:    %d\n", $created);
+echo sprintf("  Skipped:    %d\n", count($categoriesTree) - $created - $errors);
+echo sprintf("  Errors:     %d\n", $errors);
 echo "-------------------------------------------\n";
 echo "\n";
 
