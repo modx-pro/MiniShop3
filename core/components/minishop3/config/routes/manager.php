@@ -328,6 +328,80 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'view_document')
     ]);
 
+    $router->group('/orders', function($router) use ($modx) {
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getList($allParams);
+        });
+        // Filters config - must be before /{id} route
+        $router->get('/filters', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getFilters($params);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            $allParams = array_merge($params, $body, $_POST);
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->update($allParams);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->delete($params);
+        });
+        $router->get('/{id}/products', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getProducts($params);
+        });
+        $router->get('/{id}/logs', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getLogs($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'msorder_list')
+    ]);
+
+    // Statuses, Deliveries, Payments for dropdowns
+    $router->get('/statuses', function($params) use ($modx) {
+        $results = [];
+        $collection = $modx->getIterator(\MiniShop3\Model\msOrderStatus::class);
+        foreach ($collection as $item) {
+            $data = $item->toArray();
+            if (str_starts_with($data['name'], 'ms3_order_status_')) {
+                $translated = $modx->lexicon($data['name']);
+                if ($translated !== $data['name']) {
+                    $data['name'] = $translated;
+                }
+            }
+            $results[] = $data;
+        }
+        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
+    });
+
+    $router->get('/deliveries', function($params) use ($modx) {
+        $results = [];
+        $collection = $modx->getIterator(\MiniShop3\Model\msDelivery::class, ['active' => 1]);
+        foreach ($collection as $item) {
+            $results[] = $item->toArray();
+        }
+        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
+    });
+
+    $router->get('/payments', function($params) use ($modx) {
+        $results = [];
+        $collection = $modx->getIterator(\MiniShop3\Model\msPayment::class, ['active' => 1]);
+        foreach ($collection as $item) {
+            $results[] = $item->toArray();
+        }
+        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
+    });
+
     $router->group('/grid-config', function($router) use ($modx) {
         $router->get('/{grid_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);

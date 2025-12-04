@@ -1,0 +1,9 @@
+# Custom filter configurations
+# Files in this directory will NOT be overwritten on component update
+#
+# To customize filters:
+# 1. Copy config/filters/{grid}.php to this directory
+# 2. Modify as needed
+# 3. Custom config will be merged with default (custom values override default)
+#
+# Example: custom/filters/orders.php
