@@ -58,6 +58,7 @@ const classOptions = computed(() => [
   { label: _('class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
   { label: _('class_vendor'), value: 'MiniShop3\\Model\\msVendor' },
   { label: _('class_order'), value: 'MiniShop3\\Model\\msOrder' },
+  { label: _('class_order_address'), value: 'MiniShop3\\Model\\msOrderAddress' },
   { label: _('class_category'), value: 'MiniShop3\\Model\\msCategory' }
 ])
 
@@ -344,6 +345,7 @@ function confirmDelete(field) {
   confirmInProgress = true
 
   confirm.require({
+    group: 'extra-fields',
     message: _('delete_confirm_message').replace('{0}', field.key),
     header: _('delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
@@ -428,7 +430,7 @@ onMounted(() => {
 <template>
   <div class="extra-fields-manager">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog group="extra-fields" />
 
     <Card>
       <template #title>

@@ -118,6 +118,12 @@ class FilterConfigManager
     /**
      * Resolve options from xPDO model
      *
+     * Optimized query:
+     * - SELECT only required fields (valueField, labelField)
+     * - WHERE conditions from config
+     * - ORDER BY from config
+     * - LIMIT protection against large tables
+     *
      * @param array $source Source configuration
      * @return array Options array
      */
@@ -131,16 +137,36 @@ class FilterConfigManager
 
         $valueField = $source['valueField'] ?? 'id';
         $labelField = $source['labelField'] ?? 'name';
+        $limit = $source['limit'] ?? 500;
 
         try {
-            $criteria = [];
+            $c = $this->modx->newQuery($class);
+
+            // SELECT only required fields
+            $c->select([
+                $this->modx->escape($valueField),
+                $this->modx->escape($labelField)
+            ]);
+
+            // WHERE conditions
             if (!empty($source['where'])) {
-                $criteria = $source['where'];
+                $c->where($source['where']);
             }
 
+            // ORDER BY
+            if (!empty($source['sort'])) {
+                foreach ($source['sort'] as $field => $dir) {
+                    $c->sortby($field, $dir);
+                }
+            }
+
+            // LIMIT protection
+            $c->limit($limit);
+
             $options = [];
-            foreach ($this->modx->getIterator($class, $criteria) as $item) {
+            foreach ($this->modx->getIterator($class, $c) as $item) {
                 $label = $item->get($labelField);
+
                 // Translate lexicon keys for status names
                 if (str_starts_with($label, 'ms3_')) {
                     $translated = $this->modx->lexicon($label);
@@ -148,6 +174,7 @@ class FilterConfigManager
                         $label = $translated;
                     }
                 }
+
                 $options[] = [
                     'value' => $item->get($valueField),
                     'label' => $label,

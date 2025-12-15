@@ -3,6 +3,8 @@
 namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msDelivery;
+use MiniShop3\Model\msExtraField;
+use MiniShop3\Model\msModelField;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderStatus;
@@ -26,6 +28,21 @@ class OrdersController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+
+        // Ensure extra fields are loaded into xPDO map
+        $this->loadExtraFieldsMap();
+    }
+
+    /**
+     * Load extra fields into xPDO map
+     * This ensures dynamic columns added via Object Extension are available
+     */
+    protected function loadExtraFieldsMap(): void
+    {
+        $ms3 = $this->modx->services->get('ms3');
+        if ($ms3) {
+            $ms3->loadMap();
+        }
     }
 
     /**
@@ -192,11 +209,28 @@ class OrdersController
         $data['delivery_name'] = $delivery ? $delivery->get('name') : '';
         $data['payment_name'] = $payment ? $payment->get('name') : '';
 
+        // Load extra fields for msOrder (stored as real DB columns)
+        $orderExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrder');
+        foreach ($orderExtraFields as $fieldKey) {
+            $data[$fieldKey] = $order->get($fieldKey);
+        }
+
+        // Load all address fields dynamically
         if ($address) {
-            $data['first_name'] = $address->get('first_name');
-            $data['last_name'] = $address->get('last_name');
-            $data['phone'] = $address->get('phone');
-            $data['email'] = $address->get('email');
+            $addressData = $address->toArray();
+            // Exclude system fields that should not be exposed
+            $excludeFields = ['id', 'order_id', 'createdon', 'updatedon'];
+            foreach ($addressData as $key => $value) {
+                if (!in_array($key, $excludeFields)) {
+                    $data[$key] = $value;
+                }
+            }
+
+            // Load extra fields for msOrderAddress (stored as real DB columns)
+            $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
+            foreach ($addressExtraFields as $fieldKey) {
+                $data[$fieldKey] = $address->get($fieldKey);
+            }
         }
 
         return Response::success($this->formatOrder($data))->getData();
@@ -263,17 +297,20 @@ class OrdersController
 
         $oldStatusId = $order->get('status_id');
 
-        if (isset($params['status_id'])) {
-            $order->set('status_id', (int)$params['status_id']);
+        // Get editable order fields from msModelField configuration
+        $orderFields = $this->getModelFieldNames('msOrder');
+        foreach ($orderFields as $field) {
+            if (array_key_exists($field, $params)) {
+                $order->set($field, $params[$field]);
+            }
         }
-        if (isset($params['delivery_id'])) {
-            $order->set('delivery_id', (int)$params['delivery_id']);
-        }
-        if (isset($params['payment_id'])) {
-            $order->set('payment_id', (int)$params['payment_id']);
-        }
-        if (isset($params['order_comment'])) {
-            $order->set('order_comment', $params['order_comment']);
+
+        // Handle extra fields for msOrder (stored as real DB columns via Object Extension)
+        $orderExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrder');
+        foreach ($orderExtraFields as $extraField) {
+            if (array_key_exists($extraField, $params)) {
+                $order->set($extraField, $params[$extraField]);
+            }
         }
 
         $order->set('updatedon', date('Y-m-d H:i:s'));
@@ -282,14 +319,25 @@ class OrdersController
             return Response::error('Failed to update order', 500)->getData();
         }
 
+        // Handle address fields
         $address = $this->modx->getObject(msOrderAddress::class, ['order_id' => $id]);
         if ($address) {
-            $addressFields = ['first_name', 'last_name', 'phone', 'email', 'city', 'street', 'building', 'room'];
+            // Get editable address fields from msModelField configuration
+            $addressFields = $this->getModelFieldNames('msOrderAddress');
             foreach ($addressFields as $field) {
-                if (isset($params[$field])) {
+                if (array_key_exists($field, $params)) {
                     $address->set($field, $params[$field]);
                 }
             }
+
+            // Handle extra fields for msOrderAddress (stored as real DB columns via Object Extension)
+            $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
+            foreach ($addressExtraFields as $extraField) {
+                if (array_key_exists($extraField, $params)) {
+                    $address->set($extraField, $params[$extraField]);
+                }
+            }
+
             $address->save();
         }
 
@@ -543,5 +591,48 @@ class OrdersController
         }
 
         return $data;
+    }
+
+    /**
+     * Get extra field keys for a specific model class
+     *
+     * @param string $modelClass Model class name (msOrder, msOrderAddress, etc.)
+     * @return array Array of extra field keys
+     */
+    protected function getExtraFieldKeys(string $modelClass): array
+    {
+        $keys = [];
+
+        $query = $this->modx->newQuery(msExtraField::class);
+        $query->where([
+            'class' => $modelClass,
+            'active' => true,
+        ]);
+
+        foreach ($this->modx->getIterator(msExtraField::class, $query) as $field) {
+            $keys[] = $field->get('key');
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Get field names from msModelField configuration
+     *
+     * @param string $model Model name (msOrder, msOrderAddress)
+     * @return array Array of field names
+     */
+    protected function getModelFieldNames(string $model): array
+    {
+        $names = [];
+
+        $query = $this->modx->newQuery(msModelField::class);
+        $query->where(['model' => $model]);
+
+        foreach ($this->modx->getIterator(msModelField::class, $query) as $field) {
+            $names[] = $field->get('name');
+        }
+
+        return $names;
     }
 }

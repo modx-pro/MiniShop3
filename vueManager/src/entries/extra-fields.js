@@ -56,15 +56,12 @@ export function init(selector = '#ms3-vue-extra-fields') {
   }
 
   if ($el.dataset.vApp === 'true') {
-    console.info('[Extra Fields Manager] Already mounted');
     return null;
   }
 
   const app = createVueApp();
   app.mount(selector);
   $el.dataset.vApp = 'true';
-
-  console.info('[Extra Fields Manager] Mounted successfully');
 
   return app;
 }

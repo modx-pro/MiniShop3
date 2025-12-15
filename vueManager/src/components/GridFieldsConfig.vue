@@ -216,6 +216,7 @@ function deleteField(field, index) {
   const errorDetail = _('error_deleting_field')
 
   confirm.require({
+    group: 'grid-fields-config',
     message: confirmMessage,
     header: confirmHeader,
     icon: 'pi pi-exclamation-triangle',
@@ -510,7 +511,7 @@ onMounted(() => {
 <template>
   <div class="grid-fields-config">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog group="grid-fields-config" />
 
     <Card>
       <template #title>

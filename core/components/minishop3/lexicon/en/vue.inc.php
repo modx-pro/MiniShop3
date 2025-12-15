@@ -116,6 +116,7 @@ $_lang['ms3_vue_cancel_button'] = 'Cancel';
 $_lang['ms3_vue_add_button'] = 'Add';
 
 // Extra Fields Manager Widget
+$_lang['ms3_extra_fields_title'] = 'Object Extension';
 $_lang['ms3_vue_extra_fields_title'] = 'Extra Fields Management';
 $_lang['ms3_vue_extra_fields_create'] = 'Create Field';
 $_lang['ms3_vue_extra_fields_edit'] = 'Edit Field';
@@ -127,6 +128,7 @@ $_lang['ms3_vue_extra_fields_select_class'] = 'Select class';
 $_lang['ms3_vue_class_product_data'] = 'msProductData (Products)';
 $_lang['ms3_vue_class_vendor'] = 'msVendor (Vendors)';
 $_lang['ms3_vue_class_order'] = 'msOrder (Orders)';
+$_lang['ms3_vue_class_order_address'] = 'msOrderAddress (Order Addresses)';
 $_lang['ms3_vue_class_category'] = 'msCategory (Categories)';
 
 // Widget types (xtype)
@@ -465,6 +467,7 @@ $_lang['order_delete_confirm_message'] = 'Are you sure you want to delete order 
 
 // Order Edit Page
 $_lang['back_to_orders'] = 'Back to Orders';
+$_lang['order_summary'] = 'Order Summary';
 $_lang['order_info'] = 'Order Info';
 $_lang['order_main_info'] = 'Main Info';
 $_lang['order_costs'] = 'Costs';
@@ -493,3 +496,119 @@ $_lang['address_phone'] = 'Phone';
 $_lang['address_email'] = 'Email';
 $_lang['order_id_required'] = 'Order ID is required';
 $_lang['order'] = 'Order';
+
+// Model Fields Widget
+$_lang['ms3_model_fields_title'] = 'Model Fields Configuration';
+$_lang['ms3_model_field_add'] = 'Add Field';
+$_lang['ms3_model_field_edit'] = 'Edit Field';
+$_lang['ms3_model_field_model'] = 'Model';
+$_lang['ms3_model_field_name'] = 'Field Name';
+$_lang['ms3_model_field_name_placeholder'] = 'e.g.: custom_field';
+$_lang['ms3_model_field_name_hint'] = 'Latin letters, digits, underscore. No spaces.';
+$_lang['ms3_model_field_name_required'] = 'Please specify field name';
+$_lang['ms3_model_field_label'] = 'Label';
+$_lang['ms3_model_field_label_placeholder'] = 'e.g.: ms3_custom_field';
+$_lang['ms3_model_field_xtype'] = 'Field Type';
+$_lang['ms3_model_field_visible'] = 'Visible';
+$_lang['ms3_model_field_required'] = 'Required';
+$_lang['ms3_model_field_rank'] = 'Position';
+$_lang['ms3_model_field_created'] = 'Field created';
+$_lang['ms3_model_field_updated'] = 'Field updated';
+$_lang['ms3_model_field_deleted'] = 'Field deleted';
+$_lang['ms3_model_field_delete_confirm'] = 'Are you sure you want to delete this field?';
+$_lang['ms3_model_field_shown'] = 'Field is visible';
+$_lang['ms3_model_field_hidden'] = 'Field is hidden';
+$_lang['ms3_model_field_order_updated'] = 'Field order updated';
+$_lang['ms3_model_fields_empty'] = 'No fields found. Add your first field.';
+
+// Model names for dropdown
+$_lang['ms3_model_order'] = 'Order';
+$_lang['ms3_model_orderaddress'] = 'Order Address';
+$_lang['ms3_model_orderproduct'] = 'Order Product';
+
+// Order fields labels
+$_lang['ms3_order_num'] = 'Order Number';
+$_lang['ms3_order_createdon'] = 'Created At';
+$_lang['ms3_order_status'] = 'Status';
+$_lang['ms3_order_delivery'] = 'Delivery Method';
+$_lang['ms3_order_payment'] = 'Payment Method';
+$_lang['ms3_order_cost'] = 'Total';
+$_lang['ms3_order_cart_cost'] = 'Cart Cost';
+$_lang['ms3_order_delivery_cost'] = 'Delivery Cost';
+$_lang['ms3_order_weight'] = 'Weight';
+$_lang['ms3_order_comment'] = 'Order Comment';
+$_lang['ms3_order_context'] = 'Context';
+
+// Address fields labels
+$_lang['ms3_address_first_name'] = 'First Name';
+$_lang['ms3_address_last_name'] = 'Last Name';
+$_lang['ms3_address_phone'] = 'Phone';
+$_lang['ms3_address_email'] = 'Email';
+$_lang['ms3_address_country'] = 'Country';
+$_lang['ms3_address_index'] = 'Postal Code';
+$_lang['ms3_address_region'] = 'Region';
+$_lang['ms3_address_city'] = 'City';
+$_lang['ms3_address_metro'] = 'Metro';
+$_lang['ms3_address_street'] = 'Street';
+$_lang['ms3_address_building'] = 'Building';
+$_lang['ms3_address_entrance'] = 'Entrance';
+$_lang['ms3_address_floor'] = 'Floor';
+$_lang['ms3_address_room'] = 'Apartment/Suite';
+$_lang['ms3_address_comment'] = 'Address Comment';
+$_lang['ms3_address_text'] = 'Text Address';
+
+// Model Fields Widget - Extended
+$_lang['ms3_model_fields_tab'] = 'Fields';
+$_lang['ms3_model_sections_tab'] = 'Sections';
+$_lang['ms3_model_sections_title'] = 'Section Management';
+$_lang['ms3_model_field_section'] = 'Section';
+$_lang['ms3_model_field_width'] = 'Width';
+$_lang['ms3_model_field_placeholder'] = 'Placeholder';
+$_lang['ms3_model_field_placeholder_hint'] = 'Hint text shown in empty field';
+$_lang['ms3_model_field_description'] = 'Description';
+$_lang['ms3_model_field_description_hint'] = 'Help text displayed below the field';
+$_lang['ms3_model_field_basic_info'] = 'Basic Information';
+$_lang['ms3_model_field_display_settings'] = 'Display Settings';
+$_lang['ms3_model_field_no_section'] = 'No section';
+
+// Model Field Sections
+$_lang['ms3_model_section_add'] = 'Add Section';
+$_lang['ms3_model_section_edit'] = 'Edit Section';
+$_lang['ms3_model_section_key'] = 'Key';
+$_lang['ms3_model_section_key_placeholder'] = 'e.g.: main_info';
+$_lang['ms3_model_section_key_hint'] = 'Unique identifier (latin, snake_case)';
+$_lang['ms3_model_section_key_required'] = 'Section key is required';
+$_lang['ms3_model_section_label'] = 'Label';
+$_lang['ms3_model_section_label_placeholder'] = 'e.g.: Main Information';
+$_lang['ms3_model_section_lexicon_key'] = 'Lexicon Key';
+$_lang['ms3_model_section_lexicon_key_placeholder'] = 'e.g.: ms3_section_main_info';
+$_lang['ms3_model_section_lexicon_key_hint'] = 'For multilanguage support (takes priority over direct label)';
+$_lang['ms3_model_section_sort_order'] = 'Sort Order';
+$_lang['ms3_model_section_hidden'] = 'Hidden';
+$_lang['ms3_model_section_default'] = 'System';
+$_lang['ms3_model_section_created'] = 'Section created';
+$_lang['ms3_model_section_updated'] = 'Section updated';
+$_lang['ms3_model_section_deleted'] = 'Section deleted';
+$_lang['ms3_model_section_delete_confirm'] = 'Delete this section? Fields will be reassigned without section.';
+$_lang['ms3_model_section_cannot_delete_default'] = 'Cannot delete system section';
+$_lang['ms3_model_section_shown'] = 'Section is now visible';
+$_lang['ms3_model_section_hidden'] = 'Section is now hidden';
+$_lang['ms3_model_section_order_updated'] = 'Section order updated';
+$_lang['ms3_model_sections_empty'] = 'No sections found. Add your first section.';
+
+// Default sections for msOrder
+$_lang['ms3_section_order_main'] = 'Main Information';
+$_lang['ms3_section_order_costs'] = 'Costs';
+$_lang['ms3_section_order_dates'] = 'Dates';
+$_lang['ms3_section_order_other'] = 'Additional';
+
+// Default sections for msOrderAddress
+$_lang['ms3_section_address_contact'] = 'Contact Information';
+$_lang['ms3_section_address_location'] = 'Delivery Address';
+$_lang['ms3_section_address_building'] = 'Building/Apartment';
+$_lang['ms3_section_address_other'] = 'Additional';
+
+// Combo field configuration
+$_lang['ms3_model_field_combo_config'] = 'Dropdown Configuration';
+$_lang['ms3_model_field_combo_source'] = 'Data Source (JSON)';
+$_lang['ms3_model_field_combo_source_hint'] = 'Leave empty to use file-based config. Fill to override.';

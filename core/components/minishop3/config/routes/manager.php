@@ -483,6 +483,100 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    $router->group('/model-fields', function($router) use ($modx) {
+        $router->get('/models', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getModels();
+        });
+        $router->get('/visible/{model}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getVisibleFields($params);
+        });
+
+        // Combo options routes
+        $router->get('/combo-options/{model}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getComboOptions($params);
+        });
+        $router->get('/combo-options/{model}/{field_name}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getFieldComboOptions($params);
+        });
+
+        // Section routes
+        $router->get('/sections/{model}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getSections($params);
+        });
+        $router->post('/sections', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->createSection($data);
+        });
+        $router->put('/sections/ranks', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->updateSectionRanks($data);
+        });
+        $router->put('/sections/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->updateSection($data);
+        });
+        $router->delete('/sections/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->deleteSection($params);
+        });
+
+        // Field routes
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->get($params);
+        });
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->create($data);
+        });
+        $router->put('/ranks', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->updateRanks($data);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->delete($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
 }, [
     new AuthMiddleware($modx, 'mgr')
 ]);

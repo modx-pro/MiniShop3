@@ -25,6 +25,7 @@ const ProdInput = {
   'orders': 'src/entries/orders.js',
   'order': 'src/entries/order.js',
   'notifications': 'src/entries/notifications.js',
+  'model-fields': 'src/entries/model-fields.js',
   'grid-fields-config': 'src/entries/grid-fields-config.js',
   'main': 'src/main.js'
 }

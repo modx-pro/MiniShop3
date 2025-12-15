@@ -2,8 +2,6 @@
 import { onMounted, ref, computed } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
@@ -14,6 +12,7 @@ import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import draggable from 'vuedraggable'
 import request from '../request.js'
 import { useLexicon } from '../composables/useLexicon.js'
 
@@ -104,6 +103,7 @@ async function loadSections() {
  */
 function deleteSection(sectionKey) {
   confirm.require({
+    group: 'product-data-config',
     message: _('section_delete_confirm_message'),
     header: _('section_delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
@@ -137,10 +137,9 @@ function deleteSection(sectionKey) {
 }
 
 /**
- * Section reorder handler
+ * Section drag end handler
  */
-function onSectionReorder(event) {
-  sections.value = event.value
+function onSectionDragEnd() {
   toast.add({
     severity: 'info',
     summary: _('order_changed'),
@@ -171,8 +170,6 @@ async function saveSections() {
       `/api/mgr/config/sections/${pageKey}`,
       { sections: sectionsToSave }
     )
-
-    console.log('[ProductDataConfig] Save sections response:', response)
 
     toast.add({
       severity: 'success',
@@ -348,8 +345,6 @@ async function saveConfig() {
       { fields: fieldsToSave }
     )
 
-    console.log('[ProductDataConfig] Save response:', response)
-
     toast.add({
       severity: 'success',
       summary: _('success_title'),
@@ -373,10 +368,9 @@ async function saveConfig() {
 }
 
 /**
- * Row reorder handler
+ * Fields drag end handler
  */
-function onRowReorder(event) {
-  fields.value = event.value
+function onFieldsDragEnd() {
   toast.add({
     severity: 'info',
     summary: _('order_changed'),
@@ -496,42 +490,65 @@ onMounted(() => {
       </template>
 
       <template #content>
-        <DataTable
-          :value="sections"
-          :loading="loadingSections"
-          @rowReorder="onSectionReorder"
-          tableStyle="min-width: 50rem"
-        >
-          <Column rowReorder headerStyle="width: 3rem" />
+        <!-- Sections table with VueDraggable -->
+        <div class="p-datatable p-component p-datatable-striped" v-if="!loadingSections">
+          <div class="p-datatable-wrapper">
+            <table class="p-datatable-table" style="min-width: 50rem">
+              <thead class="p-datatable-thead">
+                <tr>
+                  <th style="width: 3rem"></th>
+                  <th style="width: 100px">{{ _('visible') }}</th>
+                  <th style="width: 200px">{{ _('section_key') }}</th>
+                  <th style="width: 250px">{{ _('section_label') }}</th>
+                  <th style="width: 100px">{{ _('actions') }}</th>
+                </tr>
+              </thead>
+              <draggable
+                v-model="sections"
+                tag="tbody"
+                class="p-datatable-tbody"
+                handle=".drag-handle"
+                item-key="key"
+                @end="onSectionDragEnd"
+                :animation="200"
+                ghost-class="ghost-row"
+              >
+                <template #item="{ element: section }">
+                  <tr>
+                    <td class="drag-handle-cell">
+                      <i class="pi pi-bars drag-handle"></i>
+                    </td>
+                    <td>
+                      <Checkbox
+                        v-model="section.hidden"
+                        :binary="true"
+                        :trueValue="false"
+                        :falseValue="true"
+                      />
+                    </td>
+                    <td>{{ section.key }}</td>
+                    <td>{{ section.label }}</td>
+                    <td>
+                      <Button
+                        icon="pi pi-trash"
+                        size="small"
+                        severity="danger"
+                        text
+                        @click="deleteSection(section.key)"
+                        :title="_('section_delete')"
+                      />
+                    </td>
+                  </tr>
+                </template>
+              </draggable>
+            </table>
+          </div>
+        </div>
 
-          <Column :header="_('visible')" style="width: 100px;">
-            <template #body="{ data }">
-              <Checkbox
-                v-model="data.hidden"
-                :binary="true"
-                :trueValue="false"
-                :falseValue="true"
-              />
-            </template>
-          </Column>
-
-          <Column field="key" :header="_('section_key')" style="width: 200px;" />
-
-          <Column field="label" :header="_('section_label')" style="width: 250px;" />
-
-          <Column :header="_('actions')" style="width: 100px;">
-            <template #body="{ data }">
-              <Button
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
-                text
-                @click="deleteSection(data.key)"
-                :title="_('section_delete')"
-              />
-            </template>
-          </Column>
-        </DataTable>
+        <!-- Loading indicator -->
+        <div v-if="loadingSections" class="loading-indicator">
+          <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+        </div>
       </template>
     </Card>
 
@@ -551,51 +568,70 @@ onMounted(() => {
       </template>
 
       <template #content>
-        <DataTable
-          :value="fields"
-          :loading="loading"
-          @rowReorder="onRowReorder"
-          tableStyle="min-width: 50rem"
-        >
-          <Column rowReorder headerStyle="width: 3rem" />
+        <!-- Fields table with VueDraggable -->
+        <div class="p-datatable p-component p-datatable-striped" v-if="!loading">
+          <div class="p-datatable-wrapper">
+            <table class="p-datatable-table" style="min-width: 50rem">
+              <thead class="p-datatable-thead">
+                <tr>
+                  <th style="width: 3rem"></th>
+                  <th style="width: 100px">{{ _('visible_column') }}</th>
+                  <th style="width: 200px">{{ _('field_column') }}</th>
+                  <th style="width: 200px">{{ _('label_column') }}</th>
+                  <th style="width: 150px">{{ _('type_column') }}</th>
+                  <th style="width: 150px">{{ _('section_column') }}</th>
+                  <th>{{ _('description_column') }}</th>
+                  <th style="width: 120px">{{ _('actions_column') }}</th>
+                </tr>
+              </thead>
+              <draggable
+                v-model="fields"
+                tag="tbody"
+                class="p-datatable-tbody"
+                handle=".drag-handle"
+                item-key="name"
+                @end="onFieldsDragEnd"
+                :animation="200"
+                ghost-class="ghost-row"
+              >
+                <template #item="{ element: field, index }">
+                  <tr>
+                    <td class="drag-handle-cell">
+                      <i class="pi pi-bars drag-handle"></i>
+                    </td>
+                    <td>
+                      <Checkbox
+                        v-model="field.hidden"
+                        :binary="true"
+                        :trueValue="false"
+                        :falseValue="true"
+                      />
+                    </td>
+                    <td>{{ field.name }}</td>
+                    <td>{{ field.label }}</td>
+                    <td>{{ field.xtype }}</td>
+                    <td>{{ getSectionLabel(field.section) }}</td>
+                    <td>{{ field.description }}</td>
+                    <td>
+                      <Button
+                        icon="pi pi-pencil"
+                        size="small"
+                        outlined
+                        @click="openEditDialog(field, index)"
+                        :title="_('edit_field_button')"
+                      />
+                    </td>
+                  </tr>
+                </template>
+              </draggable>
+            </table>
+          </div>
+        </div>
 
-          <Column :header="_('visible_column')" style="width: 100px;">
-            <template #body="{ data }">
-              <Checkbox
-                v-model="data.hidden"
-                :binary="true"
-                :trueValue="false"
-                :falseValue="true"
-              />
-            </template>
-          </Column>
-
-          <Column field="name" :header="_('field_column')" style="width: 200px;" />
-
-          <Column field="label" :header="_('label_column')" style="width: 200px;" />
-
-          <Column field="xtype" :header="_('type_column')" style="width: 150px;" />
-
-          <Column :header="_('section_column')" style="width: 150px;">
-            <template #body="{ data }">
-              {{ getSectionLabel(data.section) }}
-            </template>
-          </Column>
-
-          <Column field="description" :header="_('description_column')" />
-
-          <Column :header="_('actions_column')" style="width: 120px;">
-            <template #body="{ data, index }">
-              <Button
-                icon="pi pi-pencil"
-                size="small"
-                outlined
-                @click="openEditDialog(data, index)"
-                :title="_('edit_field_button')"
-              />
-            </template>
-          </Column>
-        </DataTable>
+        <!-- Loading indicator -->
+        <div v-if="loading" class="loading-indicator">
+          <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+        </div>
       </template>
     </Card>
 
@@ -799,7 +835,7 @@ onMounted(() => {
     </Dialog>
 
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog group="product-data-config" />
   </div>
 </template>
 
@@ -816,6 +852,55 @@ h2 {
 p {
   margin: 0 0 20px 0;
   color: #666;
+}
+
+.drag-handle-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #6c757d;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  user-select: none;
+}
+
+.drag-handle:hover {
+  color: #495057;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+:deep(.ghost-row) {
+  opacity: 0.5;
+  background: #f8f9fa;
+}
+
+:deep(.sortable-drag) {
+  opacity: 0.8;
+  background: #e9ecef;
+  cursor: grabbing !important;
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: #6c757d;
+}
+
+:deep(.p-datatable-tbody tr:nth-child(even)) {
+  background: #f8f9fa;
+}
+
+:deep(.p-datatable-tbody tr:hover) {
+  background: #e9ecef;
 }
 </style>
 

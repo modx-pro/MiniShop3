@@ -64,7 +64,7 @@ ms3.panel.Utilities = function (config) {
                     }]
                 },
                 {
-                    title: 'Object Extension',
+                    title: _('ms3_extra_fields_title'),
                     id: 'ms3-utilities-extra-fields-tab',
                     layout: 'fit',
                     autoScroll: true,
@@ -104,6 +104,30 @@ ms3.panel.Utilities = function (config) {
                                 const event = new CustomEvent('ms3:mountVueGridFieldsConfig', {
                                     detail: {
                                         targetId: '#ms3-grid-fields-config-vue-wrapper'
+                                    }
+                                });
+                                document.dispatchEvent(event);
+                            }
+                        }
+                    }]
+                },
+                {
+                    title: _('ms3_model_fields_title'),
+                    id: 'ms3-utilities-model-fields-tab',
+                    layout: 'fit',
+                    autoScroll: true,
+                    items: [{
+                        xtype: 'panel',
+                        id: 'ms3-vue-model-fields-panel',
+                        border: false,
+                        autoHeight: true,
+                        html: '<div id="ms3-model-fields-vue-wrapper" class="vueApp" style="min-height: 600px;"></div>',
+                        listeners: {
+                            afterrender: function() {
+                                // Mount Vue application after panel render
+                                const event = new CustomEvent('ms3:mountVueModelFields', {
+                                    detail: {
+                                        targetId: '#ms3-model-fields-vue-wrapper'
                                     }
                                 });
                                 document.dispatchEvent(event);
