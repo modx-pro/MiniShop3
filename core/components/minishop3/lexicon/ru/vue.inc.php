@@ -116,6 +116,7 @@ $_lang['ms3_vue_cancel_button'] = 'Отмена';
 $_lang['ms3_vue_add_button'] = 'Добавить';
 
 // Виджет расширения объектов (Extra Fields Manager)
+$_lang['ms3_extra_fields_title'] = 'Расширение объектов';
 $_lang['ms3_vue_extra_fields_title'] = 'Управление дополнительными полями';
 $_lang['ms3_vue_extra_fields_create'] = 'Создать поле';
 $_lang['ms3_vue_extra_fields_edit'] = 'Редактировать поле';
@@ -127,6 +128,7 @@ $_lang['ms3_vue_extra_fields_select_class'] = 'Выберите класс';
 $_lang['ms3_vue_class_product_data'] = 'msProductData (Товары)';
 $_lang['ms3_vue_class_vendor'] = 'msVendor (Производители)';
 $_lang['ms3_vue_class_order'] = 'msOrder (Заказы)';
+$_lang['ms3_vue_class_order_address'] = 'msOrderAddress (Адреса заказов)';
 $_lang['ms3_vue_class_category'] = 'msCategory (Категории)';
 
 // Типы виджетов (xtype)
@@ -245,6 +247,7 @@ $_lang['select_grid'] = 'Выберите грид';
 $_lang['grid_customers'] = 'Клиенты';
 $_lang['grid_orders'] = 'Заказы';
 $_lang['grid_products'] = 'Товары';
+$_lang['grid_order_products'] = 'Товары заказа';
 $_lang['field_name'] = 'Имя поля';
 $_lang['field_label'] = 'Заголовок';
 $_lang['visible'] = 'Видимое';
@@ -440,3 +443,232 @@ $_lang['all'] = 'Все';
 $_lang['apply'] = 'Применить';
 $_lang['clear'] = 'Сбросить';
 $_lang['confirm_delete'] = 'Подтверждение удаления';
+
+// Orders Grid Widget
+$_lang['orders_title'] = 'Заказы';
+$_lang['orders_month'] = 'Заказов';
+$_lang['orders_month_sum'] = 'На сумму';
+$_lang['order_num'] = 'Номер';
+$_lang['order_customer'] = 'Клиент';
+$_lang['order_status'] = 'Статус';
+$_lang['order_cost'] = 'Сумма';
+$_lang['order_cart_cost'] = 'Корзина';
+$_lang['order_delivery_cost'] = 'Доставка';
+$_lang['order_weight'] = 'Вес';
+$_lang['order_delivery'] = 'Доставка';
+$_lang['order_payment'] = 'Оплата';
+$_lang['order_createdon'] = 'Создан';
+$_lang['order_updatedon'] = 'Изменён';
+$_lang['order_context'] = 'Контекст';
+$_lang['order_email'] = 'Email';
+$_lang['order_phone'] = 'Телефон';
+$_lang['order_deleted'] = 'Заказ успешно удалён';
+$_lang['order_delete_confirm_title'] = 'Подтверждение удаления';
+$_lang['order_delete_confirm_message'] = 'Вы уверены, что хотите удалить заказ #{num}?';
+
+// Order Products Grid (msOrderProduct)
+$_lang['order_product_name'] = 'Наименование';
+$_lang['order_product_image'] = 'Фото';
+$_lang['order_product_count'] = 'Кол-во';
+$_lang['order_product_price'] = 'Цена';
+$_lang['order_product_cost'] = 'Сумма';
+$_lang['order_product_weight'] = 'Вес';
+$_lang['order_product_options'] = 'Опции';
+$_lang['order_product_id'] = 'ID товара';
+$_lang['order_product_key'] = 'Ключ товара';
+$_lang['order_product_delete_confirm'] = 'Вы уверены, что хотите удалить этот товар из заказа?';
+$_lang['order_product_edit'] = 'Редактирование товара';
+$_lang['order_product_saved'] = 'Товар успешно сохранён';
+$_lang['order_product_deleted'] = 'Товар удалён из заказа';
+$_lang['order_product_cannot_delete_last'] = 'Невозможно удалить последний товар из заказа';
+$_lang['order_add_product'] = 'Добавить товар';
+$_lang['order_add_product_title'] = 'Добавление товара в заказ';
+$_lang['order_search_product'] = 'Поиск товара...';
+$_lang['order_product_added'] = 'Товар добавлен в заказ';
+$_lang['order_product_select'] = 'Выберите товар';
+$_lang['order_cannot_add_to_finalized'] = 'Невозможно добавить товар в завершённый заказ';
+$_lang['confirm_delete'] = 'Подтверждение удаления';
+$_lang['warning'] = 'Предупреждение';
+
+// Options editing
+$_lang['options_mode_table'] = 'Таблица';
+$_lang['options_mode_json'] = 'JSON';
+$_lang['options_key'] = 'Ключ';
+$_lang['options_value'] = 'Значение';
+$_lang['options_add_row'] = 'Добавить';
+$_lang['options_json_placeholder'] = '{"ключ": "значение"}';
+$_lang['options_json_invalid'] = 'Некорректный JSON';
+$_lang['options_json_must_be_object'] = 'JSON должен быть объектом';
+$_lang['options_type_field'] = 'Поле';
+$_lang['options_type_custom'] = 'Своё';
+$_lang['options_select_field'] = 'Выберите поле';
+$_lang['options_select_value'] = 'Выберите значение';
+
+// Order Edit Page
+$_lang['back_to_orders'] = 'Назад к заказам';
+$_lang['order_summary'] = 'Сводка заказа';
+$_lang['order_info'] = 'Информация о заказе';
+$_lang['order_main_info'] = 'Основная информация';
+$_lang['order_costs'] = 'Стоимость';
+$_lang['order_dates'] = 'Даты';
+$_lang['order_products'] = 'Товары';
+$_lang['order_address'] = 'Адрес';
+$_lang['order_history'] = 'История';
+$_lang['order_comment'] = 'Комментарий';
+$_lang['select_status'] = 'Выберите статус';
+$_lang['select_delivery'] = 'Выберите способ доставки';
+$_lang['select_payment'] = 'Выберите способ оплаты';
+$_lang['order_saved'] = 'Заказ сохранён';
+$_lang['order_not_found'] = 'Заказ не найден';
+$_lang['product_name'] = 'Наименование';
+$_lang['product_article'] = 'Артикул';
+$_lang['product_count'] = 'Количество';
+$_lang['product_price'] = 'Цена';
+$_lang['product_cost'] = 'Стоимость';
+$_lang['log_date'] = 'Дата';
+$_lang['log_action'] = 'Действие';
+$_lang['log_user'] = 'Пользователь';
+$_lang['log_entry'] = 'Запись';
+$_lang['address_first_name'] = 'Имя';
+$_lang['address_last_name'] = 'Фамилия';
+$_lang['address_phone'] = 'Телефон';
+$_lang['address_email'] = 'Email';
+$_lang['order_id_required'] = 'Не указан ID заказа';
+$_lang['order'] = 'Заказ';
+
+// Model Fields Widget
+$_lang['ms3_model_fields_title'] = 'Конфигурация полей моделей';
+$_lang['ms3_model_field_add'] = 'Добавить поле';
+$_lang['ms3_model_field_edit'] = 'Редактировать поле';
+$_lang['ms3_model_field_model'] = 'Модель';
+$_lang['ms3_model_field_name'] = 'Имя поля';
+$_lang['ms3_model_field_name_placeholder'] = 'например: custom_field';
+$_lang['ms3_model_field_name_hint'] = 'Латинские буквы, цифры, подчёркивание. Без пробелов.';
+$_lang['ms3_model_field_name_required'] = 'Укажите имя поля';
+$_lang['ms3_model_field_label'] = 'Название';
+$_lang['ms3_model_field_label_placeholder'] = 'например: ms3_custom_field';
+$_lang['ms3_model_field_xtype'] = 'Тип поля';
+$_lang['ms3_model_field_visible'] = 'Видимое';
+$_lang['ms3_model_field_required'] = 'Обязательное';
+$_lang['ms3_model_field_rank'] = 'Позиция';
+$_lang['ms3_model_field_created'] = 'Поле создано';
+$_lang['ms3_model_field_updated'] = 'Поле обновлено';
+$_lang['ms3_model_field_deleted'] = 'Поле удалено';
+$_lang['ms3_model_field_delete_confirm'] = 'Вы уверены, что хотите удалить это поле?';
+$_lang['ms3_model_field_shown'] = 'Поле отображается';
+$_lang['ms3_model_field_hidden'] = 'Поле скрыто';
+$_lang['ms3_model_field_order_updated'] = 'Порядок полей обновлён';
+$_lang['ms3_model_fields_empty'] = 'Поля не найдены. Добавьте первое поле.';
+
+// Model names for dropdown
+$_lang['ms3_model_order'] = 'Заказ';
+$_lang['ms3_model_orderaddress'] = 'Адрес заказа';
+$_lang['ms3_model_orderproduct'] = 'Товар заказа';
+
+// Order fields labels
+$_lang['ms3_order_num'] = 'Номер заказа';
+$_lang['ms3_order_createdon'] = 'Дата создания';
+$_lang['ms3_order_status'] = 'Статус';
+$_lang['ms3_order_delivery'] = 'Способ доставки';
+$_lang['ms3_order_payment'] = 'Способ оплаты';
+$_lang['ms3_order_cost'] = 'Сумма';
+$_lang['ms3_order_cart_cost'] = 'Стоимость товаров';
+$_lang['ms3_order_delivery_cost'] = 'Стоимость доставки';
+$_lang['ms3_order_weight'] = 'Вес';
+$_lang['ms3_order_comment'] = 'Комментарий к заказу';
+$_lang['ms3_order_context'] = 'Контекст';
+
+// Address fields labels
+$_lang['ms3_address_first_name'] = 'Имя';
+$_lang['ms3_address_last_name'] = 'Фамилия';
+$_lang['ms3_address_phone'] = 'Телефон';
+$_lang['ms3_address_email'] = 'Email';
+$_lang['ms3_address_country'] = 'Страна';
+$_lang['ms3_address_index'] = 'Индекс';
+$_lang['ms3_address_region'] = 'Регион';
+$_lang['ms3_address_city'] = 'Город';
+$_lang['ms3_address_metro'] = 'Метро';
+$_lang['ms3_address_street'] = 'Улица';
+$_lang['ms3_address_building'] = 'Дом';
+$_lang['ms3_address_entrance'] = 'Подъезд';
+$_lang['ms3_address_floor'] = 'Этаж';
+$_lang['ms3_address_room'] = 'Квартира/Офис';
+$_lang['ms3_address_comment'] = 'Комментарий к адресу';
+$_lang['ms3_address_text'] = 'Текстовый адрес';
+
+// Model Fields Widget - Extended
+$_lang['ms3_model_fields_tab'] = 'Поля';
+$_lang['ms3_model_sections_tab'] = 'Секции';
+$_lang['ms3_model_sections_title'] = 'Управление секциями';
+$_lang['ms3_model_field_section'] = 'Секция';
+$_lang['ms3_model_field_width'] = 'Ширина';
+$_lang['ms3_model_field_placeholder'] = 'Placeholder';
+$_lang['ms3_model_field_placeholder_hint'] = 'Текст-подсказка в пустом поле';
+$_lang['ms3_model_field_description'] = 'Описание';
+$_lang['ms3_model_field_description_hint'] = 'Подсказка для пользователя под полем';
+$_lang['ms3_model_field_basic_info'] = 'Основная информация';
+$_lang['ms3_model_field_display_settings'] = 'Настройки отображения';
+$_lang['ms3_model_field_no_section'] = 'Без секции';
+
+// Model Field Sections
+$_lang['ms3_model_section_add'] = 'Добавить секцию';
+$_lang['ms3_model_section_edit'] = 'Редактировать секцию';
+$_lang['ms3_model_section_key'] = 'Ключ';
+$_lang['ms3_model_section_key_placeholder'] = 'например: main_info';
+$_lang['ms3_model_section_key_hint'] = 'Уникальный идентификатор (латиница, snake_case)';
+$_lang['ms3_model_section_key_required'] = 'Укажите ключ секции';
+$_lang['ms3_model_section_label'] = 'Название';
+$_lang['ms3_model_section_label_placeholder'] = 'например: Основная информация';
+$_lang['ms3_model_section_lexicon_key'] = 'Ключ лексикона';
+$_lang['ms3_model_section_lexicon_key_placeholder'] = 'например: ms3_section_main_info';
+$_lang['ms3_model_section_lexicon_key_hint'] = 'Для мультиязычности (приоритет над прямым названием)';
+$_lang['ms3_model_section_sort_order'] = 'Порядок сортировки';
+$_lang['ms3_model_section_hidden'] = 'Скрыта';
+$_lang['ms3_model_section_default'] = 'Системная';
+$_lang['ms3_model_section_created'] = 'Секция создана';
+$_lang['ms3_model_section_updated'] = 'Секция обновлена';
+$_lang['ms3_model_section_deleted'] = 'Секция удалена';
+$_lang['ms3_model_section_delete_confirm'] = 'Удалить эту секцию? Поля будут переназначены без секции.';
+$_lang['ms3_model_section_cannot_delete_default'] = 'Нельзя удалить системную секцию';
+$_lang['ms3_model_section_shown'] = 'Секция отображается';
+$_lang['ms3_model_section_hidden'] = 'Секция скрыта';
+$_lang['ms3_model_section_order_updated'] = 'Порядок секций обновлён';
+$_lang['ms3_model_sections_empty'] = 'Секции не найдены. Добавьте первую секцию.';
+
+// Default sections for msOrder
+$_lang['ms3_section_order_main'] = 'Основная информация';
+$_lang['ms3_section_order_costs'] = 'Стоимость';
+$_lang['ms3_section_order_dates'] = 'Даты';
+$_lang['ms3_section_order_other'] = 'Дополнительно';
+
+// Default sections for msOrderAddress
+$_lang['ms3_section_address_contact'] = 'Контактные данные';
+$_lang['ms3_section_address_location'] = 'Адрес доставки';
+$_lang['ms3_section_address_building'] = 'Здание/Квартира';
+$_lang['ms3_section_address_other'] = 'Дополнительно';
+
+// Combo field configuration
+$_lang['ms3_model_field_combo_config'] = 'Конфигурация выпадающего списка';
+$_lang['ms3_model_field_combo_source'] = 'Источник данных (JSON)';
+$_lang['ms3_model_field_combo_source_hint'] = 'Оставьте пустым для использования конфигурации из файла. Заполните для переопределения.';
+
+// Order creation
+$_lang['ms3_order_create'] = 'Создать заказ';
+$_lang['ms3_order_new'] = 'Новый заказ';
+$_lang['ms3_order_created'] = 'Заказ успешно создан';
+$_lang['ms3_order_search_customer'] = 'Поиск клиента по имени, email или телефону...';
+$_lang['ms3_order_customer_hint'] = 'Начните вводить для поиска существующего клиента или заполните поля вручную';
+$_lang['ms3_order_no_customer'] = 'Клиент не выбран';
+$_lang['ms3_order_customer_selected'] = 'Клиент выбран';
+$_lang['ms3_order_clear_customer'] = 'Очистить';
+
+// Customer creation from order
+$_lang['ms3_order_create_customer_from_data'] = 'Создать клиента из данных заказа';
+$_lang['ms3_customer_duplicate_found'] = 'Найден похожий клиент';
+$_lang['ms3_customer_duplicate_message'] = 'Клиент с такими данными уже существует в системе. Выберите действие:';
+$_lang['ms3_customer_use_existing'] = 'Использовать существующего';
+$_lang['ms3_customer_create_new'] = 'Создать нового';
+$_lang['customer_name'] = 'Имя';
+$_lang['ms3_customer_validation_email_or_phone'] = 'Для создания клиента необходимо указать email или телефон';
+$_lang['ms3_customer_validation_invalid_email'] = 'Указан некорректный email адрес';
+$_lang['warning'] = 'Внимание';

@@ -8,6 +8,7 @@ use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
+use MiniShop3\Model\msOrderLog;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
@@ -72,18 +73,41 @@ class Order
     }
 
     /**
-     * Initialize draft order (create if not exists)
+     * Load existing draft order (does NOT create new one)
      */
     public function initDraft(): bool
     {
         if (empty($this->token)) {
             return false;
         }
+        if ($this->draft !== null) {
+            return true;
+        }
         $this->draft = $this->getDraft($this->token);
+        if ($this->draft && empty($this->draft->get('customer_id'))) {
+            $this->ms3->customer->initialize($this->token);
+            $customerResponse = $this->ms3->customer->getFields();
+            if ($customerResponse['success'] && !empty($customerResponse['data']['id'])) {
+                $customer = $customerResponse['data'];
+                $this->draft->set('customer_id', $customer['id']);
+                $this->draft->save();
+            }
+        }
+        return $this->draft !== null;
+    }
+
+    /**
+     * Ensure draft order exists (create if not exists)
+     * Should only be called from methods that actually need to modify order
+     */
+    protected function ensureDraft(): bool
+    {
+        if (empty($this->token)) {
+            return false;
+        }
+        $this->initDraft();
         if (empty($this->draft)) {
             $this->draft = $this->newDraft($this->token);
-        }
-        if (empty($this->draft->get('customer_id'))) {
             $this->ms3->customer->initialize($this->token);
             $customerResponse = $this->ms3->customer->getFields();
             if ($customerResponse['success'] && !empty($customerResponse['data']['id'])) {
@@ -97,16 +121,53 @@ class Order
 
     /**
      * Get existing draft order by token
+     *
+     * Hybrid search strategy:
+     * 1. First try to find by token (works for guests and API)
+     * 2. If not found and customer_id exists in session - search by customer_id
+     * 3. If found by customer_id - sync token to avoid future mismatches
      */
     protected function getDraft(string $token): ?msOrder
     {
         $status_draft = $this->modx->getOption('ms3_status_draft', null, 1);
-        $where = [
+
+        // 1. Try to find by token first (primary method)
+        $draft = $this->modx->getObject(msOrder::class, [
             'token' => $token,
             'status_id' => $status_draft,
-            'context' => $this->ctx
-        ];
-        return $this->modx->getObject(msOrder::class, $where);
+            'context' => $this->ctx,
+        ]);
+
+        if ($draft) {
+            return $draft;
+        }
+
+        // 2. Fallback: search by customer_id for authenticated customers
+        $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
+        if ($customerId > 0) {
+            $draft = $this->modx->getObject(msOrder::class, [
+                'customer_id' => $customerId,
+                'status_id' => $status_draft,
+                'context' => $this->ctx,
+            ]);
+
+            if ($draft) {
+                // Sync token: update draft token to match current session token
+                // This ensures future lookups will find it by token
+                $oldToken = $draft->get('token');
+                if ($oldToken !== $token) {
+                    $draft->set('token', $token);
+                    $draft->save();
+                    $this->modx->log(
+                        \MODX\Revolution\modX::LOG_LEVEL_INFO,
+                        "[Order] Token synced for customer {$customerId}: draft #{$draft->get('id')}"
+                    );
+                }
+                return $draft;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -247,6 +308,12 @@ class Order
             return $this->error('ms3_err_token');
         }
         $this->initDraft();
+
+        // No draft = no order = zero delivery cost
+        if (!$this->draft) {
+            return $this->success('ms3_order_getcost_success', ['cost' => 0]);
+        }
+
         if (empty($this->order)) {
             $response = $this->get();
             if ($response['success']) {
@@ -326,6 +393,11 @@ class Order
             return $this->error('ms3_err_token');
         }
         $this->initDraft();
+
+        // No draft = no order = zero payment cost
+        if (!$this->draft) {
+            return $this->success('ms3_order_getcost_success', ['cost' => 0]);
+        }
 
         if (empty($this->order)) {
             $response = $this->get();
@@ -437,13 +509,15 @@ class Order
      */
     public function add(string $key, mixed $value = null): array
     {
+        $this->initDraft();
+
         if (empty($this->order)) {
-            $this->initDraft();
             $response = $this->get();
             if ($response['success']) {
                 $this->order = $response['data']['order'];
             }
         }
+
         $response = $this->ms3->utils->invokeEvent('msOnBeforeAddToOrder', [
             'key' => $key,
             'value' => $value,
@@ -455,13 +529,20 @@ class Order
         $value = $response['data']['value'];
 
         if ($key === 'address_hash') {
+            // No draft = nothing to set address for
+            if (!$this->draft) {
+                return $this->success('', [$key => null]);
+            }
             return $this->setCustomerAddress($value);
         }
 
         if (empty($value)) {
-            $this->remove($key);
+            if ($this->draft) {
+                $this->remove($key);
+            }
             return $this->success('', [$key => null]);
         }
+
         $validateResponse = $this->validate($key, $value);
         if ($validateResponse['success']) {
             $validated = $validateResponse['data']['value'];
@@ -474,11 +555,44 @@ class Order
                 return $this->error($response['message']);
             }
             $validated = $response['data']['value'];
-            $this->updateDraft($key, $validated);
+
+            // Only save to draft if it exists
+            // (no draft = cart is empty, no need to save order fields)
+            if ($this->draft) {
+                // Get old value for logging
+                $orderKey = $key;
+                // Address fields in $this->order are prefixed with "address_"
+                if (in_array($key, array_keys($this->draft->Address->_fields ?? []))) {
+                    $orderKey = 'address_' . $key;
+                }
+                $oldValue = $this->order[$orderKey] ?? null;
+
+                $this->updateDraft($key, $validated);
+
+                // Log field change if value actually changed
+                if ($oldValue != $validated && $this->log) {
+                    // Determine action type: address or field
+                    $isAddressField = in_array($key, array_keys($this->draft->Address->_fields ?? []));
+                    $action = $isAddressField ? msOrderLog::ACTION_ADDRESS : msOrderLog::ACTION_FIELD;
+
+                    $this->log->addEntry(
+                        $this->draft->get('id'),
+                        $action,
+                        [
+                            'fields' => [
+                                $key => ['old' => $oldValue, 'new' => $validated],
+                            ],
+                        ]
+                    );
+                }
+            }
 
             return $this->success('', [$key => $validated]);
         }
-        $this->updateDraft($key);
+
+        if ($this->draft) {
+            $this->updateDraft($key);
+        }
         return $this->error($validateResponse['data']['error'][$key], [$key => null]);
     }
 
@@ -487,8 +601,9 @@ class Order
      */
     public function validate(string $key, mixed $value): mixed
     {
+        $this->initDraft();
+
         if (empty($this->order)) {
-            $this->initDraft();
             $response = $this->get();
             if ($response['success']) {
                 $this->order = $response['data']['order'];
@@ -574,8 +689,14 @@ class Order
      */
     public function remove(string $key): bool
     {
+        $this->initDraft();
+
+        // No draft = nothing to remove from
+        if (!$this->draft) {
+            return false;
+        }
+
         if (empty($this->order)) {
-            $this->initDraft();
             $response = $this->get();
             if ($response['success']) {
                 $this->order = $response['data']['order'];
@@ -610,8 +731,9 @@ class Order
      */
     public function set(array $order): array
     {
+        $this->initDraft();
+
         if (empty($this->order)) {
-            $this->initDraft();
             $response = $this->get();
             if ($response['success']) {
                 $this->order = $response['data']['order'];
@@ -639,6 +761,11 @@ class Order
             return $this->error('ms3_err_token');
         }
         $this->initDraft();
+
+        // Draft must exist (created when first product was added to cart)
+        if (!$this->draft) {
+            return $this->error('ms3_order_err_empty');
+        }
 
         if (empty($this->order)) {
             $response = $this->get();
@@ -857,9 +984,13 @@ class Order
      */
     public function clean(): array
     {
-        if (empty($this->draft)) {
-            $this->initDraft();
+        $this->initDraft();
+
+        // No draft = nothing to clean
+        if (!$this->draft) {
+            return $this->success('ms3_order_clean_success');
         }
+
         // TODO Event before clean
         foreach ($this->draft->Address->_fields as $key => $value) {
             switch ($key) {

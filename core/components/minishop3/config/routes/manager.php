@@ -139,6 +139,22 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
             return $controller->getOptions($params);
         });
+        $router->get('/product-option-fields', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->getProductOptionFields($params);
+        });
+        $router->get('/product-field-values', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->getProductFieldValues($params);
+        });
+        $router->get('/products', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->searchProducts($params);
+        });
+        $router->get('/customers', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->searchCustomers($params);
+        });
 
     });
 
@@ -328,6 +344,108 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'view_document')
     ]);
 
+    $router->group('/orders', function($router) use ($modx) {
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getList($allParams);
+        });
+        // Create new order - must be before /{id} route
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->create($data);
+        });
+        // Filters config - must be before /{id} route
+        $router->get('/filters', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getFilters($params);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            $allParams = array_merge($params, $body, $_POST);
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->update($allParams);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->delete($params);
+        });
+        $router->get('/{id}/products', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getProducts($params);
+        });
+        $router->post('/{id}/products', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->addProduct($allParams);
+        });
+        $router->put('/{id}/products/{product_id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->updateProduct($allParams);
+        });
+        $router->delete('/{id}/products/{product_id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->deleteProduct($params);
+        });
+        $router->get('/{id}/logs', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->getLogs($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'msorder_list')
+    ]);
+
+    // Statuses, Deliveries, Payments for dropdowns
+    $router->get('/statuses', function($params) use ($modx) {
+        $results = [];
+        $collection = $modx->getIterator(\MiniShop3\Model\msOrderStatus::class);
+        foreach ($collection as $item) {
+            $data = $item->toArray();
+            if (str_starts_with($data['name'], 'ms3_order_status_')) {
+                $translated = $modx->lexicon($data['name']);
+                if ($translated !== $data['name']) {
+                    $data['name'] = $translated;
+                }
+            }
+            $results[] = $data;
+        }
+        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
+    });
+
+    $router->get('/deliveries', function($params) use ($modx) {
+        $results = [];
+        $collection = $modx->getIterator(\MiniShop3\Model\msDelivery::class, ['active' => 1]);
+        foreach ($collection as $item) {
+            $results[] = $item->toArray();
+        }
+        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
+    });
+
+    $router->get('/payments', function($params) use ($modx) {
+        $results = [];
+        $collection = $modx->getIterator(\MiniShop3\Model\msPayment::class, ['active' => 1]);
+        foreach ($collection as $item) {
+            $results[] = $item->toArray();
+        }
+        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
+    });
+
     $router->group('/grid-config', function($router) use ($modx) {
         $router->get('/{grid_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
@@ -402,6 +520,100 @@ $router->group('/api/mgr', function($router) use ($modx) {
         });
         $router->delete('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\NotificationsController($modx);
+            return $controller->delete($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
+    $router->group('/model-fields', function($router) use ($modx) {
+        $router->get('/models', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getModels();
+        });
+        $router->get('/visible/{model}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getVisibleFields($params);
+        });
+
+        // Combo options routes
+        $router->get('/combo-options/{model}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getComboOptions($params);
+        });
+        $router->get('/combo-options/{model}/{field_name}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getFieldComboOptions($params);
+        });
+
+        // Section routes
+        $router->get('/sections/{model}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getSections($params);
+        });
+        $router->post('/sections', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->createSection($data);
+        });
+        $router->put('/sections/ranks', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->updateSectionRanks($data);
+        });
+        $router->put('/sections/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->updateSection($data);
+        });
+        $router->delete('/sections/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->deleteSection($params);
+        });
+
+        // Field routes
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->get($params);
+        });
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->create($data);
+        });
+        $router->put('/ranks', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->updateRanks($data);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
             return $controller->delete($params);
         });
 

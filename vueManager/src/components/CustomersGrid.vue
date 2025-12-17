@@ -434,6 +434,35 @@ function clearFilters() {
 }
 
 /**
+ * Get customer_id from URL params
+ */
+function getCustomerIdFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search)
+  const customerId = urlParams.get('customer_id')
+  return customerId ? parseInt(customerId, 10) : null
+}
+
+/**
+ * Load single customer by ID and open edit dialog
+ */
+async function loadAndOpenCustomer(customerId) {
+  try {
+    const response = await request.get(`/api/mgr/customers/${customerId}`)
+    if (response && response.id) {
+      editCustomer(response)
+    }
+  } catch (error) {
+    console.error('[CustomersGrid] Error loading customer:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_loading_data'),
+      life: 5000
+    })
+  }
+}
+
+/**
  * Load grid configuration
  */
 async function loadGridConfig() {
@@ -503,6 +532,12 @@ function renderField(data, column) {
 onMounted(async () => {
   await loadGridConfig()
   await loadCustomers()
+
+  // Check if customer_id is in URL and open customer dialog
+  const customerIdFromUrl = getCustomerIdFromUrl()
+  if (customerIdFromUrl) {
+    await loadAndOpenCustomer(customerIdFromUrl)
+  }
 })
 </script>
 

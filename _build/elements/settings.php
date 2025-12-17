@@ -241,6 +241,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_order',
     ],
+    'ms3_order_log_actions' => [
+        'value' => 'status,products,field,address',
+        'xtype' => 'textfield',
+        'area' => 'ms3_order',
+    ],
 
     'ms3_token_name' => [
         'value' => 'ms3_token',
@@ -373,6 +378,11 @@ return [
     'ms3_customer_sync_user_group' => [
         'value' => 0,
         'xtype' => 'numberfield',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_duplicate_fields' => [
+        'value' => '["email", "phone"]',
+        'xtype' => 'textfield',
         'area' => 'ms3_customers',
     ],
 

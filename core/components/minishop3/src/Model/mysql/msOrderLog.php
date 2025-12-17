@@ -19,7 +19,8 @@ class msOrderLog extends \MiniShop3\Model\msOrderLog
                 'order_id' => 0,
                 'timestamp' => null,
                 'action' => '',
-                'entry' => '0',
+                'entry' => [],
+                'visible' => 1,
                 'ip' => null,
             ],
         'fieldMeta' =>
@@ -58,11 +59,18 @@ class msOrderLog extends \MiniShop3\Model\msOrderLog
                     ],
                 'entry' =>
                     [
-                        'dbtype' => 'varchar',
-                        'precision' => '255',
-                        'phptype' => 'string',
+                        'dbtype' => 'text',
+                        'phptype' => 'json',
                         'null' => false,
-                        'default' => '0',
+                        'default' => '[]',
+                    ],
+                'visible' =>
+                    [
+                        'dbtype' => 'tinyint',
+                        'precision' => '1',
+                        'phptype' => 'boolean',
+                        'null' => false,
+                        'default' => 1,
                     ],
                 'ip' =>
                     [

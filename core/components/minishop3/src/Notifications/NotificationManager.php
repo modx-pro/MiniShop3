@@ -62,17 +62,11 @@ class NotificationManager
      */
     public function send(Notification $notification, array $recipient, string $recipientType): array
     {
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] send() called for recipientType: {$recipientType}");
-
         $this->loadChannels();
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Channels loaded: " . implode(', ', array_keys($this->channels)));
 
         $results = [];
         $channels = $notification->via($recipientType);
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Channels from via(): " . json_encode($channels));
-
         $order = $notification->getOrder();
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Order ID: " . $order->get('id'));
 
         // Fire before event - allows plugins to modify or cancel notification
         $eventResult = $this->modx->invokeEvent('msOnBeforeSendNotification', [
@@ -82,16 +76,9 @@ class NotificationManager
             'channels' => &$channels,
         ]);
 
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Event result type: " . gettype($eventResult) . ", value: " . json_encode($eventResult));
-
         // Check if notification was cancelled by plugin
-        // Note: MODX invokeEvent returns:
-        // - '' (empty string) or false when no plugins listen
-        // - array of plugin results when plugins are registered
-        // Only cancel if plugin explicitly sets $modx->event->output = false or returns 'cancel'
         $cancelled = false;
         if (is_array($eventResult) && !empty($eventResult)) {
-            // Check if any plugin explicitly returned false or 'cancel'
             foreach ($eventResult as $pluginResult) {
                 if ($pluginResult === false || $pluginResult === 'cancel') {
                     $cancelled = true;
@@ -99,26 +86,20 @@ class NotificationManager
                 }
             }
         }
-        // Also check event output property (plugins can set $modx->event->output = false)
         if (!$cancelled && isset($this->modx->event->output) && $this->modx->event->output === false) {
             $cancelled = true;
         }
 
         if ($cancelled) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Notification cancelled by plugin");
             return $results;
         }
 
         if (empty($channels)) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] No channels to send! via() returned empty array");
             return $results;
         }
 
         foreach ($channels as $channelName) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Processing channel: {$channelName}");
-
             if (!isset($this->channels[$channelName])) {
-                $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Channel '{$channelName}' NOT registered!");
                 $results[$channelName] = false;
                 continue;
             }
@@ -126,32 +107,24 @@ class NotificationManager
             $channel = $this->channels[$channelName];
 
             if (!$channel->isAvailable()) {
-                $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Channel '{$channelName}' NOT available!");
                 $results[$channelName] = false;
                 continue;
             }
 
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Channel '{$channelName}' is available, sending...");
-
             try {
                 if ($notification->shouldQueue() && $this->isSchedulerAvailable()) {
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Queueing notification...");
                     $results[$channelName] = $this->queue($notification, $recipient, $recipientType, $channelName);
                 } else {
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Sending immediately via channel->send()...");
                     $results[$channelName] = $channel->send($notification, $recipient, $order);
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] channel->send() returned: " . ($results[$channelName] ? 'TRUE' : 'FALSE'));
                 }
             } catch (\Throwable $e) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "[DEBUG NotificationManager] EXCEPTION in channel '{$channelName}': " . $e->getMessage()
+                    "[ms3] Notification error in channel '{$channelName}': " . $e->getMessage()
                 );
                 $results[$channelName] = false;
             }
         }
-
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG NotificationManager] Final results: " . json_encode($results));
 
         // Fire after event - for logging/analytics
         $this->modx->invokeEvent('msOnAfterSendNotification', [

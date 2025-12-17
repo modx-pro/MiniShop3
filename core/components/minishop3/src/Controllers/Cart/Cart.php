@@ -2,8 +2,10 @@
 
 namespace MiniShop3\Controllers\Cart;
 
+use MiniShop3\Controllers\Order\OrderLog;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msOrderLog;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msProduct;
@@ -44,6 +46,9 @@ class Cart
 
     /** @var array */
     protected array $cart = [];
+
+    /** @var OrderLog|null */
+    protected ?OrderLog $orderLog = null;
 
     /**
      * @param MiniShop3 $ms3
@@ -90,6 +95,19 @@ class Cart
     }
 
     /**
+     * Get OrderLog controller (lazy loading)
+     *
+     * @return OrderLog
+     */
+    protected function getOrderLog(): OrderLog
+    {
+        if ($this->orderLog === null) {
+            $this->orderLog = new OrderLog($this->ms3);
+        }
+        return $this->orderLog;
+    }
+
+    /**
      * Get cart
      *
      * @return array Response ['success' => bool, 'message' => '', 'data' => ['cart' => [], 'status' => []]]
@@ -101,6 +119,15 @@ class Cart
         }
 
         $this->initDraft();
+
+        // No draft = empty cart (this is normal, user hasn't added anything yet)
+        if (!$this->draft) {
+            return $this->success('ms3_cart_get_success', [
+                'cart' => [],
+                'status' => $this->getStatus(),
+            ]);
+        }
+
         $this->loadCart();
 
         $response = $this->invokeEvent('msOnBeforeGetCart', [
@@ -139,7 +166,8 @@ class Cart
             return $this->error('ms3_err_token');
         }
 
-        $this->initDraft();
+        // Ensure draft exists - this is the only place where draft should be created
+        $this->ensureDraft();
         $this->loadCart();
 
         if (empty($id) || !is_numeric($id)) {
@@ -180,6 +208,20 @@ class Cart
         $this->draft->addMany($cartItem, 'Products');
         $this->draft->save();
 
+        // Log product addition
+        $this->getOrderLog()->addEntry(
+            $this->draft->get('id'),
+            msOrderLog::ACTION_PRODUCTS,
+            [
+                'operation' => 'add',
+                'product_id' => $id,
+                'product_name' => $product->get('pagetitle'),
+                'count' => $count,
+                'price' => $cartItem->get('price'),
+                'cost' => $cartItem->get('cost'),
+            ]
+        );
+
         $this->recalculateDraft();
         $this->loadCart();
 
@@ -214,6 +256,12 @@ class Cart
         }
 
         $this->initDraft();
+
+        // No draft = empty cart
+        if (!$this->draft) {
+            return $this->error('ms3_cart_change_error', $this->getStatus());
+        }
+
         $this->loadCart();
 
         if (!isset($this->cart[$product_key])) {
@@ -239,7 +287,29 @@ class Cart
         }
         $count = $response['data']['count'];
 
+        // Store old values for logging
+        $oldCount = $this->cart[$product_key]['count'];
+        $productId = $this->cart[$product_key]['product_id'];
+        $productName = $this->cart[$product_key]['name'] ?? '';
+
         $this->updateCartItemCount($product_key, $count);
+
+        // Log quantity change
+        if ($oldCount != $count) {
+            $this->getOrderLog()->addEntry(
+                $this->draft->get('id'),
+                msOrderLog::ACTION_PRODUCTS,
+                [
+                    'operation' => 'update',
+                    'product_id' => $productId,
+                    'product_name' => $productName,
+                    'changes' => [
+                        'count' => ['old' => $oldCount, 'new' => $count],
+                    ],
+                ]
+            );
+        }
+
         $this->recalculateDraft();
         $this->loadCart();
 
@@ -269,6 +339,12 @@ class Cart
         }
 
         $this->initDraft();
+
+        // No draft = empty cart
+        if (!$this->draft) {
+            return $this->error('ms3_cart_change_error', $this->getStatus());
+        }
+
         $this->loadCart();
 
         if (!isset($this->cart[$product_key])) {
@@ -348,6 +424,12 @@ class Cart
         }
 
         $this->initDraft();
+
+        // No draft = empty cart
+        if (!$this->draft) {
+            return $this->error('ms3_cart_change_error', $this->getStatus());
+        }
+
         $this->loadCart();
 
         if (!isset($this->cart[$product_key])) {
@@ -361,7 +443,29 @@ class Cart
             return $this->error($response['message']);
         }
 
+        // Store data for logging before removal
+        $productData = [
+            'product_id' => $this->cart[$product_key]['product_id'],
+            'product_name' => $this->cart[$product_key]['name'] ?? '',
+            'count' => $this->cart[$product_key]['count'],
+            'price' => $this->cart[$product_key]['price'],
+        ];
+        $orderId = $this->draft->get('id');
+
         $this->removeCartItem($product_key);
+
+        // Log product removal (before draft might be deleted)
+        $this->getOrderLog()->addEntry(
+            $orderId,
+            msOrderLog::ACTION_PRODUCTS,
+            [
+                'operation' => 'remove',
+                'product_id' => $productData['product_id'],
+                'product_name' => $productData['product_name'],
+                'count' => $productData['count'],
+                'price' => $productData['price'],
+            ]
+        );
 
         if ($this->isCartEmpty()) {
             $this->draft->remove();
@@ -478,7 +582,7 @@ class Cart
     }
 
     /**
-     * Initialize draft order (create if not exists)
+     * Load existing draft order (does NOT create new one)
      *
      * @return void
      */
@@ -489,28 +593,81 @@ class Cart
         }
 
         $this->draft = $this->getDraft();
-        if (!$this->draft) {
-            $this->draft = $this->createDraft();
-        }
 
-        if (empty($this->draft->get('customer_id'))) {
+        if ($this->draft && empty($this->draft->get('customer_id'))) {
             $this->attachCustomer();
         }
     }
 
     /**
+     * Ensure draft order exists (create if not exists)
+     * Should only be called when adding first product to cart
+     *
+     * @return msOrder
+     */
+    protected function ensureDraft(): msOrder
+    {
+        $this->initDraft();
+
+        if (!$this->draft) {
+            $this->draft = $this->createDraft();
+            $this->attachCustomer();
+        }
+
+        return $this->draft;
+    }
+
+    /**
      * Get existing draft order
+     *
+     * Hybrid search strategy:
+     * 1. First try to find by token (works for guests and API)
+     * 2. If not found and customer_id exists in session - search by customer_id
+     * 3. If found by customer_id - sync token to avoid future mismatches
      *
      * @return msOrder|null
      */
     protected function getDraft(): ?msOrder
     {
         $status_draft = $this->modx->getOption('ms3_status_draft', null, 1);
-        return $this->modx->getObject(msOrder::class, [
+
+        // 1. Try to find by token first (primary method)
+        $draft = $this->modx->getObject(msOrder::class, [
             'token' => $this->token,
             'status_id' => $status_draft,
             'context' => $this->ctx,
         ]);
+
+        if ($draft) {
+            return $draft;
+        }
+
+        // 2. Fallback: search by customer_id for authenticated customers
+        $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
+        if ($customerId > 0) {
+            $draft = $this->modx->getObject(msOrder::class, [
+                'customer_id' => $customerId,
+                'status_id' => $status_draft,
+                'context' => $this->ctx,
+            ]);
+
+            if ($draft) {
+                // Sync token: update draft token to match current session token
+                // This ensures future lookups will find it by token
+                $oldToken = $draft->get('token');
+                if ($oldToken !== $this->token) {
+                    $draft->set('token', $this->token);
+                    $draft->save();
+                    $this->modx->log(
+                        \MODX\Revolution\modX::LOG_LEVEL_INFO,
+                        "[Cart] Token synced for customer {$customerId}: draft #{$draft->get('id')}"
+                    );
+                }
+                return $draft;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -520,18 +677,6 @@ class Cart
      */
     protected function createDraft(): msOrder
     {
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5);
-        $caller = '';
-        foreach ($backtrace as $trace) {
-            if (!empty($trace['file'])) {
-                $caller .= basename($trace['file']) . ':' . ($trace['line'] ?? '?') . ' -> ';
-            }
-        }
-        $this->modx->log(
-            \MODX\Revolution\modX::LOG_LEVEL_ERROR,
-            "[Cart::createDraft] Creating new draft order. Token: {$this->token}, Caller: {$caller}"
-        );
-
         $status_draft = $this->modx->getOption('ms3_status_draft', null, 1);
 
         /** @var msOrder $draft */
