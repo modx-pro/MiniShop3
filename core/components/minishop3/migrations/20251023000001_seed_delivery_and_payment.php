@@ -34,14 +34,14 @@ class SeedDeliveryAndPayment extends AbstractMigration
         $deliveryCount = $this->fetchRow("SELECT COUNT(*) as cnt FROM {$prefix}ms3_deliveries WHERE id = 1");
 
         if ($deliveryCount['cnt'] == 0) {
-            // Create default delivery: Self-pickup
+            // Create default delivery with lexicon key (resolved at display time)
             $this->execute("
                 INSERT INTO {$prefix}ms3_deliveries
                 (id, name, price, weight_price, distance_price, active, validation_rules, position)
                 VALUES
-                (1, 'Self-pickup', 0, 0, 0, 1, '{\"first_name\":\"required\",\"last_name\":\"required\", \"email\":\"required|email\"}', 0)
+                (1, 'ms3_delivery_self_pickup', 0, 0, 0, 1, '{\"first_name\":\"required\",\"last_name\":\"required\", \"email\":\"required|email\"}', 0)
             ");
-            $this->output->writeln('<info>✓ Created default delivery: Self-pickup</info>');
+            $this->output->writeln('<info>✓ Created default delivery: ms3_delivery_self_pickup</info>');
         } else {
             $this->output->writeln('<comment>Default delivery already exists, skipping</comment>');
         }
@@ -50,14 +50,14 @@ class SeedDeliveryAndPayment extends AbstractMigration
         $paymentCount = $this->fetchRow("SELECT COUNT(*) as cnt FROM {$prefix}ms3_payments WHERE id = 1");
 
         if ($paymentCount['cnt'] == 0) {
-            // Create default payment: Cash
+            // Create default payment with lexicon key (resolved at display time)
             $this->execute("
                 INSERT INTO {$prefix}ms3_payments
                 (id, name, active, position)
                 VALUES
-                (1, 'Cash', 1, 0)
+                (1, 'ms3_payment_cash', 1, 0)
             ");
-            $this->output->writeln('<info>✓ Created default payment: Cash</info>');
+            $this->output->writeln('<info>✓ Created default payment: ms3_payment_cash</info>');
         } else {
             $this->output->writeln('<comment>Default payment already exists, skipping</comment>');
         }
@@ -79,7 +79,6 @@ class SeedDeliveryAndPayment extends AbstractMigration
         }
 
         $this->output->writeln('<info>Default delivery and payment setup completed!</info>');
-        $this->output->writeln('<comment>Note: Names are in Russian. For multi-language support, use lexicon in MODX.</comment>');
     }
 
     /**

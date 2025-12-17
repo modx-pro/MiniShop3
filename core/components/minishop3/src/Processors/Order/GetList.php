@@ -210,10 +210,24 @@ class GetList extends GetListProcessor
         $registerUser = $this->modx->getOption('ms3_order_register_user_on_submit', null, false);
         $data['register_user'] = $registerUser;
 
-        if (!empty($data['status_name']) && str_starts_with($data['status_name'], 'ms3_order_status_')) {
+        if (!empty($data['status_name']) && str_starts_with($data['status_name'], 'ms3_')) {
             $translated = $this->modx->lexicon($data['status_name']);
             if ($translated !== $data['status_name']) {
                 $data['status_name'] = $translated;
+            }
+        }
+
+        if (!empty($data['delivery_name']) && str_starts_with($data['delivery_name'], 'ms3_')) {
+            $translated = $this->modx->lexicon($data['delivery_name']);
+            if ($translated !== $data['delivery_name']) {
+                $data['delivery_name'] = $translated;
+            }
+        }
+
+        if (!empty($data['payment_name']) && str_starts_with($data['payment_name'], 'ms3_')) {
+            $translated = $this->modx->lexicon($data['payment_name']);
+            if ($translated !== $data['payment_name']) {
+                $data['payment_name'] = $translated;
             }
         }
 
