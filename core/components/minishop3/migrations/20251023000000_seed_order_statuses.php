@@ -33,17 +33,12 @@ class SeedOrderStatuses extends AbstractMigration
 
         // Status names are lexicon keys - will be translated in admin and frontend
         // User can override with custom names via admin panel
+        // Note: Email notification fields were moved to a separate notification system
         $data = [
             [
                 'id' => 1,
                 'name' => 'ms3_order_status_draft',
                 'color' => 'C0C0C0',
-                'email_user' => 0,
-                'email_manager' => 0,
-                'subject_user' => '',
-                'subject_manager' => '',
-                'body_user' => '',
-                'body_manager' => '',
                 'final' => 0,
                 'fixed' => 0,
                 'editable' => 0,
@@ -54,12 +49,6 @@ class SeedOrderStatuses extends AbstractMigration
                 'id' => 2,
                 'name' => 'ms3_order_status_new',
                 'color' => '000000',
-                'email_user' => 1,
-                'email_manager' => 1,
-                'subject_user' => '[[%ms3_email_subject_new_user]]',
-                'subject_manager' => '[[%ms3_email_subject_new_manager]]',
-                'body_user' => 'tpl.msEmail.new.user',
-                'body_manager' => 'tpl.msEmail.new.manager',
                 'final' => 0,
                 'fixed' => 1,
                 'editable' => 0,
@@ -70,12 +59,6 @@ class SeedOrderStatuses extends AbstractMigration
                 'id' => 3,
                 'name' => 'ms3_order_status_paid',
                 'color' => '008000',
-                'email_user' => 1,
-                'email_manager' => 1,
-                'subject_user' => '[[%ms3_email_subject_paid_user]]',
-                'subject_manager' => '[[%ms3_email_subject_paid_manager]]',
-                'body_user' => 'tpl.msEmail.paid.user',
-                'body_manager' => 'tpl.msEmail.paid.manager',
                 'final' => 0,
                 'fixed' => 1,
                 'editable' => 0,
@@ -86,12 +69,6 @@ class SeedOrderStatuses extends AbstractMigration
                 'id' => 4,
                 'name' => 'ms3_order_status_sent',
                 'color' => '003366',
-                'email_user' => 1,
-                'email_manager' => 0,
-                'subject_user' => '[[%ms3_email_subject_sent_user]]',
-                'subject_manager' => '',
-                'body_user' => 'tpl.msEmail.sent.user',
-                'body_manager' => '',
                 'final' => 1,
                 'fixed' => 1,
                 'editable' => 0,
@@ -102,12 +79,6 @@ class SeedOrderStatuses extends AbstractMigration
                 'id' => 5,
                 'name' => 'ms3_order_status_cancelled',
                 'color' => '800000',
-                'email_user' => 1,
-                'email_manager' => 0,
-                'subject_user' => '[[%ms3_email_subject_cancelled_user]]',
-                'subject_manager' => '',
-                'body_user' => 'tpl.msEmail.cancelled.user',
-                'body_manager' => '',
                 'final' => 1,
                 'fixed' => 1,
                 'editable' => 0,
@@ -120,7 +91,6 @@ class SeedOrderStatuses extends AbstractMigration
 
         $this->output->writeln('<info>✓ Inserted ' . count($data) . ' default order statuses</info>');
         $this->output->writeln('<comment>Note: Status names will be replaced with lexicon values when accessed through MODX</comment>');
-        $this->output->writeln('<comment>Note: Email template chunks need to be created separately</comment>');
 
         // Update system settings with status IDs
         $this->updateSystemSettings($prefix);

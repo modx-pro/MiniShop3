@@ -79,6 +79,18 @@ class GetLog extends GetListProcessor
             ]);
         }
 
+        // Filter by visibility (for customer-facing views)
+        $visibleOnly = $this->getProperty('visible_only');
+        if ($visibleOnly !== null && $visibleOnly !== '') {
+            $c->where(['visible' => (bool)$visibleOnly]);
+        }
+
+        // Filter by action type
+        $action = $this->getProperty('action');
+        if (!empty($action)) {
+            $c->where(['action' => $action]);
+        }
+
         $c->leftJoin(modUser::class, 'modUser', '`msOrderLog`.`user_id` = `modUser`.`id`');
         $c->leftJoin(modUserProfile::class, 'modUserProfile', '`msOrderLog`.`user_id` = `modUserProfile`.`internalKey`');
         $exclude = [];
@@ -116,17 +128,79 @@ class GetLog extends GetListProcessor
      */
     public function prepareArray(array $data)
     {
-        if ($data['action'] === 'status') {
-            $q = $this->modx->newQuery(msOrderStatus::class);
-            $q->where(['id' => $data['entry']]);
-            $q->select('name as entry, color');
-            $q->prepare();
-            $q->stmt->execute();
-            $status = $q->stmt->fetch(\PDO::FETCH_ASSOC);
-            $data = array_merge($data, $status);
+        // Process entry - decode JSON if needed
+        $entryData = null;
+        if (isset($data['entry'])) {
+            if (is_string($data['entry'])) {
+                $decoded = json_decode($data['entry'], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $entryData = $decoded;
+                }
+            } elseif (is_array($data['entry'])) {
+                $entryData = $data['entry'];
+            }
         }
-        if (!empty($data['color'])) {
-            $data['entry'] = '<span>' . $data['entry'] . '</span>';
+
+        // Store decoded entry data
+        $data['entry_data'] = $entryData;
+
+        // Handle different action types
+        if ($data['action'] === msOrderLog::ACTION_STATUS) {
+            // New JSON format: {old_status_id, new_status_id, old_status_name, new_status_name}
+            if ($entryData && isset($entryData['new_status_id'])) {
+                $newStatus = $this->modx->getObject(msOrderStatus::class, $entryData['new_status_id']);
+                if ($newStatus) {
+                    $data['color'] = $newStatus->get('color');
+                    $data['entry_display'] = $entryData['new_status_name'] ?? $newStatus->get('name');
+                } else {
+                    $data['entry_display'] = $entryData['new_status_name'] ?? $entryData['new_status_id'];
+                }
+            } elseif (is_numeric($data['entry'])) {
+                // Legacy format: entry is status_id
+                $q = $this->modx->newQuery(msOrderStatus::class);
+                $q->where(['id' => $data['entry']]);
+                $q->select('name, color');
+                $q->prepare();
+                $q->stmt->execute();
+                $status = $q->stmt->fetch(\PDO::FETCH_ASSOC);
+                if ($status) {
+                    $data['color'] = $status['color'];
+                    $data['entry_display'] = $status['name'];
+                }
+            }
+        } elseif ($data['action'] === msOrderLog::ACTION_PRODUCTS) {
+            // Products action: add/update/remove
+            if ($entryData) {
+                $operation = $entryData['operation'] ?? 'unknown';
+                $productName = $entryData['product_name'] ?? '';
+                $data['entry_display'] = sprintf('%s: %s', ucfirst($operation), $productName);
+            }
+        } elseif ($data['action'] === msOrderLog::ACTION_FIELD) {
+            // Field changes
+            if ($entryData && isset($entryData['fields'])) {
+                $fieldNames = array_keys($entryData['fields']);
+                $data['entry_display'] = 'Fields: ' . implode(', ', $fieldNames);
+            }
+        } elseif ($data['action'] === msOrderLog::ACTION_ADDRESS) {
+            // Address changes
+            if ($entryData && isset($entryData['fields'])) {
+                $fieldNames = array_keys($entryData['fields']);
+                $data['entry_display'] = 'Address: ' . implode(', ', $fieldNames);
+            }
+        } elseif ($data['action'] === msOrderLog::ACTION_PAYMENT) {
+            // Payment action
+            if ($entryData) {
+                $operation = $entryData['operation'] ?? 'unknown';
+                $amount = $entryData['amount'] ?? 0;
+                $data['entry_display'] = sprintf('%s: %s', ucfirst($operation), $amount);
+            }
+        }
+
+        // Format entry with color if available
+        if (!empty($data['color']) && !empty($data['entry_display'])) {
+            $data['entry_formatted'] = '<span style="color:' . $data['color'] . '">' . $data['entry_display'] . '</span>';
+        } else {
+            $data['entry_formatted'] = $data['entry_display'] ?? $data['entry'];
         }
 
         return $data;

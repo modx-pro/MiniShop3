@@ -139,6 +139,22 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
             return $controller->getOptions($params);
         });
+        $router->get('/product-option-fields', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->getProductOptionFields($params);
+        });
+        $router->get('/product-field-values', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->getProductFieldValues($params);
+        });
+        $router->get('/products', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->searchProducts($params);
+        });
+        $router->get('/customers', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
+            return $controller->searchCustomers($params);
+        });
 
     });
 
@@ -335,6 +351,14 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
             return $controller->getList($allParams);
         });
+        // Create new order - must be before /{id} route
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->create($data);
+        });
         // Filters config - must be before /{id} route
         $router->get('/filters', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
@@ -357,6 +381,26 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->get('/{id}/products', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
             return $controller->getProducts($params);
+        });
+        $router->post('/{id}/products', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->addProduct($allParams);
+        });
+        $router->put('/{id}/products/{product_id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->updateProduct($allParams);
+        });
+        $router->delete('/{id}/products/{product_id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->deleteProduct($params);
         });
         $router->get('/{id}/logs', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);

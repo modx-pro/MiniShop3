@@ -16,6 +16,7 @@ if (!empty($_GET['msorder'])) {
 /** @var MiniShop3 $ms3 */
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
+
 if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
     $token = $_SESSION['ms3']['customer_token'];
 } else {

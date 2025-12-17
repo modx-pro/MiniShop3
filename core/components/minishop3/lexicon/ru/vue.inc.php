@@ -247,6 +247,7 @@ $_lang['select_grid'] = 'Выберите грид';
 $_lang['grid_customers'] = 'Клиенты';
 $_lang['grid_orders'] = 'Заказы';
 $_lang['grid_products'] = 'Товары';
+$_lang['grid_order_products'] = 'Товары заказа';
 $_lang['field_name'] = 'Имя поля';
 $_lang['field_label'] = 'Заголовок';
 $_lang['visible'] = 'Видимое';
@@ -445,8 +446,8 @@ $_lang['confirm_delete'] = 'Подтверждение удаления';
 
 // Orders Grid Widget
 $_lang['orders_title'] = 'Заказы';
-$_lang['orders_month'] = 'За месяц';
-$_lang['orders_month_sum'] = 'Сумма';
+$_lang['orders_month'] = 'Заказов';
+$_lang['orders_month_sum'] = 'На сумму';
 $_lang['order_num'] = 'Номер';
 $_lang['order_customer'] = 'Клиент';
 $_lang['order_status'] = 'Статус';
@@ -464,6 +465,44 @@ $_lang['order_phone'] = 'Телефон';
 $_lang['order_deleted'] = 'Заказ успешно удалён';
 $_lang['order_delete_confirm_title'] = 'Подтверждение удаления';
 $_lang['order_delete_confirm_message'] = 'Вы уверены, что хотите удалить заказ #{num}?';
+
+// Order Products Grid (msOrderProduct)
+$_lang['order_product_name'] = 'Наименование';
+$_lang['order_product_image'] = 'Фото';
+$_lang['order_product_count'] = 'Кол-во';
+$_lang['order_product_price'] = 'Цена';
+$_lang['order_product_cost'] = 'Сумма';
+$_lang['order_product_weight'] = 'Вес';
+$_lang['order_product_options'] = 'Опции';
+$_lang['order_product_id'] = 'ID товара';
+$_lang['order_product_key'] = 'Ключ товара';
+$_lang['order_product_delete_confirm'] = 'Вы уверены, что хотите удалить этот товар из заказа?';
+$_lang['order_product_edit'] = 'Редактирование товара';
+$_lang['order_product_saved'] = 'Товар успешно сохранён';
+$_lang['order_product_deleted'] = 'Товар удалён из заказа';
+$_lang['order_product_cannot_delete_last'] = 'Невозможно удалить последний товар из заказа';
+$_lang['order_add_product'] = 'Добавить товар';
+$_lang['order_add_product_title'] = 'Добавление товара в заказ';
+$_lang['order_search_product'] = 'Поиск товара...';
+$_lang['order_product_added'] = 'Товар добавлен в заказ';
+$_lang['order_product_select'] = 'Выберите товар';
+$_lang['order_cannot_add_to_finalized'] = 'Невозможно добавить товар в завершённый заказ';
+$_lang['confirm_delete'] = 'Подтверждение удаления';
+$_lang['warning'] = 'Предупреждение';
+
+// Options editing
+$_lang['options_mode_table'] = 'Таблица';
+$_lang['options_mode_json'] = 'JSON';
+$_lang['options_key'] = 'Ключ';
+$_lang['options_value'] = 'Значение';
+$_lang['options_add_row'] = 'Добавить';
+$_lang['options_json_placeholder'] = '{"ключ": "значение"}';
+$_lang['options_json_invalid'] = 'Некорректный JSON';
+$_lang['options_json_must_be_object'] = 'JSON должен быть объектом';
+$_lang['options_type_field'] = 'Поле';
+$_lang['options_type_custom'] = 'Своё';
+$_lang['options_select_field'] = 'Выберите поле';
+$_lang['options_select_value'] = 'Выберите значение';
 
 // Order Edit Page
 $_lang['back_to_orders'] = 'Назад к заказам';
@@ -612,3 +651,24 @@ $_lang['ms3_section_address_other'] = 'Дополнительно';
 $_lang['ms3_model_field_combo_config'] = 'Конфигурация выпадающего списка';
 $_lang['ms3_model_field_combo_source'] = 'Источник данных (JSON)';
 $_lang['ms3_model_field_combo_source_hint'] = 'Оставьте пустым для использования конфигурации из файла. Заполните для переопределения.';
+
+// Order creation
+$_lang['ms3_order_create'] = 'Создать заказ';
+$_lang['ms3_order_new'] = 'Новый заказ';
+$_lang['ms3_order_created'] = 'Заказ успешно создан';
+$_lang['ms3_order_search_customer'] = 'Поиск клиента по имени, email или телефону...';
+$_lang['ms3_order_customer_hint'] = 'Начните вводить для поиска существующего клиента или заполните поля вручную';
+$_lang['ms3_order_no_customer'] = 'Клиент не выбран';
+$_lang['ms3_order_customer_selected'] = 'Клиент выбран';
+$_lang['ms3_order_clear_customer'] = 'Очистить';
+
+// Customer creation from order
+$_lang['ms3_order_create_customer_from_data'] = 'Создать клиента из данных заказа';
+$_lang['ms3_customer_duplicate_found'] = 'Найден похожий клиент';
+$_lang['ms3_customer_duplicate_message'] = 'Клиент с такими данными уже существует в системе. Выберите действие:';
+$_lang['ms3_customer_use_existing'] = 'Использовать существующего';
+$_lang['ms3_customer_create_new'] = 'Создать нового';
+$_lang['customer_name'] = 'Имя';
+$_lang['ms3_customer_validation_email_or_phone'] = 'Для создания клиента необходимо указать email или телефон';
+$_lang['ms3_customer_validation_invalid_email'] = 'Указан некорректный email адрес';
+$_lang['warning'] = 'Внимание';

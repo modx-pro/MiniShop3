@@ -287,6 +287,7 @@ $_lang['select_grid'] = 'Select Grid';
 $_lang['grid_customers'] = 'Customers';
 $_lang['grid_orders'] = 'Orders';
 $_lang['grid_products'] = 'Products';
+$_lang['grid_order_products'] = 'Order Products';
 $_lang['field_name'] = 'Field Name';
 $_lang['field_label'] = 'Label';
 $_lang['visible'] = 'Visible';
@@ -445,8 +446,8 @@ $_lang['confirm_delete'] = 'Confirm deletion';
 
 // Orders Grid Widget
 $_lang['orders_title'] = 'Orders';
-$_lang['orders_month'] = 'This month';
-$_lang['orders_month_sum'] = 'Total';
+$_lang['orders_month'] = 'Orders';
+$_lang['orders_month_sum'] = 'Total sum';
 $_lang['order_num'] = 'Number';
 $_lang['order_customer'] = 'Customer';
 $_lang['order_status'] = 'Status';
@@ -464,6 +465,44 @@ $_lang['order_phone'] = 'Phone';
 $_lang['order_deleted'] = 'Order deleted successfully';
 $_lang['order_delete_confirm_title'] = 'Confirm Deletion';
 $_lang['order_delete_confirm_message'] = 'Are you sure you want to delete order #{num}?';
+
+// Order Products Grid (msOrderProduct)
+$_lang['order_product_name'] = 'Name';
+$_lang['order_product_image'] = 'Image';
+$_lang['order_product_count'] = 'Qty';
+$_lang['order_product_price'] = 'Price';
+$_lang['order_product_cost'] = 'Cost';
+$_lang['order_product_weight'] = 'Weight';
+$_lang['order_product_options'] = 'Options';
+$_lang['order_product_id'] = 'Product ID';
+$_lang['order_product_key'] = 'Product Key';
+$_lang['order_product_delete_confirm'] = 'Are you sure you want to remove this product from the order?';
+$_lang['order_product_edit'] = 'Edit Product';
+$_lang['order_product_saved'] = 'Product saved successfully';
+$_lang['order_product_deleted'] = 'Product removed from order';
+$_lang['order_product_cannot_delete_last'] = 'Cannot remove the last product from the order';
+$_lang['order_add_product'] = 'Add Product';
+$_lang['order_add_product_title'] = 'Add Product to Order';
+$_lang['order_search_product'] = 'Search product...';
+$_lang['order_product_added'] = 'Product added to order';
+$_lang['order_product_select'] = 'Select a product';
+$_lang['order_cannot_add_to_finalized'] = 'Cannot add product to finalized order';
+$_lang['confirm_delete'] = 'Confirm Delete';
+$_lang['warning'] = 'Warning';
+
+// Options editing
+$_lang['options_mode_table'] = 'Table';
+$_lang['options_mode_json'] = 'JSON';
+$_lang['options_key'] = 'Key';
+$_lang['options_value'] = 'Value';
+$_lang['options_add_row'] = 'Add';
+$_lang['options_json_placeholder'] = '{"key": "value"}';
+$_lang['options_json_invalid'] = 'Invalid JSON';
+$_lang['options_json_must_be_object'] = 'JSON must be an object';
+$_lang['options_type_field'] = 'Field';
+$_lang['options_type_custom'] = 'Custom';
+$_lang['options_select_field'] = 'Select field';
+$_lang['options_select_value'] = 'Select value';
 
 // Order Edit Page
 $_lang['back_to_orders'] = 'Back to Orders';
@@ -612,3 +651,24 @@ $_lang['ms3_section_address_other'] = 'Additional';
 $_lang['ms3_model_field_combo_config'] = 'Dropdown Configuration';
 $_lang['ms3_model_field_combo_source'] = 'Data Source (JSON)';
 $_lang['ms3_model_field_combo_source_hint'] = 'Leave empty to use file-based config. Fill to override.';
+
+// Order creation
+$_lang['ms3_order_create'] = 'Create Order';
+$_lang['ms3_order_new'] = 'New Order';
+$_lang['ms3_order_created'] = 'Order created successfully';
+$_lang['ms3_order_search_customer'] = 'Search customer by name, email or phone...';
+$_lang['ms3_order_customer_hint'] = 'Start typing to search existing customer or fill fields manually';
+$_lang['ms3_order_no_customer'] = 'No customer selected';
+$_lang['ms3_order_customer_selected'] = 'Customer selected';
+$_lang['ms3_order_clear_customer'] = 'Clear';
+
+// Customer creation from order
+$_lang['ms3_order_create_customer_from_data'] = 'Create customer from order data';
+$_lang['ms3_customer_duplicate_found'] = 'Similar customer found';
+$_lang['ms3_customer_duplicate_message'] = 'A customer with these details already exists in the system. Choose an action:';
+$_lang['ms3_customer_use_existing'] = 'Use existing';
+$_lang['ms3_customer_create_new'] = 'Create new';
+$_lang['customer_name'] = 'Name';
+$_lang['ms3_customer_validation_email_or_phone'] = 'Email or phone is required to create a customer';
+$_lang['ms3_customer_validation_invalid_email'] = 'Invalid email address';
+$_lang['warning'] = 'Warning';

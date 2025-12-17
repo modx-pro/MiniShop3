@@ -58,18 +58,11 @@ class StatusChangedNotification extends Notification
      */
     public function via(string $recipientType): array
     {
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG StatusChangedNotification] via() called for recipientType: {$recipientType}");
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG StatusChangedNotification] Event: " . self::EVENT . ", Status ID: " . $this->newStatus->get('id'));
-
-        $channels = $this->getConfigService()->getChannels(
+        return $this->getConfigService()->getChannels(
             self::EVENT,
             $this->newStatus->get('id'),
             $recipientType
         );
-
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG StatusChangedNotification] Channels returned: " . json_encode($channels));
-
-        return $channels;
     }
 
     /**

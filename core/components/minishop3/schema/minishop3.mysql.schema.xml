@@ -314,7 +314,8 @@
                default="0"/>
         <field key="timestamp" dbtype="datetime" phptype="datetime" null="true" />
         <field key="action" dbtype="varchar" precision="100" phptype="string" null="false" default=""/>
-        <field key="entry" dbtype="varchar" precision="255" phptype="string" null="false" default="0"/>
+        <field key="entry" dbtype="text" phptype="json" null="false"/>
+        <field key="visible" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
         <field key="ip" dbtype="text" phptype="json" null="false"/>
 
         <index alias="user_id" name="user_id" primary="false" unique="false" type="BTREE">

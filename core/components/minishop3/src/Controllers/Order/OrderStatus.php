@@ -137,9 +137,6 @@ class OrderStatus
         msOrderStatusModel $newStatus,
         ?msOrderStatusModel $oldStatus
     ): void {
-        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] ====== START sendNotifications() ======');
-        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Order ID: ' . $msOrder->get('id') . ', New Status ID: ' . $newStatus->get('id'));
-
         // Prepare language settings
         $lang = $this->getLang($msOrder);
         $this->modx->setOption('cultureKey', $lang);
@@ -152,30 +149,20 @@ class OrderStatus
             $newStatus,
             $oldStatus
         );
-        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] StatusChangedNotification created');
 
         $notificationManager = $this->getNotificationManager();
-        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] NotificationManager obtained: ' . ($notificationManager ? 'YES' : 'NO'));
 
         // Send to customer (channels determined by notification config)
         $customerRecipient = $this->getCustomerRecipient($msOrder);
-        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Customer recipient: ' . json_encode($customerRecipient));
         if ($customerRecipient) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Calling sendToCustomer()...');
             $notificationManager->sendToCustomer($notification, $customerRecipient);
-        } else {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] No customer recipient found!');
         }
 
         // Send to manager(s) (channels determined by notification config)
         $managerRecipients = $this->getManagerRecipients();
-        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Manager recipients: ' . json_encode($managerRecipients));
         foreach ($managerRecipients as $managerRecipient) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] Calling sendToManager()...');
             $notificationManager->sendToManager($notification, $managerRecipient);
         }
-
-        $this->modx->log(modX::LOG_LEVEL_ERROR, '[DEBUG Notifications] ====== END sendNotifications() ======');
     }
 
     /**

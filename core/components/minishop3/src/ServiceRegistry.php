@@ -144,6 +144,15 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Notification\NotificationConfigService::class,
             'interface' => null,
         ],
+        // Customer services
+        'ms3_customer_duplicate_checker' => [
+            'class' => \MiniShop3\Services\CustomerDuplicateChecker::class,
+            'interface' => null,
+        ],
+        'ms3_customer_factory' => [
+            'class' => \MiniShop3\Services\CustomerFactory::class,
+            'interface' => null,
+        ],
     ];
 
     /**

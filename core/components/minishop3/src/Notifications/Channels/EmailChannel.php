@@ -30,43 +30,29 @@ class EmailChannel implements ChannelInterface
      */
     public function send(Notification $notification, array $recipient, msOrder $order): bool
     {
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] send() called");
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Recipient: " . json_encode($recipient));
-
         // Determine recipient type from context
         $recipientType = $recipient['type'] ?? 'customer';
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Recipient type: {$recipientType}");
 
         // Get message from notification
         $message = $notification->toEmail($recipientType);
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Message object: " . ($message ? get_class($message) : 'NULL'));
 
         if (!$message instanceof EmailMessage) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] No email message defined for notification!");
             return false;
         }
 
         // Get recipient email
         $email = $this->getRecipientEmail($recipient);
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Recipient email: " . ($email ?: 'EMPTY'));
 
         if (empty($email)) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] No email address for recipient!");
             return false;
         }
 
         // Build email body
         $body = $this->buildBody($message, $notification);
         $subject = $this->buildSubject($message, $notification);
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Subject: {$subject}");
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Body length: " . strlen($body));
 
         // Send email
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Calling sendEmail()...");
-        $result = $this->sendEmail($email, $subject, $body, $message);
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] sendEmail() returned: " . ($result ? 'TRUE' : 'FALSE'));
-
-        return $result;
+        return $this->sendEmail($email, $subject, $body, $message);
     }
 
     /**
@@ -203,8 +189,6 @@ class EmailChannel implements ChannelInterface
      */
     protected function sendEmail(string $email, string $subject, string $body, EmailMessage $message): bool
     {
-        $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] sendEmail() started");
-
         try {
             $mail = new modPHPMailer($this->modx);
             $mail->setHTML(true);
@@ -218,8 +202,6 @@ class EmailChannel implements ChannelInterface
             $fromName = $message->getFromName() ?? $this->modx->getOption('site_name');
             $mail->set(modMail::MAIL_FROM, $from);
             $mail->set(modMail::MAIL_FROM_NAME, $fromName);
-
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Mail configured: TO={$email}, FROM={$from}, FROM_NAME={$fromName}");
 
             // Reply-To
             if ($replyTo = $message->getReplyTo()) {
@@ -236,13 +218,11 @@ class EmailChannel implements ChannelInterface
                 }
             }
 
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] Calling mail->send()...");
             $result = $mail->send();
-            $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] mail->send() returned: " . ($result ? 'TRUE' : 'FALSE'));
 
             if (!$result) {
                 $errorInfo = $mail->mailer->ErrorInfo ?? 'Unknown error';
-                $this->modx->log(modX::LOG_LEVEL_ERROR, "[DEBUG EmailChannel] PHPMailer ErrorInfo: " . $errorInfo);
+                $this->modx->log(modX::LOG_LEVEL_ERROR, "[ms3] Email send failed: " . $errorInfo);
             }
 
             $mail->reset();
@@ -251,7 +231,7 @@ class EmailChannel implements ChannelInterface
         } catch (\Throwable $e) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "[DEBUG EmailChannel] EXCEPTION: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString()
+                "[ms3] Email exception: " . $e->getMessage()
             );
             return false;
         }

@@ -147,6 +147,8 @@ $_lang['setting_ms3_order_product_options'] = 'Product options fields in order';
 $_lang['setting_ms3_order_product_options_desc'] = 'List of editable product options in order window. Default is color, size';
 $_lang['setting_ms3_delete_drafts_after'] = 'Delete order drafts after';
 $_lang['setting_ms3_delete_drafts_after_desc'] = 'Specify strtotime()-compatible string (e.g. "-1 year" or "-2 weeks") to automatically delete outdated order drafts older than specified time period. Cleanup runs automatically every 30 minutes';
+$_lang['setting_ms3_order_log_actions'] = 'Order log actions';
+$_lang['setting_ms3_order_log_actions_desc'] = 'Action types to record in order history. Available: status (status change), products (product changes), field (field changes), address (address changes), payment (payments). Comma-separated. Use * to log everything. Empty to disable logging.';
 $_lang['setting_ms3_status_draft'] = 'Draft order status ID';
 $_lang['setting_ms3_status_draft_desc'] = 'What status to set for draft order';
 $_lang['setting_ms3_status_new'] = 'Initial order status ID';
@@ -218,6 +220,8 @@ $_lang['setting_ms3_customer_sync_delete_with_user'] = 'Delete customer with use
 $_lang['setting_ms3_customer_sync_delete_with_user_desc'] = 'Delete msCustomer record when deleting associated modUser. By default only unlinks, preserving order history.';
 $_lang['setting_ms3_customer_sync_user_group'] = 'User group for new modUsers';
 $_lang['setting_ms3_customer_sync_user_group_desc'] = 'MODX user group ID to which new users will be automatically added when created from msCustomer. 0 = don\'t add to any group.';
+$_lang['setting_ms3_customer_duplicate_fields'] = 'Customer duplicate check fields';
+$_lang['setting_ms3_customer_duplicate_fields_desc'] = 'JSON array of fields for duplicate checking when creating a customer. Default ["email", "phone"]. Check uses OR logic (match on any field).';
 
 // Login Security
 $_lang['setting_ms3_customer_max_login_attempts'] = 'Maximum login attempts';

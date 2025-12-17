@@ -147,6 +147,8 @@ $_lang['setting_ms3_order_product_options'] = 'Поля опций продук�
 $_lang['setting_ms3_order_product_options_desc'] = 'Перечень редактируемых опций товара в окне заказа. По умолчанию color, size';
 $_lang['setting_ms3_delete_drafts_after'] = 'Удалять черновики заказов после';
 $_lang['setting_ms3_delete_drafts_after_desc'] = 'Укажите strtotime() — совместимую строку (например "-1 year" или "-2 weeks") для автоматического удаления устаревших черновиков заказов старше, чем указанный временной отрезок. Очистка запускается автоматически раз в 30 минут ';
+$_lang['setting_ms3_order_log_actions'] = 'Логируемые действия с заказом';
+$_lang['setting_ms3_order_log_actions_desc'] = 'Типы действий для записи в историю заказа. Доступны: status (смена статуса), products (изменение товаров), field (изменение полей), address (изменение адреса), payment (платежи). Через запятую. Значение * — логировать всё. Пусто — отключить логирование.';
 $_lang['setting_ms3_status_draft'] = 'ID статуса заказа Черновик';
 $_lang['setting_ms3_status_draft_desc'] = 'Какой статус нужно устанавливать для заказа-черновика';
 $_lang['setting_ms3_status_new'] = 'ID первоначального статуса заказа';
@@ -218,6 +220,8 @@ $_lang['setting_ms3_customer_sync_delete_with_user'] = 'Удалять клие�
 $_lang['setting_ms3_customer_sync_delete_with_user_desc'] = 'Удалять запись msCustomer при удалении связанного modUser. По умолчанию только отвязывает, сохраняя историю заказов.';
 $_lang['setting_ms3_customer_sync_user_group'] = 'Группа пользователей для новых modUser';
 $_lang['setting_ms3_customer_sync_user_group_desc'] = 'ID группы пользователей MODX, в которую будут автоматически добавляться новые пользователи при создании из msCustomer. 0 = не добавлять в группу.';
+$_lang['setting_ms3_customer_duplicate_fields'] = 'Поля для проверки дубликатов клиентов';
+$_lang['setting_ms3_customer_duplicate_fields_desc'] = 'JSON-массив полей для проверки дубликатов при создании клиента. По умолчанию ["email", "phone"]. Проверка выполняется по логике OR (совпадение любого поля).';
 
 // Login Security
 $_lang['setting_ms3_customer_max_login_attempts'] = 'Максимум попыток входа';

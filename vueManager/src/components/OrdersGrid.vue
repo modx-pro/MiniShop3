@@ -126,6 +126,13 @@ function editOrder(order) {
 }
 
 /**
+ * Create new order (redirect to create page)
+ */
+function createNewOrder() {
+  window.location.href = '?a=mgr/order&namespace=minishop3&id=new'
+}
+
+/**
  * Delete order (called after confirmation in ActionsColumn)
  */
 async function deleteOrder(order) {
@@ -205,9 +212,7 @@ function getStatusSeverity(color) {
 async function loadFiltersConfig() {
   try {
     const response = await request.get('/api/mgr/orders/filters')
-    console.log('[OrdersGrid] Filters response:', response)
     filters.value = response.filters || response || {}
-    console.log('[OrdersGrid] Filters loaded:', filters.value)
     initFilterValues()
   } catch (error) {
     console.error('[OrdersGrid] Failed to load filters config:', error)
@@ -325,7 +330,7 @@ function renderField(data, column) {
  */
 function getCustomerLink(data) {
   if (data.customer_id) {
-    return `?a=mgr/customers&namespace=minishop3&customer=${data.customer_id}`
+    return `?a=mgr/customers&namespace=minishop3&customer_id=${data.customer_id}`
   }
   return null
 }
@@ -347,7 +352,16 @@ onMounted(async () => {
     <Card>
       <template #title>
         <div class="grid-header">
-          <span>{{ _('orders_title') }}</span>
+          <div class="grid-header-left">
+            <span>{{ _('orders_title') }}</span>
+            <Button
+              :label="_('ms3_order_create')"
+              icon="pi pi-plus"
+              severity="success"
+              size="small"
+              @click="createNewOrder"
+            />
+          </div>
           <div class="grid-stats">
             <span class="stat-item">
               <i class="pi pi-calendar"></i>
@@ -548,6 +562,12 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.grid-header-left {
+  display: flex;
+  align-items: center;
   gap: 1rem;
 }
 

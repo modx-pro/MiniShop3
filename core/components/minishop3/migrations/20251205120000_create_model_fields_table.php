@@ -53,6 +53,25 @@ final class CreateModelFieldsTable extends AbstractMigration
                 'default' => 0,
                 'comment' => 'Sort order',
             ])
+            ->addColumn('section_id', 'integer', [
+                'null' => true,
+                'comment' => 'FK to ms3_model_field_sections',
+            ])
+            ->addColumn('width', 'integer', [
+                'null' => false,
+                'default' => 6,
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY,
+                'comment' => 'Field width (1-12 grid columns)',
+            ])
+            ->addColumn('placeholder', 'string', [
+                'limit' => 255,
+                'null' => true,
+                'comment' => 'Input placeholder',
+            ])
+            ->addColumn('description', 'text', [
+                'null' => true,
+                'comment' => 'Field description/help text',
+            ])
             ->addColumn('config', 'text', [
                 'null' => true,
                 'comment' => 'Additional JSON config',
@@ -64,6 +83,10 @@ final class CreateModelFieldsTable extends AbstractMigration
             ->addIndex(['model', 'visible', 'rank'], [
                 'unique' => false,
                 'name' => 'idx_model_visible_rank',
+            ])
+            ->addIndex(['section_id'], [
+                'unique' => false,
+                'name' => 'idx_section_id',
             ])
             ->create();
     }

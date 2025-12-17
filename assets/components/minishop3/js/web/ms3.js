@@ -113,7 +113,7 @@ const ms3 = {
    * inside .ms3_form forms. Triggers form submit.
    */
   initLinkHandler () {
-    document.addEventListener('click', async (event) {
+    document.addEventListener('click', async (event) => {
       const link = event.target.closest('.ms3_link')
       if (!link) {
         return
