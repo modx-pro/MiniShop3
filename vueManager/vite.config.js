@@ -27,6 +27,7 @@ const ProdInput = {
   'notifications': 'src/entries/notifications.js',
   'model-fields': 'src/entries/model-fields.js',
   'grid-fields-config': 'src/entries/grid-fields-config.js',
+  'import': 'src/entries/import.js',
   'main': 'src/main.js'
 }
 // https://vite.dev/config/
@@ -62,7 +63,12 @@ export default defineConfig(({ command }) => {
             /^\[class\^=["']pi-/,
             /^\[class\*=["'] pi-/,
             // PrimeVue компоненты - не префиксируем (Dialog рендерится в body)
-            /^\.p-/
+            /^\.p-/,
+            // PrimeVue data-атрибуты для состояний (active, hidden и т.д.)
+            /^\[data-p-/,
+            /^\[data-pc-/,
+            // Комбинированные селекторы с .p- классами
+            /\.p-.*\[data-/
           ],
           // Трансформация селектора
           transform: function (prefix, selector, prefixToIgnore) {

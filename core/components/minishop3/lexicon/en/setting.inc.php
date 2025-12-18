@@ -163,6 +163,10 @@ $_lang['setting_ms3_use_scheduler'] = 'Use queue manager';
 $_lang['setting_ms3_use_scheduler_desc'] = 'Before using, make sure you have Scheduler component installed';
 $_lang['setting_ms3_utility_import_fields'] = 'Import fields list';
 $_lang['setting_ms3_utility_import_fields_delimiter'] = 'Import file columns delimiter';
+$_lang['setting_ms3_import_sync_limit'] = 'Sync import limit';
+$_lang['setting_ms3_import_sync_limit_desc'] = 'Maximum number of rows for synchronous import. If exceeded, background processing (Scheduler) is recommended.';
+$_lang['setting_ms3_import_preview_rows'] = 'Preview rows';
+$_lang['setting_ms3_import_preview_rows_desc'] = 'Number of CSV rows to preview when configuring mapping.';
 
 $_lang['setting_ms3_customer_grid_fields'] = 'Customers table fields';
 $_lang['setting_ms3_customer_grid_fields_desc'] = 'List of fields to be shown in customers table. Available: "id,first_name,last_name,email,phone".';

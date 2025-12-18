@@ -36,12 +36,19 @@ export function useApi() {
     try {
       const response = await requestFn();
 
-      if (response.object && response.object.data !== undefined) {
-        return response.object.data;
+      // MODX processor returns data in 'object' field
+      if (response.object && typeof response.object === 'object' && Object.keys(response.object).length > 0) {
+        return response.object;
       }
 
-      if (response.data !== undefined) {
-        return response.data;
+      // Some processors return data in 'data' field
+      if (response.data !== undefined && response.data !== null) {
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          return response.data;
+        }
+        if (!Array.isArray(response.data)) {
+          return response.data;
+        }
       }
 
       return response;
@@ -98,6 +105,13 @@ export function useApi() {
   };
 
   /**
+   * Upload file
+   */
+  const upload = (route, file, additionalData = {}, options = {}) => {
+    return executeRequest(() => request.upload(route, file, additionalData, options));
+  };
+
+  /**
    * Clear error state
    */
   const clearError = () => {
@@ -128,6 +142,7 @@ export function useApi() {
     put,
     delete: del,
     patch,
+    upload,
 
     clearError,
     isUnauthorized,
