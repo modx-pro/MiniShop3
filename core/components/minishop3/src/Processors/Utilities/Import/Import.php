@@ -159,7 +159,7 @@ class Import extends Processor
         $task = $this->modx->newObject('sFileTask');
         $task->fromArray([
             'class_key' => 'sFileTask',
-            'content' => '/tasks/csvImport.php',
+            'content' => '/elements/tasks/csvImport.php',
             'namespace' => 'MiniShop3',
             'reference' => 'ms3_csv_import',
             'description' => 'MiniShop3 CSV import'

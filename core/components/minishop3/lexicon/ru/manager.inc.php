@@ -371,3 +371,5 @@ $_lang['ms3_import_upload_err_no_tmp'] = 'Отсутствует временн�
 $_lang['ms3_import_upload_err_cant_write'] = 'Ошибка записи файла';
 $_lang['ms3_import_upload_dir_error'] = 'Ошибка создания директории для загрузки';
 $_lang['ms3_import_upload_move_error'] = 'Ошибка перемещения файла';
+$_lang['ms3_import_encoding'] = 'Кодировка';
+$_lang['ms3_import_encoding_converted'] = 'Файл будет автоматически сконвертирован из [[+from]] в UTF-8';

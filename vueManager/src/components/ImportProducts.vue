@@ -42,6 +42,7 @@ const totalRows = ref(0)
 const syncLimit = ref(300)
 const exceedsLimit = ref(false)
 const schedulerAvailable = ref(false)
+const detectedEncoding = ref('')
 
 // Mapping: column index -> field name
 const fieldMapping = ref([])
@@ -79,15 +80,10 @@ const canProceedToStep3 = computed(() => {
 const loadAvailableFields = async () => {
   try {
     const response = await get('/api/mgr/import/fields')
-    console.log('[Import] Fields response:', response)
-
-    // Handle both direct response and nested object
     const data = response.object || response
 
     availableFields.value = data.fields || []
     keyFields.value = data.key_fields || []
-
-    console.log('[Import] Loaded fields:', availableFields.value.length, 'keyFields:', keyFields.value.length)
 
     if (keyFields.value.length > 0 && !updateKey.value) {
       updateKey.value = keyFields.value.find(k => k.value === 'article')?.value || keyFields.value[0].value
@@ -100,17 +96,12 @@ const loadAvailableFields = async () => {
 const previewFile = async () => {
   if (!filePath.value) return
 
-  console.log('[Import] previewFile called, file:', filePath.value, 'delimiter:', delimiter.value)
-
   try {
     const response = await post('/api/mgr/import/preview', {
       file: filePath.value,
       delimiter: delimiter.value,
       rows: 5
     })
-    console.log('[Import] Preview response:', response)
-
-    // Handle both direct response and nested object
     const data = response.object || response
 
     csvHeaders.value = data.headers || []
@@ -119,8 +110,7 @@ const previewFile = async () => {
     syncLimit.value = data.sync_limit || 300
     exceedsLimit.value = data.exceeds_limit || false
     schedulerAvailable.value = data.scheduler_available || false
-
-    console.log('[Import] Parsed headers:', csvHeaders.value.length, 'totalRows:', totalRows.value)
+    detectedEncoding.value = data.encoding || 'UTF-8'
 
     fieldMapping.value = csvHeaders.value.map(() => null)
     autoMapFields()
@@ -184,8 +174,6 @@ const startImport = async () => {
       debug: debugMode.value
     })
 
-    console.log('[Import] Start response:', response)
-
     importId.value = response.import_id || ''
 
     if (response.scheduled) {
@@ -201,7 +189,6 @@ const startImport = async () => {
         errors: response.errors || 0,
         skipped: response.skipped || 0
       }
-      console.log('[Import] Result:', importResult.value)
       importCompleted.value = true
       importRunning.value = false
     }
@@ -221,6 +208,7 @@ const resetImport = () => {
   csvPreview.value = []
   fieldMapping.value = []
   totalRows.value = 0
+  detectedEncoding.value = ''
   importId.value = ''
   importProgress.value = null
   importRunning.value = false
@@ -234,19 +222,10 @@ const triggerFileInput = () => {
 }
 
 const handleFileSelect = async (event) => {
-  console.log('[Import] handleFileSelect called', event)
   const file = event.target.files?.[0]
-  console.log('[Import] Selected file:', file)
-
-  if (!file) {
-    console.log('[Import] No file selected')
-    return
-  }
-
-  console.log('[Import] File name:', file.name, 'Type:', file.type, 'Size:', file.size)
+  if (!file) return
 
   if (!file.name.toLowerCase().endsWith('.csv')) {
-    console.log('[Import] Invalid extension, expected .csv')
     uploadError.value = _('ms3_utilities_import_file_ext_err') || 'Only CSV files allowed'
     return
   }
@@ -255,21 +234,13 @@ const handleFileSelect = async (event) => {
   uploadError.value = null
 
   try {
-    console.log('[Import] Starting upload to /api/mgr/import/upload')
     const response = await upload('/api/mgr/import/upload', file)
-    console.log('[Import] Upload response:', response)
-    console.log('[Import] Response keys:', Object.keys(response))
-    console.log('[Import] response.file:', response.file)
-    console.log('[Import] response.object:', response.object)
-
-    // Handle both direct response and nested object
     const data = response.object || response
     filePath.value = data.file
     uploadedFileName.value = data.original_name || file.name
-    console.log('[Import] File uploaded, path:', filePath.value)
     await previewFile()
   } catch (err) {
-    console.error('[Import] Upload failed:', err)
+    console.error('Upload failed:', err)
     uploadError.value = err.message || _('ms3_import_upload_error') || 'Upload failed'
   } finally {
     uploading.value = false
@@ -352,7 +323,13 @@ onMounted(() => {
       </div>
 
       <div class="file-info" v-if="totalRows > 0">
-        <Message severity="info" :closable="false">{{ _('ms3_import_file_info') }}: {{ totalRows }} {{ _('ms3_import_rows') }}</Message>
+        <Message severity="info" :closable="false">
+          {{ _('ms3_import_file_info') }}: {{ totalRows }} {{ _('ms3_import_rows') }}
+          <span v-if="detectedEncoding" class="encoding-info"> | {{ _('ms3_import_encoding') }}: {{ detectedEncoding }}</span>
+        </Message>
+        <Message v-if="detectedEncoding && detectedEncoding !== 'UTF-8'" severity="warn" :closable="false">
+          {{ _('ms3_import_encoding_converted', { from: detectedEncoding }) }}
+        </Message>
         <Message v-if="exceedsLimit && !schedulerAvailable" severity="warn" :closable="false">{{ _('ms3_import_exceeds_limit_warning') }}</Message>
       </div>
 
@@ -533,4 +510,5 @@ onMounted(() => {
 .result-value.success { color: #155724; }
 .result-value.info { color: #0c5460; }
 .result-value.error { color: #721c24; }
+.encoding-info { font-weight: 500; }
 </style>

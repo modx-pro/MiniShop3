@@ -29,6 +29,8 @@ class ImportCSV
 
     private array $params = [];
     private string $importId = '';
+    private array $tvCache = [];
+    private ?string $detectedEncoding = null;
 
     public function __construct(modX &$modx)
     {
@@ -199,7 +201,10 @@ class ImportCSV
 
     private function import(): bool
     {
-        $handle = fopen($this->params['file'], 'r');
+        // Prepare file: detect encoding, remove BOM, convert to UTF-8 if needed
+        $preparedFile = $this->prepareFile($this->params['file']);
+
+        $handle = fopen($preparedFile, 'r');
 
         // Count total rows for progress
         $totalRows = 0;
@@ -389,8 +394,15 @@ class ImportCSV
         $data['tvs'] = $this->params['tv_enabled'] || !empty($tvData);
 
         // Add TV data to main data array for MODX processor
+        // MODX expects format tv{ID}, so we need to resolve TV name to ID
         foreach ($tvData as $tvName => $tvValue) {
-            $data['tv' . $tvName] = $tvValue;
+            $tvId = $this->resolveTvId($tvName);
+            if ($tvId) {
+                $data['tv' . $tvId] = $tvValue;
+            } else {
+                $this->modx->log(modX::LOG_LEVEL_WARN,
+                    "[Import] Row {$this->rows}: TV '$tvName' not found, skipping");
+            }
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, "Array with importing data: \n" . print_r($data, 1));
@@ -488,6 +500,43 @@ class ImportCSV
             return $vendor->get('id');
         }
 
+        return 0;
+    }
+
+    /**
+     * Resolve TV name or ID to TV ID
+     * Supports: tv.5 (by ID) or tv.fieldname (by name)
+     * Caches results for performance
+     */
+    private function resolveTvId(string $tvNameOrId): int
+    {
+        // Check cache first
+        if (isset($this->tvCache[$tvNameOrId])) {
+            return $this->tvCache[$tvNameOrId];
+        }
+
+        // If it's a numeric ID, verify it exists and return
+        if (is_numeric($tvNameOrId)) {
+            $tvId = (int)$tvNameOrId;
+            $tv = $this->modx->getObject(\MODX\Revolution\modTemplateVar::class, ['id' => $tvId]);
+            if ($tv) {
+                $this->tvCache[$tvNameOrId] = $tvId;
+                return $tvId;
+            }
+            $this->tvCache[$tvNameOrId] = 0;
+            return 0;
+        }
+
+        // Find TV by name
+        $tv = $this->modx->getObject(\MODX\Revolution\modTemplateVar::class, ['name' => $tvNameOrId]);
+        if ($tv) {
+            $tvId = $tv->get('id');
+            $this->tvCache[$tvNameOrId] = $tvId;
+            return $tvId;
+        }
+
+        // Not found - cache as 0
+        $this->tvCache[$tvNameOrId] = 0;
         return 0;
     }
 
@@ -632,21 +681,33 @@ class ImportCSV
 
     /**
      * Get preview of CSV file (first N rows)
+     * @return array ['rows' => array, 'encoding' => string]
      */
     public static function getPreview(string $filePath, string $delimiter = ';', int $rows = 5, bool $skipHeader = false): array
     {
         if (!file_exists($filePath)) {
-            return [];
+            return ['rows' => [], 'encoding' => null];
         }
 
+        // Read file content for encoding detection and conversion
+        $content = file_get_contents($filePath);
+        $originalEncoding = self::detectEncoding($content);
+
+        // Remove BOM and convert to UTF-8
+        $content = self::removeBom($content);
+        if (strtoupper($originalEncoding) !== 'UTF-8') {
+            $content = self::convertToUtf8($content, $originalEncoding);
+        }
+
+        // Parse CSV from converted content
         $preview = [];
-        $handle = fopen($filePath, 'r');
-        $rowNum = 0;
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $content);
+        rewind($handle);
+
         $headerSkipped = false;
 
         while (($csv = fgetcsv($handle, 0, $delimiter)) !== false) {
-            $rowNum++;
-
             if ($skipHeader && !$headerSkipped) {
                 $headerSkipped = true;
                 continue;
@@ -660,7 +721,10 @@ class ImportCSV
         }
         fclose($handle);
 
-        return $preview;
+        return [
+            'rows' => $preview,
+            'encoding' => $originalEncoding,
+        ];
     }
 
     /**
@@ -672,10 +736,189 @@ class ImportCSV
             return [];
         }
 
-        $handle = fopen($filePath, 'r');
+        $content = file_get_contents($filePath, false, null, 0, 8192);
+        $content = self::removeBom($content);
+        $content = self::convertToUtf8($content);
+
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $content);
+        rewind($handle);
         $headers = fgetcsv($handle, 0, $delimiter);
         fclose($handle);
 
         return $headers ?: [];
+    }
+
+    /**
+     * Detect file encoding
+     * @return string Detected encoding (UTF-8, Windows-1251, etc.)
+     */
+    public static function detectEncoding(string $content): string
+    {
+        // Check for UTF-8 BOM
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            return 'UTF-8';
+        }
+
+        // Check for UTF-16 BOM
+        if (str_starts_with($content, "\xFF\xFE") || str_starts_with($content, "\xFE\xFF")) {
+            return 'UTF-16';
+        }
+
+        // Try to detect encoding
+        // Order matters: check UTF-8 first, then Windows-1251
+        $encodings = ['UTF-8', 'Windows-1251', 'KOI8-R', 'ISO-8859-5', 'ASCII'];
+
+        // mb_detect_encoding with strict mode
+        $detected = mb_detect_encoding($content, $encodings, true);
+
+        if ($detected) {
+            return $detected;
+        }
+
+        // Additional heuristic for Windows-1251 vs UTF-8
+        // Windows-1251 Cyrillic range: 0xC0-0xFF
+        // UTF-8 Cyrillic uses 2-byte sequences starting with 0xD0-0xD1
+        $hasUtf8Cyrillic = preg_match('/[\xD0-\xD1][\x80-\xBF]/u', $content);
+        $hasWin1251Cyrillic = preg_match('/[\xC0-\xFF]/', $content) && !$hasUtf8Cyrillic;
+
+        if ($hasWin1251Cyrillic) {
+            return 'Windows-1251';
+        }
+
+        if ($hasUtf8Cyrillic) {
+            return 'UTF-8';
+        }
+
+        // Default to UTF-8
+        return 'UTF-8';
+    }
+
+    /**
+     * Remove BOM (Byte Order Mark) from content
+     */
+    public static function removeBom(string $content): string
+    {
+        // UTF-8 BOM
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            return substr($content, 3);
+        }
+
+        // UTF-16 LE BOM
+        if (str_starts_with($content, "\xFF\xFE")) {
+            return substr($content, 2);
+        }
+
+        // UTF-16 BE BOM
+        if (str_starts_with($content, "\xFE\xFF")) {
+            return substr($content, 2);
+        }
+
+        return $content;
+    }
+
+    /**
+     * Convert content to UTF-8
+     */
+    public static function convertToUtf8(string $content, ?string $fromEncoding = null): string
+    {
+        if ($fromEncoding === null) {
+            $fromEncoding = self::detectEncoding($content);
+        }
+
+        // Already UTF-8
+        if (strtoupper($fromEncoding) === 'UTF-8') {
+            return $content;
+        }
+
+        // Convert using iconv (more reliable for Cyrillic)
+        if (function_exists('iconv')) {
+            $converted = @iconv($fromEncoding, 'UTF-8//TRANSLIT//IGNORE', $content);
+            if ($converted !== false) {
+                return $converted;
+            }
+        }
+
+        // Fallback to mb_convert_encoding
+        if (function_exists('mb_convert_encoding')) {
+            return mb_convert_encoding($content, 'UTF-8', $fromEncoding);
+        }
+
+        return $content;
+    }
+
+    /**
+     * Prepare file for import: detect encoding, remove BOM, convert to UTF-8
+     * Creates a temporary file with normalized content
+     * @return string Path to prepared file (may be same as original if already UTF-8)
+     */
+    private function prepareFile(string $filePath): string
+    {
+        // Read first chunk to detect encoding
+        $handle = fopen($filePath, 'r');
+        $sample = fread($handle, 8192);
+        fclose($handle);
+
+        // Remove BOM from sample for detection
+        $sampleClean = self::removeBom($sample);
+        $encoding = self::detectEncoding($sampleClean);
+        $this->detectedEncoding = $encoding;
+
+        $this->modx->log(modX::LOG_LEVEL_INFO, "[Import] Detected encoding: {$encoding}");
+
+        // Check if file has BOM
+        $hasBom = $sample !== $sampleClean;
+
+        // If already UTF-8 without BOM, return original path
+        if (strtoupper($encoding) === 'UTF-8' && !$hasBom) {
+            return $filePath;
+        }
+
+        // Need to convert - create temp file
+        $tempPath = sys_get_temp_dir() . '/ms3_import_' . uniqid() . '.csv';
+
+        $this->modx->log(modX::LOG_LEVEL_INFO,
+            "[Import] Converting file from {$encoding} to UTF-8" . ($hasBom ? ' (removing BOM)' : ''));
+
+        $sourceHandle = fopen($filePath, 'r');
+        $destHandle = fopen($tempPath, 'w');
+
+        $isFirstChunk = true;
+        while (!feof($sourceHandle)) {
+            $chunk = fread($sourceHandle, 65536); // 64KB chunks
+
+            // Remove BOM from first chunk
+            if ($isFirstChunk) {
+                $chunk = self::removeBom($chunk);
+                $isFirstChunk = false;
+            }
+
+            // Convert encoding
+            if (strtoupper($encoding) !== 'UTF-8') {
+                $chunk = self::convertToUtf8($chunk, $encoding);
+            }
+
+            fwrite($destHandle, $chunk);
+        }
+
+        fclose($sourceHandle);
+        fclose($destHandle);
+
+        // Register temp file for cleanup
+        register_shutdown_function(function () use ($tempPath) {
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+        });
+
+        return $tempPath;
+    }
+
+    /**
+     * Get detected encoding of last processed file
+     */
+    public function getDetectedEncoding(): ?string
+    {
+        return $this->detectedEncoding;
     }
 }

@@ -61,8 +61,10 @@ class Preview extends Processor
             // Count total rows
             $totalRows = ImportCSV::countRows($realPath, $delimiter);
 
-            // Get preview data
-            $preview = ImportCSV::getPreview($realPath, $delimiter, $previewRows, false);
+            // Get preview data with encoding info
+            $previewData = ImportCSV::getPreview($realPath, $delimiter, $previewRows, false);
+            $preview = $previewData['rows'] ?? [];
+            $encoding = $previewData['encoding'] ?? 'UTF-8';
 
             // Get sync limit from settings
             $syncLimit = (int)$this->modx->getOption('ms3_import_sync_limit', null, 300);
@@ -77,6 +79,7 @@ class Preview extends Processor
                 'file' => $file,
                 'headers' => $headers,
                 'preview' => $preview,
+                'encoding' => $encoding,
                 'total_rows' => $totalRows,
                 'sync_limit' => $syncLimit,
                 'exceeds_limit' => $exceedsLimit,

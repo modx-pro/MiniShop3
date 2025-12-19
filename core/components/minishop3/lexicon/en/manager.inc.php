@@ -371,3 +371,5 @@ $_lang['ms3_import_upload_err_no_tmp'] = 'Missing temporary directory';
 $_lang['ms3_import_upload_err_cant_write'] = 'File write error';
 $_lang['ms3_import_upload_dir_error'] = 'Upload directory creation error';
 $_lang['ms3_import_upload_move_error'] = 'File move error';
+$_lang['ms3_import_encoding'] = 'Encoding';
+$_lang['ms3_import_encoding_converted'] = 'File will be automatically converted from [[+from]] to UTF-8';
