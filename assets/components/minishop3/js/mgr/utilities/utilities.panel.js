@@ -30,13 +30,26 @@ ms3.panel.Utilities = function (config) {
             },
                 {
                     title: _('ms3_utilities_import'),
-                    layout: 'anchor',
+                    id: 'ms3-utilities-import-tab',
+                    layout: 'fit',
+                    autoScroll: true,
                     items: [{
-                        html: _('ms3_utilities_import_intro'),
-                        bodyCssClass: 'panel-desc',
-                    }, {
-                        xtype: 'ms3-utilities-import',
-                        cls: 'main-wrapper',
+                        xtype: 'panel',
+                        id: 'ms3-vue-import-panel',
+                        border: false,
+                        autoHeight: true,
+                        html: '<div id="ms3-vue-import" class="vueApp" style="min-height: 600px;"></div>',
+                        listeners: {
+                            afterrender: function() {
+                                // Mount Vue application after panel render
+                                const event = new CustomEvent('ms3:mountVueImport', {
+                                    detail: {
+                                        targetId: '#ms3-vue-import'
+                                    }
+                                });
+                                document.dispatchEvent(event);
+                            }
+                        }
                     }]
                 },
                 {

@@ -163,6 +163,10 @@ $_lang['setting_ms3_use_scheduler'] = 'Использовать менеджер
 $_lang['setting_ms3_use_scheduler_desc'] = 'Перед использованием убедитесь, что у вас установлен компонент Scheduler';
 $_lang['setting_ms3_utility_import_fields'] = 'Список полей для импорта';
 $_lang['setting_ms3_utility_import_fields_delimiter'] = 'Разделитель колонок в файле импорта';
+$_lang['setting_ms3_import_sync_limit'] = 'Лимит синхронного импорта';
+$_lang['setting_ms3_import_sync_limit_desc'] = 'Максимальное количество строк для синхронного импорта. При превышении рекомендуется использовать фоновую обработку (Scheduler).';
+$_lang['setting_ms3_import_preview_rows'] = 'Строк для предпросмотра';
+$_lang['setting_ms3_import_preview_rows_desc'] = 'Количество строк CSV для предпросмотра при настройке маппинга.';
 
 $_lang['setting_ms3_customer_grid_fields'] = 'Поля таблицы клиентов';
 $_lang['setting_ms3_customer_grid_fields_desc'] = 'Список полей, которые будут показаны в таблице клиентов. Доступны: "id,first_name,last_name,email,phone".';

@@ -296,6 +296,16 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_import',
     ],
+    'ms3_import_sync_limit' => [
+        'value' => 300,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_import',
+    ],
+    'ms3_import_preview_rows' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_import',
+    ],
     'ms3_status_new' => [
         'value' => 0,
         'xtype' => 'numberfield',

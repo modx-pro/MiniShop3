@@ -6,24 +6,46 @@
  */
 export function useLexicon() {
   /**
-   * Get translation by key
+   * Get translation by key with optional placeholder replacement
    * @param {string} key - Lexicon key WITHOUT prefix (e.g., 'section_add')
-   * @param {string} fallback - Fallback value if translation not found
+   * @param {Object|string} placeholdersOrFallback - Placeholders object or fallback string
+   * @param {string} fallback - Fallback value if translation not found (when placeholders provided)
    * @returns {string}
    */
-  function _(key, fallback = null) {
+  function _(key, placeholdersOrFallback = null, fallback = null) {
     const lexicon = window.MODx?.lang || {}
 
+    let translation = null
+    let placeholders = null
+
+    // Determine if second arg is placeholders object or fallback string
+    if (typeof placeholdersOrFallback === 'object' && placeholdersOrFallback !== null) {
+      placeholders = placeholdersOrFallback
+    } else if (typeof placeholdersOrFallback === 'string') {
+      fallback = placeholdersOrFallback
+    }
+
     if (lexicon[key]) {
-      return lexicon[key]
+      translation = lexicon[key]
+    } else {
+      const fullKey = `ms3_vue_${key}`
+      if (lexicon[fullKey]) {
+        translation = lexicon[fullKey]
+      }
     }
 
-    const fullKey = `ms3_vue_${key}`
-    if (lexicon[fullKey]) {
-      return lexicon[fullKey]
+    if (!translation) {
+      return fallback || key
     }
 
-    return fallback || key
+    // Replace MODX-style placeholders [[+name]]
+    if (placeholders) {
+      for (const [name, value] of Object.entries(placeholders)) {
+        translation = translation.replace(new RegExp(`\\[\\[\\+${name}\\]\\]`, 'g'), value)
+      }
+    }
+
+    return translation
   }
 
   return {

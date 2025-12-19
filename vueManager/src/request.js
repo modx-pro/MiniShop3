@@ -183,6 +183,80 @@ class Request {
   async patch(route, data = null, options = {}) {
     return this.request('PATCH', route, data, options);
   }
+
+  /**
+   * Upload file via FormData
+   *
+   * @param {string} route - API route
+   * @param {File} file - File object to upload
+   * @param {Object} additionalData - Additional form data
+   * @param {Object} options - Additional options
+   * @returns {Promise<Object>} - API response
+   */
+  async upload(route, file, additionalData = {}, options = {}) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Add additional data to FormData
+      Object.entries(additionalData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+
+      const url = this.buildUrl(route);
+
+      const fetchOptions = {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+        // Don't set Content-Type header - browser will set it with boundary
+        headers: {
+          'Accept': 'application/json',
+          ...options.headers
+        }
+      };
+
+      const response = await fetch(url, fetchOptions);
+      const responseData = await response.json();
+
+      if (responseData.success === false) {
+        throw new RequestError(
+          responseData.message || 'Upload failed',
+          response.status,
+          responseData
+        );
+      }
+
+      if (!response.ok) {
+        throw new RequestError(
+          responseData.message || `HTTP error! status: ${response.status}`,
+          response.status,
+          responseData
+        );
+      }
+
+      if (responseData.object && Object.keys(responseData.object).length > 0) {
+        return responseData.object;
+      } else if (responseData.data) {
+        return responseData.data;
+      }
+
+      return responseData;
+
+    } catch (error) {
+      if (error instanceof RequestError) {
+        throw error;
+      }
+
+      throw new RequestError(
+        error.message || 'Upload error',
+        0,
+        { originalError: error }
+      );
+    }
+  }
 }
 
 /**
