@@ -13,10 +13,28 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
 import request from '../request.js'
 import { useLexicon } from '../composables/useLexicon.js'
+import { useSelection } from '../composables/useSelection.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const { _ } = useLexicon()
+
+// Bulk selection
+const {
+  selectedItems,
+  hasSelection,
+  selectionCount,
+  processing: bulkProcessing,
+  clearSelection,
+  confirmBulkDelete
+} = useSelection({
+  entityName: 'order',
+  deleteBulk: async (ids) => {
+    await request.delete('/api/mgr/orders/bulk', { ids })
+  },
+  onSuccess: () => loadOrders(),
+  getItemName: (item) => `#${item.num || item.id}`
+})
 
 const columns = ref([])
 const filters = ref({})
@@ -458,8 +476,35 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Bulk actions toolbar -->
+        <div v-if="hasSelection" class="bulk-actions-bar mb-3">
+          <div class="bulk-info">
+            <i class="pi pi-check-square"></i>
+            <span>{{ _('selected_count').replace('{count}', selectionCount) }}</span>
+          </div>
+          <div class="bulk-buttons">
+            <Button
+              :label="_('clear_selection')"
+              icon="pi pi-times"
+              severity="secondary"
+              size="small"
+              text
+              @click="clearSelection"
+            />
+            <Button
+              :label="_('delete_selected')"
+              icon="pi pi-trash"
+              severity="danger"
+              size="small"
+              :loading="bulkProcessing"
+              @click="confirmBulkDelete"
+            />
+          </div>
+        </div>
+
         <!-- Table -->
         <DataTable
+          v-model:selection="selectedItems"
           :value="orders"
           :loading="loading"
           :paginator="true"
@@ -469,7 +514,11 @@ onMounted(async () => {
           @page="onPage"
           stripedRows
           responsiveLayout="scroll"
+          dataKey="id"
         >
+          <!-- Selection column -->
+          <Column selectionMode="multiple" headerStyle="width: 3rem" frozen />
+
           <!-- Dynamic column rendering -->
           <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
             <!-- Actions column (special handling) -->
@@ -627,6 +676,34 @@ onMounted(async () => {
 }
 
 .filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Bulk actions toolbar */
+.bulk-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+}
+
+.bulk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.bulk-info i {
+  font-size: 1.1rem;
+}
+
+.bulk-buttons {
   display: flex;
   gap: 0.5rem;
 }

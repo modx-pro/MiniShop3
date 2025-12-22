@@ -218,6 +218,70 @@ class CustomersController
     }
 
     /**
+     * Bulk delete customers
+     * DELETE /api/mgr/customers/bulk
+     *
+     * @param array $data Request data (ids)
+     * @return array Response
+     */
+    public function bulkDelete(array $data = []): array
+    {
+        $ids = $data['ids'] ?? [];
+
+        if (empty($ids) || !is_array($ids)) {
+            return Response::error('Customer IDs array is required', 400)->getData();
+        }
+
+        // Sanitize IDs
+        $ids = array_filter(array_map('intval', $ids), function ($id) {
+            return $id > 0;
+        });
+
+        if (empty($ids)) {
+            return Response::error('No valid customer IDs provided', 400)->getData();
+        }
+
+        $deleted = 0;
+        $failed = 0;
+
+        foreach ($ids as $id) {
+            $customer = $this->modx->getObject(msCustomer::class, $id);
+
+            if (!$customer) {
+                $failed++;
+                continue;
+            }
+
+            // Delete related addresses
+            $addresses = $this->modx->getIterator(\MiniShop3\Model\msCustomerAddress::class, ['customer_id' => $id]);
+            foreach ($addresses as $address) {
+                $address->remove();
+            }
+
+            // Delete related tokens
+            $tokens = $this->modx->getIterator(\MiniShop3\Model\msCustomerToken::class, ['customer_id' => $id]);
+            foreach ($tokens as $token) {
+                $token->remove();
+            }
+
+            if ($customer->remove()) {
+                $deleted++;
+            } else {
+                $failed++;
+            }
+        }
+
+        if ($deleted === 0) {
+            return Response::error('Failed to delete customers', 500)->getData();
+        }
+
+        return Response::success([
+            'deleted' => $deleted,
+            'failed' => $failed
+        ], "Deleted {$deleted} customers")->getData();
+    }
+
+    /**
      * Format customer object for API response
      *
      * @param msCustomer $customer

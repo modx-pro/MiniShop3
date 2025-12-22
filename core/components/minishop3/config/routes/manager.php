@@ -295,6 +295,14 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->getList($allParams);
         });
+        // Bulk delete - must be before /{id} route
+        $router->delete('/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
+            return $controller->bulkDelete($data);
+        });
         $router->get('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->get($params);
@@ -363,6 +371,14 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->get('/filters', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
             return $controller->getFilters($params);
+        });
+        // Bulk delete - must be before /{id} route
+        $router->delete('/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->bulkDelete($data);
         });
         $router->get('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);

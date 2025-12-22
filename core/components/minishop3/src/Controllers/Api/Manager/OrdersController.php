@@ -296,6 +296,76 @@ class OrdersController
     }
 
     /**
+     * Bulk delete orders
+     * DELETE /api/mgr/orders/bulk
+     *
+     * @param array $data Request data (ids)
+     * @return array Response
+     */
+    public function bulkDelete(array $data = []): array
+    {
+        $ids = $data['ids'] ?? [];
+
+        if (empty($ids) || !is_array($ids)) {
+            return Response::error('Order IDs array is required', 400)->getData();
+        }
+
+        // Sanitize IDs
+        $ids = array_filter(array_map('intval', $ids), function ($id) {
+            return $id > 0;
+        });
+
+        if (empty($ids)) {
+            return Response::error('No valid order IDs provided', 400)->getData();
+        }
+
+        $deleted = 0;
+        $failed = 0;
+
+        foreach ($ids as $id) {
+            $order = $this->modx->getObject(msOrder::class, $id);
+
+            if (!$order) {
+                $failed++;
+                continue;
+            }
+
+            // Delete related addresses
+            $addresses = $this->modx->getIterator(msOrderAddress::class, ['order_id' => $id]);
+            foreach ($addresses as $address) {
+                $address->remove();
+            }
+
+            // Delete related products
+            $products = $this->modx->getIterator(\MiniShop3\Model\msOrderProduct::class, ['order_id' => $id]);
+            foreach ($products as $product) {
+                $product->remove();
+            }
+
+            // Delete related logs
+            $logs = $this->modx->getIterator(\MiniShop3\Model\msOrderLog::class, ['order_id' => $id]);
+            foreach ($logs as $log) {
+                $log->remove();
+            }
+
+            if ($order->remove()) {
+                $deleted++;
+            } else {
+                $failed++;
+            }
+        }
+
+        if ($deleted === 0) {
+            return Response::error('Failed to delete orders', 500)->getData();
+        }
+
+        return Response::success([
+            'deleted' => $deleted,
+            'failed' => $failed
+        ], "Deleted {$deleted} orders")->getData();
+    }
+
+    /**
      * Create new order
      * POST /api/mgr/orders
      *

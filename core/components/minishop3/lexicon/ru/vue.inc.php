@@ -679,3 +679,18 @@ $_lang['customer_name'] = 'Имя';
 $_lang['ms3_customer_validation_email_or_phone'] = 'Для создания клиента необходимо указать email или телефон';
 $_lang['ms3_customer_validation_invalid_email'] = 'Указан некорректный email адрес';
 $_lang['warning'] = 'Внимание';
+
+// Filters
+$_lang['apply_filters'] = 'Применить фильтры';
+$_lang['clear_filters'] = 'Сбросить фильтры';
+$_lang['filter_by'] = 'Фильтр по {field}';
+
+// Bulk selection and actions
+$_lang['selected_count'] = 'Выбрано: {count}';
+$_lang['clear_selection'] = 'Снять выделение';
+$_lang['delete_selected'] = 'Удалить выбранные';
+$_lang['no_items_selected'] = 'Не выбрано ни одного элемента';
+$_lang['bulk_delete_confirm_title'] = 'Подтверждение массового удаления';
+$_lang['bulk_delete_confirm_message'] = 'Вы уверены, что хотите удалить {count} элементов? Это действие необратимо.';
+$_lang['bulk_delete_success'] = 'Успешно удалено {count} элементов';
+$_lang['bulk_delete_error'] = 'Ошибка при массовом удалении';

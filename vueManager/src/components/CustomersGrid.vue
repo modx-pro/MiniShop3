@@ -16,11 +16,29 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import request from '../request.js'
 import { useLexicon } from '../composables/useLexicon.js'
+import { useSelection } from '../composables/useSelection.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+
+// Bulk selection
+const {
+  selectedItems,
+  hasSelection,
+  selectionCount,
+  processing: bulkProcessing,
+  clearSelection,
+  confirmBulkDelete
+} = useSelection({
+  entityName: 'customer',
+  deleteBulk: async (ids) => {
+    await request.delete('/api/mgr/customers/bulk', { ids })
+  },
+  onSuccess: () => loadCustomers(),
+  getItemName: (item) => getCustomerDisplayName(item)
+})
 
 const columns = ref([])
 const loading = ref(false)
@@ -579,7 +597,7 @@ onMounted(async () => {
                 <InputText
                   :id="`filter-${column.name}`"
                   v-model="filterValues[column.name]"
-                  :placeholder="`Filter by ${column.label}`"
+                  :placeholder="_('filter_by').replace('{field}', column.label)"
                   style="width: 100%;"
                   @keyup.enter="applyFilters"
                 />
@@ -588,12 +606,12 @@ onMounted(async () => {
           </div>
           <div style="display: flex; gap: 0.5rem;">
             <Button
-              label="Apply Filters"
+              :label="_('apply_filters')"
               icon="pi pi-filter"
               @click="applyFilters"
             />
             <Button
-              label="Clear Filters"
+              :label="_('clear_filters')"
               icon="pi pi-filter-slash"
               severity="secondary"
               @click="clearFilters"
@@ -601,8 +619,35 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Bulk actions toolbar -->
+        <div v-if="hasSelection" class="bulk-actions-bar mb-3">
+          <div class="bulk-info">
+            <i class="pi pi-check-square"></i>
+            <span>{{ _('selected_count').replace('{count}', selectionCount) }}</span>
+          </div>
+          <div class="bulk-buttons">
+            <Button
+              :label="_('clear_selection')"
+              icon="pi pi-times"
+              severity="secondary"
+              size="small"
+              text
+              @click="clearSelection"
+            />
+            <Button
+              :label="_('delete_selected')"
+              icon="pi pi-trash"
+              severity="danger"
+              size="small"
+              :loading="bulkProcessing"
+              @click="confirmBulkDelete"
+            />
+          </div>
+        </div>
+
         <!-- Table -->
         <DataTable
+          v-model:selection="selectedItems"
           :value="customers"
           :loading="loading"
           :paginator="true"
@@ -610,9 +655,13 @@ onMounted(async () => {
           :totalRecords="totalRecords"
           :lazy="true"
           @page="onPage"
+          dataKey="id"
           stripedRows
           responsiveLayout="scroll"
         >
+          <!-- Selection checkbox column -->
+          <Column selectionMode="multiple" headerStyle="width: 3rem" frozen></Column>
+
           <!-- Dynamic column rendering -->
           <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
             <!-- Actions column (special handling) -->
@@ -941,6 +990,34 @@ onMounted(async () => {
 <style scoped>
 .customers-grid {
   padding: 20px;
+}
+
+/* Bulk actions toolbar */
+.bulk-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+}
+
+.bulk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.bulk-info i {
+  font-size: 1.1rem;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .text-success {

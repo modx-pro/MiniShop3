@@ -679,3 +679,13 @@ $_lang['customer_name'] = 'Name';
 $_lang['ms3_customer_validation_email_or_phone'] = 'Email or phone is required to create a customer';
 $_lang['ms3_customer_validation_invalid_email'] = 'Invalid email address';
 $_lang['warning'] = 'Warning';
+
+// Bulk selection and actions
+$_lang['selected_count'] = 'Selected: {count}';
+$_lang['clear_selection'] = 'Clear selection';
+$_lang['delete_selected'] = 'Delete selected';
+$_lang['no_items_selected'] = 'No items selected';
+$_lang['bulk_delete_confirm_title'] = 'Confirm bulk delete';
+$_lang['bulk_delete_confirm_message'] = 'Are you sure you want to delete {count} items? This action cannot be undone.';
+$_lang['bulk_delete_success'] = 'Successfully deleted {count} items';
+$_lang['bulk_delete_error'] = 'Error during bulk delete';
