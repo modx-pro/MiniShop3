@@ -19,13 +19,32 @@ ms3.panel.Utilities = function (config) {
             },
             items: [{
                 title: _('ms3_utilities_gallery'),
-                layout: 'anchor',
+                id: 'ms3-utilities-gallery-tab',
+                layout: 'fit',
+                autoScroll: true,
                 items: [{
-                    html: _('ms3_utilities_gallery_intro'),
-                    bodyCssClass: 'panel-desc',
-                }, {
-                    xtype: 'ms3-utilities-gallery',
-                    cls: 'main-wrapper',
+                    xtype: 'panel',
+                    id: 'ms3-vue-utilities-gallery-panel',
+                    border: false,
+                    autoHeight: true,
+                    html: '<div id="ms3-vue-utilities-gallery" class="vueApp" style="min-height: 400px;"' +
+                          ' data-source-id="' + (ms3.config.utility_gallery_source_id || 1) + '"' +
+                          ' data-source-name="' + (ms3.config.utility_gallery_source_name || '') + '"' +
+                          ' data-total-products="' + (ms3.config.utility_gallery_total_products || 0) + '"' +
+                          ' data-total-files="' + (ms3.config.utility_gallery_total_products_files || 0) + '"' +
+                          ' data-thumbnails="' + encodeURIComponent(ms3.config.utility_gallery_thumbnails || '') + '"' +
+                          '></div>',
+                    listeners: {
+                        afterrender: function() {
+                            // Mount Vue application after panel render
+                            const event = new CustomEvent('ms3:mountVueUtilitiesGallery', {
+                                detail: {
+                                    targetId: '#ms3-vue-utilities-gallery'
+                                }
+                            });
+                            document.dispatchEvent(event);
+                        }
+                    }
                 }]
             },
                 {

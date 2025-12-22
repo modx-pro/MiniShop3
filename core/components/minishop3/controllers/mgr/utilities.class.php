@@ -33,7 +33,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
     {
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
-        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/utilities/gallery.css');
+        // Gallery CSS now included in Vue component (utilities-gallery.min.css)
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/default.grid.js');
@@ -43,7 +43,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/utilities.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/utilities.panel.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/gallery/panel.js');
+        // Gallery panel now uses Vue component (utilities-gallery.min.js)
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/import/panel.js');
 
         $config = $this->ms3->config;
@@ -71,8 +71,8 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         $config['utility_import_fields'] = $this->getOption('ms3_utility_import_fields', null, 'pagetitle,parent,price,article', true);
         $config['utility_import_fields_delimiter'] = $this->getOption('ms3_utility_import_fields_delimiter', null, ';', true);
-        $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
+        // CSS for Vue components
         $this->addHtml(
             '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/useLexicon.min.css">
         <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/fields-management.min.css">
@@ -80,11 +80,20 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/grid-fields-config.min.css">
         <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/model-fields.min.css">
         <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/import.min.css">
-        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/fields-management.min.js"></script>
+        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/utilities-gallery.min.css">'
+        );
+
+        // Config MUST be set BEFORE Vue modules load (they read from ms3.config)
+        $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
+
+        // Vue modules (ES modules are deferred, so config will be ready)
+        $this->addHtml(
+            '<script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/fields-management.min.js"></script>
         <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/extra-fields.min.js"></script>
         <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/grid-fields-config.min.js"></script>
         <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/model-fields.min.js"></script>
         <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/import.min.js"></script>
+        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/utilities-gallery.min.js"></script>
         <script>
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-page-utilities"});

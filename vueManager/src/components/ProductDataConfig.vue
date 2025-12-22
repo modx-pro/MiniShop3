@@ -43,6 +43,11 @@ const newSection = ref({
   sort_order: 999
 })
 
+// Section edit dialog
+const editSectionDialogVisible = ref(false)
+const editingSection = ref(null)
+const editingSectionIndex = ref(-1)
+
 /**
  * Section selection options (computed)
  * Built from loaded sections, showing only !hidden
@@ -290,6 +295,83 @@ async function addSection() {
 }
 
 /**
+ * Open section edit dialog
+ */
+function openEditSectionDialog(section, index) {
+  // Create copy of section for editing
+  editingSection.value = {
+    id: section.id,
+    key: section.key,
+    section_key: section.key,
+    lexicon_key: section.lexicon_key || '',
+    label: section.label || '',
+    hidden: section.hidden || false,
+    is_default: section.is_default || false
+  }
+  editingSectionIndex.value = index
+  editSectionDialogVisible.value = true
+}
+
+/**
+ * Close section edit dialog
+ */
+function closeEditSectionDialog() {
+  editSectionDialogVisible.value = false
+  editingSection.value = null
+  editingSectionIndex.value = -1
+}
+
+/**
+ * Save section changes
+ */
+async function saveEditedSection() {
+  if (editingSectionIndex.value < 0 || !editingSection.value) {
+    return
+  }
+
+  // Validation: must have either lexicon_key or label
+  if (!editingSection.value.lexicon_key && !editingSection.value.label) {
+    toast.add({
+      severity: 'warn',
+      summary: _('warning'),
+      detail: _('section_lexicon_or_label_required'),
+      life: 3000
+    })
+    return
+  }
+
+  try {
+    // Update section in array
+    sections.value[editingSectionIndex.value] = {
+      ...sections.value[editingSectionIndex.value],
+      lexicon_key: editingSection.value.lexicon_key || null,
+      label: editingSection.value.label || null,
+      hidden: editingSection.value.hidden
+    }
+
+    // Save all sections to server
+    await saveSections()
+
+    toast.add({
+      severity: 'success',
+      summary: _('save_success'),
+      detail: _('section_updated'),
+      life: 3000
+    })
+
+    closeEditSectionDialog()
+  } catch (error) {
+    console.error('[ProductDataConfig] Error updating section:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('save_error'),
+      detail: error.message || _('error_saving_sections'),
+      life: 5000
+    })
+  }
+}
+
+/**
  * Load all fields (including hidden)
  */
 async function loadFields() {
@@ -513,7 +595,7 @@ onMounted(() => {
                 :animation="200"
                 ghost-class="ghost-row"
               >
-                <template #item="{ element: section }">
+                <template #item="{ element: section, index }">
                   <tr>
                     <td class="drag-handle-cell">
                       <i class="pi pi-bars drag-handle"></i>
@@ -529,6 +611,13 @@ onMounted(() => {
                     <td>{{ section.key }}</td>
                     <td>{{ section.label }}</td>
                     <td>
+                      <Button
+                        icon="pi pi-pencil"
+                        size="small"
+                        text
+                        @click="openEditSectionDialog(section, index)"
+                        :title="_('section_edit')"
+                      />
                       <Button
                         icon="pi pi-trash"
                         size="small"
@@ -708,6 +797,83 @@ onMounted(() => {
           :label="_('add_button')"
           icon="pi pi-check"
           @click="addSection"
+        />
+      </template>
+    </Dialog>
+
+    <!-- Edit section dialog -->
+    <Dialog
+      v-model:visible="editSectionDialogVisible"
+      modal
+      :header="editingSection ? `${_('edit_section_title')}: ${editingSection.key}` : _('edit_section_title')"
+      :style="{ width: '600px' }"
+    >
+      <div v-if="editingSection" class="edit-field-form">
+        <div class="form-grid">
+          <!-- Section key (readonly) -->
+          <div class="field col-12">
+            <label for="edit-section-key">{{ _('section_key_label') }}</label>
+            <InputText
+              id="edit-section-key"
+              v-model="editingSection.key"
+              disabled
+              class="w-full"
+            />
+            <small>{{ _('section_key_readonly_hint') }}</small>
+          </div>
+
+          <!-- Lexicon key -->
+          <div class="field col-6">
+            <label for="edit-section-lexicon-key">{{ _('section_lexicon_key_label') }}</label>
+            <InputText
+              id="edit-section-lexicon-key"
+              v-model="editingSection.lexicon_key"
+              :placeholder="_('section_lexicon_key_example')"
+              class="w-full"
+            />
+            <small>{{ _('section_lexicon_key_hint') }}</small>
+          </div>
+
+          <!-- Direct label text -->
+          <div class="field col-6">
+            <label for="edit-section-label">{{ _('section_label_label') }}</label>
+            <InputText
+              id="edit-section-label"
+              v-model="editingSection.label"
+              :placeholder="_('section_label_example')"
+              class="w-full"
+            />
+            <small>{{ _('section_label_hint') }}</small>
+          </div>
+
+          <!-- Visibility -->
+          <div class="field col-12">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <Checkbox
+                inputId="edit-section-hidden"
+                v-model="editingSection.hidden"
+                :binary="true"
+                :trueValue="false"
+                :falseValue="true"
+              />
+              <label for="edit-section-hidden" style="margin: 0; cursor: pointer;" @click="editingSection.hidden = !editingSection.hidden">{{ _('section_visible_label') }}</label>
+            </div>
+            <small>{{ _('section_visibility_hint') }}</small>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <Button
+          :label="_('cancel_button')"
+          icon="pi pi-times"
+          severity="secondary"
+          @click="closeEditSectionDialog"
+        />
+        <Button
+          :label="_('save_button')"
+          icon="pi pi-save"
+          @click="saveEditedSection"
         />
       </template>
     </Dialog>

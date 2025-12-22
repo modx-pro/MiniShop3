@@ -311,11 +311,15 @@ class ConfigService
                 'is_default' => (bool)$item->get('is_default'),
             ];
 
-            if (!empty($section['lexicon_key'])) {
-                $section['label'] = $this->getLexiconValue($section['lexicon_key'], 'minishop3', 'product');
-            } else if (isset($config['label'])) {
+            // Priority: 1) explicit label from config, 2) lexicon translation, 3) section_key
+            if (!empty($config['label'])) {
+                // User explicitly set a custom label - use it
                 $section['label'] = $config['label'];
+            } else if (!empty($section['lexicon_key'])) {
+                // No custom label, but has lexicon key - use translation
+                $section['label'] = $this->getLexiconValue($section['lexicon_key'], 'minishop3', 'product');
             } else {
+                // Fallback to section key
                 $section['label'] = $item->get('section_key');
             }
 
@@ -366,17 +370,18 @@ class ConfigService
                 $override->set('hidden', $hidden);
                 $override->set('sort_order', $sortOrder);
 
+                // Build config from passed data
+                // Use array_key_exists() instead of isset() to handle null values correctly
                 $config = [];
-                if (isset($section['lexicon_key'])) {
+                if (array_key_exists('lexicon_key', $section) && !empty($section['lexicon_key'])) {
                     $config['lexicon_key'] = $section['lexicon_key'];
                 }
-                if (isset($section['label'])) {
+                if (array_key_exists('label', $section) && !empty($section['label'])) {
                     $config['label'] = $section['label'];
                 }
 
-                if (!empty($config)) {
-                    $override->set('config', json_encode($config, JSON_UNESCAPED_UNICODE));
-                }
+                // Always update config field (even if empty, to clear old values)
+                $override->set('config', !empty($config) ? json_encode($config, JSON_UNESCAPED_UNICODE) : null);
 
                 if (!$override->save()) {
                     $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,

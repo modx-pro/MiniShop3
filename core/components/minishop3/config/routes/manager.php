@@ -621,6 +621,25 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Utilities Gallery routes
+    $router->group('/utilities/gallery', function($router) use ($modx) {
+        // Regenerate thumbnails
+        $router->post('/update', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $response = $modx->runProcessor(
+                'MiniShop3\\Processors\\Utilities\\Gallery\\Update',
+                $data,
+                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
+            );
+            return $response->getResponse();
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'msproductfile_generate')
+    ]);
+
     // Import routes
     $router->group('/import', function($router) use ($modx) {
         // Get available fields for mapping

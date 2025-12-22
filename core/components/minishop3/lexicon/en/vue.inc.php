@@ -114,6 +114,13 @@ $_lang['ms3_vue_section_visible_label'] = 'Section visible';
 $_lang['ms3_vue_section_visibility_hint'] = 'Hidden sections are not displayed in interface';
 $_lang['ms3_vue_cancel_button'] = 'Cancel';
 $_lang['ms3_vue_add_button'] = 'Add';
+$_lang['ms3_vue_save_button'] = 'Save';
+
+// Edit section dialog
+$_lang['ms3_vue_section_edit'] = 'Edit';
+$_lang['ms3_vue_edit_section_title'] = 'Editing section';
+$_lang['ms3_vue_section_key_readonly_hint'] = 'Section key cannot be changed after creation';
+$_lang['ms3_vue_section_updated'] = 'Section updated';
 
 // Extra Fields Manager Widget
 $_lang['ms3_extra_fields_title'] = 'Object Extension';

@@ -114,6 +114,13 @@ $_lang['ms3_vue_section_visible_label'] = 'Секция видима';
 $_lang['ms3_vue_section_visibility_hint'] = 'Скрытые секции не отображаются в интерфейсе';
 $_lang['ms3_vue_cancel_button'] = 'Отмена';
 $_lang['ms3_vue_add_button'] = 'Добавить';
+$_lang['ms3_vue_save_button'] = 'Сохранить';
+
+// Диалог редактирования секции
+$_lang['ms3_vue_section_edit'] = 'Редактировать';
+$_lang['ms3_vue_edit_section_title'] = 'Редактирование секции';
+$_lang['ms3_vue_section_key_readonly_hint'] = 'Ключ секции нельзя изменить после создания';
+$_lang['ms3_vue_section_updated'] = 'Секция обновлена';
 
 // Виджет расширения объектов (Extra Fields Manager)
 $_lang['ms3_extra_fields_title'] = 'Расширение объектов';

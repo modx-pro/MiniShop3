@@ -28,6 +28,7 @@ const ProdInput = {
   'model-fields': 'src/entries/model-fields.js',
   'grid-fields-config': 'src/entries/grid-fields-config.js',
   'import': 'src/entries/import.js',
+  'utilities-gallery': 'src/entries/utilities-gallery.js',
   'main': 'src/main.js'
 }
 // https://vite.dev/config/
