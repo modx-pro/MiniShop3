@@ -270,3 +270,62 @@
 .p-dialog .w-full {
   width: 100%;
 }
+
+/* Gap */
+.vueApp .gap-1,
+.p-dialog .gap-1 {
+  gap: 0.25rem;
+}
+
+.vueApp .gap-2,
+.p-dialog .gap-2 {
+  gap: 0.5rem;
+}
+
+.vueApp .gap-3,
+.p-dialog .gap-3 {
+  gap: 0.75rem;
+}
+
+.vueApp .gap-4,
+.p-dialog .gap-4 {
+  gap: 1rem;
+}
+
+/* Validation Rule Option in Select dropdown */
+.p-select-overlay .rule-option,
+.p-dialog .rule-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.p-select-overlay .rule-option-name,
+.p-dialog .rule-option-name {
+  font-weight: 600;
+}
+
+.p-select-overlay .rule-option-desc,
+.p-dialog .rule-option-desc {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Validation Field Option in Select dropdown */
+.p-select-overlay .field-option,
+.p-dialog .field-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.p-select-overlay .field-option-name,
+.p-dialog .field-option-name {
+  font-weight: 600;
+}
+
+.p-select-overlay .field-option-group,
+.p-dialog .field-option-group {
+  font-size: 0.75rem;
+  color: #6b7280;
+}

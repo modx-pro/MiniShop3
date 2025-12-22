@@ -352,6 +352,283 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'view_document')
     ]);
 
+    $router->group('/deliveries', function($router) use ($modx) {
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->create($data);
+        });
+        // Bulk delete - must be before /{id} route
+        $router->delete('/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->bulkDelete($data);
+        });
+        // Update positions - must be before /{id} route
+        $router->put('/positions', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->updatePositions($data);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->delete($params);
+        });
+
+        // Delivery payments routes
+        $router->get('/{id}/payments', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->getPayments($params);
+        });
+        $router->post('/{id}/payments', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['delivery_id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->addPayment($data);
+        });
+        $router->delete('/{id}/payments/{payment_id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->removePayment($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
+    // Payments CRUD
+    $router->group('/payments', function($router) use ($modx) {
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->create($data);
+        });
+        $router->delete('/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->bulkDelete($data);
+        });
+        $router->put('/positions', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->updatePositions($data);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->delete($params);
+        });
+
+        // Payment deliveries routes
+        $router->get('/{id}/deliveries', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->getDeliveries($params);
+        });
+        $router->post('/{id}/deliveries', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['payment_id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->addDelivery($data);
+        });
+        $router->delete('/{id}/deliveries/{delivery_id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->removeDelivery($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
+    // Vendors routes
+    $router->group('/vendors', function($router) use ($modx) {
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
+            return $controller->create($data);
+        });
+        $router->delete('/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
+            return $controller->bulkDelete($data);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
+            return $controller->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
+            return $controller->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
+            return $controller->delete($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
+    // Statuses CRUD (for settings page)
+    $router->group('/statuses', function($router) use ($modx) {
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->create($data);
+        });
+        $router->delete('/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->bulkDelete($data);
+        });
+        $router->post('/sort', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->sort($data);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->delete($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
+    // Links CRUD (product link types)
+    $router->group('/links', function($router) use ($modx) {
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\LinksController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->post('', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\LinksController($modx);
+            return $controller->create($data);
+        });
+        $router->get('/types', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\LinksController($modx);
+            return $controller->getTypes();
+        });
+        $router->delete('/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\LinksController($modx);
+            return $controller->bulkDelete($data);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\LinksController($modx);
+            return $controller->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\LinksController($modx);
+            return $controller->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\LinksController($modx);
+            return $controller->delete($params);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
     $router->group('/orders', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
             $allParams = array_merge($_GET, $params);
@@ -427,8 +704,8 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'msorder_list')
     ]);
 
-    // Statuses, Deliveries, Payments for dropdowns
-    $router->get('/statuses', function($params) use ($modx) {
+    // Statuses dropdown (with translated names for order forms)
+    $router->get('/statuses-dropdown', function($params) use ($modx) {
         $results = [];
         $collection = $modx->getIterator(\MiniShop3\Model\msOrderStatus::class);
         foreach ($collection as $item) {
@@ -444,18 +721,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
         return \MiniShop3\Router\Response::success(['results' => $results])->getData();
     });
 
-    $router->get('/deliveries', function($params) use ($modx) {
+    // Dropdown list of active deliveries (for order forms)
+    $router->get('/deliveries-active', function($params) use ($modx) {
         $results = [];
         $collection = $modx->getIterator(\MiniShop3\Model\msDelivery::class, ['active' => 1]);
-        foreach ($collection as $item) {
-            $results[] = $item->toArray();
-        }
-        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
-    });
-
-    $router->get('/payments', function($params) use ($modx) {
-        $results = [];
-        $collection = $modx->getIterator(\MiniShop3\Model\msPayment::class, ['active' => 1]);
         foreach ($collection as $item) {
             $results[] = $item->toArray();
         }

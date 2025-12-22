@@ -914,7 +914,7 @@ async function loadLogs() {
  */
 async function loadStatuses() {
   try {
-    const response = await request.get('/api/mgr/statuses')
+    const response = await request.get('/api/mgr/statuses-dropdown')
     statuses.value = (response.results || response || []).map(s => ({
       value: s.id,
       label: s.name
@@ -930,7 +930,7 @@ async function loadStatuses() {
  */
 async function loadDeliveries() {
   try {
-    const response = await request.get('/api/mgr/deliveries')
+    const response = await request.get('/api/mgr/deliveries-active')
     deliveries.value = (response.results || response || []).map(d => ({
       value: d.id,
       label: d.name
