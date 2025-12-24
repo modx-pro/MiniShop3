@@ -295,6 +295,7 @@ $_lang['grid_customers'] = 'Customers';
 $_lang['grid_orders'] = 'Orders';
 $_lang['grid_products'] = 'Products';
 $_lang['grid_order_products'] = 'Order Products';
+$_lang['grid_vendors'] = 'Vendors';
 $_lang['field_name'] = 'Field Name';
 $_lang['field_label'] = 'Label';
 $_lang['visible'] = 'Visible';
@@ -353,6 +354,10 @@ $_lang['edit_field_dialog_title'] = 'Edit Field';
 $_lang['field_name_readonly_hint'] = 'Field name cannot be changed after creation';
 $_lang['field_updated'] = 'Field updated successfully';
 $_lang['error_updating_field'] = 'Error updating field';
+
+// Image and boolean columns
+$_lang['field_type_image'] = 'Image';
+$_lang['field_type_boolean'] = 'Boolean (yes/no)';
 
 // Actions column
 $_lang['field_type_actions'] = 'Actions Column';
@@ -756,6 +761,7 @@ $_lang['vendor_email'] = 'Email';
 $_lang['vendor_resource'] = 'Resource';
 $_lang['vendor_resource_placeholder'] = 'Resource ID';
 $_lang['vendor_resource_help'] = 'MODX page ID for the vendor';
+$_lang['vendor_position'] = 'Position';
 $_lang['vendor_contacts'] = 'Contacts';
 $_lang['vendor_create'] = 'Create vendor';
 $_lang['vendor_edit'] = 'Edit vendor';
@@ -763,6 +769,7 @@ $_lang['vendor_name_required'] = 'Vendor name is required';
 $_lang['vendor_created'] = 'Vendor created';
 $_lang['vendor_updated'] = 'Vendor updated';
 $_lang['vendor_deleted'] = 'Vendor deleted';
+$_lang['vendor_order_saved'] = 'Vendor order saved';
 $_lang['vendor_delete_confirm_message'] = 'Are you sure you want to delete vendor "{name}"?';
 $_lang['ms3_vendor'] = 'Vendor';
 
@@ -931,6 +938,8 @@ $_lang['status_updated'] = 'Status updated';
 $_lang['status_deleted'] = 'Status deleted';
 $_lang['status_delete_confirm_message'] = 'Are you sure you want to delete status "{name}"?';
 $_lang['status_order_saved'] = 'Status order saved';
+$_lang['delivery_order_saved'] = 'Delivery order saved';
+$_lang['payment_order_saved'] = 'Payment order saved';
 
 // Links (Product Link Types)
 $_lang['link_create'] = 'Create Link Type';
@@ -943,3 +952,22 @@ $_lang['link_deleted'] = 'Link type deleted';
 $_lang['link_delete_confirm_message'] = 'Are you sure you want to delete link type "{name}"?';
 $_lang['link_type_readonly'] = 'Link type cannot be changed after creation';
 $_lang['select_type'] = 'Select type';
+
+// Model msVendor for Model Fields Configuration
+$_lang['ms3_model_vendor'] = 'Vendor';
+
+// Vendor fields labels
+$_lang['ms3_vendor_name'] = 'Name';
+$_lang['ms3_vendor_position'] = 'Position';
+$_lang['ms3_vendor_resource_id'] = 'Resource';
+$_lang['ms3_vendor_country'] = 'Country';
+$_lang['ms3_vendor_logo'] = 'Logo';
+$_lang['ms3_vendor_address'] = 'Address';
+$_lang['ms3_vendor_phone'] = 'Phone';
+$_lang['ms3_vendor_email'] = 'Email';
+$_lang['ms3_vendor_description'] = 'Description';
+$_lang['ms3_vendor_properties'] = 'Properties';
+
+// Vendor sections
+$_lang['ms3_section_vendor_info'] = 'Information';
+$_lang['ms3_section_vendor_address'] = 'Address';

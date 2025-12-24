@@ -374,6 +374,14 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
             return $controller->bulkDelete($data);
         });
+        // Sort (reorder) - must be before /{id} route
+        $router->post('/sort', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+            return $controller->sort($data);
+        });
         // Update positions - must be before /{id} route
         $router->put('/positions', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -443,6 +451,13 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
             return $controller->bulkDelete($data);
         });
+        $router->post('/sort', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+            return $controller->sort($data);
+        });
         $router->put('/positions', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -510,6 +525,13 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
             return $controller->bulkDelete($data);
+        });
+        $router->post('/sort', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);
+            return $controller->sort($data);
         });
         $router->get('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\VendorsController($modx);

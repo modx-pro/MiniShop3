@@ -255,6 +255,7 @@ $_lang['grid_customers'] = 'Клиенты';
 $_lang['grid_orders'] = 'Заказы';
 $_lang['grid_products'] = 'Товары';
 $_lang['grid_order_products'] = 'Товары заказа';
+$_lang['grid_vendors'] = 'Производители';
 $_lang['field_name'] = 'Имя поля';
 $_lang['field_label'] = 'Заголовок';
 $_lang['visible'] = 'Видимое';
@@ -353,6 +354,10 @@ $_lang['edit_field_dialog_title'] = 'Редактирование поля';
 $_lang['field_name_readonly_hint'] = 'Имя поля нельзя изменить после создания';
 $_lang['field_updated'] = 'Поле успешно обновлено';
 $_lang['error_updating_field'] = 'Ошибка при обновлении поля';
+
+// Image and boolean columns
+$_lang['field_type_image'] = 'Изображение';
+$_lang['field_type_boolean'] = 'Логическое (да/нет)';
 
 // Actions column
 $_lang['field_type_actions'] = 'Колонка действий';
@@ -761,6 +766,7 @@ $_lang['vendor_email'] = 'Email';
 $_lang['vendor_resource'] = 'Ресурс';
 $_lang['vendor_resource_placeholder'] = 'ID ресурса';
 $_lang['vendor_resource_help'] = 'ID страницы MODX для производителя';
+$_lang['vendor_position'] = 'Позиция';
 $_lang['vendor_contacts'] = 'Контакты';
 $_lang['vendor_create'] = 'Создать производителя';
 $_lang['vendor_edit'] = 'Редактировать производителя';
@@ -768,6 +774,7 @@ $_lang['vendor_name_required'] = 'Укажите название произво
 $_lang['vendor_created'] = 'Производитель создан';
 $_lang['vendor_updated'] = 'Производитель обновлён';
 $_lang['vendor_deleted'] = 'Производитель удалён';
+$_lang['vendor_order_saved'] = 'Порядок производителей сохранён';
 $_lang['vendor_delete_confirm_message'] = 'Вы уверены, что хотите удалить производителя "{name}"?';
 $_lang['ms3_vendor'] = 'Производитель';
 
@@ -936,6 +943,8 @@ $_lang['status_updated'] = 'Статус обновлён';
 $_lang['status_deleted'] = 'Статус удалён';
 $_lang['status_delete_confirm_message'] = 'Вы уверены, что хотите удалить статус "{name}"?';
 $_lang['status_order_saved'] = 'Порядок статусов сохранён';
+$_lang['delivery_order_saved'] = 'Порядок способов доставки сохранён';
+$_lang['payment_order_saved'] = 'Порядок способов оплаты сохранён';
 
 // Links (Product Link Types)
 $_lang['link_create'] = 'Создать тип связи';
@@ -948,3 +957,22 @@ $_lang['link_deleted'] = 'Тип связи удалён';
 $_lang['link_delete_confirm_message'] = 'Вы уверены, что хотите удалить тип связи "{name}"?';
 $_lang['link_type_readonly'] = 'Тип связи нельзя изменить после создания';
 $_lang['select_type'] = 'Выберите тип';
+
+// Model msVendor for Model Fields Configuration
+$_lang['ms3_model_vendor'] = 'Производитель';
+
+// Vendor fields labels
+$_lang['ms3_vendor_name'] = 'Название';
+$_lang['ms3_vendor_position'] = 'Позиция';
+$_lang['ms3_vendor_resource_id'] = 'Ресурс';
+$_lang['ms3_vendor_country'] = 'Страна';
+$_lang['ms3_vendor_logo'] = 'Логотип';
+$_lang['ms3_vendor_address'] = 'Адрес';
+$_lang['ms3_vendor_phone'] = 'Телефон';
+$_lang['ms3_vendor_email'] = 'Email';
+$_lang['ms3_vendor_description'] = 'Описание';
+$_lang['ms3_vendor_properties'] = 'Свойства';
+
+// Vendor sections
+$_lang['ms3_section_vendor_info'] = 'Информация';
+$_lang['ms3_section_vendor_address'] = 'Адрес';

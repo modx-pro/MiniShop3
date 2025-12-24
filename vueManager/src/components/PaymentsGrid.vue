@@ -18,6 +18,7 @@ import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import draggable from 'vuedraggable'
 import request from '../request.js'
 import { useLexicon } from '../composables/useLexicon.js'
 import { useSelection } from '../composables/useSelection.js'
@@ -59,6 +60,7 @@ const editingPayment = ref(null)
 const isNewPayment = ref(false)
 const saving = ref(false)
 const activeTab = ref('0')
+const selectAll = ref(false)
 
 // Deliveries tab
 const deliveries = ref([])
@@ -126,6 +128,54 @@ function onPage(event) {
 function onSearch() {
   first.value = 0
   loadPayments()
+}
+
+/**
+ * Handle select all checkbox
+ */
+function onSelectAllChange(checked) {
+  if (checked) {
+    selectedItems.value = [...payments.value]
+  } else {
+    selectedItems.value = []
+  }
+  selectAll.value = checked
+}
+
+/**
+ * Handle drag-drop reorder
+ */
+async function onDragEnd() {
+  const ids = payments.value.map(p => p.id)
+  try {
+    await request.post('/api/mgr/payments/sort', { ids })
+    toast.add({
+      severity: 'success',
+      summary: _('success'),
+      detail: _('payment_order_saved'),
+      life: 2000
+    })
+  } catch (error) {
+    console.error('[PaymentsGrid] Error saving order:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_saving_data'),
+      life: 5000
+    })
+    loadPayments()
+  }
+}
+
+/**
+ * Normalize image path to always start with /
+ */
+function normalizeImagePath(path) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
+    return path
+  }
+  return '/' + path
 }
 
 /**
@@ -499,88 +549,92 @@ onMounted(async () => {
         </div>
 
         <!-- Table -->
-        <DataTable
-          v-model:selection="selectedItems"
-          :value="payments"
-          :loading="loading"
-          :paginator="true"
-          :rows="rows"
-          :totalRecords="totalRecords"
-          :lazy="true"
-          @page="onPage"
-          stripedRows
-          responsiveLayout="scroll"
-          dataKey="id"
-        >
-          <!-- Selection column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" frozen />
-
-          <!-- Dynamic column rendering -->
-          <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
-            <!-- Actions column -->
-            <Column
-              v-if="column.type === 'actions'"
-              :header="column.label"
-              :frozen="column.frozen"
-              :style="{ width: column.width }"
-            >
-              <template #body="{ data }">
-                <ActionsColumn
-                  :data="data"
-                  :actions="getActionsConfig(column)"
-                  grid-id="payments"
-                  @edit="editPayment"
-                  @delete="deletePayment"
-                  @refresh="loadPayments"
+        <div v-if="loading" class="loading-overlay">
+          <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+        </div>
+        <table v-else class="payments-table">
+          <thead>
+            <tr>
+              <th style="width: 40px">
+                <Checkbox
+                  :modelValue="selectAll"
+                  :binary="true"
+                  @update:modelValue="onSelectAllChange"
                 />
+              </th>
+              <th style="width: 40px"></th>
+              <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
+                <th :style="{ width: column.width, minWidth: column.minWidth }">
+                  {{ column.label }}
+                </th>
               </template>
-            </Column>
-
-            <!-- Name column with lexicon support -->
-            <Column
-              v-else-if="column.name === 'name'"
-              :field="column.name"
-              :header="column.label"
-              :sortable="column.sortable"
-              :frozen="column.frozen"
-              :style="{ width: column.width, minWidth: column.minWidth }"
-            >
-              <template #body="{ data }">
-                {{ getDisplayName(data.name) }}
-              </template>
-            </Column>
-
-            <!-- Boolean column -->
-            <Column
-              v-else-if="column.type === 'boolean'"
-              :field="column.name"
-              :header="column.label"
-              :sortable="column.sortable"
-              :frozen="column.frozen"
-              :style="{ width: column.width }"
-            >
-              <template #body="{ data }">
-                <i
-                  :class="data[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"
-                ></i>
-              </template>
-            </Column>
-
-            <!-- Regular columns -->
-            <Column
-              v-else
-              :field="column.name"
-              :header="column.label"
-              :sortable="column.sortable"
-              :frozen="column.frozen"
-              :style="{ width: column.width, minWidth: column.minWidth }"
-            >
-              <template #body="{ data }">
-                {{ formatValue(data[column.name], column) }}
-              </template>
-            </Column>
-          </template>
-        </DataTable>
+            </tr>
+          </thead>
+          <draggable
+            v-model="payments"
+            tag="tbody"
+            handle=".drag-handle"
+            item-key="id"
+            @end="onDragEnd"
+          >
+            <template #item="{ element: payment }">
+              <tr>
+                <td>
+                  <Checkbox
+                    :modelValue="selectedItems.some(item => item.id === payment.id)"
+                    :binary="true"
+                    @update:modelValue="(val) => {
+                      if (val) {
+                        selectedItems.push(payment)
+                      } else {
+                        selectedItems = selectedItems.filter(item => item.id !== payment.id)
+                      }
+                    }"
+                  />
+                </td>
+                <td>
+                  <span class="drag-handle">
+                    <i class="pi pi-bars"></i>
+                  </span>
+                </td>
+                <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
+                  <!-- Actions column -->
+                  <td v-if="column.type === 'actions'">
+                    <ActionsColumn
+                      :data="payment"
+                      :actions="getActionsConfig(column)"
+                      grid-id="payments"
+                      @edit="editPayment"
+                      @delete="deletePayment"
+                      @refresh="loadPayments"
+                    />
+                  </td>
+                  <!-- Name column with lexicon support -->
+                  <td v-else-if="column.name === 'name'">
+                    {{ getDisplayName(payment.name) }}
+                  </td>
+                  <!-- Image column -->
+                  <td v-else-if="column.type === 'image'">
+                    <img
+                      v-if="payment[column.name]"
+                      :src="normalizeImagePath(payment[column.name])"
+                      :alt="payment.name"
+                      class="grid-thumbnail"
+                    />
+                  </td>
+                  <!-- Boolean column -->
+                  <td v-else-if="column.type === 'boolean'">
+                    <i :class="payment[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                  </td>
+                  <!-- Regular column -->
+                  <td v-else>
+                    {{ formatValue(payment[column.name], column) }}
+                  </td>
+                </template>
+              </tr>
+            </template>
+          </draggable>
+        </table>
       </template>
     </Card>
 
@@ -896,6 +950,61 @@ onMounted(async () => {
 
 .text-muted {
   color: #9ca3af;
+}
+
+/* Custom table styles */
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.payments-table th,
+.payments-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.payments-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+.payments-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  color: #94a3b8;
+  padding: 0.25rem;
+}
+
+.drag-handle:hover {
+  color: #64748b;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Grid thumbnail */
+.grid-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: #64748b;
 }
 
 </style>

@@ -216,6 +216,37 @@ class PaymentsController
     }
 
     /**
+     * Reorder payments (drag-drop sort)
+     * POST /api/mgr/payments/sort
+     *
+     * @param array $data Request data (ids - array of payment IDs in new order)
+     * @return array Response
+     */
+    public function sort(array $data = []): array
+    {
+        $ids = $data['ids'] ?? [];
+
+        if (empty($ids) || !is_array($ids)) {
+            return Response::error('Payment IDs array is required for sorting', 400)->getData();
+        }
+
+        $position = 0;
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $payment = $this->modx->getObject(msPayment::class, $id);
+                if ($payment) {
+                    $payment->set('position', $position);
+                    $payment->save();
+                    $position++;
+                }
+            }
+        }
+
+        return Response::success([], 'Payments reordered successfully')->getData();
+    }
+
+    /**
      * Bulk delete payments
      * DELETE /api/mgr/payments/bulk
      *

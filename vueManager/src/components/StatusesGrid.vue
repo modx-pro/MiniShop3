@@ -2,8 +2,6 @@
 import { onMounted, ref } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -13,6 +11,7 @@ import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import draggable from 'vuedraggable'
 import request from '../request.js'
 import { useLexicon } from '../composables/useLexicon.js'
 import { useSelection } from '../composables/useSelection.js'
@@ -46,6 +45,7 @@ const editDialogVisible = ref(false)
 const editingStatus = ref(null)
 const isNewStatus = ref(false)
 const saving = ref(false)
+const selectAll = ref(false)
 
 // Default color palette (similar to ExtJS)
 const colorPalette = [
@@ -192,11 +192,9 @@ function deleteStatus(status) {
 }
 
 /**
- * Handle row reorder (drag-drop)
+ * Handle drag end (vuedraggable)
  */
-async function onRowReorder(event) {
-  statuses.value = event.value
-
+async function onDragEnd() {
   // Extract IDs in new order
   const ids = statuses.value.map(s => s.id)
 
@@ -218,6 +216,17 @@ async function onRowReorder(event) {
     })
     // Reload to restore original order
     loadStatuses()
+  }
+}
+
+/**
+ * Handle select all checkbox
+ */
+function onSelectAllChange() {
+  if (selectAll.value) {
+    selectedItems.value = [...statuses.value]
+  } else {
+    selectedItems.value = []
   }
 }
 
@@ -323,71 +332,86 @@ onMounted(() => {
         </div>
 
         <!-- Table with drag-drop reorder -->
-        <DataTable
-          v-model:selection="selectedItems"
-          :value="statuses"
-          :loading="loading"
-          @rowReorder="onRowReorder"
-          stripedRows
-          responsiveLayout="scroll"
-          dataKey="id"
-        >
-          <!-- Drag handle column -->
-          <Column rowReorder headerStyle="width: 3rem" />
-
-          <!-- Selection column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" />
-
-          <!-- ID -->
-          <Column field="id" :header="_('ms3_id')" style="width: 80px" />
-
-          <!-- Name with color badge -->
-          <Column field="name" :header="_('ms3_name')">
-            <template #body="{ data }">
-              <span
-                class="status-badge"
-                :style="{ backgroundColor: '#' + data.color, color: getContrastColor(data.color) }"
+        <div class="p-datatable p-component p-datatable-striped">
+          <div class="p-datatable-wrapper">
+            <table class="p-datatable-table">
+              <thead class="p-datatable-thead">
+                <tr>
+                  <th style="width: 3rem"></th>
+                  <th style="width: 3rem">
+                    <Checkbox
+                      v-model="selectAll"
+                      :binary="true"
+                      @change="onSelectAllChange"
+                    />
+                  </th>
+                  <th style="width: 80px">{{ _('ms3_id') }}</th>
+                  <th>{{ _('ms3_name') }}</th>
+                  <th style="width: 100px">{{ _('ms3_status_final') }}</th>
+                  <th style="width: 100px">{{ _('ms3_status_fixed') }}</th>
+                  <th style="width: 100px">{{ _('ms3_active') }}</th>
+                  <th style="width: 120px">{{ _('ms3_actions') }}</th>
+                </tr>
+              </thead>
+              <draggable
+                v-model="statuses"
+                tag="tbody"
+                class="p-datatable-tbody"
+                handle=".drag-handle"
+                item-key="id"
+                @end="onDragEnd"
+                :animation="200"
+                ghost-class="ghost-row"
               >
-                {{ getDisplayName(data.name) }}
-              </span>
-            </template>
-          </Column>
-
-          <!-- Final -->
-          <Column field="final" :header="_('ms3_status_final')" style="width: 100px">
-            <template #body="{ data }">
-              <i :class="data.final ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
-            </template>
-          </Column>
-
-          <!-- Fixed -->
-          <Column field="fixed" :header="_('ms3_status_fixed')" style="width: 100px">
-            <template #body="{ data }">
-              <i :class="data.fixed ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
-            </template>
-          </Column>
-
-          <!-- Active -->
-          <Column field="active" :header="_('ms3_active')" style="width: 100px">
-            <template #body="{ data }">
-              <i :class="data.active ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
-            </template>
-          </Column>
-
-          <!-- Actions -->
-          <Column :header="_('ms3_actions')" style="width: 120px">
-            <template #body="{ data }">
-              <ActionsColumn
-                :data="data"
-                :actions="getActionsConfig()"
-                grid-id="statuses"
-                @edit="editStatus"
-                @delete="deleteStatus"
-                @refresh="loadStatuses"
-              />
-            </template>
-          </Column>
-        </DataTable>
+                <template #item="{ element: status }">
+                  <tr :class="{ 'p-row-odd': statuses.indexOf(status) % 2 === 1 }">
+                    <td class="drag-handle-cell">
+                      <i class="pi pi-bars drag-handle"></i>
+                    </td>
+                    <td>
+                      <Checkbox
+                        v-model="selectedItems"
+                        :value="status"
+                        :binary="false"
+                      />
+                    </td>
+                    <td>{{ status.id }}</td>
+                    <td>
+                      <span
+                        class="status-badge"
+                        :style="{ backgroundColor: '#' + status.color, color: getContrastColor(status.color) }"
+                      >
+                        {{ getDisplayName(status.name) }}
+                      </span>
+                    </td>
+                    <td>
+                      <i :class="status.final ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
+                    </td>
+                    <td>
+                      <i :class="status.fixed ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
+                    </td>
+                    <td>
+                      <i :class="status.active ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                    </td>
+                    <td>
+                      <ActionsColumn
+                        :data="status"
+                        :actions="getActionsConfig()"
+                        grid-id="statuses"
+                        @edit="editStatus"
+                        @delete="deleteStatus"
+                        @refresh="loadStatuses"
+                      />
+                    </td>
+                  </tr>
+                </template>
+              </draggable>
+            </table>
+          </div>
+          <div v-if="loading" class="loading-overlay">
+            <i class="pi pi-spinner pi-spin"></i>
+          </div>
+        </div>
       </template>
     </Card>
 
@@ -666,6 +690,87 @@ onMounted(() => {
 
 .mb-3 {
   margin-bottom: 1rem;
+}
+
+/* Drag and drop styles */
+.drag-handle-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5rem;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #6c757d;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  user-select: none;
+}
+
+.drag-handle:hover {
+  color: #495057;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+:deep(.ghost-row) {
+  opacity: 0.5;
+  background: #f8f9fa;
+}
+
+:deep(.sortable-drag) {
+  opacity: 0.9;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.p-datatable {
+  position: relative;
+}
+
+.p-datatable-wrapper {
+  overflow: auto;
+}
+
+.p-datatable-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.p-datatable-thead th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #dee2e6;
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.p-datatable-tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.p-datatable-tbody tr:hover {
+  background: #f1f5f9;
+}
+
+.p-row-odd {
+  background: #f8fafc;
 }
 
 </style>

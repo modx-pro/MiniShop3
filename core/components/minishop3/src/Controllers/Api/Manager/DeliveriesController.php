@@ -234,6 +234,37 @@ class DeliveriesController
     }
 
     /**
+     * Reorder deliveries (drag-drop sort)
+     * POST /api/mgr/deliveries/sort
+     *
+     * @param array $data Request data (ids - array of delivery IDs in new order)
+     * @return array Response
+     */
+    public function sort(array $data = []): array
+    {
+        $ids = $data['ids'] ?? [];
+
+        if (empty($ids) || !is_array($ids)) {
+            return Response::error('Delivery IDs array is required for sorting', 400)->getData();
+        }
+
+        $position = 0;
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $delivery = $this->modx->getObject(msDelivery::class, $id);
+                if ($delivery) {
+                    $delivery->set('position', $position);
+                    $delivery->save();
+                    $position++;
+                }
+            }
+        }
+
+        return Response::success([], 'Deliveries reordered successfully')->getData();
+    }
+
+    /**
      * Bulk delete deliveries
      * DELETE /api/mgr/deliveries/bulk
      *

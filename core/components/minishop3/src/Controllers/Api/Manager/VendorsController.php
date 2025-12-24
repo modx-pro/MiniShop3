@@ -60,6 +60,7 @@ class VendorsController
         if (!$returnAll) {
             $q->limit($limit, $start);
         }
+        $q->sortby('position', 'ASC');
         $q->sortby('name', 'ASC');
 
         $results = [];
@@ -112,7 +113,7 @@ class VendorsController
 
         $vendor = $this->modx->newObject(msVendor::class);
 
-        $allowedFields = ['name', 'description', 'country', 'logo', 'address', 'phone', 'email', 'resource_id', 'properties'];
+        $allowedFields = ['name', 'description', 'country', 'logo', 'address', 'phone', 'email', 'resource_id', 'position', 'properties'];
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
@@ -148,7 +149,7 @@ class VendorsController
             return Response::error('Vendor not found', 404)->getData();
         }
 
-        $allowedFields = ['name', 'description', 'country', 'logo', 'address', 'phone', 'email', 'resource_id', 'properties'];
+        $allowedFields = ['name', 'description', 'country', 'logo', 'address', 'phone', 'email', 'resource_id', 'position', 'properties'];
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
@@ -189,6 +190,37 @@ class VendorsController
         }
 
         return Response::success([], 'Vendor deleted successfully')->getData();
+    }
+
+    /**
+     * Reorder vendors (drag-drop sort)
+     * POST /api/mgr/vendors/sort
+     *
+     * @param array $data Request data (ids - array of vendor IDs in new order)
+     * @return array Response
+     */
+    public function sort(array $data = []): array
+    {
+        $ids = $data['ids'] ?? [];
+
+        if (empty($ids) || !is_array($ids)) {
+            return Response::error('Vendor IDs array is required for sorting', 400)->getData();
+        }
+
+        $position = 0;
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            if ($id > 0) {
+                $vendor = $this->modx->getObject(msVendor::class, $id);
+                if ($vendor) {
+                    $vendor->set('position', $position);
+                    $vendor->save();
+                    $position++;
+                }
+            }
+        }
+
+        return Response::success([], 'Vendors reordered successfully')->getData();
     }
 
     /**
@@ -260,6 +292,7 @@ class VendorsController
             'phone' => $vendor->get('phone'),
             'email' => $vendor->get('email'),
             'resource_id' => $vendor->get('resource_id'),
+            'position' => $vendor->get('position'),
             'pagetitle' => $vendor->get('pagetitle'),
             'properties' => $vendor->get('properties'),
         ];
