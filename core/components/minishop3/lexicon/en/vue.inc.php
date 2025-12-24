@@ -295,6 +295,7 @@ $_lang['grid_customers'] = 'Customers';
 $_lang['grid_orders'] = 'Orders';
 $_lang['grid_products'] = 'Products';
 $_lang['grid_order_products'] = 'Order Products';
+$_lang['grid_vendors'] = 'Vendors';
 $_lang['field_name'] = 'Field Name';
 $_lang['field_label'] = 'Label';
 $_lang['visible'] = 'Visible';
@@ -353,6 +354,10 @@ $_lang['edit_field_dialog_title'] = 'Edit Field';
 $_lang['field_name_readonly_hint'] = 'Field name cannot be changed after creation';
 $_lang['field_updated'] = 'Field updated successfully';
 $_lang['error_updating_field'] = 'Error updating field';
+
+// Image and boolean columns
+$_lang['field_type_image'] = 'Image';
+$_lang['field_type_boolean'] = 'Boolean (yes/no)';
 
 // Actions column
 $_lang['field_type_actions'] = 'Actions Column';
@@ -689,3 +694,280 @@ $_lang['bulk_delete_confirm_title'] = 'Confirm bulk delete';
 $_lang['bulk_delete_confirm_message'] = 'Are you sure you want to delete {count} items? This action cannot be undone.';
 $_lang['bulk_delete_success'] = 'Successfully deleted {count} items';
 $_lang['bulk_delete_error'] = 'Error during bulk delete';
+
+// Deliveries
+$_lang['deliveries'] = 'Delivery Methods';
+$_lang['delivery_name'] = 'Name';
+$_lang['delivery_description'] = 'Description';
+$_lang['delivery_price'] = 'Price';
+$_lang['delivery_weight_price'] = 'Weight Price';
+$_lang['delivery_distance_price'] = 'Distance Price';
+$_lang['delivery_free_amount'] = 'Free Delivery From';
+$_lang['delivery_position'] = 'Position';
+$_lang['delivery_active'] = 'Active';
+$_lang['delivery_class'] = 'Handler Class';
+$_lang['delivery_class_placeholder'] = 'e.g.: MyDeliveryHandler';
+$_lang['delivery_logo'] = 'Logo';
+$_lang['delivery_logo_placeholder'] = 'Image URL';
+$_lang['delivery_create'] = 'Create Delivery Method';
+$_lang['delivery_edit'] = 'Edit Delivery Method';
+$_lang['delivery_created'] = 'Delivery method created successfully';
+$_lang['delivery_updated'] = 'Delivery method updated successfully';
+$_lang['delivery_deleted'] = 'Delivery method deleted successfully';
+$_lang['delivery_name_required'] = 'Name is required';
+$_lang['delivery_delete_confirm_message'] = 'Are you sure you want to delete delivery method "{name}"?';
+$_lang['ms3_delivery'] = 'Delivery';
+$_lang['ms3_settings'] = 'Settings';
+$_lang['ms3_payments'] = 'Payment Methods';
+$_lang['ms3_validation_rules'] = 'Validation Rules';
+$_lang['ms3_order_validation_rules_help'] = 'JSON validation rules for order fields';
+$_lang['ms3_add_cost'] = 'Additional Cost';
+$_lang['ms3_add_cost_help'] = 'Additional delivery cost';
+$_lang['ms3_weight_price_help'] = 'Price per weight unit';
+$_lang['ms3_free_delivery_amount_help'] = 'Order amount for free delivery';
+$_lang['ms3_distance_price'] = 'Distance Price';
+$_lang['ms3_distance_price_help'] = 'Price per distance unit';
+$_lang['ms3_delivery_payments_hint'] = 'Select payment methods available for this delivery method';
+$_lang['ms3_no_payments'] = 'No payment methods found';
+$_lang['ms3_payment_deliveries_hint'] = 'Select delivery methods available for this payment method';
+$_lang['ms3_no_deliveries'] = 'No delivery methods found';
+$_lang['payment_name'] = 'Name';
+$_lang['payment_active'] = 'Active';
+$_lang['payment_position'] = 'Position';
+$_lang['payment_create'] = 'Create payment method';
+$_lang['payment_edit'] = 'Edit payment method';
+$_lang['payment_description'] = 'Description';
+$_lang['payment_logo'] = 'Logo';
+$_lang['payment_logo_placeholder'] = 'Logo URL or file path';
+$_lang['payment_class'] = 'Handler class';
+$_lang['payment_class_placeholder'] = 'Full class name, e.g.: MiniShop3\\Payment\\Cash';
+$_lang['ms3_payment'] = 'Payment';
+$_lang['ms3_payment_add_cost_help'] = 'Additional cost when selecting this payment method';
+$_lang['payment_name_required'] = 'Payment method name is required';
+$_lang['payment_created'] = 'Payment method created';
+$_lang['payment_updated'] = 'Payment method updated';
+$_lang['payment_deleted'] = 'Payment method deleted';
+$_lang['payment_delete_confirm_message'] = 'Are you sure you want to delete payment method "{name}"?';
+
+// Vendors
+$_lang['vendor_name'] = 'Name';
+$_lang['vendor_country'] = 'Country';
+$_lang['vendor_logo'] = 'Logo';
+$_lang['vendor_logo_placeholder'] = 'Logo URL or file path';
+$_lang['vendor_description'] = 'Description';
+$_lang['vendor_address'] = 'Address';
+$_lang['vendor_phone'] = 'Phone';
+$_lang['vendor_email'] = 'Email';
+$_lang['vendor_resource'] = 'Resource';
+$_lang['vendor_resource_placeholder'] = 'Resource ID';
+$_lang['vendor_resource_help'] = 'MODX page ID for the vendor';
+$_lang['vendor_position'] = 'Position';
+$_lang['vendor_contacts'] = 'Contacts';
+$_lang['vendor_create'] = 'Create vendor';
+$_lang['vendor_edit'] = 'Edit vendor';
+$_lang['vendor_name_required'] = 'Vendor name is required';
+$_lang['vendor_created'] = 'Vendor created';
+$_lang['vendor_updated'] = 'Vendor updated';
+$_lang['vendor_deleted'] = 'Vendor deleted';
+$_lang['vendor_order_saved'] = 'Vendor order saved';
+$_lang['vendor_delete_confirm_message'] = 'Are you sure you want to delete vendor "{name}"?';
+$_lang['ms3_vendor'] = 'Vendor';
+
+$_lang['ms3_add_rule'] = 'Add rule';
+$_lang['ms3_add_validation_rule'] = 'Add validation rule';
+$_lang['ms3_select_rule'] = 'Select rule';
+$_lang['ms3_select_rule_placeholder'] = 'Select rule from the list';
+$_lang['add'] = 'Add';
+$_lang['create'] = 'Create';
+$_lang['total'] = 'Total';
+$_lang['all'] = 'All';
+$_lang['yes'] = 'Yes';
+$_lang['no'] = 'No';
+$_lang['confirm_delete'] = 'Confirm Delete';
+
+// Validation rules
+$_lang['validation_rule_required'] = 'Required';
+$_lang['validation_rule_required_desc'] = 'Field is required';
+$_lang['validation_rule_nullable'] = 'Nullable';
+$_lang['validation_rule_nullable_desc'] = 'Field may be empty';
+$_lang['validation_rule_present'] = 'Present';
+$_lang['validation_rule_present_desc'] = 'Field must exist';
+$_lang['validation_rule_accepted'] = 'Accepted';
+$_lang['validation_rule_accepted_desc'] = 'Must be yes, on, 1 or true';
+$_lang['validation_rule_email'] = 'Email';
+$_lang['validation_rule_email_desc'] = 'Must be valid email';
+$_lang['validation_rule_url'] = 'URL';
+$_lang['validation_rule_url_desc'] = 'Must be valid URL';
+$_lang['validation_rule_ip'] = 'IP Address';
+$_lang['validation_rule_ip_desc'] = 'Must be valid IP address';
+$_lang['validation_rule_ipv4'] = 'IPv4 Address';
+$_lang['validation_rule_ipv4_desc'] = 'Must be valid IPv4 address';
+$_lang['validation_rule_ipv6'] = 'IPv6 Address';
+$_lang['validation_rule_ipv6_desc'] = 'Must be valid IPv6 address';
+$_lang['validation_rule_numeric'] = 'Numeric';
+$_lang['validation_rule_numeric_desc'] = 'Must be numeric';
+$_lang['validation_rule_integer'] = 'Integer';
+$_lang['validation_rule_integer_desc'] = 'Must be integer';
+$_lang['validation_rule_boolean'] = 'Boolean';
+$_lang['validation_rule_boolean_desc'] = 'Must be boolean';
+$_lang['validation_rule_alpha'] = 'Alpha';
+$_lang['validation_rule_alpha_desc'] = 'Only alphabetic characters';
+$_lang['validation_rule_alpha_num'] = 'Alphanumeric';
+$_lang['validation_rule_alpha_num_desc'] = 'Only letters and numbers';
+$_lang['validation_rule_alpha_dash'] = 'Alpha Dash';
+$_lang['validation_rule_alpha_dash_desc'] = 'Letters, numbers, dashes and underscores';
+$_lang['validation_rule_alpha_spaces'] = 'Alpha Spaces';
+$_lang['validation_rule_alpha_spaces_desc'] = 'Letters and spaces';
+$_lang['validation_rule_uppercase'] = 'Uppercase';
+$_lang['validation_rule_uppercase_desc'] = 'Must be uppercase';
+$_lang['validation_rule_lowercase'] = 'Lowercase';
+$_lang['validation_rule_lowercase_desc'] = 'Must be lowercase';
+$_lang['validation_rule_json'] = 'JSON';
+$_lang['validation_rule_json_desc'] = 'Must be valid JSON';
+$_lang['validation_rule_array'] = 'Array';
+$_lang['validation_rule_array_desc'] = 'Must be array';
+$_lang['validation_rule_min'] = 'Min';
+$_lang['validation_rule_min_desc'] = 'Minimum value/length';
+$_lang['validation_rule_min_param'] = 'Value';
+$_lang['validation_rule_max'] = 'Max';
+$_lang['validation_rule_max_desc'] = 'Maximum value/length';
+$_lang['validation_rule_max_param'] = 'Value';
+$_lang['validation_rule_between'] = 'Between';
+$_lang['validation_rule_between_desc'] = 'Value between min and max';
+$_lang['validation_rule_between_param'] = 'Min,Max';
+$_lang['validation_rule_digits'] = 'Digits';
+$_lang['validation_rule_digits_desc'] = 'Exact number of digits';
+$_lang['validation_rule_digits_param'] = 'Length';
+$_lang['validation_rule_digits_between'] = 'Digits Between';
+$_lang['validation_rule_digits_between_desc'] = 'Number of digits in range';
+$_lang['validation_rule_digits_between_param'] = 'Min,Max';
+$_lang['validation_rule_in'] = 'In List';
+$_lang['validation_rule_in_desc'] = 'Must be in list of values';
+$_lang['validation_rule_in_param'] = 'Values (comma-separated)';
+$_lang['validation_rule_not_in'] = 'Not In List';
+$_lang['validation_rule_not_in_desc'] = 'Must not be in list';
+$_lang['validation_rule_not_in_param'] = 'Values (comma-separated)';
+$_lang['validation_rule_same'] = 'Same As';
+$_lang['validation_rule_same_desc'] = 'Must match another field';
+$_lang['validation_rule_same_param'] = 'Field name';
+$_lang['validation_rule_different'] = 'Different From';
+$_lang['validation_rule_different_desc'] = 'Must differ from another field';
+$_lang['validation_rule_different_param'] = 'Field name';
+$_lang['validation_rule_date'] = 'Date';
+$_lang['validation_rule_date_desc'] = 'Must be valid date';
+$_lang['validation_rule_date_param'] = 'Format (e.g. Y-m-d)';
+$_lang['validation_rule_after'] = 'After Date';
+$_lang['validation_rule_after_desc'] = 'Must be after specified date';
+$_lang['validation_rule_after_param'] = 'Date/field';
+$_lang['validation_rule_before'] = 'Before Date';
+$_lang['validation_rule_before_desc'] = 'Must be before specified date';
+$_lang['validation_rule_before_param'] = 'Date/field';
+$_lang['validation_rule_regex'] = 'Regex';
+$_lang['validation_rule_regex_desc'] = 'Must match pattern';
+$_lang['validation_rule_regex_param'] = 'Pattern (e.g. /^[0-9]+$/)';
+$_lang['validation_rule_extension'] = 'File Extension';
+$_lang['validation_rule_extension_desc'] = 'File extension';
+$_lang['validation_rule_extension_param'] = 'Extensions (e.g. jpg,png)';
+$_lang['validation_rule_mimes'] = 'MIME Type';
+$_lang['validation_rule_mimes_desc'] = 'File MIME type';
+$_lang['validation_rule_mimes_param'] = 'Types (e.g. jpeg,png)';
+$_lang['validation_rule_required_if'] = 'Required If';
+$_lang['validation_rule_required_if_desc'] = 'Required if field equals value';
+$_lang['validation_rule_required_if_param'] = 'field,value';
+$_lang['validation_rule_required_unless'] = 'Required Unless';
+$_lang['validation_rule_required_unless_desc'] = 'Required unless field equals value';
+$_lang['validation_rule_required_unless_param'] = 'field,value';
+$_lang['validation_rule_required_with'] = 'Required With';
+$_lang['validation_rule_required_with_desc'] = 'Required if any field is filled';
+$_lang['validation_rule_required_with_param'] = 'field1,field2';
+$_lang['validation_rule_required_without'] = 'Required Without';
+$_lang['validation_rule_required_without_desc'] = 'Required if any field is empty';
+$_lang['validation_rule_required_without_param'] = 'field1,field2';
+$_lang['validation_rule_required_with_all'] = 'Required With All';
+$_lang['validation_rule_required_with_all_desc'] = 'Required if all fields are filled';
+$_lang['validation_rule_required_with_all_param'] = 'field1,field2';
+$_lang['validation_rule_required_without_all'] = 'Required Without All';
+$_lang['validation_rule_required_without_all_desc'] = 'Required if all fields are empty';
+$_lang['validation_rule_required_without_all_param'] = 'field1,field2';
+
+// Validation Field Groups
+$_lang['validation_field_group_order'] = 'Order';
+$_lang['validation_field_group_address'] = 'Address';
+
+// Validation Fields - Order
+$_lang['validation_field_order_comment'] = 'Order comment';
+
+// Validation Fields - Address
+$_lang['validation_field_first_name'] = 'First name';
+$_lang['validation_field_last_name'] = 'Last name';
+$_lang['validation_field_phone'] = 'Phone';
+$_lang['validation_field_email'] = 'Email';
+$_lang['validation_field_country'] = 'Country';
+$_lang['validation_field_index'] = 'Postal code';
+$_lang['validation_field_region'] = 'Region';
+$_lang['validation_field_city'] = 'City';
+$_lang['validation_field_metro'] = 'Metro';
+$_lang['validation_field_street'] = 'Street';
+$_lang['validation_field_building'] = 'Building';
+$_lang['validation_field_entrance'] = 'Entrance';
+$_lang['validation_field_floor'] = 'Floor';
+$_lang['validation_field_room'] = 'Apartment/Office';
+$_lang['validation_field_comment'] = 'Comment';
+$_lang['validation_field_text_address'] = 'Text address';
+
+// Validation Editor UI
+$_lang['ms3_add_field'] = 'Add field';
+$_lang['ms3_add_validation_field'] = 'Add validation field';
+$_lang['ms3_select_field'] = 'Select field';
+$_lang['ms3_select_field_placeholder'] = 'Select a field...';
+$_lang['ms3_add_rule_to_field'] = 'Add rule to field';
+$_lang['remove'] = 'Remove';
+
+// Validation Editor Mode Toggle
+$_lang['validation_mode_visual'] = 'Visual';
+$_lang['validation_mode_json'] = 'JSON';
+$_lang['validation_json_placeholder'] = '{"email": "required|email", "phone": "required"}';
+$_lang['validation_json_invalid'] = 'Invalid JSON';
+
+// Statuses
+$_lang['status_create'] = 'Create Status';
+$_lang['status_edit'] = 'Edit Status';
+$_lang['status_name_required'] = 'Status name is required';
+$_lang['status_created'] = 'Status created';
+$_lang['status_updated'] = 'Status updated';
+$_lang['status_deleted'] = 'Status deleted';
+$_lang['status_delete_confirm_message'] = 'Are you sure you want to delete status "{name}"?';
+$_lang['status_order_saved'] = 'Status order saved';
+$_lang['delivery_order_saved'] = 'Delivery order saved';
+$_lang['payment_order_saved'] = 'Payment order saved';
+
+// Links (Product Link Types)
+$_lang['link_create'] = 'Create Link Type';
+$_lang['link_edit'] = 'Edit Link Type';
+$_lang['link_name_required'] = 'Link name is required';
+$_lang['link_type_required'] = 'Link type is required';
+$_lang['link_created'] = 'Link type created';
+$_lang['link_updated'] = 'Link type updated';
+$_lang['link_deleted'] = 'Link type deleted';
+$_lang['link_delete_confirm_message'] = 'Are you sure you want to delete link type "{name}"?';
+$_lang['link_type_readonly'] = 'Link type cannot be changed after creation';
+$_lang['select_type'] = 'Select type';
+
+// Model msVendor for Model Fields Configuration
+$_lang['ms3_model_vendor'] = 'Vendor';
+
+// Vendor fields labels
+$_lang['ms3_vendor_name'] = 'Name';
+$_lang['ms3_vendor_position'] = 'Position';
+$_lang['ms3_vendor_resource_id'] = 'Resource';
+$_lang['ms3_vendor_country'] = 'Country';
+$_lang['ms3_vendor_logo'] = 'Logo';
+$_lang['ms3_vendor_address'] = 'Address';
+$_lang['ms3_vendor_phone'] = 'Phone';
+$_lang['ms3_vendor_email'] = 'Email';
+$_lang['ms3_vendor_description'] = 'Description';
+$_lang['ms3_vendor_properties'] = 'Properties';
+
+// Vendor sections
+$_lang['ms3_section_vendor_info'] = 'Information';
+$_lang['ms3_section_vendor_address'] = 'Address';

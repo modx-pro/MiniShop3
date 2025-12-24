@@ -63,7 +63,8 @@ const gridOptions = computed(() => [
   { label: _('grid_customers'), value: 'customers' },
   { label: _('grid_orders'), value: 'orders' },
   { label: _('grid_products'), value: 'products' },
-  { label: _('grid_order_products'), value: 'order_products' }
+  { label: _('grid_order_products'), value: 'order_products' },
+  { label: _('grid_vendors'), value: 'vendors' }
 ])
 
 /**
@@ -74,6 +75,8 @@ const fieldTypeOptions = computed(() => [
   { label: _('field_type_template'), value: 'template' },
   { label: _('field_type_relation'), value: 'relation' },
   { label: _('field_type_computed'), value: 'computed' },
+  { label: _('field_type_image'), value: 'image' },
+  { label: _('field_type_boolean'), value: 'boolean' },
   { label: _('field_type_actions'), value: 'actions' }
 ])
 

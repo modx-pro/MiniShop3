@@ -1,7 +1,6 @@
 <?php
 
 use MiniShop3\Controllers\Options\Types\msOptionType;
-use MiniShop3\Controllers\Config\Settings\Layout;
 
 if (!class_exists('msManagerController')) {
     require_once dirname(__FILE__, 2) . '/manager.class.php';
@@ -22,7 +21,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
      */
     public function getLanguageTopics()
     {
-        return ['minishop3:default', 'minishop3:product', 'minishop3:manager'];
+        return ['minishop3:default', 'minishop3:product', 'minishop3:manager', 'minishop3:vue'];
     }
 
     /**
@@ -30,9 +29,6 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
      */
     public function loadCustomCssJs()
     {
-        $layoutController = new Layout($this->modx);
-        $layout = $layoutController->getLayout();
-
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
         $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
@@ -42,18 +38,43 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.utils.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.combo.js');
 
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/delivery/grid.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/delivery/window.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/delivery/members.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/payment/grid.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/payment/window.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/payment/members.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/status/grid.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/status/window.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/vendor/grid.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/vendor/window.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/link/grid.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/link/window.js');
+        // Vue shared components CSS
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/useLexicon.min.css">' .
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/FileBrowser.min.css">'
+        );
+
+        // Vue Deliveries Grid
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/deliveries.min.css">'
+        );
+        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/deliveries.min.js"></script>');
+
+        // Vue Payments Grid
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/payments.min.css">'
+        );
+        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/payments.min.js"></script>');
+
+        // Vue Vendors Grid
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/vendors.min.css">'
+        );
+        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/vendors.min.js"></script>');
+
+        // Vue Statuses Grid
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/statuses.min.css">'
+        );
+        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/statuses.min.js"></script>');
+
+        // Vue Links Grid
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/links.min.css">'
+        );
+        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/links.min.js"></script>');
+
+        // Options (ExtJS - not migrated yet)
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/grid.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/window.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/tree.js');
@@ -78,8 +99,6 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
 
         $this->addHtml('<script>
             ms3.config = ' . json_encode($config) . ';
-            ms3.config.layout =  ' . json_encode($layout) . ';
-           
             MODx.perm.msorder_list = ' . ($this->modx->hasPermission('msorder_list') ? 1 : 0) . ';
 
             Ext.onReady(function() {

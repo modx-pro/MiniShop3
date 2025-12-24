@@ -255,6 +255,7 @@ $_lang['grid_customers'] = 'Клиенты';
 $_lang['grid_orders'] = 'Заказы';
 $_lang['grid_products'] = 'Товары';
 $_lang['grid_order_products'] = 'Товары заказа';
+$_lang['grid_vendors'] = 'Производители';
 $_lang['field_name'] = 'Имя поля';
 $_lang['field_label'] = 'Заголовок';
 $_lang['visible'] = 'Видимое';
@@ -353,6 +354,10 @@ $_lang['edit_field_dialog_title'] = 'Редактирование поля';
 $_lang['field_name_readonly_hint'] = 'Имя поля нельзя изменить после создания';
 $_lang['field_updated'] = 'Поле успешно обновлено';
 $_lang['error_updating_field'] = 'Ошибка при обновлении поля';
+
+// Image and boolean columns
+$_lang['field_type_image'] = 'Изображение';
+$_lang['field_type_boolean'] = 'Логическое (да/нет)';
 
 // Actions column
 $_lang['field_type_actions'] = 'Колонка действий';
@@ -694,3 +699,280 @@ $_lang['bulk_delete_confirm_title'] = 'Подтверждение массово
 $_lang['bulk_delete_confirm_message'] = 'Вы уверены, что хотите удалить {count} элементов? Это действие необратимо.';
 $_lang['bulk_delete_success'] = 'Успешно удалено {count} элементов';
 $_lang['bulk_delete_error'] = 'Ошибка при массовом удалении';
+
+// Deliveries
+$_lang['deliveries'] = 'Варианты доставки';
+$_lang['delivery_name'] = 'Название';
+$_lang['delivery_description'] = 'Описание';
+$_lang['delivery_price'] = 'Цена';
+$_lang['delivery_weight_price'] = 'Цена за вес';
+$_lang['delivery_distance_price'] = 'Цена за расстояние';
+$_lang['delivery_free_amount'] = 'Бесплатно от суммы';
+$_lang['delivery_position'] = 'Позиция';
+$_lang['delivery_active'] = 'Активен';
+$_lang['delivery_class'] = 'Класс обработчика';
+$_lang['delivery_class_placeholder'] = 'Например: MyDeliveryHandler';
+$_lang['delivery_logo'] = 'Логотип';
+$_lang['delivery_logo_placeholder'] = 'URL изображения';
+$_lang['delivery_create'] = 'Создание способа доставки';
+$_lang['delivery_edit'] = 'Редактирование способа доставки';
+$_lang['delivery_created'] = 'Способ доставки успешно создан';
+$_lang['delivery_updated'] = 'Способ доставки успешно обновлён';
+$_lang['delivery_deleted'] = 'Способ доставки успешно удалён';
+$_lang['delivery_name_required'] = 'Название обязательно для заполнения';
+$_lang['delivery_delete_confirm_message'] = 'Вы уверены, что хотите удалить способ доставки "{name}"?';
+$_lang['ms3_delivery'] = 'Доставка';
+$_lang['ms3_settings'] = 'Настройки';
+$_lang['ms3_payments'] = 'Способы оплаты';
+$_lang['ms3_validation_rules'] = 'Правила валидации';
+$_lang['ms3_order_validation_rules_help'] = 'JSON правила валидации полей заказа';
+$_lang['ms3_add_cost'] = 'Доп. стоимость';
+$_lang['ms3_add_cost_help'] = 'Дополнительная стоимость доставки';
+$_lang['ms3_weight_price_help'] = 'Цена за единицу веса';
+$_lang['ms3_free_delivery_amount_help'] = 'Сумма заказа для бесплатной доставки';
+$_lang['ms3_distance_price'] = 'Цена за расстояние';
+$_lang['ms3_distance_price_help'] = 'Цена за единицу расстояния';
+$_lang['ms3_delivery_payments_hint'] = 'Выберите способы оплаты, доступные для данного способа доставки';
+$_lang['ms3_no_payments'] = 'Способы оплаты не найдены';
+$_lang['ms3_payment_deliveries_hint'] = 'Выберите способы доставки, доступные для данного способа оплаты';
+$_lang['ms3_no_deliveries'] = 'Способы доставки не найдены';
+$_lang['payment_name'] = 'Название';
+$_lang['payment_active'] = 'Активен';
+$_lang['payment_position'] = 'Позиция';
+$_lang['payment_create'] = 'Создать способ оплаты';
+$_lang['payment_edit'] = 'Редактировать способ оплаты';
+$_lang['payment_description'] = 'Описание';
+$_lang['payment_logo'] = 'Логотип';
+$_lang['payment_logo_placeholder'] = 'URL логотипа или путь к файлу';
+$_lang['payment_class'] = 'Класс обработчика';
+$_lang['payment_class_placeholder'] = 'Полное имя класса, например: MiniShop3\\Payment\\Cash';
+$_lang['ms3_payment'] = 'Оплата';
+$_lang['ms3_payment_add_cost_help'] = 'Дополнительная стоимость при выборе этого способа оплаты';
+$_lang['payment_name_required'] = 'Укажите название способа оплаты';
+$_lang['payment_created'] = 'Способ оплаты создан';
+$_lang['payment_updated'] = 'Способ оплаты обновлён';
+$_lang['payment_deleted'] = 'Способ оплаты удалён';
+$_lang['payment_delete_confirm_message'] = 'Вы уверены, что хотите удалить способ оплаты "{name}"?';
+
+// Vendors
+$_lang['vendor_name'] = 'Название';
+$_lang['vendor_country'] = 'Страна';
+$_lang['vendor_logo'] = 'Логотип';
+$_lang['vendor_logo_placeholder'] = 'URL логотипа или путь к файлу';
+$_lang['vendor_description'] = 'Описание';
+$_lang['vendor_address'] = 'Адрес';
+$_lang['vendor_phone'] = 'Телефон';
+$_lang['vendor_email'] = 'Email';
+$_lang['vendor_resource'] = 'Ресурс';
+$_lang['vendor_resource_placeholder'] = 'ID ресурса';
+$_lang['vendor_resource_help'] = 'ID страницы MODX для производителя';
+$_lang['vendor_position'] = 'Позиция';
+$_lang['vendor_contacts'] = 'Контакты';
+$_lang['vendor_create'] = 'Создать производителя';
+$_lang['vendor_edit'] = 'Редактировать производителя';
+$_lang['vendor_name_required'] = 'Укажите название производителя';
+$_lang['vendor_created'] = 'Производитель создан';
+$_lang['vendor_updated'] = 'Производитель обновлён';
+$_lang['vendor_deleted'] = 'Производитель удалён';
+$_lang['vendor_order_saved'] = 'Порядок производителей сохранён';
+$_lang['vendor_delete_confirm_message'] = 'Вы уверены, что хотите удалить производителя "{name}"?';
+$_lang['ms3_vendor'] = 'Производитель';
+
+$_lang['ms3_add_rule'] = 'Добавить правило';
+$_lang['ms3_add_validation_rule'] = 'Добавить правило валидации';
+$_lang['ms3_select_rule'] = 'Выберите правило';
+$_lang['ms3_select_rule_placeholder'] = 'Выберите правило из списка';
+$_lang['add'] = 'Добавить';
+$_lang['create'] = 'Создать';
+$_lang['total'] = 'Всего';
+$_lang['all'] = 'Все';
+$_lang['yes'] = 'Да';
+$_lang['no'] = 'Нет';
+$_lang['confirm_delete'] = 'Подтверждение удаления';
+
+// Validation rules
+$_lang['validation_rule_required'] = 'Обязательное';
+$_lang['validation_rule_required_desc'] = 'Поле обязательно для заполнения';
+$_lang['validation_rule_nullable'] = 'Может быть пустым';
+$_lang['validation_rule_nullable_desc'] = 'Поле может быть пустым';
+$_lang['validation_rule_present'] = 'Должно присутствовать';
+$_lang['validation_rule_present_desc'] = 'Поле должно существовать';
+$_lang['validation_rule_accepted'] = 'Подтверждение';
+$_lang['validation_rule_accepted_desc'] = 'Должно быть yes, on, 1 или true';
+$_lang['validation_rule_email'] = 'Email';
+$_lang['validation_rule_email_desc'] = 'Должен быть корректный email';
+$_lang['validation_rule_url'] = 'URL';
+$_lang['validation_rule_url_desc'] = 'Должен быть корректный URL';
+$_lang['validation_rule_ip'] = 'IP адрес';
+$_lang['validation_rule_ip_desc'] = 'Должен быть корректный IP адрес';
+$_lang['validation_rule_ipv4'] = 'IPv4 адрес';
+$_lang['validation_rule_ipv4_desc'] = 'Должен быть корректный IPv4 адрес';
+$_lang['validation_rule_ipv6'] = 'IPv6 адрес';
+$_lang['validation_rule_ipv6_desc'] = 'Должен быть корректный IPv6 адрес';
+$_lang['validation_rule_numeric'] = 'Число';
+$_lang['validation_rule_numeric_desc'] = 'Должно быть числом';
+$_lang['validation_rule_integer'] = 'Целое число';
+$_lang['validation_rule_integer_desc'] = 'Должно быть целым числом';
+$_lang['validation_rule_boolean'] = 'Логическое';
+$_lang['validation_rule_boolean_desc'] = 'Должно быть логическим значением';
+$_lang['validation_rule_alpha'] = 'Только буквы';
+$_lang['validation_rule_alpha_desc'] = 'Только буквенные символы';
+$_lang['validation_rule_alpha_num'] = 'Буквы и цифры';
+$_lang['validation_rule_alpha_num_desc'] = 'Только буквы и цифры';
+$_lang['validation_rule_alpha_dash'] = 'Буквы, цифры, дефис';
+$_lang['validation_rule_alpha_dash_desc'] = 'Буквы, цифры, дефис и подчёркивание';
+$_lang['validation_rule_alpha_spaces'] = 'Буквы и пробелы';
+$_lang['validation_rule_alpha_spaces_desc'] = 'Буквы и пробелы';
+$_lang['validation_rule_uppercase'] = 'Верхний регистр';
+$_lang['validation_rule_uppercase_desc'] = 'Должно быть в верхнем регистре';
+$_lang['validation_rule_lowercase'] = 'Нижний регистр';
+$_lang['validation_rule_lowercase_desc'] = 'Должно быть в нижнем регистре';
+$_lang['validation_rule_json'] = 'JSON';
+$_lang['validation_rule_json_desc'] = 'Должен быть корректный JSON';
+$_lang['validation_rule_array'] = 'Массив';
+$_lang['validation_rule_array_desc'] = 'Должно быть массивом';
+$_lang['validation_rule_min'] = 'Минимум';
+$_lang['validation_rule_min_desc'] = 'Минимальное значение/длина';
+$_lang['validation_rule_min_param'] = 'Значение';
+$_lang['validation_rule_max'] = 'Максимум';
+$_lang['validation_rule_max_desc'] = 'Максимальное значение/длина';
+$_lang['validation_rule_max_param'] = 'Значение';
+$_lang['validation_rule_between'] = 'Между';
+$_lang['validation_rule_between_desc'] = 'Значение между мин. и макс.';
+$_lang['validation_rule_between_param'] = 'Мин,Макс';
+$_lang['validation_rule_digits'] = 'Кол-во цифр';
+$_lang['validation_rule_digits_desc'] = 'Точное количество цифр';
+$_lang['validation_rule_digits_param'] = 'Длина';
+$_lang['validation_rule_digits_between'] = 'Цифр между';
+$_lang['validation_rule_digits_between_desc'] = 'Количество цифр в диапазоне';
+$_lang['validation_rule_digits_between_param'] = 'Мин,Макс';
+$_lang['validation_rule_in'] = 'Из списка';
+$_lang['validation_rule_in_desc'] = 'Должно быть из списка значений';
+$_lang['validation_rule_in_param'] = 'Значения (через запятую)';
+$_lang['validation_rule_not_in'] = 'Не из списка';
+$_lang['validation_rule_not_in_desc'] = 'Не должно быть из списка';
+$_lang['validation_rule_not_in_param'] = 'Значения (через запятую)';
+$_lang['validation_rule_same'] = 'Совпадает с';
+$_lang['validation_rule_same_desc'] = 'Должно совпадать с другим полем';
+$_lang['validation_rule_same_param'] = 'Имя поля';
+$_lang['validation_rule_different'] = 'Отличается от';
+$_lang['validation_rule_different_desc'] = 'Должно отличаться от другого поля';
+$_lang['validation_rule_different_param'] = 'Имя поля';
+$_lang['validation_rule_date'] = 'Дата';
+$_lang['validation_rule_date_desc'] = 'Должна быть корректная дата';
+$_lang['validation_rule_date_param'] = 'Формат (напр. Y-m-d)';
+$_lang['validation_rule_after'] = 'После даты';
+$_lang['validation_rule_after_desc'] = 'Должно быть после указанной даты';
+$_lang['validation_rule_after_param'] = 'Дата/поле';
+$_lang['validation_rule_before'] = 'До даты';
+$_lang['validation_rule_before_desc'] = 'Должно быть до указанной даты';
+$_lang['validation_rule_before_param'] = 'Дата/поле';
+$_lang['validation_rule_regex'] = 'Регулярное выражение';
+$_lang['validation_rule_regex_desc'] = 'Должно соответствовать шаблону';
+$_lang['validation_rule_regex_param'] = 'Шаблон (напр. /^[0-9]+$/)';
+$_lang['validation_rule_extension'] = 'Расширение файла';
+$_lang['validation_rule_extension_desc'] = 'Расширение файла';
+$_lang['validation_rule_extension_param'] = 'Расширения (напр. jpg,png)';
+$_lang['validation_rule_mimes'] = 'MIME-тип';
+$_lang['validation_rule_mimes_desc'] = 'MIME-тип файла';
+$_lang['validation_rule_mimes_param'] = 'Типы (напр. jpeg,png)';
+$_lang['validation_rule_required_if'] = 'Обязательно если';
+$_lang['validation_rule_required_if_desc'] = 'Обязательно если поле равно значению';
+$_lang['validation_rule_required_if_param'] = 'поле,значение';
+$_lang['validation_rule_required_unless'] = 'Обязательно если не';
+$_lang['validation_rule_required_unless_desc'] = 'Обязательно если поле не равно значению';
+$_lang['validation_rule_required_unless_param'] = 'поле,значение';
+$_lang['validation_rule_required_with'] = 'Обязательно с';
+$_lang['validation_rule_required_with_desc'] = 'Обязательно если любое поле заполнено';
+$_lang['validation_rule_required_with_param'] = 'поле1,поле2';
+$_lang['validation_rule_required_without'] = 'Обязательно без';
+$_lang['validation_rule_required_without_desc'] = 'Обязательно если любое поле пусто';
+$_lang['validation_rule_required_without_param'] = 'поле1,поле2';
+$_lang['validation_rule_required_with_all'] = 'Обязательно со всеми';
+$_lang['validation_rule_required_with_all_desc'] = 'Обязательно если все поля заполнены';
+$_lang['validation_rule_required_with_all_param'] = 'поле1,поле2';
+$_lang['validation_rule_required_without_all'] = 'Обязательно без всех';
+$_lang['validation_rule_required_without_all_desc'] = 'Обязательно если все поля пусты';
+$_lang['validation_rule_required_without_all_param'] = 'поле1,поле2';
+
+// Validation Field Groups
+$_lang['validation_field_group_order'] = 'Заказ';
+$_lang['validation_field_group_address'] = 'Адрес';
+
+// Validation Fields - Order
+$_lang['validation_field_order_comment'] = 'Комментарий к заказу';
+
+// Validation Fields - Address
+$_lang['validation_field_first_name'] = 'Имя';
+$_lang['validation_field_last_name'] = 'Фамилия';
+$_lang['validation_field_phone'] = 'Телефон';
+$_lang['validation_field_email'] = 'Email';
+$_lang['validation_field_country'] = 'Страна';
+$_lang['validation_field_index'] = 'Индекс';
+$_lang['validation_field_region'] = 'Регион';
+$_lang['validation_field_city'] = 'Город';
+$_lang['validation_field_metro'] = 'Метро';
+$_lang['validation_field_street'] = 'Улица';
+$_lang['validation_field_building'] = 'Дом';
+$_lang['validation_field_entrance'] = 'Подъезд';
+$_lang['validation_field_floor'] = 'Этаж';
+$_lang['validation_field_room'] = 'Квартира/Офис';
+$_lang['validation_field_comment'] = 'Комментарий';
+$_lang['validation_field_text_address'] = 'Текстовый адрес';
+
+// Validation Editor UI
+$_lang['ms3_add_field'] = 'Добавить поле';
+$_lang['ms3_add_validation_field'] = 'Добавить поле для валидации';
+$_lang['ms3_select_field'] = 'Выберите поле';
+$_lang['ms3_select_field_placeholder'] = 'Выберите поле...';
+$_lang['ms3_add_rule_to_field'] = 'Добавить правило к полю';
+$_lang['remove'] = 'Удалить';
+
+// Validation Editor Mode Toggle
+$_lang['validation_mode_visual'] = 'Конструктор';
+$_lang['validation_mode_json'] = 'JSON';
+$_lang['validation_json_placeholder'] = '{"email": "required|email", "phone": "required"}';
+$_lang['validation_json_invalid'] = 'Некорректный JSON';
+
+// Statuses
+$_lang['status_create'] = 'Создать статус';
+$_lang['status_edit'] = 'Редактировать статус';
+$_lang['status_name_required'] = 'Укажите название статуса';
+$_lang['status_created'] = 'Статус создан';
+$_lang['status_updated'] = 'Статус обновлён';
+$_lang['status_deleted'] = 'Статус удалён';
+$_lang['status_delete_confirm_message'] = 'Вы уверены, что хотите удалить статус "{name}"?';
+$_lang['status_order_saved'] = 'Порядок статусов сохранён';
+$_lang['delivery_order_saved'] = 'Порядок способов доставки сохранён';
+$_lang['payment_order_saved'] = 'Порядок способов оплаты сохранён';
+
+// Links (Product Link Types)
+$_lang['link_create'] = 'Создать тип связи';
+$_lang['link_edit'] = 'Редактировать тип связи';
+$_lang['link_name_required'] = 'Укажите название связи';
+$_lang['link_type_required'] = 'Укажите тип связи';
+$_lang['link_created'] = 'Тип связи создан';
+$_lang['link_updated'] = 'Тип связи обновлён';
+$_lang['link_deleted'] = 'Тип связи удалён';
+$_lang['link_delete_confirm_message'] = 'Вы уверены, что хотите удалить тип связи "{name}"?';
+$_lang['link_type_readonly'] = 'Тип связи нельзя изменить после создания';
+$_lang['select_type'] = 'Выберите тип';
+
+// Model msVendor for Model Fields Configuration
+$_lang['ms3_model_vendor'] = 'Производитель';
+
+// Vendor fields labels
+$_lang['ms3_vendor_name'] = 'Название';
+$_lang['ms3_vendor_position'] = 'Позиция';
+$_lang['ms3_vendor_resource_id'] = 'Ресурс';
+$_lang['ms3_vendor_country'] = 'Страна';
+$_lang['ms3_vendor_logo'] = 'Логотип';
+$_lang['ms3_vendor_address'] = 'Адрес';
+$_lang['ms3_vendor_phone'] = 'Телефон';
+$_lang['ms3_vendor_email'] = 'Email';
+$_lang['ms3_vendor_description'] = 'Описание';
+$_lang['ms3_vendor_properties'] = 'Свойства';
+
+// Vendor sections
+$_lang['ms3_section_vendor_info'] = 'Информация';
+$_lang['ms3_section_vendor_address'] = 'Адрес';

@@ -40,8 +40,9 @@ ms3.panel.Settings = function (config) {
                     html: _('ms3_deliveries_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'ms3-grid-delivery',
+                    xtype: 'container',
                     cls: 'main-wrapper',
+                    html: '<div id="ms3-vue-deliveries" class="vueApp"></div>',
                 }]
             }, {
                 title: _('ms3_payments'),
@@ -51,8 +52,9 @@ ms3.panel.Settings = function (config) {
                     html: _('ms3_payments_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'ms3-grid-payment',
+                    xtype: 'container',
                     cls: 'main-wrapper',
+                    html: '<div id="ms3-vue-payments" class="vueApp"></div>',
                 }]
             }, {
                 title: _('ms3_statuses'),
@@ -62,8 +64,9 @@ ms3.panel.Settings = function (config) {
                     html: _('ms3_statuses_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'ms3-grid-status',
+                    xtype: 'container',
                     cls: 'main-wrapper',
+                    html: '<div id="ms3-vue-statuses" class="vueApp"></div>',
                 }]
             }, {
                 title: _('ms3_vendors'),
@@ -73,8 +76,9 @@ ms3.panel.Settings = function (config) {
                     html: _('ms3_vendors_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'ms3-grid-vendor',
+                    xtype: 'container',
                     cls: 'main-wrapper',
+                    html: '<div id="ms3-vue-vendors" class="vueApp"></div>',
                 }]
             }, {
                 title: _('ms3_links'),
@@ -84,8 +88,9 @@ ms3.panel.Settings = function (config) {
                     html: _('ms3_links_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    xtype: 'ms3-grid-link',
+                    xtype: 'container',
                     cls: 'main-wrapper',
+                    html: '<div id="ms3-vue-links" class="vueApp"></div>',
                 }]
             }, {
                 title: _('ms3_options'),

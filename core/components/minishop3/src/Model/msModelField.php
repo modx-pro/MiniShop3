@@ -32,6 +32,7 @@ class msModelField extends xPDOSimpleObject
     public const MODEL_ORDER = 'msOrder';
     public const MODEL_ORDER_ADDRESS = 'msOrderAddress';
     public const MODEL_ORDER_PRODUCT = 'msOrderProduct';
+    public const MODEL_VENDOR = 'msVendor';
 
     /**
      * Get available model types
@@ -42,6 +43,7 @@ class msModelField extends xPDOSimpleObject
             self::MODEL_ORDER,
             self::MODEL_ORDER_ADDRESS,
             self::MODEL_ORDER_PRODUCT,
+            self::MODEL_VENDOR,
         ];
     }
 }

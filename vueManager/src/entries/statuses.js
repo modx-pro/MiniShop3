@@ -1,0 +1,93 @@
+/**
+ * MiniShop3 - Statuses Grid Entry Point
+ *
+ * Vue application for managing order statuses in admin panel
+ */
+
+import { createApp } from 'vue'
+import PrimeVue from 'primevue/config'
+import Aura from '@primeuix/themes/aura'
+import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
+import StatusesGrid from '../components/StatusesGrid.vue'
+
+// Mount point ID
+const MOUNT_ID = 'ms3-vue-statuses'
+
+// Track if app is mounted
+let app = null
+
+/**
+ * Initialize and mount Vue app
+ */
+function mountApp() {
+  const container = document.getElementById(MOUNT_ID)
+
+  if (!container) {
+    return false
+  }
+
+  // Don't mount twice
+  if (app) {
+    return true
+  }
+
+  app = createApp(StatusesGrid)
+
+  app.use(PrimeVue, {
+    theme: {
+      preset: Aura,
+      options: {
+        darkModeSelector: '.dark-mode',
+        cssLayer: false
+      }
+    }
+  })
+
+  app.use(ToastService)
+  app.use(ConfirmationService)
+
+  app.mount(container)
+
+  console.log('[MS3 Statuses] Vue app mounted')
+  return true
+}
+
+/**
+ * Unmount Vue app
+ */
+function unmountApp() {
+  if (app) {
+    app.unmount()
+    app = null
+    console.log('[MS3 Statuses] Vue app unmounted')
+  }
+}
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mountApp)
+} else {
+  mountApp()
+}
+
+// Listen for ExtJS tab activation
+if (typeof Ext !== 'undefined') {
+  Ext.onReady(function() {
+    // Try to mount on Ext ready
+    mountApp()
+
+    // Listen for tab changes
+    const checkAndMount = () => {
+      const container = document.getElementById(MOUNT_ID)
+      if (container && container.offsetParent !== null) {
+        mountApp()
+      }
+    }
+
+    // Check periodically for tab visibility
+    setInterval(checkAndMount, 500)
+  })
+}
+
+export { mountApp, unmountApp }
