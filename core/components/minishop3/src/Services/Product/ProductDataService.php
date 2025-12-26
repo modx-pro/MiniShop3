@@ -226,6 +226,11 @@ class ProductDataService
             ? $data['price']
             : $productData->get('price');
 
+        // Early return if no plugins registered for this event
+        if (empty($this->modx->eventMap[$eventName])) {
+            return $price;
+        }
+
         // Initialize eventData for plugin chaining
         $this->modx->eventData[$eventName] = [
             'price' => $price,
@@ -285,6 +290,11 @@ class ProductDataService
             ? $data['weight']
             : $productData->get('weight');
 
+        // Early return if no plugins registered for this event
+        if (empty($this->modx->eventMap[$eventName])) {
+            return $weight;
+        }
+
         // Initialize eventData for plugin chaining
         $this->modx->eventData[$eventName] = [
             'weight' => $weight,
@@ -340,6 +350,11 @@ class ProductDataService
     public function getModifiedFields(msProductData $productData, array $data = []): array
     {
         $eventName = 'msOnGetProductFields';
+
+        // Early return if no plugins registered for this event
+        if (empty($this->modx->eventMap[$eventName])) {
+            return $data;
+        }
 
         // Initialize eventData for plugin chaining
         $this->modx->eventData[$eventName] = [
