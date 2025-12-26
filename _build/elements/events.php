@@ -1,29 +1,29 @@
 <?php
 
 return [
+    // Cart events
     'msOnBeforeGetCart',
     'msOnGetCart',
     'msOnBeforeGetCartCost',
     'msOnGetCartCost',
-    'msOnBeforeGetDeliveryCost',
-    'msOnGetDeliveryCost',
-    'msOnBeforeGetPaymentCost',
-    'msOnGetPaymentCost',
     'msOnBeforeAddToCart',
     'msOnAddToCart',
     'msOnBeforeChangeInCart',
-    'msOnBeforeChangeOptionsInCart',
     'msOnChangeInCart',
+    'msOnBeforeChangeOptionsInCart',
     'msOnChangeOptionInCart',
     'msOnBeforeRemoveFromCart',
     'msOnRemoveFromCart',
     'msOnBeforeEmptyCart',
     'msOnEmptyCart',
     'msOnGetStatusCart',
+
+    // Order events
     'msOnBeforeAddToOrder',
     'msOnAddToOrder',
     'msOnBeforeValidateOrderValue',
     'msOnValidateOrderValue',
+    'msOnErrorValidateOrderValue',
     'msOnBeforeRemoveFromOrder',
     'msOnRemoveFromOrder',
     'msOnBeforeEmptyOrder',
@@ -33,11 +33,9 @@ return [
     'msOnSubmitOrder',
     'msOnBeforeChangeOrderStatus',
     'msOnChangeOrderStatus',
-    'msOnBeforeGetOrderCustomer',
-    'msOnGetOrderCustomer',
     'msOnBeforeCreateOrder',
-    'msOnBeforeMgrCreateOrder',
     'msOnCreateOrder',
+    'msOnBeforeMgrCreateOrder',
     'msOnMgrCreateOrder',
     'msOnBeforeUpdateOrder',
     'msOnUpdateOrder',
@@ -45,24 +43,63 @@ return [
     'msOnSaveOrder',
     'msOnBeforeRemoveOrder',
     'msOnRemoveOrder',
+
+    // Order product events
     'msOnBeforeCreateOrderProduct',
     'msOnCreateOrderProduct',
     'msOnBeforeUpdateOrderProduct',
     'msOnUpdateOrderProduct',
     'msOnBeforeRemoveOrderProduct',
     'msOnRemoveOrderProduct',
+
+    // Order user events
+    'msOnBeforeGetOrderUser',
+    'msOnGetOrderUser',
+
+    // Order customer events
+    'msOnBeforeGetOrderCustomer',
+    'msOnGetOrderCustomer',
+
+    // Customer events
+    'msOnBeforeAddToCustomer',
+    'msOnAddToCustomer',
+    'msOnBeforeValidateCustomerValue',
+    'msOnValidateCustomerValue',
+    'msOnErrorValidateCustomerValue',
+    'msOnBeforeCreateCustomer',
+    'msOnCreateCustomer',
+    'msOnBeforeAddCustomerAddress',
+    'msOnAddCustomerAddress',
+
+    // Delivery & Payment cost events
+    'msOnBeforeGetDeliveryCost',
+    'msOnGetDeliveryCost',
+    'msOnBeforeGetPaymentCost',
+    'msOnGetPaymentCost',
+
+    // Product events
     'msOnGetProductPrice',
     'msOnGetProductWeight',
     'msOnGetProductFields',
-    'msOnManagerCustomCssJs',
+
+    // Vendor events
     'msOnBeforeVendorCreate',
     'msOnVendorCreate',
     'msOnBeforeVendorUpdate',
     'msOnVendorUpdate',
     'msOnBeforeVendorDelete',
     'msOnVendorDelete',
+
+    // Import events
+    'msOnBeforeImport',
+    'msOnAfterImport',
+    'msOnImportRow',
+
     // Notification events
     'msOnBeforeSendNotification',
     'msOnAfterSendNotification',
     'msOnRegisterNotificationChannels',
+
+    // Manager events
+    'msOnManagerCustomCssJs',
 ];
