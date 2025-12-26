@@ -198,7 +198,7 @@ class msProductFile extends xPDOSimpleObject
      *
      * @return string|null Binary thumbnail data or null on error
      */
-    public function makeThumbnail($options = [], array $info)
+    public function makeThumbnail(array $options, array $info)
     {
         /** @var \MiniShop3\Services\ImageService $imageService */
         $imageService = $this->xpdo->services->get('ms3_image');
