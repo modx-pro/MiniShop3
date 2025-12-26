@@ -182,15 +182,15 @@ class Customer
             return $this->error('ms3_customer_key_empty');
         }
 
-        // $response = $$this->ms3->utils->invokeEvent('msOnBeforeAddToOrder', [
-        //            'key' => $key,
-        //            'value' => $value,
-        //            'order' => $this,
-        //        ]);
-        //        if (!$response['success']) {
-        //            return $this->error($response['message']);
-        //        }
-        //        $value = $response['data']['value'];
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeAddToCustomer', [
+            'key' => $key,
+            'value' => $value,
+            'customer' => $this,
+        ]);
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
+        $value = $response['data']['value'];
 
         $response = $this->validate($key, $value);
         if (is_array($response)) {
@@ -199,12 +199,14 @@ class Customer
 
         $validated = $response;
 
+        $isNew = false;
         $msCustomer = $this->modx->getObject(msCustomer::class, [
             'token' => $this->token
         ]);
         if ($msCustomer) {
             $msCustomer->set($key, $validated);
         } else {
+            $isNew = true;
             $userId = 0;
 
             // TODO how to correctly determine current system user if authenticated?
@@ -219,18 +221,16 @@ class Customer
         }
         $msCustomer->save();
 
-        // TODO Implement event after adding field
-
-        //$response = $$this->ms3->utils->invokeEvent('msOnAddToCustomer', [
-        //                    'key' => $key,
-        //                    'value' => $validated,
-        //                    'customer' => $this,
-//                                'mode' => 'new'
-        //                ]);
-        //                if (!$response['success']) {
-        //                    return $this->error($response['message']);
-        //                }
-        //                $validated = $response['data']['value'];
+        $response = $this->ms3->utils->invokeEvent('msOnAddToCustomer', [
+            'key' => $key,
+            'value' => $validated,
+            'customer' => $this,
+            'msCustomer' => $msCustomer,
+            'isNew' => $isNew,
+        ]);
+        if (!$response['success']) {
+            return $this->error($response['message']);
+        }
 
         return ($validated === false)
             ? $this->error('', [$key => $value])
@@ -239,41 +239,55 @@ class Customer
 
     public function validate(string $key, mixed $value): mixed
     {
-        $validator = new Validator();
+        // Allow plugins to modify value before validation
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeValidateCustomerValue', [
+            'key' => $key,
+            'value' => $value,
+            'customer' => $this,
+        ]);
+        if (!$response['success']) {
+            return [$key => $response['message']];
+        }
+        $value = $response['data']['value'];
 
-        $validation = $validator->validate(
-            [$key => $value],
-            [$key => $this->validationRules[$key]],
-            $this->validationMessages
-        );
+        // Standard validation
+        if (!empty($this->validationRules[$key])) {
+            $validator = new Validator();
 
-        $validation->validate();
+            $validation = $validator->validate(
+                [$key => $value],
+                [$key => $this->validationRules[$key]],
+                $this->validationMessages
+            );
 
-        if ($validation->fails()) {
-            // handling errors
-            $errors = $validation->errors();
-            return $errors->firstOfAll();
-        } else {
-            return $value;
+            $validation->validate();
+
+            if ($validation->fails()) {
+                $errors = $validation->errors();
+
+                // Allow plugins to handle validation errors
+                $response = $this->ms3->utils->invokeEvent('msOnErrorValidateCustomerValue', [
+                    'key' => $key,
+                    'value' => $value,
+                    'errors' => $errors->firstOfAll(),
+                    'customer' => $this,
+                ]);
+
+                return $errors->firstOfAll();
+            }
         }
 
-        // $eventParams = [
-        //            'key' => $key,
-        //            'value' => $value,
-        //            'customer' => $this,
-        //        ];
-        //        $response = $this->invokeEvent('msOnBeforeValidateCustomerValue', $eventParams);
-        //        $value = $response['data']['value'];
+        // Allow plugins to modify validated value
+        $response = $this->ms3->utils->invokeEvent('msOnValidateCustomerValue', [
+            'key' => $key,
+            'value' => $value,
+            'customer' => $this,
+        ]);
+        if (!$response['success']) {
+            return [$key => $response['message']];
+        }
 
-        //$eventParams = [
-        //            'key' => $key,
-        //            'value' => $value,
-        //            'customer' => $this,
-        //        ];
-        //        $response = $this->invokeEvent('msOnValidateCustomerValue', $eventParams);
-        //        return $response['data']['value'];
-
-        return $value;
+        return $response['data']['value'];
     }
 
     /**
@@ -289,30 +303,62 @@ class Customer
 
     public function create(array $customerData): msCustomer|null
     {
+        // Allow plugins to modify data before creation
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateCustomer', [
+            'customerData' => $customerData,
+            'customer' => $this,
+        ]);
+        if (!$response['success']) {
+            return null;
+        }
+        $customerData = $response['data']['customerData'];
+
         $msCustomer = $this->modx->newObject(msCustomer::class, $customerData);
         $save = $msCustomer->save();
         if (!$save) {
             return null;
         }
+
+        // Allow plugins to act after customer creation
+        $response = $this->ms3->utils->invokeEvent('msOnCreateCustomer', [
+            'customerData' => $customerData,
+            'msCustomer' => $msCustomer,
+            'customer' => $this,
+        ]);
+        if (!$response['success']) {
+            // Customer already created, but plugins can log/handle errors
+            $this->modx->log(modX::LOG_LEVEL_WARN, '[Customer::create] msOnCreateCustomer event failed: ' . $response['message']);
+        }
+
         return $msCustomer;
     }
 
     public function addAddress(array $customerAddressData): bool
     {
         if (empty($customerAddressData['customer_id'])) {
-            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Customer::addAddress] customer_id is required');
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] customer_id is required');
             return false;
         }
 
         if (empty($customerAddressData['city'])) {
-            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Customer::addAddress] city is required');
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] city is required');
             return false;
         }
 
         if (empty($customerAddressData['street'])) {
-            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Customer::addAddress] street is required');
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] street is required');
             return false;
         }
+
+        // Allow plugins to modify address data before saving
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeAddCustomerAddress', [
+            'addressData' => $customerAddressData,
+            'customer' => $this,
+        ]);
+        if (!$response['success']) {
+            return false;
+        }
+        $customerAddressData = $response['data']['addressData'];
 
         if (empty($customerAddressData['name'])) {
             $nameParts = array_filter([
@@ -332,7 +378,7 @@ class Customer
         ]);
 
         if (!empty($isExists)) {
-            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_INFO, '[Customer::addAddress] Address already exists for customer #' . $customerAddressData['customer_id']);
+            $this->modx->log(modX::LOG_LEVEL_INFO, '[Customer::addAddress] Address already exists for customer #' . $customerAddressData['customer_id']);
             return false;
         }
 
@@ -343,11 +389,21 @@ class Customer
         $msCustomerAddress = $this->modx->newObject(msCustomerAddress::class, $customerAddressData);
 
         if (!$msCustomerAddress->save()) {
-            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[Customer::addAddress] Failed to save address');
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] Failed to save address');
             return false;
         }
 
-        $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_INFO, '[Customer::addAddress] Created address #' . $msCustomerAddress->get('id') . ' for customer #' . $customerAddressData['customer_id']);
+        $this->modx->log(modX::LOG_LEVEL_INFO, '[Customer::addAddress] Created address #' . $msCustomerAddress->get('id') . ' for customer #' . $customerAddressData['customer_id']);
+
+        // Allow plugins to act after address is added
+        $response = $this->ms3->utils->invokeEvent('msOnAddCustomerAddress', [
+            'addressData' => $customerAddressData,
+            'msCustomerAddress' => $msCustomerAddress,
+            'customer' => $this,
+        ]);
+        if (!$response['success']) {
+            $this->modx->log(modX::LOG_LEVEL_WARN, '[Customer::addAddress] msOnAddCustomerAddress event failed: ' . $response['message']);
+        }
 
         return true;
     }

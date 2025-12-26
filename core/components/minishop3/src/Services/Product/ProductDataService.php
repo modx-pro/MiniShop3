@@ -202,7 +202,18 @@ class ProductDataService
     /**
      * Get product price with plugin modifiers
      *
-     * Invokes msOnGetProductPrice event for price modification
+     * Invokes msOnGetProductPrice event for price modification.
+     * Supports plugin chaining: each plugin can read/modify price via $modx->eventData
+     *
+     * Plugin example:
+     * ```php
+     * case 'msOnGetProductPrice':
+     *     $price = $modx->eventData['msOnGetProductPrice']['price'] ?? $scriptProperties['price'];
+     *     $newPrice = $price * 0.9; // 10% discount
+     *     $modx->eventData['msOnGetProductPrice']['price'] = $newPrice;
+     *     $modx->event->returnedValues['price'] = $newPrice;
+     *     break;
+     * ```
      *
      * @param msProductData $productData
      * @param array $data Additional product data
@@ -210,22 +221,44 @@ class ProductDataService
      */
     public function getModifiedPrice(msProductData $productData, array $data = [])
     {
+        $eventName = 'msOnGetProductPrice';
         $price = !empty($data['price'])
             ? $data['price']
             : $productData->get('price');
 
-        $response = $this->modx->invokeEvent('msOnGetProductPrice', [
+        // Early return if no plugins registered for this event
+        if (empty($this->modx->eventMap[$eventName])) {
+            return $price;
+        }
+
+        // Initialize eventData for plugin chaining
+        $this->modx->eventData[$eventName] = [
+            'price' => $price,
+            'data' => $data,
+        ];
+
+        // Clear previous returnedValues
+        if (isset($this->modx->event->returnedValues)) {
+            $this->modx->event->returnedValues = null;
+        }
+
+        $this->modx->invokeEvent($eventName, [
             'price' => $price,
             'data' => $data,
         ]);
 
-        if (is_array($response) && count($response) > 0) {
-            foreach ($response as $value) {
-                if (is_numeric($value)) {
-                    $price = $value;
-                }
-            }
+        // Priority 1: Read from eventData (plugin chain result)
+        if (isset($this->modx->eventData[$eventName]['price'])) {
+            $price = $this->modx->eventData[$eventName]['price'];
         }
+
+        // Priority 2: Check returnedValues for backward compatibility
+        if (isset($this->modx->event->returnedValues['price'])) {
+            $price = $this->modx->event->returnedValues['price'];
+        }
+
+        // Cleanup
+        unset($this->modx->eventData[$eventName]);
 
         return $price;
     }
@@ -233,7 +266,18 @@ class ProductDataService
     /**
      * Get product weight with plugin modifiers
      *
-     * Invokes msOnGetProductWeight event for weight modification
+     * Invokes msOnGetProductWeight event for weight modification.
+     * Supports plugin chaining: each plugin can read/modify weight via $modx->eventData
+     *
+     * Plugin example:
+     * ```php
+     * case 'msOnGetProductWeight':
+     *     $weight = $modx->eventData['msOnGetProductWeight']['weight'] ?? $scriptProperties['weight'];
+     *     $newWeight = $weight + 0.5; // Add packaging weight
+     *     $modx->eventData['msOnGetProductWeight']['weight'] = $newWeight;
+     *     $modx->event->returnedValues['weight'] = $newWeight;
+     *     break;
+     * ```
      *
      * @param msProductData $productData
      * @param array $data Additional product data
@@ -241,22 +285,44 @@ class ProductDataService
      */
     public function getModifiedWeight(msProductData $productData, array $data = [])
     {
+        $eventName = 'msOnGetProductWeight';
         $weight = !empty($data['weight'])
             ? $data['weight']
             : $productData->get('weight');
 
-        $response = $this->modx->invokeEvent('msOnGetProductWeight', [
+        // Early return if no plugins registered for this event
+        if (empty($this->modx->eventMap[$eventName])) {
+            return $weight;
+        }
+
+        // Initialize eventData for plugin chaining
+        $this->modx->eventData[$eventName] = [
+            'weight' => $weight,
+            'data' => $data,
+        ];
+
+        // Clear previous returnedValues
+        if (isset($this->modx->event->returnedValues)) {
+            $this->modx->event->returnedValues = null;
+        }
+
+        $this->modx->invokeEvent($eventName, [
             'weight' => $weight,
             'data' => $data,
         ]);
 
-        if (is_array($response) && count($response) > 0) {
-            foreach ($response as $value) {
-                if (is_numeric($value)) {
-                    $weight = $value;
-                }
-            }
+        // Priority 1: Read from eventData (plugin chain result)
+        if (isset($this->modx->eventData[$eventName]['weight'])) {
+            $weight = $this->modx->eventData[$eventName]['weight'];
         }
+
+        // Priority 2: Check returnedValues for backward compatibility
+        if (isset($this->modx->event->returnedValues['weight'])) {
+            $weight = $this->modx->event->returnedValues['weight'];
+        }
+
+        // Cleanup
+        unset($this->modx->eventData[$eventName]);
 
         return $weight;
     }
@@ -264,7 +330,18 @@ class ProductDataService
     /**
      * Modify product fields via plugins
      *
-     * Invokes msOnGetProductFields event for custom product field processing
+     * Invokes msOnGetProductFields event for custom product field processing.
+     * Supports plugin chaining: each plugin can read/modify fields via $modx->eventData
+     *
+     * Plugin example:
+     * ```php
+     * case 'msOnGetProductFields':
+     *     $data = $modx->eventData['msOnGetProductFields']['data'] ?? $scriptProperties['data'];
+     *     $data['custom_field'] = 'value';
+     *     $modx->eventData['msOnGetProductFields']['data'] = $data;
+     *     $modx->event->returnedValues['data'] = $data;
+     *     break;
+     * ```
      *
      * @param msProductData $productData
      * @param array $data Product fields
@@ -272,15 +349,37 @@ class ProductDataService
      */
     public function getModifiedFields(msProductData $productData, array $data = []): array
     {
-        $response = $this->modx->invokeEvent('msOnGetProductFields', ['data' => $data]);
+        $eventName = 'msOnGetProductFields';
 
-        if (is_array($response) && count($response) > 0) {
-            foreach ($response as $fields) {
-                if (is_array($fields)) {
-                    $data = array_merge($data, $fields);
-                }
-            }
+        // Early return if no plugins registered for this event
+        if (empty($this->modx->eventMap[$eventName])) {
+            return $data;
         }
+
+        // Initialize eventData for plugin chaining
+        $this->modx->eventData[$eventName] = [
+            'data' => $data,
+        ];
+
+        // Clear previous returnedValues
+        if (isset($this->modx->event->returnedValues)) {
+            $this->modx->event->returnedValues = null;
+        }
+
+        $this->modx->invokeEvent($eventName, ['data' => $data]);
+
+        // Priority 1: Read from eventData (plugin chain result)
+        if (isset($this->modx->eventData[$eventName]['data']) && is_array($this->modx->eventData[$eventName]['data'])) {
+            $data = $this->modx->eventData[$eventName]['data'];
+        }
+
+        // Priority 2: Check returnedValues for backward compatibility
+        if (isset($this->modx->event->returnedValues['data']) && is_array($this->modx->event->returnedValues['data'])) {
+            $data = $this->modx->event->returnedValues['data'];
+        }
+
+        // Cleanup
+        unset($this->modx->eventData[$eventName]);
 
         return $data;
     }
