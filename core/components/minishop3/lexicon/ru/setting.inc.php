@@ -19,6 +19,8 @@ $_lang['area_ms3_import'] = 'Импорт';
 $_lang['area_ms3_statuses'] = 'Статусы';
 $_lang['area_ms3_customers'] = 'Клиенты';
 $_lang['area_ms3_security'] = 'Безопасность';
+$_lang['area_ms3_api'] = 'API';
+$_lang['area_ms3_notifications'] = 'Уведомления';
 
 $_lang['setting_ms3_services'] = 'Службы магазина';
 $_lang['setting_ms3_services_desc'] = 'Массив с зарегистрированными классами для корзины, заказа, доставки и оплаты. Используется сторонними дополнениями для загрузки своего функционала.';
@@ -91,16 +93,10 @@ $_lang['setting_ms3_product_thumbnail_default_desc'] = 'Здесь вы може
 $_lang['setting_ms3_product_id_as_alias'] = 'Id товара как псевдоним';
 $_lang['setting_ms3_product_id_as_alias_desc'] = 'Если включено, псевдонимы для дружественных имён товаров не будут генерироваться. Вместо этого будут подставляться их id.';
 
-$_lang['setting_ms3_cart_handler_class'] = 'Класс обработчик корзины';
-$_lang['setting_ms3_cart_handler_class_desc'] = 'Имя класса, который реализует логику работы с корзиной.';
 $_lang['setting_ms3_cart_context'] = 'Использовать единую корзину для всех контекстов?';
 $_lang['setting_ms3_cart_context_desc'] = 'Если включено, то используется общая корзина для всех контекстов. Если выключено - то у каждого контекста используется своя корзина.';
-$_lang['setting_ms3_order_handler_class'] = 'Класс обработчик заказа';
-$_lang['setting_ms3_order_handler_class_desc'] = 'Имя класса, который реализует логику оформления заказа.';
 $_lang['setting_ms3_cart_max_count'] = 'Максимальное количество товаров в корзине';
 $_lang['setting_ms3_cart_max_count_desc'] = 'По умолчанию 1000. При превышении этого значения будет выведено уведомление.';
-$_lang['setting_ms3_order_tv_list'] = 'Список TV через запятую, которые попадут в письмо';
-$_lang['setting_ms3_order_tv_list_desc'] = 'Введите список TV товара через запятую, для использования их в чанке писем';
 $_lang['setting_ms3_order_user_groups'] = 'Группы регистрации покупателей';
 $_lang['setting_ms3_order_user_groups_desc'] = 'Список групп, через запятую, в которые вы хотите добавлять новых покупателей при оформлении заказа.';
 $_lang['setting_ms3_order_redirect_thanks_id'] = 'ID страницы "Спасибо за заказ"';
@@ -168,12 +164,6 @@ $_lang['setting_ms3_import_sync_limit_desc'] = 'Максимальное кол�
 $_lang['setting_ms3_import_preview_rows'] = 'Строк для предпросмотра';
 $_lang['setting_ms3_import_preview_rows_desc'] = 'Количество строк CSV для предпросмотра при настройке маппинга.';
 
-$_lang['setting_ms3_customer_grid_fields'] = 'Поля таблицы клиентов';
-$_lang['setting_ms3_customer_grid_fields_desc'] = 'Список полей, которые будут показаны в таблице клиентов. Доступны: "id,first_name,last_name,email,phone".';
-$_lang['setting_ms3_customer_window_fields'] = 'Поля редактируемых полей в окне управления клиентом';
-$_lang['setting_ms3_customer_window_fields_desc'] = 'Поля редактируемых полей в окне управления клиентом. Доступны: "id,first_name,last_name,email,phone".';
-$_lang['setting_ms3_customer_address_grid_fields'] = 'Поля таблицы адреса клиента';
-$_lang['setting_ms3_customer_address_grid_fields_desc'] = 'Поля редактируемых полей в окне управления адресом клиента. Доступны: "id,country,region.index,metro,city,street,building,entrance,floor,room,comment".';
 
 
 $_lang['ms3_source_thumbnails_desc'] = 'Закодированный в JSON массив с параметрами генерации уменьшенных копий изображений.';
@@ -192,6 +182,14 @@ $_lang['setting_ms3_snippet_token_secret'] = 'Секретный ключ для
 $_lang['setting_ms3_snippet_token_secret_desc'] = 'Криптографически стойкий секретный ключ для генерации токенов сниппетов. Генерируется автоматически при первом запуске. НЕ изменяйте это значение без необходимости!';
 $_lang['setting_ms3_snippet_cache_ttl'] = 'Время кеширования данных сниппетов (TTL)';
 $_lang['setting_ms3_snippet_cache_ttl_desc'] = 'Время в секундах, в течение которого параметры сниппетов хранятся в кеше. По умолчанию 3600 (1 час). Используется для оптимизации производительности корзины.';
+$_lang['setting_ms3_customer_api_token_ttl'] = 'Время жизни API токена клиента (TTL)';
+$_lang['setting_ms3_customer_api_token_ttl_desc'] = 'Время в секундах, в течение которого API токен клиента остается действительным. По умолчанию 86400 (24 часа).';
+$_lang['setting_ms3_password_reset_token_ttl'] = 'Время жизни токена сброса пароля (TTL)';
+$_lang['setting_ms3_password_reset_token_ttl_desc'] = 'Время в секундах, в течение которого ссылка для сброса пароля остается действительной. По умолчанию 3600 (1 час).';
+$_lang['setting_ms3_email_verification_token_ttl'] = 'Время жизни токена верификации email (TTL)';
+$_lang['setting_ms3_email_verification_token_ttl_desc'] = 'Время в секундах, в течение которого ссылка для верификации email остается действительной. По умолчанию 86400 (24 часа).';
+$_lang['setting_ms3_payment_secret'] = 'Секретный ключ для платежей';
+$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платежных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Символ валюты';
@@ -200,8 +198,18 @@ $_lang['setting_ms3_currency_position'] = 'Позиция символа вал�
 $_lang['setting_ms3_currency_position_desc'] = 'Где показывать символ валюты относительно цены. Допустимые значения: "before" (до цены: $ 100) или "after" (после цены: 100 ₽). По умолчанию "after".';
 
 // Customer Authentication & Registration
+$_lang['setting_ms3_customer_login_page_id'] = 'ID страницы входа';
+$_lang['setting_ms3_customer_login_page_id_desc'] = 'ID страницы с формой входа клиента. Используется для редиректа неавторизованных пользователей.';
+$_lang['setting_ms3_customer_register_page_id'] = 'ID страницы регистрации';
+$_lang['setting_ms3_customer_register_page_id_desc'] = 'ID страницы с формой регистрации клиента.';
 $_lang['setting_ms3_customer_auto_register_on_order'] = 'Автоматическая регистрация при оформлении заказа';
 $_lang['setting_ms3_customer_auto_register_on_order_desc'] = 'Автоматически регистрировать клиента с паролем при оформлении заказа, если такого email нет в системе. Пароль генерируется автоматически и отправляется на email.';
+$_lang['setting_ms3_customer_auto_login_on_order'] = 'Автоматический вход после заказа';
+$_lang['setting_ms3_customer_auto_login_on_order_desc'] = 'Автоматически авторизовать клиента после успешного оформления заказа.';
+$_lang['setting_ms3_customer_require_privacy_consent'] = 'Требовать согласие на обработку данных';
+$_lang['setting_ms3_customer_require_privacy_consent_desc'] = 'Требовать согласие на обработку персональных данных при регистрации (GDPR).';
+$_lang['setting_ms3_customer_auto_login_after_register'] = 'Автоматический вход после регистрации';
+$_lang['setting_ms3_customer_auto_login_after_register_desc'] = 'Автоматически авторизовать клиента сразу после успешной регистрации.';
 $_lang['setting_ms3_customer_require_email_verification'] = 'Требовать верификацию email';
 $_lang['setting_ms3_customer_require_email_verification_desc'] = 'Требовать подтверждение email адреса после регистрации. Клиент получит письмо со ссылкой для верификации.';
 $_lang['setting_ms3_customer_send_welcome_email'] = 'Отправлять приветственное письмо';
@@ -242,4 +250,26 @@ $_lang['setting_ms3_password_require_number'] = 'Требовать цифры';
 $_lang['setting_ms3_password_require_number_desc'] = 'Пароль должен содержать хотя бы одну цифру (0-9).';
 $_lang['setting_ms3_password_require_special'] = 'Требовать спецсимволы';
 $_lang['setting_ms3_password_require_special_desc'] = 'Пароль должен содержать хотя бы один специальный символ (!@#$%^&* и т.д.).';
+
+// Order Settings
+$_lang['setting_ms3_order_success_page_id'] = 'ID страницы успешной оплаты';
+$_lang['setting_ms3_order_success_page_id_desc'] = 'ID страницы, на которую перенаправляется клиент после успешной оплаты заказа. 0 = редирект на страницу заказа.';
+
+// Import Settings
+$_lang['setting_ms3_import_upload_path'] = 'Путь для загрузки файлов импорта';
+$_lang['setting_ms3_import_upload_path_desc'] = 'Относительный путь от MODX_BASE_PATH для загрузки CSV файлов импорта. По умолчанию "assets/import/".';
+
+// API Settings
+$_lang['setting_ms3_api_debug'] = 'Режим отладки API';
+$_lang['setting_ms3_api_debug_desc'] = 'Включает расширенное логирование API запросов и ответов для отладки. Не рекомендуется на продакшене.';
+$_lang['setting_ms3_cors_allowed_origins'] = 'Разрешённые CORS origins';
+$_lang['setting_ms3_cors_allowed_origins_desc'] = 'Список доменов, которым разрешены кросс-доменные запросы к API. Используйте "*" для разрешения всех или укажите домены через запятую.';
+$_lang['setting_ms3_rate_limit_max_attempts'] = 'Лимит запросов API';
+$_lang['setting_ms3_rate_limit_max_attempts_desc'] = 'Максимальное количество API запросов за период. По умолчанию 60.';
+$_lang['setting_ms3_rate_limit_decay_seconds'] = 'Период лимита запросов (сек)';
+$_lang['setting_ms3_rate_limit_decay_seconds_desc'] = 'Временное окно в секундах для подсчёта лимита запросов. По умолчанию 60 секунд.';
+
+// Notifications
+$_lang['setting_ms3_telegram_bot_token'] = 'Токен Telegram бота';
+$_lang['setting_ms3_telegram_bot_token_desc'] = 'Токен бота для отправки уведомлений в Telegram. Получите у @BotFather в Telegram.';
 

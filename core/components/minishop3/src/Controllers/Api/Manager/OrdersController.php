@@ -1148,6 +1148,9 @@ class OrdersController
     /**
      * Get orders statistics based on current filters
      *
+     * Statistics are calculated only for orders with statuses
+     * specified in ms3_status_for_stat setting (e.g. "2,3" for paid/completed).
+     *
      * @param array $params Filter parameters (same as getList)
      * @return array Statistics data
      */
@@ -1155,11 +1158,14 @@ class OrdersController
     {
         $c = $this->modx->newQuery(msOrder::class);
 
-        // Exclude drafts if setting is disabled
-        $showDrafts = $this->modx->getOption('ms3_order_show_drafts', null, false);
-        if (!$showDrafts) {
-            $statusDrafts = $this->modx->getOption('ms3_status_draft', null, 1);
-            $c->where(['status_id:!=' => $statusDrafts]);
+        // Filter by statuses for statistics (ms3_status_for_stat)
+        // Only count orders with these statuses (e.g. paid, completed)
+        $statusForStat = $this->modx->getOption('ms3_status_for_stat', null, '2,3');
+        if (!empty($statusForStat)) {
+            $statuses = array_map('intval', array_filter(explode(',', $statusForStat)));
+            if (!empty($statuses)) {
+                $c->where(['status_id:IN' => $statuses]);
+            }
         }
 
         // Apply filter_ prefixed params

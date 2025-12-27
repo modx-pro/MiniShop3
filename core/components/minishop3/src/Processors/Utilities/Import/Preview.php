@@ -28,7 +28,8 @@ class Preview extends Processor
         try {
             $file = $this->getProperty('file');
             $delimiter = $this->getProperty('delimiter') ?: ';';
-            $previewRows = (int)($this->getProperty('rows') ?: 5);
+            $defaultRows = (int)$this->modx->getOption('ms3_import_preview_rows', null, 5);
+            $previewRows = (int)($this->getProperty('rows') ?: $defaultRows);
 
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_INFO,
                 "[Import Preview] file=$file, delimiter=$delimiter, rows=$previewRows");

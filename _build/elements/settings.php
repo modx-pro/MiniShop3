@@ -65,9 +65,24 @@ return [
         'xtype' => 'modx-combo-template',
         'area' => 'ms3_category',
     ],
+    'ms3_product_main_fields' => [
+        'value' => 'pagetitle,longtitle,description,introtext,content',
+        'xtype' => 'textarea',
+        'area' => 'ms3_product',
+    ],
     'ms3_product_extra_fields' => [
         'value' => 'price,old_price,article,weight,color,size,vendor_id,made_in,tags,new,popular,favorite',
         'xtype' => 'textarea',
+        'area' => 'ms3_product',
+    ],
+    'ms3_price_snippet' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_product',
+    ],
+    'ms3_weight_snippet' => [
+        'value' => '',
+        'xtype' => 'textfield',
         'area' => 'ms3_product',
     ],
     'ms3_template_product_default' => [
@@ -151,11 +166,6 @@ return [
         'area' => 'ms3_product',
     ],
 
-    'ms3_cart_handler_class' => [
-        'value' => 'msCartHandler',
-        'xtype' => 'textfield',
-        'area' => 'ms3_cart',
-    ],
     'ms3_cart_context' => [
         'value' => false,
         'xtype' => 'combo-boolean',
@@ -196,16 +206,6 @@ return [
         'value' => 'size,color',
         'area' => 'ms3_order',
     ],
-    'ms3_order_tv_list' => [
-        'value' => '',
-        'xtype' => 'textfield',
-        'area' => 'ms3_order',
-    ],
-    'ms3_order_handler_class' => [
-        'value' => 'msOrderHandler',
-        'xtype' => 'textfield',
-        'area' => 'ms3_order',
-    ],
     'ms3_order_user_groups' => [
         'value' => '',
         'xtype' => 'textfield',
@@ -218,6 +218,11 @@ return [
     ],
     'ms3_order_redirect_thanks_id' => [
         'value' => 1,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
+    'ms3_order_success_page_id' => [
+        'value' => 0,
         'xtype' => 'numberfield',
         'area' => 'ms3_order',
     ],
@@ -306,6 +311,11 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_import',
     ],
+    'ms3_import_upload_path' => [
+        'value' => 'assets/import/',
+        'xtype' => 'textfield',
+        'area' => 'ms3_import',
+    ],
     'ms3_status_new' => [
         'value' => 0,
         'xtype' => 'numberfield',
@@ -331,19 +341,36 @@ return [
         'xtype' => 'combo-boolean',
         'area' => 'ms3_main',
     ],
-    'ms3_customer_grid_fields' => [
-        'value' => 'id,first_name,last_name,email,phone',
-        'xtype' => 'textarea',
+
+    // Customer Pages
+    'ms3_customer_login_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
         'area' => 'ms3_customers',
     ],
-    'ms3_customer_window_fields' => [
-        'value' => 'id,first_name,last_name,email,phone',
-        'xtype' => 'textarea',
+    'ms3_customer_register_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
         'area' => 'ms3_customers',
     ],
-    'ms3_customer_address_grid_fields' => [
-        'value' => 'id,city,street,building',
-        'xtype' => 'textarea',
+    'ms3_customer_profile_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_addresses_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_orders_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_redirect_after_login' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
         'area' => 'ms3_customers',
     ],
 
@@ -364,6 +391,16 @@ return [
         'area' => 'ms3_customers',
     ],
     'ms3_customer_send_welcome_email' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_require_privacy_consent' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_customers',
+    ],
+    'ms3_customer_auto_login_after_register' => [
         'value' => true,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_customers',
@@ -400,6 +437,26 @@ return [
     'ms3_customer_token_ttl' => [
         'value' => 86400, // 24 часа
         'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_customer_api_token_ttl' => [
+        'value' => 86400, // 24 часа
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_password_reset_token_ttl' => [
+        'value' => 3600, // 1 час
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_email_verification_token_ttl' => [
+        'value' => 86400, // 24 часа
+        'xtype' => 'numberfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_payment_secret' => [
+        'value' => '',
+        'xtype' => 'textfield',
         'area' => 'ms3_security',
     ],
     'ms3_snippet_token_secret' => [
@@ -457,5 +514,34 @@ return [
         'value' => 'after',
         'xtype' => 'textfield',
         'area' => 'ms3_product',
+    ],
+
+    // API Settings
+    'ms3_api_debug' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_api',
+    ],
+    'ms3_cors_allowed_origins' => [
+        'value' => '*',
+        'xtype' => 'textfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_max_attempts' => [
+        'value' => 60,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_decay_seconds' => [
+        'value' => 60,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_api',
+    ],
+
+    // Notifications
+    'ms3_telegram_bot_token' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_notifications',
     ],
 ];

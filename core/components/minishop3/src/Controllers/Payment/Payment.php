@@ -61,9 +61,15 @@ use MODX\Revolution\modX;
  *         }
  *
  *         if ($data['status'] === 'succeeded') {
- *             $order->set('status', 2); // Paid
+ *             $order->set('status_id', $this->getPaidStatusId());
  *             $order->save();
  *             return $this->success('Payment confirmed');
+ *         }
+ *
+ *         if ($data['status'] === 'canceled') {
+ *             $order->set('status_id', $this->getCanceledStatusId());
+ *             $order->save();
+ *             return $this->error('Payment canceled');
  *         }
  *
  *         return $this->error('Payment failed');
@@ -259,5 +265,31 @@ abstract class Payment implements PaymentProviderInterface
     protected function success(string $message = '', array $data = [], array $placeholders = []): array
     {
         return $this->ms3->utils->success($message, $data, $placeholders);
+    }
+
+    /**
+     * Get "Paid" status ID from system settings
+     *
+     * Returns status ID that should be set after successful payment.
+     * Configured via ms3_status_paid system setting.
+     *
+     * @return int Status ID (default: 3)
+     */
+    protected function getPaidStatusId(): int
+    {
+        return (int)$this->modx->getOption('ms3_status_paid', null, 3);
+    }
+
+    /**
+     * Get "Canceled" status ID from system settings
+     *
+     * Returns status ID that should be set when payment is canceled/failed.
+     * Configured via ms3_status_canceled system setting.
+     *
+     * @return int Status ID (default: 5)
+     */
+    protected function getCanceledStatusId(): int
+    {
+        return (int)$this->modx->getOption('ms3_status_canceled', null, 5);
     }
 }
