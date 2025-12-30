@@ -23,8 +23,15 @@ $ms3->loadMap();
 $pdoFetch = $modx->services->get(Fetch::class);
 $pdoFetch->addTime('pdoTools loaded.');
 
-if (isset($parents) && $parents === '') {
+// Don't set default parents when using link parameter (linked products can be anywhere)
+$link = $scriptProperties['link'] ?? null;
+if (empty($link) && isset($parents) && $parents === '') {
     $scriptProperties['parents'] = $modx->resource->id;
+}
+// Disable parents filtering when using link
+if (!empty($link)) {
+    $scriptProperties['parents'] = 0;
+    $scriptProperties['depth'] = 0;
 }
 
 if (!empty($returnIds)) {
@@ -86,22 +93,28 @@ if (!empty($includeThumbs)) {
     }
 }
 
-// Include linked products
+// Include linked products via innerJoin
 $innerJoin = [];
+$link = $scriptProperties['link'] ?? null;
+$master = $scriptProperties['master'] ?? null;
+$slave = $scriptProperties['slave'] ?? null;
+
 if (!empty($link) && !empty($master)) {
+    // Get slave products linked to this master
     $innerJoin['Link'] = [
         'class' => msProductLink::class,
         'alias' => 'Link',
-        'on' => 'msProduct.id = Link.slave AND Link.link = ' . $link,
+        'on' => '`msProduct`.`id` = `Link`.`slave` AND `Link`.`link` = ' . (int)$link,
     ];
-    $where['Link.master'] = $master;
+    $where['Link.master'] = (int)$master;
 } elseif (!empty($link) && !empty($slave)) {
+    // Get master products for this slave
     $innerJoin['Link'] = [
         'class' => msProductLink::class,
         'alias' => 'Link',
-        'on' => 'msProduct.id = Link.master AND Link.link = ' . $link,
+        'on' => '`msProduct`.`id` = `Link`.`master` AND `Link`.`link` = ' . (int)$link,
     ];
-    $where['Link.slave'] = $slave;
+    $where['Link.slave'] = (int)$slave;
 }
 
 // Add user parameters
@@ -211,7 +224,8 @@ $default = [
 
 // Merge all properties and run with error handling
 try {
-    $pdoFetch->setConfig(array_merge($default, $scriptProperties), false);
+    $config = array_merge($default, $scriptProperties);
+    $pdoFetch->setConfig($config, false);
     $rows = $pdoFetch->run();
 } catch (\Exception $e) {
     $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ms3_products] Query error: ' . $e->getMessage());

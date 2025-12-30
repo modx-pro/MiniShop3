@@ -33,11 +33,42 @@ class CorsMiddleware implements MiddlewareInterface
      */
     public function __construct(array $config = [])
     {
-        $this->allowedOrigins = $config['allowed_origins'] ?? ['*'];
-        $this->allowedMethods = $config['allowed_methods'] ?? ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'];
-        $this->allowedHeaders = $config['allowed_headers'] ?? ['Content-Type', 'Authorization', 'X-Requested-With', 'MS3TOKEN'];
-        $this->allowCredentials = $config['allow_credentials'] ?? true;
-        $this->maxAge = $config['max_age'] ?? 86400; // 24 hours
+        $this->allowedOrigins = $this->normalizeToArray($config['allowed_origins'] ?? ['*']);
+        $this->allowedMethods = $this->normalizeToArray($config['allowed_methods'] ?? ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']);
+        $this->allowedHeaders = $this->normalizeToArray($config['allowed_headers'] ?? ['Content-Type', 'Authorization', 'X-Requested-With', 'MS3TOKEN']);
+        $this->allowCredentials = (bool)($config['allow_credentials'] ?? true);
+        $this->maxAge = (int)($config['max_age'] ?? 86400); // 24 hours
+    }
+
+    /**
+     * Normalize value to array (handles string, JSON string, or array)
+     *
+     * @param mixed $value
+     * @return array
+     */
+    private function normalizeToArray(mixed $value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            // Try JSON decode first
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+
+            // Comma-separated string
+            if (str_contains($value, ',')) {
+                return array_map('trim', explode(',', $value));
+            }
+
+            // Single value
+            return [$value];
+        }
+
+        return ['*'];
     }
 
     /**

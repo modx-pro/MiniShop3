@@ -134,13 +134,32 @@ class ProductDataService
      * Synchronizes msProductLink table with links array from 'links' field
      * Links can be master->slave (product is master) and slave->master (product is dependent)
      *
+     * IMPORTANT: Only syncs if 'links' field was explicitly passed in POST data.
+     * Links are managed via separate UI, so we don't touch them on regular product save.
+     *
      * @param msProductData $productData
      * @return void
      */
     public function saveLinks(msProductData $productData): void
     {
         $productId = $productData->get('id');
-        $links = $productData->get('links');
+
+        // Use reflection to check if 'links' was explicitly passed in POST data
+        $reflection = new \ReflectionClass($productData);
+        $property = $reflection->getProperty('_fields');
+        $property->setAccessible(true);
+        $fields = $property->getValue($productData);
+
+        // If 'links' key doesn't exist in POST data - don't touch existing links
+        if (!array_key_exists('links', $fields)) {
+            return;
+        }
+
+        $links = $fields['links'];
+
+        if (is_string($links)) {
+            $links = json_decode($links, true);
+        }
 
         if (!is_array($links)) {
             return;

@@ -113,9 +113,11 @@ if (!empty($sortOptions) && !empty($options)) {
     });
 }
 
-$options = $ms3->options->sortOptionValues($options, $scriptProperties['sortOptionValues']);
+$sortOptionValues = $scriptProperties['sortOptionValues'] ?? '';
+$options = $ms3->options->sortOptionValues($options, $sortOptionValues);
 
-if (in_array($scriptProperties['return'], ['data', 'array'], true)) {
+$return = $scriptProperties['return'] ?? '';
+if (in_array($return, ['data', 'array'], true)) {
     return $options;
 }
 
