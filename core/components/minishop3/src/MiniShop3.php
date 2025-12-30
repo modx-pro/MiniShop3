@@ -9,7 +9,6 @@ use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Order\OrderStatus;
 use MiniShop3\Controllers\Payment\PaymentProviderInterface;
-use MiniShop3\Model\msOrder;
 use MiniShop3\ServiceRegistry;
 use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
@@ -23,7 +22,7 @@ use xPDO\xPDO;
 
 class MiniShop3
 {
-    public $version = '1.0.0-alpha.4';
+    public $version = '1.0.0-alpha.5';
 
     /** @var modX $modx */
     public $modx;
@@ -60,6 +59,9 @@ class MiniShop3
 
     /** @var Options $options */
     public $options;
+
+    /** @var bool $mapLoaded Флаг загрузки ExtraFields в xPDO map */
+    private bool $mapLoaded = false;
 
     public function __construct(modX $modx, array $config = [])
     {
@@ -112,8 +114,6 @@ class MiniShop3
         (new ServiceRegistry($this->modx))->register();
 
         $this->options = new Options($this);
-
-        $this->deleteOldDraft();
     }
 
     public function setController($type, $controller)
@@ -253,50 +253,20 @@ class MiniShop3
     }
 
     /**
-     * Loads additional metadata for miniShop3 objects
+     * Loads extra fields metadata into xPDO map.
+     * Idempotent - safe to call multiple times, loads only once per request.
+     *
+     * @return void
      */
-    public function loadMap()
+    public function loadMap(): void
     {
-        $this->extraFields->loadMap();
-        if ($this->pdoTools && method_exists($this->pdoTools, 'makePlaceholders')) {
-//            $plugins = $this->plugins->load();
-//            foreach ($plugins as $plugin) {
-//                // For legacy plugins
-//                if (isset($plugin['xpdo_meta_map']) && is_array($plugin['xpdo_meta_map'])) {
-//                    $plugin['map'] = $plugin['xpdo_meta_map'];
-//                }
-//                if (isset($plugin['map']) && is_array($plugin['map'])) {
-//                    foreach ($plugin['map'] as $class => $map) {
-//                        if (!isset($this->modx->map[$class])) {
-//                            $this->modx->loadClass($class, $this->config['modelPath'] . 'minishop3/');
-//                        }
-//                        if (isset($this->modx->map[$class])) {
-//                            foreach ($map as $key => $values) {
-//                                $this->modx->map[$class][$key] = array_merge($this->modx->map[$class][$key], $values);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-        } else {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                'pdoTools not installed, metadata for miniShop3 objects not loaded'
-            );
+        if ($this->mapLoaded) {
+            return;
         }
+
+        $this->extraFields->loadMap();
+        $this->mapLoaded = true;
     }
-
-//    public function changeOrderStatus($order_id, $status_id)
-//    {
-//        $orderStatus = new OrderStatus($this);
-//        $orderStatus->change($order_id, $status_id);
-//    }
-
-//    public function getCustomerId()
-//    {
-//        $customer = new Customer($this);
-//        return $customer->getId();
-//    }
 
     public function registerSnippet($scriptProperties)
     {
@@ -322,26 +292,5 @@ class MiniShop3
             '<script>ms3Config.render.cart.push(' . json_encode($output) . ');</script>',
             true
         );
-    }
-
-    private function deleteOldDraft()
-    {
-        // Every 30 minutes, run the cleanup for old tasks
-        if (date('i') % 30 === 0) {
-            $deleteAfter = $this->modx->getOption('ms3_delete_drafts_after', null, '');
-            $deleteAfter = !empty($deleteAfter) ? strtotime($deleteAfter) : null;
-            if ($deleteAfter) {
-                $statusDraft = $this->modx->getOption('ms3_status_draft', null, 1);
-                $orders = $this->modx->getIterator(msOrder::class, [
-                    'status_id' => $statusDraft,
-                    'createdon:<' => date('Y-m-d H:i:00', $deleteAfter)
-                ]);
-                if (iterator_count($orders) > 0) {
-                    foreach ($orders as $order) {
-                        $order->remove();
-                    }
-                }
-            }
-        }
     }
 }
