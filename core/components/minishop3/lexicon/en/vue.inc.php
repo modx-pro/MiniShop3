@@ -131,12 +131,24 @@ $_lang['ms3_vue_extra_fields_delete'] = 'Delete Field';
 $_lang['ms3_vue_extra_fields_class_filter'] = 'Model Class:';
 $_lang['ms3_vue_extra_fields_select_class'] = 'Select class';
 
-// Model class types
-$_lang['ms3_vue_class_product_data'] = 'msProductData (Products)';
+// Model class types - Products
+$_lang['ms3_vue_class_product'] = 'msProduct (Products - resource)';
+$_lang['ms3_vue_class_product_data'] = 'msProductData (Product Data)';
+$_lang['ms3_vue_class_category'] = 'msCategory (Categories)';
 $_lang['ms3_vue_class_vendor'] = 'msVendor (Vendors)';
+$_lang['ms3_vue_class_option'] = 'msOption (Product Options)';
+$_lang['ms3_vue_class_link'] = 'msLink (Product Link Types)';
+// Model class types - Orders
 $_lang['ms3_vue_class_order'] = 'msOrder (Orders)';
 $_lang['ms3_vue_class_order_address'] = 'msOrderAddress (Order Addresses)';
-$_lang['ms3_vue_class_category'] = 'msCategory (Categories)';
+$_lang['ms3_vue_class_order_product'] = 'msOrderProduct (Order Products)';
+$_lang['ms3_vue_class_order_status'] = 'msOrderStatus (Order Statuses)';
+// Model class types - Customers
+$_lang['ms3_vue_class_customer'] = 'msCustomer (Customers)';
+$_lang['ms3_vue_class_customer_address'] = 'msCustomerAddress (Customer Addresses)';
+// Model class types - Delivery and Payment
+$_lang['ms3_vue_class_delivery'] = 'msDelivery (Delivery Methods)';
+$_lang['ms3_vue_class_payment'] = 'msPayment (Payment Methods)';
 
 // Widget types (xtype)
 $_lang['ms3_vue_xtype_textfield'] = 'Text Field';

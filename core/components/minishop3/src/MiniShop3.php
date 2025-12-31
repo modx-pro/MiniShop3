@@ -12,7 +12,6 @@ use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\ServiceRegistry;
 use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
-use MiniShop3\Utils\Plugins;
 use MiniShop3\Utils\Services;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\modX;
@@ -50,9 +49,6 @@ class MiniShop3
 
     /** @var Services $services */
     public Services $services;
-
-    /** @var Plugins $plugins */
-    public $plugins;
 
     /** @var ExtraFields $extraFields */
     public $extraFields;

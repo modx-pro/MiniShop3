@@ -144,35 +144,5 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
 //        // load RTE
         //$this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', array('controller' => $this, 'page' => 'category_update'));
-//        $this->loadPlugins();
-    }
-
-
-    /**
-    * Used to set values on the resource record sent to the template for derivative classes
-    *
-    * @return void
-    */
-    public function prepareResource()
-    {
-//        $settings = $this->resource->getProperties('ms3');
-//        if (is_array($settings) && !empty($settings)) {
-//            foreach ($settings as $k => $v) {
-//                $this->resourceArray['setting_' . $k] = $v;
-//            }
-//        }
-    }
-
-    /**
-    * Loads additional scripts for product form from miniShop2 plugins
-    */
-    public function loadPlugins()
-    {
-//        $plugins = $this->ms3->plugins->load();
-//        foreach ($plugins as $plugin) {
-//            if (!empty($plugin['manager']['msProductData'])) {
-//                $this->addJavascript($plugin['manager']['msProductData']);
-//            }
-//        }
     }
 }

@@ -14,16 +14,6 @@ return [
         'key' => 'mgr_tree_icon_msproduct',
     ],
 
-    'ms3_services' => [
-        'value' => '{"cart":["MiniShop3\\\\Controllers\\\\Cart\\\\Cart"],"order":["MiniShop3\\\\Controllers\\\\Order\\\\Order"],"payment":["MiniShop3\\\\Controllers\\\\Payment\\\\DefaultPayment"],"delivery":["MiniShop3\\\\Controllers\\\\Delivery\\\\DefaultDelivery"]}',
-        'xtype' => 'textarea',
-        'area' => 'ms3_main',
-    ],
-    'ms3_plugins' => [
-        'value' => '[]',
-        'xtype' => 'textarea',
-        'area' => 'ms3_main',
-    ],
     'ms3_chunks_categories' => [
         'value' => '',
         'xtype' => 'textfield',
@@ -53,11 +43,6 @@ return [
     'ms3_category_id_as_alias' => [
         'value' => false,
         'xtype' => 'combo-boolean',
-        'area' => 'ms3_category',
-    ],
-    'ms3_category_content_default' => [
-        'value' => '',
-        'xtype' => 'textarea',
         'area' => 'ms3_category',
     ],
     'ms3_template_category_default' => [
@@ -186,26 +171,6 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_order',
     ],
-    'ms3_order_grid_fields' => [
-        'value' => 'id,num,customer,status,cost,weight,delivery,payment,createdon,updatedon,comment',
-        'xtype' => 'textarea',
-        'area' => 'ms3_order',
-    ],
-    'ms3_order_address_fields' => [
-        'xtype' => 'textarea',
-        'value' => 'first_name,last_name,email,phone,index,country,region,city,metro,street,building,entrance,floor,room,comment,text_address',
-        'area' => 'ms3_order',
-    ],
-    'ms3_order_product_fields' => [
-        'xtype' => 'textarea',
-        'value' => 'product_pagetitle,vendor_name,product_article,weight,price,count,cost',
-        'area' => 'ms3_order',
-    ],
-    'ms3_order_product_options' => [
-        'xtype' => 'textarea',
-        'value' => 'size,color',
-        'area' => 'ms3_order',
-    ],
     'ms3_order_user_groups' => [
         'value' => '',
         'xtype' => 'textfield',
@@ -281,11 +246,6 @@ return [
         'xtype' => 'textarea',
         'area' => 'ms3_frontend',
     ],
-//    'ms3_register_frontend' => [
-//        'value' => true,
-//        'xtype' => 'combo-boolean',
-//        'area' => 'ms3_frontend',
-//    ],
     'ms3_status_draft' => [
         'value' => 1,
         'xtype' => 'numberfield',
@@ -413,11 +373,6 @@ return [
         'area' => 'ms3_customers',
     ],
     'ms3_customer_sync_create_moduser' => [
-        'value' => false,
-        'xtype' => 'combo-boolean',
-        'area' => 'ms3_customers',
-    ],
-    'ms3_customer_sync_delete_with_user' => [
         'value' => false,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_customers',

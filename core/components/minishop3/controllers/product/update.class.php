@@ -172,7 +172,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
 
         $this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', ['controller' => $this, 'page' => 'product_update']);
-        $this->loadPlugins();
     }
 
     /**
@@ -196,19 +195,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         if (empty($this->resourceArray['vendor'])) {
             $this->resourceArray['vendor'] = '';
         }
-    }
-
-    /**
-     * Loads additional scripts for product form from MiniShop3 plugins
-     */
-    public function loadPlugins()
-    {
-//        $plugins = $this->ms3->plugins->load();
-//        foreach ($plugins as $plugin) {
-//            if (!empty($plugin['manager']['msProductData'])) {
-//                $this->addJavascript($plugin['manager']['msProductData']);
-//            }
-//        }
     }
 
     /**

@@ -131,12 +131,24 @@ $_lang['ms3_vue_extra_fields_delete'] = 'Удалить поле';
 $_lang['ms3_vue_extra_fields_class_filter'] = 'Класс модели:';
 $_lang['ms3_vue_extra_fields_select_class'] = 'Выберите класс';
 
-// Типы классов моделей
-$_lang['ms3_vue_class_product_data'] = 'msProductData (Товары)';
+// Типы классов моделей - Товары
+$_lang['ms3_vue_class_product'] = 'msProduct (Товары - ресурс)';
+$_lang['ms3_vue_class_product_data'] = 'msProductData (Данные товаров)';
+$_lang['ms3_vue_class_category'] = 'msCategory (Категории)';
 $_lang['ms3_vue_class_vendor'] = 'msVendor (Производители)';
+$_lang['ms3_vue_class_option'] = 'msOption (Опции товаров)';
+$_lang['ms3_vue_class_link'] = 'msLink (Типы связей товаров)';
+// Типы классов моделей - Заказы
 $_lang['ms3_vue_class_order'] = 'msOrder (Заказы)';
 $_lang['ms3_vue_class_order_address'] = 'msOrderAddress (Адреса заказов)';
-$_lang['ms3_vue_class_category'] = 'msCategory (Категории)';
+$_lang['ms3_vue_class_order_product'] = 'msOrderProduct (Товары в заказе)';
+$_lang['ms3_vue_class_order_status'] = 'msOrderStatus (Статусы заказов)';
+// Типы классов моделей - Клиенты
+$_lang['ms3_vue_class_customer'] = 'msCustomer (Клиенты)';
+$_lang['ms3_vue_class_customer_address'] = 'msCustomerAddress (Адреса клиентов)';
+// Типы классов моделей - Доставка и оплата
+$_lang['ms3_vue_class_delivery'] = 'msDelivery (Способы доставки)';
+$_lang['ms3_vue_class_payment'] = 'msPayment (Способы оплаты)';
 
 // Типы виджетов (xtype)
 $_lang['ms3_vue_xtype_textfield'] = 'Текстовое поле';

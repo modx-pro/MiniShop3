@@ -55,11 +55,24 @@ const fieldForm = ref({
  * Available model classes
  */
 const classOptions = computed(() => [
+  // Товары
+  { label: _('class_product'), value: 'MiniShop3\\Model\\msProduct' },
   { label: _('class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
+  { label: _('class_category'), value: 'MiniShop3\\Model\\msCategory' },
   { label: _('class_vendor'), value: 'MiniShop3\\Model\\msVendor' },
+  { label: _('class_option'), value: 'MiniShop3\\Model\\msOption' },
+  { label: _('class_link'), value: 'MiniShop3\\Model\\msLink' },
+  // Заказы
   { label: _('class_order'), value: 'MiniShop3\\Model\\msOrder' },
   { label: _('class_order_address'), value: 'MiniShop3\\Model\\msOrderAddress' },
-  { label: _('class_category'), value: 'MiniShop3\\Model\\msCategory' }
+  { label: _('class_order_product'), value: 'MiniShop3\\Model\\msOrderProduct' },
+  { label: _('class_order_status'), value: 'MiniShop3\\Model\\msOrderStatus' },
+  // Клиенты
+  { label: _('class_customer'), value: 'MiniShop3\\Model\\msCustomer' },
+  { label: _('class_customer_address'), value: 'MiniShop3\\Model\\msCustomerAddress' },
+  // Доставка и оплата
+  { label: _('class_delivery'), value: 'MiniShop3\\Model\\msDelivery' },
+  { label: _('class_payment'), value: 'MiniShop3\\Model\\msPayment' }
 ])
 
 /**
