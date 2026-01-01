@@ -26,7 +26,10 @@
  *   confirmMessage: '...',  // Confirmation message (lexicon key)
  *   permission: 'ms3_save', // Access permission (optional)
  *   visible: true,          // Button visibility
- *   disabled: false         // Disabled state
+ *   disabled: false,        // Disabled state
+ *   toggleField: 'published', // Toggle based on data field (shows iconOff/labelOff when true)
+ *   iconOff: 'pi-times',    // Icon when toggleField is true
+ *   labelOff: 'unpublish'   // Label when toggleField is true
  * }
  */
 import { computed } from 'vue'
@@ -76,7 +79,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['edit', 'delete', 'view', 'addresses', 'refresh', 'action'])
+const emit = defineEmits(['edit', 'delete', 'view', 'addresses', 'publish', 'duplicate', 'refresh', 'action'])
 
 const { _ } = useLexicon()
 
@@ -87,6 +90,8 @@ const { executeAction } = useActions({
   onDelete: (data) => emit('delete', data),
   onView: (data) => emit('view', data),
   onAddresses: (data) => emit('addresses', data),
+  onPublish: (data) => emit('publish', data),
+  onDuplicate: (data) => emit('duplicate', data),
   onCustomAction: (event, data) => emit('action', { name: event, data })
 })
 
@@ -131,12 +136,22 @@ const processedActions = computed(() => {
       const handlerName = action.handler || action.name
       const defaults = defaultActionConfigs[handlerName] || {}
 
+      // Handle toggle actions (e.g., publish/unpublish)
+      let icon = action.icon || defaults.icon || 'pi-cog'
+      let label = action.label || defaults.label || action.name
+
+      if (action.toggleField && props.data[action.toggleField]) {
+        // Toggle is ON - show "off" state (e.g., published=true -> show unpublish)
+        icon = action.iconOff || icon
+        label = action.labelOff || label
+      }
+
       return {
         ...defaults,
         ...action,
         handler: handlerName,
-        iconClass: `pi ${action.icon || defaults.icon || 'pi-cog'}`,
-        displayLabel: _(action.label || defaults.label || action.name),
+        iconClass: `pi ${icon}`,
+        displayLabel: _(label),
         isDisabled: checkDisabled(action)
       }
     })

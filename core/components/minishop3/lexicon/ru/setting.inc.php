@@ -29,8 +29,6 @@ $_lang['setting_ms3_tmp_storage_desc'] = "
 Для хранения корзины и временных полей заказа в сессии укажите <strong>session</strong><br>
 Для хранения в базе данных укажите <strong>db</strong>";
 
-$_lang['setting_ms3_category_grid_fields'] = 'Поля таблицы товаров';
-$_lang['setting_ms3_category_grid_fields_desc'] = 'Список видимых полей таблицы с товарами категории, через запятую. Доступны: "id,menuindex,pagetitle,article,price,thumb,new,favorite,popular';
 $_lang['setting_ms3_product_main_fields'] = 'Основные поля панели товара';
 $_lang['setting_ms3_product_main_fields_desc'] = 'Список полей панели товара, через запятую. Например: "pagetitle,longtitle,content".';
 $_lang['setting_ms3_product_extra_fields'] = 'Дополнительные поля товара';
@@ -58,8 +56,6 @@ $_lang['setting_ms3_category_show_nested_products'] = 'Показывать вл
 $_lang['setting_ms3_category_show_nested_products_desc'] = 'Если вы включаете эту опцию, то в категории будут показаны все вложенные товары. Они выделены другим цветом и у них есть имя родной категории под pagetitle.';
 $_lang['setting_ms3_category_show_options'] = 'Показывать опции товаров категории';
 $_lang['setting_ms3_category_show_options_desc'] = 'Показывать опции к товарам категории.';
-$_lang['setting_ms3_category_remember_tabs'] = 'Запоминание вкладки категории';
-$_lang['setting_ms3_category_remember_tabs_desc'] = 'Если включено, активная вкладка панели категории будет запоминаться и восстанавливаться при загрузке страницы.';
 $_lang['setting_ms3_category_remember_grid'] = 'Запоминание таблицы категории';
 $_lang['setting_ms3_category_remember_grid_desc'] = 'Если включено, состояние таблицы категории будет запоминаться и восстанавливаться при загрузке страницы, включая номер страницы и строку поиска.';
 $_lang['setting_ms3_category_id_as_alias'] = 'Id категории как псевдоним';

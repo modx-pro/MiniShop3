@@ -20,11 +20,6 @@ return [
         'area' => 'ms3_main',
     ],
 
-    'ms3_category_grid_fields' => [
-        'value' => 'id,menuindex,pagetitle,article,price,thumb,new,favorite,popular',
-        'xtype' => 'textarea',
-        'area' => 'ms3_category',
-    ],
     'ms3_category_show_nested_products' => [
         'value' => true,
         'xtype' => 'combo-boolean',
@@ -32,11 +27,6 @@ return [
     ],
     'ms3_category_show_options' => [
         'value' => false,
-        'xtype' => 'combo-boolean',
-        'area' => 'ms3_category',
-    ],
-    'ms3_category_remember_tabs' => [
-        'value' => true,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_category',
     ],

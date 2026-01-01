@@ -352,6 +352,61 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'view_document')
     ]);
 
+    // Category products routes
+    $router->group('/categories', function($router) use ($modx) {
+        // Get products in category
+        $router->get('/{id}/products', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
+            return $controller->getList($allParams);
+        });
+        // Get filters configuration
+        $router->get('/{id}/products/filters', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
+            return $controller->getFilters($params);
+        });
+        // Sort products (drag-drop)
+        $router->post('/{id}/products/sort', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
+            return $controller->sort($allParams);
+        });
+        // Bulk delete products
+        $router->delete('/{id}/products/bulk', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
+            return $controller->bulkDelete($allParams);
+        });
+        // Multiple product actions
+        $router->post('/{id}/products/multiple', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
+            return $controller->multiple($allParams);
+        });
+        // Toggle product publish status
+        $router->post('/{id}/products/{productId}/publish', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
+            return $controller->publish($allParams);
+        });
+
+    }, [
+        new PermissionMiddleware($modx, 'view_document')
+    ]);
+
     $router->group('/deliveries', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
             $allParams = array_merge($_GET, $params);

@@ -31,10 +31,16 @@ class FilterConfigManager
         $this->modx = $modx;
         $this->configPath = MODX_CORE_PATH . 'components/minishop3/config/filters/';
         $this->customPath = MODX_CORE_PATH . 'components/minishop3/custom/filters/';
+
+        // Load lexicons for filter labels
+        $this->modx->lexicon->load('minishop3:vue');
     }
 
     /**
      * Get filters configuration for a grid
+     *
+     * Filters are generated dynamically from grid configuration (filterable fields).
+     * Static config file is used as override/fallback for additional settings.
      *
      * @param string $gridKey Grid identifier (orders, customers, products)
      * @param bool $resolveOptions Whether to resolve select options
@@ -42,10 +48,36 @@ class FilterConfigManager
      */
     public function getFilters(string $gridKey, bool $resolveOptions = false): array
     {
-        $filters = $this->loadConfig($gridKey);
+        // Load static config (for overrides and special filters like 'query')
+        $staticConfig = $this->loadConfig($gridKey);
+
+        // Get dynamic filters from grid configuration
+        $dynamicFilters = $this->buildFiltersFromGrid($gridKey);
+
+        // Merge: static config overrides dynamic
+        $filters = [];
+
+        // First add dynamic filters
+        foreach ($dynamicFilters as $key => $filter) {
+            $filters[$key] = $filter;
+        }
+
+        // Then merge/override with static config
+        foreach ($staticConfig as $key => $staticFilter) {
+            if (isset($filters[$key])) {
+                // Merge static into dynamic (static takes priority)
+                $filters[$key] = array_merge($filters[$key], $staticFilter);
+            } else {
+                // Add static-only filter (like 'query')
+                $filters[$key] = $staticFilter;
+            }
+        }
 
         // Filter only visible filters
         $filters = array_filter($filters, fn($f) => ($f['visible'] ?? true) === true);
+
+        // Sort by position
+        uasort($filters, fn($a, $b) => ($a['position'] ?? 100) - ($b['position'] ?? 100));
 
         // Resolve select options if requested
         if ($resolveOptions) {
@@ -62,6 +94,85 @@ class FilterConfigManager
         }
 
         return $filters;
+    }
+
+    /**
+     * Build filters from grid configuration (filterable fields)
+     *
+     * @param string $gridKey Grid identifier
+     * @return array Filter configurations
+     */
+    protected function buildFiltersFromGrid(string $gridKey): array
+    {
+        /** @var GridConfigService $gridConfigService */
+        $gridConfigService = $this->modx->services->get('ms3_grid_config');
+
+        if (!$gridConfigService) {
+            return [];
+        }
+
+        $filterableFields = $gridConfigService->getFilterableFields($gridKey);
+        $filters = [];
+        $position = 10;
+
+        foreach ($filterableFields as $fieldName => $fieldConfig) {
+            $filterType = $this->determineFilterType($fieldName, $fieldConfig);
+
+            $filter = [
+                'type' => $filterType,
+                'label' => $fieldConfig['label'] ?? $fieldName,
+                'placeholder' => 'all',
+                'position' => $position,
+            ];
+
+            // Add options for boolean fields
+            if ($filterType === 'select') {
+                $filter['source'] = [
+                    'type' => 'static',
+                    'options' => [
+                        ['label' => 'ms3_yes', 'value' => 1],
+                        ['label' => 'ms3_no', 'value' => 0],
+                    ],
+                ];
+                $filter['width'] = '120px';
+            } else {
+                $filter['width'] = '150px';
+            }
+
+            $filters[$fieldName] = $filter;
+            $position += 10;
+        }
+
+        return $filters;
+    }
+
+    /**
+     * Determine filter type based on field name and config
+     *
+     * @param string $fieldName Field name
+     * @param array $fieldConfig Field configuration
+     * @return string Filter type (text, select, checkbox)
+     */
+    protected function determineFilterType(string $fieldName, array $fieldConfig): string
+    {
+        // Boolean fields - use select with Yes/No
+        $booleanFields = [
+            'published', 'deleted', 'hidemenu', 'isfolder', 'richtext', 'searchable', 'cacheable',
+            'new', 'popular', 'favorite', 'active', 'blocked', 'email_verified'
+        ];
+
+        if (in_array($fieldName, $booleanFields)) {
+            return 'select';
+        }
+
+        // Check if field type is boolean in config
+        $type = $fieldConfig['config']['type'] ?? null;
+        if ($type === 'boolean') {
+            return 'select';
+        }
+
+        // Default to text
+        return 'text';
     }
 
     /**
@@ -110,9 +221,38 @@ class FilterConfigManager
 
         return match ($type) {
             'model' => $this->resolveFromModel($source),
-            'static' => $source['options'] ?? [],
+            'static' => $this->resolveStaticOptions($source['options'] ?? []),
             default => [],
         };
+    }
+
+    /**
+     * Resolve static options with lexicon translation
+     *
+     * @param array $options Static options array
+     * @return array Translated options
+     */
+    private function resolveStaticOptions(array $options): array
+    {
+        $result = [];
+        foreach ($options as $option) {
+            $label = $option['label'] ?? '';
+
+            // Translate lexicon keys
+            if (!empty($label) && preg_match('/^[a-z0-9_]+$/i', $label)) {
+                $translated = $this->modx->lexicon($label);
+                if ($translated !== $label) {
+                    $label = $translated;
+                }
+            }
+
+            $result[] = [
+                'value' => $option['value'] ?? null,
+                'label' => $label,
+            ];
+        }
+
+        return $result;
     }
 
     /**

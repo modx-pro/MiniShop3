@@ -260,8 +260,8 @@ $_lang['ms3_vue_error_deleting'] = 'Ошибка удаления';
 $_lang['ms3_vue_error_deleting_field'] = 'Не удалось удалить поле';
 
 // Grid Fields Config Widget
-$_lang['ms3_grid_fields_config'] = 'Конфигурация гридов';
-$_lang['grid_fields_config_title'] = 'Конфигурация полей гридов';
+$_lang['ms3_grid_fields_config'] = 'Поля таблиц';
+$_lang['grid_fields_config_title'] = 'Поля таблиц';
 $_lang['select_grid'] = 'Выберите грид';
 $_lang['grid_customers'] = 'Клиенты';
 $_lang['grid_orders'] = 'Заказы';
@@ -988,3 +988,40 @@ $_lang['ms3_vendor_properties'] = 'Свойства';
 // Vendor sections
 $_lang['ms3_section_vendor_info'] = 'Информация';
 $_lang['ms3_section_vendor_address'] = 'Адрес';
+
+// Category Products Grid
+$_lang['category_products'] = 'Товары категории';
+$_lang['category_products_title'] = 'Товары категории';
+$_lang['category_show_nested'] = 'Показать вложенные';
+$_lang['category_create'] = 'Добавить подкатегорию';
+$_lang['product_create'] = 'Добавить товар';
+$_lang['product_image'] = 'Изображение';
+$_lang['product_pagetitle'] = 'Название';
+$_lang['product_article'] = 'Артикул';
+$_lang['product_price'] = 'Цена';
+$_lang['product_weight'] = 'Вес';
+$_lang['publish'] = 'Опубликовать';
+$_lang['unpublish'] = 'Снять с публикации';
+$_lang['duplicate'] = 'Копировать';
+$_lang['product_published'] = 'Товар опубликован';
+$_lang['product_unpublished'] = 'Товар снят с публикации';
+$_lang['product_duplicated'] = 'Товар скопирован';
+$_lang['products_reordered'] = 'Порядок товаров сохранён';
+$_lang['product_deleted'] = 'Товар удалён';
+$_lang['product_delete_confirm_message'] = 'Вы уверены, что хотите удалить товар "{pagetitle}"?';
+$_lang['drag_to_reorder'] = 'Перетащите для изменения порядка';
+$_lang['delete_selected_products_confirm'] = 'Вы уверены, что хотите удалить выбранные товары ({count})? Это действие необратимо.';
+$_lang['products_published'] = 'Товары опубликованы';
+$_lang['products_unpublished'] = 'Товары сняты с публикации';
+$_lang['search_by_title_article'] = 'Поиск по названию, артикулу...';
+$_lang['ms3_yes'] = 'Да';
+$_lang['ms3_no'] = 'Нет';
+$_lang['ms3_show_deleted'] = 'Показать удалённые';
+$_lang['ms3_hide_deleted'] = 'Скрыть удалённые';
+$_lang['deleted'] = 'Удалённые';
+$_lang['published'] = 'Опубликован';
+$_lang['publish_selected'] = 'Опубликовать выбранные';
+$_lang['unpublish_selected'] = 'Снять с публикации';
+$_lang['grid_category_products'] = 'Товары категории';
+$_lang['showing'] = 'Показано';
+$_lang['of'] = 'из';

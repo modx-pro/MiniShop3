@@ -147,15 +147,23 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
         return {
             title: _('ms3_tab_products'),
             id: 'modx-ms3-products',
-            layout: 'anchor',
-            items: [{
-                xtype: 'ms3-grid-products',
-                resource: config.resource,
-                border: false,
-                listeners: {
-
+            layout: 'fit',
+            border: false,
+            html: '<div id="ms3-vue-category-products" class="vueApp" style="height: 100%;"></div>',
+            listeners: {
+                activate: function () {
+                    // Initialize Vue app when tab is activated
+                    if (window.MS3CategoryProducts && !window.MS3CategoryProducts.isMounted()) {
+                        window.MS3CategoryProducts.init('#ms3-vue-category-products', config.resource);
+                    }
                 },
-            }]
+                deactivate: function () {
+                    // Optionally cleanup Vue app when tab is deactivated
+                    // if (window.MS3CategoryProducts) {
+                    //     window.MS3CategoryProducts.destroy();
+                    // }
+                }
+            }
         };
     },
 

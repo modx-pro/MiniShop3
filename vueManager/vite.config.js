@@ -34,6 +34,7 @@ const ProdInput = {
   'vendors': 'src/entries/vendors.js',
   'statuses': 'src/entries/statuses.js',
   'links': 'src/entries/links.js',
+  'category-products': 'src/entries/category-products.js',
   'main': 'src/main.js'
 }
 // https://vite.dev/config/
