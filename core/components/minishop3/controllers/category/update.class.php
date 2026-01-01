@@ -19,7 +19,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
     */
     public function getLanguageTopics()
     {
-        return array('resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager');
+        return array('resource', 'minishop3:default', 'minishop3:product', 'minishop3:manager', 'minishop3:vue');
     }
 
 
@@ -89,6 +89,13 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/category/option.windows.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/product.grid.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/update.js');
+
+        // Vue Category Products Grid
+        $this->addHtml(
+            '<link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/vue-dist/useLexicon.min.css">
+            <link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/vue-dist/category-products.min.css">
+            <script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/category-products.min.js"></script>'
+        );
 
         $category_option_fields = array();
         if ($showOptions) {

@@ -8,14 +8,24 @@ ms3.panel.Utilities = function (config) {
         }, {
             xtype: 'modx-tabs',
             id: 'ms3-utilities-tabs',
-            stateful: true,
-            stateId: 'ms3-utilities-tabs',
-            stateEvents: ['tabchange'],
             cls: 'ms3-panel',
-            getState: function () {
-                return {
-                    activeTab: this.items.indexOf(this.getActiveTab())
-                };
+            deferredRender: false,
+            listeners: {
+                afterrender: function(panel) {
+                    var savedId = localStorage.getItem('ms3-utilities-active-tab');
+                    if (savedId) {
+                        var tab = Ext.getCmp(savedId);
+                        if (tab) {
+                            panel.setActiveTab(tab);
+                        }
+                    }
+                    // Enable saving only after initial restore
+                    panel.tabStateReady = true;
+                },
+                tabchange: function(panel, tab) {
+                    if (!panel.tabStateReady) return;
+                    localStorage.setItem('ms3-utilities-active-tab', tab.id);
+                }
             },
             items: [{
                 title: _('ms3_utilities_gallery'),

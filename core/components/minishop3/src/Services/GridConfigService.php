@@ -599,6 +599,46 @@ class GridConfigService
     }
 
     /**
+     * Get filterable fields from grid configuration
+     *
+     * @param string $gridKey Grid key
+     * @return array Array of filterable field configs
+     */
+    public function getFilterableFields(string $gridKey): array
+    {
+        $query = $this->modx->newQuery(msGridField::class);
+        $query->where([
+            'grid_key' => $gridKey,
+            'filterable' => true,
+        ]);
+        $query->sortby('sort_order', 'ASC');
+
+        $filters = [];
+        $collection = $this->modx->getCollection(msGridField::class, $query);
+
+        foreach ($collection as $field) {
+            $fieldName = $field->get('field_name');
+            $config = $field->get('config');
+
+            // Parse JSON config
+            if (is_string($config)) {
+                $config = json_decode($config, true) ?: [];
+            } elseif (!is_array($config)) {
+                $config = [];
+            }
+
+            $filters[$fieldName] = [
+                'field_name' => $fieldName,
+                'label' => $this->resolveLabel($field),
+                'type' => $config['type'] ?? 'model',
+                'config' => $config,
+            ];
+        }
+
+        return $filters;
+    }
+
+    /**
      * Validate Actions field configuration
      *
      * @param array $config

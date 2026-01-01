@@ -29,8 +29,6 @@ $_lang['setting_ms3_tmp_storage_desc'] = "
 To store cart and temporary order fields in session specify <strong>session</strong><br>
 To store in database specify <strong>db</strong>";
 
-$_lang['setting_ms3_category_grid_fields'] = 'Product table fields';
-$_lang['setting_ms3_category_grid_fields_desc'] = 'Comma-separated list of visible fields in category products table. Available: "id,menuindex,pagetitle,article,price,thumb,new,favorite,popular';
 $_lang['setting_ms3_product_main_fields'] = 'Product panel main fields';
 $_lang['setting_ms3_product_main_fields_desc'] = 'Comma-separated list of product panel fields. For example: "pagetitle,longtitle,content".';
 $_lang['setting_ms3_product_extra_fields'] = 'Product extra fields';
@@ -58,8 +56,6 @@ $_lang['setting_ms3_category_show_nested_products'] = 'Show nested category prod
 $_lang['setting_ms3_category_show_nested_products_desc'] = 'If you enable this option, all nested products will be shown in category. They are highlighted with different color and have their parent category name under pagetitle.';
 $_lang['setting_ms3_category_show_options'] = 'Show category product options';
 $_lang['setting_ms3_category_show_options_desc'] = 'Show options for category products.';
-$_lang['setting_ms3_category_remember_tabs'] = 'Remember category tab';
-$_lang['setting_ms3_category_remember_tabs_desc'] = 'If enabled, active category panel tab will be remembered and restored on page load.';
 $_lang['setting_ms3_category_remember_grid'] = 'Remember category grid';
 $_lang['setting_ms3_category_remember_grid_desc'] = 'If enabled, category grid state will be remembered and restored on page load, including page number and search string.';
 $_lang['setting_ms3_category_id_as_alias'] = 'Category id as alias';

@@ -300,8 +300,8 @@ $_lang['apply_filters'] = 'Apply Filters';
 $_lang['clear_filters'] = 'Clear Filters';
 
 // Grid Fields Config Widget
-$_lang['ms3_grid_fields_config'] = 'Grid Configuration';
-$_lang['grid_fields_config_title'] = 'Grid Fields Configuration';
+$_lang['ms3_grid_fields_config'] = 'Table Fields';
+$_lang['grid_fields_config_title'] = 'Table Fields';
 $_lang['select_grid'] = 'Select Grid';
 $_lang['grid_customers'] = 'Customers';
 $_lang['grid_orders'] = 'Orders';
@@ -983,3 +983,40 @@ $_lang['ms3_vendor_properties'] = 'Properties';
 // Vendor sections
 $_lang['ms3_section_vendor_info'] = 'Information';
 $_lang['ms3_section_vendor_address'] = 'Address';
+
+// Category Products Grid
+$_lang['category_products'] = 'Category Products';
+$_lang['category_products_title'] = 'Category Products';
+$_lang['category_show_nested'] = 'Show nested';
+$_lang['category_create'] = 'Add subcategory';
+$_lang['product_create'] = 'Add product';
+$_lang['product_image'] = 'Image';
+$_lang['product_pagetitle'] = 'Title';
+$_lang['product_article'] = 'Article';
+$_lang['product_price'] = 'Price';
+$_lang['product_weight'] = 'Weight';
+$_lang['publish'] = 'Publish';
+$_lang['unpublish'] = 'Unpublish';
+$_lang['duplicate'] = 'Duplicate';
+$_lang['product_published'] = 'Product published';
+$_lang['product_unpublished'] = 'Product unpublished';
+$_lang['product_duplicated'] = 'Product duplicated';
+$_lang['products_reordered'] = 'Products order saved';
+$_lang['product_deleted'] = 'Product deleted';
+$_lang['product_delete_confirm_message'] = 'Are you sure you want to delete product "{pagetitle}"?';
+$_lang['drag_to_reorder'] = 'Drag to reorder';
+$_lang['delete_selected_products_confirm'] = 'Are you sure you want to delete selected products ({count})? This action cannot be undone.';
+$_lang['products_published'] = 'Products published';
+$_lang['products_unpublished'] = 'Products unpublished';
+$_lang['search_by_title_article'] = 'Search by title, article...';
+$_lang['ms3_yes'] = 'Yes';
+$_lang['ms3_no'] = 'No';
+$_lang['ms3_show_deleted'] = 'Show deleted';
+$_lang['ms3_hide_deleted'] = 'Hide deleted';
+$_lang['deleted'] = 'Deleted';
+$_lang['published'] = 'Published';
+$_lang['publish_selected'] = 'Publish selected';
+$_lang['unpublish_selected'] = 'Unpublish selected';
+$_lang['grid_category_products'] = 'Category Products';
+$_lang['showing'] = 'Showing';
+$_lang['of'] = 'of';

@@ -14,3 +14,11 @@ $modx->addPackage('MiniShop3\Model', $namespace['path'] . 'src/', null, 'MiniSho
 $modx->services->add('ms3', function ($c) use ($modx) {
     return new MiniShop3\MiniShop3($modx);
 });
+
+$modx->services->add('ms3_filter_config', function ($c) use ($modx) {
+    return new MiniShop3\Services\FilterConfigManager($modx);
+});
+
+$modx->services->add('ms3_grid_config', function ($c) use ($modx) {
+    return new MiniShop3\Services\GridConfigService($modx);
+});

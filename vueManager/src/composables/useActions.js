@@ -18,6 +18,8 @@ import { useLexicon } from './useLexicon.js'
  * @param {Function} options.onDelete - Callback for deleting record
  * @param {Function} options.onView - Callback for viewing record
  * @param {Function} options.onAddresses - Callback for managing addresses
+ * @param {Function} options.onPublish - Callback for publishing/unpublishing
+ * @param {Function} options.onDuplicate - Callback for duplicating
  * @param {Function} options.onCustomAction - Callback for custom actions (event, data)
  */
 export function useActions(options = {}) {
@@ -32,6 +34,8 @@ export function useActions(options = {}) {
     onDelete = () => {},
     onView = () => {},
     onAddresses = () => {},
+    onPublish = () => {},
+    onDuplicate = () => {},
     onCustomAction = () => {}
   } = options
 
@@ -59,6 +63,12 @@ export function useActions(options = {}) {
             break
           case 'addresses':
             onAddresses(data)
+            break
+          case 'publish':
+            onPublish(data)
+            break
+          case 'duplicate':
+            onDuplicate(data)
             break
           default:
             onCustomAction(event, data)

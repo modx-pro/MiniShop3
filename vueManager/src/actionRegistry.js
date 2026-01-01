@@ -45,6 +45,14 @@ class ActionRegistry {
       context.emit('addresses', data)
     })
 
+    this.register('publish', (data, context) => {
+      context.emit('publish', data)
+    })
+
+    this.register('duplicate', (data, context) => {
+      context.emit('duplicate', data)
+    })
+
     this.register('refresh', (data, context) => {
       context.refresh()
     })

@@ -62,9 +62,9 @@ const editingFieldIndex = ref(null)
 const gridOptions = computed(() => [
   { label: _('grid_customers'), value: 'customers' },
   { label: _('grid_orders'), value: 'orders' },
-  { label: _('grid_products'), value: 'products' },
   { label: _('grid_order_products'), value: 'order_products' },
-  { label: _('grid_vendors'), value: 'vendors' }
+  { label: _('grid_vendors'), value: 'vendors' },
+  { label: _('grid_category_products'), value: 'category-products' }
 ])
 
 /**
