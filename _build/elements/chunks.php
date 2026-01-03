@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'msProduct.content' => 'ms3_product_content',
     'tpl.msProducts.row' => 'ms3_products_row',
 
     'tpl.msCart' => 'ms3_cart',

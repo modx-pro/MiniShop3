@@ -145,7 +145,7 @@
             <div class="mt-auto">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <div>
-                        {if $old_price > 0?}
+                        {if $old_price? && $old_price > 0}
                             <div class="text-decoration-line-through text-muted small mb-1" style="font-size: 0.8rem;">
                                 {$old_price}
                             </div>

@@ -6,7 +6,7 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/">Главная</a></li>
                 {if $_modx->resource.parent > 0}
-                    <li class="breadcrumb-item"><a href="{$_modx->resource.parent | resource : 'uri'}">{$_modx->resource.parent | resource : 'pagetitle'}</a></li>
+                    <li class="breadcrumb-item"><a href="/{$_modx->resource.parent | resource : 'uri'}">{$_modx->resource.parent | resource : 'pagetitle'}</a></li>
                 {/if}
                 <li class="breadcrumb-item active" aria-current="page">{$_modx->resource.pagetitle}</li>
             </ol>
@@ -18,7 +18,7 @@
                 {* Галерея товара *}
                 <div class="col-lg-6 mb-4">
                     {'!msGallery'|snippet: [
-                        'tpl' => '@FILE chunks/ms3_gallery.tpl'
+                        'tpl' => 'tpl.msGallery'
                     ]}
                 </div>
 
@@ -26,7 +26,7 @@
                 <div class="col-lg-6">
                     <div class="product-info">
                         {* Производитель *}
-                        {if $vendor_name}
+                        {if $vendor_name?}
                             <div class="text-muted text-uppercase mb-2" style="font-size: 0.875rem; letter-spacing: 0.5px;">
                                 {$vendor_name}
                             </div>
@@ -37,11 +37,11 @@
 
                         {* Артикул и статус *}
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            {if $article}
+                            {if $article?}
                                 <span class="text-muted">Артикул: <strong>{$article}</strong></span>
                             {/if}
 
-                            {if $stock > 0}
+                            {if $stock? && $stock > 0}
                                 <span class="badge bg-success">
                                     <svg width="14" height="14" fill="currentColor" class="me-1" style="vertical-align: -2px;">
                                         <use href="#icon-check"/>
@@ -55,10 +55,10 @@
 
                         {* Бейджи *}
                         <div class="d-flex gap-2 mb-4">
-                            {if $new}
+                            {if $new?}
                                 <span class="badge bg-primary">NEW</span>
                             {/if}
-                            {if $popular}
+                            {if $popular?}
                                 <span class="badge bg-warning text-dark">
                                     <svg width="12" height="12" fill="currentColor" class="me-1">
                                         <use href="#icon-fire"/>
@@ -66,7 +66,7 @@
                                     ХИТ ПРОДАЖ
                                 </span>
                             {/if}
-                            {if $favorite}
+                            {if $favorite?}
                                 <span class="badge bg-danger">
                                     <svg width="12" height="12" fill="currentColor" class="me-1">
                                         <use href="#icon-heart"/>
@@ -85,25 +85,27 @@
 
                         {* Цена *}
                         <div class="product-price mb-4 p-4 bg-light rounded">
-                            {if $old_price > 0}
+                            {if $old_price? && $old_price > 0}
                                 <div class="old-price text-muted text-decoration-line-through mb-2" style="font-size: 1.25rem;">
                                     {$old_price} ₽
                                 </div>
 
-                                <div class="badge bg-danger mb-2">
-                                    Скидка {$discount}%
-                                </div>
+                                {if $discount?}
+                                    <div class="badge bg-danger mb-2">
+                                        Скидка {$discount}%
+                                    </div>
+                                {/if}
                             {/if}
                             <div class="current-price display-4 fw-bold text-primary">
-                                {$price} ₽
+                                {$price ?: 0} ₽
                             </div>
                         </div>
 
                         {* Опции товара *}
-                        {if $color || $size}
+                        {if $color? || $size?}
                             <div class="product-options mb-4">
                                 {* Цвета *}
-                                {if $color}
+                                {if $color?}
                                     <div class="option-group mb-3">
                                         <label class="form-label fw-semibold">Цвет:</label>
                                         <div class="d-flex flex-wrap gap-2">
@@ -117,7 +119,7 @@
                                 {/if}
 
                                 {* Размеры *}
-                                {if $size}
+                                {if $size?}
                                     <div class="option-group mb-3">
                                         <label class="form-label fw-semibold">Размер:</label>
                                         <div class="d-flex flex-wrap gap-2">
@@ -158,7 +160,7 @@
                         {* Дополнительная информация *}
                         <div class="product-meta">
                             <ul class="list-unstyled mb-0">
-                                {if $weight > 0}
+                                {if $weight? && $weight > 0}
                                     <li class="mb-2">
                                         <svg width="16" height="16" fill="currentColor" class="me-2 text-muted">
                                             <use href="#icon-box"/>
@@ -166,7 +168,7 @@
                                         <span class="text-muted">Вес:</span> <strong>{$weight} кг</strong>
                                     </li>
                                 {/if}
-                                {if $made_in}
+                                {if $made_in?}
                                     <li class="mb-2">
                                         <svg width="16" height="16" fill="currentColor" class="me-2 text-muted">
                                             <use href="#icon-globe"/>
@@ -223,31 +225,31 @@
                         <div class="content-section">
                             <table class="table table-striped">
                                 <tbody>
-                                    {if $article}
+                                    {if $article?}
                                         <tr>
                                             <td class="text-muted" style="width: 250px;">Артикул</td>
                                             <td><strong>{$article}</strong></td>
                                         </tr>
                                     {/if}
-                                    {if $vendor_name}
+                                    {if $vendor_name?}
                                         <tr>
                                             <td class="text-muted">Производитель</td>
                                             <td><strong>{$vendor_name}</strong></td>
                                         </tr>
                                     {/if}
-                                    {if $made_in}
+                                    {if $made_in?}
                                         <tr>
                                             <td class="text-muted">Страна производства</td>
                                             <td><strong>{$made_in}</strong></td>
                                         </tr>
                                     {/if}
-                                    {if $weight > 0}
+                                    {if $weight? && $weight > 0}
                                         <tr>
                                             <td class="text-muted">Вес</td>
                                             <td><strong>{$weight} кг</strong></td>
                                         </tr>
                                     {/if}
-                                    {if $color}
+                                    {if $color?}
                                         <tr>
                                             <td class="text-muted">Доступные цвета</td>
                                             <td>
@@ -257,7 +259,7 @@
                                             </td>
                                         </tr>
                                     {/if}
-                                    {if $size}
+                                    {if $size?}
                                         <tr>
                                             <td class="text-muted">Доступные размеры</td>
                                             <td>
