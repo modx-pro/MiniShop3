@@ -16,7 +16,7 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import request from '../request.js'
-import { useLexicon } from '../composables/useLexicon.js'
+import { useLexicon } from '@modxprovuecore/useLexicon'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -56,83 +56,83 @@ const fieldForm = ref({
  */
 const classOptions = computed(() => [
   // Товары
-  { label: _('class_product'), value: 'MiniShop3\\Model\\msProduct' },
-  { label: _('class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
-  { label: _('class_category'), value: 'MiniShop3\\Model\\msCategory' },
-  { label: _('class_vendor'), value: 'MiniShop3\\Model\\msVendor' },
-  { label: _('class_option'), value: 'MiniShop3\\Model\\msOption' },
-  { label: _('class_link'), value: 'MiniShop3\\Model\\msLink' },
+  { label: _('ms3_vue_class_product'), value: 'MiniShop3\\Model\\msProduct' },
+  { label: _('ms3_vue_class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
+  { label: _('ms3_vue_class_category'), value: 'MiniShop3\\Model\\msCategory' },
+  { label: _('ms3_vue_class_vendor'), value: 'MiniShop3\\Model\\msVendor' },
+  { label: _('ms3_vue_class_option'), value: 'MiniShop3\\Model\\msOption' },
+  { label: _('ms3_vue_class_link'), value: 'MiniShop3\\Model\\msLink' },
   // Заказы
-  { label: _('class_order'), value: 'MiniShop3\\Model\\msOrder' },
-  { label: _('class_order_address'), value: 'MiniShop3\\Model\\msOrderAddress' },
-  { label: _('class_order_product'), value: 'MiniShop3\\Model\\msOrderProduct' },
-  { label: _('class_order_status'), value: 'MiniShop3\\Model\\msOrderStatus' },
+  { label: _('ms3_vue_class_order'), value: 'MiniShop3\\Model\\msOrder' },
+  { label: _('ms3_vue_class_order_address'), value: 'MiniShop3\\Model\\msOrderAddress' },
+  { label: _('ms3_vue_class_order_product'), value: 'MiniShop3\\Model\\msOrderProduct' },
+  { label: _('ms3_vue_class_order_status'), value: 'MiniShop3\\Model\\msOrderStatus' },
   // Клиенты
-  { label: _('class_customer'), value: 'MiniShop3\\Model\\msCustomer' },
-  { label: _('class_customer_address'), value: 'MiniShop3\\Model\\msCustomerAddress' },
+  { label: _('ms3_vue_class_customer'), value: 'MiniShop3\\Model\\msCustomer' },
+  { label: _('ms3_vue_class_customer_address'), value: 'MiniShop3\\Model\\msCustomerAddress' },
   // Доставка и оплата
-  { label: _('class_delivery'), value: 'MiniShop3\\Model\\msDelivery' },
-  { label: _('class_payment'), value: 'MiniShop3\\Model\\msPayment' }
+  { label: _('ms3_vue_class_delivery'), value: 'MiniShop3\\Model\\msDelivery' },
+  { label: _('ms3_vue_class_payment'), value: 'MiniShop3\\Model\\msPayment' }
 ])
 
 /**
  * Widget types (xtype)
  */
 const xtypeOptions = computed(() => [
-  { label: _('xtype_textfield'), value: 'textfield' },
-  { label: _('xtype_numberfield'), value: 'numberfield' },
-  { label: _('xtype_textarea'), value: 'textarea' },
-  { label: _('xtype_xcheckbox'), value: 'xcheckbox' },
-  { label: _('xtype_combo_vendor'), value: 'ms3-combo-vendor' },
-  { label: _('xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
-  { label: _('xtype_combo_options'), value: 'ms3-combo-options' }
+  { label: _('ms3_vue_xtype_textfield'), value: 'textfield' },
+  { label: _('ms3_vue_xtype_numberfield'), value: 'numberfield' },
+  { label: _('ms3_vue_xtype_textarea'), value: 'textarea' },
+  { label: _('ms3_vue_xtype_xcheckbox'), value: 'xcheckbox' },
+  { label: _('ms3_vue_xtype_combo_vendor'), value: 'ms3-combo-vendor' },
+  { label: _('ms3_vue_xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
+  { label: _('ms3_vue_xtype_combo_options'), value: 'ms3-combo-options' }
 ])
 
 /**
  * Database data types (dbtype)
  */
 const dbtypeOptions = computed(() => [
-  { label: _('dbtype_varchar'), value: 'varchar' },
-  { label: _('dbtype_text'), value: 'text' },
-  { label: _('dbtype_int'), value: 'int' },
-  { label: _('dbtype_decimal'), value: 'decimal' },
-  { label: _('dbtype_datetime'), value: 'datetime' },
-  { label: _('dbtype_timestamp'), value: 'timestamp' },
-  { label: _('dbtype_tinyint'), value: 'tinyint' },
-  { label: _('dbtype_json'), value: 'json' }
+  { label: _('ms3_vue_dbtype_varchar'), value: 'varchar' },
+  { label: _('ms3_vue_dbtype_text'), value: 'text' },
+  { label: _('ms3_vue_dbtype_int'), value: 'int' },
+  { label: _('ms3_vue_dbtype_decimal'), value: 'decimal' },
+  { label: _('ms3_vue_dbtype_datetime'), value: 'datetime' },
+  { label: _('ms3_vue_dbtype_timestamp'), value: 'timestamp' },
+  { label: _('ms3_vue_dbtype_tinyint'), value: 'tinyint' },
+  { label: _('ms3_vue_dbtype_json'), value: 'json' }
 ])
 
 /**
  * PHP types (phptype)
  */
 const phptypeOptions = computed(() => [
-  { label: _('phptype_string'), value: 'string' },
-  { label: _('phptype_integer'), value: 'integer' },
-  { label: _('phptype_float'), value: 'float' },
-  { label: _('phptype_boolean'), value: 'boolean' },
-  { label: _('phptype_json'), value: 'json' },
-  { label: _('phptype_datetime'), value: 'datetime' },
-  { label: _('phptype_timestamp'), value: 'timestamp' }
+  { label: _('ms3_vue_phptype_string'), value: 'string' },
+  { label: _('ms3_vue_phptype_integer'), value: 'integer' },
+  { label: _('ms3_vue_phptype_float'), value: 'float' },
+  { label: _('ms3_vue_phptype_boolean'), value: 'boolean' },
+  { label: _('ms3_vue_phptype_json'), value: 'json' },
+  { label: _('ms3_vue_phptype_datetime'), value: 'datetime' },
+  { label: _('ms3_vue_phptype_timestamp'), value: 'timestamp' }
 ])
 
 /**
  * Default value types
  */
 const defaultOptions = computed(() => [
-  { label: _('default_null'), value: 'NULL' },
-  { label: _('default_current_timestamp'), value: 'CURRENT_TIMESTAMP' },
-  { label: _('default_user_defined'), value: 'USER_DEFINED' },
-  { label: _('default_none'), value: 'NONE' }
+  { label: _('ms3_vue_default_null'), value: 'NULL' },
+  { label: _('ms3_vue_default_current_timestamp'), value: 'CURRENT_TIMESTAMP' },
+  { label: _('ms3_vue_default_user_defined'), value: 'USER_DEFINED' },
+  { label: _('ms3_vue_default_none'), value: 'NONE' }
 ])
 
 /**
  * Index types
  */
 const indexTypeOptions = computed(() => [
-  { label: _('index_none'), value: 'NONE' },
-  { label: _('index_index'), value: 'INDEX' },
-  { label: _('index_unique'), value: 'UNIQUE' },
-  { label: _('index_fulltext'), value: 'FULLTEXT' }
+  { label: _('ms3_vue_index_none'), value: 'NONE' },
+  { label: _('ms3_vue_index_index'), value: 'INDEX' },
+  { label: _('ms3_vue_index_unique'), value: 'UNIQUE' },
+  { label: _('ms3_vue_index_fulltext'), value: 'FULLTEXT' }
 ])
 
 /**
@@ -155,8 +155,8 @@ async function loadFields() {
     console.error('[ExtraFieldsManager] Error loading fields:', error)
     toast.add({
       severity: 'error',
-      summary: _('error_loading'),
-      detail: error.message || _('error_loading_fields'),
+      summary: _('ms3_vue_error_loading'),
+      detail: error.message || _('ms3_vue_error_loading_fields'),
       life: 5000
     })
   } finally {
@@ -249,8 +249,8 @@ async function createField() {
     if (!fieldForm.value.key) {
       toast.add({
         severity: 'warn',
-        summary: _('validation'),
-        detail: _('validation_key_required'),
+        summary: _('ms3_vue_validation'),
+        detail: _('ms3_vue_validation_key_required'),
         life: 3000
       })
       return
@@ -259,8 +259,8 @@ async function createField() {
     if (!fieldForm.value.dbtype) {
       toast.add({
         severity: 'warn',
-        summary: _('validation'),
-        detail: _('validation_dbtype_required'),
+        summary: _('ms3_vue_validation'),
+        detail: _('ms3_vue_validation_dbtype_required'),
         life: 3000
       })
       return
@@ -278,8 +278,8 @@ async function createField() {
     if (response && response.field) {
       toast.add({
         severity: 'success',
-        summary: _('success'),
-        detail: `${_('table_field_name')} "${response.field.key}" ${_('field_created')}`,
+        summary: _('ms3_vue_success'),
+        detail: `${_('ms3_vue_table_field_name')} "${response.field.key}" ${_('ms3_vue_field_created')}`,
         life: 3000
       })
 
@@ -292,8 +292,8 @@ async function createField() {
     console.error('[ExtraFieldsManager] Error creating field:', error)
     toast.add({
       severity: 'error',
-      summary: _('error_creating'),
-      detail: error.message || _('error_creating_field'),
+      summary: _('ms3_vue_error_creating'),
+      detail: error.message || _('ms3_vue_error_creating_field'),
       life: 5000
     })
   }
@@ -321,8 +321,8 @@ async function updateField() {
     if (response && response.field) {
       toast.add({
         severity: 'success',
-        summary: _('success'),
-        detail: `${_('table_field_name')} "${response.field.key}" ${_('field_updated')}`,
+        summary: _('ms3_vue_success'),
+        detail: `${_('ms3_vue_table_field_name')} "${response.field.key}" ${_('ms3_vue_field_updated')}`,
         life: 3000
       })
 
@@ -335,8 +335,8 @@ async function updateField() {
     console.error('[ExtraFieldsManager] Error updating field:', error)
     toast.add({
       severity: 'error',
-      summary: _('error_updating'),
-      detail: error.message || _('error_updating_field'),
+      summary: _('ms3_vue_error_updating'),
+      detail: error.message || _('ms3_vue_error_updating_field'),
       life: 5000
     })
   }
@@ -359,11 +359,11 @@ function confirmDelete(field) {
 
   confirm.require({
     group: 'extra-fields',
-    message: _('delete_confirm_message').replace('{0}', field.key),
-    header: _('delete_confirm_title'),
+    message: _('ms3_vue_delete_confirm_message').replace('{0}', field.key),
+    header: _('ms3_vue_delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: _('delete_confirm_yes'),
-    rejectLabel: _('dialog_cancel'),
+    acceptLabel: _('ms3_vue_delete_confirm_yes'),
+    rejectLabel: _('ms3_vue_dialog_cancel'),
     acceptClass: 'p-button-danger',
     accept: () => {
       // Do NOT await - dialog will close immediately, deletion happens in background
@@ -391,7 +391,7 @@ async function deleteField(fieldId) {
     if (response && response.message) {
       toast.add({
         severity: 'success',
-        summary: _('success'),
+        summary: _('ms3_vue_success'),
         detail: response.message,
         life: 5000
       })
@@ -404,8 +404,8 @@ async function deleteField(fieldId) {
     console.error('[ExtraFieldsManager] Error deleting field:', error)
     toast.add({
       severity: 'error',
-      summary: _('error_deleting'),
-      detail: error.message || _('error_deleting_field'),
+      summary: _('ms3_vue_error_deleting'),
+      detail: error.message || _('ms3_vue_error_deleting_field'),
       life: 5000
     })
   } finally {
@@ -448,9 +448,9 @@ onMounted(() => {
     <Card>
       <template #title>
         <div class="flex justify-content-between align-items-center">
-          <span>{{ _('extra_fields_title') }}</span>
+          <span>{{ _('ms3_vue_extra_fields_title') }}</span>
           <Button
-            :label="_('extra_fields_create')"
+            :label="_('ms3_vue_extra_fields_create')"
             icon="pi pi-plus"
             @click="openCreateDialog"
             :disabled="loading"
@@ -461,14 +461,14 @@ onMounted(() => {
       <template #content>
         <!-- Class filter -->
         <div class="field mb-4">
-          <label for="class-filter">{{ _('extra_fields_class_filter') }}</label>
+          <label for="class-filter">{{ _('ms3_vue_extra_fields_class_filter') }}</label>
           <Dropdown
             id="class-filter"
             v-model="selectedClass"
             :options="classOptions"
             optionLabel="label"
             optionValue="value"
-            :placeholder="_('extra_fields_select_class')"
+            :placeholder="_('ms3_vue_extra_fields_select_class')"
             class="w-full md:w-20rem"
             @change="onClassFilterChange"
           />
@@ -487,54 +487,54 @@ onMounted(() => {
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="Showing {first} - {last} of {totalRecords} fields"
         >
-          <Column field="id" :header="_('table_id')" style="width: 60px" sortable />
+          <Column field="id" :header="_('ms3_vue_table_id')" style="width: 60px" sortable />
 
-          <Column field="key" :header="_('table_field_name')" sortable>
+          <Column field="key" :header="_('ms3_vue_table_field_name')" sortable>
             <template #body="{ data }">
               <strong>{{ data.key }}</strong>
             </template>
           </Column>
 
-          <Column field="label" :header="_('table_label')" sortable />
+          <Column field="label" :header="_('ms3_vue_table_label')" sortable />
 
-          <Column field="dbtype" :header="_('table_dbtype')" sortable style="width: 120px">
+          <Column field="dbtype" :header="_('ms3_vue_table_dbtype')" sortable style="width: 120px">
             <template #body="{ data }">
               <Tag :value="data.dbtype.toUpperCase()" severity="info" />
             </template>
           </Column>
 
-          <Column field="precision" :header="_('table_precision')" style="width: 100px" />
+          <Column field="precision" :header="_('ms3_vue_table_precision')" style="width: 100px" />
 
-          <Column field="index_type" :header="_('table_index')" style="width: 120px">
+          <Column field="index_type" :header="_('ms3_vue_table_index')" style="width: 120px">
             <template #body="{ data }">
               <Tag
                 v-if="data.index_type && data.index_type !== 'NONE'"
                 :value="data.index_type"
                 :severity="data.index_type === 'UNIQUE' ? 'warning' : 'info'"
               />
-              <span v-else class="text-500">{{ _('table_no_index') }}</span>
+              <span v-else class="text-500">{{ _('ms3_vue_table_no_index') }}</span>
             </template>
           </Column>
 
-          <Column field="column_exists" :header="_('table_column_exists')" style="width: 140px">
+          <Column field="column_exists" :header="_('ms3_vue_table_column_exists')" style="width: 140px">
             <template #body="{ data }">
               <Tag
-                :value="data.column_exists ? _('table_column_exists_yes') : _('table_column_exists_no')"
+                :value="data.column_exists ? _('ms3_vue_table_column_exists_yes') : _('ms3_vue_table_column_exists_no')"
                 :severity="getColumnExistsSeverity(data.column_exists)"
               />
             </template>
           </Column>
 
-          <Column field="active" :header="_('table_active')" style="width: 100px">
+          <Column field="active" :header="_('ms3_vue_table_active')" style="width: 100px">
             <template #body="{ data }">
               <Tag
-                :value="data.active ? _('table_active_yes') : _('table_active_no')"
+                :value="data.active ? _('ms3_vue_table_active_yes') : _('ms3_vue_table_active_no')"
                 :severity="getActiveSeverity(data.active)"
               />
             </template>
           </Column>
 
-          <Column :header="_('table_actions')" style="width: 150px">
+          <Column :header="_('ms3_vue_table_actions')" style="width: 150px">
             <template #body="{ data }">
               <Button
                 icon="pi pi-pencil"
@@ -542,7 +542,7 @@ onMounted(() => {
                 text
                 rounded
                 @click.stop="openEditDialog(data)"
-                v-tooltip.top="_('extra_fields_edit')"
+                v-tooltip.top="_('ms3_vue_extra_fields_edit')"
                 class="mr-1"
               />
               <Button
@@ -551,14 +551,14 @@ onMounted(() => {
                 text
                 rounded
                 @click.stop="confirmDelete(data)"
-                v-tooltip.top="_('extra_fields_delete')"
+                v-tooltip.top="_('ms3_vue_extra_fields_delete')"
               />
             </template>
           </Column>
 
           <template #empty>
             <div class="text-center p-4">
-              {{ _('table_empty') }}
+              {{ _('ms3_vue_table_empty') }}
             </div>
           </template>
         </DataTable>
@@ -568,7 +568,7 @@ onMounted(() => {
     <!-- Create/Edit field dialog -->
     <Dialog
       v-model:visible="dialogVisible"
-      :header="isEditMode ? _('dialog_edit_title') : _('dialog_create_title')"
+      :header="isEditMode ? _('ms3_vue_dialog_edit_title') : _('ms3_vue_dialog_create_title')"
       :modal="true"
       :closable="!saving"
       :style="{ width: '700px' }"
@@ -576,18 +576,18 @@ onMounted(() => {
     >
       <div class="edit-field-form">
         <!-- Basic information -->
-        <Fieldset :legend="_('dialog_fieldset_basic')" class="mb-3">
+        <Fieldset :legend="_('ms3_vue_dialog_fieldset_basic')" class="mb-3">
           <div class="form-grid">
             <!-- Model class -->
             <div class="field col-12">
-              <label for="field-class">{{ _('dialog_class') }}</label>
+              <label for="field-class">{{ _('ms3_vue_dialog_class') }}</label>
               <Dropdown
                 id="field-class"
                 v-model="fieldForm.class"
                 :options="classOptions"
                 optionLabel="label"
                 optionValue="value"
-                :placeholder="_('extra_fields_select_class')"
+                :placeholder="_('ms3_vue_extra_fields_select_class')"
                 class="w-full"
                 :disabled="isEditMode"
               />
@@ -595,31 +595,31 @@ onMounted(() => {
 
             <!-- Field name (key) -->
             <div class="field col-6">
-              <label for="field-key">{{ _('dialog_key') }}</label>
+              <label for="field-key">{{ _('ms3_vue_dialog_key') }}</label>
               <InputText
                 id="field-key"
                 v-model="fieldForm.key"
-                :placeholder="_('dialog_key_placeholder')"
+                :placeholder="_('ms3_vue_dialog_key_placeholder')"
                 class="w-full"
                 :disabled="isEditMode"
               />
-              <small class="text-500">{{ _('dialog_key_help') }}</small>
+              <small class="text-500">{{ _('ms3_vue_dialog_key_help') }}</small>
             </div>
 
             <!-- Label -->
             <div class="field col-6">
-              <label for="field-label">{{ _('dialog_label') }}</label>
+              <label for="field-label">{{ _('ms3_vue_dialog_label') }}</label>
               <InputText
                 id="field-label"
                 v-model="fieldForm.label"
-                :placeholder="_('dialog_label_placeholder')"
+                :placeholder="_('ms3_vue_dialog_label_placeholder')"
                 class="w-full"
               />
             </div>
 
             <!-- Description -->
             <div class="field col-12">
-              <label for="field-description">{{ _('dialog_description') }}</label>
+              <label for="field-description">{{ _('ms3_vue_dialog_description') }}</label>
               <Textarea
                 id="field-description"
                 v-model="fieldForm.description"
@@ -630,14 +630,14 @@ onMounted(() => {
 
             <!-- Widget type (xtype) -->
             <div class="field col-12">
-              <label for="field-xtype">{{ _('dialog_xtype') }}</label>
+              <label for="field-xtype">{{ _('ms3_vue_dialog_xtype') }}</label>
               <Dropdown
                 id="field-xtype"
                 v-model="fieldForm.xtype"
                 :options="xtypeOptions"
                 optionLabel="label"
                 optionValue="value"
-                :placeholder="_('dialog_xtype_select')"
+                :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
               />
             </div>
@@ -645,18 +645,18 @@ onMounted(() => {
         </Fieldset>
 
         <!-- Database parameters -->
-        <Fieldset :legend="_('dialog_fieldset_database')" class="mb-3">
+        <Fieldset :legend="_('ms3_vue_dialog_fieldset_database')" class="mb-3">
           <div class="form-grid">
           <!-- DB type -->
           <div class="field col-6">
-            <label for="field-dbtype">{{ _('dialog_dbtype') }}</label>
+            <label for="field-dbtype">{{ _('ms3_vue_dialog_dbtype') }}</label>
             <Dropdown
               id="field-dbtype"
               v-model="fieldForm.dbtype"
               :options="dbtypeOptions"
               optionLabel="label"
               optionValue="value"
-              :placeholder="_('dialog_xtype_select')"
+              :placeholder="_('ms3_vue_dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -664,11 +664,11 @@ onMounted(() => {
 
           <!-- Precision -->
           <div class="field col-6">
-            <label for="field-precision">{{ _('dialog_precision') }}</label>
+            <label for="field-precision">{{ _('ms3_vue_dialog_precision') }}</label>
             <InputText
               id="field-precision"
               v-model="fieldForm.precision"
-              :placeholder="_('dialog_precision_placeholder')"
+              :placeholder="_('ms3_vue_dialog_precision_placeholder')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -676,14 +676,14 @@ onMounted(() => {
 
           <!-- PHP type -->
           <div class="field col-6">
-            <label for="field-phptype">{{ _('dialog_phptype') }}</label>
+            <label for="field-phptype">{{ _('ms3_vue_dialog_phptype') }}</label>
             <Dropdown
               id="field-phptype"
               v-model="fieldForm.phptype"
               :options="phptypeOptions"
               optionLabel="label"
               optionValue="value"
-              :placeholder="_('dialog_xtype_select')"
+              :placeholder="_('ms3_vue_dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -691,7 +691,7 @@ onMounted(() => {
 
           <!-- Nullable -->
           <div class="field col-6">
-            <label for="field-null">{{ _('dialog_null') }}</label>
+            <label for="field-null">{{ _('ms3_vue_dialog_null') }}</label>
             <div class="flex align-items-center" style="height: 42px">
               <Checkbox
                 id="field-null"
@@ -699,20 +699,20 @@ onMounted(() => {
                 :binary="true"
                 :disabled="isEditMode"
               />
-              <label for="field-null" class="ml-2 cursor-pointer">{{ _('dialog_null_label') }}</label>
+              <label for="field-null" class="ml-2 cursor-pointer">{{ _('ms3_vue_dialog_null_label') }}</label>
             </div>
           </div>
 
           <!-- Default value -->
           <div class="field col-6">
-            <label for="field-default">{{ _('dialog_default') }}</label>
+            <label for="field-default">{{ _('ms3_vue_dialog_default') }}</label>
             <Dropdown
               id="field-default"
               v-model="fieldForm.default"
               :options="defaultOptions"
               optionLabel="label"
               optionValue="value"
-              :placeholder="_('dialog_xtype_select')"
+              :placeholder="_('ms3_vue_dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -720,11 +720,11 @@ onMounted(() => {
 
           <!-- User-defined default value -->
           <div class="field col-6" v-if="fieldForm.default === 'USER_DEFINED'">
-            <label for="field-default-value">{{ _('dialog_default_value') }}</label>
+            <label for="field-default-value">{{ _('ms3_vue_dialog_default_value') }}</label>
             <InputText
               id="field-default-value"
               v-model="fieldForm.default_value"
-              :placeholder="_('dialog_default_value_placeholder')"
+              :placeholder="_('ms3_vue_dialog_default_value_placeholder')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -732,27 +732,27 @@ onMounted(() => {
 
           <!-- Attributes -->
           <div class="field col-6">
-            <label for="field-attributes">{{ _('dialog_attributes') }}</label>
+            <label for="field-attributes">{{ _('ms3_vue_dialog_attributes') }}</label>
             <InputText
               id="field-attributes"
               v-model="fieldForm.attributes"
-              :placeholder="_('dialog_attributes_placeholder')"
+              :placeholder="_('ms3_vue_dialog_attributes_placeholder')"
               class="w-full"
               :disabled="isEditMode"
             />
-            <small class="text-500">{{ _('dialog_attributes_help') }}</small>
+            <small class="text-500">{{ _('ms3_vue_dialog_attributes_help') }}</small>
           </div>
 
           <!-- Index type -->
           <div class="field col-6">
-            <label for="field-index-type">{{ _('dialog_index_type') }}</label>
+            <label for="field-index-type">{{ _('ms3_vue_dialog_index_type') }}</label>
             <Dropdown
               id="field-index-type"
               v-model="fieldForm.index_type"
               :options="indexTypeOptions"
               optionLabel="label"
               optionValue="value"
-              :placeholder="_('dialog_xtype_select')"
+              :placeholder="_('ms3_vue_dialog_xtype_select')"
               class="w-full"
               :disabled="isEditMode"
             />
@@ -760,14 +760,14 @@ onMounted(() => {
 
           <!-- Active status -->
           <div class="field col-12">
-            <label for="field-active">{{ _('dialog_active') }}</label>
+            <label for="field-active">{{ _('ms3_vue_dialog_active') }}</label>
             <div class="flex align-items-center" style="height: 42px">
               <Checkbox
                 id="field-active"
                 v-model="fieldForm.active"
                 :binary="true"
               />
-              <label for="field-active" class="ml-2 cursor-pointer">{{ _('dialog_active_label') }}</label>
+              <label for="field-active" class="ml-2 cursor-pointer">{{ _('ms3_vue_dialog_active_label') }}</label>
             </div>
           </div>
           </div>
@@ -776,14 +776,14 @@ onMounted(() => {
 
       <template #footer>
         <Button
-          :label="_('dialog_cancel')"
+          :label="_('ms3_vue_dialog_cancel')"
           icon="pi pi-times"
           text
           @click="dialogVisible = false"
           :disabled="saving"
         />
         <Button
-          :label="isEditMode ? _('dialog_save') : _('dialog_create')"
+          :label="isEditMode ? _('ms3_vue_dialog_save') : _('ms3_vue_dialog_create')"
           icon="pi pi-check"
           @click="saveField"
           :loading="saving"

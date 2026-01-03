@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useApi } from '../composables/useApi.js'
-import { useLexicon } from '../composables/useLexicon.js'
+import request from '../request.js'
+import { useLexicon } from '@modxprovuecore/useLexicon'
 
 import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
@@ -14,7 +14,6 @@ import Message from 'primevue/message'
 import RadioButton from 'primevue/radiobutton'
 import SelectButton from 'primevue/selectbutton'
 
-const { get, post, upload, loading, error } = useApi()
 const { _ } = useLexicon()
 
 // State
@@ -79,7 +78,7 @@ const canProceedToStep3 = computed(() => {
 // Methods
 const loadAvailableFields = async () => {
   try {
-    const response = await get('/api/mgr/import/fields')
+    const response = await request.get('/api/mgr/import/fields')
     const data = response.object || response
 
     availableFields.value = data.fields || []
@@ -97,7 +96,7 @@ const previewFile = async () => {
   if (!filePath.value) return
 
   try {
-    const response = await post('/api/mgr/import/preview', {
+    const response = await request.post('/api/mgr/import/preview', {
       file: filePath.value,
       delimiter: delimiter.value,
       rows: 5
@@ -163,7 +162,7 @@ const startImport = async () => {
       }
     })
 
-    const response = await post('/api/mgr/import/start', {
+    const response = await request.post('/api/mgr/import/start', {
       importfile: filePath.value,
       mapping: JSON.stringify(mappingObj),
       delimiter: delimiter.value,
@@ -234,7 +233,7 @@ const handleFileSelect = async (event) => {
   uploadError.value = null
 
   try {
-    const response = await upload('/api/mgr/import/upload', file)
+    const response = await request.upload('/api/mgr/import/upload', file)
     const data = response.object || response
     filePath.value = data.file
     uploadedFileName.value = data.original_name || file.name

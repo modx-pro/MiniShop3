@@ -6,7 +6,7 @@ import Fieldset from 'primevue/fieldset'
 import { useToast } from 'primevue/usetoast'
 import DynamicField from './DynamicField.vue'
 import request from '../request.js'
-import { useLexicon } from '../composables/useLexicon.js'
+import { useLexicon } from '@modxprovuecore/useLexicon'
 
 const props = defineProps({
   productId: {
@@ -55,8 +55,8 @@ async function loadProductData() {
       console.error('[ProductDataFields] Invalid product data response:', response)
       toast.add({
         severity: 'error',
-        summary: _('error'),
-        detail: _('error_load_product_data'),
+        summary: _('ms3_vue_error'),
+        detail: _('ms3_vue_error_load_product_data'),
         life: 5000
       })
       return null
@@ -65,8 +65,8 @@ async function loadProductData() {
     console.error('[ProductDataFields] Error loading product data:', error)
     toast.add({
       severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_product_data'),
+      summary: _('ms3_vue_error'),
+      detail: error.message || _('ms3_vue_error_loading_product_data'),
       life: 5000
       })
     return null
@@ -122,8 +122,8 @@ async function loadConfig() {
       console.error('[ProductDataFields] Invalid response:', configResponse)
       toast.add({
         severity: 'error',
-        summary: _('error'),
-        detail: _('error_load_fields_config'),
+        summary: _('ms3_vue_error'),
+        detail: _('ms3_vue_error_load_fields_config'),
         life: 5000
       })
     }
@@ -131,8 +131,8 @@ async function loadConfig() {
     console.error('[ProductDataFields] Error loading config:', error)
     toast.add({
       severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_config'),
+      summary: _('ms3_vue_error'),
+      detail: error.message || _('ms3_vue_error_loading_config'),
       life: 5000
     })
   } finally {
@@ -154,15 +154,15 @@ async function saveProductData() {
     if (response && response.updated) {
       toast.add({
         severity: 'success',
-        summary: _('success_title'),
-        detail: _('product_data_saved'),
+        summary: _('ms3_vue_success_title'),
+        detail: _('ms3_vue_product_data_saved'),
         life: 3000
       })
     } else {
       toast.add({
         severity: 'error',
-        summary: _('error'),
-        detail: _('error_save_product_data'),
+        summary: _('ms3_vue_error'),
+        detail: _('ms3_vue_error_save_product_data'),
         life: 5000
       })
     }
@@ -170,8 +170,8 @@ async function saveProductData() {
     console.error('Error saving product data:', error)
     toast.add({
       severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
+      summary: _('ms3_vue_error'),
+      detail: error.message || _('ms3_vue_error_saving_data'),
       life: 5000
     })
   } finally {
@@ -232,16 +232,16 @@ onMounted(() => {
   <div class="product-data-fields">
     <Card>
       <template #title>
-        <span>{{ _('product_data_title') }}</span>
+        <span>{{ _('ms3_vue_product_data_title') }}</span>
       </template>
 
       <template #content>
         <Message v-if="loading" severity="info">
-          {{ _('loading_config') }}
+          {{ _('ms3_vue_loading_config') }}
         </Message>
 
         <Message v-else-if="visibleFields.length === 0" severity="warn">
-          {{ _('no_visible_fields') }}
+          {{ _('ms3_vue_no_visible_fields') }}
         </Message>
 
         <div v-else class="sections-container">

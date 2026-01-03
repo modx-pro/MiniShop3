@@ -19,7 +19,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { useApi } from '../composables/useApi';
+import { useApi } from '@modxprovuecore/useApi';
 
 export const useProductStore = defineStore('product', {
   state: () => ({

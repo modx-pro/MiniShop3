@@ -211,3 +211,6 @@ $_lang['ms3_notifications'] = 'Notifications';
 $_lang['ms3_notifications_desc'] = 'Order notification settings';
 $_lang['ms3_help'] = 'Help and support';
 $_lang['ms3_help_desc'] = 'Useful links and information';
+
+$_lang['ms3_error'] = 'Error';
+$_lang['ms3_modxprovuecore_required'] = 'ModxProVueCore package is required for MiniShop3. Please install it via Package Manager.';

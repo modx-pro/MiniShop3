@@ -52,7 +52,6 @@ export function init(selector = '#ms3-vue-import') {
   }
 
   if ($el.dataset.vApp === 'true') {
-    console.log('[MS3 Import] Already mounted');
     return null;
   }
 
@@ -65,7 +64,6 @@ export function init(selector = '#ms3-vue-import') {
   app.mount(selector);
   $el.dataset.vApp = 'true';
 
-  console.log('[MS3 Import] Application mounted successfully');
 
   return app;
 }

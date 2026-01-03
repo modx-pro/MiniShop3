@@ -64,7 +64,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
         if ($show_gallery) {
             $this->addCss($assetsUrl . 'css/mgr/vue-dist/gallery-uploader.min.css');
-            $this->addHtml('<script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/gallery-uploader.min.js"></script>');
+            // Vue module with ModxProVueCore dependency check
+            $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/gallery-uploader.min.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/misc/ext.ddview.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.panel.js');
             $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.toolbar.js');
@@ -154,6 +155,10 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'mode' => 'update',
         ];
 
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/main.min.css');
+        // Vue module with ModxProVueCore dependency check
+        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/main.min.js');
+
         $this->addHtml('
         <script>
         // <![CDATA[
@@ -166,9 +171,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         });
         MODx.perm.tree_show_resource_ids = ' . ($this->modx->hasPermission('tree_show_resource_ids') ? 1 : 0) . ';
         // ]]>
-        </script>
-        <link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/vue-dist/main.min.css">
-        <script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/main.min.js"></script>');
+        </script>');
 
         $this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', ['controller' => $this, 'page' => 'product_update']);

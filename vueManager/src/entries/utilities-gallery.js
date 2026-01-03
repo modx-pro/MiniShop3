@@ -45,8 +45,10 @@ export function init(selector = '#ms3-vue-utilities-gallery') {
   const $el = document.querySelector(selector);
 
   if (!$el) {
+    console.warn('[Gallery] Element not found:', selector);
     return null;
   }
+
 
   if ($el.dataset.vApp === 'true') {
     return null;
@@ -74,6 +76,7 @@ export function unmount() {
     app = null;
   }
 }
+
 
 /**
  * Wait for ExtJS to create DOM element

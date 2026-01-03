@@ -90,12 +90,9 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/category/product.grid.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/update.js');
 
-        // Vue Category Products Grid
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/vue-dist/useLexicon.min.css">
-            <link rel="stylesheet" href="' . $assetsUrl . 'css/mgr/vue-dist/category-products.min.css">
-            <script type="module" src="' . $assetsUrl . 'js/mgr/vue-dist/category-products.min.js"></script>'
-        );
+        // Vue Category Products Grid with ModxProVueCore dependency check
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-products.min.css');
+        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-products.min.js');
 
         $category_option_fields = array();
         if ($showOptions) {
