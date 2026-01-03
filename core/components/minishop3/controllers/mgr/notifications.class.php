@@ -38,16 +38,16 @@ class MiniShop3MgrNotificationsManagerController extends msManagerController
         $config = $this->ms3->config;
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/useLexicon.min.css">
-        <link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/notifications.min.css">
-        <script type="module" src="' . $this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/notifications.min.js"></script>
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/notifications.min.css');
+        // Vue module with ModxProVueCore dependency check
+        $this->addVueModule($this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/notifications.min.js');
+
+        $this->addHtml('
         <script>
             Ext.onReady(function() {
                 MODx.add({xtype: "ms3-notifications-vue-wrapper"});
             });
-        </script>'
-        );
+        </script>');
 
         $this->modx->invokeEvent('msOnManagerCustomCssJs', array(
             'controller' => $this,

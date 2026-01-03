@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useApi } from '../composables/useApi.js'
-import { useLexicon } from '../composables/useLexicon.js'
+import request from '../request.js'
+import { useLexicon } from '@modxprovuecore/useLexicon'
 
 import Button from 'primevue/button'
 import ProgressBar from 'primevue/progressbar'
@@ -10,7 +10,6 @@ import InputNumber from 'primevue/inputnumber'
 import Card from 'primevue/card'
 import Fieldset from 'primevue/fieldset'
 
-const { post, loading } = useApi()
 const { _ } = useLexicon()
 
 /**
@@ -102,7 +101,7 @@ const startRegeneration = async () => {
 
 const processNextBatch = async () => {
   try {
-    const response = await post('/api/mgr/utilities/gallery/update', {
+    const response = await request.post('/api/mgr/utilities/gallery/update', {
       limit: limit.value,
       offset: offset.value
     })

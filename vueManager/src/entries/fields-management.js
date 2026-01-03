@@ -65,6 +65,30 @@ export function init(selector = '#vue-fields-management') {
 }
 
 /**
+ * Wait for ExtJS to create DOM element
+ */
+function waitForElement(selector, callback) {
+  const element = document.querySelector(selector);
+  if (element) {
+    callback(element);
+    return;
+  }
+
+  const observer = new MutationObserver(() => {
+    const element = document.querySelector(selector);
+    if (element) {
+      observer.disconnect();
+      callback(element);
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
+/**
  * Listen for mount event from ExtJS
  */
 document.addEventListener('ms3:mountVueFieldsManagement', (e) => {
@@ -73,12 +97,12 @@ document.addEventListener('ms3:mountVueFieldsManagement', (e) => {
 });
 
 /**
- * Dev mode - automatic initialization for testing
+ * Automatic initialization - wait for element to appear
  */
-if (import.meta.env.DEV) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => init());
-  } else {
-    init();
-  }
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    waitForElement('#ms3-vue-fields-management', () => init('#ms3-vue-fields-management'));
+  });
+} else {
+  waitForElement('#ms3-vue-fields-management', () => init('#ms3-vue-fields-management'));
 }

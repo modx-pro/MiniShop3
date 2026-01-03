@@ -39,40 +39,21 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.combo.js');
 
         // Vue shared components CSS
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/useLexicon.min.css">' .
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/FileBrowser.min.css">'
-        );
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/FileBrowser.min.css');
 
-        // Vue Deliveries Grid
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/deliveries.min.css">'
-        );
-        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/deliveries.min.js"></script>');
+        // Vue Grids CSS
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/deliveries.min.css');
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/payments.min.css');
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/vendors.min.css');
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/statuses.min.css');
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/links.min.css');
 
-        // Vue Payments Grid
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/payments.min.css">'
-        );
-        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/payments.min.js"></script>');
-
-        // Vue Vendors Grid
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/vendors.min.css">'
-        );
-        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/vendors.min.js"></script>');
-
-        // Vue Statuses Grid
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/statuses.min.css">'
-        );
-        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/statuses.min.js"></script>');
-
-        // Vue Links Grid
-        $this->addHtml(
-            '<link rel="stylesheet" href="' . $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/links.min.css">'
-        );
-        $this->addHtml('<script type="module" src="' . $this->ms3->config['jsUrl'] . 'mgr/vue-dist/links.min.js"></script>');
+        // Vue modules with ModxProVueCore dependency check
+        $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/deliveries.min.js');
+        $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/payments.min.js');
+        $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/vendors.min.js');
+        $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/statuses.min.js');
+        $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/links.min.js');
 
         // Options (ExtJS - not migrated yet)
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/grid.js');

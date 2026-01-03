@@ -12,7 +12,7 @@ import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
 import request from '../request.js'
-import { useLexicon } from '../composables/useLexicon.js'
+import { useLexicon } from '@modxprovuecore/useLexicon'
 import { useSelection } from '../composables/useSelection.js'
 import ActionsColumn from './ActionsColumn.vue'
 

@@ -14,7 +14,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import draggable from 'vuedraggable'
 import request from '../request.js'
-import { useLexicon } from '../composables/useLexicon.js'
+import { useLexicon } from '@modxprovuecore/useLexicon'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -53,7 +53,7 @@ const editingSectionIndex = ref(-1)
  * Built from loaded sections, showing only !hidden
  */
 const availableSectionOptions = computed(() => {
-  const options = [{ label: _('no_section'), value: null }]
+  const options = [{ label: _('ms3_vue_no_section'), value: null }]
 
   sections.value
     .filter(section => !section.hidden)
@@ -71,7 +71,7 @@ const availableSectionOptions = computed(() => {
  * Get section label by ID
  */
 function getSectionLabel(sectionId) {
-  if (!sectionId) return _('no_section')
+  if (!sectionId) return _('ms3_vue_no_section')
   const section = sections.value.find(s => s.id === sectionId)
   return section ? (section.label || section.key) : `ID: ${sectionId}`
 }
@@ -94,8 +94,8 @@ async function loadSections() {
     console.error('[ProductDataConfig] Error loading sections:', error)
     toast.add({
       severity: 'error',
-      summary: _('save_error'),
-      detail: error.message || _('error_loading_sections'),
+      summary: _('ms3_vue_save_error'),
+      detail: error.message || _('ms3_vue_error_loading_sections'),
       life: 5000
     })
   } finally {
@@ -109,11 +109,11 @@ async function loadSections() {
 function deleteSection(sectionKey) {
   confirm.require({
     group: 'product-data-config',
-    message: _('section_delete_confirm_message'),
-    header: _('section_delete_confirm_title'),
+    message: _('ms3_vue_section_delete_confirm_message'),
+    header: _('ms3_vue_section_delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: _('section_delete_btn'),
-    rejectLabel: _('section_cancel_btn'),
+    acceptLabel: _('ms3_vue_section_delete_btn'),
+    rejectLabel: _('ms3_vue_section_cancel_btn'),
     acceptClass: 'p-button-danger',
     accept: async () => {
       try {
@@ -121,8 +121,8 @@ function deleteSection(sectionKey) {
 
         toast.add({
           severity: 'success',
-          summary: _('save_success'),
-          detail: _('section_deleted'),
+          summary: _('ms3_vue_save_success'),
+          detail: _('ms3_vue_section_deleted'),
           life: 3000
         })
 
@@ -132,8 +132,8 @@ function deleteSection(sectionKey) {
         console.error('[ProductDataConfig] Error deleting section:', error)
         toast.add({
           severity: 'error',
-          summary: _('save_error'),
-          detail: error.message || _('error_deleting_section'),
+          summary: _('ms3_vue_save_error'),
+          detail: error.message || _('ms3_vue_error_deleting_section'),
           life: 5000
         })
       }
@@ -147,8 +147,8 @@ function deleteSection(sectionKey) {
 function onSectionDragEnd() {
   toast.add({
     severity: 'info',
-    summary: _('order_changed'),
-    detail: _('save_reminder'),
+    summary: _('ms3_vue_order_changed'),
+    detail: _('ms3_vue_save_reminder'),
     life: 3000
   })
 }
@@ -178,8 +178,8 @@ async function saveSections() {
 
     toast.add({
       severity: 'success',
-      summary: _('save_success'),
-      detail: _('sections_saved'),
+      summary: _('ms3_vue_save_success'),
+      detail: _('ms3_vue_sections_saved'),
       life: 3000
     })
 
@@ -189,8 +189,8 @@ async function saveSections() {
     console.error('[ProductDataConfig] Error saving sections:', error)
     toast.add({
       severity: 'error',
-      summary: _('save_error'),
-      detail: error.message || _('error_saving_sections'),
+      summary: _('ms3_vue_save_error'),
+      detail: error.message || _('ms3_vue_error_saving_sections'),
       life: 5000
     })
   } finally {
@@ -228,8 +228,8 @@ async function addSection() {
   if (!newSection.value.section_key) {
     toast.add({
       severity: 'warn',
-      summary: _('warning'),
-      detail: _('section_key_required'),
+      summary: _('ms3_vue_warning'),
+      detail: _('ms3_vue_section_key_required'),
       life: 3000
     })
     return
@@ -240,8 +240,8 @@ async function addSection() {
   if (exists) {
     toast.add({
       severity: 'warn',
-      summary: _('warning'),
-      detail: _('section_key_exists'),
+      summary: _('ms3_vue_warning'),
+      detail: _('ms3_vue_section_key_exists'),
       life: 3000
     })
     return
@@ -251,8 +251,8 @@ async function addSection() {
   if (!newSection.value.lexicon_key && !newSection.value.label) {
     toast.add({
       severity: 'warn',
-      summary: _('warning'),
-      detail: _('section_lexicon_or_label_required'),
+      summary: _('ms3_vue_warning'),
+      detail: _('ms3_vue_section_lexicon_or_label_required'),
       life: 3000
     })
     return
@@ -277,8 +277,8 @@ async function addSection() {
 
     toast.add({
       severity: 'success',
-      summary: _('success_title'),
-      detail: _('section_added'),
+      summary: _('ms3_vue_success_title'),
+      detail: _('ms3_vue_section_added'),
       life: 3000
     })
 
@@ -287,8 +287,8 @@ async function addSection() {
     console.error('[ProductDataConfig] Error adding section:', error)
     toast.add({
       severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_adding_section_title'),
+      summary: _('ms3_vue_error'),
+      detail: error.message || _('ms3_vue_error_adding_section_title'),
       life: 5000
     })
   }
@@ -333,8 +333,8 @@ async function saveEditedSection() {
   if (!editingSection.value.lexicon_key && !editingSection.value.label) {
     toast.add({
       severity: 'warn',
-      summary: _('warning'),
-      detail: _('section_lexicon_or_label_required'),
+      summary: _('ms3_vue_warning'),
+      detail: _('ms3_vue_section_lexicon_or_label_required'),
       life: 3000
     })
     return
@@ -354,8 +354,8 @@ async function saveEditedSection() {
 
     toast.add({
       severity: 'success',
-      summary: _('save_success'),
-      detail: _('section_updated'),
+      summary: _('ms3_vue_save_success'),
+      detail: _('ms3_vue_section_updated'),
       life: 3000
     })
 
@@ -364,8 +364,8 @@ async function saveEditedSection() {
     console.error('[ProductDataConfig] Error updating section:', error)
     toast.add({
       severity: 'error',
-      summary: _('save_error'),
-      detail: error.message || _('error_saving_sections'),
+      summary: _('ms3_vue_save_error'),
+      detail: error.message || _('ms3_vue_error_saving_sections'),
       life: 5000
     })
   }
@@ -391,8 +391,8 @@ async function loadFields() {
       console.error('[ProductDataConfig] Invalid response:', response)
       toast.add({
         severity: 'error',
-        summary: _('error'),
-        detail: _('error_loading_fields_detail'),
+        summary: _('ms3_vue_error'),
+        detail: _('ms3_vue_error_loading_fields_detail'),
         life: 5000
       })
     }
@@ -400,8 +400,8 @@ async function loadFields() {
     console.error('[ProductDataConfig] Error loading fields:', error)
     toast.add({
       severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_fields_message'),
+      summary: _('ms3_vue_error'),
+      detail: error.message || _('ms3_vue_error_loading_fields_message'),
       life: 5000
     })
   } finally {
@@ -429,8 +429,8 @@ async function saveConfig() {
 
     toast.add({
       severity: 'success',
-      summary: _('success_title'),
-      detail: _('config_saved'),
+      summary: _('ms3_vue_success_title'),
+      detail: _('ms3_vue_config_saved'),
       life: 3000
     })
 
@@ -440,8 +440,8 @@ async function saveConfig() {
     console.error('[ProductDataConfig] Error saving:', error)
     toast.add({
       severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_title'),
+      summary: _('ms3_vue_error'),
+      detail: error.message || _('ms3_vue_error_saving_title'),
       life: 5000
     })
   } finally {
@@ -455,8 +455,8 @@ async function saveConfig() {
 function onFieldsDragEnd() {
   toast.add({
     severity: 'info',
-    summary: _('order_changed'),
-    detail: _('save_reminder'),
+    summary: _('ms3_vue_order_changed'),
+    detail: _('ms3_vue_save_reminder'),
     life: 3000
   })
 }
@@ -513,8 +513,8 @@ async function saveFieldChanges() {
 
       toast.add({
         severity: 'success',
-        summary: _('save_success'),
-        detail: _('field_saved'),
+        summary: _('ms3_vue_save_success'),
+        detail: _('ms3_vue_field_saved'),
         life: 3000
       })
 
@@ -526,8 +526,8 @@ async function saveFieldChanges() {
       console.error('[ProductDataConfig] Error saving:', error)
       toast.add({
         severity: 'error',
-        summary: _('error'),
-        detail: error.message || _('save_error'),
+        summary: _('ms3_vue_error'),
+        detail: error.message || _('ms3_vue_save_error'),
         life: 5000
       })
     } finally {
@@ -544,17 +544,17 @@ onMounted(() => {
 
 <template>
   <div class="product-data-config">
-    <h2>{{ _('product_fields_title') }}</h2>
-    <p>{{ _('product_fields_description') }}</p>
+    <h2>{{ _('ms3_vue_product_fields_title') }}</h2>
+    <p>{{ _('ms3_vue_product_fields_description') }}</p>
 
     <!-- Sections table -->
     <Card style="margin-top: 20px;">
       <template #title>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>{{ _('sections') }}</span>
+          <span>{{ _('ms3_vue_sections') }}</span>
           <div style="display: flex; gap: 10px;">
             <Button
-              :label="_('save_changes')"
+              :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
               size="small"
               @click="saveSections"
@@ -562,7 +562,7 @@ onMounted(() => {
               :disabled="loadingSections"
             />
             <Button
-              :label="_('section_add')"
+              :label="_('ms3_vue_section_add')"
               icon="pi pi-plus"
               size="small"
               @click="openAddSectionDialog"
@@ -579,10 +579,10 @@ onMounted(() => {
               <thead class="p-datatable-thead">
                 <tr>
                   <th style="width: 3rem"></th>
-                  <th style="width: 100px">{{ _('visible') }}</th>
-                  <th style="width: 200px">{{ _('section_key') }}</th>
-                  <th style="width: 250px">{{ _('section_label') }}</th>
-                  <th style="width: 100px">{{ _('actions') }}</th>
+                  <th style="width: 100px">{{ _('ms3_vue_visible') }}</th>
+                  <th style="width: 200px">{{ _('ms3_vue_section_key') }}</th>
+                  <th style="width: 250px">{{ _('ms3_vue_section_label') }}</th>
+                  <th style="width: 100px">{{ _('ms3_vue_actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -616,7 +616,7 @@ onMounted(() => {
                         size="small"
                         text
                         @click="openEditSectionDialog(section, index)"
-                        :title="_('section_edit')"
+                        :title="_('ms3_vue_section_edit')"
                       />
                       <Button
                         icon="pi pi-trash"
@@ -624,7 +624,7 @@ onMounted(() => {
                         severity="danger"
                         text
                         @click="deleteSection(section.key)"
-                        :title="_('section_delete')"
+                        :title="_('ms3_vue_section_delete')"
                       />
                     </td>
                   </tr>
@@ -645,9 +645,9 @@ onMounted(() => {
     <Card style="margin-top: 20px;">
       <template #title>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>{{ _('product_properties') }}</span>
+          <span>{{ _('ms3_vue_product_properties') }}</span>
           <Button
-            :label="_('save_changes')"
+            :label="_('ms3_vue_save_changes')"
             icon="pi pi-save"
             @click="saveConfig"
             :loading="saving"
@@ -664,13 +664,13 @@ onMounted(() => {
               <thead class="p-datatable-thead">
                 <tr>
                   <th style="width: 3rem"></th>
-                  <th style="width: 100px">{{ _('visible_column') }}</th>
-                  <th style="width: 200px">{{ _('field_column') }}</th>
-                  <th style="width: 200px">{{ _('label_column') }}</th>
-                  <th style="width: 150px">{{ _('type_column') }}</th>
-                  <th style="width: 150px">{{ _('section_column') }}</th>
-                  <th>{{ _('description_column') }}</th>
-                  <th style="width: 120px">{{ _('actions_column') }}</th>
+                  <th style="width: 100px">{{ _('ms3_vue_visible_column') }}</th>
+                  <th style="width: 200px">{{ _('ms3_vue_field_column') }}</th>
+                  <th style="width: 200px">{{ _('ms3_vue_label_column') }}</th>
+                  <th style="width: 150px">{{ _('ms3_vue_type_column') }}</th>
+                  <th style="width: 150px">{{ _('ms3_vue_section_column') }}</th>
+                  <th>{{ _('ms3_vue_description_column') }}</th>
+                  <th style="width: 120px">{{ _('ms3_vue_actions_column') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -707,7 +707,7 @@ onMounted(() => {
                         size="small"
                         outlined
                         @click="openEditDialog(field, index)"
-                        :title="_('edit_field_button')"
+                        :title="_('ms3_vue_edit_field_button')"
                       />
                     </td>
                   </tr>
@@ -728,45 +728,45 @@ onMounted(() => {
     <Dialog
       v-model:visible="addSectionDialogVisible"
       modal
-      :header="_('add_section_title')"
+      :header="_('ms3_vue_add_section_title')"
       :style="{ width: '600px' }"
     >
       <div class="edit-field-form">
         <div class="form-grid">
           <!-- Section key (required) -->
           <div class="field col-12">
-            <label for="section-key">{{ _('section_key_label') }}</label>
+            <label for="section-key">{{ _('ms3_vue_section_key_label') }}</label>
             <InputText
               id="section-key"
               v-model="newSection.section_key"
-              :placeholder="_('section_key_example')"
+              :placeholder="_('ms3_vue_section_key_example')"
               class="w-full"
             />
-            <small>{{ _('section_key_hint') }}</small>
+            <small>{{ _('ms3_vue_section_key_hint') }}</small>
           </div>
 
           <!-- Lexicon key -->
           <div class="field col-6">
-            <label for="section-lexicon-key">{{ _('section_lexicon_key_label') }}</label>
+            <label for="section-lexicon-key">{{ _('ms3_vue_section_lexicon_key_label') }}</label>
             <InputText
               id="section-lexicon-key"
               v-model="newSection.lexicon_key"
-              :placeholder="_('section_lexicon_key_example')"
+              :placeholder="_('ms3_vue_section_lexicon_key_example')"
               class="w-full"
             />
-            <small>{{ _('section_lexicon_key_hint') }}</small>
+            <small>{{ _('ms3_vue_section_lexicon_key_hint') }}</small>
           </div>
 
           <!-- Direct label text -->
           <div class="field col-6">
-            <label for="section-label">{{ _('section_label_label') }}</label>
+            <label for="section-label">{{ _('ms3_vue_section_label_label') }}</label>
             <InputText
               id="section-label"
               v-model="newSection.label"
-              :placeholder="_('section_label_example')"
+              :placeholder="_('ms3_vue_section_label_example')"
               class="w-full"
             />
-            <small>{{ _('section_label_hint') }}</small>
+            <small>{{ _('ms3_vue_section_label_hint') }}</small>
           </div>
 
           <!-- Visibility -->
@@ -779,22 +779,22 @@ onMounted(() => {
                 :trueValue="false"
                 :falseValue="true"
               />
-              <label for="section-hidden" style="margin: 0; cursor: pointer;" @click="newSection.hidden = !newSection.hidden">{{ _('section_visible_label') }}</label>
+              <label for="section-hidden" style="margin: 0; cursor: pointer;" @click="newSection.hidden = !newSection.hidden">{{ _('ms3_vue_section_visible_label') }}</label>
             </div>
-            <small>{{ _('section_visibility_hint') }}</small>
+            <small>{{ _('ms3_vue_section_visibility_hint') }}</small>
           </div>
         </div>
       </div>
 
       <template #footer>
         <Button
-          :label="_('cancel_button')"
+          :label="_('ms3_vue_cancel_button')"
           icon="pi pi-times"
           severity="secondary"
           @click="closeAddSectionDialog"
         />
         <Button
-          :label="_('add_button')"
+          :label="_('ms3_vue_add_button')"
           icon="pi pi-check"
           @click="addSection"
         />
@@ -805,45 +805,45 @@ onMounted(() => {
     <Dialog
       v-model:visible="editSectionDialogVisible"
       modal
-      :header="editingSection ? `${_('edit_section_title')}: ${editingSection.key}` : _('edit_section_title')"
+      :header="editingSection ? `${_('ms3_vue_edit_section_title')}: ${editingSection.key}` : _('ms3_vue_edit_section_title')"
       :style="{ width: '600px' }"
     >
       <div v-if="editingSection" class="edit-field-form">
         <div class="form-grid">
           <!-- Section key (readonly) -->
           <div class="field col-12">
-            <label for="edit-section-key">{{ _('section_key_label') }}</label>
+            <label for="edit-section-key">{{ _('ms3_vue_section_key_label') }}</label>
             <InputText
               id="edit-section-key"
               v-model="editingSection.key"
               disabled
               class="w-full"
             />
-            <small>{{ _('section_key_readonly_hint') }}</small>
+            <small>{{ _('ms3_vue_section_key_readonly_hint') }}</small>
           </div>
 
           <!-- Lexicon key -->
           <div class="field col-6">
-            <label for="edit-section-lexicon-key">{{ _('section_lexicon_key_label') }}</label>
+            <label for="edit-section-lexicon-key">{{ _('ms3_vue_section_lexicon_key_label') }}</label>
             <InputText
               id="edit-section-lexicon-key"
               v-model="editingSection.lexicon_key"
-              :placeholder="_('section_lexicon_key_example')"
+              :placeholder="_('ms3_vue_section_lexicon_key_example')"
               class="w-full"
             />
-            <small>{{ _('section_lexicon_key_hint') }}</small>
+            <small>{{ _('ms3_vue_section_lexicon_key_hint') }}</small>
           </div>
 
           <!-- Direct label text -->
           <div class="field col-6">
-            <label for="edit-section-label">{{ _('section_label_label') }}</label>
+            <label for="edit-section-label">{{ _('ms3_vue_section_label_label') }}</label>
             <InputText
               id="edit-section-label"
               v-model="editingSection.label"
-              :placeholder="_('section_label_example')"
+              :placeholder="_('ms3_vue_section_label_example')"
               class="w-full"
             />
-            <small>{{ _('section_label_hint') }}</small>
+            <small>{{ _('ms3_vue_section_label_hint') }}</small>
           </div>
 
           <!-- Visibility -->
@@ -856,22 +856,22 @@ onMounted(() => {
                 :trueValue="false"
                 :falseValue="true"
               />
-              <label for="edit-section-hidden" style="margin: 0; cursor: pointer;" @click="editingSection.hidden = !editingSection.hidden">{{ _('section_visible_label') }}</label>
+              <label for="edit-section-hidden" style="margin: 0; cursor: pointer;" @click="editingSection.hidden = !editingSection.hidden">{{ _('ms3_vue_section_visible_label') }}</label>
             </div>
-            <small>{{ _('section_visibility_hint') }}</small>
+            <small>{{ _('ms3_vue_section_visibility_hint') }}</small>
           </div>
         </div>
       </div>
 
       <template #footer>
         <Button
-          :label="_('cancel_button')"
+          :label="_('ms3_vue_cancel_button')"
           icon="pi pi-times"
           severity="secondary"
           @click="closeEditSectionDialog"
         />
         <Button
-          :label="_('save_button')"
+          :label="_('ms3_vue_save_button')"
           icon="pi pi-save"
           @click="saveEditedSection"
         />
@@ -882,72 +882,72 @@ onMounted(() => {
     <Dialog
       v-model:visible="editDialogVisible"
       modal
-      :header="editingField ? `${_('field_edit_title')}: ${editingField.name}` : _('field_edit_title')"
+      :header="editingField ? `${_('ms3_vue_field_edit_title')}: ${editingField.name}` : _('ms3_vue_field_edit_title')"
       :style="{ width: '600px' }"
     >
       <div v-if="editingField" class="edit-field-form">
         <div class="form-grid">
           <!-- Field type (readonly) -->
           <div class="field col-6">
-            <label for="field-xtype">{{ _('field_xtype') }}</label>
+            <label for="field-xtype">{{ _('ms3_vue_field_xtype') }}</label>
             <InputText
               id="field-xtype"
               v-model="editingField.xtype"
               disabled
               class="w-full"
             />
-            <small>{{ _('field_xtype_readonly') }}</small>
+            <small>{{ _('ms3_vue_field_xtype_readonly') }}</small>
           </div>
 
           <!-- Section -->
           <div class="field col-6">
-            <label for="field-section">{{ _('field_section') }}</label>
+            <label for="field-section">{{ _('ms3_vue_field_section') }}</label>
             <Dropdown
               id="field-section"
               v-model="editingField.section"
               :options="availableSectionOptions"
               optionLabel="label"
               optionValue="value"
-              :placeholder="_('field_section_placeholder')"
+              :placeholder="_('ms3_vue_field_section_placeholder')"
               showClear
               class="w-full"
             />
-            <small>{{ _('field_section_help') }}</small>
+            <small>{{ _('ms3_vue_field_section_help') }}</small>
           </div>
 
           <!-- Label -->
           <div class="field col-6">
-            <label for="field-label">{{ _('field_label') }}</label>
+            <label for="field-label">{{ _('ms3_vue_field_label') }}</label>
             <InputText
               id="field-label"
               v-model="editingField.label"
-              :placeholder="_('field_label_placeholder')"
+              :placeholder="_('ms3_vue_field_label_placeholder')"
               class="w-full"
             />
-            <small>{{ _('field_label_help') }}</small>
+            <small>{{ _('ms3_vue_field_label_help') }}</small>
           </div>
 
           <!-- Width -->
           <div class="field col-6">
-            <label for="field-width">{{ _('field_width') }}</label>
+            <label for="field-width">{{ _('ms3_vue_field_width') }}</label>
             <InputNumber
               id="field-width"
               v-model="editingField.width"
               :min="1"
               :max="12"
-              :placeholder="_('field_width_placeholder')"
+              :placeholder="_('ms3_vue_field_width_placeholder')"
               class="w-full"
             />
-            <small>{{ _('field_width_help') }}</small>
+            <small>{{ _('ms3_vue_field_width_help') }}</small>
           </div>
 
           <!-- Placeholder -->
           <div class="field col-6">
-            <label for="field-placeholder">{{ _('field_placeholder') }}</label>
+            <label for="field-placeholder">{{ _('ms3_vue_field_placeholder') }}</label>
             <InputText
               id="field-placeholder"
               v-model="editingField.placeholder"
-              :placeholder="_('field_placeholder_placeholder')"
+              :placeholder="_('ms3_vue_field_placeholder_placeholder')"
               class="w-full"
             />
           </div>
@@ -963,19 +963,19 @@ onMounted(() => {
                 :falseValue="false"
               />
               <label for="field-visible" class="field-label checkbox-label" @click="editingField.visible = !editingField.visible">
-                {{ _('field_visible') }}
+                {{ _('ms3_vue_field_visible') }}
               </label>
             </div>
-            <small>{{ _('field_visible_help') }}</small>
+            <small>{{ _('ms3_vue_field_visible_help') }}</small>
           </div>
 
           <!-- Description - full width -->
           <div class="field col-12">
-            <label for="field-description">{{ _('field_description') }}</label>
+            <label for="field-description">{{ _('ms3_vue_field_description') }}</label>
             <Textarea
               id="field-description"
               v-model="editingField.description"
-              :placeholder="_('field_description_placeholder')"
+              :placeholder="_('ms3_vue_field_description_placeholder')"
               :rows="3"
               class="w-full"
             />
@@ -985,14 +985,14 @@ onMounted(() => {
 
       <template #footer>
         <Button
-          :label="_('field_cancel')"
+          :label="_('ms3_vue_field_cancel')"
           icon="pi pi-times"
           severity="secondary"
           @click="closeEditDialog"
           :disabled="saving"
         />
         <Button
-          :label="_('field_save')"
+          :label="_('ms3_vue_field_save')"
           icon="pi pi-save"
           @click="saveFieldChanges"
           :loading="saving"

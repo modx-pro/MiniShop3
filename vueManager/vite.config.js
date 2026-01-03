@@ -92,12 +92,24 @@ export default defineConfig(({ command }) => {
     }
   }
 
+  // Externalize Vue stack - loaded via Import Map from modxprovuecore
+  const external = ['vue', 'pinia', 'primevue']
+
+  // Composables from modxprovuecore
+  const modxprovuecoreComposables = [
+    '@modxprovuecore/useApi',
+    '@modxprovuecore/useLexicon',
+    '@modxprovuecore/useModx',
+    '@modxprovuecore/usePermission'
+  ]
+
   if (command === 'serve') {
     return {
       build: {
         rollupOptions: {
           output,
-          input: DevInput
+          input: DevInput,
+          external: [...external, ...modxprovuecoreComposables]
         }
       },
       plugins: [vue(), vueDevTools(),],
@@ -114,7 +126,8 @@ export default defineConfig(({ command }) => {
       build: {
         rollupOptions: {
           output,
-          input: ProdInput
+          input: ProdInput,
+          external: [...external, ...modxprovuecoreComposables]
         },
         cssMinify: false, // Отключаем минификацию CSS чтобы сохранить Unicode символы в PrimeIcons
         minify: 'esbuild'

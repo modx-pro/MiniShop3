@@ -63,6 +63,30 @@ export function init(selector = '#ms3-grid-fields-config-vue-wrapper') {
 }
 
 /**
+ * Wait for ExtJS to create DOM element
+ */
+function waitForElement(selector, callback) {
+  const element = document.querySelector(selector)
+  if (element) {
+    callback(element)
+    return
+  }
+
+  const observer = new MutationObserver(() => {
+    const element = document.querySelector(selector)
+    if (element) {
+      observer.disconnect()
+      callback(element)
+    }
+  })
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  })
+}
+
+/**
  * Listen for custom event from ExtJS panel
  * Mount application when tab is rendered
  */
@@ -70,3 +94,14 @@ document.addEventListener('ms3:mountVueGridFieldsConfig', (event) => {
   const targetId = event.detail?.targetId || '#ms3-grid-fields-config-vue-wrapper'
   init(targetId)
 })
+
+/**
+ * Automatic initialization - wait for element to appear
+ */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    waitForElement('#ms3-grid-fields-config-vue-wrapper', () => init('#ms3-grid-fields-config-vue-wrapper'))
+  })
+} else {
+  waitForElement('#ms3-grid-fields-config-vue-wrapper', () => init('#ms3-grid-fields-config-vue-wrapper'))
+}

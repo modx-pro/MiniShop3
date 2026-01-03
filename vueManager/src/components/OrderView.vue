@@ -21,7 +21,7 @@ import AutoComplete from 'primevue/autocomplete'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import request from '../request.js'
-import { useLexicon } from '../composables/useLexicon.js'
+import { useLexicon } from '@modxprovuecore/useLexicon'
 
 const toast = useToast()
 const confirm = useConfirm()
