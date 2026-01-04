@@ -8,10 +8,7 @@ require_once($autoload);
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
-use MiniShop3\Model\msCustomerAddress;
-use MODX\Revolution\modUser;
-use MODX\Revolution\modUserProfile;
-use MODX\Revolution\modUserSetting;
+use MiniShop3\Services\Customer\CustomerAddressManager;
 use MODX\Revolution\modX;
 
 use Rakit\Validation\Validator;
@@ -333,110 +330,47 @@ class Customer
         return $msCustomer;
     }
 
+    /**
+     * Add address for customer
+     *
+     * Delegates to CustomerAddressManager service.
+     *
+     * @param array $customerAddressData Address data with required fields: customer_id, city, street
+     * @return bool True on success, false on failure or duplicate
+     */
     public function addAddress(array $customerAddressData): bool
     {
-        if (empty($customerAddressData['customer_id'])) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] customer_id is required');
-            return false;
-        }
-
-        if (empty($customerAddressData['city'])) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] city is required');
-            return false;
-        }
-
-        if (empty($customerAddressData['street'])) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] street is required');
-            return false;
-        }
-
-        // Allow plugins to modify address data before saving
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeAddCustomerAddress', [
-            'addressData' => $customerAddressData,
-            'customer' => $this,
-        ]);
-        if (!$response['success']) {
-            return false;
-        }
-        $customerAddressData = $response['data']['addressData'];
-
-        if (empty($customerAddressData['name'])) {
-            $nameParts = array_filter([
-                $customerAddressData['city'] ?? '',
-                $customerAddressData['street'] ?? '',
-                $customerAddressData['building'] ?? '',
-            ]);
-            $customerAddressData['name'] = implode(', ', $nameParts);
-        }
-
-        $addressHash = $this->generateAddressHash($customerAddressData);
-        $customerAddressData['hash'] = $addressHash;
-
-        $isExists = $this->modx->getCount(msCustomerAddress::class, [
-            'customer_id' => $customerAddressData['customer_id'],
-            'hash' => $addressHash,
-        ]);
-
-        if (!empty($isExists)) {
-            $this->modx->log(modX::LOG_LEVEL_INFO, '[Customer::addAddress] Address already exists for customer #' . $customerAddressData['customer_id']);
-            return false;
-        }
-
-        if (empty($customerAddressData['createdon'])) {
-            $customerAddressData['createdon'] = date('Y-m-d H:i:s');
-        }
-
-        $msCustomerAddress = $this->modx->newObject(msCustomerAddress::class, $customerAddressData);
-
-        if (!$msCustomerAddress->save()) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, '[Customer::addAddress] Failed to save address');
-            return false;
-        }
-
-        $this->modx->log(modX::LOG_LEVEL_INFO, '[Customer::addAddress] Created address #' . $msCustomerAddress->get('id') . ' for customer #' . $customerAddressData['customer_id']);
-
-        // Allow plugins to act after address is added
-        $response = $this->ms3->utils->invokeEvent('msOnAddCustomerAddress', [
-            'addressData' => $customerAddressData,
-            'msCustomerAddress' => $msCustomerAddress,
-            'customer' => $this,
-        ]);
-        if (!$response['success']) {
-            $this->modx->log(modX::LOG_LEVEL_WARN, '[Customer::addAddress] msOnAddCustomerAddress event failed: ' . $response['message']);
-        }
-
-        return true;
+        return $this->getAddressManager()->add($customerAddressData);
     }
 
     /**
-     * Generate address hash for duplicate detection
+     * Get all addresses for customer
      *
-     * @param array $data Address data
-     * @return string MD5 hash of address
+     * Delegates to CustomerAddressManager service.
+     *
+     * @param int $customer_id Customer ID
+     * @return array Array of address records
      */
-    protected function generateAddressHash(array $data): string
+    public function getAddresses(int $customer_id = 0): array
     {
-        $string = implode('|', [
-            $data['city'] ?? '',
-            $data['street'] ?? '',
-            $data['building'] ?? '',
-            $data['room'] ?? '',
-        ]);
-
-        return md5(mb_strtolower($string));
+        return $this->getAddressManager()->getByCustomerId($customer_id);
     }
 
-    public function getAddresses(int $customer_id = 0): bool|array
+    /**
+     * Get CustomerAddressManager service from DI
+     *
+     * @return CustomerAddressManager
+     */
+    protected function getAddressManager(): CustomerAddressManager
     {
-        $q = $this->modx->newQuery(msCustomerAddress::class);
-        $q->where([
-            'customer_id' => $customer_id,
-        ]);
-        $fields = $this->modx->getSelectColumns(msCustomerAddress::class, 'msCustomerAddress');
-        $q->select($fields);
-        $q->prepare();
-        $q->stmt->execute();
-        return $q->stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $service = $this->modx->services->get('ms3_customer_address_manager');
+
+        if (!$service) {
+            // Fallback: create directly if DI not available
+            $service = new CustomerAddressManager($this->modx, $this->ms3);
+        }
+
+        return $service;
     }
 
     /**

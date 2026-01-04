@@ -170,6 +170,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Customer\RateLimiter::class,
             'interface' => null,
         ],
+        'ms3_customer_address_manager' => [
+            'class' => \MiniShop3\Services\Customer\CustomerAddressManager::class,
+            'interface' => null,
+        ],
         'ms3_grid_config' => [
             'class' => \MiniShop3\Services\GridConfigService::class,
             'interface' => null,
@@ -424,6 +428,7 @@ class ServiceRegistry
             'ms3_order_user_resolver',
             'ms3_order_log',
             'ms3_cart_item_manager',
+            'ms3_customer_address_manager',
         ];
 
         // Services with complex dependencies (resolved via DI)
