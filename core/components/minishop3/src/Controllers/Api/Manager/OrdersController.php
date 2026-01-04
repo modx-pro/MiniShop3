@@ -2,7 +2,7 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
-use MiniShop3\Controllers\Order\OrderLog;
+use MiniShop3\Services\Order\OrderLogService;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msExtraField;
@@ -29,7 +29,7 @@ use MODX\Revolution\modX;
 class OrdersController
 {
     protected modX $modx;
-    protected ?OrderLog $orderLog = null;
+    protected ?OrderLogService $orderLog = null;
 
     public function __construct(modX $modx)
     {
@@ -40,16 +40,20 @@ class OrdersController
     }
 
     /**
-     * Get OrderLog controller (lazy loading)
+     * Get OrderLogService (lazy loading from DI)
      *
-     * @return OrderLog
+     * @return OrderLogService
      */
-    protected function getOrderLog(): OrderLog
+    protected function getOrderLog(): OrderLogService
     {
         if ($this->orderLog === null) {
-            /** @var MiniShop3 $ms3 */
-            $ms3 = $this->modx->services->get('ms3');
-            $this->orderLog = new OrderLog($ms3);
+            if ($this->modx->services->has('ms3_order_log')) {
+                $this->orderLog = $this->modx->services->get('ms3_order_log');
+            } else {
+                /** @var MiniShop3 $ms3 */
+                $ms3 = $this->modx->services->get('ms3');
+                $this->orderLog = new OrderLogService($this->modx, $ms3);
+            }
         }
         return $this->orderLog;
     }
@@ -82,14 +86,21 @@ class OrdersController
         $dir = strtoupper($params['dir'] ?? 'DESC');
 
         $gridConfig = $this->modx->services->get('ms3_grid_config');
-        $gridFields = $gridConfig ? $gridConfig->getGridConfig('orders') : [];
+        // Get ALL fields including hidden (for relation JOINs)
+        $gridFields = $gridConfig ? $gridConfig->getGridConfig('orders', true) : [];
 
         $c = $this->modx->newQuery(msOrder::class);
 
-        $c->leftJoin(msOrderStatus::class, 'Status');
-        $c->leftJoin(msDelivery::class, 'Delivery');
-        $c->leftJoin(msPayment::class, 'Payment');
+        // Address JOIN is always needed for search and customer info
         $c->leftJoin(msOrderAddress::class, 'Address', '`Address`.order_id = msOrder.id');
+
+        // Dynamic JOINs from relation fields in grid config
+        $relationGroups = $gridConfig ? $gridConfig->extractRelationFields($gridFields) : [];
+        foreach ($relationGroups as $group) {
+            if (!empty($group['modelClass'])) {
+                $c->leftJoin($group['modelClass'], $group['alias'], "`{$group['alias']}`.id = msOrder.{$group['foreignKey']}");
+            }
+        }
 
         $showDrafts = $this->modx->getOption('ms3_order_show_drafts', null, false);
         if (!$showDrafts) {
@@ -163,15 +174,20 @@ class OrdersController
         $countQuery->stmt->execute();
         $total = (int)$countQuery->stmt->fetchColumn();
 
-        $exclude = ['status_id', 'delivery_id', 'payment_id'];
-        $c->select(
-            $this->modx->getSelectColumns(msOrder::class, 'msOrder', '', $exclude, true) . ',
-            `msOrder`.status_id, `msOrder`.delivery_id, `msOrder`.payment_id,
-            `Address`.first_name, `Address`.last_name, `Address`.phone, `Address`.email,
-            `Status`.name as `status_name`, `Status`.color,
-            `Delivery`.name as `delivery_name`,
-            `Payment`.name as `payment_name`'
-        );
+        // Build SELECT: base model fields + address fields + dynamic relation fields
+        $selectParts = [
+            $this->modx->getSelectColumns(msOrder::class, 'msOrder'),
+            '`Address`.first_name', '`Address`.last_name', '`Address`.phone', '`Address`.email',
+        ];
+
+        // Add SELECT for relation fields
+        foreach ($relationGroups as $group) {
+            foreach ($group['fields'] as $fieldDef) {
+                $selectParts[] = "`{$group['alias']}`.{$fieldDef['displayField']} as `{$fieldDef['name']}`";
+            }
+        }
+
+        $c->select(implode(', ', $selectParts));
         $c->groupby('msOrder.id');
 
         $sortField = $this->mapSortField($sort);
@@ -1267,6 +1283,7 @@ class OrdersController
      */
     protected function mapSortField(string $sort): string
     {
+        // Model fields mapping
         $mapping = [
             'id' => 'msOrder.id',
             'num' => 'msOrder.num',
@@ -1277,14 +1294,13 @@ class OrdersController
             'createdon' => 'msOrder.createdon',
             'updatedon' => 'msOrder.updatedon',
             'status_id' => 'msOrder.status_id',
-            'status_name' => 'Status.name',
             'delivery_id' => 'msOrder.delivery_id',
-            'delivery_name' => 'Delivery.name',
             'payment_id' => 'msOrder.payment_id',
-            'payment_name' => 'Payment.name',
             'context' => 'msOrder.context',
         ];
 
+        // For relation fields (status_name, delivery_name, etc.) - sort by the alias
+        // This works because we SELECT them AS `field_name`
         return $mapping[$sort] ?? 'msOrder.id';
     }
 

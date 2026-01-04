@@ -7,7 +7,6 @@ use MiniShop3\Controllers\Customer\Customer;
 use MiniShop3\Controllers\Delivery\Delivery;
 use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
-use MiniShop3\Controllers\Order\OrderStatus;
 use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\ServiceRegistry;
 use MiniShop3\Utils\ExtraFields;

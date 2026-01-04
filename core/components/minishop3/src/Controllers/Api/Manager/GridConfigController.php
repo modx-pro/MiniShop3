@@ -32,6 +32,8 @@ class GridConfigController
      * GET /api/mgr/grid-config/{grid_key}
      *
      * @param array $params
+     *   - grid_key: string - Grid identifier
+     *   - include_hidden: bool - Include hidden fields (for config editor)
      * @return array
      */
     public function getConfig(array $params): array
@@ -42,7 +44,9 @@ class GridConfigController
             return Response::error('grid_key is required')->getData();
         }
 
-        $config = $this->service->getGridConfig($gridKey);
+        // For grid config editor we need all fields including hidden
+        $includeHidden = !empty($params['include_hidden']);
+        $config = $this->service->getGridConfig($gridKey, $includeHidden);
 
         return Response::success(['columns' => $config])->getData();
     }
