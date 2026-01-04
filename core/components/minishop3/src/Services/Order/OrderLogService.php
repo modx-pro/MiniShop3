@@ -1,32 +1,42 @@
 <?php
 
-namespace MiniShop3\Controllers\Order;
+namespace MiniShop3\Services\Order;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
 use MODX\Revolution\modX;
 
-class OrderLog
+/**
+ * Order Log Service
+ *
+ * Handles logging of order changes: status updates, field changes,
+ * address modifications, product changes, etc.
+ *
+ * Can be overridden via DI to customize logging behavior
+ * (e.g., send to external CRM, analytics, etc.)
+ */
+class OrderLogService
 {
-    /** @var modX $modx */
-    public $modx;
-    /** @var MiniShop3 $ms3 */
-    public $ms3;
+    protected modX $modx;
+    protected MiniShop3 $ms3;
 
     /** @var array|null Cached allowed actions */
-    private ?array $allowedActions = null;
+    protected ?array $allowedActions = null;
 
-    public function __construct(MiniShop3 $ms3)
+    public function __construct(modX $modx, MiniShop3 $ms3)
     {
+        $this->modx = $modx;
         $this->ms3 = $ms3;
-        $this->modx = $ms3->modx;
 
         $this->modx->lexicon->load('minishop3:default');
     }
 
     /**
      * Check if action should be logged based on system settings
+     *
+     * Setting: ms3_order_log_actions
+     * Values: comma-separated list (status,products,field,address) or '*' for all
      *
      * @param string $action The action type to check
      * @return bool
@@ -53,7 +63,7 @@ class OrderLog
     }
 
     /**
-     * Add log entry with structured data (new method)
+     * Add log entry with structured data
      *
      * @param int $orderId Order ID
      * @param string $action Action type (use msOrderLog::ACTION_* constants)
@@ -92,7 +102,7 @@ class OrderLog
     }
 
     /**
-     * Function for logging changes of the order (legacy method, kept for backward compatibility)
+     * Add log entry (legacy method for backward compatibility)
      *
      * @param int $order_id The id of the order
      * @param mixed $entry The value of action (string or array)
@@ -122,7 +132,6 @@ class OrderLog
         // Convert legacy entry values to array for JSON storage
         if (!is_array($entry)) {
             if ($action === msOrderLog::ACTION_STATUS) {
-                // Legacy status format: entry was status_id
                 $entry = ['status_id' => $entry];
             } else {
                 $entry = ['value' => $entry];
@@ -140,5 +149,36 @@ class OrderLog
         ]);
 
         return $msOrderLog->save();
+    }
+
+    /**
+     * Get log entries for order
+     *
+     * @param int $orderId Order ID
+     * @param bool $visibleOnly Only return entries visible to customer
+     * @param int $limit Max entries to return (0 = all)
+     * @return array Log entries
+     */
+    public function getEntries(int $orderId, bool $visibleOnly = false, int $limit = 0): array
+    {
+        $criteria = ['order_id' => $orderId];
+
+        if ($visibleOnly) {
+            $criteria['visible'] = true;
+        }
+
+        $query = $this->modx->newQuery(msOrderLog::class, $criteria);
+        $query->sortby('timestamp', 'DESC');
+
+        if ($limit > 0) {
+            $query->limit($limit);
+        }
+
+        $entries = [];
+        foreach ($this->modx->getIterator(msOrderLog::class, $query) as $log) {
+            $entries[] = $log->toArray();
+        }
+
+        return $entries;
     }
 }

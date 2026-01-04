@@ -199,13 +199,17 @@ class Router
      * Execute route handler with middleware
      *
      * @param array $routeData
-     * @param array $vars URL parameters
+     * @param array $vars URL parameters from route pattern
      * @return Response
      */
     protected function executeRoute(array $routeData, array $vars): Response
     {
         $handler = $routeData['handler'];
         $middlewares = $routeData['middlewares'] ?? [];
+
+        // Merge URL pattern vars with query string parameters
+        // URL pattern vars take precedence over query params
+        $vars = array_merge($_GET, $vars);
 
         foreach ($middlewares as $middleware) {
             $middlewareInstance = $this->resolveMiddleware($middleware);

@@ -15,9 +15,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <h1 class="mb-2">
-                            <svg width="32" height="32" fill="currentColor" class="me-2 text-primary" style="vertical-align: -6px;">
-                                <use href="#icon-cart"/>
-                            </svg>
+                            <i class="bi bi-cart3 me-2 text-primary"></i>
                             {$_modx->resource.pagetitle}
                         </h1>
                         {if $_modx->resource.introtext}
@@ -37,24 +35,23 @@
                 </div>
 
                 {* Дополнительные действия - показываем только если корзина НЕ пуста *}
+                {set $order_page_id = 'ms3_order_page_id' | option}
                 <div class="cart-actions mt-4 d-none" id="cart-actions">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <a href="/catalog" class="btn btn-outline-primary btn-lg w-100">
-                                <svg width="20" height="20" fill="currentColor" class="me-2">
-                                    <use href="#icon-arrow-left"/>
-                                </svg>
-                                Продолжить покупки
+                            <a href="/" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                {'ms3_frontend_continue_shopping' | lexicon}
                             </a>
                         </div>
+                        {if $order_page_id > 0}
                         <div class="col-md-6">
-                            <a href="/order" class="btn btn-primary btn-lg w-100">
-                                <svg width="20" height="20" fill="currentColor" class="me-2">
-                                    <use href="#icon-check"/>
-                                </svg>
-                                Оформить заказ
+                            <a href="/{$order_page_id | url}" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-check-lg me-2"></i>
+                                {'ms3_frontend_checkout' | lexicon}
                             </a>
                         </div>
+                        {/if}
                     </div>
                 </div>
             </div>
@@ -65,9 +62,7 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <div class="mb-3">
-                                <svg width="48" height="48" fill="currentColor" class="text-primary">
-                                    <use href="#icon-truck"/>
-                                </svg>
+                                <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
                             </div>
                             <h5 class="mb-2">Быстрая доставка</h5>
                             <p class="text-muted mb-0 small">Доставим заказ в течение 1-3 рабочих дней</p>
@@ -76,9 +71,7 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <div class="mb-3">
-                                <svg width="48" height="48" fill="currentColor" class="text-primary">
-                                    <use href="#icon-shield"/>
-                                </svg>
+                                <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
                             </div>
                             <h5 class="mb-2">Гарантия качества</h5>
                             <p class="text-muted mb-0 small">Все товары сертифицированы и имеют гарантию</p>
@@ -87,9 +80,7 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <div class="mb-3">
-                                <svg width="48" height="48" fill="currentColor" class="text-primary">
-                                    <use href="#icon-credit-card"/>
-                                </svg>
+                                <i class="bi bi-credit-card text-primary" style="font-size: 3rem;"></i>
                             </div>
                             <h5 class="mb-2">Удобная оплата</h5>
                             <p class="text-muted mb-0 small">Наличными, картой или онлайн-переводом</p>

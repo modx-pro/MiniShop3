@@ -1,6 +1,6 @@
 <?php
 
-namespace MiniShop3\Controllers\Order;
+namespace MiniShop3\Services\Order;
 
 use MiniShop3\Controllers\Payment\Payment;
 use MiniShop3\MiniShop3;
@@ -14,34 +14,34 @@ use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
 use MODX\Revolution\modX;
 
-class OrderStatus
+/**
+ * Order Status Service
+ *
+ * Handles order status transitions: validation, change, logging, notifications.
+ * Can be overridden via DI to customize status change behavior.
+ */
+class OrderStatusService
 {
-    /** @var modX */
-    public $modx;
-    /** @var MiniShop3 */
-    public $ms3;
-    /** @var OrderLog */
-    private $orderLogController;
-    /** @var NotificationManager */
-    private $notifications;
+    protected modX $modx;
+    protected MiniShop3 $ms3;
+    protected OrderLogService $orderLog;
+    protected ?NotificationManager $notifications = null;
 
-    public function __construct(MiniShop3 $ms3)
+    public function __construct(modX $modx, MiniShop3 $ms3, OrderLogService $orderLog)
     {
+        $this->modx = $modx;
         $this->ms3 = $ms3;
-        $this->modx = $ms3->modx;
-        $this->orderLogController = new OrderLog($ms3);
+        $this->orderLog = $orderLog;
 
         $this->modx->lexicon->load('minishop3:default');
     }
 
     /**
      * Get NotificationManager (lazy loading)
-     *
-     * @return NotificationManager
      */
     protected function getNotificationManager(): NotificationManager
     {
-        if (!$this->notifications) {
+        if ($this->notifications === null) {
             $this->notifications = $this->modx->services->get('ms3_notifications');
         }
         return $this->notifications;
@@ -50,72 +50,75 @@ class OrderStatus
     /**
      * Switch order status
      *
-     * @param integer $order_id The id of msOrder
-     * @param integer $status_id The id of msOrderStatus
-     *
-     * @return boolean|string
+     * @param int $orderId The id of msOrder
+     * @param int $statusId The id of msOrderStatus
+     * @return bool|string True on success, error message on failure
      */
-    public function change(int $order_id, int $status_id): bool|string
+    public function change(int $orderId, int $statusId): bool|string
     {
-        /** @var msOrder $order */
-        $msOrder = $this->modx->getObject(msOrder::class, ['id' => $order_id]);
+        /** @var msOrder|null $msOrder */
+        $msOrder = $this->modx->getObject(msOrder::class, ['id' => $orderId]);
         if (!$msOrder) {
             return $this->modx->lexicon('ms3_err_order_nf');
         }
+
         $ctx = $msOrder->get('context');
         $this->modx->switchContext($ctx);
         $this->ms3->initialize($ctx);
 
-        /** @var msOrderStatusModel $status */
-        $status = $this->modx->getObject(msOrderStatusModel::class, ['id' => $status_id, 'active' => 1]);
+        /** @var msOrderStatusModel|null $status */
+        $status = $this->modx->getObject(msOrderStatusModel::class, ['id' => $statusId, 'active' => 1]);
         if (!$status) {
             return $this->modx->lexicon('ms3_err_status_nf');
         }
-        /** @var msOrderStatusModel $old_status */
-        $old_status = $this->modx->getObject(
+
+        /** @var msOrderStatusModel|null $oldStatus */
+        $oldStatus = $this->modx->getObject(
             msOrderStatusModel::class,
             ['id' => $msOrder->get('status_id'), 'active' => 1]
         );
-        if ($old_status) {
-            if ($old_status->get('final')) {
+
+        if ($oldStatus) {
+            if ($oldStatus->get('final')) {
                 return $this->modx->lexicon('ms3_err_status_final');
             }
-            if ($old_status->get('fixed')) {
-                if ($status->get('position') <= $old_status->get('position')) {
+            if ($oldStatus->get('fixed')) {
+                if ($status->get('position') <= $oldStatus->get('position')) {
                     return $this->modx->lexicon('ms3_err_status_fixed');
                 }
             }
         }
 
-        if ($msOrder->get('status_id') == $status_id) {
+        if ($msOrder->get('status_id') == $statusId) {
             return $this->modx->lexicon('ms3_err_status_same');
         }
 
         $eventParams = [
             'msOrder' => $msOrder,
-            'old_status' => $old_status->get('id'),
-            'status' => $status_id,
+            'old_status' => $oldStatus?->get('id'),
+            'status' => $statusId,
         ];
         $response = $this->ms3->utils->invokeEvent('msOnBeforeChangeOrderStatus', $eventParams);
         if (!$response['success']) {
             return $response['message'];
         }
 
-        $msOrder->set('status_id', $status_id);
+        $msOrder->set('status_id', $statusId);
 
         if ($msOrder->save()) {
-            $this->orderLogController->add($msOrder->get('id'), $status_id, 'status');
+            $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
+
             $response = $this->ms3->utils->invokeEvent('msOnChangeOrderStatus', [
                 'msOrder' => $msOrder,
-                'old_status' => $old_status->get('id'),
-                'status' => $status_id,
+                'old_status' => $oldStatus?->get('id'),
+                'status' => $statusId,
             ]);
             if (!$response['success']) {
                 return $response['message'];
             }
 
             // Send notifications via NotificationManager
-            $this->sendNotifications($msOrder, $status, $old_status);
+            $this->sendNotifications($msOrder, $status, $oldStatus);
         }
 
         return true;
@@ -125,12 +128,7 @@ class OrderStatus
      * Send notifications for status change
      *
      * Uses NotificationConfigService to determine which channels are enabled
-     * for each recipient type. Channel selection is configured in ms3_notification_configs table.
-     *
-     * @param msOrder $msOrder
-     * @param msOrderStatusModel $newStatus
-     * @param msOrderStatusModel|null $oldStatus
-     * @return void
+     * for each recipient type.
      */
     protected function sendNotifications(
         msOrder $msOrder,
@@ -173,8 +171,7 @@ class OrderStatus
      * - phone: for SmsChannel
      * - telegram_id: for TelegramChannel
      *
-     * @param msOrder $msOrder
-     * @return array|null Returns null only if no contact info available at all
+     * @return array|null Returns null only if no contact info available
      */
     protected function getCustomerRecipient(msOrder $msOrder): ?array
     {
@@ -289,10 +286,6 @@ class OrderStatus
 
     /**
      * Parse comma-separated manager setting
-     *
-     * @param string $key Setting key
-     * @param string|null $default Default value
-     * @return array
      */
     protected function parseManagerSetting(string $key, ?string $default = null): array
     {
@@ -307,11 +300,8 @@ class OrderStatus
 
     /**
      * Get language for order notifications
-     *
-     * @param msOrder $msOrder
-     * @return string
      */
-    protected function getLang($msOrder): string
+    protected function getLang(msOrder $msOrder): string
     {
         $lang = $this->modx->getOption('cultureKey', null, 'en', true);
 
@@ -338,12 +328,8 @@ class OrderStatus
 
     /**
      * Get payment link for order
-     *
-     * @param mixed $msPayment
-     * @param msOrder $msOrder
-     * @return string
      */
-    protected function getPaymentLink($msPayment, $msOrder): string
+    protected function getPaymentLink(mixed $msPayment, msOrder $msOrder): string
     {
         $class = $msPayment->get('class');
         if (!empty($class)) {

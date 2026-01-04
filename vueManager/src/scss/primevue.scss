@@ -329,3 +329,32 @@
   font-size: 0.75rem;
   color: #6b7280;
 }
+
+/* Form fields in dialogs (for ModelFieldsGrid and similar) */
+.p-dialog .field {
+  margin-bottom: 1rem;
+}
+
+.p-dialog .field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.p-dialog .edit-form .field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.p-dialog .grid {
+  display: grid;
+}
+
+.p-dialog .block {
+  display: block;
+}
+
+.p-dialog .font-medium {
+  font-weight: 500;
+}

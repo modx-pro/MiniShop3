@@ -1020,3 +1020,20 @@ $_lang['unpublish_selected'] = 'Unpublish selected';
 $_lang['grid_category_products'] = 'Category Products';
 $_lang['showing'] = 'Showing';
 $_lang['of'] = 'of';
+
+// Display field types
+$_lang['field_type_badge'] = 'Badge (colored label)';
+$_lang['field_type_datetime'] = 'Date and time';
+$_lang['field_type_price'] = 'Price';
+$_lang['field_type_weight'] = 'Weight';
+$_lang['field_display_config'] = 'Display settings (JSON)';
+$_lang['field_display_config_hint'] = 'Example';
+$_lang['invalid_json_config'] = 'Invalid JSON in display settings';
+
+// Badge field configuration
+$_lang['field_source_field'] = 'Value source field';
+$_lang['field_source_field_placeholder'] = 'Select field';
+$_lang['field_source_field_hint'] = 'Field to get the displayed text from. If not selected, current field name is used';
+$_lang['field_color_field'] = 'Color field';
+$_lang['field_color_field_placeholder'] = 'Select color field';
+$_lang['field_color_field_hint'] = 'Field containing HEX color code (e.g. #ff0000)';

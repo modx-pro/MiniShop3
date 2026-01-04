@@ -27,13 +27,14 @@ class GridConfigService
      * @param string $gridKey Grid key (customers, orders, products, etc.)
      * @return array
      */
-    public function getGridConfig(string $gridKey): array
+    public function getGridConfig(string $gridKey, bool $includeHidden = false): array
     {
         $query = $this->modx->newQuery(msGridField::class);
-        $query->where([
-            'grid_key' => $gridKey,
-            'visible' => true,
-        ]);
+        $where = ['grid_key' => $gridKey];
+        if (!$includeHidden) {
+            $where['visible'] = true;
+        }
+        $query->where($where);
         $query->sortby('sort_order', 'ASC');
 
         $fields = [];
@@ -161,17 +162,37 @@ class GridConfigService
                 }
 
                 // Update JSON config (additional parameters)
-                $config = [];
-                $configKeys = ['template', 'type', 'format', 'actions'];
+                // Start with existing config to preserve values not sent
+                $existingConfig = $field->get('config');
+                if (is_string($existingConfig)) {
+                    $existingConfig = json_decode($existingConfig, true) ?: [];
+                } elseif (!is_array($existingConfig)) {
+                    $existingConfig = [];
+                }
+
+                $config = $existingConfig;
+                $configKeys = [
+                    'template', 'type', 'format', 'actions',
+                    // relation type
+                    'relation',
+                    // computed type
+                    'computed',
+                    // badge type
+                    'source_field', 'color_field',
+                    // datetime type
+                    // (format is already included)
+                    // price type
+                    'decimals', 'currency', 'currency_position', 'thousands_separator', 'decimal_separator',
+                    // weight type
+                    'unit', 'unit_position'
+                ];
                 foreach ($configKeys as $key) {
-                    if (isset($fieldData[$key])) {
+                    if (array_key_exists($key, $fieldData)) {
                         $config[$key] = $fieldData[$key];
                     }
                 }
 
-                if (!empty($config)) {
-                    $field->set('config', json_encode($config, JSON_UNESCAPED_UNICODE));
-                }
+                $field->set('config', json_encode($config, JSON_UNESCAPED_UNICODE));
 
                 if (!$field->save()) {
                     $this->modx->log(modX::LOG_LEVEL_ERROR,
@@ -693,5 +714,103 @@ class GridConfigService
         }
 
         return ['success' => true];
+    }
+
+    /**
+     * Extract relation fields from grid config and group by table+foreignKey
+     * for efficient JOIN building
+     *
+     * @param array $gridFields Array of grid field configs
+     * @return array Grouped relation fields structure:
+     *   [
+     *     'table_foreignKey' => [
+     *       'table' => 'msOrderStatus',
+     *       'modelClass' => 'MiniShop3\Model\msOrderStatus',
+     *       'foreignKey' => 'status_id',
+     *       'alias' => 'rel_msOrderStatus_status_id',
+     *       'fields' => [
+     *         ['name' => 'status_name', 'displayField' => 'name'],
+     *         ['name' => 'status_color', 'displayField' => 'color'],
+     *       ]
+     *     ]
+     *   ]
+     */
+    public function extractRelationFields(array $gridFields): array
+    {
+        $relationGroups = [];
+
+        foreach ($gridFields as $field) {
+            // Skip non-relation fields
+            if (($field['type'] ?? 'model') !== 'relation') {
+                continue;
+            }
+
+            $relation = $field['relation'] ?? null;
+            if (!$relation || empty($relation['table']) || empty($relation['foreignKey']) || empty($relation['displayField'])) {
+                continue;
+            }
+
+            $table = $relation['table'];
+            $foreignKey = $relation['foreignKey'];
+            $displayField = $relation['displayField'];
+            $fieldName = $field['name'];
+
+            // Group key: table + foreignKey (same table with same FK = one JOIN)
+            $groupKey = "{$table}_{$foreignKey}";
+
+            if (!isset($relationGroups[$groupKey])) {
+                // Resolve model class from table name
+                $modelClass = $this->resolveModelClass($table);
+
+                // Generate unique alias for this JOIN
+                $alias = "rel_{$table}_{$foreignKey}";
+
+                $relationGroups[$groupKey] = [
+                    'table' => $table,
+                    'modelClass' => $modelClass,
+                    'foreignKey' => $foreignKey,
+                    'alias' => $alias,
+                    'fields' => [],
+                ];
+            }
+
+            // Add field to this group
+            $relationGroups[$groupKey]['fields'][] = [
+                'name' => $fieldName,
+                'displayField' => $displayField,
+            ];
+        }
+
+        return $relationGroups;
+    }
+
+    /**
+     * Resolve full model class name from short table name
+     *
+     * @param string $tableName Short table name (e.g. 'msOrderStatus')
+     * @return string|null Full class name or null if not found
+     */
+    protected function resolveModelClass(string $tableName): ?string
+    {
+        // Known MiniShop3 model mappings
+        $modelMap = [
+            'msOrder' => 'MiniShop3\\Model\\msOrder',
+            'msOrderStatus' => 'MiniShop3\\Model\\msOrderStatus',
+            'msOrderAddress' => 'MiniShop3\\Model\\msOrderAddress',
+            'msOrderProduct' => 'MiniShop3\\Model\\msOrderProduct',
+            'msDelivery' => 'MiniShop3\\Model\\msDelivery',
+            'msPayment' => 'MiniShop3\\Model\\msPayment',
+            'msProduct' => 'MiniShop3\\Model\\msProduct',
+            'msProductData' => 'MiniShop3\\Model\\msProductData',
+            'msCategory' => 'MiniShop3\\Model\\msCategory',
+            'msCategoryMember' => 'MiniShop3\\Model\\msCategoryMember',
+            'msVendor' => 'MiniShop3\\Model\\msVendor',
+            'msCustomer' => 'MiniShop3\\Model\\msCustomer',
+            'modUser' => 'MODX\\Revolution\\modUser',
+            'modUserProfile' => 'MODX\\Revolution\\modUserProfile',
+            'modResource' => 'MODX\\Revolution\\modResource',
+        ];
+
+        return $modelMap[$tableName] ?? null;
     }
 }

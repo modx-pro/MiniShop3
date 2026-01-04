@@ -9,11 +9,11 @@
                 <div class="col-12 col-md-8 mt-2 mt-md-0 flex-grow-1 mb-4">
                     {var $image}
                     {if $product.thumb?}
-                        <img src="{$product.thumb}" alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100"/>
+                        <img src="{$product.thumb}" alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100" style="max-height: 150px; object-fit: contain;"/>
                     {else}
                         <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
                              srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                             alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100"/>
+                             alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100" style="max-height: 150px; object-fit: contain;"/>
                     {/if}
                     {/var}
                     <div class="d-flex">
@@ -94,6 +94,14 @@
                     </div>
                 </div>
             {/foreach}
+            {set $cart_page_id = 'ms3_cart_page_id' | option}
+            {if $cart_page_id > 0}
+                <div class="mt-3 text-center">
+                    <a href="/{$cart_page_id | url}" class="btn btn-primary">
+                        {'ms3_frontend_go_to_cart' | lexicon}
+                    </a>
+                </div>
+            {/if}
         {/if}
     </div>
 

@@ -1025,3 +1025,20 @@ $_lang['unpublish_selected'] = 'Снять с публикации';
 $_lang['grid_category_products'] = 'Товары категории';
 $_lang['showing'] = 'Показано';
 $_lang['of'] = 'из';
+
+// Display field types
+$_lang['field_type_badge'] = 'Badge (цветная метка)';
+$_lang['field_type_datetime'] = 'Дата и время';
+$_lang['field_type_price'] = 'Цена';
+$_lang['field_type_weight'] = 'Вес';
+$_lang['field_display_config'] = 'Настройки отображения (JSON)';
+$_lang['field_display_config_hint'] = 'Пример';
+$_lang['invalid_json_config'] = 'Некорректный JSON в настройках отображения';
+
+// Badge field configuration
+$_lang['field_source_field'] = 'Поле-источник значения';
+$_lang['field_source_field_placeholder'] = 'Выберите поле';
+$_lang['field_source_field_hint'] = 'Поле, из которого берётся отображаемый текст. Если не выбрано, используется имя текущего поля';
+$_lang['field_color_field'] = 'Поле цвета';
+$_lang['field_color_field_placeholder'] = 'Выберите поле с цветом';
+$_lang['field_color_field_hint'] = 'Поле, содержащее HEX-код цвета (например: #ff0000)';

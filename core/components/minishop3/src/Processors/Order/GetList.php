@@ -8,7 +8,6 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
-use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\Processors\Model\GetListProcessor;
@@ -65,15 +64,12 @@ class GetList extends GetListProcessor
         $c->leftJoin(msPayment::class, 'Payment');
         $c->leftJoin(msOrderAddress::class, 'Address', '`Address`.order_id = msOrder.id');
 
-        $item = $this->modx->getObject(modSystemSetting::class, [
-            'key' => 'ms3_order_show_drafts'
-        ]);
-        $showDrafts = $item->get('value');
+        // Hide drafts by default (ms3_order_show_drafts = false)
+        $showDrafts = $this->modx->getOption('ms3_order_show_drafts', null, false);
         if (!$showDrafts) {
-            $statusDrafts = $this->modx->getOption('ms3_status_draft', null, 1);
-
+            $statusDraft = (int)$this->modx->getOption('ms3_status_draft', null, 1);
             $c->where([
-                'status_id:!=' => $statusDrafts,
+                'status_id:!=' => $statusDraft,
             ]);
         }
 
