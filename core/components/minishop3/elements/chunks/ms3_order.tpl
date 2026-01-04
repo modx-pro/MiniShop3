@@ -1,3 +1,17 @@
+{if $isCartEmpty}
+    {* Пустая корзина - показываем приглашение перейти в каталог *}
+    <div class="empty-cart-message text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+        </div>
+        <h3 class="mb-3">{'ms3_frontend_cart_empty' | lexicon}</h3>
+        <p class="text-muted mb-4">{'ms3_frontend_cart_empty_desc' | lexicon}</p>
+        <a href="/" class="btn btn-primary btn-lg">
+            <i class="bi bi-shop me-2"></i>
+            {'ms3_frontend_go_to_catalog' | lexicon}
+        </a>
+    </div>
+{else}
 <form class="ms3_form ms3_order_form" method="post">
     {* Секция 1: Контактные данные и способы оплаты *}
     <div class="row g-4 mb-4">
@@ -5,9 +19,7 @@
         <div class="col-12 col-lg-6">
             <div class="order-section">
                 <h4>
-                    <svg width="20" height="20" fill="currentColor" class="me-2 text-primary">
-                        <use href="#icon-person"/>
-                    </svg>
+                    <i class="bi bi-person me-2 text-primary"></i>
                     {'ms3_frontend_credentials' | lexicon}
                 </h4>
 
@@ -39,9 +51,7 @@
         <div class="col-12 col-lg-6">
             <div class="order-section">
                 <h4>
-                    <svg width="20" height="20" fill="currentColor" class="me-2 text-primary">
-                        <use href="#icon-credit-card"/>
-                    </svg>
+                    <i class="bi bi-credit-card me-2 text-primary"></i>
                     {'ms3_frontend_payments' | lexicon}
                 </h4>
 
@@ -78,9 +88,7 @@
         <div class="col-12 col-lg-6">
             <div class="order-section" id="deliveries">
                 <h4>
-                    <svg width="20" height="20" fill="currentColor" class="me-2 text-primary">
-                        <use href="#icon-truck"/>
-                    </svg>
+                    <i class="bi bi-truck me-2 text-primary"></i>
                     {'ms3_frontend_deliveries' | lexicon}
                 </h4>
 
@@ -114,9 +122,7 @@
         <div class="col-12 col-lg-6">
             <div class="order-section">
                 <h4>
-                    <svg width="20" height="20" fill="currentColor" class="me-2 text-primary">
-                        <use href="#icon-geo-alt"/>
-                    </svg>
+                    <i class="bi bi-geo-alt me-2 text-primary"></i>
                     {'ms3_frontend_address' | lexicon}
                 </h4>
 
@@ -277,18 +283,14 @@
                 <form class="ms3_form">
                     <input type="hidden" name="ms3_action" value="order/clean">
                     <button type="button" class="btn btn-outline-danger ms3_link">
-                        <svg width="16" height="16" fill="currentColor" class="me-1">
-                            <use href="#icon-x-circle"/>
-                        </svg>
+                        <i class="bi bi-x-circle me-1"></i>
                         {'ms3_frontend_order_cancel' | lexicon}
                     </button>
                 </form>
                 <form class="ms3_form">
                     <input type="hidden" name="ms3_action" value="order/submit">
                     <button type="submit" class="btn btn-lg btn-primary">
-                        <svg width="20" height="20" fill="currentColor" class="me-2">
-                            <use href="#icon-check-circle"/>
-                        </svg>
+                        <i class="bi bi-check-circle me-2"></i>
                         {'ms3_frontend_order_submit' | lexicon}
                     </button>
                 </form>
@@ -329,4 +331,5 @@
         font-size: 1.1rem;
     }
 </style>
+{/if}
 

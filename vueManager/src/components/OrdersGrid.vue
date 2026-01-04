@@ -177,30 +177,84 @@ async function deleteOrder(order) {
 }
 
 /**
- * Format date
+ * Format date with configurable format
+ * @param {string} dateString - Date string to format
+ * @param {object} column - Column config with optional format property
  */
-function formatDate(dateString) {
+function formatDate(dateString, column = {}) {
   if (!dateString) return '-'
   const date = new Date(dateString)
-  return date.toLocaleString('ru-RU', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+
+  // Custom format from column config
+  const format = column.format || 'dd.MM.yyyy HH:mm'
+
+  // Simple format replacement
+  const pad = (n) => n.toString().padStart(2, '0')
+
+  return format
+    .replace('yyyy', date.getFullYear())
+    .replace('yy', date.getFullYear().toString().slice(-2))
+    .replace('MM', pad(date.getMonth() + 1))
+    .replace('dd', pad(date.getDate()))
+    .replace('HH', pad(date.getHours()))
+    .replace('mm', pad(date.getMinutes()))
+    .replace('ss', pad(date.getSeconds()))
 }
 
 /**
- * Format price
+ * Format price with configurable options
+ * @param {number} value - Price value
+ * @param {object} column - Column config with optional formatting properties
  */
-function formatPrice(value) {
+function formatPrice(value, column = {}) {
   if (value === null || value === undefined) return '-'
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
-  }).format(value)
+
+  // Get config from column or use defaults from ms3.config
+  const decimals = column.decimals ?? window.ms3?.config?.price_decimals ?? 2
+  const thousandsSeparator = column.thousands_separator ?? window.ms3?.config?.price_thousands_separator ?? ' '
+  const decimalSeparator = column.decimal_separator ?? window.ms3?.config?.price_decimal_separator ?? ','
+  const currency = column.currency ?? window.ms3?.config?.price_currency ?? ''
+  const currencyPosition = column.currency_position ?? window.ms3?.config?.price_currency_position ?? 'after'
+
+  // Format number
+  const parts = Number(value).toFixed(decimals).split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator)
+  let formatted = parts.join(decimalSeparator)
+
+  // Add currency
+  if (currency) {
+    formatted = currencyPosition === 'before'
+      ? `${currency}${formatted}`
+      : `${formatted} ${currency}`
+  }
+
+  return formatted
+}
+
+/**
+ * Format weight with configurable options
+ * @param {number} value - Weight value
+ * @param {object} column - Column config with optional formatting properties
+ */
+function formatWeight(value, column = {}) {
+  if (value === null || value === undefined) return '-'
+
+  // Get config from column or use defaults from ms3.config
+  const decimals = column.decimals ?? window.ms3?.config?.weight_decimals ?? 2
+  const unit = column.unit ?? window.ms3?.config?.weight_unit ?? 'кг'
+  const unitPosition = column.unit_position ?? 'after'
+
+  // Format number
+  let formatted = Number(value).toFixed(decimals)
+
+  // Add unit
+  if (unit) {
+    formatted = unitPosition === 'before'
+      ? `${unit} ${formatted}`
+      : `${formatted} ${unit}`
+  }
+
+  return formatted
 }
 
 /**
@@ -222,6 +276,29 @@ function getStatusSeverity(color) {
   }
 
   return colorMap[color.toLowerCase()] || 'secondary'
+}
+
+/**
+ * Get badge value from row data
+ * Uses source_field from column config if specified, otherwise column.name
+ */
+function getBadgeValue(data, column) {
+  const sourceField = column.source_field || column.name
+  return data[sourceField] || ''
+}
+
+/**
+ * Get badge color from row data using column config
+ * Uses color_field from column config or defaults to 'color'
+ */
+function getBadgeColor(data, column) {
+  const colorField = column.color_field || 'color'
+  let color = data[colorField] || null
+  // Add # prefix if color is hex without #
+  if (color && !color.startsWith('#')) {
+    color = '#' + color
+  }
+  return color
 }
 
 /**
@@ -551,24 +628,24 @@ onMounted(async () => {
               :style="{ width: column.width, minWidth: column.minWidth }"
             >
               <template #body="{ data }">
-                <!-- Badge field (status) -->
+                <!-- Badge field (uses source_field for value, color_field for color) -->
                 <Tag
                   v-if="column.type === 'badge'"
-                  :value="data[column.name]"
-                  :severity="getStatusSeverity(data.color)"
-                  :style="data.color ? { backgroundColor: data.color, color: '#fff' } : {}"
+                  :value="getBadgeValue(data, column)"
+                  :severity="getStatusSeverity(getBadgeColor(data, column))"
+                  :style="getBadgeColor(data, column) ? { backgroundColor: getBadgeColor(data, column), color: '#fff' } : {}"
                 />
                 <!-- Datetime field -->
                 <span v-else-if="column.type === 'datetime'">
-                  {{ formatDate(data[column.name]) }}
+                  {{ formatDate(data[column.name], column) }}
                 </span>
                 <!-- Price field -->
                 <span v-else-if="column.type === 'price'">
-                  {{ data[column.name + '_formatted'] || formatPrice(data[column.name]) }}
+                  {{ data[column.name + '_formatted'] || formatPrice(data[column.name], column) }}
                 </span>
                 <!-- Weight field -->
                 <span v-else-if="column.type === 'weight'">
-                  {{ data[column.name + '_formatted'] || data[column.name] }}
+                  {{ data[column.name + '_formatted'] || formatWeight(data[column.name], column) }}
                 </span>
                 <!-- Template field with customer link -->
                 <template v-else-if="column.type === 'template' && column.name === 'customer'">

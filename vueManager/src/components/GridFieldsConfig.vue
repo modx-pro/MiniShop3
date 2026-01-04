@@ -48,7 +48,13 @@ const newField = ref({
     computed: {
       className: ''
     },
-    actions: []
+    actions: [],
+    displayConfig: '',
+    // Badge config
+    badge: {
+      source_field: '',
+      color_field: ''
+    }
   }
 })
 
@@ -77,8 +83,44 @@ const fieldTypeOptions = computed(() => [
   { label: _('field_type_computed'), value: 'computed' },
   { label: _('field_type_image'), value: 'image' },
   { label: _('field_type_boolean'), value: 'boolean' },
+  { label: _('field_type_badge'), value: 'badge' },
+  { label: _('field_type_datetime'), value: 'datetime' },
+  { label: _('field_type_price'), value: 'price' },
+  { label: _('field_type_weight'), value: 'weight' },
   { label: _('field_type_actions'), value: 'actions' }
 ])
+
+/**
+ * Types that require display config (JSON editor)
+ */
+const displayConfigTypes = ['datetime', 'price', 'weight']
+
+/**
+ * Get config hint for display type
+ */
+function getConfigHint(type) {
+  const hints = {
+    datetime: '{ "format": "dd.MM.yyyy HH:mm" }',
+    price: '{ "decimals": 2, "currency": "₽", "currency_position": "after", "thousands_separator": " " }',
+    weight: '{ "decimals": 2, "unit": "кг", "unit_position": "after" }'
+  }
+  return hints[type] || ''
+}
+
+/**
+ * Get available fields for badge source_field/color_field selection
+ * Excludes current field and badge/computed types to prevent recursion
+ */
+function getAvailableFieldsForBadge(currentFieldName = '') {
+  // Filter: exclude current field and badge/computed types
+  const excludedTypes = ['badge', 'computed', 'actions']
+  return fields.value
+    .filter(f => f.name !== currentFieldName && !excludedTypes.includes(f.type))
+    .map(f => ({
+      label: f.label || f.name,
+      value: f.name
+    }))
+}
 
 /**
  * Aggregation types for relation fields
@@ -99,7 +141,8 @@ async function loadFields() {
   loading.value = true
 
   try {
-    const response = await request.get(`/api/mgr/grid-config/${selectedGrid.value}`)
+    // include_hidden=1 to get all fields for configuration (including hidden relation fields)
+    const response = await request.get(`/api/mgr/grid-config/${selectedGrid.value}`, { include_hidden: '1' })
 
     if (response && response.columns) {
       fields.value = response.columns.map((col, index) => ({
@@ -113,9 +156,23 @@ async function loadFields() {
         minWidth: col.minWidth || '',
         isSystem: col.isSystem === true,
         sort_order: index,
+        // Type-specific config
+        type: col.type || 'model',
         template: col.template || '',
-        type: col.type || '',
-        format: col.format || ''
+        relation: col.relation || null,
+        computed: col.computed || null,
+        actions: col.actions || null,
+        // Display config
+        format: col.format || '',
+        source_field: col.source_field || '',
+        color_field: col.color_field || '',
+        decimals: col.decimals,
+        currency: col.currency || '',
+        currency_position: col.currency_position || '',
+        thousands_separator: col.thousands_separator || '',
+        decimal_separator: col.decimal_separator || '',
+        unit: col.unit || '',
+        unit_position: col.unit_position || ''
       }))
     } else {
       console.error('[GridFieldsConfig] Invalid response:', response)
@@ -154,9 +211,24 @@ async function saveConfig() {
         minWidth: field.minWidth || null
       }
 
-      if (field.template) data.template = field.template
+      // Type and type-specific config
       if (field.type) data.type = field.type
+      if (field.template) data.template = field.template
+      if (field.relation) data.relation = field.relation
+      if (field.computed) data.computed = field.computed
+      if (field.actions) data.actions = field.actions
+
+      // Display config
       if (field.format) data.format = field.format
+      if (field.source_field) data.source_field = field.source_field
+      if (field.color_field) data.color_field = field.color_field
+      if (field.decimals !== undefined) data.decimals = field.decimals
+      if (field.currency) data.currency = field.currency
+      if (field.currency_position) data.currency_position = field.currency_position
+      if (field.thousands_separator) data.thousands_separator = field.thousands_separator
+      if (field.decimal_separator) data.decimal_separator = field.decimal_separator
+      if (field.unit) data.unit = field.unit
+      if (field.unit_position) data.unit_position = field.unit_position
 
       return data
     })
@@ -280,7 +352,12 @@ function openAddDialog() {
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
         { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true }
-      ]
+      ],
+      displayConfig: '',
+      badge: {
+        source_field: '',
+        color_field: ''
+      }
     }
   }
   showAddDialog.value = true
@@ -337,11 +414,51 @@ async function addField() {
         data.sortable = false
         data.filterable = false
         break
+      case 'badge':
+        // Badge uses source_field and color_field dropdowns
+        data.config = {}
+        if (newField.value.config.badge.source_field) {
+          data.config.source_field = newField.value.config.badge.source_field
+        }
+        if (newField.value.config.badge.color_field) {
+          data.config.color_field = newField.value.config.badge.color_field
+        }
+        break
+      case 'datetime':
+      case 'price':
+      case 'weight':
+        // Parse displayConfig JSON and merge into config
+        if (newField.value.config.displayConfig) {
+          try {
+            const displayConfig = JSON.parse(newField.value.config.displayConfig)
+            data.config = { ...displayConfig }
+          } catch (e) {
+            toast.add({
+              severity: 'error',
+              summary: _('error'),
+              detail: _('invalid_json_config'),
+              life: 5000
+            })
+            return
+          }
+        }
+        break
     }
 
     const result = await request.post(`/api/mgr/grid-config/${selectedGrid.value}/field`, data)
 
     if (result.field) {
+      // Parse config from response (may be JSON string or already parsed)
+      let config = result.field.config
+      if (typeof config === 'string') {
+        try {
+          config = JSON.parse(config)
+        } catch (e) {
+          config = {}
+        }
+      }
+      config = config || {}
+
       fields.value.push({
         name: result.field.field_name,
         label: result.field.label,
@@ -353,9 +470,23 @@ async function addField() {
         minWidth: result.field.min_width || '',
         isSystem: result.field.is_system,
         sort_order: result.field.sort_order,
-        template: result.field.template || '',
-        type: result.field.type || '',
-        format: result.field.format || ''
+        // Type-specific config from parsed JSON
+        type: config.type || 'model',
+        template: config.template || '',
+        relation: config.relation || null,
+        computed: config.computed || null,
+        actions: config.actions || null,
+        // Display config
+        format: config.format || '',
+        source_field: config.source_field || '',
+        color_field: config.color_field || '',
+        decimals: config.decimals,
+        currency: config.currency || '',
+        currency_position: config.currency_position || '',
+        thousands_separator: config.thousands_separator || '',
+        decimal_separator: config.decimal_separator || '',
+        unit: config.unit || '',
+        unit_position: config.unit_position || ''
       })
     }
 
@@ -386,6 +517,50 @@ function openEditDialog(field, index) {
 
   const fieldType = field.type || 'model'
 
+  // Build displayConfig JSON from field properties for display types (datetime, price, weight)
+  let displayConfig = ''
+  if (displayConfigTypes.includes(fieldType)) {
+    const configObj = {}
+    // Extract display-related properties from field
+    if (fieldType === 'datetime' && field.format) {
+      configObj.format = field.format
+    }
+    if (fieldType === 'price') {
+      if (field.decimals !== undefined) configObj.decimals = field.decimals
+      if (field.currency) configObj.currency = field.currency
+      if (field.currency_position) configObj.currency_position = field.currency_position
+      if (field.thousands_separator) configObj.thousands_separator = field.thousands_separator
+      if (field.decimal_separator) configObj.decimal_separator = field.decimal_separator
+    }
+    if (fieldType === 'weight') {
+      if (field.decimals !== undefined) configObj.decimals = field.decimals
+      if (field.unit) configObj.unit = field.unit
+      if (field.unit_position) configObj.unit_position = field.unit_position
+    }
+    if (Object.keys(configObj).length > 0) {
+      displayConfig = JSON.stringify(configObj, null, 2)
+    }
+  }
+
+  // Badge config (separate from displayConfig)
+  const badgeConfig = {
+    source_field: field.source_field || '',
+    color_field: field.color_field || ''
+  }
+
+  // Load relation config from field data
+  const relationConfig = field.relation || {
+    table: '',
+    foreignKey: '',
+    displayField: '',
+    aggregation: null
+  }
+
+  // Load computed config from field data
+  const computedConfig = field.computed || {
+    className: ''
+  }
+
   editingField.value = {
     field_name: field.name,
     label: field.label || '',
@@ -397,19 +572,14 @@ function openEditDialog(field, index) {
     width: field.width || '',
     config: {
       template: field.template || '',
-      relation: {
-        table: '',
-        foreignKey: '',
-        displayField: '',
-        aggregation: null
-      },
-      computed: {
-        className: ''
-      },
+      relation: relationConfig,
+      computed: computedConfig,
       actions: field.actions || [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
         { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true }
-      ]
+      ],
+      displayConfig: displayConfig,
+      badge: badgeConfig
     }
   }
 
@@ -466,11 +636,51 @@ async function saveEdit() {
         data.sortable = false
         data.filterable = false
         break
+      case 'badge':
+        // Badge uses source_field and color_field dropdowns
+        data.config = {}
+        if (editingField.value.config.badge.source_field) {
+          data.config.source_field = editingField.value.config.badge.source_field
+        }
+        if (editingField.value.config.badge.color_field) {
+          data.config.color_field = editingField.value.config.badge.color_field
+        }
+        break
+      case 'datetime':
+      case 'price':
+      case 'weight':
+        // Parse displayConfig JSON and merge into config
+        if (editingField.value.config.displayConfig) {
+          try {
+            const displayConfig = JSON.parse(editingField.value.config.displayConfig)
+            data.config = { ...displayConfig }
+          } catch (e) {
+            toast.add({
+              severity: 'error',
+              summary: _('error'),
+              detail: _('invalid_json_config'),
+              life: 5000
+            })
+            return
+          }
+        }
+        break
     }
 
     const result = await request.put(`/api/mgr/grid-config/${selectedGrid.value}/field/${editingField.value.field_name}`, data)
 
     if (editingFieldIndex.value !== null && result.field) {
+      // Parse config from response (may be JSON string or already parsed)
+      let config = result.field.config
+      if (typeof config === 'string') {
+        try {
+          config = JSON.parse(config)
+        } catch (e) {
+          config = {}
+        }
+      }
+      config = config || {}
+
       fields.value[editingFieldIndex.value] = {
         name: result.field.field_name,
         label: result.field.label,
@@ -482,9 +692,23 @@ async function saveEdit() {
         minWidth: result.field.min_width || '',
         isSystem: result.field.is_system,
         sort_order: result.field.sort_order,
-        template: result.field.template || '',
-        type: result.field.type || '',
-        format: result.field.format || ''
+        // Type-specific config from parsed JSON
+        type: config.type || 'model',
+        template: config.template || '',
+        relation: config.relation || null,
+        computed: config.computed || null,
+        actions: config.actions || null,
+        // Display config
+        format: config.format || '',
+        source_field: config.source_field || '',
+        color_field: config.color_field || '',
+        decimals: config.decimals,
+        currency: config.currency || '',
+        currency_position: config.currency_position || '',
+        thousands_separator: config.thousands_separator || '',
+        decimal_separator: config.decimal_separator || '',
+        unit: config.unit || '',
+        unit_position: config.unit_position || ''
       }
     }
 
@@ -758,6 +982,51 @@ onMounted(() => {
         <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
       </div>
 
+      <!-- Badge configuration -->
+      <div v-if="newField.type === 'badge'" class="mb-3">
+        <div class="field mb-2">
+          <label for="new-field-badge-source">{{ _('field_source_field') }}</label>
+          <Dropdown
+            id="new-field-badge-source"
+            v-model="newField.config.badge.source_field"
+            :options="getAvailableFieldsForBadge(newField.field_name)"
+            option-label="label"
+            option-value="value"
+            :placeholder="_('field_source_field_placeholder')"
+            :showClear="true"
+            class="w-full"
+          />
+          <small class="text-muted">{{ _('field_source_field_hint') }}</small>
+        </div>
+        <div class="field mb-2">
+          <label for="new-field-badge-color">{{ _('field_color_field') }}</label>
+          <Dropdown
+            id="new-field-badge-color"
+            v-model="newField.config.badge.color_field"
+            :options="getAvailableFieldsForBadge(newField.field_name)"
+            option-label="label"
+            option-value="value"
+            :placeholder="_('field_color_field_placeholder')"
+            :showClear="true"
+            class="w-full"
+          />
+          <small class="text-muted">{{ _('field_color_field_hint') }}</small>
+        </div>
+      </div>
+
+      <!-- Display config for datetime, price, weight -->
+      <div v-if="displayConfigTypes.includes(newField.type)" class="field mb-3">
+        <label for="new-field-display-config">{{ _('field_display_config') }}</label>
+        <Textarea
+          id="new-field-display-config"
+          v-model="newField.config.displayConfig"
+          rows="3"
+          class="w-full font-mono"
+          :placeholder="getConfigHint(newField.type)"
+        />
+        <small class="text-muted">{{ _('field_display_config_hint') }}: {{ getConfigHint(newField.type) }}</small>
+      </div>
+
       <!-- General settings -->
       <div class="field mb-3">
         <label for="new-field-width">{{ _('width') }}</label>
@@ -945,6 +1214,51 @@ onMounted(() => {
           <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
         </div>
 
+        <!-- Badge configuration -->
+        <div v-if="editingField.type === 'badge'" class="mb-3">
+          <div class="field mb-2">
+            <label for="edit-field-badge-source">{{ _('field_source_field') }}</label>
+            <Dropdown
+              id="edit-field-badge-source"
+              v-model="editingField.config.badge.source_field"
+              :options="getAvailableFieldsForBadge(editingField.field_name)"
+              option-label="label"
+              option-value="value"
+              :placeholder="_('field_source_field_placeholder')"
+              :showClear="true"
+              class="w-full"
+            />
+            <small class="text-muted">{{ _('field_source_field_hint') }}</small>
+          </div>
+          <div class="field mb-2">
+            <label for="edit-field-badge-color">{{ _('field_color_field') }}</label>
+            <Dropdown
+              id="edit-field-badge-color"
+              v-model="editingField.config.badge.color_field"
+              :options="getAvailableFieldsForBadge(editingField.field_name)"
+              option-label="label"
+              option-value="value"
+              :placeholder="_('field_color_field_placeholder')"
+              :showClear="true"
+              class="w-full"
+            />
+            <small class="text-muted">{{ _('field_color_field_hint') }}</small>
+          </div>
+        </div>
+
+        <!-- Display config for datetime, price, weight -->
+        <div v-if="displayConfigTypes.includes(editingField.type)" class="field mb-3">
+          <label for="edit-field-display-config">{{ _('field_display_config') }}</label>
+          <Textarea
+            id="edit-field-display-config"
+            v-model="editingField.config.displayConfig"
+            rows="3"
+            class="w-full font-mono"
+            :placeholder="getConfigHint(editingField.type)"
+          />
+          <small class="text-muted">{{ _('field_display_config_hint') }}: {{ getConfigHint(editingField.type) }}</small>
+        </div>
+
         <!-- General settings -->
         <div class="field mb-3">
           <label for="edit-field-width">{{ _('width') }}</label>
@@ -1090,5 +1404,9 @@ label.cursor-pointer {
 label.opacity-50 {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.font-mono {
+  font-family: monospace;
 }
 </style>

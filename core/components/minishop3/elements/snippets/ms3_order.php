@@ -58,6 +58,11 @@ if ($response['success']) {
     $order['discount_cost'] = $ms3->format->price($cost['total_discount']);
 }
 
+// Check if cart is empty
+$ms3->cart->initialize($modx->context->key, $token);
+$cartStatus = $ms3->cart->status();
+$isCartEmpty = !$cartStatus['success'] || empty($cartStatus['data']['total_count']);
+
 // We need only active methods
 $where = [
     'msDelivery.active' => true,
@@ -156,6 +161,21 @@ foreach ($rows as $row) {
         }
     }
 }
+
+// Translate delivery and payment names (if they are lexicon keys)
+foreach ($deliveries as &$delivery) {
+    if (str_starts_with($delivery['name'], 'ms3_')) {
+        $delivery['name'] = $modx->lexicon($delivery['name']);
+    }
+}
+unset($delivery);
+
+foreach ($payments as &$payment) {
+    if (str_starts_with($payment['name'], 'ms3_')) {
+        $payment['name'] = $modx->lexicon($payment['name']);
+    }
+}
+unset($payment);
 
 // Load customer addresses for authenticated customers
 $addresses = [];
@@ -286,6 +306,7 @@ $outputData = [
     'payments' => $payments,
     'errors' => $errors,
     'isCustomerAuth' => $isCustomerAuth,
+    'isCartEmpty' => $isCartEmpty,
 ];
 
 if (!empty($includeCustomerAddresses)) {

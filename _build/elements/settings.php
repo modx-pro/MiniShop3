@@ -151,6 +151,16 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_cart',
     ],
+    'ms3_cart_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_cart',
+    ],
+    'ms3_order_page_id' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
     'ms3_order_format_num' => [
         'value' => 'ym',
         'xtype' => 'textfield',
@@ -167,7 +177,7 @@ return [
         'area' => 'ms3_order',
     ],
     'ms3_order_show_drafts' => [
-        'value' => true,
+        'value' => false,
         'xtype' => 'combo-boolean',
         'area' => 'ms3_order',
     ],

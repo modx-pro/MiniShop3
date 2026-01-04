@@ -158,6 +158,12 @@ $_lang['ms3_frontend_total'] = 'Total to pay';
 $_lang['ms3_frontend_delivery_address'] = 'Delivery address';
 $_lang['ms3_frontend_delivery_method'] = 'Delivery method';
 $_lang['ms3_frontend_payment_method'] = 'Payment method';
+$_lang['ms3_frontend_go_to_cart'] = 'Go to cart';
+$_lang['ms3_frontend_continue_shopping'] = 'Continue shopping';
+$_lang['ms3_frontend_checkout'] = 'Checkout';
+$_lang['ms3_frontend_cart_empty'] = 'Your cart is empty';
+$_lang['ms3_frontend_cart_empty_desc'] = 'Add products to your cart to place an order';
+$_lang['ms3_frontend_go_to_catalog'] = 'Go to catalog';
 
 $_lang['ms3_message_close_all'] = 'close all';
 $_lang['ms3_err_unknown'] = 'Unknown error';

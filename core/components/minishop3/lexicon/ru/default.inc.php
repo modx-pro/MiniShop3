@@ -158,6 +158,12 @@ $_lang['ms3_frontend_total'] = 'Итого к оплате';
 $_lang['ms3_frontend_delivery_address'] = 'Адрес доставки';
 $_lang['ms3_frontend_delivery_method'] = 'Способ доставки';
 $_lang['ms3_frontend_payment_method'] = 'Способ оплаты';
+$_lang['ms3_frontend_go_to_cart'] = 'Перейти в корзину';
+$_lang['ms3_frontend_continue_shopping'] = 'Продолжить покупки';
+$_lang['ms3_frontend_checkout'] = 'Оформить заказ';
+$_lang['ms3_frontend_cart_empty'] = 'Ваша корзина пуста';
+$_lang['ms3_frontend_cart_empty_desc'] = 'Добавьте товары в корзину, чтобы оформить заказ';
+$_lang['ms3_frontend_go_to_catalog'] = 'Перейти в каталог';
 
 $_lang['ms3_message_close_all'] = 'закрыть все';
 $_lang['ms3_err_unknown'] = 'Неизвестная ошибка';
