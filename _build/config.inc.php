@@ -13,7 +13,7 @@ return [
     'name_lower' => 'minishop3',
     'name_short' => 'ms3',
     'version' => '1.0.0',
-    'release' => 'alpha.5',
+    'release' => 'beta.1',
     // Install package to site right after build
     'install' => false,
     // Which elements should be updated on package upgrade

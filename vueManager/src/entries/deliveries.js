@@ -56,7 +56,6 @@ export function init(selector = '#ms3-vue-deliveries') {
   app.mount(selector)
   $el.dataset.vApp = 'true'
 
-  console.log('[DeliveriesGrid] Mounted successfully')
   return app
 }
 

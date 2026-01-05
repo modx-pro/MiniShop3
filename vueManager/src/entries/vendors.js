@@ -56,7 +56,6 @@ export function init(selector = '#ms3-vue-vendors') {
   app.mount(selector)
   $el.dataset.vApp = 'true'
 
-  console.log('[VendorsGrid] Mounted successfully')
   return app
 }
 

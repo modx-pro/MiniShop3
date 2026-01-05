@@ -49,7 +49,6 @@ function mountApp() {
 
   app.mount(container)
 
-  console.log('[MS3 Statuses] Vue app mounted')
   return true
 }
 
@@ -60,7 +59,6 @@ function unmountApp() {
   if (app) {
     app.unmount()
     app = null
-    console.log('[MS3 Statuses] Vue app unmounted')
   }
 }
 

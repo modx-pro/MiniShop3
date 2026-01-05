@@ -84,7 +84,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         // Config MUST be set BEFORE Vue modules load (they read from ms3.config)
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
-        // Vue modules with ModxProVueCore dependency check
+        // Vue modules with VueTools dependency check
         $assetsUrl = $this->ms3->config['assetsUrl'];
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/fields-management.min.js');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/extra-fields.min.js');

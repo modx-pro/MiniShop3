@@ -219,4 +219,4 @@ $_lang['ms3_help'] = 'Помощь и поддержка';
 $_lang['ms3_help_desc'] = 'Полезные ссылки и информация';
 
 $_lang['ms3_error'] = 'Ошибка';
-$_lang['ms3_modxprovuecore_required'] = 'Для работы MiniShop3 требуется пакет ModxProVueCore. Установите его через Менеджер пакетов.';
+$_lang['ms3_vuetools_required'] = 'Для работы MiniShop3 требуется пакет VueTools. Установите его через Менеджер пакетов.';

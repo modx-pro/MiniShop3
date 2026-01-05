@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-alpha]
+## [1.0.0-beta.1] - 2026-01-05
 
-- Initial release.
+First beta release of MiniShop3 for MODX 3.
+
+### Added
+- Modern admin interface with Vue 3 + PrimeVue components
+- Service-based architecture with dependency injection
+- Flexible field configuration system for products, orders, customers
+- Grid configuration system with customizable columns and actions
+- API router with FastRoute for REST endpoints
+- Customer management with addresses and order history
+- Order management with status workflow and notifications
+- Delivery and payment methods configuration
+- Product gallery with drag-and-drop upload
+- Extra fields system for extending entities
+- Import functionality for products
+- Notification system for order events
+- Full lexicon support (Russian, English)
+
+### Changed
+- Complete rewrite for MODX 3.0+ compatibility
+- PHP 8.1+ required
+- Namespace changed to MiniShop3
+- Database tables prefixed with ms3_
+- ExtJS panels integrated with Vue components
+
+### Dependencies
+- Requires VueTools package for Vue infrastructure
+- Uses PdoTools for template rendering
+
+## [1.0.0-alpha] - 2025
+
+- Initial alpha releases for testing and development.

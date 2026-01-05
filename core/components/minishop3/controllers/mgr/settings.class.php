@@ -48,7 +48,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/statuses.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/links.min.css');
 
-        // Vue modules with ModxProVueCore dependency check
+        // Vue modules with VueTools dependency check
         $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/deliveries.min.js');
         $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/payments.min.js');
         $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/vendors.min.js');

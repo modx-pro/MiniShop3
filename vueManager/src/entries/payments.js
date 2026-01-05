@@ -56,7 +56,6 @@ export function init(selector = '#ms3-vue-payments') {
   app.mount(selector)
   $el.dataset.vApp = 'true'
 
-  console.log('[PaymentsGrid] Mounted successfully')
   return app
 }
 
