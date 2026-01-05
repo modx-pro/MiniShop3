@@ -14,7 +14,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import draggable from 'vuedraggable'
 import request from '../request.js'
-import { useLexicon } from '@modxprovuecore/useLexicon'
+import { useLexicon } from '@vuetools/useLexicon'
 
 const toast = useToast()
 const confirm = useConfirm()

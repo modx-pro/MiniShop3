@@ -92,15 +92,15 @@ export default defineConfig(({ command }) => {
     }
   }
 
-  // Externalize Vue stack - loaded via Import Map from modxprovuecore
+  // Externalize Vue stack - loaded via Import Map from VueTools
   const external = ['vue', 'pinia', 'primevue']
 
-  // Composables from modxprovuecore
-  const modxprovuecoreComposables = [
-    '@modxprovuecore/useApi',
-    '@modxprovuecore/useLexicon',
-    '@modxprovuecore/useModx',
-    '@modxprovuecore/usePermission'
+  // Composables from VueTools
+  const vuetoolsComposables = [
+    '@vuetools/useApi',
+    '@vuetools/useLexicon',
+    '@vuetools/useModx',
+    '@vuetools/usePermission'
   ]
 
   if (command === 'serve') {
@@ -109,7 +109,7 @@ export default defineConfig(({ command }) => {
         rollupOptions: {
           output,
           input: DevInput,
-          external: [...external, ...modxprovuecoreComposables]
+          external: [...external, ...vuetoolsComposables]
         }
       },
       plugins: [vue(), vueDevTools(),],
@@ -127,7 +127,7 @@ export default defineConfig(({ command }) => {
         rollupOptions: {
           output,
           input: ProdInput,
-          external: [...external, ...modxprovuecoreComposables]
+          external: [...external, ...vuetoolsComposables]
         },
         cssMinify: false, // Отключаем минификацию CSS чтобы сохранить Unicode символы в PrimeIcons
         minify: 'esbuild'

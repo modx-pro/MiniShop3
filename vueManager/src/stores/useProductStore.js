@@ -19,7 +19,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { useApi } from '@modxprovuecore/useApi';
+import { useApi } from '@vuetools/useApi';
 
 export const useProductStore = defineStore('product', {
   state: () => ({

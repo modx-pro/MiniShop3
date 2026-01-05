@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { useLexicon } from '@modxprovuecore/useLexicon'
+import { useLexicon } from '@vuetools/useLexicon'
 
 /**
  * Universal composable for managing row selection in DataTables

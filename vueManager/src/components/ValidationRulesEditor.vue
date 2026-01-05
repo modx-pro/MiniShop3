@@ -7,7 +7,7 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Dialog from 'primevue/dialog'
 import ToggleSwitch from 'primevue/toggleswitch'
-import { useLexicon } from '@modxprovuecore/useLexicon'
+import { useLexicon } from '@vuetools/useLexicon'
 
 const { _ } = useLexicon()
 

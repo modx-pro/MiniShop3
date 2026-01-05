@@ -6,7 +6,7 @@
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import actionRegistry from '../actionRegistry.js'
-import { useLexicon } from '@modxprovuecore/useLexicon'
+import { useLexicon } from '@vuetools/useLexicon'
 
 /**
  * Composable for working with grid actions

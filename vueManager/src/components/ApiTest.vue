@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { useApi } from '@modxprovuecore/useApi';
-import { useModx } from '@modxprovuecore/useModx';
-import { usePermission } from '@modxprovuecore/usePermission';
+import { useApi } from '@vuetools/useApi';
+import { useModx } from '@vuetools/useModx';
+import { usePermission } from '@vuetools/usePermission';
 import { formatDate } from '../utils/modx';
 
 import Card from 'primevue/card';

@@ -35,7 +35,7 @@
 import { computed } from 'vue'
 import Button from 'primevue/button'
 import { useActions } from '../composables/useActions.js'
-import { useLexicon } from '@modxprovuecore/useLexicon'
+import { useLexicon } from '@vuetools/useLexicon'
 
 const props = defineProps({
   /**

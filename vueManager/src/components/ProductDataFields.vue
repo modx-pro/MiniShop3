@@ -6,7 +6,7 @@ import Fieldset from 'primevue/fieldset'
 import { useToast } from 'primevue/usetoast'
 import DynamicField from './DynamicField.vue'
 import request from '../request.js'
-import { useLexicon } from '@modxprovuecore/useLexicon'
+import { useLexicon } from '@vuetools/useLexicon'
 
 const props = defineProps({
   productId: {
