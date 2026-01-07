@@ -108,9 +108,10 @@ class ProductDataService
      *
      * @param msProductData $productData
      * @param array|null $options Options to save (if null - collected from JSON fields)
+     * @param bool $removeOther Remove options not in $options array (default true for JSON fields, false for custom options)
      * @return void
      */
-    public function saveOptions(msProductData $productData, ?array $options = null): void
+    public function saveOptions(msProductData $productData, ?array $options = null, bool $removeOther = true): void
     {
         $productId = $productData->get('id');
 
@@ -118,14 +119,15 @@ class ProductDataService
             $options = [];
             foreach ($productData->_fieldMeta as $key => $value) {
                 if ($value['phptype'] === 'json' && !empty($productData->get($key))) {
-                    $options = array_merge($options, $productData->get($key));
+                    // Use field name as key, not numeric index from array_merge
+                    $options[$key] = $productData->get($key);
                 }
             }
         }
 
         /** @var msProductOption $optionInstance */
         $optionInstance = $this->modx->newObject(msProductOption::class);
-        $optionInstance->saveProductOptions($productId, $options);
+        $optionInstance->saveProductOptions($productId, $options, $removeOther);
     }
 
     /**
