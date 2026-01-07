@@ -690,10 +690,10 @@ onMounted(() => {
                     </td>
                     <td>
                       <Checkbox
-                        v-model="field.hidden"
+                        v-model="field.visible"
                         :binary="true"
-                        :trueValue="false"
-                        :falseValue="true"
+                        :trueValue="true"
+                        :falseValue="false"
                       />
                     </td>
                     <td>{{ field.name }}</td>
