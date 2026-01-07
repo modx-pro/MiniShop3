@@ -32,6 +32,8 @@ $_lang['ms3_cart_change_error'] = 'Error changing product count in cart';
 $_lang['ms3_cart_clean_success'] = 'Cart successfully cleared';
 $_lang['ms3_cart_is_empty'] = 'Your cart is empty';
 $_lang['ms3_cart_clean'] = 'Clear cart';
+$_lang['ms3_cart_add'] = 'Add to cart';
+$_lang['ms3_cart_in_cart'] = 'In cart';
 
 $_lang['ms3_order_err_empty'] = 'Cannot place empty order';
 $_lang['ms3_order_err_delivery'] = 'You must select delivery method';

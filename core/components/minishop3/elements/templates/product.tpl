@@ -135,27 +135,50 @@
                         {/if}
 
                         {* Количество и кнопка добавления в корзину *}
-                        <form method="post" class="ms3_form mb-4">
-                            <input type="hidden" name="id" value="{$_modx->resource.id}">
-                            <input type="hidden" name="options" value="[]">
-                            <input type="hidden" name="ms3_action" value="cart/add">
+                        <div class="ms3-product-card mb-4" data-product-id="{$_modx->resource.id}">
+                            {* Форма добавления (когда товара НЕТ в корзине) *}
+                            <form method="post" class="ms3_form" data-cart-state="add">
+                                <input type="hidden" name="id" value="{$_modx->resource.id}">
+                                <input type="hidden" name="options" value="[]">
+                                <input type="hidden" name="ms3_action" value="cart/add">
 
-                            <div class="row g-3 align-items-end">
-                                <div class="col-auto">
-                                    <label class="form-label">Количество:</label>
-                                    <input type="number" name="count" value="1" min="1"
-                                           class="form-control" style="width: 100px;">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-auto">
+                                        <label class="form-label">{'ms3_cart_count' | lexicon}:</label>
+                                        <input type="number" name="count" value="1" min="1"
+                                               class="form-control" style="width: 100px;">
+                                    </div>
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                                            {'ms3_cart_add' | lexicon}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col">
-                                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                                        <svg width="20" height="20" fill="currentColor" class="me-2">
-                                            <use href="#icon-cart"/>
-                                        </svg>
-                                        Добавить в корзину
-                                    </button>
+                            </form>
+
+                            {* Форма изменения количества (когда товар ЕСТЬ в корзине) *}
+                            <form method="post" class="ms3_form" data-cart-state="change" style="display: none;">
+                                <input type="hidden" name="product_key" value="">
+                                <input type="hidden" name="ms3_action" value="cart/change">
+
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-auto">
+                                        <label class="form-label">{'ms3_cart_count' | lexicon}:</label>
+                                        <div class="input-group" style="width: 150px;">
+                                            <button class="btn btn-outline-primary qty-btn dec-qty" type="button">−</button>
+                                            <input type="number" name="count" value="1" min="0"
+                                                   class="form-control text-center qty-input">
+                                            <button class="btn btn-outline-primary qty-btn inc-qty" type="button">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <button type="button" class="btn btn-success btn-lg w-100" disabled>
+                                            ✓ {'ms3_cart_in_cart' | lexicon}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
 
                         {* Дополнительная информация *}
                         <div class="product-meta">

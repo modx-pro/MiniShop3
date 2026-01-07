@@ -32,6 +32,8 @@ $_lang['ms3_cart_change_error'] = 'Ошибка при изменении кол
 $_lang['ms3_cart_clean_success'] = 'Корзина успешно очищена';
 $_lang['ms3_cart_is_empty'] = 'Ваша корзина пуста';
 $_lang['ms3_cart_clean'] = 'Очистить корзину';
+$_lang['ms3_cart_add'] = 'В корзину';
+$_lang['ms3_cart_in_cart'] = 'В корзине';
 
 $_lang['ms3_order_err_empty'] = 'Невозможно оформить пустой заказ';
 $_lang['ms3_order_err_delivery'] = 'Вы должны выбрать способ доставки';

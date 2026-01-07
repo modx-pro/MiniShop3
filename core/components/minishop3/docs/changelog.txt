@@ -5,10 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0-beta1] - 2026-01-07
+## [1.1.0-beta1] - 2026-01-08
+
+### Added
+- ProductCardUI module for adaptive cart buttons in product cards
+- Cart state display: "Add to cart" button or quantity controls (+/-)
+- Automatic UI update when cart changes via `ms3:cart:updated` event
+- New lexicons: `ms3_cart_add`, `ms3_cart_in_cart`
+- Migration for adding ProductCardUI.js to frontend assets
 
 ### Changed
-- Version bump to 1.1.0
+- Product card template (`ms3_products_row.tpl`) with dual-state cart forms
+- Product page template (`product.tpl`) with cart state awareness
+- Base template with `icon-plus` and `icon-minus` SVG icons
 
 ## [1.0.0-beta1] - 2026-01-05
 

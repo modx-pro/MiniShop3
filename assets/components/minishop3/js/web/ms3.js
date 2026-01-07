@@ -28,6 +28,7 @@ const ms3 = {
   cartUI: null,
   orderUI: null,
   customerUI: null,
+  productCardUI: null,
 
   hooks: null,
   message: null,
@@ -61,10 +62,12 @@ const ms3 = {
     this.cartUI = new CartUI(this.cartAPI, this.hooks, this.message, this.config)
     this.orderUI = new OrderUI(this.orderAPI, this.hooks, this.message, this.config)
     this.customerUI = new CustomerUI(this.customerAPI, this.hooks, this.message, this.config)
+    this.productCardUI = new ProductCardUI(this.cartAPI, this.hooks, this.message, this.config)
 
     this.cartUI.init()
     this.orderUI.init()
     this.customerUI.init()
+    await this.productCardUI.init()
 
     this.initFormHandler()
 
