@@ -3,7 +3,6 @@
 namespace MiniShop3\Model;
 
 use MiniShop3\MiniShop3;
-use MiniShop3\Processors\Gallery\RemoveCatalogs;
 use MiniShop3\Services\Product\ProductDataService;
 use MiniShop3\Services\Product\ProductImageService;
 use MODX\Revolution\Sources\modMediaSource;

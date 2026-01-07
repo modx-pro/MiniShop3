@@ -5,9 +5,9 @@ namespace MiniShop3\Services\Product;
 use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
-use MiniShop3\Processors\RemoveCatalogs;
 use MODX\Revolution\modX;
 
 /**
@@ -202,18 +202,23 @@ class ProductDataService
             'OR:slave:=' => $productId
         ]);
 
-        if ($productData->xpdo->getCount('msProductFile', ['product_id' => $productId]) > 0) {
+        if ($productData->xpdo->getCount(msProductFile::class, ['product_id' => $productId]) > 0) {
             $source = $productData->initializeMediaSource($productData->Product->get('context_key'));
             if ($source) {
-                $files = $productData->xpdo->getIterator('msProductFile', ['product_id' => $productId]);
-                /** @var \msProductFile $file */
+                $files = $productData->xpdo->getIterator(msProductFile::class, ['product_id' => $productId]);
+                /** @var msProductFile $file */
                 foreach ($files as $file) {
                     $file->remove();
                 }
             }
         }
 
-        RemoveCatalogs::process($productData->xpdo, $productId);
+        // Remove empty product catalog directory via ProductImageService
+        /** @var ProductImageService $imageService */
+        $imageService = $this->modx->services->get('ms3_product_image');
+        if ($imageService) {
+            $imageService->removeProductCatalog($productData);
+        }
 
         return true;
     }
