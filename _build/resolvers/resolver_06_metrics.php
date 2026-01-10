@@ -120,7 +120,7 @@ $collectMetrics = function () use ($modx, $options): array {
 
     return [
         'package_name' => 'MiniShop3',
-        'package_version' => '1.0.0-beta.1',
+        'package_version' => '1.0.0-beta1',
         'ms3_install_type' => $installType,
         'ms3_previous_version' => $previousVersion,
         'php_version' => PHP_VERSION,

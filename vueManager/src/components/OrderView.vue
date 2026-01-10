@@ -1589,7 +1589,7 @@ onMounted(async () => {
 <template>
   <div class="order-view">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <!-- Edit Product Dialog -->
     <Dialog
@@ -1599,6 +1599,7 @@ onMounted(async () => {
       :modal="true"
       :closable="!savingProduct"
       :closeOnEscape="!savingProduct"
+      appendTo="self"
     >
       <div v-if="editingProduct" class="edit-product-form">
         <!-- Product name (readonly) -->
@@ -1811,6 +1812,7 @@ onMounted(async () => {
       :modal="true"
       :closable="!savingNewProduct"
       :closeOnEscape="!savingNewProduct"
+      appendTo="self"
     >
       <div class="add-product-form">
         <!-- Product search -->
@@ -1928,6 +1930,7 @@ onMounted(async () => {
       :style="{ width: '500px' }"
       :modal="true"
       :closable="true"
+      appendTo="self"
       @hide="cancelDuplicateDialog"
     >
       <div class="duplicate-customer-dialog">

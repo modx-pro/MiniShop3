@@ -287,7 +287,7 @@ onMounted(async () => {
 <template>
   <div class="notifications-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>

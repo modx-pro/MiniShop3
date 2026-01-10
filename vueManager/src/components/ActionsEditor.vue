@@ -261,6 +261,7 @@ function closeDialog() {
       :header="editingIndex !== null ? _('edit_action') : _('add_action')"
       :modal="true"
       :style="{ width: '550px' }"
+      appendTo="self"
     >
       <div v-if="editingAction" class="action-form">
         <!-- Row 1: Name and Handler -->

@@ -544,8 +544,7 @@ onMounted(() => {
 
 <template>
   <div class="product-data-config">
-    <h2>{{ _('ms3_vue_product_fields_title') }}</h2>
-    <p>{{ _('ms3_vue_product_fields_description') }}</p>
+    <p class="tab-description">{{ _('ms3_vue_product_fields_description') }}</p>
 
     <!-- Sections table -->
     <Card style="margin-top: 20px;">
@@ -690,10 +689,10 @@ onMounted(() => {
                     </td>
                     <td>
                       <Checkbox
-                        v-model="field.hidden"
+                        v-model="field.visible"
                         :binary="true"
-                        :trueValue="false"
-                        :falseValue="true"
+                        :trueValue="true"
+                        :falseValue="false"
                       />
                     </td>
                     <td>{{ field.name }}</td>
@@ -730,6 +729,7 @@ onMounted(() => {
       modal
       :header="_('ms3_vue_add_section_title')"
       :style="{ width: '600px' }"
+      appendTo="self"
     >
       <div class="edit-field-form">
         <div class="form-grid">
@@ -807,6 +807,7 @@ onMounted(() => {
       modal
       :header="editingSection ? `${_('ms3_vue_edit_section_title')}: ${editingSection.key}` : _('ms3_vue_edit_section_title')"
       :style="{ width: '600px' }"
+      appendTo="self"
     >
       <div v-if="editingSection" class="edit-field-form">
         <div class="form-grid">
@@ -884,6 +885,7 @@ onMounted(() => {
       modal
       :header="editingField ? `${_('ms3_vue_field_edit_title')}: ${editingField.name}` : _('ms3_vue_field_edit_title')"
       :style="{ width: '600px' }"
+      appendTo="self"
     >
       <div v-if="editingField" class="edit-field-form">
         <div class="form-grid">
@@ -1001,7 +1003,7 @@ onMounted(() => {
     </Dialog>
 
     <Toast />
-    <ConfirmDialog group="product-data-config" />
+    <ConfirmDialog group="product-data-config" appendTo="self" />
   </div>
 </template>
 

@@ -511,7 +511,7 @@ onMounted(async () => {
 <template>
   <div class="vendors-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>
@@ -696,6 +696,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '700px' }"
+      appendTo="self"
     >
       <div v-if="editingVendor">
         <!-- Dynamic form based on sections config -->

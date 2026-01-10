@@ -5,7 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-beta.1] - 2026-01-05
+## [1.1.0-beta1] - 2026-01-11
+
+### Added
+- ProductCardUI module for adaptive cart buttons in product cards
+- Cart state display: "Add to cart" button or quantity controls (+/-)
+- Automatic UI update when cart changes via `ms3:cart:updated` event
+- New lexicons: `ms3_cart_add`, `ms3_cart_in_cart`
+- Migration for adding ProductCardUI.js to frontend assets
+- Tab descriptions for Utilities page tabs explaining each section purpose
+- CSS class `.tab-description` for consistent tab description styling
+
+### Changed
+- Product card template (`ms3_products_row.tpl`) with dual-state cart forms
+- Product page template (`product.tpl`) with cart state awareness
+- Base template with `icon-plus` and `icon-minus` SVG icons
+- Renamed "Расширение объектов" tab to "Свои поля" (Custom Fields)
+- Renamed "Управление свойствами товара" to "Поля товара (админка)"
+- Renamed "Конфигурация полей моделей" to "Поля форм (админка)"
+- Improved layout: dropdown and button on same row in "Свои поля" and "Поля таблиц" tabs
+- Removed duplicate titles from tab content (already shown in tab headers)
+
+### Fixed
+- CSS isolation for Dialog and ConfirmDialog components (appendTo="self")
+- Product options (color, size) saving in msProductOption table
+- Duplicate Delivery/Payment filters on Orders page
+- Field visibility saving in product properties management
+
+## [1.0.0-beta1] - 2026-01-05
 
 First beta release of MiniShop3 for MODX 3.
 

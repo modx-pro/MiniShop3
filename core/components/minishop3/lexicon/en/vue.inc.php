@@ -5,7 +5,7 @@
  */
 
 // Vue field management widget
-$_lang['ms3_vue_product_fields_title'] = 'Product Properties Management';
+$_lang['ms3_vue_product_fields_title'] = 'Product Fields (Admin)';
 $_lang['ms3_vue_product_fields_description'] = 'Here you can configure which fields are displayed on the "Product Data" tab when editing a product';
 $_lang['ms3_vue_product_properties'] = 'Product Properties';
 
@@ -123,7 +123,7 @@ $_lang['ms3_vue_section_key_readonly_hint'] = 'Section key cannot be changed aft
 $_lang['ms3_vue_section_updated'] = 'Section updated';
 
 // Extra Fields Manager Widget
-$_lang['ms3_extra_fields_title'] = 'Object Extension';
+$_lang['ms3_extra_fields_title'] = 'Custom Fields';
 $_lang['ms3_vue_extra_fields_title'] = 'Extra Fields Management';
 $_lang['ms3_vue_extra_fields_create'] = 'Create Field';
 $_lang['ms3_vue_extra_fields_edit'] = 'Edit Field';
@@ -561,7 +561,7 @@ $_lang['order_id_required'] = 'Order ID is required';
 $_lang['order'] = 'Order';
 
 // Model Fields Widget
-$_lang['ms3_model_fields_title'] = 'Model Fields Configuration';
+$_lang['ms3_model_fields_title'] = 'Form Fields (Admin)';
 $_lang['ms3_model_field_add'] = 'Add Field';
 $_lang['ms3_model_field_edit'] = 'Edit Field';
 $_lang['ms3_model_field_model'] = 'Model';
@@ -1037,3 +1037,9 @@ $_lang['field_source_field_hint'] = 'Field to get the displayed text from. If no
 $_lang['field_color_field'] = 'Color field';
 $_lang['field_color_field_placeholder'] = 'Select color field';
 $_lang['field_color_field_hint'] = 'Field containing HEX color code (e.g. #ff0000)';
+
+// Utilities tabs descriptions
+$_lang['ms3_utilities_import_description'] = 'Import products from CSV file. Upload a file, configure column to field mapping, and start the import.';
+$_lang['ms3_utilities_extra_fields_description'] = 'Create additional fields for MiniShop3 models. Fields are automatically added to database tables.';
+$_lang['ms3_utilities_grid_fields_description'] = 'Configure admin grid columns: visibility, sorting, filtering, order. Add computed and related fields.';
+$_lang['ms3_utilities_model_fields_description'] = 'Configure form fields for editing orders, vendors, and other entities. Group by sections, set visibility and order.';

@@ -565,7 +565,7 @@ onMounted(async () => {
 <template>
   <div class="category-products-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>

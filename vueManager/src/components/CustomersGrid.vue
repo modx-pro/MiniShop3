@@ -562,7 +562,7 @@ onMounted(async () => {
 <template>
   <div class="customers-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>

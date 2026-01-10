@@ -1,4 +1,4 @@
-<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 ms3-product-card" data-product-id="{$id}">
     <div class="card h-100 border-0 shadow-sm product-card" itemtype="http://schema.org/Product" itemscope>
         <meta itemprop="description" content="{$description ?: $pagetitle}">
         <meta itemprop="name" content="{$pagetitle}">
@@ -156,8 +156,8 @@
                     </div>
                 </div>
 
-                {* Форма добавления в корзину *}
-                <form method="post" class="ms3_form position-relative" style="z-index: 10;">
+                {* Форма добавления в корзину (показывается когда товара НЕТ в корзине) *}
+                <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add" style="z-index: 10;">
                     <input type="hidden" name="id" value="{$id}">
                     <input type="hidden" name="count" value="1">
                     <input type="hidden" name="options" value="[]">
@@ -168,8 +168,31 @@
                             <svg width="16" height="16" fill="currentColor" class="me-1">
                                 <use href="#icon-cart"/>
                             </svg>
-                            В корзину
+                            {'ms3_cart_add' | lexicon}
                         </button>
+                    </div>
+                </form>
+
+                {* Форма изменения количества (показывается когда товар ЕСТЬ в корзине) *}
+                <form method="post" class="ms3_form ms3-cart-controls position-relative" data-cart-state="change" style="z-index: 10; display: none;">
+                    <input type="hidden" name="product_key" value="">
+                    <input type="hidden" name="ms3_action" value="cart/change">
+
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="btn-group btn-group-sm flex-grow-1" role="group">
+                            <button class="btn btn-outline-primary qty-btn dec-qty" type="button" style="padding: 0.5rem 0.75rem; font-weight: bold; font-size: 1.1rem;">
+                                −
+                            </button>
+                            <input type="number" name="count" value="1" min="0"
+                                class="form-control form-control-sm qty-input text-center border-primary"
+                                style="max-width: 50px; padding: 0.5rem 0.25rem;">
+                            <button class="btn btn-outline-primary qty-btn inc-qty" type="button" style="padding: 0.5rem 0.75rem; font-weight: bold; font-size: 1.1rem;">
+                                +
+                            </button>
+                        </div>
+                        <span class="badge bg-success text-white" style="padding: 0.5rem 0.75rem;">
+                            ✓ {'ms3_cart_in_cart' | lexicon}
+                        </span>
                     </div>
                 </form>
             </div>

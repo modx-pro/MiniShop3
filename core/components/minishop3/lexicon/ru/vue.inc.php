@@ -5,7 +5,7 @@
  */
 
 // Vue виджет управления полями
-$_lang['ms3_vue_product_fields_title'] = 'Управление свойствами товара';
+$_lang['ms3_vue_product_fields_title'] = 'Поля товара (админка)';
 $_lang['ms3_vue_product_fields_description'] = 'Здесь вы можете настроить, какие поля отображаются на вкладке "Данные товара" при редактировании товара';
 $_lang['ms3_vue_product_properties'] = 'Свойства товара';
 
@@ -123,7 +123,7 @@ $_lang['ms3_vue_section_key_readonly_hint'] = 'Ключ секции нельз�
 $_lang['ms3_vue_section_updated'] = 'Секция обновлена';
 
 // Виджет расширения объектов (Extra Fields Manager)
-$_lang['ms3_extra_fields_title'] = 'Расширение объектов';
+$_lang['ms3_extra_fields_title'] = 'Свои поля';
 $_lang['ms3_vue_extra_fields_title'] = 'Управление дополнительными полями';
 $_lang['ms3_vue_extra_fields_create'] = 'Создать поле';
 $_lang['ms3_vue_extra_fields_edit'] = 'Редактировать поле';
@@ -477,7 +477,7 @@ $_lang['order_customer'] = 'Клиент';
 $_lang['order_status'] = 'Статус';
 $_lang['order_cost'] = 'Сумма';
 $_lang['order_cart_cost'] = 'Корзина';
-$_lang['order_delivery_cost'] = 'Доставка';
+$_lang['order_delivery_cost'] = 'Стоимость доставки';
 $_lang['order_weight'] = 'Вес';
 $_lang['order_delivery'] = 'Доставка';
 $_lang['order_payment'] = 'Оплата';
@@ -561,7 +561,7 @@ $_lang['order_id_required'] = 'Не указан ID заказа';
 $_lang['order'] = 'Заказ';
 
 // Model Fields Widget
-$_lang['ms3_model_fields_title'] = 'Конфигурация полей моделей';
+$_lang['ms3_model_fields_title'] = 'Поля форм (админка)';
 $_lang['ms3_model_field_add'] = 'Добавить поле';
 $_lang['ms3_model_field_edit'] = 'Редактировать поле';
 $_lang['ms3_model_field_model'] = 'Модель';
@@ -1042,3 +1042,9 @@ $_lang['field_source_field_hint'] = 'Поле, из которого берёт�
 $_lang['field_color_field'] = 'Поле цвета';
 $_lang['field_color_field_placeholder'] = 'Выберите поле с цветом';
 $_lang['field_color_field_hint'] = 'Поле, содержащее HEX-код цвета (например: #ff0000)';
+
+// Utilities tabs descriptions
+$_lang['ms3_utilities_import_description'] = 'Импорт товаров из CSV файла. Загрузите файл, настройте соответствие колонок полям товаров и запустите импорт.';
+$_lang['ms3_utilities_extra_fields_description'] = 'Создание дополнительных полей для моделей MiniShop3. Поля автоматически добавляются в таблицы БД.';
+$_lang['ms3_utilities_grid_fields_description'] = 'Настройка колонок таблиц в админке: видимость, сортировка, фильтрация, порядок. Добавление вычисляемых и связанных полей.';
+$_lang['ms3_utilities_model_fields_description'] = 'Конфигурация полей форм редактирования заказов, производителей и других сущностей. Группировка по секциям, настройка видимости и порядка.';

@@ -278,7 +278,7 @@ function getXtypeTitle(name) {
   </div>
 
   <Dialog v-model:visible="editVisible" modal header="Edit Field" :style="{ width: '25rem' }"
-          v-if="Object.entries(editedField).length > 0"
+          v-if="Object.entries(editedField).length > 0" appendTo="self"
   >
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -307,7 +307,7 @@ function getXtypeTitle(name) {
     </div>
   </Dialog>
 
-  <Dialog v-model:visible="createVisible" modal header="Add Field" :style="{ width: '25rem' }">
+  <Dialog v-model:visible="createVisible" modal header="Add Field" :style="{ width: '25rem' }" appendTo="self">
     <div class="flex items-center gap-4 mb-4"
          style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
       <label for="name" style="width: 50%;">Field</label>
@@ -338,5 +338,5 @@ function getXtypeTitle(name) {
   </Dialog>
 
   <Toast/>
-  <ConfirmDialog/>
+  <ConfirmDialog appendTo="self" />
 </template>

@@ -463,7 +463,7 @@ onMounted(async () => {
 <template>
   <div class="payments-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>
@@ -645,6 +645,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '600px' }"
+      appendTo="self"
     >
       <div v-if="editingPayment">
         <Tabs v-model:value="activeTab">

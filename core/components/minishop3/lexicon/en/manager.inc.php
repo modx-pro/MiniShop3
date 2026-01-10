@@ -236,7 +236,7 @@ $_lang['ms3_utilities_scheduler_nf'] = 'Scheduler component is not installed';
 $_lang['ms3_utilities_scheduler_task_ce'] = 'Failed to create Scheduler task';
 $_lang['ms3_utilities_scheduler_success'] = 'Scheduler task created';
 
-$_lang['ms3_extrafields'] = 'Object Extension';
+$_lang['ms3_extrafields'] = 'Custom Fields';
 $_lang['ms3_extrafields_intro'] = 'Here you can create additional fields for MiniShop3 objects';
 $_lang['ms3_extrafields_class'] = 'Object';
 $_lang['ms3_extrafields_key'] = 'Field key';
