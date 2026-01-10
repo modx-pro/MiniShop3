@@ -236,7 +236,7 @@ $_lang['ms3_utilities_scheduler_nf'] = 'У вас не установлен ко
 $_lang['ms3_utilities_scheduler_task_ce'] = 'Не удалось создать задание Scheduler';
 $_lang['ms3_utilities_scheduler_success'] = 'Задание Scheduler создано';
 
-$_lang['ms3_extrafields'] = 'Расширение объектов';
+$_lang['ms3_extrafields'] = 'Свои поля';
 $_lang['ms3_extrafields_intro'] = 'Здесь вы можете создать дополнительные поля для объектов MiniShop3';
 $_lang['ms3_extrafields_class'] = 'Объект';
 $_lang['ms3_extrafields_key'] = 'Ключ поля';

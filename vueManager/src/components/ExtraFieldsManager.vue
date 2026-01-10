@@ -445,35 +445,32 @@ onMounted(() => {
     <Toast />
     <ConfirmDialog group="extra-fields" appendTo="self" />
 
+    <p class="tab-description">{{ _('ms3_utilities_extra_fields_description') }}</p>
+
+    <div class="flex justify-content-between align-items-center mb-3">
+      <div class="flex align-items-center gap-2">
+        <label for="class-filter">{{ _('ms3_vue_extra_fields_class_filter') }}</label>
+        <Dropdown
+          id="class-filter"
+          v-model="selectedClass"
+          :options="classOptions"
+          optionLabel="label"
+          optionValue="value"
+          :placeholder="_('ms3_vue_extra_fields_select_class')"
+          style="min-width: 280px;"
+          @change="onClassFilterChange"
+        />
+      </div>
+      <Button
+        :label="_('ms3_vue_extra_fields_create')"
+        icon="pi pi-plus"
+        @click="openCreateDialog"
+        :disabled="loading"
+      />
+    </div>
+
     <Card>
-      <template #title>
-        <div class="flex justify-content-between align-items-center">
-          <span>{{ _('ms3_vue_extra_fields_title') }}</span>
-          <Button
-            :label="_('ms3_vue_extra_fields_create')"
-            icon="pi pi-plus"
-            @click="openCreateDialog"
-            :disabled="loading"
-          />
-        </div>
-      </template>
-
       <template #content>
-        <!-- Class filter -->
-        <div class="field mb-4">
-          <label for="class-filter">{{ _('ms3_vue_extra_fields_class_filter') }}</label>
-          <Dropdown
-            id="class-filter"
-            v-model="selectedClass"
-            :options="classOptions"
-            optionLabel="label"
-            optionValue="value"
-            :placeholder="_('ms3_vue_extra_fields_select_class')"
-            class="w-full md:w-20rem"
-            @change="onClassFilterChange"
-          />
-        </div>
-
         <!-- Fields table -->
         <DataTable
           :value="fields"

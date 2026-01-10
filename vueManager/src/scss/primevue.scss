@@ -358,3 +358,17 @@
 .p-dialog .font-medium {
   font-weight: 500;
 }
+
+/* ============================================ */
+/* Tab Description                             */
+/* ============================================ */
+.vueApp .tab-description {
+  margin: 0 0 1rem 0;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border-left: 3px solid #3b82f6;
+  color: #4b5563;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 0 4px 4px 0;
+}

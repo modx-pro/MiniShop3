@@ -741,36 +741,30 @@ onMounted(() => {
     <Toast />
     <ConfirmDialog group="grid-fields-config" appendTo="self" />
 
+    <p class="tab-description">{{ _('ms3_utilities_grid_fields_description') }}</p>
+
+    <div class="flex justify-content-between align-items-center mb-3">
+      <div class="flex align-items-center gap-2">
+        <label for="grid-select">{{ _('select_grid') }}</label>
+        <Dropdown
+          id="grid-select"
+          v-model="selectedGrid"
+          :options="gridOptions"
+          option-label="label"
+          option-value="value"
+          @change="onGridChange"
+          style="min-width: 200px;"
+        />
+      </div>
+      <Button
+        :label="_('add_field')"
+        icon="pi pi-plus"
+        @click="openAddDialog"
+      />
+    </div>
+
     <Card>
-      <template #title>
-        {{ _('grid_fields_config_title') }}
-      </template>
-
       <template #content>
-        <!-- Grid selector -->
-        <div class="field mb-4">
-          <label for="grid-select">{{ _('select_grid') }}</label>
-          <Dropdown
-            id="grid-select"
-            v-model="selectedGrid"
-            :options="gridOptions"
-            option-label="label"
-            option-value="value"
-            @change="onGridChange"
-            class="w-full md:w-14rem"
-          />
-        </div>
-
-        <!-- Add field button -->
-        <div class="mb-3">
-          <Button
-            :label="_('add_field')"
-            icon="pi pi-plus"
-            @click="openAddDialog"
-            size="small"
-          />
-        </div>
-
         <!-- Fields table with VueDraggable -->
         <div class="p-datatable p-component p-datatable-striped" v-if="!loading">
           <div class="p-datatable-wrapper">

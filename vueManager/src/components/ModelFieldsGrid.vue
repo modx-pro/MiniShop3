@@ -637,6 +637,8 @@ onMounted(async () => {
     <Toast />
     <ConfirmDialog group="model-fields" appendTo="self" />
 
+    <p class="tab-description">{{ _('ms3_utilities_model_fields_description') }}</p>
+
     <!-- Model filter - top bar -->
     <div class="model-filter-bar mb-3">
       <div style="display: flex; align-items: center; gap: 0.5rem;">

@@ -544,8 +544,7 @@ onMounted(() => {
 
 <template>
   <div class="product-data-config">
-    <h2>{{ _('ms3_vue_product_fields_title') }}</h2>
-    <p>{{ _('ms3_vue_product_fields_description') }}</p>
+    <p class="tab-description">{{ _('ms3_vue_product_fields_description') }}</p>
 
     <!-- Sections table -->
     <Card style="margin-top: 20px;">

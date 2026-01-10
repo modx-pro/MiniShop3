@@ -264,6 +264,8 @@ onMounted(() => {
 
 <template>
   <div class="import-products">
+    <p class="tab-description">{{ _('ms3_utilities_import_description') }}</p>
+
     <div class="step-indicators">
       <div class="step-indicator" :class="{ active: currentStep === 1, completed: currentStep > 1 }" @click="goToStep(1)">
         <span class="step-number">1</span>
