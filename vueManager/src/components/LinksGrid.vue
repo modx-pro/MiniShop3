@@ -240,7 +240,7 @@ onMounted(() => {
 <template>
   <div class="links-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>
@@ -348,6 +348,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '550px' }"
+      appendTo="self"
     >
       <div v-if="editingLink" class="ms3-link-form">
         <!-- Name -->

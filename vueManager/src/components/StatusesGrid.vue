@@ -279,7 +279,7 @@ onMounted(() => {
 <template>
   <div class="statuses-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>
@@ -422,6 +422,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '500px' }"
+      appendTo="self"
     >
       <div v-if="editingStatus" class="ms3-status-form">
         <!-- Name -->

@@ -635,7 +635,7 @@ onMounted(async () => {
 <template>
   <div class="model-fields-grid">
     <Toast />
-    <ConfirmDialog group="model-fields" />
+    <ConfirmDialog group="model-fields" appendTo="self" />
 
     <!-- Model filter - top bar -->
     <div class="model-filter-bar mb-3">
@@ -835,6 +835,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       style="width: 600px;"
+      appendTo="self"
     >
       <div v-if="editingField" class="edit-form">
         <!-- Basic info -->
@@ -991,6 +992,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       style="width: 500px;"
+      appendTo="self"
     >
       <div v-if="editingSection" class="edit-form">
         <div class="field mb-3">

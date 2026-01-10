@@ -443,7 +443,7 @@ onMounted(() => {
 <template>
   <div class="extra-fields-manager">
     <Toast />
-    <ConfirmDialog group="extra-fields" />
+    <ConfirmDialog group="extra-fields" appendTo="self" />
 
     <Card>
       <template #title>
@@ -572,6 +572,7 @@ onMounted(() => {
       :modal="true"
       :closable="!saving"
       :style="{ width: '700px' }"
+      appendTo="self"
       @hide="saving = false"
     >
       <div class="edit-field-form">

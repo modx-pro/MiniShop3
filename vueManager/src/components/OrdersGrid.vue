@@ -442,7 +442,7 @@ onMounted(async () => {
 <template>
   <div class="orders-grid">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog appendTo="self" />
 
     <Card>
       <template #title>

@@ -739,7 +739,7 @@ onMounted(() => {
 <template>
   <div class="grid-fields-config">
     <Toast />
-    <ConfirmDialog group="grid-fields-config" />
+    <ConfirmDialog group="grid-fields-config" appendTo="self" />
 
     <Card>
       <template #title>
@@ -872,6 +872,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '600px' }"
+      appendTo="self"
       @hide="closeAddDialog"
     >
       <div class="field mb-3">
@@ -1102,6 +1103,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '600px' }"
+      appendTo="self"
       @hide="closeEditDialog"
     >
       <div v-if="editingField">

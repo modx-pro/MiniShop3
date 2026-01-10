@@ -527,6 +527,7 @@ const editingFieldName = computed(() => {
       :header="_('ms3_add_validation_field')"
       :modal="true"
       :style="{ width: '450px' }"
+      appendTo="self"
     >
       <div class="add-field-form">
         <div class="form-field">
@@ -565,6 +566,7 @@ const editingFieldName = computed(() => {
       :header="_('ms3_add_rule_to_field') + ': ' + editingFieldName"
       :modal="true"
       :style="{ width: '450px' }"
+      appendTo="self"
       @hide="closeRuleDialog"
     >
       <div class="add-rule-form">
