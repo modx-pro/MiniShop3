@@ -90,12 +90,18 @@ class TokenMiddleware implements MiddlewareInterface
             return Response::error('ms3_err_token_invalid', 401);
         }
 
+        // Auto-renew expired token instead of returning error
         if ($tokenObj->isExpired()) {
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+            $newExpiresAt = date('Y-m-d H:i:s', time() + $ttl);
+
+            $tokenObj->set('expires_at', $newExpiresAt);
+            $tokenObj->save();
+
             $this->modx->log(
-                \MODX\Revolution\modX::LOG_LEVEL_ERROR,
-                "[TokenMiddleware] Token expired. Expires: " . $tokenObj->get('expires_at') . ", Now: " . date('Y-m-d H:i:s')
+                \MODX\Revolution\modX::LOG_LEVEL_INFO,
+                "[TokenMiddleware] Token auto-renewed. New expires: " . $newExpiresAt
             );
-            return Response::error('ms3_err_token_expired', 401);
         }
 
         // Save token and customer_id to session
@@ -104,6 +110,7 @@ class TokenMiddleware implements MiddlewareInterface
         }
         $_SESSION['ms3']['customer_token'] = $token;
         $_SESSION['ms3']['customer_id'] = $tokenObj->get('customer_id');
+        $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
 
         return null; // Continue execution
     }
