@@ -9,6 +9,7 @@ class SeedCustomersGridConfig extends AbstractMigration
 {
     public function up()
     {
+        $now = date('Y-m-d H:i:s');
         $data = [
             // ID column
             [
@@ -137,6 +138,12 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'is_default' => 1,
             ],
         ];
+
+        // Add timestamps to each record
+        foreach ($data as &$row) {
+            $row['created_at'] = $now;
+            $row['updated_at'] = $now;
+        }
 
         $this->table('ms3_grid_fields')->insert($data)->save();
     }
