@@ -7,7 +7,7 @@ use xPDO\xPDO;
 class msGridField extends \MiniShop3\Model\msGridField
 {
     public static $metaMap = [
-        'package' => 'MiniShop3\\Model\\',
+        'package' => 'MiniShop3\\Model',
         'version' => '3.0',
         'table' => 'ms3_grid_fields',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',
@@ -104,7 +104,7 @@ class msGridField extends \MiniShop3\Model\msGridField
                 'null' => true,
             ],
             'config' => [
-                'dbtype' => 'json',
+                'dbtype' => 'text',
                 'phptype' => 'json',
                 'null' => true,
             ],
@@ -131,8 +131,8 @@ class msGridField extends \MiniShop3\Model\msGridField
             'updated_at' => [
                 'dbtype' => 'timestamp',
                 'phptype' => 'timestamp',
-                'null' => false,
-                'default' => 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
+                'null' => true,
+                'extra' => 'on update CURRENT_TIMESTAMP',
             ],
         ],
         'indexes' => [

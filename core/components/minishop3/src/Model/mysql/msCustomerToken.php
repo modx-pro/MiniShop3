@@ -7,7 +7,7 @@ use xPDO\xPDO;
 class msCustomerToken extends \MiniShop3\Model\msCustomerToken
 {
     public static $metaMap = [
-        'package' => 'MiniShop3\\Model\\',
+        'package' => 'MiniShop3\\Model',
         'version' => '3.0',
         'table' => 'ms3_customer_tokens',
         'extends' => 'xPDO\\Om\\xPDOSimpleObject',

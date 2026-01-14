@@ -223,7 +223,7 @@ class SeedProductFields extends AbstractMigration
             ],
         ];
 
-        $table->insert($data)->save();
+        $table->insert($data)->saveData();
 
         $this->output->writeln('<info>✓ Inserted ' . count($data) . ' default product fields</info>');
     }

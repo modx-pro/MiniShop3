@@ -314,7 +314,7 @@ class SeedOrdersGridConfig extends AbstractMigration
             $row['updated_at'] = $now;
         }
 
-        $this->table('ms3_grid_fields')->insert($data)->save();
+        $this->table('ms3_grid_fields')->insert($data)->saveData();
     }
 
     public function down()

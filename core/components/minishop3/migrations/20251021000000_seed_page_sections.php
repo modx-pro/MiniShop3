@@ -65,7 +65,7 @@ class SeedPageSections extends AbstractMigration
             ],
         ];
 
-        $table->insert($data)->save();
+        $table->insert($data)->saveData();
 
         $this->output->writeln('<info>✓ Inserted ' . count($data) . ' page sections for product_data</info>');
     }

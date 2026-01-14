@@ -87,7 +87,7 @@ class SeedOrderStatuses extends AbstractMigration
             ],
         ];
 
-        $table->insert($data)->save();
+        $table->insert($data)->saveData();
 
         $this->output->writeln('<info>✓ Inserted ' . count($data) . ' default order statuses</info>');
         $this->output->writeln('<comment>Note: Status names will be replaced with lexicon values when accessed through MODX</comment>');
