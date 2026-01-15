@@ -1830,16 +1830,16 @@ onMounted(async () => {
             :minLength="2"
           >
             <template #option="{ option }">
-              <div class="product-suggestion">
+              <div class="ms3-product-suggestion">
                 <img
                   v-if="option.image"
                   :src="option.image"
                   :alt="option.pagetitle"
-                  class="product-suggestion-image"
+                  class="ms3-product-suggestion-image"
                 />
-                <div class="product-suggestion-info">
-                  <div class="product-suggestion-name">{{ option.pagetitle }}</div>
-                  <div class="product-suggestion-meta">
+                <div class="ms3-product-suggestion-info">
+                  <div class="ms3-product-suggestion-name">{{ option.pagetitle }}</div>
+                  <div class="ms3-product-suggestion-meta">
                     <span v-if="option.article" class="article">[{{ option.article }}]</span>
                     <span class="price">{{ formatPrice(option.price) }}</span>
                   </div>
@@ -2857,45 +2857,6 @@ onMounted(async () => {
   font-size: 0.875rem;
 }
 
-.product-suggestion {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.25rem 0;
-}
-
-.product-suggestion-image {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-}
-
-.product-suggestion-info {
-  flex: 1;
-}
-
-.product-suggestion-name {
-  font-weight: 500;
-  color: #1e293b;
-}
-
-.product-suggestion-meta {
-  font-size: 0.75rem;
-  color: #64748b;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.product-suggestion-meta .article {
-  color: #3b82f6;
-}
-
-.product-suggestion-meta .price {
-  font-weight: 500;
-}
-
 .selected-product-details {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -3119,6 +3080,66 @@ onMounted(async () => {
 .duplicate-customer-info .info-value {
   color: #1e293b;
   font-size: 0.875rem;
+  font-weight: 500;
+}
+</style>
+
+<style>
+/* AutoComplete input full width
+   .p- classes are excluded from postcss-prefix-selector */
+.add-product-form .p-autocomplete {
+  width: 100%;
+}
+
+.add-product-form .p-autocomplete-input {
+  width: 100%;
+}
+
+/* Product suggestion in AutoComplete dropdown
+   Uses .ms3- prefix to bypass postcss-prefix-selector (excluded in vite.config.js)
+   These styles work in teleported dropdowns rendered in <body> */
+.ms3-product-suggestion {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.ms3-product-suggestion-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.ms3-product-suggestion-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ms3-product-suggestion-name {
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ms3-product-suggestion-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ms3-product-suggestion-meta .article {
+  color: #3b82f6;
+}
+
+.ms3-product-suggestion-meta .price {
   font-weight: 500;
 }
 </style>

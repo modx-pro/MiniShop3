@@ -47,17 +47,16 @@ class ImageService
     /**
      * Generate image thumbnail
      *
-     * Main method to replace msProductFile::makeThumbnail()
      * Works with any MODX Media Sources via binary data
      *
      * @param array $sourceInfo Data from $mediaSource->getObjectContents()
      *                          Required keys: ['content' => binary_data]
      * @param array $options Generation parameters:
-     *                       - 'w' (int): width in pixels
-     *                       - 'h' (int): height in pixels
-     *                       - 'q' (int): quality 1-100 (default 90)
-     *                       - 'f' or 'fm' (string): format (jpg, png, webp, avif)
-     *                       - 'zc' or 'fit' (string): resize mode (crop, contain, max)
+     *                       - 'width' (int): width in pixels
+     *                       - 'height' (int): height in pixels
+     *                       - 'quality' (int): quality 1-100 (default 90)
+     *                       - 'format' (string): jpg, png, webp, avif (default jpg)
+     *                       - 'mode' (string): resize mode - cover, contain, max, stretch (default cover)
      *
      * @return string|null Binary thumbnail data or null on error
      *
@@ -65,11 +64,11 @@ class ImageService
      * ```php
      * $info = $mediaSource->getObjectContents('products/1/photo.jpg');
      * $thumbnail = $imageService->makeThumbnail($info, [
-     *     'w' => 300,
-     *     'h' => 200,
-     *     'q' => 85,
-     *     'f' => 'webp',
-     *     'zc' => 'T'
+     *     'width' => 300,
+     *     'height' => 200,
+     *     'quality' => 85,
+     *     'format' => 'webp',
+     *     'mode' => 'cover'
      * ]);
      * ```
      */
@@ -85,15 +84,20 @@ class ImageService
             $image = $this->imageManager->read($sourceInfo['content']);
 
             // Extract parameters
-            $width = isset($options['w']) ? (int) $options['w'] : null;
-            $height = isset($options['h']) ? (int) $options['h'] : null;
-            $quality = isset($options['q']) ? (int) $options['q'] : 90;
-            $format = $options['f'] ?? $options['fm'] ?? 'jpg';
-            $fit = $options['fit'] ?? $options['zc'] ?? 'crop';
+            $width = isset($options['width']) ? (int) $options['width'] : null;
+            $height = isset($options['height']) ? (int) $options['height'] : null;
+            $quality = (int) ($options['quality'] ?? 90);
+            $format = $options['format'] ?? 'jpg';
+            $mode = $options['mode'] ?? 'cover';
+
+            $this->modx->log(
+                modX::LOG_LEVEL_DEBUG,
+                "[ImageService] Processing: {$width}x{$height}, quality={$quality}, format={$format}, mode={$mode}"
+            );
 
             // Apply transformations
             if ($width || $height) {
-                $this->applyTransformations($image, $width, $height, $fit);
+                $this->applyResize($image, $width, $height, $mode);
             }
 
             // Get encoder for required format
@@ -112,46 +116,36 @@ class ImageService
     }
 
     /**
-     * Apply transformations to image
-     *
-     * Supports various resize modes for phpThumb compatibility
+     * Apply resize to image
      *
      * @param \Intervention\Image\Interfaces\ImageInterface $image
      * @param int|null $width
      * @param int|null $height
-     * @param string $fit Resize mode
+     * @param string $mode Resize mode: cover, contain, max, stretch
      */
-    private function applyTransformations($image, ?int $width, ?int $height, string $fit): void
+    private function applyResize($image, ?int $width, ?int $height, string $mode): void
     {
-        // Various resize modes
-        switch ($fit) {
-            // Crop (crop with fill)
-            case 'crop':
-            case 'C':
-            case 'T': // phpThumb: zc=T (top crop)
+        switch ($mode) {
+            // Cover - crop to fill exact dimensions (default)
+            case 'cover':
                 $image->cover($width, $height);
                 break;
 
-            // Contain (fit with aspect ratio)
+            // Contain - fit within dimensions, preserve aspect ratio
             case 'contain':
-            case 'scale':
-            case '1': // phpThumb: zc=1
                 $image->scale($width, $height);
                 break;
 
-            // Max (shrink if larger, don't upscale)
+            // Max - shrink if larger, don't upscale
             case 'max':
-            case '2': // phpThumb: zc=2
                 $image->scaleDown($width, $height);
                 break;
 
-            // Stretch (stretch without aspect ratio)
+            // Stretch - resize to exact dimensions, ignore aspect ratio
             case 'stretch':
-            case '3': // phpThumb: zc=3
                 $image->resize($width, $height);
                 break;
 
-            // Default - crop
             default:
                 $image->cover($width, $height);
         }

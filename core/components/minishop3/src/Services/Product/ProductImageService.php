@@ -140,7 +140,14 @@ class ProductImageService
         ], ['sortby' => 'rank']);
 
         if ($file) {
-            $thumb = $file->get('thumbnail') ?: $file->get('url');
+            // Get thumbnail from child record (generated thumbnail)
+            /** @var msProductFile $thumbnailFile */
+            $thumbnailFile = $this->modx->getObject(msProductFile::class, [
+                'parent_id' => $file->get('id'),
+                'type' => 'image',
+            ]);
+            $thumb = $thumbnailFile ? $thumbnailFile->get('url') : $file->get('url');
+
             $productData->set('image', $file->get('url'));
             $productData->set('thumb', $thumb);
 
