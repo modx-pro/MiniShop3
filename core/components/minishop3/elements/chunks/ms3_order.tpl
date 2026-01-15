@@ -2,7 +2,7 @@
     {* Пустая корзина - показываем приглашение перейти в каталог *}
     <div class="empty-cart-message text-center py-5">
         <div class="mb-4">
-            <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+            <i class="bi bi-cart-x text-muted empty-cart-icon"></i>
         </div>
         <h3 class="mb-3">{'ms3_frontend_cart_empty' | lexicon}</h3>
         <p class="text-muted mb-4">{'ms3_frontend_cart_empty_desc' | lexicon}</p>
@@ -298,38 +298,5 @@
         </div>
     </div>
 </div>
-
-<style>
-    .order-section {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 1.5rem;
-        height: 100%;
-    }
-
-    .payment-option,
-    .delivery-option {
-        cursor: pointer;
-    }
-
-    .payment-logo,
-    .delivery-logo {
-        max-height: 32px;
-        max-width: 80px;
-        object-fit: contain;
-    }
-
-    .order-summary {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 8px;
-        padding: 2rem;
-        margin-top: 2rem;
-        border: 2px solid #dee2e6;
-    }
-
-    .cost-breakdown {
-        font-size: 1.1rem;
-    }
-</style>
 {/if}
 

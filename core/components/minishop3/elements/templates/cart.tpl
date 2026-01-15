@@ -62,7 +62,7 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <div class="mb-3">
-                                <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
+                                <i class="bi bi-truck text-primary benefit-icon"></i>
                             </div>
                             <h5 class="mb-2">Быстрая доставка</h5>
                             <p class="text-muted mb-0 small">Доставим заказ в течение 1-3 рабочих дней</p>
@@ -71,7 +71,7 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <div class="mb-3">
-                                <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                                <i class="bi bi-shield-check text-primary benefit-icon"></i>
                             </div>
                             <h5 class="mb-2">Гарантия качества</h5>
                             <p class="text-muted mb-0 small">Все товары сертифицированы и имеют гарантию</p>
@@ -80,7 +80,7 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <div class="mb-3">
-                                <i class="bi bi-credit-card text-primary" style="font-size: 3rem;"></i>
+                                <i class="bi bi-credit-card text-primary benefit-icon"></i>
                             </div>
                             <h5 class="mb-2">Удобная оплата</h5>
                             <p class="text-muted mb-0 small">Наличными, картой или онлайн-переводом</p>
@@ -90,90 +90,6 @@
             </div>
         </main>
     </div>
-
-    {* Дополнительные стили для корзины *}
-    <style>
-        .cart-wrapper {
-            background: #fff;
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
-        }
-
-        .msCart .ms-image img {
-            max-width: 80px;
-            height: auto;
-            border-radius: 4px;
-            object-fit: cover;
-        }
-
-        .msCart .quantity {
-            gap: 0.5rem;
-        }
-
-        .msCart .qty-btn {
-            width: 36px;
-            height: 36px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .msCart .qty-input {
-            text-align: center;
-            width: 60px;
-            padding: 0.375rem 0.5rem;
-        }
-
-        .msCart .old_price {
-            text-decoration: line-through;
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-
-        .msCart .ms-footer {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .msCart .ms-footer th {
-            padding: 1rem;
-            vertical-align: middle;
-        }
-
-        .cart-benefits {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 2rem;
-        }
-
-        .cart-actions .btn {
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .cart-actions .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-        }
-
-        @media (max-width: 768px) {
-            .cart-wrapper {
-                padding: 1rem;
-            }
-
-            .msCart .ms-image img {
-                max-width: 60px;
-            }
-
-            .cart-benefits {
-                padding: 1rem;
-            }
-        }
-    </style>
 
     {* JavaScript для отображения кнопок действий *}
     <script>

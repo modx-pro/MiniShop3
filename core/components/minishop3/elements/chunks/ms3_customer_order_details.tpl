@@ -28,13 +28,13 @@
 
             {* Таблица товаров *}
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle ms3-order-table">
                     <thead class="table-light">
                         <tr>
                             <th>{'ms3_cart_title' | lexicon}</th>
-                            <th class="text-center" style="width: 100px;">{'ms3_cart_count' | lexicon}</th>
-                            <th class="text-end" style="width: 120px;">{'ms3_cart_price' | lexicon}</th>
-                            <th class="text-end" style="width: 120px;">{'ms3_cart_cost' | lexicon}</th>
+                            <th class="text-center col-count">{'ms3_cart_count' | lexicon}</th>
+                            <th class="text-end col-price">{'ms3_cart_price' | lexicon}</th>
+                            <th class="text-end col-cost">{'ms3_cart_cost' | lexicon}</th>
                         </tr>
                     </thead>
                     <tbody>

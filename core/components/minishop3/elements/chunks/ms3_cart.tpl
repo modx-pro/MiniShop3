@@ -46,7 +46,7 @@
                                         <form class="ms3_form mt-2">
                                             <input type="hidden" name="product_key" value="{$product.product_key}">
                                             <input type="hidden" name="ms3_action" value="cart/changeOption"/>
-                                            <select name="options[color]" class="form-select ms3_cart_options" style="width:200px;">
+                                            <select name="options[color]" class="form-select ms3_cart_options ms3-cart-options-select">
                                                 <option value="">Выбери цвет</option>
                                                 {foreach $product.color as $option}
                                                     <option value="{$option}"
@@ -60,8 +60,7 @@
                                         <form class="ms3_form  mt-2">
                                             <input type="hidden" name="product_key" value="{$product.product_key}">
                                             <input type="hidden" name="ms3_action" value="cart/changeOption"/>
-                                            <select name="options[size]" class="form-select mt-2 ms3_cart_options"
-                                                    style="width:200px;">
+                                            <select name="options[size]" class="form-select mt-2 ms3_cart_options ms3-cart-options-select">
                                                 <option value="">Выбери размер</option>
                                                 {foreach $product.size as $option}
                                                     <option value="{$option}"
@@ -83,7 +82,7 @@
                                 <button class="btn btn-primary qty-btn dec-qty" type="button">
                                     -
                                 </button>
-                                <input class="form-control qty-input" type="number" name="count" value="{$product.count}" min="0" style="max-width: 50px;">
+                                <input class="form-control qty-input ms3-cart-qty-input" type="number" name="count" value="{$product.count}" min="0">
                                 <button class="btn btn-primary qty-btn inc-qty" type="button">
                                     +
                                 </button>

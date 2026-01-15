@@ -5,7 +5,7 @@
             {* Success Header *}
             <div class="text-center mb-5">
                 <div class="mb-4">
-                    <svg class="text-success" width="80" height="80" fill="currentColor">
+                    <svg class="text-success thanks-checkmark" width="80" height="80" fill="currentColor">
                         <use xlink:href="#icon-check"/>
                     </svg>
                 </div>
@@ -25,7 +25,7 @@
             {* Additional Actions *}
             <div class="row justify-content-center mt-5">
                 <div class="col-lg-10">
-                    <div class="card border-0 bg-light">
+                    <div class="card border-0 bg-light thanks-card">
                         <div class="card-body text-center py-4">
                             <h5 class="card-title mb-3">Что дальше?</h5>
                             <p class="card-text text-muted mb-4">
@@ -52,36 +52,4 @@
             </div>
         </main>
     </div>
-
-    {* Custom Styles *}
-    <style>
-        /* Success checkmark animation */
-        @keyframes checkmark-appear {
-            0% {
-                transform: scale(0) rotate(0deg);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.2) rotate(10deg);
-            }
-            100% {
-                transform: scale(1) rotate(0deg);
-                opacity: 1;
-            }
-        }
-
-        svg use[xlink\:href="#icon-check"] {
-            animation: checkmark-appear 0.5s ease-out;
-        }
-
-        /* Card hover effect */
-        .card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-    </style>
 {/block}

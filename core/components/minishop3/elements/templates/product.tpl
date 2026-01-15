@@ -27,7 +27,7 @@
                     <div class="product-info">
                         {* Производитель *}
                         {if $vendor_name?}
-                            <div class="text-muted text-uppercase mb-2" style="font-size: 0.875rem; letter-spacing: 0.5px;">
+                            <div class="text-muted text-uppercase mb-2 product-vendor-name">
                                 {$vendor_name}
                             </div>
                         {/if}
@@ -43,7 +43,7 @@
 
                             {if $stock? && $stock > 0}
                                 <span class="badge bg-success">
-                                    <svg width="14" height="14" fill="currentColor" class="me-1" style="vertical-align: -2px;">
+                                    <svg width="14" height="14" fill="currentColor" class="me-1 product-badge-icon">
                                         <use href="#icon-check"/>
                                     </svg>
                                     В наличии
@@ -86,7 +86,7 @@
                         {* Цена *}
                         <div class="product-price mb-4 p-4 bg-light rounded">
                             {if $old_price? && $old_price > 0}
-                                <div class="old-price text-muted text-decoration-line-through mb-2" style="font-size: 1.25rem;">
+                                <div class="old-price text-muted text-decoration-line-through mb-2 product-old-price-lg">
                                     {$old_price} ₽
                                 </div>
 
@@ -146,7 +146,7 @@
                                     <div class="col-auto">
                                         <label class="form-label">{'ms3_cart_count' | lexicon}:</label>
                                         <input type="number" name="count" value="1" min="1"
-                                               class="form-control" style="width: 100px;">
+                                               class="form-control product-count-input">
                                     </div>
                                     <div class="col">
                                         <button type="submit" class="btn btn-primary btn-lg w-100">
@@ -157,14 +157,14 @@
                             </form>
 
                             {* Форма изменения количества (когда товар ЕСТЬ в корзине) *}
-                            <form method="post" class="ms3_form" data-cart-state="change" style="display: none;">
+                            <form method="post" class="ms3_form product-cart-controls-hidden" data-cart-state="change">
                                 <input type="hidden" name="product_key" value="">
                                 <input type="hidden" name="ms3_action" value="cart/change">
 
                                 <div class="row g-3 align-items-end">
                                     <div class="col-auto">
                                         <label class="form-label">{'ms3_cart_count' | lexicon}:</label>
-                                        <div class="input-group" style="width: 150px;">
+                                        <div class="input-group product-qty-group">
                                             <button class="btn btn-outline-primary qty-btn dec-qty" type="button">−</button>
                                             <input type="number" name="count" value="1" min="0"
                                                    class="form-control text-center qty-input">
@@ -250,7 +250,7 @@
                                 <tbody>
                                     {if $article?}
                                         <tr>
-                                            <td class="text-muted" style="width: 250px;">Артикул</td>
+                                            <td class="text-muted product-specs-label">Артикул</td>
                                             <td><strong>{$article}</strong></td>
                                         </tr>
                                     {/if}
@@ -352,62 +352,6 @@
             </div>
         </main>
     </div>
-
-    {* Дополнительные стили *}
-    <style>
-        .product-gallery .main-image {
-            position: relative;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-        }
-
-        .product-gallery .main-image img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .option-btn {
-            min-width: 60px;
-            transition: all 0.2s ease;
-        }
-
-        .option-btn:hover,
-        .option-btn.active {
-            background-color: var(--bs-primary);
-            color: white;
-            border-color: var(--bs-primary);
-        }
-
-        .product-price {
-            border: 2px solid #e9ecef;
-        }
-
-        .content-section {
-            padding: 1.5rem 0;
-        }
-
-        .delivery-option {
-            transition: all 0.2s ease;
-        }
-
-        .delivery-option:hover {
-            box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .nav-tabs .nav-link {
-            color: #6c757d;
-            font-weight: 500;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--bs-primary);
-        }
-    </style>
 
     {* JavaScript для выбора опций *}
     <script>
