@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0-beta1] - 2026-01-16
+
+### Added
+- Order validation for delivery required fields (from `validation_rules`)
+- Customer data validation (email/phone) when creating from order
+- Customer creation during order finalization from address data
+- Duplicate customer handling during order finalization
+- Validation error lexicons for order fields (ru/en)
+- OrderFinalizeService for order finalization logic
+
+### Changed
+- "Create Order" button renamed to "Create Draft Order"
+- Custom routes can now override system routes
+- Modernized thumbnail generation API
+- Improved product selection UI in order management
+- Moved inline styles to centralized CSS file
+
+### Fixed
+- Automatic token renewal instead of error on expiration
+- Delivery required fields validation during order finalization
+- Customer creation flow in admin order management
+
 ## [1.1.0-beta1] - 2026-01-11
 
 ### Added
@@ -31,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Product options (color, size) saving in msProductOption table
 - Duplicate Delivery/Payment filters on Orders page
 - Field visibility saving in product properties management
+- Migration errors on clean installation
+- Default value error for `created_at` field
 
 ## [1.0.0-beta1] - 2026-01-05
 
