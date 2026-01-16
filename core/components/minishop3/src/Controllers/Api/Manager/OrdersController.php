@@ -401,6 +401,18 @@ class OrdersController
 
         // Handle customer creation
         if ($createCustomer && $customerId === 0) {
+            // Validate customer data - need at least email or phone
+            $email = trim($params['email'] ?? '');
+            $phone = trim($params['phone'] ?? '');
+
+            if (empty($email) && empty($phone)) {
+                return Response::error(
+                    $this->modx->lexicon('ms3_order_err_customer_contact'),
+                    400,
+                    ['email', 'phone']
+                )->getData();
+            }
+
             /** @var CustomerDuplicateChecker $duplicateChecker */
             $duplicateChecker = $this->modx->services->get('ms3_customer_duplicate_checker');
 
@@ -452,9 +464,9 @@ class OrdersController
         $order->set('uuid', (string) \Ramsey\Uuid\Uuid::uuid4());
         $order->set('token', md5(uniqid('ms3_mgr_', true)));
 
-        // Set status to "New" (not draft)
-        $statusNew = (int) $this->modx->getOption('ms3_status_new', null, 2);
-        $order->set('status_id', $statusNew);
+        // Set status to "Draft" - order will be finalized later
+        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1);
+        $order->set('status_id', $statusDraft);
 
         // Context
         $order->set('context', $params['context'] ?? 'web');
@@ -472,8 +484,8 @@ class OrdersController
         $order->set('payment_id', (int) ($params['payment_id'] ?? 0));
         $order->set('order_comment', $params['order_comment'] ?? '');
 
-        // Generate order number
-        $order->set('num', $this->generateOrderNum());
+        // Order number will be generated on finalization
+        $order->set('num', '');
 
         // Initial costs (will be recalculated after adding products)
         $order->set('cart_cost', 0);
@@ -504,15 +516,15 @@ class OrdersController
         }
         $address->save();
 
-        // Log order creation
+        // Log draft creation
         $this->getOrderLog()->addEntry(
             $order->get('id'),
             msOrderLog::ACTION_STATUS,
             [
                 'old_status_id' => 0,
-                'new_status_id' => $statusNew,
+                'new_status_id' => $statusDraft,
                 'old_status_name' => '',
-                'new_status_name' => $this->getStatusName($statusNew),
+                'new_status_name' => $this->getStatusName($statusDraft),
             ]
         );
 
@@ -521,7 +533,77 @@ class OrdersController
         $orderData = array_merge($orderData, $address->toArray());
         $orderData['customer_created'] = $createCustomer && $customerId > 0;
 
-        return Response::success($this->formatOrder($orderData), 'Order created successfully')->getData();
+        return Response::success($this->formatOrder($orderData), 'Order draft created')->getData();
+    }
+
+    /**
+     * Finalize order (convert draft to final order)
+     * POST /api/mgr/orders/{id}/finalize
+     *
+     * Triggers:
+     * - Validation (products, delivery, payment)
+     * - Cost calculation
+     * - Order number generation
+     * - Status change to "New"
+     * - Events (msOnBeforeCreateOrder, msOnCreateOrder, msOnChangeOrderStatus)
+     * - Notifications
+     *
+     * @param array $params Route parameters
+     *   - id: Order ID
+     *   - skip_notifications: bool - Skip sending notifications (optional)
+     *   - create_customer: bool - Create customer from order address data (optional)
+     *   - force_create_customer: bool - Force create even if duplicate found (optional)
+     * @return array Response
+     */
+    public function finalize(array $params = []): array
+    {
+        $orderId = (int) ($params['id'] ?? 0);
+        if (!$orderId) {
+            return Response::error('Order ID is required', 400)->getData();
+        }
+
+        $options = [
+            'skip_notifications' => !empty($params['skip_notifications']),
+            'create_customer' => !empty($params['create_customer']),
+            'force_create_customer' => !empty($params['force_create_customer']),
+        ];
+
+        /** @var \MiniShop3\Services\Order\OrderFinalizeService $finalizeService */
+        $finalizeService = $this->modx->services->get('ms3_order_finalize');
+
+        $result = $finalizeService->finalize($orderId, $options);
+
+        // Check if duplicate customer was found - return for user decision
+        if ($result['success'] && !empty($result['data']['duplicate_found'])) {
+            return Response::success($result['data'], 'Customer with matching data already exists')->getData();
+        }
+
+        if (!$result['success']) {
+            // Translate error message
+            $message = $result['message'] ?? 'ms3_err_unknown';
+            $translatedMessage = $this->modx->lexicon($message);
+            if ($translatedMessage === $message) {
+                $translatedMessage = $message;
+            }
+
+            return Response::error($translatedMessage, 400, $result['data'] ?? [])->getData();
+        }
+
+        // Reload order with full data
+        $order = $this->modx->getObject(msOrder::class, $orderId);
+        if (!$order) {
+            return Response::error('Order not found after finalization', 500)->getData();
+        }
+
+        $orderData = $order->toArray();
+
+        // Get address data
+        $address = $order->getOne('Address');
+        if ($address) {
+            $orderData = array_merge($orderData, $address->toArray());
+        }
+
+        return Response::success($this->formatOrder($orderData), 'ms3_order_finalized')->getData();
     }
 
     /**

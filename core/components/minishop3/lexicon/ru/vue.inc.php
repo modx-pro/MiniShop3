@@ -677,9 +677,9 @@ $_lang['ms3_model_field_combo_source'] = 'Источник данных (JSON)';
 $_lang['ms3_model_field_combo_source_hint'] = 'Оставьте пустым для использования конфигурации из файла. Заполните для переопределения.';
 
 // Order creation
-$_lang['ms3_order_create'] = 'Создать заказ';
+$_lang['ms3_order_create'] = 'Создать черновик заказа';
 $_lang['ms3_order_new'] = 'Новый заказ';
-$_lang['ms3_order_created'] = 'Заказ успешно создан';
+$_lang['ms3_order_created'] = 'Черновик заказа создан';
 $_lang['ms3_order_search_customer'] = 'Поиск клиента по имени, email или телефону...';
 $_lang['ms3_order_customer_hint'] = 'Начните вводить для поиска существующего клиента или заполните поля вручную';
 $_lang['ms3_order_no_customer'] = 'Клиент не выбран';
@@ -696,6 +696,32 @@ $_lang['customer_name'] = 'Имя';
 $_lang['ms3_customer_validation_email_or_phone'] = 'Для создания клиента необходимо указать email или телефон';
 $_lang['ms3_customer_validation_invalid_email'] = 'Указан некорректный email адрес';
 $_lang['warning'] = 'Внимание';
+
+// Order finalization (admin)
+$_lang['ms3_order_finalize_btn'] = 'Оформить заказ';
+$_lang['ms3_order_finalize_info'] = 'После формирования черновика заказа нажмите кнопку «Оформить заказ» для правильного проведения заказа в системе';
+$_lang['ms3_order_finalize_confirm'] = 'Подтверждение оформления заказа';
+$_lang['ms3_order_finalize_confirm_desc'] = 'После оформления заказ получит номер, статус изменится на «Новый», и будут отправлены уведомления.';
+$_lang['ms3_order_finalized'] = 'Заказ успешно оформлен';
+$_lang['ms3_order_finalize_error'] = 'Ошибка при оформлении заказа';
+$_lang['ms3_order_is_draft'] = 'Черновик';
+$_lang['ms3_order_err_validation'] = 'Ошибка валидации данных заказа';
+$_lang['ms3_order_err_products'] = 'В заказе нет товаров';
+$_lang['ms3_order_err_delivery_id'] = 'Не выбран способ доставки';
+$_lang['ms3_order_err_payment_id'] = 'Не выбран способ оплаты';
+$_lang['ms3_order_err_customer_id'] = 'Не указан покупатель';
+$_lang['ms3_order_err_customer_contact'] = 'Для создания клиента необходимо указать email или телефон';
+$_lang['ms3_order_err_email'] = 'Не указан email';
+$_lang['ms3_order_err_phone'] = 'Не указан телефон';
+$_lang['ms3_order_err_first_name'] = 'Не указано имя';
+$_lang['ms3_order_err_last_name'] = 'Не указана фамилия';
+$_lang['ms3_order_err_country'] = 'Не указана страна';
+$_lang['ms3_order_err_index'] = 'Не указан почтовый индекс';
+$_lang['ms3_order_err_region'] = 'Не указан регион';
+$_lang['ms3_order_err_city'] = 'Не указан город';
+$_lang['ms3_order_err_street'] = 'Не указана улица';
+$_lang['ms3_order_err_building'] = 'Не указан дом';
+$_lang['ms3_order_err_room'] = 'Не указана квартира/офис';
 
 // Filters
 $_lang['apply_filters'] = 'Применить фильтры';

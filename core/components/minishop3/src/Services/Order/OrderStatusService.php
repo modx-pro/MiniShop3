@@ -52,9 +52,10 @@ class OrderStatusService
      *
      * @param int $orderId The id of msOrder
      * @param int $statusId The id of msOrderStatus
+     * @param bool $skipNotifications Skip sending notifications (for admin finalization)
      * @return bool|string True on success, error message on failure
      */
-    public function change(int $orderId, int $statusId): bool|string
+    public function change(int $orderId, int $statusId, bool $skipNotifications = false): bool|string
     {
         /** @var msOrder|null $msOrder */
         $msOrder = $this->modx->getObject(msOrder::class, ['id' => $orderId]);
@@ -117,8 +118,10 @@ class OrderStatusService
                 return $response['message'];
             }
 
-            // Send notifications via NotificationManager
-            $this->sendNotifications($msOrder, $status, $oldStatus);
+            // Send notifications via NotificationManager (unless skipped)
+            if (!$skipNotifications) {
+                $this->sendNotifications($msOrder, $status, $oldStatus);
+            }
         }
 
         return true;
