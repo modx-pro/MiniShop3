@@ -129,7 +129,10 @@ class OrdersPageService extends CustomerPageService
             $ordersData[] = is_string($chunk) ? $chunk : '';
         }
 
-        $statuses = $this->modx->getIterator(msOrderStatus::class, ['id:!=' => 1], ['sortby' => 'rank']);
+        $statusQuery = $this->modx->newQuery(msOrderStatus::class);
+        $statusQuery->where(['id:!=' => 1]);
+        $statusQuery->sortby('position', 'ASC');
+        $statuses = $this->modx->getIterator(msOrderStatus::class, $statusQuery);
         $statusesData = [];
         /** @var msOrderStatus $status */
         foreach ($statuses as $status) {
@@ -316,7 +319,10 @@ class OrdersPageService extends CustomerPageService
             $ordersData[] = $orderData;
         }
 
-        $statuses = $this->modx->getIterator(msOrderStatus::class, ['id:!=' => 1], ['sortby' => 'rank']);
+        $statusQuery = $this->modx->newQuery(msOrderStatus::class);
+        $statusQuery->where(['id:!=' => 1]);
+        $statusQuery->sortby('position', 'ASC');
+        $statuses = $this->modx->getIterator(msOrderStatus::class, $statusQuery);
         $statusesData = [];
         /** @var msOrderStatus $status */
         foreach ($statuses as $status) {
