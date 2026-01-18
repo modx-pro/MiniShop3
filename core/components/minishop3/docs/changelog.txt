@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic token renewal instead of error on expiration
 - Delivery required fields validation during order finalization
 - Customer creation flow in admin order management
+- Gallery upload/delete 500 error (incorrect getObject/getIterator usage, rank → position field)
 
 ## [1.1.0-beta1] - 2026-01-11
 
