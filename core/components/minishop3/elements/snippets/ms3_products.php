@@ -17,6 +17,9 @@ use ModxPro\PdoTools\Fetch;
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 
+// Load lexicons for template (cart buttons)
+$modx->lexicon->load('minishop3:cart');
+
 $ms3->loadMap();
 
 /** @var Fetch $pdoFetch */
