@@ -66,54 +66,54 @@ $_lang['ms3_customer_err_register_rate_limit'] = 'Registration limit exceeded. P
 $_lang['ms3_customer_email_verified'] = 'Email successfully verified';
 $_lang['ms3_customer_err_email_verification_invalid'] = 'Invalid or expired verification token';
 $_lang['ms3_email_verification_sent'] = 'Verification email has been sent';
-$_lang['ms3_email_verification_cooldown'] = 'Please wait {seconds} seconds before requesting another email';
+$_lang['ms3_email_verification_cooldown'] = 'Please wait [[+seconds]] seconds before requesting another email';
 $_lang['ms3_email_verification_send_failed'] = 'Failed to send verification email';
 $_lang['ms3_email_already_verified'] = 'Email is already verified';
-$_lang['ms3_email_verification_subject'] = '{site}: Email Verification';
-$_lang['ms3_email_verification_body'] = 'Hello, {first_name}!
+$_lang['ms3_email_verification_subject'] = '[[+site]]: Email Verification';
+$_lang['ms3_email_verification_body'] = 'Hello, [[+first_name]]!
 
 To verify your email address, please click the following link:
-{url}
+[[+url]]
 
-This link is valid for {ttl_hours} hours.
+This link is valid for [[+ttl_hours]] hours.
 
 Best regards,
-{site}';
+[[+site]]';
 
 // Password Reset
 $_lang['ms3_customer_forgot_password_success'] = 'Password reset instructions have been sent to your email';
 $_lang['ms3_customer_err_forgot_password_rate_limit'] = 'Too many requests. Please try again in an hour.';
 $_lang['ms3_customer_err_forgot_password_email_cooldown'] = 'Email already sent. Please try again in 5 minutes.';
-$_lang['ms3_password_reset_subject'] = '{site}: Password Reset';
-$_lang['ms3_password_reset_body'] = 'Hello, {first_name}!
+$_lang['ms3_password_reset_subject'] = '[[+site]]: Password Reset';
+$_lang['ms3_password_reset_body'] = 'Hello, [[+first_name]]!
 
 To reset your password, please click the following link:
-{url}
+[[+url]]
 
-This link is valid for {ttl_minutes} minutes.
+This link is valid for [[+ttl_minutes]] minutes.
 
 If you did not request a password reset, please ignore this email.
 
 Best regards,
-{site}';
+[[+site]]';
 $_lang['ms3_password_reset_complete'] = 'Password successfully changed';
 
 // Welcome Email
-$_lang['ms3_customer_welcome_subject'] = '{site}: Welcome!';
+$_lang['ms3_customer_welcome_subject'] = '[[+site]]: Welcome!';
 $_lang['ms3_customer_welcome_body'] = 'Hello!
 
-You have been registered on {site}.
+You have been registered on [[+site]].
 
-Email: {email}
-Password: {password}
+Email: [[+email]]
+Password: [[+password]]
 
 We recommend changing your password after first login.
 
 Best regards,
-{site}';
+[[+site]]';
 
 // Customer Account Pages
-$_lang['ms3_customer_err_invalid_service'] = 'Unknown service: {service}';
+$_lang['ms3_customer_err_invalid_service'] = 'Unknown service: [[+service]]';
 $_lang['ms3_customer_account_title'] = 'My Account';
 $_lang['ms3_customer_logout'] = 'Logout';
 $_lang['ms3_customer_err_validation'] = 'Validation error';

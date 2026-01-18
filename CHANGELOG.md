@@ -15,6 +15,36 @@
 
 ## Январь 2026
 
+### [2026-01-18] 📧 Исправлена отправка писем подтверждения email
+
+**Контекст:** Письма верификации email не отправлялись из-за отсутствующего импорта, а плейсхолдеры в письмах не заменялись на реальные значения.
+
+---
+
+#### 🐛 Исправлено
+
+**EmailVerificationService.php:**
+- Добавлен отсутствующий импорт `use MODX\Revolution\Mail\modMail`
+
+**Лексиконы (ru/en customer.inc.php):**
+- Формат плейсхолдеров изменён с `{name}` на `[[+name]]`
+- MODX `$modx->lexicon()` требует формат `[[+name]]` для замены значений
+- Исправлены шаблоны писем:
+  - Email verification (subject + body)
+  - Password reset (subject + body)
+  - Welcome email (subject + body)
+  - Сообщение об ошибке `ms3_customer_err_invalid_service`
+
+#### 📁 Файлы
+
+```
+core/components/minishop3/src/Services/Customer/EmailVerificationService.php
+core/components/minishop3/lexicon/ru/customer.inc.php
+core/components/minishop3/lexicon/en/customer.inc.php
+```
+
+---
+
 ### [2026-01-08] 🛒 Адаптивная кнопка корзины в карточках товаров
 
 **Контекст:** Улучшение UX каталога товаров — теперь в карточках товаров отображается актуальное состояние корзины.

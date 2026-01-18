@@ -66,54 +66,54 @@ $_lang['ms3_customer_err_register_rate_limit'] = 'Превышен лимит р
 $_lang['ms3_customer_email_verified'] = 'Email успешно подтвержден';
 $_lang['ms3_customer_err_email_verification_invalid'] = 'Неверный или истекший токен подтверждения';
 $_lang['ms3_email_verification_sent'] = 'Письмо с подтверждением отправлено на ваш email';
-$_lang['ms3_email_verification_cooldown'] = 'Повторная отправка возможна через {seconds} секунд';
+$_lang['ms3_email_verification_cooldown'] = 'Повторная отправка возможна через [[+seconds]] секунд';
 $_lang['ms3_email_verification_send_failed'] = 'Ошибка отправки письма';
 $_lang['ms3_email_already_verified'] = 'Email уже подтвержден';
-$_lang['ms3_email_verification_subject'] = '{site}: Подтверждение email';
-$_lang['ms3_email_verification_body'] = 'Здравствуйте, {first_name}!
+$_lang['ms3_email_verification_subject'] = '[[+site]]: Подтверждение email';
+$_lang['ms3_email_verification_body'] = 'Здравствуйте, [[+first_name]]!
 
 Для подтверждения вашего email адреса перейдите по ссылке:
-{url}
+[[+url]]
 
-Ссылка действительна в течение {ttl_hours} часов.
+Ссылка действительна в течение [[+ttl_hours]] часов.
 
 С уважением,
-{site}';
+[[+site]]';
 
 // Password Reset
 $_lang['ms3_customer_forgot_password_success'] = 'Инструкции по восстановлению пароля отправлены на email';
 $_lang['ms3_customer_err_forgot_password_rate_limit'] = 'Превышен лимит запросов. Попробуйте через час.';
 $_lang['ms3_customer_err_forgot_password_email_cooldown'] = 'Письмо уже было отправлено. Попробуйте через 5 минут.';
-$_lang['ms3_password_reset_subject'] = '{site}: Восстановление пароля';
-$_lang['ms3_password_reset_body'] = 'Здравствуйте, {first_name}!
+$_lang['ms3_password_reset_subject'] = '[[+site]]: Восстановление пароля';
+$_lang['ms3_password_reset_body'] = 'Здравствуйте, [[+first_name]]!
 
 Для сброса пароля перейдите по ссылке:
-{url}
+[[+url]]
 
-Ссылка действительна в течение {ttl_minutes} минут.
+Ссылка действительна в течение [[+ttl_minutes]] минут.
 
 Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.
 
 С уважением,
-{site}';
+[[+site]]';
 $_lang['ms3_password_reset_complete'] = 'Пароль успешно изменен';
 
 // Welcome Email
-$_lang['ms3_customer_welcome_subject'] = '{site}: Добро пожаловать!';
+$_lang['ms3_customer_welcome_subject'] = '[[+site]]: Добро пожаловать!';
 $_lang['ms3_customer_welcome_body'] = 'Здравствуйте!
 
-Вы зарегистрированы на сайте {site}.
+Вы зарегистрированы на сайте [[+site]].
 
-Email: {email}
-Пароль: {password}
+Email: [[+email]]
+Пароль: [[+password]]
 
 Рекомендуем сменить пароль после первого входа.
 
 С уважением,
-{site}';
+[[+site]]';
 
 // Customer Account Pages
-$_lang['ms3_customer_err_invalid_service'] = 'Неизвестный сервис: {service}';
+$_lang['ms3_customer_err_invalid_service'] = 'Неизвестный сервис: [[+service]]';
 $_lang['ms3_customer_account_title'] = 'Личный кабинет';
 $_lang['ms3_customer_logout'] = 'Выход';
 $_lang['ms3_customer_err_validation'] = 'Ошибка валидации данных';

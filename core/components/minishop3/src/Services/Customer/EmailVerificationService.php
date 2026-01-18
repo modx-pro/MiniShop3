@@ -4,6 +4,7 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
+use MODX\Revolution\Mail\modMail;
 use MODX\Revolution\modX;
 
 /**
