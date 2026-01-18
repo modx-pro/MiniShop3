@@ -20,13 +20,13 @@
 
         {* Products Table *}
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-hover align-middle ms3-order-table">
                 <thead class="table-light">
                     <tr>
                         <th>{'ms3_cart_title' | lexicon}</th>
-                        <th class="text-center" style="width: 100px;">{'ms3_cart_count' | lexicon}</th>
-                        <th class="text-end" style="width: 120px;">{'ms3_cart_price' | lexicon}</th>
-                        <th class="text-end" style="width: 120px;">{'ms3_cart_cost' | lexicon}</th>
+                        <th class="text-center col-count">{'ms3_cart_count' | lexicon}</th>
+                        <th class="text-end col-price">{'ms3_cart_price' | lexicon}</th>
+                        <th class="text-end col-cost">{'ms3_cart_cost' | lexicon}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,15 +34,14 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="flex-shrink-0" style="width: 60px;">
+                                    <div class="flex-shrink-0 ms3-order-product-thumb-wrapper">
                                         {if $product.thumb?}
                                             <img src="{$product.thumb}" alt="{$product.pagetitle}"
-                                                 class="img-thumbnail" style="max-width: 60px; max-height: 60px; object-fit: cover;"/>
+                                                 class="img-thumbnail ms3-order-product-thumb"/>
                                         {else}
                                             <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
                                                  srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                                                 alt="{$product.pagetitle}" class="img-thumbnail"
-                                                 style="max-width: 60px; max-height: 60px; object-fit: cover;"/>
+                                                 alt="{$product.pagetitle}" class="img-thumbnail ms3-order-product-thumb"/>
                                         {/if}
                                     </div>
                                     <div class="flex-grow-1">

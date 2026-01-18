@@ -17,6 +17,7 @@ import TabPanel from 'primevue/tabpanel'
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
+import Message from 'primevue/message'
 import AutoComplete from 'primevue/autocomplete'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -115,6 +116,20 @@ const isCreateMode = computed(() => {
   return orderId.value === 'new' || orderId.value === 0
 })
 
+// Draft status ID (typically 1)
+const draftStatusId = computed(() => {
+  return window.ms3?.config?.status_draft || 1
+})
+
+// Check if order is in draft status
+const isDraft = computed(() => {
+  if (!order.value) return false
+  return parseInt(order.value.status_id) === parseInt(draftStatusId.value)
+})
+
+// Finalize state
+const finalizing = ref(false)
+
 /**
  * Group fields by sections
  */
@@ -194,7 +209,8 @@ async function loadOrder() {
       loadOrderFields(),
       loadAddressFields(),
       loadOrderExtraFields(),
-      loadAddressExtraFields()
+      loadAddressExtraFields(),
+      loadOrderCustomer()
     ])
   } catch (error) {
     console.error('[OrderView] Error loading order:', error)
@@ -206,6 +222,30 @@ async function loadOrder() {
     })
   } finally {
     loading.value = false
+  }
+}
+
+/**
+ * Load customer data for the order (if customer_id exists)
+ */
+async function loadOrderCustomer() {
+  const customerId = order.value?.customer_id
+  if (!customerId || customerId === 0) {
+    selectedCustomer.value = null
+    return
+  }
+
+  try {
+    const response = await request.get(`/api/mgr/customers/${customerId}`)
+    if (response && response.id) {
+      selectedCustomer.value = {
+        ...response,
+        display: `${response.first_name || ''} ${response.last_name || ''} (${response.email || response.phone || ''})`
+      }
+    }
+  } catch (error) {
+    console.error('[OrderView] Error loading customer:', error)
+    selectedCustomer.value = null
   }
 }
 
@@ -1104,6 +1144,93 @@ async function saveOrder() {
 }
 
 /**
+ * Finalize order (convert draft to final order)
+ * Shows confirmation dialog first
+ */
+function confirmFinalizeOrder() {
+  confirm.require({
+    message: _('ms3_order_finalize_confirm_desc'),
+    header: _('ms3_order_finalize_confirm'),
+    icon: 'pi pi-check-circle',
+    acceptLabel: _('ms3_order_finalize_btn'),
+    rejectLabel: _('cancel'),
+    accept: () => {
+      finalizeOrder()
+    }
+  })
+}
+
+/**
+ * Finalize order API call
+ */
+async function finalizeOrder(forceCreateCustomer = false) {
+  finalizing.value = true
+
+  try {
+    // Build request data
+    const requestData = {}
+
+    // If create customer checkbox is checked and no customer linked
+    if (createCustomerFromData.value && !order.value.customer_id) {
+      requestData.create_customer = true
+      if (forceCreateCustomer) {
+        requestData.force_create_customer = true
+      }
+    }
+
+    const response = await request.post(`/api/mgr/orders/${orderId.value}/finalize`, requestData)
+
+    // Check if duplicate customer was found
+    if (response.duplicate_found) {
+      // Store for later and show dialog
+      pendingOrderData.value = { finalize: true }
+      duplicateCustomer.value = response.customer
+      showDuplicateDialog.value = true
+      finalizing.value = false
+      return
+    }
+
+    toast.add({
+      severity: 'success',
+      summary: _('success'),
+      detail: _('ms3_order_finalized'),
+      life: 3000
+    })
+
+    // Reload order to get updated status and order number
+    await loadOrder()
+    await loadLogs()
+  } catch (error) {
+    console.error('[OrderView] Error finalizing order:', error)
+
+    // Show each validation error as separate toast
+    // Response structure: error.data.object.errors contains array of field names
+    const validationErrors = error.data?.object?.errors
+    if (validationErrors && Array.isArray(validationErrors) && validationErrors.length > 0) {
+      validationErrors.forEach(field => {
+        const fieldError = _(`ms3_order_err_${field}`) || field
+        toast.add({
+          severity: 'error',
+          summary: _('ms3_order_err_validation'),
+          detail: fieldError,
+          life: 5000
+        })
+      })
+    } else {
+      // Fallback to general error message
+      toast.add({
+        severity: 'error',
+        summary: _('error'),
+        detail: error.message || _('ms3_order_finalize_error'),
+        life: 5000
+      })
+    }
+  } finally {
+    finalizing.value = false
+  }
+}
+
+/**
  * Initialize empty order for create mode
  */
 async function initEmptyOrder() {
@@ -1310,7 +1437,34 @@ async function useDuplicateCustomer() {
     return
   }
 
-  // Set existing customer and create order without create_customer flag
+  // Check if this is from finalize or create
+  if (pendingOrderData.value.finalize) {
+    // For finalize: update order's customer_id and retry finalize
+    try {
+      // Update order with existing customer
+      await request.put(`/api/mgr/orders/${orderId.value}`, {
+        customer_id: duplicateCustomer.value.id
+      })
+
+      // Disable create customer flag and finalize
+      createCustomerFromData.value = false
+      await finalizeOrder()
+    } catch (error) {
+      console.error('[OrderView] Error updating order customer:', error)
+      toast.add({
+        severity: 'error',
+        summary: _('error'),
+        detail: error.message || _('error_saving_data'),
+        life: 5000
+      })
+    } finally {
+      pendingOrderData.value = null
+      duplicateCustomer.value = null
+    }
+    return
+  }
+
+  // For create: set existing customer and create order without create_customer flag
   selectedCustomer.value = duplicateCustomer.value
   pendingOrderData.value.customer_id = duplicateCustomer.value.id
   delete pendingOrderData.value.create_customer
@@ -1353,9 +1507,16 @@ async function createNewCustomerAnyway() {
   showDuplicateDialog.value = false
   duplicateCustomer.value = null
 
-  // Retry with force flag
-  await createOrder(true)
-  pendingOrderData.value = null
+  // Check if this is from finalize or create
+  if (pendingOrderData.value?.finalize) {
+    // Retry finalize with force flag
+    pendingOrderData.value = null
+    await finalizeOrder(true)
+  } else {
+    // Retry create with force flag
+    await createOrder(true)
+    pendingOrderData.value = null
+  }
 }
 
 /**
@@ -1395,6 +1556,9 @@ async function searchCustomers(event) {
 function onCustomerSelect(event) {
   const customer = event.value
   if (customer) {
+    // Set customer_id in order
+    order.value.customer_id = customer.id
+
     // Fill address fields from customer data
     order.value.first_name = customer.first_name || order.value.first_name
     order.value.last_name = customer.last_name || order.value.last_name
@@ -1408,6 +1572,10 @@ function onCustomerSelect(event) {
  */
 function clearCustomer() {
   selectedCustomer.value = null
+  // Clear customer_id in order
+  if (order.value) {
+    order.value.customer_id = 0
+  }
 }
 
 /**
@@ -1830,16 +1998,16 @@ onMounted(async () => {
             :minLength="2"
           >
             <template #option="{ option }">
-              <div class="product-suggestion">
+              <div class="ms3-product-suggestion">
                 <img
                   v-if="option.image"
                   :src="option.image"
                   :alt="option.pagetitle"
-                  class="product-suggestion-image"
+                  class="ms3-product-suggestion-image"
                 />
-                <div class="product-suggestion-info">
-                  <div class="product-suggestion-name">{{ option.pagetitle }}</div>
-                  <div class="product-suggestion-meta">
+                <div class="ms3-product-suggestion-info">
+                  <div class="ms3-product-suggestion-name">{{ option.pagetitle }}</div>
+                  <div class="ms3-product-suggestion-meta">
                     <span v-if="option.article" class="article">[{{ option.article }}]</span>
                     <span class="price">{{ formatPrice(option.price) }}</span>
                   </div>
@@ -2003,78 +2171,6 @@ onMounted(async () => {
       <TabView>
         <!-- Order Info Tab -->
         <TabPanel :header="_('order_info')">
-          <!-- Customer Search Section (only in create mode) -->
-          <Fieldset v-if="isCreateMode" :legend="_('order_customer')" class="mb-3" :toggleable="true">
-            <div class="customer-search-content">
-              <div class="customer-search-field">
-                <AutoComplete
-                  v-model="selectedCustomer"
-                  :suggestions="customerSuggestions"
-                  @complete="searchCustomers"
-                  @item-select="onCustomerSelect"
-                  optionLabel="display"
-                  :placeholder="_('ms3_order_search_customer')"
-                  :loading="searchingCustomers"
-                  class="w-full"
-                  :minLength="2"
-                >
-                  <template #option="{ option }">
-                    <div class="customer-suggestion">
-                      <div class="customer-suggestion-info">
-                        <div class="customer-suggestion-name">{{ option.first_name }} {{ option.last_name }}</div>
-                        <div class="customer-suggestion-meta">
-                          <span v-if="option.email" class="email">{{ option.email }}</span>
-                          <span v-if="option.phone" class="phone">{{ option.phone }}</span>
-                        </div>
-                        <div class="customer-suggestion-stats">
-                          <span v-if="option.orders_count">{{ _('orders') }}: {{ option.orders_count }}</span>
-                          <span v-if="option.total_spent">{{ _('total') }}: {{ formatPrice(option.total_spent) }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </AutoComplete>
-                <small class="customer-search-hint">{{ _('ms3_order_customer_hint') }}</small>
-              </div>
-
-              <!-- Selected customer info -->
-              <div v-if="selectedCustomer && selectedCustomer.id" class="selected-customer-info">
-                <div class="selected-customer-badge">
-                  <i class="pi pi-user"></i>
-                  <span class="customer-name">{{ selectedCustomer.first_name }} {{ selectedCustomer.last_name }}</span>
-                  <span v-if="selectedCustomer.email" class="customer-email">{{ selectedCustomer.email }}</span>
-                  <Button
-                    icon="pi pi-times"
-                    severity="secondary"
-                    text
-                    rounded
-                    size="small"
-                    @click="clearCustomer"
-                    :title="_('ms3_order_clear_customer')"
-                  />
-                </div>
-                <small class="text-success">{{ _('ms3_order_customer_selected') }}</small>
-              </div>
-              <div v-else class="no-customer-hint">
-                <i class="pi pi-info-circle"></i>
-                <span>{{ _('ms3_order_no_customer') }}</span>
-              </div>
-
-              <!-- Create customer checkbox -->
-              <div class="create-customer-checkbox mt-3">
-                <Checkbox
-                  v-model="createCustomerFromData"
-                  inputId="createCustomer"
-                  :binary="true"
-                  :disabled="!!selectedCustomer?.id"
-                />
-                <label for="createCustomer" class="ml-2" :class="{ 'text-muted': !!selectedCustomer?.id }">
-                  {{ _('ms3_order_create_customer_from_data') }}
-                </label>
-              </div>
-            </div>
-          </Fieldset>
-
           <!-- Static Order Summary Section (only in edit mode) -->
           <Fieldset v-if="!isCreateMode" :legend="_('order_summary')" class="mb-3 order-summary-section" :toggleable="false">
             <div class="order-summary-grid">
@@ -2206,6 +2302,24 @@ onMounted(async () => {
           <div v-if="orderFieldsBySection.length === 0" class="no-fields-message">
             <p>{{ _('ms3_model_fields_empty') }}</p>
           </div>
+
+          <!-- Draft order finalization panel -->
+          <Message v-if="!isCreateMode && isDraft" severity="info" :closable="false" class="finalize-info-panel mt-3">
+            <template #icon>
+              <i class="pi pi-info-circle"></i>
+            </template>
+            <div class="finalize-info-content">
+              <p class="finalize-info-text">{{ _('ms3_order_finalize_info') }}</p>
+              <Button
+                :label="_('ms3_order_finalize_btn')"
+                icon="pi pi-check-circle"
+                severity="success"
+                :loading="finalizing"
+                @click="confirmFinalizeOrder"
+                class="finalize-button"
+              />
+            </div>
+          </Message>
 
           <!-- Save/Create button -->
           <div class="actions-bar mt-3">
@@ -2383,8 +2497,80 @@ onMounted(async () => {
           </DataTable>
         </TabPanel>
 
-        <!-- Address Tab (dynamic fields grouped by sections) - hidden in create mode -->
-        <TabPanel v-if="!isCreateMode" :header="_('order_address')">
+        <!-- Address Tab (dynamic fields grouped by sections) -->
+        <TabPanel :header="_('order_address')">
+          <!-- Customer Search Section (in create mode or when order is draft) -->
+          <Fieldset v-if="isCreateMode || isDraft" :legend="_('order_customer')" class="mb-3" :toggleable="true">
+            <div class="customer-search-content">
+              <div class="customer-search-field">
+                <AutoComplete
+                  v-model="selectedCustomer"
+                  :suggestions="customerSuggestions"
+                  @complete="searchCustomers"
+                  @item-select="onCustomerSelect"
+                  optionLabel="display"
+                  :placeholder="_('ms3_order_search_customer')"
+                  :loading="searchingCustomers"
+                  class="w-full"
+                  :minLength="2"
+                >
+                  <template #option="{ option }">
+                    <div class="customer-suggestion">
+                      <div class="customer-suggestion-info">
+                        <div class="customer-suggestion-name">{{ option.first_name }} {{ option.last_name }}</div>
+                        <div class="customer-suggestion-meta">
+                          <span v-if="option.email" class="email">{{ option.email }}</span>
+                          <span v-if="option.phone" class="phone">{{ option.phone }}</span>
+                        </div>
+                        <div class="customer-suggestion-stats">
+                          <span v-if="option.orders_count">{{ _('orders') }}: {{ option.orders_count }}</span>
+                          <span v-if="option.total_spent">{{ _('total') }}: {{ formatPrice(option.total_spent) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </AutoComplete>
+                <small class="customer-search-hint">{{ _('ms3_order_customer_hint') }}</small>
+              </div>
+
+              <!-- Selected customer info -->
+              <div v-if="selectedCustomer && selectedCustomer.id" class="selected-customer-info">
+                <div class="selected-customer-badge">
+                  <i class="pi pi-user"></i>
+                  <span class="customer-name">{{ selectedCustomer.first_name }} {{ selectedCustomer.last_name }}</span>
+                  <span v-if="selectedCustomer.email" class="customer-email">{{ selectedCustomer.email }}</span>
+                  <Button
+                    icon="pi pi-times"
+                    severity="secondary"
+                    text
+                    rounded
+                    size="small"
+                    @click="clearCustomer"
+                    :title="_('ms3_order_clear_customer')"
+                  />
+                </div>
+                <small class="text-success">{{ _('ms3_order_customer_selected') }}</small>
+              </div>
+              <div v-else class="no-customer-hint">
+                <i class="pi pi-info-circle"></i>
+                <span>{{ _('ms3_order_no_customer') }}</span>
+              </div>
+
+              <!-- Create customer checkbox -->
+              <div class="create-customer-checkbox mt-3">
+                <Checkbox
+                  v-model="createCustomerFromData"
+                  inputId="createCustomer"
+                  :binary="true"
+                  :disabled="!!selectedCustomer?.id"
+                />
+                <label for="createCustomer" class="ml-2" :class="{ 'text-muted': !!selectedCustomer?.id }">
+                  {{ _('ms3_order_create_customer_from_data') }}
+                </label>
+              </div>
+            </div>
+          </Fieldset>
+
           <template v-for="section in addressFieldsBySection" :key="section.id || 'no_section'">
             <Fieldset :legend="section.label" class="mb-3" :toggleable="true">
               <div class="fields-grid">
@@ -2456,13 +2642,28 @@ onMounted(async () => {
             <p>{{ _('ms3_model_fields_empty') }}</p>
           </div>
 
-          <!-- Save button for address -->
+          <!-- Action buttons for address tab -->
           <div class="actions-bar mt-3">
             <Button
+              v-if="isCreateMode"
+              :label="_('ms3_order_create')"
+              icon="pi pi-plus"
+              severity="success"
+              :loading="saving"
+              @click="createOrder"
+            />
+            <Button
+              v-else
               :label="_('save')"
               icon="pi pi-check"
               :loading="saving"
               @click="saveOrder"
+            />
+            <Button
+              :label="_('cancel')"
+              icon="pi pi-times"
+              severity="secondary"
+              @click="goBack"
             />
           </div>
         </TabPanel>
@@ -2857,45 +3058,6 @@ onMounted(async () => {
   font-size: 0.875rem;
 }
 
-.product-suggestion {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.25rem 0;
-}
-
-.product-suggestion-image {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-}
-
-.product-suggestion-info {
-  flex: 1;
-}
-
-.product-suggestion-name {
-  font-weight: 500;
-  color: #1e293b;
-}
-
-.product-suggestion-meta {
-  font-size: 0.75rem;
-  color: #64748b;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.product-suggestion-meta .article {
-  color: #3b82f6;
-}
-
-.product-suggestion-meta .price {
-  font-weight: 500;
-}
-
 .selected-product-details {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -3119,6 +3281,120 @@ onMounted(async () => {
 .duplicate-customer-info .info-value {
   color: #1e293b;
   font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Finalize order info panel */
+.finalize-info-panel {
+  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: 8px;
+}
+
+.finalize-info-panel :deep(.p-message-wrapper) {
+  padding: 1rem 1.25rem;
+}
+
+.finalize-info-panel :deep(.p-message-icon) {
+  color: #3b82f6;
+  font-size: 1.25rem;
+}
+
+.finalize-info-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+
+.finalize-info-text {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  color: #1e40af;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.finalize-button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .finalize-info-content {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .finalize-info-text {
+    min-width: auto;
+  }
+
+  .finalize-button {
+    width: 100%;
+  }
+}
+</style>
+
+<style>
+/* AutoComplete input full width
+   .p- classes are excluded from postcss-prefix-selector */
+.add-product-form .p-autocomplete {
+  width: 100%;
+}
+
+.add-product-form .p-autocomplete-input {
+  width: 100%;
+}
+
+/* Product suggestion in AutoComplete dropdown
+   Uses .ms3- prefix to bypass postcss-prefix-selector (excluded in vite.config.js)
+   These styles work in teleported dropdowns rendered in <body> */
+.ms3-product-suggestion {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.ms3-product-suggestion-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.ms3-product-suggestion-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ms3-product-suggestion-name {
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ms3-product-suggestion-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ms3-product-suggestion-meta .article {
+  color: #3b82f6;
+}
+
+.ms3-product-suggestion-meta .price {
   font-weight: 500;
 }
 </style>

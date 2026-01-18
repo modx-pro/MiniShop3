@@ -734,6 +734,15 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
             return $controller->bulkDelete($data);
         });
+        // Finalize order (convert draft to final) - must be before /{id} route
+        $router->post('/{id}/finalize', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($params, $data);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
+            return $controller->finalize($allParams);
+        });
         $router->get('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
             return $controller->get($params);

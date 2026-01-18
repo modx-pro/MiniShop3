@@ -419,6 +419,7 @@ class ReferencesController extends BaseApiController
                 'Data.article',
                 'Data.price',
                 'Data.weight',
+                'Data.thumb',
                 'Data.image',
             ]);
 
@@ -429,19 +430,13 @@ class ReferencesController extends BaseApiController
             foreach ($this->modx->getIterator('MiniShop3\\Model\\msProduct', $c) as $product) {
                 $data = $product->toArray();
 
-                // Get thumbnail if image exists
-                $thumb = '';
-                if (!empty($data['image'])) {
-                    $thumb = $data['image'];
-                }
-
                 $products[] = [
                     'id' => (int)$data['id'],
                     'pagetitle' => $data['pagetitle'],
                     'article' => $data['article'] ?? '',
                     'price' => (float)($data['price'] ?? 0),
                     'weight' => (float)($data['weight'] ?? 0),
-                    'image' => $thumb,
+                    'image' => $data['thumb'] ?: $data['image'] ?: '',
                     'display' => $data['pagetitle'] . (!empty($data['article']) ? ' [' . $data['article'] . ']' : ''),
                 ];
             }

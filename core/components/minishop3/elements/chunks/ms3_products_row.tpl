@@ -4,7 +4,7 @@
         <meta itemprop="name" content="{$pagetitle}">
 
         {* Изображение товара с hover эффектом *}
-        <div class="position-relative overflow-hidden d-flex align-items-center justify-content-center" style="background: #f8f9fa; aspect-ratio: 1/1;">
+        <div class="position-relative overflow-hidden d-flex align-items-center justify-content-center product-image-wrapper">
             <a href="/{$id | url}" class="d-block product-image-link w-100 h-100 d-flex align-items-center justify-content-center">
                 {if $thumb?}
                     <img src="{$thumb}" class="product-image" alt="{$pagetitle}" title="{$pagetitle}" itemprop="image"/>
@@ -75,19 +75,19 @@
             {* Производитель и артикул в одной строке *}
             <div class="d-flex justify-content-between align-items-center mb-2">
                 {if $vendor_name?}
-                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                    <small class="text-muted text-uppercase fw-semibold product-vendor">
                         {$vendor_name}
                     </small>
                 {/if}
                 {if $article?}
-                    <small class="text-muted" style="font-size: 0.7rem;">
+                    <small class="text-muted product-article">
                         арт. {$article}
                     </small>
                 {/if}
             </div>
 
             {* Название товара *}
-            <h6 class="card-title mb-2 flex-grow-1" style="min-height: 2.8rem; line-height: 1.4;">
+            <h6 class="card-title mb-2 flex-grow-1">
                 <a href="/{$id | url}" class="text-decoration-none text-dark stretched-link product-title">
                     {$pagetitle}
                 </a>
@@ -96,7 +96,7 @@
             {* Краткие характеристики (если есть) *}
             {if $color || $size}
                 <div class="mb-2 pb-2 border-bottom">
-                    <div class="d-flex flex-wrap gap-1" style="font-size: 0.75rem;">
+                    <div class="d-flex flex-wrap gap-1 product-options">
                         {if $color}
                             {foreach $color as $opt}
                                 {if $opt@index < 3}
@@ -123,17 +123,17 @@
 
             {* Дополнительная информация *}
             <div class="mb-3">
-                <div class="d-flex flex-wrap gap-2" style="font-size: 0.75rem; color: #6c757d;">
+                <div class="d-flex flex-wrap gap-2 product-meta">
                     {if $weight > 0?}
                         <span>
-                            <svg width="14" height="14" fill="currentColor" class="me-1" style="vertical-align: -2px;">
+                            <svg width="14" height="14" fill="currentColor" class="me-1">
                                 <use href="#icon-box"/>
                             </svg>
                             {$weight} кг
                         </span>
                     {/if}
                     <span>
-                        <svg width="14" height="14" fill="currentColor" class="me-1" style="vertical-align: -2px;">
+                        <svg width="14" height="14" fill="currentColor" class="me-1">
                             <use href="#icon-truck"/>
                         </svg>
                         1-3 дня
@@ -146,25 +146,25 @@
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <div>
                         {if $old_price? && $old_price > 0}
-                            <div class="text-decoration-line-through text-muted small mb-1" style="font-size: 0.8rem;">
+                            <div class="text-decoration-line-through text-muted small mb-1 product-old-price">
                                 {$old_price}
                             </div>
                         {/if}
-                        <div class="fw-bold text-primary" style="font-size: 1.25rem;">
+                        <div class="fw-bold text-primary product-price">
                             {$price}
                         </div>
                     </div>
                 </div>
 
                 {* Форма добавления в корзину (показывается когда товара НЕТ в корзине) *}
-                <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add" style="z-index: 10;">
+                <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add">
                     <input type="hidden" name="id" value="{$id}">
                     <input type="hidden" name="count" value="1">
                     <input type="hidden" name="options" value="[]">
                     <input type="hidden" name="ms3_action" value="cart/add">
 
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary btn-sm fw-semibold" type="submit" style="padding: 0.5rem;">
+                        <button class="btn btn-primary btn-sm fw-semibold" type="submit">
                             <svg width="16" height="16" fill="currentColor" class="me-1">
                                 <use href="#icon-cart"/>
                             </svg>
@@ -174,23 +174,22 @@
                 </form>
 
                 {* Форма изменения количества (показывается когда товар ЕСТЬ в корзине) *}
-                <form method="post" class="ms3_form ms3-cart-controls position-relative" data-cart-state="change" style="z-index: 10; display: none;">
+                <form method="post" class="ms3_form ms3-cart-controls position-relative" data-cart-state="change">
                     <input type="hidden" name="product_key" value="">
                     <input type="hidden" name="ms3_action" value="cart/change">
 
                     <div class="d-flex align-items-center justify-content-between gap-2">
                         <div class="btn-group btn-group-sm flex-grow-1" role="group">
-                            <button class="btn btn-outline-primary qty-btn dec-qty" type="button" style="padding: 0.5rem 0.75rem; font-weight: bold; font-size: 1.1rem;">
+                            <button class="btn btn-outline-primary qty-btn dec-qty" type="button">
                                 −
                             </button>
                             <input type="number" name="count" value="1" min="0"
-                                class="form-control form-control-sm qty-input text-center border-primary"
-                                style="max-width: 50px; padding: 0.5rem 0.25rem;">
-                            <button class="btn btn-outline-primary qty-btn inc-qty" type="button" style="padding: 0.5rem 0.75rem; font-weight: bold; font-size: 1.1rem;">
+                                class="form-control form-control-sm qty-input text-center border-primary">
+                            <button class="btn btn-outline-primary qty-btn inc-qty" type="button">
                                 +
                             </button>
                         </div>
-                        <span class="badge bg-success text-white" style="padding: 0.5rem 0.75rem;">
+                        <span class="badge bg-success text-white cart-status-badge">
                             ✓ {'ms3_cart_in_cart' | lexicon}
                         </span>
                     </div>
@@ -199,54 +198,3 @@
         </div>
     </div>
 </div>
-
-<style>
-.product-card {
-    transition: all 0.3s ease;
-}
-
-.product-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
-}
-
-.product-image {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    transition: transform 0.3s ease;
-}
-
-.product-image-link:hover .product-image {
-    transform: scale(1.05);
-}
-
-.product-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.product-image-link:hover .product-overlay {
-    opacity: 1;
-}
-
-.product-title {
-    transition: color 0.2s ease;
-}
-
-.product-title:hover {
-    color: var(--bs-primary) !important;
-}
-
-.badge {
-    backdrop-filter: blur(4px);
-}
-</style>

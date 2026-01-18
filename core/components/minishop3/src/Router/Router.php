@@ -80,6 +80,9 @@ class Router
     /**
      * Add route
      *
+     * Routes are indexed by method:pattern key, allowing custom routes
+     * to override system routes with the same method and pattern.
+     *
      * @param string|array $method HTTP method (GET, POST, PUT, DELETE) or array of methods
      * @param string $pattern URL pattern
      * @param callable|string $handler Handler (closure or string 'Controller@method')
@@ -93,7 +96,16 @@ class Router
         $allMiddlewares = array_merge($this->currentMiddlewares ?? [], $middlewares);
 
         $route = new Route($method, $fullPattern, $handler, $allMiddlewares);
-        $this->routes[] = $route->toArray();
+
+        // Generate unique key for route override detection
+        // Normalize method(s) to uppercase and sort for consistent key
+        $methods = is_array($method) ? $method : [$method];
+        sort($methods);
+        $methodKey = implode('|', array_map('strtoupper', $methods));
+        $routeKey = $methodKey . ':' . $fullPattern;
+
+        // Store with key - allows custom routes to override system routes
+        $this->routes[$routeKey] = $route->toArray();
 
         return $route;
     }

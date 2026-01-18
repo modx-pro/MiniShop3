@@ -54,3 +54,4 @@ assets/customScript.js
 nul
 sync-exclude.txt
 copy-dist-exclude.txt
+tmpclaude-*

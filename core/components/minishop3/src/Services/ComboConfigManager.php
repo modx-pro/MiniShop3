@@ -27,7 +27,7 @@ use MODX\Revolution\modX;
  *     "valueField": "id",
  *     "labelField": "name",
  *     "where": {"active": true},
- *     "sort": {"rank": "ASC"}
+ *     "sort": {"position": "ASC"}
  *   }
  * }
  *

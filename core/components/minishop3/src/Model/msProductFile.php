@@ -156,26 +156,28 @@ class msProductFile extends xPDOSimpleObject
         }
 
         if (empty($thumbnails)) {
+            $defaultFormat = !empty($properties['thumbnailType']['value'])
+                ? $properties['thumbnailType']['value']
+                : 'jpg';
             $thumbnails = [
-                [
-                    'w' => 120,
-                    'h' => 90,
-                    'q' => 90,
-                    'zc' => 'T',
-                    'bg' => '000000',
-                    'f' => !empty($properties['thumbnailType']['value'])
-                        ? $properties['thumbnailType']['value']
-                        : 'jpg',
+                'small' => [
+                    'width' => 120,
+                    'height' => 120,
+                    'quality' => 90,
+                    'mode' => 'cover',
+                    'format' => $defaultFormat,
                 ],
             ];
         }
 
         foreach ($thumbnails as $k => $options) {
-            if (empty($options['f'])) {
-                $options['f'] = !empty($properties['thumbnailType']['value'])
+            // Set default format if not specified
+            if (empty($options['format'])) {
+                $options['format'] = !empty($properties['thumbnailType']['value'])
                     ? $properties['thumbnailType']['value']
                     : 'jpg';
             }
+            // Use key as name if not numeric
             if (empty($options['name']) && !is_numeric($k)) {
                 $options['name'] = $k;
             }
@@ -237,12 +239,16 @@ class msProductFile extends xPDOSimpleObject
      */
     public function saveThumbnail($raw_image, $options = [])
     {
-        $filename = $this->ms3->utils->pathinfo($this->get('file'), 'filename') . '.' . $options['f'];
+        $format = $options['format'] ?? 'jpg';
+        $width = $options['width'] ?? 0;
+        $height = $options['height'] ?? 0;
+
+        $filename = $this->ms3->utils->pathinfo($this->get('file'), 'filename') . '.' . $format;
         if (!empty($options['name'])) {
             $thumb_dir = preg_replace('#[^\w]#', '', $options['name']);
         }
         if (empty($thumb_dir)) {
-            $thumb_dir = $options['w'] . 'x' . $options['h'];
+            $thumb_dir = $width . 'x' . $height;
         }
         $path = $this->get('path') . $thumb_dir . '/';
 

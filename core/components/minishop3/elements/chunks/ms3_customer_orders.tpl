@@ -43,14 +43,14 @@
             {* Список заказов *}
             {if $orders_count > 0}
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle ms3-order-table">
                     <thead class="table-light">
                         <tr>
                             <th>{'ms3_customer_order_num' | lexicon}</th>
                             <th>{'ms3_customer_order_date' | lexicon}</th>
                             <th>{'ms3_customer_order_status' | lexicon}</th>
                             <th class="text-end">{'ms3_customer_order_total' | lexicon}</th>
-                            <th style="width: 120px;"></th>
+                            <th class="col-actions"></th>
                         </tr>
                     </thead>
                     <tbody>

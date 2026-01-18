@@ -111,7 +111,7 @@ class ProductImageService
                 'id' => $fileId,
                 'product_id' => $productId
             ])) {
-                $file->set('rank', $position);
+                $file->set('position', $position);
                 $file->save();
             }
         }
@@ -132,15 +132,27 @@ class ProductImageService
     {
         $productId = $productData->get('id');
 
-        /** @var msProductFile $file */
-        $file = $this->modx->getObject(msProductFile::class, [
+        // Получаем первое изображение (с минимальной позицией)
+        $c = $this->modx->newQuery(msProductFile::class);
+        $c->where([
             'product_id' => $productId,
             'parent_id' => 0,
             'type' => 'image'
-        ], ['sortby' => 'rank']);
+        ]);
+        $c->sortby('position', 'ASC');
+
+        /** @var msProductFile $file */
+        $file = $this->modx->getObject(msProductFile::class, $c);
 
         if ($file) {
-            $thumb = $file->get('thumbnail') ?: $file->get('url');
+            // Get thumbnail from child record (generated thumbnail)
+            /** @var msProductFile $thumbnailFile */
+            $thumbnailFile = $this->modx->getObject(msProductFile::class, [
+                'parent_id' => $file->get('id'),
+                'type' => 'image',
+            ]);
+            $thumb = $thumbnailFile ? $thumbnailFile->get('url') : $file->get('url');
+
             $productData->set('image', $file->get('url'));
             $productData->set('thumb', $thumb);
 

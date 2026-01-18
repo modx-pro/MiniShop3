@@ -48,78 +48,6 @@
         {/if}
     </div>
 
-    <style>
-        .ms3-gallery {
-            max-width: 100%;
-        }
-
-        .ms3-gallery-main {
-            margin-bottom: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .ms3-gallery-main .splide__slide {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            aspect-ratio: 1 / 1;
-        }
-
-        .ms3-gallery-main .splide__slide img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .ms3-gallery-main .splide__slide a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        .ms3-gallery-thumbs .splide__slide {
-            opacity: 0.6;
-            cursor: pointer;
-            border: 2px solid transparent;
-            border-radius: 4px;
-            overflow: hidden;
-            transition: all 0.2s ease;
-        }
-
-        .ms3-gallery-thumbs .splide__slide:hover {
-            opacity: 0.8;
-        }
-
-        .ms3-gallery-thumbs .splide__slide.is-active {
-            opacity: 1;
-            border-color: var(--bs-primary, #0d6efd);
-        }
-
-        .ms3-gallery-thumbs .splide__slide img {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-        }
-
-        /* Стрелки навигации */
-        .ms3-gallery-main .splide__arrow {
-            background: rgba(255, 255, 255, 0.9);
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .ms3-gallery-main:hover .splide__arrow {
-            opacity: 1;
-        }
-
-        .ms3-gallery-main .splide__arrow:hover {
-            background: #fff;
-        }
-    </style>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var mainSlider = document.getElementById('ms3-gallery-main');
@@ -181,20 +109,4 @@
                  alt="" title=""/>
         </div>
     </div>
-
-    <style>
-        .ms3-gallery-empty {
-            background: #f8f9fa;
-            border-radius: 8px;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ms3-gallery-placeholder img {
-            max-width: 60%;
-            opacity: 0.5;
-        }
-    </style>
 {/if}

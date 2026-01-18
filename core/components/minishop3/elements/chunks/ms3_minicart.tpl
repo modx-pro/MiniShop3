@@ -9,11 +9,11 @@
                 <div class="col-12 col-md-8 mt-2 mt-md-0 flex-grow-1 mb-4">
                     {var $image}
                     {if $product.thumb?}
-                        <img src="{$product.thumb}" alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100" style="max-height: 150px; object-fit: contain;"/>
+                        <img src="{$product.thumb}" alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100 ms3-cart-thumb"/>
                     {else}
                         <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
                              srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                             alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100" style="max-height: 150px; object-fit: contain;"/>
+                             alt="{$product.pagetitle}" title="{$product.pagetitle}" class="mw-100 ms3-cart-thumb"/>
                     {/if}
                     {/var}
                     <div class="d-flex">
@@ -40,7 +40,7 @@
                                                     <button class="btn btn-primary qty-btn dec-qty" type="button">
                                                         -
                                                     </button>
-                                                    <input class="form-control qty-input" type="number" name="count" value="{$product.count}" min="0" style="max-width: 50px;">
+                                                    <input class="form-control qty-input ms3-cart-qty-input" type="number" name="count" value="{$product.count}" min="0">
                                                     <button class="btn btn-primary qty-btn inc-qty" type="button">
                                                         +
                                                     </button>
@@ -51,7 +51,7 @@
                                                     <form class="ms3_form mt-2">
                                                         <input type="hidden" name="product_key" value="{$product.product_key}">
                                                         <input type="hidden" name="ms3_action" value="cart/changeOption"/>
-                                                        <select name="options[color]" class="form-select ms3_cart_options" style="width:200px;">
+                                                        <select name="options[color]" class="form-select ms3_cart_options ms3-cart-options-select">
                                                             <option value="">Выбери цвет</option>
                                                             {foreach $product.color as $option}
                                                                 <option value="{$option}"
@@ -65,8 +65,7 @@
                                                     <form class="ms3_form  mt-2">
                                                         <input type="hidden" name="product_key" value="{$product.product_key}">
                                                         <input type="hidden" name="ms3_action" value="cart/changeOption"/>
-                                                        <select name="options[size]" class="form-select mt-2 ms3_cart_options"
-                                                                style="width:200px;">
+                                                        <select name="options[size]" class="form-select mt-2 ms3_cart_options ms3-cart-options-select">
                                                             <option value="">Выбери размер</option>
                                                             {foreach $product.size as $option}
                                                                 <option value="{$option}"

@@ -35,3 +35,19 @@ $_lang['ms3_err_token'] = 'Token not found or invalid';
 
 // General errors
 $_lang['ms3_err_unknown'] = 'Unknown error. Please try again later or contact the administrator.';
+
+// Order finalization (admin)
+$_lang['ms3_order_finalized'] = 'Order successfully finalized';
+$_lang['ms3_order_err_nf'] = 'Order not found';
+$_lang['ms3_order_err_already_finalized'] = 'Order is already finalized';
+$_lang['ms3_order_err_validation'] = 'Order data validation error';
+$_lang['ms3_order_finalize_btn'] = 'Finalize Order';
+$_lang['ms3_order_finalize_info'] = 'After preparing the order draft, click the "Finalize Order" button to properly process the order in the system';
+$_lang['ms3_order_finalize_confirm'] = 'Are you sure you want to finalize this order?';
+$_lang['ms3_order_finalize_confirm_desc'] = 'After finalization, the order will receive a number, status will change to "New", and notifications will be sent.';
+
+// Field validation errors (for finalization)
+$_lang['ms3_order_err_products'] = 'Order has no products';
+$_lang['ms3_order_err_delivery_id'] = 'Delivery method is not selected';
+$_lang['ms3_order_err_payment_id'] = 'Payment method is not selected';
+$_lang['ms3_order_err_customer_id'] = 'Customer is not specified';

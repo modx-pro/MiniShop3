@@ -677,9 +677,9 @@ $_lang['ms3_model_field_combo_source'] = 'Data Source (JSON)';
 $_lang['ms3_model_field_combo_source_hint'] = 'Leave empty to use file-based config. Fill to override.';
 
 // Order creation
-$_lang['ms3_order_create'] = 'Create Order';
+$_lang['ms3_order_create'] = 'Create Draft Order';
 $_lang['ms3_order_new'] = 'New Order';
-$_lang['ms3_order_created'] = 'Order created successfully';
+$_lang['ms3_order_created'] = 'Draft order created';
 $_lang['ms3_order_search_customer'] = 'Search customer by name, email or phone...';
 $_lang['ms3_order_customer_hint'] = 'Start typing to search existing customer or fill fields manually';
 $_lang['ms3_order_no_customer'] = 'No customer selected';
@@ -696,6 +696,32 @@ $_lang['customer_name'] = 'Name';
 $_lang['ms3_customer_validation_email_or_phone'] = 'Email or phone is required to create a customer';
 $_lang['ms3_customer_validation_invalid_email'] = 'Invalid email address';
 $_lang['warning'] = 'Warning';
+
+// Order finalization (admin)
+$_lang['ms3_order_finalize_btn'] = 'Finalize Order';
+$_lang['ms3_order_finalize_info'] = 'After preparing the order draft, click the "Finalize Order" button to properly process the order in the system';
+$_lang['ms3_order_finalize_confirm'] = 'Confirm Order Finalization';
+$_lang['ms3_order_finalize_confirm_desc'] = 'After finalization, the order will receive a number, status will change to "New", and notifications will be sent.';
+$_lang['ms3_order_finalized'] = 'Order successfully finalized';
+$_lang['ms3_order_finalize_error'] = 'Error finalizing order';
+$_lang['ms3_order_is_draft'] = 'Draft';
+$_lang['ms3_order_err_validation'] = 'Order data validation error';
+$_lang['ms3_order_err_products'] = 'Order has no products';
+$_lang['ms3_order_err_delivery_id'] = 'Delivery method is not selected';
+$_lang['ms3_order_err_payment_id'] = 'Payment method is not selected';
+$_lang['ms3_order_err_customer_id'] = 'Customer is not specified';
+$_lang['ms3_order_err_customer_contact'] = 'Email or phone is required to create a customer';
+$_lang['ms3_order_err_email'] = 'Email is not specified';
+$_lang['ms3_order_err_phone'] = 'Phone is not specified';
+$_lang['ms3_order_err_first_name'] = 'First name is not specified';
+$_lang['ms3_order_err_last_name'] = 'Last name is not specified';
+$_lang['ms3_order_err_country'] = 'Country is not specified';
+$_lang['ms3_order_err_index'] = 'Postal code is not specified';
+$_lang['ms3_order_err_region'] = 'Region is not specified';
+$_lang['ms3_order_err_city'] = 'City is not specified';
+$_lang['ms3_order_err_street'] = 'Street is not specified';
+$_lang['ms3_order_err_building'] = 'Building is not specified';
+$_lang['ms3_order_err_room'] = 'Apartment/office is not specified';
 
 // Bulk selection and actions
 $_lang['selected_count'] = 'Selected: {count}';

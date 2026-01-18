@@ -113,6 +113,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Order\OrderStatusService::class,
             'interface' => null,
         ],
+        'ms3_order_finalize' => [
+            'class' => \MiniShop3\Services\Order\OrderFinalizeService::class,
+            'interface' => null,
+        ],
         // Cart services
         'ms3_cart_item_manager' => [
             'class' => \MiniShop3\Services\Cart\CartItemManager::class,
@@ -427,6 +431,7 @@ class ServiceRegistry
             'ms3_order_cost_calculator',
             'ms3_order_user_resolver',
             'ms3_order_log',
+            'ms3_order_finalize',
             'ms3_cart_item_manager',
             'ms3_customer_address_manager',
         ];
