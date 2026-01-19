@@ -711,7 +711,7 @@
         <field key="xtype" dbtype="varchar" precision="50" phptype="string" null="false" default="textfield"/>
         <field key="visible" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
         <field key="required" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
-        <field key="rank" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
+        <field key="sort_order" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
         <field key="section_id" dbtype="int" precision="10" phptype="integer" null="true"/>
         <field key="width" dbtype="tinyint" precision="2" phptype="integer" null="false" default="6"/>
         <field key="placeholder" dbtype="varchar" precision="255" phptype="string" null="true"/>
@@ -722,10 +722,10 @@
             <column key="model" length="" collation="A" null="false"/>
             <column key="name" length="" collation="A" null="false"/>
         </index>
-        <index alias="idx_model_visible_rank" name="idx_model_visible_rank" primary="false" unique="false" type="BTREE">
+        <index alias="idx_model_visible_sort_order" name="idx_model_visible_sort_order" primary="false" unique="false" type="BTREE">
             <column key="model" length="" collation="A" null="false"/>
             <column key="visible" length="" collation="A" null="false"/>
-            <column key="rank" length="" collation="A" null="false"/>
+            <column key="sort_order" length="" collation="A" null="false"/>
         </index>
         <index alias="idx_section_id" name="idx_section_id" primary="false" unique="false" type="BTREE">
             <column key="section_id" length="" collation="A" null="true"/>

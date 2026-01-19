@@ -18,7 +18,7 @@ use xPDO\Om\xPDOSimpleObject;
  * @property string $xtype Widget type
  * @property bool $visible Show/hide field
  * @property bool $required Field is required
- * @property int $rank Sort order
+ * @property int $sort_order Sort order
  * @property int|null $section_id FK to msModelFieldSection
  * @property int $width Field width (1-12 grid columns)
  * @property string|null $placeholder Input placeholder

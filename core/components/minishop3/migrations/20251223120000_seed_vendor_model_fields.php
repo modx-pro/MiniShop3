@@ -36,7 +36,7 @@ final class SeedVendorModelFields extends AbstractMigration
                 'label' => null,
                 'lexicon_key' => 'ms3_section_vendor_info',
                 'hidden' => false,
-                'sort_order' => 10,
+                'rank' => 10,
                 'is_default' => true,
             ],
             [
@@ -45,7 +45,7 @@ final class SeedVendorModelFields extends AbstractMigration
                 'label' => null,
                 'lexicon_key' => 'ms3_section_vendor_address',
                 'hidden' => false,
-                'sort_order' => 20,
+                'rank' => 20,
                 'is_default' => true,
             ],
         ];
