@@ -17,6 +17,7 @@ $pdoFetch = $modx->services->get(Fetch::class);
 
 $modx->lexicon->load('minishop3:customer');
 $modx->lexicon->load('minishop3:default');
+$modx->lexicon->load('minishop3:cart'); // For order details template
 
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     if (!empty($_SESSION['ms3']['customer_token'])) {

@@ -52,7 +52,7 @@ class ModelFieldsController
             $query->where($criteria);
         }
         $query->sortby('model', 'ASC');
-        $query->sortby('rank', 'ASC');
+        $query->sortby('sort_order', 'ASC');
         $query->limit($limit, $start);
 
         // Load sections for this model
@@ -156,7 +156,7 @@ class ModelFieldsController
             'xtype' => $params['xtype'] ?? 'textfield',
             'visible' => isset($params['visible']) ? (bool)$params['visible'] : true,
             'required' => isset($params['required']) ? (bool)$params['required'] : false,
-            'rank' => (int)($params['rank'] ?? 0),
+            'sort_order' => (int)($params['sort_order'] ?? 0),
             'section_id' => isset($params['section_id']) ? (int)$params['section_id'] : null,
             'width' => (int)($params['width'] ?? 6),
             'placeholder' => $params['placeholder'] ?? null,
@@ -214,13 +214,13 @@ class ModelFieldsController
             return Response::error('Invalid model type', 400)->getData();
         }
 
-        $updateFields = ['model', 'name', 'label', 'xtype', 'visible', 'required', 'rank', 'section_id', 'width', 'placeholder', 'description', 'config'];
+        $updateFields = ['model', 'name', 'label', 'xtype', 'visible', 'required', 'sort_order', 'section_id', 'width', 'placeholder', 'description', 'config'];
         foreach ($updateFields as $fieldName) {
             if (array_key_exists($fieldName, $params)) {
                 $value = $params[$fieldName];
                 if (in_array($fieldName, ['visible', 'required'])) {
                     $value = (bool)$value;
-                } elseif (in_array($fieldName, ['rank', 'width'])) {
+                } elseif (in_array($fieldName, ['sort_order', 'width'])) {
                     $value = (int)$value;
                 } elseif ($fieldName === 'section_id') {
                     $value = $value ? (int)$value : null;
@@ -324,7 +324,7 @@ class ModelFieldsController
             'model' => $model,
             'visible' => true,
         ]);
-        $query->sortby('rank', 'ASC');
+        $query->sortby('sort_order', 'ASC');
 
         $results = [];
         foreach ($this->modx->getIterator(msModelField::class, $query) as $field) {
@@ -382,10 +382,10 @@ class ModelFieldsController
     }
 
     /**
-     * Update field ranks (batch update for drag-n-drop reordering)
+     * Update field sort orders (batch update for drag-n-drop reordering)
      * PUT /api/mgr/model-fields/ranks
      *
-     * @param array $params Array of {id, rank}
+     * @param array $params Array of {id, sort_order}
      * @return array Response
      */
     public function updateRanks(array $params = []): array
@@ -397,13 +397,13 @@ class ModelFieldsController
         }
 
         foreach ($ranks as $item) {
-            if (!isset($item['id']) || !isset($item['rank'])) {
+            if (!isset($item['id']) || !isset($item['sort_order'])) {
                 continue;
             }
 
             $field = $this->modx->getObject(msModelField::class, (int)$item['id']);
             if ($field) {
-                $field->set('rank', (int)$item['rank']);
+                $field->set('sort_order', (int)$item['sort_order']);
                 $field->save();
             }
         }

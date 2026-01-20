@@ -114,7 +114,7 @@ Ext.extend(ms3.panel.Gallery, MODx.Panel, {
             MODx.Ajax.request({
                 url: ms3.config.connector_url,
                 params: {
-                    action: 'MiniShop3\Processors\Product\Get',
+                    action: 'MiniShop3\\Processors\\Product\\Get',
                     id: this.record.id
                 },
                 listeners: {

@@ -59,15 +59,15 @@ final class SeedVendorModelFields extends AbstractMigration
 
         $vendorFields = [
             // Info section fields
-            ['model' => 'msVendor', 'name' => 'name', 'label' => 'ms3_vendor_name', 'xtype' => 'textfield', 'visible' => true, 'required' => true, 'rank' => 10],
-            ['model' => 'msVendor', 'name' => 'description', 'label' => 'ms3_vendor_description', 'xtype' => 'textarea', 'visible' => true, 'required' => false, 'rank' => 20],
-            ['model' => 'msVendor', 'name' => 'logo', 'label' => 'ms3_vendor_logo', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'rank' => 30],
-            ['model' => 'msVendor', 'name' => 'country', 'label' => 'ms3_vendor_country', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'rank' => 40],
-            ['model' => 'msVendor', 'name' => 'resource_id', 'label' => 'ms3_vendor_resource_id', 'xtype' => 'numberfield', 'visible' => true, 'required' => false, 'rank' => 50],
-                // Address section fields
-            ['model' => 'msVendor', 'name' => 'address', 'label' => 'ms3_vendor_address', 'xtype' => 'textarea', 'visible' => true, 'required' => false, 'rank' => 70],
-            ['model' => 'msVendor', 'name' => 'phone', 'label' => 'ms3_vendor_phone', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'rank' => 80],
-            ['model' => 'msVendor', 'name' => 'email', 'label' => 'ms3_vendor_email', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'rank' => 90],
+            ['model' => 'msVendor', 'name' => 'name', 'label' => 'ms3_vendor_name', 'xtype' => 'textfield', 'visible' => true, 'required' => true, 'sort_order' => 10],
+            ['model' => 'msVendor', 'name' => 'description', 'label' => 'ms3_vendor_description', 'xtype' => 'textarea', 'visible' => true, 'required' => false, 'sort_order' => 20],
+            ['model' => 'msVendor', 'name' => 'logo', 'label' => 'ms3_vendor_logo', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'sort_order' => 30],
+            ['model' => 'msVendor', 'name' => 'country', 'label' => 'ms3_vendor_country', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'sort_order' => 40],
+            ['model' => 'msVendor', 'name' => 'resource_id', 'label' => 'ms3_vendor_resource_id', 'xtype' => 'numberfield', 'visible' => true, 'required' => false, 'sort_order' => 50],
+            // Address section fields
+            ['model' => 'msVendor', 'name' => 'address', 'label' => 'ms3_vendor_address', 'xtype' => 'textarea', 'visible' => true, 'required' => false, 'sort_order' => 70],
+            ['model' => 'msVendor', 'name' => 'phone', 'label' => 'ms3_vendor_phone', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'sort_order' => 80],
+            ['model' => 'msVendor', 'name' => 'email', 'label' => 'ms3_vendor_email', 'xtype' => 'textfield', 'visible' => true, 'required' => false, 'sort_order' => 90],
         ];
 
         $fieldsTable->insert($vendorFields)->saveData();

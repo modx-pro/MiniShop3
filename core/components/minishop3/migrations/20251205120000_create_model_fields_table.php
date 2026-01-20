@@ -8,6 +8,11 @@ final class CreateModelFieldsTable extends AbstractMigration
 {
     public function change(): void
     {
+        // Skip if table already created by InitialSchema (xPDO)
+        if ($this->hasTable('ms3_model_fields')) {
+            return;
+        }
+
         $table = $this->table('ms3_model_fields', [
             'id' => true,
             'primary_key' => ['id'],
@@ -48,7 +53,7 @@ final class CreateModelFieldsTable extends AbstractMigration
                 'default' => false,
                 'comment' => 'Field is required',
             ])
-            ->addColumn('rank', 'integer', [
+            ->addColumn('sort_order', 'integer', [
                 'null' => false,
                 'default' => 0,
                 'comment' => 'Sort order',
@@ -80,9 +85,9 @@ final class CreateModelFieldsTable extends AbstractMigration
                 'unique' => true,
                 'name' => 'idx_model_name',
             ])
-            ->addIndex(['model', 'visible', 'rank'], [
+            ->addIndex(['model', 'visible', 'sort_order'], [
                 'unique' => false,
-                'name' => 'idx_model_visible_rank',
+                'name' => 'idx_model_visible_sort_order',
             ])
             ->addIndex(['section_id'], [
                 'unique' => false,

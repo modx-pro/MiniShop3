@@ -11,7 +11,7 @@ class GetList extends GetListProcessor
 {
     public $classKey = modContext::class;
     public $languageTopics = ['context'];
-    public $defaultSortField = 'rank';
+    public $defaultSortField = 'key'; // Fallback, actual sort is set in prepareQueryBeforeCount
 
 
     /**
@@ -22,6 +22,9 @@ class GetList extends GetListProcessor
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
         $c->select('key,name');
+
+        // 'rank' is reserved word in MySQL 8.0+, escape with backticks
+        $c->sortby('`rank`', 'ASC');
         $key = $this->getProperty('key');
         if (!empty($key)) {
             $c->where(['key' => $key]);

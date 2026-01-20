@@ -24,7 +24,7 @@ class msModelField extends \MiniShop3\Model\msModelField
             'xtype' => 'textfield',
             'visible' => 1,
             'required' => 0,
-            'rank' => 0,
+            'sort_order' => 0,
             'section_id' => null,
             'width' => 6,
             'placeholder' => null,
@@ -71,7 +71,7 @@ class msModelField extends \MiniShop3\Model\msModelField
                 'null' => false,
                 'default' => 0,
             ],
-            'rank' => [
+            'sort_order' => [
                 'dbtype' => 'int',
                 'precision' => '10',
                 'phptype' => 'integer',
@@ -127,8 +127,8 @@ class msModelField extends \MiniShop3\Model\msModelField
                     ],
                 ],
             ],
-            'idx_model_visible_rank' => [
-                'alias' => 'idx_model_visible_rank',
+            'idx_model_visible_sort_order' => [
+                'alias' => 'idx_model_visible_sort_order',
                 'primary' => false,
                 'unique' => false,
                 'type' => 'BTREE',
@@ -143,7 +143,7 @@ class msModelField extends \MiniShop3\Model\msModelField
                         'collation' => 'A',
                         'null' => false,
                     ],
-                    'rank' => [
+                    'sort_order' => [
                         'length' => '',
                         'collation' => 'A',
                         'null' => false,

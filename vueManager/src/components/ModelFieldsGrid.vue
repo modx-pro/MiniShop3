@@ -183,7 +183,7 @@ function createField() {
     xtype: 'textfield',
     visible: true,
     required: false,
-    rank: fields.value.length * 10,
+    sort_order: fields.value.length * 10,
     section_id: null,
     width: 6,
     placeholder: '',
@@ -336,10 +336,10 @@ async function toggleVisible(field) {
  * Handle drag end - save new order
  */
 async function onDragEnd() {
-  // Update ranks based on new order
+  // Update sort_order based on new order
   const ranks = fields.value.map((field, index) => ({
     id: field.id,
-    rank: index * 10
+    sort_order: index * 10
   }))
 
   try {
@@ -908,9 +908,9 @@ onMounted(async () => {
             </div>
 
             <div class="field">
-              <label class="block mb-2 font-medium">{{ _('ms3_model_field_rank') }}</label>
+              <label class="block mb-2 font-medium">{{ _('ms3_model_field_sort_order') }}</label>
               <InputNumber
-                v-model="editingField.rank"
+                v-model="editingField.sort_order"
                 :min="0"
                 style="width: 100%;"
               />

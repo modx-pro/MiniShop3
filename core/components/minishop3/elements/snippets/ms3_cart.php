@@ -19,6 +19,9 @@ if (isset($_POST['render'])) {
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 
+// Load lexicons for template
+$modx->lexicon->load('minishop3:cart');
+
 if (!empty($scriptProperties['customer_token'])) {
     $token = $scriptProperties['customer_token'];
 } elseif (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {

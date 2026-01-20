@@ -33,7 +33,7 @@ if (!in_array($options[xPDOTransport::PACKAGE_ACTION], [
 /**
  * Собирает метрики окружения
  */
-$collectMetrics = function () use ($modx, $options): array {
+$collectMetrics = function () use ($modx, $options, $transport): array {
     // Определяем тип установки и предыдущую версию
     $installType = 'fresh';
     $previousVersion = null;
@@ -118,9 +118,18 @@ $collectMetrics = function () use ($modx, $options): array {
     // Тип ОС
     $osType = PHP_OS_FAMILY; // Linux, Windows, Darwin, etc.
 
+    // Получаем версию из signature транспорта (например: minishop3-1.2.2-beta1)
+    $packageVersion = 'unknown';
+    if (!empty($transport->signature)) {
+        $parts = explode('-', $transport->signature, 2);
+        if (isset($parts[1])) {
+            $packageVersion = $parts[1];
+        }
+    }
+
     return [
         'package_name' => 'MiniShop3',
-        'package_version' => '1.0.0-beta1',
+        'package_version' => $packageVersion,
         'ms3_install_type' => $installType,
         'ms3_previous_version' => $previousVersion,
         'php_version' => PHP_VERSION,

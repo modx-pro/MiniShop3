@@ -15,6 +15,113 @@
 
 ## Январь 2026
 
+### [2026-01-20] 🚀 Версия 1.2.2-beta1
+
+**Тип релиза:** PATCH (beta) — исправления багов
+
+---
+
+#### 🐛 Исправлено
+
+**Галерея изображений:**
+- Исправлено экранирование namespace процессора в JavaScript (`MiniShop3\\Processors\\Product\\Get`)
+
+**Чистая установка:**
+- Миграции создания таблиц проверяют существование перед созданием
+- Все seed-миграции используют `sort_order` (совместимость с xPDO моделями)
+
+#### 📁 Файлы
+
+```
+assets/components/minishop3/js/mgr/product/gallery/gallery.panel.js
+core/components/minishop3/migrations/20251205120000_create_model_fields_table.php
+core/components/minishop3/migrations/20251205120100_seed_model_fields.php
+core/components/minishop3/migrations/20251211120000_create_model_field_sections_table.php
+core/components/minishop3/migrations/20251223120000_seed_vendor_model_fields.php
+```
+
+---
+
+### [2026-01-20] 🚀 Версия 1.2.1-beta1
+
+**Тип релиза:** PATCH (beta) — исправления багов
+
+---
+
+#### 🐛 Исправлено
+
+**Совместимость с MySQL 8.0:**
+- Поле `rank` переименовано в `sort_order` в таблицах `ms3_model_fields` и `ms3_model_field_sections`
+- `rank` — зарезервированное слово в MySQL 8.0+ (window functions)
+- Для системной таблицы `modContext` (MODX core) добавлено экранирование бэктиками
+
+**Отправка писем подтверждения email:**
+- Добавлен отсутствующий импорт `modMail`
+- Исправлен формат плейсхолдеров в лексиконах (`{name}` → `[[+name]]`)
+
+**Загрузка лексиконов:**
+- Добавлена загрузка лексикона `minishop3:cart` в сниппеты
+
+#### 🔄 Изменено
+
+**Грид заказов в админке:**
+- Статус заказа теперь использует relation-поля вместо прямого JOIN
+- Новые поля: `order_status` (badge), `status_color`, `status_name` (relation)
+- Поля `delivery_name`, `payment_name` переведены на тип `relation`
+
+#### 📁 Миграции
+
+| Миграция | Описание |
+|----------|----------|
+| `20260119120000` | Переименование `rank` → `sort_order` |
+| `20260119220000` | Обновление полей статуса в гриде заказов |
+
+#### 📁 Файлы
+
+```
+core/components/minishop3/src/MiniShop3.php
+core/components/minishop3/schema/minishop3.mysql.schema.xml
+core/components/minishop3/src/Model/msModelField.php
+core/components/minishop3/src/Model/mysql/msModelField.php
+core/components/minishop3/src/Controllers/Api/Manager/ModelFieldsController.php
+core/components/minishop3/src/Processors/System/Element/Context/GetList.php
+core/components/minishop3/lexicon/ru/vue.inc.php
+core/components/minishop3/lexicon/en/vue.inc.php
+vueManager/src/components/ModelFieldsGrid.vue
+```
+
+---
+
+### [2026-01-18] 📧 Исправлена отправка писем подтверждения email
+
+**Контекст:** Письма верификации email не отправлялись из-за отсутствующего импорта, а плейсхолдеры в письмах не заменялись на реальные значения.
+
+---
+
+#### 🐛 Исправлено
+
+**EmailVerificationService.php:**
+- Добавлен отсутствующий импорт `use MODX\Revolution\Mail\modMail`
+
+**Лексиконы (ru/en customer.inc.php):**
+- Формат плейсхолдеров изменён с `{name}` на `[[+name]]`
+- MODX `$modx->lexicon()` требует формат `[[+name]]` для замены значений
+- Исправлены шаблоны писем:
+  - Email verification (subject + body)
+  - Password reset (subject + body)
+  - Welcome email (subject + body)
+  - Сообщение об ошибке `ms3_customer_err_invalid_service`
+
+#### 📁 Файлы
+
+```
+core/components/minishop3/src/Services/Customer/EmailVerificationService.php
+core/components/minishop3/lexicon/ru/customer.inc.php
+core/components/minishop3/lexicon/en/customer.inc.php
+```
+
+---
+
 ### [2026-01-08] 🛒 Адаптивная кнопка корзины в карточках товаров
 
 **Контекст:** Улучшение UX каталога товаров — теперь в карточках товаров отображается актуальное состояние корзины.
