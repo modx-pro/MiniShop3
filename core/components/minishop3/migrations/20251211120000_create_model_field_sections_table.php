@@ -8,6 +8,11 @@ final class CreateModelFieldSectionsTable extends AbstractMigration
 {
     public function change(): void
     {
+        // Skip if table already created by InitialSchema (xPDO)
+        if ($this->hasTable('ms3_model_field_sections')) {
+            return;
+        }
+
         // Create sections table
         $table = $this->table('ms3_model_field_sections', [
             'id' => true,
