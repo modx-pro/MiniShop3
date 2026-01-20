@@ -15,6 +15,33 @@
 
 ## Январь 2026
 
+### [2026-01-20] 🚀 Версия 1.2.2-beta1
+
+**Тип релиза:** PATCH (beta) — исправления багов
+
+---
+
+#### 🐛 Исправлено
+
+**Галерея изображений:**
+- Исправлено экранирование namespace процессора в JavaScript (`MiniShop3\\Processors\\Product\\Get`)
+
+**Чистая установка:**
+- Миграции создания таблиц проверяют существование перед созданием
+- Все seed-миграции используют `sort_order` (совместимость с xPDO моделями)
+
+#### 📁 Файлы
+
+```
+assets/components/minishop3/js/mgr/product/gallery/gallery.panel.js
+core/components/minishop3/migrations/20251205120000_create_model_fields_table.php
+core/components/minishop3/migrations/20251205120100_seed_model_fields.php
+core/components/minishop3/migrations/20251211120000_create_model_field_sections_table.php
+core/components/minishop3/migrations/20251223120000_seed_vendor_model_fields.php
+```
+
+---
+
 ### [2026-01-20] 🚀 Версия 1.2.1-beta1
 
 **Тип релиза:** PATCH (beta) — исправления багов
