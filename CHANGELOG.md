@@ -15,6 +15,56 @@
 
 ## Январь 2026
 
+### [2026-01-20] 🚀 Версия 1.2.1-beta1
+
+**Тип релиза:** PATCH (beta) — исправления багов
+
+---
+
+#### 🐛 Исправлено
+
+**Совместимость с MySQL 8.0:**
+- Поле `rank` переименовано в `sort_order` в таблицах `ms3_model_fields` и `ms3_model_field_sections`
+- `rank` — зарезервированное слово в MySQL 8.0+ (window functions)
+- Для системной таблицы `modContext` (MODX core) добавлено экранирование бэктиками
+
+**Отправка писем подтверждения email:**
+- Добавлен отсутствующий импорт `modMail`
+- Исправлен формат плейсхолдеров в лексиконах (`{name}` → `[[+name]]`)
+
+**Загрузка лексиконов:**
+- Добавлена загрузка лексикона `minishop3:cart` в сниппеты
+
+#### 🔄 Изменено
+
+**Грид заказов в админке:**
+- Статус заказа теперь использует relation-поля вместо прямого JOIN
+- Новые поля: `order_status` (badge), `status_color`, `status_name` (relation)
+- Поля `delivery_name`, `payment_name` переведены на тип `relation`
+
+#### 📁 Миграции
+
+| Миграция | Описание |
+|----------|----------|
+| `20260119120000` | Переименование `rank` → `sort_order` |
+| `20260119220000` | Обновление полей статуса в гриде заказов |
+
+#### 📁 Файлы
+
+```
+core/components/minishop3/src/MiniShop3.php
+core/components/minishop3/schema/minishop3.mysql.schema.xml
+core/components/minishop3/src/Model/msModelField.php
+core/components/minishop3/src/Model/mysql/msModelField.php
+core/components/minishop3/src/Controllers/Api/Manager/ModelFieldsController.php
+core/components/minishop3/src/Processors/System/Element/Context/GetList.php
+core/components/minishop3/lexicon/ru/vue.inc.php
+core/components/minishop3/lexicon/en/vue.inc.php
+vueManager/src/components/ModelFieldsGrid.vue
+```
+
+---
+
 ### [2026-01-18] 📧 Исправлена отправка писем подтверждения email
 
 **Контекст:** Письма верификации email не отправлялись из-за отсутствующего импорта, а плейсхолдеры в письмах не заменялись на реальные значения.
