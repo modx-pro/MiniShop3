@@ -11,6 +11,7 @@ ms3.grid.Products = function (config) {
             parent: config.resource,
             sort: 'menuindex',
             dir: 'asc',
+            nested: MODx.config['ms3_category_show_nested_products'] != 0 ? 1 : 0,
         },
         multi_select: true,
         stateful: true,
@@ -203,7 +204,7 @@ Ext.extend(ms3.grid.Products, ms3.grid.Default, {
             width: 200,
             boxLabel: _('ms3_category_show_nested'),
             ctCls: 'tbar-checkbox',
-            checked: MODx.config['ms3_category_show_nested_products'] == 1,
+            checked: MODx.config['ms3_category_show_nested_products'] != 0,
             listeners: {
                 check: {fn: this.nestedFilter, scope: this}
             }
