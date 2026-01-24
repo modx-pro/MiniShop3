@@ -153,7 +153,8 @@ class RegisterService
         $customer->set('phone', $phone);
         $customer->set('is_active', true);
 
-        $customer->set('token', bin2hex(random_bytes(32)));
+        // Use provided token (from checkout auto-register) or generate new one
+        $customer->set('token', !empty($data['token']) ? $data['token'] : bin2hex(random_bytes(32)));
 
         if (!empty($data['privacy_accepted'])) {
             $customer->set('privacy_accepted_at', date('Y-m-d H:i:s'));
