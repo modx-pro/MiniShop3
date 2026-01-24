@@ -77,4 +77,15 @@ class OrderAPI {
   async get () {
     return this.api.get('/api/v1/order/get')
   }
+
+  /**
+   * Get order cost breakdown
+   *
+   * GET /api/v1/order/cost
+   *
+   * @returns {Promise<Object>} { success, data: { cost, cart_cost, delivery_cost, ... } }
+   */
+  async getCost () {
+    return this.api.get('/api/v1/order/cost')
+  }
 }
