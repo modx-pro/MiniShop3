@@ -688,7 +688,7 @@ onMounted(async () => {
                 </div>
 
                 <div class="form-row">
-                  <div class="flex align-items-center gap-2">
+                  <div class="checkbox-field">
                     <Checkbox v-model="editingDelivery.active" :binary="true" inputId="delivery-active" />
                     <label for="delivery-active">{{ _('delivery_active') }}</label>
                   </div>
@@ -1037,6 +1037,17 @@ onMounted(async () => {
 
 .drag-handle:active {
   cursor: grabbing;
+}
+
+/* Checkbox with label */
+.checkbox-field {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-field label {
+  margin-left: 0.5rem;
+  cursor: pointer;
 }
 
 /* Grid thumbnail */

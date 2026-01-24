@@ -446,7 +446,7 @@ const editingFieldName = computed(() => {
 <template>
   <div class="validation-rules-editor">
     <!-- Mode toggle -->
-    <div class="flex align-items-center gap-2 mb-3">
+    <div class="mode-toggle">
       <span class="mode-label">{{ _('validation_mode_visual') }}</span>
       <ToggleSwitch v-model="isJsonMode" @change="isJsonMode ? switchToJsonMode() : switchToVisualMode()" />
       <span class="mode-label">{{ _('validation_mode_json') }}</span>
@@ -623,9 +623,17 @@ const editingFieldName = computed(() => {
   width: 100%;
 }
 
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
 .mode-label {
   font-size: 0.875rem;
   color: #64748b;
+  line-height: 1;
 }
 
 .json-editor {
