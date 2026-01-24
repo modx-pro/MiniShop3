@@ -14,6 +14,7 @@ import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
+import Paginator from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import draggable from 'vuedraggable'
@@ -685,6 +686,14 @@ onMounted(async () => {
           <div v-if="loading" class="loading-overlay">
             <i class="pi pi-spinner pi-spin"></i>
           </div>
+        <!-- Pagination -->
+        <Paginator
+          :first="first"
+          :rows="rows"
+          :totalRecords="totalRecords"
+          :rowsPerPageOptions="[10, 20, 50, 100]"
+          @page="onPage"
+        />
         </div>
       </template>
     </Card>
