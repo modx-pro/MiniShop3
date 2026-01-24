@@ -1,178 +1,132 @@
-# MiniShop3
+<p align="center">
+  <img src="https://modstore.pro/assets/extras/minishop3/logo-lg.png" alt="MiniShop3" width="400">
+</p>
 
-Современный компонент интернет-магазина для MODX 3, полностью переписанный с учётом новых возможностей платформы.
+<h1 align="center">MiniShop3</h1>
 
-## Ключевые особенности
+<p align="center">
+  <strong>Современный компонент интернет-магазина для MODX 3</strong>
+</p>
 
-### Для MODX 3
+<p align="center">
+  <a href="https://github.com/modx-pro/MiniShop3/releases"><img src="https://img.shields.io/badge/version-1.2.3--beta1-blue" alt="Version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.1+"></a>
+  <a href="#"><img src="https://img.shields.io/badge/MODX-3.0%2B-green?logo=modx&logoColor=white" alt="MODX 3.0+"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="License MIT"></a>
+</p>
 
-MiniShop3 разработан специально для MODX Revolution 3.x и использует все преимущества новой версии:
+<p align="center">
+  <a href="https://docs.modx.pro/components/minishop3/">Документация</a> •
+  <a href="https://docs.modx.pro/components/minishop3/quick-start">Быстрый старт</a> •
+  <a href="https://github.com/modx-pro/MiniShop3/issues">Сообщить о баге</a> •
+  <a href="https://github.com/modx-pro/MiniShop3/releases">Релизы</a>
+</p>
 
-- **PHP 8.1+** — современный синтаксис, типизация, атрибуты
-- **Namespaces** — все классы организованы в пространстве имён `MiniShop3\`
-- **PSR-4 автозагрузка** — через Composer
-- **Миграции Phinx** — версионирование структуры БД
+---
 
-### Улучшенная архитектура
+## ✨ Особенности
 
-- **REST API** — полноценный API для headless-интеграций
-- **Service Container** — зависимости через DI-контейнер MODX
-- **Vue 3 + PrimeVue** — современный интерфейс админки через VueTools
-- **Современный фронтенд** — без jQuery, нативный JavaScript
+- 🚀 **Для MODX 3** — PHP 8.1+, namespaces, PSR-4, миграции Phinx
+- 🔌 **REST API** — полноценный API для headless-интеграций
+- 🎨 **Vue 3 + PrimeVue** — современный интерфейс админки
+- ⚡ **Без jQuery** — нативный JavaScript на фронтенде
+- 🔄 **Совместимость с miniShop2** — те же сниппеты, чанки и параметры
 
-### Совместимость
+## 📋 Требования
 
-MiniShop3 сохраняет обратную совместимость с miniShop2 на уровне:
-
-- Имена сниппетов (`msProducts`, `msCart`, `msOrder` и др.)
-- Структура чанков и плейсхолдеров
-- Параметры сниппетов
-
-## Системные требования
-
-| Требование | Версия |
-|------------|--------|
+| Компонент | Версия |
+|-----------|--------|
 | MODX Revolution | 3.0.0+ |
 | PHP | 8.1+ |
 | MySQL | 5.7+ / MariaDB 10.3+ |
 
-### Зависимости MODX
+### Зависимости
 
-- **pdoTools 3.x** — для работы сниппетов и шаблонизатора Fenom
-- **VueTools** — Vue 3 и PrimeVue для административного интерфейса
-- **Scheduler** *(опционально)* — для фоновых задач (импорт, уведомления, очистка)
+| Пакет | Обязательный | Описание |
+|-------|--------------|----------|
+| [pdoTools 3.x](https://docs.modx.pro/components/pdotools/) | ✅ | Сниппеты и шаблонизатор Fenom |
+| [VueTools](https://docs.modx.pro/components/vuetools/) | ✅ | Vue 3 и PrimeVue для админки |
+| [Scheduler](https://docs.modx.pro/components/scheduler/) | ❌ | Фоновые задачи (импорт, уведомления) |
 
-> **Важно:** MiniShop3 использует Vue 3 для современного интерфейса админки. Пакет **VueTools** должен быть установлен до или вместе с MiniShop3. При отсутствии пакета будет показано сообщение с инструкцией по установке.
+## 🚀 Установка
 
-### Composer библиотеки
+### Через менеджер пакетов (рекомендуется)
 
-MiniShop3 использует следующие PHP библиотеки (включены в пакет):
+```
+Extras → Installer → Download Extras → MiniShop3 → Install
+```
 
-| Библиотека | Версия | Назначение |
-|------------|--------|------------|
-| [nikic/fast-route](https://github.com/nikic/FastRoute) | ^1.3 | Маршрутизация REST API |
-| [rakit/validation](https://github.com/rakit/validation) | ^1.4 | Валидация данных форм и API |
-| [intervention/image](https://image.intervention.io/) | ^3.0 | Обработка изображений (ресайз, водяные знаки) |
-| [robmorgan/phinx](https://phinx.org/) | ^0.16 | Миграции базы данных |
-| [ramsey/uuid](https://uuid.ramsey.dev/) | ^4.7 | Генерация UUID для токенов |
+> ⚠️ Убедитесь, что **VueTools** установлен до MiniShop3
 
-## Установка
-
-### Способ 1: Через менеджер пакетов (рекомендуется)
-
-Стандартный способ установки через менеджер пакетов MODX с подключёнными репозиториями:
-
-1. Перейдите в **Extras → Installer**
-2. Нажмите **Download Extras**
-3. Установите **VueTools** (если ещё не установлен)
-4. Найдите **MiniShop3** в списке доступных пакетов
-5. Нажмите **Download** и затем **Install**
-
-Пакет доступен в репозиториях [modx.com](https://modx.com/extras/) и [modstore.pro](https://modstore.pro/).
-
-### Способ 2: Загрузка транспортного пакета
-
-Если репозитории недоступны или нужна конкретная версия:
-
-1. Скачайте транспортный пакет со страницы [релизов GitHub](https://github.com/modx-pro/MiniShop3/releases)
-2. Загрузите файл `.transport.zip` в `/core/packages/` вашего сайта
-3. Перейдите в **Extras → Installer**
-4. Нажмите **Search locally for packages**
-5. Найдите MiniShop3 в списке и нажмите **Install**
-
-### Способ 3: Установка из исходников (для разработчиков)
-
-Этот способ подходит для разработчиков, которым нужны самые свежие наработки:
-
-> **Предварительные требования:** Перед установкой MiniShop3 убедитесь, что на сайте установлен пакет **VueTools**. Он предоставляет Vue 3 и PrimeVue через import maps.
+### Из исходников (для разработчиков)
 
 ```bash
-# Клонирование репозитория
+# Клонирование
 git clone https://github.com/modx-pro/MiniShop3.git
 cd MiniShop3
 
-# Установка PHP зависимостей
-cd core/components/minishop3
-composer install
-cd ../../..
+# PHP зависимости
+cd core/components/minishop3 && composer install && cd ../../..
 
-# Сборка Vue виджетов (требуется Node.js 18+)
-cd vueManager
-npm install
-npm run build
-cd ..
+# Vue виджеты (Node.js 18+)
+cd vueManager && npm install && npm run build && cd ..
 
-# Сборка и установка компонента
-# Откройте _build/build.php в браузере или выполните:
+# Сборка пакета
 php _build/build.php
 ```
 
-После установки перейдите в **Extras → MiniShop3** для настройки магазина.
+## 📖 Документация
 
-## Структура компонента
+Полная документация доступна на **[docs.modx.pro/components/minishop3](https://docs.modx.pro/components/minishop3/)**
 
-### Ядро (core/components/minishop3/)
+- [Быстрый старт](https://docs.modx.pro/components/minishop3/quick-start) — первоначальная настройка
+- [Сниппеты](https://docs.modx.pro/components/minishop3/snippets/) — msProducts, msCart, msOrder и др.
+- [REST API](https://docs.modx.pro/components/minishop3/development/api) — интеграция с внешними системами
+- [События](https://docs.modx.pro/components/minishop3/development/events) — расширение функциональности
 
-```
-core/components/minishop3/
-├── bootstrap.php           # Инициализация компонента
-├── config/
-│   ├── routes/             # Маршруты REST API
-│   ├── mgr/                # Конфигурация админки
-│   ├── combos/             # Комбобоксы для админки
-│   ├── filters/            # Фильтры для гридов
-│   └── ms3.services.d/     # Кастомные сервисы
-├── controllers/            # Контроллеры страниц админки
-├── elements/
-│   ├── snippets/           # Сниппеты (msProducts, msCart, msOrder...)
-│   ├── chunks/             # Чанки (шаблоны Fenom)
-│   ├── plugins/            # MODX плагины
-│   ├── tasks/              # Задачи Scheduler
-│   └── templates/          # Email-шаблоны
-├── lexicon/                # Языковые файлы (en, ru)
-├── migrations/             # Миграции Phinx
-├── schema/                 # xPDO схема БД
-├── seeds/                  # Сиды для БД
-├── src/
-│   ├── Controllers/        # Бизнес-логика (Cart, Order, Customer)
-│   ├── Model/              # xPDO модели
-│   ├── Processors/         # AJAX процессоры
-│   ├── Services/           # Сервисы (Format, AuthManager...)
-│   ├── Notifications/      # Система уведомлений
-│   ├── Router/             # Маршрутизатор API
-│   ├── Middleware/         # Middleware для API
-│   ├── Utils/              # Утилиты (ImportCSV...)
-│   ├── MiniShop3.php       # Главный класс компонента
-│   └── ServiceRegistry.php # Реестр сервисов
-└── vendor/                 # Composer зависимости
-```
-
-### Фронтенд (assets/components/minishop3/)
+## 🏗️ Структура проекта
 
 ```
-assets/components/minishop3/
-├── api.php                 # Точка входа REST API
-├── connector.php           # AJAX коннектор админки
-├── js/
-│   ├── mgr/                # JavaScript админки (ExtJS)
-│   └── web/                # JavaScript сайта (нативный JS)
-├── css/
-│   ├── mgr/                # Стили админки
-│   └── web/                # Стили сайта
-├── img/                    # Изображения
-├── payment/                # Обработчики платёжных систем
-└── plugins/                # JavaScript плагины
+MiniShop3/
+├── _build/                 # Сборка транспортного пакета
+├── assets/components/minishop3/
+│   ├── js/web/             # Frontend JavaScript
+│   ├── js/mgr/             # Admin ExtJS + Vue
+│   └── css/                # Стили
+├── core/components/minishop3/
+│   ├── elements/           # Сниппеты, чанки, плагины
+│   ├── src/                # PHP классы (PSR-4)
+│   ├── migrations/         # Phinx миграции
+│   └── lexicon/            # Переводы (ru, en)
+└── vueManager/             # Vue 3 исходники админки
 ```
 
-## Документация
+## 🤝 Участие в разработке
 
-Полная документация доступна на [docs.modx.pro](https://docs.modx.pro/components/minishop3/).
+Мы приветствуем вклад в развитие проекта!
 
-## Лицензия
+1. Форкните репозиторий
+2. Создайте ветку для фичи (`git checkout -b feature/amazing-feature`)
+3. Закоммитьте изменения (`git commit -m 'Add amazing feature'`)
+4. Запушьте ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
 
-MIT License. См. файл [LICENSE](LICENSE).
+## 📝 Changelog
 
-## Поддержка
+Смотрите [CHANGELOG.md](CHANGELOG.md) для истории изменений.
 
-- [GitHub Issues](https://github.com/modx-pro/MiniShop3/issues) — баги и предложения
-- [Документация](https://docs.modx.pro/components/minishop3/) — руководства и справочники
+## 📄 Лицензия
+
+Распространяется под лицензией MIT. Смотрите [LICENSE](LICENSE) для подробностей.
+
+## 💬 Поддержка
+
+- 🐛 [GitHub Issues](https://github.com/modx-pro/MiniShop3/issues) — баги и предложения
+- 📚 [Документация](https://docs.modx.pro/components/minishop3/) — руководства и справочники
+- 💬 [Telegram](https://t.me/modx_pro) — сообщество MODX
+
+---
+
+<p align="center">
+  Сделано с ❤️ для сообщества MODX
+</p>
