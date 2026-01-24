@@ -175,13 +175,17 @@ class OrderSubmitHandler
         $num = $this->getNewOrderNum();
 
         // Update draft with final data
+        // Total cost = cart cost + delivery cost
+        $totalCost = $cartCost + $deliveryCost;
+
         $draft->fromArray([
             'customer_id' => $customerId,
             'user_id' => $userId,
             'updatedon' => time(),
             'num' => $num,
+            'cart_cost' => $cartCost,
             'delivery_cost' => $deliveryCost,
-            'cost' => $cartCost,
+            'cost' => $totalCost,
         ]);
 
         $draft->Address->set('updatedon', time());

@@ -24,6 +24,12 @@ class OrderUI {
     document.querySelectorAll('.ms3_order_form').forEach(form => {
       this.initForm(form)
     })
+
+    // Listen for cart updates to recalculate delivery cost
+    // (e.g., free delivery threshold may be reached)
+    document.addEventListener('ms3:cart:updated', () => {
+      this.updateOrderCosts()
+    })
   }
 
   /**

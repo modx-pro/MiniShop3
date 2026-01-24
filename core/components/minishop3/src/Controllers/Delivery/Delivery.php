@@ -97,6 +97,14 @@ abstract class Delivery implements DeliveryProviderInterface
             }
         }
 
+        // Check free delivery threshold first
+        // Use $cost parameter (cart cost passed from calculator) for threshold check
+        $freeDeliveryAmount = (float)$delivery->get('free_delivery_amount');
+
+        if ($freeDeliveryAmount > 0 && $cost >= $freeDeliveryAmount) {
+            return 0;
+        }
+
         // Cost by weight
         $weightPrice = (float)$delivery->get('weight_price');
         $cartWeight = (float)($cart['total_weight'] ?? 0);
@@ -110,14 +118,6 @@ abstract class Delivery implements DeliveryProviderInterface
         }
 
         $deliveryCost += $weightPrice * $cartWeight;
-
-        // Check free delivery threshold
-        $freeDeliveryAmount = (float)$delivery->get('free_delivery_amount');
-        $cartCost = (float)($cart['total_cost'] ?? 0);
-
-        if ($freeDeliveryAmount > 0 && $cartCost >= $freeDeliveryAmount) {
-            return 0;
-        }
 
         // Base delivery cost
         $addPrice = $delivery->get('price');
