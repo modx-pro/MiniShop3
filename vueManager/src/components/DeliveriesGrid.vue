@@ -258,6 +258,17 @@ function isPaymentEnabled(paymentId) {
 }
 
 /**
+ * Get translated payment name
+ * If translation exists, return it; otherwise return original name
+ */
+function getPaymentName(name) {
+  if (!name) return ''
+  const translated = _(name)
+  // If translation returns the same key, it means no translation found
+  return translated !== name ? translated : name
+}
+
+/**
  * Toggle payment for delivery
  */
 async function togglePayment(paymentId, newValue) {
@@ -760,7 +771,7 @@ onMounted(async () => {
                     <template #body="{ data }">
                       <div class="payment-name-cell">
                         <img v-if="data.logo" :src="data.logo" :alt="data.name" class="payment-logo-small" />
-                        <span>{{ data.name }}</span>
+                        <span>{{ getPaymentName(data.name) }}</span>
                       </div>
                     </template>
                   </Column>
