@@ -3,6 +3,7 @@
  *
  * Simple wrapper over fetch() for backend API interaction.
  * Automatically adds authorization token and handles JSON.
+ * Handles token refresh on 401 errors.
  *
  * @example
  * const client = new ApiClient({
@@ -29,9 +30,10 @@ class ApiClient {
    * @param {string} method - HTTP method (GET, POST, etc.)
    * @param {string} endpoint - API endpoint (e.g., '/cart/get')
    * @param {Object|null} data - Data to send (for POST/PATCH)
+   * @param {boolean} isRetry - Internal flag for retry after token refresh
    * @returns {Promise<Object>} - Server response
    */
-  async request (method, endpoint, data = null) {
+  async request (method, endpoint, data = null, isRetry = false) {
     const url = new URL(this.baseUrl, window.location.origin)
 
     url.searchParams.set('route', endpoint)
@@ -63,10 +65,33 @@ class ApiClient {
     try {
       const response = await fetch(url.toString(), options)
       const result = await response.json()
+
+      // Handle token errors: clear invalid token, get new one, and retry
+      if (!isRetry && response.status === 401 && this.isTokenError(result)) {
+        console.log('[ApiClient] Token invalid, refreshing and retrying request')
+        this.tokenManager.removeToken()
+        await this.tokenManager.fetchNewToken()
+        return this.request(method, endpoint, data, true)
+      }
+
       return result
     } catch (error) {
       throw error
     }
+  }
+
+  /**
+   * Check if error is a token-related error
+   *
+   * @param {Object} result - API response
+   * @returns {boolean}
+   */
+  isTokenError (result) {
+    if (!result || result.success) {
+      return false
+    }
+    const tokenErrors = ['ms3_err_token', 'ms3_err_token_invalid', 'ms3_err_token_expired']
+    return tokenErrors.includes(result.message)
   }
 
   /**

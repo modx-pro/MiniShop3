@@ -24,6 +24,12 @@ class OrderUI {
     document.querySelectorAll('.ms3_order_form').forEach(form => {
       this.initForm(form)
     })
+
+    // Listen for cart updates to recalculate delivery cost
+    // (e.g., free delivery threshold may be reached)
+    document.addEventListener('ms3:cart:updated', () => {
+      this.updateOrderCosts()
+    })
   }
 
   /**
@@ -127,11 +133,65 @@ class OrderUI {
         this.message.error(response.message)
       }
 
+      // Recalculate costs when delivery or payment changes
+      if (response.success && ['delivery_id', 'payment_id'].includes(key)) {
+        await this.updateOrderCosts()
+      }
+
       return response
     } catch (error) {
       this.message.error('An error occurred')
       return { success: false, message: error.message }
     }
+  }
+
+  /**
+   * Update order costs in DOM
+   *
+   * Fetches current costs from API and updates DOM elements
+   */
+  async updateOrderCosts () {
+    try {
+      const response = await this.order.getCost()
+
+      if (response.success && response.data) {
+        const { cost, cart_cost, delivery_cost } = response.data
+
+        // Update cart cost
+        const cartCostEl = document.getElementById('ms3_order_cart_cost')
+        if (cartCostEl && cart_cost !== undefined) {
+          cartCostEl.textContent = this.formatPrice(cart_cost)
+        }
+
+        // Update delivery cost
+        const deliveryCostEl = document.getElementById('ms3_order_delivery_cost')
+        if (deliveryCostEl && delivery_cost !== undefined) {
+          deliveryCostEl.textContent = this.formatPrice(delivery_cost)
+        }
+
+        // Update total cost
+        const totalCostEl = document.getElementById('ms3_order_cost')
+        if (totalCostEl && cost !== undefined) {
+          totalCostEl.textContent = this.formatPrice(cost)
+        }
+
+        await this.hooks.runHooks('afterUpdateOrderCosts', { cost, cart_cost, delivery_cost })
+      }
+    } catch (error) {
+      console.error('[OrderUI] Failed to update order costs:', error)
+    }
+  }
+
+  /**
+   * Format price for display
+   *
+   * @param {number} price - Price value
+   * @returns {string} Formatted price
+   */
+  formatPrice (price) {
+    const num = parseFloat(price) || 0
+    // Format with 2 decimals, remove trailing zeros
+    return num % 1 === 0 ? num.toString() : num.toFixed(2).replace(/\.?0+$/, '')
   }
 
   /**

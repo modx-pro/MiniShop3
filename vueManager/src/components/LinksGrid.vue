@@ -10,6 +10,7 @@ import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
+import Paginator from 'primevue/paginator'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import request from '../request.js'
@@ -41,6 +42,8 @@ const {
 const loading = ref(false)
 const links = ref([])
 const totalRecords = ref(0)
+const first = ref(0)
+const rows = ref(20)
 const linkTypes = ref([])
 const editDialogVisible = ref(false)
 const editingLink = ref(null)
@@ -77,7 +80,10 @@ async function loadLinks() {
   loading.value = true
 
   try {
-    const response = await request.get('/api/mgr/links', { limit: 0 })
+    const response = await request.get('/api/mgr/links', {
+      start: first.value,
+      limit: rows.value
+    })
 
     if (response && response.results) {
       links.value = response.results
@@ -97,6 +103,15 @@ async function loadLinks() {
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * Handle pagination
+ */
+function onPage(event) {
+  first.value = event.first
+  rows.value = event.rows
+  loadLinks()
 }
 
 /**
@@ -338,6 +353,15 @@ onMounted(() => {
             </template>
           </Column>
         </DataTable>
+
+        <!-- Pagination -->
+        <Paginator
+          :first="first"
+          :rows="rows"
+          :totalRecords="totalRecords"
+          :rowsPerPageOptions="[10, 20, 50, 100]"
+          @page="onPage"
+        />
       </template>
     </Card>
 

@@ -101,39 +101,12 @@ class OrderSubmitHandler
             return $this->error('ms3_order_err_empty');
         }
 
-        // Ensure customer is linked to order
-        $customerId = $draft->get('customer_id');
-        if (empty($customerId)) {
-            $this->ms3->customer->initialize($token);
-            $customerId = $this->ms3->customer->getOrCreate();
-
-            if (empty($customerId)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    '[OrderSubmitHandler::submit] Failed to get or create customer'
-                );
-                return $this->error('ms3_err_customer_nf');
-            }
-
-            $draft->set('customer_id', $customerId);
-            $draft->save();
-        }
-
-        // Fill address from customer if empty
-        $customerResponse = $this->ms3->customer->getFields();
-        if ($customerResponse['success'] && !empty($customerResponse['data'])) {
-            $this->addressManager->fillFromCustomer($draft, $orderData, $customerResponse['data']);
-        }
-
-        // Refresh order data after customer fill
-        $orderData = $this->draftManager->toArray($draft);
-
-        // Validate delivery is selected
+        // Validate delivery is selected (before customer creation)
         if (empty($orderData['delivery_id'])) {
             return $this->error('ms3_order_err_delivery', ['delivery_id']);
         }
 
-        // Validate payment is selected (must be before status change!)
+        // Validate payment is selected (before customer creation)
         if (empty($orderData['payment_id'])) {
             return $this->error('ms3_order_err_payment', ['payment_id']);
         }
@@ -166,6 +139,19 @@ class OrderSubmitHandler
             return $this->error('ms3_order_err_requires', $errors);
         }
 
+        // Link customer to order (optional - order can proceed without customer)
+        $customerId = $draft->get('customer_id');
+        if (empty($customerId)) {
+            $this->ms3->customer->initialize($token);
+            $customerId = $this->ms3->customer->getOrCreate();
+
+            if (!empty($customerId)) {
+                $draft->set('customer_id', $customerId);
+                $draft->save();
+            }
+            // If no customer created (no email/phone), order proceeds with data in msOrderAddress only
+        }
+
         // Register MODX user if configured
         $registerUser = $this->modx->getOption('ms3_order_register_user_on_submit', null, false);
         $userId = 0;
@@ -189,13 +175,17 @@ class OrderSubmitHandler
         $num = $this->getNewOrderNum();
 
         // Update draft with final data
+        // Total cost = cart cost + delivery cost
+        $totalCost = $cartCost + $deliveryCost;
+
         $draft->fromArray([
             'customer_id' => $customerId,
             'user_id' => $userId,
             'updatedon' => time(),
             'num' => $num,
+            'cart_cost' => $cartCost,
             'delivery_cost' => $deliveryCost,
-            'cost' => $cartCost,
+            'cost' => $totalCost,
         ]);
 
         $draft->Address->set('updatedon', time());

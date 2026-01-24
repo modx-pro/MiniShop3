@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3-beta1] - 2026-01-24
+
+### Added
+- Automatic order cost recalculation when changing delivery or payment method
+- Automatic delivery cost recalculation when cart changes (free delivery threshold support)
+- Pagination for Vendors settings tab (previously limited to 20 records)
+- Pagination for Product Links settings tab
+- "Show nested" checkbox enabled by default in category products grid
+
+### Fixed
+- Order total cost now correctly includes delivery cost (`cost = cart_cost + delivery_cost`)
+- Free delivery threshold calculation now uses cart cost passed to method
+- Session token preserved during customer auto-registration (cart no longer disappears after page reload)
+- Automatic token refresh on `ms3_err_token_invalid` error
+- Order validation (delivery, payment) now runs before customer creation
+- Payment method name translation in delivery edit dialog
+- Validation rules dropdown z-index styling
+- Form spacing in delivery and payment edit dialogs
+
 ## [1.2.2-beta1] - 2026-01-20
 
 ### Fixed

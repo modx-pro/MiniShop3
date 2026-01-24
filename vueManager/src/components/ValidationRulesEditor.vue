@@ -446,7 +446,7 @@ const editingFieldName = computed(() => {
 <template>
   <div class="validation-rules-editor">
     <!-- Mode toggle -->
-    <div class="flex align-items-center gap-2 mb-3">
+    <div class="mode-toggle">
       <span class="mode-label">{{ _('validation_mode_visual') }}</span>
       <ToggleSwitch v-model="isJsonMode" @change="isJsonMode ? switchToJsonMode() : switchToVisualMode()" />
       <span class="mode-label">{{ _('validation_mode_json') }}</span>
@@ -623,9 +623,17 @@ const editingFieldName = computed(() => {
   width: 100%;
 }
 
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
 .mode-label {
   font-size: 0.875rem;
   color: #64748b;
+  line-height: 1;
 }
 
 .json-editor {
@@ -717,7 +725,44 @@ const editingFieldName = computed(() => {
   font-size: 0.8rem;
 }
 
+:deep(.rule-option) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.25rem 0;
+}
+
+:deep(.rule-option-name) {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+:deep(.rule-option-desc) {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
 .w-full {
   width: 100%;
+}
+</style>
+
+<!-- Global styles for PrimeVue dropdown panels -->
+<style>
+.p-select-overlay .rule-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.25rem 0;
+}
+
+.p-select-overlay .rule-option-name {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.p-select-overlay .rule-option-desc {
+  font-size: 0.8rem;
+  color: #64748b;
 }
 </style>
