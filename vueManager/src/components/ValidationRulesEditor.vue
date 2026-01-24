@@ -725,7 +725,44 @@ const editingFieldName = computed(() => {
   font-size: 0.8rem;
 }
 
+:deep(.rule-option) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.25rem 0;
+}
+
+:deep(.rule-option-name) {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+:deep(.rule-option-desc) {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
 .w-full {
   width: 100%;
+}
+</style>
+
+<!-- Global styles for PrimeVue dropdown panels -->
+<style>
+.p-select-overlay .rule-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.25rem 0;
+}
+
+.p-select-overlay .rule-option-name {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.p-select-overlay .rule-option-desc {
+  font-size: 0.8rem;
+  color: #64748b;
 }
 </style>
