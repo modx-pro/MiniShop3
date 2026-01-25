@@ -55,3 +55,7 @@ nul
 sync-exclude.txt
 copy-dist-exclude.txt
 tmpclaude-*
+
+# PHPStan (local config with machine-specific paths)
+phpstan.neon
+phpstan-baseline.neon
