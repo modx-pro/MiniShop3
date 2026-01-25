@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ru">
 <head>
+    <base href="{'site_url'|option}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MiniShop3 - {$_modx->resource.pagetitle}</title>
