@@ -18,6 +18,10 @@ $packages = [
         'version' => '3.0.2-pl',
         'service_url' => 'modstore.pro',
     ],
+    'VueTools' => [
+        'version' => '1.0.0-beta1',
+        'service_url' => 'modstore.pro',
+    ],
 ];
 
 $downloadPackage = function ($src, $dst) {
