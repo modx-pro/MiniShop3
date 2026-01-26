@@ -290,7 +290,11 @@ class CustomerAddressController
     }
 
     /**
-     * Get authorized customer from session
+     * Get authorized customer from session or API token
+     *
+     * Authorization flow (same as TokenMiddleware):
+     * 1. Try API token from request/session
+     * 2. Fall back to session customer_id (set by cart/order operations)
      *
      * @return msCustomer|null
      */
@@ -303,24 +307,32 @@ class CustomerAddressController
 
         $ms3->initialize();
 
+        // Method 1: Try API token
         $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
 
-        if (empty($tokenString)) {
-            return null;
+        if (!empty($tokenString)) {
+            $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
+                'token' => $tokenString,
+                'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
+            ]);
+
+            if ($tokenObj && !$tokenObj->isExpired()) {
+                $customer = $this->modx->getObject(msCustomer::class, $tokenObj->get('customer_id'));
+                if ($customer) {
+                    return $customer;
+                }
+            }
         }
 
-        $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
-            'token' => $tokenString,
-            'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
-        ]);
-
-        if (!$tokenObj || $tokenObj->isExpired()) {
-            return null;
+        // Method 2: Fall back to session customer_id (consistent with TokenMiddleware)
+        if (!empty($_SESSION['ms3']['customer_id'])) {
+            $customer = $this->modx->getObject(msCustomer::class, (int)$_SESSION['ms3']['customer_id']);
+            if ($customer) {
+                return $customer;
+            }
         }
 
-        $customer = $this->modx->getObject(msCustomer::class, $tokenObj->get('customer_id'));
-
-        return $customer ?: null;
+        return null;
     }
 
     /**
