@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Документация
+    url: https://docs.modx.pro/components/minishop3
+    about: Прочитайте документацию перед созданием issue
+  - name: Обсуждения (Telegram)
+    url: https://t.me/ru_modx
+    about: Задайте вопрос в Telegram-сообществе MODX
