@@ -155,9 +155,15 @@ $_lang['ms3_vue_xtype_textfield'] = 'Текстовое поле';
 $_lang['ms3_vue_xtype_numberfield'] = 'Числовое поле';
 $_lang['ms3_vue_xtype_textarea'] = 'Текстовая область';
 $_lang['ms3_vue_xtype_xcheckbox'] = 'Флажок';
+$_lang['ms3_vue_xtype_combo_select'] = 'Выпадающий список';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Производитель (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Автодополнение (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Опции товара (chips)';
+
+// Настройки выпадающего списка
+$_lang['ms3_vue_select_options_label'] = 'Варианты списка';
+$_lang['ms3_vue_select_options_placeholder'] = "value1==Первый вариант\nvalue2==Второй вариант\nvalue3==Третий вариант";
+$_lang['ms3_vue_select_options_help'] = 'Формат: значение==подпись (по одному на строку). Если подпись не указана, будет использовано значение.';
 
 // Типы данных БД (dbtype)
 $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (строка)';
@@ -219,7 +225,7 @@ $_lang['ms3_vue_dialog_key_help'] = 'Латинские буквы, цифры, 
 $_lang['ms3_vue_dialog_label'] = 'Метка';
 $_lang['ms3_vue_dialog_label_placeholder'] = 'Гарантия (месяцев)';
 $_lang['ms3_vue_dialog_description'] = 'Описание';
-$_lang['ms3_vue_dialog_xtype'] = 'Тип виджета (xtype)';
+$_lang['ms3_vue_dialog_xtype'] = 'Тип поля';
 $_lang['ms3_vue_dialog_xtype_select'] = 'Выберите тип';
 $_lang['ms3_vue_dialog_dbtype'] = 'Тип данных БД (dbtype) *';
 $_lang['ms3_vue_dialog_precision'] = 'Точность (precision)';

@@ -169,6 +169,27 @@
       </template>
     </template>
 
+    <!-- Dropdown select (ms3-combo-select) -->
+    <template v-else-if="fieldConfig.xtype === 'ms3-combo-select'">
+      <Dropdown
+        :inputId="fieldConfig.name"
+        v-model="localValue"
+        :options="selectOptions"
+        optionLabel="label"
+        optionValue="value"
+        :placeholder="fieldConfig.placeholder || 'Select...'"
+        :disabled="disabled"
+        :showClear="true"
+        class="w-full"
+        @change="handleBlur"
+      />
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="localValue || ''"
+      />
+    </template>
+
     <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
     <!-- For now, we display them as simple text info since editing happens in ExtJS form -->
     <div v-else-if="isExtJSComboField" class="extjs-combo-info">
@@ -265,9 +286,38 @@ const isComplexField = computed(() => {
 
 /**
  * Determine if field is ExtJS combo (ms3-combo-*)
+ * Excludes ms3-combo-select which is handled separately
  */
 const isExtJSComboField = computed(() => {
-  return props.fieldConfig.xtype && props.fieldConfig.xtype.startsWith('ms3-combo-')
+  if (!props.fieldConfig.xtype) return false
+  if (props.fieldConfig.xtype === 'ms3-combo-select') return false
+  if (props.fieldConfig.xtype === 'ms3-combo-vendor') return false
+  if (props.fieldConfig.xtype === 'ms3-combo-autocomplete') return false
+  if (props.fieldConfig.xtype === 'ms3-combo-options') return false
+  return props.fieldConfig.xtype.startsWith('ms3-combo-')
+})
+
+/**
+ * Parse select_options string into array for ms3-combo-select
+ * Format: "value1==label1\nvalue2==label2" or just "value1\nvalue2"
+ * Note: select_options may be in fieldConfig.config.select_options or fieldConfig.select_options
+ * depending on how the config was merged in PHP
+ */
+const selectOptions = computed(() => {
+  const optionsString = props.fieldConfig.config?.select_options
+    || props.fieldConfig.select_options
+    || ''
+  if (!optionsString) return []
+
+  return optionsString.split('\n')
+    .filter(line => line.trim())
+    .map(line => {
+      const parts = line.split('==')
+      if (parts.length >= 2) {
+        return { value: parts[0].trim(), label: parts.slice(1).join('==').trim() }
+      }
+      return { value: line.trim(), label: line.trim() }
+    })
 })
 
 /**
@@ -281,7 +331,8 @@ const getExtJSComboLabel = (xtype) => {
     'ms3-combo-customer': 'Customer selection (ExtJS combo)',
     'ms3-combo-source': 'Media source selection (ExtJS combo)',
     'ms3-combo-options': 'Product options (ExtJS combo)',
-    'ms3-combo-autocomplete': 'Autocomplete (ExtJS combo)'
+    'ms3-combo-autocomplete': 'Autocomplete (ExtJS combo)',
+    'ms3-combo-select': 'Dropdown list'
   }
 
   return labels[xtype] || `ExtJS widget: ${xtype}`
@@ -330,6 +381,10 @@ const handleBlur = () => {
 
 <style scoped>
 .field-wrapper {
+  width: 100%;
+}
+
+.field-wrapper :deep(.w-full) {
   width: 100%;
 }
 

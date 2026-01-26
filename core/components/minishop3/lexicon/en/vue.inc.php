@@ -155,9 +155,15 @@ $_lang['ms3_vue_xtype_textfield'] = 'Text Field';
 $_lang['ms3_vue_xtype_numberfield'] = 'Number Field';
 $_lang['ms3_vue_xtype_textarea'] = 'Text Area';
 $_lang['ms3_vue_xtype_xcheckbox'] = 'Checkbox';
+$_lang['ms3_vue_xtype_combo_select'] = 'Dropdown List';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Vendor (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Autocomplete (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Product Options (chips)';
+
+// Dropdown list settings
+$_lang['ms3_vue_select_options_label'] = 'List Options';
+$_lang['ms3_vue_select_options_placeholder'] = "value1==First option\nvalue2==Second option\nvalue3==Third option";
+$_lang['ms3_vue_select_options_help'] = 'Format: value==label (one per line). If label is not specified, the value will be used.';
 
 // Database types (dbtype)
 $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (string)';
@@ -219,7 +225,7 @@ $_lang['ms3_vue_dialog_key_help'] = 'Latin letters, digits, underscore. No space
 $_lang['ms3_vue_dialog_label'] = 'Label';
 $_lang['ms3_vue_dialog_label_placeholder'] = 'Warranty (months)';
 $_lang['ms3_vue_dialog_description'] = 'Description';
-$_lang['ms3_vue_dialog_xtype'] = 'Widget Type (xtype)';
+$_lang['ms3_vue_dialog_xtype'] = 'Field Type';
 $_lang['ms3_vue_dialog_xtype_select'] = 'Select type';
 $_lang['ms3_vue_dialog_dbtype'] = 'Database Type (dbtype) *';
 $_lang['ms3_vue_dialog_precision'] = 'Precision';

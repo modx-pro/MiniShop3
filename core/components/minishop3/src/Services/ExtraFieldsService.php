@@ -242,6 +242,12 @@ class ExtraFieldsService
     {
         /** @var msProductField $productField */
         $productField = $this->modx->newObject(msProductField::class);
+
+        $config = null;
+        if ($extraField->get('xtype') === 'ms3-combo-select' && $extraField->get('select_options')) {
+            $config = ['select_options' => $extraField->get('select_options')];
+        }
+
         $productField->fromArray([
             'name' => $extraField->get('key'),
             'label' => $extraField->get('label') ?: $extraField->get('key'),
@@ -254,6 +260,7 @@ class ExtraFieldsService
             'width' => 6,
             'is_system' => 0,
             'is_default' => 0,
+            'config' => $config,
         ]);
 
         if ($productField->save()) {
@@ -281,7 +288,7 @@ class ExtraFieldsService
             return ['success' => false, 'message' => 'Field not found'];
         }
 
-        $allowedFields = ['label', 'description', 'xtype', 'active'];
+        $allowedFields = ['label', 'description', 'xtype', 'active', 'select_options'];
 
         foreach ($allowedFields as $fieldName) {
             if (isset($data[$fieldName])) {
@@ -319,6 +326,15 @@ class ExtraFieldsService
             $productField->set('description', $extraField->get('description'));
             $productField->set('xtype', $extraField->get('xtype') ?: 'textfield');
             $productField->set('visible', $extraField->get('active') ? 1 : 0);
+
+            // Update config for ms3-combo-select
+            $config = $productField->get('config') ?: [];
+            if ($extraField->get('xtype') === 'ms3-combo-select') {
+                $config['select_options'] = $extraField->get('select_options') ?: '';
+            } else {
+                unset($config['select_options']);
+            }
+            $productField->set('config', !empty($config) ? $config : null);
 
             if ($productField->save()) {
                 $this->modx->log(modX::LOG_LEVEL_INFO,
