@@ -748,6 +748,7 @@ $_lang['bulk_delete_error'] = 'Ошибка при массовом удален
 // Deliveries
 $_lang['deliveries'] = 'Варианты доставки';
 $_lang['delivery_name'] = 'Название';
+$_lang['delivery_name_hint'] = 'Можно указать ключ лексикона (например: ms3_delivery_courier) или обычный текст';
 $_lang['delivery_description'] = 'Описание';
 $_lang['delivery_price'] = 'Цена';
 $_lang['delivery_weight_price'] = 'Цена за вес';
@@ -782,6 +783,7 @@ $_lang['ms3_no_payments'] = 'Способы оплаты не найдены';
 $_lang['ms3_payment_deliveries_hint'] = 'Выберите способы доставки, доступные для данного способа оплаты';
 $_lang['ms3_no_deliveries'] = 'Способы доставки не найдены';
 $_lang['payment_name'] = 'Название';
+$_lang['payment_name_hint'] = 'Можно указать ключ лексикона (например: ms3_payment_cash) или обычный текст';
 $_lang['payment_active'] = 'Активен';
 $_lang['payment_position'] = 'Позиция';
 $_lang['payment_create'] = 'Создать способ оплаты';

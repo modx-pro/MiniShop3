@@ -662,6 +662,7 @@ onMounted(async () => {
                 <div class="form-row mb-3">
                   <label>{{ _('payment_name') }} *</label>
                   <InputText v-model="editingPayment.name" class="w-full" />
+                  <small class="form-hint">{{ _('payment_name_hint') }}</small>
                 </div>
 
                 <div class="form-row mb-3">

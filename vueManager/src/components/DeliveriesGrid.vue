@@ -682,6 +682,7 @@ onMounted(async () => {
                 <div class="form-row mb-3">
                   <label>{{ _('delivery_name') }} *</label>
                   <InputText v-model="editingDelivery.name" class="w-full" />
+                  <small class="form-hint">{{ _('delivery_name_hint') }}</small>
                 </div>
 
                 <div class="form-row mb-3">

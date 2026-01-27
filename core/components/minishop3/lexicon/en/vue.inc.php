@@ -743,6 +743,7 @@ $_lang['bulk_delete_error'] = 'Error during bulk delete';
 // Deliveries
 $_lang['deliveries'] = 'Delivery Methods';
 $_lang['delivery_name'] = 'Name';
+$_lang['delivery_name_hint'] = 'You can use a lexicon key (e.g.: ms3_delivery_courier) or plain text';
 $_lang['delivery_description'] = 'Description';
 $_lang['delivery_price'] = 'Price';
 $_lang['delivery_weight_price'] = 'Weight Price';
@@ -777,6 +778,7 @@ $_lang['ms3_no_payments'] = 'No payment methods found';
 $_lang['ms3_payment_deliveries_hint'] = 'Select delivery methods available for this payment method';
 $_lang['ms3_no_deliveries'] = 'No delivery methods found';
 $_lang['payment_name'] = 'Name';
+$_lang['payment_name_hint'] = 'You can use a lexicon key (e.g.: ms3_payment_cash) or plain text';
 $_lang['payment_active'] = 'Active';
 $_lang['payment_position'] = 'Position';
 $_lang['payment_create'] = 'Create payment method';
