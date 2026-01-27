@@ -28,7 +28,7 @@ ms3.panel.Toolbar = function (config) {
             xtype: 'ms3-combo-source',
             id: 'ms3-resource-source',
             description: '<b>[[+source_id]]</b><br />' + _('ms3_product_source_help'),
-            value: config.record.source,
+            value: config.record.source_id || config.record.source,
             name: 'source_id',
             hiddenName: 'source_id',
             listeners: {
@@ -45,7 +45,7 @@ ms3.panel.Toolbar = function (config) {
 Ext.extend(ms3.panel.Toolbar, Ext.Toolbar, {
 
     sourceWarning: function (combo) {
-        const source_id = this.config.record.source;
+        const source_id = this.config.record.source_id || this.config.record.source;
         const sel_id = combo.getValue();
         if (source_id !== sel_id) {
             Ext.Msg.confirm(_('warning'), _('ms3_product_change_source_confirm'), function (e) {

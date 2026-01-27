@@ -61,6 +61,10 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/update.js');
 
+        // Product Tabs Vue module (contains Properties, Gallery, Categories, Links, Options tabs)
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/product-tabs.min.css');
+        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
+
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
         if ($show_gallery) {
             $this->addCss($assetsUrl . 'css/mgr/vue-dist/gallery-uploader.min.css');

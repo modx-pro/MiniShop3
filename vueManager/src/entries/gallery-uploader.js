@@ -47,8 +47,6 @@ window.MS3_initGalleryUploader = function(config) {
   container.__vueApp__ = app
   container.__vueInstance__ = instance
 
-  console.log('[MS3 Gallery Uploader] Initialized for product', productId)
-
   return {
     app,
     instance,
@@ -66,8 +64,5 @@ window.MS3_destroyGalleryUploader = function(containerId = 'ms3-gallery-uploader
     container.__vueApp__.unmount()
     delete container.__vueApp__
     delete container.__vueInstance__
-    console.log('[MS3 Gallery Uploader] Destroyed')
   }
 }
-
-console.log('[MS3 Gallery Uploader] Entry point loaded')
