@@ -855,3 +855,46 @@ textarea.ms3_field_error:focus {
 .nav-tabs .nav-link.active {
     color: var(--bs-primary);
 }
+
+/* ========================================
+   Order Total (Cart Icon Widget)
+   ======================================== */
+
+.ms3-order-total {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.ms3-order-total:hover {
+    background: #e9ecef;
+}
+
+.ms3-order-total__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.4rem;
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.ms3-order-total__count:empty,
+.ms3-order-total__count[data-count="0"] {
+    background: #6c757d;
+}
+
+.ms3-order-total__cost {
+    font-weight: 500;
+    color: #212529;
+}

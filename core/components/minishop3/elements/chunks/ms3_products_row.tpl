@@ -3,15 +3,15 @@
         <meta itemprop="description" content="{$description ?: $pagetitle}">
         <meta itemprop="name" content="{$pagetitle}">
 
-        {* Изображение товара *}
+        {* Изображение товара с hover эффектом *}
         <div class="position-relative overflow-hidden d-flex align-items-center justify-content-center product-image-wrapper">
             <a href="/{$id | url}" class="d-block product-image-link w-100 h-100 d-flex align-items-center justify-content-center">
                 {if $thumb?}
                     <img src="{$thumb}" class="product-image" alt="{$pagetitle}" title="{$pagetitle}" itemprop="image"/>
                 {else}
                     <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
-                        srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                        class="product-image" alt="{$pagetitle}" title="{$pagetitle}"/>
+                         srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
+                         class="product-image" alt="{$pagetitle}" title="{$pagetitle}"/>
                 {/if}
             </a>
 
@@ -147,21 +147,21 @@
                 </div>
 
                 {* Форма добавления в корзину (показывается когда товара НЕТ в корзине) *}
-                    <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add">
-                        <input type="hidden" name="id" value="{$id}">
-                        <input type="hidden" name="count" value="1">
-                        <input type="hidden" name="options" value="[]">
-                        <input type="hidden" name="ms3_action" value="cart/add">
+                <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add">
+                    <input type="hidden" name="id" value="{$id}">
+                    <input type="hidden" name="count" value="1">
+                    <input type="hidden" name="options" value="[]">
+                    <input type="hidden" name="ms3_action" value="cart/add">
 
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary btn-sm fw-semibold" type="submit">
-                                <svg width="16" height="16" fill="currentColor" class="me-1">
-                                    <use href="#icon-cart"/>
-                                </svg>
-                                {'ms3_cart_add' | lexicon}
-                            </button>
-                        </div>
-                    </form>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-sm fw-semibold" type="submit">
+                            <svg width="16" height="16" fill="currentColor" class="me-1">
+                                <use href="#icon-cart"/>
+                            </svg>
+                            {'ms3_cart_add' | lexicon}
+                        </button>
+                    </div>
+                </form>
 
                 {* Форма изменения количества (показывается когда товар ЕСТЬ в корзине) *}
                 <form method="post" class="ms3_form ms3-cart-controls position-relative" data-cart-state="change">
@@ -174,7 +174,7 @@
                                 −
                             </button>
                             <input type="number" name="count" value="1" min="0"
-                                class="form-control form-control-sm qty-input text-center border-primary">
+                                   class="form-control form-control-sm qty-input text-center border-primary">
                             <button class="btn btn-outline-primary qty-btn inc-qty" type="button">
                                 +
                             </button>

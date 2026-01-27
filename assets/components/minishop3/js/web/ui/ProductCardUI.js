@@ -165,7 +165,7 @@ class ProductCardUI {
     if (inCart) {
       // Product is in cart - show quantity controls
       addForm.style.display = 'none'
-      changeForm.style.display = ''
+      changeForm.style.display = 'flex'
 
       // Update quantity input
       const countInput = changeForm.querySelector('.qty-input')

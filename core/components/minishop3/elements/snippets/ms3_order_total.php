@@ -9,6 +9,8 @@ use ModxPro\PdoTools\Fetch;
 
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
+$ms3->registerSnippet($scriptProperties, 'msOrderTotal');
+
 if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
     $token = $_SESSION['ms3']['customer_token'];
 } else {
@@ -38,11 +40,9 @@ $total = [
     'total_positions' => 0
 ];
 
-if (!$response['success']) {
-    return $total;
+if ($response['success']) {
+    $total = array_merge($total, $response['data']);
 }
-
-$total = array_merge($total, $response['data']);
 
 if ($return === 'data') {
     return $total;

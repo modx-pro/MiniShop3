@@ -5,6 +5,7 @@ return [
 
     'tpl.msCart' => 'ms3_cart',
     'tpl.msMiniCart' => 'ms3_minicart',
+    'tpl.msOrderTotal' => 'ms3_order_total',
     'tpl.msCustomerForm' => 'ms3_customer',
     'tpl.msOrder' => 'ms3_order',
     'tpl.msGetOrder' => 'ms3_get_order',
