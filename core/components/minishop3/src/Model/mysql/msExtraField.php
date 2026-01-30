@@ -26,6 +26,7 @@ class msExtraField extends \MiniShop3\Model\msExtraField
             'attributes' => null,
             'index_type' => 'NONE',
             'active' => 0,
+            'select_options' => null,
         ],
         'fieldMeta' => [
             'class' => [
@@ -108,6 +109,11 @@ class msExtraField extends \MiniShop3\Model\msExtraField
                 'phptype' => 'boolean',
                 'null' => true,
                 'default' => 0,
+            ],
+            'select_options' => [
+                'dbtype' => 'text',
+                'phptype' => 'string',
+                'null' => true,
             ]
         ],
         'indexes' => [],

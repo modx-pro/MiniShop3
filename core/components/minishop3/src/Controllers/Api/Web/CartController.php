@@ -248,7 +248,10 @@ class CartController
                 $snippetParams['customer_token'] = $customerToken;
             }
 
-            $html = $this->modx->runSnippet('msCart', $snippetParams);
+            $snippetName = $snippetParams['_snippetName'] ?? 'msCart';
+            unset($snippetParams['_snippetName']);
+
+            $html = $this->modx->runSnippet($snippetName, $snippetParams);
 
             if (!empty($html)) {
                 $rendered[$token] = $html;

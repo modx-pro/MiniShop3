@@ -155,9 +155,15 @@ $_lang['ms3_vue_xtype_textfield'] = 'Текстовое поле';
 $_lang['ms3_vue_xtype_numberfield'] = 'Числовое поле';
 $_lang['ms3_vue_xtype_textarea'] = 'Текстовая область';
 $_lang['ms3_vue_xtype_xcheckbox'] = 'Флажок';
+$_lang['ms3_vue_xtype_combo_select'] = 'Выпадающий список';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Производитель (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Автодополнение (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Опции товара (chips)';
+
+// Настройки выпадающего списка
+$_lang['ms3_vue_select_options_label'] = 'Варианты списка';
+$_lang['ms3_vue_select_options_placeholder'] = "value1==Первый вариант\nvalue2==Второй вариант\nvalue3==Третий вариант";
+$_lang['ms3_vue_select_options_help'] = 'Формат: значение==подпись (по одному на строку). Если подпись не указана, будет использовано значение.';
 
 // Типы данных БД (dbtype)
 $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (строка)';
@@ -219,7 +225,7 @@ $_lang['ms3_vue_dialog_key_help'] = 'Латинские буквы, цифры, 
 $_lang['ms3_vue_dialog_label'] = 'Метка';
 $_lang['ms3_vue_dialog_label_placeholder'] = 'Гарантия (месяцев)';
 $_lang['ms3_vue_dialog_description'] = 'Описание';
-$_lang['ms3_vue_dialog_xtype'] = 'Тип виджета (xtype)';
+$_lang['ms3_vue_dialog_xtype'] = 'Тип поля';
 $_lang['ms3_vue_dialog_xtype_select'] = 'Выберите тип';
 $_lang['ms3_vue_dialog_dbtype'] = 'Тип данных БД (dbtype) *';
 $_lang['ms3_vue_dialog_precision'] = 'Точность (precision)';
@@ -742,6 +748,7 @@ $_lang['bulk_delete_error'] = 'Ошибка при массовом удален
 // Deliveries
 $_lang['deliveries'] = 'Варианты доставки';
 $_lang['delivery_name'] = 'Название';
+$_lang['delivery_name_hint'] = 'Можно указать ключ лексикона (например: ms3_delivery_courier) или обычный текст';
 $_lang['delivery_description'] = 'Описание';
 $_lang['delivery_price'] = 'Цена';
 $_lang['delivery_weight_price'] = 'Цена за вес';
@@ -776,6 +783,7 @@ $_lang['ms3_no_payments'] = 'Способы оплаты не найдены';
 $_lang['ms3_payment_deliveries_hint'] = 'Выберите способы доставки, доступные для данного способа оплаты';
 $_lang['ms3_no_deliveries'] = 'Способы доставки не найдены';
 $_lang['payment_name'] = 'Название';
+$_lang['payment_name_hint'] = 'Можно указать ключ лексикона (например: ms3_payment_cash) или обычный текст';
 $_lang['payment_active'] = 'Активен';
 $_lang['payment_position'] = 'Позиция';
 $_lang['payment_create'] = 'Создать способ оплаты';

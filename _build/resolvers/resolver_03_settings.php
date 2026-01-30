@@ -14,6 +14,7 @@ use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\modCategory;
 use MODX\Revolution\modChunk;
+use MODX\Revolution\modSnippet;
 use MODX\Revolution\modSystemSetting;
 
 if ($transport->xpdo) {
@@ -114,6 +115,25 @@ if ($transport->xpdo) {
                         $chunk->save();
                     }
                 }
+            }
+
+            // Update msOrderTotal snippet default properties
+            /** @var modSnippet $snippet */
+            $snippet = $modx->getObject(modSnippet::class, ['name' => 'msOrderTotal']);
+            if ($snippet) {
+                $properties = $snippet->get('properties') ?: [];
+                $properties['tpl'] = [
+                    'name' => 'tpl',
+                    'type' => 'textfield',
+                    'value' => 'tpl.msOrderTotal',
+                ];
+                $properties['return'] = [
+                    'name' => 'return',
+                    'type' => 'textfield',
+                    'value' => 'tpl',
+                ];
+                $snippet->set('properties', $properties);
+                $snippet->save();
             }
             break;
 

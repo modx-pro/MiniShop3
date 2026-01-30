@@ -347,12 +347,12 @@ return [
         'properties' => [
             'tpl' => [
                 'type' => 'textfield',
-                'value' => '',
+                'value' => 'tpl.msOrderTotal',
             ],
             'return' => [
                 'type' => 'textfield',
-                'value' => 'data',
-            ]
+                'value' => 'tpl',
+            ],
         ],
     ],
 ];

@@ -44,6 +44,7 @@ assets/customScript.js
 # Personal AI assistant files
 *.md
 !CHANGELOG.md
+!.github/**/*.md
 
 # Environment
 .env
@@ -55,3 +56,7 @@ nul
 sync-exclude.txt
 copy-dist-exclude.txt
 tmpclaude-*
+
+# PHPStan (local config with machine-specific paths)
+phpstan.neon
+phpstan-baseline.neon

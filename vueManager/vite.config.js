@@ -21,6 +21,7 @@ const ProdInput = {
   'fields-management': 'src/entries/fields-management.js',
   'extra-fields': 'src/entries/extra-fields.js',
   'gallery-uploader': 'src/entries/gallery-uploader.js',
+  'product-tabs': 'src/entries/product-tabs.js',
   'customers': 'src/entries/customers.js',
   'orders': 'src/entries/orders.js',
   'order': 'src/entries/order.js',

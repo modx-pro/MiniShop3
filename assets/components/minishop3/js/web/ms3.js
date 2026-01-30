@@ -168,6 +168,11 @@ const ms3 = {
             const options = this.parseOptions(formData.get('options'))
             return this.cartUI.handleAdd(id, count, options)
           },
+          change: () => {
+            const productKey = formData.get('product_key')
+            const count = parseInt(formData.get('count')) || 0
+            return this.cartUI.handleChange(productKey, count)
+          },
           remove: () => {
             const productKey = formData.get('product_key')
             return this.cartUI.handleRemove(productKey)

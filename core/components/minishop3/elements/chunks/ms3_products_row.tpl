@@ -10,19 +10,9 @@
                     <img src="{$thumb}" class="product-image" alt="{$pagetitle}" title="{$pagetitle}" itemprop="image"/>
                 {else}
                     <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
-                        srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                        class="product-image" alt="{$pagetitle}" title="{$pagetitle}"/>
+                         srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
+                         class="product-image" alt="{$pagetitle}" title="{$pagetitle}"/>
                 {/if}
-
-                {* Оверлей при hover *}
-                <div class="product-overlay">
-                    <span class="text-white fw-semibold">
-                        <svg width="20" height="20" fill="currentColor" class="me-1">
-                            <use href="#icon-eye"/>
-                        </svg>
-                        Быстрый просмотр
-                    </span>
-                </div>
             </a>
 
             {* Статус наличия *}
@@ -88,7 +78,7 @@
 
             {* Название товара *}
             <h6 class="card-title mb-2 flex-grow-1">
-                <a href="/{$id | url}" class="text-decoration-none text-dark stretched-link product-title">
+                <a href="/{$id | url}" class="text-decoration-none text-dark product-title">
                     {$pagetitle}
                 </a>
             </h6>
@@ -184,7 +174,7 @@
                                 −
                             </button>
                             <input type="number" name="count" value="1" min="0"
-                                class="form-control form-control-sm qty-input text-center border-primary">
+                                   class="form-control form-control-sm qty-input text-center border-primary">
                             <button class="btn btn-outline-primary qty-btn inc-qty" type="button">
                                 +
                             </button>

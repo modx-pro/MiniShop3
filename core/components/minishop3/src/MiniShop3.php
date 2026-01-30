@@ -20,7 +20,7 @@ use xPDO\xPDO;
 
 class MiniShop3
 {
-    public $version = '1.2.3-beta1';
+    public $version = '1.3.0-beta1';
 
     /** @var modX $modx */
     public $modx;
@@ -263,7 +263,7 @@ class MiniShop3
         $this->mapLoaded = true;
     }
 
-    public function registerSnippet($scriptProperties)
+    public function registerSnippet($scriptProperties, string $snippetName = 'msCart')
     {
         /** @var \MiniShop3\Services\TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
@@ -272,7 +272,9 @@ class MiniShop3
         $cachedData = $tokenService->getSnippetData($token);
 
         if ($cachedData === null) {
-            $tokenService->cacheSnippetData($token, $scriptProperties);
+            $cacheData = $scriptProperties;
+            $cacheData['_snippetName'] = $snippetName;
+            $tokenService->cacheSnippetData($token, $cacheData);
         }
 
         $output = [

@@ -48,7 +48,8 @@ const fieldForm = ref({
   default_value: '',
   attributes: '',
   index_type: 'NONE',
-  active: true
+  active: true,
+  select_options: ''
 })
 
 /**
@@ -83,6 +84,7 @@ const xtypeOptions = computed(() => [
   { label: _('ms3_vue_xtype_numberfield'), value: 'numberfield' },
   { label: _('ms3_vue_xtype_textarea'), value: 'textarea' },
   { label: _('ms3_vue_xtype_xcheckbox'), value: 'xcheckbox' },
+  { label: _('ms3_vue_xtype_combo_select'), value: 'ms3-combo-select' },
   { label: _('ms3_vue_xtype_combo_vendor'), value: 'ms3-combo-vendor' },
   { label: _('ms3_vue_xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
   { label: _('ms3_vue_xtype_combo_options'), value: 'ms3-combo-options' }
@@ -186,7 +188,8 @@ function openCreateDialog() {
     default_value: '',
     attributes: '',
     index_type: 'NONE',
-    active: true
+    active: true,
+    select_options: ''
   }
 
   dialogVisible.value = true
@@ -215,7 +218,8 @@ function openEditDialog(field) {
     default_value: field.default_value || '',
     attributes: field.attributes || '',
     index_type: field.index_type || 'NONE',
-    active: field.active
+    active: field.active,
+    select_options: field.select_options || ''
   }
 
   dialogVisible.value = true
@@ -313,7 +317,8 @@ async function updateField() {
       label: fieldForm.value.label || '',
       description: fieldForm.value.description || '',
       xtype: fieldForm.value.xtype || 'textfield',
-      active: fieldForm.value.active === true || fieldForm.value.active === 'true' || fieldForm.value.active === 1
+      active: fieldForm.value.active === true || fieldForm.value.active === 'true' || fieldForm.value.active === 1,
+      select_options: fieldForm.value.xtype === 'ms3-combo-select' ? fieldForm.value.select_options : ''
     }
 
     const response = await request.put(`/api/mgr/extra-fields/${fieldForm.value.id}`, payload)
@@ -638,6 +643,19 @@ onMounted(() => {
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
               />
+            </div>
+
+            <!-- Dropdown options (only for ms3-combo-select) -->
+            <div class="field col-12" v-if="fieldForm.xtype === 'ms3-combo-select'">
+              <label for="field-select-options">{{ _('ms3_vue_select_options_label') }}</label>
+              <Textarea
+                id="field-select-options"
+                v-model="fieldForm.select_options"
+                :placeholder="_('ms3_vue_select_options_placeholder')"
+                rows="5"
+                class="w-full"
+              />
+              <small class="text-500">{{ _('ms3_vue_select_options_help') }}</small>
             </div>
           </div>
         </Fieldset>

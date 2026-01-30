@@ -67,22 +67,10 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
               })
               tabs.push(tab)
 
-              // Vue tab "Product" - second position after "Document"
+              // Vue tab "Product" with nested tabs (Properties, Gallery, Categories, Links, Options)
+              // Only show for existing products (not in create mode)
               if (config.mode !== 'create') {
-                tabs.push(this.getVueProductFields(config))
-              }
-
-              // Old ExtJS "Product Data" tab - REMOVED, using Vue tab instead
-              // tabs.push(this.getProductFields(config))
-
-              if (config.mode !== 'create') {
-                tabs.push(this.getProductLinks(config))
-                tabs.push(this.getProductCategories(config))
-
-                const optionsTab = this.getProductOptions(config)
-                if (optionsTab) {
-                  tabs.push(optionsTab)
-                }
+                tabs.push(this.getProductTab(config))
               }
 
               break
@@ -190,6 +178,49 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
     }
   },
 
+  /**
+   * Get Product tab with nested Vue TabView
+   * Contains: Properties, Gallery, Categories, Links, Options
+   */
+  getProductTab: function (config) {
+    return {
+      title: _('ms3_tab_product'),
+      id: 'ms3-product-tab',
+      layout: 'fit',
+      items: [{
+        xtype: 'panel',
+        border: false,
+        id: 'ms3-vue-product-tabs-panel',
+        html: '<div id="ms3-vue-product-tabs" class="vueApp"></div>',
+        listeners: {
+          afterrender: function () {
+            // Dispatch event to mount Vue ProductTabs application
+            const event = new CustomEvent('ms3:mountProductTabs', {
+              detail: {
+                targetId: 'ms3-vue-product-tabs',
+                productId: config.record.id,
+                record: config.record,
+                config: {
+                  show_gallery: ms3.config.show_gallery,
+                  show_categories: ms3.config.show_categories,
+                  show_links: ms3.config.show_links,
+                  show_options: ms3.config.show_options,
+                  option_fields: ms3.config.option_fields || [],
+                  media_source: ms3.config.media_source || {},
+                  connector_url: ms3.config.connector_url
+                }
+              }
+            })
+            document.dispatchEvent(event)
+          }
+        }
+      }]
+    }
+  },
+
+  /**
+   * @deprecated Use getProductTab() instead. Kept for backward compatibility.
+   */
   getVueProductFields: function (config) {
     return {
       title: _('ms3_tab_product_data'),

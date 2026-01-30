@@ -130,10 +130,9 @@ Ext.extend(ms3.panel.UpdateProduct, ms3.panel.Product, {
 
 
 
-            if (parseInt(ms3.config['show_gallery']) !== 0) {
-                const galleryTab = this.getGallery(config);
-                tabs.push(galleryTab);
-            }
+            // Gallery tab is now inside Vue ProductTabs component
+            // No need to add it separately here
+
             tabs.push(pageSettingsTab);
             tabs.push(accessPermissionsTab);
 
@@ -144,6 +143,9 @@ Ext.extend(ms3.panel.UpdateProduct, ms3.panel.Product, {
         return fields;
     },
 
+    /**
+     * @deprecated Gallery is now inside Vue ProductTabs. Kept for backward compatibility.
+     */
     getGallery: function (config) {
         return {
             title: _('ms3_tab_product_gallery'),

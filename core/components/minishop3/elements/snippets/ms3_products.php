@@ -1,6 +1,8 @@
 <?php
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msCategory;
+use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
@@ -28,7 +30,7 @@ $pdoFetch->addTime('pdoTools loaded.');
 
 // Don't set default parents when using link parameter (linked products can be anywhere)
 $link = $scriptProperties['link'] ?? null;
-if (empty($link) && isset($parents) && $parents === '') {
+if (empty($link) && (!isset($parents) || $parents === '')) {
     $scriptProperties['parents'] = $modx->resource->id;
 }
 // Disable parents filtering when using link
@@ -134,6 +136,112 @@ foreach (['where', 'leftJoin', 'innerJoin', 'select', 'groupby'] as $v) {
     unset($scriptProperties[$v]);
 }
 $pdoFetch->addTime('Conditions prepared');
+
+// Workaround: pdoTools проверяет 'msCategory' в classMap, но MiniShop3 использует namespace
+// Добавляем товары из дополнительных категорий (msCategoryMember) через кастомный WHERE
+// TODO убрать этот блок в случае доработок pdoTools
+$_ms3Parents = (string)($scriptProperties['parents'] ?? '');
+if ($_ms3Parents !== '' && $_ms3Parents !== '0') {
+    $_ms3Depth = (int)($scriptProperties['depth'] ?? 10);
+    $_ms3ParentsIn = [];
+    $_ms3ParentsOut = [];
+
+    // Разбираем parents: положительные - включить, отрицательные - исключить
+    foreach (array_map('trim', explode(',', $_ms3Parents)) as $_ms3Parent) {
+        $_ms3Parent = (int)$_ms3Parent;
+        if ($_ms3Parent > 0) {
+            $_ms3ParentsIn[] = $_ms3Parent;
+        } elseif ($_ms3Parent < 0) {
+            $_ms3ParentsOut[] = abs($_ms3Parent);
+        }
+    }
+
+    // Получаем дочерние категории для включения (только msCategory, не все ресурсы)
+    if (!empty($_ms3ParentsIn) && $_ms3Depth > 0) {
+        $_ms3CatIds = $_ms3ParentsIn;
+        for ($_ms3i = 0; $_ms3i < $_ms3Depth; $_ms3i++) {
+            $_ms3CatQuery = $modx->newQuery(msCategory::class);
+            $_ms3CatQuery->where([
+                'class_key' => msCategory::class,
+                'parent:IN' => $_ms3CatIds,
+                'published' => 1,
+                'deleted' => 0,
+            ]);
+            $_ms3CatQuery->select('id');
+
+            if ($_ms3CatQuery->prepare() && $_ms3CatQuery->stmt->execute()) {
+                $_ms3ChildIds = $_ms3CatQuery->stmt->fetchAll(\PDO::FETCH_COLUMN);
+                if (empty($_ms3ChildIds)) {
+                    break;
+                }
+                $_ms3ParentsIn = array_merge($_ms3ParentsIn, $_ms3ChildIds);
+                $_ms3CatIds = $_ms3ChildIds;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Получаем дочерние категории для исключения
+    if (!empty($_ms3ParentsOut) && $_ms3Depth > 0) {
+        $_ms3CatIds = $_ms3ParentsOut;
+        for ($_ms3i = 0; $_ms3i < $_ms3Depth; $_ms3i++) {
+            $_ms3CatQuery = $modx->newQuery(msCategory::class);
+            $_ms3CatQuery->where([
+                'class_key' => msCategory::class,
+                'parent:IN' => $_ms3CatIds,
+                'published' => 1,
+                'deleted' => 0,
+            ]);
+            $_ms3CatQuery->select('id');
+
+            if ($_ms3CatQuery->prepare() && $_ms3CatQuery->stmt->execute()) {
+                $_ms3ChildIds = $_ms3CatQuery->stmt->fetchAll(\PDO::FETCH_COLUMN);
+                if (empty($_ms3ChildIds)) {
+                    break;
+                }
+                $_ms3ParentsOut = array_merge($_ms3ParentsOut, $_ms3ChildIds);
+                $_ms3CatIds = $_ms3ChildIds;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Вычитаем исключённые категории из включённых
+    $_ms3ParentsIn = array_unique($_ms3ParentsIn);
+    $_ms3ParentsOut = array_unique($_ms3ParentsOut);
+    if (!empty($_ms3ParentsOut)) {
+        $_ms3ParentsIn = array_diff($_ms3ParentsIn, $_ms3ParentsOut);
+    }
+
+    // ВСЕГДА отключаем pdoTools parent processing - мы обрабатываем сами
+    if (!empty($_ms3ParentsIn)) {
+        $_ms3ParentsList = implode(',', array_map('intval', $_ms3ParentsIn));
+
+        // Получаем товары из дополнительных категорий
+        $_ms3MemberQuery = $modx->newQuery(msCategoryMember::class);
+        $_ms3MemberQuery->where(['category_id:IN' => $_ms3ParentsIn]);
+        $_ms3MemberQuery->select('product_id');
+
+        $_ms3MemberIds = [];
+        if ($_ms3MemberQuery->prepare() && $_ms3MemberQuery->stmt->execute()) {
+            $_ms3MemberIds = $_ms3MemberQuery->stmt->fetchAll(\PDO::FETCH_COLUMN);
+        }
+
+        // Строим WHERE: parent IN категориях, опционально OR id IN доп. категориях
+        if (!empty($_ms3MemberIds)) {
+            $_ms3MembersList = implode(',', array_map('intval', $_ms3MemberIds));
+            $where[] = "(`msProduct`.`parent` IN ({$_ms3ParentsList}) OR `msProduct`.`id` IN ({$_ms3MembersList}))";
+        } else {
+            // Нет товаров в доп. категориях - просто фильтруем по parent
+            $where[] = "`msProduct`.`parent` IN ({$_ms3ParentsList})";
+        }
+
+        // ВСЕГДА отключаем стандартную фильтрацию pdoTools по parents
+        $scriptProperties['parents'] = 0;
+    }
+}
 
 // Add filters by options
 $joinedOptions = [];

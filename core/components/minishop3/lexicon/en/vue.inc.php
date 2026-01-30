@@ -155,9 +155,15 @@ $_lang['ms3_vue_xtype_textfield'] = 'Text Field';
 $_lang['ms3_vue_xtype_numberfield'] = 'Number Field';
 $_lang['ms3_vue_xtype_textarea'] = 'Text Area';
 $_lang['ms3_vue_xtype_xcheckbox'] = 'Checkbox';
+$_lang['ms3_vue_xtype_combo_select'] = 'Dropdown List';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Vendor (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Autocomplete (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Product Options (chips)';
+
+// Dropdown list settings
+$_lang['ms3_vue_select_options_label'] = 'List Options';
+$_lang['ms3_vue_select_options_placeholder'] = "value1==First option\nvalue2==Second option\nvalue3==Third option";
+$_lang['ms3_vue_select_options_help'] = 'Format: value==label (one per line). If label is not specified, the value will be used.';
 
 // Database types (dbtype)
 $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (string)';
@@ -219,7 +225,7 @@ $_lang['ms3_vue_dialog_key_help'] = 'Latin letters, digits, underscore. No space
 $_lang['ms3_vue_dialog_label'] = 'Label';
 $_lang['ms3_vue_dialog_label_placeholder'] = 'Warranty (months)';
 $_lang['ms3_vue_dialog_description'] = 'Description';
-$_lang['ms3_vue_dialog_xtype'] = 'Widget Type (xtype)';
+$_lang['ms3_vue_dialog_xtype'] = 'Field Type';
 $_lang['ms3_vue_dialog_xtype_select'] = 'Select type';
 $_lang['ms3_vue_dialog_dbtype'] = 'Database Type (dbtype) *';
 $_lang['ms3_vue_dialog_precision'] = 'Precision';
@@ -737,6 +743,7 @@ $_lang['bulk_delete_error'] = 'Error during bulk delete';
 // Deliveries
 $_lang['deliveries'] = 'Delivery Methods';
 $_lang['delivery_name'] = 'Name';
+$_lang['delivery_name_hint'] = 'You can use a lexicon key (e.g.: ms3_delivery_courier) or plain text';
 $_lang['delivery_description'] = 'Description';
 $_lang['delivery_price'] = 'Price';
 $_lang['delivery_weight_price'] = 'Weight Price';
@@ -771,6 +778,7 @@ $_lang['ms3_no_payments'] = 'No payment methods found';
 $_lang['ms3_payment_deliveries_hint'] = 'Select delivery methods available for this payment method';
 $_lang['ms3_no_deliveries'] = 'No delivery methods found';
 $_lang['payment_name'] = 'Name';
+$_lang['payment_name_hint'] = 'You can use a lexicon key (e.g.: ms3_payment_cash) or plain text';
 $_lang['payment_active'] = 'Active';
 $_lang['payment_position'] = 'Position';
 $_lang['payment_create'] = 'Create payment method';
