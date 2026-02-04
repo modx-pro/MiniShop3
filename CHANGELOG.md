@@ -4,12 +4,52 @@
 
 ## Навигация
 
-- **Текущий месяц:** [Январь 2026](#январь-2026) (ниже)
-- **Предыдущий месяц:** [Декабрь 2025](#декабрь-2025) (ниже)
+- **Текущий месяц:** [Февраль 2026](#февраль-2026) (ниже)
+- **Предыдущий месяц:** [Январь 2026](#январь-2026) (ниже)
 - **Архив по месяцам:**
   - [Ноябрь 2025](changelogs/2025-11.md)
   - [Октябрь 2025](changelogs/2025-10.md)
   - [Архив (2024 и ранее)](changelogs/archive.md)
+
+---
+
+## Февраль 2026
+
+### [2026-02-04] 🚀 Версия 1.4.0-beta1
+
+**Тип релиза:** MINOR (beta) — улучшения и исправления
+
+---
+
+#### ✨ Добавлено
+
+**Админка — Vue Manager:**
+- Локализация PrimeVue через `@vuetools/usePrimeVueLocale` во всех Vue-приложениях (заказы, товары, клиенты, доставки, оплаты, производители, связи, статусы, уведомления, категории товаров, галерея, импорт, поля и т.д.)
+- Composables VueTools расширен на `usePrimeVueLocale` в vite.config.js
+
+#### 📁 Изменённые файлы
+
+```
+vueManager/src/entries/api-test.js
+vueManager/src/entries/category-products.js
+vueManager/src/entries/customers.js
+vueManager/src/entries/deliveries.js
+vueManager/src/entries/extra-fields.js
+vueManager/src/entries/fields-management.js
+vueManager/src/entries/grid-fields-config.js
+vueManager/src/entries/import.js
+vueManager/src/entries/links.js
+vueManager/src/entries/model-fields.js
+vueManager/src/entries/notifications.js
+vueManager/src/entries/order.js
+vueManager/src/entries/orders.js
+vueManager/src/entries/payments.js
+vueManager/src/entries/product-tabs.js
+vueManager/src/entries/statuses.js
+vueManager/src/entries/utilities-gallery.js
+vueManager/src/entries/vendors.js
+vueManager/vite.config.js
+```
 
 ---
 

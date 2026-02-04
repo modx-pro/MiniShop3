@@ -5,7 +5,6 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import prefixSelector from 'postcss-prefix-selector'
 
-
 const output = {
   dir: '../',
   assetFileNames: 'assets/components/minishop3/css/mgr/vue-dist/[name].min[extname]', // css files
@@ -96,12 +95,13 @@ export default defineConfig(({ command }) => {
   // Externalize Vue stack - loaded via Import Map from VueTools
   const external = ['vue', 'pinia', 'primevue']
 
-  // Composables from VueTools
+  // Composables from VueTools — загружаются из Import Map (VueTools)
   const vuetoolsComposables = [
     '@vuetools/useApi',
     '@vuetools/useLexicon',
     '@vuetools/useModx',
-    '@vuetools/usePermission'
+    '@vuetools/usePermission',
+    '@vuetools/usePrimeVueLocale',
   ]
 
   if (command === 'serve') {
@@ -113,7 +113,7 @@ export default defineConfig(({ command }) => {
           external: [...external, ...vuetoolsComposables]
         }
       },
-      plugins: [vue(), vueDevTools(),],
+      plugins: [vue(), vueDevTools()],
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url))

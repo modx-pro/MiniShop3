@@ -9,6 +9,7 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
+import { getPrimeVueLocale } from "@vuetools/usePrimeVueLocale";
 import 'primeicons/primeicons.css';
 
 import ConfirmationService from 'primevue/confirmationservice';
@@ -21,17 +22,18 @@ import ModelFieldsGrid from '../components/ModelFieldsGrid.vue';
  */
 function createVueApp() {
   const app = createApp(ModelFieldsGrid);
-
   const pinia = createPinia();
+
   app.use(pinia);
 
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
+        darkModeSelector: "none",
+      },
+    },
+    locale: getPrimeVueLocale(),
   });
 
   app.use(ConfirmationService);

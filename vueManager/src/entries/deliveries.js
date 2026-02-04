@@ -8,6 +8,7 @@ import '../scss/primevue.scss'
 import { createApp } from 'vue'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from "@vuetools/usePrimeVueLocale";
 import 'primeicons/primeicons.css'
 
 import ConfirmationService from 'primevue/confirmationservice'
@@ -25,10 +26,11 @@ function createVueApp() {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
-  })
+        darkModeSelector: "none",
+      },
+    },
+    locale: getPrimeVueLocale(),
+  });
 
   app.use(ConfirmationService)
   app.use(ToastService)

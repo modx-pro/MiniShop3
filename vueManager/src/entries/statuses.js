@@ -10,6 +10,7 @@ import Aura from '@primeuix/themes/aura'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 import StatusesGrid from '../components/StatusesGrid.vue'
+import { getPrimeVueLocale } from "@vuetools/usePrimeVueLocale";
 
 // Mount point ID
 const MOUNT_ID = 'ms3-vue-statuses'
@@ -38,11 +39,12 @@ function mountApp() {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: '.dark-mode',
-        cssLayer: false
-      }
-    }
-  })
+        darkModeSelector: ".dark-mode",
+        cssLayer: false,
+      },
+    },
+    locale: getPrimeVueLocale(),
+  });
 
   app.use(ToastService)
   app.use(ConfirmationService)

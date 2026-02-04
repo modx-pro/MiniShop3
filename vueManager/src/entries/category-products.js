@@ -10,6 +10,7 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
+import { getPrimeVueLocale } from "@vuetools/usePrimeVueLocale";
 import 'primeicons/primeicons.css';
 
 import ConfirmationService from 'primevue/confirmationservice';
@@ -35,9 +36,10 @@ function createVueApp(categoryId) {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
+        darkModeSelector: "none",
+      },
+    },
+    locale: getPrimeVueLocale(),
   });
 
   app.use(ConfirmationService);

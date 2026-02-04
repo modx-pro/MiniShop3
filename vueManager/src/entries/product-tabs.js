@@ -12,6 +12,7 @@ import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 import 'primeicons/primeicons.css'
+import { getPrimeVueLocale } from "@vuetools/usePrimeVueLocale";
 
 import ToastService from 'primevue/toastservice'
 import ProductTabs from '../components/product/ProductTabs.vue'
@@ -120,7 +121,7 @@ window.MS3ProductTabsRegistry = window.MS3ProductTabsRegistry || new ProductTabs
  * @returns {Object} Vue app instance
  */
 function createVueApp(props) {
-  const app = createApp(ProductTabs, props)
+  const app = createApp(ProductTabs, props);
 
   const pinia = createPinia()
   app.use(pinia)
@@ -129,10 +130,11 @@ function createVueApp(props) {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
-  })
+        darkModeSelector: "none",
+      },
+    },
+    locale: getPrimeVueLocale(),
+  });
 
   app.use(ToastService)
 
