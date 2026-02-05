@@ -29,14 +29,14 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'link',
   deleteBulk: async (ids) => {
     await request.delete('/api/mgr/links/bulk', { ids })
   },
   onSuccess: () => loadLinks(),
-  getItemName: (item) => item.name
+  getItemName: (item) => item.name,
 })
 
 const loading = ref(false)
@@ -82,7 +82,7 @@ async function loadLinks() {
   try {
     const response = await request.get('/api/mgr/links', {
       start: first.value,
-      limit: rows.value
+      limit: rows.value,
     })
 
     if (response && response.results) {
@@ -98,7 +98,7 @@ async function loadLinks() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -121,7 +121,7 @@ function createLink() {
   editingLink.value = {
     name: '',
     type: linkTypes.value.length > 0 ? linkTypes.value[0].value : '',
-    description: ''
+    description: '',
   }
   isNewLink.value = true
   editDialogVisible.value = true
@@ -145,7 +145,7 @@ async function saveLink() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('link_name_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -155,7 +155,7 @@ async function saveLink() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('link_type_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -175,7 +175,7 @@ async function saveLink() {
         severity: 'success',
         summary: _('success'),
         detail: isNewLink.value ? _('link_created') : _('link_updated'),
-        life: 3000
+        life: 3000,
       })
       editDialogVisible.value = false
       loadLinks()
@@ -186,7 +186,7 @@ async function saveLink() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -211,7 +211,7 @@ function deleteLink(link) {
           severity: 'success',
           summary: _('success'),
           detail: _('link_deleted'),
-          life: 3000
+          life: 3000,
         })
         loadLinks()
       } catch (error) {
@@ -220,10 +220,10 @@ function deleteLink(link) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -233,7 +233,7 @@ function deleteLink(link) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false }
+    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false },
   ]
 }
 

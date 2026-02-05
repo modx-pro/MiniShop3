@@ -14,21 +14,21 @@ export default defineConfig({
       input: {
         vue: 'src/vendor-vue.js',
         pinia: 'src/vendor-pinia.js',
-        primevue: 'src/vendor-primevue.js'
+        primevue: 'src/vendor-primevue.js',
       },
       output: {
         format: 'es',
         entryFileNames: '[name].min.js',
         // Сохраняем исходную структуру модулей
-        preserveModules: false
-      }
+        preserveModules: false,
+      },
     },
     // Минификация
     minify: 'terser',
     terserOptions: {
       format: {
-        comments: false
-      }
-    }
-  }
+        comments: false,
+      },
+    },
+  },
 })

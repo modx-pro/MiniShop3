@@ -20,7 +20,7 @@ window.MS3_initGalleryUploader = function(config) {
     allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic'],
     onUploadSuccess,
     onUploadError,
-    onUploadComplete
+    onUploadComplete,
   } = config
 
   const container = document.getElementById(containerId)
@@ -39,7 +39,7 @@ window.MS3_initGalleryUploader = function(config) {
     allowedFileTypes,
     onUploadSuccess,
     onUploadError,
-    onUploadComplete
+    onUploadComplete,
   })
 
   const instance = app.mount(container)
@@ -54,7 +54,7 @@ window.MS3_initGalleryUploader = function(config) {
       app.unmount()
       delete container.__vueApp__
       delete container.__vueInstance__
-    }
+    },
   }
 }
 

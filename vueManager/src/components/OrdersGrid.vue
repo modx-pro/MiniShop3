@@ -26,14 +26,14 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'order',
   deleteBulk: async (ids) => {
     await request.delete('/api/mgr/orders/bulk', { ids })
   },
   onSuccess: () => loadOrders(),
-  getItemName: (item) => `#${item.num || item.id}`
+  getItemName: (item) => `#${item.num || item.id}`,
 })
 
 const columns = ref([])
@@ -46,7 +46,7 @@ const rows = ref(20)
 const filterValues = ref({})
 const stats = ref({
   month_sum: '0',
-  month_total: '0'
+  month_total: '0',
 })
 
 /**
@@ -67,7 +67,7 @@ async function loadOrders() {
   try {
     const params = {
       start: first.value,
-      limit: rows.value
+      limit: rows.value,
     }
 
     // Apply filter values
@@ -110,7 +110,7 @@ async function loadOrders() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -161,7 +161,7 @@ async function deleteOrder(order) {
       severity: 'success',
       summary: _('success'),
       detail: _('order_deleted'),
-      life: 3000
+      life: 3000,
     })
 
     await loadOrders()
@@ -171,7 +171,7 @@ async function deleteOrder(order) {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_deleting_data'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -272,7 +272,7 @@ function getStatusSeverity(color) {
     '#f0ad4e': 'warn',
     'yellow': 'warn',
     '#5bc0de': 'info',
-    'blue': 'info'
+    'blue': 'info',
   }
 
   return colorMap[color.toLowerCase()] || 'secondary'
@@ -391,9 +391,9 @@ function getDefaultColumns() {
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' }
-      ]
-    }
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' },
+      ],
+    },
   ]
 }
 
@@ -404,7 +404,7 @@ function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' }
+      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' },
     ]
   }
   return column.actions
@@ -433,7 +433,7 @@ function getCustomerLink(data) {
 onMounted(async () => {
   await Promise.all([
     loadGridConfig(),
-    loadFiltersConfig()
+    loadFiltersConfig(),
   ])
   await loadOrders()
 })

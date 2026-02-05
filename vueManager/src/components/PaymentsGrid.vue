@@ -36,14 +36,14 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'payment',
   deleteBulk: async (ids) => {
     await request.delete('/api/mgr/payments/bulk', { ids })
   },
   onSuccess: () => loadPayments(),
-  getItemName: (item) => item.name
+  getItemName: (item) => item.name,
 })
 
 const columns = ref([])
@@ -76,7 +76,7 @@ async function loadPayments() {
   try {
     const params = {
       start: first.value,
-      limit: rows.value
+      limit: rows.value,
     }
 
     if (searchQuery.value) {
@@ -106,7 +106,7 @@ async function loadPayments() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -116,6 +116,7 @@ async function loadPayments() {
 /**
  * Handle pagination
  */
+// eslint-disable-next-line no-unused-vars
 function onPage(event) {
   first.value = event.first
   rows.value = event.rows
@@ -125,6 +126,7 @@ function onPage(event) {
 /**
  * Handle search
  */
+// eslint-disable-next-line no-unused-vars
 function onSearch() {
   first.value = 0
   loadPayments()
@@ -153,7 +155,7 @@ async function onDragEnd() {
       severity: 'success',
       summary: _('success'),
       detail: _('payment_order_saved'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[PaymentsGrid] Error saving order:', error)
@@ -161,7 +163,7 @@ async function onDragEnd() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
     loadPayments()
   }
@@ -189,7 +191,7 @@ function createPayment() {
     position: 0,
     active: true,
     class: '',
-    logo: ''
+    logo: '',
   }
   isNewPayment.value = true
   activeTab.value = '0'
@@ -284,7 +286,7 @@ async function toggleDelivery(deliveryId, newValue) {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -298,7 +300,7 @@ async function savePayment() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('payment_name_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -318,7 +320,7 @@ async function savePayment() {
         severity: 'success',
         summary: _('success'),
         detail: isNewPayment.value ? _('payment_created') : _('payment_updated'),
-        life: 3000
+        life: 3000,
       })
       editDialogVisible.value = false
       loadPayments()
@@ -329,7 +331,7 @@ async function savePayment() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -354,7 +356,7 @@ function deletePayment(payment) {
           severity: 'success',
           summary: _('success'),
           detail: _('payment_deleted'),
-          life: 3000
+          life: 3000,
         })
         loadPayments()
       } catch (error) {
@@ -363,10 +365,10 @@ function deletePayment(payment) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -394,7 +396,7 @@ function getActionsConfig(column) {
   const config = column.actions || []
   return config.map(action => ({
     ...action,
-    label: _(action.label) || action.label
+    label: _(action.label) || action.label,
   }))
 }
 
@@ -417,8 +419,8 @@ async function loadGridConfig() {
         { name: 'position', label: _('payment_position'), visible: true, sortable: true, width: '100px' },
         { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '120px', actions: [
           { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false }
-        ]}
+          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false },
+        ]},
       ]
     }
   } catch (error) {

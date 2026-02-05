@@ -9,7 +9,8 @@ import '../scss/primevue.scss';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import PrimeVue from 'primevue/config';
-import Aura from '@primevue/themes/aura';
+import Aura from '@primeuix/themes/aura';
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import 'primeicons/primeicons.css';
 
 import ConfirmationService from 'primevue/confirmationservice';
@@ -25,7 +26,7 @@ let appInstance = null;
  */
 function createVueApp(categoryId) {
   const app = createApp(CategoryProductsGrid, {
-    categoryId: categoryId
+    categoryId: categoryId,
   });
 
   const pinia = createPinia();
@@ -35,9 +36,10 @@ function createVueApp(categoryId) {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
+        darkModeSelector: 'none',
+      },
+    },
+    locale: getPrimeVueLocale(),
   });
 
   app.use(ConfirmationService);
@@ -104,5 +106,5 @@ export function isMounted() {
 window.MS3CategoryProducts = {
   init,
   destroy,
-  isMounted
+  isMounted,
 };

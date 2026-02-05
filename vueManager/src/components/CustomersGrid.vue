@@ -30,14 +30,14 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'customer',
   deleteBulk: async (ids) => {
     await request.delete('/api/mgr/customers/bulk', { ids })
   },
   onSuccess: () => loadCustomers(),
-  getItemName: (item) => getCustomerDisplayName(item)
+  getItemName: (item) => getCustomerDisplayName(item),
 })
 
 const columns = ref([])
@@ -71,7 +71,7 @@ async function loadCustomers() {
   try {
     const params = {
       start: first.value,
-      limit: rows.value
+      limit: rows.value,
     }
 
     if (searchQuery.value) {
@@ -101,7 +101,7 @@ async function loadCustomers() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -169,7 +169,7 @@ async function saveCustomer() {
       severity: 'success',
       summary: _('success'),
       detail: _('customer_updated'),
-      life: 3000
+      life: 3000,
     })
 
     editDialogVisible.value = false
@@ -180,7 +180,7 @@ async function saveCustomer() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -206,7 +206,7 @@ function deleteCustomer(customer) {
           severity: 'success',
           summary: _('success'),
           detail: _('customer_deleted'),
-          life: 3000
+          life: 3000,
         })
 
         await loadCustomers()
@@ -216,10 +216,10 @@ function deleteCustomer(customer) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -263,7 +263,7 @@ async function loadAddresses(customerId) {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
     addresses.value = []
   } finally {
@@ -288,7 +288,7 @@ function createAddress() {
     floor: '',
     room: '',
     comment: '',
-    active: true
+    active: true,
   }
   addressFormVisible.value = true
 }
@@ -315,24 +315,24 @@ async function saveAddress() {
     if (editingAddress.value.id) {
       await request.put(
         `/api/mgr/customers/${customerId}/addresses/${editingAddress.value.id}`,
-        editingAddress.value
+        editingAddress.value,
       )
       toast.add({
         severity: 'success',
         summary: _('success'),
         detail: _('address_updated'),
-        life: 3000
+        life: 3000,
       })
     } else {
       await request.post(
         `/api/mgr/customers/${customerId}/addresses`,
-        editingAddress.value
+        editingAddress.value,
       )
       toast.add({
         severity: 'success',
         summary: _('success'),
         detail: _('address_created'),
-        life: 3000
+        life: 3000,
       })
     }
 
@@ -345,7 +345,7 @@ async function saveAddress() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     savingAddress.value = false
@@ -372,7 +372,7 @@ function deleteAddress(address) {
           severity: 'success',
           summary: _('success'),
           detail: _('address_deleted'),
-          life: 3000
+          life: 3000,
         })
 
         await loadAddresses(customerId)
@@ -382,10 +382,10 @@ function deleteAddress(address) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -408,13 +408,14 @@ function formatDate(dateString) {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
 /**
  * Format email status
  */
+// eslint-disable-next-line no-unused-vars
 function formatEmailStatus(customer) {
   return customer.email_verified_at ? _('verified') : _('not_verified')
 }
@@ -475,7 +476,7 @@ async function loadAndOpenCustomer(customerId) {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -517,9 +518,9 @@ function getDefaultColumns() {
       actions: [
         { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' }
-      ]
-    }
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' },
+      ],
+    },
   ]
 }
 
@@ -531,7 +532,7 @@ function getActionsConfig(column) {
     return [
       { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' }
+      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' },
     ]
   }
   return column.actions

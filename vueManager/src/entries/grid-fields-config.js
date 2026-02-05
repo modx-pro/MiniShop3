@@ -8,7 +8,8 @@ import '../scss/primevue.scss'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import Aura from '@primevue/themes/aura'
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import 'primeicons/primeicons.css'
 
 import ConfirmationService from 'primevue/confirmationservice'
@@ -20,7 +21,7 @@ import GridFieldsConfig from '../components/GridFieldsConfig.vue'
  * Creates and configures Vue application
  */
 function createVueApp() {
-  const app = createApp(GridFieldsConfig)
+  const app = createApp(GridFieldsConfig);
 
   const pinia = createPinia()
   app.use(pinia)
@@ -29,10 +30,11 @@ function createVueApp() {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
-  })
+        darkModeSelector: 'none',
+      },
+    },
+    locale: getPrimeVueLocale(),
+  });
 
   app.use(ConfirmationService)
   app.use(ToastService)
@@ -82,7 +84,7 @@ function waitForElement(selector, callback) {
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
   })
 }
 

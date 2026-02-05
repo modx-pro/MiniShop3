@@ -1,12 +1,12 @@
 <script setup>
 
 import { onMounted, ref } from 'vue'
-import { Button, Card, Column, DataTable, Dialog, InputText, Select, InputNumber } from 'primevue';
+import { Button, Card, Column, DataTable, Dialog, InputText, Select } from 'primevue';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Toast from 'primevue/toast';
 
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
+import { useConfirm } from 'primevue/useconfirm';
+import { useToast } from 'primevue/usetoast';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -47,7 +47,7 @@ async function get () {
       leftFields.value = product.data.left
       rightFields.value = product.data.right
     } catch (error) {
-      console.error(`Error when executing query GET product-fields:`, error)
+      console.error('Error when executing query GET product-fields:', error)
     }
   } else {
     const { product } = await import('../mockups/product/fields.json')
@@ -65,7 +65,7 @@ async function getXtypes () {
       const { xtypes } = await request.get('product-xtypes', formData)
       types.value = xtypes
     } catch (error) {
-      console.error(`Error when executing query GET product-xtypes:`, error)
+      console.error('Error when executing query GET product-xtypes:', error)
     }
   } else {
     const { xtypes } = await import('../mockups/product/xtypes.json')
@@ -89,7 +89,7 @@ async function save () {
         loading.value = false
       }
     } catch (error) {
-      console.error(`Error when executing query POST product-fields:`, error)
+      console.error('Error when executing query POST product-fields:', error)
     }
   } else {
     setTimeout(() => {
@@ -106,10 +106,10 @@ const confirmRemove = (field) => {
     rejectProps: {
       label: 'Cancel',
       severity: 'secondary',
-      outlined: true
+      outlined: true,
     },
     acceptProps: {
-      label: 'Delete'
+      label: 'Delete',
     },
     accept: () => {
       remove(field.name)

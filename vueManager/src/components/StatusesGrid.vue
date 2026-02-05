@@ -28,14 +28,14 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'status',
   deleteBulk: async (ids) => {
     await request.delete('/api/mgr/statuses/bulk', { ids })
   },
   onSuccess: () => loadStatuses(),
-  getItemName: (item) => item.name
+  getItemName: (item) => item.name,
 })
 
 const loading = ref(false)
@@ -53,7 +53,7 @@ const colorPalette = [
   '800000', 'FF6600', '808000', '008000', '008080', '0000FF', '666699', '808080',
   'FF0000', 'FF9900', '99CC00', '339966', '33CCCC', '3366FF', '800080', '969696',
   'FF00FF', 'FFCC00', 'FFFF00', '00FF00', '00FFFF', '00CCFF', '993366', 'C0C0C0',
-  'FF99CC', 'FFCC99', 'FFFF99', 'CCFFCC', 'CCFFFF', '99CCFF', 'CC99FF', 'FFFFFF'
+  'FF99CC', 'FFCC99', 'FFFF99', 'CCFFCC', 'CCFFFF', '99CCFF', 'CC99FF', 'FFFFFF',
 ]
 
 /**
@@ -78,7 +78,7 @@ async function loadStatuses() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -95,7 +95,7 @@ function createStatus() {
     color: '000000',
     active: true,
     final: false,
-    fixed: false
+    fixed: false,
   }
   isNewStatus.value = true
   editDialogVisible.value = true
@@ -119,7 +119,7 @@ async function saveStatus() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('status_name_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -139,7 +139,7 @@ async function saveStatus() {
         severity: 'success',
         summary: _('success'),
         detail: isNewStatus.value ? _('status_created') : _('status_updated'),
-        life: 3000
+        life: 3000,
       })
       editDialogVisible.value = false
       loadStatuses()
@@ -150,7 +150,7 @@ async function saveStatus() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -175,7 +175,7 @@ function deleteStatus(status) {
           severity: 'success',
           summary: _('success'),
           detail: _('status_deleted'),
-          life: 3000
+          life: 3000,
         })
         loadStatuses()
       } catch (error) {
@@ -184,10 +184,10 @@ function deleteStatus(status) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -204,7 +204,7 @@ async function onDragEnd() {
       severity: 'success',
       summary: _('success'),
       detail: _('status_order_saved'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[StatusesGrid] Error saving order:', error)
@@ -212,7 +212,7 @@ async function onDragEnd() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
     // Reload to restore original order
     loadStatuses()
@@ -243,7 +243,7 @@ function selectColor(color) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false }
+    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false },
   ]
 }
 

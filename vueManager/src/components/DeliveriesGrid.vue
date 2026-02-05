@@ -38,14 +38,14 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'delivery',
   deleteBulk: async (ids) => {
     await request.delete('/api/mgr/deliveries/bulk', { ids })
   },
   onSuccess: () => loadDeliveries(),
-  getItemName: (item) => item.name
+  getItemName: (item) => item.name,
 })
 
 const columns = ref([])
@@ -78,7 +78,7 @@ async function loadDeliveries() {
   try {
     const params = {
       start: first.value,
-      limit: rows.value
+      limit: rows.value,
     }
 
     if (searchQuery.value) {
@@ -108,7 +108,7 @@ async function loadDeliveries() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -118,6 +118,7 @@ async function loadDeliveries() {
 /**
  * Handle pagination
  */
+// eslint-disable-next-line no-unused-vars
 function onPage(event) {
   first.value = event.first
   rows.value = event.rows
@@ -127,6 +128,7 @@ function onPage(event) {
 /**
  * Handle search
  */
+// eslint-disable-next-line no-unused-vars
 function onSearch() {
   first.value = 0
   loadDeliveries()
@@ -155,7 +157,7 @@ async function onDragEnd() {
       severity: 'success',
       summary: _('success'),
       detail: _('delivery_order_saved'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[DeliveriesGrid] Error saving order:', error)
@@ -163,7 +165,7 @@ async function onDragEnd() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
     loadDeliveries()
   }
@@ -195,7 +197,7 @@ function createDelivery() {
     active: true,
     class: '',
     logo: '',
-    validation_rules: ''
+    validation_rules: '',
   }
   isNewDelivery.value = true
   activeTab.value = '0'
@@ -301,7 +303,7 @@ async function togglePayment(paymentId, newValue) {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -315,7 +317,7 @@ async function saveDelivery() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('delivery_name_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -335,7 +337,7 @@ async function saveDelivery() {
         severity: 'success',
         summary: _('success'),
         detail: isNewDelivery.value ? _('delivery_created') : _('delivery_updated'),
-        life: 3000
+        life: 3000,
       })
       editDialogVisible.value = false
       loadDeliveries()
@@ -346,7 +348,7 @@ async function saveDelivery() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -371,7 +373,7 @@ function deleteDelivery(delivery) {
           severity: 'success',
           summary: _('success'),
           detail: _('delivery_deleted'),
-          life: 3000
+          life: 3000,
         })
         loadDeliveries()
       } catch (error) {
@@ -380,10 +382,10 @@ function deleteDelivery(delivery) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -411,7 +413,7 @@ function getActionsConfig(column) {
   const config = column.actions || []
   return config.map(action => ({
     ...action,
-    label: _(action.label) || action.label
+    label: _(action.label) || action.label,
   }))
 }
 
@@ -435,8 +437,8 @@ async function loadGridConfig() {
         { name: 'position', label: _('delivery_position'), visible: true, sortable: true, width: '100px' },
         { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '120px', actions: [
           { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false }
-        ]}
+          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false },
+        ]},
       ]
     }
   } catch (error) {
