@@ -27,7 +27,7 @@ const props = defineProps({
    */
   inputId: {
     type: String,
-    default: null
+    default: null,
   },
 
   /**
@@ -35,7 +35,7 @@ const props = defineProps({
    */
   fieldName: {
     type: String,
-    required: true
+    required: true,
   },
 
   /**
@@ -43,7 +43,7 @@ const props = defineProps({
    */
   modelValue: {
     type: [String, Number, null],
-    default: null
+    default: null,
   },
 
   /**
@@ -51,7 +51,7 @@ const props = defineProps({
    */
   placeholder: {
     type: String,
-    default: 'Start typing...'
+    default: 'Start typing...',
   },
 
   /**
@@ -59,8 +59,8 @@ const props = defineProps({
    */
   disabled: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -81,7 +81,7 @@ async function search(event) {
     const query = event.query || ''
     const response = await request.get('/api/mgr/references/autocomplete', {
       name: props.fieldName,
-      query: query
+      query: query,
     })
 
     if (response && response.values) {
@@ -105,7 +105,7 @@ async function search(event) {
 function handleChange() {
   emit('update:modelValue', localValue.value)
   emit('change', {
-    value: localValue.value
+    value: localValue.value,
   })
 }
 

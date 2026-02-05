@@ -10,9 +10,9 @@ import '../scss/primevue.scss'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import Aura from '@primevue/themes/aura'
+import Aura from '@primeuix/themes/aura'
 import 'primeicons/primeicons.css'
-import { getPrimeVueLocale } from "@vuetools/usePrimeVueLocale";
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 
 import ToastService from 'primevue/toastservice'
 import ProductTabs from '../components/product/ProductTabs.vue'
@@ -130,7 +130,7 @@ function createVueApp(props) {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: "none",
+        darkModeSelector: 'none',
       },
     },
     locale: getPrimeVueLocale(),
@@ -156,7 +156,7 @@ window.MS3_initProductTabs = function(config) {
     containerId = 'ms3-vue-product-tabs',
     productId,
     record,
-    config: appConfig = {}
+    config: appConfig = {},
   } = config
 
   if (!productId) {
@@ -186,7 +186,7 @@ window.MS3_initProductTabs = function(config) {
         delete container.__vueApp__
         delete container.__vueInstance__
         window.MS3ProductTabsRegistry._onUnmounted()
-      }
+      },
     }
   }
 
@@ -198,13 +198,13 @@ window.MS3_initProductTabs = function(config) {
     show_options: true,
     option_fields: [],
     ...window.ms3?.config,
-    ...appConfig
+    ...appConfig,
   }
 
   const props = {
     productId: parseInt(productId),
     record,
-    config: mergedConfig
+    config: mergedConfig,
   }
 
   const app = createVueApp(props)
@@ -225,7 +225,7 @@ window.MS3_initProductTabs = function(config) {
       delete container.__vueApp__
       delete container.__vueInstance__
       window.MS3ProductTabsRegistry._onUnmounted()
-    }
+    },
   }
 }
 
@@ -273,7 +273,7 @@ function waitForElement(selector, callback, timeout = 10000) {
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
   })
 }
 
@@ -286,7 +286,7 @@ document.addEventListener('ms3:mountProductTabs', (e) => {
     targetId = 'ms3-vue-product-tabs',
     productId,
     record,
-    config
+    config,
   } = e.detail || {}
 
   if (!productId || !record) {
@@ -299,7 +299,7 @@ document.addEventListener('ms3:mountProductTabs', (e) => {
       containerId: targetId,
       productId,
       record,
-      config
+      config,
     })
   })
 })

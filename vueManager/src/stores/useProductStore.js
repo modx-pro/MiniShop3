@@ -27,7 +27,7 @@ export const useProductStore = defineStore('product', {
     total: 0,
     currentProduct: null,
     loading: false,
-    error: null
+    error: null,
   }),
 
   getters: {
@@ -46,7 +46,7 @@ export const useProductStore = defineStore('product', {
     /**
      * Check if current product is loaded
      */
-    hasCurrentProduct: (state) => state.currentProduct !== null
+    hasCurrentProduct: (state) => state.currentProduct !== null,
   },
 
   actions: {
@@ -237,6 +237,6 @@ export const useProductStore = defineStore('product', {
       this.currentProduct = null;
       this.loading = false;
       this.error = null;
-    }
-  }
+    },
+  },
 });

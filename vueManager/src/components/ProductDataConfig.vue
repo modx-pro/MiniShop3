@@ -40,7 +40,7 @@ const newSection = ref({
   lexicon_key: '',
   label: '',
   hidden: false,
-  sort_order: 999
+  sort_order: 999,
 })
 
 // Section edit dialog
@@ -60,7 +60,7 @@ const availableSectionOptions = computed(() => {
     .forEach(section => {
       options.push({
         label: section.label || section.key,
-        value: section.id  // Using ID instead of key, since section in DB is FK to id
+        value: section.id,  // Using ID instead of key, since section in DB is FK to id
       })
     })
 
@@ -96,7 +96,7 @@ async function loadSections() {
       severity: 'error',
       summary: _('ms3_vue_save_error'),
       detail: error.message || _('ms3_vue_error_loading_sections'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loadingSections.value = false
@@ -123,7 +123,7 @@ function deleteSection(sectionKey) {
           severity: 'success',
           summary: _('ms3_vue_save_success'),
           detail: _('ms3_vue_section_deleted'),
-          life: 3000
+          life: 3000,
         })
 
         // Reload sections
@@ -134,10 +134,10 @@ function deleteSection(sectionKey) {
           severity: 'error',
           summary: _('ms3_vue_save_error'),
           detail: error.message || _('ms3_vue_error_deleting_section'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -149,7 +149,7 @@ function onSectionDragEnd() {
     severity: 'info',
     summary: _('ms3_vue_order_changed'),
     detail: _('ms3_vue_save_reminder'),
-    life: 3000
+    life: 3000,
   })
 }
 
@@ -168,19 +168,19 @@ async function saveSections() {
       sort_order: index,
       is_default: section.is_default || false,
       lexicon_key: section.lexicon_key || null,
-      label: section.label || null
+      label: section.label || null,
     }))
 
-    const response = await request.put(
+    await request.put(
       `/api/mgr/config/sections/${pageKey}`,
-      { sections: sectionsToSave }
+      { sections: sectionsToSave },
     )
 
     toast.add({
       severity: 'success',
       summary: _('ms3_vue_save_success'),
       detail: _('ms3_vue_sections_saved'),
-      life: 3000
+      life: 3000,
     })
 
     // Reload for sync with DB
@@ -191,7 +191,7 @@ async function saveSections() {
       severity: 'error',
       summary: _('ms3_vue_save_error'),
       detail: error.message || _('ms3_vue_error_saving_sections'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -208,7 +208,7 @@ function openAddSectionDialog() {
     lexicon_key: '',
     label: '',
     hidden: false,
-    sort_order: sections.value.length
+    sort_order: sections.value.length,
   }
   addSectionDialogVisible.value = true
 }
@@ -230,7 +230,7 @@ async function addSection() {
       severity: 'warn',
       summary: _('ms3_vue_warning'),
       detail: _('ms3_vue_section_key_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -242,7 +242,7 @@ async function addSection() {
       severity: 'warn',
       summary: _('ms3_vue_warning'),
       detail: _('ms3_vue_section_key_exists'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -253,7 +253,7 @@ async function addSection() {
       severity: 'warn',
       summary: _('ms3_vue_warning'),
       detail: _('ms3_vue_section_lexicon_or_label_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -267,7 +267,7 @@ async function addSection() {
       label: newSection.value.label || null,
       hidden: newSection.value.hidden,
       sort_order: sections.value.length,
-      is_default: false
+      is_default: false,
     }
 
     sections.value.push(newSectionData)
@@ -279,7 +279,7 @@ async function addSection() {
       severity: 'success',
       summary: _('ms3_vue_success_title'),
       detail: _('ms3_vue_section_added'),
-      life: 3000
+      life: 3000,
     })
 
     closeAddSectionDialog()
@@ -289,7 +289,7 @@ async function addSection() {
       severity: 'error',
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_adding_section_title'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -306,7 +306,7 @@ function openEditSectionDialog(section, index) {
     lexicon_key: section.lexicon_key || '',
     label: section.label || '',
     hidden: section.hidden || false,
-    is_default: section.is_default || false
+    is_default: section.is_default || false,
   }
   editingSectionIndex.value = index
   editSectionDialogVisible.value = true
@@ -335,7 +335,7 @@ async function saveEditedSection() {
       severity: 'warn',
       summary: _('ms3_vue_warning'),
       detail: _('ms3_vue_section_lexicon_or_label_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -346,7 +346,7 @@ async function saveEditedSection() {
       ...sections.value[editingSectionIndex.value],
       lexicon_key: editingSection.value.lexicon_key || null,
       label: editingSection.value.label || null,
-      hidden: editingSection.value.hidden
+      hidden: editingSection.value.hidden,
     }
 
     // Save all sections to server
@@ -356,7 +356,7 @@ async function saveEditedSection() {
       severity: 'success',
       summary: _('ms3_vue_save_success'),
       detail: _('ms3_vue_section_updated'),
-      life: 3000
+      life: 3000,
     })
 
     closeEditSectionDialog()
@@ -366,7 +366,7 @@ async function saveEditedSection() {
       severity: 'error',
       summary: _('ms3_vue_save_error'),
       detail: error.message || _('ms3_vue_error_saving_sections'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -385,7 +385,7 @@ async function loadFields() {
       // Make sure all fields have visible (default true)
       fields.value = response.fields.map(field => ({
         ...field,
-        visible: field.visible !== undefined ? field.visible : true
+        visible: field.visible !== undefined ? field.visible : true,
       }))
     } else {
       console.error('[ProductDataConfig] Invalid response:', response)
@@ -393,7 +393,7 @@ async function loadFields() {
         severity: 'error',
         summary: _('ms3_vue_error'),
         detail: _('ms3_vue_error_loading_fields_detail'),
-        life: 5000
+        life: 5000,
       })
     }
   } catch (error) {
@@ -402,7 +402,7 @@ async function loadFields() {
       severity: 'error',
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_loading_fields_message'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -419,19 +419,19 @@ async function saveConfig() {
     // Update sort_order based on current order
     const fieldsToSave = fields.value.map((field, index) => ({
       ...field,
-      sort_order: index
+      sort_order: index,
     }))
 
-    const response = await request.put(
+    await request.put(
       `/api/mgr/config/page-fields/${pageKey}`,
-      { fields: fieldsToSave }
+      { fields: fieldsToSave },
     )
 
     toast.add({
       severity: 'success',
       summary: _('ms3_vue_success_title'),
       detail: _('ms3_vue_config_saved'),
-      life: 3000
+      life: 3000,
     })
 
     // Reload for sync with DB
@@ -442,7 +442,7 @@ async function saveConfig() {
       severity: 'error',
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_saving_title'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -457,7 +457,7 @@ function onFieldsDragEnd() {
     severity: 'info',
     summary: _('ms3_vue_order_changed'),
     detail: _('ms3_vue_save_reminder'),
-    life: 3000
+    life: 3000,
   })
 }
 
@@ -472,7 +472,7 @@ function openEditDialog(field, index) {
     // Default true if not set
     visible: field.visible !== undefined && field.visible !== null
       ? Boolean(Number(field.visible))
-      : true
+      : true,
   }
   editingFieldIndex.value = index
   editDialogVisible.value = true
@@ -503,19 +503,19 @@ async function saveFieldChanges() {
         ...field,
         sort_order: index,
         // Make sure visible is present in all fields (default true)
-        visible: field.visible !== undefined ? field.visible : true
+        visible: field.visible !== undefined ? field.visible : true,
       }))
 
-      const response = await request.put(
+      await request.put(
         `/api/mgr/config/page-fields/${pageKey}`,
-        { fields: fieldsToSave }
+        { fields: fieldsToSave },
       )
 
       toast.add({
         severity: 'success',
         summary: _('ms3_vue_save_success'),
         detail: _('ms3_vue_field_saved'),
-        life: 3000
+        life: 3000,
       })
 
       closeEditDialog()
@@ -528,7 +528,7 @@ async function saveFieldChanges() {
         severity: 'error',
         summary: _('ms3_vue_error'),
         detail: error.message || _('ms3_vue_save_error'),
-        life: 5000
+        life: 5000,
       })
     } finally {
       saving.value = false

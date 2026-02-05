@@ -268,5 +268,5 @@ export default {
   matches,
   sameAs,
   validate,
-  createValidationRules
+  createValidationRules,
 };

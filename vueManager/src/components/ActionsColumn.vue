@@ -43,7 +43,7 @@ const props = defineProps({
    */
   data: {
     type: Object,
-    required: true
+    required: true,
   },
 
   /**
@@ -51,7 +51,7 @@ const props = defineProps({
    */
   actions: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
 
   /**
@@ -59,7 +59,7 @@ const props = defineProps({
    */
   gridId: {
     type: String,
-    default: 'unknown'
+    default: 'unknown',
   },
 
   /**
@@ -67,7 +67,7 @@ const props = defineProps({
    */
   iconOnly: {
     type: Boolean,
-    default: true
+    default: true,
   },
 
   /**
@@ -75,8 +75,8 @@ const props = defineProps({
    */
   size: {
     type: String,
-    default: 'small'
-  }
+    default: 'small',
+  },
 })
 
 const emit = defineEmits(['edit', 'delete', 'view', 'addresses', 'publish', 'duplicate', 'refresh', 'action'])
@@ -92,7 +92,7 @@ const { executeAction } = useActions({
   onAddresses: (data) => emit('addresses', data),
   onPublish: (data) => emit('publish', data),
   onDuplicate: (data) => emit('duplicate', data),
-  onCustomAction: (event, data) => emit('action', { name: event, data })
+  onCustomAction: (event, data) => emit('action', { name: event, data }),
 })
 
 /**
@@ -103,27 +103,27 @@ const defaultActionConfigs = {
     icon: 'pi-pencil',
     label: 'edit',
     severity: null,
-    confirm: false
+    confirm: false,
   },
   delete: {
     icon: 'pi-trash',
     label: 'delete',
     severity: 'danger',
     confirm: true,
-    confirmMessage: 'action_delete_confirm'
+    confirmMessage: 'action_delete_confirm',
   },
   view: {
     icon: 'pi-eye',
     label: 'view',
     severity: 'secondary',
-    confirm: false
+    confirm: false,
   },
   addresses: {
     icon: 'pi-map-marker',
     label: 'addresses',
     severity: 'secondary',
-    confirm: false
-  }
+    confirm: false,
+  },
 }
 
 /**
@@ -152,7 +152,7 @@ const processedActions = computed(() => {
         handler: handlerName,
         iconClass: `pi ${icon}`,
         displayLabel: _(label),
-        isDisabled: checkDisabled(action)
+        isDisabled: checkDisabled(action),
       }
     })
 })
@@ -181,7 +181,7 @@ async function handleActionClick(action) {
     emit('action', {
       name: action.name,
       handler: action.handler,
-      data: props.data
+      data: props.data,
     })
 
     await executeAction(action.handler, props.data, action)
@@ -193,7 +193,7 @@ async function handleActionClick(action) {
 /**
  * Get CSS classes for button
  */
-function getButtonClasses(action) {
+function getButtonClasses() {
   const classes = ['p-button-text']
 
   if (props.size === 'small') classes.push('p-button-sm')

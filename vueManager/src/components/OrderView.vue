@@ -1,6 +1,5 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -60,7 +59,7 @@ const editingProduct = ref(null)
 const editProductForm = ref({
   count: 1,
   price: 0,
-  weight: 0
+  weight: 0,
 })
 const savingProduct = ref(false)
 
@@ -83,7 +82,7 @@ const addProductForm = ref({
   count: 1,
   price: 0,
   weight: 0,
-  options: {}
+  options: {},
 })
 const savingNewProduct = ref(false)
 
@@ -152,7 +151,7 @@ function groupFieldsBySection(fields, sections) {
   for (const section of sections) {
     sectionMap.set(section.id, {
       ...section,
-      fields: []
+      fields: [],
     })
   }
 
@@ -162,7 +161,7 @@ function groupFieldsBySection(fields, sections) {
     label: _('ms3_model_field_no_section'),
     section_key: 'no_section',
     sort_order: 9999,
-    fields: []
+    fields: [],
   })
 
   // Assign fields to sections
@@ -191,7 +190,7 @@ async function loadOrder() {
       severity: 'error',
       summary: _('error'),
       detail: _('order_id_required'),
-      life: 5000
+      life: 5000,
     })
     return
   }
@@ -210,7 +209,7 @@ async function loadOrder() {
       loadAddressFields(),
       loadOrderExtraFields(),
       loadAddressExtraFields(),
-      loadOrderCustomer()
+      loadOrderCustomer(),
     ])
   } catch (error) {
     console.error('[OrderView] Error loading order:', error)
@@ -218,7 +217,7 @@ async function loadOrder() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -240,7 +239,7 @@ async function loadOrderCustomer() {
     if (response && response.id) {
       selectedCustomer.value = {
         ...response,
-        display: `${response.first_name || ''} ${response.last_name || ''} (${response.email || response.phone || ''})`
+        display: `${response.first_name || ''} ${response.last_name || ''} (${response.email || response.phone || ''})`,
       }
     }
   } catch (error) {
@@ -356,7 +355,7 @@ function getDefaultProductsColumns() {
     { name: 'name', label: _('order_product_name'), visible: true, type: 'template', template: '{name}' },
     { name: 'count', label: _('order_product_count'), visible: true, type: 'number' },
     { name: 'price', label: _('order_product_price'), visible: true, type: 'price' },
-    { name: 'cost', label: _('order_product_cost'), visible: true, type: 'price' }
+    { name: 'cost', label: _('order_product_cost'), visible: true, type: 'price' },
   ]
 }
 
@@ -423,7 +422,7 @@ async function editProduct(product) {
   editProductForm.value = {
     count: product.count || 1,
     price: product.price || 0,
-    weight: product.weight || 0
+    weight: product.weight || 0,
   }
 
   // Load product option fields if not already loaded
@@ -483,7 +482,7 @@ async function initOptionsFromProduct(options) {
       value: isComplexValue(value) ? JSON.stringify(value, null, 2) : value,
       isComplex: isComplexValue(value),
       fieldValues: [],
-      loadingValues: false
+      loadingValues: false,
     }
 
     // If it's a product field, load its values
@@ -520,7 +519,7 @@ async function loadFieldValuesForRow(row) {
   try {
     const response = await request.get('/api/mgr/references/product-field-values', {
       field: row.key,
-      product_id: productId
+      product_id: productId,
     })
     row.fieldValues = response.values || []
   } catch (error) {
@@ -534,7 +533,7 @@ async function loadFieldValuesForRow(row) {
 /**
  * Handle option type change (field/custom)
  */
-async function onOptionTypeChange(row, index) {
+async function onOptionTypeChange(row) {
   if (row.type === 'field') {
     // Reset to first available field if key is not a valid field
     const isValidField = productOptionFields.value.some(f => f.name === row.key)
@@ -580,7 +579,7 @@ function addOptionRow() {
     value: '',
     isComplex: false,
     fieldValues: [],
-    loadingValues: false
+    loadingValues: false,
   })
 }
 
@@ -637,7 +636,7 @@ function syncJsonToTable() {
     optionsTableData.value = Object.entries(parsed).map(([key, value]) => ({
       key,
       value: isComplexValue(value) ? JSON.stringify(value, null, 2) : value,
-      isComplex: isComplexValue(value)
+      isComplex: isComplexValue(value),
     }))
     return true
   } catch (e) {
@@ -717,19 +716,19 @@ async function saveEditedProduct() {
   try {
     const data = {
       ...editProductForm.value,
-      options: getOptionsForSave()
+      options: getOptionsForSave(),
     }
 
     await request.put(
       `/api/mgr/orders/${orderId.value}/products/${editingProduct.value.id}`,
-      data
+      data,
     )
 
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: _('order_product_saved'),
-      life: 3000
+      life: 3000,
     })
 
     editProductDialogVisible.value = false
@@ -737,7 +736,7 @@ async function saveEditedProduct() {
     // Reload products and order to update totals
     await Promise.all([
       loadProducts(),
-      loadOrder()
+      loadOrder(),
     ])
   } catch (error) {
     console.error('[OrderView] Error saving product:', error)
@@ -745,7 +744,7 @@ async function saveEditedProduct() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     savingProduct.value = false
@@ -784,7 +783,7 @@ function openAddProductDialog() {
     count: 1,
     price: 0,
     weight: 0,
-    options: {}
+    options: {},
   }
   addProductDialogVisible.value = true
 }
@@ -831,7 +830,7 @@ async function saveNewProduct() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('order_product_select'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -843,7 +842,7 @@ async function saveNewProduct() {
       count: addProductForm.value.count || 1,
       price: addProductForm.value.price || 0,
       weight: addProductForm.value.weight || 0,
-      options: addProductForm.value.options || {}
+      options: addProductForm.value.options || {},
     }
 
     await request.post(`/api/mgr/orders/${orderId.value}/products`, data)
@@ -852,7 +851,7 @@ async function saveNewProduct() {
       severity: 'success',
       summary: _('success'),
       detail: _('order_product_added'),
-      life: 3000
+      life: 3000,
     })
 
     addProductDialogVisible.value = false
@@ -860,7 +859,7 @@ async function saveNewProduct() {
     // Reload products and order to update totals
     await Promise.all([
       loadProducts(),
-      loadOrder()
+      loadOrder(),
     ])
   } catch (error) {
     console.error('[OrderView] Error adding product:', error)
@@ -868,7 +867,7 @@ async function saveNewProduct() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     savingNewProduct.value = false
@@ -893,7 +892,7 @@ function deleteProduct(product) {
       severity: 'warn',
       summary: _('warning'),
       detail: _('order_product_cannot_delete_last'),
-      life: 5000
+      life: 5000,
     })
     return
   }
@@ -908,20 +907,20 @@ function deleteProduct(product) {
     accept: async () => {
       try {
         await request.delete(
-          `/api/mgr/orders/${orderId.value}/products/${product.id}`
+          `/api/mgr/orders/${orderId.value}/products/${product.id}`,
         )
 
         toast.add({
           severity: 'success',
           summary: _('success'),
           detail: _('order_product_deleted'),
-          life: 3000
+          life: 3000,
         })
 
         // Reload products and order to update totals
         await Promise.all([
           loadProducts(),
-          loadOrder()
+          loadOrder(),
         ])
       } catch (error) {
         console.error('[OrderView] Error deleting product:', error)
@@ -929,10 +928,10 @@ function deleteProduct(product) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -952,12 +951,13 @@ async function loadLogs() {
 /**
  * Load statuses list
  */
+// eslint-disable-next-line no-unused-vars
 async function loadStatuses() {
   try {
     const response = await request.get('/api/mgr/statuses-dropdown')
     statuses.value = (response.results || response || []).map(s => ({
       value: s.id,
-      label: s.name
+      label: s.name,
     }))
   } catch (error) {
     console.error('[OrderView] Error loading statuses:', error)
@@ -968,12 +968,13 @@ async function loadStatuses() {
 /**
  * Load deliveries list
  */
+// eslint-disable-next-line no-unused-vars
 async function loadDeliveries() {
   try {
     const response = await request.get('/api/mgr/deliveries-active')
     deliveries.value = (response.results || response || []).map(d => ({
       value: d.id,
-      label: d.name
+      label: d.name,
     }))
   } catch (error) {
     console.error('[OrderView] Error loading deliveries:', error)
@@ -984,12 +985,13 @@ async function loadDeliveries() {
 /**
  * Load payments list
  */
+// eslint-disable-next-line no-unused-vars
 async function loadPayments() {
   try {
     const response = await request.get('/api/mgr/payments')
     payments.value = (response.results || response || []).map(p => ({
       value: p.id,
-      label: p.name
+      label: p.name,
     }))
   } catch (error) {
     console.error('[OrderView] Error loading payments:', error)
@@ -1126,7 +1128,7 @@ async function saveOrder() {
       severity: 'success',
       summary: _('success'),
       detail: _('order_saved'),
-      life: 3000
+      life: 3000,
     })
 
     await loadLogs()
@@ -1136,7 +1138,7 @@ async function saveOrder() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -1156,7 +1158,7 @@ function confirmFinalizeOrder() {
     rejectLabel: _('cancel'),
     accept: () => {
       finalizeOrder()
-    }
+    },
   })
 }
 
@@ -1194,7 +1196,7 @@ async function finalizeOrder(forceCreateCustomer = false) {
       severity: 'success',
       summary: _('success'),
       detail: _('ms3_order_finalized'),
-      life: 3000
+      life: 3000,
     })
 
     // Reload order to get updated status and order number
@@ -1213,7 +1215,7 @@ async function finalizeOrder(forceCreateCustomer = false) {
           severity: 'error',
           summary: _('ms3_order_err_validation'),
           detail: fieldError,
-          life: 5000
+          life: 5000,
         })
       })
     } else {
@@ -1222,7 +1224,7 @@ async function finalizeOrder(forceCreateCustomer = false) {
         severity: 'error',
         summary: _('error'),
         detail: error.message || _('ms3_order_finalize_error'),
-        life: 5000
+        life: 5000,
       })
     }
   } finally {
@@ -1266,7 +1268,7 @@ async function initEmptyOrder() {
       floor: '',
       room: '',
       comment: '',
-      text_address: ''
+      text_address: '',
     }
 
     // Load field configurations and combo options
@@ -1274,7 +1276,7 @@ async function initEmptyOrder() {
       loadOrderFields(),
       loadAddressFields(),
       loadOrderExtraFields(),
-      loadAddressExtraFields()
+      loadAddressExtraFields(),
     ])
 
     // Initialize empty products and logs
@@ -1286,7 +1288,7 @@ async function initEmptyOrder() {
       severity: 'error',
       summary: _('error'),
       detail: _('error_loading_config'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -1383,7 +1385,7 @@ async function createOrder(forceCreateCustomer = false) {
         severity: 'warn',
         summary: _('warning'),
         detail: validationError,
-        life: 5000
+        life: 5000,
       })
       saving.value = false
       return
@@ -1406,7 +1408,7 @@ async function createOrder(forceCreateCustomer = false) {
       severity: 'success',
       summary: _('success'),
       detail: _('ms3_order_created'),
-      life: 3000
+      life: 3000,
     })
 
     // Redirect to edit the created order
@@ -1420,7 +1422,7 @@ async function createOrder(forceCreateCustomer = false) {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -1443,7 +1445,7 @@ async function useDuplicateCustomer() {
     try {
       // Update order with existing customer
       await request.put(`/api/mgr/orders/${orderId.value}`, {
-        customer_id: duplicateCustomer.value.id
+        customer_id: duplicateCustomer.value.id,
       })
 
       // Disable create customer flag and finalize
@@ -1455,7 +1457,7 @@ async function useDuplicateCustomer() {
         severity: 'error',
         summary: _('error'),
         detail: error.message || _('error_saving_data'),
-        life: 5000
+        life: 5000,
       })
     } finally {
       pendingOrderData.value = null
@@ -1478,7 +1480,7 @@ async function useDuplicateCustomer() {
       severity: 'success',
       summary: _('success'),
       detail: _('ms3_order_created'),
-      life: 3000
+      life: 3000,
     })
 
     const createdOrderId = response.id || response.object?.id
@@ -1491,7 +1493,7 @@ async function useDuplicateCustomer() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -1596,7 +1598,7 @@ function formatDate(dateString) {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -1641,38 +1643,43 @@ function formatLogEntryObject(action, entry) {
       }
       break
 
-    case 'products':
+    case 'products': {
       const op = entry.operation || 'unknown'
       const productName = entry.product_name || ''
       const count = entry.count ? ` (×${entry.count})` : ''
       return `${capitalizeFirst(op)}: ${productName}${count}`
+    }
 
-    case 'field':
+    case 'field': {
       if (entry.fields) {
         const fieldNames = Object.keys(entry.fields)
         return `Fields: ${fieldNames.join(', ')}`
       }
       break
+    }
 
-    case 'address':
+    case 'address': {
       if (entry.fields) {
         const fieldNames = Object.keys(entry.fields)
         return `Address: ${fieldNames.join(', ')}`
       }
       break
+    }
 
-    case 'payment':
+    case 'payment': {
       const payOp = entry.operation || 'unknown'
       const amount = entry.amount || 0
       return `${capitalizeFirst(payOp)}: ${formatPrice(amount)}`
+    }
 
-    default:
+    default: {
       // Generic fallback: show key-value pairs
       const pairs = Object.entries(entry)
         .filter(([, v]) => v !== null && v !== undefined)
         .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
         .slice(0, 3) // Limit to 3 pairs
       return pairs.join(', ') || '-'
+    }
   }
 
   return JSON.stringify(entry)
@@ -1694,7 +1701,7 @@ function formatPrice(value) {
   return new Intl.NumberFormat('ru-RU', {
     style: 'decimal',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(value)
 }
 
@@ -1706,27 +1713,33 @@ function getFieldDisplayValue(field, value) {
   if (value === null || value === undefined) return '-'
 
   switch (field.xtype) {
-    case 'datefield':
+    case 'datefield': {
       return formatDate(value)
-    case 'numberfield':
+    }
+    case 'numberfield': {
       return formatPrice(value)
-    case 'combo':
+    }
+    case 'combo': {
       // For combo fields, use compareField to get the correct value
       const compareField = getFieldCompareField(field.name)
       const actualValue = order.value?.[compareField] ?? value
       const options = getFieldOptions(field.name)
       const option = options.find(o => o.value === actualValue)
       return option?.label || actualValue
-    case 'checkbox':
+    }
+    case 'checkbox': {
       return value ? _('yes') : _('no')
-    default:
+    }
+    default: {
       return value
+    }
   }
 }
 
 /**
  * Get status severity for tag
  */
+// eslint-disable-next-line no-unused-vars
 function getStatusSeverity(color) {
   if (!color) return 'secondary'
   const colorMap = {
@@ -1738,7 +1751,7 @@ function getStatusSeverity(color) {
     '#f0ad4e': 'warn',
     'yellow': 'warn',
     '#5bc0de': 'info',
-    'blue': 'info'
+    'blue': 'info',
   }
   return colorMap[color?.toLowerCase()] || 'secondary'
 }
@@ -1860,7 +1873,7 @@ onMounted(async () => {
                 optionLabel="label"
                 optionValue="value"
                 class="options-type-select"
-                @change="onOptionTypeChange(row, index)"
+                @change="onOptionTypeChange(row)"
               />
 
               <!-- Field type: Select field name -->

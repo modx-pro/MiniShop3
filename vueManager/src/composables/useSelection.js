@@ -28,7 +28,7 @@ export function useSelection(options = {}) {
     deleteBulk = null,
     onSuccess = null,
     getItemId = (item) => item.id,
-    getItemName = (item) => item.name || item.id
+    getItemName = (item) => item.name || item.id,
   } = options
 
   const confirm = useConfirm()
@@ -101,7 +101,7 @@ export function useSelection(options = {}) {
         severity: 'warn',
         summary: _('warning'),
         detail: _('no_items_selected'),
-        life: 3000
+        life: 3000,
       })
       return
     }
@@ -117,7 +117,7 @@ export function useSelection(options = {}) {
       acceptClass: 'p-button-danger',
       accept: async () => {
         await executeBulkDelete()
-      }
+      },
     })
   }
 
@@ -149,7 +149,7 @@ export function useSelection(options = {}) {
         severity: 'success',
         summary: _('success'),
         detail: _('bulk_delete_success').replace('{count}', count),
-        life: 3000
+        life: 3000,
       })
 
       clearSelection()
@@ -163,7 +163,7 @@ export function useSelection(options = {}) {
         severity: 'error',
         summary: _('error'),
         detail: error.message || _('bulk_delete_error'),
-        life: 5000
+        life: 5000,
       })
     } finally {
       processing.value = false
@@ -185,7 +185,7 @@ export function useSelection(options = {}) {
     return {
       selection: selectedItems,
       selectionMode: 'multiple',
-      dataKey
+      dataKey,
     }
   }
 
@@ -204,6 +204,6 @@ export function useSelection(options = {}) {
     isSelected,
     confirmBulkDelete,
     executeBulkDelete,
-    getTableProps
+    getTableProps,
   }
 }

@@ -46,7 +46,7 @@ class Request {
   setHeaders() {
     this.headers = {
       'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     };
   }
 
@@ -91,7 +91,7 @@ class Request {
       const fetchOptions = {
         method,
         headers: { ...this.headers, ...options.headers },
-        credentials: 'same-origin'
+        credentials: 'same-origin',
       };
 
       let url;
@@ -114,7 +114,7 @@ class Request {
         throw new RequestError(
           responseData.message || 'Request failed',
           response.status,
-          responseData
+          responseData,
         );
       }
 
@@ -122,7 +122,7 @@ class Request {
         throw new RequestError(
           responseData.message || `HTTP error! status: ${response.status}`,
           response.status,
-          responseData
+          responseData,
         );
       }
 
@@ -144,7 +144,7 @@ class Request {
       throw new RequestError(
         error.message || 'Network error',
         0,
-        { originalError: error }
+        { originalError: error },
       );
     }
   }
@@ -214,8 +214,8 @@ class Request {
         // Don't set Content-Type header - browser will set it with boundary
         headers: {
           'Accept': 'application/json',
-          ...options.headers
-        }
+          ...options.headers,
+        },
       };
 
       const response = await fetch(url, fetchOptions);
@@ -225,7 +225,7 @@ class Request {
         throw new RequestError(
           responseData.message || 'Upload failed',
           response.status,
-          responseData
+          responseData,
         );
       }
 
@@ -233,7 +233,7 @@ class Request {
         throw new RequestError(
           responseData.message || `HTTP error! status: ${response.status}`,
           response.status,
-          responseData
+          responseData,
         );
       }
 
@@ -253,7 +253,7 @@ class Request {
       throw new RequestError(
         error.message || 'Upload error',
         0,
-        { originalError: error }
+        { originalError: error },
       );
     }
   }

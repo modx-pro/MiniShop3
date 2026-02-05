@@ -49,7 +49,7 @@ const fieldForm = ref({
   attributes: '',
   index_type: 'NONE',
   active: true,
-  select_options: ''
+  select_options: '',
 })
 
 /**
@@ -73,7 +73,7 @@ const classOptions = computed(() => [
   { label: _('ms3_vue_class_customer_address'), value: 'MiniShop3\\Model\\msCustomerAddress' },
   // Доставка и оплата
   { label: _('ms3_vue_class_delivery'), value: 'MiniShop3\\Model\\msDelivery' },
-  { label: _('ms3_vue_class_payment'), value: 'MiniShop3\\Model\\msPayment' }
+  { label: _('ms3_vue_class_payment'), value: 'MiniShop3\\Model\\msPayment' },
 ])
 
 /**
@@ -87,7 +87,7 @@ const xtypeOptions = computed(() => [
   { label: _('ms3_vue_xtype_combo_select'), value: 'ms3-combo-select' },
   { label: _('ms3_vue_xtype_combo_vendor'), value: 'ms3-combo-vendor' },
   { label: _('ms3_vue_xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
-  { label: _('ms3_vue_xtype_combo_options'), value: 'ms3-combo-options' }
+  { label: _('ms3_vue_xtype_combo_options'), value: 'ms3-combo-options' },
 ])
 
 /**
@@ -101,7 +101,7 @@ const dbtypeOptions = computed(() => [
   { label: _('ms3_vue_dbtype_datetime'), value: 'datetime' },
   { label: _('ms3_vue_dbtype_timestamp'), value: 'timestamp' },
   { label: _('ms3_vue_dbtype_tinyint'), value: 'tinyint' },
-  { label: _('ms3_vue_dbtype_json'), value: 'json' }
+  { label: _('ms3_vue_dbtype_json'), value: 'json' },
 ])
 
 /**
@@ -114,7 +114,7 @@ const phptypeOptions = computed(() => [
   { label: _('ms3_vue_phptype_boolean'), value: 'boolean' },
   { label: _('ms3_vue_phptype_json'), value: 'json' },
   { label: _('ms3_vue_phptype_datetime'), value: 'datetime' },
-  { label: _('ms3_vue_phptype_timestamp'), value: 'timestamp' }
+  { label: _('ms3_vue_phptype_timestamp'), value: 'timestamp' },
 ])
 
 /**
@@ -124,7 +124,7 @@ const defaultOptions = computed(() => [
   { label: _('ms3_vue_default_null'), value: 'NULL' },
   { label: _('ms3_vue_default_current_timestamp'), value: 'CURRENT_TIMESTAMP' },
   { label: _('ms3_vue_default_user_defined'), value: 'USER_DEFINED' },
-  { label: _('ms3_vue_default_none'), value: 'NONE' }
+  { label: _('ms3_vue_default_none'), value: 'NONE' },
 ])
 
 /**
@@ -134,7 +134,7 @@ const indexTypeOptions = computed(() => [
   { label: _('ms3_vue_index_none'), value: 'NONE' },
   { label: _('ms3_vue_index_index'), value: 'INDEX' },
   { label: _('ms3_vue_index_unique'), value: 'UNIQUE' },
-  { label: _('ms3_vue_index_fulltext'), value: 'FULLTEXT' }
+  { label: _('ms3_vue_index_fulltext'), value: 'FULLTEXT' },
 ])
 
 /**
@@ -159,7 +159,7 @@ async function loadFields() {
       severity: 'error',
       summary: _('ms3_vue_error_loading'),
       detail: error.message || _('ms3_vue_error_loading_fields'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -189,7 +189,7 @@ function openCreateDialog() {
     attributes: '',
     index_type: 'NONE',
     active: true,
-    select_options: ''
+    select_options: '',
   }
 
   dialogVisible.value = true
@@ -219,7 +219,7 @@ function openEditDialog(field) {
     attributes: field.attributes || '',
     index_type: field.index_type || 'NONE',
     active: field.active,
-    select_options: field.select_options || ''
+    select_options: field.select_options || '',
   }
 
   dialogVisible.value = true
@@ -255,7 +255,7 @@ async function createField() {
         severity: 'warn',
         summary: _('ms3_vue_validation'),
         detail: _('ms3_vue_validation_key_required'),
-        life: 3000
+        life: 3000,
       })
       return
     }
@@ -265,7 +265,7 @@ async function createField() {
         severity: 'warn',
         summary: _('ms3_vue_validation'),
         detail: _('ms3_vue_validation_dbtype_required'),
-        life: 3000
+        life: 3000,
       })
       return
     }
@@ -274,7 +274,7 @@ async function createField() {
     const payload = {
       ...fieldForm.value,
       null: fieldForm.value.null === true || fieldForm.value.null === 'true' || fieldForm.value.null === 1,
-      active: fieldForm.value.active === true || fieldForm.value.active === 'true' || fieldForm.value.active === 1
+      active: fieldForm.value.active === true || fieldForm.value.active === 'true' || fieldForm.value.active === 1,
     }
 
     const response = await request.post('/api/mgr/extra-fields', payload)
@@ -284,7 +284,7 @@ async function createField() {
         severity: 'success',
         summary: _('ms3_vue_success'),
         detail: `${_('ms3_vue_table_field_name')} "${response.field.key}" ${_('ms3_vue_field_created')}`,
-        life: 3000
+        life: 3000,
       })
 
       dialogVisible.value = false
@@ -298,7 +298,7 @@ async function createField() {
       severity: 'error',
       summary: _('ms3_vue_error_creating'),
       detail: error.message || _('ms3_vue_error_creating_field'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -318,7 +318,7 @@ async function updateField() {
       description: fieldForm.value.description || '',
       xtype: fieldForm.value.xtype || 'textfield',
       active: fieldForm.value.active === true || fieldForm.value.active === 'true' || fieldForm.value.active === 1,
-      select_options: fieldForm.value.xtype === 'ms3-combo-select' ? fieldForm.value.select_options : ''
+      select_options: fieldForm.value.xtype === 'ms3-combo-select' ? fieldForm.value.select_options : '',
     }
 
     const response = await request.put(`/api/mgr/extra-fields/${fieldForm.value.id}`, payload)
@@ -328,7 +328,7 @@ async function updateField() {
         severity: 'success',
         summary: _('ms3_vue_success'),
         detail: `${_('ms3_vue_table_field_name')} "${response.field.key}" ${_('ms3_vue_field_updated')}`,
-        life: 3000
+        life: 3000,
       })
 
       dialogVisible.value = false
@@ -342,7 +342,7 @@ async function updateField() {
       severity: 'error',
       summary: _('ms3_vue_error_updating'),
       detail: error.message || _('ms3_vue_error_updating_field'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -380,7 +380,7 @@ function confirmDelete(field) {
     },
     onHide: () => {
       confirmInProgress = false
-    }
+    },
   })
 }
 
@@ -398,7 +398,7 @@ async function deleteField(fieldId) {
         severity: 'success',
         summary: _('ms3_vue_success'),
         detail: response.message,
-        life: 5000
+        life: 5000,
       })
 
       await loadFields()
@@ -411,7 +411,7 @@ async function deleteField(fieldId) {
       severity: 'error',
       summary: _('ms3_vue_error_deleting'),
       detail: error.message || _('ms3_vue_error_deleting_field'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false

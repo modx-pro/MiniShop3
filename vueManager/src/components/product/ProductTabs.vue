@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick, watch, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import Toast from 'primevue/toast'
@@ -10,20 +10,20 @@ import ProductDataFields from '../ProductDataFields.vue'
 const props = defineProps({
   productId: {
     type: Number,
-    required: true
+    required: true,
   },
   record: {
     type: Object,
-    required: true
+    required: true,
   },
   config: {
     type: Object,
-    default: () => ({})
-  }
+    default: () => ({}),
+  },
 })
 
-const toast = useToast()
 const { _ } = useLexicon()
+useToast() // Required for Toast component to work
 
 // Active tab index
 const activeTab = ref(0)
@@ -54,8 +54,8 @@ const tabConfig = computed(() => {
       title: _('ms3_tab_product_data'),
       type: 'vue',
       component: 'ProductDataFields',
-      position: 0
-    }
+      position: 0,
+    },
   ]
 
   if (showGallery.value) {
@@ -67,9 +67,9 @@ const tabConfig = computed(() => {
       extConfig: {
         record: props.record,
         pageSize: 50,
-        border: false
+        border: false,
       },
-      position: 1
+      position: 1,
     })
   }
 
@@ -82,9 +82,9 @@ const tabConfig = computed(() => {
       extConfig: {
         parent: props.record.parent || 0,
         resource: props.record.id || 0,
-        categories: props.record.categories || []
+        categories: props.record.categories || [],
       },
-      position: 2
+      position: 2,
     })
   }
 
@@ -95,9 +95,9 @@ const tabConfig = computed(() => {
       type: 'extjs',
       xtype: 'ms3-product-links',
       extConfig: {
-        record: props.record
+        record: props.record,
       },
-      position: 3
+      position: 3,
     })
   }
 
@@ -106,7 +106,7 @@ const tabConfig = computed(() => {
       key: 'options',
       title: _('ms3_tab_product_options'),
       type: 'extjs-options',
-      position: 4
+      position: 4,
     })
   }
 
@@ -118,7 +118,7 @@ const tabConfig = computed(() => {
     if (tab.type === 'extjs' || tab.type === 'plugin-extjs') {
       tab.extConfig = {
         record: props.record,
-        ...tab.extConfig
+        ...tab.extConfig,
       }
     }
 
@@ -171,7 +171,7 @@ function mountExtJS(tabKey, tabData) {
         xtype: tabData.xtype,
         renderTo: container,
         width: '100%',
-        ...tabData.extConfig
+        ...tabData.extConfig,
       })
 
       mountedExtComponents.value[tabKey] = extComponent
@@ -234,7 +234,7 @@ function mountOptionsTab() {
           { record: props.record, mode: 'update' },
           option.key,
           option,
-          'extra-field'
+          'extra-field',
         )
 
         if (!field) continue
@@ -256,7 +256,7 @@ function mountOptionsTab() {
             category: option.category,
             title: option.category_name || _('ms3_ft_nogroup'),
             bodyCssClass: 'main-wrapper',
-            items: [field]
+            items: [field],
           })
         }
       }
@@ -273,7 +273,7 @@ function mountOptionsTab() {
         plain: true,
         deferredRender: false,
         id: 'ms3-options-vtabs-vue',
-        items: optionGroups
+        items: optionGroups,
       })
 
       mountedExtComponents.value['options'] = vtabs
@@ -344,7 +344,7 @@ function registerPluginTab(tabData) {
     xtype: tabData.xtype,
     extConfig: tabData.extConfig || {},
     props: tabData.props || {},
-    position: tabData.position || 100
+    position: tabData.position || 100,
   })
 
   return true
@@ -353,7 +353,7 @@ function registerPluginTab(tabData) {
 // Expose register method for plugin registry
 defineExpose({
   registerPluginTab,
-  getActiveTab: () => activeTab.value
+  getActiveTab: () => activeTab.value,
 })
 
 onMounted(() => {
@@ -362,7 +362,7 @@ onMounted(() => {
   // Register this instance in global registry
   if (window.MS3ProductTabsRegistry) {
     window.MS3ProductTabsRegistry._instance = {
-      registerPluginTab
+      registerPluginTab,
     }
   }
 })

@@ -37,7 +37,7 @@ const props = defineProps({
    */
   inputId: {
     type: String,
-    default: null
+    default: null,
   },
 
   /**
@@ -45,7 +45,7 @@ const props = defineProps({
    */
   modelValue: {
     type: [Number, String, null],
-    default: null
+    default: null,
   },
 
   /**
@@ -53,7 +53,7 @@ const props = defineProps({
    */
   placeholder: {
     type: String,
-    default: 'Select vendor'
+    default: 'Select vendor',
   },
 
   /**
@@ -61,7 +61,7 @@ const props = defineProps({
    */
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
 
   /**
@@ -69,7 +69,7 @@ const props = defineProps({
    */
   showClear: {
     type: Boolean,
-    default: true
+    default: true,
   },
 
   /**
@@ -77,8 +77,8 @@ const props = defineProps({
    */
   enableFilter: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -126,11 +126,11 @@ async function loadVendors() {
 /**
  * Handle value change
  */
-function handleChange(event) {
+function handleChange() {
   emit('update:modelValue', localValue.value)
   emit('change', {
     value: localValue.value,
-    vendor: vendors.value.find(v => v.id === localValue.value)
+    vendor: vendors.value.find(v => v.id === localValue.value),
   })
 }
 

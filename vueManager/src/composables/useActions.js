@@ -36,7 +36,7 @@ export function useActions(options = {}) {
     onAddresses = () => {},
     onPublish = () => {},
     onDuplicate = () => {},
-    onCustomAction = () => {}
+    onCustomAction = () => {},
   } = options
 
   /**
@@ -74,7 +74,7 @@ export function useActions(options = {}) {
             onCustomAction(event, data)
         }
       },
-      ...customContext
+      ...customContext,
     }
   }
 
@@ -114,13 +114,13 @@ export function useActions(options = {}) {
             try {
               const result = await actionRegistry.execute(actionName, data, context)
               resolve(result)
-            } catch (error) {
+            } catch {
               resolve(null)
             }
           },
           reject: () => {
             resolve(null)
-          }
+          },
         })
       })
     }
@@ -158,6 +158,6 @@ export function useActions(options = {}) {
     hasAction,
     getAvailableActions,
     registerAction,
-    registry: actionRegistry
+    registry: actionRegistry,
   }
 }

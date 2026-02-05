@@ -248,7 +248,7 @@ const props = defineProps({
    */
   fieldConfig: {
     type: Object,
-    required: true
+    required: true,
   },
 
   /**
@@ -256,7 +256,7 @@ const props = defineProps({
    */
   modelValue: {
     type: [String, Number, Boolean, Date, Array, Object],
-    default: null
+    default: null,
   },
 
   /**
@@ -264,16 +264,8 @@ const props = defineProps({
    */
   disabled: {
     type: Boolean,
-    default: false
-  }
-})
-
-/**
- * Determine if field is simple type (doesn't require hidden input)
- */
-const isSimpleField = computed(() => {
-  const simpleTypes = ['textfield', 'numberfield', 'textarea', 'switch', 'checkbox', 'xcheckbox']
-  return simpleTypes.includes(props.fieldConfig.xtype)
+    default: false,
+  },
 })
 
 /**
@@ -332,7 +324,7 @@ const getExtJSComboLabel = (xtype) => {
     'ms3-combo-source': 'Media source selection (ExtJS combo)',
     'ms3-combo-options': 'Product options (ExtJS combo)',
     'ms3-combo-autocomplete': 'Autocomplete (ExtJS combo)',
-    'ms3-combo-select': 'Dropdown list'
+    'ms3-combo-select': 'Dropdown list',
   }
 
   return labels[xtype] || `ExtJS widget: ${xtype}`
@@ -374,7 +366,7 @@ watch(localValue, (newValue) => {
 const handleBlur = () => {
   emit('blur', {
     fieldId: props.fieldConfig.id,
-    value: localValue.value
+    value: localValue.value,
   })
 }
 </script>

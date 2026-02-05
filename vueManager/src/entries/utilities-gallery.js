@@ -7,8 +7,8 @@
 import '../scss/primevue.scss';
 import { createApp } from 'vue';
 import PrimeVue from 'primevue/config';
-import Aura from '@primevue/themes/aura';
-import { getPrimeVueLocale } from "@vuetools/usePrimeVueLocale";
+import Aura from '@primeuix/themes/aura';
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import 'primeicons/primeicons.css';
 
 import ToastService from 'primevue/toastservice';
@@ -26,8 +26,8 @@ function createVueApp(props = {}) {
     theme: {
       preset: Aura,
       options: {
-        prefix: "p",
-        darkModeSelector: ".ms3-dark-mode",
+        prefix: 'p',
+        darkModeSelector: '.ms3-dark-mode',
         cssLayer: false,
       },
     },
@@ -90,7 +90,7 @@ function waitForElement(selector, callback) {
     return;
   }
 
-  const observer = new MutationObserver((mutations) => {
+  const observer = new MutationObserver(() => {
     const element = document.querySelector(selector);
     if (element) {
       observer.disconnect();
@@ -100,7 +100,7 @@ function waitForElement(selector, callback) {
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
   });
 }
 

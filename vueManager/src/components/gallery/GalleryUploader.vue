@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 import Uppy from '@uppy/core'
 import Dashboard from '@uppy/dashboard'
 import XHRUpload from '@uppy/xhr-upload'
@@ -14,32 +14,32 @@ import ImageEditor from '@uppy/image-editor'
 const props = defineProps({
   productId: {
     type: [Number, String],
-    required: true
+    required: true,
   },
   sourceId: {
     type: [Number, String],
-    default: 1
+    default: 1,
   },
   connectorUrl: {
     type: String,
-    required: true
+    required: true,
   },
   maxFileSize: {
     type: Number,
-    default: 10485760 // 10MB
+    default: 10485760, // 10MB
   },
   maxWidth: {
     type: Number,
-    default: 1920
+    default: 1920,
   },
   maxHeight: {
     type: Number,
-    default: 1080
+    default: 1080,
   },
   allowedFileTypes: {
     type: Array,
-    default: () => ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic']
-  }
+    default: () => ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic'],
+  },
 })
 
 const emit = defineEmits(['upload-success', 'upload-error', 'upload-complete'])
@@ -65,7 +65,7 @@ const initUppy = () => {
       maxFileSize: props.maxFileSize,
       maxNumberOfFiles: null,
       minNumberOfFiles: null,
-      allowedFileTypes: props.allowedFileTypes
+      allowedFileTypes: props.allowedFileTypes,
     },
     locale: {
       strings: {
@@ -84,10 +84,10 @@ const initUppy = () => {
         xFilesSelected: {
           0: '%{smart_count} file selected',
           1: '%{smart_count} files selected',
-          2: '%{smart_count} files selected'
-        }
-      }
-    }
+          2: '%{smart_count} files selected',
+        },
+      },
+    },
   })
 
   uppy.use(Dashboard, {
@@ -99,12 +99,12 @@ const initUppy = () => {
     showProgressDetails: true,
     hideUploadButton: false,
     note: `Maximum size: ${formatBytes(props.maxFileSize)}`,
-    theme: 'light'
+    theme: 'light',
   })
 
   uppy.use(ImageEditor, {
     target: Dashboard,
-    quality: 0.8
+    quality: 0.8,
   })
 
   uppy.use(XHRUpload, {
@@ -114,8 +114,8 @@ const initUppy = () => {
     fieldName: 'file',
     timeout: 60000, // 60 seconds
     headers: {
-      'Accept': 'application/json'
-    }
+      'Accept': 'application/json',
+    },
   })
 
   uppy.on('upload-success', (file, response) => {
@@ -150,7 +150,7 @@ const buildUploadUrl = () => {
     id: props.productId,
     source: props.sourceId,
     ctx: 'mgr',
-    HTTP_MODAUTH: window.MODx?.siteId || ''
+    HTTP_MODAUTH: window.MODx?.siteId || '',
   })
 
   return `${props.connectorUrl}?${params.toString()}`
@@ -182,7 +182,7 @@ const addFiles = (files) => {
 defineExpose({
   updateSettings,
   addFiles,
-  uppy
+  uppy,
 })
 </script>
 

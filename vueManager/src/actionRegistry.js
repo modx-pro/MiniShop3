@@ -154,7 +154,7 @@ class ActionRegistry {
           severity: 'error',
           summary: 'Error',
           detail: error.message || 'An error occurred while executing action',
-          life: 5000
+          life: 5000,
         })
       }
 
@@ -210,7 +210,7 @@ class ActionRegistry {
       delete: { icon: 'pi-trash', labelKey: 'delete', severity: 'danger' },
       view: { icon: 'pi-eye', labelKey: 'view', severity: 'secondary' },
       addresses: { icon: 'pi-map-marker', labelKey: 'addresses', severity: 'secondary' },
-      refresh: { icon: 'pi-refresh', labelKey: 'refresh', severity: 'secondary' }
+      refresh: { icon: 'pi-refresh', labelKey: 'refresh', severity: 'secondary' },
     }
 
     return builtinMeta[name] || { icon: 'pi-cog', labelKey: name, severity: null }

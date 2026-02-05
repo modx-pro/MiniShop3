@@ -29,7 +29,7 @@ const references = ref({
   statuses: [],
   events: [],
   recipient_types: [],
-  channels: []
+  channels: [],
 })
 
 const filterStatusId = ref(null)
@@ -89,7 +89,7 @@ async function loadNotifications() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -118,7 +118,7 @@ function createNotification() {
     template: '',
     delay: 0,
     position: 0,
-    config: {}
+    config: {},
   }
   isNewRecord.value = true
   editDialogVisible.value = true
@@ -136,18 +136,17 @@ async function saveNotification() {
   saving.value = true
 
   try {
-    let response
     if (isNewRecord.value) {
-      response = await request.post('/api/mgr/notifications', editingNotification.value)
+      await request.post('/api/mgr/notifications', editingNotification.value)
     } else {
-      response = await request.put(`/api/mgr/notifications/${editingNotification.value.id}`, editingNotification.value)
+      await request.put(`/api/mgr/notifications/${editingNotification.value.id}`, editingNotification.value)
     }
 
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: isNewRecord.value ? _('ms3_notification_created') : _('ms3_notification_updated'),
-      life: 3000
+      life: 3000,
     })
 
     editDialogVisible.value = false
@@ -158,7 +157,7 @@ async function saveNotification() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -181,7 +180,7 @@ function deleteNotification(notification) {
           severity: 'success',
           summary: _('success'),
           detail: _('ms3_notification_deleted'),
-          life: 3000
+          life: 3000,
         })
 
         await loadNotifications()
@@ -191,17 +190,17 @@ function deleteNotification(notification) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
 async function toggleEnabled(notification) {
   try {
     await request.put(`/api/mgr/notifications/${notification.id}`, {
-      enabled: !notification.enabled
+      enabled: !notification.enabled,
     })
 
     notification.enabled = !notification.enabled
@@ -210,7 +209,7 @@ async function toggleEnabled(notification) {
       severity: 'success',
       summary: _('success'),
       detail: notification.enabled ? _('ms3_notification_enabled') : _('ms3_notification_disabled'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[NotificationsGrid] Error toggling enabled:', error)
@@ -218,7 +217,7 @@ async function toggleEnabled(notification) {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -267,14 +266,14 @@ function getStatusStyle(statusId) {
   const color = status?.color || '888888'
   return {
     backgroundColor: `#${color}`,
-    color: getContrastTextColor(color)
+    color: getContrastTextColor(color),
   }
 }
 
 const statusOptions = computed(() => {
   return [
     { id: null, name: _('ms3_notification_all_statuses') },
-    ...references.value.statuses
+    ...references.value.statuses,
   ]
 })
 
