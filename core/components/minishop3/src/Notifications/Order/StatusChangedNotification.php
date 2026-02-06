@@ -113,32 +113,19 @@ class StatusChangedNotification extends Notification
      */
     public function toTelegram(string $recipientType): ?TelegramMessage
     {
+        // Ensure lexicon is loaded (manager contains status translations)
+        $this->modx->lexicon->load('minishop3:default');
+        $this->modx->lexicon->load('minishop3:manager');
+        $this->modx->lexicon->load('minishop3:notifications');
+
         $config = $this->getChannelConfig($recipientType, 'telegram');
-        if (!$config) {
-            // Default message if no config
-            $orderNum = $this->order->get('num');
-            $statusName = $this->newStatus->get('name');
-
-            $content = $recipientType === 'customer'
-                ? "Order #{$orderNum} status changed to: <b>{$statusName}</b>"
-                : "Order #{$orderNum} moved to status: <b>{$statusName}</b>";
-
-            return (new TelegramMessage())
-                ->content($content)
-                ->parseMode('HTML');
-        }
 
         // Use template from config if available
-        $template = $config->get('template');
-        if ($template) {
-            // Render chunk with placeholders
-            $content = $this->renderTemplate($template);
+        if ($config && $config->get('template')) {
+            $content = $this->renderTemplate($config->get('template'));
         } else {
-            $orderNum = $this->order->get('num');
-            $statusName = $this->newStatus->get('name');
-            $content = $recipientType === 'customer'
-                ? "Order #{$orderNum} status changed to: <b>{$statusName}</b>"
-                : "Order #{$orderNum} moved to status: <b>{$statusName}</b>";
+            // Default message with translated status
+            $content = $this->buildDefaultTelegramMessage($recipientType);
         }
 
         return (new TelegramMessage())
@@ -147,20 +134,86 @@ class StatusChangedNotification extends Notification
     }
 
     /**
+     * Build default Telegram message with proper localization
+     *
+     * @param string $recipientType
+     * @return string
+     */
+    protected function buildDefaultTelegramMessage(string $recipientType): string
+    {
+        $orderNum = $this->order->get('num');
+        $statusKey = $this->newStatus->get('name');
+        $statusName = $this->modx->lexicon($statusKey);
+
+        // If lexicon not found, use the key itself
+        if ($statusName === $statusKey) {
+            $statusName = $statusKey;
+        }
+
+        $siteName = $this->modx->getOption('site_name');
+
+        if ($recipientType === 'customer') {
+            // Customer message
+            $template = $this->modx->lexicon('ms3_telegram_order_status_customer');
+            if ($template === 'ms3_telegram_order_status_customer') {
+                // Fallback if lexicon not defined
+                $template = "🛒 <b>{$siteName}</b>\n\n";
+                $template .= $this->modx->lexicon('ms3_telegram_order') . " <b>#{$orderNum}</b>\n";
+                $template .= $this->modx->lexicon('ms3_telegram_status') . ": <b>{$statusName}</b>";
+            } else {
+                $template = str_replace(
+                    ['{$site_name}', '{$order_num}', '{$status_name}'],
+                    [$siteName, $orderNum, $statusName],
+                    $template
+                );
+            }
+        } else {
+            // Manager message
+            $template = $this->modx->lexicon('ms3_telegram_order_status_manager');
+            if ($template === 'ms3_telegram_order_status_manager') {
+                // Fallback if lexicon not defined
+                $template = "📦 <b>{$statusName}</b>\n\n";
+                $template .= $this->modx->lexicon('ms3_telegram_order') . " <b>#{$orderNum}</b>";
+
+                // Add order cost
+                $cost = $this->order->get('cost');
+                if ($cost > 0) {
+                    $template .= "\n" . $this->modx->lexicon('ms3_telegram_total') . ": <b>{$cost}</b>";
+                }
+            } else {
+                $cost = $this->order->get('cost');
+                $template = str_replace(
+                    ['{$site_name}', '{$order_num}', '{$status_name}', '{$cost}'],
+                    [$siteName, $orderNum, $statusName, $cost],
+                    $template
+                );
+            }
+        }
+
+        return $template;
+    }
+
+    /**
      * @inheritDoc
      */
     public function toSms(string $recipientType): ?SmsMessage
     {
+        // Ensure lexicon is loaded (manager contains status translations)
+        $this->modx->lexicon->load('minishop3:default');
+        $this->modx->lexicon->load('minishop3:manager');
+        $this->modx->lexicon->load('minishop3:notifications');
+
         $config = $this->getChannelConfig($recipientType, 'sms');
 
         $orderNum = $this->order->get('num');
-        $statusName = $this->newStatus->get('name');
+        $statusKey = $this->newStatus->get('name');
+        $statusName = $this->modx->lexicon($statusKey) ?: $statusKey;
 
         // Use template from config or default
         if ($config && $config->get('template')) {
             $content = $this->renderTemplate($config->get('template'));
         } else {
-            $content = "Order #{$orderNum}: {$statusName}";
+            $content = $this->modx->lexicon('ms3_telegram_order') . " #{$orderNum}: {$statusName}";
         }
 
         return (new SmsMessage())->content($content);
@@ -194,16 +247,24 @@ class StatusChangedNotification extends Notification
      */
     public function getPlaceholders(): array
     {
+        // Ensure lexicon is loaded for translations (manager contains status translations)
+        $this->modx->lexicon->load('minishop3:default');
+        $this->modx->lexicon->load('minishop3:manager');
+
         $pls = parent::getPlaceholders();
 
-        // Add status-specific placeholders
+        // Add status-specific placeholders with translations
         $pls['status'] = $this->newStatus->toArray();
-        $pls['status_name'] = $this->newStatus->get('name');
+        $statusKey = $this->newStatus->get('name');
+        $pls['status_key'] = $statusKey;
+        $pls['status_name'] = $this->modx->lexicon($statusKey) ?: $statusKey;
         $pls['status_color'] = $this->newStatus->get('color');
 
         if ($this->oldStatus) {
             $pls['old_status'] = $this->oldStatus->toArray();
-            $pls['old_status_name'] = $this->oldStatus->get('name');
+            $oldStatusKey = $this->oldStatus->get('name');
+            $pls['old_status_key'] = $oldStatusKey;
+            $pls['old_status_name'] = $this->modx->lexicon($oldStatusKey) ?: $oldStatusKey;
         }
 
         // Site info

@@ -256,4 +256,6 @@ $_lang['setting_ms3_rate_limit_decay_seconds_desc'] = 'Time window in seconds fo
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Telegram bot token';
 $_lang['setting_ms3_telegram_bot_token_desc'] = 'Bot token for sending notifications to Telegram. Get it from @BotFather in Telegram.';
+$_lang['setting_ms3_telegram_manager'] = 'Manager Telegram chat IDs';
+$_lang['setting_ms3_telegram_manager_desc'] = 'Comma-separated list of manager chat IDs for sending order notifications to Telegram. You can get your chat ID from @userinfobot.';
 

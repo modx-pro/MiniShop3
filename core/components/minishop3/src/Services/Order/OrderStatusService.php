@@ -175,7 +175,7 @@ class OrderStatusService
      * Returns all available contact information for the customer:
      * - email: for EmailChannel
      * - phone: for SmsChannel
-     * - telegram_id: for TelegramChannel
+     * - telegram_chat_id: for TelegramChannel
      *
      * @return array|null Returns null only if no contact info available
      */
@@ -185,7 +185,7 @@ class OrderStatusService
             'type' => 'customer',
             'email' => null,
             'phone' => null,
-            'telegram_id' => null,
+            'telegram_chat_id' => null,
         ];
 
         $hasContact = false;
@@ -204,10 +204,10 @@ class OrderStatusService
                 $recipient['phone'] = $phone;
                 $hasContact = true;
             }
-            // telegram_id may be stored in extended fields
+            // telegram_chat_id may be stored in extended fields
             $extended = $customer->get('extended');
-            if (is_array($extended) && !empty($extended['telegram_id'])) {
-                $recipient['telegram_id'] = $extended['telegram_id'];
+            if (is_array($extended) && !empty($extended['telegram_chat_id'])) {
+                $recipient['telegram_chat_id'] = $extended['telegram_chat_id'];
                 $hasContact = true;
             }
         }
@@ -227,10 +227,10 @@ class OrderStatusService
                     $recipient['phone'] = $profile->get('phone');
                     $hasContact = true;
                 }
-                // Check extended for telegram_id
+                // Check extended for telegram_chat_id
                 $extended = $profile->get('extended');
-                if (empty($recipient['telegram_id']) && is_array($extended) && !empty($extended['telegram_id'])) {
-                    $recipient['telegram_id'] = $extended['telegram_id'];
+                if (empty($recipient['telegram_chat_id']) && is_array($extended) && !empty($extended['telegram_chat_id'])) {
+                    $recipient['telegram_chat_id'] = $extended['telegram_chat_id'];
                     $hasContact = true;
                 }
             }
@@ -261,15 +261,15 @@ class OrderStatusService
 
         $recipients = [];
         for ($i = 0; $i < $maxCount; $i++) {
-            $recipient = [
+                $recipient = [
                 'type' => 'manager',
                 'email' => $emails[$i] ?? null,
                 'phone' => $phones[$i] ?? null,
-                'telegram_id' => $telegramIds[$i] ?? null,
+                'telegram_chat_id' => $telegramIds[$i] ?? null,
             ];
 
             // Only add if at least one contact method exists
-            if ($recipient['email'] || $recipient['phone'] || $recipient['telegram_id']) {
+            if ($recipient['email'] || $recipient['phone'] || $recipient['telegram_chat_id']) {
                 $recipients[] = $recipient;
             }
         }
@@ -280,9 +280,9 @@ class OrderStatusService
                 'type' => 'manager',
                 'email' => $emails[0] ?? null,
                 'phone' => $phones[0] ?? null,
-                'telegram_id' => $telegramIds[0] ?? null,
+                'telegram_chat_id' => $telegramIds[0] ?? null,
             ];
-            if ($recipient['email'] || $recipient['phone'] || $recipient['telegram_id']) {
+            if ($recipient['email'] || $recipient['phone'] || $recipient['telegram_chat_id']) {
                 $recipients[] = $recipient;
             }
         }

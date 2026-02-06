@@ -287,9 +287,9 @@ class NotificationsController
             ['id' => 'email', 'name' => 'Email'],
         ];
 
-        if ($this->modx->services->has('ms3_notification_manager')) {
+        if ($this->modx->services->has('ms3_notifications')) {
             /** @var \MiniShop3\Notifications\NotificationManager $notificationManager */
-            $notificationManager = $this->modx->services->get('ms3_notification_manager');
+            $notificationManager = $this->modx->services->get('ms3_notifications');
             foreach ($notificationManager->getChannels() as $channel) {
                 $channelName = $channel->getName();
                 if ($channelName !== 'email') {
