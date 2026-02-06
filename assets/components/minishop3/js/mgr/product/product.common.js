@@ -218,34 +218,6 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
     }
   },
 
-  /**
-   * @deprecated Use getProductTab() instead. Kept for backward compatibility.
-   */
-  getVueProductFields: function (config) {
-    return {
-      title: _('ms3_tab_product_data'),
-      layout: 'fit',
-      items: [{
-        xtype: 'panel',
-        border: false,
-        id: 'ms3-vue-product-fields-panel',
-        html: '<div id="ms3-vue-product-fields" class="vueApp"></div>',
-        listeners: {
-          afterrender: function () {
-            // Dispatch event to mount Vue application
-            const event = new CustomEvent('ms3:mountVueProductFields', {
-              detail: {
-                targetId: '#ms3-vue-product-fields',
-                productId: config.record.id
-              }
-            })
-            document.dispatchEvent(event)
-          }
-        }
-      }]
-    }
-  },
-
   getProductCategories: function (config) {
     return {
       title: _('ms3_tab_product_categories'),
