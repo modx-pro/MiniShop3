@@ -118,13 +118,27 @@ abstract class Notification
      */
     public function getPlaceholders(): array
     {
-        $pls = $this->order->toArray();
+        $orderData = $this->order->toArray();
 
-        // Format prices and weight
-        $pls['cost'] = $this->ms3->format->price($pls['cost'] ?? 0);
-        $pls['cart_cost'] = $this->ms3->format->price($pls['cart_cost'] ?? 0);
-        $pls['delivery_cost'] = $this->ms3->format->price($pls['delivery_cost'] ?? 0);
-        $pls['weight'] = $this->ms3->format->weight($pls['weight'] ?? 0);
+        // Format prices and weight for display
+        $formattedCost = $this->ms3->format->price($orderData['cost'] ?? 0);
+        $formattedCartCost = $this->ms3->format->price($orderData['cart_cost'] ?? 0);
+        $formattedDeliveryCost = $this->ms3->format->price($orderData['delivery_cost'] ?? 0);
+        $formattedWeight = $this->ms3->format->weight($orderData['weight'] ?? 0);
+
+        // Start with order data spread (for backwards compatibility)
+        $pls = $orderData;
+        $pls['cost'] = $formattedCost;
+        $pls['cart_cost'] = $formattedCartCost;
+        $pls['delivery_cost'] = $formattedDeliveryCost;
+        $pls['weight'] = $formattedWeight;
+
+        // Also add as nested 'order' array (for templates using {$order.num} syntax)
+        $pls['order'] = $orderData;
+        $pls['order']['cost'] = $formattedCost;
+        $pls['order']['cart_cost'] = $formattedCartCost;
+        $pls['order']['delivery_cost'] = $formattedDeliveryCost;
+        $pls['order']['weight'] = $formattedWeight;
 
         // Add customer data
         if ($customer = $this->order->getOne('Customer')) {
@@ -146,10 +160,57 @@ abstract class Notification
             $pls['payment'] = $payment->toArray();
         }
 
+        // Add products from order
+        $pls['products'] = $this->getOrderProducts();
+
+        // Add totals for email template
+        $pls['total'] = [
+            'cost' => $formattedCost,
+            'cart_cost' => $formattedCartCost,
+            'cart_count' => $orderData['cart_count'] ?? 0,
+            'cart_weight' => $formattedWeight,
+            'delivery_cost' => $formattedDeliveryCost,
+        ];
+
         // Merge custom data
         $pls = array_merge($pls, $this->data);
 
         return $pls;
+    }
+
+    /**
+     * Get products from order for email template
+     *
+     * @return array
+     */
+    protected function getOrderProducts(): array
+    {
+        $products = [];
+
+        /** @var \MiniShop3\Model\msOrderProduct $orderProduct */
+        foreach ($this->order->getMany('Products') as $orderProduct) {
+            $productData = $orderProduct->toArray();
+
+            // Add product resource data if available
+            if ($product = $orderProduct->getOne('Product')) {
+                $productData['pagetitle'] = $product->get('pagetitle');
+                $productData['thumb'] = $product->get('thumb');
+            }
+
+            // Format price
+            $productData['price'] = $this->ms3->format->price($productData['price'] ?? 0);
+            $productData['cost'] = $this->ms3->format->price($productData['cost'] ?? 0);
+
+            // Parse options if stored as JSON
+            if (!empty($productData['options']) && is_string($productData['options'])) {
+                $options = json_decode($productData['options'], true);
+                $productData['options'] = is_array($options) ? $options : [];
+            }
+
+            $products[] = $productData;
+        }
+
+        return $products;
     }
 
     /**

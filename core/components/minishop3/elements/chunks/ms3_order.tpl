@@ -64,10 +64,10 @@
                             <label class="form-check-label w-100" for="payment_{$payment.id}">
                                 <div class="d-flex align-items-center">
                                     {if $payment.logo?}
-                                        <img src="{$payment.logo}" alt="{$payment.name}" title="{$payment.name}" class="payment-logo me-3"/>
+                                        <img src="{$payment.logo}" alt="{$payment.name | lexicon}" title="{$payment.name | lexicon}" class="payment-logo me-3"/>
                                     {/if}
                                     <div class="flex-grow-1">
-                                        <div class="payment-name fw-semibold">{$payment.name}</div>
+                                        <div class="payment-name fw-semibold">{$payment.name | lexicon}</div>
                                         {if $payment.description?}
                                             <div class="payment-desc small text-muted mt-1">{$payment.description}</div>
                                         {/if}
@@ -101,10 +101,10 @@
                             <label class="form-check-label w-100" for="delivery_{$delivery.id}">
                                 <div class="d-flex align-items-center">
                                     {if $delivery.logo?}
-                                        <img src="{$delivery.logo}" alt="{$delivery.name}" title="{$delivery.name}" class="delivery-logo me-3"/>
+                                        <img src="{$delivery.logo}" alt="{$delivery.name | lexicon}" title="{$delivery.name | lexicon}" class="delivery-logo me-3"/>
                                     {/if}
                                     <div class="flex-grow-1">
-                                        <div class="delivery-name fw-semibold">{$delivery.name}</div>
+                                        <div class="delivery-name fw-semibold">{$delivery.name | lexicon}</div>
                                         {if $delivery.description?}
                                             <div class="delivery-desc small text-muted mt-1">{$delivery.description}</div>
                                         {/if}

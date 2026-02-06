@@ -111,6 +111,10 @@ class EmailChannel implements ChannelInterface
      */
     protected function buildBody(EmailMessage $message, Notification $notification): string
     {
+        // Load MiniShop3 lexicon topics for template rendering
+        $this->modx->lexicon->load('minishop3:default');
+        $this->modx->lexicon->load('minishop3:cart');
+
         $body = $message->getBody();
 
         // If chunk is specified, render it
@@ -120,6 +124,9 @@ class EmailChannel implements ChannelInterface
                 $message->getPlaceholders()
             );
 
+            // Use output buffering to capture any stray output from Fenom/pdoTools
+            ob_start();
+
             // Use pdoTools for Fenom rendering
             if ($this->modx->services->has(Fetch::class)) {
                 /** @var Fetch $pdoFetch */
@@ -128,6 +135,9 @@ class EmailChannel implements ChannelInterface
             } else {
                 $body = $this->modx->getChunk($chunkName, $placeholders);
             }
+
+            // Discard any stray output
+            ob_end_clean();
         }
 
         // Process MODX tags
@@ -157,6 +167,9 @@ class EmailChannel implements ChannelInterface
             $message->getPlaceholders()
         );
 
+        // Use output buffering to capture any stray output from Fenom/pdoTools
+        ob_start();
+
         // Use pdoTools Fenom parser for subject (supports Fenom and MODX syntax)
         if ($this->modx->services->has(Fetch::class)) {
             /** @var Fetch $pdoFetch */
@@ -174,6 +187,9 @@ class EmailChannel implements ChannelInterface
             $this->modx->getParser()->processElementTags('', $subject, true, false, '[[', ']]', [], 10);
             $this->modx->getParser()->processElementTags('', $subject, true, true, '[[', ']]', [], 10);
         }
+
+        // Discard any stray output
+        ob_end_clean();
 
         return $subject;
     }

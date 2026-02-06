@@ -119,8 +119,11 @@ class OrderStatusService
             }
 
             // Send notifications via NotificationManager (unless skipped)
+            // Use output buffering to prevent any stray output from Fenom/pdoTools
             if (!$skipNotifications) {
+                ob_start();
                 $this->sendNotifications($msOrder, $status, $oldStatus);
+                ob_end_clean();
             }
         }
 
