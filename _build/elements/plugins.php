@@ -8,6 +8,7 @@ return [
             'OnMODXInit',
             'OnLoadWebDocument',
             'OnManagerPageBeforeRender',
+            'OnDocFormSave',
             'OnUserSave',
             'OnBeforeUserFormSave',
             'OnUserRemove',

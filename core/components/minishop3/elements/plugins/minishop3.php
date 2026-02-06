@@ -6,6 +6,7 @@
  * - OnMODXInit: Load extra fields through ExtraFields
  * - OnLoadWebDocument: Initialize frontend, register product fields as [[*resource]] tags
  * - OnManagerPageBeforeRender: Load lexicon and JS in admin panel
+ * - OnDocFormSave: Handle resource-to-product conversion
  * - OnUserSave: Synchronize msCustomer ↔ modUser (create/update)
  * - OnBeforeUserFormSave: Synchronize msCustomer when modUser profile changes
  * - OnUserRemove: Unlink msCustomer from deleted modUser
@@ -15,6 +16,8 @@
  */
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Model\msProduct;
+use MiniShop3\Services\Product\ProductService;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 
@@ -59,6 +62,27 @@ switch ($modx->event->name) {
                 );
             }
         }
+        break;
+
+    /**
+     * OnDocFormSave - handle resource-to-product conversion
+     *
+     * Delegates to ProductService::handleConversion()
+     */
+    case 'OnDocFormSave':
+        /** @var \MODX\Revolution\modResource $resource */
+        if (!isset($resource)) {
+            break;
+        }
+
+        // Only process msProduct resources
+        if ($resource->get('class_key') !== msProduct::class) {
+            break;
+        }
+
+        /** @var ProductService $productService */
+        $productService = $modx->services->get('ms3_product_service');
+        $productService->handleConversion($resource);
         break;
 
     /**

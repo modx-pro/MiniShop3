@@ -37,6 +37,13 @@
 - Исправлены компоненты: `CategoryProductsGrid.vue`, `OrderView.vue`, `OrdersGrid.vue`, `HelpPage.vue`, `product-tabs.js`, `utils/modx.js`
 - Добавлена утилита `getMs3Config()` в `utils/modx.js` для безопасного доступа
 
+**Конвертация ресурса в товар:**
+- При смене `class_key` обычного ресурса на `msProduct`:
+  - Автоматически создаётся запись `msProductData` (чтобы товар отображался в гридах)
+  - Товар скрывается из дерева согласно настройке `ms3_product_show_in_tree_default`
+- Логика вынесена в новый сервис `ProductService::handleConversion()`
+- Плагин `OnDocFormSave` делегирует обработку сервису
+
 **Синхронизация XML схемы и PHP моделей:**
 - Добавлено поле `stock` в PHP модель `msProductData` (было только в XML схеме)
 - Добавлено поле `default_value` в PHP модель `msExtraField` (было только в XML схеме)

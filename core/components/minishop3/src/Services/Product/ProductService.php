@@ -6,6 +6,7 @@ use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msVendor;
 use MiniShop3\MiniShop3;
+use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
@@ -54,6 +55,48 @@ class ProductService
         } else {
             $product->loadData();
         }
+
+        return true;
+    }
+
+    /**
+     * Handle resource-to-product conversion
+     *
+     * When a regular resource is converted to msProduct (class_key change):
+     * 1. Creates msProductData record (required for product to appear in grids)
+     * 2. Sets show_in_tree based on ms3_product_show_in_tree_default setting
+     *
+     * @param modResource $resource The resource being saved
+     * @return bool True if conversion was handled, false if not applicable
+     */
+    public function handleConversion(modResource $resource): bool
+    {
+        // Only process if resource is now an msProduct
+        if ($resource->get('class_key') !== msProduct::class) {
+            return false;
+        }
+
+        // Check if msProductData exists - if not, this is a converted resource
+        $productData = $this->modx->getObject(msProductData::class, ['id' => $resource->get('id')]);
+        if ($productData) {
+            // Product data exists - this is a normal product, not a conversion
+            return false;
+        }
+
+        // Create msProductData record for converted resource
+        $productData = $this->modx->newObject(msProductData::class);
+        $productData->set('id', $resource->get('id'));
+        $productData->save();
+
+        // Set show_in_tree based on system setting
+        $showInTree = (bool)$this->modx->getOption('ms3_product_show_in_tree_default', null, false);
+        $resource->set('show_in_tree', $showInTree);
+        $resource->save();
+
+        $this->modx->log(
+            modX::LOG_LEVEL_INFO,
+            "[MiniShop3] Resource #{$resource->get('id')} converted to product: msProductData created, show_in_tree=" . ($showInTree ? 'true' : 'false')
+        );
 
         return true;
     }
