@@ -8,13 +8,13 @@
  * @subpackage lexicon
  */
 
-$_lang['ms3_components_href'] = '#';
+$_lang['ms3_components_href'] = 'https://modstore.pro/';
 $_lang['ms3_components_text'] = 'Платные и бесплатные дополнения';
 $_lang['ms3_components_title'] = 'Дополнения';
 $_lang['ms3_demo_href'] = '#';
 $_lang['ms3_demo_text'] = 'Перейти на демо-сайт';
 $_lang['ms3_demo_title'] = 'Демо';
-$_lang['ms3_docs_href'] = '#';
+$_lang['ms3_docs_href'] = 'https://docs.modx.pro/components/minishop3/';
 $_lang['ms3_docs_text'] = 'Официальная документация';
 $_lang['ms3_docs_title'] = 'Документация';
 $_lang['ms3_forum_href'] = 'https://modx.pro/';
@@ -32,9 +32,15 @@ $_lang['ms3_lexicons_text'] = 'Управление словарями';
 $_lang['ms3_localization_href'] = 'https://crowdin.com/project/minishop3-ecommerce';
 $_lang['ms3_localization_text'] = 'Помогите с переводом';
 $_lang['ms3_localization_title'] = 'Локализация';
+$_lang['ms3_customers_href'] = '?a=mgr/customers&namespace=minishop3';
+$_lang['ms3_customers_text'] = 'Клиенты';
+$_lang['ms3_notifications_href'] = '?a=mgr/notifications&namespace=minishop3';
+$_lang['ms3_notifications_text'] = 'Уведомления';
 $_lang['ms3_orders_href'] = '?a=mgr/orders&namespace=minishop3';
 $_lang['ms3_orders_text'] = 'Заказы';
 $_lang['ms3_settings_href'] = '?a=mgr/settings&namespace=minishop3';
 $_lang['ms3_settings_text'] = 'Настройки';
 $_lang['ms3_sys_settings_href'] = '?a=system/settings&ns=minishop3';
 $_lang['ms3_sys_settings_text'] = 'Системные настройки & События';
+$_lang['ms3_utilities_href'] = '?a=mgr/utilities&namespace=minishop3';
+$_lang['ms3_utilities_text'] = 'Утилиты';

@@ -27,7 +27,16 @@ class MiniShop3MgrHelpManagerController extends msManagerController
      */
     public function loadCustomCssJs()
     {
-        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/help.css');
+        // Vue CSS
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/help.min.css');
+
+        // Vue module
+        $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/help.min.js');
+
+        // Pass config to JavaScript
+        $this->addHtml('<script>
+            ms3.config = ' . json_encode($this->ms3->config) . ';
+        </script>');
     }
 
     /**
@@ -36,11 +45,7 @@ class MiniShop3MgrHelpManagerController extends msManagerController
      */
     public function process(array $scriptProperties = [])
     {
-        $placeholders = [];
-        $placeholders['logo'] = $this->ms3->config['defaultThumb'];
-        $placeholders['changelog'] = file_get_contents(dirname(__FILE__, 3) . '/docs/changelog.txt');
-
-        return $placeholders;
+        return [];
     }
 
     /**
