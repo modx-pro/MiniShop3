@@ -210,11 +210,14 @@ function formatPrice(value, column = {}) {
   if (value === null || value === undefined) return '-'
 
   // Get config from column or use defaults from ms3.config
-  const decimals = column.decimals ?? window.ms3?.config?.price_decimals ?? 2
-  const thousandsSeparator = column.thousands_separator ?? window.ms3?.config?.price_thousands_separator ?? ' '
-  const decimalSeparator = column.decimal_separator ?? window.ms3?.config?.price_decimal_separator ?? ','
-  const currency = column.currency ?? window.ms3?.config?.price_currency ?? ''
-  const currencyPosition = column.currency_position ?? window.ms3?.config?.price_currency_position ?? 'after'
+  // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
+  // eslint-disable-next-line no-undef
+  const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
+  const decimals = column.decimals ?? ms3Config?.price_decimals ?? 2
+  const thousandsSeparator = column.thousands_separator ?? ms3Config?.price_thousands_separator ?? ' '
+  const decimalSeparator = column.decimal_separator ?? ms3Config?.price_decimal_separator ?? ','
+  const currency = column.currency ?? ms3Config?.price_currency ?? ''
+  const currencyPosition = column.currency_position ?? ms3Config?.price_currency_position ?? 'after'
 
   // Format number
   const parts = Number(value).toFixed(decimals).split('.')
@@ -240,8 +243,10 @@ function formatWeight(value, column = {}) {
   if (value === null || value === undefined) return '-'
 
   // Get config from column or use defaults from ms3.config
-  const decimals = column.decimals ?? window.ms3?.config?.weight_decimals ?? 2
-  const unit = column.unit ?? window.ms3?.config?.weight_unit ?? 'кг'
+  // eslint-disable-next-line no-undef
+  const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
+  const decimals = column.decimals ?? ms3Config?.weight_decimals ?? 2
+  const unit = column.unit ?? ms3Config?.weight_unit ?? 'кг'
   const unitPosition = column.unit_position ?? 'after'
 
   // Format number

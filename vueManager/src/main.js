@@ -24,7 +24,7 @@ import VueProductDataFields from './components/ProductDataFields.vue'
  *
  * MODX Integration:
  * - Access to window.MODx for MODX API
- * - Access to window.ms3.config for MiniShop3 settings
+ * - Access to ms3.config for MiniShop3 settings (global variable, not window.ms3)
  * - HTTP_MODAUTH token for security
  * - Lexicon for translations
  */

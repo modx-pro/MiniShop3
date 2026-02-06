@@ -3,6 +3,18 @@
  */
 
 /**
+ * Get ms3.config safely
+ * Note: ms3 is a global variable declared with 'let' in minishop3.js,
+ * so it's NOT available as window.ms3. We must access it directly.
+ *
+ * @returns {Object|null} - ms3.config object or null
+ */
+export function getMs3Config() {
+  // eslint-disable-next-line no-undef
+  return typeof ms3 !== 'undefined' ? ms3.config : null
+}
+
+/**
  * Format price according to MODX/MiniShop3 settings
  *
  * @param {number} price - Price
@@ -10,12 +22,13 @@
  * @returns {string} - Formatted price
  */
 export function formatPrice(price, options = {}) {
+  const ms3Config = getMs3Config()
   const {
     decimals = 2,
     decPoint = '.',
     thousandsSep = ' ',
-    currency = window.ms3?.config?.price_format_currency || 'USD',
-    currencyPosition = window.ms3?.config?.price_format_currency_position || 'right'
+    currency = ms3Config?.price_format_currency || 'USD',
+    currencyPosition = ms3Config?.price_format_currency_position || 'right'
   } = options;
 
   const numPrice = parseFloat(price) || 0;

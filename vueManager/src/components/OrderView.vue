@@ -100,8 +100,11 @@ const pendingOrderData = ref(null)
 
 const orderId = computed(() => {
   // Try to get from ms3.config first
-  if (window.ms3?.config?.order_id) {
-    const configId = window.ms3.config.order_id
+  // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
+  // eslint-disable-next-line no-undef
+  const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
+  if (ms3Config?.order_id) {
+    const configId = ms3Config.order_id
     // Return 'new' string as is, otherwise parse as int
     return configId === 'new' ? 'new' : parseInt(configId) || 0
   }
@@ -118,7 +121,9 @@ const isCreateMode = computed(() => {
 
 // Draft status ID (typically 1)
 const draftStatusId = computed(() => {
-  return window.ms3?.config?.status_draft || 1
+  // eslint-disable-next-line no-undef
+  const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
+  return ms3Config?.status_draft || 1
 })
 
 // Check if order is in draft status

@@ -8,7 +8,8 @@ import { useLexicon } from '@vuetools/useLexicon'
 const { _ } = useLexicon()
 
 // Logo from ms3.config
-const logo = computed(() => window.ms3?.config?.defaultThumb || '')
+// eslint-disable-next-line no-undef
+const logo = computed(() => (typeof ms3 !== 'undefined' ? ms3.config?.defaultThumb : null) || '')
 
 // Quick links to admin sections
 const quickLinks = computed(() => [

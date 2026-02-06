@@ -28,11 +28,28 @@
 
 #### 🐛 Исправлено
 
+**Настройка `ms3_category_show_nested_products`:**
+- Vue компонент категории теперь читает системную настройку (ранее всегда начинал с `false`)
+- Удалён неиспользуемый ExtJS файл `product.grid.js` (грид товаров полностью на Vue)
+
+**Доступ к `ms3.config` в Vue компонентах:**
+- Исправлен доступ к глобальной переменной `ms3` — она объявлена через `let`, поэтому недоступна как `window.ms3`
+- Исправлены компоненты: `CategoryProductsGrid.vue`, `OrderView.vue`, `OrdersGrid.vue`, `HelpPage.vue`, `product-tabs.js`, `utils/modx.js`
+- Добавлена утилита `getMs3Config()` в `utils/modx.js` для безопасного доступа
+
 **Синхронизация XML схемы и PHP моделей:**
 - Добавлено поле `stock` в PHP модель `msProductData` (было только в XML схеме)
 - Добавлено поле `default_value` в PHP модель `msExtraField` (было только в XML схеме)
 - Добавлена модель `msGridField` в XML схему (была только в PHP)
 - Добавлено поле `select_options` в XML схему `msExtraField` (было только в PHP)
+
+#### 🗑️ Удалено
+
+**Очистка неиспользуемых ExtJS файлов:**
+- `misc/plupload/` — библиотека Plupload (не используется, галерея на Vue)
+- `model-fields/model-fields.wrapper.js` — wrapper создаётся inline в utilities.panel.js
+- `utilities/gallery/panel.js` — заменён Vue компонентом utilities-gallery
+- `lexicon/en/plupload.inc.php`, `lexicon/ru/plupload.inc.php` — лексиконы Plupload
 
 ---
 
