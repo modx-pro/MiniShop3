@@ -352,6 +352,24 @@ if ($scriptProperties['return'] === 'json') {
     $rows = json_decode($rows, true);
 }
 
+// Parse usePackages parameter for external package integration
+$usePackages = [];
+if (!empty($scriptProperties['usePackages'])) {
+    $usePackages = array_map('trim', explode(',', $scriptProperties['usePackages']));
+}
+
+// Event: msOnProductsLoad - bulk loading of additional data from external packages
+if (!empty($rows) && is_array($rows)) {
+    $productIds = array_column($rows, 'id');
+    $modx->invokeEvent('msOnProductsLoad', [
+        'rows' => &$rows,
+        'productIds' => $productIds,
+        'usePackages' => $usePackages,
+        'scriptProperties' => $scriptProperties,
+    ]);
+    $pdoFetch->addTime('Invoked msOnProductsLoad event');
+}
+
 // Process rows
 $output = $additionalPlaceholders = [];
 if (!empty($rows) && is_array($rows)) {
@@ -413,6 +431,14 @@ if (!empty($rows) && is_array($rows)) {
 
         $rows[$k] = $row = array_merge($additionalPlaceholders, $row, $options);
         $opt_time += microtime(true) - $opt_time_start;
+
+        // Event: msOnProductPrepare - enrich single product data from external packages
+        $modx->invokeEvent('msOnProductPrepare', [
+            'row' => &$rows[$k],
+            'productId' => $row['id'],
+            'idx' => $row['idx'],
+        ]);
+        $row = $rows[$k]; // Update local variable after event modifications
 
         if ($scriptProperties['return'] == 'data') {
             $tpl = $pdoFetch->defineChunk($row);

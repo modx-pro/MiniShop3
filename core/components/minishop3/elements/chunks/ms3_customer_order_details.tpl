@@ -139,7 +139,7 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <p class="mb-0">{$delivery.name}</p>
+                    <p class="mb-0">{$delivery.name | lexicon}</p>
                     {if $delivery.description}
                     <small class="text-muted">{$delivery.description}</small>
                     {/if}
@@ -160,7 +160,7 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <p class="mb-0">{$payment.name}</p>
+                    <p class="mb-0">{$payment.name | lexicon}</p>
                     {if $payment.description}
                     <small class="text-muted">{$payment.description}</small>
                     {/if}

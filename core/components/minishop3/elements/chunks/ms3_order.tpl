@@ -30,7 +30,7 @@
                         </label>
                         <input type="text" id="{$field}" placeholder="{('ms3_frontend_' ~ $field) | lexicon}"
                             name="{$field}" value="{$form[$field]}"
-                            class="form-control{($field in list $errors) ? ' error' : ''}">
+                            class="form-control">
                         <div class="invalid-feedback"></div>
                     </div>
                 {/foreach}
@@ -41,7 +41,7 @@
                     </label>
                     <textarea name="comment" id="comment" placeholder="{'ms3_frontend_comment' | lexicon}"
                         rows="3"
-                        class="form-control{('comment' in list $errors) ? ' error' : ''}">{$form.comment}</textarea>
+                        class="form-control">{$form.comment}</textarea>
                     <div class="invalid-feedback"></div>
                 </div>
             </div>
@@ -64,10 +64,10 @@
                             <label class="form-check-label w-100" for="payment_{$payment.id}">
                                 <div class="d-flex align-items-center">
                                     {if $payment.logo?}
-                                        <img src="{$payment.logo}" alt="{$payment.name}" title="{$payment.name}" class="payment-logo me-3"/>
+                                        <img src="{$payment.logo}" alt="{$payment.name | lexicon}" title="{$payment.name | lexicon}" class="payment-logo me-3"/>
                                     {/if}
                                     <div class="flex-grow-1">
-                                        <div class="payment-name fw-semibold">{$payment.name}</div>
+                                        <div class="payment-name fw-semibold">{$payment.name | lexicon}</div>
                                         {if $payment.description?}
                                             <div class="payment-desc small text-muted mt-1">{$payment.description}</div>
                                         {/if}
@@ -101,10 +101,10 @@
                             <label class="form-check-label w-100" for="delivery_{$delivery.id}">
                                 <div class="d-flex align-items-center">
                                     {if $delivery.logo?}
-                                        <img src="{$delivery.logo}" alt="{$delivery.name}" title="{$delivery.name}" class="delivery-logo me-3"/>
+                                        <img src="{$delivery.logo}" alt="{$delivery.name | lexicon}" title="{$delivery.name | lexicon}" class="delivery-logo me-3"/>
                                     {/if}
                                     <div class="flex-grow-1">
-                                        <div class="delivery-name fw-semibold">{$delivery.name}</div>
+                                        <div class="delivery-name fw-semibold">{$delivery.name | lexicon}</div>
                                         {if $delivery.description?}
                                             <div class="delivery-desc small text-muted mt-1">{$delivery.description}</div>
                                         {/if}
@@ -151,7 +151,7 @@
                         </label>
                         <input type="text" id="index" placeholder="{('ms3_frontend_index') | lexicon}"
                             name="index" value="{$form.index}"
-                            class="form-control{('index' in list $errors) ? ' error' : ''}">
+                            class="form-control">
                         <div class="invalid-feedback"></div>
                     </div>
                     <div class="col-8">
@@ -160,7 +160,7 @@
                         </label>
                         <input type="text" id="region" placeholder="{('ms3_frontend_region') | lexicon}"
                             name="region" value="{$form.region}"
-                            class="form-control{('region' in list $errors) ? ' error' : ''}">
+                            class="form-control">
                         <div class="invalid-feedback"></div>
                     </div>
                 </div>
@@ -171,7 +171,7 @@
                     </label>
                     <input type="text" id="city" placeholder="{('ms3_frontend_city') | lexicon}"
                         name="city" value="{$form.city}"
-                        class="form-control{('city' in list $errors) ? ' error' : ''}">
+                        class="form-control">
                     <div class="invalid-feedback"></div>
                 </div>
 
@@ -181,7 +181,7 @@
                     </label>
                     <input type="text" id="street" placeholder="{('ms3_frontend_street') | lexicon}"
                         name="street" value="{$form.street}"
-                        class="form-control{('street' in list $errors) ? ' error' : ''}">
+                        class="form-control">
                     <div class="invalid-feedback"></div>
                 </div>
 
@@ -192,7 +192,7 @@
                         </label>
                         <input type="text" id="building" placeholder="{('ms3_frontend_building') | lexicon}"
                             name="building" value="{$form.building}"
-                            class="form-control{('building' in list $errors) ? ' error' : ''}">
+                            class="form-control">
                         <div class="invalid-feedback"></div>
                     </div>
                     <div class="col-2">
@@ -201,7 +201,7 @@
                         </label>
                         <input type="text" id="entrance" placeholder="№"
                             name="entrance" value="{$form.entrance}"
-                            class="form-control{('entrance' in list $errors) ? ' error' : ''}">
+                            class="form-control">
                         <div class="invalid-feedback"></div>
                     </div>
                     <div class="col-2">
@@ -210,7 +210,7 @@
                         </label>
                         <input type="text" id="floor" placeholder="№"
                             name="floor" value="{$form.floor}"
-                            class="form-control{('floor' in list $errors) ? ' error' : ''}">
+                            class="form-control">
                         <div class="invalid-feedback"></div>
                     </div>
                     <div class="col-2">
@@ -219,7 +219,7 @@
                         </label>
                         <input type="text" id="room" placeholder="№"
                             name="room" value="{$form.room}"
-                            class="form-control{('room' in list $errors) ? ' error' : ''}">
+                            class="form-control">
                         <div class="invalid-feedback"></div>
                     </div>
                 </div>
@@ -230,7 +230,7 @@
                     </label>
                     <textarea name="text_address" id="text_address" placeholder="{'ms3_frontend_text_address' | lexicon}"
                         rows="2"
-                        class="form-control{('text_address' in list $errors) ? ' error' : ''}">{$form.text_address}</textarea>
+                        class="form-control">{$form.text_address}</textarea>
                     <div class="invalid-feedback"></div>
                     <div class="form-text">Укажите дополнительную информацию для доставки</div>
                 </div>

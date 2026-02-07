@@ -723,9 +723,9 @@ class ModelFieldsController
             ];
         }
 
-        // Resolve options via ComboConfigManager
+        // Resolve options via ComboConfigManager (with metadata for proper field comparison)
         $comboManager = new ComboConfigManager($this->modx);
-        $options = $comboManager->resolveAllOptions($model, $fieldsWithProperties);
+        $options = $comboManager->resolveAllOptionsWithMeta($model, $fieldsWithProperties);
 
         return Response::success([
             'model' => $model,

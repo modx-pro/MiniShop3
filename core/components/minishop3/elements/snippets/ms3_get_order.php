@@ -17,6 +17,7 @@ $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 
 // Load lexicons for template
+$modx->lexicon->load('minishop3:default');
 $modx->lexicon->load('minishop3:cart');
 
 /** @var Fetch $pdoFetch */

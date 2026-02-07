@@ -82,6 +82,10 @@ return [
     'msOnGetProductWeight',
     'msOnGetProductFields',
 
+    // msProducts snippet events (for extending with external packages)
+    'msOnProductsLoad',    // After loading products, for bulk data loading
+    'msOnProductPrepare',  // Before rendering each product, for enriching data
+
     // Vendor events
     'msOnBeforeVendorCreate',
     'msOnVendorCreate',

@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Services\Order\OrderLogService;
+use MiniShop3\Services\Order\OrderStatusService;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msExtraField;
@@ -780,9 +781,26 @@ class OrdersController
             }
         }
 
-        // Log status change (using legacy method for backward compatibility with notifications)
-        if ($oldStatusId != $order->get('status_id')) {
-            $this->logStatusChange($order, $oldStatusId, $order->get('status_id'));
+        // Handle status change via OrderStatusService (sends notifications)
+        $newStatusId = $order->get('status_id');
+        if ($oldStatusId != $newStatusId) {
+            // Revert status to old value - OrderStatusService will change it properly
+            $order->set('status_id', $oldStatusId);
+            $order->save();
+
+            /** @var OrderStatusService $orderStatusService */
+            $orderStatusService = $this->modx->services->get('ms3_order_status');
+            $result = $orderStatusService->change($order->get('id'), $newStatusId);
+
+            if ($result !== true) {
+                return Response::error(
+                    is_string($result) ? $result : $this->modx->lexicon('ms3_err_status_change'),
+                    400
+                )->getData();
+            }
+
+            // Reload order to get updated data
+            $order = $this->modx->getObject(msOrder::class, $id);
         }
 
         return Response::success($order->toArray(), 'Order updated successfully')->getData();

@@ -51,3 +51,9 @@ $_lang['ms3_notification_deleted'] = 'Notification deleted';
 $_lang['ms3_notification_enabled'] = 'Notification enabled';
 $_lang['ms3_notification_disabled'] = 'Notification disabled';
 $_lang['ms3_notification_delete_confirm'] = 'Are you sure you want to delete this notification?';
+
+// Telegram messages
+$_lang['ms3_telegram_order'] = 'Order';
+$_lang['ms3_telegram_status'] = 'Status';
+$_lang['ms3_telegram_total'] = 'Total';
+$_lang['ms3_telegram_new_order'] = 'New order';

@@ -1,5 +1,5 @@
 import './scss/primevue.scss'
-import { createApp, h } from 'vue'
+import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
@@ -8,8 +8,6 @@ import 'primeicons/primeicons.css'
 
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
-
-import VueProductDataFields from './components/ProductDataFields.vue'
 
 /**
  * MiniShop3 Vue Manager
@@ -25,7 +23,7 @@ import VueProductDataFields from './components/ProductDataFields.vue'
  *
  * MODX Integration:
  * - Access to window.MODx for MODX API
- * - Access to window.ms3.config for MiniShop3 settings
+ * - Access to ms3.config for MiniShop3 settings (global variable, not window.ms3)
  * - HTTP_MODAUTH token for security
  * - Lexicon for translations
  */
@@ -65,35 +63,3 @@ function createVueApp(rootComponent) {
 
   return app;
 }
-
-/**
- * Event handler for mounting ProductDataFields
- *
- * Called from product.common.js when switching to "Product Data (Vue)" tab
- */
-document.addEventListener('ms3:mountVueProductFields', (e) => {
-  setTimeout(() => {
-    const { targetId, productId } = e.detail
-    const $target = document.querySelector(targetId)
-
-    if ($target && $target.dataset.vApp === undefined) {
-      const WrapperComponent = {
-        render() {
-          return h(VueProductDataFields, {
-            productId: productId,
-          })
-        },
-      }
-
-      const app = createVueApp(WrapperComponent)
-
-      app.mount(targetId)
-
-      $target.dataset.vApp = 'true'
-    } else {
-      console.warn('[Vue] Target not found or already mounted:', targetId)
-    }
-  }, 100)
-})
-
-

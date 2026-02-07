@@ -500,4 +500,9 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_notifications',
     ],
+    'ms3_telegram_manager' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_notifications',
+    ],
 ];

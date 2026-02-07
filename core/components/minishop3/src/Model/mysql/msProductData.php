@@ -18,6 +18,7 @@ class msProductData extends \MiniShop3\Model\msProductData
                 'article' => null,
                 'price' => 0.0,
                 'old_price' => 0.0,
+                'stock' => 0.0,
                 'weight' => 0.0,
                 'image' => null,
                 'thumb' => null,
@@ -52,6 +53,14 @@ class msProductData extends \MiniShop3\Model\msProductData
                     [
                         'dbtype' => 'decimal',
                         'precision' => '12,2',
+                        'phptype' => 'float',
+                        'null' => true,
+                        'default' => 0.0,
+                    ],
+                'stock' =>
+                    [
+                        'dbtype' => 'decimal',
+                        'precision' => '13,3',
                         'phptype' => 'float',
                         'null' => true,
                         'default' => 0.0,
@@ -193,6 +202,22 @@ class msProductData extends \MiniShop3\Model\msProductData
                         'columns' =>
                             [
                                 'old_price' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                            ],
+                    ],
+                'stock' =>
+                    [
+                        'alias' => 'stock',
+                        'primary' => false,
+                        'unique' => false,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'stock' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',

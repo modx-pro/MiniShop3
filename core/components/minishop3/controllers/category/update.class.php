@@ -87,7 +87,6 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/category/category.common.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/option.grid.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/option.windows.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/category/product.grid.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/update.js');
 
         // Vue Category Products Grid with VueTools dependency check
@@ -108,7 +107,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             'option_keys' => $category_option_keys,
             'option_fields' => $category_option_fields,
             'default_thumb' => $this->ms3->config['defaultThumb'],
-            //'isHideContent' => $this->isHideContent(),
+            'show_nested_products' => (bool) $this->modx->getOption('ms3_category_show_nested_products', null, true),
         );
         $ready = array(
             'xtype' => 'ms3-page-category-update',

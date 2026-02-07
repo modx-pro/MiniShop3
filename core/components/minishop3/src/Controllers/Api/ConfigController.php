@@ -109,6 +109,7 @@ class ConfigController extends BaseApiController
      * DELETE /api/mgr/config/page-fields/{page_key}/{field_name}
      * Delete override for specific field
      *
+     * @deprecated Table ms3_field_config_overrides removed. Endpoint kept for backward compatibility.
      * @param array $params
      * @return Response
      */

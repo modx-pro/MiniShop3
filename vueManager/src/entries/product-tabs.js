@@ -191,14 +191,17 @@ window.MS3_initProductTabs = function(config) {
   }
 
   // Merge config from ms3.config if available
+  // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
+  // eslint-disable-next-line no-undef
+  const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : {}
   const mergedConfig = {
     show_gallery: true,
     show_categories: true,
     show_links: true,
     show_options: true,
     option_fields: [],
-    ...window.ms3?.config,
-    ...appConfig,
+    ...ms3Config,
+    ...appConfig
   }
 
   const props = {

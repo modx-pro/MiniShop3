@@ -256,4 +256,6 @@ $_lang['setting_ms3_rate_limit_decay_seconds_desc'] = 'Временное окн
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Токен Telegram бота';
 $_lang['setting_ms3_telegram_bot_token_desc'] = 'Токен бота для отправки уведомлений в Telegram. Получите у @BotFather в Telegram.';
+$_lang['setting_ms3_telegram_manager'] = 'Telegram chat ID менеджеров';
+$_lang['setting_ms3_telegram_manager_desc'] = 'Список chat ID менеджеров через запятую для отправки уведомлений о заказах в Telegram. Узнать свой chat ID можно у бота @userinfobot.';
 

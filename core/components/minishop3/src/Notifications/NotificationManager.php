@@ -194,6 +194,7 @@ class NotificationManager
 
         // Register built-in channels
         $this->registerChannel(new Channels\EmailChannel($this->modx));
+        $this->registerChannel(new Channels\TelegramChannel($this->modx));
 
         // Fire event for plugins to register custom channels
         $this->modx->invokeEvent('msOnRegisterNotificationChannels', [

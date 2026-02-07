@@ -25,8 +25,7 @@
         <a href="{$site_url}">
             <img style="{$style.logo}"
                  src="{$site_url}{$assets_url}components/minishop3/img/web/ms3_small@2x.png"
-                 alt="{$site_url}"
-                 width="120" height="90"/>
+                 alt="{$site_url}"/>
         </a>
     {/block}
     <!-- body -->
@@ -71,8 +70,8 @@
                                                     {/if}
                                                 </td>
                                                 <td style="{$style.th}">
-                                                    {if $product.id?}
-                                                        <a href="{$product.id | url : ['scheme' => 'full']}"
+                                                    {if $product.product_id?}
+                                                        <a href="{$product.product_id | url : ['scheme' => 'full']}"
                                                            style="{$style.a}">
                                                             {$product.name}
                                                         </a>

@@ -143,21 +143,5 @@ Ext.extend(ms3.panel.UpdateProduct, ms3.panel.Product, {
         return fields;
     },
 
-    /**
-     * @deprecated Gallery is now inside Vue ProductTabs. Kept for backward compatibility.
-     */
-    getGallery: function (config) {
-        return {
-            title: _('ms3_tab_product_gallery'),
-            layout: 'anchor',
-            items: [{
-                xtype: 'ms3-gallery-page',
-                record: config.record,
-                pageSize: 50,
-                border: false,
-            }]
-        };
-    },
-
 });
 Ext.reg('ms3-panel-product-update', ms3.panel.UpdateProduct);

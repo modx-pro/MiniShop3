@@ -55,6 +55,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\ConfigService::class,
             'interface' => null,
         ],
+        'ms3_product_service' => [
+            'class' => \MiniShop3\Services\Product\ProductService::class,
+            'interface' => null,
+        ],
         'ms3_product_data_service' => [
             'class' => \MiniShop3\Services\Product\ProductDataService::class,
             'interface' => null,
@@ -180,6 +184,10 @@ class ServiceRegistry
         ],
         'ms3_grid_config' => [
             'class' => \MiniShop3\Services\GridConfigService::class,
+            'interface' => null,
+        ],
+        'ms3_filter_config' => [
+            'class' => \MiniShop3\Services\FilterConfigManager::class,
             'interface' => null,
         ],
         // Notification Center

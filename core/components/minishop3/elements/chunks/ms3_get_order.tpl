@@ -120,7 +120,7 @@
                         </svg>
                         Способ доставки
                     </h6>
-                    <p class="mb-1 fw-semibold">{$delivery.name}</p>
+                    <p class="mb-1 fw-semibold">{$delivery.name | lexicon}</p>
                     {if $delivery.description?}
                         <p class="small text-muted mb-0">{$delivery.description}</p>
                     {/if}
@@ -140,7 +140,7 @@
                         </svg>
                         Способ оплаты
                     </h6>
-                    <p class="mb-1 fw-semibold">{$payment.name}</p>
+                    <p class="mb-1 fw-semibold">{$payment.name | lexicon}</p>
                     {if $payment.description?}
                         <p class="small text-muted mb-0">{$payment.description}</p>
                     {/if}
