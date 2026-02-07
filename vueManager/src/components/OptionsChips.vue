@@ -56,24 +56,24 @@ import request from '../request.js'
 const props = defineProps({
   inputId: {
     type: String,
-    default: null
+    default: null,
   },
   optionKey: {
     type: String,
-    required: true
+    required: true,
   },
   modelValue: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   placeholder: {
     type: String,
-    default: 'Add options...'
+    default: 'Add options...',
   },
   disabled: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -102,7 +102,7 @@ async function search(query) {
     const response = await request.get('/api/mgr/references/options', {
       key: props.optionKey,
       query: query.trim(),
-      exclude: JSON.stringify(localValue.value)
+      exclude: JSON.stringify(localValue.value),
     })
 
     if (response && response.values) {
@@ -215,7 +215,7 @@ function handleBlur() {
 function emitChange() {
   emit('update:modelValue', localValue.value)
   emit('change', {
-    value: localValue.value
+    value: localValue.value,
   })
 }
 

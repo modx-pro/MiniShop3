@@ -35,14 +35,14 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'vendor',
   deleteBulk: async (ids) => {
     await request.delete('/api/mgr/vendors/bulk', { ids })
   },
   onSuccess: () => loadVendors(),
-  getItemName: (item) => item.name
+  getItemName: (item) => item.name,
 })
 
 const columns = ref([])
@@ -75,14 +75,14 @@ const fieldsBySection = computed(() => {
   sectionsConfig.value.forEach(section => {
     result[section.id] = {
       section,
-      fields: []
+      fields: [],
     }
   })
 
   // Add "no section" group for fields without section
   result['none'] = {
     section: { id: 'none', label: _('ms3_model_field_no_section'), section_key: 'none' },
-    fields: []
+    fields: [],
   }
 
   // Group fields by section
@@ -160,7 +160,7 @@ async function loadVendors() {
   try {
     const params = {
       start: first.value,
-      limit: rows.value
+      limit: rows.value,
     }
 
     Object.keys(filterValues.value).forEach(key => {
@@ -186,7 +186,7 @@ async function loadVendors() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -272,7 +272,7 @@ async function saveVendor() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('vendor_name_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -292,7 +292,7 @@ async function saveVendor() {
         severity: 'success',
         summary: _('success'),
         detail: isNewVendor.value ? _('vendor_created') : _('vendor_updated'),
-        life: 3000
+        life: 3000,
       })
       editDialogVisible.value = false
       loadVendors()
@@ -303,7 +303,7 @@ async function saveVendor() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -328,7 +328,7 @@ function deleteVendor(vendor) {
           severity: 'success',
           summary: _('success'),
           detail: _('vendor_deleted'),
-          life: 3000
+          life: 3000,
         })
         loadVendors()
       } catch (error) {
@@ -337,10 +337,10 @@ function deleteVendor(vendor) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -374,7 +374,7 @@ async function onDragEnd() {
       severity: 'success',
       summary: _('success'),
       detail: _('vendor_order_saved'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[VendorsGrid] Error saving order:', error)
@@ -382,7 +382,7 @@ async function onDragEnd() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
     // Reload to restore original order
     loadVendors()
@@ -408,13 +408,13 @@ function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' }
+      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' },
     ]
   }
 
   return column.actions.map(action => ({
     ...action,
-    label: _(action.label) || action.label
+    label: _(action.label) || action.label,
   }))
 }
 
@@ -451,9 +451,9 @@ function getDefaultColumns() {
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' }
-      ]
-    }
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' },
+      ],
+    },
   ]
 }
 
@@ -503,7 +503,7 @@ function isFieldRequired(field) {
 onMounted(async () => {
   await Promise.all([
     loadFieldsConfig(),
-    loadGridConfig()
+    loadGridConfig(),
   ])
   await loadVendors()
 })

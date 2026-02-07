@@ -9,6 +9,7 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import LinksGrid from '../components/LinksGrid.vue'
 
 // Mount point ID
@@ -39,10 +40,11 @@ function mountApp() {
       preset: Aura,
       options: {
         darkModeSelector: '.dark-mode',
-        cssLayer: false
-      }
-    }
-  })
+        cssLayer: false,
+      },
+    },
+    locale: getPrimeVueLocale(),
+  });
 
   app.use(ToastService)
   app.use(ConfirmationService)

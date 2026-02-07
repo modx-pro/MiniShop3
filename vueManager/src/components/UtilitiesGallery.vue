@@ -62,7 +62,7 @@ const galleryInfoHtml = computed(() => {
     sourceName.value,
     sourceId.value,
     totalProducts.value,
-    totalFiles.value
+    totalFiles.value,
   )
 })
 
@@ -73,16 +73,6 @@ const progressPercent = computed(() => {
 
 const canStart = computed(() => {
   return !isRunning.value && total.value > 0
-})
-
-const statusMessage = computed(() => {
-  if (isCompleted.value) {
-    return _('ms3_utilities_gallery_done_message', `Updated ${updatedCount.value} products`)
-  }
-  if (isRunning.value) {
-    return _('ms3_utilities_gallery_updating', 'Updating thumbnails...')
-  }
-  return ''
 })
 
 // Methods
@@ -103,7 +93,7 @@ const processNextBatch = async () => {
   try {
     const response = await request.post('/api/mgr/utilities/gallery/update', {
       limit: limit.value,
-      offset: offset.value
+      offset: offset.value,
     })
 
     const data = response.object || response

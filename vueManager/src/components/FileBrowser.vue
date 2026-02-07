@@ -6,24 +6,24 @@ import Button from 'primevue/button'
 const props = defineProps({
   modelValue: {
     type: String,
-    default: ''
+    default: '',
   },
   placeholder: {
     type: String,
-    default: ''
+    default: '',
   },
   source: {
     type: [Number, String],
-    default: null
+    default: null,
   },
   allowedFileTypes: {
     type: String,
-    default: ''
+    default: '',
   },
   disabled: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -95,9 +95,9 @@ function openBrowser() {
     hideFiles: true,
     listeners: {
       select: {
-        fn: onSelectFile
-      }
-    }
+        fn: onSelectFile,
+      },
+    },
   })
 
   if (browser) {

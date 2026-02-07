@@ -2,8 +2,6 @@
 import { onMounted, ref, computed } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
 import Checkbox from 'primevue/checkbox'
@@ -43,19 +41,19 @@ const newField = ref({
       table: '',
       foreignKey: '',
       displayField: '',
-      aggregation: null
+      aggregation: null,
     },
     computed: {
-      className: ''
+      className: '',
     },
     actions: [],
     displayConfig: '',
     // Badge config
     badge: {
       source_field: '',
-      color_field: ''
-    }
-  }
+      color_field: '',
+    },
+  },
 })
 
 const showEditDialog = ref(false)
@@ -70,7 +68,7 @@ const gridOptions = computed(() => [
   { label: _('grid_orders'), value: 'orders' },
   { label: _('grid_order_products'), value: 'order_products' },
   { label: _('grid_vendors'), value: 'vendors' },
-  { label: _('grid_category_products'), value: 'category-products' }
+  { label: _('grid_category_products'), value: 'category-products' },
 ])
 
 /**
@@ -87,7 +85,7 @@ const fieldTypeOptions = computed(() => [
   { label: _('field_type_datetime'), value: 'datetime' },
   { label: _('field_type_price'), value: 'price' },
   { label: _('field_type_weight'), value: 'weight' },
-  { label: _('field_type_actions'), value: 'actions' }
+  { label: _('field_type_actions'), value: 'actions' },
 ])
 
 /**
@@ -102,7 +100,7 @@ function getConfigHint(type) {
   const hints = {
     datetime: '{ "format": "dd.MM.yyyy HH:mm" }',
     price: '{ "decimals": 2, "currency": "₽", "currency_position": "after", "thousands_separator": " " }',
-    weight: '{ "decimals": 2, "unit": "кг", "unit_position": "after" }'
+    weight: '{ "decimals": 2, "unit": "кг", "unit_position": "after" }',
   }
   return hints[type] || ''
 }
@@ -118,7 +116,7 @@ function getAvailableFieldsForBadge(currentFieldName = '') {
     .filter(f => f.name !== currentFieldName && !excludedTypes.includes(f.type))
     .map(f => ({
       label: f.label || f.name,
-      value: f.name
+      value: f.name,
     }))
 }
 
@@ -131,7 +129,7 @@ const aggregationOptions = computed(() => [
   { label: _('relation_aggregation_sum'), value: 'SUM' },
   { label: _('relation_aggregation_avg'), value: 'AVG' },
   { label: _('relation_aggregation_min'), value: 'MIN' },
-  { label: _('relation_aggregation_max'), value: 'MAX' }
+  { label: _('relation_aggregation_max'), value: 'MAX' },
 ])
 
 /**
@@ -172,7 +170,7 @@ async function loadFields() {
         thousands_separator: col.thousands_separator || '',
         decimal_separator: col.decimal_separator || '',
         unit: col.unit || '',
-        unit_position: col.unit_position || ''
+        unit_position: col.unit_position || '',
       }))
     } else {
       console.error('[GridFieldsConfig] Invalid response:', response)
@@ -184,7 +182,7 @@ async function loadFields() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -208,7 +206,7 @@ async function saveConfig() {
         frozen: field.frozen,
         sort_order: index,
         width: field.width || null,
-        minWidth: field.minWidth || null
+        minWidth: field.minWidth || null,
       }
 
       // Type and type-specific config
@@ -234,14 +232,14 @@ async function saveConfig() {
     })
 
     await request.put(`/api/mgr/grid-config/${selectedGrid.value}`, {
-      fields: fieldsData
+      fields: fieldsData,
     })
 
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: _('grid_config_saved'),
-      life: 3000
+      life: 3000,
     })
   } catch (error) {
     console.error('[GridFieldsConfig] Error saving config:', error)
@@ -249,7 +247,7 @@ async function saveConfig() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -264,7 +262,7 @@ function onDragEnd() {
     severity: 'info',
     summary: _('success'),
     detail: _('order_changed_save_reminder'),
-    life: 3000
+    life: 3000,
   })
 }
 
@@ -277,7 +275,7 @@ function deleteField(field, index) {
       severity: 'warn',
       summary: _('warning'),
       detail: _('cannot_delete_system_field'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -309,7 +307,7 @@ function deleteField(field, index) {
           severity: 'success',
           summary: successSummary,
           detail: successDetail,
-          life: 3000
+          life: 3000,
         })
       } catch (error) {
         console.error('[GridFieldsConfig] Error deleting field:', error)
@@ -317,10 +315,10 @@ function deleteField(field, index) {
           severity: 'error',
           summary: errorSummary,
           detail: error.message || errorDetail,
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
@@ -344,21 +342,21 @@ function openAddDialog() {
         table: '',
         foreignKey: '',
         displayField: '',
-        aggregation: null
+        aggregation: null,
       },
       computed: {
-        className: ''
+        className: '',
       },
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true }
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true },
       ],
       displayConfig: '',
       badge: {
         source_field: '',
-        color_field: ''
-      }
-    }
+        color_field: '',
+      },
+    },
   }
   showAddDialog.value = true
 }
@@ -381,13 +379,13 @@ async function addField() {
       filterable: newField.value.filterable,
       frozen: newField.value.frozen,
       width: newField.value.width || null,
-      config: {}
+      config: {},
     }
 
     switch (newField.value.type) {
       case 'template':
         data.config = {
-          template: newField.value.config.template
+          template: newField.value.config.template,
         }
         break
       case 'relation':
@@ -396,20 +394,20 @@ async function addField() {
             table: newField.value.config.relation.table,
             foreignKey: newField.value.config.relation.foreignKey,
             displayField: newField.value.config.relation.displayField,
-            aggregation: newField.value.config.relation.aggregation
-          }
+            aggregation: newField.value.config.relation.aggregation,
+          },
         }
         break
       case 'computed':
         data.config = {
           computed: {
-            className: newField.value.config.computed.className
-          }
+            className: newField.value.config.computed.className,
+          },
         }
         break
       case 'actions':
         data.config = {
-          actions: newField.value.config.actions || []
+          actions: newField.value.config.actions || [],
         }
         data.sortable = false
         data.filterable = false
@@ -432,12 +430,12 @@ async function addField() {
           try {
             const displayConfig = JSON.parse(newField.value.config.displayConfig)
             data.config = { ...displayConfig }
-          } catch (e) {
+          } catch {
             toast.add({
               severity: 'error',
               summary: _('error'),
               detail: _('invalid_json_config'),
-              life: 5000
+              life: 5000,
             })
             return
           }
@@ -453,7 +451,7 @@ async function addField() {
       if (typeof config === 'string') {
         try {
           config = JSON.parse(config)
-        } catch (e) {
+        } catch {
           config = {}
         }
       }
@@ -486,7 +484,7 @@ async function addField() {
         thousands_separator: config.thousands_separator || '',
         decimal_separator: config.decimal_separator || '',
         unit: config.unit || '',
-        unit_position: config.unit_position || ''
+        unit_position: config.unit_position || '',
       })
     }
 
@@ -494,7 +492,7 @@ async function addField() {
       severity: 'success',
       summary: _('success'),
       detail: _('field_added'),
-      life: 3000
+      life: 3000,
     })
 
     closeAddDialog()
@@ -504,7 +502,7 @@ async function addField() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_adding_field'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -545,7 +543,7 @@ function openEditDialog(field, index) {
   // Badge config (separate from displayConfig)
   const badgeConfig = {
     source_field: field.source_field || '',
-    color_field: field.color_field || ''
+    color_field: field.color_field || '',
   }
 
   // Load relation config from field data
@@ -553,12 +551,12 @@ function openEditDialog(field, index) {
     table: '',
     foreignKey: '',
     displayField: '',
-    aggregation: null
+    aggregation: null,
   }
 
   // Load computed config from field data
   const computedConfig = field.computed || {
-    className: ''
+    className: '',
   }
 
   editingField.value = {
@@ -576,11 +574,11 @@ function openEditDialog(field, index) {
       computed: computedConfig,
       actions: field.actions || [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true }
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true },
       ],
       displayConfig: displayConfig,
-      badge: badgeConfig
-    }
+      badge: badgeConfig,
+    },
   }
 
   showEditDialog.value = true
@@ -603,13 +601,13 @@ async function saveEdit() {
       filterable: editingField.value.filterable,
       frozen: editingField.value.frozen,
       width: editingField.value.width || null,
-      config: {}
+      config: {},
     }
 
     switch (editingField.value.type) {
       case 'template':
         data.config = {
-          template: editingField.value.config.template
+          template: editingField.value.config.template,
         }
         break
       case 'relation':
@@ -618,20 +616,20 @@ async function saveEdit() {
             table: editingField.value.config.relation.table,
             foreignKey: editingField.value.config.relation.foreignKey,
             displayField: editingField.value.config.relation.displayField,
-            aggregation: editingField.value.config.relation.aggregation
-          }
+            aggregation: editingField.value.config.relation.aggregation,
+          },
         }
         break
       case 'computed':
         data.config = {
           computed: {
-            className: editingField.value.config.computed.className
-          }
+            className: editingField.value.config.computed.className,
+          },
         }
         break
       case 'actions':
         data.config = {
-          actions: editingField.value.config.actions || []
+          actions: editingField.value.config.actions || [],
         }
         data.sortable = false
         data.filterable = false
@@ -654,12 +652,12 @@ async function saveEdit() {
           try {
             const displayConfig = JSON.parse(editingField.value.config.displayConfig)
             data.config = { ...displayConfig }
-          } catch (e) {
+          } catch {
             toast.add({
               severity: 'error',
               summary: _('error'),
               detail: _('invalid_json_config'),
-              life: 5000
+              life: 5000,
             })
             return
           }
@@ -675,7 +673,7 @@ async function saveEdit() {
       if (typeof config === 'string') {
         try {
           config = JSON.parse(config)
-        } catch (e) {
+        } catch {
           config = {}
         }
       }
@@ -708,7 +706,7 @@ async function saveEdit() {
         thousands_separator: config.thousands_separator || '',
         decimal_separator: config.decimal_separator || '',
         unit: config.unit || '',
-        unit_position: config.unit_position || ''
+        unit_position: config.unit_position || '',
       }
     }
 
@@ -716,7 +714,7 @@ async function saveEdit() {
       severity: 'success',
       summary: _('success'),
       detail: _('field_updated'),
-      life: 3000
+      life: 3000,
     })
 
     closeEditDialog()
@@ -726,7 +724,7 @@ async function saveEdit() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_updating_field'),
-      life: 5000
+      life: 5000,
     })
   }
 }

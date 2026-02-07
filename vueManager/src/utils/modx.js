@@ -60,7 +60,7 @@ export function formatDate(date, format = 'datetime') {
     date: 'd.m.Y',
     datetime: 'd.m.Y H:i',
     time: 'H:i',
-    full: 'd.m.Y H:i:s'
+    full: 'd.m.Y H:i:s',
   };
 
   const formatString = formats[format] || format;
@@ -140,7 +140,7 @@ export function getFileIcon(filename) {
     mp4: 'pi pi-video',
     avi: 'pi pi-video',
     mov: 'pi pi-video',
-    wmv: 'pi pi-video'
+    wmv: 'pi pi-video',
   };
 
   return icons[ext] || 'pi pi-file';
@@ -156,7 +156,7 @@ export function isJsonString(str) {
   try {
     JSON.parse(str);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -171,7 +171,7 @@ export function isJsonString(str) {
 export function safeJsonParse(str, defaultValue = null) {
   try {
     return JSON.parse(str);
-  } catch (e) {
+  } catch {
     return defaultValue;
   }
 }
@@ -192,7 +192,7 @@ export function generateAlias(str) {
     'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
     'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
     'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '',
-    'э': 'e', 'ю': 'yu', 'я': 'ya'
+    'э': 'e', 'ю': 'yu', 'я': 'ya',
   };
 
   return str
@@ -230,7 +230,7 @@ export function escapeHtml(str) {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#039;'
+    "'": '&#039;',
   };
 
   return String(str).replace(/[&<>"']/g, m => map[m]);

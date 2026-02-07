@@ -5,16 +5,15 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import prefixSelector from 'postcss-prefix-selector'
 
-
 const output = {
   dir: '../',
   assetFileNames: 'assets/components/minishop3/css/mgr/vue-dist/[name].min[extname]', // css files
   chunkFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js', // js libs and common code
-  entryFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js' // main js file (entry point)
+  entryFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js', // main js file (entry point)
 }
 
 const DevInput = {
-  'fields-management': 'index.html'
+  'fields-management': 'index.html',
 }
 
 const ProdInput = {
@@ -79,30 +78,31 @@ export default defineConfig(({ command }) => {
             /^\[data-p-/,
             /^\[data-pc-/,
             // Комбинированные селекторы с .p- классами
-            /\.p-.*\[data-/
+            /\.p-.*\[data-/,
           ],
           // Трансформация селектора
-          transform: function (prefix, selector, prefixToIgnore) {
+          transform: function (prefix, selector) {
             // Специальная обработка для :root - заменяем на .vueApp
             if (selector === ':root') {
               return '.vueApp'
             }
             return prefix + ' ' + selector
-          }
-        })
-      ]
-    }
+          },
+        }),
+      ],
+    },
   }
 
   // Externalize Vue stack - loaded via Import Map from VueTools
   const external = ['vue', 'pinia', 'primevue']
 
-  // Composables from VueTools
+  // Composables from VueTools — загружаются из Import Map (VueTools)
   const vuetoolsComposables = [
     '@vuetools/useApi',
     '@vuetools/useLexicon',
     '@vuetools/useModx',
-    '@vuetools/usePermission'
+    '@vuetools/usePermission',
+    '@vuetools/usePrimeVueLocale',
   ]
 
   if (command === 'serve') {
@@ -111,16 +111,16 @@ export default defineConfig(({ command }) => {
         rollupOptions: {
           output,
           input: DevInput,
-          external: [...external, ...vuetoolsComposables]
-        }
-      },
-      plugins: [vue(), vueDevTools(),],
-      resolve: {
-        alias: {
-          '@': fileURLToPath(new URL('./src', import.meta.url))
+          external: [...external, ...vuetoolsComposables],
         },
       },
-      css: cssConfig.postcss ? { postcss: cssConfig.postcss } : undefined
+      plugins: [vue(), vueDevTools()],
+      resolve: {
+        alias: {
+          '@': fileURLToPath(new URL('./src', import.meta.url)),
+        },
+      },
+      css: cssConfig.postcss ? { postcss: cssConfig.postcss } : undefined,
     }
   } else {
     // command === 'build'
@@ -129,18 +129,18 @@ export default defineConfig(({ command }) => {
         rollupOptions: {
           output,
           input: ProdInput,
-          external: [...external, ...vuetoolsComposables]
+          external: [...external, ...vuetoolsComposables],
         },
         cssMinify: false, // Отключаем минификацию CSS чтобы сохранить Unicode символы в PrimeIcons
-        minify: 'esbuild'
+        minify: 'esbuild',
       },
       plugins: [vue()],
       resolve: {
         alias: {
-          '@': fileURLToPath(new URL('./src', import.meta.url))
+          '@': fileURLToPath(new URL('./src', import.meta.url)),
         },
       },
-      css: cssConfig.postcss ? { postcss: cssConfig.postcss } : undefined
+      css: cssConfig.postcss ? { postcss: cssConfig.postcss } : undefined,
     }
   }
 })

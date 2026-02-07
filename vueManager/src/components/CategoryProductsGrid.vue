@@ -19,12 +19,12 @@ import ActionsColumn from './ActionsColumn.vue'
 const props = defineProps({
   categoryId: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const toast = useToast()
-const confirm = useConfirm()
+useConfirm()
 const { _ } = useLexicon()
 
 // Bulk selection
@@ -34,17 +34,17 @@ const {
   selectionCount,
   processing: bulkProcessing,
   clearSelection,
-  confirmBulkDelete
+  confirmBulkDelete,
 } = useSelection({
   entityName: 'product',
   deleteBulk: async (ids) => {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
-      ids
+      ids,
     })
   },
   onSuccess: () => loadProducts(),
-  getItemName: (item) => item.pagetitle || `#${item.id}`
+  getItemName: (item) => item.pagetitle || `#${item.id}`,
 })
 
 const columns = ref([])
@@ -94,7 +94,7 @@ async function loadProducts() {
       limit: rows.value,
       sort: sortField.value,
       dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
-      nested: nested.value ? 1 : 0
+      nested: nested.value ? 1 : 0,
     }
 
     // Apply filter values
@@ -121,7 +121,7 @@ async function loadProducts() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -129,8 +129,9 @@ async function loadProducts() {
 }
 
 /**
- * Handle pagination
+ * Handle pagination (for DataTable lazy loading)
  */
+// eslint-disable-next-line no-unused-vars
 function onPage(event) {
   first.value = event.first
   rows.value = event.rows
@@ -138,8 +139,9 @@ function onPage(event) {
 }
 
 /**
- * Handle sorting
+ * Handle sorting (for DataTable lazy loading)
  */
+// eslint-disable-next-line no-unused-vars
 function onSort(event) {
   sortField.value = event.sortField
   sortOrder.value = event.sortOrder
@@ -156,7 +158,7 @@ async function onDragEnd() {
     // Calculate new menuindex values based on current order
     const items = products.value.map((product, index) => ({
       id: product.id,
-      menuindex: first.value + index
+      menuindex: first.value + index,
     }))
 
     await request.post(`/api/mgr/categories/${props.categoryId}/products/sort`, { items })
@@ -165,7 +167,7 @@ async function onDragEnd() {
       severity: 'success',
       summary: _('success'),
       detail: _('products_reordered'),
-      life: 3000
+      life: 3000,
     })
   } catch (error) {
     console.error('[CategoryProductsGrid] Error saving order:', error)
@@ -173,7 +175,7 @@ async function onDragEnd() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
     // Reload to restore original order
     await loadProducts()
@@ -203,14 +205,14 @@ async function deleteProduct(product) {
   try {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
-      ids: [product.id]
+      ids: [product.id],
     })
 
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: _('product_deleted'),
-      life: 3000
+      life: 3000,
     })
 
     await loadProducts()
@@ -220,7 +222,7 @@ async function deleteProduct(product) {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_deleting_data'),
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -247,13 +249,13 @@ async function bulkPublish() {
   try {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'publish',
-      ids
+      ids,
     })
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: _('products_published'),
-      life: 3000
+      life: 3000,
     })
     clearSelection()
     await loadProducts()
@@ -262,7 +264,7 @@ async function bulkPublish() {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -275,13 +277,13 @@ async function bulkUnpublish() {
   try {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'unpublish',
-      ids
+      ids,
     })
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: _('products_unpublished'),
-      life: 3000
+      life: 3000,
     })
     clearSelection()
     await loadProducts()
@@ -290,7 +292,7 @@ async function bulkUnpublish() {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -303,7 +305,7 @@ function formatPrice(value) {
   return new Intl.NumberFormat('ru-RU', {
     style: 'decimal',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(value)
 }
 
@@ -315,7 +317,7 @@ function formatWeight(value) {
   return new Intl.NumberFormat('ru-RU', {
     style: 'decimal',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 3
+    maximumFractionDigits: 3,
   }).format(value)
 }
 
@@ -414,9 +416,9 @@ function getDefaultColumns() {
       actions: [
         { name: 'view', handler: 'view', icon: 'pi-eye', label: 'view' },
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' }
-      ]
-    }
+        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' },
+      ],
+    },
   ]
 }
 
@@ -430,7 +432,7 @@ function getActionsConfig(column) {
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
       { name: 'publish', handler: 'publish', icon: 'pi-check', iconOff: 'pi-times', label: 'publish', labelOff: 'unpublish', toggleField: 'published' },
       { name: 'duplicate', handler: 'duplicate', icon: 'pi-copy', label: 'duplicate' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' }
+      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' },
     ]
   }
   return column.actions
@@ -443,13 +445,13 @@ async function togglePublish(product) {
   try {
     const newStatus = product.published ? 0 : 1
     await request.post(`/api/mgr/categories/${props.categoryId}/products/${product.id}/publish`, {
-      published: newStatus
+      published: newStatus,
     })
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: newStatus ? _('product_published') : _('product_unpublished'),
-      life: 3000
+      life: 3000,
     })
     await loadProducts()
   } catch (error) {
@@ -457,7 +459,7 @@ async function togglePublish(product) {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -484,11 +486,11 @@ function duplicateProduct(product) {
             severity: 'success',
             summary: _('success'),
             detail: _('product_duplicated'),
-            life: 3000
+            life: 3000,
           })
-        }
-      }
-    }
+        },
+      },
+    },
   })
   w.show()
 }
@@ -563,7 +565,7 @@ onMounted(async () => {
 
   await Promise.all([
     loadGridConfig(),
-    loadFiltersConfig()
+    loadFiltersConfig(),
   ])
   await loadProducts()
 })

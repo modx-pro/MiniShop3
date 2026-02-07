@@ -44,6 +44,7 @@ assets/customScript.js
 # Personal AI assistant files
 *.md
 !CHANGELOG.md
+!changelogs/*.md
 !.github/**/*.md
 
 # Environment

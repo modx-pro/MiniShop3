@@ -19,8 +19,8 @@ const jsonError = ref('')
 const props = defineProps({
   modelValue: {
     type: [String, Object],
-    default: ''
-  }
+    default: '',
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -104,7 +104,7 @@ const availableFields = computed(() => {
   return fieldDefinitions.map(field => ({
     ...field,
     label: _(`validation_field_${field.name}`),
-    groupLabel: _(`validation_field_group_${field.group}`)
+    groupLabel: _(`validation_field_group_${field.group}`),
   }))
 })
 
@@ -115,7 +115,7 @@ const groupedFields = computed(() => {
     if (!groups[field.group]) {
       groups[field.group] = {
         label: field.groupLabel,
-        items: []
+        items: [],
       }
     }
     groups[field.group].items.push(field)
@@ -129,7 +129,7 @@ const availableRules = computed(() => {
     ...rule,
     label: _(`validation_rule_${rule.name}`),
     description: _(`validation_rule_${rule.name}_desc`),
-    paramLabel: rule.hasParam ? _(`validation_rule_${rule.name}_param`) : ''
+    paramLabel: rule.hasParam ? _(`validation_rule_${rule.name}_param`) : '',
   }))
 })
 
@@ -306,7 +306,7 @@ const availableFieldsForAdd = computed(() => {
     if (!groups[field.group]) {
       groups[field.group] = {
         label: field.groupLabel,
-        items: []
+        items: [],
       }
     }
     groups[field.group].items.push(field)
@@ -339,7 +339,7 @@ function addField() {
 
   fieldRules.value.push({
     field: selectedField.value,
-    rules: []
+    rules: [],
   })
 
   showAddFieldDialog.value = false
@@ -399,7 +399,7 @@ function addRule() {
 
   fieldRules.value[editingFieldIndex.value].rules.push({
     name: selectedRule.value,
-    param: ruleParam.value.trim()
+    param: ruleParam.value.trim(),
   })
 
   // Reset state before closing (so @hide handler doesn't remove the field)

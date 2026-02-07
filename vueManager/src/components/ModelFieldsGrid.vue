@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
@@ -76,7 +76,7 @@ const widthOptions = [
 const sectionOptions = computed(() => {
   return [
     { id: null, label: _('ms3_model_field_no_section') },
-    ...sections.value.map(s => ({ id: s.id, label: s.label }))
+    ...sections.value.map(s => ({ id: s.id, label: s.label })),
   ]
 })
 
@@ -130,7 +130,7 @@ async function loadFields() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -159,7 +159,7 @@ async function loadSections() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_loading_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     sectionsLoading.value = false
@@ -188,7 +188,7 @@ function createField() {
     width: 6,
     placeholder: '',
     description: '',
-    config: null
+    config: null,
   }
   isNewRecord.value = true
   comboSourceJson.value = ''
@@ -219,7 +219,7 @@ async function saveField() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('ms3_model_field_name_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -233,7 +233,7 @@ async function saveField() {
         severity: 'warn',
         summary: _('warning'),
         detail: validation.error,
-        life: 5000
+        life: 5000,
       })
       return
     }
@@ -244,18 +244,17 @@ async function saveField() {
   saving.value = true
 
   try {
-    let response
     if (isNewRecord.value) {
-      response = await request.post('/api/mgr/model-fields', editingField.value)
+      await request.post('/api/mgr/model-fields', editingField.value)
     } else {
-      response = await request.put(`/api/mgr/model-fields/${editingField.value.id}`, editingField.value)
+      await request.put(`/api/mgr/model-fields/${editingField.value.id}`, editingField.value)
     }
 
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: isNewRecord.value ? _('ms3_model_field_created') : _('ms3_model_field_updated'),
-      life: 3000
+      life: 3000,
     })
 
     editDialogVisible.value = false
@@ -266,7 +265,7 @@ async function saveField() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -290,7 +289,7 @@ function deleteField(field) {
           severity: 'success',
           summary: _('success'),
           detail: _('ms3_model_field_deleted'),
-          life: 3000
+          life: 3000,
         })
 
         await loadFields()
@@ -300,17 +299,17 @@ function deleteField(field) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
 async function toggleVisible(field) {
   try {
     await request.put(`/api/mgr/model-fields/${field.id}`, {
-      visible: !field.visible
+      visible: !field.visible,
     })
 
     field.visible = !field.visible
@@ -319,7 +318,7 @@ async function toggleVisible(field) {
       severity: 'success',
       summary: _('success'),
       detail: field.visible ? _('ms3_model_field_shown') : _('ms3_model_field_hidden'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[ModelFieldsGrid] Error toggling visible:', error)
@@ -327,7 +326,7 @@ async function toggleVisible(field) {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
@@ -339,7 +338,7 @@ async function onDragEnd() {
   // Update sort_order based on new order
   const ranks = fields.value.map((field, index) => ({
     id: field.id,
-    sort_order: index * 10
+    sort_order: index * 10,
   }))
 
   try {
@@ -349,7 +348,7 @@ async function onDragEnd() {
       severity: 'success',
       summary: _('success'),
       detail: _('ms3_model_field_order_updated'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[ModelFieldsGrid] Error updating ranks:', error)
@@ -357,7 +356,7 @@ async function onDragEnd() {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
     // Reload to restore original order
     await loadFields()
@@ -376,7 +375,7 @@ function createSection() {
     lexicon_key: '',
     hidden: false,
     sort_order: sections.value.length * 10,
-    is_default: false
+    is_default: false,
   }
   isNewSection.value = true
   sectionDialogVisible.value = true
@@ -396,7 +395,7 @@ async function saveSection() {
       severity: 'warn',
       summary: _('warning'),
       detail: _('ms3_model_section_key_required'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -404,18 +403,17 @@ async function saveSection() {
   savingSec.value = true
 
   try {
-    let response
     if (isNewSection.value) {
-      response = await request.post('/api/mgr/model-fields/sections', editingSection.value)
+      await request.post('/api/mgr/model-fields/sections', editingSection.value)
     } else {
-      response = await request.put(`/api/mgr/model-fields/sections/${editingSection.value.id}`, editingSection.value)
+      await request.put(`/api/mgr/model-fields/sections/${editingSection.value.id}`, editingSection.value)
     }
 
     toast.add({
       severity: 'success',
       summary: _('success'),
       detail: isNewSection.value ? _('ms3_model_section_created') : _('ms3_model_section_updated'),
-      life: 3000
+      life: 3000,
     })
 
     sectionDialogVisible.value = false
@@ -427,7 +425,7 @@ async function saveSection() {
       severity: 'error',
       summary: _('error'),
       detail: error.message || _('error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     savingSec.value = false
@@ -440,7 +438,7 @@ function deleteSection(section) {
       severity: 'warn',
       summary: _('warning'),
       detail: _('ms3_model_section_cannot_delete_default'),
-      life: 3000
+      life: 3000,
     })
     return
   }
@@ -461,7 +459,7 @@ function deleteSection(section) {
           severity: 'success',
           summary: _('success'),
           detail: _('ms3_model_section_deleted'),
-          life: 3000
+          life: 3000,
         })
 
         await loadSections()
@@ -472,17 +470,17 @@ function deleteSection(section) {
           severity: 'error',
           summary: _('error'),
           detail: error.message || _('error_deleting_data'),
-          life: 5000
+          life: 5000,
         })
       }
-    }
+    },
   })
 }
 
 async function toggleSectionHidden(section) {
   try {
     await request.put(`/api/mgr/model-fields/sections/${section.id}`, {
-      hidden: !section.hidden
+      hidden: !section.hidden,
     })
 
     section.hidden = !section.hidden
@@ -491,7 +489,7 @@ async function toggleSectionHidden(section) {
       severity: 'success',
       summary: _('success'),
       detail: section.hidden ? _('ms3_model_section_hidden') : _('ms3_model_section_shown'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[ModelFieldsGrid] Error toggling section hidden:', error)
@@ -499,15 +497,16 @@ async function toggleSectionHidden(section) {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 async function onSectionDragEnd() {
   const ranks = sections.value.map((section, index) => ({
     id: section.id,
-    sort_order: index * 10
+    sort_order: index * 10,
   }))
 
   try {
@@ -517,7 +516,7 @@ async function onSectionDragEnd() {
       severity: 'success',
       summary: _('success'),
       detail: _('ms3_model_section_order_updated'),
-      life: 2000
+      life: 2000,
     })
   } catch (error) {
     console.error('[ModelFieldsGrid] Error updating section ranks:', error)
@@ -525,7 +524,7 @@ async function onSectionDragEnd() {
       severity: 'error',
       summary: _('error'),
       detail: error.message,
-      life: 5000
+      life: 5000,
     })
     await loadSections()
   }
@@ -546,6 +545,7 @@ function getSectionLabel(sectionId) {
   return section?.label || '-'
 }
 
+// eslint-disable-next-line no-unused-vars
 function getWidthLabel(width) {
   const option = widthOptions.find(o => o.value === width)
   return option?.label || `${width}/12`
@@ -586,7 +586,7 @@ function parseComboSource(config) {
   try {
     const parsed = typeof config === 'string' ? JSON.parse(config) : config
     return JSON.stringify(parsed, null, 2)
-  } catch (e) {
+  } catch {
     return ''
   }
 }

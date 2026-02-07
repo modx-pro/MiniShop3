@@ -11,12 +11,12 @@ import { useLexicon } from '@vuetools/useLexicon'
 const props = defineProps({
   productId: {
     type: Number,
-    required: true
+    required: true,
   },
   productData: {
     type: Object,
-    default: () => ({})
-  }
+    default: () => ({}),
+  },
 })
 
 const toast = useToast()
@@ -29,14 +29,14 @@ const saving = ref(false)
 // Fields and sections configuration
 const fieldsConfig = ref({
   fields: [],
-  sections: {}
+  sections: {},
 })
 
 // Field values
 const fieldValues = ref({})
 
-// Product data
-const productData = ref({})
+// Loaded product data from API
+const loadedProductData = ref({})
 
 // Page key
 const pageKey = 'product_data'
@@ -49,7 +49,7 @@ async function loadProductData() {
     const response = await request.get(`/api/mgr/product-data/${props.productId}`)
 
     if (response) {
-      productData.value = response
+      loadedProductData.value = response
       return response
     } else {
       console.error('[ProductDataFields] Invalid product data response:', response)
@@ -57,7 +57,7 @@ async function loadProductData() {
         severity: 'error',
         summary: _('ms3_vue_error'),
         detail: _('ms3_vue_error_load_product_data'),
-        life: 5000
+        life: 5000,
       })
       return null
     }
@@ -67,7 +67,7 @@ async function loadProductData() {
       severity: 'error',
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_loading_product_data'),
-      life: 5000
+      life: 5000,
       })
     return null
   }
@@ -83,7 +83,7 @@ async function loadConfig() {
     // Load fields configuration and product data in parallel
     const [configResponse, productDataResponse] = await Promise.all([
       request.get(`/api/mgr/config/page-fields/${pageKey}`),
-      loadProductData()
+      loadProductData(),
     ])
 
     if (configResponse && configResponse.fields) {
@@ -97,7 +97,6 @@ async function loadConfig() {
 
           // For checkboxes convert value to number
           if (field.xtype === 'xcheckbox' || field.xtype === 'checkbox') {
-            const originalValue = value
             // Handle boolean, string and number
             if (typeof value === 'boolean') {
               value = value ? 1 : 0
@@ -124,7 +123,7 @@ async function loadConfig() {
         severity: 'error',
         summary: _('ms3_vue_error'),
         detail: _('ms3_vue_error_load_fields_config'),
-        life: 5000
+        life: 5000,
       })
     }
   } catch (error) {
@@ -133,7 +132,7 @@ async function loadConfig() {
       severity: 'error',
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_loading_config'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     loading.value = false
@@ -143,12 +142,13 @@ async function loadConfig() {
 /**
  * Save product data
  */
+// eslint-disable-next-line no-unused-vars
 async function saveProductData() {
   saving.value = true
   try {
     const response = await request.put(
       `/api/mgr/product-data/${props.productId}`,
-      fieldValues.value
+      fieldValues.value,
     )
 
     if (response && response.updated) {
@@ -156,14 +156,14 @@ async function saveProductData() {
         severity: 'success',
         summary: _('ms3_vue_success_title'),
         detail: _('ms3_vue_product_data_saved'),
-        life: 3000
+        life: 3000,
       })
     } else {
       toast.add({
         severity: 'error',
         summary: _('ms3_vue_error'),
         detail: _('ms3_vue_error_save_product_data'),
-        life: 5000
+        life: 5000,
       })
     }
   } catch (error) {
@@ -172,7 +172,7 @@ async function saveProductData() {
       severity: 'error',
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_saving_data'),
-      life: 5000
+      life: 5000,
     })
   } finally {
     saving.value = false
@@ -212,7 +212,7 @@ const fieldsBySections = computed(() => {
     if (!sections[sectionKey]) {
       sections[sectionKey] = {
         ...sectionConfig,
-        fields: []
+        fields: [],
       }
     }
 

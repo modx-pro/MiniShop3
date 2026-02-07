@@ -3,7 +3,6 @@ import { ref, computed } from 'vue';
 import { useApi } from '@vuetools/useApi';
 import { useModx } from '@vuetools/useModx';
 import { usePermission } from '@vuetools/usePermission';
-import { formatDate } from '../utils/modx';
 
 import Card from 'primevue/card';
 import Button from 'primevue/button';
@@ -19,8 +18,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 
 const { get, loading, error, clearError } = useApi();
-const { lexicon, config, ms3Config, userName, userId, isUserAdmin, showMessage } = useModx();
-const { hasPermission, canCreate, canEdit, canDelete, getAvailablePermissions } = usePermission();
+const { config, ms3Config, userName, userId, isUserAdmin, showMessage } = useModx();
+const { canCreate, canEdit, canDelete, getAvailablePermissions } = usePermission();
 
 const healthData = ref(null);
 const testResponse = ref(null);
@@ -70,7 +69,7 @@ const testPostRequest = async () => {
     const data = {
       test: 'data',
       timestamp: Date.now(),
-      user: userName.value
+      user: userName.value,
     };
 
     testResponse.value = await get('/api/mgr/test/echo', data);
@@ -239,7 +238,7 @@ const testPostRequest = async () => {
                 </template>
 
                 <p>Send data and get it back (echo)</p>
-                <p><code>GET /api/mgr/test/echo?test=data&timestamp=...</code></p>
+                <p><code>GET /api/mgr/test/echo?test=data&amp;timestamp=...</code></p>
 
                 <Button
                   label="Execute Echo Request"
@@ -310,24 +309,24 @@ const testPostRequest = async () => {
 
               <Panel header="Request Class" :toggleable="true">
                 <pre class="code-block">
-import request from '@/request.js';
+                  import request from '@/request.js';
 
-// GET request
-const data = await request.get('/api/mgr/health');
+                  // GET request
+                  const data = await request.get('/api/mgr/health');
 
-// POST request
-await request.post('/api/mgr/products', {
-  pagetitle: 'New'
-});
+                  // POST request
+                  await request.post('/api/mgr/products', {
+                    pagetitle: 'New'
+                  });
 
-// Error handling
-try {
-  const data = await request.get('/api/mgr/test');
-} catch (error) {
-  if (error.isUnauthorized()) {
-    // Redirect to login
-  }
-}
+                  // Error handling
+                  try {
+                    const data = await request.get('/api/mgr/test');
+                  } catch (error) {
+                    if (error.isUnauthorized()) {
+                      // Redirect to login
+                    }
+                  }
                 </pre>
               </Panel>
             </div>

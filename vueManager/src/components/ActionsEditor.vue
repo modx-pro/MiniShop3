@@ -21,7 +21,7 @@ const props = defineProps({
    */
   modelValue: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
 
   /**
@@ -29,8 +29,8 @@ const props = defineProps({
    */
   gridId: {
     type: String,
-    default: 'customers'
-  }
+    default: 'customers',
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -57,7 +57,7 @@ const availableHandlers = computed(() => {
     return {
       value: name,
       label: _(info?.labelKey || name),
-      icon: info?.icon || 'pi-cog'
+      icon: info?.icon || 'pi-cog',
     }
   })
 })
@@ -71,7 +71,7 @@ const severityOptions = [
   { value: 'success', label: _('severity_success') },
   { value: 'info', label: _('severity_info') },
   { value: 'warn', label: _('severity_warning') },
-  { value: 'danger', label: _('severity_danger') }
+  { value: 'danger', label: _('severity_danger') },
 ]
 
 /**
@@ -94,7 +94,7 @@ const iconOptions = [
   { value: 'pi-list', label: 'List' },
   { value: 'pi-refresh', label: 'Refresh' },
   { value: 'pi-send', label: 'Send' },
-  { value: 'pi-print', label: 'Print' }
+  { value: 'pi-print', label: 'Print' },
 ]
 
 /**
@@ -109,7 +109,7 @@ function openAddDialog() {
     severity: null,
     confirm: false,
     confirmMessage: '',
-    visible: true
+    visible: true,
   }
   editingIndex.value = null
   showDialog.value = true

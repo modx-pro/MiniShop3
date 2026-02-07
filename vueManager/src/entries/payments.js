@@ -8,6 +8,7 @@ import '../scss/primevue.scss'
 import { createApp } from 'vue'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import 'primeicons/primeicons.css'
 
 import ConfirmationService from 'primevue/confirmationservice'
@@ -19,16 +20,16 @@ import PaymentsGrid from '../components/PaymentsGrid.vue'
  * Creates and configures Vue application
  */
 function createVueApp() {
-  const app = createApp(PaymentsGrid)
-
+  const app = createApp(PaymentsGrid);
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
-  })
+        darkModeSelector: 'none',
+      },
+    },
+    locale: getPrimeVueLocale(),
+  });
 
   app.use(ConfirmationService)
   app.use(ToastService)
@@ -71,7 +72,7 @@ function waitForElement(selector, callback) {
     return
   }
 
-  const observer = new MutationObserver((mutations) => {
+  const observer = new MutationObserver(() => {
     const element = document.querySelector(selector)
     if (element) {
       observer.disconnect()
@@ -81,7 +82,7 @@ function waitForElement(selector, callback) {
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
   })
 }
 

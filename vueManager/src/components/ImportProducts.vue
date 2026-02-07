@@ -4,7 +4,6 @@ import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
 
 import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
@@ -52,13 +51,12 @@ const importProgress = ref(null)
 const importRunning = ref(false)
 const importCompleted = ref(false)
 const importResult = ref(null)
-const progressInterval = ref(null)
 
 // Delimiter options
 const delimiterOptions = ref([
   { label: ';', value: ';' },
   { label: ',', value: ',' },
-  { label: 'Tab', value: '\t' }
+  { label: 'Tab', value: '\t' },
 ])
 
 // Computed
@@ -99,7 +97,7 @@ const previewFile = async () => {
     const response = await request.post('/api/mgr/import/preview', {
       file: filePath.value,
       delimiter: delimiter.value,
-      rows: 5
+      rows: 5,
     })
     const data = response.object || response
 
@@ -170,7 +168,7 @@ const startImport = async () => {
       update: updateExisting.value,
       key: updateKey.value,
       scheduler: useScheduler.value,
-      debug: debugMode.value
+      debug: debugMode.value,
     })
 
     importId.value = response.import_id || ''
@@ -186,7 +184,7 @@ const startImport = async () => {
         created: response.created || 0,
         updated: response.updated || 0,
         errors: response.errors || 0,
-        skipped: response.skipped || 0
+        skipped: response.skipped || 0,
       }
       importCompleted.value = true
       importRunning.value = false
