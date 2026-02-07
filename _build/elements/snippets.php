@@ -255,6 +255,10 @@ return [
                 'type' => 'textfield',
                 'value' => '',
             ],
+            'customerFields' => [
+                'type' => 'textfield',
+                'value' => '',
+            ],
             'showLog' => [
                 'type' => 'combo-boolean',
                 'value' => false,

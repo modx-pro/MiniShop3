@@ -209,25 +209,41 @@ if ($isCustomerAuth && $customerId > 0) {
     }
 }
 
-// Get modUser data (has higher priority than msCustomer)
+// Determine data source based on sync setting
+// If sync enabled: msCustomer and modUser are unified, use modUserProfile
+// If sync disabled: msCustomer is independent, use only msCustomer data
+$syncEnabled = (bool) $modx->getOption('ms3_customer_sync_enabled', null, false);
+
+// Get modUser data (only used when sync is enabled)
 $profile = [];
-if ($modx->user->isAuthenticated($modx->context->key)) {
+if ($syncEnabled && $modx->user->isAuthenticated($modx->context->key)) {
     $profile = array_merge($modx->user->Profile->toArray(), $modx->user->toArray());
 }
 
 // msCustomer fields mapping (simple 1:1 mapping)
-$customerFields = [
+$defaultCustomerFields = [
     'first_name' => 'first_name',
     'last_name' => 'last_name',
     'email' => 'email',
     'phone' => 'phone',
 ];
 
+// Apply custom customerFields
+if (!empty($customerFields)) {
+    if (!is_array($customerFields)) {
+        $customerFields = json_decode($customerFields, true);
+    }
+    if (is_array($customerFields)) {
+        $defaultCustomerFields = array_merge($defaultCustomerFields, $customerFields);
+    }
+}
+
 // modUser fields mapping (extended mapping with profile fields)
-$fields = [
-//    'receiver' => 'fullname',
-//    'phone' => 'phone',
-//    'email' => 'email',
+// Only used when sync is enabled
+$userProfileFields = [
+    'first_name' => 'fullname',
+    'phone' => 'phone',
+    'email' => 'email',
     'address_comment' => 'extended[comment]',
     'index' => 'zip',
     'country' => 'country',
@@ -241,62 +257,61 @@ $fields = [
     'text_address' => 'extended[address]',
 ];
 
-// Apply custom fields
-if (!empty($userFields)) {
+// Apply custom userFields (only when sync is enabled)
+if ($syncEnabled && !empty($userFields)) {
     if (!is_array($userFields)) {
         $userFields = json_decode($userFields, true);
     }
     if (is_array($userFields)) {
-        $fields = array_merge($fields, $userFields);
+        $userProfileFields = array_merge($userProfileFields, $userFields);
     }
 }
 
-// 1. First, apply msCustomer data (lowest priority)
-if (!empty($customerData)) {
-    foreach ($customerFields as $orderField => $customerField) {
-        if (!empty($customerData[$customerField]) && empty($form[$orderField])) {
-            $response = $ms3->order->add($orderField, $customerData[$customerField]);
-            if ($response['success'] && !empty($response['data'][$orderField])) {
-                $form[$orderField] = $response['data'][$orderField];
+// Apply data based on sync mode
+if ($syncEnabled) {
+    // Sync enabled: use modUserProfile as source of truth
+    foreach ($userProfileFields as $key => $value) {
+        if (!empty($profile) && !empty($value)) {
+            if (strpos($value, 'extended') !== false) {
+                $tmp = substr($value, 9, -1);
+                $value = !empty($profile['extended'][$tmp])
+                    ? $profile['extended'][$tmp]
+                    : '';
+            } else {
+                $value = $profile[$value] ?? '';
+            }
+            if (!empty($value)) {
+                $response = $ms3->order->add($key, $value);
+                if ($response['success'] && !empty($response['data'][$key])) {
+                    $form[$key] = $response['data'][$key];
+                }
+            }
+        }
+        if (empty($form[$key]) && !empty($order[$key])) {
+            $form[$key] = $order[$key];
+            unset($order[$key]);
+        }
+    }
+} else {
+    // Sync disabled: use msCustomer as source of truth
+    if (!empty($customerData)) {
+        foreach ($defaultCustomerFields as $orderField => $customerField) {
+            if (!empty($customerData[$customerField]) && empty($form[$orderField])) {
+                $response = $ms3->order->add($orderField, $customerData[$customerField]);
+                if ($response['success'] && !empty($response['data'][$orderField])) {
+                    $form[$orderField] = $response['data'][$orderField];
+                }
             }
         }
     }
 }
 
-// 2. Then, apply modUser data (higher priority, overrides msCustomer)
-foreach ($fields as $key => $value) {
-    if (!empty($profile) && !empty($value)) {
-        if (strpos($value, 'extended') !== false) {
-            $tmp = substr($value, 9, -1);
-            $value = !empty($profile['extended'][$tmp])
-                ? $profile['extended'][$tmp]
-                : '';
-        } else {
-            $value = $profile[$value];
-        }
-        $response = $ms3->order->add($key, $value);
-        if ($response['success'] && !empty($response['data'][$key])) {
-            $form[$key] = $response['data'][$key];
-        }
-    }
+// Apply remaining order data to form
+foreach ($userProfileFields as $key => $value) {
     if (empty($form[$key]) && !empty($order[$key])) {
         $form[$key] = $order[$key];
         unset($order[$key]);
     }
-}
-
-// Check for errors
-$errors = [];
-if (!empty($_POST)) {
-    $response = $ms3->order->getDeliveryRequiresFields();
-//    if ($requires = $response['data']['requires']) {
-//        foreach ($_POST as $field => $val) {
-//            $validated = $ms3->order->validate($field, $val);
-//            if ((in_array($field, $requires) && empty($validated))) {
-//                $errors[] = $field;
-//            }
-//        }
-//    }
 }
 
 $outputData = [
@@ -304,7 +319,6 @@ $outputData = [
     'form' => $form,
     'deliveries' => $deliveries,
     'payments' => $payments,
-    'errors' => $errors,
     'isCustomerAuth' => $isCustomerAuth,
     'isCartEmpty' => $isCartEmpty,
 ];

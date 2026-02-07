@@ -67,7 +67,8 @@ $_lang['ms3_prop_hideEmpty'] = 'Do not show options with empty values.';
 $_lang['ms3_prop_groups'] = 'Display options only of specified groups (name or category identifier comma-separated, "0" means without groups)';
 $_lang['ms3_prop_tplValue'] = 'Template for one value (only for multiple options)';
 
-$_lang['ms3_prop_userFields'] = 'Associative array of correspondence between order fields and user profile fields in format "order field" => "profile field".';
+$_lang['ms3_prop_userFields'] = 'Associative array mapping order fields to user profile fields (modUserProfile) in format "order field" => "profile field".';
+$_lang['ms3_prop_customerFields'] = 'Associative array mapping order fields to customer fields (msCustomer) in format "order field" => "customer field".';
 $_lang['ms3_prop_wrapIfEmpty'] = 'Enables output of wrapper chunk (tplWrapper) even if there are no results.';
 $_lang['ms3_prop_includeDeliveryFields'] = 'Comma-separated list of msDelivery table fields to select. For example: "name,price,free_delivery_amount". By default all fields are selected via *.';
 $_lang['ms3_prop_includePaymentFields'] = 'Comma-separated list of msPayment table fields to select. For example: "name,description,price,logo". By default all fields are selected via *.';
