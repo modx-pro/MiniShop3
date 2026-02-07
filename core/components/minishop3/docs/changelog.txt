@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0-beta1] - 2026-02-07
+
+### Added
+- Notification Center: Email notifications on order status change (manager + customer recipients)
+- Notification Center: Telegram notifications for managers on order status change
+- Telegram settings: `ms3_telegram_bot_token`, `ms3_telegram_manager_chat_id`
+- msOrder snippet: `customerFields` parameter for msCustomer field mapping
+- msOrder snippet: Data source selection based on `ms3_customer_sync_enabled` setting
+- msProducts snippet: `msOnProductsLoad` and `msOnProductPrepare` events for external packages
+- msProducts snippet: `usePackages` parameter for bulk data loading (ms3Variants, msBrands)
+- Help page: Migrated to Vue 3 + PrimeVue
+- Resource to product conversion: Automatic msProductData creation on class_key change
+
+### Changed
+- All 41 services centralized in ServiceRegistry
+- bootstrap.php now contains only core `ms3` service
+
+### Fixed
+- msOrder snippet: Removed dead POST validation code (validation in OrderSubmitHandler)
+- msOrder template: Removed unused error CSS classes
+- Vue components: Fixed `ms3.config` access (added `getMs3Config()` utility)
+- XML schema and PHP models synchronization (stock, default_value, msGridField)
+- Options tab styling fixes
+
+### Removed
+- Plupload library (gallery is Vue-based)
+- Unused ExtJS files (product.grid.js, gallery/panel.js, model-fields.wrapper.js)
+- Plupload lexicons
+- Unused notification processors
+
 ## [1.3.0-beta1] - 2026-01-30
 
 ### Added

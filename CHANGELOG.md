@@ -16,47 +16,89 @@
 
 ## Февраль 2026
 
-### Не выпущено
+### [2026-02-07] 🚀 Версия 1.4.0-beta1
+
+**Тип релиза:** MINOR (beta) — Notification Center, улучшения msOrder
+
+---
 
 #### ✨ Добавлено
+
+**Notification Center — Email уведомления:**
+- Email-уведомления при смене статуса заказа
+- Поддержка получателей: `manager` и `customer`
+- Настраиваемые шаблоны через чанки (поддержка `@FILE` синтаксиса)
+- Миграция для seed-конфигурации уведомлений
+- Лексиконы для email-сообщений (ru/en)
+
+**Notification Center — Telegram уведомления:**
+- Telegram-уведомления для менеджеров при смене статуса заказа
+- Системные настройки: `ms3_telegram_bot_token`, `ms3_telegram_manager_chat_id`
+- Локализованные сообщения с информацией о заказе
+- Поддержка кастомных шаблонов через чанки
+
+**Сниппет msOrder — параметр `customerFields`:**
+- Новый параметр для маппинга полей msCustomer на поля заказа
+- Формат: JSON `{"order_field": "customer_field"}`
+- Автозаполнение данных авторизованного клиента
+
+**Сниппет msOrder — выбор источника данных:**
+- При `ms3_customer_sync_enabled = true`: данные берутся из modUserProfile
+- При `ms3_customer_sync_enabled = false`: данные берутся из msCustomer
+- Исключает конфликт между двумя источниками
+
+**События для интеграции внешних пакетов:**
+- `msOnProductsLoad` — bulk-загрузка данных для списка товаров
+- `msOnProductPrepare` — обогащение данных отдельного товара
+- Параметр `usePackages` для активации (ms3Variants, msBrands и др.)
 
 **Страница "Помощь и поддержка":**
 - Переведена на Vue 3 + PrimeVue для унификации UI
 - Карточки ресурсов с hover-эффектами
 - Быстрые ссылки на разделы админки
-- Удалён устаревший CSS файл `help.css`
-
-#### 🐛 Исправлено
-
-**Настройка `ms3_category_show_nested_products`:**
-- Vue компонент категории теперь читает системную настройку (ранее всегда начинал с `false`)
-- Удалён неиспользуемый ExtJS файл `product.grid.js` (грид товаров полностью на Vue)
-
-**Доступ к `ms3.config` в Vue компонентах:**
-- Исправлен доступ к глобальной переменной `ms3` — она объявлена через `let`, поэтому недоступна как `window.ms3`
-- Исправлены компоненты: `CategoryProductsGrid.vue`, `OrderView.vue`, `OrdersGrid.vue`, `HelpPage.vue`, `product-tabs.js`, `utils/modx.js`
-- Добавлена утилита `getMs3Config()` в `utils/modx.js` для безопасного доступа
 
 **Конвертация ресурса в товар:**
 - При смене `class_key` обычного ресурса на `msProduct`:
-  - Автоматически создаётся запись `msProductData` (чтобы товар отображался в гридах)
+  - Автоматически создаётся запись `msProductData`
   - Товар скрывается из дерева согласно настройке `ms3_product_show_in_tree_default`
-- Логика вынесена в новый сервис `ProductService::handleConversion()`
-- Плагин `OnDocFormSave` делегирует обработку сервису
+- Логика в сервисе `ProductService::handleConversion()`
+
+#### 🔧 Изменено
+
+**Централизация сервисов:**
+- Все 41 сервис MiniShop3 теперь в ServiceRegistry
+- bootstrap.php содержит только основной `ms3` сервис
+- Добавлен `ms3_filter_config` в ServiceRegistry
+
+#### 🐛 Исправлено
+
+**Сниппет msOrder:**
+- Удалён мёртвый код валидации POST (валидация в OrderSubmitHandler)
+- Удалены неиспользуемые CSS-классы ошибок из чанка `ms3_order.tpl`
+
+**Доступ к `ms3.config` в Vue компонентах:**
+- Исправлен доступ к глобальной переменной `ms3`
+- Добавлена утилита `getMs3Config()` в `utils/modx.js`
 
 **Синхронизация XML схемы и PHP моделей:**
-- Добавлено поле `stock` в PHP модель `msProductData` (было только в XML схеме)
-- Добавлено поле `default_value` в PHP модель `msExtraField` (было только в XML схеме)
-- Добавлена модель `msGridField` в XML схему (была только в PHP)
-- Добавлено поле `select_options` в XML схему `msExtraField` (было только в PHP)
+- Поле `stock` в модели `msProductData`
+- Поле `default_value` в модели `msExtraField`
+- Модель `msGridField` в XML схему
+
+**Стили вкладки Options:**
+- Исправлены стили компонента ProductOptions.vue
+- Удалён deprecated CSS код
 
 #### 🗑️ Удалено
 
-**Очистка неиспользуемых ExtJS файлов:**
-- `misc/plupload/` — библиотека Plupload (не используется, галерея на Vue)
-- `model-fields/model-fields.wrapper.js` — wrapper создаётся inline в utilities.panel.js
-- `utilities/gallery/panel.js` — заменён Vue компонентом utilities-gallery
-- `lexicon/en/plupload.inc.php`, `lexicon/ru/plupload.inc.php` — лексиконы Plupload
+**Очистка неиспользуемых файлов:**
+- `misc/plupload/` — библиотека Plupload
+- `model-fields/model-fields.wrapper.js`
+- `utilities/gallery/panel.js`
+- `product.grid.js` — грид товаров полностью на Vue
+- `help.css` — стили теперь в Vue компоненте
+- Лексиконы Plupload
+- Неиспользуемые процессоры уведомлений
 
 ---
 
