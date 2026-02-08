@@ -196,8 +196,8 @@ defineExpose({
 }
 
 .uppy-container {
-  border: 2px dashed #ddd;
-  border-radius: 8px;
+  border: 0.125rem dashed #ddd;
+  border-radius: 0.5rem;
   overflow: hidden;
 }
 

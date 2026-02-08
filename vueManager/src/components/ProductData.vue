@@ -210,8 +210,8 @@ function getXtypeTitle(name) {
 
 <template>
   <h3>Here you can manage the layout and display of product properties on the product page</h3>
-  <div style="padding: 40px 0;">
-    <Card style="max-width: 840px; margin-bottom: 50px;">
+  <div style="padding: 2.5rem 0;">
+    <Card style="max-width: 52.5rem; margin-bottom: 3.125rem;">
       <template #title>
         <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
           <span>Left Column</span>
@@ -221,15 +221,15 @@ function getXtypeTitle(name) {
       <template #content>
         <DataTable :value="leftFields" tableStyle="min-width: 50rem" @rowReorder="LeftReorder">
           <Column rowReorder headerStyle="width: 3rem"/>
-          <Column field="name" header="Field" style="width: 300px;"></Column>
-          <Column field="xtype" header="Type" style="width: 300px;">
+          <Column field="name" header="Field" style="width: 18.75rem;"></Column>
+          <Column field="xtype" header="Type" style="width: 18.75rem;">
             <template #body="{ data }">
               <span> {{ getXtypeTitle(data.xtype) }}</span>
             </template>
           </Column>
           <Column class="w-24">
             <template #body="{ data }">
-              <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px;">
+              <div style="display: flex; align-items: center; justify-content: flex-start; gap: 1.25rem;">
                 <Button icon="pi pi-pencil" @click="showEdit(data)"></Button>
 
                 <Button icon="pi pi-minus" class="btn-danger" @click="confirmRemove( data)"></Button>
@@ -242,7 +242,7 @@ function getXtypeTitle(name) {
     </Card>
 
 
-    <Card style="max-width: 840px;">
+    <Card style="max-width: 52.5rem;">
       <template #title>
         <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
           <span>Right Column</span>
@@ -254,15 +254,15 @@ function getXtypeTitle(name) {
                    @rowReorder="RightReorder"
         >
           <Column rowReorder headerStyle="width: 3rem"/>
-          <Column field="name" header="Field" style="width: 300px;"></Column>
-          <Column field="xtype" header="Type" style="width: 300px;">
+          <Column field="name" header="Field" style="width: 18.75rem;"></Column>
+          <Column field="xtype" header="Type" style="width: 18.75rem;">
             <template #body="{ data }">
               <span> {{ getXtypeTitle(data.xtype) }}</span>
             </template>
           </Column>
           <Column class="w-24">
             <template #body="{ data }">
-              <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px;">
+              <div style="display: flex; align-items: center; justify-content: flex-start; gap: 1.25rem;">
 
                 <Button icon="pi pi-pencil" @click="showEdit(data)"></Button>
 
@@ -281,27 +281,27 @@ function getXtypeTitle(name) {
           v-if="Object.entries(editedField).length > 0" appendTo="self"
   >
     <div class="flex items-center gap-4 mb-4"
-         style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+         style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.625rem;">
       <label for="name" style="width: 50%;">Field</label>
       <InputText id="name" autocomplete="off" disabled readonly :value="editedField.name" style="width: 50%;"/>
     </div>
 
     <div class="flex items-center gap-4 mb-4"
-         style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+         style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.625rem;">
       <label for="name" style="width: 50%;">Field Type</label>
 
       <Select v-model="editedField.xtype" :options="types" optionLabel="name" optionValue="xtype" style="width: 58%;"/>
     </div>
 
     <div class="flex items-center gap-4 mb-4"
-         style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+         style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.625rem;">
       <label for="anchor" style="width: 50%;">Field Width</label>
       <InputText inputId="anchor" name="anchor" v-model="editedField.anchor" style="width: 50%;"
                  fluid/>
     </div>
 
 
-    <div style="display:flex; align-items: center; justify-content: flex-end; gap: 20px; margin-top: 40px;">
+    <div style="display:flex; align-items: center; justify-content: flex-end; gap: 1.25rem; margin-top: 2.5rem;">
       <Button type="button" label="Cancel" severity="secondary" @click="closeEdit()"></Button>
       <Button type="button" label="Save" @click="saveEdit()"></Button>
     </div>
@@ -309,7 +309,7 @@ function getXtypeTitle(name) {
 
   <Dialog v-model:visible="createVisible" modal header="Add Field" :style="{ width: '25rem' }" appendTo="self">
     <div class="flex items-center gap-4 mb-4"
-         style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+         style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.625rem;">
       <label for="name" style="width: 50%;">Field</label>
 
       <Select v-model="createdField.name" :options="unUsedFields" optionLabel="title" optionValue="name"
@@ -317,21 +317,21 @@ function getXtypeTitle(name) {
     </div>
 
     <div class="flex items-center gap-4 mb-4"
-         style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+         style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.625rem;">
       <label for="name" style="width: 50%;">Field Type</label>
 
       <Select v-model="createdField.xtype" :options="types" optionLabel="name" optionValue="xtype" style="width: 58%;"/>
     </div>
 
     <div class="flex items-center gap-4 mb-4"
-         style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+         style="display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.625rem;">
       <label for="anchor" style="width: 50%;">Field Width</label>
       <InputText inputId="anchor" name="anchor" v-model="createdField.anchor" style="width: 50%;"
                  fluid/>
     </div>
 
 
-    <div style="display:flex; align-items: center; justify-content: flex-end; gap: 20px; margin-top: 40px;">
+    <div style="display:flex; align-items: center; justify-content: flex-end; gap: 1.25rem; margin-top: 2.5rem;">
       <Button type="button" label="Cancel" severity="secondary" @click="closeCreate()"></Button>
       <Button type="button" label="Add" @click="saveCreate()"></Button>
     </div>

@@ -436,18 +436,18 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px', isSystem: true },
-    { name: 'name', label: _('vendor_name'), visible: true, sortable: true, filterable: true, minWidth: '200px' },
-    { name: 'country', label: _('vendor_country'), visible: true, sortable: true, filterable: true, width: '150px' },
-    { name: 'email', label: _('vendor_email'), visible: true, sortable: true, filterable: true, width: '200px' },
-    { name: 'phone', label: _('vendor_phone'), visible: true, sortable: true, width: '150px' },
+    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem', isSystem: true },
+    { name: 'name', label: _('vendor_name'), visible: true, sortable: true, filterable: true, minWidth: '12.5rem' },
+    { name: 'country', label: _('vendor_country'), visible: true, sortable: true, filterable: true, width: '9.375rem' },
+    { name: 'email', label: _('vendor_email'), visible: true, sortable: true, filterable: true, width: '12.5rem' },
+    { name: 'phone', label: _('vendor_phone'), visible: true, sortable: true, width: '9.375rem' },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '120px',
+      width: '7.5rem',
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
@@ -704,7 +704,7 @@ onMounted(async () => {
       :header="isNewVendor ? _('vendor_create') : _('vendor_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '700px' }"
+      :style="{ width: '43.75rem' }"
       appendTo="self"
     >
       <div v-if="editingVendor">
@@ -879,7 +879,7 @@ onMounted(async () => {
 
 <style scoped>
 .vendors-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -924,13 +924,13 @@ onMounted(async () => {
   margin-bottom: 1rem;
   padding: 1rem;
   background: #f8fafc;
-  border-radius: 6px;
+  border-radius: 0.375rem;
 }
 
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .filter-item label {
@@ -954,8 +954,8 @@ onMounted(async () => {
   align-items: center;
   padding: 0.75rem 1rem;
   background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  border: 0.0625rem solid #fbbf24;
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -989,11 +989,11 @@ onMounted(async () => {
 
 /* Image column thumbnail */
 .column-thumbnail {
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  border: 0.0625rem solid #e2e8f0;
 }
 
 .no-image {
@@ -1039,7 +1039,7 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 37.5rem) {
   .form-row-group {
     grid-template-columns: 1fr;
   }
@@ -1100,7 +1100,7 @@ onMounted(async () => {
 :deep(.sortable-drag) {
   opacity: 0.9;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
 }
 
 .loading-overlay {
@@ -1132,14 +1132,14 @@ onMounted(async () => {
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 0.0625rem solid #dee2e6;
   background: #f8f9fa;
   font-weight: 600;
 }
 
 .p-datatable-tbody td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 0.0625rem solid #dee2e6;
 }
 
 .p-datatable-tbody tr:hover {

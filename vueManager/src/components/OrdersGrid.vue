@@ -378,21 +378,21 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px', isSystem: true },
-    { name: 'num', label: _('order_num'), visible: true, sortable: true, filterable: true, width: '100px' },
-    { name: 'customer', label: _('order_customer'), visible: true, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '150px' },
-    { name: 'status_name', label: _('order_status'), visible: true, sortable: true, filterable: true, type: 'badge', width: '120px' },
-    { name: 'cost', label: _('order_cost'), visible: true, sortable: true, type: 'price', width: '120px' },
-    { name: 'delivery_name', label: _('order_delivery'), visible: true, sortable: true, filterable: true, width: '150px' },
-    { name: 'payment_name', label: _('order_payment'), visible: true, sortable: true, filterable: true, width: '150px' },
-    { name: 'createdon', label: _('order_createdon'), visible: true, sortable: true, type: 'datetime', width: '150px' },
+    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem', isSystem: true },
+    { name: 'num', label: _('order_num'), visible: true, sortable: true, filterable: true, width: '6.25rem' },
+    { name: 'customer', label: _('order_customer'), visible: true, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '9.375rem' },
+    { name: 'status_name', label: _('order_status'), visible: true, sortable: true, filterable: true, type: 'badge', width: '7.5rem' },
+    { name: 'cost', label: _('order_cost'), visible: true, sortable: true, type: 'price', width: '7.5rem' },
+    { name: 'delivery_name', label: _('order_delivery'), visible: true, sortable: true, filterable: true, width: '9.375rem' },
+    { name: 'payment_name', label: _('order_payment'), visible: true, sortable: true, filterable: true, width: '9.375rem' },
+    { name: 'createdon', label: _('order_createdon'), visible: true, sortable: true, type: 'datetime', width: '9.375rem' },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '120px',
+      width: '7.5rem',
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
@@ -477,11 +477,11 @@ onMounted(async () => {
 
       <template #content>
         <!-- Filters form -->
-        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
+        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
           <div class="filters-row">
             <template v-for="filter in sortedFilters" :key="filter.key">
               <!-- Text input filter -->
-              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '200px' }">
+              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '12.5rem' }">
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <InputText
                   :id="`filter-${filter.key}`"
@@ -493,7 +493,7 @@ onMounted(async () => {
               </div>
 
               <!-- Select filter -->
-              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '180px' }">
+              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '11.25rem' }">
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <Select
                   :id="`filter-${filter.key}`"
@@ -509,7 +509,7 @@ onMounted(async () => {
               </div>
 
               <!-- Date picker filter -->
-              <div v-else-if="filter.type === 'datepicker'" class="filter-item" :style="{ width: filter.width || '150px' }">
+              <div v-else-if="filter.type === 'datepicker'" class="filter-item" :style="{ width: filter.width || '9.375rem' }">
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <DatePicker
                   :id="`filter-${filter.key}`"
@@ -523,7 +523,7 @@ onMounted(async () => {
               </div>
 
               <!-- Date range filter -->
-              <div v-else-if="filter.type === 'daterange'" class="filter-item" :style="{ width: filter.width || '280px' }">
+              <div v-else-if="filter.type === 'daterange'" class="filter-item" :style="{ width: filter.width || '17.5rem' }">
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <DatePicker
                   :id="`filter-${filter.key}`"
@@ -685,7 +685,7 @@ onMounted(async () => {
 
 <style scoped>
 .orders-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -746,7 +746,7 @@ onMounted(async () => {
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .filter-item label {
@@ -769,8 +769,8 @@ onMounted(async () => {
   align-items: center;
   padding: 0.75rem 1rem;
   background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  border: 0.0625rem solid #fbbf24;
+  border-radius: 0.375rem;
 }
 
 .bulk-info {

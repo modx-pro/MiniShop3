@@ -345,12 +345,12 @@ onMounted(() => {
                       @change="onSelectAllChange"
                     />
                   </th>
-                  <th style="width: 80px">{{ _('ms3_id') }}</th>
+                  <th style="width: 5rem">{{ _('ms3_id') }}</th>
                   <th>{{ _('ms3_name') }}</th>
-                  <th style="width: 100px">{{ _('ms3_status_final') }}</th>
-                  <th style="width: 100px">{{ _('ms3_status_fixed') }}</th>
-                  <th style="width: 100px">{{ _('ms3_active') }}</th>
-                  <th style="width: 120px">{{ _('ms3_actions') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_status_final') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_status_fixed') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_active') }}</th>
+                  <th style="width: 7.5rem">{{ _('ms3_actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -421,7 +421,7 @@ onMounted(() => {
       :header="isNewStatus ? _('status_create') : _('status_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '500px' }"
+      :style="{ width: '31.25rem' }"
       appendTo="self"
     >
       <div v-if="editingStatus" class="ms3-status-form">
@@ -502,8 +502,8 @@ onMounted(() => {
 /* Status badge styles - global because used in table */
 .status-badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
   font-weight: 500;
   font-size: 0.875rem;
 }
@@ -533,25 +533,25 @@ onMounted(() => {
 }
 
 .ms3-status-form .color-preview {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  border: 2px solid #e2e8f0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.25rem;
+  border: 0.125rem solid #e2e8f0;
 }
 
 .ms3-status-form .color-palette {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 0.25rem;
   margin-top: 0.5rem;
 }
 
 .ms3-status-form .color-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.125rem;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
+  border: 0.0625rem solid #e2e8f0;
   transition: transform 0.15s;
 }
 
@@ -560,8 +560,8 @@ onMounted(() => {
 }
 
 .ms3-status-form .color-swatch.selected {
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  border: 0.125rem solid #3b82f6;
+  box-shadow: 0 0 0 0.125rem rgba(59, 130, 246, 0.3);
 }
 
 .ms3-status-form .checkboxes-row {
@@ -588,7 +588,7 @@ onMounted(() => {
   gap: 0.5rem;
   padding: 0.75rem;
   background: #f8fafc;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 .ms3-status-form .help-text {
@@ -607,7 +607,7 @@ onMounted(() => {
 
 <style scoped>
 .statuses-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -652,8 +652,8 @@ onMounted(() => {
   align-items: center;
   padding: 0.75rem 1rem;
   background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  border: 0.0625rem solid #fbbf24;
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -724,7 +724,7 @@ onMounted(() => {
 :deep(.sortable-drag) {
   opacity: 0.9;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
 }
 
 .loading-overlay {
@@ -756,14 +756,14 @@ onMounted(() => {
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 0.0625rem solid #dee2e6;
   background: #f8f9fa;
   font-weight: 600;
 }
 
 .p-datatable-tbody td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 0.0625rem solid #dee2e6;
 }
 
 .p-datatable-tbody tr:hover {

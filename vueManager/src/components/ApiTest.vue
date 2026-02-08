@@ -339,27 +339,27 @@ const testPostRequest = async () => {
 
 <style scoped>
 .api-test {
-  padding: 20px;
-  max-width: 1200px;
+  padding: 1.25rem;
+  max-width: 75rem;
   margin: 0 auto;
 }
 
 .system-info,
 .api-tests,
 .documentation {
-  padding: 10px 0;
+  padding: 0.625rem 0;
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(15.625rem, 1fr));
+  gap: 0.9375rem;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .info-item strong {
@@ -369,8 +369,8 @@ const testPostRequest = async () => {
 
 .info-item code {
   background: var(--surface-100);
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
   font-size: 0.85rem;
   word-break: break-all;
 }
@@ -378,7 +378,7 @@ const testPostRequest = async () => {
 .permissions-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 0.625rem;
 }
 
 .loading-overlay {
@@ -386,31 +386,31 @@ const testPostRequest = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
-  gap: 15px;
+  padding: 2.5rem;
+  gap: 0.9375rem;
 }
 
 .code-block {
   background: var(--surface-100);
-  padding: 15px;
-  border-radius: 6px;
+  padding: 0.9375rem;
+  border-radius: 0.375rem;
   overflow-x: auto;
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
 .documentation h3 {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
   color: var(--primary-color);
 }
 
 .documentation ul {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 1.25rem;
 }
 
 .documentation ul li {
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   line-height: 1.6;
 }
 
@@ -425,7 +425,7 @@ const testPostRequest = async () => {
 :deep(.p-message pre) {
   margin: 0;
   font-size: 0.85rem;
-  max-height: 300px;
+  max-height: 18.75rem;
   overflow: auto;
 }
 </style>

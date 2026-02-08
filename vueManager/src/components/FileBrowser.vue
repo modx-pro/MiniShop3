@@ -201,20 +201,20 @@ function getImageUrl(path) {
 }
 
 .ms3-file-browser .file-preview {
-  width: 150px;
-  height: 150px;
+  width: 9.375rem;
+  height: 9.375rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.25rem;
   background: #f8fafc;
   overflow: hidden;
 }
 
 .ms3-file-browser .file-preview img {
-  max-width: 150px;
-  max-height: 150px;
+  max-width: 9.375rem;
+  max-height: 9.375rem;
   width: auto;
   height: auto;
   object-fit: contain;

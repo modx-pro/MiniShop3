@@ -547,11 +547,11 @@ onMounted(() => {
     <p class="tab-description">{{ _('ms3_vue_product_fields_description') }}</p>
 
     <!-- Sections table -->
-    <Card style="margin-top: 20px;">
+    <Card style="margin-top: 1.25rem;">
       <template #title>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span>{{ _('ms3_vue_sections') }}</span>
-          <div style="display: flex; gap: 10px;">
+          <div style="display: flex; gap: 0.625rem;">
             <Button
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
@@ -578,10 +578,10 @@ onMounted(() => {
               <thead class="p-datatable-thead">
                 <tr>
                   <th style="width: 3rem"></th>
-                  <th style="width: 100px">{{ _('ms3_vue_visible') }}</th>
-                  <th style="width: 200px">{{ _('ms3_vue_section_key') }}</th>
-                  <th style="width: 250px">{{ _('ms3_vue_section_label') }}</th>
-                  <th style="width: 100px">{{ _('ms3_vue_actions') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_vue_visible') }}</th>
+                  <th style="width: 12.5rem">{{ _('ms3_vue_section_key') }}</th>
+                  <th style="width: 15.625rem">{{ _('ms3_vue_section_label') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_vue_actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -641,7 +641,7 @@ onMounted(() => {
     </Card>
 
     <!-- Fields table -->
-    <Card style="margin-top: 20px;">
+    <Card style="margin-top: 1.25rem;">
       <template #title>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span>{{ _('ms3_vue_product_properties') }}</span>
@@ -663,13 +663,13 @@ onMounted(() => {
               <thead class="p-datatable-thead">
                 <tr>
                   <th style="width: 3rem"></th>
-                  <th style="width: 100px">{{ _('ms3_vue_visible_column') }}</th>
-                  <th style="width: 200px">{{ _('ms3_vue_field_column') }}</th>
-                  <th style="width: 200px">{{ _('ms3_vue_label_column') }}</th>
-                  <th style="width: 150px">{{ _('ms3_vue_type_column') }}</th>
-                  <th style="width: 150px">{{ _('ms3_vue_section_column') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_vue_visible_column') }}</th>
+                  <th style="width: 12.5rem">{{ _('ms3_vue_field_column') }}</th>
+                  <th style="width: 12.5rem">{{ _('ms3_vue_label_column') }}</th>
+                  <th style="width: 9.375rem">{{ _('ms3_vue_type_column') }}</th>
+                  <th style="width: 9.375rem">{{ _('ms3_vue_section_column') }}</th>
                   <th>{{ _('ms3_vue_description_column') }}</th>
-                  <th style="width: 120px">{{ _('ms3_vue_actions_column') }}</th>
+                  <th style="width: 7.5rem">{{ _('ms3_vue_actions_column') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -728,7 +728,7 @@ onMounted(() => {
       v-model:visible="addSectionDialogVisible"
       modal
       :header="_('ms3_vue_add_section_title')"
-      :style="{ width: '600px' }"
+      :style="{ width: '37.5rem' }"
       appendTo="self"
     >
       <div class="edit-field-form">
@@ -771,7 +771,7 @@ onMounted(() => {
 
           <!-- Visibility -->
           <div class="field col-12">
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
               <Checkbox
                 inputId="section-hidden"
                 v-model="newSection.hidden"
@@ -806,7 +806,7 @@ onMounted(() => {
       v-model:visible="editSectionDialogVisible"
       modal
       :header="editingSection ? `${_('ms3_vue_edit_section_title')}: ${editingSection.key}` : _('ms3_vue_edit_section_title')"
-      :style="{ width: '600px' }"
+      :style="{ width: '37.5rem' }"
       appendTo="self"
     >
       <div v-if="editingSection" class="edit-field-form">
@@ -849,7 +849,7 @@ onMounted(() => {
 
           <!-- Visibility -->
           <div class="field col-12">
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
               <Checkbox
                 inputId="edit-section-hidden"
                 v-model="editingSection.hidden"
@@ -884,7 +884,7 @@ onMounted(() => {
       v-model:visible="editDialogVisible"
       modal
       :header="editingField ? `${_('ms3_vue_field_edit_title')}: ${editingField.name}` : _('ms3_vue_field_edit_title')"
-      :style="{ width: '600px' }"
+      :style="{ width: '37.5rem' }"
       appendTo="self"
     >
       <div v-if="editingField" class="edit-field-form">
@@ -1009,16 +1009,16 @@ onMounted(() => {
 
 <style scoped>
 .product-data-config {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 h2 {
-  margin: 0 0 10px 0;
-  font-size: 24px;
+  margin: 0 0 0.625rem 0;
+  font-size: 1.5rem;
 }
 
 p {
-  margin: 0 0 20px 0;
+  margin: 0 0 1.25rem 0;
   color: #666;
 }
 
@@ -1076,38 +1076,38 @@ p {
 /* Modal window styles - work in both .vueApp and .p-dialog */
 .vueApp .edit-field-form,
 .p-dialog .edit-field-form {
-  padding: 10px 0;
+  padding: 0.625rem 0;
 }
 
 .vueApp .form-grid,
 .p-dialog .form-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin: -8px;
+  gap: 1rem;
+  margin: -0.5rem;
 }
 
 .vueApp .edit-field-form .field,
 .p-dialog .edit-field-form .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
+  gap: 0.375rem;
+  padding: 0.5rem;
   box-sizing: border-box;
 }
 
 .vueApp .edit-field-form .field label,
 .p-dialog .edit-field-form .field label {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #333;
 }
 
 .vueApp .edit-field-form .field small,
 .p-dialog .edit-field-form .field small {
   color: #666;
-  font-size: 12px;
-  margin-top: -2px;
+  font-size: 0.75rem;
+  margin-top: -0.125rem;
 }
 
 .vueApp .edit-field-form .w-full,
@@ -1118,21 +1118,21 @@ p {
 /* Grid for modal window */
 .vueApp .col-6,
 .p-dialog .col-6 {
-  flex: 0 0 calc(50% - 16px);
-  max-width: calc(50% - 16px);
+  flex: 0 0 calc(50% - 1rem);
+  max-width: calc(50% - 1rem);
 }
 
 .vueApp .col-12,
 .p-dialog .col-12 {
-  flex: 0 0 calc(100% - 16px);
-  max-width: calc(100% - 16px);
+  flex: 0 0 calc(100% - 1rem);
+  max-width: calc(100% - 1rem);
 }
 
 /* Checkbox in modal window */
 .vueApp .edit-field-form .checkbox-wrapper,
 .p-dialog .edit-field-form .checkbox-wrapper {
   display: flex;
-  gap: 10px;
+  gap: 0.625rem;
   align-items: center;
 }
 

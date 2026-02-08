@@ -304,9 +304,9 @@ onMounted(async () => {
         </div>
 
         <!-- Filters -->
-        <div class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
+        <div class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
           <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
-            <div style="flex: 1; min-width: 200px;">
+            <div style="flex: 1; min-width: 12.5rem;">
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ _('ms3_notification_status') }}</label>
               <Dropdown
                 v-model="filterStatusId"
@@ -318,7 +318,7 @@ onMounted(async () => {
                 showClear
               />
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex: 1; min-width: 9.375rem;">
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ _('ms3_notification_channel') }}</label>
               <Dropdown
                 v-model="filterChannel"
@@ -330,7 +330,7 @@ onMounted(async () => {
                 showClear
               />
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex: 1; min-width: 9.375rem;">
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ _('ms3_notification_recipient') }}</label>
               <Dropdown
                 v-model="filterRecipientType"
@@ -365,7 +365,7 @@ onMounted(async () => {
           stripedRows
           responsiveLayout="scroll"
         >
-          <Column field="enabled" :header="_('ms3_notification_enabled')" style="width: 80px;">
+          <Column field="enabled" :header="_('ms3_notification_enabled')" style="width: 5rem;">
             <template #body="{ data }">
               <Checkbox
                 :modelValue="data.enabled"
@@ -421,7 +421,7 @@ onMounted(async () => {
             </template>
           </Column>
 
-          <Column :header="_('actions')" style="width: 120px;">
+          <Column :header="_('actions')" style="width: 7.5rem;">
             <template #body="{ data }">
               <div class="actions-cell">
                 <Button
@@ -451,7 +451,7 @@ onMounted(async () => {
       :header="isNewRecord ? _('ms3_notification_add') : _('ms3_notification_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '600px' }"
+      :style="{ width: '37.5rem' }"
       :appendTo="'self'"
     >
       <div v-if="editingNotification" class="notification-form">
@@ -589,7 +589,7 @@ onMounted(async () => {
 
 <style scoped>
 .notifications-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .toolbar {
@@ -660,7 +660,7 @@ onMounted(async () => {
 
 .text-ellipsis {
   display: block;
-  max-width: 200px;
+  max-width: 12.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

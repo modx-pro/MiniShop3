@@ -462,7 +462,7 @@ onMounted(() => {
           optionLabel="label"
           optionValue="value"
           :placeholder="_('ms3_vue_extra_fields_select_class')"
-          style="min-width: 280px;"
+          style="min-width: 17.5rem;"
           @change="onClassFilterChange"
         />
       </div>
@@ -489,7 +489,7 @@ onMounted(() => {
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="Showing {first} - {last} of {totalRecords} fields"
         >
-          <Column field="id" :header="_('ms3_vue_table_id')" style="width: 60px" sortable />
+          <Column field="id" :header="_('ms3_vue_table_id')" style="width: 3.75rem" sortable />
 
           <Column field="key" :header="_('ms3_vue_table_field_name')" sortable>
             <template #body="{ data }">
@@ -499,15 +499,15 @@ onMounted(() => {
 
           <Column field="label" :header="_('ms3_vue_table_label')" sortable />
 
-          <Column field="dbtype" :header="_('ms3_vue_table_dbtype')" sortable style="width: 120px">
+          <Column field="dbtype" :header="_('ms3_vue_table_dbtype')" sortable style="width: 7.5rem">
             <template #body="{ data }">
               <Tag :value="data.dbtype.toUpperCase()" severity="info" />
             </template>
           </Column>
 
-          <Column field="precision" :header="_('ms3_vue_table_precision')" style="width: 100px" />
+          <Column field="precision" :header="_('ms3_vue_table_precision')" style="width: 6.25rem" />
 
-          <Column field="index_type" :header="_('ms3_vue_table_index')" style="width: 120px">
+          <Column field="index_type" :header="_('ms3_vue_table_index')" style="width: 7.5rem">
             <template #body="{ data }">
               <Tag
                 v-if="data.index_type && data.index_type !== 'NONE'"
@@ -518,7 +518,7 @@ onMounted(() => {
             </template>
           </Column>
 
-          <Column field="column_exists" :header="_('ms3_vue_table_column_exists')" style="width: 140px">
+          <Column field="column_exists" :header="_('ms3_vue_table_column_exists')" style="width: 8.75rem">
             <template #body="{ data }">
               <Tag
                 :value="data.column_exists ? _('ms3_vue_table_column_exists_yes') : _('ms3_vue_table_column_exists_no')"
@@ -527,7 +527,7 @@ onMounted(() => {
             </template>
           </Column>
 
-          <Column field="active" :header="_('ms3_vue_table_active')" style="width: 100px">
+          <Column field="active" :header="_('ms3_vue_table_active')" style="width: 6.25rem">
             <template #body="{ data }">
               <Tag
                 :value="data.active ? _('ms3_vue_table_active_yes') : _('ms3_vue_table_active_no')"
@@ -536,7 +536,7 @@ onMounted(() => {
             </template>
           </Column>
 
-          <Column :header="_('ms3_vue_table_actions')" style="width: 150px">
+          <Column :header="_('ms3_vue_table_actions')" style="width: 9.375rem">
             <template #body="{ data }">
               <Button
                 icon="pi pi-pencil"
@@ -573,7 +573,7 @@ onMounted(() => {
       :header="isEditMode ? _('ms3_vue_dialog_edit_title') : _('ms3_vue_dialog_create_title')"
       :modal="true"
       :closable="!saving"
-      :style="{ width: '700px' }"
+      :style="{ width: '43.75rem' }"
       appendTo="self"
       @hide="saving = false"
     >
@@ -708,7 +708,7 @@ onMounted(() => {
           <!-- Nullable -->
           <div class="field col-6">
             <label for="field-null">{{ _('ms3_vue_dialog_null') }}</label>
-            <div class="flex align-items-center" style="height: 42px">
+            <div class="flex align-items-center" style="height: 2.625rem">
               <Checkbox
                 id="field-null"
                 v-model="fieldForm.null"
@@ -777,7 +777,7 @@ onMounted(() => {
           <!-- Active status -->
           <div class="field col-12">
             <label for="field-active">{{ _('ms3_vue_dialog_active') }}</label>
-            <div class="flex align-items-center" style="height: 42px">
+            <div class="flex align-items-center" style="height: 2.625rem">
               <Checkbox
                 id="field-active"
                 v-model="fieldForm.active"
@@ -819,38 +819,38 @@ onMounted(() => {
 /* Modal window styles - work in both .vueApp and .p-dialog */
 .vueApp .edit-field-form,
 .p-dialog .edit-field-form {
-  padding: 10px 0;
+  padding: 0.625rem 0;
 }
 
 .vueApp .form-grid,
 .p-dialog .form-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin: -8px;
+  gap: 1rem;
+  margin: -0.5rem;
 }
 
 .vueApp .edit-field-form .field,
 .p-dialog .edit-field-form .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
+  gap: 0.375rem;
+  padding: 0.5rem;
   box-sizing: border-box;
 }
 
 .vueApp .edit-field-form .field label,
 .p-dialog .edit-field-form .field label {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #333;
 }
 
 .vueApp .edit-field-form .field small,
 .p-dialog .edit-field-form .field small {
   color: #666;
-  font-size: 12px;
-  margin-top: -2px;
+  font-size: 0.75rem;
+  margin-top: -0.125rem;
 }
 
 .vueApp .edit-field-form .w-full,
@@ -861,21 +861,21 @@ onMounted(() => {
 /* Grid for modal window */
 .vueApp .col-6,
 .p-dialog .col-6 {
-  flex: 0 0 calc(50% - 16px);
-  max-width: calc(50% - 16px);
+  flex: 0 0 calc(50% - 1rem);
+  max-width: calc(50% - 1rem);
 }
 
 .vueApp .col-12,
 .p-dialog .col-12 {
-  flex: 0 0 calc(100% - 16px);
-  max-width: calc(100% - 16px);
+  flex: 0 0 calc(100% - 1rem);
+  max-width: calc(100% - 1rem);
 }
 
 /* Checkbox in modal window */
 .vueApp .edit-field-form .checkbox-wrapper,
 .p-dialog .edit-field-form .checkbox-wrapper {
   display: flex;
-  gap: 10px;
+  gap: 0.625rem;
   align-items: center;
 }
 

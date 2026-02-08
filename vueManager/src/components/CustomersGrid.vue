@@ -501,19 +501,19 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px', isSystem: true },
-    { name: 'customer_name', label: _('customer_name'), visible: true, sortable: false, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '200px' },
-    { name: 'email', label: _('customer_email'), visible: true, sortable: true, filterable: true, type: 'model', minWidth: '200px' },
-    { name: 'phone', label: _('customer_phone'), visible: true, filterable: true, type: 'model', width: '150px', minWidth: '120px' },
-    { name: 'is_active', label: _('customer_active'), visible: true, sortable: true, filterable: true, type: 'boolean', width: '100px' },
-    { name: 'created_at', label: _('created_at'), visible: true, sortable: true, type: 'model', format: 'datetime', width: '180px', minWidth: '150px' },
+    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem', isSystem: true },
+    { name: 'customer_name', label: _('customer_name'), visible: true, sortable: false, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '12.5rem' },
+    { name: 'email', label: _('customer_email'), visible: true, sortable: true, filterable: true, type: 'model', minWidth: '12.5rem' },
+    { name: 'phone', label: _('customer_phone'), visible: true, filterable: true, type: 'model', width: '9.375rem', minWidth: '7.5rem' },
+    { name: 'is_active', label: _('customer_active'), visible: true, sortable: true, filterable: true, type: 'boolean', width: '6.25rem' },
+    { name: 'created_at', label: _('created_at'), visible: true, sortable: true, type: 'model', format: 'datetime', width: '11.25rem', minWidth: '9.375rem' },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '150px',
+      width: '9.375rem',
       type: 'actions',
       actions: [
         { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
@@ -586,12 +586,12 @@ onMounted(async () => {
         </div>
 
         <!-- Filters form -->
-        <div v-if="filterableColumns.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
+        <div v-if="filterableColumns.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
           <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
             <div
               v-for="column in filterableColumns"
               :key="column.name"
-              style="flex: 1 1 300px; min-width: 250px;"
+              style="flex: 1 1 18.75rem; min-width: 15.625rem;"
             >
               <div class="field">
                 <label :for="`filter-${column.name}`" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ column.label }}</label>
@@ -728,7 +728,7 @@ onMounted(async () => {
       :header="_('edit_customer')"
       :modal="true"
       :closable="true"
-      :style="{ width: '550px' }"
+      :style="{ width: '34.375rem' }"
       :appendTo="'self'"
     >
       <div v-if="editingCustomer" class="customer-form">
@@ -833,7 +833,7 @@ onMounted(async () => {
       :header="currentCustomerForAddresses ? _('customer_addresses_title').replace('{name}', getCustomerDisplayName(currentCustomerForAddresses)) : _('addresses')"
       :modal="true"
       :closable="true"
-      :style="{ width: '800px' }"
+      :style="{ width: '50rem' }"
       :appendTo="'self'"
     >
       <div class="addresses-content">
@@ -990,7 +990,7 @@ onMounted(async () => {
 
 <style scoped>
 .customers-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 /* Bulk actions toolbar */
@@ -1000,8 +1000,8 @@ onMounted(async () => {
   align-items: center;
   padding: 0.75rem 1rem;
   background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  border: 0.0625rem solid #fbbf24;
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -1093,7 +1093,7 @@ onMounted(async () => {
 
 /* Styles for addresses dialog */
 .addresses-content {
-  min-height: 200px;
+  min-height: 12.5rem;
 }
 
 .addresses-header {
@@ -1124,8 +1124,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.375rem;
   background: #fff;
 }
 
@@ -1148,7 +1148,7 @@ onMounted(async () => {
 .address-badge {
   font-size: 0.7rem;
   padding: 0.15rem 0.4rem;
-  border-radius: 3px;
+  border-radius: 0.1875rem;
 }
 
 .address-badge.inactive {
@@ -1216,6 +1216,6 @@ onMounted(async () => {
   gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 0.0625rem solid #e2e8f0;
 }
 </style>

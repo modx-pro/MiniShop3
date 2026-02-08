@@ -160,7 +160,7 @@ function navigateTo(href) {
 <style scoped>
 .ms3-help-page {
   padding: 1rem;
-  max-width: 1200px;
+  max-width: 75rem;
 }
 
 .ms3-help-header {
@@ -186,7 +186,7 @@ function navigateTo(href) {
 }
 
 .header-logo {
-  max-height: 80px;
+  max-height: 5rem;
   object-fit: contain;
 }
 
@@ -202,7 +202,7 @@ function navigateTo(href) {
 
 .ms3-resource-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -213,8 +213,8 @@ function navigateTo(href) {
 }
 
 .resource-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
 }
 
 .resource-content {

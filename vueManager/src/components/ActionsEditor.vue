@@ -188,25 +188,25 @@ function closeDialog() {
   <div class="actions-editor">
     <!-- Current actions table -->
     <DataTable :value="localActions" size="small" class="mb-2">
-      <Column field="name" :header="_('action_name')" style="width: 150px">
+      <Column field="name" :header="_('action_name')" style="width: 9.375rem">
         <template #body="{ data }">
           <span class="font-semibold">{{ data.name }}</span>
         </template>
       </Column>
 
-      <Column field="handler" :header="_('action_handler')" style="width: 120px">
+      <Column field="handler" :header="_('action_handler')" style="width: 7.5rem">
         <template #body="{ data }">
           <span class="text-muted">{{ data.handler }}</span>
         </template>
       </Column>
 
-      <Column field="icon" :header="_('action_icon')" style="width: 80px">
+      <Column field="icon" :header="_('action_icon')" style="width: 5rem">
         <template #body="{ data }">
           <i :class="`pi ${data.icon}`"></i>
         </template>
       </Column>
 
-      <Column field="severity" :header="_('action_severity')" style="width: 100px">
+      <Column field="severity" :header="_('action_severity')" style="width: 6.25rem">
         <template #body="{ data }">
           <span :class="`p-badge p-badge-${data.severity || 'secondary'}`">
             {{ data.severity || 'default' }}
@@ -214,7 +214,7 @@ function closeDialog() {
         </template>
       </Column>
 
-      <Column :header="_('actions')" style="width: 150px">
+      <Column :header="_('actions')" style="width: 9.375rem">
         <template #body="{ data, index }">
           <Button
             icon="pi pi-arrow-up"
@@ -260,7 +260,7 @@ function closeDialog() {
       v-model:visible="showDialog"
       :header="editingIndex !== null ? _('edit_action') : _('add_action')"
       :modal="true"
-      :style="{ width: '550px' }"
+      :style="{ width: '34.375rem' }"
       appendTo="self"
     >
       <div v-if="editingAction" class="action-form">

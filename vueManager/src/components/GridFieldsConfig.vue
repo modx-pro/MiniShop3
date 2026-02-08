@@ -751,7 +751,7 @@ onMounted(() => {
           option-label="label"
           option-value="value"
           @change="onGridChange"
-          style="min-width: 200px;"
+          style="min-width: 12.5rem;"
         />
       </div>
       <Button
@@ -770,14 +770,14 @@ onMounted(() => {
               <thead class="p-datatable-thead">
                 <tr>
                   <th style="width: 4rem"></th>
-                  <th style="width: 200px">{{ _('field_name') }}</th>
-                  <th style="min-width: 200px">{{ _('field_label') }}</th>
-                  <th style="width: 100px">{{ _('visible') }}</th>
-                  <th style="width: 100px">{{ _('sortable') }}</th>
-                  <th style="width: 100px">{{ _('filterable') }}</th>
-                  <th style="width: 100px">{{ _('frozen') }}</th>
-                  <th style="width: 120px">{{ _('width') }}</th>
-                  <th style="width: 100px">{{ _('actions') }}</th>
+                  <th style="width: 12.5rem">{{ _('field_name') }}</th>
+                  <th style="min-width: 12.5rem">{{ _('field_label') }}</th>
+                  <th style="width: 6.25rem">{{ _('visible') }}</th>
+                  <th style="width: 6.25rem">{{ _('sortable') }}</th>
+                  <th style="width: 6.25rem">{{ _('filterable') }}</th>
+                  <th style="width: 6.25rem">{{ _('frozen') }}</th>
+                  <th style="width: 7.5rem">{{ _('width') }}</th>
+                  <th style="width: 6.25rem">{{ _('actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -812,7 +812,7 @@ onMounted(() => {
                       <Checkbox v-model="field.frozen" :binary="true" />
                     </td>
                     <td>
-                      <InputText v-model="field.width" placeholder="150px" class="w-full" />
+                      <InputText v-model="field.width" placeholder="9.375rem" class="w-full" />
                     </td>
                     <td>
                       <Button
@@ -863,7 +863,7 @@ onMounted(() => {
       :header="_('add_field_dialog_title')"
       :modal="true"
       :closable="true"
-      :style="{ width: '600px' }"
+      :style="{ width: '37.5rem' }"
       appendTo="self"
       @hide="closeAddDialog"
     >
@@ -1027,7 +1027,7 @@ onMounted(() => {
           id="new-field-width"
           v-model="newField.width"
           class="w-full"
-          placeholder="150px"
+          placeholder="9.375rem"
         />
       </div>
 
@@ -1094,7 +1094,7 @@ onMounted(() => {
       :header="_('edit_field_dialog_title')"
       :modal="true"
       :closable="true"
-      :style="{ width: '600px' }"
+      :style="{ width: '37.5rem' }"
       appendTo="self"
       @hide="closeEditDialog"
     >
@@ -1260,7 +1260,7 @@ onMounted(() => {
             id="edit-field-width"
             v-model="editingField.width"
             class="w-full"
-            placeholder="150px"
+            placeholder="9.375rem"
           />
         </div>
 
@@ -1326,7 +1326,7 @@ onMounted(() => {
 
 <style scoped>
 .grid-fields-config {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .drag-handle-cell {

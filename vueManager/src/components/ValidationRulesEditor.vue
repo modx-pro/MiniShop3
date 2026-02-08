@@ -526,7 +526,7 @@ const editingFieldName = computed(() => {
       v-model:visible="showAddFieldDialog"
       :header="_('ms3_add_validation_field')"
       :modal="true"
-      :style="{ width: '450px' }"
+      :style="{ width: '28.125rem' }"
       appendTo="self"
     >
       <div class="add-field-form">
@@ -565,7 +565,7 @@ const editingFieldName = computed(() => {
       v-model:visible="showAddRuleDialog"
       :header="_('ms3_add_rule_to_field') + ': ' + editingFieldName"
       :modal="true"
-      :style="{ width: '450px' }"
+      :style="{ width: '28.125rem' }"
       appendTo="self"
       @hide="closeRuleDialog"
     >
@@ -665,8 +665,8 @@ const editingFieldName = computed(() => {
 
 .field-rules-item {
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.375rem;
   padding: 0.75rem;
 }
 

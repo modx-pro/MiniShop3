@@ -439,16 +439,16 @@ onBeforeUnmount(() => {
 <style scoped>
 .product-tabs {
   width: 100%;
-  min-height: 400px;
+  min-height: 25rem;
 }
 
 .extjs-container {
-  min-height: 300px;
+  min-height: 18.75rem;
   width: 100%;
 }
 
 .extjs-options-container {
-  min-height: 400px;
+  min-height: 25rem;
 }
 
 /* Ensure ExtJS components fill their containers */
@@ -458,7 +458,7 @@ onBeforeUnmount(() => {
 
 /* Fix padding for ExtJS panels inside Vue tabs */
 .extjs-container :deep(.x-panel-body) {
-  padding: 10px;
+  padding: 0.625rem;
 }
 
 /* Gallery specific styles */
@@ -468,11 +468,11 @@ onBeforeUnmount(() => {
 
 /* Categories tree styles */
 #ms3-product-tab-categories :deep(.x-tree-view) {
-  min-height: 300px;
+  min-height: 18.75rem;
 }
 
 /* Links grid styles */
 #ms3-product-tab-links :deep(.x-grid-view) {
-  min-height: 200px;
+  min-height: 12.5rem;
 }
 </style>

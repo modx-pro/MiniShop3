@@ -429,13 +429,13 @@ async function loadGridConfig() {
     } else {
       // Fallback default columns
       columns.value = [
-        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px' },
+        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
         { name: 'name', label: _('delivery_name'), visible: true, sortable: true, filterable: true },
-        { name: 'price', label: _('delivery_price'), visible: true, sortable: true, width: '120px' },
-        { name: 'free_delivery_amount', label: _('delivery_free_amount'), visible: true, sortable: true, width: '150px' },
-        { name: 'active', label: _('delivery_active'), visible: true, sortable: true, type: 'boolean', width: '100px' },
-        { name: 'position', label: _('delivery_position'), visible: true, sortable: true, width: '100px' },
-        { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '120px', actions: [
+        { name: 'price', label: _('delivery_price'), visible: true, sortable: true, width: '7.5rem' },
+        { name: 'free_delivery_amount', label: _('delivery_free_amount'), visible: true, sortable: true, width: '9.375rem' },
+        { name: 'active', label: _('delivery_active'), visible: true, sortable: true, type: 'boolean', width: '6.25rem' },
+        { name: 'position', label: _('delivery_position'), visible: true, sortable: true, width: '6.25rem' },
+        { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '7.5rem', actions: [
           { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
           { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false },
         ]},
@@ -577,14 +577,14 @@ onMounted(async () => {
         <table v-else class="deliveries-table">
           <thead>
             <tr>
-              <th style="width: 40px">
+              <th style="width: 2.5rem">
                 <Checkbox
                   :modelValue="selectAll"
                   :binary="true"
                   @update:modelValue="onSelectAllChange"
                 />
               </th>
-              <th style="width: 40px"></th>
+              <th style="width: 2.5rem"></th>
               <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                 <th :style="{ width: column.width, minWidth: column.minWidth }">
                   {{ column.label }}
@@ -666,7 +666,7 @@ onMounted(async () => {
       :header="isNewDelivery ? _('delivery_create') : _('delivery_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '700px' }"
+      :style="{ width: '43.75rem' }"
       appendTo="self"
     >
       <div v-if="editingDelivery">
@@ -778,13 +778,13 @@ onMounted(async () => {
                       </div>
                     </template>
                   </Column>
-                  <Column field="price" :header="_('ms3_add_cost')" style="width: 150px">
+                  <Column field="price" :header="_('ms3_add_cost')" style="width: 9.375rem">
                     <template #body="{ data }">
                       <span v-if="data.price">{{ data.price }}</span>
                       <span v-else class="text-muted">—</span>
                     </template>
                   </Column>
-                  <Column :header="_('delivery_active')" style="width: 100px">
+                  <Column :header="_('delivery_active')" style="width: 6.25rem">
                     <template #body="{ data }">
                       <ToggleSwitch
                         :modelValue="isPaymentEnabled(data.id)"
@@ -819,7 +819,7 @@ onMounted(async () => {
 
 <style scoped>
 .deliveries-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -864,13 +864,13 @@ onMounted(async () => {
   margin-bottom: 1rem;
   padding: 1rem;
   background: #f8fafc;
-  border-radius: 6px;
+  border-radius: 0.375rem;
 }
 
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .filter-item label {
@@ -894,8 +894,8 @@ onMounted(async () => {
   align-items: center;
   padding: 0.75rem 1rem;
   background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  border: 0.0625rem solid #fbbf24;
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -954,7 +954,7 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 37.5rem) {
   .form-row-group {
     grid-template-columns: 1fr;
   }
@@ -996,8 +996,8 @@ onMounted(async () => {
 }
 
 .payment-logo-small {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -1025,7 +1025,7 @@ onMounted(async () => {
 .deliveries-table td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 0.0625rem solid #e2e8f0;
 }
 
 .deliveries-table th {
@@ -1066,10 +1066,10 @@ onMounted(async () => {
 
 /* Grid thumbnail */
 .grid-thumbnail {
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 /* Loading overlay */

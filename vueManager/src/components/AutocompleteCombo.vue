@@ -150,8 +150,8 @@ onMounted(() => {
 <style>
 /* Global styles for autocomplete panel */
 .autocomplete-combo-wrapper .p-autocomplete-panel {
-  min-width: 300px;
-  max-width: 500px;
+  min-width: 18.75rem;
+  max-width: 31.25rem;
 }
 
 .autocomplete-combo-wrapper .p-autocomplete-input {

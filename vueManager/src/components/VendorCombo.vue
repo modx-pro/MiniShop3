@@ -179,8 +179,8 @@ onMounted(() => {
 <style>
 /* Global styles for dropdown empty message */
 .vendor-combo-wrapper .p-dropdown-panel {
-  min-width: 400px !important;
-  max-width: 500px !important;
+  min-width: 25rem !important;
+  max-width: 31.25rem !important;
 }
 
 .vendor-combo-wrapper .p-dropdown-empty-message,

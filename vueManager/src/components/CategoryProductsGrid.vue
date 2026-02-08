@@ -398,20 +398,20 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, width: '60px', isSystem: true },
-    { name: 'thumb', label: _('product_image'), visible: true, type: 'image', width: '60px' },
-    { name: 'pagetitle', label: _('product_pagetitle'), visible: true, sortable: true, filterable: true, minWidth: '200px', type: 'template', template: '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>' },
-    { name: 'article', label: _('product_article'), visible: true, sortable: true, filterable: true, width: '100px' },
-    { name: 'price', label: _('product_price'), visible: true, sortable: true, type: 'price', width: '100px' },
-    { name: 'weight', label: _('product_weight'), visible: true, sortable: true, type: 'weight', width: '80px' },
-    { name: 'published', label: _('product_published'), visible: true, sortable: true, type: 'boolean', width: '80px' },
+    { name: 'id', label: 'ID', visible: true, sortable: true, width: '3.75rem', isSystem: true },
+    { name: 'thumb', label: _('product_image'), visible: true, type: 'image', width: '3.75rem' },
+    { name: 'pagetitle', label: _('product_pagetitle'), visible: true, sortable: true, filterable: true, minWidth: '12.5rem', type: 'template', template: '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>' },
+    { name: 'article', label: _('product_article'), visible: true, sortable: true, filterable: true, width: '6.25rem' },
+    { name: 'price', label: _('product_price'), visible: true, sortable: true, type: 'price', width: '6.25rem' },
+    { name: 'weight', label: _('product_weight'), visible: true, sortable: true, type: 'weight', width: '5rem' },
+    { name: 'published', label: _('product_published'), visible: true, sortable: true, type: 'boolean', width: '5rem' },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '140px',
+      width: '8.75rem',
       type: 'actions',
       actions: [
         { name: 'view', handler: 'view', icon: 'pi-eye', label: 'view' },
@@ -612,11 +612,11 @@ onMounted(async () => {
 
       <template #content>
         <!-- Filters form -->
-        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
+        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
           <div class="filters-row">
             <template v-for="filter in sortedFilters" :key="filter.key">
               <!-- Text input filter -->
-              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '200px' }">
+              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '12.5rem' }">
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <InputText
                   :id="`filter-${filter.key}`"
@@ -628,7 +628,7 @@ onMounted(async () => {
               </div>
 
               <!-- Select filter -->
-              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '150px' }">
+              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '9.375rem' }">
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <Select
                   :id="`filter-${filter.key}`"
@@ -857,7 +857,7 @@ onMounted(async () => {
 
 <style scoped>
 .category-products-grid {
-  padding: 10px;
+  padding: 0.625rem;
 }
 
 .grid-header {
@@ -906,7 +906,7 @@ onMounted(async () => {
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 120px;
+  min-width: 7.5rem;
 }
 
 .filter-item label {
@@ -929,8 +929,8 @@ onMounted(async () => {
   align-items: center;
   padding: 0.75rem 1rem;
   background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  border: 0.0625rem solid #fbbf24;
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -957,7 +957,7 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: #e0f2fe;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   font-size: 0.85rem;
   color: #0369a1;
 }
@@ -993,7 +993,7 @@ onMounted(async () => {
 :deep(.sortable-drag) {
   opacity: 0.9;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
 }
 
 /* Table styles */
@@ -1013,7 +1013,7 @@ onMounted(async () => {
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 0.0625rem solid #dee2e6;
   background: #f8f9fa;
   font-weight: 600;
 }
@@ -1034,7 +1034,7 @@ onMounted(async () => {
 
 .p-datatable-tbody td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 0.0625rem solid #dee2e6;
   vertical-align: middle;
 }
 
@@ -1065,7 +1065,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: flex-end;
   padding: 0.75rem 1rem;
-  border-top: 1px solid #dee2e6;
+  border-top: 0.0625rem solid #dee2e6;
   gap: 0.5rem;
 }
 
@@ -1077,10 +1077,10 @@ onMounted(async () => {
 
 /* Product thumbnail */
 .product-thumb {
-  width: 50px;
-  height: 50px;
+  width: 3.125rem;
+  height: 3.125rem;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 .no-image {

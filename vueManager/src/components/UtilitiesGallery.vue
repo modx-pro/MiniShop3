@@ -217,12 +217,12 @@ onMounted(() => {
 
 <style scoped>
 .utilities-gallery {
-  padding: 20px;
-  max-width: 800px;
+  padding: 1.25rem;
+  max-width: 50rem;
 }
 
 .info-card {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .info-content {
@@ -234,7 +234,7 @@ onMounted(() => {
 }
 
 .params-fieldset {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .thumbnails-info {
@@ -242,8 +242,8 @@ onMounted(() => {
   font-size: 0.9rem;
   line-height: 1.6;
   background: #f8f9fa;
-  padding: 10px;
-  border-radius: 4px;
+  padding: 0.625rem;
+  border-radius: 0.25rem;
 }
 
 .thumbnails-info :deep(strong) {
@@ -252,26 +252,26 @@ onMounted(() => {
 
 .settings-section {
   background: #f8f9fa;
-  padding: 15px 20px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+  padding: 0.9375rem 1.25rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.25rem;
 }
 
 .setting-row {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 0.9375rem;
 }
 
 .setting-row label {
   font-weight: 500;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .action-section {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
 }
 
 .reset-btn {
@@ -280,16 +280,16 @@ onMounted(() => {
 
 .progress-section {
   background: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 15px;
-  margin-bottom: 20px;
+  border: 0.0625rem solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.9375rem;
+  margin-bottom: 1.25rem;
 }
 
 .progress-labels {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
   font-weight: 600;
 }
 
@@ -302,7 +302,7 @@ onMounted(() => {
 }
 
 .progress-bar {
-  height: 8px;
+  height: 0.5rem;
 }
 
 .progress-bar :deep(.p-progressbar-value) {
@@ -310,10 +310,10 @@ onMounted(() => {
 }
 
 .status-message {
-  margin-top: 15px;
+  margin-top: 0.9375rem;
 }
 
 .status-message :deep(.pi-check-circle) {
-  margin-right: 8px;
+  margin-right: 0.5rem;
 }
 </style>

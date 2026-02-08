@@ -320,7 +320,7 @@ onMounted(() => {
           <Column selectionMode="multiple" headerStyle="width: 3rem" />
 
           <!-- ID -->
-          <Column field="id" :header="_('ms3_id')" style="width: 80px" sortable />
+          <Column field="id" :header="_('ms3_id')" style="width: 5rem" sortable />
 
           <!-- Name -->
           <Column field="name" :header="_('ms3_name')" sortable>
@@ -330,7 +330,7 @@ onMounted(() => {
           </Column>
 
           <!-- Type -->
-          <Column field="type" :header="_('ms3_type')" style="width: 200px">
+          <Column field="type" :header="_('ms3_type')" style="width: 12.5rem">
             <template #body="{ data }">
               <span class="link-type-badge">{{ data.type_label || _('ms3_link_' + data.type) }}</span>
             </template>
@@ -340,7 +340,7 @@ onMounted(() => {
           <Column field="description" :header="_('ms3_description')" />
 
           <!-- Actions -->
-          <Column :header="_('ms3_actions')" style="width: 120px">
+          <Column :header="_('ms3_actions')" style="width: 7.5rem">
             <template #body="{ data }">
               <ActionsColumn
                 :data="data"
@@ -371,7 +371,7 @@ onMounted(() => {
       :header="isNewLink ? _('link_create') : _('link_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '550px' }"
+      :style="{ width: '34.375rem' }"
       appendTo="self"
     >
       <div v-if="editingLink" class="ms3-link-form">
@@ -450,7 +450,7 @@ onMounted(() => {
   font-style: italic;
   padding: 0.5rem;
   background: #f3f4f6;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   margin-top: 0.25rem;
 }
 
@@ -466,7 +466,7 @@ onMounted(() => {
 
 <style scoped>
 .links-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -511,8 +511,8 @@ onMounted(() => {
   align-items: center;
   padding: 0.75rem 1rem;
   background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  border: 0.0625rem solid #fbbf24;
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -539,10 +539,10 @@ onMounted(() => {
 /* Link type badge */
 .link-type-badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 0.25rem 0.625rem;
   background: #e0e7ff;
   color: #3730a3;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   font-size: 0.85rem;
   font-weight: 500;
 }

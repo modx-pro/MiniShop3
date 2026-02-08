@@ -648,7 +648,7 @@ onMounted(async () => {
           :options="models"
           optionLabel="label"
           optionValue="value"
-          style="width: 200px;"
+          style="width: 12.5rem;"
           @change="onModelChange"
         />
       </div>
@@ -682,7 +682,7 @@ onMounted(async () => {
             <i class="pi pi-bars drag-handle"></i>
           </template>
         </Column>
-        <Column field="section_key" :header="_('ms3_model_section_key')" style="width: 150px">
+        <Column field="section_key" :header="_('ms3_model_section_key')" style="width: 9.375rem">
           <template #body="{ data }">
             <strong>{{ data.section_key }}</strong>
           </template>
@@ -692,7 +692,7 @@ onMounted(async () => {
             {{ data.label || '-' }}
           </template>
         </Column>
-        <Column :header="_('ms3_model_section_hidden')" style="width: 100px">
+        <Column :header="_('ms3_model_section_hidden')" style="width: 6.25rem">
           <template #body="{ data }">
             <Button
               :icon="data.hidden ? 'pi pi-eye-slash' : 'pi pi-eye'"
@@ -702,12 +702,12 @@ onMounted(async () => {
             />
           </template>
         </Column>
-        <Column :header="_('ms3_model_section_default')" style="width: 100px">
+        <Column :header="_('ms3_model_section_default')" style="width: 6.25rem">
           <template #body="{ data }">
             <i :class="data.is_default ? 'pi pi-check text-green-500' : 'pi pi-minus text-gray-400'" />
           </template>
         </Column>
-        <Column :header="_('actions')" style="width: 120px">
+        <Column :header="_('actions')" style="width: 7.5rem">
           <template #body="{ data }">
             <Button
               icon="pi pi-pencil"
@@ -752,12 +752,12 @@ onMounted(async () => {
                   <th style="width: 3rem"></th>
                   <th>{{ _('ms3_model_field_name') }}</th>
                   <th>{{ _('ms3_model_field_label') }}</th>
-                  <th style="width: 120px">{{ _('ms3_model_field_section') }}</th>
-                  <th style="width: 100px">{{ _('ms3_model_field_width') }}</th>
-                  <th style="width: 120px">{{ _('ms3_model_field_xtype') }}</th>
-                  <th style="width: 80px">{{ _('ms3_model_field_visible') }}</th>
-                  <th style="width: 80px">{{ _('ms3_model_field_required') }}</th>
-                  <th style="width: 120px">{{ _('actions') }}</th>
+                  <th style="width: 7.5rem">{{ _('ms3_model_field_section') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_model_field_width') }}</th>
+                  <th style="width: 7.5rem">{{ _('ms3_model_field_xtype') }}</th>
+                  <th style="width: 5rem">{{ _('ms3_model_field_visible') }}</th>
+                  <th style="width: 5rem">{{ _('ms3_model_field_required') }}</th>
+                  <th style="width: 7.5rem">{{ _('actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -836,7 +836,7 @@ onMounted(async () => {
       :header="isNewRecord ? _('ms3_model_field_add') : _('ms3_model_field_edit')"
       :modal="true"
       :closable="true"
-      style="width: 600px;"
+      style="width: 37.5rem;"
       appendTo="self"
     >
       <div v-if="editingField" class="edit-form">
@@ -958,7 +958,7 @@ onMounted(async () => {
             <label class="block mb-2 font-medium">{{ _('ms3_model_field_combo_source') }}</label>
             <Textarea
               v-model="comboSourceJson"
-              style="width: 100%; font-family: monospace; font-size: 12px;"
+              style="width: 100%; font-family: monospace; font-size: 0.75rem;"
               rows="10"
               :placeholder="comboSourcePlaceholder"
               :class="{ 'p-invalid': comboSourceError }"
@@ -993,7 +993,7 @@ onMounted(async () => {
       :header="isNewSection ? _('ms3_model_section_add') : _('ms3_model_section_edit')"
       :modal="true"
       :closable="true"
-      style="width: 500px;"
+      style="width: 31.25rem;"
       appendTo="self"
     >
       <div v-if="editingSection" class="edit-form">
@@ -1088,8 +1088,8 @@ onMounted(async () => {
 .model-filter-bar {
   padding: 0.75rem 1rem;
   background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  border: 0.0625rem solid #dee2e6;
 }
 
 .sections-panel {

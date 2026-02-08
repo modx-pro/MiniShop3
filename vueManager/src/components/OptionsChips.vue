@@ -250,10 +250,10 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  border: 0.0625rem solid #ced4da;
+  border-radius: 0.25rem;
   background: #ffffff;
-  min-height: 40px;
+  min-height: 2.5rem;
   cursor: text;
   transition: border-color 0.2s;
 }
@@ -274,7 +274,7 @@ onMounted(() => {
   background: #3b82f6;
   color: #ffffff;
   padding: 0.25rem 0.5rem;
-  border-radius: 3px;
+  border-radius: 0.1875rem;
   font-size: 0.875rem;
   white-space: nowrap;
 }
@@ -293,8 +293,8 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
   font-weight: 700;
@@ -313,7 +313,7 @@ onMounted(() => {
   outline: none;
   padding: 0.25rem;
   font-size: 1rem;
-  min-width: 120px;
+  min-width: 7.5rem;
   background: transparent;
 }
 
@@ -329,12 +329,12 @@ onMounted(() => {
   right: 0;
   z-index: 1000;
   background: #ffffff;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  border: 0.0625rem solid #ced4da;
+  border-radius: 0.25rem;
   margin-top: 0.25rem;
-  max-height: 200px;
+  max-height: 12.5rem;
   overflow-y: auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.15);
 }
 
 .suggestion-item {

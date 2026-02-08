@@ -1781,7 +1781,7 @@ onMounted(async () => {
     <Dialog
       v-model:visible="editProductDialogVisible"
       :header="_('order_product_edit')"
-      :style="{ width: '650px' }"
+      :style="{ width: '40.625rem' }"
       :modal="true"
       :closable="!savingProduct"
       :closeOnEscape="!savingProduct"
@@ -1994,7 +1994,7 @@ onMounted(async () => {
     <Dialog
       v-model:visible="addProductDialogVisible"
       :header="_('order_add_product_title')"
-      :style="{ width: '550px' }"
+      :style="{ width: '34.375rem' }"
       :modal="true"
       :closable="!savingNewProduct"
       :closeOnEscape="!savingNewProduct"
@@ -2113,7 +2113,7 @@ onMounted(async () => {
     <Dialog
       v-model:visible="showDuplicateDialog"
       :header="_('ms3_customer_duplicate_found')"
-      :style="{ width: '500px' }"
+      :style="{ width: '31.25rem' }"
       :modal="true"
       :closable="true"
       appendTo="self"
@@ -2689,13 +2689,13 @@ onMounted(async () => {
         <!-- History Tab - hidden in create mode -->
         <TabPanel v-if="!isCreateMode" :header="_('order_history')">
           <DataTable :value="logs" stripedRows responsiveLayout="scroll">
-            <Column field="timestamp" :header="_('log_date')" style="width: 180px">
+            <Column field="timestamp" :header="_('log_date')" style="width: 11.25rem">
               <template #body="{ data }">
                 {{ formatDate(data.timestamp || data.createdon) }}
               </template>
             </Column>
             <Column field="action" :header="_('log_action')" />
-            <Column field="user_name" :header="_('log_user')" style="width: 150px" />
+            <Column field="user_name" :header="_('log_user')" style="width: 9.375rem" />
             <Column field="entry_formatted" :header="_('log_entry')">
               <template #body="{ data }">
                 <span v-html="data.entry_formatted || formatLogEntry(data)"></span>
@@ -2716,7 +2716,7 @@ onMounted(async () => {
 
 <style scoped>
 .order-view {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .order-header {
@@ -2768,7 +2768,7 @@ onMounted(async () => {
 .col-12 { width: 100%; }
 
 /* Responsive: on small screens all fields become full-width */
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .col-1, .col-2, .col-3, .col-4, .col-5, .col-6,
   .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 {
     width: 100%;
@@ -2808,7 +2808,7 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .costs-grid {
     grid-template-columns: 1fr;
   }
@@ -2826,19 +2826,19 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 75rem) {
   .order-summary-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .order-summary-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 30rem) {
   .order-summary-grid {
     grid-template-columns: 1fr;
   }
@@ -2849,8 +2849,8 @@ onMounted(async () => {
   flex-direction: column;
   padding: 0.75rem 1rem;
   background: #f8fafc;
-  border-radius: 8px;
-  border-left: 3px solid #e2e8f0;
+  border-radius: 0.5rem;
+  border-left: 0.1875rem solid #e2e8f0;
 }
 
 .summary-item.summary-num {
@@ -2889,7 +2889,7 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 1rem;
   background: #f8fafc;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .no-fields-message {
@@ -2921,15 +2921,15 @@ onMounted(async () => {
 
 /* Fieldset styles */
 :deep(.p-fieldset) {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.5rem;
 }
 
 :deep(.p-fieldset .p-fieldset-legend) {
   font-size: 0.95rem;
   padding: 0.5rem 1rem;
   background: #f8fafc;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 :deep(.p-fieldset .p-fieldset-content) {
@@ -2938,7 +2938,7 @@ onMounted(async () => {
 
 /* Products table styles */
 .product-thumbnail {
-  border-radius: 4px;
+  border-radius: 0.25rem;
   object-fit: cover;
 }
 
@@ -2981,7 +2981,7 @@ onMounted(async () => {
   color: #1e293b;
   padding: 0.5rem;
   background: #f8fafc;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 .cost-display {
@@ -2990,7 +2990,7 @@ onMounted(async () => {
   color: #22c55e;
   padding: 0.5rem;
   background: #f0fdf4;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   text-align: right;
 }
 
@@ -3012,8 +3012,8 @@ onMounted(async () => {
 }
 
 .options-table {
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.375rem;
   padding: 0.75rem;
   background: #f8fafc;
 }
@@ -3030,13 +3030,13 @@ onMounted(async () => {
 }
 
 .options-type-select {
-  flex: 0 0 100px;
-  min-width: 100px;
+  flex: 0 0 6.25rem;
+  min-width: 6.25rem;
 }
 
 .options-key-input {
-  flex: 0 0 120px;
-  min-width: 100px;
+  flex: 0 0 7.5rem;
+  min-width: 6.25rem;
 }
 
 .options-value-input {
@@ -3045,8 +3045,8 @@ onMounted(async () => {
 }
 
 .options-json {
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.375rem;
   padding: 0.5rem;
   background: #f8fafc;
 }
@@ -3077,8 +3077,8 @@ onMounted(async () => {
 }
 
 .selected-product-details {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border: 0.0625rem solid #e2e8f0;
+  border-radius: 0.5rem;
   padding: 1rem;
   background: #f8fafc;
 }
@@ -3088,15 +3088,15 @@ onMounted(async () => {
   align-items: center;
   gap: 0.75rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 0.0625rem solid #e2e8f0;
 }
 
 .selected-product-image {
-  width: 50px;
-  height: 50px;
+  width: 3.125rem;
+  height: 3.125rem;
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  border: 0.0625rem solid #e2e8f0;
 }
 
 .selected-product-name {
@@ -3111,7 +3111,7 @@ onMounted(async () => {
   color: #22c55e;
   padding: 0.5rem;
   background: #f0fdf4;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   text-align: right;
 }
 
@@ -3189,8 +3189,8 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
+  border: 0.0625rem solid #bbf7d0;
+  border-radius: 0.5rem;
 }
 
 .selected-customer-badge i {
@@ -3213,8 +3213,8 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   background: #f8fafc;
-  border: 1px dashed #e2e8f0;
-  border-radius: 8px;
+  border: 0.0625rem dashed #e2e8f0;
+  border-radius: 0.5rem;
   color: #64748b;
   font-size: 0.875rem;
 }
@@ -3233,8 +3233,8 @@ onMounted(async () => {
   align-items: center;
   padding: 0.75rem;
   background: #fefce8;
-  border: 1px solid #fef08a;
-  border-radius: 8px;
+  border: 0.0625rem solid #fef08a;
+  border-radius: 0.5rem;
 }
 
 .create-customer-checkbox label {
@@ -3261,7 +3261,7 @@ onMounted(async () => {
   gap: 0.75rem;
   padding: 1rem;
   background: #fef3c7;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .duplicate-warning i {
@@ -3282,7 +3282,7 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 1rem;
   background: #f8fafc;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .duplicate-customer-info .info-row {
@@ -3293,7 +3293,7 @@ onMounted(async () => {
 .duplicate-customer-info .info-label {
   color: #64748b;
   font-size: 0.875rem;
-  min-width: 100px;
+  min-width: 6.25rem;
 }
 
 .duplicate-customer-info .info-value {
@@ -3304,9 +3304,9 @@ onMounted(async () => {
 
 /* Finalize order info panel */
 .finalize-info-panel {
-  border: 1px solid #bfdbfe;
+  border: 0.0625rem solid #bfdbfe;
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .finalize-info-panel :deep(.p-message-wrapper) {
@@ -3329,7 +3329,7 @@ onMounted(async () => {
 
 .finalize-info-text {
   flex: 1;
-  min-width: 200px;
+  min-width: 12.5rem;
   margin: 0;
   color: #1e40af;
   font-size: 0.9rem;
@@ -3340,7 +3340,7 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 40rem) {
   .finalize-info-content {
     flex-direction: column;
     align-items: stretch;
@@ -3380,11 +3380,11 @@ onMounted(async () => {
 }
 
 .ms3-product-suggestion-image {
-  width: 50px;
-  height: 50px;
+  width: 3.125rem;
+  height: 3.125rem;
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  border: 0.0625rem solid #e2e8f0;
   flex-shrink: 0;
 }
 
