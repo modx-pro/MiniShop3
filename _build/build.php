@@ -419,7 +419,7 @@ class MiniShop3Package
             foreach ($data['properties'] ?? [] as $k => $v) {
                 $properties[] = array_merge([
                     'name' => $k,
-                    'desc' => 'ms_prop_' . $k,
+                    'desc' => 'ms3_prop_' . $k,
                     'lexicon' => 'minishop3:properties',
                 ], $v);
             }
