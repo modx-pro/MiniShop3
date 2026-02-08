@@ -287,7 +287,7 @@ onMounted(async () => {
 <template>
   <div class="notifications-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -314,11 +314,11 @@ onMounted(async () => {
               <Select
                 v-model="filterStatusId"
                 :options="statusOptions"
-                optionLabel="name"
-                optionValue="id"
+                option-label="name"
+                option-value="id"
                 :placeholder="_('all')"
                 style="width: 100%"
-                showClear
+                show-clear
               />
             </div>
             <div style="flex: 1; min-width: 9.375rem">
@@ -328,11 +328,11 @@ onMounted(async () => {
               <Select
                 v-model="filterChannel"
                 :options="references.channels"
-                optionLabel="name"
-                optionValue="id"
+                option-label="name"
+                option-value="id"
                 :placeholder="_('all')"
                 style="width: 100%"
-                showClear
+                show-clear
               />
             </div>
             <div style="flex: 1; min-width: 9.375rem">
@@ -342,11 +342,11 @@ onMounted(async () => {
               <Select
                 v-model="filterRecipientType"
                 :options="references.recipient_types"
-                optionLabel="name"
-                optionValue="id"
+                option-label="name"
+                option-value="id"
                 :placeholder="_('all')"
                 style="width: 100%"
-                showClear
+                show-clear
               />
             </div>
             <div style="display: flex; gap: 0.5rem">
@@ -362,10 +362,15 @@ onMounted(async () => {
         </div>
 
         <!-- Table -->
-        <DataTable :value="notifications" :loading="loading" stripedRows responsiveLayout="scroll">
+        <DataTable
+          :value="notifications"
+          :loading="loading"
+          striped-rows
+          responsive-layout="scroll"
+        >
           <Column field="enabled" :header="_('ms3_notification_enabled')" style="width: 5rem">
             <template #body="{ data }">
-              <Checkbox :modelValue="data.enabled" :binary="true" @click="toggleEnabled(data)" />
+              <Checkbox :model-value="data.enabled" :binary="true" @click="toggleEnabled(data)" />
             </template>
           </Column>
 
@@ -419,15 +424,15 @@ onMounted(async () => {
                   icon="pi pi-pencil"
                   text
                   severity="secondary"
-                  @click="editNotification(data)"
                   :title="_('edit')"
+                  @click="editNotification(data)"
                 />
                 <Button
                   icon="pi pi-trash"
                   text
                   severity="danger"
-                  @click="deleteNotification(data)"
                   :title="_('delete')"
+                  @click="deleteNotification(data)"
                 />
               </div>
             </template>
@@ -443,7 +448,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '37.5rem' }"
-      :appendTo="'self'"
+      :append-to="'self'"
     >
       <div v-if="editingNotification" class="notification-form">
         <!-- Event -->
@@ -454,8 +459,8 @@ onMounted(async () => {
               id="event"
               v-model="editingNotification.event"
               :options="references.events"
-              optionLabel="name"
-              optionValue="id"
+              option-label="name"
+              option-value="id"
               class="w-full"
             />
           </div>
@@ -465,11 +470,11 @@ onMounted(async () => {
               id="status_id"
               v-model="editingNotification.status_id"
               :options="statusOptions"
-              optionLabel="name"
-              optionValue="id"
+              option-label="name"
+              option-value="id"
               :placeholder="_('ms3_notification_all_statuses')"
               class="w-full"
-              showClear
+              show-clear
             />
           </div>
         </div>
@@ -482,8 +487,8 @@ onMounted(async () => {
               id="recipient_type"
               v-model="editingNotification.recipient_type"
               :options="references.recipient_types"
-              optionLabel="name"
-              optionValue="id"
+              option-label="name"
+              option-value="id"
               class="w-full"
             />
           </div>
@@ -493,8 +498,8 @@ onMounted(async () => {
               id="channel"
               v-model="editingNotification.channel"
               :options="references.channels"
-              optionLabel="name"
-              optionValue="id"
+              option-label="name"
+              option-value="id"
               class="w-full"
             />
           </div>
@@ -554,7 +559,7 @@ onMounted(async () => {
         <!-- Enabled -->
         <div class="form-row">
           <div class="checkbox-col">
-            <Checkbox inputId="enabled" v-model="editingNotification.enabled" :binary="true" />
+            <Checkbox v-model="editingNotification.enabled" input-id="enabled" :binary="true" />
             <label for="enabled">{{ _('ms3_notification_enabled') }}</label>
           </div>
         </div>

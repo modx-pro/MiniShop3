@@ -15,7 +15,7 @@ return [
     'version' => '1.4.0',
     'release' => 'beta1',
     // Install package to site right after build
-    'install' => false,
+    'install' => true,
     // Which elements should be updated on package upgrade
     'update' => [
         'chunks' => true,

@@ -645,7 +645,7 @@ onMounted(async () => {
 <template>
   <div class="category-products-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -669,7 +669,12 @@ onMounted(async () => {
           </div>
           <div class="grid-header-right">
             <div class="nested-checkbox">
-              <Checkbox v-model="nested" inputId="nested" :binary="true" @change="onNestedChange" />
+              <Checkbox
+                v-model="nested"
+                input-id="nested"
+                :binary="true"
+                @change="onNestedChange"
+              />
               <label for="nested">{{ _('category_show_nested') }}</label>
             </div>
           </div>
@@ -712,10 +717,10 @@ onMounted(async () => {
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
                   :options="filter.options || []"
-                  optionLabel="label"
-                  optionValue="value"
+                  option-label="label"
+                  option-value="value"
                   :placeholder="_(filter.placeholder || 'all')"
-                  :showClear="true"
+                  :show-clear="true"
                   class="w-full"
                   @change="applyFilters"
                 />
@@ -823,9 +828,9 @@ onMounted(async () => {
                 :handle="canDrag ? '.drag-handle' : null"
                 :disabled="!canDrag"
                 item-key="id"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: product, index }">
                   <tr :class="{ 'p-row-odd': index % 2 === 1 }">

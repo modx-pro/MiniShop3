@@ -537,7 +537,7 @@ onMounted(async () => {
 <template>
   <div class="deliveries-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -626,9 +626,9 @@ onMounted(async () => {
             <tr>
               <th style="width: 2.5rem">
                 <Checkbox
-                  :modelValue="selectAll"
+                  :model-value="selectAll"
                   :binary="true"
-                  @update:modelValue="onSelectAllChange"
+                  @update:model-value="onSelectAllChange"
                 />
               </th>
               <th style="width: 2.5rem"></th>
@@ -650,9 +650,9 @@ onMounted(async () => {
               <tr>
                 <td>
                   <Checkbox
-                    :modelValue="selectedItems.some(item => item.id === delivery.id)"
+                    :model-value="selectedItems.some(item => item.id === delivery.id)"
                     :binary="true"
-                    @update:modelValue="
+                    @update:model-value="
                       val => {
                         if (val) {
                           selectedItems.push(delivery)
@@ -722,7 +722,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '43.75rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingDelivery">
         <Tabs v-model:value="activeTab">
@@ -761,7 +761,7 @@ onMounted(async () => {
                     <Checkbox
                       v-model="editingDelivery.active"
                       :binary="true"
-                      inputId="delivery-active"
+                      input-id="delivery-active"
                     />
                     <label for="delivery-active">{{ _('delivery_active') }}</label>
                   </div>
@@ -798,7 +798,7 @@ onMounted(async () => {
                     <InputNumber
                       v-model="editingDelivery.weight_price"
                       class="w-full"
-                      :minFractionDigits="2"
+                      :min-fraction-digits="2"
                     />
                     <small class="form-hint">{{ _('ms3_weight_price_help') }}</small>
                   </div>
@@ -810,7 +810,7 @@ onMounted(async () => {
                     <InputNumber
                       v-model="editingDelivery.free_delivery_amount"
                       class="w-full"
-                      :minFractionDigits="2"
+                      :min-fraction-digits="2"
                     />
                     <small class="form-hint">{{ _('ms3_free_delivery_amount_help') }}</small>
                   </div>
@@ -820,7 +820,7 @@ onMounted(async () => {
                     <InputNumber
                       v-model="editingDelivery.distance_price"
                       class="w-full"
-                      :minFractionDigits="2"
+                      :min-fraction-digits="2"
                     />
                     <small class="form-hint">{{ _('ms3_distance_price_help') }}</small>
                   </div>
@@ -841,8 +841,8 @@ onMounted(async () => {
                 <DataTable
                   v-else
                   :value="payments"
-                  stripedRows
-                  responsiveLayout="scroll"
+                  striped-rows
+                  responsive-layout="scroll"
                   class="payments-table"
                 >
                   <Column field="name" :header="_('payment_name')">
@@ -867,8 +867,8 @@ onMounted(async () => {
                   <Column :header="_('delivery_active')" style="width: 6.25rem">
                     <template #body="{ data }">
                       <ToggleSwitch
-                        :modelValue="isPaymentEnabled(data.id)"
-                        @update:modelValue="val => togglePayment(data.id, val)"
+                        :model-value="isPaymentEnabled(data.id)"
+                        @update:model-value="val => togglePayment(data.id, val)"
                       />
                     </template>
                   </Column>

@@ -174,7 +174,7 @@ window.MS3_initProductTabs = function (config) {
 
   // Check if already mounted
   if (container.__vueApp__) {
-    console.info('[ProductTabs] Already mounted, returning existing instance')
+    // Already mounted, return existing instance
     return {
       app: container.__vueApp__,
       instance: container.__vueInstance__,

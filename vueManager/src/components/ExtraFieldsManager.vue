@@ -459,7 +459,7 @@ onMounted(() => {
 <template>
   <div class="extra-fields-manager">
     <Toast />
-    <ConfirmDialog group="extra-fields" appendTo="self" />
+    <ConfirmDialog group="extra-fields" append-to="self" />
 
     <p class="tab-description">{{ _('ms3_utilities_extra_fields_description') }}</p>
 
@@ -470,8 +470,8 @@ onMounted(() => {
           id="class-filter"
           v-model="selectedClass"
           :options="classOptions"
-          optionLabel="label"
-          optionValue="value"
+          option-label="label"
+          option-value="value"
           :placeholder="_('ms3_vue_extra_fields_select_class')"
           style="min-width: 17.5rem"
           @change="onClassFilterChange"
@@ -480,8 +480,8 @@ onMounted(() => {
       <Button
         :label="_('ms3_vue_extra_fields_create')"
         icon="pi pi-plus"
-        @click="openCreateDialog"
         :disabled="loading"
+        @click="openCreateDialog"
       />
     </div>
 
@@ -491,14 +491,14 @@ onMounted(() => {
         <DataTable
           :value="fields"
           :loading="loading"
-          stripedRows
-          showGridlines
-          responsiveLayout="scroll"
+          striped-rows
+          show-gridlines
+          responsive-layout="scroll"
           :paginator="fields.length > 10"
           :rows="10"
-          :rowsPerPageOptions="[10, 20, 50]"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="Showing {first} - {last} of {totalRecords} fields"
+          :rows-per-page-options="[10, 20, 50]"
+          paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+          current-page-report-template="Showing {first} - {last} of {totalRecords} fields"
         >
           <Column field="id" :header="_('ms3_vue_table_id')" style="width: 3.75rem" sortable />
 
@@ -558,21 +558,21 @@ onMounted(() => {
           <Column :header="_('ms3_vue_table_actions')" style="width: 9.375rem">
             <template #body="{ data }">
               <Button
+                v-tooltip.top="_('ms3_vue_extra_fields_edit')"
                 icon="pi pi-pencil"
                 severity="secondary"
                 text
                 rounded
-                @click.stop="openEditDialog(data)"
-                v-tooltip.top="_('ms3_vue_extra_fields_edit')"
                 class="mr-1"
+                @click.stop="openEditDialog(data)"
               />
               <Button
+                v-tooltip.top="_('ms3_vue_extra_fields_delete')"
                 icon="pi pi-trash"
                 severity="danger"
                 text
                 rounded
                 @click.stop="confirmDelete(data)"
-                v-tooltip.top="_('ms3_vue_extra_fields_delete')"
               />
             </template>
           </Column>
@@ -593,7 +593,7 @@ onMounted(() => {
       :modal="true"
       :closable="!saving"
       :style="{ width: '43.75rem' }"
-      appendTo="self"
+      append-to="self"
       @hide="saving = false"
     >
       <div class="edit-field-form">
@@ -607,8 +607,8 @@ onMounted(() => {
                 id="field-class"
                 v-model="fieldForm.class"
                 :options="classOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="_('ms3_vue_extra_fields_select_class')"
                 class="w-full"
                 :disabled="isEditMode"
@@ -657,15 +657,15 @@ onMounted(() => {
                 id="field-xtype"
                 v-model="fieldForm.xtype"
                 :options="xtypeOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
               />
             </div>
 
             <!-- Dropdown options (only for ms3-combo-select) -->
-            <div class="field col-12" v-if="fieldForm.xtype === 'ms3-combo-select'">
+            <div v-if="fieldForm.xtype === 'ms3-combo-select'" class="field col-12">
               <label for="field-select-options">{{ _('ms3_vue_select_options_label') }}</label>
               <Textarea
                 id="field-select-options"
@@ -689,8 +689,8 @@ onMounted(() => {
                 id="field-dbtype"
                 v-model="fieldForm.dbtype"
                 :options="dbtypeOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
                 :disabled="isEditMode"
@@ -716,8 +716,8 @@ onMounted(() => {
                 id="field-phptype"
                 v-model="fieldForm.phptype"
                 :options="phptypeOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
                 :disabled="isEditMode"
@@ -747,8 +747,8 @@ onMounted(() => {
                 id="field-default"
                 v-model="fieldForm.default"
                 :options="defaultOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
                 :disabled="isEditMode"
@@ -756,7 +756,7 @@ onMounted(() => {
             </div>
 
             <!-- User-defined default value -->
-            <div class="field col-6" v-if="fieldForm.default === 'USER_DEFINED'">
+            <div v-if="fieldForm.default === 'USER_DEFINED'" class="field col-6">
               <label for="field-default-value">{{ _('ms3_vue_dialog_default_value') }}</label>
               <InputText
                 id="field-default-value"
@@ -787,8 +787,8 @@ onMounted(() => {
                 id="field-index-type"
                 v-model="fieldForm.index_type"
                 :options="indexTypeOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
                 :disabled="isEditMode"
@@ -814,14 +814,14 @@ onMounted(() => {
           :label="_('ms3_vue_dialog_cancel')"
           icon="pi pi-times"
           text
-          @click="dialogVisible = false"
           :disabled="saving"
+          @click="dialogVisible = false"
         />
         <Button
           :label="isEditMode ? _('ms3_vue_dialog_save') : _('ms3_vue_dialog_create')"
           icon="pi pi-check"
-          @click="saveField"
           :loading="saving"
+          @click="saveField"
         />
       </template>
     </Dialog>

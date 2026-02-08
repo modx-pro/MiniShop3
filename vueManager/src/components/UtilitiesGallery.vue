@@ -163,17 +163,17 @@ onMounted(() => {
         }}</label>
         <InputNumber
           v-model="limit"
-          inputId="limit-input"
+          input-id="limit-input"
           :min="1"
           :max="100"
           :disabled="isRunning"
-          showButtons
-          buttonLayout="horizontal"
+          show-buttons
+          button-layout="horizontal"
           :step="5"
-          decrementButtonClass="p-button-secondary"
-          incrementButtonClass="p-button-secondary"
-          incrementButtonIcon="pi pi-plus"
-          decrementButtonIcon="pi pi-minus"
+          decrement-button-class="p-button-secondary"
+          increment-button-class="p-button-secondary"
+          increment-button-icon="pi pi-plus"
+          decrement-button-icon="pi pi-minus"
         />
       </div>
     </div>
@@ -185,28 +185,28 @@ onMounted(() => {
         icon="pi pi-refresh"
         :loading="isRunning"
         :disabled="!canStart"
-        @click="startRegeneration"
         severity="primary"
+        @click="startRegeneration"
       />
       <Button
         v-if="isCompleted"
         :label="_('ms3_utilities_gallery_reset', 'Reset')"
         icon="pi pi-times"
         severity="secondary"
-        @click="resetState"
         class="reset-btn"
+        @click="resetState"
       />
     </div>
 
     <!-- Progress Section -->
-    <div class="progress-section" v-if="isRunning || isCompleted">
+    <div v-if="isRunning || isCompleted" class="progress-section">
       <div class="progress-labels">
         <span class="progress-percent">{{ progress }}%</span>
-        <span class="progress-iteration" v-if="!isCompleted">
+        <span v-if="!isCompleted" class="progress-iteration">
           {{ currentIteration }} / {{ totalIterations }}
         </span>
       </div>
-      <ProgressBar :value="progress" :showValue="false" class="progress-bar" />
+      <ProgressBar :value="progress" :show-value="false" class="progress-bar" />
     </div>
 
     <!-- Status Messages -->
@@ -220,8 +220,8 @@ onMounted(() => {
       v-if="errorMessage"
       severity="error"
       :closable="true"
-      @close="errorMessage = null"
       class="status-message"
+      @close="errorMessage = null"
     >
       {{ errorMessage }}
     </Message>

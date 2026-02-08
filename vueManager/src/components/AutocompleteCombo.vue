@@ -1,14 +1,14 @@
 <template>
-  <div class="autocomplete-combo-wrapper" ref="wrapperRef">
+  <div ref="wrapperRef" class="autocomplete-combo-wrapper">
     <AutoComplete
-      :inputId="inputId"
       v-model="localValue"
+      :input-id="inputId"
       :suggestions="filteredValues"
       :placeholder="placeholder"
       :disabled="disabled"
       :loading="loading"
-      :completeOnFocus="true"
-      :forceSelection="false"
+      :complete-on-focus="true"
+      :force-selection="false"
       class="w-full"
       @complete="search"
       @change="handleChange"

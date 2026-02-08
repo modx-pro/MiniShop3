@@ -499,7 +499,7 @@ onMounted(async () => {
 <template>
   <div class="payments-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -588,9 +588,9 @@ onMounted(async () => {
             <tr>
               <th style="width: 2.5rem">
                 <Checkbox
-                  :modelValue="selectAll"
+                  :model-value="selectAll"
                   :binary="true"
-                  @update:modelValue="onSelectAllChange"
+                  @update:model-value="onSelectAllChange"
                 />
               </th>
               <th style="width: 2.5rem"></th>
@@ -612,9 +612,9 @@ onMounted(async () => {
               <tr>
                 <td>
                   <Checkbox
-                    :modelValue="selectedItems.some(item => item.id === payment.id)"
+                    :model-value="selectedItems.some(item => item.id === payment.id)"
                     :binary="true"
-                    @update:modelValue="
+                    @update:model-value="
                       val => {
                         if (val) {
                           selectedItems.push(payment)
@@ -684,7 +684,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '37.5rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingPayment">
         <Tabs v-model:value="activeTab">
@@ -723,7 +723,7 @@ onMounted(async () => {
                     <Checkbox
                       v-model="editingPayment.active"
                       :binary="true"
-                      inputId="payment-active"
+                      input-id="payment-active"
                     />
                     <label for="payment-active">{{ _('payment_active') }}</label>
                   </div>
@@ -764,8 +764,8 @@ onMounted(async () => {
                 <DataTable
                   v-else
                   :value="deliveries"
-                  stripedRows
-                  responsiveLayout="scroll"
+                  striped-rows
+                  responsive-layout="scroll"
                   class="deliveries-table"
                 >
                   <Column field="name" :header="_('delivery_name')">
@@ -790,8 +790,8 @@ onMounted(async () => {
                   <Column :header="_('payment_active')" style="width: 6.25rem">
                     <template #body="{ data }">
                       <ToggleSwitch
-                        :modelValue="isDeliveryEnabled(data.id)"
-                        @update:modelValue="val => toggleDelivery(data.id, val)"
+                        :model-value="isDeliveryEnabled(data.id)"
+                        @update:model-value="val => toggleDelivery(data.id, val)"
                       />
                     </template>
                   </Column>

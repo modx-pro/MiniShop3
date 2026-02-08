@@ -4,8 +4,8 @@
     <InputText
       v-if="fieldConfig.xtype === 'textfield'"
       :id="fieldConfig.id"
-      :name="fieldConfig.name"
       v-model="localValue"
+      :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
       :maxlength="fieldConfig.props?.maxlength"
@@ -16,15 +16,15 @@
     <InputNumber
       v-else-if="fieldConfig.xtype === 'numberfield'"
       :id="fieldConfig.id"
-      :name="fieldConfig.name"
       v-model="localValue"
+      :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
       :min="fieldConfig.props?.min"
       :max="fieldConfig.props?.max"
-      :minFractionDigits="fieldConfig.props?.minFractionDigits ?? 0"
-      :maxFractionDigits="fieldConfig.props?.maxFractionDigits ?? 2"
-      :useGrouping="false"
+      :min-fraction-digits="fieldConfig.props?.minFractionDigits ?? 0"
+      :max-fraction-digits="fieldConfig.props?.maxFractionDigits ?? 2"
+      :use-grouping="false"
       :locale="fieldConfig.props?.locale ?? 'en-US'"
       :mode="fieldConfig.props?.mode ?? 'decimal'"
       :currency="fieldConfig.props?.currency"
@@ -36,12 +36,12 @@
     <!-- Checkbox (ExtJS xcheckbox) -->
     <div v-else-if="fieldConfig.xtype === 'xcheckbox' || fieldConfig.xtype === 'checkbox'">
       <Checkbox
-        :inputId="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
         :disabled="disabled"
         :binary="true"
-        :trueValue="fieldConfig.inputValue ?? 1"
-        :falseValue="0"
+        :true-value="fieldConfig.inputValue ?? 1"
+        :false-value="0"
         @change="handleBlur"
       />
       <!-- Hidden field to pass correct value to form -->
@@ -51,11 +51,11 @@
     <!-- Switch / Toggle -->
     <ToggleSwitch
       v-else-if="fieldConfig.xtype === 'switch'"
-      :inputId="fieldConfig.id"
       v-model="localValue"
+      :input-id="fieldConfig.id"
       :disabled="disabled"
-      :trueValue="fieldConfig.props?.trueValue ?? true"
-      :falseValue="fieldConfig.props?.falseValue ?? false"
+      :true-value="fieldConfig.props?.trueValue ?? true"
+      :false-value="fieldConfig.props?.falseValue ?? false"
       @change="handleBlur"
     />
 
@@ -63,12 +63,12 @@
     <Textarea
       v-else-if="fieldConfig.xtype === 'textarea'"
       :id="fieldConfig.id"
-      :name="fieldConfig.name"
       v-model="localValue"
+      :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
       :rows="fieldConfig.props?.rows ?? 3"
-      :autoResize="fieldConfig.props?.autoResize ?? false"
+      :auto-resize="fieldConfig.props?.autoResize ?? false"
       @blur="handleBlur"
     />
 
@@ -78,23 +78,23 @@
       :id="fieldConfig.id"
       v-model="localValue"
       :options="fieldConfig.props?.options ?? []"
-      :optionLabel="fieldConfig.props?.optionLabel ?? 'label'"
-      :optionValue="fieldConfig.props?.optionValue ?? 'value'"
+      :option-label="fieldConfig.props?.optionLabel ?? 'label'"
+      :option-value="fieldConfig.props?.optionValue ?? 'value'"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
-      :showClear="fieldConfig.props?.showClear ?? true"
+      :show-clear="fieldConfig.props?.showClear ?? true"
       @change="handleBlur"
     />
 
     <!-- Date picker -->
     <DatePicker
       v-else-if="fieldConfig.xtype === 'datefield'"
-      :inputId="fieldConfig.id"
       v-model="localValue"
+      :input-id="fieldConfig.id"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
-      :showIcon="fieldConfig.props?.showIcon ?? true"
-      :dateFormat="fieldConfig.props?.dateFormat ?? 'dd.mm.yy'"
+      :show-icon="fieldConfig.props?.showIcon ?? true"
+      :date-format="fieldConfig.props?.dateFormat ?? 'dd.mm.yy'"
       @blur="handleBlur"
     />
 
@@ -111,8 +111,8 @@
     <!-- Vendor combo (ms3-combo-vendor) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-vendor'">
       <VendorCombo
-        :inputId="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Select vendor'"
         :disabled="disabled"
         @change="handleBlur"
@@ -124,9 +124,9 @@
     <!-- Autocomplete combo (ms3-combo-autocomplete) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-autocomplete'">
       <AutocompleteCombo
-        :inputId="fieldConfig.name"
-        :fieldName="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
+        :field-name="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Start typing...'"
         :disabled="disabled"
         @change="handleBlur"
@@ -138,9 +138,9 @@
     <!-- Options chips (ms3-combo-options) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-options'">
       <OptionsChips
-        :inputId="fieldConfig.name"
-        :optionKey="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
+        :option-key="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Add options...'"
         :disabled="disabled"
         @change="handleBlur"
@@ -160,14 +160,14 @@
     <!-- Dropdown select (ms3-combo-select) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-select'">
       <Select
-        :inputId="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
         :options="selectOptions"
-        optionLabel="label"
-        optionValue="value"
+        option-label="label"
+        option-value="value"
         :placeholder="fieldConfig.placeholder || 'Select...'"
         :disabled="disabled"
-        :showClear="true"
+        :show-clear="true"
         class="w-full"
         @change="handleBlur"
       />

@@ -268,8 +268,8 @@ onMounted(() => {
                 <template v-if="field.xtype === 'xcheckbox' || field.xtype === 'checkbox'">
                   <div class="checkbox-wrapper">
                     <DynamicField
-                      :field-config="field"
                       v-model="fieldValues[field.name]"
+                      :field-config="field"
                       :disabled="loading || saving"
                       @blur="handleFieldChange(field.name, $event.value)"
                     />
@@ -291,8 +291,8 @@ onMounted(() => {
                   </label>
 
                   <DynamicField
-                    :field-config="field"
                     v-model="fieldValues[field.name]"
+                    :field-config="field"
                     :disabled="loading || saving"
                     @blur="handleFieldChange(field.name, $event.value)"
                   />

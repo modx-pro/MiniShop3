@@ -263,7 +263,7 @@ onMounted(() => {
 <template>
   <div class="links-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -317,12 +317,12 @@ onMounted(() => {
           v-model:selection="selectedItems"
           :value="links"
           :loading="loading"
-          stripedRows
-          responsiveLayout="scroll"
-          dataKey="id"
+          striped-rows
+          responsive-layout="scroll"
+          data-key="id"
         >
           <!-- Selection column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" />
+          <Column selection-mode="multiple" header-style="width: 3rem" />
 
           <!-- ID -->
           <Column field="id" :header="_('ms3_id')" style="width: 5rem" sortable />
@@ -365,8 +365,8 @@ onMounted(() => {
         <Paginator
           :first="first"
           :rows="rows"
-          :totalRecords="totalRecords"
-          :rowsPerPageOptions="[10, 20, 50, 100]"
+          :total-records="totalRecords"
+          :rows-per-page-options="[10, 20, 50, 100]"
           @page="onPage"
         />
       </template>
@@ -379,7 +379,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '34.375rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingLink" class="ms3-link-form">
         <!-- Name -->
@@ -394,8 +394,8 @@ onMounted(() => {
           <Select
             v-model="editingLink.type"
             :options="linkTypes"
-            optionLabel="label"
-            optionValue="value"
+            option-label="label"
+            option-value="value"
             :disabled="!isNewLink"
             class="w-full"
             :placeholder="_('select_type')"

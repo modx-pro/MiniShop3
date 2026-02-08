@@ -196,9 +196,9 @@ const testPostRequest = async () => {
                   <Button
                     label="Execute Health Check"
                     icon="pi pi-heart"
-                    @click="testHealthCheck"
                     :loading="loading"
                     class="mt-3"
+                    @click="testHealthCheck"
                   />
 
                   <div v-if="healthData" class="mt-3">
@@ -222,9 +222,9 @@ const testPostRequest = async () => {
                   <Button
                     label="Execute Authorized Request"
                     icon="pi pi-lock"
-                    @click="testAuthRequest"
                     :loading="loading"
                     class="mt-3"
+                    @click="testAuthRequest"
                   />
 
                   <div v-if="testResponse" class="mt-3">
@@ -248,9 +248,9 @@ const testPostRequest = async () => {
                   <Button
                     label="Execute Echo Request"
                     icon="pi pi-send"
-                    @click="testPostRequest"
                     :loading="loading"
                     class="mt-3"
+                    @click="testPostRequest"
                   />
 
                   <div v-if="testResponse" class="mt-3">

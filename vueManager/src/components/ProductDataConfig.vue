@@ -547,9 +547,9 @@ onMounted(() => {
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
               size="small"
-              @click="saveSections"
               :loading="saving"
               :disabled="loadingSections"
+              @click="saveSections"
             />
             <Button
               :label="_('ms3_vue_section_add')"
@@ -563,7 +563,7 @@ onMounted(() => {
 
       <template #content>
         <!-- Sections table with VueDraggable -->
-        <div class="p-datatable p-component p-datatable-striped" v-if="!loadingSections">
+        <div v-if="!loadingSections" class="p-datatable p-component p-datatable-striped">
           <div class="p-datatable-wrapper">
             <table class="p-datatable-table" style="min-width: 50rem">
               <thead class="p-datatable-thead">
@@ -581,9 +581,9 @@ onMounted(() => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="key"
-                @end="onSectionDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onSectionDragEnd"
               >
                 <template #item="{ element: section, index }">
                   <tr>
@@ -594,8 +594,8 @@ onMounted(() => {
                       <Checkbox
                         v-model="section.hidden"
                         :binary="true"
-                        :trueValue="false"
-                        :falseValue="true"
+                        :true-value="false"
+                        :false-value="true"
                       />
                     </td>
                     <td>{{ section.key }}</td>
@@ -605,16 +605,16 @@ onMounted(() => {
                         icon="pi pi-pencil"
                         size="small"
                         text
-                        @click="openEditSectionDialog(section, index)"
                         :title="_('ms3_vue_section_edit')"
+                        @click="openEditSectionDialog(section, index)"
                       />
                       <Button
                         icon="pi pi-trash"
                         size="small"
                         severity="danger"
                         text
-                        @click="deleteSection(section.key)"
                         :title="_('ms3_vue_section_delete')"
+                        @click="deleteSection(section.key)"
                       />
                     </td>
                   </tr>
@@ -639,16 +639,16 @@ onMounted(() => {
           <Button
             :label="_('ms3_vue_save_changes')"
             icon="pi pi-save"
-            @click="saveConfig"
             :loading="saving"
             :disabled="loading"
+            @click="saveConfig"
           />
         </div>
       </template>
 
       <template #content>
         <!-- Fields table with VueDraggable -->
-        <div class="p-datatable p-component p-datatable-striped" v-if="!loading">
+        <div v-if="!loading" class="p-datatable p-component p-datatable-striped">
           <div class="p-datatable-wrapper">
             <table class="p-datatable-table" style="min-width: 50rem">
               <thead class="p-datatable-thead">
@@ -669,9 +669,9 @@ onMounted(() => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="name"
-                @end="onFieldsDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onFieldsDragEnd"
               >
                 <template #item="{ element: field, index }">
                   <tr>
@@ -682,8 +682,8 @@ onMounted(() => {
                       <Checkbox
                         v-model="field.visible"
                         :binary="true"
-                        :trueValue="true"
-                        :falseValue="false"
+                        :true-value="true"
+                        :false-value="false"
                       />
                     </td>
                     <td>{{ field.name }}</td>
@@ -696,8 +696,8 @@ onMounted(() => {
                         icon="pi pi-pencil"
                         size="small"
                         outlined
-                        @click="openEditDialog(field, index)"
                         :title="_('ms3_vue_edit_field_button')"
+                        @click="openEditDialog(field, index)"
                       />
                     </td>
                   </tr>
@@ -720,7 +720,7 @@ onMounted(() => {
       modal
       :header="_('ms3_vue_add_section_title')"
       :style="{ width: '37.5rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div class="edit-field-form">
         <div class="form-grid">
@@ -764,11 +764,11 @@ onMounted(() => {
           <div class="field col-12">
             <div style="display: flex; align-items: center; gap: 0.5rem">
               <Checkbox
-                inputId="section-hidden"
                 v-model="newSection.hidden"
+                input-id="section-hidden"
                 :binary="true"
-                :trueValue="false"
-                :falseValue="true"
+                :true-value="false"
+                :false-value="true"
               />
               <label
                 for="section-hidden"
@@ -803,7 +803,7 @@ onMounted(() => {
           : _('ms3_vue_edit_section_title')
       "
       :style="{ width: '37.5rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingSection" class="edit-field-form">
         <div class="form-grid">
@@ -844,11 +844,11 @@ onMounted(() => {
           <div class="field col-12">
             <div style="display: flex; align-items: center; gap: 0.5rem">
               <Checkbox
-                inputId="edit-section-hidden"
                 v-model="editingSection.hidden"
+                input-id="edit-section-hidden"
                 :binary="true"
-                :trueValue="false"
-                :falseValue="true"
+                :true-value="false"
+                :false-value="true"
               />
               <label
                 for="edit-section-hidden"
@@ -883,7 +883,7 @@ onMounted(() => {
           : _('ms3_vue_field_edit_title')
       "
       :style="{ width: '37.5rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingField" class="edit-field-form">
         <div class="form-grid">
@@ -901,10 +901,10 @@ onMounted(() => {
               id="field-section"
               v-model="editingField.section"
               :options="availableSectionOptions"
-              optionLabel="label"
-              optionValue="value"
+              option-label="label"
+              option-value="value"
               :placeholder="_('ms3_vue_field_section_placeholder')"
-              showClear
+              show-clear
               class="w-full"
             />
             <small>{{ _('ms3_vue_field_section_help') }}</small>
@@ -951,11 +951,11 @@ onMounted(() => {
           <div class="field col-6 field-checkbox">
             <div class="checkbox-wrapper">
               <Checkbox
-                inputId="field-visible"
                 v-model="editingField.visible"
+                input-id="field-visible"
                 :binary="true"
-                :trueValue="true"
-                :falseValue="false"
+                :true-value="true"
+                :false-value="false"
               />
               <label
                 for="field-visible"
@@ -987,20 +987,20 @@ onMounted(() => {
           :label="_('ms3_vue_field_cancel')"
           icon="pi pi-times"
           severity="secondary"
-          @click="closeEditDialog"
           :disabled="saving"
+          @click="closeEditDialog"
         />
         <Button
           :label="_('ms3_vue_field_save')"
           icon="pi pi-save"
-          @click="saveFieldChanges"
           :loading="saving"
+          @click="saveFieldChanges"
         />
       </template>
     </Dialog>
 
     <Toast />
-    <ConfirmDialog group="product-data-config" appendTo="self" />
+    <ConfirmDialog group="product-data-config" append-to="self" />
   </div>
 </template>
 

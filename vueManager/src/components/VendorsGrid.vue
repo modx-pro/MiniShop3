@@ -558,7 +558,7 @@ onMounted(async () => {
 <template>
   <div class="vendors-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -663,9 +663,9 @@ onMounted(async () => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="id"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: vendor }">
                   <tr :class="{ 'p-row-odd': vendors.indexOf(vendor) % 2 === 1 }">
@@ -727,8 +727,8 @@ onMounted(async () => {
           <Paginator
             :first="first"
             :rows="rows"
-            :totalRecords="totalRecords"
-            :rowsPerPageOptions="[10, 20, 50, 100]"
+            :total-records="totalRecords"
+            :rows-per-page-options="[10, 20, 50, 100]"
             @page="onPage"
           />
         </div>
@@ -742,7 +742,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '43.75rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingVendor">
         <!-- Dynamic form based on sections config -->

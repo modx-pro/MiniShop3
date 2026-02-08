@@ -761,7 +761,7 @@ onMounted(() => {
 <template>
   <div class="grid-fields-config">
     <Toast />
-    <ConfirmDialog group="grid-fields-config" appendTo="self" />
+    <ConfirmDialog group="grid-fields-config" append-to="self" />
 
     <p class="tab-description">{{ _('ms3_utilities_grid_fields_description') }}</p>
 
@@ -774,8 +774,8 @@ onMounted(() => {
           :options="gridOptions"
           option-label="label"
           option-value="value"
-          @change="onGridChange"
           style="min-width: 12.5rem"
+          @change="onGridChange"
         />
       </div>
       <Button :label="_('add_field')" icon="pi pi-plus" @click="openAddDialog" />
@@ -784,7 +784,7 @@ onMounted(() => {
     <Card>
       <template #content>
         <!-- Fields table with VueDraggable -->
-        <div class="p-datatable p-component p-datatable-striped" v-if="!loading">
+        <div v-if="!loading" class="p-datatable p-component p-datatable-striped">
           <div class="p-datatable-wrapper">
             <table class="p-datatable-table">
               <thead class="p-datatable-thead">
@@ -806,9 +806,9 @@ onMounted(() => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="name"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: field, index }">
                   <tr>
@@ -840,8 +840,8 @@ onMounted(() => {
                         size="small"
                         text
                         :title="_('edit')"
-                        @click="openEditDialog(field, index)"
                         class="mr-2"
+                        @click="openEditDialog(field, index)"
                       />
                       <Button
                         icon="pi pi-trash"
@@ -879,7 +879,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '37.5rem' }"
-      appendTo="self"
+      append-to="self"
       @hide="closeAddDialog"
     >
       <div class="field mb-3">
@@ -1004,7 +1004,7 @@ onMounted(() => {
             option-label="label"
             option-value="value"
             :placeholder="_('field_source_field_placeholder')"
-            :showClear="true"
+            :show-clear="true"
             class="w-full"
           />
           <small class="text-muted">{{ _('field_source_field_hint') }}</small>
@@ -1018,7 +1018,7 @@ onMounted(() => {
             option-label="label"
             option-value="value"
             :placeholder="_('field_color_field_placeholder')"
-            :showClear="true"
+            :show-clear="true"
             class="w-full"
           />
           <small class="text-muted">{{ _('field_color_field_hint') }}</small>
@@ -1053,14 +1053,14 @@ onMounted(() => {
 
       <div class="flex flex-wrap gap-4 mb-3">
         <div class="flex align-items-center">
-          <Checkbox input-id="new-field-visible" v-model="newField.visible" :binary="true" />
+          <Checkbox v-model="newField.visible" input-id="new-field-visible" :binary="true" />
           <label for="new-field-visible" class="ml-2 cursor-pointer">{{ _('visible') }}</label>
         </div>
 
         <div class="flex align-items-center">
           <Checkbox
-            input-id="new-field-sortable"
             v-model="newField.sortable"
+            input-id="new-field-sortable"
             :binary="true"
             :disabled="newField.type === 'actions'"
           />
@@ -1074,8 +1074,8 @@ onMounted(() => {
 
         <div class="flex align-items-center">
           <Checkbox
-            input-id="new-field-filterable"
             v-model="newField.filterable"
+            input-id="new-field-filterable"
             :binary="true"
             :disabled="newField.type === 'template' || newField.type === 'actions'"
           />
@@ -1088,7 +1088,7 @@ onMounted(() => {
         </div>
 
         <div class="flex align-items-center">
-          <Checkbox input-id="new-field-frozen" v-model="newField.frozen" :binary="true" />
+          <Checkbox v-model="newField.frozen" input-id="new-field-frozen" :binary="true" />
           <label for="new-field-frozen" class="ml-2 cursor-pointer">{{ _('frozen') }}</label>
         </div>
       </div>
@@ -1097,15 +1097,15 @@ onMounted(() => {
         <Button
           :label="_('cancel')"
           icon="pi pi-times"
-          @click="closeAddDialog"
           severity="secondary"
           text
+          @click="closeAddDialog"
         />
         <Button
           :label="_('create')"
           icon="pi pi-check"
-          @click="addField"
           :disabled="!newField.field_name"
+          @click="addField"
         />
       </template>
     </Dialog>
@@ -1117,7 +1117,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '37.5rem' }"
-      appendTo="self"
+      append-to="self"
       @hide="closeEditDialog"
     >
       <div v-if="editingField">
@@ -1246,7 +1246,7 @@ onMounted(() => {
               option-label="label"
               option-value="value"
               :placeholder="_('field_source_field_placeholder')"
-              :showClear="true"
+              :show-clear="true"
               class="w-full"
             />
             <small class="text-muted">{{ _('field_source_field_hint') }}</small>
@@ -1260,7 +1260,7 @@ onMounted(() => {
               option-label="label"
               option-value="value"
               :placeholder="_('field_color_field_placeholder')"
-              :showClear="true"
+              :show-clear="true"
               class="w-full"
             />
             <small class="text-muted">{{ _('field_color_field_hint') }}</small>
@@ -1295,14 +1295,14 @@ onMounted(() => {
 
         <div class="flex flex-wrap gap-4 mb-3">
           <div class="flex align-items-center">
-            <Checkbox input-id="edit-field-visible" v-model="editingField.visible" :binary="true" />
+            <Checkbox v-model="editingField.visible" input-id="edit-field-visible" :binary="true" />
             <label for="edit-field-visible" class="ml-2 cursor-pointer">{{ _('visible') }}</label>
           </div>
 
           <div class="flex align-items-center">
             <Checkbox
-              input-id="edit-field-sortable"
               v-model="editingField.sortable"
+              input-id="edit-field-sortable"
               :binary="true"
               :disabled="editingField.type === 'actions'"
             />
@@ -1316,8 +1316,8 @@ onMounted(() => {
 
           <div class="flex align-items-center">
             <Checkbox
-              input-id="edit-field-filterable"
               v-model="editingField.filterable"
+              input-id="edit-field-filterable"
               :binary="true"
               :disabled="editingField.type === 'template' || editingField.type === 'actions'"
             />
@@ -1332,7 +1332,7 @@ onMounted(() => {
           </div>
 
           <div class="flex align-items-center">
-            <Checkbox input-id="edit-field-frozen" v-model="editingField.frozen" :binary="true" />
+            <Checkbox v-model="editingField.frozen" input-id="edit-field-frozen" :binary="true" />
             <label for="edit-field-frozen" class="ml-2 cursor-pointer">{{ _('frozen') }}</label>
           </div>
         </div>
@@ -1342,15 +1342,15 @@ onMounted(() => {
         <Button
           :label="_('cancel')"
           icon="pi pi-times"
-          @click="closeEditDialog"
           severity="secondary"
           text
+          @click="closeEditDialog"
         />
         <Button
           :label="_('save')"
           icon="pi pi-check"
-          @click="saveEdit"
           :disabled="!editingField || !editingField.field_name"
+          @click="saveEdit"
         />
       </template>
     </Dialog>

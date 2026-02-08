@@ -518,7 +518,7 @@ onMounted(async () => {
 <template>
   <div class="orders-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -582,10 +582,10 @@ onMounted(async () => {
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
                   :options="filter.options || []"
-                  optionLabel="label"
-                  optionValue="value"
+                  option-label="label"
+                  option-value="value"
                   :placeholder="_(filter.placeholder || 'all')"
-                  :showClear="true"
+                  :show-clear="true"
                   class="w-full"
                   @change="applyFilters"
                 />
@@ -601,9 +601,9 @@ onMounted(async () => {
                 <DatePicker
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
-                  dateFormat="dd.mm.yy"
-                  :showIcon="true"
-                  :showButtonBar="true"
+                  date-format="dd.mm.yy"
+                  :show-icon="true"
+                  :show-button-bar="true"
                   class="w-full"
                   @date-select="applyFilters"
                 />
@@ -619,10 +619,10 @@ onMounted(async () => {
                 <DatePicker
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
-                  selectionMode="range"
-                  dateFormat="dd.mm.yy"
-                  :showIcon="true"
-                  :showButtonBar="true"
+                  selection-mode="range"
+                  date-format="dd.mm.yy"
+                  :show-icon="true"
+                  :show-button-bar="true"
                   class="w-full"
                   @date-select="applyFilters"
                 />
@@ -682,15 +682,15 @@ onMounted(async () => {
           :loading="loading"
           :paginator="true"
           :rows="rows"
-          :totalRecords="totalRecords"
+          :total-records="totalRecords"
           :lazy="true"
+          striped-rows
+          responsive-layout="scroll"
+          data-key="id"
           @page="onPage"
-          stripedRows
-          responsiveLayout="scroll"
-          dataKey="id"
         >
           <!-- Selection column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" frozen />
+          <Column selection-mode="multiple" header-style="width: 3rem" frozen />
 
           <!-- Dynamic column rendering -->
           <template v-for="column in columns.filter(c => c.visible)" :key="column.name">

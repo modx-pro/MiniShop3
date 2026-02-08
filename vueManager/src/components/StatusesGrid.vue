@@ -325,7 +325,7 @@ onMounted(() => {
 <template>
   <div class="statuses-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -403,9 +403,9 @@ onMounted(() => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="id"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: status }">
                   <tr :class="{ 'p-row-odd': statuses.indexOf(status) % 2 === 1 }">
@@ -477,7 +477,7 @@ onMounted(() => {
       :modal="true"
       :closable="true"
       :style="{ width: '31.25rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingStatus" class="ms3-status-form">
         <!-- Name -->
@@ -518,15 +518,15 @@ onMounted(() => {
         <!-- Checkboxes -->
         <div class="checkboxes-row">
           <div class="checkbox-item">
-            <Checkbox v-model="editingStatus.active" :binary="true" inputId="status-active" />
+            <Checkbox v-model="editingStatus.active" :binary="true" input-id="status-active" />
             <label for="status-active">{{ _('ms3_active') }}</label>
           </div>
           <div class="checkbox-item">
-            <Checkbox v-model="editingStatus.final" :binary="true" inputId="status-final" />
+            <Checkbox v-model="editingStatus.final" :binary="true" input-id="status-final" />
             <label for="status-final">{{ _('ms3_status_final') }}</label>
           </div>
           <div class="checkbox-item">
-            <Checkbox v-model="editingStatus.fixed" :binary="true" inputId="status-fixed" />
+            <Checkbox v-model="editingStatus.fixed" :binary="true" input-id="status-fixed" />
             <label for="status-fixed">{{ _('ms3_status_fixed') }}</label>
           </div>
         </div>

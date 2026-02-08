@@ -639,7 +639,7 @@ onMounted(async () => {
 <template>
   <div class="model-fields-grid">
     <Toast />
-    <ConfirmDialog group="model-fields" appendTo="self" />
+    <ConfirmDialog group="model-fields" append-to="self" />
 
     <p class="tab-description">{{ _('ms3_utilities_model_fields_description') }}</p>
 
@@ -650,8 +650,8 @@ onMounted(async () => {
         <Select
           v-model="filterModel"
           :options="models"
-          optionLabel="label"
-          optionValue="value"
+          option-label="label"
+          option-value="value"
           style="width: 12.5rem"
           @change="onModelChange"
         />
@@ -660,9 +660,9 @@ onMounted(async () => {
 
     <!-- Sections Panel (collapsible) -->
     <Panel
+      v-model:collapsed="sectionsPanelCollapsed"
       :header="_('ms3_model_sections_title')"
       :toggleable="true"
-      v-model:collapsed="sectionsPanelCollapsed"
       class="sections-panel mb-3"
     >
       <template #icons>
@@ -678,7 +678,7 @@ onMounted(async () => {
         :value="sections"
         :loading="sectionsLoading"
         size="small"
-        stripedRows
+        striped-rows
         class="sections-table"
       >
         <Column style="width: 3rem">
@@ -723,8 +723,8 @@ onMounted(async () => {
             <Button
               icon="pi pi-trash"
               class="p-button-sm p-button-text p-button-danger"
-              @click="deleteSection(data)"
               :disabled="data.is_default"
+              @click="deleteSection(data)"
             />
           </template>
         </Column>
@@ -750,7 +750,7 @@ onMounted(async () => {
 
       <template #content>
         <!-- Fields table with VueDraggable -->
-        <div class="p-datatable p-component p-datatable-striped p-datatable-sm" v-if="!loading">
+        <div v-if="!loading" class="p-datatable p-component p-datatable-striped p-datatable-sm">
           <div class="p-datatable-wrapper">
             <table class="p-datatable-table">
               <thead class="p-datatable-thead">
@@ -772,9 +772,9 @@ onMounted(async () => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="id"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: field }">
                   <tr>
@@ -847,7 +847,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       style="width: 37.5rem"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingField" class="edit-form">
         <!-- Basic info -->
@@ -858,8 +858,8 @@ onMounted(async () => {
               <Select
                 v-model="editingField.model"
                 :options="models"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 :disabled="!isNewRecord"
                 style="width: 100%"
               />
@@ -890,8 +890,8 @@ onMounted(async () => {
               <Select
                 v-model="editingField.xtype"
                 :options="xtypeOptions"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 style="width: 100%"
               />
             </div>
@@ -901,8 +901,8 @@ onMounted(async () => {
               <Select
                 v-model="editingField.section_id"
                 :options="sectionOptions"
-                optionLabel="label"
-                optionValue="id"
+                option-label="label"
+                option-value="id"
                 style="width: 100%"
               />
             </div>
@@ -946,11 +946,11 @@ onMounted(async () => {
 
           <div class="field mt-3" style="display: flex; gap: 2rem">
             <div style="display: flex; align-items: center; gap: 0.5rem">
-              <Checkbox v-model="editingField.visible" :binary="true" inputId="visible" />
+              <Checkbox v-model="editingField.visible" :binary="true" input-id="visible" />
               <label for="visible">{{ _('ms3_model_field_visible') }}</label>
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem">
-              <Checkbox v-model="editingField.required" :binary="true" inputId="required" />
+              <Checkbox v-model="editingField.required" :binary="true" input-id="required" />
               <label for="required">{{ _('ms3_model_field_required') }}</label>
             </div>
           </div>
@@ -997,7 +997,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       style="width: 31.25rem"
-      appendTo="self"
+      append-to="self"
     >
       <div v-if="editingSection" class="edit-form">
         <div class="field mb-3">
@@ -1005,8 +1005,8 @@ onMounted(async () => {
           <Select
             v-model="editingSection.model"
             :options="models"
-            optionLabel="label"
-            optionValue="value"
+            option-label="label"
+            option-value="value"
             :disabled="!isNewSection"
             style="width: 100%"
           />
@@ -1053,7 +1053,7 @@ onMounted(async () => {
 
         <div class="field mb-3">
           <div style="display: flex; align-items: center; gap: 0.5rem">
-            <Checkbox v-model="editingSection.hidden" :binary="true" inputId="section_hidden" />
+            <Checkbox v-model="editingSection.hidden" :binary="true" input-id="section_hidden" />
             <label for="section_hidden">{{ _('ms3_model_section_hidden') }}</label>
           </div>
         </div>

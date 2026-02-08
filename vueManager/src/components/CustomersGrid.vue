@@ -630,7 +630,7 @@ onMounted(async () => {
 <template>
   <div class="customers-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -720,15 +720,15 @@ onMounted(async () => {
           :loading="loading"
           :paginator="true"
           :rows="rows"
-          :totalRecords="totalRecords"
+          :total-records="totalRecords"
           :lazy="true"
+          data-key="id"
+          striped-rows
+          responsive-layout="scroll"
           @page="onPage"
-          dataKey="id"
-          stripedRows
-          responsiveLayout="scroll"
         >
           <!-- Selection checkbox column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" frozen></Column>
+          <Column selection-mode="multiple" header-style="width: 3rem" frozen></Column>
 
           <!-- Dynamic column rendering -->
           <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
@@ -796,7 +796,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '34.375rem' }"
-      :appendTo="'self'"
+      :append-to="'self'"
     >
       <div v-if="editingCustomer" class="customer-form">
         <!-- Row 1: First and Last Name -->
@@ -839,16 +839,16 @@ onMounted(async () => {
                 <Button
                   :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"
                   text
-                  @click="showPassword = !showPassword"
                   :title="showPassword ? _('hide_password') : _('show_password')"
+                  @click="showPassword = !showPassword"
                 />
               </InputGroupAddon>
               <InputGroupAddon>
                 <Button
                   icon="pi pi-refresh"
                   text
-                  @click="generatePassword"
                   :title="_('generate_password')"
+                  @click="generatePassword"
                 />
               </InputGroupAddon>
             </InputGroup>
@@ -859,16 +859,16 @@ onMounted(async () => {
         <!-- Row 4: Checkboxes -->
         <div class="checkboxes-row">
           <div class="checkbox-col">
-            <Checkbox inputId="is_active" v-model="editingCustomer.is_active" :binary="true" />
+            <Checkbox v-model="editingCustomer.is_active" input-id="is_active" :binary="true" />
             <label for="is_active">{{ _('customer_active') }}</label>
           </div>
           <div class="checkbox-col">
-            <Checkbox inputId="is_blocked" v-model="editingCustomer.is_blocked" :binary="true" />
+            <Checkbox v-model="editingCustomer.is_blocked" input-id="is_blocked" :binary="true" />
             <label for="is_blocked">{{ _('customer_blocked') }}</label>
           </div>
           <div class="checkbox-col">
             <Checkbox
-              inputId="email_verified"
+              input-id="email_verified"
               :model-value="Boolean(editingCustomer.email_verified_at)"
               :binary="true"
               disabled
@@ -905,7 +905,7 @@ onMounted(async () => {
       :modal="true"
       :closable="true"
       :style="{ width: '50rem' }"
-      :appendTo="'self'"
+      :append-to="'self'"
     >
       <div class="addresses-content">
         <!-- Addresses list -->
@@ -947,15 +947,15 @@ onMounted(async () => {
                   icon="pi pi-pencil"
                   text
                   severity="secondary"
-                  @click="editAddress(address)"
                   :title="_('edit')"
+                  @click="editAddress(address)"
                 />
                 <Button
                   icon="pi pi-trash"
                   text
                   severity="danger"
-                  @click="deleteAddress(address)"
                   :title="_('delete')"
+                  @click="deleteAddress(address)"
                 />
               </div>
             </div>
@@ -1042,7 +1042,7 @@ onMounted(async () => {
 
           <div class="form-row">
             <div class="checkbox-col">
-              <Checkbox inputId="addr_active" v-model="editingAddress.active" :binary="true" />
+              <Checkbox v-model="editingAddress.active" input-id="addr_active" :binary="true" />
               <label for="addr_active">{{ _('address_active') }}</label>
             </div>
           </div>

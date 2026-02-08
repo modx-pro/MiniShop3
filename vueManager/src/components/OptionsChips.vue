@@ -1,5 +1,5 @@
 <template>
-  <div class="options-chips-wrapper" ref="wrapperRef">
+  <div ref="wrapperRef" class="options-chips-wrapper">
     <div class="chips-container" @click="focusInput">
       <!-- Display selected chips -->
       <div v-for="(chip, index) in localValue" :key="index" class="chip-item">
@@ -11,9 +11,9 @@
 
       <!-- Input field for adding new values -->
       <input
+        :id="inputId"
         ref="inputRef"
         v-model="searchQuery"
-        :id="inputId"
         type="text"
         class="chip-input"
         :placeholder="localValue.length === 0 ? placeholder : ''"

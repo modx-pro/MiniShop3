@@ -126,7 +126,7 @@ const initUppy = () => {
   })
 
   uppy.on('upload-success', (file, response) => {
-    console.log('File uploaded:', file.name, response)
+    // File uploaded successfully
     emit('upload-success', { file, response })
   })
 
@@ -136,7 +136,7 @@ const initUppy = () => {
   })
 
   uppy.on('complete', result => {
-    console.log('Upload complete:', result)
+    // Upload complete
     emit('upload-complete', result)
 
     setTimeout(() => {

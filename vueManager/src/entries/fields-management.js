@@ -56,7 +56,7 @@ export function init(selector = '#vue-fields-management') {
   }
 
   if ($el.dataset.vApp === 'true') {
-    console.info('[Fields Management] Already mounted')
+    // Already mounted
     return null
   }
 

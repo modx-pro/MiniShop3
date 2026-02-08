@@ -1,19 +1,19 @@
 <template>
-  <div class="vendor-combo-wrapper" ref="wrapperRef">
+  <div ref="wrapperRef" class="vendor-combo-wrapper">
     <Select
-      :inputId="inputId"
       v-model="localValue"
+      :input-id="inputId"
       :options="vendors"
-      optionLabel="name"
-      optionValue="id"
+      option-label="name"
+      option-value="id"
       :placeholder="placeholder"
       :disabled="disabled"
       :loading="loading"
-      :showClear="showClear"
+      :show-clear="showClear"
       :filter="enableFilter"
-      filterPlaceholder="Search vendor..."
-      :emptyMessage="emptyMessage"
-      :emptyFilterMessage="emptyFilterMessage"
+      filter-placeholder="Search vendor..."
+      :empty-message="emptyMessage"
+      :empty-filter-message="emptyFilterMessage"
       class="w-full"
       @change="handleChange"
     >

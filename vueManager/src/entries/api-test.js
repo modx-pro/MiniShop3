@@ -56,7 +56,7 @@ export function init(selector = '#vue-api-test') {
   }
 
   if ($el.dataset.vApp === 'true') {
-    console.info('[API Test] Already mounted')
+    // Already mounted
     return null
   }
 
@@ -65,7 +65,6 @@ export function init(selector = '#vue-api-test') {
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'
 
-  console.info('[API Test] Mounted successfully')
   return app
 }
 

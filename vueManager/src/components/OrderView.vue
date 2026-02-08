@@ -1780,7 +1780,7 @@ onMounted(async () => {
 <template>
   <div class="order-view">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <!-- Edit Product Dialog -->
     <Dialog
@@ -1789,8 +1789,8 @@ onMounted(async () => {
       :style="{ width: '40.625rem' }"
       :modal="true"
       :closable="!savingProduct"
-      :closeOnEscape="!savingProduct"
-      appendTo="self"
+      :close-on-escape="!savingProduct"
+      append-to="self"
     >
       <div v-if="editingProduct" class="edit-product-form">
         <!-- Product name (readonly) -->
@@ -1807,7 +1807,7 @@ onMounted(async () => {
             v-model="editProductForm.count"
             :min="1"
             :max="9999"
-            showButtons
+            show-buttons
             class="w-full"
           />
         </div>
@@ -1819,8 +1819,8 @@ onMounted(async () => {
             id="edit-price"
             v-model="editProductForm.price"
             :min="0"
-            :minFractionDigits="0"
-            :maxFractionDigits="2"
+            :min-fraction-digits="0"
+            :max-fraction-digits="2"
             class="w-full"
           />
         </div>
@@ -1832,8 +1832,8 @@ onMounted(async () => {
             id="edit-weight"
             v-model="editProductForm.weight"
             :min="0"
-            :minFractionDigits="0"
-            :maxFractionDigits="3"
+            :min-fraction-digits="0"
+            :max-fraction-digits="3"
             class="w-full"
           />
         </div>
@@ -1876,8 +1876,8 @@ onMounted(async () => {
                   { value: 'field', label: _('options_type_field') },
                   { value: 'custom', label: _('options_type_custom') },
                 ]"
-                optionLabel="label"
-                optionValue="value"
+                option-label="label"
+                option-value="value"
                 class="options-type-select"
                 @change="onOptionTypeChange(row)"
               />
@@ -1887,8 +1887,8 @@ onMounted(async () => {
                 <Select
                   v-model="row.key"
                   :options="productOptionFields"
-                  optionLabel="label"
-                  optionValue="name"
+                  option-label="label"
+                  option-value="name"
                   :placeholder="_('options_select_field')"
                   class="options-key-input"
                   @change="onFieldKeyChange(row)"
@@ -1898,8 +1898,8 @@ onMounted(async () => {
                   v-if="row.fieldValues.length > 0"
                   v-model="row.value"
                   :options="row.fieldValues"
-                  optionLabel="label"
-                  optionValue="value"
+                  option-label="label"
+                  option-value="value"
                   :placeholder="_('options_select_value')"
                   :loading="row.loadingValues"
                   editable
@@ -1979,14 +1979,14 @@ onMounted(async () => {
           :label="_('cancel')"
           icon="pi pi-times"
           severity="secondary"
-          @click="cancelEditProduct"
           :disabled="savingProduct"
+          @click="cancelEditProduct"
         />
         <Button
           :label="_('save')"
           icon="pi pi-check"
-          @click="saveEditedProduct"
           :loading="savingProduct"
+          @click="saveEditedProduct"
         />
       </template>
     </Dialog>
@@ -1998,8 +1998,8 @@ onMounted(async () => {
       :style="{ width: '34.375rem' }"
       :modal="true"
       :closable="!savingNewProduct"
-      :closeOnEscape="!savingNewProduct"
-      appendTo="self"
+      :close-on-escape="!savingNewProduct"
+      append-to="self"
     >
       <div class="add-product-form">
         <!-- Product search -->
@@ -2008,13 +2008,13 @@ onMounted(async () => {
           <AutoComplete
             v-model="selectedProduct"
             :suggestions="productSuggestions"
-            @complete="searchProducts"
-            @item-select="onProductSelect"
-            optionLabel="display"
+            option-label="display"
             :placeholder="_('order_search_product')"
             :loading="searchingProducts"
             class="w-full"
-            :minLength="2"
+            :min-length="2"
+            @complete="searchProducts"
+            @item-select="onProductSelect"
           >
             <template #option="{ option }">
               <div class="ms3-product-suggestion">
@@ -2061,8 +2061,8 @@ onMounted(async () => {
               <InputNumber
                 v-model="addProductForm.price"
                 mode="decimal"
-                :minFractionDigits="2"
-                :maxFractionDigits="2"
+                :min-fraction-digits="2"
+                :max-fraction-digits="2"
                 class="w-full"
               />
             </div>
@@ -2073,8 +2073,8 @@ onMounted(async () => {
               <InputNumber
                 v-model="addProductForm.weight"
                 mode="decimal"
-                :minFractionDigits="3"
-                :maxFractionDigits="3"
+                :min-fraction-digits="3"
+                :max-fraction-digits="3"
                 class="w-full"
               />
             </div>
@@ -2093,15 +2093,15 @@ onMounted(async () => {
           :label="_('cancel')"
           icon="pi pi-times"
           severity="secondary"
-          @click="cancelAddProduct"
           :disabled="savingNewProduct"
+          @click="cancelAddProduct"
         />
         <Button
           :label="_('save')"
           icon="pi pi-check"
-          @click="saveNewProduct"
           :loading="savingNewProduct"
           :disabled="!selectedProduct || !selectedProduct.id"
+          @click="saveNewProduct"
         />
       </template>
     </Dialog>
@@ -2113,7 +2113,7 @@ onMounted(async () => {
       :style="{ width: '31.25rem' }"
       :modal="true"
       :closable="true"
-      appendTo="self"
+      append-to="self"
       @hide="cancelDuplicateDialog"
     >
       <div class="duplicate-customer-dialog">
@@ -2271,8 +2271,8 @@ onMounted(async () => {
                           <Select
                             v-model="order[getFieldCompareField(field.name)]"
                             :options="getFieldOptions(field.name)"
-                            optionLabel="label"
-                            optionValue="value"
+                            option-label="label"
+                            option-value="value"
                             :placeholder="field.placeholder"
                             class="w-full"
                           />
@@ -2294,8 +2294,8 @@ onMounted(async () => {
                             v-model="order[field.name]"
                             :placeholder="field.placeholder"
                             class="w-full"
-                            :minFractionDigits="0"
-                            :maxFractionDigits="2"
+                            :min-fraction-digits="0"
+                            :max-fraction-digits="2"
                           />
                         </template>
 
@@ -2305,9 +2305,9 @@ onMounted(async () => {
                             v-model="order[field.name]"
                             :placeholder="field.placeholder"
                             class="w-full"
-                            dateFormat="dd.mm.yy"
-                            showTime
-                            hourFormat="24"
+                            date-format="dd.mm.yy"
+                            show-time
+                            hour-format="24"
                           />
                         </template>
 
@@ -2360,8 +2360,8 @@ onMounted(async () => {
                   icon="pi pi-check-circle"
                   severity="success"
                   :loading="finalizing"
-                  @click="confirmFinalizeOrder"
                   class="finalize-button"
+                  @click="confirmFinalizeOrder"
                 />
               </div>
             </Message>
@@ -2403,7 +2403,7 @@ onMounted(async () => {
                 @click="openAddProductDialog"
               />
             </div>
-            <DataTable :value="products" stripedRows responsiveLayout="scroll">
+            <DataTable :value="products" striped-rows responsive-layout="scroll">
               <template v-for="column in productsColumns.filter(c => c.visible)" :key="column.name">
                 <!-- Image column -->
                 <Column
@@ -2560,13 +2560,13 @@ onMounted(async () => {
                   <AutoComplete
                     v-model="selectedCustomer"
                     :suggestions="customerSuggestions"
-                    @complete="searchCustomers"
-                    @item-select="onCustomerSelect"
-                    optionLabel="display"
+                    option-label="display"
                     :placeholder="_('ms3_order_search_customer')"
                     :loading="searchingCustomers"
                     class="w-full"
-                    :minLength="2"
+                    :min-length="2"
+                    @complete="searchCustomers"
+                    @item-select="onCustomerSelect"
                   >
                     <template #option="{ option }">
                       <div class="customer-suggestion">
@@ -2609,8 +2609,8 @@ onMounted(async () => {
                       text
                       rounded
                       size="small"
-                      @click="clearCustomer"
                       :title="_('ms3_order_clear_customer')"
+                      @click="clearCustomer"
                     />
                   </div>
                   <small class="text-success">{{ _('ms3_order_customer_selected') }}</small>
@@ -2624,7 +2624,7 @@ onMounted(async () => {
                 <div class="create-customer-checkbox mt-3">
                   <Checkbox
                     v-model="createCustomerFromData"
-                    inputId="createCustomer"
+                    input-id="createCustomer"
                     :binary="true"
                     :disabled="!!selectedCustomer?.id"
                   />
@@ -2652,8 +2652,8 @@ onMounted(async () => {
                           <Select
                             v-model="order[getAddressFieldCompareField(field.name)]"
                             :options="getAddressFieldOptions(field.name)"
-                            optionLabel="label"
-                            optionValue="value"
+                            option-label="label"
+                            option-value="value"
                             :placeholder="field.placeholder"
                             class="w-full"
                           />
@@ -2738,7 +2738,7 @@ onMounted(async () => {
 
           <!-- History Tab - hidden in create mode -->
           <TabPanel v-if="!isCreateMode" value="history">
-            <DataTable :value="logs" stripedRows responsiveLayout="scroll">
+            <DataTable :value="logs" striped-rows responsive-layout="scroll">
               <Column field="timestamp" :header="_('log_date')" style="width: 11.25rem">
                 <template #body="{ data }">
                   {{ formatDate(data.timestamp || data.createdon) }}

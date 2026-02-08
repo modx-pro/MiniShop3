@@ -217,8 +217,8 @@ function getXtypeTitle(name) {
         </div>
       </template>
       <template #content>
-        <DataTable :value="leftFields" tableStyle="min-width: 50rem" @rowReorder="LeftReorder">
-          <Column rowReorder headerStyle="width: 3rem" />
+        <DataTable :value="leftFields" table-style="min-width: 50rem" @row-reorder="LeftReorder">
+          <Column row-reorder header-style="width: 3rem" />
           <Column field="name" header="Field" style="width: 18.75rem"></Column>
           <Column field="xtype" header="Type" style="width: 18.75rem">
             <template #body="{ data }">
@@ -255,8 +255,8 @@ function getXtypeTitle(name) {
         </div>
       </template>
       <template #content>
-        <DataTable :value="rightFields" tableStyle="min-width: 50rem" @rowReorder="RightReorder">
-          <Column rowReorder headerStyle="width: 3rem" />
+        <DataTable :value="rightFields" table-style="min-width: 50rem" @row-reorder="RightReorder">
+          <Column row-reorder header-style="width: 3rem" />
           <Column field="name" header="Field" style="width: 18.75rem"></Column>
           <Column field="xtype" header="Type" style="width: 18.75rem">
             <template #body="{ data }">
@@ -285,12 +285,12 @@ function getXtypeTitle(name) {
   </div>
 
   <Dialog
+    v-if="Object.entries(editedField).length > 0"
     v-model:visible="editVisible"
     modal
     header="Edit Field"
     :style="{ width: '25rem' }"
-    v-if="Object.entries(editedField).length > 0"
-    appendTo="self"
+    append-to="self"
   >
     <div
       class="flex items-center gap-4 mb-4"
@@ -316,8 +316,8 @@ function getXtypeTitle(name) {
       <Select
         v-model="editedField.xtype"
         :options="types"
-        optionLabel="name"
-        optionValue="xtype"
+        option-label="name"
+        option-value="xtype"
         style="width: 58%"
       />
     </div>
@@ -328,9 +328,9 @@ function getXtypeTitle(name) {
     >
       <label for="anchor" style="width: 50%">Field Width</label>
       <InputText
-        inputId="anchor"
-        name="anchor"
         v-model="editedField.anchor"
+        input-id="anchor"
+        name="anchor"
         style="width: 50%"
         fluid
       />
@@ -355,7 +355,7 @@ function getXtypeTitle(name) {
     modal
     header="Add Field"
     :style="{ width: '25rem' }"
-    appendTo="self"
+    append-to="self"
   >
     <div
       class="flex items-center gap-4 mb-4"
@@ -366,8 +366,8 @@ function getXtypeTitle(name) {
       <Select
         v-model="createdField.name"
         :options="unUsedFields"
-        optionLabel="title"
-        optionValue="name"
+        option-label="title"
+        option-value="name"
         style="width: 58%"
       />
     </div>
@@ -381,8 +381,8 @@ function getXtypeTitle(name) {
       <Select
         v-model="createdField.xtype"
         :options="types"
-        optionLabel="name"
-        optionValue="xtype"
+        option-label="name"
+        option-value="xtype"
         style="width: 58%"
       />
     </div>
@@ -393,9 +393,9 @@ function getXtypeTitle(name) {
     >
       <label for="anchor" style="width: 50%">Field Width</label>
       <InputText
-        inputId="anchor"
-        name="anchor"
         v-model="createdField.anchor"
+        input-id="anchor"
+        name="anchor"
         style="width: 50%"
         fluid
       />
@@ -416,5 +416,5 @@ function getXtypeTitle(name) {
   </Dialog>
 
   <Toast />
-  <ConfirmDialog appendTo="self" />
+  <ConfirmDialog append-to="self" />
 </template>

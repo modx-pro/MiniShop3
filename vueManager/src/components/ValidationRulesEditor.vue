@@ -463,8 +463,8 @@ const editingFieldName = computed(() => {
         <Button
           :label="_('apply')"
           size="small"
-          @click="applyJsonChanges"
           :disabled="!!jsonError"
+          @click="applyJsonChanges"
         />
       </div>
     </div>
@@ -475,13 +475,13 @@ const editingFieldName = computed(() => {
         <div class="field-header">
           <span class="field-name">{{ getFieldLabel(fr.field) }}</span>
           <Button
+            v-tooltip="_('remove')"
             icon="pi pi-times"
             severity="danger"
             text
             rounded
             size="small"
             @click="removeField(fieldIndex)"
-            v-tooltip="_('remove')"
           />
         </div>
         <div class="rules-chips">
@@ -490,17 +490,17 @@ const editingFieldName = computed(() => {
             :key="`${fr.field}-${rule.name}-${ruleIndex}`"
             :label="getRuleLabel(rule)"
             removable
-            @remove="() => removeRule(fieldIndex, ruleIndex)"
             class="rule-chip"
+            @remove="() => removeRule(fieldIndex, ruleIndex)"
           />
           <Button
+            v-tooltip="_('ms3_add_rule')"
             icon="pi pi-plus"
             size="small"
             severity="secondary"
             text
             rounded
             @click="openAddRuleDialog(fieldIndex)"
-            v-tooltip="_('ms3_add_rule')"
           />
         </div>
       </div>
@@ -512,9 +512,9 @@ const editingFieldName = computed(() => {
         size="small"
         severity="secondary"
         outlined
-        @click="openAddFieldDialog"
         class="add-field-btn"
         :disabled="availableFieldsForAdd.length === 0"
+        @click="openAddFieldDialog"
       />
     </div>
 
@@ -524,7 +524,7 @@ const editingFieldName = computed(() => {
       :header="_('ms3_add_validation_field')"
       :modal="true"
       :style="{ width: '28.125rem' }"
-      appendTo="self"
+      append-to="self"
     >
       <div class="add-field-form">
         <div class="form-field">
@@ -532,10 +532,10 @@ const editingFieldName = computed(() => {
           <Select
             v-model="selectedField"
             :options="availableFieldsForAdd"
-            optionLabel="label"
-            optionValue="name"
-            optionGroupLabel="label"
-            optionGroupChildren="items"
+            option-label="label"
+            option-value="name"
+            option-group-label="label"
+            option-group-children="items"
             :placeholder="_('ms3_select_field_placeholder')"
             class="w-full"
             filter
@@ -555,7 +555,7 @@ const editingFieldName = computed(() => {
       :header="_('ms3_add_rule_to_field') + ': ' + editingFieldName"
       :modal="true"
       :style="{ width: '28.125rem' }"
-      appendTo="self"
+      append-to="self"
       @hide="closeRuleDialog"
     >
       <div class="add-rule-form">
@@ -564,8 +564,8 @@ const editingFieldName = computed(() => {
           <Select
             v-model="selectedRule"
             :options="availableRulesForAdd"
-            optionLabel="label"
-            optionValue="name"
+            option-label="label"
+            option-value="name"
             :placeholder="_('ms3_select_rule_placeholder')"
             class="w-full"
             filter

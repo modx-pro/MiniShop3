@@ -314,21 +314,21 @@ onMounted(() => {
     </div>
 
     <!-- Step 1: File Upload -->
-    <div class="step-content" v-show="currentStep === 1">
+    <div v-show="currentStep === 1" class="step-content">
       <h3>{{ _('ms3_import_select_file') }}</h3>
 
       <div class="upload-section">
-        <div class="upload-area" @click="triggerFileInput" :class="{ uploading: uploading }">
+        <div class="upload-area" :class="{ uploading: uploading }" @click="triggerFileInput">
           <input
-            type="file"
             ref="fileInputRef"
+            type="file"
             accept=".csv"
-            @change="handleFileSelect"
             style="display: none"
+            @change="handleFileSelect"
           />
           <div class="upload-icon">
-            <i class="pi pi-cloud-upload" v-if="!uploading"></i>
-            <i class="pi pi-spin pi-spinner" v-else></i>
+            <i v-if="!uploading" class="pi pi-cloud-upload"></i>
+            <i v-else class="pi pi-spin pi-spinner"></i>
           </div>
           <div class="upload-text">
             <span v-if="!uploading">{{ _('ms3_import_drop_or_click') }}</span>
@@ -341,7 +341,7 @@ onMounted(() => {
         }}</Message>
       </div>
 
-      <div class="selected-file" v-if="filePath">
+      <div v-if="filePath" class="selected-file">
         <div class="selected-file-header">
           <i class="pi pi-file"></i>
           <span class="file-name">{{ uploadedFileName || filePath }}</span>
@@ -349,24 +349,24 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="settings-section" v-if="filePath">
+      <div v-if="filePath" class="settings-section">
         <h4>{{ _('ms3_import_settings') }}</h4>
         <div class="setting-row">
           <label>{{ _('ms3_import_delimiter') }}</label>
           <SelectButton
             v-model="delimiter"
             :options="delimiterOptions"
-            optionLabel="label"
-            optionValue="value"
+            option-label="label"
+            option-value="value"
           />
         </div>
         <div class="setting-row">
-          <Checkbox v-model="skipHeader" :binary="true" inputId="skipHeader" />
+          <Checkbox v-model="skipHeader" :binary="true" input-id="skipHeader" />
           <label for="skipHeader">{{ _('ms3_import_skip_header') }}</label>
         </div>
       </div>
 
-      <div class="file-info" v-if="totalRows > 0">
+      <div v-if="totalRows > 0" class="file-info">
         <Message severity="info" :closable="false">
           {{ _('ms3_import_file_info') }}: {{ totalRows }} {{ _('ms3_import_rows') }}
           <span v-if="detectedEncoding" class="encoding-info">
@@ -389,15 +389,15 @@ onMounted(() => {
         <Button
           :label="_('ms3_import_next')"
           icon="pi pi-arrow-right"
-          iconPos="right"
-          @click="currentStep = 2"
+          icon-pos="right"
           :disabled="!canProceedToStep2"
+          @click="currentStep = 2"
         />
       </div>
     </div>
 
     <!-- Step 2: Field Mapping -->
-    <div class="step-content" v-show="currentStep === 2">
+    <div v-show="currentStep === 2" class="step-content">
       <h3>{{ _('ms3_import_field_mapping') }}</h3>
 
       <Message v-if="missingRequiredFields.length > 0" severity="warn" :closable="false">
@@ -422,18 +422,18 @@ onMounted(() => {
             <Select
               v-model="fieldMapping[data.index]"
               :options="availableFields"
-              optionLabel="label"
-              optionValue="value"
+              option-label="label"
+              option-value="value"
               :placeholder="_('ms3_import_select_field')"
               class="field-select"
               filter
-              showClear
+              show-clear
             />
           </template>
         </Column>
         <Column :header="_('ms3_import_preview')">
           <template #body="{ data }">
-            <span class="preview-value" v-if="csvPreview[skipHeader ? 1 : 0]">{{
+            <span v-if="csvPreview[skipHeader ? 1 : 0]" class="preview-value">{{
               csvPreview[skipHeader ? 1 : 0][data.index] || '—'
             }}</span>
           </template>
@@ -443,16 +443,16 @@ onMounted(() => {
       <div class="update-settings">
         <h4>{{ _('ms3_import_update_settings') }}</h4>
         <div class="setting-row">
-          <Checkbox v-model="updateExisting" :binary="true" inputId="updateExisting" />
+          <Checkbox v-model="updateExisting" :binary="true" input-id="updateExisting" />
           <label for="updateExisting">{{ _('ms3_import_update_existing') }}</label>
         </div>
-        <div class="setting-row" v-if="updateExisting">
+        <div v-if="updateExisting" class="setting-row">
           <label>{{ _('ms3_import_update_key') }}:</label>
           <Select
             v-model="updateKey"
             :options="keyFields"
-            optionLabel="label"
-            optionValue="value"
+            option-label="label"
+            option-value="value"
             class="key-select"
           />
         </div>
@@ -468,18 +468,18 @@ onMounted(() => {
         <Button
           :label="_('ms3_import_next')"
           icon="pi pi-arrow-right"
-          iconPos="right"
-          @click="currentStep = 3"
+          icon-pos="right"
           :disabled="!canProceedToStep3"
+          @click="currentStep = 3"
         />
       </div>
     </div>
 
     <!-- Step 3: Import -->
-    <div class="step-content" v-show="currentStep === 3">
+    <div v-show="currentStep === 3" class="step-content">
       <h3>{{ _('ms3_import_preview_title') }}</h3>
 
-      <div class="preview-section" v-if="!importRunning && !importCompleted">
+      <div v-if="!importRunning && !importCompleted" class="preview-section">
         <h4>{{ _('ms3_import_summary') }}</h4>
         <div class="summary-info">
           <div class="summary-row">
@@ -502,15 +502,15 @@ onMounted(() => {
             <Message severity="info" :closable="false">{{
               _('ms3_import_large_file_info')
             }}</Message>
-            <div class="mode-options" v-if="schedulerAvailable">
+            <div v-if="schedulerAvailable" class="mode-options">
               <div class="mode-option">
-                <RadioButton v-model="useScheduler" :value="false" inputId="modeSync" /><label
+                <RadioButton v-model="useScheduler" :value="false" input-id="modeSync" /><label
                   for="modeSync"
                   >{{ _('ms3_import_mode_sync') }}</label
                 >
               </div>
               <div class="mode-option">
-                <RadioButton v-model="useScheduler" :value="true" inputId="modeAsync" /><label
+                <RadioButton v-model="useScheduler" :value="true" input-id="modeAsync" /><label
                   for="modeAsync"
                   >{{ _('ms3_import_mode_async') }}</label
                 >
@@ -518,7 +518,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="setting-row">
-            <Checkbox v-model="debugMode" :binary="true" inputId="debugMode" /><label
+            <Checkbox v-model="debugMode" :binary="true" input-id="debugMode" /><label
               for="debugMode"
               >{{ _('ms3_import_debug_mode') }}</label
             >
@@ -535,19 +535,19 @@ onMounted(() => {
           <Button
             :label="_('ms3_import_start')"
             icon="pi pi-play"
-            @click="startImport"
             :loading="loading"
+            @click="startImport"
           />
         </div>
       </div>
 
-      <div class="progress-section" v-if="importRunning">
+      <div v-if="importRunning" class="progress-section">
         <h4>{{ _('ms3_import_in_progress') }}</h4>
         <ProgressBar mode="indeterminate" class="import-progress-bar" />
         <p>{{ _('ms3_import_please_wait') }}</p>
       </div>
 
-      <div class="result-section" v-if="importCompleted && importResult">
+      <div v-if="importCompleted && importResult" class="result-section">
         <Message :severity="importResult.success ? 'success' : 'error'" :closable="false">
           <template v-if="importResult.scheduled">{{ importResult.message }}</template>
           <template v-else-if="importResult.success">
@@ -566,7 +566,7 @@ onMounted(() => {
                   <span class="result-label">{{ _('ms3_import_updated') }}:</span
                   ><span class="result-value info">{{ importResult.updated }}</span>
                 </div>
-                <div class="result-stat" v-if="importResult.errors > 0">
+                <div v-if="importResult.errors > 0" class="result-stat">
                   <span class="result-label">{{ _('ms3_import_errors') }}:</span
                   ><span class="result-value error">{{ importResult.errors }}</span>
                 </div>
