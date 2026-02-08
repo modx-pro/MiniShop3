@@ -1337,14 +1337,14 @@ onMounted(() => {
 
 .drag-handle {
   cursor: grab;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 1.2rem;
   padding: 0.5rem;
   user-select: none;
 }
 
 .drag-handle:hover {
-  color: #495057;
+  color: var(--ms3-text-hint);
 }
 
 .drag-handle:active {
@@ -1353,12 +1353,12 @@ onMounted(() => {
 
 :deep(.ghost-row) {
   opacity: 0.5;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.sortable-drag) {
   opacity: 0.8;
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
   cursor: grabbing !important;
 }
 
@@ -1367,26 +1367,26 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   padding: 3rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 :deep(.p-datatable-tbody tr:nth-child(even)) {
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.p-datatable-tbody tr:hover) {
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
 }
 
 label.required::after {
   content: ' *';
-  color: #dc3545;
+  color: var(--ms3-text-danger-alt);
 }
 
 small.text-muted {
   display: block;
   margin-top: 0.25rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 

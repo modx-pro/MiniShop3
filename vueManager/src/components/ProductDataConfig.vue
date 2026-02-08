@@ -1019,7 +1019,7 @@ h2 {
 
 p {
   margin: 0 0 1.25rem 0;
-  color: #666;
+  color: var(--ms3-text-muted);
 }
 
 .drag-handle-cell {
@@ -1030,14 +1030,14 @@ p {
 
 .drag-handle {
   cursor: grab;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 1.2rem;
   padding: 0.5rem;
   user-select: none;
 }
 
 .drag-handle:hover {
-  color: #495057;
+  color: var(--ms3-text-hint);
 }
 
 .drag-handle:active {
@@ -1046,12 +1046,12 @@ p {
 
 :deep(.ghost-row) {
   opacity: 0.5;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.sortable-drag) {
   opacity: 0.8;
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
   cursor: grabbing !important;
 }
 
@@ -1060,15 +1060,15 @@ p {
   justify-content: center;
   align-items: center;
   padding: 3rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 :deep(.p-datatable-tbody tr:nth-child(even)) {
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.p-datatable-tbody tr:hover) {
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
 }
 </style>
 
@@ -1100,12 +1100,12 @@ p {
 .p-dialog .edit-field-form .field label {
   font-weight: 600;
   font-size: 0.875rem;
-  color: #333;
+  color: var(--ms3-text-primary);
 }
 
 .vueApp .edit-field-form .field small,
 .p-dialog .edit-field-form .field small {
-  color: #666;
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
   margin-top: -0.125rem;
 }

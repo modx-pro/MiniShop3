@@ -843,12 +843,12 @@ onMounted(() => {
 .p-dialog .edit-field-form .field label {
   font-weight: 600;
   font-size: 0.875rem;
-  color: #333;
+  color: var(--ms3-text-primary);
 }
 
 .vueApp .edit-field-form .field small,
 .p-dialog .edit-field-form .field small {
-  color: #666;
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
   margin-top: -0.125rem;
 }

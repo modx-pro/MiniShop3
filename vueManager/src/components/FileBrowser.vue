@@ -206,9 +206,9 @@ function getImageUrl(path) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 0.0625rem solid #e2e8f0;
+  border: 0.0625rem solid var(--ms3-border-color);
   border-radius: 0.25rem;
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
   overflow: hidden;
 }
 

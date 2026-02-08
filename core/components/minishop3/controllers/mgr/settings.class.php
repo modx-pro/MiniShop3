@@ -38,6 +38,8 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.utils.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/misc/ms3.combo.js');
 
+        // Vue shared CSS (variables + PrimeIcons)
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         // Vue shared components CSS
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/FileBrowser.min.css');
 

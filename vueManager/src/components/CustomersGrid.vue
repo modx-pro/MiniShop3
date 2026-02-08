@@ -999,8 +999,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 0.0625rem solid #fbbf24;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
   border-radius: 0.375rem;
 }
 
@@ -1009,7 +1009,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -1022,11 +1022,11 @@ onMounted(async () => {
 }
 
 .text-success {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .text-warning {
-  color: #f59e0b;
+  color: var(--ms3-text-warning-accent);
 }
 
 /* Customer edit form grid */
@@ -1061,7 +1061,7 @@ onMounted(async () => {
 .form-col-full small.text-muted {
   display: block;
   margin-top: 0.25rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
 }
 
@@ -1104,7 +1104,7 @@ onMounted(async () => {
 .addresses-empty {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 .addresses-empty i {
@@ -1124,14 +1124,14 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 1rem;
-  border: 0.0625rem solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--ms3-bg-surface);
 }
 
 .address-card.address-inactive {
   opacity: 0.6;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 .address-info {
@@ -1152,19 +1152,19 @@ onMounted(async () => {
 }
 
 .address-badge.inactive {
-  background: #e2e8f0;
-  color: #64748b;
+  background: var(--ms3-border-color);
+  color: var(--ms3-text-secondary);
 }
 
 .address-formatted {
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.875rem;
 }
 
 .address-comment {
   margin-top: 0.5rem;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   font-style: italic;
 }
 
@@ -1216,6 +1216,6 @@ onMounted(async () => {
   gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 0.0625rem solid #e2e8f0;
+  border-top: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 </style>

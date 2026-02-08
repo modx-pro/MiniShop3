@@ -214,7 +214,7 @@ function navigateTo(href) {
 
 .resource-card:hover {
   transform: translateY(-0.125rem);
-  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  box-shadow: var(--ms3-shadow-dropdown);
 }
 
 .resource-content {

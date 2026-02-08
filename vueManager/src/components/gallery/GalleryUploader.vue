@@ -196,12 +196,12 @@ defineExpose({
 }
 
 .uppy-container {
-  border: 0.125rem dashed #ddd;
+  border: var(--ms3-border-width-focus) dashed var(--ms3-border-upload);
   border-radius: 0.5rem;
   overflow: hidden;
 }
 
 .uppy-container :deep(.uppy-Dashboard--isDraggingOver) {
-  border-color: #4CAF50;
+  border-color: var(--ms3-accent-green);
 }
 </style>

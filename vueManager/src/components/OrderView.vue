@@ -2707,7 +2707,7 @@ onMounted(async () => {
     </template>
 
     <div v-else class="error-state">
-      <i class="pi pi-exclamation-triangle" style="font-size: 3rem; color: #f59e0b"></i>
+      <i class="pi pi-exclamation-triangle" style="font-size: 3rem; color: var(--ms3-text-warning-accent)"></i>
       <p>{{ _('order_not_found') }}</p>
       <Button :label="_('back_to_orders')" @click="goBack" />
     </div>
@@ -2728,7 +2728,7 @@ onMounted(async () => {
 .order-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .loading-state,
@@ -2783,13 +2783,13 @@ onMounted(async () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.875rem;
 }
 
 .field-value {
   font-size: 1rem;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
   min-height: 2.5rem;
   display: flex;
   align-items: center;
@@ -2798,7 +2798,7 @@ onMounted(async () => {
 .field-description {
   display: block;
   margin-top: 0.25rem;
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   font-size: 0.75rem;
 }
 
@@ -2816,8 +2816,8 @@ onMounted(async () => {
 
 /* Order Summary Section */
 .order-summary-section :deep(.p-fieldset-legend) {
-  background: #3b82f6;
-  color: white;
+  background: var(--ms3-accent-primary);
+  color: var(--ms3-text-on-primary);
 }
 
 .order-summary-grid {
@@ -2847,23 +2847,23 @@ onMounted(async () => {
 .summary-item {
   display: flex;
   flex-direction: column;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
+  padding: var(--ms3-spacing-3) 1rem;
+  background: var(--ms3-bg-slate);
   border-radius: 0.5rem;
-  border-left: 0.1875rem solid #e2e8f0;
+  border-left: var(--ms3-border-width-accent) solid var(--ms3-border-color);
 }
 
 .summary-item.summary-num {
-  border-left-color: #3b82f6;
+  border-left-color: var(--ms3-accent-primary);
 }
 
 .summary-item.summary-cost {
-  border-left-color: #22c55e;
+  border-left-color: var(--ms3-text-success);
 }
 
 .summary-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
@@ -2872,7 +2872,7 @@ onMounted(async () => {
 .summary-value {
   font-size: 1rem;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .summary-value-lg {
@@ -2881,21 +2881,21 @@ onMounted(async () => {
 }
 
 .summary-value-primary {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .actions-bar {
   display: flex;
   gap: 0.5rem;
   padding: 1rem;
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
   border-radius: 0.5rem;
 }
 
 .no-fields-message {
   padding: 1rem;
   text-align: center;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-style: italic;
 }
 
@@ -2921,14 +2921,14 @@ onMounted(async () => {
 
 /* Fieldset styles */
 :deep(.p-fieldset) {
-  border: 0.0625rem solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   border-radius: 0.5rem;
 }
 
 :deep(.p-fieldset .p-fieldset-legend) {
   font-size: 0.95rem;
   padding: 0.5rem 1rem;
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
   border-radius: 0.25rem;
 }
 
@@ -2943,11 +2943,11 @@ onMounted(async () => {
 }
 
 .no-image {
-  color: #9ca3af;
+  color: var(--ms3-text-muted-light);
 }
 
 .product-link {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
   text-decoration: none;
 }
 
@@ -2971,25 +2971,25 @@ onMounted(async () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.875rem;
 }
 
 .product-name-display {
   font-size: 1rem;
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
   padding: 0.5rem;
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
   border-radius: 0.25rem;
 }
 
 .cost-display {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #22c55e;
+  color: var(--ms3-text-success);
   padding: 0.5rem;
-  background: #f0fdf4;
+  background: var(--ms3-bg-success);
   border-radius: 0.25rem;
   text-align: right;
 }
@@ -3012,10 +3012,10 @@ onMounted(async () => {
 }
 
 .options-table {
-  border: 0.0625rem solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   border-radius: 0.375rem;
-  padding: 0.75rem;
-  background: #f8fafc;
+  padding: var(--ms3-spacing-3);
+  background: var(--ms3-bg-slate);
 }
 
 .options-row {
@@ -3026,7 +3026,7 @@ onMounted(async () => {
 }
 
 .options-row:last-of-type {
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--ms3-spacing-3);
 }
 
 .options-type-select {
@@ -3045,10 +3045,10 @@ onMounted(async () => {
 }
 
 .options-json {
-  border: 0.0625rem solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   border-radius: 0.375rem;
   padding: 0.5rem;
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
 }
 
 .options-json-textarea {
@@ -3057,11 +3057,11 @@ onMounted(async () => {
 }
 
 .options-json-textarea.p-invalid {
-  border-color: #ef4444;
+  border-color: var(--ms3-text-danger);
 }
 
 .p-error {
-  color: #ef4444;
+  color: var(--ms3-text-danger);
   font-size: 0.75rem;
   margin-top: 0.25rem;
   display: block;
@@ -3072,23 +3072,23 @@ onMounted(async () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.875rem;
 }
 
 .selected-product-details {
-  border: 0.0625rem solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   border-radius: 0.5rem;
   padding: 1rem;
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
 }
 
 .selected-product-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 0.0625rem solid #e2e8f0;
+  gap: var(--ms3-spacing-3);
+  padding-bottom: var(--ms3-spacing-3);
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 
 .selected-product-image {
@@ -3096,21 +3096,21 @@ onMounted(async () => {
   height: 3.125rem;
   object-fit: cover;
   border-radius: 0.25rem;
-  border: 0.0625rem solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 
 .selected-product-name {
   font-weight: 600;
   font-size: 1rem;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .calculated-cost {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #22c55e;
+  color: var(--ms3-text-success);
   padding: 0.5rem;
-  background: #f0fdf4;
+  background: var(--ms3-bg-success);
   border-radius: 0.25rem;
   text-align: right;
 }
@@ -3134,14 +3134,14 @@ onMounted(async () => {
 }
 
 .customer-search-hint {
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.75rem;
 }
 
 .customer-suggestion {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--ms3-spacing-3);
   padding: 0.25rem 0;
 }
 
@@ -3151,29 +3151,29 @@ onMounted(async () => {
 
 .customer-suggestion-name {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .customer-suggestion-meta {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   display: flex;
-  gap: 0.75rem;
+  gap: var(--ms3-spacing-3);
 }
 
 .customer-suggestion-meta .email {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
 }
 
 .customer-suggestion-meta .phone {
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .customer-suggestion-stats {
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   display: flex;
-  gap: 0.75rem;
+  gap: var(--ms3-spacing-3);
   margin-top: 0.25rem;
 }
 
@@ -3187,23 +3187,23 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: #f0fdf4;
-  border: 0.0625rem solid #bbf7d0;
+  padding: 0.5rem var(--ms3-spacing-3);
+  background: var(--ms3-bg-success);
+  border: var(--ms3-border-width) solid var(--ms3-border-success);
   border-radius: 0.5rem;
 }
 
 .selected-customer-badge i {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .selected-customer-badge .customer-name {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .selected-customer-badge .customer-email {
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -3211,40 +3211,40 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: #f8fafc;
-  border: 0.0625rem dashed #e2e8f0;
+  padding: 0.5rem var(--ms3-spacing-3);
+  background: var(--ms3-bg-slate);
+  border: var(--ms3-border-width) dashed var(--ms3-border-color);
   border-radius: 0.5rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.875rem;
 }
 
 .no-customer-hint i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .text-success {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 /* Create customer checkbox */
 .create-customer-checkbox {
   display: flex;
   align-items: center;
-  padding: 0.75rem;
-  background: #fefce8;
-  border: 0.0625rem solid #fef08a;
+  padding: var(--ms3-spacing-3);
+  background: var(--ms3-bg-warning-light);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning-alt);
   border-radius: 0.5rem;
 }
 
 .create-customer-checkbox label {
   cursor: pointer;
   font-size: 0.875rem;
-  color: #854d0e;
+  color: var(--ms3-text-warning-dark);
 }
 
 .create-customer-checkbox label.text-muted {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   cursor: not-allowed;
 }
 
@@ -3258,21 +3258,21 @@ onMounted(async () => {
 .duplicate-warning {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--ms3-spacing-3);
   padding: 1rem;
-  background: #fef3c7;
+  background: var(--ms3-bg-warning);
   border-radius: 0.5rem;
 }
 
 .duplicate-warning i {
-  color: #f59e0b;
+  color: var(--ms3-text-warning-accent);
   font-size: 1.5rem;
   flex-shrink: 0;
 }
 
 .duplicate-warning p {
   margin: 0;
-  color: #92400e;
+  color: var(--ms3-text-warning);
   font-size: 0.875rem;
 }
 
@@ -3281,7 +3281,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
   border-radius: 0.5rem;
 }
 
@@ -3291,21 +3291,21 @@ onMounted(async () => {
 }
 
 .duplicate-customer-info .info-label {
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   font-size: 0.875rem;
   min-width: 6.25rem;
 }
 
 .duplicate-customer-info .info-value {
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
   font-size: 0.875rem;
   font-weight: 500;
 }
 
 /* Finalize order info panel */
 .finalize-info-panel {
-  border: 0.0625rem solid #bfdbfe;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: var(--ms3-border-width) solid var(--ms3-border-accent);
+  background: linear-gradient(135deg, var(--ms3-bg-accent) 0%, var(--ms3-bg-accent-alt) 100%);
   border-radius: 0.5rem;
 }
 
@@ -3314,7 +3314,7 @@ onMounted(async () => {
 }
 
 .finalize-info-panel :deep(.p-message-icon) {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
   font-size: 1.25rem;
 }
 
@@ -3331,7 +3331,7 @@ onMounted(async () => {
   flex: 1;
   min-width: 12.5rem;
   margin: 0;
-  color: #1e40af;
+  color: var(--ms3-text-accent-dark);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -3375,7 +3375,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--ms3-spacing-3);
   padding: 0.25rem 0;
 }
 
@@ -3384,7 +3384,7 @@ onMounted(async () => {
   height: 3.125rem;
   object-fit: cover;
   border-radius: 0.25rem;
-  border: 0.0625rem solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   flex-shrink: 0;
 }
 
@@ -3395,7 +3395,7 @@ onMounted(async () => {
 
 .ms3-product-suggestion-name {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3403,13 +3403,13 @@ onMounted(async () => {
 
 .ms3-product-suggestion-meta {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   display: flex;
   gap: 0.5rem;
 }
 
 .ms3-product-suggestion-meta .article {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
 }
 
 .ms3-product-suggestion-meta .price {

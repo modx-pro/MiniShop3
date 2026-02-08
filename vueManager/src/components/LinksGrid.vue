@@ -442,20 +442,20 @@ onMounted(() => {
 
 .ms3-link-form .form-row label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .ms3-link-form .type-description {
-  color: #6b7280;
+  color: var(--ms3-text-muted-alt);
   font-style: italic;
   padding: 0.5rem;
-  background: #f3f4f6;
+  background: var(--ms3-bg-gray-100);
   border-radius: 0.25rem;
   margin-top: 0.25rem;
 }
 
 .ms3-link-form .type-hint {
-  color: #9ca3af;
+  color: var(--ms3-text-muted-light);
   font-size: 0.8rem;
 }
 
@@ -487,7 +487,7 @@ onMounted(() => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .stat-item {
@@ -497,11 +497,11 @@ onMounted(() => {
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 /* Bulk actions toolbar */
@@ -510,8 +510,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 0.0625rem solid #fbbf24;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
   border-radius: 0.375rem;
 }
 
@@ -520,7 +520,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -540,8 +540,8 @@ onMounted(() => {
 .link-type-badge {
   display: inline-block;
   padding: 0.25rem 0.625rem;
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--ms3-bg-indigo);
+  color: var(--ms3-text-indigo);
   border-radius: 0.25rem;
   font-size: 0.85rem;
   font-weight: 500;

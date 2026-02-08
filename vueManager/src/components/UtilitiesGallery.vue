@@ -230,7 +230,7 @@ onMounted(() => {
 }
 
 .info-content :deep(strong) {
-  color: #1e40af;
+  color: var(--ms3-text-accent-dark);
 }
 
 .params-fieldset {
@@ -241,17 +241,17 @@ onMounted(() => {
   font-family: monospace;
   font-size: 0.9rem;
   line-height: 1.6;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
   padding: 0.625rem;
   border-radius: 0.25rem;
 }
 
 .thumbnails-info :deep(strong) {
-  color: #495057;
+  color: var(--ms3-text-hint);
 }
 
 .settings-section {
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
   padding: 0.9375rem 1.25rem;
   border-radius: 0.375rem;
   margin-bottom: 1.25rem;
@@ -279,8 +279,8 @@ onMounted(() => {
 }
 
 .progress-section {
-  background: #fff;
-  border: 0.0625rem solid #dee2e6;
+  background: var(--ms3-bg-surface);
+  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
   border-radius: 0.375rem;
   padding: 0.9375rem;
   margin-bottom: 1.25rem;
@@ -294,11 +294,11 @@ onMounted(() => {
 }
 
 .progress-percent {
-  color: #1e40af;
+  color: var(--ms3-text-accent-dark);
 }
 
 .progress-iteration {
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 .progress-bar {
@@ -306,7 +306,7 @@ onMounted(() => {
 }
 
 .progress-bar :deep(.p-progressbar-value) {
-  background: #32AB9A;
+  background: var(--ms3-accent-teal);
 }
 
 .status-message {

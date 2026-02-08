@@ -28,6 +28,7 @@ class MiniShop3MgrHelpManagerController extends msManagerController
     public function loadCustomCssJs()
     {
         // Vue CSS
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/help.min.css');
 
         // Vue module

@@ -1,0 +1,92 @@
+/**
+ * MiniShop3 Vue Manager — Design Tokens
+ * Повторяющиеся значения вынесены в переменные
+ */
+
+/* Переменные доступны в .vueApp и .p-dialog (Dialog teleport в body) */
+.vueApp,
+.p-dialog,
+.p-confirm-dialog {
+  /* Colors — backgrounds */
+  --ms3-bg-surface: #fff;
+  --ms3-bg-muted: #f8f9fa;
+  --ms3-bg-slate: #f8fafc;
+  --ms3-bg-slate-alt: #f1f5f9;
+  --ms3-bg-warning: #fef3c7;
+  --ms3-bg-warning-light: #fefce8;
+  --ms3-bg-success: #f0fdf4;
+  --ms3-bg-success-light: #e8f5e9;
+  --ms3-bg-info: #e0f2fe;
+  --ms3-bg-accent: #eff6ff;
+  --ms3-bg-accent-alt: #dbeafe;
+  --ms3-bg-indigo: #e0e7ff;
+  --ms3-bg-neutral: #e9ecef;
+  --ms3-bg-gray-100: #f3f4f6;
+  --ms3-bg-gray-50: #fafafa;
+  --ms3-bg-drag: #f8f9fa;
+  --ms3-bg-overlay: rgba(255, 255, 255, 0.7);
+
+  /* Colors — borders */
+  --ms3-border-color: #e2e8f0;
+  --ms3-border-color-alt: #dee2e6;
+  --ms3-border-warning: #fbbf24;
+  --ms3-border-success: #bbf7d0;
+  --ms3-border-success-light: #c8e6c9;
+  --ms3-border-warning-alt: #fef08a;
+  --ms3-border-accent: #bfdbfe;
+  --ms3-border-neutral: #ced4da;
+  --ms3-border-divider: #eee;
+
+  /* Colors — text */
+  --ms3-text-primary: #374151;
+  --ms3-text-secondary: #64748b;
+  --ms3-text-muted: #6c757d;
+  --ms3-text-muted-alt: #6b7280;
+  --ms3-text-light: #94a3b8;
+  --ms3-text-dark: #334155;
+  --ms3-text-hint: #495057;
+  --ms3-text-info: #4b5563;
+  --ms3-text-header: #475569;
+  --ms3-text-warning: #92400e;
+  --ms3-text-warning-accent: #f59e0b;
+  --ms3-text-warning-dark: #854d0e;
+  --ms3-text-success: #22c55e;
+  --ms3-text-success-dark: #2e7d32;
+  --ms3-text-danger: #ef4444;
+  --ms3-text-danger-alt: #dc2626;
+  --ms3-text-darkest: #1e293b;
+  --ms3-text-muted-light: #9ca3af;
+  --ms3-text-accent-dark: #1e40af;
+  --ms3-text-info-dark: #0369a1;
+  --ms3-text-indigo: #3730a3;
+  --ms3-text-on-primary: #fff;
+  --ms3-text-success-result: #155724;
+  --ms3-text-info-result: #0c5460;
+  --ms3-text-error-result: #721c24;
+
+  /* Colors — accents */
+  --ms3-accent-primary: #3b82f6;
+  --ms3-accent-focus: rgba(59, 130, 246, 0.3);
+  --ms3-accent-teal: #32ab9a;
+  --ms3-accent-green: #4caf50;
+  --ms3-border-upload: #ddd;
+
+  /* Spacing (margins, paddings, gaps) */
+  --ms3-spacing-1: 0.25rem;
+  --ms3-spacing-2: 0.5rem;
+  --ms3-spacing-3: 0.75rem;
+  --ms3-spacing-4: 1rem;
+
+  /* Radius */
+  --ms3-radius-sm: 0.25rem;
+  --ms3-radius-md: 0.375rem;
+  --ms3-radius-lg: 0.5rem;
+
+  /* Border */
+  --ms3-border-width: 0.0625rem;
+  --ms3-border-width-focus: 0.125rem;
+  --ms3-border-width-accent: 0.1875rem;
+
+  /* Shadow */
+  --ms3-shadow-dropdown: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+}

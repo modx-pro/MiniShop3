@@ -363,11 +363,11 @@ onMounted(() => {
 .field-label {
   font-weight: 600;
   font-size: 0.875rem;
-  color: #333;
+  color: var(--ms3-text-primary);
 }
 
 .field-label .required {
-  color: #e24c4c;
+  color: var(--ms3-text-danger-alt);
   margin-left: 0.125rem;
 }
 
@@ -389,7 +389,7 @@ onMounted(() => {
 }
 
 .field-description {
-  color: #666;
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }

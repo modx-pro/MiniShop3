@@ -629,7 +629,7 @@ onMounted(async () => {
 .form-col-full small.text-muted {
   display: block;
   margin-top: 0.25rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
 }
 

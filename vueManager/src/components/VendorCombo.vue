@@ -186,7 +186,7 @@ onMounted(() => {
 .vendor-combo-wrapper .p-dropdown-empty-message,
 .p-dropdown-panel .p-dropdown-empty-message {
   padding: 0.75rem 1rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
   white-space: normal !important;
   word-wrap: break-word !important;

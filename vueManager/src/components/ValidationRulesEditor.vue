@@ -632,7 +632,7 @@ const editingFieldName = computed(() => {
 
 .mode-label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   line-height: 1;
 }
 
@@ -648,7 +648,7 @@ const editingFieldName = computed(() => {
 }
 
 .json-error {
-  color: #dc2626;
+  color: var(--ms3-text-danger-alt);
   font-size: 0.8rem;
 }
 
@@ -664,8 +664,8 @@ const editingFieldName = computed(() => {
 }
 
 .field-rules-item {
-  background: #f8fafc;
-  border: 0.0625rem solid #e2e8f0;
+  background: var(--ms3-bg-slate);
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   border-radius: 0.375rem;
   padding: 0.75rem;
 }
@@ -679,7 +679,7 @@ const editingFieldName = computed(() => {
 
 .field-name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .rules-chips {
@@ -690,12 +690,12 @@ const editingFieldName = computed(() => {
 }
 
 .rule-chip {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--ms3-bg-info);
+  color: var(--ms3-text-info-dark);
 }
 
 .rule-chip :deep(.p-chip-remove-icon) {
-  color: #0369a1;
+  color: var(--ms3-text-info-dark);
 }
 
 .add-field-btn {
@@ -717,11 +717,11 @@ const editingFieldName = computed(() => {
 
 .form-field label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .param-hint {
-  color: #6b7280;
+  color: var(--ms3-text-muted-alt);
   font-size: 0.8rem;
 }
 
@@ -734,12 +734,12 @@ const editingFieldName = computed(() => {
 
 :deep(.rule-option-name) {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 :deep(.rule-option-desc) {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .w-full {
@@ -758,11 +758,11 @@ const editingFieldName = computed(() => {
 
 .p-select-overlay .rule-option-name {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .p-select-overlay .rule-option-desc {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 </style>

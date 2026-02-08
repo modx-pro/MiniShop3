@@ -1087,9 +1087,9 @@ onMounted(async () => {
 
 .model-filter-bar {
   padding: 0.75rem 1rem;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
   border-radius: 0.375rem;
-  border: 0.0625rem solid #dee2e6;
+  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
 }
 
 .sections-panel {
@@ -1098,7 +1098,7 @@ onMounted(async () => {
 
 .sections-panel :deep(.p-panel-header) {
   padding: 0.75rem 1rem;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 .sections-panel :deep(.p-panel-content) {
@@ -1142,14 +1142,14 @@ onMounted(async () => {
 
 .drag-handle {
   cursor: grab;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 1.2rem;
   padding: 0.5rem;
   user-select: none;
 }
 
 .drag-handle:hover {
-  color: #495057;
+  color: var(--ms3-text-hint);
 }
 
 .drag-handle:active {
@@ -1158,12 +1158,12 @@ onMounted(async () => {
 
 :deep(.ghost-row) {
   opacity: 0.5;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.sortable-drag) {
   opacity: 0.8;
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
   cursor: grabbing !important;
 }
 
@@ -1172,15 +1172,15 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   padding: 3rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 :deep(.p-datatable-tbody tr:nth-child(even)) {
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.p-datatable-tbody tr:hover) {
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
 }
 
 :deep(.p-fieldset) {

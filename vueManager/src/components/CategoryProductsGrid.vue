@@ -889,7 +889,7 @@ onMounted(async () => {
 .nested-checkbox label {
   cursor: pointer;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .w-full {
@@ -914,7 +914,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .filter-buttons {
@@ -928,8 +928,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 0.0625rem solid #fbbf24;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
   border-radius: 0.375rem;
 }
 
@@ -938,7 +938,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -956,10 +956,10 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #e0f2fe;
+  background: var(--ms3-bg-info);
   border-radius: 0.25rem;
   font-size: 0.85rem;
-  color: #0369a1;
+  color: var(--ms3-text-info-dark);
 }
 
 /* Drag and drop styles */
@@ -971,14 +971,14 @@ onMounted(async () => {
 
 .drag-handle {
   cursor: grab;
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   font-size: 1.2rem;
   padding: 0.5rem;
   user-select: none;
 }
 
 .drag-handle:hover {
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .drag-handle:active {
@@ -987,13 +987,13 @@ onMounted(async () => {
 
 :deep(.ghost-row) {
   opacity: 0.5;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.sortable-drag) {
   opacity: 0.9;
-  background: #fff;
-  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
+  background: var(--ms3-bg-surface);
+  box-shadow: var(--ms3-shadow-dropdown);
 }
 
 /* Table styles */
@@ -1013,8 +1013,8 @@ onMounted(async () => {
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
-  border-bottom: 0.0625rem solid #dee2e6;
-  background: #f8f9fa;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  background: var(--ms3-bg-muted);
   font-weight: 600;
 }
 
@@ -1023,27 +1023,27 @@ onMounted(async () => {
 }
 
 .sortable-header:hover {
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
 }
 
 .sort-icon {
   margin-left: 0.5rem;
   font-size: 0.8rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 .p-datatable-tbody td {
   padding: 0.75rem 1rem;
-  border-bottom: 0.0625rem solid #dee2e6;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
   vertical-align: middle;
 }
 
 .p-datatable-tbody tr:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 
 .p-row-odd {
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
 }
 
 .loading-overlay {
@@ -1052,7 +1052,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255,255,255,0.7);
+  background: var(--ms3-bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1065,12 +1065,12 @@ onMounted(async () => {
   align-items: center;
   justify-content: flex-end;
   padding: 0.75rem 1rem;
-  border-top: 0.0625rem solid #dee2e6;
+  border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt);
   gap: 0.5rem;
 }
 
 .p-paginator-current {
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.9rem;
   margin-right: auto;
 }
@@ -1084,18 +1084,18 @@ onMounted(async () => {
 }
 
 .no-image {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 /* Product title */
 .product-id {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   font-size: 0.85rem;
   margin-right: 0.25rem;
 }
 
 :deep(.product-link) {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
   text-decoration: none;
 }
 
@@ -1110,15 +1110,15 @@ onMounted(async () => {
 
 .product-category {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .product-category a {
-  color: #64748b;
+  color: var(--ms3-text-secondary);
   text-decoration: none;
 }
 
 .product-category a:hover {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
 }
 </style>

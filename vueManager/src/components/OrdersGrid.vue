@@ -638,7 +638,7 @@ onMounted(async () => {
                   v-if="column.type === 'badge'"
                   :value="getBadgeValue(data, column)"
                   :severity="getStatusSeverity(getBadgeColor(data, column))"
-                  :style="getBadgeColor(data, column) ? { backgroundColor: getBadgeColor(data, column), color: '#fff' } : {}"
+                  :style="getBadgeColor(data, column) ? { backgroundColor: getBadgeColor(data, column), color: 'var(--ms3-text-on-primary)' } : {}"
                 />
                 <!-- Datetime field -->
                 <span v-else-if="column.type === 'datetime'">
@@ -706,7 +706,7 @@ onMounted(async () => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .stat-item {
@@ -716,15 +716,15 @@ onMounted(async () => {
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 .customer-link {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
   text-decoration: none;
 }
 
@@ -754,7 +754,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-secondary);
 }
 
 .filter-buttons {
@@ -768,8 +768,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 0.0625rem solid #fbbf24;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
   border-radius: 0.375rem;
 }
 
@@ -778,7 +778,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {

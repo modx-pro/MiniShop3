@@ -250,29 +250,29 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  border: 0.0625rem solid #ced4da;
+  border: var(--ms3-border-width) solid var(--ms3-border-neutral);
   border-radius: 0.25rem;
-  background: #ffffff;
+  background: var(--ms3-bg-surface);
   min-height: 2.5rem;
   cursor: text;
   transition: border-color 0.2s;
 }
 
 .chips-container:hover {
-  border-color: #94a3b8;
+  border-color: var(--ms3-text-light);
 }
 
 .chips-container:focus-within {
-  border-color: #3b82f6;
+  border-color: var(--ms3-accent-primary);
   outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 0.2rem var(--ms3-accent-focus);
 }
 
 .chip-item {
   display: inline-flex;
   align-items: center;
-  background: #3b82f6;
-  color: #ffffff;
+  background: var(--ms3-accent-primary);
+  color: var(--ms3-text-on-primary);
   padding: 0.25rem 0.5rem;
   border-radius: 0.1875rem;
   font-size: 0.875rem;
@@ -318,7 +318,7 @@ onMounted(() => {
 }
 
 .chip-input:disabled {
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
   cursor: not-allowed;
 }
 
@@ -328,13 +328,13 @@ onMounted(() => {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: #ffffff;
-  border: 0.0625rem solid #ced4da;
+  background: var(--ms3-bg-surface);
+  border: var(--ms3-border-width) solid var(--ms3-border-neutral);
   border-radius: 0.25rem;
   margin-top: 0.25rem;
   max-height: 12.5rem;
   overflow-y: auto;
-  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.15);
+  box-shadow: var(--ms3-shadow-dropdown);
 }
 
 .suggestion-item {
@@ -344,6 +344,6 @@ onMounted(() => {
 }
 
 .suggestion-item:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 </style>

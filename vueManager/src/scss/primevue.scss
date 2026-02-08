@@ -1,6 +1,8 @@
 // Глобальные правила box-sizing и переопределение для Vue находятся в main.css
 // Этот файл больше не содержит правил box-sizing
 
+@use 'variables' as *;
+
 /* ============================================ */
 /* Utility классы (аналог PrimeFlex)           */
 /* ============================================ */
@@ -308,7 +310,7 @@
 .p-select-overlay .rule-option-desc,
 .p-dialog .rule-option-desc {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--ms3-text-muted-alt);
 }
 
 /* Validation Field Option in Select dropdown */
@@ -327,7 +329,7 @@
 .p-select-overlay .field-option-group,
 .p-dialog .field-option-group {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--ms3-text-muted-alt);
 }
 
 /* Form fields in dialogs (for ModelFieldsGrid and similar) */
@@ -365,10 +367,10 @@
 .vueApp .tab-description {
   margin: 0 0 1rem 0;
   padding: 0.75rem 1rem;
-  background-color: #f8f9fa;
-  border-left: 0.1875rem solid #3b82f6;
-  color: #4b5563;
+  background-color: var(--ms3-bg-muted);
+  border-left: var(--ms3-border-width-accent) solid var(--ms3-accent-primary);
+  color: var(--ms3-text-info);
   font-size: 0.875rem;
   line-height: 1.5;
-  border-radius: 0 0.25rem 0.25rem 0;
+  border-radius: 0 var(--ms3-radius-sm) var(--ms3-radius-sm) 0;
 }
