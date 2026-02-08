@@ -16,6 +16,7 @@ import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 
 import ToastService from 'primevue/toastservice'
 import ProductTabs from '../components/product/ProductTabs.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Plugin Registry for third-party tabs
@@ -212,6 +213,7 @@ window.MS3_initProductTabs = function(config) {
 
   const app = createVueApp(props)
   const instance = app.mount(container)
+  injectFormStylesOverride()
 
   // Store references
   container.__vueApp__ = app

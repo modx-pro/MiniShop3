@@ -17,6 +17,7 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
 import CategoryProductsGrid from '../components/CategoryProductsGrid.vue';
+import { injectFormStylesOverride } from '../utils/formStyles.js';
 
 let appInstance = null;
 
@@ -74,6 +75,7 @@ export function init(selector = '#ms3-vue-category-products', categoryId = 0) {
 
   appInstance = createVueApp(categoryId);
   appInstance.mount(selector);
+  injectFormStylesOverride();
   $el.dataset.vApp = 'true';
 
   return appInstance;

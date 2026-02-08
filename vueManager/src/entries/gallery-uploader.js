@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import GalleryUploader from '../components/gallery/GalleryUploader.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Gallery Uploader Entry Point
@@ -43,6 +44,7 @@ window.MS3_initGalleryUploader = function(config) {
   })
 
   const instance = app.mount(container)
+  injectFormStylesOverride()
 
   container.__vueApp__ = app
   container.__vueInstance__ = instance

@@ -14,6 +14,7 @@ import 'primeicons/primeicons.css';
 import ToastService from 'primevue/toastservice';
 
 import UtilitiesGallery from '../components/UtilitiesGallery.vue';
+import { injectFormStylesOverride } from '../utils/formStyles.js';
 
 let app = null;
 
@@ -63,6 +64,7 @@ export function init(selector = '#ms3-vue-utilities-gallery') {
   // Component reads config from data-attributes set by ExtJS
   app = createVueApp();
   app.mount(selector);
+  injectFormStylesOverride();
   $el.dataset.vApp = 'true';
 
   return app;

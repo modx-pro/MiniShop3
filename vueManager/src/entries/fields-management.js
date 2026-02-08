@@ -16,6 +16,7 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
 import VueFieldsManagement from '../components/FieldsManagement.vue';
+import { injectFormStylesOverride } from '../utils/formStyles.js';
 
 /**
  * Creates and configures Vue application
@@ -61,6 +62,7 @@ export function init(selector = '#vue-fields-management') {
 
   const app = createVueApp();
   app.mount(selector);
+  injectFormStylesOverride();
   $el.dataset.vApp = 'true';
 
   return app;

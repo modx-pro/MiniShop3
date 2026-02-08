@@ -1,0 +1,49 @@
+/**
+ * Инжект переопределения font-size для контролов.
+ * Вызывать после app.mount() — стили PrimeVue встраиваются в runtime и перезаписывают CSS из файлов.
+ */
+const STYLE_ID = 'ms3-form-styles-override'
+
+export function injectFormStylesOverride() {
+  if (document.getElementById(STYLE_ID)) return
+
+  const css = `
+.vueApp .p-dropdown .p-dropdown-label,
+.vueApp .p-dropdown .p-inputtext,
+.vueApp .p-select [data-pc-section="label"],
+.vueApp .p-select .p-select-label,
+.vueApp .p-select .p-inputtext,
+.vueApp .p-multiselect [data-pc-section="label"],
+.vueApp .p-multiselect .p-multiselect-label,
+.vueApp .p-inputtext,
+.vueApp .p-inputnumber .p-inputnumber-input,
+.vueApp .p-inputnumber-input,
+.vueApp .p-autocomplete .p-autocomplete-input,
+.vueApp .p-autocomplete-input,
+.vueApp .p-textarea,
+.vueApp .p-cascadeselect [data-pc-section="label"],
+.vueApp .p-treeselect [data-pc-section="label"],
+.p-dialog .p-dropdown .p-dropdown-label,
+.p-dialog .p-dropdown .p-inputtext,
+.p-dialog .p-select [data-pc-section="label"],
+.p-dialog .p-select .p-select-label,
+.p-dialog .p-select .p-inputtext,
+.p-dialog .p-multiselect [data-pc-section="label"],
+.p-dialog .p-multiselect .p-multiselect-label,
+.p-dialog .p-inputtext,
+.p-dialog .p-inputnumber .p-inputnumber-input,
+.p-dialog .p-inputnumber-input,
+.p-dialog .p-autocomplete .p-autocomplete-input,
+.p-dialog .p-autocomplete-input,
+.p-dialog .p-textarea,
+.p-dialog .p-cascadeselect [data-pc-section="label"],
+.p-dialog .p-treeselect [data-pc-section="label"] {
+  font-size: 0.875rem !important;
+}
+`
+
+  const el = document.createElement('style')
+  el.id = STYLE_ID
+  el.textContent = css
+  document.head.appendChild(el)
+}

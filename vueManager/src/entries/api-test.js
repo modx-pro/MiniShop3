@@ -16,6 +16,7 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
 import VueApiTest from '../components/ApiTest.vue';
+import { injectFormStylesOverride } from '../utils/formStyles.js';
 
 /**
  * Creates and configures Vue application
@@ -61,6 +62,7 @@ export function init(selector = '#vue-api-test') {
 
   const app = createVueApp();
   app.mount(selector);
+  injectFormStylesOverride();
   $el.dataset.vApp = 'true';
 
   console.info('[API Test] Mounted successfully');

@@ -16,6 +16,7 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
 import OrdersGrid from '../components/OrdersGrid.vue';
+import { injectFormStylesOverride } from '../utils/formStyles.js';
 
 /**
  * Creates and configures Vue application
@@ -59,6 +60,7 @@ export function init(selector = '#ms3-orders-vue-wrapper') {
 
   const app = createVueApp();
   app.mount(selector);
+  injectFormStylesOverride();
   $el.dataset.vApp = 'true';
 
   return app;

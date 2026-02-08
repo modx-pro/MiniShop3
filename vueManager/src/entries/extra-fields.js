@@ -17,6 +17,7 @@ import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
 
 import VueExtraFieldsManager from '../components/ExtraFieldsManager.vue';
+import { injectFormStylesOverride } from '../utils/formStyles.js';
 
 /**
  * Creates and configures Vue application
@@ -64,6 +65,7 @@ export function init(selector = '#ms3-vue-extra-fields') {
 
   const app = createVueApp();
   app.mount(selector);
+  injectFormStylesOverride();
   $el.dataset.vApp = 'true';
 
   return app;

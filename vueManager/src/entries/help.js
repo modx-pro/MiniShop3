@@ -9,6 +9,7 @@ import Aura from '@primeuix/themes/aura'
 import 'primeicons/primeicons.css'
 
 import HelpPage from '../components/HelpPage.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Creates and configures Vue application
@@ -45,6 +46,7 @@ export function init(selector = '#ms3-vue-help') {
 
   const app = createVueApp()
   app.mount(selector)
+  injectFormStylesOverride()
   $el.dataset.vApp = 'true'
 
   return app

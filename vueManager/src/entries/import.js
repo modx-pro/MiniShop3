@@ -15,6 +15,7 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
 import ImportProducts from '../components/ImportProducts.vue';
+import { injectFormStylesOverride } from '../utils/formStyles.js';
 
 let app = null;
 
@@ -64,6 +65,7 @@ export function init(selector = '#ms3-vue-import') {
 
   app = createVueApp();
   app.mount(selector);
+  injectFormStylesOverride();
   $el.dataset.vApp = 'true';
 
 

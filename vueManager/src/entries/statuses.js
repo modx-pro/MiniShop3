@@ -10,6 +10,7 @@ import Aura from '@primeuix/themes/aura'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 import StatusesGrid from '../components/StatusesGrid.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 
 // Mount point ID
@@ -50,6 +51,7 @@ function mountApp() {
   app.use(ConfirmationService)
 
   app.mount(container)
+  injectFormStylesOverride()
 
   return true
 }

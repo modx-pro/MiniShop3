@@ -11,6 +11,7 @@ import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import LinksGrid from '../components/LinksGrid.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 // Mount point ID
 const MOUNT_ID = 'ms3-vue-links'
@@ -50,6 +51,7 @@ function mountApp() {
   app.use(ConfirmationService)
 
   app.mount(container)
+  injectFormStylesOverride()
 
   return true
 }
