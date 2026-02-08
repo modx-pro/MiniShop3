@@ -4,7 +4,7 @@
       <!-- Display selected chips -->
       <div v-for="(chip, index) in localValue" :key="index" class="chip-item">
         <span class="chip-text">{{ chip }}</span>
-        <span v-if="!disabled" class="chip-remove" @click.stop="removeChip(index)">×</span>
+        <span v-if="!disabled" class="chip-remove" @click.stop="removeChip(index)"><i class="pi pi-times"></i></span>
       </div>
 
       <!-- Input field for adding new values -->
@@ -278,8 +278,6 @@ onMounted(() => {
 }
 
 .chip-remove {
-  font-size: 1.25rem;
-  line-height: 1;
   cursor: pointer;
   margin-left: 0.375rem;
   opacity: 0.9;
@@ -289,10 +287,16 @@ onMounted(() => {
   justify-content: center;
   width: 1.125rem;
   height: 1.125rem;
+  min-width: 1.125rem;
+  min-height: 1.125rem;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
-  font-weight: 700;
   user-select: none;
+  font-size: 0.65rem;
+}
+
+.chip-remove i {
+  font-size: inherit;
 }
 
 .chip-remove:hover {

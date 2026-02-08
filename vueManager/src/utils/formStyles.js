@@ -40,6 +40,33 @@ export function injectFormStylesOverride() {
 .p-dialog .p-treeselect [data-pc-section="label"] {
   font-size: 0.875rem !important;
 }
+
+/* Компактные бейджи (Tag, status-badge, статусы) */
+.vueApp .p-tag,
+.vueApp .status-badge,
+.p-dialog .p-tag,
+.p-dialog .status-badge {
+  padding: 0.125rem 0.5rem !important;
+  font-size: 0.75rem !important;
+}
+
+/* Единая высота всех однострочных контролов */
+.vueApp .p-inputtext,
+.vueApp .p-select,
+.vueApp .p-dropdown,
+.vueApp .p-inputnumber .p-inputnumber-input,
+.vueApp .p-autocomplete .p-autocomplete-input,
+.vueApp .p-datepicker .p-datepicker-input,
+.p-dialog .p-inputtext,
+.p-dialog .p-select,
+.p-dialog .p-dropdown,
+.p-dialog .p-inputnumber .p-inputnumber-input,
+.p-dialog .p-autocomplete .p-autocomplete-input,
+.p-dialog .p-datepicker .p-datepicker-input {
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  box-sizing: border-box !important;
+}
 `
 
   const el = document.createElement('style')

@@ -559,10 +559,10 @@ onMounted(() => {
 /* Status badge styles - global because used in table */
 .status-badge {
   display: inline-block;
-  padding: var(--ms3-spacing-1) var(--ms3-spacing-3);
+  padding: 0.125rem 0.5rem;
   border-radius: var(--ms3-radius-sm);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 /* Dialog form styles - global because Dialog teleports to body */
