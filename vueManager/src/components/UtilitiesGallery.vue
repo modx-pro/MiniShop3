@@ -1,14 +1,14 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
-
 import Button from 'primevue/button'
-import ProgressBar from 'primevue/progressbar'
-import Message from 'primevue/message'
-import InputNumber from 'primevue/inputnumber'
 import Card from 'primevue/card'
 import Fieldset from 'primevue/fieldset'
+import InputNumber from 'primevue/inputnumber'
+import Message from 'primevue/message'
+import ProgressBar from 'primevue/progressbar'
+import { computed, onMounted, ref } from 'vue'
+
+import request from '../request.js'
 
 const { _ } = useLexicon()
 
@@ -62,7 +62,7 @@ const galleryInfoHtml = computed(() => {
     sourceName.value,
     sourceId.value,
     totalProducts.value,
-    totalFiles.value,
+    totalFiles.value
   )
 })
 
@@ -114,7 +114,8 @@ const processNextBatch = async () => {
     }
   } catch (err) {
     console.error('Gallery regeneration failed:', err)
-    errorMessage.value = err.message || _('ms3_utilities_gallery_err_noproducts', 'Error regenerating thumbnails')
+    errorMessage.value =
+      err.message || _('ms3_utilities_gallery_err_noproducts', 'Error regenerating thumbnails')
     isRunning.value = false
   }
 }
@@ -146,14 +147,20 @@ onMounted(() => {
     </Card>
 
     <!-- Thumbnails Configuration -->
-    <Fieldset :legend="_('ms3_utilities_params', 'Parameters')" :toggleable="true" class="params-fieldset">
+    <Fieldset
+      :legend="_('ms3_utilities_params', 'Parameters')"
+      :toggleable="true"
+      class="params-fieldset"
+    >
       <div class="thumbnails-info" v-html="thumbnailsInfo"></div>
     </Fieldset>
 
     <!-- Settings -->
     <div class="settings-section">
       <div class="setting-row">
-        <label for="limit-input">{{ _('ms3_utilities_gallery_for_step', 'Products per step') }}</label>
+        <label for="limit-input">{{
+          _('ms3_utilities_gallery_for_step', 'Products per step')
+        }}</label>
         <InputNumber
           v-model="limit"
           inputId="limit-input"
@@ -209,7 +216,13 @@ onMounted(() => {
       {{ _('ms3_utilities_gallery_done_message', `Updated ${updatedCount} products`) }}
     </Message>
 
-    <Message v-if="errorMessage" severity="error" :closable="true" @close="errorMessage = null" class="status-message">
+    <Message
+      v-if="errorMessage"
+      severity="error"
+      :closable="true"
+      @close="errorMessage = null"
+      class="status-message"
+    >
       {{ errorMessage }}
     </Message>
   </div>

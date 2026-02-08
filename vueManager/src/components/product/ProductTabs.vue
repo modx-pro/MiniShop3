@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
-import TabView from 'primevue/tabview'
+import { useLexicon } from '@vuetools/useLexicon'
 import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
-import { useLexicon } from '@vuetools/useLexicon'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+
 import ProductDataFields from '../ProductDataFields.vue'
 
 const props = defineProps({
@@ -159,7 +160,7 @@ function mountExtJS(tabKey, tabData) {
 
   const containerId = `ms3-product-tab-${tabKey}`
 
-  waitForElement(containerId, (container) => {
+  waitForElement(containerId, container => {
     try {
       // Check if Ext is available
       if (typeof Ext === 'undefined') {
@@ -185,14 +186,20 @@ function mountExtJS(tabKey, tabData) {
           // Fix source combo - set value after store loads
           const sourceCombo = Ext.getCmp('ms3-resource-source')
           if (sourceCombo && tabData.extConfig.record) {
-            const sourceValue = tabData.extConfig.record.source || tabData.extConfig.record.source_id
+            const sourceValue =
+              tabData.extConfig.record.source || tabData.extConfig.record.source_id
             if (sourceValue && sourceCombo.store) {
               if (sourceCombo.store.getCount() > 0) {
                 sourceCombo.setValue(sourceValue)
               } else {
-                sourceCombo.store.on('load', function() {
-                  sourceCombo.setValue(sourceValue)
-                }, null, { single: true })
+                sourceCombo.store.on(
+                  'load',
+                  function () {
+                    sourceCombo.setValue(sourceValue)
+                  },
+                  null,
+                  { single: true }
+                )
                 if (!sourceCombo.store.isLoading) {
                   sourceCombo.store.load()
                 }
@@ -217,7 +224,7 @@ function mountOptionsTab() {
 
   const containerId = 'ms3-product-tab-options'
 
-  waitForElement(containerId, (container) => {
+  waitForElement(containerId, container => {
     try {
       if (typeof Ext === 'undefined') {
         console.error('[ProductTabs] Ext is not defined')
@@ -234,7 +241,7 @@ function mountOptionsTab() {
           { record: props.record, mode: 'update' },
           option.key,
           option,
-          'extra-field',
+          'extra-field'
         )
 
         if (!field) continue
@@ -380,38 +387,21 @@ onBeforeUnmount(() => {
   <div class="product-tabs">
     <Toast />
 
-    <TabView
-      v-if="tabsReady"
-      v-model:activeIndex="activeTab"
-      @tab-change="onTabChange"
-    >
-      <TabPanel
-        v-for="tab in tabConfig"
-        :key="tab.key"
-        :header="tab.title"
-      >
+    <TabView v-if="tabsReady" v-model:activeIndex="activeTab" @tab-change="onTabChange">
+      <TabPanel v-for="tab in tabConfig" :key="tab.key" :header="tab.title">
         <!-- Vue component: ProductDataFields -->
         <template v-if="tab.type === 'vue' && tab.component === 'ProductDataFields'">
-          <ProductDataFields
-            :product-id="productId"
-            :product-data="record"
-          />
+          <ProductDataFields :product-id="productId" :product-data="record" />
         </template>
 
         <!-- ExtJS component container -->
         <template v-else-if="tab.type === 'extjs'">
-          <div
-            :id="`ms3-product-tab-${tab.key}`"
-            class="extjs-container"
-          ></div>
+          <div :id="`ms3-product-tab-${tab.key}`" class="extjs-container"></div>
         </template>
 
         <!-- ExtJS Options with vtabs -->
         <template v-else-if="tab.type === 'extjs-options'">
-          <div
-            id="ms3-product-tab-options"
-            class="extjs-container extjs-options-container"
-          ></div>
+          <div id="ms3-product-tab-options" class="extjs-container extjs-options-container"></div>
         </template>
 
         <!-- Plugin Vue component -->
@@ -426,10 +416,7 @@ onBeforeUnmount(() => {
 
         <!-- Plugin ExtJS component -->
         <template v-else-if="tab.type === 'plugin-extjs'">
-          <div
-            :id="`ms3-product-tab-${tab.key}`"
-            class="extjs-container"
-          ></div>
+          <div :id="`ms3-product-tab-${tab.key}`" class="extjs-container"></div>
         </template>
       </TabPanel>
     </TabView>

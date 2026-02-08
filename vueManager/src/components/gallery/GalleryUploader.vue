@@ -5,11 +5,11 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount } from 'vue'
 import Uppy from '@uppy/core'
 import Dashboard from '@uppy/dashboard'
-import XHRUpload from '@uppy/xhr-upload'
 import ImageEditor from '@uppy/image-editor'
+import XHRUpload from '@uppy/xhr-upload'
+import { onBeforeUnmount, onMounted } from 'vue'
 
 const props = defineProps({
   productId: {
@@ -38,7 +38,14 @@ const props = defineProps({
   },
   allowedFileTypes: {
     type: Array,
-    default: () => ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic'],
+    default: () => [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/avif',
+      'image/heic',
+    ],
   },
 })
 
@@ -114,7 +121,7 @@ const initUppy = () => {
     fieldName: 'file',
     timeout: 60000, // 60 seconds
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
   })
 
@@ -128,7 +135,7 @@ const initUppy = () => {
     emit('upload-error', { file, error, response })
   })
 
-  uppy.on('complete', (result) => {
+  uppy.on('complete', result => {
     console.log('Upload complete:', result)
     emit('upload-complete', result)
 
@@ -165,13 +172,13 @@ const formatBytes = (bytes, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-const updateSettings = (newSettings) => {
+const updateSettings = newSettings => {
   if (uppy) {
     uppy.setOptions(newSettings)
   }
 }
 
-const addFiles = (files) => {
+const addFiles = files => {
   if (uppy) {
     files.forEach(file => {
       uppy.addFile(file)

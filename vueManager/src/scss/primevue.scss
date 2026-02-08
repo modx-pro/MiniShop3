@@ -4,7 +4,9 @@
 @use 'variables' as *;
 
 /* ============================================ */
+
 /* Utility классы (аналог PrimeFlex)           */
+
 /* ============================================ */
 
 /* Flex Layout */
@@ -362,10 +364,12 @@
 }
 
 /* ============================================ */
+
 /* Tab Description                             */
+
 /* ============================================ */
 .vueApp .tab-description {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1rem;
   padding: 0.75rem 1rem;
   background-color: var(--ms3-bg-muted);
   border-left: var(--ms3-border-width-accent) solid var(--ms3-accent-primary);

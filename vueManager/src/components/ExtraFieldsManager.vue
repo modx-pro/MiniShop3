@@ -1,22 +1,23 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
-import Fieldset from 'primevue/fieldset'
-import Dropdown from 'primevue/dropdown'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
+import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import Dialog from 'primevue/dialog'
+import Dropdown from 'primevue/dropdown'
+import Fieldset from 'primevue/fieldset'
+import InputText from 'primevue/inputtext'
+import Tag from 'primevue/tag'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
+import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
+import request from '../request.js'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -273,8 +274,14 @@ async function createField() {
     // Convert null from string to boolean
     const payload = {
       ...fieldForm.value,
-      null: fieldForm.value.null === true || fieldForm.value.null === 'true' || fieldForm.value.null === 1,
-      active: fieldForm.value.active === true || fieldForm.value.active === 'true' || fieldForm.value.active === 1,
+      null:
+        fieldForm.value.null === true ||
+        fieldForm.value.null === 'true' ||
+        fieldForm.value.null === 1,
+      active:
+        fieldForm.value.active === true ||
+        fieldForm.value.active === 'true' ||
+        fieldForm.value.active === 1,
     }
 
     const response = await request.post('/api/mgr/extra-fields', payload)
@@ -317,8 +324,12 @@ async function updateField() {
       label: fieldForm.value.label || '',
       description: fieldForm.value.description || '',
       xtype: fieldForm.value.xtype || 'textfield',
-      active: fieldForm.value.active === true || fieldForm.value.active === 'true' || fieldForm.value.active === 1,
-      select_options: fieldForm.value.xtype === 'ms3-combo-select' ? fieldForm.value.select_options : '',
+      active:
+        fieldForm.value.active === true ||
+        fieldForm.value.active === 'true' ||
+        fieldForm.value.active === 1,
+      select_options:
+        fieldForm.value.xtype === 'ms3-combo-select' ? fieldForm.value.select_options : '',
     }
 
     const response = await request.put(`/api/mgr/extra-fields/${fieldForm.value.id}`, payload)
@@ -462,7 +473,7 @@ onMounted(() => {
           optionLabel="label"
           optionValue="value"
           :placeholder="_('ms3_vue_extra_fields_select_class')"
-          style="min-width: 17.5rem;"
+          style="min-width: 17.5rem"
           @change="onClassFilterChange"
         />
       </div>
@@ -518,10 +529,18 @@ onMounted(() => {
             </template>
           </Column>
 
-          <Column field="column_exists" :header="_('ms3_vue_table_column_exists')" style="width: 8.75rem">
+          <Column
+            field="column_exists"
+            :header="_('ms3_vue_table_column_exists')"
+            style="width: 8.75rem"
+          >
             <template #body="{ data }">
               <Tag
-                :value="data.column_exists ? _('ms3_vue_table_column_exists_yes') : _('ms3_vue_table_column_exists_no')"
+                :value="
+                  data.column_exists
+                    ? _('ms3_vue_table_column_exists_yes')
+                    : _('ms3_vue_table_column_exists_no')
+                "
                 :severity="getColumnExistsSeverity(data.column_exists)"
               />
             </template>
@@ -663,129 +682,129 @@ onMounted(() => {
         <!-- Database parameters -->
         <Fieldset :legend="_('ms3_vue_dialog_fieldset_database')" class="mb-3">
           <div class="form-grid">
-          <!-- DB type -->
-          <div class="field col-6">
-            <label for="field-dbtype">{{ _('ms3_vue_dialog_dbtype') }}</label>
-            <Dropdown
-              id="field-dbtype"
-              v-model="fieldForm.dbtype"
-              :options="dbtypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              :placeholder="_('ms3_vue_dialog_xtype_select')"
-              class="w-full"
-              :disabled="isEditMode"
-            />
-          </div>
-
-          <!-- Precision -->
-          <div class="field col-6">
-            <label for="field-precision">{{ _('ms3_vue_dialog_precision') }}</label>
-            <InputText
-              id="field-precision"
-              v-model="fieldForm.precision"
-              :placeholder="_('ms3_vue_dialog_precision_placeholder')"
-              class="w-full"
-              :disabled="isEditMode"
-            />
-          </div>
-
-          <!-- PHP type -->
-          <div class="field col-6">
-            <label for="field-phptype">{{ _('ms3_vue_dialog_phptype') }}</label>
-            <Dropdown
-              id="field-phptype"
-              v-model="fieldForm.phptype"
-              :options="phptypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              :placeholder="_('ms3_vue_dialog_xtype_select')"
-              class="w-full"
-              :disabled="isEditMode"
-            />
-          </div>
-
-          <!-- Nullable -->
-          <div class="field col-6">
-            <label for="field-null">{{ _('ms3_vue_dialog_null') }}</label>
-            <div class="flex align-items-center" style="height: 2.625rem">
-              <Checkbox
-                id="field-null"
-                v-model="fieldForm.null"
-                :binary="true"
+            <!-- DB type -->
+            <div class="field col-6">
+              <label for="field-dbtype">{{ _('ms3_vue_dialog_dbtype') }}</label>
+              <Dropdown
+                id="field-dbtype"
+                v-model="fieldForm.dbtype"
+                :options="dbtypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                :placeholder="_('ms3_vue_dialog_xtype_select')"
+                class="w-full"
                 :disabled="isEditMode"
               />
-              <label for="field-null" class="ml-2 cursor-pointer">{{ _('ms3_vue_dialog_null_label') }}</label>
             </div>
-          </div>
 
-          <!-- Default value -->
-          <div class="field col-6">
-            <label for="field-default">{{ _('ms3_vue_dialog_default') }}</label>
-            <Dropdown
-              id="field-default"
-              v-model="fieldForm.default"
-              :options="defaultOptions"
-              optionLabel="label"
-              optionValue="value"
-              :placeholder="_('ms3_vue_dialog_xtype_select')"
-              class="w-full"
-              :disabled="isEditMode"
-            />
-          </div>
-
-          <!-- User-defined default value -->
-          <div class="field col-6" v-if="fieldForm.default === 'USER_DEFINED'">
-            <label for="field-default-value">{{ _('ms3_vue_dialog_default_value') }}</label>
-            <InputText
-              id="field-default-value"
-              v-model="fieldForm.default_value"
-              :placeholder="_('ms3_vue_dialog_default_value_placeholder')"
-              class="w-full"
-              :disabled="isEditMode"
-            />
-          </div>
-
-          <!-- Attributes -->
-          <div class="field col-6">
-            <label for="field-attributes">{{ _('ms3_vue_dialog_attributes') }}</label>
-            <InputText
-              id="field-attributes"
-              v-model="fieldForm.attributes"
-              :placeholder="_('ms3_vue_dialog_attributes_placeholder')"
-              class="w-full"
-              :disabled="isEditMode"
-            />
-            <small class="text-500">{{ _('ms3_vue_dialog_attributes_help') }}</small>
-          </div>
-
-          <!-- Index type -->
-          <div class="field col-6">
-            <label for="field-index-type">{{ _('ms3_vue_dialog_index_type') }}</label>
-            <Dropdown
-              id="field-index-type"
-              v-model="fieldForm.index_type"
-              :options="indexTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              :placeholder="_('ms3_vue_dialog_xtype_select')"
-              class="w-full"
-              :disabled="isEditMode"
-            />
-          </div>
-
-          <!-- Active status -->
-          <div class="field col-12">
-            <label for="field-active">{{ _('ms3_vue_dialog_active') }}</label>
-            <div class="flex align-items-center" style="height: 2.625rem">
-              <Checkbox
-                id="field-active"
-                v-model="fieldForm.active"
-                :binary="true"
+            <!-- Precision -->
+            <div class="field col-6">
+              <label for="field-precision">{{ _('ms3_vue_dialog_precision') }}</label>
+              <InputText
+                id="field-precision"
+                v-model="fieldForm.precision"
+                :placeholder="_('ms3_vue_dialog_precision_placeholder')"
+                class="w-full"
+                :disabled="isEditMode"
               />
-              <label for="field-active" class="ml-2 cursor-pointer">{{ _('ms3_vue_dialog_active_label') }}</label>
             </div>
-          </div>
+
+            <!-- PHP type -->
+            <div class="field col-6">
+              <label for="field-phptype">{{ _('ms3_vue_dialog_phptype') }}</label>
+              <Dropdown
+                id="field-phptype"
+                v-model="fieldForm.phptype"
+                :options="phptypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                :placeholder="_('ms3_vue_dialog_xtype_select')"
+                class="w-full"
+                :disabled="isEditMode"
+              />
+            </div>
+
+            <!-- Nullable -->
+            <div class="field col-6">
+              <label for="field-null">{{ _('ms3_vue_dialog_null') }}</label>
+              <div class="flex align-items-center" style="height: 2.625rem">
+                <Checkbox
+                  id="field-null"
+                  v-model="fieldForm.null"
+                  :binary="true"
+                  :disabled="isEditMode"
+                />
+                <label for="field-null" class="ml-2 cursor-pointer">{{
+                  _('ms3_vue_dialog_null_label')
+                }}</label>
+              </div>
+            </div>
+
+            <!-- Default value -->
+            <div class="field col-6">
+              <label for="field-default">{{ _('ms3_vue_dialog_default') }}</label>
+              <Dropdown
+                id="field-default"
+                v-model="fieldForm.default"
+                :options="defaultOptions"
+                optionLabel="label"
+                optionValue="value"
+                :placeholder="_('ms3_vue_dialog_xtype_select')"
+                class="w-full"
+                :disabled="isEditMode"
+              />
+            </div>
+
+            <!-- User-defined default value -->
+            <div class="field col-6" v-if="fieldForm.default === 'USER_DEFINED'">
+              <label for="field-default-value">{{ _('ms3_vue_dialog_default_value') }}</label>
+              <InputText
+                id="field-default-value"
+                v-model="fieldForm.default_value"
+                :placeholder="_('ms3_vue_dialog_default_value_placeholder')"
+                class="w-full"
+                :disabled="isEditMode"
+              />
+            </div>
+
+            <!-- Attributes -->
+            <div class="field col-6">
+              <label for="field-attributes">{{ _('ms3_vue_dialog_attributes') }}</label>
+              <InputText
+                id="field-attributes"
+                v-model="fieldForm.attributes"
+                :placeholder="_('ms3_vue_dialog_attributes_placeholder')"
+                class="w-full"
+                :disabled="isEditMode"
+              />
+              <small class="text-500">{{ _('ms3_vue_dialog_attributes_help') }}</small>
+            </div>
+
+            <!-- Index type -->
+            <div class="field col-6">
+              <label for="field-index-type">{{ _('ms3_vue_dialog_index_type') }}</label>
+              <Dropdown
+                id="field-index-type"
+                v-model="fieldForm.index_type"
+                :options="indexTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                :placeholder="_('ms3_vue_dialog_xtype_select')"
+                class="w-full"
+                :disabled="isEditMode"
+              />
+            </div>
+
+            <!-- Active status -->
+            <div class="field col-12">
+              <label for="field-active">{{ _('ms3_vue_dialog_active') }}</label>
+              <div class="flex align-items-center" style="height: 2.625rem">
+                <Checkbox id="field-active" v-model="fieldForm.active" :binary="true" />
+                <label for="field-active" class="ml-2 cursor-pointer">{{
+                  _('ms3_vue_dialog_active_label')
+                }}</label>
+              </div>
+            </div>
           </div>
         </Fieldset>
       </div>

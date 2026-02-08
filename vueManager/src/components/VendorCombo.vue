@@ -27,8 +27,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
 import Dropdown from 'primevue/dropdown'
+import { computed, onMounted, ref, watch } from 'vue'
+
 import request from '../request.js'
 
 const props = defineProps({
@@ -135,12 +136,15 @@ function handleChange() {
 }
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localValue.value = newValue
-})
+watch(
+  () => props.modelValue,
+  newValue => {
+    localValue.value = newValue
+  }
+)
 
 // Watch for local changes
-watch(localValue, (newValue) => {
+watch(localValue, newValue => {
   emit('update:modelValue', newValue)
 })
 
@@ -153,7 +157,7 @@ onMounted(() => {
     // Find the label element
     const label = document.querySelector(`label[for="${props.inputId}"]`)
     if (label) {
-      label.addEventListener('click', (e) => {
+      label.addEventListener('click', e => {
         // Find the dropdown button inside wrapper
         const dropdownButton = wrapperRef.value.querySelector('.p-dropdown')
         if (dropdownButton && !props.disabled) {

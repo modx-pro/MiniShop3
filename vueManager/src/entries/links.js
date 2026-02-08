@@ -4,12 +4,13 @@
  * Vue application for managing product link types in admin panel
  */
 
-import { createApp } from 'vue'
-import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
-import ToastService from 'primevue/toastservice'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import PrimeVue from 'primevue/config'
 import ConfirmationService from 'primevue/confirmationservice'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
+import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
+
 import LinksGrid from '../components/LinksGrid.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
@@ -45,7 +46,7 @@ function mountApp() {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
   app.use(ToastService)
   app.use(ConfirmationService)
@@ -75,7 +76,7 @@ if (document.readyState === 'loading') {
 
 // Listen for ExtJS tab activation
 if (typeof Ext !== 'undefined') {
-  Ext.onReady(function() {
+  Ext.onReady(function () {
     // Try to mount on Ext ready
     mountApp()
 

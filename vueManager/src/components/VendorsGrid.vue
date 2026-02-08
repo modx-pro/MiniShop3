@@ -1,26 +1,27 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
+import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import Paginator from 'primevue/paginator'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanel from 'primevue/tabpanel'
+import TabPanels from 'primevue/tabpanels'
+import Tabs from 'primevue/tabs'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
-import Paginator from 'primevue/paginator'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 
@@ -38,11 +39,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'vendor',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/vendors/bulk', { ids })
   },
   onSuccess: () => loadVendors(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const columns = ref([])
@@ -284,7 +285,10 @@ async function saveVendor() {
     if (isNewVendor.value) {
       response = await request.post('/api/mgr/vendors', editingVendor.value)
     } else {
-      response = await request.put(`/api/mgr/vendors/${editingVendor.value.id}`, editingVendor.value)
+      response = await request.put(
+        `/api/mgr/vendors/${editingVendor.value.id}`,
+        editingVendor.value
+      )
     }
 
     if (response) {
@@ -408,7 +412,15 @@ function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: _('delete'),
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'vendor_delete_confirm_message',
+      },
     ]
   }
 
@@ -436,10 +448,39 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem', isSystem: true },
-    { name: 'name', label: _('vendor_name'), visible: true, sortable: true, filterable: true, minWidth: '12.5rem' },
-    { name: 'country', label: _('vendor_country'), visible: true, sortable: true, filterable: true, width: '9.375rem' },
-    { name: 'email', label: _('vendor_email'), visible: true, sortable: true, filterable: true, width: '12.5rem' },
+    {
+      name: 'id',
+      label: 'ID',
+      visible: true,
+      sortable: true,
+      frozen: true,
+      width: '5rem',
+      isSystem: true,
+    },
+    {
+      name: 'name',
+      label: _('vendor_name'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      minWidth: '12.5rem',
+    },
+    {
+      name: 'country',
+      label: _('vendor_country'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '9.375rem',
+    },
+    {
+      name: 'email',
+      label: _('vendor_email'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '12.5rem',
+    },
     { name: 'phone', label: _('vendor_phone'), visible: true, sortable: true, width: '9.375rem' },
     {
       name: 'actions',
@@ -451,7 +492,15 @@ function getDefaultColumns() {
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'vendor_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -501,10 +550,7 @@ function isFieldRequired(field) {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadFieldsConfig(),
-    loadGridConfig(),
-  ])
+  await Promise.all([loadFieldsConfig(), loadGridConfig()])
   await loadVendors()
 })
 </script>
@@ -522,7 +568,9 @@ onMounted(async () => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -550,18 +598,11 @@ onMounted(async () => {
               </select>
             </template>
             <template v-else>
-              <InputText
-                v-model="filterValues[column.name]"
-                :placeholder="column.label"
-              />
+              <InputText v-model="filterValues[column.name]" :placeholder="column.label" />
             </template>
           </div>
           <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -605,11 +646,7 @@ onMounted(async () => {
                 <tr>
                   <th style="width: 3rem"></th>
                   <th style="width: 3rem">
-                    <Checkbox
-                      v-model="selectAll"
-                      :binary="true"
-                      @change="onSelectAllChange"
-                    />
+                    <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
                   </th>
                   <th
                     v-for="column in columns.filter(c => c.visible)"
@@ -636,11 +673,7 @@ onMounted(async () => {
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
                     <td>
-                      <Checkbox
-                        v-model="selectedItems"
-                        :value="vendor"
-                        :binary="false"
-                      />
+                      <Checkbox v-model="selectedItems" :value="vendor" :binary="false" />
                     </td>
                     <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                       <!-- Actions column -->
@@ -669,7 +702,11 @@ onMounted(async () => {
                       <!-- Boolean column -->
                       <td v-else-if="column.type === 'boolean'" :style="{ width: column.width }">
                         <i
-                          :class="vendor[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"
+                          :class="
+                            vendor[column.name]
+                              ? 'pi pi-check text-success'
+                              : 'pi pi-times text-danger'
+                          "
                         ></i>
                       </td>
 
@@ -686,14 +723,14 @@ onMounted(async () => {
           <div v-if="loading" class="loading-overlay">
             <i class="pi pi-spinner pi-spin"></i>
           </div>
-        <!-- Pagination -->
-        <Paginator
-          :first="first"
-          :rows="rows"
-          :totalRecords="totalRecords"
-          :rowsPerPageOptions="[10, 20, 50, 100]"
-          @page="onPage"
-        />
+          <!-- Pagination -->
+          <Paginator
+            :first="first"
+            :rows="rows"
+            :totalRecords="totalRecords"
+            :rowsPerPageOptions="[10, 20, 50, 100]"
+            @page="onPage"
+          />
         </div>
       </template>
     </Card>
@@ -849,7 +886,12 @@ onMounted(async () => {
 
                   <div class="form-row mb-3">
                     <label>{{ _('vendor_resource') }}</label>
-                    <InputText v-model="editingVendor.resource_id" class="w-full" type="number" :placeholder="_('vendor_resource_placeholder')" />
+                    <InputText
+                      v-model="editingVendor.resource_id"
+                      class="w-full"
+                      type="number"
+                      :placeholder="_('vendor_resource_placeholder')"
+                    />
                     <small class="form-hint">{{ _('vendor_resource_help') }}</small>
                   </div>
                 </div>
@@ -866,12 +908,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveVendor"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveVendor" />
       </template>
     </Dialog>
   </div>
@@ -1149,5 +1186,4 @@ onMounted(async () => {
 .p-row-odd {
   background: var(--ms3-bg-slate);
 }
-
 </style>

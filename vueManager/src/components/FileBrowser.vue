@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -31,9 +31,12 @@ const emit = defineEmits(['update:modelValue'])
 const inputValue = ref(props.modelValue)
 
 // Sync inputValue with modelValue prop
-watch(() => props.modelValue, (newValue) => {
-  inputValue.value = newValue
-})
+watch(
+  () => props.modelValue,
+  newValue => {
+    inputValue.value = newValue
+  }
+)
 
 // Update v-model when input changes
 function onInputChange(event) {
@@ -70,7 +73,7 @@ function openBrowser() {
   const browserId = Ext.id()
 
   // Create callback to handle file selection
-  const onSelectFile = (data) => {
+  const onSelectFile = data => {
     if (data && data.fullRelativeUrl) {
       inputValue.value = data.fullRelativeUrl
       emit('update:modelValue', data.fullRelativeUrl)
@@ -103,7 +106,7 @@ function openBrowser() {
   if (browser) {
     // Enable OK button when it gets disabled (MODX behavior)
     if (browser.win && browser.win.buttons && browser.win.buttons[0]) {
-      browser.win.buttons[0].on('disable', function() {
+      browser.win.buttons[0].on('disable', function () {
         this.enable()
       })
     }

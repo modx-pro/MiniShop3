@@ -32,10 +32,11 @@
  *   labelOff: 'unpublish'   // Label when toggleField is true
  * }
  */
-import { computed } from 'vue'
-import Button from 'primevue/button'
-import { useActions } from '../composables/useActions.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import Button from 'primevue/button'
+import { computed } from 'vue'
+
+import { useActions } from '../composables/useActions.js'
 
 const props = defineProps({
   /**
@@ -79,19 +80,28 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['edit', 'delete', 'view', 'addresses', 'publish', 'duplicate', 'refresh', 'action'])
+const emit = defineEmits([
+  'edit',
+  'delete',
+  'view',
+  'addresses',
+  'publish',
+  'duplicate',
+  'refresh',
+  'action',
+])
 
 const { _ } = useLexicon()
 
 const { executeAction } = useActions({
   gridId: props.gridId,
   onRefresh: () => emit('refresh'),
-  onEdit: (data) => emit('edit', data),
-  onDelete: (data) => emit('delete', data),
-  onView: (data) => emit('view', data),
-  onAddresses: (data) => emit('addresses', data),
-  onPublish: (data) => emit('publish', data),
-  onDuplicate: (data) => emit('duplicate', data),
+  onEdit: data => emit('edit', data),
+  onDelete: data => emit('delete', data),
+  onView: data => emit('view', data),
+  onAddresses: data => emit('addresses', data),
+  onPublish: data => emit('publish', data),
+  onDuplicate: data => emit('duplicate', data),
   onCustomAction: (event, data) => emit('action', { name: event, data }),
 })
 

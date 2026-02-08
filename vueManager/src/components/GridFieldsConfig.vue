@@ -1,19 +1,20 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import Dropdown from 'primevue/dropdown'
-import InputText from 'primevue/inputtext'
+import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
-import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
+import Dropdown from 'primevue/dropdown'
+import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import { useToast } from 'primevue/usetoast'
+import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
+
 import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
 import ActionsEditor from './ActionsEditor.vue'
 
 const toast = useToast()
@@ -99,7 +100,8 @@ const displayConfigTypes = ['datetime', 'price', 'weight']
 function getConfigHint(type) {
   const hints = {
     datetime: '{ "format": "dd.MM.yyyy HH:mm" }',
-    price: '{ "decimals": 2, "currency": "₽", "currency_position": "after", "thousands_separator": " " }',
+    price:
+      '{ "decimals": 2, "currency": "₽", "currency_position": "after", "thousands_separator": " " }',
     weight: '{ "decimals": 2, "unit": "кг", "unit_position": "after" }',
   }
   return hints[type] || ''
@@ -140,7 +142,9 @@ async function loadFields() {
 
   try {
     // include_hidden=1 to get all fields for configuration (including hidden relation fields)
-    const response = await request.get(`/api/mgr/grid-config/${selectedGrid.value}`, { include_hidden: '1' })
+    const response = await request.get(`/api/mgr/grid-config/${selectedGrid.value}`, {
+      include_hidden: '1',
+    })
 
     if (response && response.columns) {
       fields.value = response.columns.map((col, index) => ({
@@ -280,7 +284,10 @@ function deleteField(field, index) {
     return
   }
 
-  const confirmMessage = _('delete_field_confirm_message').replace('{name}', field.label || field.name)
+  const confirmMessage = _('delete_field_confirm_message').replace(
+    '{name}',
+    field.label || field.name
+  )
   const confirmHeader = _('delete_field_confirm_title')
   const deleteLabel = _('delete')
   const cancelLabel = _('cancel')
@@ -349,7 +356,14 @@ function openAddDialog() {
       },
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+        },
       ],
       displayConfig: '',
       badge: {
@@ -574,7 +588,14 @@ function openEditDialog(field, index) {
       computed: computedConfig,
       actions: field.actions || [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+        },
       ],
       displayConfig: displayConfig,
       badge: badgeConfig,
@@ -665,7 +686,10 @@ async function saveEdit() {
         break
     }
 
-    const result = await request.put(`/api/mgr/grid-config/${selectedGrid.value}/field/${editingField.value.field_name}`, data)
+    const result = await request.put(
+      `/api/mgr/grid-config/${selectedGrid.value}/field/${editingField.value.field_name}`,
+      data
+    )
 
     if (editingFieldIndex.value !== null && result.field) {
       // Parse config from response (may be JSON string or already parsed)
@@ -751,14 +775,10 @@ onMounted(() => {
           option-label="label"
           option-value="value"
           @change="onGridChange"
-          style="min-width: 12.5rem;"
+          style="min-width: 12.5rem"
         />
       </div>
-      <Button
-        :label="_('add_field')"
-        icon="pi pi-plus"
-        @click="openAddDialog"
-      />
+      <Button :label="_('add_field')" icon="pi pi-plus" @click="openAddDialog" />
     </div>
 
     <Card>
@@ -847,12 +867,7 @@ onMounted(() => {
 
         <!-- Save button -->
         <div class="flex justify-content-end">
-          <Button
-            :label="_('save')"
-            icon="pi pi-check"
-            :loading="saving"
-            @click="saveConfig"
-          />
+          <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveConfig" />
         </div>
       </template>
     </Card>
@@ -923,7 +938,9 @@ onMounted(() => {
           />
         </div>
         <div class="field mb-2">
-          <label for="new-field-relation-fk" class="required">{{ _('relation_foreign_key') }}</label>
+          <label for="new-field-relation-fk" class="required">{{
+            _('relation_foreign_key')
+          }}</label>
           <InputText
             id="new-field-relation-fk"
             v-model="newField.config.relation.foreignKey"
@@ -932,7 +949,9 @@ onMounted(() => {
           />
         </div>
         <div class="field mb-2">
-          <label for="new-field-relation-display" class="required">{{ _('relation_display_field') }}</label>
+          <label for="new-field-relation-display" class="required">{{
+            _('relation_display_field')
+          }}</label>
           <InputText
             id="new-field-relation-display"
             v-model="newField.config.relation.displayField"
@@ -955,7 +974,9 @@ onMounted(() => {
       </div>
 
       <div v-if="newField.type === 'computed'" class="field mb-3">
-        <label for="new-field-computed-class" class="required">{{ _('computed_class_name') }}</label>
+        <label for="new-field-computed-class" class="required">{{
+          _('computed_class_name')
+        }}</label>
         <InputText
           id="new-field-computed-class"
           v-model="newField.config.computed.className"
@@ -968,10 +989,7 @@ onMounted(() => {
       <!-- Actions configuration for actions type -->
       <div v-if="newField.type === 'actions'" class="field mb-3">
         <label class="mb-2 block font-semibold">{{ _('actions_configuration') }}</label>
-        <ActionsEditor
-          v-model="newField.config.actions"
-          :grid-id="selectedGrid"
-        />
+        <ActionsEditor v-model="newField.config.actions" :grid-id="selectedGrid" />
         <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
       </div>
 
@@ -1017,7 +1035,9 @@ onMounted(() => {
           class="w-full font-mono"
           :placeholder="getConfigHint(newField.type)"
         />
-        <small class="text-muted">{{ _('field_display_config_hint') }}: {{ getConfigHint(newField.type) }}</small>
+        <small class="text-muted"
+          >{{ _('field_display_config_hint') }}: {{ getConfigHint(newField.type) }}</small
+        >
       </div>
 
       <!-- General settings -->
@@ -1033,11 +1053,7 @@ onMounted(() => {
 
       <div class="flex flex-wrap gap-4 mb-3">
         <div class="flex align-items-center">
-          <Checkbox
-            input-id="new-field-visible"
-            v-model="newField.visible"
-            :binary="true"
-          />
+          <Checkbox input-id="new-field-visible" v-model="newField.visible" :binary="true" />
           <label for="new-field-visible" class="ml-2 cursor-pointer">{{ _('visible') }}</label>
         </div>
 
@@ -1048,7 +1064,12 @@ onMounted(() => {
             :binary="true"
             :disabled="newField.type === 'actions'"
           />
-          <label for="new-field-sortable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': newField.type === 'actions' }">{{ _('sortable') }}</label>
+          <label
+            for="new-field-sortable"
+            class="ml-2 cursor-pointer"
+            :class="{ 'opacity-50': newField.type === 'actions' }"
+            >{{ _('sortable') }}</label
+          >
         </div>
 
         <div class="flex align-items-center">
@@ -1058,15 +1079,16 @@ onMounted(() => {
             :binary="true"
             :disabled="newField.type === 'template' || newField.type === 'actions'"
           />
-          <label for="new-field-filterable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': newField.type === 'template' || newField.type === 'actions' }">{{ _('filterable') }}</label>
+          <label
+            for="new-field-filterable"
+            class="ml-2 cursor-pointer"
+            :class="{ 'opacity-50': newField.type === 'template' || newField.type === 'actions' }"
+            >{{ _('filterable') }}</label
+          >
         </div>
 
         <div class="flex align-items-center">
-          <Checkbox
-            input-id="new-field-frozen"
-            v-model="newField.frozen"
-            :binary="true"
-          />
+          <Checkbox input-id="new-field-frozen" v-model="newField.frozen" :binary="true" />
           <label for="new-field-frozen" class="ml-2 cursor-pointer">{{ _('frozen') }}</label>
         </div>
       </div>
@@ -1147,7 +1169,9 @@ onMounted(() => {
 
         <div v-if="editingField.type === 'relation'" class="mb-3">
           <div class="field mb-2">
-            <label for="edit-field-relation-table" class="required">{{ _('relation_table') }}</label>
+            <label for="edit-field-relation-table" class="required">{{
+              _('relation_table')
+            }}</label>
             <InputText
               id="edit-field-relation-table"
               v-model="editingField.config.relation.table"
@@ -1156,7 +1180,9 @@ onMounted(() => {
             />
           </div>
           <div class="field mb-2">
-            <label for="edit-field-relation-fk" class="required">{{ _('relation_foreign_key') }}</label>
+            <label for="edit-field-relation-fk" class="required">{{
+              _('relation_foreign_key')
+            }}</label>
             <InputText
               id="edit-field-relation-fk"
               v-model="editingField.config.relation.foreignKey"
@@ -1165,7 +1191,9 @@ onMounted(() => {
             />
           </div>
           <div class="field mb-2">
-            <label for="edit-field-relation-display" class="required">{{ _('relation_display_field') }}</label>
+            <label for="edit-field-relation-display" class="required">{{
+              _('relation_display_field')
+            }}</label>
             <InputText
               id="edit-field-relation-display"
               v-model="editingField.config.relation.displayField"
@@ -1188,7 +1216,9 @@ onMounted(() => {
         </div>
 
         <div v-if="editingField.type === 'computed'" class="field mb-3">
-          <label for="edit-field-computed-class" class="required">{{ _('computed_class_name') }}</label>
+          <label for="edit-field-computed-class" class="required">{{
+            _('computed_class_name')
+          }}</label>
           <InputText
             id="edit-field-computed-class"
             v-model="editingField.config.computed.className"
@@ -1201,10 +1231,7 @@ onMounted(() => {
         <!-- Actions configuration for actions type -->
         <div v-if="editingField.type === 'actions'" class="field mb-3">
           <label class="mb-2 block font-semibold">{{ _('actions_configuration') }}</label>
-          <ActionsEditor
-            v-model="editingField.config.actions"
-            :grid-id="selectedGrid"
-          />
+          <ActionsEditor v-model="editingField.config.actions" :grid-id="selectedGrid" />
           <small class="text-muted">{{ _('actions_configuration_hint') }}</small>
         </div>
 
@@ -1250,7 +1277,9 @@ onMounted(() => {
             class="w-full font-mono"
             :placeholder="getConfigHint(editingField.type)"
           />
-          <small class="text-muted">{{ _('field_display_config_hint') }}: {{ getConfigHint(editingField.type) }}</small>
+          <small class="text-muted"
+            >{{ _('field_display_config_hint') }}: {{ getConfigHint(editingField.type) }}</small
+          >
         </div>
 
         <!-- General settings -->
@@ -1266,11 +1295,7 @@ onMounted(() => {
 
         <div class="flex flex-wrap gap-4 mb-3">
           <div class="flex align-items-center">
-            <Checkbox
-              input-id="edit-field-visible"
-              v-model="editingField.visible"
-              :binary="true"
-            />
+            <Checkbox input-id="edit-field-visible" v-model="editingField.visible" :binary="true" />
             <label for="edit-field-visible" class="ml-2 cursor-pointer">{{ _('visible') }}</label>
           </div>
 
@@ -1281,7 +1306,12 @@ onMounted(() => {
               :binary="true"
               :disabled="editingField.type === 'actions'"
             />
-            <label for="edit-field-sortable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': editingField.type === 'actions' }">{{ _('sortable') }}</label>
+            <label
+              for="edit-field-sortable"
+              class="ml-2 cursor-pointer"
+              :class="{ 'opacity-50': editingField.type === 'actions' }"
+              >{{ _('sortable') }}</label
+            >
           </div>
 
           <div class="flex align-items-center">
@@ -1291,15 +1321,18 @@ onMounted(() => {
               :binary="true"
               :disabled="editingField.type === 'template' || editingField.type === 'actions'"
             />
-            <label for="edit-field-filterable" class="ml-2 cursor-pointer" :class="{ 'opacity-50': editingField.type === 'template' || editingField.type === 'actions' }">{{ _('filterable') }}</label>
+            <label
+              for="edit-field-filterable"
+              class="ml-2 cursor-pointer"
+              :class="{
+                'opacity-50': editingField.type === 'template' || editingField.type === 'actions',
+              }"
+              >{{ _('filterable') }}</label
+            >
           </div>
 
           <div class="flex align-items-center">
-            <Checkbox
-              input-id="edit-field-frozen"
-              v-model="editingField.frozen"
-              :binary="true"
-            />
+            <Checkbox input-id="edit-field-frozen" v-model="editingField.frozen" :binary="true" />
             <label for="edit-field-frozen" class="ml-2 cursor-pointer">{{ _('frozen') }}</label>
           </div>
         </div>

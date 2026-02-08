@@ -1,25 +1,26 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
+import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
-import Dropdown from 'primevue/dropdown'
-import Textarea from 'primevue/textarea'
-import Slider from 'primevue/slider'
-import Fieldset from 'primevue/fieldset'
-import Toast from 'primevue/toast'
+import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
+import Dialog from 'primevue/dialog'
+import Dropdown from 'primevue/dropdown'
+import Fieldset from 'primevue/fieldset'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
 import Panel from 'primevue/panel'
-import { useToast } from 'primevue/usetoast'
+import Slider from 'primevue/slider'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
+
 import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -406,7 +407,10 @@ async function saveSection() {
     if (isNewSection.value) {
       await request.post('/api/mgr/model-fields/sections', editingSection.value)
     } else {
-      await request.put(`/api/mgr/model-fields/sections/${editingSection.value.id}`, editingSection.value)
+      await request.put(
+        `/api/mgr/model-fields/sections/${editingSection.value.id}`,
+        editingSection.value
+      )
     }
 
     toast.add({
@@ -641,14 +645,14 @@ onMounted(async () => {
 
     <!-- Model filter - top bar -->
     <div class="model-filter-bar mb-3">
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <label style="font-weight: 500;">{{ _('ms3_model_field_model') }}:</label>
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <label style="font-weight: 500">{{ _('ms3_model_field_model') }}:</label>
         <Dropdown
           v-model="filterModel"
           :options="models"
           optionLabel="label"
           optionValue="value"
-          style="width: 12.5rem;"
+          style="width: 12.5rem"
           @change="onModelChange"
         />
       </div>
@@ -704,7 +708,9 @@ onMounted(async () => {
         </Column>
         <Column :header="_('ms3_model_section_default')" style="width: 6.25rem">
           <template #body="{ data }">
-            <i :class="data.is_default ? 'pi pi-check text-green-500' : 'pi pi-minus text-gray-400'" />
+            <i
+              :class="data.is_default ? 'pi pi-check text-green-500' : 'pi pi-minus text-gray-400'"
+            />
           </template>
         </Column>
         <Column :header="_('actions')" style="width: 7.5rem">
@@ -731,7 +737,7 @@ onMounted(async () => {
     <!-- Fields Card -->
     <Card>
       <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center">
           <span>{{ _('ms3_model_fields_title') }}</span>
           <Button
             :label="_('ms3_model_field_add')"
@@ -784,9 +790,7 @@ onMounted(async () => {
                     <td>
                       {{ getSectionLabel(field.section_id) }}
                     </td>
-                    <td>
-                      {{ field.width }}/12
-                    </td>
+                    <td>{{ field.width }}/12</td>
                     <td>
                       {{ getXtypeLabel(field.xtype) }}
                     </td>
@@ -799,7 +803,13 @@ onMounted(async () => {
                       />
                     </td>
                     <td>
-                      <i :class="field.required ? 'pi pi-check text-green-500' : 'pi pi-minus text-gray-400'" />
+                      <i
+                        :class="
+                          field.required
+                            ? 'pi pi-check text-green-500'
+                            : 'pi pi-minus text-gray-400'
+                        "
+                      />
                     </td>
                     <td>
                       <Button
@@ -836,13 +846,13 @@ onMounted(async () => {
       :header="isNewRecord ? _('ms3_model_field_add') : _('ms3_model_field_edit')"
       :modal="true"
       :closable="true"
-      style="width: 37.5rem;"
+      style="width: 37.5rem"
       appendTo="self"
     >
       <div v-if="editingField" class="edit-form">
         <!-- Basic info -->
         <Fieldset :legend="_('ms3_model_field_basic_info')" class="mb-3">
-          <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_model') }} *</label>
               <Dropdown
@@ -851,7 +861,7 @@ onMounted(async () => {
                 optionLabel="label"
                 optionValue="value"
                 :disabled="!isNewRecord"
-                style="width: 100%;"
+                style="width: 100%"
               />
             </div>
 
@@ -859,7 +869,7 @@ onMounted(async () => {
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_name') }} *</label>
               <InputText
                 v-model="editingField.name"
-                style="width: 100%;"
+                style="width: 100%"
                 :placeholder="_('ms3_model_field_name_placeholder')"
               />
             </div>
@@ -869,12 +879,12 @@ onMounted(async () => {
             <label class="block mb-2 font-medium">{{ _('ms3_model_field_label') }}</label>
             <InputText
               v-model="editingField.label"
-              style="width: 100%;"
+              style="width: 100%"
               :placeholder="_('ms3_model_field_label_placeholder')"
             />
           </div>
 
-          <div class="grid mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="grid mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_xtype') }}</label>
               <Dropdown
@@ -882,7 +892,7 @@ onMounted(async () => {
                 :options="xtypeOptions"
                 optionLabel="label"
                 optionValue="value"
-                style="width: 100%;"
+                style="width: 100%"
               />
             </div>
 
@@ -893,7 +903,7 @@ onMounted(async () => {
                 :options="sectionOptions"
                 optionLabel="label"
                 optionValue="id"
-                style="width: 100%;"
+                style="width: 100%"
               />
             </div>
           </div>
@@ -901,19 +911,17 @@ onMounted(async () => {
 
         <!-- Display settings -->
         <Fieldset :legend="_('ms3_model_field_display_settings')" class="mb-3">
-          <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
             <div class="field">
-              <label class="block mb-2 font-medium">{{ _('ms3_model_field_width') }} ({{ editingField.width }}/12)</label>
-              <Slider v-model="editingField.width" :min="1" :max="12" style="width: 100%;" />
+              <label class="block mb-2 font-medium"
+                >{{ _('ms3_model_field_width') }} ({{ editingField.width }}/12)</label
+              >
+              <Slider v-model="editingField.width" :min="1" :max="12" style="width: 100%" />
             </div>
 
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_sort_order') }}</label>
-              <InputNumber
-                v-model="editingField.sort_order"
-                :min="0"
-                style="width: 100%;"
-              />
+              <InputNumber v-model="editingField.sort_order" :min="0" style="width: 100%" />
             </div>
           </div>
 
@@ -921,7 +929,7 @@ onMounted(async () => {
             <label class="block mb-2 font-medium">{{ _('ms3_model_field_placeholder') }}</label>
             <InputText
               v-model="editingField.placeholder"
-              style="width: 100%;"
+              style="width: 100%"
               :placeholder="_('ms3_model_field_placeholder_hint')"
             />
           </div>
@@ -930,18 +938,18 @@ onMounted(async () => {
             <label class="block mb-2 font-medium">{{ _('ms3_model_field_description') }}</label>
             <Textarea
               v-model="editingField.description"
-              style="width: 100%;"
+              style="width: 100%"
               rows="2"
               :placeholder="_('ms3_model_field_description_hint')"
             />
           </div>
 
-          <div class="field mt-3" style="display: flex; gap: 2rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div class="field mt-3" style="display: flex; gap: 2rem">
+            <div style="display: flex; align-items: center; gap: 0.5rem">
               <Checkbox v-model="editingField.visible" :binary="true" inputId="visible" />
               <label for="visible">{{ _('ms3_model_field_visible') }}</label>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem">
               <Checkbox v-model="editingField.required" :binary="true" inputId="required" />
               <label for="required">{{ _('ms3_model_field_required') }}</label>
             </div>
@@ -958,7 +966,7 @@ onMounted(async () => {
             <label class="block mb-2 font-medium">{{ _('ms3_model_field_combo_source') }}</label>
             <Textarea
               v-model="comboSourceJson"
-              style="width: 100%; font-family: monospace; font-size: 0.75rem;"
+              style="width: 100%; font-family: monospace; font-size: 0.75rem"
               rows="10"
               :placeholder="comboSourcePlaceholder"
               :class="{ 'p-invalid': comboSourceError }"
@@ -978,12 +986,7 @@ onMounted(async () => {
           class="p-button-text"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveField"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveField" />
       </template>
     </Dialog>
 
@@ -993,7 +996,7 @@ onMounted(async () => {
       :header="isNewSection ? _('ms3_model_section_add') : _('ms3_model_section_edit')"
       :modal="true"
       :closable="true"
-      style="width: 31.25rem;"
+      style="width: 31.25rem"
       appendTo="self"
     >
       <div v-if="editingSection" class="edit-form">
@@ -1005,7 +1008,7 @@ onMounted(async () => {
             optionLabel="label"
             optionValue="value"
             :disabled="!isNewSection"
-            style="width: 100%;"
+            style="width: 100%"
           />
         </div>
 
@@ -1014,7 +1017,7 @@ onMounted(async () => {
           <InputText
             v-model="editingSection.section_key"
             :disabled="!isNewSection"
-            style="width: 100%;"
+            style="width: 100%"
             :placeholder="_('ms3_model_section_key_placeholder')"
           />
           <small v-if="isNewSection" class="text-gray-500">
@@ -1026,7 +1029,7 @@ onMounted(async () => {
           <label class="block mb-2 font-medium">{{ _('ms3_model_section_label') }}</label>
           <InputText
             v-model="editingSection.label"
-            style="width: 100%;"
+            style="width: 100%"
             :placeholder="_('ms3_model_section_label_placeholder')"
           />
         </div>
@@ -1035,7 +1038,7 @@ onMounted(async () => {
           <label class="block mb-2 font-medium">{{ _('ms3_model_section_lexicon_key') }}</label>
           <InputText
             v-model="editingSection.lexicon_key"
-            style="width: 100%;"
+            style="width: 100%"
             :placeholder="_('ms3_model_section_lexicon_key_placeholder')"
           />
           <small class="text-gray-500">
@@ -1045,15 +1048,11 @@ onMounted(async () => {
 
         <div class="field mb-3">
           <label class="block mb-2 font-medium">{{ _('ms3_model_section_sort_order') }}</label>
-          <InputNumber
-            v-model="editingSection.sort_order"
-            :min="0"
-            style="width: 100%;"
-          />
+          <InputNumber v-model="editingSection.sort_order" :min="0" style="width: 100%" />
         </div>
 
         <div class="field mb-3">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem">
             <Checkbox v-model="editingSection.hidden" :binary="true" inputId="section_hidden" />
             <label for="section_hidden">{{ _('ms3_model_section_hidden') }}</label>
           </div>
@@ -1067,12 +1066,7 @@ onMounted(async () => {
           class="p-button-text"
           @click="sectionDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="savingSec"
-          @click="saveSection"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="savingSec" @click="saveSection" />
       </template>
     </Dialog>
   </div>

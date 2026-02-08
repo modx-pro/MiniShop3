@@ -4,15 +4,16 @@
  *
  * Allows adding, removing and editing actions in grid column
  */
-import { ref, computed, watch } from 'vue'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import Checkbox from 'primevue/checkbox'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import { useLexicon } from '@vuetools/useLexicon'
+import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import Dialog from 'primevue/dialog'
+import Dropdown from 'primevue/dropdown'
+import InputText from 'primevue/inputtext'
+import { computed, ref, watch } from 'vue'
+
 import actionRegistry from '../actionRegistry.js'
 
 const props = defineProps({
@@ -39,9 +40,13 @@ const { _ } = useLexicon()
 
 const localActions = ref([])
 
-watch(() => props.modelValue, (newVal) => {
-  localActions.value = JSON.parse(JSON.stringify(newVal || []))
-}, { immediate: true, deep: true })
+watch(
+  () => props.modelValue,
+  newVal => {
+    localActions.value = JSON.parse(JSON.stringify(newVal || []))
+  },
+  { immediate: true, deep: true }
+)
 
 const showDialog = ref(false)
 const editingAction = ref(null)
@@ -230,12 +235,7 @@ function closeDialog() {
             :disabled="index === localActions.length - 1"
             @click="moveDown(index)"
           />
-          <Button
-            icon="pi pi-pencil"
-            size="small"
-            text
-            @click="openEditDialog(data, index)"
-          />
+          <Button icon="pi pi-pencil" size="small" text @click="openEditDialog(data, index)" />
           <Button
             icon="pi pi-trash"
             size="small"
@@ -248,12 +248,7 @@ function closeDialog() {
     </DataTable>
 
     <!-- Add button -->
-    <Button
-      :label="_('add_action')"
-      icon="pi pi-plus"
-      size="small"
-      @click="openAddDialog"
-    />
+    <Button :label="_('add_action')" icon="pi pi-plus" size="small" @click="openAddDialog" />
 
     <!-- Action edit dialog -->
     <Dialog
@@ -355,11 +350,7 @@ function closeDialog() {
         <div class="form-row">
           <div class="form-col-full">
             <div class="confirm-checkbox">
-              <Checkbox
-                id="action-confirm"
-                v-model="editingAction.confirm"
-                :binary="true"
-              />
+              <Checkbox id="action-confirm" v-model="editingAction.confirm" :binary="true" />
               <label for="action-confirm" class="ml-2">{{ _('action_requires_confirm') }}</label>
             </div>
           </div>
@@ -381,12 +372,7 @@ function closeDialog() {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          icon="pi pi-times"
-          text
-          @click="closeDialog"
-        />
+        <Button :label="_('cancel')" icon="pi pi-times" text @click="closeDialog" />
         <Button
           :label="_('save')"
           icon="pi pi-check"

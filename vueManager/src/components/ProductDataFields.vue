@@ -1,12 +1,13 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
-import Message from 'primevue/message'
-import Fieldset from 'primevue/fieldset'
-import { useToast } from 'primevue/usetoast'
-import DynamicField from './DynamicField.vue'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import Card from 'primevue/card'
+import Fieldset from 'primevue/fieldset'
+import Message from 'primevue/message'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
+import request from '../request.js'
+import DynamicField from './DynamicField.vue'
 
 const props = defineProps({
   productId: {
@@ -68,7 +69,7 @@ async function loadProductData() {
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_loading_product_data'),
       life: 5000,
-      })
+    })
     return null
   }
 }
@@ -101,7 +102,7 @@ async function loadConfig() {
             if (typeof value === 'boolean') {
               value = value ? 1 : 0
             } else if (typeof value === 'string') {
-              value = (value === 'true' || value === '1') ? 1 : 0
+              value = value === 'true' || value === '1' ? 1 : 0
             } else {
               value = parseInt(value) || 0
             }
@@ -148,7 +149,7 @@ async function saveProductData() {
   try {
     const response = await request.put(
       `/api/mgr/product-data/${props.productId}`,
-      fieldValues.value,
+      fieldValues.value
     )
 
     if (response && response.updated) {
@@ -257,7 +258,11 @@ onMounted(() => {
               <div
                 v-for="field in section.fields"
                 :key="field.name"
-                :class="['field-item', `col-${field.width || 4}`, { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' }]"
+                :class="[
+                  'field-item',
+                  `col-${field.width || 4}`,
+                  { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' },
+                ]"
               >
                 <!-- Checkbox layout: checkbox + label in one line -->
                 <template v-if="field.xtype === 'xcheckbox' || field.xtype === 'checkbox'">
@@ -334,22 +339,61 @@ onMounted(() => {
 }
 
 /* 12-column grid system */
-.col-1 { flex: 0 0 calc(8.333% - 1.25rem); max-width: calc(8.333% - 1.25rem); }
-.col-2 { flex: 0 0 calc(16.666% - 1.25rem); max-width: calc(16.666% - 1.25rem); }
-.col-3 { flex: 0 0 calc(25% - 1.25rem); max-width: calc(25% - 1.25rem); }
-.col-4 { flex: 0 0 calc(33.333% - 1.25rem); max-width: calc(33.333% - 1.25rem); }
-.col-5 { flex: 0 0 calc(41.666% - 1.25rem); max-width: calc(41.666% - 1.25rem); }
-.col-6 { flex: 0 0 calc(50% - 1.25rem); max-width: calc(50% - 1.25rem); }
-.col-7 { flex: 0 0 calc(58.333% - 1.25rem); max-width: calc(58.333% - 1.25rem); }
-.col-8 { flex: 0 0 calc(66.666% - 1.25rem); max-width: calc(66.666% - 1.25rem); }
-.col-9 { flex: 0 0 calc(75% - 1.25rem); max-width: calc(75% - 1.25rem); }
-.col-10 { flex: 0 0 calc(83.333% - 1.25rem); max-width: calc(83.333% - 1.25rem); }
-.col-11 { flex: 0 0 calc(91.666% - 1.25rem); max-width: calc(91.666% - 1.25rem); }
-.col-12 { flex: 0 0 calc(100% - 1.25rem); max-width: calc(100% - 1.25rem); }
+.col-1 {
+  flex: 0 0 calc(8.333% - 1.25rem);
+  max-width: calc(8.333% - 1.25rem);
+}
+.col-2 {
+  flex: 0 0 calc(16.666% - 1.25rem);
+  max-width: calc(16.666% - 1.25rem);
+}
+.col-3 {
+  flex: 0 0 calc(25% - 1.25rem);
+  max-width: calc(25% - 1.25rem);
+}
+.col-4 {
+  flex: 0 0 calc(33.333% - 1.25rem);
+  max-width: calc(33.333% - 1.25rem);
+}
+.col-5 {
+  flex: 0 0 calc(41.666% - 1.25rem);
+  max-width: calc(41.666% - 1.25rem);
+}
+.col-6 {
+  flex: 0 0 calc(50% - 1.25rem);
+  max-width: calc(50% - 1.25rem);
+}
+.col-7 {
+  flex: 0 0 calc(58.333% - 1.25rem);
+  max-width: calc(58.333% - 1.25rem);
+}
+.col-8 {
+  flex: 0 0 calc(66.666% - 1.25rem);
+  max-width: calc(66.666% - 1.25rem);
+}
+.col-9 {
+  flex: 0 0 calc(75% - 1.25rem);
+  max-width: calc(75% - 1.25rem);
+}
+.col-10 {
+  flex: 0 0 calc(83.333% - 1.25rem);
+  max-width: calc(83.333% - 1.25rem);
+}
+.col-11 {
+  flex: 0 0 calc(91.666% - 1.25rem);
+  max-width: calc(91.666% - 1.25rem);
+}
+.col-12 {
+  flex: 0 0 calc(100% - 1.25rem);
+  max-width: calc(100% - 1.25rem);
+}
 
 /* Responsive: on tablets col-4 becomes col-6 */
 @media (max-width: 64rem) {
-  .col-4 { flex: 0 0 calc(50% - 1.25rem); max-width: calc(50% - 1.25rem); }
+  .col-4 {
+    flex: 0 0 calc(50% - 1.25rem);
+    max-width: calc(50% - 1.25rem);
+  }
 }
 
 /* Responsive: on mobile all fields full width */

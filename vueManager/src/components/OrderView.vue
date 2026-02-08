@@ -1,27 +1,28 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Select from 'primevue/select'
-import Checkbox from 'primevue/checkbox'
-import DatePicker from 'primevue/datepicker'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Tag from 'primevue/tag'
-import Fieldset from 'primevue/fieldset'
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import Message from 'primevue/message'
-import AutoComplete from 'primevue/autocomplete'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import AutoComplete from 'primevue/autocomplete'
+import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
+import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import DatePicker from 'primevue/datepicker'
+import Dialog from 'primevue/dialog'
+import Fieldset from 'primevue/fieldset'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
+import Select from 'primevue/select'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
+import Tag from 'primevue/tag'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
+import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
+import request from '../request.js'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -100,7 +101,7 @@ const pendingOrderData = ref(null)
 const orderId = computed(() => {
   // Try to get from ms3.config first
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   if (ms3Config?.order_id) {
     const configId = ms3Config.order_id
@@ -120,7 +121,6 @@ const isCreateMode = computed(() => {
 
 // Draft status ID (typically 1)
 const draftStatusId = computed(() => {
-  // eslint-disable-next-line no-undef
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   return ms3Config?.status_draft || 1
 })
@@ -266,13 +266,16 @@ async function loadOrderFields() {
 
     // Populate legacy refs for backward compatibility (extract options from new format)
     if (orderComboOptions.value.status_id) {
-      statuses.value = orderComboOptions.value.status_id.options || orderComboOptions.value.status_id
+      statuses.value =
+        orderComboOptions.value.status_id.options || orderComboOptions.value.status_id
     }
     if (orderComboOptions.value.delivery_id) {
-      deliveries.value = orderComboOptions.value.delivery_id.options || orderComboOptions.value.delivery_id
+      deliveries.value =
+        orderComboOptions.value.delivery_id.options || orderComboOptions.value.delivery_id
     }
     if (orderComboOptions.value.payment_id) {
-      payments.value = orderComboOptions.value.payment_id.options || orderComboOptions.value.payment_id
+      payments.value =
+        orderComboOptions.value.payment_id.options || orderComboOptions.value.payment_id
     }
   } catch (error) {
     console.error('[OrderView] Error loading order fields:', error)
@@ -357,7 +360,13 @@ async function loadProductsGridConfig() {
  */
 function getDefaultProductsColumns() {
   return [
-    { name: 'name', label: _('order_product_name'), visible: true, type: 'template', template: '{name}' },
+    {
+      name: 'name',
+      label: _('order_product_name'),
+      visible: true,
+      type: 'template',
+      template: '{name}',
+    },
     { name: 'count', label: _('order_product_count'), visible: true, type: 'number' },
     { name: 'price', label: _('order_product_price'), visible: true, type: 'price' },
     { name: 'cost', label: _('order_product_cost'), visible: true, type: 'price' },
@@ -387,7 +396,7 @@ function formatOptions(options) {
     }
   }
   if (Array.isArray(options)) {
-    return options.map(opt => typeof opt === 'object' ? `${opt.key}: ${opt.value}` : opt)
+    return options.map(opt => (typeof opt === 'object' ? `${opt.key}: ${opt.value}` : opt))
   }
   if (typeof options === 'object') {
     return Object.entries(options).map(([key, value]) => `${key}: ${value}`)
@@ -501,9 +510,7 @@ async function initOptionsFromProduct(options) {
   optionsTableData.value = tableData
 
   // Store JSON text
-  optionsJsonText.value = Object.keys(parsed).length > 0
-    ? JSON.stringify(parsed, null, 2)
-    : ''
+  optionsJsonText.value = Object.keys(parsed).length > 0 ? JSON.stringify(parsed, null, 2) : ''
 }
 
 /**
@@ -614,9 +621,7 @@ function syncTableToJson() {
       }
     }
   }
-  optionsJsonText.value = Object.keys(obj).length > 0
-    ? JSON.stringify(obj, null, 2)
-    : ''
+  optionsJsonText.value = Object.keys(obj).length > 0 ? JSON.stringify(obj, null, 2) : ''
   optionsJsonError.value = ''
 }
 
@@ -724,10 +729,7 @@ async function saveEditedProduct() {
       options: getOptionsForSave(),
     }
 
-    await request.put(
-      `/api/mgr/orders/${orderId.value}/products/${editingProduct.value.id}`,
-      data,
-    )
+    await request.put(`/api/mgr/orders/${orderId.value}/products/${editingProduct.value.id}`, data)
 
     toast.add({
       severity: 'success',
@@ -739,10 +741,7 @@ async function saveEditedProduct() {
     editProductDialogVisible.value = false
 
     // Reload products and order to update totals
-    await Promise.all([
-      loadProducts(),
-      loadOrder(),
-    ])
+    await Promise.all([loadProducts(), loadOrder()])
   } catch (error) {
     console.error('[OrderView] Error saving product:', error)
     toast.add({
@@ -862,10 +861,7 @@ async function saveNewProduct() {
     addProductDialogVisible.value = false
 
     // Reload products and order to update totals
-    await Promise.all([
-      loadProducts(),
-      loadOrder(),
-    ])
+    await Promise.all([loadProducts(), loadOrder()])
   } catch (error) {
     console.error('[OrderView] Error adding product:', error)
     toast.add({
@@ -911,9 +907,7 @@ function deleteProduct(product) {
     acceptClass: 'p-button-danger',
     accept: async () => {
       try {
-        await request.delete(
-          `/api/mgr/orders/${orderId.value}/products/${product.id}`,
-        )
+        await request.delete(`/api/mgr/orders/${orderId.value}/products/${product.id}`)
 
         toast.add({
           severity: 'success',
@@ -923,10 +917,7 @@ function deleteProduct(product) {
         })
 
         // Reload products and order to update totals
-        await Promise.all([
-          loadProducts(),
-          loadOrder(),
-        ])
+        await Promise.all([loadProducts(), loadOrder()])
       } catch (error) {
         console.error('[OrderView] Error deleting product:', error)
         toast.add({
@@ -1079,7 +1070,15 @@ function getAddressFieldCompareField(fieldName) {
  */
 function isFieldEditable(fieldName) {
   // Read-only fields
-  const readOnlyFields = ['num', 'createdon', 'updatedon', 'cost', 'cart_cost', 'delivery_cost', 'weight']
+  const readOnlyFields = [
+    'num',
+    'createdon',
+    'updatedon',
+    'cost',
+    'cart_cost',
+    'delivery_cost',
+    'weight',
+  ]
   return !readOnlyFields.includes(fieldName)
 }
 
@@ -1750,13 +1749,13 @@ function getStatusSeverity(color) {
   const colorMap = {
     '#97b94d': 'success',
     '#81d742': 'success',
-    'green': 'success',
+    green: 'success',
     '#dd3d36': 'danger',
-    'red': 'danger',
+    red: 'danger',
     '#f0ad4e': 'warn',
-    'yellow': 'warn',
+    yellow: 'warn',
     '#5bc0de': 'info',
-    'blue': 'info',
+    blue: 'info',
   }
   return colorMap[color?.toLowerCase()] || 'secondary'
 }
@@ -1863,17 +1862,13 @@ onMounted(async () => {
 
           <!-- Table mode -->
           <div v-if="optionsEditMode === 'table'" class="options-table">
-            <div
-              v-for="(row, index) in optionsTableData"
-              :key="index"
-              class="options-row"
-            >
+            <div v-for="(row, index) in optionsTableData" :key="index" class="options-row">
               <!-- Type selector -->
               <Select
                 v-model="row.type"
                 :options="[
                   { value: 'field', label: _('options_type_field') },
-                  { value: 'custom', label: _('options_type_custom') }
+                  { value: 'custom', label: _('options_type_custom') },
                 ]"
                 optionLabel="label"
                 optionValue="value"
@@ -2051,11 +2046,7 @@ onMounted(async () => {
             <!-- Count -->
             <div class="field mb-3">
               <label>{{ _('order_product_count') }}</label>
-              <InputNumber
-                v-model="addProductForm.count"
-                :min="1"
-                class="w-full"
-              />
+              <InputNumber v-model="addProductForm.count" :min="1" class="w-full" />
             </div>
 
             <!-- Price -->
@@ -2128,7 +2119,9 @@ onMounted(async () => {
         <div v-if="duplicateCustomer" class="duplicate-customer-info">
           <div class="info-row">
             <span class="info-label">{{ _('customer_name') }}:</span>
-            <span class="info-value">{{ duplicateCustomer.first_name }} {{ duplicateCustomer.last_name }}</span>
+            <span class="info-value"
+              >{{ duplicateCustomer.first_name }} {{ duplicateCustomer.last_name }}</span
+            >
           </div>
           <div v-if="duplicateCustomer.email" class="info-row">
             <span class="info-label">Email:</span>
@@ -2190,32 +2183,47 @@ onMounted(async () => {
         <!-- Order Info Tab -->
         <TabPanel :header="_('order_info')">
           <!-- Static Order Summary Section (only in edit mode) -->
-          <Fieldset v-if="!isCreateMode" :legend="_('order_summary')" class="mb-3 order-summary-section" :toggleable="false">
+          <Fieldset
+            v-if="!isCreateMode"
+            :legend="_('order_summary')"
+            class="mb-3 order-summary-section"
+            :toggleable="false"
+          >
             <div class="order-summary-grid">
               <!-- Order number -->
               <div class="summary-item summary-num">
                 <span class="summary-label">{{ _('order_num') }}</span>
-                <span class="summary-value summary-value-lg">{{ order.num ? '#' + order.num : '-' }}</span>
+                <span class="summary-value summary-value-lg">{{
+                  order.num ? '#' + order.num : '-'
+                }}</span>
               </div>
               <!-- Total cost -->
               <div class="summary-item summary-cost">
                 <span class="summary-label">{{ _('order_cost') }}</span>
-                <span class="summary-value summary-value-lg summary-value-primary">{{ order.cost_formatted || formatPrice(order.cost) }}</span>
+                <span class="summary-value summary-value-lg summary-value-primary">{{
+                  order.cost_formatted || formatPrice(order.cost)
+                }}</span>
               </div>
               <!-- Cart cost -->
               <div class="summary-item">
                 <span class="summary-label">{{ _('order_cart_cost') }}</span>
-                <span class="summary-value">{{ order.cart_cost_formatted || formatPrice(order.cart_cost) }}</span>
+                <span class="summary-value">{{
+                  order.cart_cost_formatted || formatPrice(order.cart_cost)
+                }}</span>
               </div>
               <!-- Delivery cost -->
               <div class="summary-item">
                 <span class="summary-label">{{ _('order_delivery_cost') }}</span>
-                <span class="summary-value">{{ order.delivery_cost_formatted || formatPrice(order.delivery_cost) }}</span>
+                <span class="summary-value">{{
+                  order.delivery_cost_formatted || formatPrice(order.delivery_cost)
+                }}</span>
               </div>
               <!-- Weight -->
               <div class="summary-item">
                 <span class="summary-label">{{ _('order_weight') }}</span>
-                <span class="summary-value">{{ order.weight_formatted || order.weight || '-' }}</span>
+                <span class="summary-value">{{
+                  order.weight_formatted || order.weight || '-'
+                }}</span>
               </div>
               <!-- Created date -->
               <div class="summary-item">
@@ -2241,7 +2249,9 @@ onMounted(async () => {
 
                       <!-- Read-only fields -->
                       <template v-if="!isFieldEditable(field.name)">
-                        <div class="field-value">{{ getFieldDisplayValue(field, order[field.name]) }}</div>
+                        <div class="field-value">
+                          {{ getFieldDisplayValue(field, order[field.name]) }}
+                        </div>
                       </template>
 
                       <!-- Combo (Select) -->
@@ -2322,7 +2332,12 @@ onMounted(async () => {
           </div>
 
           <!-- Draft order finalization panel -->
-          <Message v-if="!isCreateMode && isDraft" severity="info" :closable="false" class="finalize-info-panel mt-3">
+          <Message
+            v-if="!isCreateMode && isDraft"
+            severity="info"
+            :closable="false"
+            class="finalize-info-panel mt-3"
+          >
             <template #icon>
               <i class="pi pi-info-circle"></i>
             </template>
@@ -2356,12 +2371,7 @@ onMounted(async () => {
               :loading="saving"
               @click="saveOrder"
             />
-            <Button
-              :label="_('cancel')"
-              icon="pi pi-times"
-              severity="secondary"
-              @click="goBack"
-            />
+            <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="goBack" />
           </div>
         </TabPanel>
 
@@ -2391,7 +2401,11 @@ onMounted(async () => {
                     :src="data[column.name]"
                     :alt="data.name"
                     class="product-thumbnail"
-                    :style="{ width: (column.width || 50) + 'px', height: (column.height || 50) + 'px', objectFit: 'cover' }"
+                    :style="{
+                      width: (column.width || 50) + 'px',
+                      height: (column.height || 50) + 'px',
+                      objectFit: 'cover',
+                    }"
                   />
                   <span v-else class="no-image">—</span>
                 </template>
@@ -2490,7 +2504,7 @@ onMounted(async () => {
                 <template #body="{ data }">
                   <div class="actions-buttons">
                     <Button
-                      v-for="action in (column.actions || [])"
+                      v-for="action in column.actions || []"
                       :key="action.name"
                       :icon="'pi ' + action.icon"
                       :severity="action.severity || 'secondary'"
@@ -2518,7 +2532,12 @@ onMounted(async () => {
         <!-- Address Tab (dynamic fields grouped by sections) -->
         <TabPanel :header="_('order_address')">
           <!-- Customer Search Section (in create mode or when order is draft) -->
-          <Fieldset v-if="isCreateMode || isDraft" :legend="_('order_customer')" class="mb-3" :toggleable="true">
+          <Fieldset
+            v-if="isCreateMode || isDraft"
+            :legend="_('order_customer')"
+            class="mb-3"
+            :toggleable="true"
+          >
             <div class="customer-search-content">
               <div class="customer-search-field">
                 <AutoComplete
@@ -2535,14 +2554,20 @@ onMounted(async () => {
                   <template #option="{ option }">
                     <div class="customer-suggestion">
                       <div class="customer-suggestion-info">
-                        <div class="customer-suggestion-name">{{ option.first_name }} {{ option.last_name }}</div>
+                        <div class="customer-suggestion-name">
+                          {{ option.first_name }} {{ option.last_name }}
+                        </div>
                         <div class="customer-suggestion-meta">
                           <span v-if="option.email" class="email">{{ option.email }}</span>
                           <span v-if="option.phone" class="phone">{{ option.phone }}</span>
                         </div>
                         <div class="customer-suggestion-stats">
-                          <span v-if="option.orders_count">{{ _('orders') }}: {{ option.orders_count }}</span>
-                          <span v-if="option.total_spent">{{ _('total') }}: {{ formatPrice(option.total_spent) }}</span>
+                          <span v-if="option.orders_count"
+                            >{{ _('orders') }}: {{ option.orders_count }}</span
+                          >
+                          <span v-if="option.total_spent"
+                            >{{ _('total') }}: {{ formatPrice(option.total_spent) }}</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -2555,8 +2580,12 @@ onMounted(async () => {
               <div v-if="selectedCustomer && selectedCustomer.id" class="selected-customer-info">
                 <div class="selected-customer-badge">
                   <i class="pi pi-user"></i>
-                  <span class="customer-name">{{ selectedCustomer.first_name }} {{ selectedCustomer.last_name }}</span>
-                  <span v-if="selectedCustomer.email" class="customer-email">{{ selectedCustomer.email }}</span>
+                  <span class="customer-name"
+                    >{{ selectedCustomer.first_name }} {{ selectedCustomer.last_name }}</span
+                  >
+                  <span v-if="selectedCustomer.email" class="customer-email">{{
+                    selectedCustomer.email
+                  }}</span>
                   <Button
                     icon="pi pi-times"
                     severity="secondary"
@@ -2582,7 +2611,11 @@ onMounted(async () => {
                   :binary="true"
                   :disabled="!!selectedCustomer?.id"
                 />
-                <label for="createCustomer" class="ml-2" :class="{ 'text-muted': !!selectedCustomer?.id }">
+                <label
+                  for="createCustomer"
+                  class="ml-2"
+                  :class="{ 'text-muted': !!selectedCustomer?.id }"
+                >
                   {{ _('ms3_order_create_customer_from_data') }}
                 </label>
               </div>
@@ -2677,12 +2710,7 @@ onMounted(async () => {
               :loading="saving"
               @click="saveOrder"
             />
-            <Button
-              :label="_('cancel')"
-              icon="pi pi-times"
-              severity="secondary"
-              @click="goBack"
-            />
+            <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="goBack" />
           </div>
         </TabPanel>
 
@@ -2707,7 +2735,10 @@ onMounted(async () => {
     </template>
 
     <div v-else class="error-state">
-      <i class="pi pi-exclamation-triangle" style="font-size: 3rem; color: var(--ms3-text-warning-accent)"></i>
+      <i
+        class="pi pi-exclamation-triangle"
+        style="font-size: 3rem; color: var(--ms3-text-warning-accent)"
+      ></i>
       <p>{{ _('order_not_found') }}</p>
       <Button :label="_('back_to_orders')" @click="goBack" />
     </div>
@@ -2754,23 +2785,57 @@ onMounted(async () => {
 }
 
 /* Width classes (12-column grid) */
-.col-1 { width: 8.333%; }
-.col-2 { width: 16.666%; }
-.col-3 { width: 25%; }
-.col-4 { width: 33.333%; }
-.col-5 { width: 41.666%; }
-.col-6 { width: 50%; }
-.col-7 { width: 58.333%; }
-.col-8 { width: 66.666%; }
-.col-9 { width: 75%; }
-.col-10 { width: 83.333%; }
-.col-11 { width: 91.666%; }
-.col-12 { width: 100%; }
+.col-1 {
+  width: 8.333%;
+}
+.col-2 {
+  width: 16.666%;
+}
+.col-3 {
+  width: 25%;
+}
+.col-4 {
+  width: 33.333%;
+}
+.col-5 {
+  width: 41.666%;
+}
+.col-6 {
+  width: 50%;
+}
+.col-7 {
+  width: 58.333%;
+}
+.col-8 {
+  width: 66.666%;
+}
+.col-9 {
+  width: 75%;
+}
+.col-10 {
+  width: 83.333%;
+}
+.col-11 {
+  width: 91.666%;
+}
+.col-12 {
+  width: 100%;
+}
 
 /* Responsive: on small screens all fields become full-width */
 @media (max-width: 48rem) {
-  .col-1, .col-2, .col-3, .col-4, .col-5, .col-6,
-  .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 {
+  .col-1,
+  .col-2,
+  .col-3,
+  .col-4,
+  .col-5,
+  .col-6,
+  .col-7,
+  .col-8,
+  .col-9,
+  .col-10,
+  .col-11,
+  .col-12 {
     width: 100%;
   }
 }

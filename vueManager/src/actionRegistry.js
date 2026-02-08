@@ -75,7 +75,9 @@ class ActionRegistry {
     }
 
     if (this.handlers.has(name) && !options.override) {
-      console.warn(`[MS3ActionRegistry] Handler "${name}" already exists. Use override: true to replace`)
+      console.warn(
+        `[MS3ActionRegistry] Handler "${name}" already exists. Use override: true to replace`
+      )
       return false
     }
 

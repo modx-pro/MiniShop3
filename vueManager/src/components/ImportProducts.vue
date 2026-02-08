@@ -1,17 +1,17 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
-
-import Select from 'primevue/select'
-import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
-import ProgressBar from 'primevue/progressbar'
+import DataTable from 'primevue/datatable'
 import Message from 'primevue/message'
+import ProgressBar from 'primevue/progressbar'
 import RadioButton from 'primevue/radiobutton'
+import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
+import { computed, onMounted, ref, watch } from 'vue'
+
+import request from '../request.js'
 
 const { _ } = useLexicon()
 
@@ -83,7 +83,8 @@ const loadAvailableFields = async () => {
     keyFields.value = data.key_fields || []
 
     if (keyFields.value.length > 0 && !updateKey.value) {
-      updateKey.value = keyFields.value.find(k => k.value === 'article')?.value || keyFields.value[0].value
+      updateKey.value =
+        keyFields.value.find(k => k.value === 'article')?.value || keyFields.value[0].value
     }
   } catch (err) {
     console.error('Failed to load fields:', err)
@@ -127,12 +128,23 @@ const autoMapFields = () => {
     }
 
     const commonMappings = {
-      'name': 'pagetitle', 'title': 'pagetitle', 'product': 'pagetitle',
-      'category': 'parent', 'category_id': 'parent', 'parent_id': 'parent',
-      'sku': 'article', 'art': 'article',
-      'cost': 'price', 'old_cost': 'old_price', 'discount_price': 'old_price',
-      'image': 'gallery', 'photo': 'gallery', 'picture': 'gallery',
-      'brand': 'vendor', 'manufacturer': 'vendor', 'country': 'made_in',
+      name: 'pagetitle',
+      title: 'pagetitle',
+      product: 'pagetitle',
+      category: 'parent',
+      category_id: 'parent',
+      parent_id: 'parent',
+      sku: 'article',
+      art: 'article',
+      cost: 'price',
+      old_cost: 'old_price',
+      discount_price: 'old_price',
+      image: 'gallery',
+      photo: 'gallery',
+      picture: 'gallery',
+      brand: 'vendor',
+      manufacturer: 'vendor',
+      country: 'made_in',
     }
 
     for (const [key, value] of Object.entries(commonMappings)) {
@@ -174,7 +186,11 @@ const startImport = async () => {
     importId.value = response.import_id || ''
 
     if (response.scheduled) {
-      importResult.value = { success: true, message: _('ms3_import_scheduled_success'), scheduled: true }
+      importResult.value = {
+        success: true,
+        message: _('ms3_import_scheduled_success'),
+        scheduled: true,
+      }
       importCompleted.value = true
       importRunning.value = false
     } else if (!useScheduler.value) {
@@ -218,7 +234,7 @@ const triggerFileInput = () => {
   fileInputRef.value?.click()
 }
 
-const handleFileSelect = async (event) => {
+const handleFileSelect = async event => {
   const file = event.target.files?.[0]
   if (!file) return
 
@@ -245,7 +261,7 @@ const handleFileSelect = async (event) => {
   }
 }
 
-const goToStep = (step) => {
+const goToStep = step => {
   if (step === 2 && !canProceedToStep2.value) return
   if (step === 3 && !canProceedToStep3.value) return
   currentStep.value = step
@@ -265,17 +281,33 @@ onMounted(() => {
     <p class="tab-description">{{ _('ms3_utilities_import_description') }}</p>
 
     <div class="step-indicators">
-      <div class="step-indicator" :class="{ active: currentStep === 1, completed: currentStep > 1 }" @click="goToStep(1)">
+      <div
+        class="step-indicator"
+        :class="{ active: currentStep === 1, completed: currentStep > 1 }"
+        @click="goToStep(1)"
+      >
         <span class="step-number">1</span>
         <span class="step-title">{{ _('ms3_import_step_upload') }}</span>
       </div>
       <div class="step-connector" :class="{ active: currentStep > 1 }"></div>
-      <div class="step-indicator" :class="{ active: currentStep === 2, completed: currentStep > 2, disabled: !canProceedToStep2 }" @click="goToStep(2)">
+      <div
+        class="step-indicator"
+        :class="{
+          active: currentStep === 2,
+          completed: currentStep > 2,
+          disabled: !canProceedToStep2,
+        }"
+        @click="goToStep(2)"
+      >
         <span class="step-number">2</span>
         <span class="step-title">{{ _('ms3_import_step_mapping') }}</span>
       </div>
       <div class="step-connector" :class="{ active: currentStep > 2 }"></div>
-      <div class="step-indicator" :class="{ active: currentStep === 3, disabled: !canProceedToStep3 }" @click="goToStep(3)">
+      <div
+        class="step-indicator"
+        :class="{ active: currentStep === 3, disabled: !canProceedToStep3 }"
+        @click="goToStep(3)"
+      >
         <span class="step-number">3</span>
         <span class="step-title">{{ _('ms3_import_step_import') }}</span>
       </div>
@@ -287,7 +319,13 @@ onMounted(() => {
 
       <div class="upload-section">
         <div class="upload-area" @click="triggerFileInput" :class="{ uploading: uploading }">
-          <input type="file" ref="fileInputRef" accept=".csv" @change="handleFileSelect" style="display: none" />
+          <input
+            type="file"
+            ref="fileInputRef"
+            accept=".csv"
+            @change="handleFileSelect"
+            style="display: none"
+          />
           <div class="upload-icon">
             <i class="pi pi-cloud-upload" v-if="!uploading"></i>
             <i class="pi pi-spin pi-spinner" v-else></i>
@@ -298,7 +336,9 @@ onMounted(() => {
           </div>
           <div class="upload-hint">{{ _('ms3_import_csv_only') }}</div>
         </div>
-        <Message v-if="uploadError" severity="error" :closable="true" @close="uploadError = null">{{ uploadError }}</Message>
+        <Message v-if="uploadError" severity="error" :closable="true" @close="uploadError = null">{{
+          uploadError
+        }}</Message>
       </div>
 
       <div class="selected-file" v-if="filePath">
@@ -313,7 +353,12 @@ onMounted(() => {
         <h4>{{ _('ms3_import_settings') }}</h4>
         <div class="setting-row">
           <label>{{ _('ms3_import_delimiter') }}</label>
-          <SelectButton v-model="delimiter" :options="delimiterOptions" optionLabel="label" optionValue="value" />
+          <SelectButton
+            v-model="delimiter"
+            :options="delimiterOptions"
+            optionLabel="label"
+            optionValue="value"
+          />
         </div>
         <div class="setting-row">
           <Checkbox v-model="skipHeader" :binary="true" inputId="skipHeader" />
@@ -324,16 +369,30 @@ onMounted(() => {
       <div class="file-info" v-if="totalRows > 0">
         <Message severity="info" :closable="false">
           {{ _('ms3_import_file_info') }}: {{ totalRows }} {{ _('ms3_import_rows') }}
-          <span v-if="detectedEncoding" class="encoding-info"> | {{ _('ms3_import_encoding') }}: {{ detectedEncoding }}</span>
+          <span v-if="detectedEncoding" class="encoding-info">
+            | {{ _('ms3_import_encoding') }}: {{ detectedEncoding }}</span
+          >
         </Message>
-        <Message v-if="detectedEncoding && detectedEncoding !== 'UTF-8'" severity="warn" :closable="false">
+        <Message
+          v-if="detectedEncoding && detectedEncoding !== 'UTF-8'"
+          severity="warn"
+          :closable="false"
+        >
           {{ _('ms3_import_encoding_converted', { from: detectedEncoding }) }}
         </Message>
-        <Message v-if="exceedsLimit && !schedulerAvailable" severity="warn" :closable="false">{{ _('ms3_import_exceeds_limit_warning') }}</Message>
+        <Message v-if="exceedsLimit && !schedulerAvailable" severity="warn" :closable="false">{{
+          _('ms3_import_exceeds_limit_warning')
+        }}</Message>
       </div>
 
       <div class="step-actions">
-        <Button :label="_('ms3_import_next')" icon="pi pi-arrow-right" iconPos="right" @click="currentStep = 2" :disabled="!canProceedToStep2" />
+        <Button
+          :label="_('ms3_import_next')"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          @click="currentStep = 2"
+          :disabled="!canProceedToStep2"
+        />
       </div>
     </div>
 
@@ -342,7 +401,8 @@ onMounted(() => {
       <h3>{{ _('ms3_import_field_mapping') }}</h3>
 
       <Message v-if="missingRequiredFields.length > 0" severity="warn" :closable="false">
-        {{ _('ms3_import_required_fields_warning') }}: <strong>{{ missingRequiredFields.join(', ') }}</strong>
+        {{ _('ms3_import_required_fields_warning') }}:
+        <strong>{{ missingRequiredFields.join(', ') }}</strong>
       </Message>
 
       <DataTable :value="csvHeaders.map((h, i) => ({ index: i, header: h }))" class="mapping-table">
@@ -359,12 +419,23 @@ onMounted(() => {
         </Column>
         <Column field="mapping" :header="_('ms3_import_product_field')">
           <template #body="{ data }">
-            <Select v-model="fieldMapping[data.index]" :options="availableFields" optionLabel="label" optionValue="value" :placeholder="_('ms3_import_select_field')" class="field-select" filter showClear />
+            <Select
+              v-model="fieldMapping[data.index]"
+              :options="availableFields"
+              optionLabel="label"
+              optionValue="value"
+              :placeholder="_('ms3_import_select_field')"
+              class="field-select"
+              filter
+              showClear
+            />
           </template>
         </Column>
         <Column :header="_('ms3_import_preview')">
           <template #body="{ data }">
-            <span class="preview-value" v-if="csvPreview[skipHeader ? 1 : 0]">{{ csvPreview[skipHeader ? 1 : 0][data.index] || '—' }}</span>
+            <span class="preview-value" v-if="csvPreview[skipHeader ? 1 : 0]">{{
+              csvPreview[skipHeader ? 1 : 0][data.index] || '—'
+            }}</span>
           </template>
         </Column>
       </DataTable>
@@ -377,13 +448,30 @@ onMounted(() => {
         </div>
         <div class="setting-row" v-if="updateExisting">
           <label>{{ _('ms3_import_update_key') }}:</label>
-          <Select v-model="updateKey" :options="keyFields" optionLabel="label" optionValue="value" class="key-select" />
+          <Select
+            v-model="updateKey"
+            :options="keyFields"
+            optionLabel="label"
+            optionValue="value"
+            class="key-select"
+          />
         </div>
       </div>
 
       <div class="step-actions">
-        <Button :label="_('ms3_import_back')" icon="pi pi-arrow-left" severity="secondary" @click="currentStep = 1" />
-        <Button :label="_('ms3_import_next')" icon="pi pi-arrow-right" iconPos="right" @click="currentStep = 3" :disabled="!canProceedToStep3" />
+        <Button
+          :label="_('ms3_import_back')"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          @click="currentStep = 1"
+        />
+        <Button
+          :label="_('ms3_import_next')"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          @click="currentStep = 3"
+          :disabled="!canProceedToStep3"
+        />
       </div>
     </div>
 
@@ -394,26 +482,62 @@ onMounted(() => {
       <div class="preview-section" v-if="!importRunning && !importCompleted">
         <h4>{{ _('ms3_import_summary') }}</h4>
         <div class="summary-info">
-          <div class="summary-row"><span class="summary-label">{{ _('ms3_import_file') }}:</span><span class="summary-value">{{ uploadedFileName || filePath }}</span></div>
-          <div class="summary-row"><span class="summary-label">{{ _('ms3_import_total_rows') }}:</span><span class="summary-value">{{ totalRows }}</span></div>
-          <div class="summary-row"><span class="summary-label">{{ _('ms3_import_mapped_fields') }}:</span><span class="summary-value">{{ fieldMapping.filter(f => f).length }}</span></div>
+          <div class="summary-row">
+            <span class="summary-label">{{ _('ms3_import_file') }}:</span
+            ><span class="summary-value">{{ uploadedFileName || filePath }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">{{ _('ms3_import_total_rows') }}:</span
+            ><span class="summary-value">{{ totalRows }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">{{ _('ms3_import_mapped_fields') }}:</span
+            ><span class="summary-value">{{ fieldMapping.filter(f => f).length }}</span>
+          </div>
         </div>
 
         <div class="import-options">
           <h4>{{ _('ms3_import_options') }}</h4>
           <div v-if="exceedsLimit" class="import-mode-selection">
-            <Message severity="info" :closable="false">{{ _('ms3_import_large_file_info') }}</Message>
+            <Message severity="info" :closable="false">{{
+              _('ms3_import_large_file_info')
+            }}</Message>
             <div class="mode-options" v-if="schedulerAvailable">
-              <div class="mode-option"><RadioButton v-model="useScheduler" :value="false" inputId="modeSync" /><label for="modeSync">{{ _('ms3_import_mode_sync') }}</label></div>
-              <div class="mode-option"><RadioButton v-model="useScheduler" :value="true" inputId="modeAsync" /><label for="modeAsync">{{ _('ms3_import_mode_async') }}</label></div>
+              <div class="mode-option">
+                <RadioButton v-model="useScheduler" :value="false" inputId="modeSync" /><label
+                  for="modeSync"
+                  >{{ _('ms3_import_mode_sync') }}</label
+                >
+              </div>
+              <div class="mode-option">
+                <RadioButton v-model="useScheduler" :value="true" inputId="modeAsync" /><label
+                  for="modeAsync"
+                  >{{ _('ms3_import_mode_async') }}</label
+                >
+              </div>
             </div>
           </div>
-          <div class="setting-row"><Checkbox v-model="debugMode" :binary="true" inputId="debugMode" /><label for="debugMode">{{ _('ms3_import_debug_mode') }}</label></div>
+          <div class="setting-row">
+            <Checkbox v-model="debugMode" :binary="true" inputId="debugMode" /><label
+              for="debugMode"
+              >{{ _('ms3_import_debug_mode') }}</label
+            >
+          </div>
         </div>
 
         <div class="step-actions">
-          <Button :label="_('ms3_import_back')" icon="pi pi-arrow-left" severity="secondary" @click="currentStep = 2" />
-          <Button :label="_('ms3_import_start')" icon="pi pi-play" @click="startImport" :loading="loading" />
+          <Button
+            :label="_('ms3_import_back')"
+            icon="pi pi-arrow-left"
+            severity="secondary"
+            @click="currentStep = 2"
+          />
+          <Button
+            :label="_('ms3_import_start')"
+            icon="pi pi-play"
+            @click="startImport"
+            :loading="loading"
+          />
         </div>
       </div>
 
@@ -430,84 +554,338 @@ onMounted(() => {
             <div class="result-content">
               <h4>{{ _('ms3_import_complete') }}</h4>
               <div class="result-stats">
-                <div class="result-stat"><span class="result-label">{{ _('ms3_import_total_processed') }}:</span><span class="result-value">{{ importResult.total }}</span></div>
-                <div class="result-stat"><span class="result-label">{{ _('ms3_import_created') }}:</span><span class="result-value success">{{ importResult.created }}</span></div>
-                <div class="result-stat"><span class="result-label">{{ _('ms3_import_updated') }}:</span><span class="result-value info">{{ importResult.updated }}</span></div>
-                <div class="result-stat" v-if="importResult.errors > 0"><span class="result-label">{{ _('ms3_import_errors') }}:</span><span class="result-value error">{{ importResult.errors }}</span></div>
+                <div class="result-stat">
+                  <span class="result-label">{{ _('ms3_import_total_processed') }}:</span
+                  ><span class="result-value">{{ importResult.total }}</span>
+                </div>
+                <div class="result-stat">
+                  <span class="result-label">{{ _('ms3_import_created') }}:</span
+                  ><span class="result-value success">{{ importResult.created }}</span>
+                </div>
+                <div class="result-stat">
+                  <span class="result-label">{{ _('ms3_import_updated') }}:</span
+                  ><span class="result-value info">{{ importResult.updated }}</span>
+                </div>
+                <div class="result-stat" v-if="importResult.errors > 0">
+                  <span class="result-label">{{ _('ms3_import_errors') }}:</span
+                  ><span class="result-value error">{{ importResult.errors }}</span>
+                </div>
               </div>
             </div>
           </template>
           <template v-else>{{ importResult.message }}</template>
         </Message>
-        <div class="step-actions"><Button :label="_('ms3_import_new')" icon="pi pi-plus" @click="resetImport" /></div>
+        <div class="step-actions">
+          <Button :label="_('ms3_import_new')" icon="pi pi-plus" @click="resetImport" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.import-products { padding: 1.25rem; max-width: 62.5rem; }
-.step-indicators { display: flex; align-items: center; justify-content: center; margin-bottom: 1.875rem; padding: 1.25rem 0; }
-.step-indicator { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background: var(--ms3-bg-muted); }
-.step-indicator:hover:not(.disabled) { background: var(--ms3-bg-neutral); }
-.step-indicator.active { background: var(--ms3-accent-primary); color: var(--ms3-text-on-primary); }
-.step-indicator.completed { background: var(--ms3-text-success); color: var(--ms3-text-on-primary); }
-.step-indicator.disabled { opacity: 0.5; cursor: not-allowed; }
-.step-number { display: flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: rgba(0, 0, 0, 0.1); font-weight: 600; }
-.step-indicator.active .step-number, .step-indicator.completed .step-number { background: rgba(255, 255, 255, 0.2); }
-.step-title { font-weight: 500; }
-.step-connector { width: 2.5rem; height: 0.125rem; background: var(--ms3-border-color-alt); margin: 0 0.5rem; }
-.step-connector.active { background: var(--ms3-text-success); }
-.step-content { padding: 1.25rem 0; }
-.step-content h3 { margin-bottom: 1.25rem; font-size: 1.25rem; font-weight: 600; }
-.step-content h4 { margin: 1.25rem 0 0.625rem; font-size: 1rem; font-weight: 500; }
-.file-source-tabs { margin-bottom: 1.25rem; }
-.source-tab-buttons { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-.source-tab-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border: var(--ms3-border-width) solid var(--ms3-border-color-alt); background: var(--ms3-bg-surface); border-radius: var(--ms3-radius-md); cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
-.source-tab-btn:hover { background: var(--ms3-bg-muted); }
-.source-tab-btn.active { background: var(--ms3-accent-primary); color: var(--ms3-text-on-primary); border-color: var(--ms3-accent-primary); }
-.source-tab-content { min-height: 9.375rem; }
-.upload-area { border: var(--ms3-border-width-focus) dashed var(--ms3-border-color-alt); border-radius: var(--ms3-radius-lg); padding: 2.5rem 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--ms3-bg-gray-50); }
-.upload-area:hover { border-color: var(--ms3-accent-primary); background: var(--ms3-bg-accent); }
-.upload-area.uploading { pointer-events: none; opacity: 0.7; }
-.upload-icon { font-size: 3rem; color: var(--ms3-text-muted); margin-bottom: 0.9375rem; }
-.upload-text { font-size: 1.1rem; margin-bottom: 0.5rem; }
-.upload-hint { font-size: 0.85rem; color: var(--ms3-text-muted); }
-.modx-browser-section { text-align: center; padding: 2.5rem 1.25rem; background: var(--ms3-bg-gray-50); border-radius: var(--ms3-radius-lg); border: var(--ms3-border-width) solid var(--ms3-border-color-alt); }
-.browser-hint { margin-bottom: 1.25rem; color: var(--ms3-text-muted); }
-.selected-file { margin: 1.25rem 0; padding: 0.75rem 1rem; background: var(--ms3-bg-success-light); border-radius: var(--ms3-radius-md); border: var(--ms3-border-width) solid var(--ms3-border-success-light); }
-.selected-file-header { display: flex; align-items: center; gap: 0.625rem; }
-.selected-file-header i { color: var(--ms3-text-success-dark); font-size: 1.2rem; }
-.file-name { flex: 1; font-weight: 500; color: var(--ms3-text-success-dark); }
-.settings-section, .update-settings, .import-options { background: var(--ms3-bg-muted); padding: 0.9375rem; border-radius: 0.375rem; margin: 1.25rem 0; }
-.setting-row { display: flex; align-items: center; gap: 0.625rem; margin: 0.625rem 0; }
-.setting-row label { cursor: pointer; }
-.file-info { margin: 1.25rem 0; }
-.step-actions { display: flex; gap: 0.625rem; justify-content: flex-end; margin-top: 1.875rem; padding-top: 1.25rem; border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt); }
-.mapping-table { margin: 1.25rem 0; }
-.column-info { display: flex; gap: 0.5rem; align-items: center; }
-.column-letter { font-weight: 600; color: var(--ms3-text-hint); }
-.column-name { color: var(--ms3-text-muted); }
-.mapping-arrow { color: var(--ms3-text-muted); }
-.field-select { width: 100%; min-width: 12.5rem; }
-.preview-value { color: var(--ms3-text-muted); font-size: 0.875rem; max-width: 9.375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-.key-select { min-width: 9.375rem; }
-.summary-info { background: var(--ms3-bg-surface); padding: 0.9375rem; border-radius: var(--ms3-radius-md); border: var(--ms3-border-width) solid var(--ms3-border-color-alt); }
-.summary-row { display: flex; gap: 0.625rem; padding: 0.5rem 0; border-bottom: var(--ms3-border-width) solid var(--ms3-border-divider); }
-.summary-row:last-child { border-bottom: none; }
-.summary-label { font-weight: 500; min-width: 9.375rem; }
-.mode-options { display: flex; flex-direction: column; gap: 0.625rem; margin-top: 0.9375rem; }
-.mode-option { display: flex; align-items: center; gap: 0.625rem; padding: 0.625rem; background: var(--ms3-bg-surface); border-radius: var(--ms3-radius-sm); }
-.mode-option label { cursor: pointer; }
-.progress-section { text-align: center; padding: 2.5rem 1.25rem; }
-.import-progress-bar { height: 0.5rem; margin: 1.25rem 0; }
-.result-section { margin-top: 1.25rem; }
-.result-content h4 { margin: 0 0 0.9375rem; }
-.result-stats { display: flex; gap: 1.25rem; flex-wrap: wrap; }
-.result-stat { display: flex; gap: 0.3125rem; }
-.result-value { font-weight: 600; }
-.result-value.success { color: var(--ms3-text-success-result); }
-.result-value.info { color: var(--ms3-text-info-result); }
-.result-value.error { color: var(--ms3-text-error-result); }
-.encoding-info { font-weight: 500; }
+.import-products {
+  padding: 1.25rem;
+  max-width: 62.5rem;
+}
+.step-indicators {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.875rem;
+  padding: 1.25rem 0;
+}
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--ms3-bg-muted);
+}
+.step-indicator:hover:not(.disabled) {
+  background: var(--ms3-bg-neutral);
+}
+.step-indicator.active {
+  background: var(--ms3-accent-primary);
+  color: var(--ms3-text-on-primary);
+}
+.step-indicator.completed {
+  background: var(--ms3-text-success);
+  color: var(--ms3-text-on-primary);
+}
+.step-indicator.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+.step-indicator.active .step-number,
+.step-indicator.completed .step-number {
+  background: rgba(255, 255, 255, 0.2);
+}
+.step-title {
+  font-weight: 500;
+}
+.step-connector {
+  width: 2.5rem;
+  height: 0.125rem;
+  background: var(--ms3-border-color-alt);
+  margin: 0 0.5rem;
+}
+.step-connector.active {
+  background: var(--ms3-text-success);
+}
+.step-content {
+  padding: 1.25rem 0;
+}
+.step-content h3 {
+  margin-bottom: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.step-content h4 {
+  margin: 1.25rem 0 0.625rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.file-source-tabs {
+  margin-bottom: 1.25rem;
+}
+.source-tab-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.source-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  background: var(--ms3-bg-surface);
+  border-radius: var(--ms3-radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+.source-tab-btn:hover {
+  background: var(--ms3-bg-muted);
+}
+.source-tab-btn.active {
+  background: var(--ms3-accent-primary);
+  color: var(--ms3-text-on-primary);
+  border-color: var(--ms3-accent-primary);
+}
+.source-tab-content {
+  min-height: 9.375rem;
+}
+.upload-area {
+  border: var(--ms3-border-width-focus) dashed var(--ms3-border-color-alt);
+  border-radius: var(--ms3-radius-lg);
+  padding: 2.5rem 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--ms3-bg-gray-50);
+}
+.upload-area:hover {
+  border-color: var(--ms3-accent-primary);
+  background: var(--ms3-bg-accent);
+}
+.upload-area.uploading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+.upload-icon {
+  font-size: 3rem;
+  color: var(--ms3-text-muted);
+  margin-bottom: 0.9375rem;
+}
+.upload-text {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+.upload-hint {
+  font-size: 0.85rem;
+  color: var(--ms3-text-muted);
+}
+.modx-browser-section {
+  text-align: center;
+  padding: 2.5rem 1.25rem;
+  background: var(--ms3-bg-gray-50);
+  border-radius: var(--ms3-radius-lg);
+  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+}
+.browser-hint {
+  margin-bottom: 1.25rem;
+  color: var(--ms3-text-muted);
+}
+.selected-file {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--ms3-bg-success-light);
+  border-radius: var(--ms3-radius-md);
+  border: var(--ms3-border-width) solid var(--ms3-border-success-light);
+}
+.selected-file-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.selected-file-header i {
+  color: var(--ms3-text-success-dark);
+  font-size: 1.2rem;
+}
+.file-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--ms3-text-success-dark);
+}
+.settings-section,
+.update-settings,
+.import-options {
+  background: var(--ms3-bg-muted);
+  padding: 0.9375rem;
+  border-radius: 0.375rem;
+  margin: 1.25rem 0;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0.625rem 0;
+}
+.setting-row label {
+  cursor: pointer;
+}
+.file-info {
+  margin: 1.25rem 0;
+}
+.step-actions {
+  display: flex;
+  gap: 0.625rem;
+  justify-content: flex-end;
+  margin-top: 1.875rem;
+  padding-top: 1.25rem;
+  border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+}
+.mapping-table {
+  margin: 1.25rem 0;
+}
+.column-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.column-letter {
+  font-weight: 600;
+  color: var(--ms3-text-hint);
+}
+.column-name {
+  color: var(--ms3-text-muted);
+}
+.mapping-arrow {
+  color: var(--ms3-text-muted);
+}
+.field-select {
+  width: 100%;
+  min-width: 12.5rem;
+}
+.preview-value {
+  color: var(--ms3-text-muted);
+  font-size: 0.875rem;
+  max-width: 9.375rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+.key-select {
+  min-width: 9.375rem;
+}
+.summary-info {
+  background: var(--ms3-bg-surface);
+  padding: 0.9375rem;
+  border-radius: var(--ms3-radius-md);
+  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+}
+.summary-row {
+  display: flex;
+  gap: 0.625rem;
+  padding: 0.5rem 0;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-divider);
+}
+.summary-row:last-child {
+  border-bottom: none;
+}
+.summary-label {
+  font-weight: 500;
+  min-width: 9.375rem;
+}
+.mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.9375rem;
+}
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem;
+  background: var(--ms3-bg-surface);
+  border-radius: var(--ms3-radius-sm);
+}
+.mode-option label {
+  cursor: pointer;
+}
+.progress-section {
+  text-align: center;
+  padding: 2.5rem 1.25rem;
+}
+.import-progress-bar {
+  height: 0.5rem;
+  margin: 1.25rem 0;
+}
+.result-section {
+  margin-top: 1.25rem;
+}
+.result-content h4 {
+  margin: 0 0 0.9375rem;
+}
+.result-stats {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.result-stat {
+  display: flex;
+  gap: 0.3125rem;
+}
+.result-value {
+  font-weight: 600;
+}
+.result-value.success {
+  color: var(--ms3-text-success-result);
+}
+.result-value.info {
+  color: var(--ms3-text-info-result);
+}
+.result-value.error {
+  color: var(--ms3-text-error-result);
+}
+.encoding-info {
+  font-weight: 500;
+}
 </style>

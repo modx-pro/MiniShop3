@@ -1,20 +1,21 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
+import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import InputNumber from 'primevue/inputnumber'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
+
 import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -60,7 +61,7 @@ const availableSectionOptions = computed(() => {
     .forEach(section => {
       options.push({
         label: section.label || section.key,
-        value: section.id,  // Using ID instead of key, since section in DB is FK to id
+        value: section.id, // Using ID instead of key, since section in DB is FK to id
       })
     })
 
@@ -73,7 +74,7 @@ const availableSectionOptions = computed(() => {
 function getSectionLabel(sectionId) {
   if (!sectionId) return _('ms3_vue_no_section')
   const section = sections.value.find(s => s.id === sectionId)
-  return section ? (section.label || section.key) : `ID: ${sectionId}`
+  return section ? section.label || section.key : `ID: ${sectionId}`
 }
 
 /**
@@ -171,10 +172,7 @@ async function saveSections() {
       label: section.label || null,
     }))
 
-    await request.put(
-      `/api/mgr/config/sections/${pageKey}`,
-      { sections: sectionsToSave },
-    )
+    await request.put(`/api/mgr/config/sections/${pageKey}`, { sections: sectionsToSave })
 
     toast.add({
       severity: 'success',
@@ -422,10 +420,7 @@ async function saveConfig() {
       sort_order: index,
     }))
 
-    await request.put(
-      `/api/mgr/config/page-fields/${pageKey}`,
-      { fields: fieldsToSave },
-    )
+    await request.put(`/api/mgr/config/page-fields/${pageKey}`, { fields: fieldsToSave })
 
     toast.add({
       severity: 'success',
@@ -470,9 +465,8 @@ function openEditDialog(field, index) {
     ...field,
     // Convert visible: 0/1 (number) or true/false (boolean) to boolean
     // Default true if not set
-    visible: field.visible !== undefined && field.visible !== null
-      ? Boolean(Number(field.visible))
-      : true,
+    visible:
+      field.visible !== undefined && field.visible !== null ? Boolean(Number(field.visible)) : true,
   }
   editingFieldIndex.value = index
   editDialogVisible.value = true
@@ -506,10 +500,7 @@ async function saveFieldChanges() {
         visible: field.visible !== undefined ? field.visible : true,
       }))
 
-      await request.put(
-        `/api/mgr/config/page-fields/${pageKey}`,
-        { fields: fieldsToSave },
-      )
+      await request.put(`/api/mgr/config/page-fields/${pageKey}`, { fields: fieldsToSave })
 
       toast.add({
         severity: 'success',
@@ -547,11 +538,11 @@ onMounted(() => {
     <p class="tab-description">{{ _('ms3_vue_product_fields_description') }}</p>
 
     <!-- Sections table -->
-    <Card style="margin-top: 1.25rem;">
+    <Card style="margin-top: 1.25rem">
       <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center">
           <span>{{ _('ms3_vue_sections') }}</span>
-          <div style="display: flex; gap: 0.625rem;">
+          <div style="display: flex; gap: 0.625rem">
             <Button
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
@@ -641,9 +632,9 @@ onMounted(() => {
     </Card>
 
     <!-- Fields table -->
-    <Card style="margin-top: 1.25rem;">
+    <Card style="margin-top: 1.25rem">
       <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center">
           <span>{{ _('ms3_vue_product_properties') }}</span>
           <Button
             :label="_('ms3_vue_save_changes')"
@@ -771,7 +762,7 @@ onMounted(() => {
 
           <!-- Visibility -->
           <div class="field col-12">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem">
               <Checkbox
                 inputId="section-hidden"
                 v-model="newSection.hidden"
@@ -779,7 +770,12 @@ onMounted(() => {
                 :trueValue="false"
                 :falseValue="true"
               />
-              <label for="section-hidden" style="margin: 0; cursor: pointer;" @click="newSection.hidden = !newSection.hidden">{{ _('ms3_vue_section_visible_label') }}</label>
+              <label
+                for="section-hidden"
+                style="margin: 0; cursor: pointer"
+                @click="newSection.hidden = !newSection.hidden"
+                >{{ _('ms3_vue_section_visible_label') }}</label
+              >
             </div>
             <small>{{ _('ms3_vue_section_visibility_hint') }}</small>
           </div>
@@ -793,11 +789,7 @@ onMounted(() => {
           severity="secondary"
           @click="closeAddSectionDialog"
         />
-        <Button
-          :label="_('ms3_vue_add_button')"
-          icon="pi pi-check"
-          @click="addSection"
-        />
+        <Button :label="_('ms3_vue_add_button')" icon="pi pi-check" @click="addSection" />
       </template>
     </Dialog>
 
@@ -805,7 +797,11 @@ onMounted(() => {
     <Dialog
       v-model:visible="editSectionDialogVisible"
       modal
-      :header="editingSection ? `${_('ms3_vue_edit_section_title')}: ${editingSection.key}` : _('ms3_vue_edit_section_title')"
+      :header="
+        editingSection
+          ? `${_('ms3_vue_edit_section_title')}: ${editingSection.key}`
+          : _('ms3_vue_edit_section_title')
+      "
       :style="{ width: '37.5rem' }"
       appendTo="self"
     >
@@ -814,18 +810,15 @@ onMounted(() => {
           <!-- Section key (readonly) -->
           <div class="field col-12">
             <label for="edit-section-key">{{ _('ms3_vue_section_key_label') }}</label>
-            <InputText
-              id="edit-section-key"
-              v-model="editingSection.key"
-              disabled
-              class="w-full"
-            />
+            <InputText id="edit-section-key" v-model="editingSection.key" disabled class="w-full" />
             <small>{{ _('ms3_vue_section_key_readonly_hint') }}</small>
           </div>
 
           <!-- Lexicon key -->
           <div class="field col-6">
-            <label for="edit-section-lexicon-key">{{ _('ms3_vue_section_lexicon_key_label') }}</label>
+            <label for="edit-section-lexicon-key">{{
+              _('ms3_vue_section_lexicon_key_label')
+            }}</label>
             <InputText
               id="edit-section-lexicon-key"
               v-model="editingSection.lexicon_key"
@@ -849,7 +842,7 @@ onMounted(() => {
 
           <!-- Visibility -->
           <div class="field col-12">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem">
               <Checkbox
                 inputId="edit-section-hidden"
                 v-model="editingSection.hidden"
@@ -857,7 +850,12 @@ onMounted(() => {
                 :trueValue="false"
                 :falseValue="true"
               />
-              <label for="edit-section-hidden" style="margin: 0; cursor: pointer;" @click="editingSection.hidden = !editingSection.hidden">{{ _('ms3_vue_section_visible_label') }}</label>
+              <label
+                for="edit-section-hidden"
+                style="margin: 0; cursor: pointer"
+                @click="editingSection.hidden = !editingSection.hidden"
+                >{{ _('ms3_vue_section_visible_label') }}</label
+              >
             </div>
             <small>{{ _('ms3_vue_section_visibility_hint') }}</small>
           </div>
@@ -871,11 +869,7 @@ onMounted(() => {
           severity="secondary"
           @click="closeEditSectionDialog"
         />
-        <Button
-          :label="_('ms3_vue_save_button')"
-          icon="pi pi-save"
-          @click="saveEditedSection"
-        />
+        <Button :label="_('ms3_vue_save_button')" icon="pi pi-save" @click="saveEditedSection" />
       </template>
     </Dialog>
 
@@ -883,7 +877,11 @@ onMounted(() => {
     <Dialog
       v-model:visible="editDialogVisible"
       modal
-      :header="editingField ? `${_('ms3_vue_field_edit_title')}: ${editingField.name}` : _('ms3_vue_field_edit_title')"
+      :header="
+        editingField
+          ? `${_('ms3_vue_field_edit_title')}: ${editingField.name}`
+          : _('ms3_vue_field_edit_title')
+      "
       :style="{ width: '37.5rem' }"
       appendTo="self"
     >
@@ -892,12 +890,7 @@ onMounted(() => {
           <!-- Field type (readonly) -->
           <div class="field col-6">
             <label for="field-xtype">{{ _('ms3_vue_field_xtype') }}</label>
-            <InputText
-              id="field-xtype"
-              v-model="editingField.xtype"
-              disabled
-              class="w-full"
-            />
+            <InputText id="field-xtype" v-model="editingField.xtype" disabled class="w-full" />
             <small>{{ _('ms3_vue_field_xtype_readonly') }}</small>
           </div>
 
@@ -964,7 +957,11 @@ onMounted(() => {
                 :trueValue="true"
                 :falseValue="false"
               />
-              <label for="field-visible" class="field-label checkbox-label" @click="editingField.visible = !editingField.visible">
+              <label
+                for="field-visible"
+                class="field-label checkbox-label"
+                @click="editingField.visible = !editingField.visible"
+              >
                 {{ _('ms3_vue_field_visible') }}
               </label>
             </div>

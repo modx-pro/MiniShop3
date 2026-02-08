@@ -1,21 +1,22 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
+import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
+import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
 import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -139,7 +140,10 @@ async function saveNotification() {
     if (isNewRecord.value) {
       await request.post('/api/mgr/notifications', editingNotification.value)
     } else {
-      await request.put(`/api/mgr/notifications/${editingNotification.value.id}`, editingNotification.value)
+      await request.put(
+        `/api/mgr/notifications/${editingNotification.value.id}`,
+        editingNotification.value
+      )
     }
 
     toast.add({
@@ -271,10 +275,7 @@ function getStatusStyle(statusId) {
 }
 
 const statusOptions = computed(() => {
-  return [
-    { id: null, name: _('ms3_notification_all_statuses') },
-    ...references.value.statuses,
-  ]
+  return [{ id: null, name: _('ms3_notification_all_statuses') }, ...references.value.statuses]
 })
 
 onMounted(async () => {
@@ -304,50 +305,52 @@ onMounted(async () => {
         </div>
 
         <!-- Filters -->
-        <div class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
-          <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
-            <div style="flex: 1; min-width: 12.5rem;">
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ _('ms3_notification_status') }}</label>
+        <div class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem">
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end">
+            <div style="flex: 1; min-width: 12.5rem">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
+                _('ms3_notification_status')
+              }}</label>
               <Dropdown
                 v-model="filterStatusId"
                 :options="statusOptions"
                 optionLabel="name"
                 optionValue="id"
                 :placeholder="_('all')"
-                style="width: 100%;"
+                style="width: 100%"
                 showClear
               />
             </div>
-            <div style="flex: 1; min-width: 9.375rem;">
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ _('ms3_notification_channel') }}</label>
+            <div style="flex: 1; min-width: 9.375rem">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
+                _('ms3_notification_channel')
+              }}</label>
               <Dropdown
                 v-model="filterChannel"
                 :options="references.channels"
                 optionLabel="name"
                 optionValue="id"
                 :placeholder="_('all')"
-                style="width: 100%;"
+                style="width: 100%"
                 showClear
               />
             </div>
-            <div style="flex: 1; min-width: 9.375rem;">
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ _('ms3_notification_recipient') }}</label>
+            <div style="flex: 1; min-width: 9.375rem">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
+                _('ms3_notification_recipient')
+              }}</label>
               <Dropdown
                 v-model="filterRecipientType"
                 :options="references.recipient_types"
                 optionLabel="name"
                 optionValue="id"
                 :placeholder="_('all')"
-                style="width: 100%;"
+                style="width: 100%"
                 showClear
               />
             </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <Button
-                :label="_('apply')"
-                icon="pi pi-filter"
-                @click="applyFilters"
-              />
+            <div style="display: flex; gap: 0.5rem">
+              <Button :label="_('apply')" icon="pi pi-filter" @click="applyFilters" />
               <Button
                 :label="_('clear')"
                 icon="pi pi-filter-slash"
@@ -359,19 +362,10 @@ onMounted(async () => {
         </div>
 
         <!-- Table -->
-        <DataTable
-          :value="notifications"
-          :loading="loading"
-          stripedRows
-          responsiveLayout="scroll"
-        >
-          <Column field="enabled" :header="_('ms3_notification_enabled')" style="width: 5rem;">
+        <DataTable :value="notifications" :loading="loading" stripedRows responsiveLayout="scroll">
+          <Column field="enabled" :header="_('ms3_notification_enabled')" style="width: 5rem">
             <template #body="{ data }">
-              <Checkbox
-                :modelValue="data.enabled"
-                :binary="true"
-                @click="toggleEnabled(data)"
-              />
+              <Checkbox :modelValue="data.enabled" :binary="true" @click="toggleEnabled(data)" />
             </template>
           </Column>
 
@@ -383,10 +377,7 @@ onMounted(async () => {
 
           <Column field="status_id" :header="_('ms3_notification_status')">
             <template #body="{ data }">
-              <Tag
-                :value="getStatusName(data.status_id)"
-                :style="getStatusStyle(data.status_id)"
-              />
+              <Tag :value="getStatusName(data.status_id)" :style="getStatusStyle(data.status_id)" />
             </template>
           </Column>
 
@@ -421,7 +412,7 @@ onMounted(async () => {
             </template>
           </Column>
 
-          <Column :header="_('actions')" style="width: 7.5rem;">
+          <Column :header="_('actions')" style="width: 7.5rem">
             <template #body="{ data }">
               <div class="actions-cell">
                 <Button
@@ -576,12 +567,7 @@ onMounted(async () => {
           class="p-button-text"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveNotification"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveNotification" />
       </template>
     </Dialog>
   </div>

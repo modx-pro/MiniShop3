@@ -3,10 +3,11 @@
  *
  * Provides convenient interface for working with grid actions
  */
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import actionRegistry from '../actionRegistry.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+
+import actionRegistry from '../actionRegistry.js'
 
 /**
  * Composable for working with grid actions
@@ -89,7 +90,7 @@ export function useActions(options = {}) {
     const context = createContext()
 
     if (actionConfig.confirm) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         let message = actionConfig.confirmMessage
           ? _(actionConfig.confirmMessage)
           : _('action_confirm_message')

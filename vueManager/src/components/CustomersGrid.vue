@@ -1,22 +1,23 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import InputGroup from 'primevue/inputgroup'
 import InputGroupAddon from 'primevue/inputgroupaddon'
-import Checkbox from 'primevue/checkbox'
+import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -33,11 +34,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'customer',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/customers/bulk', { ids })
   },
   onSuccess: () => loadCustomers(),
-  getItemName: (item) => getCustomerDisplayName(item),
+  getItemName: item => getCustomerDisplayName(item),
 })
 
 const columns = ref([])
@@ -192,7 +193,10 @@ async function saveCustomer() {
  */
 function deleteCustomer(customer) {
   confirm.require({
-    message: _('customer_delete_confirm_message').replace('{name}', getCustomerDisplayName(customer)),
+    message: _('customer_delete_confirm_message').replace(
+      '{name}',
+      getCustomerDisplayName(customer)
+    ),
     header: _('customer_delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
     acceptLabel: _('delete'),
@@ -315,7 +319,7 @@ async function saveAddress() {
     if (editingAddress.value.id) {
       await request.put(
         `/api/mgr/customers/${customerId}/addresses/${editingAddress.value.id}`,
-        editingAddress.value,
+        editingAddress.value
       )
       toast.add({
         severity: 'success',
@@ -324,10 +328,7 @@ async function saveAddress() {
         life: 3000,
       })
     } else {
-      await request.post(
-        `/api/mgr/customers/${customerId}/addresses`,
-        editingAddress.value,
-      )
+      await request.post(`/api/mgr/customers/${customerId}/addresses`, editingAddress.value)
       toast.add({
         severity: 'success',
         summary: _('success'),
@@ -501,12 +502,62 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem', isSystem: true },
-    { name: 'customer_name', label: _('customer_name'), visible: true, sortable: false, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '12.5rem' },
-    { name: 'email', label: _('customer_email'), visible: true, sortable: true, filterable: true, type: 'model', minWidth: '12.5rem' },
-    { name: 'phone', label: _('customer_phone'), visible: true, filterable: true, type: 'model', width: '9.375rem', minWidth: '7.5rem' },
-    { name: 'is_active', label: _('customer_active'), visible: true, sortable: true, filterable: true, type: 'boolean', width: '6.25rem' },
-    { name: 'created_at', label: _('created_at'), visible: true, sortable: true, type: 'model', format: 'datetime', width: '11.25rem', minWidth: '9.375rem' },
+    {
+      name: 'id',
+      label: 'ID',
+      visible: true,
+      sortable: true,
+      frozen: true,
+      width: '5rem',
+      isSystem: true,
+    },
+    {
+      name: 'customer_name',
+      label: _('customer_name'),
+      visible: true,
+      sortable: false,
+      filterable: true,
+      type: 'template',
+      template: '{first_name} {last_name}',
+      minWidth: '12.5rem',
+    },
+    {
+      name: 'email',
+      label: _('customer_email'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      type: 'model',
+      minWidth: '12.5rem',
+    },
+    {
+      name: 'phone',
+      label: _('customer_phone'),
+      visible: true,
+      filterable: true,
+      type: 'model',
+      width: '9.375rem',
+      minWidth: '7.5rem',
+    },
+    {
+      name: 'is_active',
+      label: _('customer_active'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      type: 'boolean',
+      width: '6.25rem',
+    },
+    {
+      name: 'created_at',
+      label: _('created_at'),
+      visible: true,
+      sortable: true,
+      type: 'model',
+      format: 'datetime',
+      width: '11.25rem',
+      minWidth: '9.375rem',
+    },
     {
       name: 'actions',
       label: _('actions'),
@@ -518,7 +569,15 @@ function getDefaultColumns() {
       actions: [
         { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'customer_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -532,7 +591,15 @@ function getActionsConfig(column) {
     return [
       { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: 'delete',
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'customer_delete_confirm_message',
+      },
     ]
   }
   return column.actions
@@ -578,39 +645,39 @@ onMounted(async () => {
             :placeholder="_('search_placeholder')"
             @keyup.enter="onSearch"
           />
-          <Button
-            icon="pi pi-search"
-            :label="_('search')"
-            @click="onSearch"
-          />
+          <Button icon="pi pi-search" :label="_('search')" @click="onSearch" />
         </div>
 
         <!-- Filters form -->
-        <div v-if="filterableColumns.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
-          <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div
+          v-if="filterableColumns.length > 0"
+          class="filters-form mb-3 p-3 surface-ground"
+          style="border-radius: 0.375rem"
+        >
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem">
             <div
               v-for="column in filterableColumns"
               :key="column.name"
-              style="flex: 1 1 18.75rem; min-width: 15.625rem;"
+              style="flex: 1 1 18.75rem; min-width: 15.625rem"
             >
               <div class="field">
-                <label :for="`filter-${column.name}`" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ column.label }}</label>
+                <label
+                  :for="`filter-${column.name}`"
+                  style="display: block; margin-bottom: 0.5rem; font-weight: 500"
+                  >{{ column.label }}</label
+                >
                 <InputText
                   :id="`filter-${column.name}`"
                   v-model="filterValues[column.name]"
                   :placeholder="_('filter_by').replace('{field}', column.label)"
-                  style="width: 100%;"
+                  style="width: 100%"
                   @keyup.enter="applyFilters"
                 />
               </div>
             </div>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+          <div style="display: flex; gap: 0.5rem">
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -806,7 +873,9 @@ onMounted(async () => {
               :binary="true"
               disabled
             />
-            <label for="email_verified" class="text-muted">{{ _('customer_email_verified') }}</label>
+            <label for="email_verified" class="text-muted">{{
+              _('customer_email_verified')
+            }}</label>
           </div>
         </div>
       </div>
@@ -818,19 +887,21 @@ onMounted(async () => {
           class="p-button-text"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveCustomer"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveCustomer" />
       </template>
     </Dialog>
 
     <!-- Customer addresses modal window -->
     <Dialog
       v-model:visible="addressesDialogVisible"
-      :header="currentCustomerForAddresses ? _('customer_addresses_title').replace('{name}', getCustomerDisplayName(currentCustomerForAddresses)) : _('addresses')"
+      :header="
+        currentCustomerForAddresses
+          ? _('customer_addresses_title').replace(
+              '{name}',
+              getCustomerDisplayName(currentCustomerForAddresses)
+            )
+          : _('addresses')
+      "
       :modal="true"
       :closable="true"
       :style="{ width: '50rem' }"
@@ -840,11 +911,7 @@ onMounted(async () => {
         <!-- Addresses list -->
         <div v-if="!addressFormVisible" class="addresses-list">
           <div class="addresses-header">
-            <Button
-              :label="_('add_address')"
-              icon="pi pi-plus"
-              @click="createAddress"
-            />
+            <Button :label="_('add_address')" icon="pi pi-plus" @click="createAddress" />
           </div>
 
           <div v-if="addressesLoading" class="addresses-loading">
@@ -866,7 +933,9 @@ onMounted(async () => {
               <div class="address-info">
                 <div class="address-name">
                   <strong>{{ address.name || _('address_unnamed') }}</strong>
-                  <span v-if="!address.active" class="address-badge inactive">{{ _('inactive') }}</span>
+                  <span v-if="!address.active" class="address-badge inactive">{{
+                    _('inactive')
+                  }}</span>
                 </div>
                 <div class="address-formatted">{{ address.formatted }}</div>
                 <div v-if="address.comment" class="address-comment">
@@ -898,7 +967,12 @@ onMounted(async () => {
           <div class="form-row">
             <div class="form-col-full">
               <label for="addr_name">{{ _('address_name') }}</label>
-              <InputText id="addr_name" v-model="editingAddress.name" class="w-full" :placeholder="_('address_name_placeholder')" />
+              <InputText
+                id="addr_name"
+                v-model="editingAddress.name"
+                class="w-full"
+                :placeholder="_('address_name_placeholder')"
+              />
             </div>
           </div>
 
@@ -957,7 +1031,12 @@ onMounted(async () => {
           <div class="form-row">
             <div class="form-col-full">
               <label for="addr_comment">{{ _('address_comment') }}</label>
-              <Textarea id="addr_comment" v-model="editingAddress.comment" class="w-full" rows="2" />
+              <Textarea
+                id="addr_comment"
+                v-model="editingAddress.comment"
+                class="w-full"
+                rows="2"
+              />
             </div>
           </div>
 

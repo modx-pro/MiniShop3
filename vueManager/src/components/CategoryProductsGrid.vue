@@ -1,19 +1,20 @@
 <script setup>
-import { onMounted, ref, computed, defineProps, watch } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
+import ConfirmDialog from 'primevue/confirmdialog'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
-import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, defineProps, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const props = defineProps({
@@ -37,14 +38,14 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'product',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
       ids,
     })
   },
   onSuccess: () => loadProducts(),
-  getItemName: (item) => item.pagetitle || `#${item.id}`,
+  getItemName: item => item.pagetitle || `#${item.id}`,
 })
 
 const columns = ref([])
@@ -62,8 +63,10 @@ const sortOrder = ref(1)
 const selectAll = ref(false)
 
 // Default thumbnail from system settings
-// eslint-disable-next-line no-undef
-const defaultThumb = (typeof ms3 !== 'undefined' ? ms3.config?.default_thumb : null) || '/assets/components/minishop3/img/mgr/ms3_small.png'
+
+const defaultThumb =
+  (typeof ms3 !== 'undefined' ? ms3.config?.default_thumb : null) ||
+  '/assets/components/minishop3/img/mgr/ms3_small.png'
 
 /**
  * Get sorted filters list
@@ -231,14 +234,20 @@ async function deleteProduct(product) {
  * Create new product
  */
 function createProduct() {
-  MODx.loadPage('resource/create', 'class_key=MiniShop3\\Model\\msProduct&parent=' + props.categoryId + '&context_key=' + MODx.ctx)
+  MODx.loadPage(
+    'resource/create',
+    'class_key=MiniShop3\\Model\\msProduct&parent=' + props.categoryId + '&context_key=' + MODx.ctx
+  )
 }
 
 /**
  * Create new subcategory
  */
 function createCategory() {
-  MODx.loadPage('resource/create', 'class_key=MiniShop3\\Model\\msCategory&parent=' + props.categoryId + '&context_key=' + MODx.ctx)
+  MODx.loadPage(
+    'resource/create',
+    'class_key=MiniShop3\\Model\\msCategory&parent=' + props.categoryId + '&context_key=' + MODx.ctx
+  )
 }
 
 /**
@@ -400,11 +409,49 @@ function getDefaultColumns() {
   return [
     { name: 'id', label: 'ID', visible: true, sortable: true, width: '3.75rem', isSystem: true },
     { name: 'thumb', label: _('product_image'), visible: true, type: 'image', width: '3.75rem' },
-    { name: 'pagetitle', label: _('product_pagetitle'), visible: true, sortable: true, filterable: true, minWidth: '12.5rem', type: 'template', template: '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>' },
-    { name: 'article', label: _('product_article'), visible: true, sortable: true, filterable: true, width: '6.25rem' },
-    { name: 'price', label: _('product_price'), visible: true, sortable: true, type: 'price', width: '6.25rem' },
-    { name: 'weight', label: _('product_weight'), visible: true, sortable: true, type: 'weight', width: '5rem' },
-    { name: 'published', label: _('product_published'), visible: true, sortable: true, type: 'boolean', width: '5rem' },
+    {
+      name: 'pagetitle',
+      label: _('product_pagetitle'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      minWidth: '12.5rem',
+      type: 'template',
+      template:
+        '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>',
+    },
+    {
+      name: 'article',
+      label: _('product_article'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '6.25rem',
+    },
+    {
+      name: 'price',
+      label: _('product_price'),
+      visible: true,
+      sortable: true,
+      type: 'price',
+      width: '6.25rem',
+    },
+    {
+      name: 'weight',
+      label: _('product_weight'),
+      visible: true,
+      sortable: true,
+      type: 'weight',
+      width: '5rem',
+    },
+    {
+      name: 'published',
+      label: _('product_published'),
+      visible: true,
+      sortable: true,
+      type: 'boolean',
+      width: '5rem',
+    },
     {
       name: 'actions',
       label: _('actions'),
@@ -416,7 +463,15 @@ function getDefaultColumns() {
       actions: [
         { name: 'view', handler: 'view', icon: 'pi-eye', label: 'view' },
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'product_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -430,9 +485,25 @@ function getActionsConfig(column) {
     return [
       { name: 'view', handler: 'view', icon: 'pi-eye', label: 'view' },
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'publish', handler: 'publish', icon: 'pi-check', iconOff: 'pi-times', label: 'publish', labelOff: 'unpublish', toggleField: 'published' },
+      {
+        name: 'publish',
+        handler: 'publish',
+        icon: 'pi-check',
+        iconOff: 'pi-times',
+        label: 'publish',
+        labelOff: 'unpublish',
+        toggleField: 'published',
+      },
       { name: 'duplicate', handler: 'duplicate', icon: 'pi-copy', label: 'duplicate' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: 'delete',
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'product_delete_confirm_message',
+      },
     ]
   }
   return column.actions
@@ -551,22 +622,22 @@ function onPageNext() {
 }
 
 // Watch for category ID changes
-watch(() => props.categoryId, () => {
-  first.value = 0
-  loadProducts()
-})
+watch(
+  () => props.categoryId,
+  () => {
+    first.value = 0
+    loadProducts()
+  }
+)
 
 onMounted(async () => {
   // Initialize nested from system setting
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let' in minishop3.js
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   nested.value = ms3Config?.show_nested_products ?? false
 
-  await Promise.all([
-    loadGridConfig(),
-    loadFiltersConfig(),
-  ])
+  await Promise.all([loadGridConfig(), loadFiltersConfig()])
   await loadProducts()
 })
 </script>
@@ -598,12 +669,7 @@ onMounted(async () => {
           </div>
           <div class="grid-header-right">
             <div class="nested-checkbox">
-              <Checkbox
-                v-model="nested"
-                inputId="nested"
-                :binary="true"
-                @change="onNestedChange"
-              />
+              <Checkbox v-model="nested" inputId="nested" :binary="true" @change="onNestedChange" />
               <label for="nested">{{ _('category_show_nested') }}</label>
             </div>
           </div>
@@ -612,11 +678,19 @@ onMounted(async () => {
 
       <template #content>
         <!-- Filters form -->
-        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
+        <div
+          v-if="sortedFilters.length > 0"
+          class="filters-form mb-3 p-3 surface-ground"
+          style="border-radius: 0.375rem"
+        >
           <div class="filters-row">
             <template v-for="filter in sortedFilters" :key="filter.key">
               <!-- Text input filter -->
-              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '12.5rem' }">
+              <div
+                v-if="filter.type === 'text'"
+                class="filter-item"
+                :style="{ width: filter.width || '12.5rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <InputText
                   :id="`filter-${filter.key}`"
@@ -628,7 +702,11 @@ onMounted(async () => {
               </div>
 
               <!-- Select filter -->
-              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '9.375rem' }">
+              <div
+                v-else-if="filter.type === 'select'"
+                class="filter-item"
+                :style="{ width: filter.width || '9.375rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <Select
                   :id="`filter-${filter.key}`"
@@ -718,11 +796,7 @@ onMounted(async () => {
                 <tr>
                   <th v-if="canDrag" style="width: 3rem"></th>
                   <th style="width: 3rem">
-                    <Checkbox
-                      v-model="selectAll"
-                      :binary="true"
-                      @change="onSelectAllChange"
-                    />
+                    <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
                   </th>
                   <th
                     v-for="column in columns.filter(c => c.visible)"
@@ -734,7 +808,9 @@ onMounted(async () => {
                     {{ column.label }}
                     <i
                       v-if="column.sortable && sortField === column.name"
-                      :class="sortOrder === 1 ? 'pi pi-sort-amount-up-alt' : 'pi pi-sort-amount-down'"
+                      :class="
+                        sortOrder === 1 ? 'pi pi-sort-amount-up-alt' : 'pi pi-sort-amount-down'
+                      "
                       class="sort-icon"
                     ></i>
                   </th>
@@ -757,11 +833,7 @@ onMounted(async () => {
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
                     <td>
-                      <Checkbox
-                        v-model="selectedItems"
-                        :value="product"
-                        :binary="false"
-                      />
+                      <Checkbox v-model="selectedItems" :value="product" :binary="false" />
                     </td>
                     <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                       <!-- Actions column -->
@@ -807,7 +879,10 @@ onMounted(async () => {
                       </td>
 
                       <!-- Template column (renders HTML) -->
-                      <td v-else-if="column.type === 'template'" :style="{ width: column.width, minWidth: column.minWidth }">
+                      <td
+                        v-else-if="column.type === 'template'"
+                        :style="{ width: column.width, minWidth: column.minWidth }"
+                      >
                         <div v-if="nested && product.category_name" class="nested-product">
                           <span v-html="renderField(product, column)"></span>
                           <div class="product-category">{{ product.category_name }}</div>
@@ -834,14 +909,10 @@ onMounted(async () => {
           <!-- Pagination -->
           <div class="p-paginator p-component">
             <span class="p-paginator-current">
-              {{ _('showing') }} {{ first + 1 }}-{{ Math.min(first + rows, totalRecords) }} {{ _('of') }} {{ totalRecords }}
+              {{ _('showing') }} {{ first + 1 }}-{{ Math.min(first + rows, totalRecords) }}
+              {{ _('of') }} {{ totalRecords }}
             </span>
-            <Button
-              icon="pi pi-angle-left"
-              :disabled="first === 0"
-              text
-              @click="onPagePrev"
-            />
+            <Button icon="pi pi-angle-left" :disabled="first === 0" text @click="onPagePrev" />
             <Button
               icon="pi pi-angle-right"
               :disabled="first + rows >= totalRecords"

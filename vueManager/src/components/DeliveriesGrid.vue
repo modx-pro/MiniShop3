@@ -1,31 +1,32 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import ToggleSwitch from 'primevue/toggleswitch'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import draggable from 'vuedraggable'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
+import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanel from 'primevue/tabpanel'
+import TabPanels from 'primevue/tabpanels'
+import Tabs from 'primevue/tabs'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
+import ToggleSwitch from 'primevue/toggleswitch'
+import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+import draggable from 'vuedraggable'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
-import ValidationRulesEditor from './ValidationRulesEditor.vue'
 import FileBrowser from './FileBrowser.vue'
+import ValidationRulesEditor from './ValidationRulesEditor.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -41,11 +42,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'delivery',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/deliveries/bulk', { ids })
   },
   onSuccess: () => loadDeliveries(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const columns = ref([])
@@ -287,7 +288,9 @@ async function togglePayment(paymentId, newValue) {
 
   try {
     if (newValue) {
-      await request.post(`/api/mgr/deliveries/${editingDelivery.value.id}/payments`, { payment_id: paymentId })
+      await request.post(`/api/mgr/deliveries/${editingDelivery.value.id}/payments`, {
+        payment_id: paymentId,
+      })
     } else {
       await request.delete(`/api/mgr/deliveries/${editingDelivery.value.id}/payments/${paymentId}`)
     }
@@ -329,7 +332,10 @@ async function saveDelivery() {
     if (isNewDelivery.value) {
       response = await request.post('/api/mgr/deliveries', editingDelivery.value)
     } else {
-      response = await request.put(`/api/mgr/deliveries/${editingDelivery.value.id}`, editingDelivery.value)
+      response = await request.put(
+        `/api/mgr/deliveries/${editingDelivery.value.id}`,
+        editingDelivery.value
+      )
     }
 
     if (response) {
@@ -430,15 +436,61 @@ async function loadGridConfig() {
       // Fallback default columns
       columns.value = [
         { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
-        { name: 'name', label: _('delivery_name'), visible: true, sortable: true, filterable: true },
-        { name: 'price', label: _('delivery_price'), visible: true, sortable: true, width: '7.5rem' },
-        { name: 'free_delivery_amount', label: _('delivery_free_amount'), visible: true, sortable: true, width: '9.375rem' },
-        { name: 'active', label: _('delivery_active'), visible: true, sortable: true, type: 'boolean', width: '6.25rem' },
-        { name: 'position', label: _('delivery_position'), visible: true, sortable: true, width: '6.25rem' },
-        { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '7.5rem', actions: [
-          { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false },
-        ]},
+        {
+          name: 'name',
+          label: _('delivery_name'),
+          visible: true,
+          sortable: true,
+          filterable: true,
+        },
+        {
+          name: 'price',
+          label: _('delivery_price'),
+          visible: true,
+          sortable: true,
+          width: '7.5rem',
+        },
+        {
+          name: 'free_delivery_amount',
+          label: _('delivery_free_amount'),
+          visible: true,
+          sortable: true,
+          width: '9.375rem',
+        },
+        {
+          name: 'active',
+          label: _('delivery_active'),
+          visible: true,
+          sortable: true,
+          type: 'boolean',
+          width: '6.25rem',
+        },
+        {
+          name: 'position',
+          label: _('delivery_position'),
+          visible: true,
+          sortable: true,
+          width: '6.25rem',
+        },
+        {
+          name: 'actions',
+          label: _('actions'),
+          visible: true,
+          frozen: true,
+          type: 'actions',
+          width: '7.5rem',
+          actions: [
+            { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+            {
+              name: 'delete',
+              handler: 'delete',
+              icon: 'pi-trash',
+              label: 'delete',
+              severity: 'danger',
+              confirm: false,
+            },
+          ],
+        },
       ]
     }
   } catch (error) {
@@ -495,7 +547,9 @@ onMounted(async () => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -523,18 +577,11 @@ onMounted(async () => {
               </select>
             </template>
             <template v-else>
-              <InputText
-                v-model="filterValues[column.name]"
-                :placeholder="column.label"
-              />
+              <InputText v-model="filterValues[column.name]" :placeholder="column.label" />
             </template>
           </div>
           <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -605,13 +652,15 @@ onMounted(async () => {
                   <Checkbox
                     :modelValue="selectedItems.some(item => item.id === delivery.id)"
                     :binary="true"
-                    @update:modelValue="(val) => {
-                      if (val) {
-                        selectedItems.push(delivery)
-                      } else {
-                        selectedItems = selectedItems.filter(item => item.id !== delivery.id)
+                    @update:modelValue="
+                      val => {
+                        if (val) {
+                          selectedItems.push(delivery)
+                        } else {
+                          selectedItems = selectedItems.filter(item => item.id !== delivery.id)
+                        }
                       }
-                    }"
+                    "
                   />
                 </td>
                 <td>
@@ -646,7 +695,13 @@ onMounted(async () => {
                   </td>
                   <!-- Boolean column -->
                   <td v-else-if="column.type === 'boolean'">
-                    <i :class="delivery[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                    <i
+                      :class="
+                        delivery[column.name]
+                          ? 'pi pi-check text-success'
+                          : 'pi pi-times text-danger'
+                      "
+                    ></i>
                   </td>
                   <!-- Regular column -->
                   <td v-else>
@@ -703,7 +758,11 @@ onMounted(async () => {
 
                 <div class="form-row">
                   <div class="checkbox-field">
-                    <Checkbox v-model="editingDelivery.active" :binary="true" inputId="delivery-active" />
+                    <Checkbox
+                      v-model="editingDelivery.active"
+                      :binary="true"
+                      inputId="delivery-active"
+                    />
                     <label for="delivery-active">{{ _('delivery_active') }}</label>
                   </div>
                 </div>
@@ -715,7 +774,11 @@ onMounted(async () => {
               <div class="edit-form">
                 <div class="form-row mb-3">
                   <label>{{ _('delivery_class') }}</label>
-                  <InputText v-model="editingDelivery.class" class="w-full" :placeholder="_('delivery_class_placeholder')" />
+                  <InputText
+                    v-model="editingDelivery.class"
+                    class="w-full"
+                    :placeholder="_('delivery_class_placeholder')"
+                  />
                 </div>
 
                 <div class="form-row mb-3">
@@ -732,7 +795,11 @@ onMounted(async () => {
 
                   <div class="form-row">
                     <label>{{ _('delivery_weight_price') }}</label>
-                    <InputNumber v-model="editingDelivery.weight_price" class="w-full" :minFractionDigits="2" />
+                    <InputNumber
+                      v-model="editingDelivery.weight_price"
+                      class="w-full"
+                      :minFractionDigits="2"
+                    />
                     <small class="form-hint">{{ _('ms3_weight_price_help') }}</small>
                   </div>
                 </div>
@@ -740,13 +807,21 @@ onMounted(async () => {
                 <div class="form-row-group mb-3">
                   <div class="form-row">
                     <label>{{ _('delivery_free_amount') }}</label>
-                    <InputNumber v-model="editingDelivery.free_delivery_amount" class="w-full" :minFractionDigits="2" />
+                    <InputNumber
+                      v-model="editingDelivery.free_delivery_amount"
+                      class="w-full"
+                      :minFractionDigits="2"
+                    />
                     <small class="form-hint">{{ _('ms3_free_delivery_amount_help') }}</small>
                   </div>
 
                   <div class="form-row">
                     <label>{{ _('ms3_distance_price') }}</label>
-                    <InputNumber v-model="editingDelivery.distance_price" class="w-full" :minFractionDigits="2" />
+                    <InputNumber
+                      v-model="editingDelivery.distance_price"
+                      class="w-full"
+                      :minFractionDigits="2"
+                    />
                     <small class="form-hint">{{ _('ms3_distance_price_help') }}</small>
                   </div>
                 </div>
@@ -773,7 +848,12 @@ onMounted(async () => {
                   <Column field="name" :header="_('payment_name')">
                     <template #body="{ data }">
                       <div class="payment-name-cell">
-                        <img v-if="data.logo" :src="data.logo" :alt="data.name" class="payment-logo-small" />
+                        <img
+                          v-if="data.logo"
+                          :src="data.logo"
+                          :alt="data.name"
+                          class="payment-logo-small"
+                        />
                         <span>{{ getPaymentName(data.name) }}</span>
                       </div>
                     </template>
@@ -788,7 +868,7 @@ onMounted(async () => {
                     <template #body="{ data }">
                       <ToggleSwitch
                         :modelValue="isPaymentEnabled(data.id)"
-                        @update:modelValue="(val) => togglePayment(data.id, val)"
+                        @update:modelValue="val => togglePayment(data.id, val)"
                       />
                     </template>
                   </Column>
@@ -806,12 +886,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveDelivery"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveDelivery" />
       </template>
     </Dialog>
   </div>
@@ -1080,5 +1155,4 @@ onMounted(async () => {
   padding: 3rem;
   color: var(--ms3-text-secondary);
 }
-
 </style>

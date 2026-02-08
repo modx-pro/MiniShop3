@@ -1,27 +1,28 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import ToggleSwitch from 'primevue/toggleswitch'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
+import TabList from 'primevue/tablist'
 import TabPanel from 'primevue/tabpanel'
-import { useToast } from 'primevue/usetoast'
+import TabPanels from 'primevue/tabpanels'
+import Tabs from 'primevue/tabs'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
+import ToggleSwitch from 'primevue/toggleswitch'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 
@@ -39,11 +40,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'payment',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/payments/bulk', { ids })
   },
   onSuccess: () => loadPayments(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const columns = ref([])
@@ -270,7 +271,9 @@ async function toggleDelivery(deliveryId, newValue) {
 
   try {
     if (newValue) {
-      await request.post(`/api/mgr/payments/${editingPayment.value.id}/deliveries`, { delivery_id: deliveryId })
+      await request.post(`/api/mgr/payments/${editingPayment.value.id}/deliveries`, {
+        delivery_id: deliveryId,
+      })
     } else {
       await request.delete(`/api/mgr/payments/${editingPayment.value.id}/deliveries/${deliveryId}`)
     }
@@ -312,7 +315,10 @@ async function savePayment() {
     if (isNewPayment.value) {
       response = await request.post('/api/mgr/payments', editingPayment.value)
     } else {
-      response = await request.put(`/api/mgr/payments/${editingPayment.value.id}`, editingPayment.value)
+      response = await request.put(
+        `/api/mgr/payments/${editingPayment.value.id}`,
+        editingPayment.value
+      )
     }
 
     if (response) {
@@ -415,12 +421,40 @@ async function loadGridConfig() {
         { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
         { name: 'name', label: _('payment_name'), visible: true, sortable: true, filterable: true },
         { name: 'price', label: _('ms3_add_cost'), visible: true, sortable: true, width: '7.5rem' },
-        { name: 'active', label: _('payment_active'), visible: true, sortable: true, type: 'boolean', width: '6.25rem' },
-        { name: 'position', label: _('payment_position'), visible: true, sortable: true, width: '6.25rem' },
-        { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '7.5rem', actions: [
-          { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false },
-        ]},
+        {
+          name: 'active',
+          label: _('payment_active'),
+          visible: true,
+          sortable: true,
+          type: 'boolean',
+          width: '6.25rem',
+        },
+        {
+          name: 'position',
+          label: _('payment_position'),
+          visible: true,
+          sortable: true,
+          width: '6.25rem',
+        },
+        {
+          name: 'actions',
+          label: _('actions'),
+          visible: true,
+          frozen: true,
+          type: 'actions',
+          width: '7.5rem',
+          actions: [
+            { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+            {
+              name: 'delete',
+              handler: 'delete',
+              icon: 'pi-trash',
+              label: 'delete',
+              severity: 'danger',
+              confirm: false,
+            },
+          ],
+        },
       ]
     }
   } catch (error) {
@@ -475,7 +509,9 @@ onMounted(async () => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -503,18 +539,11 @@ onMounted(async () => {
               </select>
             </template>
             <template v-else>
-              <InputText
-                v-model="filterValues[column.name]"
-                :placeholder="column.label"
-              />
+              <InputText v-model="filterValues[column.name]" :placeholder="column.label" />
             </template>
           </div>
           <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -585,13 +614,15 @@ onMounted(async () => {
                   <Checkbox
                     :modelValue="selectedItems.some(item => item.id === payment.id)"
                     :binary="true"
-                    @update:modelValue="(val) => {
-                      if (val) {
-                        selectedItems.push(payment)
-                      } else {
-                        selectedItems = selectedItems.filter(item => item.id !== payment.id)
+                    @update:modelValue="
+                      val => {
+                        if (val) {
+                          selectedItems.push(payment)
+                        } else {
+                          selectedItems = selectedItems.filter(item => item.id !== payment.id)
+                        }
                       }
-                    }"
+                    "
                   />
                 </td>
                 <td>
@@ -626,7 +657,13 @@ onMounted(async () => {
                   </td>
                   <!-- Boolean column -->
                   <td v-else-if="column.type === 'boolean'">
-                    <i :class="payment[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                    <i
+                      :class="
+                        payment[column.name]
+                          ? 'pi pi-check text-success'
+                          : 'pi pi-times text-danger'
+                      "
+                    ></i>
                   </td>
                   <!-- Regular column -->
                   <td v-else>
@@ -683,7 +720,11 @@ onMounted(async () => {
 
                 <div class="form-row">
                   <div class="checkbox-field">
-                    <Checkbox v-model="editingPayment.active" :binary="true" inputId="payment-active" />
+                    <Checkbox
+                      v-model="editingPayment.active"
+                      :binary="true"
+                      inputId="payment-active"
+                    />
                     <label for="payment-active">{{ _('payment_active') }}</label>
                   </div>
                 </div>
@@ -695,7 +736,11 @@ onMounted(async () => {
               <div class="edit-form">
                 <div class="form-row mb-3">
                   <label>{{ _('payment_class') }}</label>
-                  <InputText v-model="editingPayment.class" class="w-full" :placeholder="_('payment_class_placeholder')" />
+                  <InputText
+                    v-model="editingPayment.class"
+                    class="w-full"
+                    :placeholder="_('payment_class_placeholder')"
+                  />
                 </div>
 
                 <div class="form-row mb-3">
@@ -726,7 +771,12 @@ onMounted(async () => {
                   <Column field="name" :header="_('delivery_name')">
                     <template #body="{ data }">
                       <div class="delivery-name-cell">
-                        <img v-if="data.logo" :src="data.logo" :alt="data.name" class="delivery-logo-small" />
+                        <img
+                          v-if="data.logo"
+                          :src="data.logo"
+                          :alt="data.name"
+                          class="delivery-logo-small"
+                        />
                         <span>{{ getDisplayName(data.name) }}</span>
                       </div>
                     </template>
@@ -741,7 +791,7 @@ onMounted(async () => {
                     <template #body="{ data }">
                       <ToggleSwitch
                         :modelValue="isDeliveryEnabled(data.id)"
-                        @update:modelValue="(val) => toggleDelivery(data.id, val)"
+                        @update:modelValue="val => toggleDelivery(data.id, val)"
                       />
                     </template>
                   </Column>
@@ -759,12 +809,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="savePayment"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="savePayment" />
       </template>
     </Dialog>
   </div>
@@ -1021,5 +1066,4 @@ onMounted(async () => {
   padding: 3rem;
   color: var(--ms3-text-secondary);
 }
-
 </style>

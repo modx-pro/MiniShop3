@@ -1,21 +1,22 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Select from 'primevue/select'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
 import Paginator from 'primevue/paginator'
-import { useToast } from 'primevue/usetoast'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -32,11 +33,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'link',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/links/bulk', { ids })
   },
   onSuccess: () => loadLinks(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const loading = ref(false)
@@ -233,7 +234,14 @@ function deleteLink(link) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false },
+    {
+      name: 'delete',
+      handler: 'delete',
+      icon: 'pi-trash',
+      label: _('delete'),
+      severity: 'danger',
+      confirm: false,
+    },
   ]
 }
 
@@ -265,17 +273,14 @@ onMounted(() => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
           <div class="grid-header-right">
-            <Button
-              :label="_('create')"
-              icon="pi pi-plus"
-              severity="success"
-              @click="createLink"
-            />
+            <Button :label="_('create')" icon="pi pi-plus" severity="success" @click="createLink" />
           </div>
         </div>
       </template>
@@ -332,7 +337,9 @@ onMounted(() => {
           <!-- Type -->
           <Column field="type" :header="_('ms3_type')" style="width: 12.5rem">
             <template #body="{ data }">
-              <span class="link-type-badge">{{ data.type_label || _('ms3_link_' + data.type) }}</span>
+              <span class="link-type-badge">{{
+                data.type_label || _('ms3_link_' + data.type)
+              }}</span>
             </template>
           </Column>
 
@@ -415,12 +422,7 @@ onMounted(() => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveLink"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveLink" />
       </template>
     </Dialog>
   </div>

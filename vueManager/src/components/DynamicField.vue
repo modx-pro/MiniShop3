@@ -45,11 +45,7 @@
         @change="handleBlur"
       />
       <!-- Hidden field to pass correct value to form -->
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue" />
     </div>
 
     <!-- Switch / Toggle -->
@@ -122,11 +118,7 @@
         @change="handleBlur"
       />
       <!-- Hidden field to send value to ExtJS form -->
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue || ''"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
     <!-- Autocomplete combo (ms3-combo-autocomplete) -->
@@ -140,11 +132,7 @@
         @change="handleBlur"
       />
       <!-- Hidden field to send value to ExtJS form -->
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue || ''"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
     <!-- Options chips (ms3-combo-options) -->
@@ -183,11 +171,7 @@
         class="w-full"
         @change="handleBlur"
       />
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue || ''"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
     <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
@@ -200,36 +184,30 @@
 
     <!-- Unknown field type -->
     <div v-else class="unknown-field">
-      <Message severity="warn">
-        Unknown field type: {{ fieldConfig.xtype }}
-      </Message>
+      <Message severity="warn"> Unknown field type: {{ fieldConfig.xtype }} </Message>
     </div>
 
     <!-- Hidden field for complex types (combobox, datefield, colorpicker, chips, multiselect) -->
     <!-- These fields require JSON serialization to pass to ExtJS form -->
-    <input
-      v-if="isComplexField"
-      type="hidden"
-      :name="fieldConfig.name"
-      :value="serializedValue"
-    />
+    <input v-if="isComplexField" type="hidden" :name="fieldConfig.name" :value="serializedValue" />
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Checkbox from 'primevue/checkbox'
-import InputSwitch from 'primevue/inputswitch'
-import Textarea from 'primevue/textarea'
-import Dropdown from 'primevue/dropdown'
 import Calendar from 'primevue/calendar'
+import Checkbox from 'primevue/checkbox'
 import ColorPicker from 'primevue/colorpicker'
+import Dropdown from 'primevue/dropdown'
+import InputNumber from 'primevue/inputnumber'
+import InputSwitch from 'primevue/inputswitch'
+import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
-import VendorCombo from './VendorCombo.vue'
+import Textarea from 'primevue/textarea'
+import { computed, ref, watch } from 'vue'
+
 import AutocompleteCombo from './AutocompleteCombo.vue'
 import OptionsChips from './OptionsChips.vue'
+import VendorCombo from './VendorCombo.vue'
 
 const props = defineProps({
   /**
@@ -296,12 +274,12 @@ const isExtJSComboField = computed(() => {
  * depending on how the config was merged in PHP
  */
 const selectOptions = computed(() => {
-  const optionsString = props.fieldConfig.config?.select_options
-    || props.fieldConfig.select_options
-    || ''
+  const optionsString =
+    props.fieldConfig.config?.select_options || props.fieldConfig.select_options || ''
   if (!optionsString) return []
 
-  return optionsString.split('\n')
+  return optionsString
+    .split('\n')
     .filter(line => line.trim())
     .map(line => {
       const parts = line.split('==')
@@ -315,7 +293,7 @@ const selectOptions = computed(() => {
 /**
  * Get ExtJS combo field description
  */
-const getExtJSComboLabel = (xtype) => {
+const getExtJSComboLabel = xtype => {
   const labels = {
     'ms3-combo-vendor': 'Vendor selection (ExtJS combo)',
     'ms3-combo-category': 'Category selection (ExtJS combo)',
@@ -353,12 +331,15 @@ const emit = defineEmits(['update:modelValue', 'blur'])
 const localValue = ref(props.modelValue)
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localValue.value = newValue
-})
+watch(
+  () => props.modelValue,
+  newValue => {
+    localValue.value = newValue
+  }
+)
 
 // Watch for local changes and emit to parent
-watch(localValue, (newValue) => {
+watch(localValue, newValue => {
   emit('update:modelValue', newValue)
 })
 

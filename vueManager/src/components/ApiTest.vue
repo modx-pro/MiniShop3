@@ -1,83 +1,82 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useApi } from '@vuetools/useApi';
-import { useModx } from '@vuetools/useModx';
-import { usePermission } from '@vuetools/usePermission';
+import { useApi } from '@vuetools/useApi'
+import { useModx } from '@vuetools/useModx'
+import { usePermission } from '@vuetools/usePermission'
+import Badge from 'primevue/badge'
+import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Chip from 'primevue/chip'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import Divider from 'primevue/divider'
+import Message from 'primevue/message'
+import Panel from 'primevue/panel'
+import ProgressSpinner from 'primevue/progressspinner'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
+import { computed, ref } from 'vue'
 
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import Divider from 'primevue/divider';
-import Message from 'primevue/message';
-import ProgressSpinner from 'primevue/progressspinner';
-import Panel from 'primevue/panel';
-import Chip from 'primevue/chip';
-import Badge from 'primevue/badge';
-import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
+const { get, loading, error, clearError } = useApi()
+const { config, ms3Config, userName, userId, isUserAdmin, showMessage } = useModx()
+const { canCreate, canEdit, canDelete, getAvailablePermissions } = usePermission()
 
-const { get, loading, error, clearError } = useApi();
-const { config, ms3Config, userName, userId, isUserAdmin, showMessage } = useModx();
-const { canCreate, canEdit, canDelete, getAvailablePermissions } = usePermission();
+const healthData = ref(null)
+const testResponse = ref(null)
+const activeTab = ref(0)
 
-const healthData = ref(null);
-const testResponse = ref(null);
-const activeTab = ref(0);
-
-const availablePermissions = computed(() => getAvailablePermissions());
+const availablePermissions = computed(() => getAvailablePermissions())
 
 /**
  * Test 1: Health check (without authorization)
  */
 const testHealthCheck = async () => {
-  clearError();
-  testResponse.value = null;
+  clearError()
+  testResponse.value = null
 
   try {
-    healthData.value = await get('/api/mgr/health');
-    showMessage('Health check successful', 'success');
+    healthData.value = await get('/api/mgr/health')
+    showMessage('Health check successful', 'success')
   } catch (err) {
-    showMessage(`Health check error: ${err.message}`, 'error');
+    showMessage(`Health check error: ${err.message}`, 'error')
   }
-};
+}
 
 /**
  * Test 2: Authorized request
  */
 const testAuthRequest = async () => {
-  clearError();
-  testResponse.value = null;
+  clearError()
+  testResponse.value = null
 
   try {
-    const response = await get('/api/mgr/test/info');
-    testResponse.value = response;
-    showMessage('Authorized request successful', 'success');
+    const response = await get('/api/mgr/test/info')
+    testResponse.value = response
+    showMessage('Authorized request successful', 'success')
   } catch (err) {
-    showMessage(`Error: ${err.message}`, 'error');
+    showMessage(`Error: ${err.message}`, 'error')
   }
-};
+}
 
 /**
  * Test 3: POST request with data
  */
 const testPostRequest = async () => {
-  clearError();
-  testResponse.value = null;
+  clearError()
+  testResponse.value = null
 
   try {
     const data = {
       test: 'data',
       timestamp: Date.now(),
       user: userName.value,
-    };
+    }
 
-    testResponse.value = await get('/api/mgr/test/echo', data);
-    showMessage('POST request successful', 'success');
+    testResponse.value = await get('/api/mgr/test/echo', data)
+    showMessage('POST request successful', 'success')
   } catch (err) {
-    showMessage(`Error: ${err.message}`, 'error');
+    showMessage(`Error: ${err.message}`, 'error')
   }
-};
+}
 </script>
 
 <template>
@@ -90,9 +89,7 @@ const testPostRequest = async () => {
         </div>
       </template>
 
-      <template #subtitle>
-        Testing new Vue Manager + API Router architecture
-      </template>
+      <template #subtitle> Testing new Vue Manager + API Router architecture </template>
 
       <template #content>
         <TabView v-model:activeIndex="activeTab">
@@ -259,8 +256,8 @@ const testPostRequest = async () => {
               <div v-if="error" class="mt-3">
                 <Message severity="error">
                   <div>
-                    <strong>Error:</strong> {{ error.message }}<br>
-                    <strong>Code:</strong> {{ error.statusCode }}<br>
+                    <strong>Error:</strong> {{ error.message }}<br />
+                    <strong>Code:</strong> {{ error.statusCode }}<br />
                     <small>{{ error.data }}</small>
                   </div>
                 </Message>
@@ -281,7 +278,9 @@ const testPostRequest = async () => {
 
               <Panel header="Composables" :toggleable="true" class="mb-3">
                 <ul>
-                  <li><strong>useApi()</strong> - Reactive API requests with loading/error state</li>
+                  <li>
+                    <strong>useApi()</strong> - Reactive API requests with loading/error state
+                  </li>
                   <li><strong>useModx()</strong> - Access to MODX configuration and lexicon</li>
                   <li><strong>usePermission()</strong> - User access rights verification</li>
                 </ul>
@@ -303,8 +302,13 @@ const testPostRequest = async () => {
 
                 <Divider />
 
-                <p><strong>HTTP_MODAUTH token:</strong> Automatically added from <code>window.MODx.config.MODAUTH</code></p>
-                <p><strong>Middleware:</strong> AuthMiddleware checks authorization in mgr context</p>
+                <p>
+                  <strong>HTTP_MODAUTH token:</strong> Automatically added from
+                  <code>window.MODx.config.MODAUTH</code>
+                </p>
+                <p>
+                  <strong>Middleware:</strong> AuthMiddleware checks authorization in mgr context
+                </p>
               </Panel>
 
               <Panel header="Request Class" :toggleable="true">

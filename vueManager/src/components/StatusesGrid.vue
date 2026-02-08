@@ -1,20 +1,21 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
+import ColorPicker from 'primevue/colorpicker'
+import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import ColorPicker from 'primevue/colorpicker'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -31,11 +32,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'status',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/statuses/bulk', { ids })
   },
   onSuccess: () => loadStatuses(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const loading = ref(false)
@@ -49,11 +50,46 @@ const selectAll = ref(false)
 
 // Default color palette (similar to ExtJS)
 const colorPalette = [
-  '000000', '993300', '333300', '003300', '003366', '000080', '333399', '333333',
-  '800000', 'FF6600', '808000', '008000', '008080', '0000FF', '666699', '808080',
-  'FF0000', 'FF9900', '99CC00', '339966', '33CCCC', '3366FF', '800080', '969696',
-  'FF00FF', 'FFCC00', 'FFFF00', '00FF00', '00FFFF', '00CCFF', '993366', 'C0C0C0',
-  'FF99CC', 'FFCC99', 'FFFF99', 'CCFFCC', 'CCFFFF', '99CCFF', 'CC99FF', 'FFFFFF',
+  '000000',
+  '993300',
+  '333300',
+  '003300',
+  '003366',
+  '000080',
+  '333399',
+  '333333',
+  '800000',
+  'FF6600',
+  '808000',
+  '008000',
+  '008080',
+  '0000FF',
+  '666699',
+  '808080',
+  'FF0000',
+  'FF9900',
+  '99CC00',
+  '339966',
+  '33CCCC',
+  '3366FF',
+  '800080',
+  '969696',
+  'FF00FF',
+  'FFCC00',
+  'FFFF00',
+  '00FF00',
+  '00FFFF',
+  '00CCFF',
+  '993366',
+  'C0C0C0',
+  'FF99CC',
+  'FFCC99',
+  'FFFF99',
+  'CCFFCC',
+  'CCFFFF',
+  '99CCFF',
+  'CC99FF',
+  'FFFFFF',
 ]
 
 /**
@@ -131,7 +167,10 @@ async function saveStatus() {
     if (isNewStatus.value) {
       response = await request.post('/api/mgr/statuses', editingStatus.value)
     } else {
-      response = await request.put(`/api/mgr/statuses/${editingStatus.value.id}`, editingStatus.value)
+      response = await request.put(
+        `/api/mgr/statuses/${editingStatus.value.id}`,
+        editingStatus.value
+      )
     }
 
     if (response) {
@@ -243,7 +282,14 @@ function selectColor(color) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false },
+    {
+      name: 'delete',
+      handler: 'delete',
+      icon: 'pi-trash',
+      label: _('delete'),
+      severity: 'danger',
+      confirm: false,
+    },
   ]
 }
 
@@ -289,7 +335,9 @@ onMounted(() => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -339,11 +387,7 @@ onMounted(() => {
                 <tr>
                   <th style="width: 3rem"></th>
                   <th style="width: 3rem">
-                    <Checkbox
-                      v-model="selectAll"
-                      :binary="true"
-                      @change="onSelectAllChange"
-                    />
+                    <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
                   </th>
                   <th style="width: 5rem">{{ _('ms3_id') }}</th>
                   <th>{{ _('ms3_name') }}</th>
@@ -369,29 +413,40 @@ onMounted(() => {
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
                     <td>
-                      <Checkbox
-                        v-model="selectedItems"
-                        :value="status"
-                        :binary="false"
-                      />
+                      <Checkbox v-model="selectedItems" :value="status" :binary="false" />
                     </td>
                     <td>{{ status.id }}</td>
                     <td>
                       <span
                         class="status-badge"
-                        :style="{ backgroundColor: '#' + status.color, color: getContrastColor(status.color) }"
+                        :style="{
+                          backgroundColor: '#' + status.color,
+                          color: getContrastColor(status.color),
+                        }"
                       >
                         {{ getDisplayName(status.name) }}
                       </span>
                     </td>
                     <td>
-                      <i :class="status.final ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
+                      <i
+                        :class="
+                          status.final ? 'pi pi-check text-success' : 'pi pi-times text-muted'
+                        "
+                      ></i>
                     </td>
                     <td>
-                      <i :class="status.fixed ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
+                      <i
+                        :class="
+                          status.fixed ? 'pi pi-check text-success' : 'pi pi-times text-muted'
+                        "
+                      ></i>
                     </td>
                     <td>
-                      <i :class="status.active ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                      <i
+                        :class="
+                          status.active ? 'pi pi-check text-success' : 'pi pi-times text-danger'
+                        "
+                      ></i>
                     </td>
                     <td>
                       <ActionsColumn
@@ -435,7 +490,10 @@ onMounted(() => {
         <div class="form-row mb-3">
           <label>{{ _('ms3_color') }}</label>
           <div class="color-picker-wrapper">
-            <div class="color-preview" :style="{ backgroundColor: '#' + editingStatus.color }"></div>
+            <div
+              class="color-preview"
+              :style="{ backgroundColor: '#' + editingStatus.color }"
+            ></div>
             <ColorPicker v-model="editingStatus.color" />
           </div>
           <!-- Color palette -->
@@ -475,8 +533,12 @@ onMounted(() => {
 
         <!-- Help texts -->
         <div class="help-texts">
-          <small class="help-text"><strong>{{ _('ms3_status_final') }}:</strong> {{ _('ms3_status_final_help') }}</small>
-          <small class="help-text"><strong>{{ _('ms3_status_fixed') }}:</strong> {{ _('ms3_status_fixed_help') }}</small>
+          <small class="help-text"
+            ><strong>{{ _('ms3_status_final') }}:</strong> {{ _('ms3_status_final_help') }}</small
+          >
+          <small class="help-text"
+            ><strong>{{ _('ms3_status_fixed') }}:</strong> {{ _('ms3_status_fixed_help') }}</small
+          >
         </div>
       </div>
 
@@ -487,12 +549,7 @@ onMounted(() => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveStatus"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveStatus" />
       </template>
     </Dialog>
   </div>
@@ -733,7 +790,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -773,5 +830,4 @@ onMounted(() => {
 .p-row-odd {
   background: var(--ms3-bg-slate);
 }
-
 </style>

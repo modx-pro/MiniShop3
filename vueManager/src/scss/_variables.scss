@@ -24,7 +24,7 @@
   --ms3-bg-gray-100: #f3f4f6;
   --ms3-bg-gray-50: #fafafa;
   --ms3-bg-drag: #f8f9fa;
-  --ms3-bg-overlay: rgba(255, 255, 255, 0.7);
+  --ms3-bg-overlay: rgb(255 255 255 / 70%);
 
   /* Colors — borders */
   --ms3-border-color: #e2e8f0;
@@ -66,7 +66,7 @@
 
   /* Colors — accents */
   --ms3-accent-primary: #3b82f6;
-  --ms3-accent-focus: rgba(59, 130, 246, 0.3);
+  --ms3-accent-focus: rgb(59 130 246 / 30%);
   --ms3-accent-teal: #32ab9a;
   --ms3-accent-green: #4caf50;
   --ms3-border-upload: #ddd;
@@ -88,5 +88,5 @@
   --ms3-border-width-accent: 0.1875rem;
 
   /* Shadow */
-  --ms3-shadow-dropdown: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  --ms3-shadow-dropdown: 0 0.25rem 0.75rem rgb(0 0 0 / 15%);
 }

@@ -2,17 +2,9 @@
   <div class="options-chips-wrapper" ref="wrapperRef">
     <div class="chips-container" @click="focusInput">
       <!-- Display selected chips -->
-      <div
-        v-for="(chip, index) in localValue"
-        :key="index"
-        class="chip-item"
-      >
+      <div v-for="(chip, index) in localValue" :key="index" class="chip-item">
         <span class="chip-text">{{ chip }}</span>
-        <span
-          v-if="!disabled"
-          class="chip-remove"
-          @click.stop="removeChip(index)"
-        >×</span>
+        <span v-if="!disabled" class="chip-remove" @click.stop="removeChip(index)">×</span>
       </div>
 
       <!-- Input field for adding new values -->
@@ -33,10 +25,7 @@
     </div>
 
     <!-- Dropdown with suggestions -->
-    <div
-      v-if="showSuggestions && filteredOptions.length > 0"
-      class="suggestions-panel"
-    >
+    <div v-if="showSuggestions && filteredOptions.length > 0" class="suggestions-panel">
       <div
         v-for="(option, index) in filteredOptions"
         :key="index"
@@ -50,7 +39,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
+
 import request from '../request.js'
 
 const props = defineProps({
@@ -220,16 +210,20 @@ function emitChange() {
 }
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localValue.value = [...(newValue || [])]
-}, { deep: true })
+watch(
+  () => props.modelValue,
+  newValue => {
+    localValue.value = [...(newValue || [])]
+  },
+  { deep: true }
+)
 
 // Setup label click handler on mount
 onMounted(() => {
   if (props.inputId && wrapperRef.value) {
     const label = document.querySelector(`label[for="${props.inputId}"]`)
     if (label) {
-      label.addEventListener('click', (e) => {
+      label.addEventListener('click', e => {
         e.preventDefault()
         focusInput()
       })

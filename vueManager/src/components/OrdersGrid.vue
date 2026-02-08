@@ -1,19 +1,20 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import DatePicker from 'primevue/datepicker'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
-import DatePicker from 'primevue/datepicker'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+import { computed, onMounted, ref } from 'vue'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -29,11 +30,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'order',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/orders/bulk', { ids })
   },
   onSuccess: () => loadOrders(),
-  getItemName: (item) => `#${item.num || item.id}`,
+  getItemName: item => `#${item.num || item.id}`,
 })
 
 const columns = ref([])
@@ -189,7 +190,7 @@ function formatDate(dateString, column = {}) {
   const format = column.format || 'dd.MM.yyyy HH:mm'
 
   // Simple format replacement
-  const pad = (n) => n.toString().padStart(2, '0')
+  const pad = n => n.toString().padStart(2, '0')
 
   return format
     .replace('yyyy', date.getFullYear())
@@ -211,10 +212,11 @@ function formatPrice(value, column = {}) {
 
   // Get config from column or use defaults from ms3.config
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   const decimals = column.decimals ?? ms3Config?.price_decimals ?? 2
-  const thousandsSeparator = column.thousands_separator ?? ms3Config?.price_thousands_separator ?? ' '
+  const thousandsSeparator =
+    column.thousands_separator ?? ms3Config?.price_thousands_separator ?? ' '
   const decimalSeparator = column.decimal_separator ?? ms3Config?.price_decimal_separator ?? ','
   const currency = column.currency ?? ms3Config?.price_currency ?? ''
   const currencyPosition = column.currency_position ?? ms3Config?.price_currency_position ?? 'after'
@@ -226,9 +228,8 @@ function formatPrice(value, column = {}) {
 
   // Add currency
   if (currency) {
-    formatted = currencyPosition === 'before'
-      ? `${currency}${formatted}`
-      : `${formatted} ${currency}`
+    formatted =
+      currencyPosition === 'before' ? `${currency}${formatted}` : `${formatted} ${currency}`
   }
 
   return formatted
@@ -243,7 +244,7 @@ function formatWeight(value, column = {}) {
   if (value === null || value === undefined) return '-'
 
   // Get config from column or use defaults from ms3.config
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   const decimals = column.decimals ?? ms3Config?.weight_decimals ?? 2
   const unit = column.unit ?? ms3Config?.weight_unit ?? 'кг'
@@ -254,9 +255,7 @@ function formatWeight(value, column = {}) {
 
   // Add unit
   if (unit) {
-    formatted = unitPosition === 'before'
-      ? `${unit} ${formatted}`
-      : `${formatted} ${unit}`
+    formatted = unitPosition === 'before' ? `${unit} ${formatted}` : `${formatted} ${unit}`
   }
 
   return formatted
@@ -271,13 +270,13 @@ function getStatusSeverity(color) {
   const colorMap = {
     '#97b94d': 'success',
     '#81d742': 'success',
-    'green': 'success',
+    green: 'success',
     '#dd3d36': 'danger',
-    'red': 'danger',
+    red: 'danger',
     '#f0ad4e': 'warn',
-    'yellow': 'warn',
+    yellow: 'warn',
     '#5bc0de': 'info',
-    'blue': 'info',
+    blue: 'info',
   }
 
   return colorMap[color.toLowerCase()] || 'secondary'
@@ -378,14 +377,73 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem', isSystem: true },
-    { name: 'num', label: _('order_num'), visible: true, sortable: true, filterable: true, width: '6.25rem' },
-    { name: 'customer', label: _('order_customer'), visible: true, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '9.375rem' },
-    { name: 'status_name', label: _('order_status'), visible: true, sortable: true, filterable: true, type: 'badge', width: '7.5rem' },
-    { name: 'cost', label: _('order_cost'), visible: true, sortable: true, type: 'price', width: '7.5rem' },
-    { name: 'delivery_name', label: _('order_delivery'), visible: true, sortable: true, filterable: true, width: '9.375rem' },
-    { name: 'payment_name', label: _('order_payment'), visible: true, sortable: true, filterable: true, width: '9.375rem' },
-    { name: 'createdon', label: _('order_createdon'), visible: true, sortable: true, type: 'datetime', width: '9.375rem' },
+    {
+      name: 'id',
+      label: 'ID',
+      visible: true,
+      sortable: true,
+      frozen: true,
+      width: '5rem',
+      isSystem: true,
+    },
+    {
+      name: 'num',
+      label: _('order_num'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '6.25rem',
+    },
+    {
+      name: 'customer',
+      label: _('order_customer'),
+      visible: true,
+      filterable: true,
+      type: 'template',
+      template: '{first_name} {last_name}',
+      minWidth: '9.375rem',
+    },
+    {
+      name: 'status_name',
+      label: _('order_status'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      type: 'badge',
+      width: '7.5rem',
+    },
+    {
+      name: 'cost',
+      label: _('order_cost'),
+      visible: true,
+      sortable: true,
+      type: 'price',
+      width: '7.5rem',
+    },
+    {
+      name: 'delivery_name',
+      label: _('order_delivery'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '9.375rem',
+    },
+    {
+      name: 'payment_name',
+      label: _('order_payment'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '9.375rem',
+    },
+    {
+      name: 'createdon',
+      label: _('order_createdon'),
+      visible: true,
+      sortable: true,
+      type: 'datetime',
+      width: '9.375rem',
+    },
     {
       name: 'actions',
       label: _('actions'),
@@ -396,7 +454,15 @@ function getDefaultColumns() {
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'order_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -409,7 +475,15 @@ function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: 'delete',
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'order_delete_confirm_message',
+      },
     ]
   }
   return column.actions
@@ -436,10 +510,7 @@ function getCustomerLink(data) {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadGridConfig(),
-    loadFiltersConfig(),
-  ])
+  await Promise.all([loadGridConfig(), loadFiltersConfig()])
   await loadOrders()
 })
 </script>
@@ -477,11 +548,19 @@ onMounted(async () => {
 
       <template #content>
         <!-- Filters form -->
-        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem;">
+        <div
+          v-if="sortedFilters.length > 0"
+          class="filters-form mb-3 p-3 surface-ground"
+          style="border-radius: 0.375rem"
+        >
           <div class="filters-row">
             <template v-for="filter in sortedFilters" :key="filter.key">
               <!-- Text input filter -->
-              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '12.5rem' }">
+              <div
+                v-if="filter.type === 'text'"
+                class="filter-item"
+                :style="{ width: filter.width || '12.5rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <InputText
                   :id="`filter-${filter.key}`"
@@ -493,7 +572,11 @@ onMounted(async () => {
               </div>
 
               <!-- Select filter -->
-              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '11.25rem' }">
+              <div
+                v-else-if="filter.type === 'select'"
+                class="filter-item"
+                :style="{ width: filter.width || '11.25rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <Select
                   :id="`filter-${filter.key}`"
@@ -509,7 +592,11 @@ onMounted(async () => {
               </div>
 
               <!-- Date picker filter -->
-              <div v-else-if="filter.type === 'datepicker'" class="filter-item" :style="{ width: filter.width || '9.375rem' }">
+              <div
+                v-else-if="filter.type === 'datepicker'"
+                class="filter-item"
+                :style="{ width: filter.width || '9.375rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <DatePicker
                   :id="`filter-${filter.key}`"
@@ -523,7 +610,11 @@ onMounted(async () => {
               </div>
 
               <!-- Date range filter -->
-              <div v-else-if="filter.type === 'daterange'" class="filter-item" :style="{ width: filter.width || '17.5rem' }">
+              <div
+                v-else-if="filter.type === 'daterange'"
+                class="filter-item"
+                :style="{ width: filter.width || '17.5rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <DatePicker
                   :id="`filter-${filter.key}`"
@@ -638,7 +729,14 @@ onMounted(async () => {
                   v-if="column.type === 'badge'"
                   :value="getBadgeValue(data, column)"
                   :severity="getStatusSeverity(getBadgeColor(data, column))"
-                  :style="getBadgeColor(data, column) ? { backgroundColor: getBadgeColor(data, column), color: 'var(--ms3-text-on-primary)' } : {}"
+                  :style="
+                    getBadgeColor(data, column)
+                      ? {
+                          backgroundColor: getBadgeColor(data, column),
+                          color: 'var(--ms3-text-on-primary)',
+                        }
+                      : {}
+                  "
                 />
                 <!-- Datetime field -->
                 <span v-else-if="column.type === 'datetime'">

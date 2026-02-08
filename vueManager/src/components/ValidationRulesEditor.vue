@@ -1,13 +1,13 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import Chip from 'primevue/chip'
-import Button from 'primevue/button'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Dialog from 'primevue/dialog'
-import ToggleSwitch from 'primevue/toggleswitch'
 import { useLexicon } from '@vuetools/useLexicon'
+import Button from 'primevue/button'
+import Chip from 'primevue/chip'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import ToggleSwitch from 'primevue/toggleswitch'
+import { computed, ref, watch } from 'vue'
 
 const { _ } = useLexicon()
 
@@ -160,10 +160,13 @@ function parseValue(value) {
 
     // Convert { fieldName: 'rule1|rule2:param' } to array format
     return Object.entries(parsed).map(([fieldName, ruleString]) => {
-      const rules = ruleString.split('|').map(rule => {
-        const [name, param] = rule.split(':')
-        return { name: name.trim(), param: param || '' }
-      }).filter(r => r.name)
+      const rules = ruleString
+        .split('|')
+        .map(rule => {
+          const [name, param] = rule.split(':')
+          return { name: name.trim(), param: param || '' }
+        })
+        .filter(r => r.name)
 
       return { field: fieldName, rules }
     })
@@ -180,9 +183,11 @@ function toJsonString(fieldRulesArray) {
   const result = {}
   fieldRulesArray.forEach(item => {
     if (item.rules && item.rules.length > 0) {
-      result[item.field] = item.rules.map(r => {
-        return r.param ? `${r.name}:${r.param}` : r.name
-      }).join('|')
+      result[item.field] = item.rules
+        .map(r => {
+          return r.param ? `${r.name}:${r.param}` : r.name
+        })
+        .join('|')
     }
   })
 
@@ -190,20 +195,24 @@ function toJsonString(fieldRulesArray) {
 }
 
 // Watch for external changes
-watch(() => props.modelValue, (newVal) => {
-  fieldRules.value = parseValue(newVal)
-  // Update JSON text for JSON mode
-  if (newVal) {
-    try {
-      const parsed = typeof newVal === 'string' ? JSON.parse(newVal) : newVal
-      jsonText.value = JSON.stringify(parsed, null, 2)
-    } catch {
-      jsonText.value = typeof newVal === 'string' ? newVal : ''
+watch(
+  () => props.modelValue,
+  newVal => {
+    fieldRules.value = parseValue(newVal)
+    // Update JSON text for JSON mode
+    if (newVal) {
+      try {
+        const parsed = typeof newVal === 'string' ? JSON.parse(newVal) : newVal
+        jsonText.value = JSON.stringify(parsed, null, 2)
+      } catch {
+        jsonText.value = typeof newVal === 'string' ? newVal : ''
+      }
+    } else {
+      jsonText.value = ''
     }
-  } else {
-    jsonText.value = ''
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // Emit changes
 function emitChange() {
@@ -448,7 +457,10 @@ const editingFieldName = computed(() => {
     <!-- Mode toggle -->
     <div class="mode-toggle">
       <span class="mode-label">{{ _('validation_mode_visual') }}</span>
-      <ToggleSwitch v-model="isJsonMode" @change="isJsonMode ? switchToJsonMode() : switchToVisualMode()" />
+      <ToggleSwitch
+        v-model="isJsonMode"
+        @change="isJsonMode ? switchToJsonMode() : switchToVisualMode()"
+      />
       <span class="mode-label">{{ _('validation_mode_json') }}</span>
     </div>
 
@@ -547,16 +559,8 @@ const editingFieldName = computed(() => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          severity="secondary"
-          @click="showAddFieldDialog = false"
-        />
-        <Button
-          :label="_('add')"
-          :disabled="!selectedField"
-          @click="addField"
-        />
+        <Button :label="_('cancel')" severity="secondary" @click="showAddFieldDialog = false" />
+        <Button :label="_('add')" :disabled="!selectedField" @click="addField" />
       </template>
     </Dialog>
 
@@ -603,11 +607,7 @@ const editingFieldName = computed(() => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          severity="secondary"
-          @click="closeRuleDialog"
-        />
+        <Button :label="_('cancel')" severity="secondary" @click="closeRuleDialog" />
         <Button
           :label="_('add')"
           :disabled="!selectedRule || (selectedRuleDef?.hasParam && !ruleParam.trim())"

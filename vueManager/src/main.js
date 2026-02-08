@@ -1,13 +1,13 @@
 import './scss/primevue.scss'
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import 'primeicons/primeicons.css'
 
-import ConfirmationService from 'primevue/confirmationservice';
-import ToastService from 'primevue/toastservice';
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import PrimeVue from 'primevue/config'
+import ConfirmationService from 'primevue/confirmationservice'
+import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
 
 /**
  * MiniShop3 Vue Manager
@@ -34,10 +34,10 @@ import ToastService from 'primevue/toastservice';
  * @returns {Object} - Vue application instance
  */
 function createVueApp(rootComponent) {
-  const app = createApp(rootComponent);
+  const app = createApp(rootComponent)
 
-  const pinia = createPinia();
-  app.use(pinia);
+  const pinia = createPinia()
+  app.use(pinia)
 
   app.use(PrimeVue, {
     theme: {
@@ -56,10 +56,10 @@ function createVueApp(rootComponent) {
         },
       },
     },
-  });
+  })
 
-  app.use(ConfirmationService);
-  app.use(ToastService);
+  app.use(ConfirmationService)
+  app.use(ToastService)
 
-  return app;
+  return app
 }
