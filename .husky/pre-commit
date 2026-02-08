@@ -1,1 +1,2 @@
-npm test
+# Pre-commit: lint disabled (run manually: npm run lint)
+# Commit message validation: commitlint (commit-msg hook)

@@ -10,7 +10,7 @@
  * @returns {Object|null} - ms3.config object or null
  */
 export function getMs3Config() {
-  // eslint-disable-next-line no-undef
+   
   return typeof ms3 !== 'undefined' ? ms3.config : null
 }
 
@@ -28,7 +28,7 @@ export function formatPrice(price, options = {}) {
     decPoint = '.',
     thousandsSep = ' ',
     currency = ms3Config?.price_format_currency || 'USD',
-    currencyPosition = ms3Config?.price_format_currency_position || 'right'
+    currencyPosition = ms3Config?.price_format_currency_position || 'right',
   } = options;
 
   const numPrice = parseFloat(price) || 0;

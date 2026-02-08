@@ -36,7 +36,7 @@ const ProdInput = {
   'links': 'src/entries/links.js',
   'category-products': 'src/entries/category-products.js',
   'help': 'src/entries/help.js',
-  'main': 'src/main.js'
+  'main': 'src/main.js',
 }
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {

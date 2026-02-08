@@ -8,7 +8,7 @@ import { useLexicon } from '@vuetools/useLexicon'
 const { _ } = useLexicon()
 
 // Logo from ms3.config
-// eslint-disable-next-line no-undef
+ 
 const logo = computed(() => (typeof ms3 !== 'undefined' ? ms3.config?.defaultThumb : null) || '')
 
 // Quick links to admin sections
@@ -16,33 +16,33 @@ const quickLinks = computed(() => [
   {
     icon: 'pi pi-shopping-cart',
     href: _('ms3_orders_href'),
-    text: _('ms3_orders_text')
+    text: _('ms3_orders_text'),
   },
   {
     icon: 'pi pi-users',
     href: _('ms3_customers_href'),
-    text: _('ms3_customers_text')
+    text: _('ms3_customers_text'),
   },
   {
     icon: 'pi pi-bell',
     href: _('ms3_notifications_href'),
-    text: _('ms3_notifications_text')
+    text: _('ms3_notifications_text'),
   },
   {
     icon: 'pi pi-cog',
     href: _('ms3_settings_href'),
-    text: _('ms3_settings_text')
+    text: _('ms3_settings_text'),
   },
   {
     icon: 'pi pi-wrench',
     href: _('ms3_utilities_href'),
-    text: _('ms3_utilities_text')
+    text: _('ms3_utilities_text'),
   },
   {
     icon: 'pi pi-sliders-h',
     href: _('ms3_sys_settings_href'),
-    text: _('ms3_sys_settings_text')
-  }
+    text: _('ms3_sys_settings_text'),
+  },
 ])
 
 // Resource cards
@@ -51,32 +51,32 @@ const resourceCards = computed(() => [
     icon: 'pi pi-desktop',
     href: _('ms3_demo_href'),
     title: _('ms3_demo_title'),
-    text: _('ms3_demo_text')
+    text: _('ms3_demo_text'),
   },
   {
     icon: 'pi pi-book',
     href: _('ms3_docs_href'),
     title: _('ms3_docs_title'),
-    text: _('ms3_docs_text')
+    text: _('ms3_docs_text'),
   },
   {
     icon: 'pi pi-box',
     href: _('ms3_components_href'),
     title: _('ms3_components_title'),
-    text: _('ms3_components_text')
+    text: _('ms3_components_text'),
   },
   {
     icon: 'pi pi-comments',
     href: _('ms3_forum_href'),
     title: _('ms3_forum_title'),
-    text: _('ms3_forum_text')
+    text: _('ms3_forum_text'),
   },
   {
     icon: 'pi pi-github',
     href: _('ms3_github_href'),
     title: _('ms3_github_title'),
-    text: _('ms3_github_text')
-  }
+    text: _('ms3_github_text'),
+  },
 ])
 
 function navigateTo(href) {

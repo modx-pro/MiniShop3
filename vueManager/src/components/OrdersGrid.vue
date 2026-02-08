@@ -211,7 +211,7 @@ function formatPrice(value, column = {}) {
 
   // Get config from column or use defaults from ms3.config
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
-  // eslint-disable-next-line no-undef
+   
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   const decimals = column.decimals ?? ms3Config?.price_decimals ?? 2
   const thousandsSeparator = column.thousands_separator ?? ms3Config?.price_thousands_separator ?? ' '
@@ -243,7 +243,7 @@ function formatWeight(value, column = {}) {
   if (value === null || value === undefined) return '-'
 
   // Get config from column or use defaults from ms3.config
-  // eslint-disable-next-line no-undef
+   
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   const decimals = column.decimals ?? ms3Config?.weight_decimals ?? 2
   const unit = column.unit ?? ms3Config?.weight_unit ?? 'кг'

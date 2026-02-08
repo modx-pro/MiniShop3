@@ -62,7 +62,7 @@ const sortOrder = ref(1)
 const selectAll = ref(false)
 
 // Default thumbnail from system settings
-// eslint-disable-next-line no-undef
+ 
 const defaultThumb = (typeof ms3 !== 'undefined' ? ms3.config?.default_thumb : null) || '/assets/components/minishop3/img/mgr/ms3_small.png'
 
 /**
@@ -559,7 +559,7 @@ watch(() => props.categoryId, () => {
 onMounted(async () => {
   // Initialize nested from system setting
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let' in minishop3.js
-  // eslint-disable-next-line no-undef
+   
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   nested.value = ms3Config?.show_nested_products ?? false
 

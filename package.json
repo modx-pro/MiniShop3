@@ -9,7 +9,8 @@
   "scripts": {
     "semantic-release": "semantic-release",
     "prepare": "husky",
-    "commitlint": "commitlint --edit"
+    "commitlint": "commitlint --edit",
+    "lint": "cd vueManager && npm run lint"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",

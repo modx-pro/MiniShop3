@@ -20,9 +20,9 @@ function createVueApp() {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
+        darkModeSelector: 'none',
+      },
+    },
   })
 
   return app
