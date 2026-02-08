@@ -49,9 +49,9 @@
     </div>
 
     <!-- Switch / Toggle -->
-    <InputSwitch
+    <ToggleSwitch
       v-else-if="fieldConfig.xtype === 'switch'"
-      :id="fieldConfig.id"
+      :inputId="fieldConfig.id"
       v-model="localValue"
       :disabled="disabled"
       :trueValue="fieldConfig.props?.trueValue ?? true"
@@ -73,7 +73,7 @@
     />
 
     <!-- Combobox / Select -->
-    <Dropdown
+    <Select
       v-else-if="fieldConfig.xtype === 'combobox'"
       :id="fieldConfig.id"
       v-model="localValue"
@@ -87,9 +87,9 @@
     />
 
     <!-- Date picker -->
-    <Calendar
+    <DatePicker
       v-else-if="fieldConfig.xtype === 'datefield'"
-      :id="fieldConfig.id"
+      :inputId="fieldConfig.id"
       v-model="localValue"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
@@ -159,7 +159,7 @@
 
     <!-- Dropdown select (ms3-combo-select) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-select'">
-      <Dropdown
+      <Select
         :inputId="fieldConfig.name"
         v-model="localValue"
         :options="selectOptions"
@@ -194,15 +194,15 @@
 </template>
 
 <script setup>
-import Calendar from 'primevue/calendar'
 import Checkbox from 'primevue/checkbox'
 import ColorPicker from 'primevue/colorpicker'
-import Dropdown from 'primevue/dropdown'
+import DatePicker from 'primevue/datepicker'
 import InputNumber from 'primevue/inputnumber'
-import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
+import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
+import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
 import AutocompleteCombo from './AutocompleteCombo.vue'

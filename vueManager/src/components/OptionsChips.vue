@@ -4,7 +4,9 @@
       <!-- Display selected chips -->
       <div v-for="(chip, index) in localValue" :key="index" class="chip-item">
         <span class="chip-text">{{ chip }}</span>
-        <span v-if="!disabled" class="chip-remove" @click.stop="removeChip(index)"><i class="pi pi-times"></i></span>
+        <span v-if="!disabled" class="chip-remove" @click.stop="removeChip(index)"
+          ><i class="pi pi-times"></i
+        ></span>
       </div>
 
       <!-- Input field for adding new values -->

@@ -1,6 +1,6 @@
 <template>
   <div class="vendor-combo-wrapper" ref="wrapperRef">
-    <Dropdown
+    <Select
       :inputId="inputId"
       v-model="localValue"
       :options="vendors"
@@ -22,12 +22,12 @@
           {{ emptyMessage }}
         </div>
       </template>
-    </Dropdown>
+    </Select>
   </div>
 </template>
 
 <script setup>
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'

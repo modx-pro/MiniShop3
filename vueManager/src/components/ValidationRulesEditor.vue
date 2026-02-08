@@ -108,21 +108,6 @@ const availableFields = computed(() => {
   }))
 })
 
-// Build grouped fields for Select dropdown
-const groupedFields = computed(() => {
-  const groups = {}
-  availableFields.value.forEach(field => {
-    if (!groups[field.group]) {
-      groups[field.group] = {
-        label: field.groupLabel,
-        items: [],
-      }
-    }
-    groups[field.group].items.push(field)
-  })
-  return Object.values(groups)
-})
-
 // Build available rules with localized labels
 const availableRules = computed(() => {
   return ruleDefinitions.map(rule => ({

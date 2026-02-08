@@ -7,9 +7,9 @@ import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
 import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
@@ -466,7 +466,7 @@ onMounted(() => {
     <div class="flex justify-content-between align-items-center mb-3">
       <div class="flex align-items-center gap-2">
         <label for="class-filter">{{ _('ms3_vue_extra_fields_class_filter') }}</label>
-        <Dropdown
+        <Select
           id="class-filter"
           v-model="selectedClass"
           :options="classOptions"
@@ -603,7 +603,7 @@ onMounted(() => {
             <!-- Model class -->
             <div class="field col-12">
               <label for="field-class">{{ _('ms3_vue_dialog_class') }}</label>
-              <Dropdown
+              <Select
                 id="field-class"
                 v-model="fieldForm.class"
                 :options="classOptions"
@@ -653,7 +653,7 @@ onMounted(() => {
             <!-- Widget type (xtype) -->
             <div class="field col-12">
               <label for="field-xtype">{{ _('ms3_vue_dialog_xtype') }}</label>
-              <Dropdown
+              <Select
                 id="field-xtype"
                 v-model="fieldForm.xtype"
                 :options="xtypeOptions"
@@ -685,7 +685,7 @@ onMounted(() => {
             <!-- DB type -->
             <div class="field col-6">
               <label for="field-dbtype">{{ _('ms3_vue_dialog_dbtype') }}</label>
-              <Dropdown
+              <Select
                 id="field-dbtype"
                 v-model="fieldForm.dbtype"
                 :options="dbtypeOptions"
@@ -712,7 +712,7 @@ onMounted(() => {
             <!-- PHP type -->
             <div class="field col-6">
               <label for="field-phptype">{{ _('ms3_vue_dialog_phptype') }}</label>
-              <Dropdown
+              <Select
                 id="field-phptype"
                 v-model="fieldForm.phptype"
                 :options="phptypeOptions"
@@ -743,7 +743,7 @@ onMounted(() => {
             <!-- Default value -->
             <div class="field col-6">
               <label for="field-default">{{ _('ms3_vue_dialog_default') }}</label>
-              <Dropdown
+              <Select
                 id="field-default"
                 v-model="fieldForm.default"
                 :options="defaultOptions"
@@ -783,7 +783,7 @@ onMounted(() => {
             <!-- Index type -->
             <div class="field col-6">
               <label for="field-index-type">{{ _('ms3_vue_dialog_index_type') }}</label>
-              <Dropdown
+              <Select
                 id="field-index-type"
                 v-model="fieldForm.index_type"
                 :options="indexTypeOptions"

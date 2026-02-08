@@ -2,7 +2,6 @@
 import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Divider from 'primevue/divider'
 import { computed } from 'vue'
 
 const { _ } = useLexicon()

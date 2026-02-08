@@ -5,8 +5,8 @@ import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -768,7 +768,7 @@ onMounted(() => {
     <div class="flex justify-content-between align-items-center mb-3">
       <div class="flex align-items-center gap-2">
         <label for="grid-select">{{ _('select_grid') }}</label>
-        <Dropdown
+        <Select
           id="grid-select"
           v-model="selectedGrid"
           :options="gridOptions"
@@ -904,7 +904,7 @@ onMounted(() => {
 
       <div class="field mb-3">
         <label for="new-field-type" class="required">{{ _('field_type') }}</label>
-        <Dropdown
+        <Select
           id="new-field-type"
           v-model="newField.type"
           :options="fieldTypeOptions"
@@ -961,7 +961,7 @@ onMounted(() => {
         </div>
         <div class="field mb-2">
           <label for="new-field-relation-aggregation">{{ _('relation_aggregation') }}</label>
-          <Dropdown
+          <Select
             id="new-field-relation-aggregation"
             v-model="newField.config.relation.aggregation"
             :options="aggregationOptions"
@@ -997,7 +997,7 @@ onMounted(() => {
       <div v-if="newField.type === 'badge'" class="mb-3">
         <div class="field mb-2">
           <label for="new-field-badge-source">{{ _('field_source_field') }}</label>
-          <Dropdown
+          <Select
             id="new-field-badge-source"
             v-model="newField.config.badge.source_field"
             :options="getAvailableFieldsForBadge(newField.field_name)"
@@ -1011,7 +1011,7 @@ onMounted(() => {
         </div>
         <div class="field mb-2">
           <label for="new-field-badge-color">{{ _('field_color_field') }}</label>
-          <Dropdown
+          <Select
             id="new-field-badge-color"
             v-model="newField.config.badge.color_field"
             :options="getAvailableFieldsForBadge(newField.field_name)"
@@ -1144,7 +1144,7 @@ onMounted(() => {
 
         <div class="field mb-3">
           <label for="edit-field-type" class="required">{{ _('field_type') }}</label>
-          <Dropdown
+          <Select
             id="edit-field-type"
             v-model="editingField.type"
             :options="fieldTypeOptions"
@@ -1203,7 +1203,7 @@ onMounted(() => {
           </div>
           <div class="field mb-2">
             <label for="edit-field-relation-aggregation">{{ _('relation_aggregation') }}</label>
-            <Dropdown
+            <Select
               id="edit-field-relation-aggregation"
               v-model="editingField.config.relation.aggregation"
               :options="aggregationOptions"
@@ -1239,7 +1239,7 @@ onMounted(() => {
         <div v-if="editingField.type === 'badge'" class="mb-3">
           <div class="field mb-2">
             <label for="edit-field-badge-source">{{ _('field_source_field') }}</label>
-            <Dropdown
+            <Select
               id="edit-field-badge-source"
               v-model="editingField.config.badge.source_field"
               :options="getAvailableFieldsForBadge(editingField.field_name)"
@@ -1253,7 +1253,7 @@ onMounted(() => {
           </div>
           <div class="field mb-2">
             <label for="edit-field-badge-color">{{ _('field_color_field') }}</label>
-            <Dropdown
+            <Select
               id="edit-field-badge-color"
               v-model="editingField.config.badge.color_field"
               :options="getAvailableFieldsForBadge(editingField.field_name)"

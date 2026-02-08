@@ -7,9 +7,9 @@ import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -311,7 +311,7 @@ onMounted(async () => {
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
                 _('ms3_notification_status')
               }}</label>
-              <Dropdown
+              <Select
                 v-model="filterStatusId"
                 :options="statusOptions"
                 optionLabel="name"
@@ -325,7 +325,7 @@ onMounted(async () => {
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
                 _('ms3_notification_channel')
               }}</label>
-              <Dropdown
+              <Select
                 v-model="filterChannel"
                 :options="references.channels"
                 optionLabel="name"
@@ -339,7 +339,7 @@ onMounted(async () => {
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
                 _('ms3_notification_recipient')
               }}</label>
-              <Dropdown
+              <Select
                 v-model="filterRecipientType"
                 :options="references.recipient_types"
                 optionLabel="name"
@@ -450,7 +450,7 @@ onMounted(async () => {
         <div class="form-row">
           <div class="form-col">
             <label for="event">{{ _('ms3_notification_event') }} *</label>
-            <Dropdown
+            <Select
               id="event"
               v-model="editingNotification.event"
               :options="references.events"
@@ -461,7 +461,7 @@ onMounted(async () => {
           </div>
           <div class="form-col">
             <label for="status_id">{{ _('ms3_notification_status') }}</label>
-            <Dropdown
+            <Select
               id="status_id"
               v-model="editingNotification.status_id"
               :options="statusOptions"
@@ -478,7 +478,7 @@ onMounted(async () => {
         <div class="form-row">
           <div class="form-col">
             <label for="recipient_type">{{ _('ms3_notification_recipient') }} *</label>
-            <Dropdown
+            <Select
               id="recipient_type"
               v-model="editingNotification.recipient_type"
               :options="references.recipient_types"
@@ -489,7 +489,7 @@ onMounted(async () => {
           </div>
           <div class="form-col">
             <label for="channel">{{ _('ms3_notification_channel') }} *</label>
-            <Dropdown
+            <Select
               id="channel"
               v-model="editingNotification.channel"
               :options="references.channels"

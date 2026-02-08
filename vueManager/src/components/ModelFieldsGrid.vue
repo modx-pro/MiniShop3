@@ -7,11 +7,11 @@ import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
 import Fieldset from 'primevue/fieldset'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Panel from 'primevue/panel'
+import Select from 'primevue/select'
 import Slider from 'primevue/slider'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
@@ -647,7 +647,7 @@ onMounted(async () => {
     <div class="model-filter-bar mb-3">
       <div style="display: flex; align-items: center; gap: 0.5rem">
         <label style="font-weight: 500">{{ _('ms3_model_field_model') }}:</label>
-        <Dropdown
+        <Select
           v-model="filterModel"
           :options="models"
           optionLabel="label"
@@ -855,7 +855,7 @@ onMounted(async () => {
           <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_model') }} *</label>
-              <Dropdown
+              <Select
                 v-model="editingField.model"
                 :options="models"
                 optionLabel="label"
@@ -887,7 +887,7 @@ onMounted(async () => {
           <div class="grid mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_xtype') }}</label>
-              <Dropdown
+              <Select
                 v-model="editingField.xtype"
                 :options="xtypeOptions"
                 optionLabel="label"
@@ -898,7 +898,7 @@ onMounted(async () => {
 
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_section') }}</label>
-              <Dropdown
+              <Select
                 v-model="editingField.section_id"
                 :options="sectionOptions"
                 optionLabel="label"
@@ -1002,7 +1002,7 @@ onMounted(async () => {
       <div v-if="editingSection" class="edit-form">
         <div class="field mb-3">
           <label class="block mb-2 font-medium">{{ _('ms3_model_field_model') }} *</label>
-          <Dropdown
+          <Select
             v-model="editingSection.model"
             :options="models"
             optionLabel="label"

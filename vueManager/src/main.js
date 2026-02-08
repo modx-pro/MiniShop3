@@ -33,7 +33,7 @@ import { createApp } from 'vue'
  * @param {Object} rootComponent - Root component
  * @returns {Object} - Vue application instance
  */
-function createVueApp(rootComponent) {
+export function createVueApp(rootComponent) {
   const app = createApp(rootComponent)
 
   const pinia = createPinia()

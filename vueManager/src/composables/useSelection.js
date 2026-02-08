@@ -23,12 +23,10 @@ import { computed, ref } from 'vue'
  */
 export function useSelection(options = {}) {
   const {
-    entityName = 'item',
     deleteOne = null,
     deleteBulk = null,
     onSuccess = null,
     getItemId = item => item.id,
-    getItemName = item => item.name || item.id,
   } = options
 
   const confirm = useConfirm()

@@ -10,8 +10,8 @@ import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import { computed, ref, watch } from 'vue'
 
 import actionRegistry from '../actionRegistry.js'
@@ -274,7 +274,7 @@ function closeDialog() {
 
           <div class="form-col">
             <label for="action-handler" class="required">{{ _('action_handler') }}</label>
-            <Dropdown
+            <Select
               id="action-handler"
               v-model="editingAction.handler"
               :options="availableHandlers"
@@ -287,7 +287,7 @@ function closeDialog() {
                 <i :class="`pi ${option.icon} mr-2`"></i>
                 {{ option.label }}
               </template>
-            </Dropdown>
+            </Select>
             <small class="text-muted">{{ _('action_handler_hint') }}</small>
           </div>
         </div>
@@ -310,7 +310,7 @@ function closeDialog() {
         <div class="form-row">
           <div class="form-col">
             <label for="action-icon">{{ _('action_icon') }}</label>
-            <Dropdown
+            <Select
               id="action-icon"
               v-model="editingAction.icon"
               :options="iconOptions"
@@ -329,12 +329,12 @@ function closeDialog() {
                   {{ value }}
                 </span>
               </template>
-            </Dropdown>
+            </Select>
           </div>
 
           <div class="form-col">
             <label for="action-severity">{{ _('action_severity') }}</label>
-            <Dropdown
+            <Select
               id="action-severity"
               v-model="editingAction.severity"
               :options="severityOptions"

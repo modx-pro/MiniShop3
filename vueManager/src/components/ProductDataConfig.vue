@@ -5,9 +5,9 @@ import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -897,7 +897,7 @@ onMounted(() => {
           <!-- Section -->
           <div class="field col-6">
             <label for="field-section">{{ _('ms3_vue_field_section') }}</label>
-            <Dropdown
+            <Select
               id="field-section"
               v-model="editingField.section"
               :options="availableSectionOptions"
