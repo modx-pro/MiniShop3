@@ -2,6 +2,21 @@
 
 Краткое описание изменений и их цели.
 
+## Conventional Commits
+
+Используйте [Conventional Commits](https://www.conventionalcommits.org/) для сообщений коммитов:
+
+| Префикс | Описание | Влияние на версию |
+|---------|----------|-------------------|
+| `feat:` | Новая функциональность | minor |
+| `fix:` | Исправление бага | patch |
+| `docs:` | Документация | — |
+| `refactor:` | Рефакторинг | — |
+| `chore:` | Прочее (зависимости и т.д.) | — |
+| `BREAKING CHANGE:` | Ломающие изменения | major |
+
+**Примеры:** `feat: add notification center`, `fix: correct order validation`
+
 ## Тип изменений
 
 - [ ] Исправление бага (non-breaking change)

@@ -2,15 +2,27 @@
   "name": "minishop3",
   "version": "0.0.0",
   "private": true,
-  "description": "",
+  "description": "MiniShop3 - e-commerce solution for MODX",
   "main": "index.js",
   "author": "",
   "license": "ISC",
+  "scripts": {
+    "semantic-release": "semantic-release",
+    "prepare": "husky",
+    "commitlint": "commitlint --edit"
+  },
   "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.1.1"
+    "eslint-plugin-promise": "^6.1.1",
+    "husky": "^9.1.7",
+    "semantic-release": "^24.2.0"
   }
 }
