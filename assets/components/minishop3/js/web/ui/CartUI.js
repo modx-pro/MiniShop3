@@ -1,14 +1,19 @@
 /**
  * UI handlers for cart
  *
- * Class manages interactive cart elements:
- * - Quantity increment/decrement buttons
- * - Quantity input fields
- * - Product option selects
- * - Product removal buttons
+ * Manages cart-specific UI operations:
+ * - Product addition (handleAdd)
+ * - Product removal (handleRemove)
+ * - Cart clearing (handleClean)
+ * - SSR rendering (renderCart)
+ * - Option selects
+ *
+ * Note: Quantity +/- buttons and inputs are handled by QuantityUI
+ * to avoid duplication with ProductCardUI.
  *
  * Separation of concerns:
- * - CartUI: UI logic (events, DOM)
+ * - CartUI: Cart operations (add, remove, clean, render)
+ * - QuantityUI: Quantity controls (+/- buttons, inputs)
  * - CartAPI: Server requests
  * - Hooks: Extensibility
  * - Message: Notifications
@@ -31,61 +36,7 @@ class CartUI {
    * Initialize UI handlers
    */
   init () {
-    this.initQuantityButtons()
-    this.initQuantityInputs()
     this.initOptionSelects()
-  }
-
-  /**
-   * Product quantity +/- buttons
-   */
-  initQuantityButtons () {
-    document.querySelectorAll('.qty-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const form = e.target.closest('.ms3_form')
-        if (!form) return
-
-        const input = form.querySelector('.qty-input')
-        const productKeyInput = form.querySelector('[name="product_key"]')
-
-        if (!input || !productKeyInput) return
-
-        let qty = parseInt(input.value) || 0
-
-        if (e.target.classList.contains('inc-qty')) {
-          qty++
-        }
-
-        if (e.target.classList.contains('dec-qty') && qty > 0) {
-          qty--
-        }
-
-        input.value = qty
-
-        await this.handleChange(productKeyInput.value, qty)
-      })
-    })
-  }
-
-  /**
-   * Quantity input fields
-   */
-  initQuantityInputs () {
-    document.querySelectorAll('.qty-input').forEach(input => {
-      input.addEventListener('change', async (e) => {
-        const form = e.target.closest('.ms3_form')
-        if (!form) return
-
-        const productKeyInput = form.querySelector('[name="product_key"]')
-        if (!productKeyInput) return
-
-        const qty = parseInt(e.target.value) || 0
-
-        if (qty === 0) return
-
-        await this.handleChange(productKeyInput.value, qty)
-      })
-    })
   }
 
   /**
@@ -103,12 +54,20 @@ class CartUI {
   }
 
   /**
-   * Handle product quantity change
+   * Handle product quantity change (for form submit)
+   *
+   * Note: This is called from ms3.js form handler for cart/change action.
+   * For +/- buttons and inputs, QuantityUI is used instead.
    *
    * @param {string} productKey - Product key
    * @param {number} count - New quantity
    */
   async handleChange (productKey, count) {
+    // Delegate to remove if count <= 0
+    if (count <= 0) {
+      return this.handleRemove(productKey)
+    }
+
     const hookData = { productKey, count }
     await this.hooks.runHooks('beforeChangeCart', hookData)
 
@@ -138,7 +97,7 @@ class CartUI {
         }
       }
     } catch (error) {
-      console.error('CartUI.handleChange error:', error)
+      console.error('[CartUI] handleChange error:', error)
       this.message.error('Cart update error')
     }
   }
@@ -220,7 +179,7 @@ class CartUI {
         }
       }
     } catch (error) {
-      console.error('CartUI.handleRemove error:', error)
+      console.error('[CartUI] handleRemove error:', error)
       this.message.error('Product removal error')
     }
   }
@@ -258,7 +217,7 @@ class CartUI {
         }
       }
     } catch (error) {
-      console.error('CartUI.handleClean error:', error)
+      console.error('[CartUI] handleClean error:', error)
       this.message.error('Cart clearing error')
     }
   }
@@ -279,12 +238,11 @@ class CartUI {
       return null
     }
 
-    const tokens = cartRenderConfig.map(item => item.token).filter(Boolean)
-    return tokens
+    return cartRenderConfig.map(item => item.token).filter(Boolean)
   }
 
   /**
-   * Render cart HTML blocks
+   * Render cart HTML blocks (SSR)
    *
    * Backend returns HTML by tokens:
    * {
@@ -294,6 +252,9 @@ class CartUI {
    *
    * Map tokens to selectors from ms3Config.render.cart:
    * [{token: "token1", selector: "#headerMiniCart"}, ...]
+   *
+   * Note: After rendering, ms3:cart:updated event is dispatched.
+   * QuantityUI listens to this event and reinitializes controls.
    *
    * @param {Object} renderData - Object {token: html}
    */
@@ -310,7 +271,6 @@ class CartUI {
 
     for (const token in renderData) {
       const html = renderData[token]
-
       const config = cartRenderConfig.find(item => item.token === token)
 
       if (!config || !config.selector) {
@@ -324,9 +284,7 @@ class CartUI {
       }
     }
 
-    setTimeout(() => {
-      this.init()
-    }, 100)
+    // Note: QuantityUI.reinit() will be called via ms3:cart:updated event listener
   }
 
   /**

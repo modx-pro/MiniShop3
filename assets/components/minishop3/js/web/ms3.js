@@ -5,7 +5,7 @@
  * - TokenManager: Token management
  * - ApiClient: HTTP client
  * - API modules: CartAPI, OrderAPI, CustomerAPI
- * - UI modules: CartUI, OrderUI, CustomerUI
+ * - UI modules: CartUI, OrderUI, CustomerUI, QuantityUI, ProductCardUI
  * - Utilities: Hooks, Message
  *
  * Configuration passed via window.ms3Config:
@@ -28,6 +28,7 @@ const ms3 = {
   cartUI: null,
   orderUI: null,
   customerUI: null,
+  quantityUI: null,
   productCardUI: null,
 
   hooks: null,
@@ -62,12 +63,19 @@ const ms3 = {
     this.cartUI = new CartUI(this.cartAPI, this.hooks, this.message, this.config)
     this.orderUI = new OrderUI(this.orderAPI, this.hooks, this.message, this.config)
     this.customerUI = new CustomerUI(this.customerAPI, this.hooks, this.message, this.config)
+    this.quantityUI = new QuantityUI(this.cartAPI, this.hooks, this.message, this.config)
     this.productCardUI = new ProductCardUI(this.cartAPI, this.hooks, this.message, this.config)
 
     this.cartUI.init()
     this.orderUI.init()
     this.customerUI.init()
+    this.quantityUI.init()
     await this.productCardUI.init()
+
+    // Reinit quantity controls after cart DOM updates
+    document.addEventListener('ms3:cart:updated', () => {
+      this.quantityUI.reinit()
+    })
 
     this.initFormHandler()
 
