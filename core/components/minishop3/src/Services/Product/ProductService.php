@@ -102,27 +102,6 @@ class ProductService
     }
 
     /**
-     * Duplicate product with all related data
-     *
-     * @param msProduct $product Source product
-     * @param msProduct $newProduct New product (already duplicated by parent)
-     * @return msProduct
-     */
-    public function duplicateProduct(msProduct $product, msProduct $newProduct): msProduct
-    {
-        $data = $product->loadData();
-
-        $newProduct->set('categories', $data->get('categories'));
-        $newProduct->set('options', $data->get('options'));
-        $newProduct->set('links', $data->get('links'));
-
-        $newProduct->set('image', '');
-        $newProduct->set('thumb', '');
-
-        return $newProduct;
-    }
-
-    /**
      * Get neighbor products (left and right)
      *
      * Used for navigation through products of the same level
