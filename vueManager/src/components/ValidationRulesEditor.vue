@@ -617,7 +617,7 @@ const editingFieldName = computed(() => {
 
 .mode-label {
   font-size: 0.875rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   line-height: 1;
 }
 
@@ -706,7 +706,7 @@ const editingFieldName = computed(() => {
 }
 
 .param-hint {
-  color: var(--ms3-text-muted-alt);
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
 }
 
@@ -724,7 +724,7 @@ const editingFieldName = computed(() => {
 
 :deep(.rule-option-desc) {
   font-size: 0.8rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .w-full {
@@ -748,6 +748,6 @@ const editingFieldName = computed(() => {
 
 .p-select-overlay .rule-option-desc {
   font-size: 0.8rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 </style>

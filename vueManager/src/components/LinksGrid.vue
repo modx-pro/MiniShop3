@@ -448,7 +448,7 @@ onMounted(() => {
 }
 
 .ms3-link-form .type-description {
-  color: var(--ms3-text-muted-alt);
+  color: var(--ms3-text-muted);
   font-style: italic;
   padding: 0.5rem;
   background: var(--ms3-bg-gray-100);
@@ -489,7 +489,7 @@ onMounted(() => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {

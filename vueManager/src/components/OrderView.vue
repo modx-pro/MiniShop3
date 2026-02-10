@@ -2871,7 +2871,7 @@ onMounted(async () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 
@@ -2951,7 +2951,7 @@ onMounted(async () => {
 
 .summary-label {
   font-size: 0.75rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
@@ -2983,7 +2983,7 @@ onMounted(async () => {
 .no-fields-message {
   padding: 1rem;
   text-align: center;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-style: italic;
 }
 
@@ -3059,7 +3059,7 @@ onMounted(async () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 
@@ -3160,7 +3160,7 @@ onMounted(async () => {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 
@@ -3222,7 +3222,7 @@ onMounted(async () => {
 }
 
 .customer-search-hint {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
 }
 
@@ -3244,7 +3244,7 @@ onMounted(async () => {
 
 .customer-suggestion-meta {
   font-size: 0.75rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   display: flex;
   gap: var(--ms3-spacing-3);
 }
@@ -3254,7 +3254,7 @@ onMounted(async () => {
 }
 
 .customer-suggestion-meta .phone {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .customer-suggestion-stats {
@@ -3291,7 +3291,7 @@ onMounted(async () => {
 }
 
 .selected-customer-badge .customer-email {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 
@@ -3303,7 +3303,7 @@ onMounted(async () => {
   background: var(--ms3-bg-slate);
   border: var(--ms3-border-width) dashed var(--ms3-border-color);
   border-radius: 0.5rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 
@@ -3379,7 +3379,7 @@ onMounted(async () => {
 }
 
 .duplicate-customer-info .info-label {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
   min-width: 6.25rem;
 }
@@ -3491,7 +3491,7 @@ onMounted(async () => {
 
 .ms3-product-suggestion-meta {
   font-size: 0.75rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   display: flex;
   gap: 0.5rem;
 }

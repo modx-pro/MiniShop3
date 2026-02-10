@@ -838,7 +838,7 @@ onMounted(async () => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
@@ -876,7 +876,7 @@ onMounted(async () => {
   margin-bottom: var(--ms3-spacing-2);
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -948,7 +948,7 @@ onMounted(async () => {
 
 /* Form hint */
 .form-hint {
-  color: var(--ms3-text-muted-alt);
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
   margin-top: var(--ms3-spacing-1);
 }
@@ -968,14 +968,14 @@ onMounted(async () => {
 }
 
 .deliveries-hint {
-  color: var(--ms3-text-muted-alt);
+  color: var(--ms3-text-muted);
   font-size: 0.9rem;
 }
 
 .loading-deliveries {
   text-align: center;
   padding: 2rem;
-  color: var(--ms3-text-muted-alt);
+  color: var(--ms3-text-muted);
 }
 
 .no-deliveries {
@@ -1032,7 +1032,7 @@ onMounted(async () => {
 }
 
 .drag-handle:hover {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .drag-handle:active {
@@ -1064,6 +1064,6 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   padding: 3rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 </style>

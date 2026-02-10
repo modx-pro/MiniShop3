@@ -39,9 +39,8 @@
 
   /* Colors — text */
   --ms3-text-primary: #374151;
-  --ms3-text-secondary: #64748b;
-  --ms3-text-muted: #6c757d;
-  --ms3-text-muted-alt: #6b7280;
+  /* Объединённые muted/secondary (ранее были #6c757d, #6b7280, #64748b) */
+  --ms3-text-muted: #64748b;
   --ms3-text-light: #94a3b8;
   --ms3-text-dark: #334155;
   --ms3-text-hint: #495057;

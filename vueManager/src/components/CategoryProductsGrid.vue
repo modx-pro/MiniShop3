@@ -965,7 +965,7 @@ onMounted(async () => {
 .nested-checkbox label {
   cursor: pointer;
   font-size: 0.9rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .w-full {
@@ -990,7 +990,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -1054,7 +1054,7 @@ onMounted(async () => {
 }
 
 .drag-handle:hover {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .drag-handle:active {
@@ -1186,11 +1186,11 @@ onMounted(async () => {
 
 .product-category {
   font-size: 0.8rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .product-category a {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   text-decoration: none;
 }
 

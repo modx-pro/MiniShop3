@@ -1,6 +1,9 @@
 /**
- * Инжект переопределения font-size для контролов.
- * Вызывать после app.mount() — стили PrimeVue встраиваются в runtime и перезаписывают CSS из файлов.
+ * Runtime injection переопределений для контролов PrimeVue (font-size, height и т.п.).
+ *
+ * Вызывать после app.mount(). PrimeVue с @primeuix/themes встраивает тему в runtime
+ * после загрузки бандла, поэтому стили из SCSS (даже с !important) загружаются раньше
+ * и перезаписываются. Runtime injection обеспечивает применение наших правил последними.
  */
 const STYLE_ID = 'ms3-form-styles-override'
 

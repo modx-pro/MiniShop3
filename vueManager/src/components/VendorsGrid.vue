@@ -937,7 +937,7 @@ onMounted(async () => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
@@ -975,7 +975,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -1092,7 +1092,7 @@ onMounted(async () => {
 
 /* Form hint */
 .form-hint {
-  color: var(--ms3-text-muted-alt);
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
   margin-top: 0.25rem;
 }

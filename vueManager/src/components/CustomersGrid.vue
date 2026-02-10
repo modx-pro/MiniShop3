@@ -1232,11 +1232,11 @@ onMounted(async () => {
 
 .address-badge.inactive {
   background: var(--ms3-border-color);
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .address-formatted {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 

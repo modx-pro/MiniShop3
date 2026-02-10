@@ -649,7 +649,7 @@ onMounted(() => {
 }
 
 .ms3-status-form .help-text {
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
 }
 
@@ -685,7 +685,7 @@ onMounted(() => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: var(--ms3-text-secondary);
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
