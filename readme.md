@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/modx-pro/MiniShop3/releases"><img src="https://img.shields.io/badge/version-1.2.3--beta1-blue" alt="Version"></a>
-  <a href="#"><img src="https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.1+"></a>
+  <a href="#"><img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.2+"></a>
   <a href="#"><img src="https://img.shields.io/badge/MODX-3.0%2B-green?logo=modx&logoColor=white" alt="MODX 3.0+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="License MIT"></a>
 </p>
@@ -26,7 +26,7 @@
 
 ## ✨ Особенности
 
-- 🚀 **Для MODX 3** — PHP 8.1+, namespaces, PSR-4, миграции Phinx
+- 🚀 **Для MODX 3** — PHP 8.2+, namespaces, PSR-4, миграции Phinx
 - 🔌 **REST API** — полноценный API для headless-интеграций
 - 🎨 **Vue 3 + PrimeVue** — современный интерфейс админки
 - ⚡ **Без jQuery** — нативный JavaScript на фронтенде
@@ -37,7 +37,7 @@
 | Компонент | Версия |
 |-----------|--------|
 | MODX Revolution | 3.0.0+ |
-| PHP | 8.1+ |
+| PHP | 8.2+ |
 | MySQL | 5.7+ / MariaDB 10.3+ |
 
 ### Зависимости
