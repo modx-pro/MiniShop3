@@ -182,8 +182,8 @@ class ProductService
 
             $this->modx->setPlaceholders($placeholders);
 
-            $product->loadOptions();
-            $this->modx->setPlaceholders($product->options ?? []);
+            $options = $product->loadOptions();
+            $this->modx->setPlaceholders($options ?? []);
         }
 
         /** @var msVendor $vendor */
