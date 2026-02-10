@@ -224,7 +224,7 @@ class msProduct extends modResource
         $additional = array_merge(
             $this->loadData()->toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated),
             $this->loadOptions(),
-            $this->loadVendor()->toArray($keyPrefix . 'vendor.', $rawValues, $excludeLazy, $includeRelated)
+            $this->loadVendor()->toArray($keyPrefix . 'vendor_', $rawValues, $excludeLazy, $includeRelated)
         );
         $intersect = array_keys(array_intersect_key($original, $additional));
         foreach ($intersect as $key) {

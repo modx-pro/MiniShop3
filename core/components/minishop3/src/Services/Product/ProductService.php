@@ -188,7 +188,7 @@ class ProductService
 
         /** @var msVendor $vendor */
         if ($vendor = $product->getOne('Vendor')) {
-            $this->modx->setPlaceholders($vendor->toArray('vendor.'));
+            $this->modx->setPlaceholders($vendor->toArray('vendor_'));
         }
 
         $this->modx->lexicon->load('minishop3:default');
