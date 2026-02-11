@@ -1,14 +1,14 @@
 <template>
-  <div class="autocomplete-combo-wrapper" ref="wrapperRef">
+  <div ref="wrapperRef" class="autocomplete-combo-wrapper">
     <AutoComplete
-      :inputId="inputId"
       v-model="localValue"
+      :input-id="inputId"
       :suggestions="filteredValues"
       :placeholder="placeholder"
       :disabled="disabled"
       :loading="loading"
-      :completeOnFocus="true"
-      :forceSelection="false"
+      :complete-on-focus="true"
+      :force-selection="false"
       class="w-full"
       @complete="search"
       @change="handleChange"
@@ -17,8 +17,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
 import AutoComplete from 'primevue/autocomplete'
+import { onMounted, ref, watch } from 'vue'
+
 import request from '../request.js'
 
 const props = defineProps({
@@ -110,12 +111,15 @@ function handleChange() {
 }
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localValue.value = newValue
-})
+watch(
+  () => props.modelValue,
+  newValue => {
+    localValue.value = newValue
+  }
+)
 
 // Watch for local changes
-watch(localValue, (newValue) => {
+watch(localValue, newValue => {
   emit('update:modelValue', newValue)
 })
 
@@ -125,7 +129,7 @@ onMounted(() => {
   if (props.inputId && wrapperRef.value) {
     const label = document.querySelector(`label[for="${props.inputId}"]`)
     if (label) {
-      label.addEventListener('click', (e) => {
+      label.addEventListener('click', e => {
         const autocompleteInput = wrapperRef.value.querySelector('.p-autocomplete-input')
         if (autocompleteInput && !props.disabled) {
           e.preventDefault()
@@ -150,8 +154,8 @@ onMounted(() => {
 <style>
 /* Global styles for autocomplete panel */
 .autocomplete-combo-wrapper .p-autocomplete-panel {
-  min-width: 300px;
-  max-width: 500px;
+  min-width: 18.75rem;
+  max-width: 31.25rem;
 }
 
 .autocomplete-combo-wrapper .p-autocomplete-input {

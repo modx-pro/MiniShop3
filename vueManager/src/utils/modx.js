@@ -10,7 +10,6 @@
  * @returns {Object|null} - ms3.config object or null
  */
 export function getMs3Config() {
-  // eslint-disable-next-line no-undef
   return typeof ms3 !== 'undefined' ? ms3.config : null
 }
 
@@ -28,18 +27,16 @@ export function formatPrice(price, options = {}) {
     decPoint = '.',
     thousandsSep = ' ',
     currency = ms3Config?.price_format_currency || 'USD',
-    currencyPosition = ms3Config?.price_format_currency_position || 'right'
-  } = options;
+    currencyPosition = ms3Config?.price_format_currency_position || 'right',
+  } = options
 
-  const numPrice = parseFloat(price) || 0;
+  const numPrice = parseFloat(price) || 0
 
-  const parts = numPrice.toFixed(decimals).split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSep);
-  const formatted = parts.join(decPoint);
+  const parts = numPrice.toFixed(decimals).split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSep)
+  const formatted = parts.join(decPoint)
 
-  return currencyPosition === 'left'
-    ? `${currency} ${formatted}`
-    : `${formatted} ${currency}`;
+  return currencyPosition === 'left' ? `${currency} ${formatted}` : `${formatted} ${currency}`
 }
 
 /**
@@ -50,22 +47,22 @@ export function formatPrice(price, options = {}) {
  * @returns {string} - Formatted date
  */
 export function formatDate(date, format = 'datetime') {
-  if (!date) return '';
+  if (!date) return ''
 
-  const d = date instanceof Date ? date : new Date(date);
+  const d = date instanceof Date ? date : new Date(date)
 
-  if (isNaN(d.getTime())) return '';
+  if (isNaN(d.getTime())) return ''
 
   const formats = {
     date: 'd.m.Y',
     datetime: 'd.m.Y H:i',
     time: 'H:i',
     full: 'd.m.Y H:i:s',
-  };
+  }
 
-  const formatString = formats[format] || format;
+  const formatString = formats[format] || format
 
-  const pad = (num) => String(num).padStart(2, '0');
+  const pad = num => String(num).padStart(2, '0')
 
   return formatString
     .replace('d', pad(d.getDate()))
@@ -73,7 +70,7 @@ export function formatDate(date, format = 'datetime') {
     .replace('Y', d.getFullYear())
     .replace('H', pad(d.getHours()))
     .replace('i', pad(d.getMinutes()))
-    .replace('s', pad(d.getSeconds()));
+    .replace('s', pad(d.getSeconds()))
 }
 
 /**
@@ -84,13 +81,13 @@ export function formatDate(date, format = 'datetime') {
  * @returns {Array} - Array of values
  */
 export function parseTvValue(value, separator = '||') {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
+  if (!value) return []
+  if (Array.isArray(value)) return value
 
   return String(value)
     .split(separator)
     .map(v => v.trim())
-    .filter(v => v.length > 0);
+    .filter(v => v.length > 0)
 }
 
 /**
@@ -100,12 +97,12 @@ export function parseTvValue(value, separator = '||') {
  * @returns {Date|null} - Date object or null
  */
 export function timestampToDate(timestamp) {
-  if (!timestamp) return null;
+  if (!timestamp) return null
 
-  const num = Number(timestamp);
-  if (isNaN(num)) return null;
+  const num = Number(timestamp)
+  if (isNaN(num)) return null
 
-  return new Date(num * 1000);
+  return new Date(num * 1000)
 }
 
 /**
@@ -115,9 +112,9 @@ export function timestampToDate(timestamp) {
  * @returns {string} - CSS icon class
  */
 export function getFileIcon(filename) {
-  if (!filename) return 'pi pi-file';
+  if (!filename) return 'pi pi-file'
 
-  const ext = filename.split('.').pop().toLowerCase();
+  const ext = filename.split('.').pop().toLowerCase()
 
   const icons = {
     jpg: 'pi pi-image',
@@ -141,9 +138,9 @@ export function getFileIcon(filename) {
     avi: 'pi pi-video',
     mov: 'pi pi-video',
     wmv: 'pi pi-video',
-  };
+  }
 
-  return icons[ext] || 'pi pi-file';
+  return icons[ext] || 'pi pi-file'
 }
 
 /**
@@ -154,10 +151,10 @@ export function getFileIcon(filename) {
  */
 export function isJsonString(str) {
   try {
-    JSON.parse(str);
-    return true;
+    JSON.parse(str)
+    return true
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -170,9 +167,9 @@ export function isJsonString(str) {
  */
 export function safeJsonParse(str, defaultValue = null) {
   try {
-    return JSON.parse(str);
+    return JSON.parse(str)
   } catch {
-    return defaultValue;
+    return defaultValue
   }
 }
 
@@ -183,17 +180,43 @@ export function safeJsonParse(str, defaultValue = null) {
  * @returns {string} - Alias
  */
 export function generateAlias(str) {
-  if (!str) return '';
+  if (!str) return ''
 
   const translitMap = {
-    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
-    'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
-    'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
-    'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
-    'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
-    'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '',
-    'э': 'e', 'ю': 'yu', 'я': 'ya',
-  };
+    а: 'a',
+    б: 'b',
+    в: 'v',
+    г: 'g',
+    д: 'd',
+    е: 'e',
+    ё: 'yo',
+    ж: 'zh',
+    з: 'z',
+    и: 'i',
+    й: 'y',
+    к: 'k',
+    л: 'l',
+    м: 'm',
+    н: 'n',
+    о: 'o',
+    п: 'p',
+    р: 'r',
+    с: 's',
+    т: 't',
+    у: 'u',
+    ф: 'f',
+    х: 'h',
+    ц: 'ts',
+    ч: 'ch',
+    ш: 'sh',
+    щ: 'sch',
+    ъ: '',
+    ы: 'y',
+    ь: '',
+    э: 'e',
+    ю: 'yu',
+    я: 'ya',
+  }
 
   return str
     .toLowerCase()
@@ -201,7 +224,7 @@ export function generateAlias(str) {
     .map(char => translitMap[char] || char)
     .join('')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/^-+|-+$/g, '')
 }
 
 /**
@@ -212,8 +235,8 @@ export function generateAlias(str) {
  * @returns {string} - Truncated string
  */
 export function truncate(str, maxLength = 50) {
-  if (!str || str.length <= maxLength) return str;
-  return str.substring(0, maxLength) + '...';
+  if (!str || str.length <= maxLength) return str
+  return str.substring(0, maxLength) + '...'
 }
 
 /**
@@ -223,7 +246,7 @@ export function truncate(str, maxLength = 50) {
  * @returns {string} - Escaped string
  */
 export function escapeHtml(str) {
-  if (!str) return '';
+  if (!str) return ''
 
   const map = {
     '&': '&amp;',
@@ -231,9 +254,9 @@ export function escapeHtml(str) {
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#039;',
-  };
+  }
 
-  return String(str).replace(/[&<>"']/g, m => map[m]);
+  return String(str).replace(/[&<>"']/g, m => map[m])
 }
 
 /**
@@ -244,13 +267,13 @@ export function escapeHtml(str) {
  * @returns {Function} - Wrapped function
  */
 export function debounce(func, wait = 300) {
-  let timeout;
+  let timeout
   return function executedFunction(...args) {
     const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
 }

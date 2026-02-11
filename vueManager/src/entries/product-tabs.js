@@ -7,15 +7,17 @@
  */
 
 import '../scss/primevue.scss'
-import { createApp } from 'vue'
+import 'primeicons/primeicons.css'
+
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
-import 'primeicons/primeicons.css'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
-
 import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
+
 import ProductTabs from '../components/product/ProductTabs.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Plugin Registry for third-party tabs
@@ -121,7 +123,7 @@ window.MS3ProductTabsRegistry = window.MS3ProductTabsRegistry || new ProductTabs
  * @returns {Object} Vue app instance
  */
 function createVueApp(props) {
-  const app = createApp(ProductTabs, props);
+  const app = createApp(ProductTabs, props)
 
   const pinia = createPinia()
   app.use(pinia)
@@ -134,7 +136,7 @@ function createVueApp(props) {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
   app.use(ToastService)
 
@@ -151,13 +153,8 @@ function createVueApp(props) {
  * @param {Object} [config.config={}] - Additional configuration (show_gallery, etc.)
  * @returns {Object|null} - App instance and control methods, or null if failed
  */
-window.MS3_initProductTabs = function(config) {
-  const {
-    containerId = 'ms3-vue-product-tabs',
-    productId,
-    record,
-    config: appConfig = {},
-  } = config
+window.MS3_initProductTabs = function (config) {
+  const { containerId = 'ms3-vue-product-tabs', productId, record, config: appConfig = {} } = config
 
   if (!productId) {
     console.error('[ProductTabs] productId is required')
@@ -177,7 +174,7 @@ window.MS3_initProductTabs = function(config) {
 
   // Check if already mounted
   if (container.__vueApp__) {
-    console.info('[ProductTabs] Already mounted, returning existing instance')
+    // Already mounted, return existing instance
     return {
       app: container.__vueApp__,
       instance: container.__vueInstance__,
@@ -192,7 +189,7 @@ window.MS3_initProductTabs = function(config) {
 
   // Merge config from ms3.config if available
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : {}
   const mergedConfig = {
     show_gallery: true,
@@ -201,7 +198,7 @@ window.MS3_initProductTabs = function(config) {
     show_options: true,
     option_fields: [],
     ...ms3Config,
-    ...appConfig
+    ...appConfig,
   }
 
   const props = {
@@ -212,6 +209,7 @@ window.MS3_initProductTabs = function(config) {
 
   const app = createVueApp(props)
   const instance = app.mount(container)
+  injectFormStylesOverride()
 
   // Store references
   container.__vueApp__ = app
@@ -237,7 +235,7 @@ window.MS3_initProductTabs = function(config) {
  *
  * @param {string} [containerId='ms3-vue-product-tabs'] - Container element ID
  */
-window.MS3_destroyProductTabs = function(containerId = 'ms3-vue-product-tabs') {
+window.MS3_destroyProductTabs = function (containerId = 'ms3-vue-product-tabs') {
   const container = document.getElementById(containerId)
   if (container && container.__vueApp__) {
     container.__vueApp__.unmount()
@@ -284,13 +282,8 @@ function waitForElement(selector, callback, timeout = 10000) {
  * Listen for mount event from ExtJS
  * ExtJS dispatches this event when the product tab panel is rendered
  */
-document.addEventListener('ms3:mountProductTabs', (e) => {
-  const {
-    targetId = 'ms3-vue-product-tabs',
-    productId,
-    record,
-    config,
-  } = e.detail || {}
+document.addEventListener('ms3:mountProductTabs', e => {
+  const { targetId = 'ms3-vue-product-tabs', productId, record, config } = e.detail || {}
 
   if (!productId || !record) {
     console.error('[ProductTabs] Event missing required data:', e.detail)

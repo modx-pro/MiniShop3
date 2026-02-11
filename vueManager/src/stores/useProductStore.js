@@ -18,8 +18,8 @@
  * ```
  */
 
-import { defineStore } from 'pinia';
-import { useApi } from '@vuetools/useApi';
+import { useApi } from '@vuetools/useApi'
+import { defineStore } from 'pinia'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
@@ -34,19 +34,19 @@ export const useProductStore = defineStore('product', {
     /**
      * Get product by ID from state
      */
-    getProductById: (state) => (id) => {
-      return state.products.find(product => product.id === id);
+    getProductById: state => id => {
+      return state.products.find(product => product.id === id)
     },
 
     /**
      * Check if products are loaded
      */
-    hasProducts: (state) => state.products.length > 0,
+    hasProducts: state => state.products.length > 0,
 
     /**
      * Check if current product is loaded
      */
-    hasCurrentProduct: (state) => state.currentProduct !== null,
+    hasCurrentProduct: state => state.currentProduct !== null,
   },
 
   actions: {
@@ -57,30 +57,29 @@ export const useProductStore = defineStore('product', {
      * @returns {Promise<void>}
      */
     async fetchProducts(params = {}) {
-      this.loading = true;
-      this.error = null;
+      this.loading = true
+      this.error = null
 
       try {
-        const { get } = useApi();
-        const response = await get('/api/mgr/products', params);
+        const { get } = useApi()
+        const response = await get('/api/mgr/products', params)
 
         if (response.results) {
-          this.products = response.results;
-          this.total = response.total || response.results.length;
+          this.products = response.results
+          this.total = response.total || response.results.length
         } else if (Array.isArray(response)) {
-          this.products = response;
-          this.total = response.length;
+          this.products = response
+          this.total = response.length
         } else {
-          this.products = [];
-          this.total = 0;
+          this.products = []
+          this.total = 0
         }
-
       } catch (error) {
-        this.error = error;
-        console.error('[ProductStore] Failed to fetch products:', error);
-        throw error;
+        this.error = error
+        console.error('[ProductStore] Failed to fetch products:', error)
+        throw error
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
@@ -91,28 +90,27 @@ export const useProductStore = defineStore('product', {
      * @returns {Promise<void>}
      */
     async fetchProduct(id) {
-      this.loading = true;
-      this.error = null;
+      this.loading = true
+      this.error = null
 
       try {
-        const { get } = useApi();
-        const response = await get(`/api/mgr/products/${id}`);
+        const { get } = useApi()
+        const response = await get(`/api/mgr/products/${id}`)
 
-        this.currentProduct = response;
+        this.currentProduct = response
 
-        const index = this.products.findIndex(p => p.id === id);
+        const index = this.products.findIndex(p => p.id === id)
         if (index !== -1) {
-          this.products[index] = response;
+          this.products[index] = response
         } else {
-          this.products.push(response);
+          this.products.push(response)
         }
-
       } catch (error) {
-        this.error = error;
-        console.error('[ProductStore] Failed to fetch product:', error);
-        throw error;
+        this.error = error
+        console.error('[ProductStore] Failed to fetch product:', error)
+        throw error
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
@@ -123,26 +121,25 @@ export const useProductStore = defineStore('product', {
      * @returns {Promise<Object>} - Created product
      */
     async createProduct(data) {
-      this.loading = true;
-      this.error = null;
+      this.loading = true
+      this.error = null
 
       try {
-        const { post } = useApi();
-        const response = await post('/api/mgr/products', data);
+        const { post } = useApi()
+        const response = await post('/api/mgr/products', data)
 
         if (response.id) {
-          this.products.unshift(response);
-          this.total++;
+          this.products.unshift(response)
+          this.total++
         }
 
-        return response;
-
+        return response
       } catch (error) {
-        this.error = error;
-        console.error('[ProductStore] Failed to create product:', error);
-        throw error;
+        this.error = error
+        console.error('[ProductStore] Failed to create product:', error)
+        throw error
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
@@ -154,30 +151,29 @@ export const useProductStore = defineStore('product', {
      * @returns {Promise<Object>} - Updated product
      */
     async updateProduct(id, data) {
-      this.loading = true;
-      this.error = null;
+      this.loading = true
+      this.error = null
 
       try {
-        const { put } = useApi();
-        const response = await put(`/api/mgr/products/${id}`, data);
+        const { put } = useApi()
+        const response = await put(`/api/mgr/products/${id}`, data)
 
-        const index = this.products.findIndex(p => p.id === id);
+        const index = this.products.findIndex(p => p.id === id)
         if (index !== -1) {
-          this.products[index] = response;
+          this.products[index] = response
         }
 
         if (this.currentProduct?.id === id) {
-          this.currentProduct = response;
+          this.currentProduct = response
         }
 
-        return response;
-
+        return response
       } catch (error) {
-        this.error = error;
-        console.error('[ProductStore] Failed to update product:', error);
-        throw error;
+        this.error = error
+        console.error('[ProductStore] Failed to update product:', error)
+        throw error
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
@@ -188,29 +184,28 @@ export const useProductStore = defineStore('product', {
      * @returns {Promise<void>}
      */
     async deleteProduct(id) {
-      this.loading = true;
-      this.error = null;
+      this.loading = true
+      this.error = null
 
       try {
-        const { delete: del } = useApi();
-        await del(`/api/mgr/products/${id}`);
+        const { delete: del } = useApi()
+        await del(`/api/mgr/products/${id}`)
 
-        const index = this.products.findIndex(p => p.id === id);
+        const index = this.products.findIndex(p => p.id === id)
         if (index !== -1) {
-          this.products.splice(index, 1);
-          this.total--;
+          this.products.splice(index, 1)
+          this.total--
         }
 
         if (this.currentProduct?.id === id) {
-          this.currentProduct = null;
+          this.currentProduct = null
         }
-
       } catch (error) {
-        this.error = error;
-        console.error('[ProductStore] Failed to delete product:', error);
-        throw error;
+        this.error = error
+        console.error('[ProductStore] Failed to delete product:', error)
+        throw error
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
 
@@ -218,25 +213,25 @@ export const useProductStore = defineStore('product', {
      * Clear current product
      */
     clearCurrentProduct() {
-      this.currentProduct = null;
+      this.currentProduct = null
     },
 
     /**
      * Clear errors
      */
     clearError() {
-      this.error = null;
+      this.error = null
     },
 
     /**
      * Reset entire state
      */
     $reset() {
-      this.products = [];
-      this.total = 0;
-      this.currentProduct = null;
-      this.loading = false;
-      this.error = null;
+      this.products = []
+      this.total = 0
+      this.currentProduct = null
+      this.loading = false
+      this.error = null
     },
   },
-});
+})

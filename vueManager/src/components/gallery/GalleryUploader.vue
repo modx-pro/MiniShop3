@@ -5,11 +5,11 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount } from 'vue'
 import Uppy from '@uppy/core'
 import Dashboard from '@uppy/dashboard'
-import XHRUpload from '@uppy/xhr-upload'
 import ImageEditor from '@uppy/image-editor'
+import XHRUpload from '@uppy/xhr-upload'
+import { onBeforeUnmount, onMounted } from 'vue'
 
 const props = defineProps({
   productId: {
@@ -38,7 +38,14 @@ const props = defineProps({
   },
   allowedFileTypes: {
     type: Array,
-    default: () => ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic'],
+    default: () => [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/avif',
+      'image/heic',
+    ],
   },
 })
 
@@ -114,12 +121,12 @@ const initUppy = () => {
     fieldName: 'file',
     timeout: 60000, // 60 seconds
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
   })
 
   uppy.on('upload-success', (file, response) => {
-    console.log('File uploaded:', file.name, response)
+    // File uploaded successfully
     emit('upload-success', { file, response })
   })
 
@@ -128,8 +135,8 @@ const initUppy = () => {
     emit('upload-error', { file, error, response })
   })
 
-  uppy.on('complete', (result) => {
-    console.log('Upload complete:', result)
+  uppy.on('complete', result => {
+    // Upload complete
     emit('upload-complete', result)
 
     setTimeout(() => {
@@ -165,13 +172,13 @@ const formatBytes = (bytes, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-const updateSettings = (newSettings) => {
+const updateSettings = newSettings => {
   if (uppy) {
     uppy.setOptions(newSettings)
   }
 }
 
-const addFiles = (files) => {
+const addFiles = files => {
   if (uppy) {
     files.forEach(file => {
       uppy.addFile(file)
@@ -196,12 +203,12 @@ defineExpose({
 }
 
 .uppy-container {
-  border: 2px dashed #ddd;
-  border-radius: 8px;
+  border: var(--ms3-border-width-focus) dashed var(--ms3-border-upload);
+  border-radius: 0.5rem;
   overflow: hidden;
 }
 
 .uppy-container :deep(.uppy-Dashboard--isDraggingOver) {
-  border-color: #4CAF50;
+  border-color: var(--ms3-accent-green);
 }
 </style>

@@ -5,16 +5,17 @@
  */
 
 import '../scss/primevue.scss'
-import { createApp } from 'vue'
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import 'primeicons/primeicons.css'
 
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import PrimeVue from 'primevue/config'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
 
 import DeliveriesGrid from '../components/DeliveriesGrid.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Creates and configures Vue application
@@ -30,7 +31,7 @@ function createVueApp() {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
   app.use(ConfirmationService)
   app.use(ToastService)
@@ -56,6 +57,7 @@ export function init(selector = '#ms3-vue-deliveries') {
 
   const app = createVueApp()
   app.mount(selector)
+  injectFormStylesOverride()
   $el.dataset.vApp = 'true'
 
   return app

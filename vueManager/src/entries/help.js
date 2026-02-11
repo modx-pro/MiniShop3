@@ -3,12 +3,14 @@
  */
 
 import '../scss/primevue.scss'
-import { createApp } from 'vue'
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
 import 'primeicons/primeicons.css'
 
+import Aura from '@primeuix/themes/aura'
+import PrimeVue from 'primevue/config'
+import { createApp } from 'vue'
+
 import HelpPage from '../components/HelpPage.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Creates and configures Vue application
@@ -20,9 +22,9 @@ function createVueApp() {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: 'none'
-      }
-    }
+        darkModeSelector: 'none',
+      },
+    },
   })
 
   return app
@@ -45,6 +47,7 @@ export function init(selector = '#ms3-vue-help') {
 
   const app = createVueApp()
   app.mount(selector)
+  injectFormStylesOverride()
   $el.dataset.vApp = 'true'
 
   return app

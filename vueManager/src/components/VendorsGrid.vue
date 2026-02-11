@@ -1,26 +1,27 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
+import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import Paginator from 'primevue/paginator'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanel from 'primevue/tabpanel'
+import TabPanels from 'primevue/tabpanels'
+import Tabs from 'primevue/tabs'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
-import Paginator from 'primevue/paginator'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 
@@ -38,11 +39,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'vendor',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/vendors/bulk', { ids })
   },
   onSuccess: () => loadVendors(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const columns = ref([])
@@ -284,7 +285,10 @@ async function saveVendor() {
     if (isNewVendor.value) {
       response = await request.post('/api/mgr/vendors', editingVendor.value)
     } else {
-      response = await request.put(`/api/mgr/vendors/${editingVendor.value.id}`, editingVendor.value)
+      response = await request.put(
+        `/api/mgr/vendors/${editingVendor.value.id}`,
+        editingVendor.value
+      )
     }
 
     if (response) {
@@ -408,7 +412,15 @@ function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: _('delete'),
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'vendor_delete_confirm_message',
+      },
     ]
   }
 
@@ -436,22 +448,59 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px', isSystem: true },
-    { name: 'name', label: _('vendor_name'), visible: true, sortable: true, filterable: true, minWidth: '200px' },
-    { name: 'country', label: _('vendor_country'), visible: true, sortable: true, filterable: true, width: '150px' },
-    { name: 'email', label: _('vendor_email'), visible: true, sortable: true, filterable: true, width: '200px' },
-    { name: 'phone', label: _('vendor_phone'), visible: true, sortable: true, width: '150px' },
+    {
+      name: 'id',
+      label: 'ID',
+      visible: true,
+      sortable: true,
+      frozen: true,
+      width: '5rem',
+      isSystem: true,
+    },
+    {
+      name: 'name',
+      label: _('vendor_name'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      minWidth: '12.5rem',
+    },
+    {
+      name: 'country',
+      label: _('vendor_country'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '9.375rem',
+    },
+    {
+      name: 'email',
+      label: _('vendor_email'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '12.5rem',
+    },
+    { name: 'phone', label: _('vendor_phone'), visible: true, sortable: true, width: '9.375rem' },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '120px',
+      width: '7.5rem',
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'vendor_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'vendor_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -501,10 +550,7 @@ function isFieldRequired(field) {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadFieldsConfig(),
-    loadGridConfig(),
-  ])
+  await Promise.all([loadFieldsConfig(), loadGridConfig()])
   await loadVendors()
 })
 </script>
@@ -512,7 +558,7 @@ onMounted(async () => {
 <template>
   <div class="vendors-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -522,7 +568,9 @@ onMounted(async () => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -550,18 +598,11 @@ onMounted(async () => {
               </select>
             </template>
             <template v-else>
-              <InputText
-                v-model="filterValues[column.name]"
-                :placeholder="column.label"
-              />
+              <InputText v-model="filterValues[column.name]" :placeholder="column.label" />
             </template>
           </div>
           <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -605,11 +646,7 @@ onMounted(async () => {
                 <tr>
                   <th style="width: 3rem"></th>
                   <th style="width: 3rem">
-                    <Checkbox
-                      v-model="selectAll"
-                      :binary="true"
-                      @change="onSelectAllChange"
-                    />
+                    <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
                   </th>
                   <th
                     v-for="column in columns.filter(c => c.visible)"
@@ -626,9 +663,9 @@ onMounted(async () => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="id"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: vendor }">
                   <tr :class="{ 'p-row-odd': vendors.indexOf(vendor) % 2 === 1 }">
@@ -636,11 +673,7 @@ onMounted(async () => {
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
                     <td>
-                      <Checkbox
-                        v-model="selectedItems"
-                        :value="vendor"
-                        :binary="false"
-                      />
+                      <Checkbox v-model="selectedItems" :value="vendor" :binary="false" />
                     </td>
                     <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                       <!-- Actions column -->
@@ -669,7 +702,11 @@ onMounted(async () => {
                       <!-- Boolean column -->
                       <td v-else-if="column.type === 'boolean'" :style="{ width: column.width }">
                         <i
-                          :class="vendor[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"
+                          :class="
+                            vendor[column.name]
+                              ? 'pi pi-check text-success'
+                              : 'pi pi-times text-danger'
+                          "
                         ></i>
                       </td>
 
@@ -686,14 +723,14 @@ onMounted(async () => {
           <div v-if="loading" class="loading-overlay">
             <i class="pi pi-spinner pi-spin"></i>
           </div>
-        <!-- Pagination -->
-        <Paginator
-          :first="first"
-          :rows="rows"
-          :totalRecords="totalRecords"
-          :rowsPerPageOptions="[10, 20, 50, 100]"
-          @page="onPage"
-        />
+          <!-- Pagination -->
+          <Paginator
+            :first="first"
+            :rows="rows"
+            :total-records="totalRecords"
+            :rows-per-page-options="[10, 20, 50, 100]"
+            @page="onPage"
+          />
         </div>
       </template>
     </Card>
@@ -704,8 +741,8 @@ onMounted(async () => {
       :header="isNewVendor ? _('vendor_create') : _('vendor_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '700px' }"
-      appendTo="self"
+      :style="{ width: '43.75rem' }"
+      append-to="self"
     >
       <div v-if="editingVendor">
         <!-- Dynamic form based on sections config -->
@@ -849,7 +886,12 @@ onMounted(async () => {
 
                   <div class="form-row mb-3">
                     <label>{{ _('vendor_resource') }}</label>
-                    <InputText v-model="editingVendor.resource_id" class="w-full" type="number" :placeholder="_('vendor_resource_placeholder')" />
+                    <InputText
+                      v-model="editingVendor.resource_id"
+                      class="w-full"
+                      type="number"
+                      :placeholder="_('vendor_resource_placeholder')"
+                    />
                     <small class="form-hint">{{ _('vendor_resource_help') }}</small>
                   </div>
                 </div>
@@ -866,12 +908,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveVendor"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveVendor" />
       </template>
     </Dialog>
   </div>
@@ -879,7 +916,7 @@ onMounted(async () => {
 
 <style scoped>
 .vendors-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -900,7 +937,7 @@ onMounted(async () => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
@@ -910,11 +947,11 @@ onMounted(async () => {
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 .filters-row {
@@ -923,14 +960,14 @@ onMounted(async () => {
   gap: 1rem;
   margin-bottom: 1rem;
   padding: 1rem;
-  background: #f8fafc;
-  border-radius: 6px;
+  background: var(--ms3-bg-slate);
+  border-radius: 0.375rem;
 }
 
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .filter-item label {
@@ -938,7 +975,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -953,9 +990,9 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -963,7 +1000,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -980,24 +1017,24 @@ onMounted(async () => {
 }
 
 .text-success {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .text-danger {
-  color: #ef4444;
+  color: var(--ms3-text-danger);
 }
 
 /* Image column thumbnail */
 .column-thumbnail {
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 
 .no-image {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 /* Edit form styles */
@@ -1025,11 +1062,11 @@ onMounted(async () => {
 
 .form-row label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .form-row label .required {
-  color: #ef4444;
+  color: var(--ms3-text-danger);
   margin-left: 0.25rem;
 }
 
@@ -1039,7 +1076,7 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 37.5rem) {
   .form-row-group {
     grid-template-columns: 1fr;
   }
@@ -1055,7 +1092,7 @@ onMounted(async () => {
 
 /* Form hint */
 .form-hint {
-  color: #6b7280;
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
   margin-top: 0.25rem;
 }
@@ -1078,14 +1115,14 @@ onMounted(async () => {
 
 .drag-handle {
   cursor: grab;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 1.2rem;
   padding: 0.5rem;
   user-select: none;
 }
 
 .drag-handle:hover {
-  color: #495057;
+  color: var(--ms3-text-hint);
 }
 
 .drag-handle:active {
@@ -1094,13 +1131,13 @@ onMounted(async () => {
 
 :deep(.ghost-row) {
   opacity: 0.5;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.sortable-drag) {
   opacity: 0.9;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: var(--ms3-bg-surface);
+  box-shadow: var(--ms3-shadow-dropdown);
 }
 
 .loading-overlay {
@@ -1109,7 +1146,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255,255,255,0.7);
+  background: var(--ms3-bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1132,22 +1169,21 @@ onMounted(async () => {
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
-  background: #f8f9fa;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  background: var(--ms3-bg-muted);
   font-weight: 600;
 }
 
 .p-datatable-tbody td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
 }
 
 .p-datatable-tbody tr:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 
 .p-row-odd {
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
 }
-
 </style>

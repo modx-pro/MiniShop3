@@ -1,19 +1,20 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import DatePicker from 'primevue/datepicker'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
-import DatePicker from 'primevue/datepicker'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
 import { useToast } from 'primevue/usetoast'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+import { computed, onMounted, ref } from 'vue'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -29,11 +30,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'order',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/orders/bulk', { ids })
   },
   onSuccess: () => loadOrders(),
-  getItemName: (item) => `#${item.num || item.id}`,
+  getItemName: item => `#${item.num || item.id}`,
 })
 
 const columns = ref([])
@@ -189,7 +190,7 @@ function formatDate(dateString, column = {}) {
   const format = column.format || 'dd.MM.yyyy HH:mm'
 
   // Simple format replacement
-  const pad = (n) => n.toString().padStart(2, '0')
+  const pad = n => n.toString().padStart(2, '0')
 
   return format
     .replace('yyyy', date.getFullYear())
@@ -211,10 +212,11 @@ function formatPrice(value, column = {}) {
 
   // Get config from column or use defaults from ms3.config
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   const decimals = column.decimals ?? ms3Config?.price_decimals ?? 2
-  const thousandsSeparator = column.thousands_separator ?? ms3Config?.price_thousands_separator ?? ' '
+  const thousandsSeparator =
+    column.thousands_separator ?? ms3Config?.price_thousands_separator ?? ' '
   const decimalSeparator = column.decimal_separator ?? ms3Config?.price_decimal_separator ?? ','
   const currency = column.currency ?? ms3Config?.price_currency ?? ''
   const currencyPosition = column.currency_position ?? ms3Config?.price_currency_position ?? 'after'
@@ -226,9 +228,8 @@ function formatPrice(value, column = {}) {
 
   // Add currency
   if (currency) {
-    formatted = currencyPosition === 'before'
-      ? `${currency}${formatted}`
-      : `${formatted} ${currency}`
+    formatted =
+      currencyPosition === 'before' ? `${currency}${formatted}` : `${formatted} ${currency}`
   }
 
   return formatted
@@ -243,7 +244,7 @@ function formatWeight(value, column = {}) {
   if (value === null || value === undefined) return '-'
 
   // Get config from column or use defaults from ms3.config
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   const decimals = column.decimals ?? ms3Config?.weight_decimals ?? 2
   const unit = column.unit ?? ms3Config?.weight_unit ?? 'кг'
@@ -254,9 +255,7 @@ function formatWeight(value, column = {}) {
 
   // Add unit
   if (unit) {
-    formatted = unitPosition === 'before'
-      ? `${unit} ${formatted}`
-      : `${formatted} ${unit}`
+    formatted = unitPosition === 'before' ? `${unit} ${formatted}` : `${formatted} ${unit}`
   }
 
   return formatted
@@ -271,13 +270,13 @@ function getStatusSeverity(color) {
   const colorMap = {
     '#97b94d': 'success',
     '#81d742': 'success',
-    'green': 'success',
+    green: 'success',
     '#dd3d36': 'danger',
-    'red': 'danger',
+    red: 'danger',
     '#f0ad4e': 'warn',
-    'yellow': 'warn',
+    yellow: 'warn',
     '#5bc0de': 'info',
-    'blue': 'info',
+    blue: 'info',
   }
 
   return colorMap[color.toLowerCase()] || 'secondary'
@@ -378,25 +377,92 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px', isSystem: true },
-    { name: 'num', label: _('order_num'), visible: true, sortable: true, filterable: true, width: '100px' },
-    { name: 'customer', label: _('order_customer'), visible: true, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '150px' },
-    { name: 'status_name', label: _('order_status'), visible: true, sortable: true, filterable: true, type: 'badge', width: '120px' },
-    { name: 'cost', label: _('order_cost'), visible: true, sortable: true, type: 'price', width: '120px' },
-    { name: 'delivery_name', label: _('order_delivery'), visible: true, sortable: true, filterable: true, width: '150px' },
-    { name: 'payment_name', label: _('order_payment'), visible: true, sortable: true, filterable: true, width: '150px' },
-    { name: 'createdon', label: _('order_createdon'), visible: true, sortable: true, type: 'datetime', width: '150px' },
+    {
+      name: 'id',
+      label: 'ID',
+      visible: true,
+      sortable: true,
+      frozen: true,
+      width: '5rem',
+      isSystem: true,
+    },
+    {
+      name: 'num',
+      label: _('order_num'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '6.25rem',
+    },
+    {
+      name: 'customer',
+      label: _('order_customer'),
+      visible: true,
+      filterable: true,
+      type: 'template',
+      template: '{first_name} {last_name}',
+      minWidth: '9.375rem',
+    },
+    {
+      name: 'status_name',
+      label: _('order_status'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      type: 'badge',
+      width: '7.5rem',
+    },
+    {
+      name: 'cost',
+      label: _('order_cost'),
+      visible: true,
+      sortable: true,
+      type: 'price',
+      width: '7.5rem',
+    },
+    {
+      name: 'delivery_name',
+      label: _('order_delivery'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '9.375rem',
+    },
+    {
+      name: 'payment_name',
+      label: _('order_payment'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '9.375rem',
+    },
+    {
+      name: 'createdon',
+      label: _('order_createdon'),
+      visible: true,
+      sortable: true,
+      type: 'datetime',
+      width: '9.375rem',
+    },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '120px',
+      width: '7.5rem',
       type: 'actions',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'order_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -409,7 +475,15 @@ function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'order_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: 'delete',
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'order_delete_confirm_message',
+      },
     ]
   }
   return column.actions
@@ -436,10 +510,7 @@ function getCustomerLink(data) {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadGridConfig(),
-    loadFiltersConfig(),
-  ])
+  await Promise.all([loadGridConfig(), loadFiltersConfig()])
   await loadOrders()
 })
 </script>
@@ -447,7 +518,7 @@ onMounted(async () => {
 <template>
   <div class="orders-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -477,11 +548,19 @@ onMounted(async () => {
 
       <template #content>
         <!-- Filters form -->
-        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
+        <div
+          v-if="sortedFilters.length > 0"
+          class="filters-form mb-3 p-3 surface-ground"
+          style="border-radius: 0.375rem"
+        >
           <div class="filters-row">
             <template v-for="filter in sortedFilters" :key="filter.key">
               <!-- Text input filter -->
-              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '200px' }">
+              <div
+                v-if="filter.type === 'text'"
+                class="filter-item"
+                :style="{ width: filter.width || '12.5rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <InputText
                   :id="`filter-${filter.key}`"
@@ -493,45 +572,57 @@ onMounted(async () => {
               </div>
 
               <!-- Select filter -->
-              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '180px' }">
+              <div
+                v-else-if="filter.type === 'select'"
+                class="filter-item"
+                :style="{ width: filter.width || '11.25rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <Select
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
                   :options="filter.options || []"
-                  optionLabel="label"
-                  optionValue="value"
+                  option-label="label"
+                  option-value="value"
                   :placeholder="_(filter.placeholder || 'all')"
-                  :showClear="true"
+                  :show-clear="true"
                   class="w-full"
                   @change="applyFilters"
                 />
               </div>
 
               <!-- Date picker filter -->
-              <div v-else-if="filter.type === 'datepicker'" class="filter-item" :style="{ width: filter.width || '150px' }">
+              <div
+                v-else-if="filter.type === 'datepicker'"
+                class="filter-item"
+                :style="{ width: filter.width || '9.375rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <DatePicker
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
-                  dateFormat="dd.mm.yy"
-                  :showIcon="true"
-                  :showButtonBar="true"
+                  date-format="dd.mm.yy"
+                  :show-icon="true"
+                  :show-button-bar="true"
                   class="w-full"
                   @date-select="applyFilters"
                 />
               </div>
 
               <!-- Date range filter -->
-              <div v-else-if="filter.type === 'daterange'" class="filter-item" :style="{ width: filter.width || '280px' }">
+              <div
+                v-else-if="filter.type === 'daterange'"
+                class="filter-item"
+                :style="{ width: filter.width || '17.5rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <DatePicker
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
-                  selectionMode="range"
-                  dateFormat="dd.mm.yy"
-                  :showIcon="true"
-                  :showButtonBar="true"
+                  selection-mode="range"
+                  date-format="dd.mm.yy"
+                  :show-icon="true"
+                  :show-button-bar="true"
                   class="w-full"
                   @date-select="applyFilters"
                 />
@@ -591,15 +682,15 @@ onMounted(async () => {
           :loading="loading"
           :paginator="true"
           :rows="rows"
-          :totalRecords="totalRecords"
+          :total-records="totalRecords"
           :lazy="true"
+          striped-rows
+          responsive-layout="scroll"
+          data-key="id"
           @page="onPage"
-          stripedRows
-          responsiveLayout="scroll"
-          dataKey="id"
         >
           <!-- Selection column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" frozen />
+          <Column selection-mode="multiple" header-style="width: 3rem" frozen />
 
           <!-- Dynamic column rendering -->
           <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
@@ -638,7 +729,14 @@ onMounted(async () => {
                   v-if="column.type === 'badge'"
                   :value="getBadgeValue(data, column)"
                   :severity="getStatusSeverity(getBadgeColor(data, column))"
-                  :style="getBadgeColor(data, column) ? { backgroundColor: getBadgeColor(data, column), color: '#fff' } : {}"
+                  :style="
+                    getBadgeColor(data, column)
+                      ? {
+                          backgroundColor: getBadgeColor(data, column),
+                          color: 'var(--ms3-text-on-primary)',
+                        }
+                      : {}
+                  "
                 />
                 <!-- Datetime field -->
                 <span v-else-if="column.type === 'datetime'">
@@ -685,7 +783,7 @@ onMounted(async () => {
 
 <style scoped>
 .orders-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -706,7 +804,7 @@ onMounted(async () => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
@@ -716,15 +814,15 @@ onMounted(async () => {
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 .customer-link {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
   text-decoration: none;
 }
 
@@ -746,7 +844,7 @@ onMounted(async () => {
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .filter-item label {
@@ -754,7 +852,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -768,9 +866,9 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -778,7 +876,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {

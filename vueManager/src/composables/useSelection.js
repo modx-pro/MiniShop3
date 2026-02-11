@@ -1,7 +1,7 @@
-import { ref, computed } from 'vue'
+import { useLexicon } from '@vuetools/useLexicon'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { useLexicon } from '@vuetools/useLexicon'
+import { computed, ref } from 'vue'
 
 /**
  * Universal composable for managing row selection in DataTables
@@ -23,12 +23,10 @@ import { useLexicon } from '@vuetools/useLexicon'
  */
 export function useSelection(options = {}) {
   const {
-    entityName = 'item',
     deleteOne = null,
     deleteBulk = null,
     onSuccess = null,
-    getItemId = (item) => item.id,
-    getItemName = (item) => item.name || item.id,
+    getItemId = item => item.id,
   } = options
 
   const confirm = useConfirm()

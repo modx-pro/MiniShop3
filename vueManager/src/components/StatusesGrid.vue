@@ -1,20 +1,21 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
+import ColorPicker from 'primevue/colorpicker'
+import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import ColorPicker from 'primevue/colorpicker'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -31,11 +32,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'status',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/statuses/bulk', { ids })
   },
   onSuccess: () => loadStatuses(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const loading = ref(false)
@@ -49,11 +50,46 @@ const selectAll = ref(false)
 
 // Default color palette (similar to ExtJS)
 const colorPalette = [
-  '000000', '993300', '333300', '003300', '003366', '000080', '333399', '333333',
-  '800000', 'FF6600', '808000', '008000', '008080', '0000FF', '666699', '808080',
-  'FF0000', 'FF9900', '99CC00', '339966', '33CCCC', '3366FF', '800080', '969696',
-  'FF00FF', 'FFCC00', 'FFFF00', '00FF00', '00FFFF', '00CCFF', '993366', 'C0C0C0',
-  'FF99CC', 'FFCC99', 'FFFF99', 'CCFFCC', 'CCFFFF', '99CCFF', 'CC99FF', 'FFFFFF',
+  '000000',
+  '993300',
+  '333300',
+  '003300',
+  '003366',
+  '000080',
+  '333399',
+  '333333',
+  '800000',
+  'FF6600',
+  '808000',
+  '008000',
+  '008080',
+  '0000FF',
+  '666699',
+  '808080',
+  'FF0000',
+  'FF9900',
+  '99CC00',
+  '339966',
+  '33CCCC',
+  '3366FF',
+  '800080',
+  '969696',
+  'FF00FF',
+  'FFCC00',
+  'FFFF00',
+  '00FF00',
+  '00FFFF',
+  '00CCFF',
+  '993366',
+  'C0C0C0',
+  'FF99CC',
+  'FFCC99',
+  'FFFF99',
+  'CCFFCC',
+  'CCFFFF',
+  '99CCFF',
+  'CC99FF',
+  'FFFFFF',
 ]
 
 /**
@@ -131,7 +167,10 @@ async function saveStatus() {
     if (isNewStatus.value) {
       response = await request.post('/api/mgr/statuses', editingStatus.value)
     } else {
-      response = await request.put(`/api/mgr/statuses/${editingStatus.value.id}`, editingStatus.value)
+      response = await request.put(
+        `/api/mgr/statuses/${editingStatus.value.id}`,
+        editingStatus.value
+      )
     }
 
     if (response) {
@@ -243,7 +282,14 @@ function selectColor(color) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false },
+    {
+      name: 'delete',
+      handler: 'delete',
+      icon: 'pi-trash',
+      label: _('delete'),
+      severity: 'danger',
+      confirm: false,
+    },
   ]
 }
 
@@ -279,7 +325,7 @@ onMounted(() => {
 <template>
   <div class="statuses-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -289,7 +335,9 @@ onMounted(() => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -339,18 +387,14 @@ onMounted(() => {
                 <tr>
                   <th style="width: 3rem"></th>
                   <th style="width: 3rem">
-                    <Checkbox
-                      v-model="selectAll"
-                      :binary="true"
-                      @change="onSelectAllChange"
-                    />
+                    <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
                   </th>
-                  <th style="width: 80px">{{ _('ms3_id') }}</th>
+                  <th style="width: 5rem">{{ _('ms3_id') }}</th>
                   <th>{{ _('ms3_name') }}</th>
-                  <th style="width: 100px">{{ _('ms3_status_final') }}</th>
-                  <th style="width: 100px">{{ _('ms3_status_fixed') }}</th>
-                  <th style="width: 100px">{{ _('ms3_active') }}</th>
-                  <th style="width: 120px">{{ _('ms3_actions') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_status_final') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_status_fixed') }}</th>
+                  <th style="width: 6.25rem">{{ _('ms3_active') }}</th>
+                  <th style="width: 7.5rem">{{ _('ms3_actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -359,9 +403,9 @@ onMounted(() => {
                 class="p-datatable-tbody"
                 handle=".drag-handle"
                 item-key="id"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: status }">
                   <tr :class="{ 'p-row-odd': statuses.indexOf(status) % 2 === 1 }">
@@ -369,29 +413,40 @@ onMounted(() => {
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
                     <td>
-                      <Checkbox
-                        v-model="selectedItems"
-                        :value="status"
-                        :binary="false"
-                      />
+                      <Checkbox v-model="selectedItems" :value="status" :binary="false" />
                     </td>
                     <td>{{ status.id }}</td>
                     <td>
                       <span
                         class="status-badge"
-                        :style="{ backgroundColor: '#' + status.color, color: getContrastColor(status.color) }"
+                        :style="{
+                          backgroundColor: '#' + status.color,
+                          color: getContrastColor(status.color),
+                        }"
                       >
                         {{ getDisplayName(status.name) }}
                       </span>
                     </td>
                     <td>
-                      <i :class="status.final ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
+                      <i
+                        :class="
+                          status.final ? 'pi pi-check text-success' : 'pi pi-times text-muted'
+                        "
+                      ></i>
                     </td>
                     <td>
-                      <i :class="status.fixed ? 'pi pi-check text-success' : 'pi pi-times text-muted'"></i>
+                      <i
+                        :class="
+                          status.fixed ? 'pi pi-check text-success' : 'pi pi-times text-muted'
+                        "
+                      ></i>
                     </td>
                     <td>
-                      <i :class="status.active ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                      <i
+                        :class="
+                          status.active ? 'pi pi-check text-success' : 'pi pi-times text-danger'
+                        "
+                      ></i>
                     </td>
                     <td>
                       <ActionsColumn
@@ -421,8 +476,8 @@ onMounted(() => {
       :header="isNewStatus ? _('status_create') : _('status_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '500px' }"
-      appendTo="self"
+      :style="{ width: '31.25rem' }"
+      append-to="self"
     >
       <div v-if="editingStatus" class="ms3-status-form">
         <!-- Name -->
@@ -435,7 +490,10 @@ onMounted(() => {
         <div class="form-row mb-3">
           <label>{{ _('ms3_color') }}</label>
           <div class="color-picker-wrapper">
-            <div class="color-preview" :style="{ backgroundColor: '#' + editingStatus.color }"></div>
+            <div
+              class="color-preview"
+              :style="{ backgroundColor: '#' + editingStatus.color }"
+            ></div>
             <ColorPicker v-model="editingStatus.color" />
           </div>
           <!-- Color palette -->
@@ -460,23 +518,27 @@ onMounted(() => {
         <!-- Checkboxes -->
         <div class="checkboxes-row">
           <div class="checkbox-item">
-            <Checkbox v-model="editingStatus.active" :binary="true" inputId="status-active" />
+            <Checkbox v-model="editingStatus.active" :binary="true" input-id="status-active" />
             <label for="status-active">{{ _('ms3_active') }}</label>
           </div>
           <div class="checkbox-item">
-            <Checkbox v-model="editingStatus.final" :binary="true" inputId="status-final" />
+            <Checkbox v-model="editingStatus.final" :binary="true" input-id="status-final" />
             <label for="status-final">{{ _('ms3_status_final') }}</label>
           </div>
           <div class="checkbox-item">
-            <Checkbox v-model="editingStatus.fixed" :binary="true" inputId="status-fixed" />
+            <Checkbox v-model="editingStatus.fixed" :binary="true" input-id="status-fixed" />
             <label for="status-fixed">{{ _('ms3_status_fixed') }}</label>
           </div>
         </div>
 
         <!-- Help texts -->
         <div class="help-texts">
-          <small class="help-text"><strong>{{ _('ms3_status_final') }}:</strong> {{ _('ms3_status_final_help') }}</small>
-          <small class="help-text"><strong>{{ _('ms3_status_fixed') }}:</strong> {{ _('ms3_status_fixed_help') }}</small>
+          <small class="help-text"
+            ><strong>{{ _('ms3_status_final') }}:</strong> {{ _('ms3_status_final_help') }}</small
+          >
+          <small class="help-text"
+            ><strong>{{ _('ms3_status_fixed') }}:</strong> {{ _('ms3_status_fixed_help') }}</small
+          >
         </div>
       </div>
 
@@ -487,12 +549,7 @@ onMounted(() => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveStatus"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveStatus" />
       </template>
     </Dialog>
   </div>
@@ -502,10 +559,10 @@ onMounted(() => {
 /* Status badge styles - global because used in table */
 .status-badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--ms3-radius-sm);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 /* Dialog form styles - global because Dialog teleports to body */
@@ -523,35 +580,35 @@ onMounted(() => {
 
 .ms3-status-form .form-row label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .ms3-status-form .color-picker-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--ms3-spacing-3);
 }
 
 .ms3-status-form .color-preview {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  border: 2px solid #e2e8f0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--ms3-radius-sm);
+  border: var(--ms3-border-width-focus) solid var(--ms3-border-color);
 }
 
 .ms3-status-form .color-palette {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 0.25rem;
   margin-top: 0.5rem;
 }
 
 .ms3-status-form .color-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.125rem;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
   transition: transform 0.15s;
 }
 
@@ -560,8 +617,8 @@ onMounted(() => {
 }
 
 .ms3-status-form .color-swatch.selected {
-  border: 2px solid #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  border: var(--ms3-border-width-focus) solid var(--ms3-accent-primary);
+  box-shadow: 0 0 0 var(--ms3-border-width-focus) var(--ms3-accent-focus);
 }
 
 .ms3-status-form .checkboxes-row {
@@ -585,19 +642,19 @@ onMounted(() => {
 .ms3-status-form .help-texts {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: #f8fafc;
-  border-radius: 4px;
+  gap: var(--ms3-spacing-2);
+  padding: var(--ms3-spacing-3);
+  background: var(--ms3-bg-slate);
+  border-radius: var(--ms3-radius-sm);
 }
 
 .ms3-status-form .help-text {
-  color: #64748b;
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
 }
 
 .ms3-status-form .help-text strong {
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .ms3-status-form .w-full {
@@ -607,7 +664,7 @@ onMounted(() => {
 
 <style scoped>
 .statuses-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -628,21 +685,21 @@ onMounted(() => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--ms3-spacing-2);
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 /* Bulk actions toolbar */
@@ -650,18 +707,18 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  padding: var(--ms3-spacing-3) var(--ms3-spacing-4);
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: var(--ms3-radius-md);
 }
 
 .bulk-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--ms3-spacing-2);
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -678,15 +735,15 @@ onMounted(() => {
 }
 
 .text-success {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .text-danger {
-  color: #ef4444;
+  color: var(--ms3-text-danger);
 }
 
 .text-muted {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .mb-3 {
@@ -702,14 +759,14 @@ onMounted(() => {
 
 .drag-handle {
   cursor: grab;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 1.2rem;
-  padding: 0.5rem;
+  padding: var(--ms3-spacing-2);
   user-select: none;
 }
 
 .drag-handle:hover {
-  color: #495057;
+  color: var(--ms3-text-hint);
 }
 
 .drag-handle:active {
@@ -718,13 +775,13 @@ onMounted(() => {
 
 :deep(.ghost-row) {
   opacity: 0.5;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.sortable-drag) {
   opacity: 0.9;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: var(--ms3-bg-surface);
+  box-shadow: var(--ms3-shadow-dropdown);
 }
 
 .loading-overlay {
@@ -733,7 +790,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -756,22 +813,21 @@ onMounted(() => {
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
-  background: #f8f9fa;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  background: var(--ms3-bg-muted);
   font-weight: 600;
 }
 
 .p-datatable-tbody td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
 }
 
 .p-datatable-tbody tr:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 
 .p-row-odd {
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
 }
-
 </style>

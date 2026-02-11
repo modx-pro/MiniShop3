@@ -4,8 +4,8 @@
     <InputText
       v-if="fieldConfig.xtype === 'textfield'"
       :id="fieldConfig.id"
-      :name="fieldConfig.name"
       v-model="localValue"
+      :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
       :maxlength="fieldConfig.props?.maxlength"
@@ -16,15 +16,15 @@
     <InputNumber
       v-else-if="fieldConfig.xtype === 'numberfield'"
       :id="fieldConfig.id"
-      :name="fieldConfig.name"
       v-model="localValue"
+      :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
       :min="fieldConfig.props?.min"
       :max="fieldConfig.props?.max"
-      :minFractionDigits="fieldConfig.props?.minFractionDigits ?? 0"
-      :maxFractionDigits="fieldConfig.props?.maxFractionDigits ?? 2"
-      :useGrouping="false"
+      :min-fraction-digits="fieldConfig.props?.minFractionDigits ?? 0"
+      :max-fraction-digits="fieldConfig.props?.maxFractionDigits ?? 2"
+      :use-grouping="false"
       :locale="fieldConfig.props?.locale ?? 'en-US'"
       :mode="fieldConfig.props?.mode ?? 'decimal'"
       :currency="fieldConfig.props?.currency"
@@ -36,30 +36,26 @@
     <!-- Checkbox (ExtJS xcheckbox) -->
     <div v-else-if="fieldConfig.xtype === 'xcheckbox' || fieldConfig.xtype === 'checkbox'">
       <Checkbox
-        :inputId="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
         :disabled="disabled"
         :binary="true"
-        :trueValue="fieldConfig.inputValue ?? 1"
-        :falseValue="0"
+        :true-value="fieldConfig.inputValue ?? 1"
+        :false-value="0"
         @change="handleBlur"
       />
       <!-- Hidden field to pass correct value to form -->
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue" />
     </div>
 
     <!-- Switch / Toggle -->
-    <InputSwitch
+    <ToggleSwitch
       v-else-if="fieldConfig.xtype === 'switch'"
-      :id="fieldConfig.id"
       v-model="localValue"
+      :input-id="fieldConfig.id"
       :disabled="disabled"
-      :trueValue="fieldConfig.props?.trueValue ?? true"
-      :falseValue="fieldConfig.props?.falseValue ?? false"
+      :true-value="fieldConfig.props?.trueValue ?? true"
+      :false-value="fieldConfig.props?.falseValue ?? false"
       @change="handleBlur"
     />
 
@@ -67,38 +63,38 @@
     <Textarea
       v-else-if="fieldConfig.xtype === 'textarea'"
       :id="fieldConfig.id"
-      :name="fieldConfig.name"
       v-model="localValue"
+      :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
       :rows="fieldConfig.props?.rows ?? 3"
-      :autoResize="fieldConfig.props?.autoResize ?? false"
+      :auto-resize="fieldConfig.props?.autoResize ?? false"
       @blur="handleBlur"
     />
 
     <!-- Combobox / Select -->
-    <Dropdown
+    <Select
       v-else-if="fieldConfig.xtype === 'combobox'"
       :id="fieldConfig.id"
       v-model="localValue"
       :options="fieldConfig.props?.options ?? []"
-      :optionLabel="fieldConfig.props?.optionLabel ?? 'label'"
-      :optionValue="fieldConfig.props?.optionValue ?? 'value'"
+      :option-label="fieldConfig.props?.optionLabel ?? 'label'"
+      :option-value="fieldConfig.props?.optionValue ?? 'value'"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
-      :showClear="fieldConfig.props?.showClear ?? true"
+      :show-clear="fieldConfig.props?.showClear ?? true"
       @change="handleBlur"
     />
 
     <!-- Date picker -->
-    <Calendar
+    <DatePicker
       v-else-if="fieldConfig.xtype === 'datefield'"
-      :id="fieldConfig.id"
       v-model="localValue"
+      :input-id="fieldConfig.id"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
-      :showIcon="fieldConfig.props?.showIcon ?? true"
-      :dateFormat="fieldConfig.props?.dateFormat ?? 'dd.mm.yy'"
+      :show-icon="fieldConfig.props?.showIcon ?? true"
+      :date-format="fieldConfig.props?.dateFormat ?? 'dd.mm.yy'"
       @blur="handleBlur"
     />
 
@@ -115,44 +111,36 @@
     <!-- Vendor combo (ms3-combo-vendor) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-vendor'">
       <VendorCombo
-        :inputId="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Select vendor'"
         :disabled="disabled"
         @change="handleBlur"
       />
       <!-- Hidden field to send value to ExtJS form -->
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue || ''"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
     <!-- Autocomplete combo (ms3-combo-autocomplete) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-autocomplete'">
       <AutocompleteCombo
-        :inputId="fieldConfig.name"
-        :fieldName="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
+        :field-name="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Start typing...'"
         :disabled="disabled"
         @change="handleBlur"
       />
       <!-- Hidden field to send value to ExtJS form -->
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue || ''"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
     <!-- Options chips (ms3-combo-options) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-options'">
       <OptionsChips
-        :inputId="fieldConfig.name"
-        :optionKey="fieldConfig.name"
         v-model="localValue"
+        :input-id="fieldConfig.name"
+        :option-key="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Add options...'"
         :disabled="disabled"
         @change="handleBlur"
@@ -171,23 +159,19 @@
 
     <!-- Dropdown select (ms3-combo-select) -->
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-select'">
-      <Dropdown
-        :inputId="fieldConfig.name"
+      <Select
         v-model="localValue"
+        :input-id="fieldConfig.name"
         :options="selectOptions"
-        optionLabel="label"
-        optionValue="value"
+        option-label="label"
+        option-value="value"
         :placeholder="fieldConfig.placeholder || 'Select...'"
         :disabled="disabled"
-        :showClear="true"
+        :show-clear="true"
         class="w-full"
         @change="handleBlur"
       />
-      <input
-        type="hidden"
-        :name="fieldConfig.name"
-        :value="localValue || ''"
-      />
+      <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
     <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
@@ -200,36 +184,30 @@
 
     <!-- Unknown field type -->
     <div v-else class="unknown-field">
-      <Message severity="warn">
-        Unknown field type: {{ fieldConfig.xtype }}
-      </Message>
+      <Message severity="warn"> Unknown field type: {{ fieldConfig.xtype }} </Message>
     </div>
 
     <!-- Hidden field for complex types (combobox, datefield, colorpicker, chips, multiselect) -->
     <!-- These fields require JSON serialization to pass to ExtJS form -->
-    <input
-      v-if="isComplexField"
-      type="hidden"
-      :name="fieldConfig.name"
-      :value="serializedValue"
-    />
+    <input v-if="isComplexField" type="hidden" :name="fieldConfig.name" :value="serializedValue" />
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
 import Checkbox from 'primevue/checkbox'
-import InputSwitch from 'primevue/inputswitch'
-import Textarea from 'primevue/textarea'
-import Dropdown from 'primevue/dropdown'
-import Calendar from 'primevue/calendar'
 import ColorPicker from 'primevue/colorpicker'
+import DatePicker from 'primevue/datepicker'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
-import VendorCombo from './VendorCombo.vue'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import ToggleSwitch from 'primevue/toggleswitch'
+import { computed, ref, watch } from 'vue'
+
 import AutocompleteCombo from './AutocompleteCombo.vue'
 import OptionsChips from './OptionsChips.vue'
+import VendorCombo from './VendorCombo.vue'
 
 const props = defineProps({
   /**
@@ -296,12 +274,12 @@ const isExtJSComboField = computed(() => {
  * depending on how the config was merged in PHP
  */
 const selectOptions = computed(() => {
-  const optionsString = props.fieldConfig.config?.select_options
-    || props.fieldConfig.select_options
-    || ''
+  const optionsString =
+    props.fieldConfig.config?.select_options || props.fieldConfig.select_options || ''
   if (!optionsString) return []
 
-  return optionsString.split('\n')
+  return optionsString
+    .split('\n')
     .filter(line => line.trim())
     .map(line => {
       const parts = line.split('==')
@@ -315,7 +293,7 @@ const selectOptions = computed(() => {
 /**
  * Get ExtJS combo field description
  */
-const getExtJSComboLabel = (xtype) => {
+const getExtJSComboLabel = xtype => {
   const labels = {
     'ms3-combo-vendor': 'Vendor selection (ExtJS combo)',
     'ms3-combo-category': 'Category selection (ExtJS combo)',
@@ -353,12 +331,15 @@ const emit = defineEmits(['update:modelValue', 'blur'])
 const localValue = ref(props.modelValue)
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localValue.value = newValue
-})
+watch(
+  () => props.modelValue,
+  newValue => {
+    localValue.value = newValue
+  }
+)
 
 // Watch for local changes and emit to parent
-watch(localValue, (newValue) => {
+watch(localValue, newValue => {
   emit('update:modelValue', newValue)
 })
 

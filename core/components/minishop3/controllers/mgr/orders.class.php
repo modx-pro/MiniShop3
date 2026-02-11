@@ -40,6 +40,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $config = $this->ms3->config;
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/orders.min.css');
         // Vue module with VueTools dependency check
         $this->addVueModule($this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/orders.min.js');

@@ -1,22 +1,23 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import InputGroup from 'primevue/inputgroup'
 import InputGroupAddon from 'primevue/inputgroupaddon'
-import Checkbox from 'primevue/checkbox'
+import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -33,11 +34,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'customer',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/customers/bulk', { ids })
   },
   onSuccess: () => loadCustomers(),
-  getItemName: (item) => getCustomerDisplayName(item),
+  getItemName: item => getCustomerDisplayName(item),
 })
 
 const columns = ref([])
@@ -192,7 +193,10 @@ async function saveCustomer() {
  */
 function deleteCustomer(customer) {
   confirm.require({
-    message: _('customer_delete_confirm_message').replace('{name}', getCustomerDisplayName(customer)),
+    message: _('customer_delete_confirm_message').replace(
+      '{name}',
+      getCustomerDisplayName(customer)
+    ),
     header: _('customer_delete_confirm_title'),
     icon: 'pi pi-exclamation-triangle',
     acceptLabel: _('delete'),
@@ -315,7 +319,7 @@ async function saveAddress() {
     if (editingAddress.value.id) {
       await request.put(
         `/api/mgr/customers/${customerId}/addresses/${editingAddress.value.id}`,
-        editingAddress.value,
+        editingAddress.value
       )
       toast.add({
         severity: 'success',
@@ -324,10 +328,7 @@ async function saveAddress() {
         life: 3000,
       })
     } else {
-      await request.post(
-        `/api/mgr/customers/${customerId}/addresses`,
-        editingAddress.value,
-      )
+      await request.post(`/api/mgr/customers/${customerId}/addresses`, editingAddress.value)
       toast.add({
         severity: 'success',
         summary: _('success'),
@@ -501,24 +502,82 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px', isSystem: true },
-    { name: 'customer_name', label: _('customer_name'), visible: true, sortable: false, filterable: true, type: 'template', template: '{first_name} {last_name}', minWidth: '200px' },
-    { name: 'email', label: _('customer_email'), visible: true, sortable: true, filterable: true, type: 'model', minWidth: '200px' },
-    { name: 'phone', label: _('customer_phone'), visible: true, filterable: true, type: 'model', width: '150px', minWidth: '120px' },
-    { name: 'is_active', label: _('customer_active'), visible: true, sortable: true, filterable: true, type: 'boolean', width: '100px' },
-    { name: 'created_at', label: _('created_at'), visible: true, sortable: true, type: 'model', format: 'datetime', width: '180px', minWidth: '150px' },
+    {
+      name: 'id',
+      label: 'ID',
+      visible: true,
+      sortable: true,
+      frozen: true,
+      width: '5rem',
+      isSystem: true,
+    },
+    {
+      name: 'customer_name',
+      label: _('customer_name'),
+      visible: true,
+      sortable: false,
+      filterable: true,
+      type: 'template',
+      template: '{first_name} {last_name}',
+      minWidth: '12.5rem',
+    },
+    {
+      name: 'email',
+      label: _('customer_email'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      type: 'model',
+      minWidth: '12.5rem',
+    },
+    {
+      name: 'phone',
+      label: _('customer_phone'),
+      visible: true,
+      filterable: true,
+      type: 'model',
+      width: '9.375rem',
+      minWidth: '7.5rem',
+    },
+    {
+      name: 'is_active',
+      label: _('customer_active'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      type: 'boolean',
+      width: '6.25rem',
+    },
+    {
+      name: 'created_at',
+      label: _('created_at'),
+      visible: true,
+      sortable: true,
+      type: 'model',
+      format: 'datetime',
+      width: '11.25rem',
+      minWidth: '9.375rem',
+    },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '150px',
+      width: '9.375rem',
       type: 'actions',
       actions: [
         { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'customer_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -532,7 +591,15 @@ function getActionsConfig(column) {
     return [
       { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'customer_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: 'delete',
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'customer_delete_confirm_message',
+      },
     ]
   }
   return column.actions
@@ -563,7 +630,7 @@ onMounted(async () => {
 <template>
   <div class="customers-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -578,39 +645,39 @@ onMounted(async () => {
             :placeholder="_('search_placeholder')"
             @keyup.enter="onSearch"
           />
-          <Button
-            icon="pi pi-search"
-            :label="_('search')"
-            @click="onSearch"
-          />
+          <Button icon="pi pi-search" :label="_('search')" @click="onSearch" />
         </div>
 
         <!-- Filters form -->
-        <div v-if="filterableColumns.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
-          <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div
+          v-if="filterableColumns.length > 0"
+          class="filters-form mb-3 p-3 surface-ground"
+          style="border-radius: 0.375rem"
+        >
+          <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem">
             <div
               v-for="column in filterableColumns"
               :key="column.name"
-              style="flex: 1 1 300px; min-width: 250px;"
+              style="flex: 1 1 18.75rem; min-width: 15.625rem"
             >
               <div class="field">
-                <label :for="`filter-${column.name}`" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">{{ column.label }}</label>
+                <label
+                  :for="`filter-${column.name}`"
+                  style="display: block; margin-bottom: 0.5rem; font-weight: 500"
+                  >{{ column.label }}</label
+                >
                 <InputText
                   :id="`filter-${column.name}`"
                   v-model="filterValues[column.name]"
                   :placeholder="_('filter_by').replace('{field}', column.label)"
-                  style="width: 100%;"
+                  style="width: 100%"
                   @keyup.enter="applyFilters"
                 />
               </div>
             </div>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+          <div style="display: flex; gap: 0.5rem">
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -653,15 +720,15 @@ onMounted(async () => {
           :loading="loading"
           :paginator="true"
           :rows="rows"
-          :totalRecords="totalRecords"
+          :total-records="totalRecords"
           :lazy="true"
+          data-key="id"
+          striped-rows
+          responsive-layout="scroll"
           @page="onPage"
-          dataKey="id"
-          stripedRows
-          responsiveLayout="scroll"
         >
           <!-- Selection checkbox column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" frozen></Column>
+          <Column selection-mode="multiple" header-style="width: 3rem" frozen></Column>
 
           <!-- Dynamic column rendering -->
           <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
@@ -728,8 +795,8 @@ onMounted(async () => {
       :header="_('edit_customer')"
       :modal="true"
       :closable="true"
-      :style="{ width: '550px' }"
-      :appendTo="'self'"
+      :style="{ width: '34.375rem' }"
+      :append-to="'self'"
     >
       <div v-if="editingCustomer" class="customer-form">
         <!-- Row 1: First and Last Name -->
@@ -772,16 +839,16 @@ onMounted(async () => {
                 <Button
                   :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"
                   text
-                  @click="showPassword = !showPassword"
                   :title="showPassword ? _('hide_password') : _('show_password')"
+                  @click="showPassword = !showPassword"
                 />
               </InputGroupAddon>
               <InputGroupAddon>
                 <Button
                   icon="pi pi-refresh"
                   text
-                  @click="generatePassword"
                   :title="_('generate_password')"
+                  @click="generatePassword"
                 />
               </InputGroupAddon>
             </InputGroup>
@@ -792,21 +859,23 @@ onMounted(async () => {
         <!-- Row 4: Checkboxes -->
         <div class="checkboxes-row">
           <div class="checkbox-col">
-            <Checkbox inputId="is_active" v-model="editingCustomer.is_active" :binary="true" />
+            <Checkbox v-model="editingCustomer.is_active" input-id="is_active" :binary="true" />
             <label for="is_active">{{ _('customer_active') }}</label>
           </div>
           <div class="checkbox-col">
-            <Checkbox inputId="is_blocked" v-model="editingCustomer.is_blocked" :binary="true" />
+            <Checkbox v-model="editingCustomer.is_blocked" input-id="is_blocked" :binary="true" />
             <label for="is_blocked">{{ _('customer_blocked') }}</label>
           </div>
           <div class="checkbox-col">
             <Checkbox
-              inputId="email_verified"
+              input-id="email_verified"
               :model-value="Boolean(editingCustomer.email_verified_at)"
               :binary="true"
               disabled
             />
-            <label for="email_verified" class="text-muted">{{ _('customer_email_verified') }}</label>
+            <label for="email_verified" class="text-muted">{{
+              _('customer_email_verified')
+            }}</label>
           </div>
         </div>
       </div>
@@ -818,33 +887,31 @@ onMounted(async () => {
           class="p-button-text"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveCustomer"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveCustomer" />
       </template>
     </Dialog>
 
     <!-- Customer addresses modal window -->
     <Dialog
       v-model:visible="addressesDialogVisible"
-      :header="currentCustomerForAddresses ? _('customer_addresses_title').replace('{name}', getCustomerDisplayName(currentCustomerForAddresses)) : _('addresses')"
+      :header="
+        currentCustomerForAddresses
+          ? _('customer_addresses_title').replace(
+              '{name}',
+              getCustomerDisplayName(currentCustomerForAddresses)
+            )
+          : _('addresses')
+      "
       :modal="true"
       :closable="true"
-      :style="{ width: '800px' }"
-      :appendTo="'self'"
+      :style="{ width: '50rem' }"
+      :append-to="'self'"
     >
       <div class="addresses-content">
         <!-- Addresses list -->
         <div v-if="!addressFormVisible" class="addresses-list">
           <div class="addresses-header">
-            <Button
-              :label="_('add_address')"
-              icon="pi pi-plus"
-              @click="createAddress"
-            />
+            <Button :label="_('add_address')" icon="pi pi-plus" @click="createAddress" />
           </div>
 
           <div v-if="addressesLoading" class="addresses-loading">
@@ -866,7 +933,9 @@ onMounted(async () => {
               <div class="address-info">
                 <div class="address-name">
                   <strong>{{ address.name || _('address_unnamed') }}</strong>
-                  <span v-if="!address.active" class="address-badge inactive">{{ _('inactive') }}</span>
+                  <span v-if="!address.active" class="address-badge inactive">{{
+                    _('inactive')
+                  }}</span>
                 </div>
                 <div class="address-formatted">{{ address.formatted }}</div>
                 <div v-if="address.comment" class="address-comment">
@@ -878,15 +947,15 @@ onMounted(async () => {
                   icon="pi pi-pencil"
                   text
                   severity="secondary"
-                  @click="editAddress(address)"
                   :title="_('edit')"
+                  @click="editAddress(address)"
                 />
                 <Button
                   icon="pi pi-trash"
                   text
                   severity="danger"
-                  @click="deleteAddress(address)"
                   :title="_('delete')"
+                  @click="deleteAddress(address)"
                 />
               </div>
             </div>
@@ -898,7 +967,12 @@ onMounted(async () => {
           <div class="form-row">
             <div class="form-col-full">
               <label for="addr_name">{{ _('address_name') }}</label>
-              <InputText id="addr_name" v-model="editingAddress.name" class="w-full" :placeholder="_('address_name_placeholder')" />
+              <InputText
+                id="addr_name"
+                v-model="editingAddress.name"
+                class="w-full"
+                :placeholder="_('address_name_placeholder')"
+              />
             </div>
           </div>
 
@@ -957,13 +1031,18 @@ onMounted(async () => {
           <div class="form-row">
             <div class="form-col-full">
               <label for="addr_comment">{{ _('address_comment') }}</label>
-              <Textarea id="addr_comment" v-model="editingAddress.comment" class="w-full" rows="2" />
+              <Textarea
+                id="addr_comment"
+                v-model="editingAddress.comment"
+                class="w-full"
+                rows="2"
+              />
             </div>
           </div>
 
           <div class="form-row">
             <div class="checkbox-col">
-              <Checkbox inputId="addr_active" v-model="editingAddress.active" :binary="true" />
+              <Checkbox v-model="editingAddress.active" input-id="addr_active" :binary="true" />
               <label for="addr_active">{{ _('address_active') }}</label>
             </div>
           </div>
@@ -990,7 +1069,7 @@ onMounted(async () => {
 
 <style scoped>
 .customers-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 /* Bulk actions toolbar */
@@ -999,9 +1078,9 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -1009,7 +1088,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -1022,11 +1101,11 @@ onMounted(async () => {
 }
 
 .text-success {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .text-warning {
-  color: #f59e0b;
+  color: var(--ms3-text-warning-accent);
 }
 
 /* Customer edit form grid */
@@ -1061,7 +1140,7 @@ onMounted(async () => {
 .form-col-full small.text-muted {
   display: block;
   margin-top: 0.25rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
 }
 
@@ -1093,7 +1172,7 @@ onMounted(async () => {
 
 /* Styles for addresses dialog */
 .addresses-content {
-  min-height: 200px;
+  min-height: 12.5rem;
 }
 
 .addresses-header {
@@ -1104,7 +1183,7 @@ onMounted(async () => {
 .addresses-empty {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 .addresses-empty i {
@@ -1124,14 +1203,14 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-start;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: #fff;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
+  border-radius: 0.375rem;
+  background: var(--ms3-bg-surface);
 }
 
 .address-card.address-inactive {
   opacity: 0.6;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 .address-info {
@@ -1148,23 +1227,23 @@ onMounted(async () => {
 .address-badge {
   font-size: 0.7rem;
   padding: 0.15rem 0.4rem;
-  border-radius: 3px;
+  border-radius: 0.1875rem;
 }
 
 .address-badge.inactive {
-  background: #e2e8f0;
-  color: #64748b;
+  background: var(--ms3-border-color);
+  color: var(--ms3-text-muted);
 }
 
 .address-formatted {
-  color: #64748b;
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
 }
 
 .address-comment {
   margin-top: 0.5rem;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   font-style: italic;
 }
 
@@ -1216,6 +1295,6 @@ onMounted(async () => {
   gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 </style>

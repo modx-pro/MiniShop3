@@ -1,13 +1,13 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import Chip from 'primevue/chip'
-import Button from 'primevue/button'
-import Select from 'primevue/select'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Dialog from 'primevue/dialog'
-import ToggleSwitch from 'primevue/toggleswitch'
 import { useLexicon } from '@vuetools/useLexicon'
+import Button from 'primevue/button'
+import Chip from 'primevue/chip'
+import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import ToggleSwitch from 'primevue/toggleswitch'
+import { computed, ref, watch } from 'vue'
 
 const { _ } = useLexicon()
 
@@ -108,21 +108,6 @@ const availableFields = computed(() => {
   }))
 })
 
-// Build grouped fields for Select dropdown
-const groupedFields = computed(() => {
-  const groups = {}
-  availableFields.value.forEach(field => {
-    if (!groups[field.group]) {
-      groups[field.group] = {
-        label: field.groupLabel,
-        items: [],
-      }
-    }
-    groups[field.group].items.push(field)
-  })
-  return Object.values(groups)
-})
-
 // Build available rules with localized labels
 const availableRules = computed(() => {
   return ruleDefinitions.map(rule => ({
@@ -160,10 +145,13 @@ function parseValue(value) {
 
     // Convert { fieldName: 'rule1|rule2:param' } to array format
     return Object.entries(parsed).map(([fieldName, ruleString]) => {
-      const rules = ruleString.split('|').map(rule => {
-        const [name, param] = rule.split(':')
-        return { name: name.trim(), param: param || '' }
-      }).filter(r => r.name)
+      const rules = ruleString
+        .split('|')
+        .map(rule => {
+          const [name, param] = rule.split(':')
+          return { name: name.trim(), param: param || '' }
+        })
+        .filter(r => r.name)
 
       return { field: fieldName, rules }
     })
@@ -180,9 +168,11 @@ function toJsonString(fieldRulesArray) {
   const result = {}
   fieldRulesArray.forEach(item => {
     if (item.rules && item.rules.length > 0) {
-      result[item.field] = item.rules.map(r => {
-        return r.param ? `${r.name}:${r.param}` : r.name
-      }).join('|')
+      result[item.field] = item.rules
+        .map(r => {
+          return r.param ? `${r.name}:${r.param}` : r.name
+        })
+        .join('|')
     }
   })
 
@@ -190,20 +180,24 @@ function toJsonString(fieldRulesArray) {
 }
 
 // Watch for external changes
-watch(() => props.modelValue, (newVal) => {
-  fieldRules.value = parseValue(newVal)
-  // Update JSON text for JSON mode
-  if (newVal) {
-    try {
-      const parsed = typeof newVal === 'string' ? JSON.parse(newVal) : newVal
-      jsonText.value = JSON.stringify(parsed, null, 2)
-    } catch {
-      jsonText.value = typeof newVal === 'string' ? newVal : ''
+watch(
+  () => props.modelValue,
+  newVal => {
+    fieldRules.value = parseValue(newVal)
+    // Update JSON text for JSON mode
+    if (newVal) {
+      try {
+        const parsed = typeof newVal === 'string' ? JSON.parse(newVal) : newVal
+        jsonText.value = JSON.stringify(parsed, null, 2)
+      } catch {
+        jsonText.value = typeof newVal === 'string' ? newVal : ''
+      }
+    } else {
+      jsonText.value = ''
     }
-  } else {
-    jsonText.value = ''
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // Emit changes
 function emitChange() {
@@ -448,7 +442,10 @@ const editingFieldName = computed(() => {
     <!-- Mode toggle -->
     <div class="mode-toggle">
       <span class="mode-label">{{ _('validation_mode_visual') }}</span>
-      <ToggleSwitch v-model="isJsonMode" @change="isJsonMode ? switchToJsonMode() : switchToVisualMode()" />
+      <ToggleSwitch
+        v-model="isJsonMode"
+        @change="isJsonMode ? switchToJsonMode() : switchToVisualMode()"
+      />
       <span class="mode-label">{{ _('validation_mode_json') }}</span>
     </div>
 
@@ -466,8 +463,8 @@ const editingFieldName = computed(() => {
         <Button
           :label="_('apply')"
           size="small"
-          @click="applyJsonChanges"
           :disabled="!!jsonError"
+          @click="applyJsonChanges"
         />
       </div>
     </div>
@@ -478,13 +475,13 @@ const editingFieldName = computed(() => {
         <div class="field-header">
           <span class="field-name">{{ getFieldLabel(fr.field) }}</span>
           <Button
+            v-tooltip="_('remove')"
             icon="pi pi-times"
             severity="danger"
             text
             rounded
             size="small"
             @click="removeField(fieldIndex)"
-            v-tooltip="_('remove')"
           />
         </div>
         <div class="rules-chips">
@@ -493,17 +490,17 @@ const editingFieldName = computed(() => {
             :key="`${fr.field}-${rule.name}-${ruleIndex}`"
             :label="getRuleLabel(rule)"
             removable
-            @remove="() => removeRule(fieldIndex, ruleIndex)"
             class="rule-chip"
+            @remove="() => removeRule(fieldIndex, ruleIndex)"
           />
           <Button
+            v-tooltip="_('ms3_add_rule')"
             icon="pi pi-plus"
             size="small"
             severity="secondary"
             text
             rounded
             @click="openAddRuleDialog(fieldIndex)"
-            v-tooltip="_('ms3_add_rule')"
           />
         </div>
       </div>
@@ -515,9 +512,9 @@ const editingFieldName = computed(() => {
         size="small"
         severity="secondary"
         outlined
-        @click="openAddFieldDialog"
         class="add-field-btn"
         :disabled="availableFieldsForAdd.length === 0"
+        @click="openAddFieldDialog"
       />
     </div>
 
@@ -526,8 +523,8 @@ const editingFieldName = computed(() => {
       v-model:visible="showAddFieldDialog"
       :header="_('ms3_add_validation_field')"
       :modal="true"
-      :style="{ width: '450px' }"
-      appendTo="self"
+      :style="{ width: '28.125rem' }"
+      append-to="self"
     >
       <div class="add-field-form">
         <div class="form-field">
@@ -535,10 +532,10 @@ const editingFieldName = computed(() => {
           <Select
             v-model="selectedField"
             :options="availableFieldsForAdd"
-            optionLabel="label"
-            optionValue="name"
-            optionGroupLabel="label"
-            optionGroupChildren="items"
+            option-label="label"
+            option-value="name"
+            option-group-label="label"
+            option-group-children="items"
             :placeholder="_('ms3_select_field_placeholder')"
             class="w-full"
             filter
@@ -547,16 +544,8 @@ const editingFieldName = computed(() => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          severity="secondary"
-          @click="showAddFieldDialog = false"
-        />
-        <Button
-          :label="_('add')"
-          :disabled="!selectedField"
-          @click="addField"
-        />
+        <Button :label="_('cancel')" severity="secondary" @click="showAddFieldDialog = false" />
+        <Button :label="_('add')" :disabled="!selectedField" @click="addField" />
       </template>
     </Dialog>
 
@@ -565,8 +554,8 @@ const editingFieldName = computed(() => {
       v-model:visible="showAddRuleDialog"
       :header="_('ms3_add_rule_to_field') + ': ' + editingFieldName"
       :modal="true"
-      :style="{ width: '450px' }"
-      appendTo="self"
+      :style="{ width: '28.125rem' }"
+      append-to="self"
       @hide="closeRuleDialog"
     >
       <div class="add-rule-form">
@@ -575,8 +564,8 @@ const editingFieldName = computed(() => {
           <Select
             v-model="selectedRule"
             :options="availableRulesForAdd"
-            optionLabel="label"
-            optionValue="name"
+            option-label="label"
+            option-value="name"
             :placeholder="_('ms3_select_rule_placeholder')"
             class="w-full"
             filter
@@ -603,11 +592,7 @@ const editingFieldName = computed(() => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          severity="secondary"
-          @click="closeRuleDialog"
-        />
+        <Button :label="_('cancel')" severity="secondary" @click="closeRuleDialog" />
         <Button
           :label="_('add')"
           :disabled="!selectedRule || (selectedRuleDef?.hasParam && !ruleParam.trim())"
@@ -632,7 +617,7 @@ const editingFieldName = computed(() => {
 
 .mode-label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
   line-height: 1;
 }
 
@@ -648,7 +633,7 @@ const editingFieldName = computed(() => {
 }
 
 .json-error {
-  color: #dc2626;
+  color: var(--ms3-text-danger-alt);
   font-size: 0.8rem;
 }
 
@@ -664,9 +649,9 @@ const editingFieldName = computed(() => {
 }
 
 .field-rules-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: var(--ms3-bg-slate);
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
+  border-radius: 0.375rem;
   padding: 0.75rem;
 }
 
@@ -679,7 +664,7 @@ const editingFieldName = computed(() => {
 
 .field-name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .rules-chips {
@@ -690,12 +675,12 @@ const editingFieldName = computed(() => {
 }
 
 .rule-chip {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--ms3-bg-info);
+  color: var(--ms3-text-info-dark);
 }
 
 .rule-chip :deep(.p-chip-remove-icon) {
-  color: #0369a1;
+  color: var(--ms3-text-info-dark);
 }
 
 .add-field-btn {
@@ -717,11 +702,11 @@ const editingFieldName = computed(() => {
 
 .form-field label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .param-hint {
-  color: #6b7280;
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
 }
 
@@ -734,12 +719,12 @@ const editingFieldName = computed(() => {
 
 :deep(.rule-option-name) {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 :deep(.rule-option-desc) {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .w-full {
@@ -758,11 +743,11 @@ const editingFieldName = computed(() => {
 
 .p-select-overlay .rule-option-name {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--ms3-text-darkest);
 }
 
 .p-select-overlay .rule-option-desc {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 </style>

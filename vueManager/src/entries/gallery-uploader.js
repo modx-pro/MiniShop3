@@ -1,5 +1,7 @@
 import { createApp } from 'vue'
+
 import GalleryUploader from '../components/gallery/GalleryUploader.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Gallery Uploader Entry Point
@@ -8,7 +10,7 @@ import GalleryUploader from '../components/gallery/GalleryUploader.vue'
  * Integrates into ExtJS panel via DOM mounting
  */
 
-window.MS3_initGalleryUploader = function(config) {
+window.MS3_initGalleryUploader = function (config) {
   const {
     containerId = 'ms3-gallery-uploader',
     productId,
@@ -17,7 +19,14 @@ window.MS3_initGalleryUploader = function(config) {
     maxFileSize = 10485760,
     maxWidth = 1920,
     maxHeight = 1080,
-    allowedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic'],
+    allowedFileTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/avif',
+      'image/heic',
+    ],
     onUploadSuccess,
     onUploadError,
     onUploadComplete,
@@ -43,6 +52,7 @@ window.MS3_initGalleryUploader = function(config) {
   })
 
   const instance = app.mount(container)
+  injectFormStylesOverride()
 
   container.__vueApp__ = app
   container.__vueInstance__ = instance
@@ -58,7 +68,7 @@ window.MS3_initGalleryUploader = function(config) {
   }
 }
 
-window.MS3_destroyGalleryUploader = function(containerId = 'ms3-gallery-uploader') {
+window.MS3_destroyGalleryUploader = function (containerId = 'ms3-gallery-uploader') {
   const container = document.getElementById(containerId)
   if (container && container.__vueApp__) {
     container.__vueApp__.unmount()
