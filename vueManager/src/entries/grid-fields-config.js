@@ -5,23 +5,24 @@
  */
 
 import '../scss/primevue.scss'
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import 'primeicons/primeicons.css'
 
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
 
 import GridFieldsConfig from '../components/GridFieldsConfig.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Creates and configures Vue application
  */
 function createVueApp() {
-  const app = createApp(GridFieldsConfig);
+  const app = createApp(GridFieldsConfig)
 
   const pinia = createPinia()
   app.use(pinia)
@@ -34,7 +35,7 @@ function createVueApp() {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
   app.use(ConfirmationService)
   app.use(ToastService)
@@ -59,6 +60,7 @@ export function init(selector = '#ms3-grid-fields-config-vue-wrapper') {
 
   const app = createVueApp()
   app.mount(selector)
+  injectFormStylesOverride()
   $el.dataset.vApp = 'true'
 
   return app
@@ -92,7 +94,7 @@ function waitForElement(selector, callback) {
  * Listen for custom event from ExtJS panel
  * Mount application when tab is rendered
  */
-document.addEventListener('ms3:mountVueGridFieldsConfig', (event) => {
+document.addEventListener('ms3:mountVueGridFieldsConfig', event => {
   const targetId = event.detail?.targetId || '#ms3-grid-fields-config-vue-wrapper'
   init(targetId)
 })
@@ -102,8 +104,12 @@ document.addEventListener('ms3:mountVueGridFieldsConfig', (event) => {
  */
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    waitForElement('#ms3-grid-fields-config-vue-wrapper', () => init('#ms3-grid-fields-config-vue-wrapper'))
+    waitForElement('#ms3-grid-fields-config-vue-wrapper', () =>
+      init('#ms3-grid-fields-config-vue-wrapper')
+    )
   })
 } else {
-  waitForElement('#ms3-grid-fields-config-vue-wrapper', () => init('#ms3-grid-fields-config-vue-wrapper'))
+  waitForElement('#ms3-grid-fields-config-vue-wrapper', () =>
+    init('#ms3-grid-fields-config-vue-wrapper')
+  )
 }

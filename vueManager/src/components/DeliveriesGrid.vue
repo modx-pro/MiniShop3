@@ -1,31 +1,32 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import ToggleSwitch from 'primevue/toggleswitch'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import draggable from 'vuedraggable'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
+import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
+import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanel from 'primevue/tabpanel'
+import TabPanels from 'primevue/tabpanels'
+import Tabs from 'primevue/tabs'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
+import ToggleSwitch from 'primevue/toggleswitch'
+import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+import draggable from 'vuedraggable'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
-import ValidationRulesEditor from './ValidationRulesEditor.vue'
 import FileBrowser from './FileBrowser.vue'
+import ValidationRulesEditor from './ValidationRulesEditor.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -41,11 +42,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'delivery',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/deliveries/bulk', { ids })
   },
   onSuccess: () => loadDeliveries(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const columns = ref([])
@@ -287,7 +288,9 @@ async function togglePayment(paymentId, newValue) {
 
   try {
     if (newValue) {
-      await request.post(`/api/mgr/deliveries/${editingDelivery.value.id}/payments`, { payment_id: paymentId })
+      await request.post(`/api/mgr/deliveries/${editingDelivery.value.id}/payments`, {
+        payment_id: paymentId,
+      })
     } else {
       await request.delete(`/api/mgr/deliveries/${editingDelivery.value.id}/payments/${paymentId}`)
     }
@@ -329,7 +332,10 @@ async function saveDelivery() {
     if (isNewDelivery.value) {
       response = await request.post('/api/mgr/deliveries', editingDelivery.value)
     } else {
-      response = await request.put(`/api/mgr/deliveries/${editingDelivery.value.id}`, editingDelivery.value)
+      response = await request.put(
+        `/api/mgr/deliveries/${editingDelivery.value.id}`,
+        editingDelivery.value
+      )
     }
 
     if (response) {
@@ -429,16 +435,62 @@ async function loadGridConfig() {
     } else {
       // Fallback default columns
       columns.value = [
-        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px' },
-        { name: 'name', label: _('delivery_name'), visible: true, sortable: true, filterable: true },
-        { name: 'price', label: _('delivery_price'), visible: true, sortable: true, width: '120px' },
-        { name: 'free_delivery_amount', label: _('delivery_free_amount'), visible: true, sortable: true, width: '150px' },
-        { name: 'active', label: _('delivery_active'), visible: true, sortable: true, type: 'boolean', width: '100px' },
-        { name: 'position', label: _('delivery_position'), visible: true, sortable: true, width: '100px' },
-        { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '120px', actions: [
-          { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false },
-        ]},
+        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
+        {
+          name: 'name',
+          label: _('delivery_name'),
+          visible: true,
+          sortable: true,
+          filterable: true,
+        },
+        {
+          name: 'price',
+          label: _('delivery_price'),
+          visible: true,
+          sortable: true,
+          width: '7.5rem',
+        },
+        {
+          name: 'free_delivery_amount',
+          label: _('delivery_free_amount'),
+          visible: true,
+          sortable: true,
+          width: '9.375rem',
+        },
+        {
+          name: 'active',
+          label: _('delivery_active'),
+          visible: true,
+          sortable: true,
+          type: 'boolean',
+          width: '6.25rem',
+        },
+        {
+          name: 'position',
+          label: _('delivery_position'),
+          visible: true,
+          sortable: true,
+          width: '6.25rem',
+        },
+        {
+          name: 'actions',
+          label: _('actions'),
+          visible: true,
+          frozen: true,
+          type: 'actions',
+          width: '7.5rem',
+          actions: [
+            { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+            {
+              name: 'delete',
+              handler: 'delete',
+              icon: 'pi-trash',
+              label: 'delete',
+              severity: 'danger',
+              confirm: false,
+            },
+          ],
+        },
       ]
     }
   } catch (error) {
@@ -485,7 +537,7 @@ onMounted(async () => {
 <template>
   <div class="deliveries-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -495,7 +547,9 @@ onMounted(async () => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -523,18 +577,11 @@ onMounted(async () => {
               </select>
             </template>
             <template v-else>
-              <InputText
-                v-model="filterValues[column.name]"
-                :placeholder="column.label"
-              />
+              <InputText v-model="filterValues[column.name]" :placeholder="column.label" />
             </template>
           </div>
           <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -577,14 +624,14 @@ onMounted(async () => {
         <table v-else class="deliveries-table">
           <thead>
             <tr>
-              <th style="width: 40px">
+              <th style="width: 2.5rem">
                 <Checkbox
-                  :modelValue="selectAll"
+                  :model-value="selectAll"
                   :binary="true"
-                  @update:modelValue="onSelectAllChange"
+                  @update:model-value="onSelectAllChange"
                 />
               </th>
-              <th style="width: 40px"></th>
+              <th style="width: 2.5rem"></th>
               <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                 <th :style="{ width: column.width, minWidth: column.minWidth }">
                   {{ column.label }}
@@ -603,15 +650,17 @@ onMounted(async () => {
               <tr>
                 <td>
                   <Checkbox
-                    :modelValue="selectedItems.some(item => item.id === delivery.id)"
+                    :model-value="selectedItems.some(item => item.id === delivery.id)"
                     :binary="true"
-                    @update:modelValue="(val) => {
-                      if (val) {
-                        selectedItems.push(delivery)
-                      } else {
-                        selectedItems = selectedItems.filter(item => item.id !== delivery.id)
+                    @update:model-value="
+                      val => {
+                        if (val) {
+                          selectedItems.push(delivery)
+                        } else {
+                          selectedItems = selectedItems.filter(item => item.id !== delivery.id)
+                        }
                       }
-                    }"
+                    "
                   />
                 </td>
                 <td>
@@ -646,7 +695,13 @@ onMounted(async () => {
                   </td>
                   <!-- Boolean column -->
                   <td v-else-if="column.type === 'boolean'">
-                    <i :class="delivery[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                    <i
+                      :class="
+                        delivery[column.name]
+                          ? 'pi pi-check text-success'
+                          : 'pi pi-times text-danger'
+                      "
+                    ></i>
                   </td>
                   <!-- Regular column -->
                   <td v-else>
@@ -666,8 +721,8 @@ onMounted(async () => {
       :header="isNewDelivery ? _('delivery_create') : _('delivery_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '700px' }"
-      appendTo="self"
+      :style="{ width: '43.75rem' }"
+      append-to="self"
     >
       <div v-if="editingDelivery">
         <Tabs v-model:value="activeTab">
@@ -703,7 +758,11 @@ onMounted(async () => {
 
                 <div class="form-row">
                   <div class="checkbox-field">
-                    <Checkbox v-model="editingDelivery.active" :binary="true" inputId="delivery-active" />
+                    <Checkbox
+                      v-model="editingDelivery.active"
+                      :binary="true"
+                      input-id="delivery-active"
+                    />
                     <label for="delivery-active">{{ _('delivery_active') }}</label>
                   </div>
                 </div>
@@ -715,7 +774,11 @@ onMounted(async () => {
               <div class="edit-form">
                 <div class="form-row mb-3">
                   <label>{{ _('delivery_class') }}</label>
-                  <InputText v-model="editingDelivery.class" class="w-full" :placeholder="_('delivery_class_placeholder')" />
+                  <InputText
+                    v-model="editingDelivery.class"
+                    class="w-full"
+                    :placeholder="_('delivery_class_placeholder')"
+                  />
                 </div>
 
                 <div class="form-row mb-3">
@@ -732,7 +795,11 @@ onMounted(async () => {
 
                   <div class="form-row">
                     <label>{{ _('delivery_weight_price') }}</label>
-                    <InputNumber v-model="editingDelivery.weight_price" class="w-full" :minFractionDigits="2" />
+                    <InputNumber
+                      v-model="editingDelivery.weight_price"
+                      class="w-full"
+                      :min-fraction-digits="2"
+                    />
                     <small class="form-hint">{{ _('ms3_weight_price_help') }}</small>
                   </div>
                 </div>
@@ -740,13 +807,21 @@ onMounted(async () => {
                 <div class="form-row-group mb-3">
                   <div class="form-row">
                     <label>{{ _('delivery_free_amount') }}</label>
-                    <InputNumber v-model="editingDelivery.free_delivery_amount" class="w-full" :minFractionDigits="2" />
+                    <InputNumber
+                      v-model="editingDelivery.free_delivery_amount"
+                      class="w-full"
+                      :min-fraction-digits="2"
+                    />
                     <small class="form-hint">{{ _('ms3_free_delivery_amount_help') }}</small>
                   </div>
 
                   <div class="form-row">
                     <label>{{ _('ms3_distance_price') }}</label>
-                    <InputNumber v-model="editingDelivery.distance_price" class="w-full" :minFractionDigits="2" />
+                    <InputNumber
+                      v-model="editingDelivery.distance_price"
+                      class="w-full"
+                      :min-fraction-digits="2"
+                    />
                     <small class="form-hint">{{ _('ms3_distance_price_help') }}</small>
                   </div>
                 </div>
@@ -766,29 +841,34 @@ onMounted(async () => {
                 <DataTable
                   v-else
                   :value="payments"
-                  stripedRows
-                  responsiveLayout="scroll"
+                  striped-rows
+                  responsive-layout="scroll"
                   class="payments-table"
                 >
                   <Column field="name" :header="_('payment_name')">
                     <template #body="{ data }">
                       <div class="payment-name-cell">
-                        <img v-if="data.logo" :src="data.logo" :alt="data.name" class="payment-logo-small" />
+                        <img
+                          v-if="data.logo"
+                          :src="data.logo"
+                          :alt="data.name"
+                          class="payment-logo-small"
+                        />
                         <span>{{ getPaymentName(data.name) }}</span>
                       </div>
                     </template>
                   </Column>
-                  <Column field="price" :header="_('ms3_add_cost')" style="width: 150px">
+                  <Column field="price" :header="_('ms3_add_cost')" style="width: 9.375rem">
                     <template #body="{ data }">
                       <span v-if="data.price">{{ data.price }}</span>
                       <span v-else class="text-muted">—</span>
                     </template>
                   </Column>
-                  <Column :header="_('delivery_active')" style="width: 100px">
+                  <Column :header="_('delivery_active')" style="width: 6.25rem">
                     <template #body="{ data }">
                       <ToggleSwitch
-                        :modelValue="isPaymentEnabled(data.id)"
-                        @update:modelValue="(val) => togglePayment(data.id, val)"
+                        :model-value="isPaymentEnabled(data.id)"
+                        @update:model-value="val => togglePayment(data.id, val)"
                       />
                     </template>
                   </Column>
@@ -806,12 +886,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveDelivery"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveDelivery" />
       </template>
     </Dialog>
   </div>
@@ -819,7 +894,7 @@ onMounted(async () => {
 
 <style scoped>
 .deliveries-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -840,7 +915,7 @@ onMounted(async () => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
@@ -850,11 +925,11 @@ onMounted(async () => {
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 .filters-row {
@@ -863,14 +938,14 @@ onMounted(async () => {
   gap: 1rem;
   margin-bottom: 1rem;
   padding: 1rem;
-  background: #f8fafc;
-  border-radius: 6px;
+  background: var(--ms3-bg-slate);
+  border-radius: 0.375rem;
 }
 
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .filter-item label {
@@ -878,7 +953,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -893,9 +968,9 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -903,7 +978,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -920,11 +995,11 @@ onMounted(async () => {
 }
 
 .text-success {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .text-danger {
-  color: #ef4444;
+  color: var(--ms3-text-danger);
 }
 
 /* Edit form styles */
@@ -945,7 +1020,7 @@ onMounted(async () => {
 
 .form-row label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .form-row-group {
@@ -954,7 +1029,7 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 37.5rem) {
   .form-row-group {
     grid-template-columns: 1fr;
   }
@@ -962,7 +1037,7 @@ onMounted(async () => {
 
 /* Form hint */
 .form-hint {
-  color: #6b7280;
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
   margin-top: 0.25rem;
 }
@@ -973,20 +1048,20 @@ onMounted(async () => {
 }
 
 .payments-hint {
-  color: #6b7280;
+  color: var(--ms3-text-muted);
   font-size: 0.9rem;
 }
 
 .loading-payments {
   text-align: center;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--ms3-text-muted);
 }
 
 .no-payments {
   text-align: center;
   padding: 2rem;
-  color: #9ca3af;
+  color: var(--ms3-text-muted-light);
 }
 
 .payment-name-cell {
@@ -996,14 +1071,14 @@ onMounted(async () => {
 }
 
 .payment-logo-small {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .text-muted {
-  color: #9ca3af;
+  color: var(--ms3-text-muted-light);
 }
 
 /* Tabs styling */
@@ -1025,28 +1100,28 @@ onMounted(async () => {
 .deliveries-table td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 
 .deliveries-table th {
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
   font-weight: 600;
-  color: #475569;
+  color: var(--ms3-text-header);
 }
 
 .deliveries-table tbody tr:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 
 /* Drag handle */
 .drag-handle {
   cursor: grab;
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   padding: 0.25rem;
 }
 
 .drag-handle:hover {
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .drag-handle:active {
@@ -1066,10 +1141,10 @@ onMounted(async () => {
 
 /* Grid thumbnail */
 .grid-thumbnail {
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 /* Loading overlay */
@@ -1078,7 +1153,6 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
-
 </style>

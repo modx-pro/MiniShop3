@@ -1,25 +1,19 @@
 <template>
-  <div class="options-chips-wrapper" ref="wrapperRef">
+  <div ref="wrapperRef" class="options-chips-wrapper">
     <div class="chips-container" @click="focusInput">
       <!-- Display selected chips -->
-      <div
-        v-for="(chip, index) in localValue"
-        :key="index"
-        class="chip-item"
-      >
+      <div v-for="(chip, index) in localValue" :key="index" class="chip-item">
         <span class="chip-text">{{ chip }}</span>
-        <span
-          v-if="!disabled"
-          class="chip-remove"
-          @click.stop="removeChip(index)"
-        >×</span>
+        <span v-if="!disabled" class="chip-remove" @click.stop="removeChip(index)"
+          ><i class="pi pi-times"></i
+        ></span>
       </div>
 
       <!-- Input field for adding new values -->
       <input
+        :id="inputId"
         ref="inputRef"
         v-model="searchQuery"
-        :id="inputId"
         type="text"
         class="chip-input"
         :placeholder="localValue.length === 0 ? placeholder : ''"
@@ -33,10 +27,7 @@
     </div>
 
     <!-- Dropdown with suggestions -->
-    <div
-      v-if="showSuggestions && filteredOptions.length > 0"
-      class="suggestions-panel"
-    >
+    <div v-if="showSuggestions && filteredOptions.length > 0" class="suggestions-panel">
       <div
         v-for="(option, index) in filteredOptions"
         :key="index"
@@ -50,7 +41,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
+
 import request from '../request.js'
 
 const props = defineProps({
@@ -220,16 +212,20 @@ function emitChange() {
 }
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localValue.value = [...(newValue || [])]
-}, { deep: true })
+watch(
+  () => props.modelValue,
+  newValue => {
+    localValue.value = [...(newValue || [])]
+  },
+  { deep: true }
+)
 
 // Setup label click handler on mount
 onMounted(() => {
   if (props.inputId && wrapperRef.value) {
     const label = document.querySelector(`label[for="${props.inputId}"]`)
     if (label) {
-      label.addEventListener('click', (e) => {
+      label.addEventListener('click', e => {
         e.preventDefault()
         focusInput()
       })
@@ -250,31 +246,31 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  background: #ffffff;
-  min-height: 40px;
+  border: var(--ms3-border-width) solid var(--ms3-border-neutral);
+  border-radius: 0.25rem;
+  background: var(--ms3-bg-surface);
+  min-height: 2.5rem;
   cursor: text;
   transition: border-color 0.2s;
 }
 
 .chips-container:hover {
-  border-color: #94a3b8;
+  border-color: var(--ms3-text-light);
 }
 
 .chips-container:focus-within {
-  border-color: #3b82f6;
+  border-color: var(--ms3-accent-primary);
   outline: none;
-  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 0.2rem var(--ms3-accent-focus);
 }
 
 .chip-item {
   display: inline-flex;
   align-items: center;
-  background: #3b82f6;
-  color: #ffffff;
+  background: var(--ms3-accent-primary);
+  color: var(--ms3-text-on-primary);
   padding: 0.25rem 0.5rem;
-  border-radius: 3px;
+  border-radius: 0.1875rem;
   font-size: 0.875rem;
   white-space: nowrap;
 }
@@ -284,8 +280,6 @@ onMounted(() => {
 }
 
 .chip-remove {
-  font-size: 1.25rem;
-  line-height: 1;
   cursor: pointer;
   margin-left: 0.375rem;
   opacity: 0.9;
@@ -293,12 +287,18 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
+  min-width: 1.125rem;
+  min-height: 1.125rem;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
-  font-weight: 700;
   user-select: none;
+  font-size: 0.65rem;
+}
+
+.chip-remove i {
+  font-size: inherit;
 }
 
 .chip-remove:hover {
@@ -313,12 +313,12 @@ onMounted(() => {
   outline: none;
   padding: 0.25rem;
   font-size: 1rem;
-  min-width: 120px;
+  min-width: 7.5rem;
   background: transparent;
 }
 
 .chip-input:disabled {
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
   cursor: not-allowed;
 }
 
@@ -328,13 +328,13 @@ onMounted(() => {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: #ffffff;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  background: var(--ms3-bg-surface);
+  border: var(--ms3-border-width) solid var(--ms3-border-neutral);
+  border-radius: 0.25rem;
   margin-top: 0.25rem;
-  max-height: 200px;
+  max-height: 12.5rem;
   overflow-y: auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--ms3-shadow-dropdown);
 }
 
 .suggestion-item {
@@ -344,6 +344,6 @@ onMounted(() => {
 }
 
 .suggestion-item:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 </style>

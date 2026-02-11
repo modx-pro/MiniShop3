@@ -5,22 +5,23 @@
  */
 
 import '../scss/primevue.scss'
-import { createApp } from 'vue'
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
 import 'primeicons/primeicons.css'
 
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import PrimeVue from 'primevue/config'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
 
 import PaymentsGrid from '../components/PaymentsGrid.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Creates and configures Vue application
  */
 function createVueApp() {
-  const app = createApp(PaymentsGrid);
+  const app = createApp(PaymentsGrid)
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
@@ -29,7 +30,7 @@ function createVueApp() {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
   app.use(ConfirmationService)
   app.use(ToastService)
@@ -55,6 +56,7 @@ export function init(selector = '#ms3-vue-payments') {
 
   const app = createVueApp()
   app.mount(selector)
+  injectFormStylesOverride()
   $el.dataset.vApp = 'true'
 
   return app

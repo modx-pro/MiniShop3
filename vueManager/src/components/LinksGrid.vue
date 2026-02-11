@@ -1,21 +1,22 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Select from 'primevue/select'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
 import Paginator from 'primevue/paginator'
-import { useToast } from 'primevue/usetoast'
+import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -32,11 +33,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'link',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/links/bulk', { ids })
   },
   onSuccess: () => loadLinks(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const loading = ref(false)
@@ -233,7 +234,14 @@ function deleteLink(link) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    { name: 'delete', handler: 'delete', icon: 'pi-trash', label: _('delete'), severity: 'danger', confirm: false },
+    {
+      name: 'delete',
+      handler: 'delete',
+      icon: 'pi-trash',
+      label: _('delete'),
+      severity: 'danger',
+      confirm: false,
+    },
   ]
 }
 
@@ -255,7 +263,7 @@ onMounted(() => {
 <template>
   <div class="links-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -265,17 +273,14 @@ onMounted(() => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
           <div class="grid-header-right">
-            <Button
-              :label="_('create')"
-              icon="pi pi-plus"
-              severity="success"
-              @click="createLink"
-            />
+            <Button :label="_('create')" icon="pi pi-plus" severity="success" @click="createLink" />
           </div>
         </div>
       </template>
@@ -312,15 +317,15 @@ onMounted(() => {
           v-model:selection="selectedItems"
           :value="links"
           :loading="loading"
-          stripedRows
-          responsiveLayout="scroll"
-          dataKey="id"
+          striped-rows
+          responsive-layout="scroll"
+          data-key="id"
         >
           <!-- Selection column -->
-          <Column selectionMode="multiple" headerStyle="width: 3rem" />
+          <Column selection-mode="multiple" header-style="width: 3rem" />
 
           <!-- ID -->
-          <Column field="id" :header="_('ms3_id')" style="width: 80px" sortable />
+          <Column field="id" :header="_('ms3_id')" style="width: 5rem" sortable />
 
           <!-- Name -->
           <Column field="name" :header="_('ms3_name')" sortable>
@@ -330,9 +335,11 @@ onMounted(() => {
           </Column>
 
           <!-- Type -->
-          <Column field="type" :header="_('ms3_type')" style="width: 200px">
+          <Column field="type" :header="_('ms3_type')" style="width: 12.5rem">
             <template #body="{ data }">
-              <span class="link-type-badge">{{ data.type_label || _('ms3_link_' + data.type) }}</span>
+              <span class="link-type-badge">{{
+                data.type_label || _('ms3_link_' + data.type)
+              }}</span>
             </template>
           </Column>
 
@@ -340,7 +347,7 @@ onMounted(() => {
           <Column field="description" :header="_('ms3_description')" />
 
           <!-- Actions -->
-          <Column :header="_('ms3_actions')" style="width: 120px">
+          <Column :header="_('ms3_actions')" style="width: 7.5rem">
             <template #body="{ data }">
               <ActionsColumn
                 :data="data"
@@ -358,8 +365,8 @@ onMounted(() => {
         <Paginator
           :first="first"
           :rows="rows"
-          :totalRecords="totalRecords"
-          :rowsPerPageOptions="[10, 20, 50, 100]"
+          :total-records="totalRecords"
+          :rows-per-page-options="[10, 20, 50, 100]"
           @page="onPage"
         />
       </template>
@@ -371,8 +378,8 @@ onMounted(() => {
       :header="isNewLink ? _('link_create') : _('link_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '550px' }"
-      appendTo="self"
+      :style="{ width: '34.375rem' }"
+      append-to="self"
     >
       <div v-if="editingLink" class="ms3-link-form">
         <!-- Name -->
@@ -387,8 +394,8 @@ onMounted(() => {
           <Select
             v-model="editingLink.type"
             :options="linkTypes"
-            optionLabel="label"
-            optionValue="value"
+            option-label="label"
+            option-value="value"
             :disabled="!isNewLink"
             class="w-full"
             :placeholder="_('select_type')"
@@ -415,12 +422,7 @@ onMounted(() => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="saveLink"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveLink" />
       </template>
     </Dialog>
   </div>
@@ -442,20 +444,20 @@ onMounted(() => {
 
 .ms3-link-form .form-row label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 .ms3-link-form .type-description {
-  color: #6b7280;
+  color: var(--ms3-text-muted);
   font-style: italic;
   padding: 0.5rem;
-  background: #f3f4f6;
-  border-radius: 4px;
+  background: var(--ms3-bg-gray-100);
+  border-radius: 0.25rem;
   margin-top: 0.25rem;
 }
 
 .ms3-link-form .type-hint {
-  color: #9ca3af;
+  color: var(--ms3-text-muted-light);
   font-size: 0.8rem;
 }
 
@@ -466,7 +468,7 @@ onMounted(() => {
 
 <style scoped>
 .links-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -487,7 +489,7 @@ onMounted(() => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
@@ -497,11 +499,11 @@ onMounted(() => {
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 /* Bulk actions toolbar */
@@ -510,9 +512,9 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -520,7 +522,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -539,10 +541,10 @@ onMounted(() => {
 /* Link type badge */
 .link-type-badge {
   display: inline-block;
-  padding: 4px 10px;
-  background: #e0e7ff;
-  color: #3730a3;
-  border-radius: 4px;
+  padding: 0.25rem 0.625rem;
+  background: var(--ms3-bg-indigo);
+  color: var(--ms3-text-indigo);
+  border-radius: 0.25rem;
   font-size: 0.85rem;
   font-weight: 500;
 }

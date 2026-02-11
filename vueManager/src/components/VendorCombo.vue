@@ -1,19 +1,19 @@
 <template>
-  <div class="vendor-combo-wrapper" ref="wrapperRef">
-    <Dropdown
-      :inputId="inputId"
+  <div ref="wrapperRef" class="vendor-combo-wrapper">
+    <Select
       v-model="localValue"
+      :input-id="inputId"
       :options="vendors"
-      optionLabel="name"
-      optionValue="id"
+      option-label="name"
+      option-value="id"
       :placeholder="placeholder"
       :disabled="disabled"
       :loading="loading"
-      :showClear="showClear"
+      :show-clear="showClear"
       :filter="enableFilter"
-      filterPlaceholder="Search vendor..."
-      :emptyMessage="emptyMessage"
-      :emptyFilterMessage="emptyFilterMessage"
+      filter-placeholder="Search vendor..."
+      :empty-message="emptyMessage"
+      :empty-filter-message="emptyFilterMessage"
       class="w-full"
       @change="handleChange"
     >
@@ -22,13 +22,14 @@
           {{ emptyMessage }}
         </div>
       </template>
-    </Dropdown>
+    </Select>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
+import { computed, onMounted, ref, watch } from 'vue'
+
 import request from '../request.js'
 
 const props = defineProps({
@@ -135,12 +136,15 @@ function handleChange() {
 }
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  localValue.value = newValue
-})
+watch(
+  () => props.modelValue,
+  newValue => {
+    localValue.value = newValue
+  }
+)
 
 // Watch for local changes
-watch(localValue, (newValue) => {
+watch(localValue, newValue => {
   emit('update:modelValue', newValue)
 })
 
@@ -153,7 +157,7 @@ onMounted(() => {
     // Find the label element
     const label = document.querySelector(`label[for="${props.inputId}"]`)
     if (label) {
-      label.addEventListener('click', (e) => {
+      label.addEventListener('click', e => {
         // Find the dropdown button inside wrapper
         const dropdownButton = wrapperRef.value.querySelector('.p-dropdown')
         if (dropdownButton && !props.disabled) {
@@ -179,14 +183,14 @@ onMounted(() => {
 <style>
 /* Global styles for dropdown empty message */
 .vendor-combo-wrapper .p-dropdown-panel {
-  min-width: 400px !important;
-  max-width: 500px !important;
+  min-width: 25rem !important;
+  max-width: 31.25rem !important;
 }
 
 .vendor-combo-wrapper .p-dropdown-empty-message,
 .p-dropdown-panel .p-dropdown-empty-message {
   padding: 0.75rem 1rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.875rem;
   white-space: normal !important;
   word-wrap: break-word !important;

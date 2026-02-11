@@ -4,15 +4,16 @@
  *
  * Allows adding, removing and editing actions in grid column
  */
-import { ref, computed, watch } from 'vue'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import Checkbox from 'primevue/checkbox'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import { useLexicon } from '@vuetools/useLexicon'
+import Select from 'primevue/select'
+import { computed, ref, watch } from 'vue'
+
 import actionRegistry from '../actionRegistry.js'
 
 const props = defineProps({
@@ -39,9 +40,13 @@ const { _ } = useLexicon()
 
 const localActions = ref([])
 
-watch(() => props.modelValue, (newVal) => {
-  localActions.value = JSON.parse(JSON.stringify(newVal || []))
-}, { immediate: true, deep: true })
+watch(
+  () => props.modelValue,
+  newVal => {
+    localActions.value = JSON.parse(JSON.stringify(newVal || []))
+  },
+  { immediate: true, deep: true }
+)
 
 const showDialog = ref(false)
 const editingAction = ref(null)
@@ -188,25 +193,25 @@ function closeDialog() {
   <div class="actions-editor">
     <!-- Current actions table -->
     <DataTable :value="localActions" size="small" class="mb-2">
-      <Column field="name" :header="_('action_name')" style="width: 150px">
+      <Column field="name" :header="_('action_name')" style="width: 9.375rem">
         <template #body="{ data }">
           <span class="font-semibold">{{ data.name }}</span>
         </template>
       </Column>
 
-      <Column field="handler" :header="_('action_handler')" style="width: 120px">
+      <Column field="handler" :header="_('action_handler')" style="width: 7.5rem">
         <template #body="{ data }">
           <span class="text-muted">{{ data.handler }}</span>
         </template>
       </Column>
 
-      <Column field="icon" :header="_('action_icon')" style="width: 80px">
+      <Column field="icon" :header="_('action_icon')" style="width: 5rem">
         <template #body="{ data }">
           <i :class="`pi ${data.icon}`"></i>
         </template>
       </Column>
 
-      <Column field="severity" :header="_('action_severity')" style="width: 100px">
+      <Column field="severity" :header="_('action_severity')" style="width: 6.25rem">
         <template #body="{ data }">
           <span :class="`p-badge p-badge-${data.severity || 'secondary'}`">
             {{ data.severity || 'default' }}
@@ -214,7 +219,7 @@ function closeDialog() {
         </template>
       </Column>
 
-      <Column :header="_('actions')" style="width: 150px">
+      <Column :header="_('actions')" style="width: 9.375rem">
         <template #body="{ data, index }">
           <Button
             icon="pi pi-arrow-up"
@@ -230,12 +235,7 @@ function closeDialog() {
             :disabled="index === localActions.length - 1"
             @click="moveDown(index)"
           />
-          <Button
-            icon="pi pi-pencil"
-            size="small"
-            text
-            @click="openEditDialog(data, index)"
-          />
+          <Button icon="pi pi-pencil" size="small" text @click="openEditDialog(data, index)" />
           <Button
             icon="pi pi-trash"
             size="small"
@@ -248,20 +248,15 @@ function closeDialog() {
     </DataTable>
 
     <!-- Add button -->
-    <Button
-      :label="_('add_action')"
-      icon="pi pi-plus"
-      size="small"
-      @click="openAddDialog"
-    />
+    <Button :label="_('add_action')" icon="pi pi-plus" size="small" @click="openAddDialog" />
 
     <!-- Action edit dialog -->
     <Dialog
       v-model:visible="showDialog"
       :header="editingIndex !== null ? _('edit_action') : _('add_action')"
       :modal="true"
-      :style="{ width: '550px' }"
-      appendTo="self"
+      :style="{ width: '34.375rem' }"
+      append-to="self"
     >
       <div v-if="editingAction" class="action-form">
         <!-- Row 1: Name and Handler -->
@@ -279,7 +274,7 @@ function closeDialog() {
 
           <div class="form-col">
             <label for="action-handler" class="required">{{ _('action_handler') }}</label>
-            <Dropdown
+            <Select
               id="action-handler"
               v-model="editingAction.handler"
               :options="availableHandlers"
@@ -292,7 +287,7 @@ function closeDialog() {
                 <i :class="`pi ${option.icon} mr-2`"></i>
                 {{ option.label }}
               </template>
-            </Dropdown>
+            </Select>
             <small class="text-muted">{{ _('action_handler_hint') }}</small>
           </div>
         </div>
@@ -315,7 +310,7 @@ function closeDialog() {
         <div class="form-row">
           <div class="form-col">
             <label for="action-icon">{{ _('action_icon') }}</label>
-            <Dropdown
+            <Select
               id="action-icon"
               v-model="editingAction.icon"
               :options="iconOptions"
@@ -334,12 +329,12 @@ function closeDialog() {
                   {{ value }}
                 </span>
               </template>
-            </Dropdown>
+            </Select>
           </div>
 
           <div class="form-col">
             <label for="action-severity">{{ _('action_severity') }}</label>
-            <Dropdown
+            <Select
               id="action-severity"
               v-model="editingAction.severity"
               :options="severityOptions"
@@ -355,11 +350,7 @@ function closeDialog() {
         <div class="form-row">
           <div class="form-col-full">
             <div class="confirm-checkbox">
-              <Checkbox
-                id="action-confirm"
-                v-model="editingAction.confirm"
-                :binary="true"
-              />
+              <Checkbox id="action-confirm" v-model="editingAction.confirm" :binary="true" />
               <label for="action-confirm" class="ml-2">{{ _('action_requires_confirm') }}</label>
             </div>
           </div>
@@ -381,12 +372,7 @@ function closeDialog() {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          icon="pi pi-times"
-          text
-          @click="closeDialog"
-        />
+        <Button :label="_('cancel')" icon="pi pi-times" text @click="closeDialog" />
         <Button
           :label="_('save')"
           icon="pi pi-check"
@@ -449,13 +435,13 @@ function closeDialog() {
 
 label.required::after {
   content: ' *';
-  color: #dc3545;
+  color: var(--ms3-text-danger-alt);
 }
 
 small.text-muted {
   display: block;
   margin-top: 0.25rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.75rem;
 }
 

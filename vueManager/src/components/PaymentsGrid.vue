@@ -1,27 +1,28 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Checkbox from 'primevue/checkbox'
-import ToggleSwitch from 'primevue/toggleswitch'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
+import TabList from 'primevue/tablist'
 import TabPanel from 'primevue/tabpanel'
-import { useToast } from 'primevue/usetoast'
+import TabPanels from 'primevue/tabpanels'
+import Tabs from 'primevue/tabs'
+import Textarea from 'primevue/textarea'
+import Toast from 'primevue/toast'
+import ToggleSwitch from 'primevue/toggleswitch'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 
@@ -39,11 +40,11 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'payment',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.delete('/api/mgr/payments/bulk', { ids })
   },
   onSuccess: () => loadPayments(),
-  getItemName: (item) => item.name,
+  getItemName: item => item.name,
 })
 
 const columns = ref([])
@@ -270,7 +271,9 @@ async function toggleDelivery(deliveryId, newValue) {
 
   try {
     if (newValue) {
-      await request.post(`/api/mgr/payments/${editingPayment.value.id}/deliveries`, { delivery_id: deliveryId })
+      await request.post(`/api/mgr/payments/${editingPayment.value.id}/deliveries`, {
+        delivery_id: deliveryId,
+      })
     } else {
       await request.delete(`/api/mgr/payments/${editingPayment.value.id}/deliveries/${deliveryId}`)
     }
@@ -312,7 +315,10 @@ async function savePayment() {
     if (isNewPayment.value) {
       response = await request.post('/api/mgr/payments', editingPayment.value)
     } else {
-      response = await request.put(`/api/mgr/payments/${editingPayment.value.id}`, editingPayment.value)
+      response = await request.put(
+        `/api/mgr/payments/${editingPayment.value.id}`,
+        editingPayment.value
+      )
     }
 
     if (response) {
@@ -412,15 +418,43 @@ async function loadGridConfig() {
     } else {
       // Fallback default columns
       columns.value = [
-        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '80px' },
+        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
         { name: 'name', label: _('payment_name'), visible: true, sortable: true, filterable: true },
-        { name: 'price', label: _('ms3_add_cost'), visible: true, sortable: true, width: '120px' },
-        { name: 'active', label: _('payment_active'), visible: true, sortable: true, type: 'boolean', width: '100px' },
-        { name: 'position', label: _('payment_position'), visible: true, sortable: true, width: '100px' },
-        { name: 'actions', label: _('actions'), visible: true, frozen: true, type: 'actions', width: '120px', actions: [
-          { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-          { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: false },
-        ]},
+        { name: 'price', label: _('ms3_add_cost'), visible: true, sortable: true, width: '7.5rem' },
+        {
+          name: 'active',
+          label: _('payment_active'),
+          visible: true,
+          sortable: true,
+          type: 'boolean',
+          width: '6.25rem',
+        },
+        {
+          name: 'position',
+          label: _('payment_position'),
+          visible: true,
+          sortable: true,
+          width: '6.25rem',
+        },
+        {
+          name: 'actions',
+          label: _('actions'),
+          visible: true,
+          frozen: true,
+          type: 'actions',
+          width: '7.5rem',
+          actions: [
+            { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+            {
+              name: 'delete',
+              handler: 'delete',
+              icon: 'pi-trash',
+              label: 'delete',
+              severity: 'danger',
+              confirm: false,
+            },
+          ],
+        },
       ]
     }
   } catch (error) {
@@ -465,7 +499,7 @@ onMounted(async () => {
 <template>
   <div class="payments-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -475,7 +509,9 @@ onMounted(async () => {
             <div class="grid-stats">
               <span class="stat-item">
                 <i class="pi pi-list"></i>
-                <span>{{ _('total') }}: <strong>{{ totalRecords }}</strong></span>
+                <span
+                  >{{ _('total') }}: <strong>{{ totalRecords }}</strong></span
+                >
               </span>
             </div>
           </div>
@@ -503,18 +539,11 @@ onMounted(async () => {
               </select>
             </template>
             <template v-else>
-              <InputText
-                v-model="filterValues[column.name]"
-                :placeholder="column.label"
-              />
+              <InputText v-model="filterValues[column.name]" :placeholder="column.label" />
             </template>
           </div>
           <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              @click="applyFilters"
-            />
+            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -557,14 +586,14 @@ onMounted(async () => {
         <table v-else class="payments-table">
           <thead>
             <tr>
-              <th style="width: 40px">
+              <th style="width: 2.5rem">
                 <Checkbox
-                  :modelValue="selectAll"
+                  :model-value="selectAll"
                   :binary="true"
-                  @update:modelValue="onSelectAllChange"
+                  @update:model-value="onSelectAllChange"
                 />
               </th>
-              <th style="width: 40px"></th>
+              <th style="width: 2.5rem"></th>
               <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                 <th :style="{ width: column.width, minWidth: column.minWidth }">
                   {{ column.label }}
@@ -583,15 +612,17 @@ onMounted(async () => {
               <tr>
                 <td>
                   <Checkbox
-                    :modelValue="selectedItems.some(item => item.id === payment.id)"
+                    :model-value="selectedItems.some(item => item.id === payment.id)"
                     :binary="true"
-                    @update:modelValue="(val) => {
-                      if (val) {
-                        selectedItems.push(payment)
-                      } else {
-                        selectedItems = selectedItems.filter(item => item.id !== payment.id)
+                    @update:model-value="
+                      val => {
+                        if (val) {
+                          selectedItems.push(payment)
+                        } else {
+                          selectedItems = selectedItems.filter(item => item.id !== payment.id)
+                        }
                       }
-                    }"
+                    "
                   />
                 </td>
                 <td>
@@ -626,7 +657,13 @@ onMounted(async () => {
                   </td>
                   <!-- Boolean column -->
                   <td v-else-if="column.type === 'boolean'">
-                    <i :class="payment[column.name] ? 'pi pi-check text-success' : 'pi pi-times text-danger'"></i>
+                    <i
+                      :class="
+                        payment[column.name]
+                          ? 'pi pi-check text-success'
+                          : 'pi pi-times text-danger'
+                      "
+                    ></i>
                   </td>
                   <!-- Regular column -->
                   <td v-else>
@@ -646,8 +683,8 @@ onMounted(async () => {
       :header="isNewPayment ? _('payment_create') : _('payment_edit')"
       :modal="true"
       :closable="true"
-      :style="{ width: '600px' }"
-      appendTo="self"
+      :style="{ width: '37.5rem' }"
+      append-to="self"
     >
       <div v-if="editingPayment">
         <Tabs v-model:value="activeTab">
@@ -683,7 +720,11 @@ onMounted(async () => {
 
                 <div class="form-row">
                   <div class="checkbox-field">
-                    <Checkbox v-model="editingPayment.active" :binary="true" inputId="payment-active" />
+                    <Checkbox
+                      v-model="editingPayment.active"
+                      :binary="true"
+                      input-id="payment-active"
+                    />
                     <label for="payment-active">{{ _('payment_active') }}</label>
                   </div>
                 </div>
@@ -695,7 +736,11 @@ onMounted(async () => {
               <div class="edit-form">
                 <div class="form-row mb-3">
                   <label>{{ _('payment_class') }}</label>
-                  <InputText v-model="editingPayment.class" class="w-full" :placeholder="_('payment_class_placeholder')" />
+                  <InputText
+                    v-model="editingPayment.class"
+                    class="w-full"
+                    :placeholder="_('payment_class_placeholder')"
+                  />
                 </div>
 
                 <div class="form-row mb-3">
@@ -719,29 +764,34 @@ onMounted(async () => {
                 <DataTable
                   v-else
                   :value="deliveries"
-                  stripedRows
-                  responsiveLayout="scroll"
+                  striped-rows
+                  responsive-layout="scroll"
                   class="deliveries-table"
                 >
                   <Column field="name" :header="_('delivery_name')">
                     <template #body="{ data }">
                       <div class="delivery-name-cell">
-                        <img v-if="data.logo" :src="data.logo" :alt="data.name" class="delivery-logo-small" />
+                        <img
+                          v-if="data.logo"
+                          :src="data.logo"
+                          :alt="data.name"
+                          class="delivery-logo-small"
+                        />
                         <span>{{ getDisplayName(data.name) }}</span>
                       </div>
                     </template>
                   </Column>
-                  <Column field="price" :header="_('ms3_add_cost')" style="width: 150px">
+                  <Column field="price" :header="_('ms3_add_cost')" style="width: 9.375rem">
                     <template #body="{ data }">
                       <span v-if="data.price">{{ data.price }}</span>
                       <span v-else class="text-muted">—</span>
                     </template>
                   </Column>
-                  <Column :header="_('payment_active')" style="width: 100px">
+                  <Column :header="_('payment_active')" style="width: 6.25rem">
                     <template #body="{ data }">
                       <ToggleSwitch
-                        :modelValue="isDeliveryEnabled(data.id)"
-                        @update:modelValue="(val) => toggleDelivery(data.id, val)"
+                        :model-value="isDeliveryEnabled(data.id)"
+                        @update:model-value="val => toggleDelivery(data.id, val)"
                       />
                     </template>
                   </Column>
@@ -759,12 +809,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button
-          :label="_('save')"
-          icon="pi pi-check"
-          :loading="saving"
-          @click="savePayment"
-        />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="savePayment" />
       </template>
     </Dialog>
   </div>
@@ -772,7 +817,7 @@ onMounted(async () => {
 
 <style scoped>
 .payments-grid {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .grid-header {
@@ -793,21 +838,21 @@ onMounted(async () => {
   display: flex;
   gap: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--ms3-spacing-2);
 }
 
 .stat-item i {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 .stat-item strong {
-  color: #334155;
+  color: var(--ms3-text-dark);
 }
 
 .filters-row {
@@ -816,22 +861,22 @@ onMounted(async () => {
   gap: 1rem;
   margin-bottom: 1rem;
   padding: 1rem;
-  background: #f8fafc;
-  border-radius: 6px;
+  background: var(--ms3-bg-slate);
+  border-radius: 0.375rem;
 }
 
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .filter-item label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--ms3-spacing-2);
   font-weight: 500;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -845,18 +890,18 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  padding: var(--ms3-spacing-3) var(--ms3-spacing-4);
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: var(--ms3-radius-md);
 }
 
 .bulk-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--ms3-spacing-2);
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -873,11 +918,11 @@ onMounted(async () => {
 }
 
 .text-success {
-  color: #22c55e;
+  color: var(--ms3-text-success);
 }
 
 .text-danger {
-  color: #ef4444;
+  color: var(--ms3-text-danger);
 }
 
 /* Edit form styles */
@@ -898,14 +943,14 @@ onMounted(async () => {
 
 .form-row label {
   font-weight: 500;
-  color: #374151;
+  color: var(--ms3-text-primary);
 }
 
 /* Form hint */
 .form-hint {
-  color: #6b7280;
+  color: var(--ms3-text-muted);
   font-size: 0.8rem;
-  margin-top: 0.25rem;
+  margin-top: var(--ms3-spacing-1);
 }
 
 /* Tabs styling */
@@ -923,37 +968,37 @@ onMounted(async () => {
 }
 
 .deliveries-hint {
-  color: #6b7280;
+  color: var(--ms3-text-muted);
   font-size: 0.9rem;
 }
 
 .loading-deliveries {
   text-align: center;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--ms3-text-muted);
 }
 
 .no-deliveries {
   text-align: center;
   padding: 2rem;
-  color: #9ca3af;
+  color: var(--ms3-text-muted-light);
 }
 
 .delivery-name-cell {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--ms3-spacing-3);
 }
 
 .delivery-logo-small {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .text-muted {
-  color: #9ca3af;
+  color: var(--ms3-text-muted-light);
 }
 
 /* Custom table styles */
@@ -964,30 +1009,30 @@ onMounted(async () => {
 
 .payments-table th,
 .payments-table td {
-  padding: 0.75rem;
+  padding: var(--ms3-spacing-3);
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 
 .payments-table th {
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
   font-weight: 600;
-  color: #475569;
+  color: var(--ms3-text-header);
 }
 
 .payments-table tbody tr:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 
 /* Drag handle */
 .drag-handle {
   cursor: grab;
-  color: #94a3b8;
-  padding: 0.25rem;
+  color: var(--ms3-text-light);
+  padding: var(--ms3-spacing-1);
 }
 
 .drag-handle:hover {
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .drag-handle:active {
@@ -1007,10 +1052,10 @@ onMounted(async () => {
 
 /* Grid thumbnail */
 .grid-thumbnail {
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 /* Loading overlay */
@@ -1019,7 +1064,6 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
-
 </style>

@@ -5,20 +5,21 @@
  * in category update page within ExtJS tab
  */
 
-import '../scss/primevue.scss';
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
-import 'primeicons/primeicons.css';
+import '../scss/primevue.scss'
+import 'primeicons/primeicons.css'
 
-import ConfirmationService from 'primevue/confirmationservice';
-import ToastService from 'primevue/toastservice';
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import PrimeVue from 'primevue/config'
+import ConfirmationService from 'primevue/confirmationservice'
+import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
 
-import CategoryProductsGrid from '../components/CategoryProductsGrid.vue';
+import CategoryProductsGrid from '../components/CategoryProductsGrid.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
-let appInstance = null;
+let appInstance = null
 
 /**
  * Creates and configures Vue application
@@ -27,10 +28,10 @@ let appInstance = null;
 function createVueApp(categoryId) {
   const app = createApp(CategoryProductsGrid, {
     categoryId: categoryId,
-  });
+  })
 
-  const pinia = createPinia();
-  app.use(pinia);
+  const pinia = createPinia()
+  app.use(pinia)
 
   app.use(PrimeVue, {
     theme: {
@@ -40,12 +41,12 @@ function createVueApp(categoryId) {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
-  app.use(ConfirmationService);
-  app.use(ToastService);
+  app.use(ConfirmationService)
+  app.use(ToastService)
 
-  return app;
+  return app
 }
 
 /**
@@ -55,28 +56,29 @@ function createVueApp(categoryId) {
  * @param {number} categoryId - Category ID
  */
 export function init(selector = '#ms3-vue-category-products', categoryId = 0) {
-  const $el = document.querySelector(selector);
+  const $el = document.querySelector(selector)
 
   if (!$el) {
-    console.warn('[CategoryProducts] Mount element not found:', selector);
-    return null;
+    console.warn('[CategoryProducts] Mount element not found:', selector)
+    return null
   }
 
   // Already mounted
   if ($el.dataset.vApp === 'true') {
-    return appInstance;
+    return appInstance
   }
 
   if (!categoryId) {
-    console.error('[CategoryProducts] categoryId is required');
-    return null;
+    console.error('[CategoryProducts] categoryId is required')
+    return null
   }
 
-  appInstance = createVueApp(categoryId);
-  appInstance.mount(selector);
-  $el.dataset.vApp = 'true';
+  appInstance = createVueApp(categoryId)
+  appInstance.mount(selector)
+  injectFormStylesOverride()
+  $el.dataset.vApp = 'true'
 
-  return appInstance;
+  return appInstance
 }
 
 /**
@@ -84,13 +86,13 @@ export function init(selector = '#ms3-vue-category-products', categoryId = 0) {
  */
 export function destroy() {
   if (appInstance) {
-    appInstance.unmount();
-    appInstance = null;
+    appInstance.unmount()
+    appInstance = null
   }
 
-  const $el = document.querySelector('#ms3-vue-category-products');
+  const $el = document.querySelector('#ms3-vue-category-products')
   if ($el) {
-    $el.dataset.vApp = 'false';
+    $el.dataset.vApp = 'false'
   }
 }
 
@@ -98,8 +100,8 @@ export function destroy() {
  * Check if app is mounted
  */
 export function isMounted() {
-  const $el = document.querySelector('#ms3-vue-category-products');
-  return $el && $el.dataset.vApp === 'true';
+  const $el = document.querySelector('#ms3-vue-category-products')
+  return $el && $el.dataset.vApp === 'true'
 }
 
 // Export for global access
@@ -107,4 +109,4 @@ window.MS3CategoryProducts = {
   init,
   destroy,
   isMounted,
-};
+}

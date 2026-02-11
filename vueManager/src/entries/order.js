@@ -4,26 +4,27 @@
  * Exports initialization function for mounting Vue application
  */
 
-import '../scss/primevue.scss';
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
-import 'primeicons/primeicons.css';
+import '../scss/primevue.scss'
+import 'primeicons/primeicons.css'
 
-import ConfirmationService from 'primevue/confirmationservice';
-import ToastService from 'primevue/toastservice';
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import PrimeVue from 'primevue/config'
+import ConfirmationService from 'primevue/confirmationservice'
+import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
 
-import OrderView from '../components/OrderView.vue';
+import OrderView from '../components/OrderView.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Creates and configures Vue application
  */
 function createVueApp() {
-  const app = createApp(OrderView);
-  const pinia = createPinia();
-  app.use(pinia);
+  const app = createApp(OrderView)
+  const pinia = createPinia()
+  app.use(pinia)
 
   app.use(PrimeVue, {
     theme: {
@@ -33,58 +34,59 @@ function createVueApp() {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
-  app.use(ConfirmationService);
-  app.use(ToastService);
+  app.use(ConfirmationService)
+  app.use(ToastService)
 
-  return app;
+  return app
 }
 
 /**
  * Widget initialization
  */
 export function init(selector = '#ms3-order-vue-wrapper') {
-  const $el = document.querySelector(selector);
+  const $el = document.querySelector(selector)
 
   if (!$el) {
-    return null;
+    return null
   }
 
   if ($el.dataset.vApp === 'true') {
-    return null;
+    return null
   }
 
-  const app = createVueApp();
-  app.mount(selector);
-  $el.dataset.vApp = 'true';
+  const app = createVueApp()
+  app.mount(selector)
+  injectFormStylesOverride()
+  $el.dataset.vApp = 'true'
 
-  return app;
+  return app
 }
 
 /**
  * Wait for ExtJS to create DOM element
  */
 function waitForElement(selector, callback) {
-  const element = document.querySelector(selector);
+  const element = document.querySelector(selector)
 
   if (element) {
-    callback(element);
-    return;
+    callback(element)
+    return
   }
 
   const observer = new MutationObserver(() => {
-    const element = document.querySelector(selector);
+    const element = document.querySelector(selector)
     if (element) {
-      observer.disconnect();
-      callback(element);
+      observer.disconnect()
+      callback(element)
     }
-  });
+  })
 
   observer.observe(document.body, {
     childList: true,
     subtree: true,
-  });
+  })
 }
 
 /**
@@ -92,8 +94,8 @@ function waitForElement(selector, callback) {
  */
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    waitForElement('#ms3-order-vue-wrapper', () => init());
-  });
+    waitForElement('#ms3-order-vue-wrapper', () => init())
+  })
 } else {
-  waitForElement('#ms3-order-vue-wrapper', () => init());
+  waitForElement('#ms3-order-vue-wrapper', () => init())
 }

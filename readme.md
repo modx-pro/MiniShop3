@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/modx-pro/MiniShop3/releases"><img src="https://img.shields.io/badge/version-1.2.3--beta1-blue" alt="Version"></a>
+  <a href="https://github.com/modx-pro/MiniShop3/releases"><img src="https://img.shields.io/github/v/release/modx-pro/MiniShop3?include_prereleases" alt="Version"></a>
   <a href="#"><img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.2+"></a>
   <a href="#"><img src="https://img.shields.io/badge/MODX-3.0%2B-green?logo=modx&logoColor=white" alt="MODX 3.0+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="License MIT"></a>

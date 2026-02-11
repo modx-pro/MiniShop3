@@ -1,19 +1,20 @@
 <script setup>
-import { onMounted, ref, computed, defineProps, watch } from 'vue'
-import Card from 'primevue/card'
+import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
+import ConfirmDialog from 'primevue/confirmdialog'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
-import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import { computed, defineProps, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
-import request from '../request.js'
-import { useLexicon } from '@vuetools/useLexicon'
+
 import { useSelection } from '../composables/useSelection.js'
+import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const props = defineProps({
@@ -37,14 +38,14 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'product',
-  deleteBulk: async (ids) => {
+  deleteBulk: async ids => {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
       ids,
     })
   },
   onSuccess: () => loadProducts(),
-  getItemName: (item) => item.pagetitle || `#${item.id}`,
+  getItemName: item => item.pagetitle || `#${item.id}`,
 })
 
 const columns = ref([])
@@ -62,8 +63,10 @@ const sortOrder = ref(1)
 const selectAll = ref(false)
 
 // Default thumbnail from system settings
-// eslint-disable-next-line no-undef
-const defaultThumb = (typeof ms3 !== 'undefined' ? ms3.config?.default_thumb : null) || '/assets/components/minishop3/img/mgr/ms3_small.png'
+
+const defaultThumb =
+  (typeof ms3 !== 'undefined' ? ms3.config?.default_thumb : null) ||
+  '/assets/components/minishop3/img/mgr/ms3_small.png'
 
 /**
  * Get sorted filters list
@@ -231,14 +234,20 @@ async function deleteProduct(product) {
  * Create new product
  */
 function createProduct() {
-  MODx.loadPage('resource/create', 'class_key=MiniShop3\\Model\\msProduct&parent=' + props.categoryId + '&context_key=' + MODx.ctx)
+  MODx.loadPage(
+    'resource/create',
+    'class_key=MiniShop3\\Model\\msProduct&parent=' + props.categoryId + '&context_key=' + MODx.ctx
+  )
 }
 
 /**
  * Create new subcategory
  */
 function createCategory() {
-  MODx.loadPage('resource/create', 'class_key=MiniShop3\\Model\\msCategory&parent=' + props.categoryId + '&context_key=' + MODx.ctx)
+  MODx.loadPage(
+    'resource/create',
+    'class_key=MiniShop3\\Model\\msCategory&parent=' + props.categoryId + '&context_key=' + MODx.ctx
+  )
 }
 
 /**
@@ -398,25 +407,71 @@ async function loadGridConfig() {
  */
 function getDefaultColumns() {
   return [
-    { name: 'id', label: 'ID', visible: true, sortable: true, width: '60px', isSystem: true },
-    { name: 'thumb', label: _('product_image'), visible: true, type: 'image', width: '60px' },
-    { name: 'pagetitle', label: _('product_pagetitle'), visible: true, sortable: true, filterable: true, minWidth: '200px', type: 'template', template: '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>' },
-    { name: 'article', label: _('product_article'), visible: true, sortable: true, filterable: true, width: '100px' },
-    { name: 'price', label: _('product_price'), visible: true, sortable: true, type: 'price', width: '100px' },
-    { name: 'weight', label: _('product_weight'), visible: true, sortable: true, type: 'weight', width: '80px' },
-    { name: 'published', label: _('product_published'), visible: true, sortable: true, type: 'boolean', width: '80px' },
+    { name: 'id', label: 'ID', visible: true, sortable: true, width: '3.75rem', isSystem: true },
+    { name: 'thumb', label: _('product_image'), visible: true, type: 'image', width: '3.75rem' },
+    {
+      name: 'pagetitle',
+      label: _('product_pagetitle'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      minWidth: '12.5rem',
+      type: 'template',
+      template:
+        '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>',
+    },
+    {
+      name: 'article',
+      label: _('product_article'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+      width: '6.25rem',
+    },
+    {
+      name: 'price',
+      label: _('product_price'),
+      visible: true,
+      sortable: true,
+      type: 'price',
+      width: '6.25rem',
+    },
+    {
+      name: 'weight',
+      label: _('product_weight'),
+      visible: true,
+      sortable: true,
+      type: 'weight',
+      width: '5rem',
+    },
+    {
+      name: 'published',
+      label: _('product_published'),
+      visible: true,
+      sortable: true,
+      type: 'boolean',
+      width: '5rem',
+    },
     {
       name: 'actions',
       label: _('actions'),
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '140px',
+      width: '8.75rem',
       type: 'actions',
       actions: [
         { name: 'view', handler: 'view', icon: 'pi-eye', label: 'view' },
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: true,
+          confirmMessage: 'product_delete_confirm_message',
+        },
       ],
     },
   ]
@@ -430,9 +485,25 @@ function getActionsConfig(column) {
     return [
       { name: 'view', handler: 'view', icon: 'pi-eye', label: 'view' },
       { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      { name: 'publish', handler: 'publish', icon: 'pi-check', iconOff: 'pi-times', label: 'publish', labelOff: 'unpublish', toggleField: 'published' },
+      {
+        name: 'publish',
+        handler: 'publish',
+        icon: 'pi-check',
+        iconOff: 'pi-times',
+        label: 'publish',
+        labelOff: 'unpublish',
+        toggleField: 'published',
+      },
       { name: 'duplicate', handler: 'duplicate', icon: 'pi-copy', label: 'duplicate' },
-      { name: 'delete', handler: 'delete', icon: 'pi-trash', label: 'delete', severity: 'danger', confirm: true, confirmMessage: 'product_delete_confirm_message' },
+      {
+        name: 'delete',
+        handler: 'delete',
+        icon: 'pi-trash',
+        label: 'delete',
+        severity: 'danger',
+        confirm: true,
+        confirmMessage: 'product_delete_confirm_message',
+      },
     ]
   }
   return column.actions
@@ -551,22 +622,22 @@ function onPageNext() {
 }
 
 // Watch for category ID changes
-watch(() => props.categoryId, () => {
-  first.value = 0
-  loadProducts()
-})
+watch(
+  () => props.categoryId,
+  () => {
+    first.value = 0
+    loadProducts()
+  }
+)
 
 onMounted(async () => {
   // Initialize nested from system setting
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let' in minishop3.js
-  // eslint-disable-next-line no-undef
+
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   nested.value = ms3Config?.show_nested_products ?? false
 
-  await Promise.all([
-    loadGridConfig(),
-    loadFiltersConfig(),
-  ])
+  await Promise.all([loadGridConfig(), loadFiltersConfig()])
   await loadProducts()
 })
 </script>
@@ -574,7 +645,7 @@ onMounted(async () => {
 <template>
   <div class="category-products-grid">
     <Toast />
-    <ConfirmDialog appendTo="self" />
+    <ConfirmDialog append-to="self" />
 
     <Card>
       <template #title>
@@ -600,7 +671,7 @@ onMounted(async () => {
             <div class="nested-checkbox">
               <Checkbox
                 v-model="nested"
-                inputId="nested"
+                input-id="nested"
                 :binary="true"
                 @change="onNestedChange"
               />
@@ -612,11 +683,19 @@ onMounted(async () => {
 
       <template #content>
         <!-- Filters form -->
-        <div v-if="sortedFilters.length > 0" class="filters-form mb-3 p-3 surface-ground" style="border-radius: 6px;">
+        <div
+          v-if="sortedFilters.length > 0"
+          class="filters-form mb-3 p-3 surface-ground"
+          style="border-radius: 0.375rem"
+        >
           <div class="filters-row">
             <template v-for="filter in sortedFilters" :key="filter.key">
               <!-- Text input filter -->
-              <div v-if="filter.type === 'text'" class="filter-item" :style="{ width: filter.width || '200px' }">
+              <div
+                v-if="filter.type === 'text'"
+                class="filter-item"
+                :style="{ width: filter.width || '12.5rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <InputText
                   :id="`filter-${filter.key}`"
@@ -628,16 +707,20 @@ onMounted(async () => {
               </div>
 
               <!-- Select filter -->
-              <div v-else-if="filter.type === 'select'" class="filter-item" :style="{ width: filter.width || '150px' }">
+              <div
+                v-else-if="filter.type === 'select'"
+                class="filter-item"
+                :style="{ width: filter.width || '9.375rem' }"
+              >
                 <label :for="`filter-${filter.key}`">{{ _(filter.label) }}</label>
                 <Select
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
                   :options="filter.options || []"
-                  optionLabel="label"
-                  optionValue="value"
+                  option-label="label"
+                  option-value="value"
                   :placeholder="_(filter.placeholder || 'all')"
-                  :showClear="true"
+                  :show-clear="true"
                   class="w-full"
                   @change="applyFilters"
                 />
@@ -718,11 +801,7 @@ onMounted(async () => {
                 <tr>
                   <th v-if="canDrag" style="width: 3rem"></th>
                   <th style="width: 3rem">
-                    <Checkbox
-                      v-model="selectAll"
-                      :binary="true"
-                      @change="onSelectAllChange"
-                    />
+                    <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
                   </th>
                   <th
                     v-for="column in columns.filter(c => c.visible)"
@@ -734,7 +813,9 @@ onMounted(async () => {
                     {{ column.label }}
                     <i
                       v-if="column.sortable && sortField === column.name"
-                      :class="sortOrder === 1 ? 'pi pi-sort-amount-up-alt' : 'pi pi-sort-amount-down'"
+                      :class="
+                        sortOrder === 1 ? 'pi pi-sort-amount-up-alt' : 'pi pi-sort-amount-down'
+                      "
                       class="sort-icon"
                     ></i>
                   </th>
@@ -747,9 +828,9 @@ onMounted(async () => {
                 :handle="canDrag ? '.drag-handle' : null"
                 :disabled="!canDrag"
                 item-key="id"
-                @end="onDragEnd"
                 :animation="200"
                 ghost-class="ghost-row"
+                @end="onDragEnd"
               >
                 <template #item="{ element: product, index }">
                   <tr :class="{ 'p-row-odd': index % 2 === 1 }">
@@ -757,11 +838,7 @@ onMounted(async () => {
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
                     <td>
-                      <Checkbox
-                        v-model="selectedItems"
-                        :value="product"
-                        :binary="false"
-                      />
+                      <Checkbox v-model="selectedItems" :value="product" :binary="false" />
                     </td>
                     <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                       <!-- Actions column -->
@@ -807,7 +884,10 @@ onMounted(async () => {
                       </td>
 
                       <!-- Template column (renders HTML) -->
-                      <td v-else-if="column.type === 'template'" :style="{ width: column.width, minWidth: column.minWidth }">
+                      <td
+                        v-else-if="column.type === 'template'"
+                        :style="{ width: column.width, minWidth: column.minWidth }"
+                      >
                         <div v-if="nested && product.category_name" class="nested-product">
                           <span v-html="renderField(product, column)"></span>
                           <div class="product-category">{{ product.category_name }}</div>
@@ -834,14 +914,10 @@ onMounted(async () => {
           <!-- Pagination -->
           <div class="p-paginator p-component">
             <span class="p-paginator-current">
-              {{ _('showing') }} {{ first + 1 }}-{{ Math.min(first + rows, totalRecords) }} {{ _('of') }} {{ totalRecords }}
+              {{ _('showing') }} {{ first + 1 }}-{{ Math.min(first + rows, totalRecords) }}
+              {{ _('of') }} {{ totalRecords }}
             </span>
-            <Button
-              icon="pi pi-angle-left"
-              :disabled="first === 0"
-              text
-              @click="onPagePrev"
-            />
+            <Button icon="pi pi-angle-left" :disabled="first === 0" text @click="onPagePrev" />
             <Button
               icon="pi pi-angle-right"
               :disabled="first + rows >= totalRecords"
@@ -857,7 +933,7 @@ onMounted(async () => {
 
 <style scoped>
 .category-products-grid {
-  padding: 10px;
+  padding: 0.625rem;
 }
 
 .grid-header {
@@ -889,7 +965,7 @@ onMounted(async () => {
 .nested-checkbox label {
   cursor: pointer;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .w-full {
@@ -906,7 +982,7 @@ onMounted(async () => {
 .filter-item {
   display: flex;
   flex-direction: column;
-  min-width: 120px;
+  min-width: 7.5rem;
 }
 
 .filter-item label {
@@ -914,7 +990,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -928,9 +1004,9 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 6px;
+  background: var(--ms3-bg-warning);
+  border: var(--ms3-border-width) solid var(--ms3-border-warning);
+  border-radius: 0.375rem;
 }
 
 .bulk-info {
@@ -938,7 +1014,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--ms3-text-warning);
 }
 
 .bulk-info i {
@@ -956,10 +1032,10 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #e0f2fe;
-  border-radius: 4px;
+  background: var(--ms3-bg-info);
+  border-radius: 0.25rem;
   font-size: 0.85rem;
-  color: #0369a1;
+  color: var(--ms3-text-info-dark);
 }
 
 /* Drag and drop styles */
@@ -971,14 +1047,14 @@ onMounted(async () => {
 
 .drag-handle {
   cursor: grab;
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   font-size: 1.2rem;
   padding: 0.5rem;
   user-select: none;
 }
 
 .drag-handle:hover {
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .drag-handle:active {
@@ -987,13 +1063,13 @@ onMounted(async () => {
 
 :deep(.ghost-row) {
   opacity: 0.5;
-  background: #f8f9fa;
+  background: var(--ms3-bg-muted);
 }
 
 :deep(.sortable-drag) {
   opacity: 0.9;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: var(--ms3-bg-surface);
+  box-shadow: var(--ms3-shadow-dropdown);
 }
 
 /* Table styles */
@@ -1013,8 +1089,8 @@ onMounted(async () => {
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
-  background: #f8f9fa;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  background: var(--ms3-bg-muted);
   font-weight: 600;
 }
 
@@ -1023,27 +1099,27 @@ onMounted(async () => {
 }
 
 .sortable-header:hover {
-  background: #e9ecef;
+  background: var(--ms3-bg-neutral);
 }
 
 .sort-icon {
   margin-left: 0.5rem;
   font-size: 0.8rem;
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 .p-datatable-tbody td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: var(--ms3-border-width) solid var(--ms3-border-color-alt);
   vertical-align: middle;
 }
 
 .p-datatable-tbody tr:hover {
-  background: #f1f5f9;
+  background: var(--ms3-bg-slate-alt);
 }
 
 .p-row-odd {
-  background: #f8fafc;
+  background: var(--ms3-bg-slate);
 }
 
 .loading-overlay {
@@ -1052,7 +1128,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255,255,255,0.7);
+  background: var(--ms3-bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1065,37 +1141,37 @@ onMounted(async () => {
   align-items: center;
   justify-content: flex-end;
   padding: 0.75rem 1rem;
-  border-top: 1px solid #dee2e6;
+  border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt);
   gap: 0.5rem;
 }
 
 .p-paginator-current {
-  color: #6c757d;
+  color: var(--ms3-text-muted);
   font-size: 0.9rem;
   margin-right: auto;
 }
 
 /* Product thumbnail */
 .product-thumb {
-  width: 50px;
-  height: 50px;
+  width: 3.125rem;
+  height: 3.125rem;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 0.25rem;
 }
 
 .no-image {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
 }
 
 /* Product title */
 .product-id {
-  color: #94a3b8;
+  color: var(--ms3-text-light);
   font-size: 0.85rem;
   margin-right: 0.25rem;
 }
 
 :deep(.product-link) {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
   text-decoration: none;
 }
 
@@ -1110,15 +1186,15 @@ onMounted(async () => {
 
 .product-category {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--ms3-text-muted);
 }
 
 .product-category a {
-  color: #64748b;
+  color: var(--ms3-text-muted);
   text-decoration: none;
 }
 
 .product-category a:hover {
-  color: #3b82f6;
+  color: var(--ms3-accent-primary);
 }
 </style>

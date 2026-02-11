@@ -1,14 +1,14 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
-
 import Button from 'primevue/button'
-import ProgressBar from 'primevue/progressbar'
-import Message from 'primevue/message'
-import InputNumber from 'primevue/inputnumber'
 import Card from 'primevue/card'
 import Fieldset from 'primevue/fieldset'
+import InputNumber from 'primevue/inputnumber'
+import Message from 'primevue/message'
+import ProgressBar from 'primevue/progressbar'
+import { computed, onMounted, ref } from 'vue'
+
+import request from '../request.js'
 
 const { _ } = useLexicon()
 
@@ -62,7 +62,7 @@ const galleryInfoHtml = computed(() => {
     sourceName.value,
     sourceId.value,
     totalProducts.value,
-    totalFiles.value,
+    totalFiles.value
   )
 })
 
@@ -114,7 +114,8 @@ const processNextBatch = async () => {
     }
   } catch (err) {
     console.error('Gallery regeneration failed:', err)
-    errorMessage.value = err.message || _('ms3_utilities_gallery_err_noproducts', 'Error regenerating thumbnails')
+    errorMessage.value =
+      err.message || _('ms3_utilities_gallery_err_noproducts', 'Error regenerating thumbnails')
     isRunning.value = false
   }
 }
@@ -146,27 +147,33 @@ onMounted(() => {
     </Card>
 
     <!-- Thumbnails Configuration -->
-    <Fieldset :legend="_('ms3_utilities_params', 'Parameters')" :toggleable="true" class="params-fieldset">
+    <Fieldset
+      :legend="_('ms3_utilities_params', 'Parameters')"
+      :toggleable="true"
+      class="params-fieldset"
+    >
       <div class="thumbnails-info" v-html="thumbnailsInfo"></div>
     </Fieldset>
 
     <!-- Settings -->
     <div class="settings-section">
       <div class="setting-row">
-        <label for="limit-input">{{ _('ms3_utilities_gallery_for_step', 'Products per step') }}</label>
+        <label for="limit-input">{{
+          _('ms3_utilities_gallery_for_step', 'Products per step')
+        }}</label>
         <InputNumber
           v-model="limit"
-          inputId="limit-input"
+          input-id="limit-input"
           :min="1"
           :max="100"
           :disabled="isRunning"
-          showButtons
-          buttonLayout="horizontal"
+          show-buttons
+          button-layout="horizontal"
           :step="5"
-          decrementButtonClass="p-button-secondary"
-          incrementButtonClass="p-button-secondary"
-          incrementButtonIcon="pi pi-plus"
-          decrementButtonIcon="pi pi-minus"
+          decrement-button-class="p-button-secondary"
+          increment-button-class="p-button-secondary"
+          increment-button-icon="pi pi-plus"
+          decrement-button-icon="pi pi-minus"
         />
       </div>
     </div>
@@ -178,28 +185,28 @@ onMounted(() => {
         icon="pi pi-refresh"
         :loading="isRunning"
         :disabled="!canStart"
-        @click="startRegeneration"
         severity="primary"
+        @click="startRegeneration"
       />
       <Button
         v-if="isCompleted"
         :label="_('ms3_utilities_gallery_reset', 'Reset')"
         icon="pi pi-times"
         severity="secondary"
-        @click="resetState"
         class="reset-btn"
+        @click="resetState"
       />
     </div>
 
     <!-- Progress Section -->
-    <div class="progress-section" v-if="isRunning || isCompleted">
+    <div v-if="isRunning || isCompleted" class="progress-section">
       <div class="progress-labels">
         <span class="progress-percent">{{ progress }}%</span>
-        <span class="progress-iteration" v-if="!isCompleted">
+        <span v-if="!isCompleted" class="progress-iteration">
           {{ currentIteration }} / {{ totalIterations }}
         </span>
       </div>
-      <ProgressBar :value="progress" :showValue="false" class="progress-bar" />
+      <ProgressBar :value="progress" :show-value="false" class="progress-bar" />
     </div>
 
     <!-- Status Messages -->
@@ -209,7 +216,13 @@ onMounted(() => {
       {{ _('ms3_utilities_gallery_done_message', `Updated ${updatedCount} products`) }}
     </Message>
 
-    <Message v-if="errorMessage" severity="error" :closable="true" @close="errorMessage = null" class="status-message">
+    <Message
+      v-if="errorMessage"
+      severity="error"
+      :closable="true"
+      class="status-message"
+      @close="errorMessage = null"
+    >
       {{ errorMessage }}
     </Message>
   </div>
@@ -217,12 +230,12 @@ onMounted(() => {
 
 <style scoped>
 .utilities-gallery {
-  padding: 20px;
-  max-width: 800px;
+  padding: 1.25rem;
+  max-width: 50rem;
 }
 
 .info-card {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .info-content {
@@ -230,48 +243,48 @@ onMounted(() => {
 }
 
 .info-content :deep(strong) {
-  color: #1e40af;
+  color: var(--ms3-text-accent-dark);
 }
 
 .params-fieldset {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .thumbnails-info {
   font-family: monospace;
   font-size: 0.9rem;
   line-height: 1.6;
-  background: #f8f9fa;
-  padding: 10px;
-  border-radius: 4px;
+  background: var(--ms3-bg-muted);
+  padding: 0.625rem;
+  border-radius: 0.25rem;
 }
 
 .thumbnails-info :deep(strong) {
-  color: #495057;
+  color: var(--ms3-text-hint);
 }
 
 .settings-section {
-  background: #f8f9fa;
-  padding: 15px 20px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+  background: var(--ms3-bg-muted);
+  padding: 0.9375rem 1.25rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.25rem;
 }
 
 .setting-row {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 0.9375rem;
 }
 
 .setting-row label {
   font-weight: 500;
-  min-width: 150px;
+  min-width: 9.375rem;
 }
 
 .action-section {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
 }
 
 .reset-btn {
@@ -279,41 +292,41 @@ onMounted(() => {
 }
 
 .progress-section {
-  background: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 15px;
-  margin-bottom: 20px;
+  background: var(--ms3-bg-surface);
+  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  border-radius: 0.375rem;
+  padding: 0.9375rem;
+  margin-bottom: 1.25rem;
 }
 
 .progress-labels {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
   font-weight: 600;
 }
 
 .progress-percent {
-  color: #1e40af;
+  color: var(--ms3-text-accent-dark);
 }
 
 .progress-iteration {
-  color: #6c757d;
+  color: var(--ms3-text-muted);
 }
 
 .progress-bar {
-  height: 8px;
+  height: 0.5rem;
 }
 
 .progress-bar :deep(.p-progressbar-value) {
-  background: #32AB9A;
+  background: var(--ms3-accent-teal);
 }
 
 .status-message {
-  margin-top: 15px;
+  margin-top: 0.9375rem;
 }
 
 .status-message :deep(.pi-check-circle) {
-  margin-right: 8px;
+  margin-right: 0.5rem;
 }
 </style>

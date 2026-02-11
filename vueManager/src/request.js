@@ -9,15 +9,15 @@
  */
 class Request {
   constructor() {
-    this.headers = {};
-    this.init();
+    this.headers = {}
+    this.init()
   }
 
   /**
    * Initialize: get configuration from MODX
    */
   init() {
-    this.setHeaders();
+    this.setHeaders()
   }
 
   /**
@@ -25,9 +25,9 @@ class Request {
    */
   getConnectorUrl() {
     if (typeof ms3 !== 'undefined' && ms3?.config?.connector_url) {
-      return ms3.config.connector_url;
+      return ms3.config.connector_url
     }
-    return '/assets/components/minishop3/connector.php';
+    return '/assets/components/minishop3/connector.php'
   }
 
   /**
@@ -35,9 +35,9 @@ class Request {
    */
   getModAuthToken() {
     if (typeof MODx !== 'undefined' && MODx?.siteId) {
-      return MODx.siteId;
+      return MODx.siteId
     }
-    return null;
+    return null
   }
 
   /**
@@ -45,9 +45,9 @@ class Request {
    */
   setHeaders() {
     this.headers = {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
-    };
+    }
   }
 
   /**
@@ -58,23 +58,23 @@ class Request {
    * @returns {string} - Full URL
    */
   buildUrl(route, params = {}) {
-    const url = new URL(this.getConnectorUrl(), window.location.origin);
+    const url = new URL(this.getConnectorUrl(), window.location.origin)
 
-    url.searchParams.set('action', 'MiniShop3\\Processors\\Api\\Index');
-    url.searchParams.set('route', route);
+    url.searchParams.set('action', 'MiniShop3\\Processors\\Api\\Index')
+    url.searchParams.set('route', route)
 
-    const modAuthToken = this.getModAuthToken();
+    const modAuthToken = this.getModAuthToken()
     if (modAuthToken) {
-      url.searchParams.set('HTTP_MODAUTH', modAuthToken);
+      url.searchParams.set('HTTP_MODAUTH', modAuthToken)
     }
 
     Object.entries(params).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        url.searchParams.set(key, value);
+        url.searchParams.set(key, value)
       }
-    });
+    })
 
-    return url.toString();
+    return url.toString()
   }
 
   /**
@@ -92,60 +92,59 @@ class Request {
         method,
         headers: { ...this.headers, ...options.headers },
         credentials: 'same-origin',
-      };
+      }
 
-      let url;
+      let url
 
       if (method === 'GET' && data) {
-        url = this.buildUrl(route, data);
+        url = this.buildUrl(route, data)
       } else {
-        url = this.buildUrl(route);
+        url = this.buildUrl(route)
 
         if (data) {
-          fetchOptions.body = JSON.stringify(data);
+          fetchOptions.body = JSON.stringify(data)
         }
       }
 
-      const response = await fetch(url, fetchOptions);
+      const response = await fetch(url, fetchOptions)
 
-      const responseData = await response.json();
+      const responseData = await response.json()
 
       if (responseData.success === false) {
         throw new RequestError(
           responseData.message || 'Request failed',
           response.status,
-          responseData,
-        );
+          responseData
+        )
       }
 
       if (!response.ok) {
         throw new RequestError(
           responseData.message || `HTTP error! status: ${response.status}`,
           response.status,
-          responseData,
-        );
+          responseData
+        )
       }
 
       if (responseData.object && Object.keys(responseData.object).length > 0) {
-        return responseData.object;
-      } else if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
-        return responseData.data;
+        return responseData.object
+      } else if (
+        responseData.data &&
+        Array.isArray(responseData.data) &&
+        responseData.data.length > 0
+      ) {
+        return responseData.data
       } else if (responseData.data && !Array.isArray(responseData.data)) {
-        return responseData.data;
+        return responseData.data
       }
 
-      return responseData;
-
+      return responseData
     } catch (error) {
       if (error instanceof RequestError) {
-        throw error;
+        throw error
       }
 
-      throw new RequestError(
-        error.message || 'Network error',
-        0,
-        { originalError: error },
-      );
+      throw new RequestError(error.message || 'Network error', 0, { originalError: error })
     }
   }
 
@@ -153,35 +152,35 @@ class Request {
    * GET request
    */
   async get(route, params = null, options = {}) {
-    return this.request('GET', route, params, options);
+    return this.request('GET', route, params, options)
   }
 
   /**
    * POST request
    */
   async post(route, data = null, options = {}) {
-    return this.request('POST', route, data, options);
+    return this.request('POST', route, data, options)
   }
 
   /**
    * PUT request
    */
   async put(route, data = null, options = {}) {
-    return this.request('PUT', route, data, options);
+    return this.request('PUT', route, data, options)
   }
 
   /**
    * DELETE request
    */
   async delete(route, data = null, options = {}) {
-    return this.request('DELETE', route, data, options);
+    return this.request('DELETE', route, data, options)
   }
 
   /**
    * PATCH request
    */
   async patch(route, data = null, options = {}) {
-    return this.request('PATCH', route, data, options);
+    return this.request('PATCH', route, data, options)
   }
 
   /**
@@ -195,17 +194,17 @@ class Request {
    */
   async upload(route, file, additionalData = {}, options = {}) {
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      const formData = new FormData()
+      formData.append('file', file)
 
       // Add additional data to FormData
       Object.entries(additionalData).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          formData.append(key, value);
+          formData.append(key, value)
         }
-      });
+      })
 
-      const url = this.buildUrl(route);
+      const url = this.buildUrl(route)
 
       const fetchOptions = {
         method: 'POST',
@@ -213,48 +212,43 @@ class Request {
         credentials: 'same-origin',
         // Don't set Content-Type header - browser will set it with boundary
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           ...options.headers,
         },
-      };
+      }
 
-      const response = await fetch(url, fetchOptions);
-      const responseData = await response.json();
+      const response = await fetch(url, fetchOptions)
+      const responseData = await response.json()
 
       if (responseData.success === false) {
         throw new RequestError(
           responseData.message || 'Upload failed',
           response.status,
-          responseData,
-        );
+          responseData
+        )
       }
 
       if (!response.ok) {
         throw new RequestError(
           responseData.message || `HTTP error! status: ${response.status}`,
           response.status,
-          responseData,
-        );
+          responseData
+        )
       }
 
       if (responseData.object && Object.keys(responseData.object).length > 0) {
-        return responseData.object;
+        return responseData.object
       } else if (responseData.data) {
-        return responseData.data;
+        return responseData.data
       }
 
-      return responseData;
-
+      return responseData
     } catch (error) {
       if (error instanceof RequestError) {
-        throw error;
+        throw error
       }
 
-      throw new RequestError(
-        error.message || 'Upload error',
-        0,
-        { originalError: error },
-      );
+      throw new RequestError(error.message || 'Upload error', 0, { originalError: error })
     }
   }
 }
@@ -264,34 +258,34 @@ class Request {
  */
 class RequestError extends Error {
   constructor(message, statusCode, data = {}) {
-    super(message);
-    this.name = 'RequestError';
-    this.statusCode = statusCode;
-    this.data = data;
+    super(message)
+    this.name = 'RequestError'
+    this.statusCode = statusCode
+    this.data = data
   }
 
   /**
    * Check if error is unauthorized
    */
   isUnauthorized() {
-    return this.statusCode === 401;
+    return this.statusCode === 401
   }
 
   /**
    * Check if error is forbidden
    */
   isForbidden() {
-    return this.statusCode === 403;
+    return this.statusCode === 403
   }
 
   /**
    * Check if error is validation error
    */
   isValidationError() {
-    return this.statusCode === 422;
+    return this.statusCode === 422
   }
 }
-const request = new Request();
+const request = new Request()
 
-export default request;
-export { Request, RequestError };
+export default request
+export { Request, RequestError }

@@ -4,27 +4,28 @@
  * Exports initialization function for mounting Vue application
  */
 
-import '../scss/primevue.scss';
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import PrimeVue from 'primevue/config';
-import Aura from '@primeuix/themes/aura';
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale';
-import 'primeicons/primeicons.css';
+import '../scss/primevue.scss'
+import 'primeicons/primeicons.css'
 
-import ConfirmationService from 'primevue/confirmationservice';
-import ToastService from 'primevue/toastservice';
+import Aura from '@primeuix/themes/aura'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import PrimeVue from 'primevue/config'
+import ConfirmationService from 'primevue/confirmationservice'
+import ToastService from 'primevue/toastservice'
+import { createApp } from 'vue'
 
-import VueApiTest from '../components/ApiTest.vue';
+import VueApiTest from '../components/ApiTest.vue'
+import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 /**
  * Creates and configures Vue application
  */
 function createVueApp() {
-  const app = createApp(VueApiTest);
+  const app = createApp(VueApiTest)
 
-  const pinia = createPinia();
-  app.use(pinia);
+  const pinia = createPinia()
+  app.use(pinia)
 
   app.use(PrimeVue, {
     theme: {
@@ -34,12 +35,12 @@ function createVueApp() {
       },
     },
     locale: getPrimeVueLocale(),
-  });
+  })
 
-  app.use(ConfirmationService);
-  app.use(ToastService);
+  app.use(ConfirmationService)
+  app.use(ToastService)
 
-  return app;
+  return app
 }
 
 /**
@@ -47,24 +48,24 @@ function createVueApp() {
  * Called externally when switching to the tab
  */
 export function init(selector = '#vue-api-test') {
-  const $el = document.querySelector(selector);
+  const $el = document.querySelector(selector)
 
   if (!$el) {
-    console.warn(`[API Test] Element ${selector} not found`);
-    return null;
+    console.warn(`[API Test] Element ${selector} not found`)
+    return null
   }
 
   if ($el.dataset.vApp === 'true') {
-    console.info('[API Test] Already mounted');
-    return null;
+    // Already mounted
+    return null
   }
 
-  const app = createVueApp();
-  app.mount(selector);
-  $el.dataset.vApp = 'true';
+  const app = createVueApp()
+  app.mount(selector)
+  injectFormStylesOverride()
+  $el.dataset.vApp = 'true'
 
-  console.info('[API Test] Mounted successfully');
-  return app;
+  return app
 }
 
 /**
@@ -72,8 +73,8 @@ export function init(selector = '#vue-api-test') {
  */
 if (import.meta.env.DEV) {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => init());
+    document.addEventListener('DOMContentLoaded', () => init())
   } else {
-    init();
+    init()
   }
 }

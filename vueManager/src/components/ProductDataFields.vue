@@ -1,12 +1,13 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import Card from 'primevue/card'
-import Message from 'primevue/message'
-import Fieldset from 'primevue/fieldset'
-import { useToast } from 'primevue/usetoast'
-import DynamicField from './DynamicField.vue'
-import request from '../request.js'
 import { useLexicon } from '@vuetools/useLexicon'
+import Card from 'primevue/card'
+import Fieldset from 'primevue/fieldset'
+import Message from 'primevue/message'
+import { useToast } from 'primevue/usetoast'
+import { computed, onMounted, ref } from 'vue'
+
+import request from '../request.js'
+import DynamicField from './DynamicField.vue'
 
 const props = defineProps({
   productId: {
@@ -68,7 +69,7 @@ async function loadProductData() {
       summary: _('ms3_vue_error'),
       detail: error.message || _('ms3_vue_error_loading_product_data'),
       life: 5000,
-      })
+    })
     return null
   }
 }
@@ -101,7 +102,7 @@ async function loadConfig() {
             if (typeof value === 'boolean') {
               value = value ? 1 : 0
             } else if (typeof value === 'string') {
-              value = (value === 'true' || value === '1') ? 1 : 0
+              value = value === 'true' || value === '1' ? 1 : 0
             } else {
               value = parseInt(value) || 0
             }
@@ -148,7 +149,7 @@ async function saveProductData() {
   try {
     const response = await request.put(
       `/api/mgr/product-data/${props.productId}`,
-      fieldValues.value,
+      fieldValues.value
     )
 
     if (response && response.updated) {
@@ -257,14 +258,18 @@ onMounted(() => {
               <div
                 v-for="field in section.fields"
                 :key="field.name"
-                :class="['field-item', `col-${field.width || 4}`, { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' }]"
+                :class="[
+                  'field-item',
+                  `col-${field.width || 4}`,
+                  { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' },
+                ]"
               >
                 <!-- Checkbox layout: checkbox + label in one line -->
                 <template v-if="field.xtype === 'xcheckbox' || field.xtype === 'checkbox'">
                   <div class="checkbox-wrapper">
                     <DynamicField
-                      :field-config="field"
                       v-model="fieldValues[field.name]"
+                      :field-config="field"
                       :disabled="loading || saving"
                       @blur="handleFieldChange(field.name, $event.value)"
                     />
@@ -286,8 +291,8 @@ onMounted(() => {
                   </label>
 
                   <DynamicField
-                    :field-config="field"
                     v-model="fieldValues[field.name]"
+                    :field-config="field"
                     :disabled="loading || saving"
                     @blur="handleFieldChange(field.name, $event.value)"
                   />
@@ -307,21 +312,21 @@ onMounted(() => {
 
 <style scoped>
 .product-data-fields {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .fields-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  margin: -10px; /* Compensate field padding */
+  gap: 1.25rem;
+  margin: -0.625rem; /* Compensate field padding */
 }
 
 .field-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
+  gap: 0.5rem;
+  padding: 0.625rem;
   box-sizing: border-box;
 }
 
@@ -334,48 +339,87 @@ onMounted(() => {
 }
 
 /* 12-column grid system */
-.col-1 { flex: 0 0 calc(8.333% - 20px); max-width: calc(8.333% - 20px); }
-.col-2 { flex: 0 0 calc(16.666% - 20px); max-width: calc(16.666% - 20px); }
-.col-3 { flex: 0 0 calc(25% - 20px); max-width: calc(25% - 20px); }
-.col-4 { flex: 0 0 calc(33.333% - 20px); max-width: calc(33.333% - 20px); }
-.col-5 { flex: 0 0 calc(41.666% - 20px); max-width: calc(41.666% - 20px); }
-.col-6 { flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px); }
-.col-7 { flex: 0 0 calc(58.333% - 20px); max-width: calc(58.333% - 20px); }
-.col-8 { flex: 0 0 calc(66.666% - 20px); max-width: calc(66.666% - 20px); }
-.col-9 { flex: 0 0 calc(75% - 20px); max-width: calc(75% - 20px); }
-.col-10 { flex: 0 0 calc(83.333% - 20px); max-width: calc(83.333% - 20px); }
-.col-11 { flex: 0 0 calc(91.666% - 20px); max-width: calc(91.666% - 20px); }
-.col-12 { flex: 0 0 calc(100% - 20px); max-width: calc(100% - 20px); }
+.col-1 {
+  flex: 0 0 calc(8.333% - 1.25rem);
+  max-width: calc(8.333% - 1.25rem);
+}
+.col-2 {
+  flex: 0 0 calc(16.666% - 1.25rem);
+  max-width: calc(16.666% - 1.25rem);
+}
+.col-3 {
+  flex: 0 0 calc(25% - 1.25rem);
+  max-width: calc(25% - 1.25rem);
+}
+.col-4 {
+  flex: 0 0 calc(33.333% - 1.25rem);
+  max-width: calc(33.333% - 1.25rem);
+}
+.col-5 {
+  flex: 0 0 calc(41.666% - 1.25rem);
+  max-width: calc(41.666% - 1.25rem);
+}
+.col-6 {
+  flex: 0 0 calc(50% - 1.25rem);
+  max-width: calc(50% - 1.25rem);
+}
+.col-7 {
+  flex: 0 0 calc(58.333% - 1.25rem);
+  max-width: calc(58.333% - 1.25rem);
+}
+.col-8 {
+  flex: 0 0 calc(66.666% - 1.25rem);
+  max-width: calc(66.666% - 1.25rem);
+}
+.col-9 {
+  flex: 0 0 calc(75% - 1.25rem);
+  max-width: calc(75% - 1.25rem);
+}
+.col-10 {
+  flex: 0 0 calc(83.333% - 1.25rem);
+  max-width: calc(83.333% - 1.25rem);
+}
+.col-11 {
+  flex: 0 0 calc(91.666% - 1.25rem);
+  max-width: calc(91.666% - 1.25rem);
+}
+.col-12 {
+  flex: 0 0 calc(100% - 1.25rem);
+  max-width: calc(100% - 1.25rem);
+}
 
 /* Responsive: on tablets col-4 becomes col-6 */
-@media (max-width: 1024px) {
-  .col-4 { flex: 0 0 calc(50% - 20px); max-width: calc(50% - 20px); }
+@media (max-width: 64rem) {
+  .col-4 {
+    flex: 0 0 calc(50% - 1.25rem);
+    max-width: calc(50% - 1.25rem);
+  }
 }
 
 /* Responsive: on mobile all fields full width */
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .field-item {
-    flex: 0 0 calc(100% - 20px) !important;
-    max-width: calc(100% - 20px) !important;
+    flex: 0 0 calc(100% - 1.25rem) !important;
+    max-width: calc(100% - 1.25rem) !important;
   }
 }
 
 .field-label {
   font-weight: 600;
-  font-size: 14px;
-  color: #333;
+  font-size: 0.875rem;
+  color: var(--ms3-text-primary);
 }
 
 .field-label .required {
-  color: #e24c4c;
-  margin-left: 2px;
+  color: var(--ms3-text-danger-alt);
+  margin-left: 0.125rem;
 }
 
 /* Checkbox: horizontal layout */
 .checkbox-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .checkbox-wrapper :deep(.field-wrapper) {
@@ -389,15 +433,15 @@ onMounted(() => {
 }
 
 .field-description {
-  color: #666;
-  font-size: 12px;
-  margin-top: 4px;
+  color: var(--ms3-text-muted);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 .sections-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
 .section-fieldset {
