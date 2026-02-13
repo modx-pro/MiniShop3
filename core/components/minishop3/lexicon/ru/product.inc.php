@@ -165,4 +165,26 @@ $_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Вы действител�
 
 $_lang['ms3_gallery_errors'] = 'Ошибки при загрузке';
 
+// Строки Uppy для загрузки в галерею
+$_lang['ms3_gallery_uppy_drop_paste'] = 'Перетащите файлы сюда или %{browse}';
+$_lang['ms3_gallery_uppy_browse'] = 'выбрать';
+$_lang['ms3_gallery_uppy_browse_files'] = 'выбрать файлы';
+$_lang['ms3_gallery_uppy_browse_folders'] = 'выбрать папки';
+$_lang['ms3_gallery_uppy_upload_complete'] = 'Загрузка завершена';
+$_lang['ms3_gallery_uppy_upload_failed'] = 'Ошибка загрузки';
+$_lang['ms3_gallery_uppy_uploading'] = 'Загрузка...';
+$_lang['ms3_gallery_uppy_complete'] = 'Готово';
+$_lang['ms3_gallery_uppy_cancel'] = 'Отмена';
+$_lang['ms3_gallery_uppy_remove'] = 'Удалить';
+$_lang['ms3_gallery_uppy_edit'] = 'Редактировать';
+$_lang['ms3_gallery_uppy_retry'] = 'Повторить';
+$_lang['ms3_gallery_uppy_add_more'] = 'Добавить ещё';
+$_lang['ms3_gallery_uppy_x_files_selected_0'] = '%{smart_count} файл выбран';
+$_lang['ms3_gallery_uppy_x_files_selected_1'] = '%{smart_count} файла выбрано';
+$_lang['ms3_gallery_uppy_x_files_selected_2'] = '%{smart_count} файлов выбрано';
+$_lang['ms3_gallery_uppy_upload_x_files_0'] = 'Загрузить %{smart_count} файл';
+$_lang['ms3_gallery_uppy_upload_x_files_1'] = 'Загрузить %{smart_count} файла';
+$_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Загрузить %{smart_count} файлов';
+$_lang['ms3_gallery_uppy_note_max_size'] = 'Макс. размер: %{maxSize}';
+
 $_lang['ms3_product_data_vue'] = 'Данные товара (Vue)';
