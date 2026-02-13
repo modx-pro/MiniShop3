@@ -12,7 +12,7 @@
         </a>
     </div>
 {else}
-<form class="ms3_form ms3_order_form" method="post">
+<form class="ms3_form ms3_order_form" method="post" data-ms3-form="order">
     {* Секция 1: Контактные данные и способы оплаты *}
     <div class="row g-4 mb-4">
         {* Контактные данные *}
@@ -280,14 +280,14 @@
         </div>
         <div class="col-12 col-md-6">
             <div class="d-flex gap-2 justify-content-md-end">
-                <form class="ms3_form">
+                <form class="ms3_form" data-ms3-form="order">
                     <input type="hidden" name="ms3_action" value="order/clean">
                     <button type="button" class="btn btn-outline-danger ms3_link">
                         <i class="bi bi-x-circle me-1"></i>
                         {'ms3_frontend_order_cancel' | lexicon}
                     </button>
                 </form>
-                <form class="ms3_form">
+                <form class="ms3_form" data-ms3-form="order">
                     <input type="hidden" name="ms3_action" value="order/submit">
                     <button type="submit" class="btn btn-lg btn-primary">
                         <i class="bi bi-check-circle me-2"></i>

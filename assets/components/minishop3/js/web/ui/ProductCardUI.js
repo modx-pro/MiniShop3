@@ -134,7 +134,7 @@ class ProductCardUI {
    * Update all product cards on page
    */
   updateAllCards () {
-    const cards = document.querySelectorAll('.ms3-product-card')
+    const cards = document.querySelectorAll('[data-ms3-product-card], .ms3-product-card')
 
     cards.forEach(card => {
       this.updateCard(card)
@@ -168,7 +168,7 @@ class ProductCardUI {
       changeForm.style.display = 'flex'
 
       // Update quantity input
-      const countInput = changeForm.querySelector('.qty-input')
+      const countInput = changeForm.querySelector('[data-ms3-qty="input"]') || changeForm.querySelector('.qty-input')
       if (countInput) {
         countInput.value = this.cartState[productId].totalCount
       }
@@ -206,64 +206,65 @@ class ProductCardUI {
   }
 
   /**
-   * Product quantity +/- buttons in product cards
+   * Product quantity +/- buttons in product cards ([data-ms3-qty="inc"], [data-ms3-qty="dec"])
    */
   initQuantityButtons () {
-    const cards = document.querySelectorAll('.ms3-product-card')
+    const cards = document.querySelectorAll('[data-ms3-product-card], .ms3-product-card')
 
     cards.forEach(card => {
       const changeForm = card.querySelector('[data-cart-state="change"]')
       if (!changeForm) return
 
-      changeForm.querySelectorAll('.qty-btn').forEach(btn => {
-        // Remove old listeners by cloning
+      const buttons = changeForm.querySelectorAll('[data-ms3-qty="inc"], [data-ms3-qty="dec"]')
+      if (buttons.length === 0) {
+        changeForm.querySelectorAll('.qty-btn').forEach(btn => {
+          const newBtn = btn.cloneNode(true)
+          btn.parentNode.replaceChild(newBtn, btn)
+          newBtn.addEventListener('click', (e) => this.handleQtyButtonClick(e, changeForm, card))
+        })
+        return
+      }
+
+      buttons.forEach(btn => {
         const newBtn = btn.cloneNode(true)
         btn.parentNode.replaceChild(newBtn, btn)
-
-        newBtn.addEventListener('click', async (e) => {
-          e.preventDefault()
-
-          const input = changeForm.querySelector('.qty-input')
-          const productKeyInput = changeForm.querySelector('[name="product_key"]')
-
-          if (!input || !productKeyInput) return
-
-          let qty = parseInt(input.value) || 0
-
-          if (e.target.classList.contains('inc-qty')) {
-            qty++
-          }
-
-          if (e.target.classList.contains('dec-qty')) {
-            qty--
-          }
-
-          if (qty < 0) {
-            qty = 0
-          }
-
-          input.value = qty
-
-          await this.handleQuantityChange(productKeyInput.value, qty, card)
-        })
+        newBtn.addEventListener('click', (e) => this.handleQtyButtonClick(e, changeForm, card))
       })
     })
   }
 
   /**
-   * Quantity input fields in product cards
+   * @param {Event} e - Click event
+   * @param {HTMLFormElement} changeForm - Change form
+   * @param {HTMLElement} card - Product card
+   */
+  handleQtyButtonClick (e, changeForm, card) {
+    e.preventDefault()
+    const input = changeForm.querySelector('[data-ms3-qty="input"]') || changeForm.querySelector('.qty-input')
+    const productKeyInput = changeForm.querySelector('[name="product_key"]')
+    if (!input || !productKeyInput) return
+    let qty = parseInt(input.value) || 0
+    const btn = e.currentTarget
+    if (btn.getAttribute('data-ms3-qty') === 'inc' || btn.classList.contains('inc-qty')) qty++
+    if (btn.getAttribute('data-ms3-qty') === 'dec' || btn.classList.contains('dec-qty')) qty--
+    if (qty < 0) qty = 0
+    input.value = qty
+    this.handleQuantityChange(productKeyInput.value, qty, card)
+  }
+
+  /**
+   * Quantity input fields in product cards ([data-ms3-qty="input"])
    */
   initQuantityInputs () {
-    const cards = document.querySelectorAll('.ms3-product-card')
+    const cards = document.querySelectorAll('[data-ms3-product-card], .ms3-product-card')
 
     cards.forEach(card => {
       const changeForm = card.querySelector('[data-cart-state="change"]')
       if (!changeForm) return
 
-      const input = changeForm.querySelector('.qty-input')
+      const input = changeForm.querySelector('[data-ms3-qty="input"]') || changeForm.querySelector('.qty-input')
       if (!input) return
 
-      // Remove old listeners by cloning
       const newInput = input.cloneNode(true)
       input.parentNode.replaceChild(newInput, input)
 

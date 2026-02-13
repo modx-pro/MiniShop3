@@ -1,4 +1,4 @@
-<form class="ms3_customer_form" method="post">
+<form class="ms3_customer_form" method="post" data-ms3-form="customer">
     <div class="row">
         <h4>{'ms3_frontend_customer' | lexicon}:</h4>
         {foreach ['first_name','last_name','email', 'phone'] as $field}
@@ -10,7 +10,7 @@
                     <div class="col-md-12">
                         <input type="text" id="{$field}" placeholder="{('ms3_frontend_' ~ $field) | lexicon}"
                                name="{$field}" value="{$form[$field]}"
-                               class="form-control{($field in list $errors) ? ' error' : ''}">
+                               class="form-control{($field in list $errors) ? ' error' : ''}"{($field in list $errors) ? ' data-ms3-error' : ''}>
                     </div>
                 </div>
 

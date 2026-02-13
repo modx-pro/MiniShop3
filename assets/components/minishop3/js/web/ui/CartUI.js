@@ -37,26 +37,26 @@ class CartUI {
   }
 
   /**
-   * Product quantity +/- buttons
+   * Product quantity +/- buttons ([data-ms3-qty="inc"], [data-ms3-qty="dec"])
    */
   initQuantityButtons () {
-    document.querySelectorAll('.qty-btn').forEach(btn => {
+    document.querySelectorAll('[data-ms3-qty="inc"], [data-ms3-qty="dec"]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
-        const form = e.target.closest('.ms3_form')
+        const form = e.currentTarget.closest('[data-ms3-form]') || e.currentTarget.closest('.ms3_form')
         if (!form) return
 
-        const input = form.querySelector('.qty-input')
+        const input = form.querySelector('[data-ms3-qty="input"]') || form.querySelector('.qty-input')
         const productKeyInput = form.querySelector('[name="product_key"]')
 
         if (!input || !productKeyInput) return
 
         let qty = parseInt(input.value) || 0
 
-        if (e.target.classList.contains('inc-qty')) {
+        if (e.currentTarget.getAttribute('data-ms3-qty') === 'inc') {
           qty++
         }
 
-        if (e.target.classList.contains('dec-qty') && qty > 0) {
+        if (e.currentTarget.getAttribute('data-ms3-qty') === 'dec' && qty > 0) {
           qty--
         }
 
@@ -68,12 +68,12 @@ class CartUI {
   }
 
   /**
-   * Quantity input fields
+   * Quantity input fields ([data-ms3-qty="input"] or .qty-input fallback)
    */
   initQuantityInputs () {
-    document.querySelectorAll('.qty-input').forEach(input => {
+    document.querySelectorAll('[data-ms3-qty="input"], .qty-input').forEach(input => {
       input.addEventListener('change', async (e) => {
-        const form = e.target.closest('.ms3_form')
+        const form = e.target.closest('[data-ms3-form]') || e.target.closest('.ms3_form')
         if (!form) return
 
         const productKeyInput = form.querySelector('[name="product_key"]')
@@ -89,12 +89,12 @@ class CartUI {
   }
 
   /**
-   * Product option selects (color, size, etc.)
+   * Product option selects (data-ms3-cart-options)
    */
   initOptionSelects () {
-    document.querySelectorAll('.ms3_cart_options').forEach(select => {
+    document.querySelectorAll('[data-ms3-cart-options]').forEach(select => {
       select.addEventListener('change', async (e) => {
-        const form = e.target.closest('.ms3_form')
+        const form = e.target.closest('[data-ms3-form]') || e.target.closest('.ms3_form')
         if (!form) return
 
         console.log('Option changed:', e.target.name, e.target.value)

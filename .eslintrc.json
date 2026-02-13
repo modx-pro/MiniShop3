@@ -1,11 +1,7 @@
 {
   "root": true,
-  "extends": [
-    "standard"
-  ],
-  "env": {
-    "browser": true
-  },
+  "extends": ["standard"],
+  "env": { "browser": true },
   "globals": {
     "ms3": "readonly",
     "ms3Config": "readonly"
