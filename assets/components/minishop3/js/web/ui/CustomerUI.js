@@ -18,6 +18,15 @@ class CustomerUI {
   }
 
   /**
+   * Get lexicon string (from window.ms3Lexicon or fallback to key)
+   * @param {string} key - Lexicon key
+   * @returns {string}
+   */
+  t (key) {
+    return (typeof window !== 'undefined' && window.ms3Lexicon && window.ms3Lexicon[key]) || key
+  }
+
+  /**
    * Initialize UI handlers
    */
   init () {
@@ -107,7 +116,7 @@ class CustomerUI {
       return response
     } catch (error) {
       console.error('CustomerUI.handleAdd error:', error)
-      this.message.error('An error occurred')
+      this.message.error(this.t('ms3_customer_err_occurred'))
       return { success: false, message: error.message }
     }
   }
@@ -143,7 +152,7 @@ class CustomerUI {
       return response
     } catch (error) {
       console.error('CustomerUI.handleChangeAddress error:', error)
-      this.message.error('An error occurred')
+      this.message.error(this.t('ms3_customer_err_occurred'))
       return { success: false }
     }
   }
@@ -174,19 +183,19 @@ class CustomerUI {
       await this.hooks.runHooks('afterUpdateProfile', { data, response })
 
       if (response.success) {
-        this.message.success(response.message || 'Profile successfully updated')
+        this.message.success(response.message || this.t('ms3_customer_profile_updated'))
 
         setTimeout(() => {
           window.location.reload()
         }, 1000)
       } else {
-        this.message.error(response.message || 'Profile update error')
+        this.message.error(response.message || this.t('ms3_customer_profile_update_error'))
       }
 
       return response
     } catch (error) {
       console.error('CustomerUI.handleProfileUpdate error:', error)
-      this.message.error('An error occurred while saving')
+      this.message.error(this.t('ms3_customer_err_occurred_saving'))
       return { success: false, message: error.message }
     }
   }
@@ -217,19 +226,19 @@ class CustomerUI {
       await this.hooks.runHooks('afterCreateAddress', { data, response })
 
       if (response.success) {
-        this.message.success(response.message || 'Address successfully added')
+        this.message.success(response.message || this.t('ms3_customer_address_added'))
 
         setTimeout(() => {
           window.location.href = window.location.pathname
         }, 1000)
       } else {
-        this.message.error(response.message || 'Address creation error')
+        this.message.error(response.message || this.t('ms3_customer_address_creation_error'))
       }
 
       return response
     } catch (error) {
       console.error('CustomerUI.handleAddressCreate error:', error)
-      this.message.error('An error occurred while saving')
+      this.message.error(this.t('ms3_customer_err_occurred_saving'))
       return { success: false, message: error.message }
     }
   }
@@ -249,8 +258,9 @@ class CustomerUI {
 
     const addressId = data.id
     if (!addressId) {
-      this.message.error('Address ID not specified')
-      return { success: false, message: 'Address ID not specified' }
+      const msg = this.t('ms3_customer_err_address_id_not_specified')
+      this.message.error(msg)
+      return { success: false, message: msg }
     }
 
     const hookData = { addressId, data }
@@ -266,19 +276,19 @@ class CustomerUI {
       await this.hooks.runHooks('afterUpdateAddress', { addressId, data, response })
 
       if (response.success) {
-        this.message.success(response.message || 'Address successfully updated')
+        this.message.success(response.message || this.t('ms3_customer_address_updated'))
 
         setTimeout(() => {
           window.location.href = window.location.pathname
         }, 1000)
       } else {
-        this.message.error(response.message || 'Address update error')
+        this.message.error(response.message || this.t('ms3_customer_address_update_error'))
       }
 
       return response
     } catch (error) {
       console.error('CustomerUI.handleAddressUpdate error:', error)
-      this.message.error('An error occurred while saving')
+      this.message.error(this.t('ms3_customer_err_occurred_saving'))
       return { success: false, message: error.message }
     }
   }

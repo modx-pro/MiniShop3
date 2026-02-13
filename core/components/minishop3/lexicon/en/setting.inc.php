@@ -153,12 +153,10 @@ $_lang['setting_ms3_import_preview_rows_desc'] = 'Number of CSV rows to preview 
 
 
 $_lang['ms3_source_thumbnails_desc'] = 'JSON-encoded array with parameters for generating image thumbnails.';
-$_lang['ms3_source_maxUploadWidth_desc'] = 'Maximum width of image for upload. Anything larger will be reduced to this value.';
-$_lang['ms3_source_maxUploadHeight_desc'] = 'Maximum height of image for upload. Anything larger will be reduced to this value.';
-$_lang['ms3_source_maxUploadSize_desc'] = 'Maximum size of uploaded images (in bytes).';
-$_lang['ms3_source_imageNameType_desc'] = 'This parameter specifies how to rename file on upload. Hash - generates unique name depending on file content. Friendly - generates name using site friendly URL algorithm (controlled by system settings).';
-$_lang['setting_ms3_utility_import_fields'] = 'Import fields list';
-$_lang['setting_ms3_utility_import_fields_delimiter'] = 'Import file columns delimiter';
+$_lang['ms3_source_max_upload_width_desc'] = 'Maximum width of image for upload. Anything larger will be reduced to this value.';
+$_lang['ms3_source_max_upload_height_desc'] = 'Maximum height of image for upload. Anything larger will be reduced to this value.';
+$_lang['ms3_source_max_upload_size_desc'] = 'Maximum size of uploaded images (in bytes).';
+$_lang['ms3_source_image_name_type_desc'] = 'This parameter specifies how to rename file on upload. Hash - generates unique name depending on file content. Friendly - generates name using site friendly URL algorithm (controlled by system settings).';
 
 // Token Security Settings
 $_lang['area_ms3_security'] = 'Security';

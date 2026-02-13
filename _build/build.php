@@ -417,9 +417,10 @@ class MiniShop3Package
             ], $data), '', true, true);
             $properties = [];
             foreach ($data['properties'] ?? [] as $k => $v) {
+                $propKey = $k === 'includeTVs' ? 'include_tvs' : $this->camelToSnake($k);
                 $properties[] = array_merge([
                     'name' => $k,
-                    'desc' => 'ms3_prop_' . $k,
+                    'desc' => 'ms3_prop_' . $propKey,
                     'lexicon' => 'minishop3:properties',
                 ], $v);
             }
@@ -581,6 +582,14 @@ class MiniShop3Package
      * @param string $filename
      * @return string
      */
+    /**
+     * Converts camelCase to snake_case for lexicon keys.
+     */
+    private function camelToSnake(string $str): string
+    {
+        return strtolower(preg_replace('/([A-Z])/', '_$1', $str));
+    }
+
     private function getFileContent(string $filename): string
     {
         if (!file_exists($filename)) {

@@ -10,7 +10,6 @@
 $_lang['ms3_err_token'] = 'Token not specified';
 $_lang['ms3_err_token_invalid'] = 'Token not found or invalid';
 $_lang['ms3_err_token_expired'] = 'Token has expired';
-$_lang['ms3_customer'] = 'Customer';
 $_lang['ms3_customer_addresses'] = 'Customer addresses';
 $_lang['ms3_customer_key_empty'] = 'Request key missing';
 $_lang['ms3_err_customer_nf'] = 'Customer profile not found';
@@ -172,6 +171,14 @@ $_lang['ms3_customer_address_name_placeholder'] = 'E.g.: Home, Office, Cottage';
 $_lang['ms3_customer_address_name_help'] = 'Optional. If not specified, will be generated automatically.';
 $_lang['ms3_customer_address_comment_help'] = 'Additional information for courier';
 $_lang['ms3_customer_err_address_not_found'] = 'Address not found';
+$_lang['ms3_customer_err_address_id_not_specified'] = 'Address ID not specified';
+$_lang['ms3_customer_address_updated'] = 'Address successfully updated';
+$_lang['ms3_customer_address_added'] = 'Address successfully added';
+$_lang['ms3_customer_address_creation_error'] = 'Address creation error';
+$_lang['ms3_customer_address_update_error'] = 'Address update error';
+$_lang['ms3_customer_profile_update_error'] = 'Profile update error';
+$_lang['ms3_customer_err_occurred'] = 'An error occurred';
+$_lang['ms3_customer_err_occurred_saving'] = 'An error occurred while saving';
 $_lang['ms3_customer_cancel'] = 'Cancel';
 $_lang['ms3_customer_save'] = 'Save';
 

@@ -78,28 +78,28 @@ if ($transport->xpdo) {
                     ],
                     'maxUploadWidth' => [
                         'name' => 'maxUploadWidth',
-                        'desc' => 'ms3_source_maxUploadWidth_desc',
+                        'desc' => 'ms3_source_max_upload_width_desc',
                         'type' => 'numberfield',
                         'lexicon' => 'MiniShop3:setting',
                         'value' => 1920,
                     ],
                     'maxUploadHeight' => [
                         'name' => 'maxUploadHeight',
-                        'desc' => 'ms3_source_maxUploadHeight_desc',
+                        'desc' => 'ms3_source_max_upload_height_desc',
                         'type' => 'numberfield',
                         'lexicon' => 'MiniShop3:setting',
                         'value' => 1080,
                     ],
                     'maxUploadSize' => [
                         'name' => 'maxUploadSize',
-                        'desc' => 'ms3_source_maxUploadSize_desc',
+                        'desc' => 'ms3_source_max_upload_size_desc',
                         'type' => 'numberfield',
                         'lexicon' => 'MiniShop3:setting',
                         'value' => 10485760,
                     ],
                     'imageNameType' => [
                         'name' => 'imageNameType',
-                        'desc' => 'ms3_source_imageNameType_desc',
+                        'desc' => 'ms3_source_image_name_type_desc',
                         'type' => 'list',
                         'lexicon' => 'MiniShop3:setting',
                         'options' => [

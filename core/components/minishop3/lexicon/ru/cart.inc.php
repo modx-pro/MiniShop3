@@ -18,13 +18,11 @@ $_lang['ms3_cart_remove'] = 'Удалить';
 $_lang['ms3_cart_total'] = 'Итого';
 
 $_lang['ms3_cart_add_success'] = 'Товар успешно добавлен в корзину: [[+count]]';
-$_lang['ms3_cart_add_error'] = 'Ошибка добавления товара в корзину';
 $_lang['ms3_cart_add_err_id'] = 'Ошибка добавления в корзину: не указан идентификатор товара';
 $_lang['ms3_cart_add_err_nf'] = 'Ошибка добавления в корзину: товар не найден';
 $_lang['ms3_cart_add_err_count'] = 'Ошибка добавления в корзину: неверное количество "[[+count]]"';
 
 $_lang['ms3_cart_remove_success'] = 'Товар успешно удалён из корзины';
-$_lang['ms3_cart_remove_error'] = 'Ошибка удаления товара';
 
 $_lang['ms3_cart_change_success'] = 'Количество товара в корзине успешно изменено: [[+count]]';
 $_lang['ms3_cart_change_error'] = 'Ошибка при изменении количества товара в корзине';
@@ -37,6 +35,4 @@ $_lang['ms3_cart_in_cart'] = 'В корзине';
 
 $_lang['ms3_order_err_empty'] = 'Невозможно оформить пустой заказ';
 $_lang['ms3_order_err_delivery'] = 'Вы должны выбрать способ доставки';
-$_lang['ms3_order_err_validation_rules'] = 'Вы должны корректно заполнить требуемые поля';
-$_lang['ms3_err_token'] = 'Не указан токен';
 $_lang['ms3_err_rate_limit'] = 'Превышен лимит запросов. Попробуйте позже';

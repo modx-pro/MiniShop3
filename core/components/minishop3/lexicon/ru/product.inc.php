@@ -61,7 +61,6 @@ $_lang['ms3_product_publishedon_help'] = 'Дата опубликования р
 $_lang['ms3_product_publishedby'] = 'Кто опубликовал';
 $_lang['ms3_product_publishedby_help'] = 'Пользователь, который опубликовал ресурс.';
 
-$_lang['ms3_product_menutitle'] = 'Пункт меню';
 $_lang['ms3_product_hidemenu'] = 'Не показывать в меню';
 $_lang['ms3_product_uri_override'] = 'Заморозить ссылку';
 $_lang['ms3_product_uri'] = 'Ссылка';
@@ -100,8 +99,6 @@ $_lang['ms3_product_tags'] = 'Теги';
 $_lang['ms3_product_tags_help'] = 'Любые теги продукта.';
 $_lang['ms3_product_size'] = 'Размеры';
 $_lang['ms3_product_size_help'] = 'Размеры товара, если есть.';
-$_lang['ms3_product_color'] = 'Цвета';
-$_lang['ms3_product_color_help'] = 'Цвета товара, если есть.';
 $_lang['ms3_product_new'] = 'Новый товар';
 $_lang['ms3_product_new_help'] = '';
 $_lang['ms3_product_favorite'] = 'Особый';
