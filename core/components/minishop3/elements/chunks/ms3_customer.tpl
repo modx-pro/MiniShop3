@@ -8,9 +8,7 @@
                         {('ms3_frontend_' ~ $field) | lexicon} <span class="required-star">*</span>
                     </label>
                     <div class="col-md-12">
-                        <input type="text" id="{$field}" placeholder="{('ms3_frontend_' ~ $field) | lexicon}"
-                               name="{$field}" value="{$form[$field]}"
-                               class="form-control{($field in list $errors) ? ' error' : ''}"{($field in list $errors) ? ' data-ms3-error' : ''}>
+                        <input type="text" id="{$field}" placeholder="{('ms3_frontend_' ~ $field) | lexicon}" name="{$field}" value="{$form[$field]}" class="form-control{($field in list $errors) ? ' error' : ''}{($field in list $errors) ? ' data-ms3-error' : ''}">
                     </div>
                 </div>
 

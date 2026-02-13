@@ -21,8 +21,8 @@
                     <img src="{$product.thumb}" alt="{$product.pagetitle}" title="{$product.pagetitle}"/>
                 {else}
                     <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
-                         srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                         alt="{$product.pagetitle}" title="{$product.pagetitle}"/>
+                        srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
+                        alt="{$product.pagetitle}" title="{$product.pagetitle}"/>
                 {/if}
                 {/var}
                 <tr id="{$product.product_key}">
@@ -102,11 +102,11 @@
                         <span class="mr-2 text-nowrap"><span class="ms3_cost">{$product.cost}</span> {'ms3_frontend_currency' | lexicon}</span>
                     </td>
                     <td class="ms-remove">
-<form method="post" class="ms3_form text-md-right" data-ms3-form>
-                                            <input type="hidden" name="product_key" value="{$product.product_key}">
-                                            <input type="hidden" name="ms3_action" value="cart/remove">
-                                            <button class="btn btn-sm btn-danger" type="submit">&times;</button>
-                                        </form>
+                        <form method="post" class="ms3_form text-md-right" data-ms3-form>
+                            <input type="hidden" name="product_key" value="{$product.product_key}">
+                            <input type="hidden" name="ms3_action" value="cart/remove">
+                            <button class="btn btn-sm btn-danger" type="submit">&times;</button>
+                        </form>
                     </td>
                 </tr>
             {/foreach}
