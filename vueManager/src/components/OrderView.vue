@@ -2304,10 +2304,12 @@ onMounted(async () => {
                           <DatePicker
                             v-model="order[field.name]"
                             :placeholder="field.placeholder"
-                            class="w-full"
                             date-format="dd.mm.yy"
                             show-time
                             hour-format="24"
+                            show-icon
+                            fluid
+                            icon-display="input"
                           />
                         </template>
 
