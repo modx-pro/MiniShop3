@@ -9,7 +9,10 @@ import Uppy from '@uppy/core'
 import Dashboard from '@uppy/dashboard'
 import ImageEditor from '@uppy/image-editor'
 import XHRUpload from '@uppy/xhr-upload'
+import { useLexicon } from '@vuetools/useLexicon'
 import { onBeforeUnmount, onMounted } from 'vue'
+
+const { _ } = useLexicon()
 
 const props = defineProps({
   productId: {
@@ -63,7 +66,47 @@ onBeforeUnmount(() => {
   }
 })
 
+const buildUppyLocale = () => {
+  const isRu = (window.MODx?.cultureKey || 'en').toLowerCase().startsWith('ru')
+  return {
+    strings: {
+      dropPasteFiles: _('ms3_gallery_uppy_drop_paste'),
+      browse: _('ms3_gallery_uppy_browse'),
+      browseFiles: _('ms3_gallery_uppy_browse_files'),
+      browseFolders: _('ms3_gallery_uppy_browse_folders'),
+      uploadComplete: _('ms3_gallery_uppy_upload_complete'),
+      uploadFailed: _('ms3_gallery_uppy_upload_failed'),
+      uploading: _('ms3_gallery_uppy_uploading'),
+      complete: _('ms3_gallery_uppy_complete'),
+      cancel: _('ms3_gallery_uppy_cancel'),
+      remove: _('ms3_gallery_uppy_remove'),
+      edit: _('ms3_gallery_uppy_edit'),
+      retry: _('ms3_gallery_uppy_retry'),
+      addMore: _('ms3_gallery_uppy_add_more'),
+      xFilesSelected: {
+        0: _('ms3_gallery_uppy_x_files_selected_0'),
+        1: _('ms3_gallery_uppy_x_files_selected_1'),
+        2: _('ms3_gallery_uppy_x_files_selected_2'),
+      },
+      uploadXFiles: {
+        0: _('ms3_gallery_uppy_upload_x_files_0'),
+        1: _('ms3_gallery_uppy_upload_x_files_1'),
+        2: _('ms3_gallery_uppy_upload_x_files_2'),
+      },
+    },
+    pluralize: isRu
+      ? n =>
+          n % 10 === 1 && n % 100 !== 11
+            ? 0
+            : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
+              ? 1
+              : 2
+      : n => (n === 1 ? 0 : 1),
+  }
+}
+
 const initUppy = () => {
+  const locale = buildUppyLocale()
   uppy = new Uppy({
     id: 'gallery-uploader',
     autoProceed: false,
@@ -74,28 +117,13 @@ const initUppy = () => {
       minNumberOfFiles: null,
       allowedFileTypes: props.allowedFileTypes,
     },
-    locale: {
-      strings: {
-        // English localization
-        dropPasteFiles: 'Drop files here or %{browse}',
-        browse: 'browse',
-        uploadComplete: 'Upload complete',
-        uploadFailed: 'Upload failed',
-        uploading: 'Uploading...',
-        complete: 'Complete',
-        cancel: 'Cancel',
-        remove: 'Remove',
-        edit: 'Edit',
-        retry: 'Retry',
-        addMore: 'Add more',
-        xFilesSelected: {
-          0: '%{smart_count} file selected',
-          1: '%{smart_count} files selected',
-          2: '%{smart_count} files selected',
-        },
-      },
-    },
+    locale,
   })
+
+  const noteText = _('ms3_gallery_uppy_note_max_size').replace(
+    '%{maxSize}',
+    formatBytes(props.maxFileSize)
+  )
 
   uppy.use(Dashboard, {
     target: '#uppy-dashboard',
@@ -105,7 +133,7 @@ const initUppy = () => {
     proudlyDisplayPoweredByUppy: false,
     showProgressDetails: true,
     hideUploadButton: false,
-    note: `Maximum size: ${formatBytes(props.maxFileSize)}`,
+    note: noteText,
     theme: 'light',
   })
 
