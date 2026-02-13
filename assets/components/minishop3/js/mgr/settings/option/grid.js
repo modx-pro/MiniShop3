@@ -107,14 +107,6 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
         };
     },
 
-    actionsColumnRenderer: function (value, metaData, record, rowIndex, colIndex, store) {
-        const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
-        return this._getActionsColumnTpl().apply({
-            actions: actions
-        });
-    },
-
-
     createOption: function (btn, e) {
         let w = Ext.getCmp('ms3-window-option-create');
         if (w) {

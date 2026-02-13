@@ -273,7 +273,11 @@ onMounted(() => {
                       :disabled="loading || saving"
                       @blur="handleFieldChange(field.name, $event.value)"
                     />
-                    <label :for="field.name" class="field-label checkbox-label">
+                    <label
+                      :for="field.name"
+                      class="field-label checkbox-label"
+                      :title="'[[+' + field.name + ']]'"
+                    >
                       {{ field.label }}
                       <span v-if="field.required" class="required">*</span>
                     </label>
@@ -285,7 +289,7 @@ onMounted(() => {
 
                 <!-- Regular field: label on top, field below -->
                 <template v-else>
-                  <label :for="field.name" class="field-label">
+                  <label :for="field.name" class="field-label" :title="'[[+' + field.name + ']]'">
                     {{ field.label }}
                     <span v-if="field.required" class="required">*</span>
                   </label>

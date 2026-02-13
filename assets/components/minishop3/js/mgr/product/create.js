@@ -55,9 +55,6 @@ ms3.panel.CreateProduct = function (config) {
     ms3.panel.CreateProduct.superclass.constructor.call(this, config);
 };
 Ext.extend(ms3.panel.CreateProduct, ms3.panel.Product, {
-    formatMainPanelTitle(formId, record, realtimeValue = null, returnBaseTitle = false) {
-
-    },
     getFields: function (config) {
         const fields = [];
         const originals = ms3.panel.Product.prototype.getFields.call(this, config);
@@ -69,20 +66,6 @@ Ext.extend(ms3.panel.CreateProduct, ms3.panel.Product, {
             fields.push(item);
         }
         return fields;
-    },
-
-    getGallery: function (config) {
-        return {
-            title: _('ms3_tab_product_gallery'),
-            disabled: true,
-            listeners: {
-                afterrender: function (p) {
-                    Ext.get(p.tabEl).on('click', function () {
-                        MODx.msg.alert(_('warning'), _('ms3_gallery_unavailablemsg'));
-                    });
-                }
-            }
-        };
     },
 });
 Ext.reg('ms3-panel-product-create', ms3.panel.CreateProduct);
