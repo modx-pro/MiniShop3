@@ -1055,6 +1055,9 @@ $_lang['unpublish_selected'] = 'Unpublish selected';
 $_lang['grid_category_products'] = 'Category Products';
 $_lang['showing'] = 'Showing';
 $_lang['of'] = 'of';
+$_lang['rows_per_page'] = 'Rows per page';
+$_lang['first_page'] = 'First page';
+$_lang['last_page'] = 'Last page';
 
 // Display field types
 $_lang['field_type_badge'] = 'Badge (colored label)';

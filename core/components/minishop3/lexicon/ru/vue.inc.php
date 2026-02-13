@@ -1060,6 +1060,9 @@ $_lang['unpublish_selected'] = 'Снять с публикации';
 $_lang['grid_category_products'] = 'Товары категории';
 $_lang['showing'] = 'Показано';
 $_lang['of'] = 'из';
+$_lang['rows_per_page'] = 'Показывать по';
+$_lang['first_page'] = 'В начало';
+$_lang['last_page'] = 'В конец';
 
 // Display field types
 $_lang['field_type_badge'] = 'Badge (цветная метка)';
