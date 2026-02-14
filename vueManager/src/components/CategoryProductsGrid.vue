@@ -681,15 +681,20 @@ onMounted(async () => {
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   nested.value = ms3Config?.show_nested_products ?? false
 
-  // Default rows: from config, or from localStorage, or 20
+  // Default rows: localStorage (user choice) > config (admin default) > 20
   const configRows = ms3Config?.category_products_rows
-  if (configRows && rowsPerPageOptions.includes(Number(configRows))) {
+  let saved = null
+  try {
+    saved = parseInt(localStorage.getItem(ROWS_STORAGE_KEY), 10)
+  } catch {
+    // ignore (e.g. private mode Safari)
+  }
+  if (saved && rowsPerPageOptions.includes(saved)) {
+    rows.value = saved
+  } else if (configRows && rowsPerPageOptions.includes(Number(configRows))) {
     rows.value = Number(configRows)
   } else {
-    const saved = parseInt(localStorage.getItem(ROWS_STORAGE_KEY), 10)
-    if (saved && rowsPerPageOptions.includes(saved)) {
-      rows.value = saved
-    }
+    rows.value = 20
   }
 
   await Promise.all([loadGridConfig(), loadFiltersConfig()])
