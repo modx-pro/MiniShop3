@@ -8,7 +8,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 const output = {
   dir: '../',
   assetFileNames: 'assets/components/minishop3/css/mgr/vue-dist/[name].min[extname]', // css files
-  chunkFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js', // js libs and common code
+  chunkFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name]-[hash].min.js', // chunks (hash = same build, no stale export)
   entryFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js', // main js file (entry point)
 }
 
