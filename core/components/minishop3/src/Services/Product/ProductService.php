@@ -102,27 +102,6 @@ class ProductService
     }
 
     /**
-     * Duplicate product with all related data
-     *
-     * @param msProduct $product Source product
-     * @param msProduct $newProduct New product (already duplicated by parent)
-     * @return msProduct
-     */
-    public function duplicateProduct(msProduct $product, msProduct $newProduct): msProduct
-    {
-        $data = $product->loadData();
-
-        $newProduct->set('categories', $data->get('categories'));
-        $newProduct->set('options', $data->get('options'));
-        $newProduct->set('links', $data->get('links'));
-
-        $newProduct->set('image', '');
-        $newProduct->set('thumb', '');
-
-        return $newProduct;
-    }
-
-    /**
      * Get neighbor products (left and right)
      *
      * Used for navigation through products of the same level
@@ -203,13 +182,13 @@ class ProductService
 
             $this->modx->setPlaceholders($placeholders);
 
-            $product->loadOptions();
-            $this->modx->setPlaceholders($product->options ?? []);
+            $options = $product->loadOptions();
+            $this->modx->setPlaceholders($options ?? []);
         }
 
         /** @var msVendor $vendor */
         if ($vendor = $product->getOne('Vendor')) {
-            $this->modx->setPlaceholders($vendor->toArray('vendor.'));
+            $this->modx->setPlaceholders($vendor->toArray('vendor_'));
         }
 
         $this->modx->lexicon->load('minishop3:default');

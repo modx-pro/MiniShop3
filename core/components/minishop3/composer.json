@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.2",
     "rakit/validation": "^1.4",
     "robmorgan/phinx": "^0.16",
     "nikic/fast-route": "^1.3",
