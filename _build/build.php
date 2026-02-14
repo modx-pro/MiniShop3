@@ -113,7 +113,7 @@ class MiniShop3Package
             'license' => $this->readDocFile('license.txt'),
             'readme' => $this->readDocFile('readme.txt'),
             'requires' => [
-                'php' => '>=8.1.0',
+                'php' => '>=8.2.0',
                 'modx' => '>=3.0.3',
                 //'pdoTools' => '>=3.0.0'
             ],

@@ -241,6 +241,7 @@ return [
             "[[+jsUrl]]web\/ui\/CartUI.js",
             "[[+jsUrl]]web\/ui\/OrderUI.js",
             "[[+jsUrl]]web\/ui\/CustomerUI.js",
+            "[[+jsUrl]]web\/ui\/QuantityUI.js",
             "[[+jsUrl]]web\/ui\/ProductCardUI.js",
             "[[+jsUrl]]web\/ms3.js"
         ]',

@@ -602,9 +602,10 @@ onMounted(async () => {
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
                   date-format="dd.mm.yy"
-                  :show-icon="true"
+                  show-icon
+                  fluid
+                  icon-display="input"
                   :show-button-bar="true"
-                  class="w-full"
                   @date-select="applyFilters"
                 />
               </div>
@@ -621,9 +622,10 @@ onMounted(async () => {
                   v-model="filterValues[filter.key]"
                   selection-mode="range"
                   date-format="dd.mm.yy"
-                  :show-icon="true"
+                  show-icon
+                  fluid
+                  icon-display="input"
                   :show-button-bar="true"
-                  class="w-full"
                   @date-select="applyFilters"
                 />
               </div>

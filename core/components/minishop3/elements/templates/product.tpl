@@ -101,15 +101,15 @@
                             </div>
                         </div>
 
-                        {* Опции товара *}
-                        {if $color? || $size?}
+                        {* Опции товара - через поля ресурса *}
+                        {if $_modx->resource.color? || $_modx->resource.size?}
                             <div class="product-options mb-4">
                                 {* Цвета *}
-                                {if $color?}
+                                {if $_modx->resource.color?}
                                     <div class="option-group mb-3">
                                         <label class="form-label fw-semibold">Цвет:</label>
                                         <div class="d-flex flex-wrap gap-2">
-                                            {foreach $color as $colorOption}
+                                            {foreach $_modx->resource.color as $colorOption}
                                                 <button type="button" class="btn btn-outline-secondary btn-sm option-btn">
                                                     {$colorOption}
                                                 </button>
@@ -119,11 +119,11 @@
                                 {/if}
 
                                 {* Размеры *}
-                                {if $size?}
+                                {if $_modx->resource.size?}
                                     <div class="option-group mb-3">
                                         <label class="form-label fw-semibold">Размер:</label>
                                         <div class="d-flex flex-wrap gap-2">
-                                            {foreach $size as $sizeOption}
+                                            {foreach $_modx->resource.size as $sizeOption}
                                                 <button type="button" class="btn btn-outline-secondary btn-sm option-btn">
                                                     {$sizeOption}
                                                 </button>
@@ -272,21 +272,21 @@
                                             <td><strong>{$weight} кг</strong></td>
                                         </tr>
                                     {/if}
-                                    {if $color?}
+                                    {if $_modx->resource.color?}
                                         <tr>
                                             <td class="text-muted">Доступные цвета</td>
                                             <td>
-                                                {foreach $color as $c}
+                                                {foreach $_modx->resource.color as $c}
                                                     <span class="badge bg-light text-dark border me-1">{$c}</span>
                                                 {/foreach}
                                             </td>
                                         </tr>
                                     {/if}
-                                    {if $size?}
+                                    {if $_modx->resource.size?}
                                         <tr>
                                             <td class="text-muted">Доступные размеры</td>
                                             <td>
-                                                {foreach $size as $s}
+                                                {foreach $_modx->resource.size as $s}
                                                     <span class="badge bg-light text-dark border me-1">{$s}</span>
                                                 {/foreach}
                                             </td>

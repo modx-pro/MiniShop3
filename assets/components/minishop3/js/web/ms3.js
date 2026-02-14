@@ -5,7 +5,7 @@
  * - TokenManager: Token management
  * - ApiClient: HTTP client
  * - API modules: CartAPI, OrderAPI, CustomerAPI
- * - UI modules: CartUI, OrderUI, CustomerUI
+ * - UI modules: CartUI, OrderUI, CustomerUI, QuantityUI, ProductCardUI
  * - Utilities: Hooks, Message
  *
  * Configuration passed via window.ms3Config:
@@ -36,6 +36,7 @@ const ms3 = {
   cartUI: null,
   orderUI: null,
   customerUI: null,
+  quantityUI: null,
   productCardUI: null,
 
   hooks: null,
@@ -70,12 +71,19 @@ const ms3 = {
     this.cartUI = new CartUI(this.cartAPI, this.hooks, this.message, this.config)
     this.orderUI = new OrderUI(this.orderAPI, this.hooks, this.message, this.config)
     this.customerUI = new CustomerUI(this.customerAPI, this.hooks, this.message, this.config)
+    this.quantityUI = new QuantityUI(this.cartAPI, this.hooks, this.message, this.config)
     this.productCardUI = new ProductCardUI(this.cartAPI, this.hooks, this.message, this.config)
 
     this.cartUI.init()
     this.orderUI.init()
     this.customerUI.init()
+    this.quantityUI.init()
     await this.productCardUI.init()
+
+    // Reinit quantity controls after cart DOM updates
+    document.addEventListener('ms3:cart:updated', () => {
+      this.quantityUI.reinit()
+    })
 
     this.initFormHandler()
 
@@ -173,7 +181,7 @@ const ms3 = {
           add: () => {
             const id = parseInt(formData.get('id'))
             const count = parseInt(formData.get('count')) || 1
-            const options = this.parseOptions(formData.get('options'))
+            const options = this.collectOptions(formData)
             return this.cartUI.handleAdd(id, count, options)
           },
           change: () => {
@@ -224,19 +232,35 @@ const ms3 = {
   },
 
   /**
-   * Parse options from string/JSON
+   * Collect options from FormData
    *
-   * @param {string|Object} options
+   * Supports two formats:
+   * 1. JSON: name="options" value='{"color":"red","size":"L"}'
+   * 2. HTML array: name="options[color]" value="red"
+   *
+   * @param {FormData} formData
    * @returns {Object}
    */
-  parseOptions (options) {
-    if (!options) return {}
-
-    if (typeof options === 'string') {
+  collectOptions (formData) {
+    // Try JSON format first: name="options" value='{"key":"value"}'
+    const jsonOptions = formData.get('options')
+    if (jsonOptions && typeof jsonOptions === 'string') {
       try {
-        return JSON.parse(options)
+        const parsed = JSON.parse(jsonOptions)
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length > 0) {
+          return parsed
+        }
       } catch (e) {
-        return {}
+        // Not valid JSON, continue to array format
+      }
+    }
+
+    // Collect HTML array format: name="options[key]" value="value"
+    const options = {}
+    for (const [key, value] of formData.entries()) {
+      const match = key.match(/^options\[([^\]]+)\]$/)
+      if (match && value) {
+        options[match[1]] = value
       }
     }
 

@@ -93,7 +93,9 @@
       :input-id="fieldConfig.id"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
-      :show-icon="fieldConfig.props?.showIcon ?? true"
+      show-icon
+      fluid
+      icon-display="input"
       :date-format="fieldConfig.props?.dateFormat ?? 'dd.mm.yy'"
       @blur="handleBlur"
     />

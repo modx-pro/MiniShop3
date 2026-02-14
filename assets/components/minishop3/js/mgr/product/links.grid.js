@@ -54,13 +54,6 @@ Ext.extend(ms3.grid.ProductLinks, ms3.grid.Default, {
         }, '->', this.getSearchField()];
     },
 
-    actionsColumnRenderer: function(value, metaData, record, rowIndex, colIndex, store) {
-        const actions = this.getActions.apply(this, [record, rowIndex, colIndex, store]);
-        return this._getActionsColumnTpl().apply({
-            actions: actions
-        });
-    },
-
     createLink: function (btn, e) {
         let w = Ext.getCmp('ms3-product-link-create');
         if (w) {
