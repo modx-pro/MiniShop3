@@ -34,7 +34,7 @@ $_lang['ms3_vue_error_saving_data'] = 'Error saving data';
 $_lang['ms3_vue_delete_record_confirm'] = 'Delete record?';
 $_lang['ms3_vue_deletion'] = 'Deletion';
 $_lang['ms3_vue_record_deleted'] = 'Record deleted';
-$_lang['ms3_vue_price_eur'] = 'Price in EUR';
+$_lang['ms3_vue_price_example'] = 'Price (example)';
 
 // Sections
 $_lang['ms3_vue_sections'] = 'Sections';

@@ -3,6 +3,20 @@
  *
  * Manages customer profile forms: auto-save, validation.
  */
+
+/** Default strings (EN) when window.ms3Lexicon is not set by template */
+const CUSTOMER_UI_LEXICON = {
+  ms3_customer_err_occurred: 'An error occurred',
+  ms3_customer_err_occurred_saving: 'An error occurred while saving',
+  ms3_customer_profile_updated: 'Profile successfully updated',
+  ms3_customer_profile_update_error: 'Profile update error',
+  ms3_customer_address_added: 'Address successfully added',
+  ms3_customer_address_updated: 'Address successfully updated',
+  ms3_customer_address_creation_error: 'Address creation error',
+  ms3_customer_address_update_error: 'Address update error',
+  ms3_customer_err_address_id_not_specified: 'Address ID not specified'
+}
+
 class CustomerUI {
   /**
    * @param {CustomerAPI} customerAPI - Customer API instance
@@ -18,12 +32,15 @@ class CustomerUI {
   }
 
   /**
-   * Get lexicon string (from window.ms3Lexicon or fallback to key)
+   * Get lexicon string (window.ms3Lexicon, then fallback, then key)
    * @param {string} key - Lexicon key
    * @returns {string}
    */
   t (key) {
-    return (typeof window !== 'undefined' && window.ms3Lexicon && window.ms3Lexicon[key]) || key
+    if (typeof window !== 'undefined' && window.ms3Lexicon && window.ms3Lexicon[key]) {
+      return window.ms3Lexicon[key]
+    }
+    return CUSTOMER_UI_LEXICON[key] || key
   }
 
   /**

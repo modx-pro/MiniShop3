@@ -22,7 +22,7 @@ const types = ref([])
 
 const unUsedFields = ref([
   { name: 'price', title: _('ms3_product_price') },
-  { name: 'eur_price', title: _('ms3_vue_price_eur') },
+  { name: 'eur_price', title: _('ms3_vue_price_example') },
   { name: 'remains', title: _('ms3_product_remains') },
 ])
 
