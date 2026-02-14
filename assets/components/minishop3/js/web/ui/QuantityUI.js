@@ -49,27 +49,43 @@ class QuantityUI {
   }
 
   /**
-   * Initialize all .qty-btn buttons
+   * Initialize quantity buttons: [data-ms3-qty="inc"]/[data-ms3-qty="dec"] or .inc-qty/.dec-qty (fallback)
    */
   initButtons () {
-    document.querySelectorAll('.qty-btn').forEach(btn => {
-      // Clone to remove old handlers
+    const byData = document.querySelectorAll('[data-ms3-qty="inc"], [data-ms3-qty="dec"]')
+    const byClass = document.querySelectorAll('.inc-qty, .dec-qty')
+    const seen = new Set()
+    const buttons = []
+    ;[...byData, ...byClass].forEach(btn => {
+      if (!seen.has(btn)) {
+        seen.add(btn)
+        buttons.push(btn)
+      }
+    })
+    buttons.forEach(btn => {
       const newBtn = btn.cloneNode(true)
       btn.parentNode.replaceChild(newBtn, btn)
-
       newBtn.addEventListener('click', (e) => this.handleButtonClick(e))
     })
   }
 
   /**
-   * Initialize all .qty-input fields
+   * Initialize quantity inputs: [data-ms3-qty="input"] or .qty-input (fallback)
    */
   initInputs () {
-    document.querySelectorAll('.qty-input').forEach(input => {
-      // Clone to remove old handlers
+    const byData = document.querySelectorAll('[data-ms3-qty="input"]')
+    const byClass = document.querySelectorAll('.qty-input')
+    const seen = new Set()
+    const inputs = []
+    ;[...byData, ...byClass].forEach(input => {
+      if (!seen.has(input)) {
+        seen.add(input)
+        inputs.push(input)
+      }
+    })
+    inputs.forEach(input => {
       const newInput = input.cloneNode(true)
       input.parentNode.replaceChild(newInput, input)
-
       newInput.addEventListener('change', (e) => this.handleInputChange(e))
     })
   }
@@ -82,21 +98,19 @@ class QuantityUI {
   async handleButtonClick (e) {
     e.preventDefault()
 
-    const form = e.target.closest('.ms3_form')
+    const form = e.target.closest('[data-ms3-form]') || e.target.closest('.ms3_form')
     if (!form) return
 
-    const input = form.querySelector('.qty-input')
+    const input = form.querySelector('[data-ms3-qty="input"]') || form.querySelector('.qty-input')
     if (!input) return
 
     let qty = parseInt(input.value) || 0
 
-    if (e.target.classList.contains('inc-qty')) {
-      qty++
-    }
+    const isInc = e.target.getAttribute('data-ms3-qty') === 'inc' || e.target.classList.contains('inc-qty')
+    const isDec = e.target.getAttribute('data-ms3-qty') === 'dec' || e.target.classList.contains('dec-qty')
 
-    if (e.target.classList.contains('dec-qty')) {
-      qty--
-    }
+    if (isInc) qty++
+    if (isDec) qty--
 
     qty = Math.max(0, qty)
     input.value = qty
@@ -110,7 +124,7 @@ class QuantityUI {
    * @param {Event} e - Change event
    */
   async handleInputChange (e) {
-    const form = e.target.closest('.ms3_form')
+    const form = e.target.closest('[data-ms3-form]') || e.target.closest('.ms3_form')
     if (!form) return
 
     const qty = Math.max(0, parseInt(e.target.value) || 0)

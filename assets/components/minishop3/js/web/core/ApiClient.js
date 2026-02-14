@@ -62,18 +62,22 @@ class ApiClient {
       }
     }
 
-    const response = await fetch(url.toString(), options)
-    const result = await response.json()
+    try {
+      const response = await fetch(url.toString(), options)
+      const result = await response.json()
 
-    // Handle token errors: clear invalid token, get new one, and retry
-    if (!isRetry && response.status === 401 && this.isTokenError(result)) {
-      console.log('[ApiClient] Token invalid, refreshing and retrying request')
-      this.tokenManager.removeToken()
-      await this.tokenManager.fetchNewToken()
-      return this.request(method, endpoint, data, true)
+      // Handle token errors: clear invalid token, get new one, and retry
+      if (!isRetry && response.status === 401 && this.isTokenError(result)) {
+        console.log('[ApiClient] Token invalid, refreshing and retrying request')
+        this.tokenManager.removeToken()
+        await this.tokenManager.fetchNewToken()
+        return this.request(method, endpoint, data, true)
+      }
+
+      return result
+    } catch (error) {
+      throw error
     }
-
-    return result
   }
 
   /**

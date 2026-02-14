@@ -282,8 +282,9 @@ class OrderUI {
    * @param {Array<string>} errors - Array of field names with errors
    */
   highlightErrors (errors) {
-    document.querySelectorAll('[data-ms3-error]').forEach(el => {
+    document.querySelectorAll('[data-ms3-error], .ms3_field_error').forEach(el => {
       el.removeAttribute('data-ms3-error')
+      el.classList.remove('ms3_field_error')
     })
 
     errors.forEach(fieldName => {
@@ -297,9 +298,11 @@ class OrderUI {
         const field = document.querySelector(selector)
         if (field) {
           field.setAttribute('data-ms3-error', '')
+          field.classList.add('ms3_field_error')
 
           field.addEventListener('focus', function removeError () {
             field.removeAttribute('data-ms3-error')
+            field.classList.remove('ms3_field_error')
             field.removeEventListener('focus', removeError)
           }, { once: true })
         }

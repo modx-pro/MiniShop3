@@ -12,7 +12,6 @@
  * })
  * authForms.init()
  */
-/* global bootstrap */
 class AuthForms {
   /**
    * @param {Object} config - Configuration
