@@ -160,6 +160,28 @@ $_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Are you sure you want to d
 
 $_lang['ms3_gallery_errors'] = 'Upload Errors';
 
+// Uppy gallery uploader strings
+$_lang['ms3_gallery_uppy_drop_paste'] = 'Drop files here or %{browse}';
+$_lang['ms3_gallery_uppy_browse'] = 'browse';
+$_lang['ms3_gallery_uppy_browse_files'] = 'browse files';
+$_lang['ms3_gallery_uppy_browse_folders'] = 'browse folders';
+$_lang['ms3_gallery_uppy_upload_complete'] = 'Upload complete';
+$_lang['ms3_gallery_uppy_upload_failed'] = 'Upload failed';
+$_lang['ms3_gallery_uppy_uploading'] = 'Uploading...';
+$_lang['ms3_gallery_uppy_complete'] = 'Complete';
+$_lang['ms3_gallery_uppy_cancel'] = 'Cancel';
+$_lang['ms3_gallery_uppy_remove'] = 'Remove';
+$_lang['ms3_gallery_uppy_edit'] = 'Edit';
+$_lang['ms3_gallery_uppy_retry'] = 'Retry';
+$_lang['ms3_gallery_uppy_add_more'] = 'Add more';
+$_lang['ms3_gallery_uppy_x_files_selected_0'] = '%{smart_count} file selected';
+$_lang['ms3_gallery_uppy_x_files_selected_1'] = '%{smart_count} files selected';
+$_lang['ms3_gallery_uppy_x_files_selected_2'] = '%{smart_count} files selected';
+$_lang['ms3_gallery_uppy_upload_x_files_0'] = 'Upload %{smart_count} file';
+$_lang['ms3_gallery_uppy_upload_x_files_1'] = 'Upload %{smart_count} files';
+$_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Upload %{smart_count} files';
+$_lang['ms3_gallery_uppy_note_max_size'] = 'Maximum size: %{maxSize}';
+
 $_lang['ms3_product_data_vue'] = 'Product Data (Vue)';
 
 // Vue field management widget

@@ -1,11 +1,14 @@
 /**
  * UI handlers for product cards (cart state display)
  *
- * Manages product card buttons:
+ * Manages product card state switching:
  * - Shows "Add to cart" button when product is NOT in cart
  * - Shows quantity controls (+/-) when product IS in cart
  *
  * Listens to cart updates and refreshes card states accordingly.
+ *
+ * Note: Quantity +/- buttons and inputs are handled by QuantityUI
+ * to avoid duplication with CartUI.
  *
  * Usage in template:
  * <div class="ms3-product-card" data-product-id="123">
@@ -26,7 +29,7 @@ class ProductCardUI {
     this.message = message
     this.config = config
 
-    // Cart state: { productId: { key: productKey, count: quantity } }
+    // Cart state: { productId: { entries: [...], totalCount: N } }
     this.cartState = {}
   }
 
@@ -39,10 +42,6 @@ class ProductCardUI {
 
     // Update all product cards with current state
     this.updateAllCards()
-
-    // Init quantity controls in product cards
-    this.initQuantityButtons()
-    this.initQuantityInputs()
 
     // Listen for cart updates
     document.addEventListener('ms3:cart:updated', (e) => {
@@ -122,12 +121,6 @@ class ProductCardUI {
     }
 
     this.updateAllCards()
-
-    // Reinit quantity buttons after DOM update
-    setTimeout(() => {
-      this.initQuantityButtons()
-      this.initQuantityInputs()
-    }, 50)
   }
 
   /**
@@ -203,134 +196,5 @@ class ProductCardUI {
    */
   getCartInfo (productId) {
     return this.cartState[productId] || null
-  }
-
-  /**
-   * Product quantity +/- buttons in product cards
-   */
-  initQuantityButtons () {
-    const cards = document.querySelectorAll('.ms3-product-card')
-
-    cards.forEach(card => {
-      const changeForm = card.querySelector('[data-cart-state="change"]')
-      if (!changeForm) return
-
-      changeForm.querySelectorAll('.qty-btn').forEach(btn => {
-        // Remove old listeners by cloning
-        const newBtn = btn.cloneNode(true)
-        btn.parentNode.replaceChild(newBtn, btn)
-
-        newBtn.addEventListener('click', async (e) => {
-          e.preventDefault()
-
-          const input = changeForm.querySelector('.qty-input')
-          const productKeyInput = changeForm.querySelector('[name="product_key"]')
-
-          if (!input || !productKeyInput) return
-
-          let qty = parseInt(input.value) || 0
-
-          if (e.target.classList.contains('inc-qty')) {
-            qty++
-          }
-
-          if (e.target.classList.contains('dec-qty')) {
-            qty--
-          }
-
-          if (qty < 0) {
-            qty = 0
-          }
-
-          input.value = qty
-
-          await this.handleQuantityChange(productKeyInput.value, qty, card)
-        })
-      })
-    })
-  }
-
-  /**
-   * Quantity input fields in product cards
-   */
-  initQuantityInputs () {
-    const cards = document.querySelectorAll('.ms3-product-card')
-
-    cards.forEach(card => {
-      const changeForm = card.querySelector('[data-cart-state="change"]')
-      if (!changeForm) return
-
-      const input = changeForm.querySelector('.qty-input')
-      if (!input) return
-
-      // Remove old listeners by cloning
-      const newInput = input.cloneNode(true)
-      input.parentNode.replaceChild(newInput, input)
-
-      newInput.addEventListener('change', async (e) => {
-        const productKeyInput = changeForm.querySelector('[name="product_key"]')
-        if (!productKeyInput) return
-
-        const qty = parseInt(e.target.value) || 0
-
-        await this.handleQuantityChange(productKeyInput.value, qty, card)
-      })
-    })
-  }
-
-  /**
-   * Handle quantity change from product card
-   *
-   * @param {string} productKey - Product key in cart
-   * @param {number} count - New quantity
-   * @param {HTMLElement} card - Product card element
-   */
-  async handleQuantityChange (productKey, count, card) {
-    const hookData = { productKey, count }
-    await this.hooks.runHooks('beforeChangeCart', hookData)
-
-    if (hookData.cancel) {
-      return
-    }
-
-    try {
-      let response
-
-      if (count <= 0) {
-        // Remove from cart
-        response = await this.cart.remove(productKey)
-      } else {
-        // Change quantity
-        response = await this.cart.change(productKey, count)
-      }
-
-      await this.hooks.runHooks('afterChangeCart', { productKey, count, response })
-
-      if (response.success) {
-        // Update cart state
-        if (response.data && response.data.cart) {
-          this.parseCartData(response.data.cart)
-        }
-
-        // Update this specific card
-        this.updateCard(card)
-
-        // Dispatch event for other components (mini cart, etc.)
-        document.dispatchEvent(new CustomEvent('ms3:cart:updated', {
-          detail: response.data
-        }))
-
-        if (response.message) {
-          this.message.success(response.message)
-        }
-      } else {
-        if (response.message) {
-          this.message.error(response.message)
-        }
-      }
-    } catch (error) {
-      console.error('[ProductCardUI] handleQuantityChange error:', error)
-      this.message.error('Cart update error')
-    }
   }
 }

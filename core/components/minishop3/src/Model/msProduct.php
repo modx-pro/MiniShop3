@@ -224,7 +224,7 @@ class msProduct extends modResource
         $additional = array_merge(
             $this->loadData()->toArray($keyPrefix, $rawValues, $excludeLazy, $includeRelated),
             $this->loadOptions(),
-            $this->loadVendor()->toArray($keyPrefix . 'vendor.', $rawValues, $excludeLazy, $includeRelated)
+            $this->loadVendor()->toArray($keyPrefix . 'vendor_', $rawValues, $excludeLazy, $includeRelated)
         );
         $intersect = array_keys(array_intersect_key($original, $additional));
         foreach ($intersect as $key) {
@@ -374,15 +374,30 @@ class msProduct extends modResource
     }
 
     /**
+     * Duplicate product with its data
+     *
+     * Sets values on original object BEFORE calling parent::duplicate(),
+     * so the copy receives the modified values (empty image/thumb, copied categories/options/links).
+     *
      * @param array $options
      *
      * @return msProduct
      */
     public function duplicate(array $options = [])
     {
-        $newProduct = parent::duplicate($options);
+        $data = $this->loadData();
 
-        $this->getProductService()->duplicateProduct($this, $newProduct);
+        // Copy categories, options, links from msProductData
+        parent::set('categories', $data->get('categories'));
+        parent::set('options', $data->get('options'));
+        parent::set('links', $data->get('links'));
+
+        // Clear image/thumb - gallery should NOT be copied
+        parent::set('image', '');
+        parent::set('thumb', '');
+
+        /** @var msProduct $newProduct */
+        $newProduct = parent::duplicate($options);
 
         return $newProduct;
     }
