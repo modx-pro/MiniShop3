@@ -36,7 +36,10 @@ class Get extends GetProcessor
     {
         $c = $this->modx->newQuery(msCategory::class);
         $c->leftJoin(msCategoryOption::class, 'msCategoryOption', 'msCategoryOption.category_id = msCategory.id');
-        $c->where(['msCategoryOption.option_id' => $this->object->get('id')]);
+        $c->where([
+            'msCategory.class_key' => msCategory::class,
+            'msCategoryOption.option_id' => $this->object->get('id'),
+        ]);
         $c->select([
             $this->modx->getSelectColumns(msCategory::class, 'msCategory'),
             $this->modx->getSelectColumns(

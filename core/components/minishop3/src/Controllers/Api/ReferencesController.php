@@ -392,6 +392,9 @@ class ReferencesController extends BaseApiController
             // Join with msProductData for additional fields
             $c->leftJoin('MiniShop3\\Model\\msProductData', 'Data', 'msProduct.id = Data.id');
 
+            // class_key filter (getIterator doesn't call addDerivativeCriteria)
+            $c->where(['msProduct.class_key' => 'MiniShop3\\Model\\msProduct']);
+
             // Search by pagetitle, article, or id
             $c->where([
                 'msProduct.pagetitle:LIKE' => "%{$searchQuery}%",
