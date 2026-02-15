@@ -44,6 +44,17 @@ if ($response['success']) {
     $total = array_merge($total, $response['data']);
 }
 
+if (!empty($scriptProperties['formatPrices'])) {
+    $withCurrency = !empty($scriptProperties['withCurrency']);
+    $total['cost'] = $ms3->format->price($total['cost'], $withCurrency);
+    $total['cart_cost'] = $ms3->format->price($total['cart_cost'], $withCurrency);
+    $total['delivery_cost'] = $ms3->format->price($total['delivery_cost'], $withCurrency);
+    $total['payment_cost'] = $ms3->format->price($total['payment_cost'], $withCurrency);
+    $total['total_cost'] = $ms3->format->price($total['total_cost'], $withCurrency);
+    $total['total_discount'] = $ms3->format->price($total['total_discount'], $withCurrency);
+    $total['total_weight'] = $ms3->format->weight($total['total_weight']);
+}
+
 if ($return === 'data') {
     return $total;
 }

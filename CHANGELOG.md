@@ -16,6 +16,27 @@
 
 ## Февраль 2026
 
+### [2026-02-15] Исправления getIterator и статусов заказов
+
+#### 🐛 Исправлено
+
+**Критический баг getIterator + class_key (PR #90, Issue #87):**
+- `xPDO::getIterator()` не вызывает `addDerivativeCriteria()` — в отличие от `getCollection()`
+- Для классов без собственной таблицы (msCategory, msProduct наследуют modResource) это приводило к ошибке: `Instantiated a derived class msProduct that is not a subclass of the requested class msCategory`
+- Добавлен явный фильтр `class_key` в 3 местах:
+  - `CategoryProductsController::getList()` — `class_key => msProduct::class`
+  - `CategoryProductsController::getChildCategories()` — `class_key => msCategory::class`
+  - `ReferencesController::searchProducts()` — `class_key => msProduct::class`
+  - `Settings/Option/Get::beforeOutput()` — `class_key => msCategory::class`
+
+**Ошибка "Статус с таким идентификатором не найден" при оформлении заказа (PR #91, Issue #89):**
+- Системные настройки `ms3_status_new`, `ms3_status_paid`, `ms3_status_canceled` имели дефолтное значение `0` в `_build/elements/settings.php`
+- `$modx->getOption('ms3_status_new', null, 2)` возвращает `0` (а не fallback `2`), когда настройка существует со значением `0`
+- Исправлены дефолты: `ms3_status_new` → 2, `ms3_status_paid` → 3, `ms3_status_canceled` → 5
+- Добавлен fallback `?: default` во все 11 вызовов `getOption('ms3_status_*')` в 7 файлах для существующих установок
+
+---
+
 ### [2026-02-14] 🚀 Версия 1.4.1-beta1
 
 **Тип релиза:** PATCH (beta) — рефакторинг UI, локализация галереи, исправления
