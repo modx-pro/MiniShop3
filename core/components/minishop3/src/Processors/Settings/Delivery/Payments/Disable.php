@@ -20,10 +20,6 @@ class Disable extends RemoveProcessor
      */
     public function initialize()
     {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
         /**
          * @TODO: hardcode
          */

@@ -26,9 +26,6 @@ class GetList extends GetListProcessor
         if ($this->getProperty('combo') && !$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
             $this->item_id = $id;
         }
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
 
         return parent::initialize();
     }

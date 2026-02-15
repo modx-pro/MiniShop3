@@ -16,19 +16,6 @@ class Update extends UpdateProcessor
     protected $old_name = null;
 
     /**
-     * @return bool|null|string
-     */
-    public function initialize()
-    {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
-        return parent::initialize();
-    }
-
-
-    /**
      * @return array|bool|string
      */
     public function beforeSet()

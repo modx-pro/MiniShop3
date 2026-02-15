@@ -13,18 +13,6 @@ class Remove extends RemoveProcessor
     public $permission = 'msorder_remove';
     public int $customerId = 0;
 
-    /**
-     * @return bool|null|string
-     */
-    public function initialize()
-    {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
-        return parent::initialize();
-    }
-
     public function process()
     {
         $canRemove = $this->beforeRemove();
