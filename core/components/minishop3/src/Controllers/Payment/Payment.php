@@ -277,7 +277,7 @@ abstract class Payment implements PaymentProviderInterface
      */
     protected function getPaidStatusId(): int
     {
-        return (int)$this->modx->getOption('ms3_status_paid', null, 3);
+        return (int) $this->modx->getOption('ms3_status_paid', null, 3) ?: 3;
     }
 
     /**
@@ -290,6 +290,6 @@ abstract class Payment implements PaymentProviderInterface
      */
     protected function getCanceledStatusId(): int
     {
-        return (int)$this->modx->getOption('ms3_status_canceled', null, 5);
+        return (int) $this->modx->getOption('ms3_status_canceled', null, 5) ?: 5;
     }
 }

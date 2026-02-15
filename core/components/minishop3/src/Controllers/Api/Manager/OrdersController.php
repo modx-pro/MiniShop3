@@ -105,7 +105,7 @@ class OrdersController
 
         $showDrafts = $this->modx->getOption('ms3_order_show_drafts', null, false);
         if (!$showDrafts) {
-            $statusDrafts = $this->modx->getOption('ms3_status_draft', null, 1);
+            $statusDrafts = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
             $c->where(['status_id:!=' => $statusDrafts]);
         }
 
@@ -466,7 +466,7 @@ class OrdersController
         $order->set('token', md5(uniqid('ms3_mgr_', true)));
 
         // Set status to "Draft" - order will be finalized later
-        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1);
+        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
         $order->set('status_id', $statusDraft);
 
         // Context

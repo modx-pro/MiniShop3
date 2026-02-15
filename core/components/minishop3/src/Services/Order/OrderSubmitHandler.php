@@ -224,7 +224,7 @@ class OrderSubmitHandler
         $_SESSION['ms3']['orders'][] = $draft->get('id');
 
         // Change status to "new"
-        $statusNew = $this->modx->getOption('ms3_status_new', null, 2);
+        $statusNew = (int) $this->modx->getOption('ms3_status_new', null, 2) ?: 2;
         /** @var OrderStatusService $orderStatus */
         $orderStatus = $this->modx->services->get('ms3_order_status');
         $statusResponse = $orderStatus->change($draft->get('id'), $statusNew);

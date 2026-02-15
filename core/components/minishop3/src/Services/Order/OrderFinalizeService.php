@@ -57,7 +57,7 @@ class OrderFinalizeService
         }
 
         // Check order is in DRAFT status
-        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1);
+        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
         if ((int) $order->get('status_id') !== $statusDraft) {
             return $this->error('ms3_order_err_already_finalized');
         }
@@ -140,7 +140,7 @@ class OrderFinalizeService
         }
 
         // Change status to "new"
-        $statusNew = (int) $this->modx->getOption('ms3_status_new', null, 2);
+        $statusNew = (int) $this->modx->getOption('ms3_status_new', null, 2) ?: 2;
 
         /** @var OrderStatusService $orderStatus */
         $orderStatus = $this->modx->services->get('ms3_order_status');

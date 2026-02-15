@@ -29,7 +29,7 @@ if (!$threshold) {
     return false;
 }
 
-$statusDraft = (int)$modx->getOption('ms3_status_draft', null, 1);
+$statusDraft = (int) $modx->getOption('ms3_status_draft', null, 1) ?: 1;
 $thresholdDate = date('Y-m-d H:i:s', $threshold);
 
 // Find and delete old drafts

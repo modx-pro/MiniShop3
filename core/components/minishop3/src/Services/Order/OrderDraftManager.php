@@ -38,7 +38,7 @@ class OrderDraftManager
             return null;
         }
 
-        $status_draft = $this->modx->getOption('ms3_status_draft', null, 1);
+        $status_draft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
 
         // 1. Try to find by token first (primary method)
         $draft = $this->modx->getObject(msOrder::class, [
@@ -84,7 +84,7 @@ class OrderDraftManager
      */
     public function createDraft(string $token, string $ctx = 'web'): msOrder
     {
-        $status_draft = $this->modx->getOption('ms3_status_draft', null, 1);
+        $status_draft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
 
         /** @var msOrder $msOrder */
         $msOrder = $this->modx->newObject(msOrder::class);
@@ -384,7 +384,7 @@ class OrderDraftManager
             return null;
         }
 
-        $statusDraft = $this->modx->getOption('ms3_status_draft', null, 1);
+        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
 
         return $this->modx->getObject(msOrder::class, [
             'customer_id' => $customerId,
