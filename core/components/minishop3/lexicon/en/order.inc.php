@@ -11,7 +11,7 @@
 $_lang['ms3_order_get_success'] = 'Order data retrieved';
 $_lang['ms3_order_getcost_success'] = 'Cost calculated';
 $_lang['ms3_order_set_success'] = 'Order data saved';
-$_lang['ms3_order_clean_success'] = 'Order cleared';
+$_lang['ms3_order_clean_success'] = 'Order form cleared';
 $_lang['ms3_order_submit_success'] = 'Order submitted';
 $_lang['ms3_order_add_success'] = 'Order field updated';
 $_lang['ms3_order_remove_success'] = 'Order field removed';
