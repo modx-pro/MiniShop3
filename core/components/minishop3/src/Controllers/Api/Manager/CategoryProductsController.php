@@ -61,6 +61,9 @@ class CategoryProductsController
         $c = $this->modx->newQuery(msProduct::class);
         $c->innerJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
 
+        // class_key filter (getIterator doesn't call addDerivativeCriteria)
+        $c->where(['msProduct.class_key' => msProduct::class]);
+
         // Parent filter
         if ($nested) {
             // Get all child category IDs
@@ -450,7 +453,8 @@ class CategoryProductsController
 
         $children = $this->modx->getIterator(msCategory::class, [
             'parent' => $parentId,
-            'deleted' => 0
+            'deleted' => 0,
+            'class_key' => msCategory::class,
         ]);
 
         foreach ($children as $child) {
