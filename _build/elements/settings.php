@@ -279,17 +279,17 @@ return [
         'area' => 'ms3_import',
     ],
     'ms3_status_new' => [
-        'value' => 0,
+        'value' => 2,
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
     'ms3_status_paid' => [
-        'value' => 0,
+        'value' => 3,
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
     'ms3_status_canceled' => [
-        'value' => 0,
+        'value' => 5,
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
