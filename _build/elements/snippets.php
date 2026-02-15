@@ -357,6 +357,14 @@ return [
                 'type' => 'textfield',
                 'value' => 'tpl',
             ],
+            'formatPrices' => [
+                'type' => 'combo-boolean',
+                'value' => false,
+            ],
+            'withCurrency' => [
+                'type' => 'combo-boolean',
+                'value' => false,
+            ],
         ],
     ],
 ];
