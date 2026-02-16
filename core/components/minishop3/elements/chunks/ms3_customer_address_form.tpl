@@ -10,7 +10,7 @@
             </h5>
         </div>
         <div class="card-body">
-            <form class="ms3_form ms3-address-form" method="post" action="">
+            <form class="ms3_form ms3-address-form" method="post" action="" data-ms3-form="customer-address">
                 <input type="hidden" name="ms3_action" value="customer/{if $mode == 'edit'}address-update{else}address-create{/if}">
                 {if $mode == 'edit'}
                 <input type="hidden" name="id" value="{$address.id}">

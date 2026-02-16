@@ -32,26 +32,26 @@
                                 <div class="col-12 col-md-6">
                                     <div class="mt-2 d-flex justify-content-around justify-content-md-start gap-4">
                                         <div class="d-flex flex-column justify-content-start align-items-start">
-                                            <form method="post" class="ms3_form">
+                                            <form method="post" class="ms3_form" data-ms3-form>
                                                 <input type="hidden" name="product_key" value="{$product.product_key}"/>
                                                 <input type="hidden" name="ms3_action" value="cart/change"/>
 
                                                 <div class="quantity d-flex align-items-center justify-content-between">
-                                                    <button class="btn btn-primary qty-btn dec-qty" type="button">
+                                                    <button class="btn btn-primary qty-btn dec-qty" type="button" data-ms3-qty="dec">
                                                         -
                                                     </button>
-                                                    <input class="form-control qty-input ms3-cart-qty-input" type="number" name="count" value="{$product.count}" min="0">
-                                                    <button class="btn btn-primary qty-btn inc-qty" type="button">
+                                                    <input class="form-control qty-input ms3-cart-qty-input" type="number" name="count" value="{$product.count}" min="0" data-ms3-qty="input">
+                                                    <button class="btn btn-primary qty-btn inc-qty" type="button" data-ms3-qty="inc">
                                                         +
                                                     </button>
                                                 </div>
                                             </form>
                                             {if $product.options?}
                                                 {if $product.color && $product.options.color}
-                                                    <form class="ms3_form mt-2">
+                                                    <form class="ms3_form mt-2" data-ms3-form>
                                                         <input type="hidden" name="product_key" value="{$product.product_key}">
                                                         <input type="hidden" name="ms3_action" value="cart/changeOption"/>
-                                                        <select name="options[color]" class="form-select ms3_cart_options ms3-cart-options-select">
+                                                        <select name="options[color]" class="form-select ms3_cart_options ms3-cart-options-select" data-ms3-cart-options>
                                                             <option value="">Выбери цвет</option>
                                                             {foreach $product.color as $option}
                                                                 <option value="{$option}"
@@ -62,10 +62,10 @@
                                                 {/if}
 
                                                 {if $product.size && $product.options.size}
-                                                    <form class="ms3_form  mt-2">
+                                                    <form class="ms3_form  mt-2" data-ms3-form>
                                                         <input type="hidden" name="product_key" value="{$product.product_key}">
                                                         <input type="hidden" name="ms3_action" value="cart/changeOption"/>
-                                                        <select name="options[size]" class="form-select mt-2 ms3_cart_options ms3-cart-options-select">
+                                                        <select name="options[size]" class="form-select mt-2 ms3_cart_options ms3-cart-options-select" data-ms3-cart-options>
                                                             <option value="">Выбери размер</option>
                                                             {foreach $product.size as $option}
                                                                 <option value="{$option}"
@@ -79,7 +79,7 @@
 
                                         <div class="product-remove-area d-flex flex-column align-items-end">
 
-                                            <form method="post" class="ms3_form text-md-right">
+                                            <form method="post" class="ms3_form text-md-right" data-ms3-form>
                                                 <input type="hidden" name="product_key" value="{$product.product_key}">
                                                 <input type="hidden" name="ms3_action" value="cart/remove"/>
                                                 <button class="btn  btn-danger" type="submit">&times;</button>

@@ -31,7 +31,10 @@
 #msOrder .required .required-star { display: inline; }
 #msOrder .error { border: 1px solid brown !important; }
 
-/* Validation errors highlighting */
+/* Validation errors highlighting ([data-ms3-error] for logic, .ms3_field_error kept for backward compat) */
+input[data-ms3-error],
+select[data-ms3-error],
+textarea[data-ms3-error],
 input.ms3_field_error,
 select.ms3_field_error,
 textarea.ms3_field_error {
@@ -40,6 +43,9 @@ textarea.ms3_field_error {
     outline: none !important;
 }
 
+input[data-ms3-error]:focus,
+select[data-ms3-error]:focus,
+textarea[data-ms3-error]:focus,
 input.ms3_field_error:focus,
 select.ms3_field_error:focus,
 textarea.ms3_field_error:focus {

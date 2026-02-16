@@ -14,7 +14,15 @@
  *   tokenName: 'ms3_token',
  *   render: { ... }
  * }
+ *
+ * Data attributes for logic (Issue #17): use data-ms3-* for JS selection; keep classes for styling.
+ * - data-ms3-form / data-ms3-form="order"|"customer" — form
+ * - data-ms3-error — field with validation error
+ * - data-ms3-product-card — product card
+ * - data-ms3-qty="input"|"inc"|"dec" — quantity control
+ * - data-ms3-cart-options — cart options select
  */
+/* global TokenManager, ApiClient, CartAPI, OrderAPI, CustomerAPI, CartUI, OrderUI, CustomerUI, ProductCardUI */
 const ms3 = {
   config: {},
 
@@ -87,7 +95,7 @@ const ms3 = {
   },
 
   /**
-   * .ms3_form submit handler
+   * [data-ms3-form] submit handler (fallback: .ms3_form deprecated)
    *
    * Automatically calls appropriate API method based on ms3_action:
    * - cart/add → cartUI.handleAdd()
@@ -96,13 +104,13 @@ const ms3 = {
    */
   initFormHandler () {
     document.addEventListener('submit', async (event) => {
-      if (!event.target.classList.contains('ms3_form')) {
+      const form = event.target
+      if (!form.hasAttribute('data-ms3-form') && !form.classList.contains('ms3_form')) {
         return
       }
 
       event.preventDefault()
 
-      const form = event.target
       const formData = new FormData(form)
       const action = formData.get('ms3_action')
 
@@ -130,9 +138,9 @@ const ms3 = {
         return
       }
 
-      const form = link.closest('.ms3_form')
+      const form = link.closest('[data-ms3-form]') || link.closest('.ms3_form')
       if (!form) {
-        console.warn('.ms3_link must be inside .ms3_form')
+        console.warn('.ms3_link must be inside a form with data-ms3-form or .ms3_form')
         return
       }
 

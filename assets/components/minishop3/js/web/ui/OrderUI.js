@@ -21,7 +21,7 @@ class OrderUI {
    * Initialize UI handlers
    */
   init () {
-    document.querySelectorAll('.ms3_order_form').forEach(form => {
+    document.querySelectorAll('[data-ms3-form="order"], .ms3_order_form').forEach(form => {
       this.initForm(form)
     })
 
@@ -61,6 +61,7 @@ class OrderUI {
 
       parent.classList.remove('was-validated')
       input.classList.remove('is-invalid')
+      input.removeAttribute('data-ms3-error')
       const feedback = parent.querySelector('.invalid-feedback')
       if (feedback) {
         feedback.textContent = ''
@@ -77,6 +78,7 @@ class OrderUI {
       } else {
         parent.classList.add('was-validated')
         input.classList.add('is-invalid')
+        input.setAttribute('data-ms3-error', '')
 
         if (feedback) {
           feedback.textContent = response.message || 'Validation error'
@@ -92,7 +94,6 @@ class OrderUI {
    */
   initAddressInput (input) {
     input.addEventListener('change', async () => {
-      const form = input.closest('.ms3_order_form')
       const parent = input.closest('div')
       if (!parent) return
 
@@ -155,18 +156,18 @@ class OrderUI {
       const response = await this.order.getCost()
 
       if (response.success && response.data) {
-        const { cost, cart_cost, delivery_cost } = response.data
+        const { cost, cart_cost: cartCost, delivery_cost: deliveryCost } = response.data
 
         // Update cart cost
         const cartCostEl = document.getElementById('ms3_order_cart_cost')
-        if (cartCostEl && cart_cost !== undefined) {
-          cartCostEl.textContent = this.formatPrice(cart_cost)
+        if (cartCostEl && cartCost !== undefined) {
+          cartCostEl.textContent = this.formatPrice(cartCost)
         }
 
         // Update delivery cost
         const deliveryCostEl = document.getElementById('ms3_order_delivery_cost')
-        if (deliveryCostEl && delivery_cost !== undefined) {
-          deliveryCostEl.textContent = this.formatPrice(delivery_cost)
+        if (deliveryCostEl && deliveryCost !== undefined) {
+          deliveryCostEl.textContent = this.formatPrice(deliveryCost)
         }
 
         // Update total cost
@@ -175,7 +176,7 @@ class OrderUI {
           totalCostEl.textContent = this.formatPrice(cost)
         }
 
-        await this.hooks.runHooks('afterUpdateOrderCosts', { cost, cart_cost, delivery_cost })
+        await this.hooks.runHooks('afterUpdateOrderCosts', { cost, cart_cost: cartCost, delivery_cost: deliveryCost })
       }
     } catch (error) {
       console.error('[OrderUI] Failed to update order costs:', error)
@@ -263,7 +264,7 @@ class OrderUI {
       }
 
       if (response.success) {
-        document.querySelectorAll('.ms3_order_form').forEach(form => {
+        document.querySelectorAll('[data-ms3-form="order"], .ms3_order_form').forEach(form => {
           form.reset()
         })
       }
@@ -281,7 +282,8 @@ class OrderUI {
    * @param {Array<string>} errors - Array of field names with errors
    */
   highlightErrors (errors) {
-    document.querySelectorAll('.ms3_field_error').forEach(el => {
+    document.querySelectorAll('[data-ms3-error], .ms3_field_error').forEach(el => {
+      el.removeAttribute('data-ms3-error')
       el.classList.remove('ms3_field_error')
     })
 
@@ -295,9 +297,11 @@ class OrderUI {
       selectors.forEach(selector => {
         const field = document.querySelector(selector)
         if (field) {
+          field.setAttribute('data-ms3-error', '')
           field.classList.add('ms3_field_error')
 
           field.addEventListener('focus', function removeError () {
+            field.removeAttribute('data-ms3-error')
             field.classList.remove('ms3_field_error')
             field.removeEventListener('focus', removeError)
           }, { once: true })

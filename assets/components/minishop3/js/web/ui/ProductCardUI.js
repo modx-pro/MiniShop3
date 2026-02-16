@@ -127,7 +127,7 @@ class ProductCardUI {
    * Update all product cards on page
    */
   updateAllCards () {
-    const cards = document.querySelectorAll('.ms3-product-card')
+    const cards = document.querySelectorAll('[data-ms3-product-card], .ms3-product-card')
 
     cards.forEach(card => {
       this.updateCard(card)
@@ -161,7 +161,7 @@ class ProductCardUI {
       changeForm.style.display = 'flex'
 
       // Update quantity input
-      const countInput = changeForm.querySelector('.qty-input')
+      const countInput = changeForm.querySelector('[data-ms3-qty="input"]') || changeForm.querySelector('.qty-input')
       if (countInput) {
         countInput.value = this.cartState[productId].totalCount
       }

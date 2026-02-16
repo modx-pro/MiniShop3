@@ -20,7 +20,7 @@
             </div>
             {/if}
 
-            <form class="ms3_form ms3-customer-profile-form" method="post" action="">
+            <form class="ms3_form ms3-customer-profile-form" method="post" action="" data-ms3-form="customer-profile">
                 <input type="hidden" name="ms3_action" value="customer/update-profile">
 
                 <div class="row">

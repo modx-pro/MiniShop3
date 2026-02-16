@@ -1,4 +1,4 @@
-<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 ms3-product-card" data-product-id="{$id}">
+<div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 ms3-product-card" data-product-id="{$id}" data-ms3-product-card>
     <div class="card h-100 border-0 shadow-sm product-card" itemtype="http://schema.org/Product" itemscope>
         <meta itemprop="description" content="{$description ?: $pagetitle}">
         <meta itemprop="name" content="{$pagetitle}">
@@ -147,7 +147,7 @@
                 </div>
 
                 {* Форма добавления в корзину (показывается когда товара НЕТ в корзине) *}
-                <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add">
+                <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add" data-ms3-form>
                     <input type="hidden" name="id" value="{$id}">
                     <input type="hidden" name="count" value="1">
                     <input type="hidden" name="options" value="[]">
@@ -164,18 +164,18 @@
                 </form>
 
                 {* Форма изменения количества (показывается когда товар ЕСТЬ в корзине) *}
-                <form method="post" class="ms3_form ms3-cart-controls position-relative" data-cart-state="change">
+                <form method="post" class="ms3_form ms3-cart-controls position-relative" data-cart-state="change" data-ms3-form>
                     <input type="hidden" name="product_key" value="">
                     <input type="hidden" name="ms3_action" value="cart/change">
 
                     <div class="d-flex align-items-center justify-content-between gap-2">
                         <div class="btn-group btn-group-sm flex-grow-1" role="group">
-                            <button class="btn btn-outline-primary qty-btn dec-qty" type="button">
+                            <button class="btn btn-outline-primary qty-btn dec-qty" type="button" data-ms3-qty="dec">
                                 −
                             </button>
                             <input type="number" name="count" value="1" min="0"
-                                   class="form-control form-control-sm qty-input text-center border-primary">
-                            <button class="btn btn-outline-primary qty-btn inc-qty" type="button">
+                                   class="form-control form-control-sm qty-input text-center border-primary" data-ms3-qty="input">
+                            <button class="btn btn-outline-primary qty-btn inc-qty" type="button" data-ms3-qty="inc">
                                 +
                             </button>
                         </div>
