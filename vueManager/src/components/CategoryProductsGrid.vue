@@ -53,6 +53,9 @@ const filters = ref({})
 const loading = ref(false)
 const products = ref([])
 const totalRecords = ref(0)
+const ROWS_STORAGE_KEY = 'ms3_category_products_rows'
+const rowsPerPageOptions = [10, 20, 25, 50, 100]
+
 const first = ref(0)
 const rows = ref(20)
 const filterValues = ref({})
@@ -621,6 +624,47 @@ function onPageNext() {
   }
 }
 
+/**
+ * Jump to first page
+ */
+function onPageFirst() {
+  if (first.value > 0) {
+    first.value = 0
+    loadProducts()
+  }
+}
+
+/**
+ * Jump to last page
+ */
+function onPageLast() {
+  const lastStart = Math.max(0, Math.ceil(totalRecords.value / rows.value) - 1) * rows.value
+  if (first.value !== lastStart) {
+    first.value = lastStart
+    loadProducts()
+  }
+}
+
+/**
+ * Save rows per page to localStorage
+ */
+function saveRowsPreference(value) {
+  try {
+    localStorage.setItem(ROWS_STORAGE_KEY, String(value))
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Handle rows per page change: reset to first page, save preference, reload
+ */
+function onRowsChange() {
+  first.value = 0
+  saveRowsPreference(rows.value)
+  loadProducts()
+}
+
 // Watch for category ID changes
 watch(
   () => props.categoryId,
@@ -636,6 +680,22 @@ onMounted(async () => {
 
   const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
   nested.value = ms3Config?.show_nested_products ?? false
+
+  // Default rows: localStorage (user choice) > config (admin default) > 20
+  const configRows = ms3Config?.category_products_rows
+  let saved = null
+  try {
+    saved = parseInt(localStorage.getItem(ROWS_STORAGE_KEY), 10)
+  } catch {
+    // ignore (e.g. private mode Safari)
+  }
+  if (saved && rowsPerPageOptions.includes(saved)) {
+    rows.value = saved
+  } else if (configRows && rowsPerPageOptions.includes(Number(configRows))) {
+    rows.value = Number(configRows)
+  } else {
+    rows.value = 20
+  }
 
   await Promise.all([loadGridConfig(), loadFiltersConfig()])
   await loadProducts()
@@ -917,12 +977,34 @@ onMounted(async () => {
               {{ _('showing') }} {{ first + 1 }}-{{ Math.min(first + rows, totalRecords) }}
               {{ _('of') }} {{ totalRecords }}
             </span>
+            <Button
+              icon="pi pi-angle-double-left"
+              :disabled="first === 0"
+              text
+              :title="_('first_page')"
+              @click="onPageFirst"
+            />
             <Button icon="pi pi-angle-left" :disabled="first === 0" text @click="onPagePrev" />
             <Button
               icon="pi pi-angle-right"
               :disabled="first + rows >= totalRecords"
               text
               @click="onPageNext"
+            />
+            <Button
+              icon="pi pi-angle-double-right"
+              :disabled="first + rows >= totalRecords || totalRecords === 0"
+              text
+              :title="_('last_page')"
+              @click="onPageLast"
+            />
+            <label class="rows-per-page-label">{{ _('rows_per_page') }}</label>
+            <Select
+              v-model="rows"
+              :options="rowsPerPageOptions"
+              class="rows-per-page-select"
+              style="min-width: 5rem"
+              @change="onRowsChange"
             />
           </div>
         </div>
@@ -1149,6 +1231,12 @@ onMounted(async () => {
   color: var(--ms3-text-muted);
   font-size: 0.9rem;
   margin-right: auto;
+}
+
+.rows-per-page-label {
+  font-size: 0.9rem;
+  color: var(--ms3-text-muted);
+  margin-right: 0.5rem;
 }
 
 /* Product thumbnail */

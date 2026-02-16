@@ -109,6 +109,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             'option_fields' => $category_option_fields,
             'default_thumb' => $this->ms3->config['defaultThumb'],
             'show_nested_products' => (bool) $this->modx->getOption('ms3_category_show_nested_products', null, true),
+            'category_products_rows' => (int) $this->getOption('ms3_category_products_default_rows', null, 20),
         );
         $ready = array(
             'xtype' => 'ms3-page-category-update',
