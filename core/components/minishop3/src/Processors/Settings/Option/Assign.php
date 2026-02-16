@@ -20,19 +20,6 @@ class Assign extends CreateProcessor
     /**
      * @return bool|null|string
      */
-    public function initialize()
-    {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
-        return parent::initialize();
-    }
-
-
-    /**
-     * @return bool|null|string
-     */
     public function beforeSet()
     {
         $option_id = $this->getProperty('option_id');

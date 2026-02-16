@@ -27,9 +27,6 @@ class Upload extends ModelProcessor
      */
     public function initialize()
     {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
         /** @var msProduct $product */
         $id = (int)$this->getProperty('id', @$_GET['id']);
         $this->product = $this->modx->getObject(msProduct::class, $id);

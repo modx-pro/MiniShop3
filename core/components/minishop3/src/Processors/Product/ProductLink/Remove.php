@@ -19,13 +19,8 @@ class Remove extends RemoveProcessor
      */
     public function initialize()
     {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
         return true;
     }
-
 
     /**
      * @return array|string

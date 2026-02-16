@@ -11,16 +11,4 @@ class Get extends GetProcessor
     public $objectType = 'msVendor';
     public $languageTopics = ['minishop3'];
     public $permission = 'mssetting_view';
-
-    /**
-     * @return bool|null|string
-     */
-    public function initialize()
-    {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
-
-        return parent::initialize();
-    }
 }

@@ -28,9 +28,6 @@ class GetList extends GetListProcessor
      */
     public function initialize()
     {
-        if (!$this->modx->hasPermission($this->permission)) {
-            return $this->modx->lexicon('access_denied');
-        }
         $this->ms3 = $this->modx->services->get('ms3');
 
         /** @var msProduct $product */
