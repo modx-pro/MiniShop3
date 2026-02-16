@@ -11,7 +11,7 @@
 $_lang['ms3_order_get_success'] = 'Данные заказа получены';
 $_lang['ms3_order_getcost_success'] = 'Стоимость рассчитана';
 $_lang['ms3_order_set_success'] = 'Данные заказа сохранены';
-$_lang['ms3_order_clean_success'] = 'Заказ очищен';
+$_lang['ms3_order_clean_success'] = 'Форма заказа очищена';
 $_lang['ms3_order_submit_success'] = 'Заказ оформлен';
 $_lang['ms3_order_add_success'] = 'Поле заказа обновлено';
 $_lang['ms3_order_remove_success'] = 'Поле заказа удалено';

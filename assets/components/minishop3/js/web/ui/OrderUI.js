@@ -267,6 +267,7 @@ class OrderUI {
         document.querySelectorAll('[data-ms3-form="order"], .ms3_order_form').forEach(form => {
           form.reset()
         })
+        document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
       }
 
       return response

@@ -218,7 +218,7 @@ class OrderDraftManager
         // Clean order fields
         $orderFields = array_keys($draft->toArray());
         foreach ($orderFields as $key) {
-            if (!in_array($key, ['id', 'user_id', 'token', 'createdon'])) {
+            if (!in_array($key, ['id', 'user_id', 'token', 'status_id', 'createdon'])) {
                 $draft->set($key, null);
             }
         }
