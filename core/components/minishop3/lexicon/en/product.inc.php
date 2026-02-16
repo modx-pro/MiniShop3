@@ -61,7 +61,6 @@ $_lang['ms3_product_publishedon_help'] = 'Date when resource was published.';
 $_lang['ms3_product_publishedby'] = 'Published By';
 $_lang['ms3_product_publishedby_help'] = 'User who published this resource.';
 
-$_lang['ms3_product_menutitle'] = 'Menu Title';
 $_lang['ms3_product_hidemenu'] = 'Hide From Menu';
 $_lang['ms3_product_uri_override'] = 'Freeze URI';
 $_lang['ms3_product_uri'] = 'URI';
@@ -100,8 +99,6 @@ $_lang['ms3_product_tags'] = 'Tags';
 $_lang['ms3_product_tags_help'] = 'Any product tags.';
 $_lang['ms3_product_size'] = 'Sizes';
 $_lang['ms3_product_size_help'] = 'Product sizes, if any.';
-$_lang['ms3_product_color'] = 'Colors';
-$_lang['ms3_product_color_help'] = 'Product colors, if any.';
 $_lang['ms3_product_new'] = 'New';
 $_lang['ms3_product_new_help'] = '';
 $_lang['ms3_product_favorite'] = 'Featured';

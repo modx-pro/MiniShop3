@@ -5,9 +5,11 @@ import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
+import { useLexicon } from '@vuetools/useLexicon'
 
 const confirm = useConfirm()
 const toast = useToast()
+const { _ } = useLexicon()
 
 import request from '../request.js'
 
@@ -19,9 +21,9 @@ const createVisible = ref(false)
 const types = ref([])
 
 const unUsedFields = ref([
-  { name: 'price', title: 'Price' },
-  { name: 'eur_price', title: 'Price in EUR' },
-  { name: 'remains', title: 'Stock' },
+  { name: 'price', title: _('ms3_product_price') },
+  { name: 'eur_price', title: _('ms3_vue_price_example') },
+  { name: 'remains', title: _('ms3_product_remains') },
 ])
 
 const editedField = ref({})
@@ -98,21 +100,21 @@ async function save() {
 
 const confirmRemove = field => {
   confirm.require({
-    message: 'Delete record?',
-    header: 'Deletion',
+    message: _('ms3_vue_delete_record_confirm'),
+    header: _('ms3_vue_deletion'),
     icon: 'pi pi-exclamation-triangle',
     rejectProps: {
-      label: 'Cancel',
+      label: _('ms3_vue_dialog_cancel'),
       severity: 'secondary',
       outlined: true,
     },
     acceptProps: {
-      label: 'Delete',
+      label: _('ms3_vue_section_delete'),
     },
     accept: () => {
       remove(field.name)
       save()
-      toast.add({ severity: 'success', summary: 'OK', detail: 'Record deleted', life: 3000 })
+      toast.add({ severity: 'success', summary: _('ms3_vue_success_title'), detail: _('ms3_vue_record_deleted'), life: 3000 })
     },
   })
 }

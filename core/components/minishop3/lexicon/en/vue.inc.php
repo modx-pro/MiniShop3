@@ -31,6 +31,10 @@ $_lang['ms3_vue_error_loading_config'] = 'Error loading configuration';
 $_lang['ms3_vue_product_data_saved'] = 'Product data saved';
 $_lang['ms3_vue_error_save_product_data'] = 'Failed to save product data';
 $_lang['ms3_vue_error_saving_data'] = 'Error saving data';
+$_lang['ms3_vue_delete_record_confirm'] = 'Delete record?';
+$_lang['ms3_vue_deletion'] = 'Deletion';
+$_lang['ms3_vue_record_deleted'] = 'Record deleted';
+$_lang['ms3_vue_price_example'] = 'Price (example)';
 
 // Sections
 $_lang['ms3_vue_sections'] = 'Sections';

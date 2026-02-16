@@ -10,7 +10,6 @@
 $_lang['ms3_err_token'] = 'Не указан токен';
 $_lang['ms3_err_token_invalid'] = 'Токен не найден или недействителен';
 $_lang['ms3_err_token_expired'] = 'Срок действия токена истёк';
-$_lang['ms3_customer'] = 'Покупатель';
 $_lang['ms3_customer_addresses'] = 'Адреса покупателя';
 $_lang['ms3_customer_key_empty'] = 'Отсутствует ключ запроса';
 $_lang['ms3_err_customer_nf'] = 'Профиль покупателя не найден';
@@ -172,6 +171,14 @@ $_lang['ms3_customer_address_name_placeholder'] = 'Например: Дом, Р�
 $_lang['ms3_customer_address_name_help'] = 'Необязательно. Если не указано, будет сформировано автоматически.';
 $_lang['ms3_customer_address_comment_help'] = 'Дополнительная информация для курьера';
 $_lang['ms3_customer_err_address_not_found'] = 'Адрес не найден';
+$_lang['ms3_customer_err_address_id_not_specified'] = 'Не указан идентификатор адреса';
+$_lang['ms3_customer_address_updated'] = 'Адрес успешно обновлён';
+$_lang['ms3_customer_address_added'] = 'Адрес успешно добавлен';
+$_lang['ms3_customer_address_creation_error'] = 'Ошибка создания адреса';
+$_lang['ms3_customer_address_update_error'] = 'Ошибка обновления адреса';
+$_lang['ms3_customer_profile_update_error'] = 'Ошибка обновления профиля';
+$_lang['ms3_customer_err_occurred'] = 'Произошла ошибка';
+$_lang['ms3_customer_err_occurred_saving'] = 'Произошла ошибка при сохранении';
 $_lang['ms3_customer_cancel'] = 'Отмена';
 $_lang['ms3_customer_save'] = 'Сохранить';
 

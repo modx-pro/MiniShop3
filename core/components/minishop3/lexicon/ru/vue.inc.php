@@ -31,6 +31,10 @@ $_lang['ms3_vue_error_loading_config'] = 'Ошибка загрузки конф
 $_lang['ms3_vue_product_data_saved'] = 'Данные товара сохранены';
 $_lang['ms3_vue_error_save_product_data'] = 'Не удалось сохранить данные товара';
 $_lang['ms3_vue_error_saving_data'] = 'Ошибка сохранения данных';
+$_lang['ms3_vue_delete_record_confirm'] = 'Удалить запись?';
+$_lang['ms3_vue_deletion'] = 'Удаление';
+$_lang['ms3_vue_record_deleted'] = 'Запись удалена';
+$_lang['ms3_vue_price_example'] = 'Цена (пример)';
 
 // Секции
 $_lang['ms3_vue_sections'] = 'Секции';
