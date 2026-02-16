@@ -4,7 +4,7 @@ return [
     'miniShop3' => [
         'description' => 'ms3_menu_desc',
         'icon' => '<i class="icon-shopping-cart icon icon-large"></i>',
-        'action' => 'mgr/orders',
+        'action' => '',
     ],
     'ms3_orders' => [
         'description' => 'ms3_orders_desc',
