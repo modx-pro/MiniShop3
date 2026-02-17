@@ -38,6 +38,7 @@ class Response
         return new self([
             'success' => false,
             'message' => $message,
+            'code' => $statusCode,
             'errors' => $errors
         ], $statusCode);
     }

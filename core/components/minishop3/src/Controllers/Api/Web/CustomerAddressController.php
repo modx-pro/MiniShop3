@@ -17,6 +17,8 @@ use MODX\Revolution\modX;
  */
 class CustomerAddressController
 {
+    use GetMs3OrFailTrait;
+
     protected modX $modx;
 
     public function __construct(modX $modx)
@@ -33,7 +35,11 @@ class CustomerAddressController
      */
     public function getList(array $params = []): array
     {
-        $customer = $this->getAuthorizedCustomer();
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
+        $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -61,7 +67,11 @@ class CustomerAddressController
      */
     public function get(array $params = []): array
     {
-        $customer = $this->getAuthorizedCustomer();
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
+        $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -94,7 +104,11 @@ class CustomerAddressController
      */
     public function create(array $params = []): array
     {
-        $customer = $this->getAuthorizedCustomer();
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
+        $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -151,7 +165,11 @@ class CustomerAddressController
      */
     public function update(array $params = []): array
     {
-        $customer = $this->getAuthorizedCustomer();
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
+        $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -208,7 +226,11 @@ class CustomerAddressController
      */
     public function setDefault(array $params = []): array
     {
-        $customer = $this->getAuthorizedCustomer();
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
+        $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -256,7 +278,11 @@ class CustomerAddressController
      */
     public function delete(array $params = []): array
     {
-        $customer = $this->getAuthorizedCustomer();
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
+        $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -296,11 +322,12 @@ class CustomerAddressController
      * 1. Try API token from request/session
      * 2. Fall back to session customer_id (set by cart/order operations)
      *
+     * @param \MiniShop3\MiniShop3|null $ms3 Уже полученный сервис (избегает повторного getMs3OrFail в одном запросе)
      * @return msCustomer|null
      */
-    protected function getAuthorizedCustomer(): ?msCustomer
+    protected function getAuthorizedCustomer(?\MiniShop3\MiniShop3 $ms3 = null): ?msCustomer
     {
-        $ms3 = $this->modx->services->get('ms3');
+        $ms3 = $ms3 ?? $this->getMs3OrFail();
         if (!$ms3) {
             return null;
         }

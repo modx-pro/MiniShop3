@@ -15,6 +15,8 @@ use MODX\Revolution\modX;
  */
 class CartController
 {
+    use GetMs3OrFailTrait;
+
     protected modX $modx;
 
     public function __construct(modX $modx)
@@ -42,7 +44,10 @@ class CartController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->modx->services->get('ms3');
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
         $cart = $ms3->cart;
         $cart->initialize($this->modx->context->key, $token);
 
@@ -67,14 +72,17 @@ class CartController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401);
+            return Response::error('Token is required', 401)->getData();
         }
 
         if (empty($product_key)) {
-            return Response::error('Product key is required', 400);
+            return Response::error('Product key is required', 400)->getData();
         }
 
-        $ms3 = $this->modx->services->get('ms3');
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
         $cart = $ms3->cart;
         $cart->initialize($this->modx->context->key, $token);
 
@@ -98,14 +106,17 @@ class CartController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401);
+            return Response::error('Token is required', 401)->getData();
         }
 
         if (empty($product_key)) {
-            return Response::error('Product key is required', 400);
+            return Response::error('Product key is required', 400)->getData();
         }
 
-        $ms3 = $this->modx->services->get('ms3');
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
         $cart = $ms3->cart;
         $cart->initialize($this->modx->context->key, $token);
 
@@ -129,7 +140,10 @@ class CartController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->modx->services->get('ms3');
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
         $cart = $ms3->cart;
         $cart->initialize($this->modx->context->key, $token);
 
@@ -153,7 +167,10 @@ class CartController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->modx->services->get('ms3');
+        $ms3 = $this->getMs3OrFail();
+        if ($ms3 === null) {
+            return $this->serviceUnavailableResponse();
+        }
         $cart = $ms3->cart;
         $cart->initialize($this->modx->context->key, $token);
 

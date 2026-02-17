@@ -42,7 +42,15 @@ $rateLimitMiddleware = new RateLimitMiddleware(
     $modx->getOption('ms3_rate_limit_max_attempts', null, 60),
     $modx->getOption('ms3_rate_limit_decay_seconds', null, 60)
 );
-$router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
+/** @return array{0: \MiniShop3\Router\Response|null, 1: \MiniShop3\MiniShop3|null} */
+$ensureMs3Service = function (\MODX\Revolution\modX $modx): array {
+    if (!$modx->services->has('ms3')) {
+        $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+        return [Response::error('Service unavailable', 503), null];
+    }
+    return [null, $modx->services->get('ms3')];
+};
+$router->group('/api/v1', function($router) use ($modx, $tokenMiddleware, $ensureMs3Service) {
 
     $router->group('/cart', function($router) use ($modx) {
         $router->post('/add', function($params) use ($modx) {
@@ -128,7 +136,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
     }, [$tokenMiddleware]);
 
-    $router->group('/customer', function($router) use ($modx, $tokenMiddleware) {
+    $router->group('/customer', function($router) use ($modx, $tokenMiddleware, $ensureMs3Service) {
         $router->post('/login', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -179,13 +187,11 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
             return Response::success($response->getObject(), $response->getMessage());
         });
-        $router->get('/token/get', function($params) use ($modx) {
-            /** @var \MiniShop3\MiniShop3 $ms3 */
-            $ms3 = $modx->services->get('ms3');
-            if (!$ms3) {
-                return Response::error('MiniShop3 not initialized', 500);
+        $router->get('/token/get', function($params) use ($modx, $ensureMs3Service) {
+            [$err, $ms3] = $ensureMs3Service($modx);
+            if ($err !== null) {
+                return $err;
             }
-
             $ms3->initialize();
             $response = $ms3->customer->generateToken();
 
@@ -238,21 +244,30 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
         }, [$tokenMiddleware]);
 
-        $router->put('/profile', function($params) use ($modx) {
+        $router->put('/profile', function($params) use ($modx, $ensureMs3Service) {
+            [$err, $ms3] = $ensureMs3Service($modx);
+            if ($err !== null) {
+                return $err;
+            }
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
-            $ms3 = $modx->services->get('ms3');
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerProfileController($modx, $ms3);
             return $controller->update($data);
         }, [$tokenMiddleware]);
-        $router->post('/email/resend-verification', function($params) use ($modx) {
-            $ms3 = $modx->services->get('ms3');
+        $router->post('/email/resend-verification', function($params) use ($modx, $ensureMs3Service) {
+            [$err, $ms3] = $ensureMs3Service($modx);
+            if ($err !== null) {
+                return $err;
+            }
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
             return $controller->resendVerification();
         }, [$tokenMiddleware]);
-        $router->get('/email/verify', function($params) use ($modx) {
-            $ms3 = $modx->services->get('ms3');
+        $router->get('/email/verify', function($params) use ($modx, $ensureMs3Service) {
+            [$err, $ms3] = $ensureMs3Service($modx);
+            if ($err !== null) {
+                return $err;
+            }
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
             return $controller->verify($params);
         });

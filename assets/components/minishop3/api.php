@@ -51,14 +51,18 @@ try {
 
     require_once $autoloader;
 
-    // Инициализируем сервис MiniShop3
+    // Проверяем наличие сервиса (Issue #68: get() бросает Exception при отсутствии)
     if (!$modx->services->has('ms3')) {
-        $modx->services->add('ms3', function() use ($modx) {
-            return new \MiniShop3\MiniShop3($modx);
-        });
+        $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+        http_response_code(503);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Service unavailable',
+            'code' => 503
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
-    // Получаем сервис и инициализируем его (для регистрации корзины и других сервисов)
     $ms3 = $modx->services->get('ms3');
     $ms3->initialize('web');
 

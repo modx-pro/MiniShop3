@@ -8,6 +8,12 @@ use ModxPro\PdoTools\CoreTools;
 /** @var modX $modx */
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
+
+if (!$modx->services->has('ms3')) {
+    $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+    return '';
+}
+
 $ms3 = $modx->services->get('ms3');
 
 $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msProductOptions');

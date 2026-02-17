@@ -11,6 +11,11 @@ if (!empty($_GET['msorder'])) {
     return '';
 }
 
+if (!$modx->services->has('ms3')) {
+    $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+    return '';
+}
+
 /** @var modX $modx */
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
