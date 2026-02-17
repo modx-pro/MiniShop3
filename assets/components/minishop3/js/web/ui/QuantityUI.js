@@ -49,19 +49,14 @@ class QuantityUI {
   }
 
   /**
-   * Initialize quantity buttons: [data-ms3-qty="inc"]/[data-ms3-qty="dec"] or .inc-qty/.dec-qty (fallback)
+   * Initialize quantity buttons: uses sel.qtyInc, sel.qtyDec from config
    */
   initButtons () {
-    const byData = document.querySelectorAll('[data-ms3-qty="inc"], [data-ms3-qty="dec"]')
-    const byClass = document.querySelectorAll('.inc-qty, .dec-qty')
-    const seen = new Set()
-    const buttons = []
-    ;[...byData, ...byClass].forEach(btn => {
-      if (!seen.has(btn)) {
-        seen.add(btn)
-        buttons.push(btn)
-      }
-    })
+    const sel = this.config?.selectors || {}
+    const qtyIncSel = sel.qtyInc || '[data-ms3-qty="inc"], .inc-qty'
+    const qtyDecSel = sel.qtyDec || '[data-ms3-qty="dec"], .dec-qty'
+    const buttons = document.querySelectorAll([qtyIncSel, qtyDecSel].join(', '))
+
     buttons.forEach(btn => {
       const newBtn = btn.cloneNode(true)
       btn.parentNode.replaceChild(newBtn, btn)
@@ -70,19 +65,13 @@ class QuantityUI {
   }
 
   /**
-   * Initialize quantity inputs: [data-ms3-qty="input"] or .qty-input (fallback)
+   * Initialize quantity inputs: uses sel.qtyInput from config
    */
   initInputs () {
-    const byData = document.querySelectorAll('[data-ms3-qty="input"]')
-    const byClass = document.querySelectorAll('.qty-input')
-    const seen = new Set()
-    const inputs = []
-    ;[...byData, ...byClass].forEach(input => {
-      if (!seen.has(input)) {
-        seen.add(input)
-        inputs.push(input)
-      }
-    })
+    const sel = this.config?.selectors || {}
+    const qtyInputSel = sel.qtyInput || '[data-ms3-qty="input"], .qty-input'
+    const inputs = document.querySelectorAll(qtyInputSel)
+
     inputs.forEach(input => {
       const newInput = input.cloneNode(true)
       input.parentNode.replaceChild(newInput, input)
@@ -98,10 +87,14 @@ class QuantityUI {
   async handleButtonClick (e) {
     e.preventDefault()
 
-    const form = e.target.closest('[data-ms3-form]') || e.target.closest('.ms3_form')
+    const sel = this.config?.selectors || {}
+    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+    const qtyInputSel = sel.qtyInput || '[data-ms3-qty="input"], .qty-input'
+
+    const form = e.target.closest(formSel)
     if (!form) return
 
-    const input = form.querySelector('[data-ms3-qty="input"]') || form.querySelector('.qty-input')
+    const input = form.querySelector(qtyInputSel)
     if (!input) return
 
     let qty = parseInt(input.value) || 0
@@ -124,7 +117,10 @@ class QuantityUI {
    * @param {Event} e - Change event
    */
   async handleInputChange (e) {
-    const form = e.target.closest('[data-ms3-form]') || e.target.closest('.ms3_form')
+    const sel = this.config?.selectors || {}
+    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+
+    const form = e.target.closest(formSel)
     if (!form) return
 
     const qty = Math.max(0, parseInt(e.target.value) || 0)

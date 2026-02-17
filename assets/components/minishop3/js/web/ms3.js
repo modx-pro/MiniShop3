@@ -22,7 +22,7 @@
  * - data-ms3-qty="input"|"inc"|"dec" — quantity control
  * - data-ms3-cart-options — cart options select
  */
-/* global TokenManager, ApiClient, CartAPI, OrderAPI, CustomerAPI, CartUI, OrderUI, CustomerUI, ProductCardUI */
+/* global TokenManager, ApiClient, CartAPI, OrderAPI, CustomerAPI, CartUI, OrderUI, CustomerUI, QuantityUI, ProductCardUI, getSelectors */
 const ms3 = {
   config: {},
 
@@ -47,6 +47,12 @@ const ms3 = {
    */
   async init () {
     this.config = window.ms3Config || {}
+
+    // Merge selectors from Selectors.js (overridable via ms3Config.selectors)
+    const selectors = typeof getSelectors === 'function'
+      ? getSelectors()
+      : (window.Ms3DefaultSelectors || {})
+    this.config = { ...this.config, selectors }
 
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
@@ -95,7 +101,7 @@ const ms3 = {
   },
 
   /**
-   * [data-ms3-form] submit handler (fallback: .ms3_form deprecated)
+   * Form submit handler (uses sel.form from config)
    *
    * Automatically calls appropriate API method based on ms3_action:
    * - cart/add → cartUI.handleAdd()
@@ -103,9 +109,13 @@ const ms3 = {
    * - etc.
    */
   initFormHandler () {
+    const sel = this.config?.selectors || {}
+    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+
     document.addEventListener('submit', async (event) => {
       const form = event.target
-      if (!form.hasAttribute('data-ms3-form') && !form.classList.contains('ms3_form')) {
+      const matches = form.matches || form.msMatchesSelector || form.webkitMatchesSelector
+      if (!matches || !matches.call(form, formSel)) {
         return
       }
 
@@ -126,21 +136,25 @@ const ms3 = {
   },
 
   /**
-   * .ms3_link click handler
+   * Link click handler (uses sel.link, sel.form from config)
    *
-   * Handles clicks on buttons/links with .ms3_link class
-   * inside .ms3_form forms. Triggers form submit.
+   * Handles clicks on buttons/links with sel.link
+   * inside forms matching sel.form. Triggers form submit.
    */
   initLinkHandler () {
+    const sel = this.config?.selectors || {}
+    const linkSel = sel.link || '.ms3_link'
+    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+
     document.addEventListener('click', async (event) => {
-      const link = event.target.closest('.ms3_link')
+      const link = event.target.closest(linkSel)
       if (!link) {
         return
       }
 
-      const form = link.closest('[data-ms3-form]') || link.closest('.ms3_form')
+      const form = link.closest(formSel)
       if (!form) {
-        console.warn('.ms3_link must be inside a form with data-ms3-form or .ms3_form')
+        console.warn('ms3_link must be inside a form matching sel.form')
         return
       }
 

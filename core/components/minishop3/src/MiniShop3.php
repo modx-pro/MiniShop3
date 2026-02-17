@@ -158,7 +158,8 @@ class MiniShop3
                     'tokenName' => $tokenName,
                     'render' => [
                         'cart' => []
-                    ]
+                    ],
+                    'selectors' => []
                 ];
 
                 $data = json_encode($js_setting, JSON_UNESCAPED_UNICODE);

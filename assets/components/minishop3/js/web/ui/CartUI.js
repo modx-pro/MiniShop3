@@ -40,22 +40,16 @@ class CartUI {
   }
 
   /**
-   * Product option selects: [data-ms3-cart-options] or .ms3_cart_options (fallback)
+   * Product option selects: uses sel.cartOptions from config
    */
   initOptionSelects () {
-    const byData = document.querySelectorAll('[data-ms3-cart-options]')
-    const byClass = document.querySelectorAll('.ms3_cart_options')
-    const seen = new Set()
-    const selects = []
-    ;[...byData, ...byClass].forEach(select => {
-      if (!seen.has(select)) {
-        seen.add(select)
-        selects.push(select)
-      }
-    })
-    selects.forEach(select => {
+    const sel = this.config?.selectors || {}
+    const cartOptionsSel = sel.cartOptions || '[data-ms3-cart-options], .ms3_cart_options'
+    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+
+    document.querySelectorAll(cartOptionsSel).forEach(select => {
       select.addEventListener('change', async (e) => {
-        const form = e.target.closest('[data-ms3-form]') || e.target.closest('.ms3_form')
+        const form = e.target.closest(formSel)
         if (!form) return
 
         console.log('Option changed:', e.target.name, e.target.value)

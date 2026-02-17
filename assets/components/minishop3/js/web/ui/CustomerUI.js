@@ -47,7 +47,10 @@ class CustomerUI {
    * Initialize UI handlers
    */
   init () {
-    document.querySelectorAll('[data-ms3-form="customer"], .ms3_customer_form').forEach(form => {
+    const sel = this.config?.selectors || {}
+    const formCustomerSel = sel.formCustomer || '[data-ms3-form="customer"], .ms3_customer_form'
+
+    document.querySelectorAll(formCustomerSel).forEach(form => {
       this.initForm(form)
     })
   }
@@ -72,7 +75,8 @@ class CustomerUI {
    */
   initInput (input) {
     input.addEventListener('change', async () => {
-      const form = input.closest('[data-ms3-form="customer"], .ms3_customer_form')
+      const formCustomerSel = (this.config?.selectors || {}).formCustomer || '[data-ms3-form="customer"], .ms3_customer_form'
+      const form = input.closest(formCustomerSel)
       if (!form) return
 
       const parent = input.closest('div')
