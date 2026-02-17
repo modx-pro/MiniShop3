@@ -86,6 +86,13 @@ class CartUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:cart:changing', {
+        entity: 'cart',
+        action: 'change',
+        form: null,
+        data: { productKey, count },
+        response: null
+      })
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.change(productKey, count, renderTokens)
 
@@ -106,9 +113,23 @@ class CartUI {
           this.message.error(response.message)
         }
       }
+      dispatchMs3Loading('ms3:cart:changed', {
+        entity: 'cart',
+        action: 'change',
+        form: null,
+        data: { productKey, count },
+        response
+      })
     } catch (error) {
       console.error('[CartUI] handleChange error:', error)
       this.message.error('Cart update error')
+      dispatchMs3Loading('ms3:cart:changed', {
+        entity: 'cart',
+        action: 'change',
+        form: null,
+        data: { productKey, count },
+        response: { success: false }
+      })
     }
   }
 
@@ -128,6 +149,13 @@ class CartUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:cart:adding', {
+        entity: 'cart',
+        action: 'add',
+        form: null,
+        data: { id, count, options },
+        response: null
+      })
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.add(id, count, options, renderTokens)
 
@@ -148,9 +176,23 @@ class CartUI {
           this.message.error(response.message)
         }
       }
+      dispatchMs3Loading('ms3:cart:added', {
+        entity: 'cart',
+        action: 'add',
+        form: null,
+        data: { id, count, options },
+        response
+      })
     } catch (error) {
       console.error('[CartUI] handleAdd error:', error)
       this.message.error('Product addition error')
+      dispatchMs3Loading('ms3:cart:added', {
+        entity: 'cart',
+        action: 'add',
+        form: null,
+        data: { id, count, options },
+        response: { success: false }
+      })
     }
   }
 
@@ -168,6 +210,13 @@ class CartUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:cart:removing', {
+        entity: 'cart',
+        action: 'remove',
+        form: null,
+        data: { productKey },
+        response: null
+      })
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.remove(productKey, renderTokens)
 
@@ -188,9 +237,23 @@ class CartUI {
           this.message.error(response.message)
         }
       }
+      dispatchMs3Loading('ms3:cart:removed', {
+        entity: 'cart',
+        action: 'remove',
+        form: null,
+        data: { productKey },
+        response
+      })
     } catch (error) {
       console.error('[CartUI] handleRemove error:', error)
       this.message.error('Product removal error')
+      dispatchMs3Loading('ms3:cart:removed', {
+        entity: 'cart',
+        action: 'remove',
+        form: null,
+        data: { productKey },
+        response: { success: false }
+      })
     }
   }
 
@@ -206,6 +269,13 @@ class CartUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:cart:cleaning', {
+        entity: 'cart',
+        action: 'clean',
+        form: null,
+        data: {},
+        response: null
+      })
       const renderTokens = this.getRenderTokens()
       const response = await this.cart.clean(renderTokens)
 
@@ -226,9 +296,23 @@ class CartUI {
           this.message.error(response.message)
         }
       }
+      dispatchMs3Loading('ms3:cart:cleaned', {
+        entity: 'cart',
+        action: 'clean',
+        form: null,
+        data: {},
+        response
+      })
     } catch (error) {
       console.error('[CartUI] handleClean error:', error)
       this.message.error('Cart clearing error')
+      dispatchMs3Loading('ms3:cart:cleaned', {
+        entity: 'cart',
+        action: 'clean',
+        form: null,
+        data: {},
+        response: { success: false }
+      })
     }
   }
 

@@ -54,6 +54,12 @@ textarea.ms3_field_error:focus {
     box-shadow: 0 0 5px rgba(217, 83, 79, 0.5) !important;
 }
 
+/* Loading state (Issue #16): listeners of ms3:*:adding may set this attribute to show loader/block UI */
+[data-ms3-loading] {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
 /* Logs */
 .msProductsLog, .msGalleryLog, .msCartLog, .msOrderLog, .msGetOrderLog {
     width: 100%;

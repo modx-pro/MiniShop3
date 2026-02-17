@@ -15,6 +15,25 @@
  *   render: { ... }
  * }
  *
+ * DOM events (Issue #16 — loading/loaded):
+ * - ms3:ready — init finished
+ * - ms3:cart:updated — cart data changed (detail: cart data)
+ * - ms3:cart:adding / ms3:cart:added — add to cart
+ * - ms3:cart:changing / ms3:cart:changed — change quantity
+ * - ms3:cart:removing / ms3:cart:removed — remove from cart
+ * - ms3:cart:cleaning / ms3:cart:cleaned — clear cart
+ * - ms3:order:adding / ms3:order:added — order field update
+ * - ms3:order:submitting / ms3:order:submitted — order submit
+ * - ms3:order:cleaning / ms3:order:cleaned — order clear
+ * - ms3:customer:adding / ms3:customer:added — customer field
+ * - ms3:customer:updating-profile / ms3:customer:updated-profile
+ * - ms3:customer:creating-address / ms3:customer:created-address
+ * - ms3:customer:updating-address / ms3:customer:updated-address
+ * - ms3:customer:changing-address / ms3:customer:changed-address
+ * - ms3:quantity:changing / ms3:quantity:changed — quantity +/-/input
+ * Event detail: { entity, action, form, data, response? }. Use *:ing to show loader, *:ed to hide.
+ * Optional: set [data-ms3-loading] on form/button in *:ing listener for built-in CSS (opacity, pointer-events).
+ *
  * Data attributes for logic (Issue #17): use data-ms3-* for JS selection; keep classes for styling.
  * - data-ms3-form / data-ms3-form="order"|"customer" — form
  * - data-ms3-error — field with validation error

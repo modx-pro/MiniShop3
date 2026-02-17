@@ -158,6 +158,13 @@ class QuantityUI {
     count = hookData.count
 
     try {
+      dispatchMs3Loading('ms3:quantity:changing', {
+        entity: 'quantity',
+        action: 'change',
+        form,
+        data: { productKey, count },
+        response: null
+      })
       let response
       const renderTokens = this.getRenderTokens()
 
@@ -193,9 +200,23 @@ class QuantityUI {
           this.message.error(response.message)
         }
       }
+      dispatchMs3Loading('ms3:quantity:changed', {
+        entity: 'quantity',
+        action: 'change',
+        form,
+        data: { productKey, count },
+        response
+      })
     } catch (error) {
       console.error('[QuantityUI] updateQuantity error:', error)
       this.message.error('Cart update error')
+      dispatchMs3Loading('ms3:quantity:changed', {
+        entity: 'quantity',
+        action: 'change',
+        form,
+        data: { productKey, count },
+        response: { success: false }
+      })
     }
   }
 

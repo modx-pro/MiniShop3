@@ -8,7 +8,11 @@
   },
   "globals": {
     "ms3": "readonly",
-    "ms3Config": "readonly"
+    "ms3Config": "readonly",
+    "dispatchMs3Loading": "readonly"
   },
-  "ignorePatterns": ["**/node_modules/**", "**/mgr/**"]
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/mgr/**"
+  ]
 }

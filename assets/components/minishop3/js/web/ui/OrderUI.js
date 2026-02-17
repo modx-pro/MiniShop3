@@ -122,6 +122,13 @@ class OrderUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:order:adding', {
+        entity: 'order',
+        action: 'add',
+        form: null,
+        data: { key, value },
+        response: null
+      })
       const response = await this.order.add(key, value)
 
       await this.hooks.runHooks('afterAddOrder', { key, value, response })
@@ -139,9 +146,23 @@ class OrderUI {
         await this.updateOrderCosts()
       }
 
+      dispatchMs3Loading('ms3:order:added', {
+        entity: 'order',
+        action: 'add',
+        form: null,
+        data: { key, value },
+        response
+      })
       return response
     } catch (error) {
       this.message.error('An error occurred')
+      dispatchMs3Loading('ms3:order:added', {
+        entity: 'order',
+        action: 'add',
+        form: null,
+        data: { key, value },
+        response: { success: false }
+      })
       return { success: false, message: error.message }
     }
   }
@@ -209,6 +230,13 @@ class OrderUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:order:submitting', {
+        entity: 'order',
+        action: 'submit',
+        form: null,
+        data: {},
+        response: null
+      })
       const response = await this.order.submit()
 
       await this.hooks.runHooks('afterSubmitOrder', { response })
@@ -230,9 +258,23 @@ class OrderUI {
         }
       }
 
+      dispatchMs3Loading('ms3:order:submitted', {
+        entity: 'order',
+        action: 'submit',
+        form: null,
+        data: {},
+        response
+      })
       return response
     } catch (error) {
       this.message.error('Order submission error')
+      dispatchMs3Loading('ms3:order:submitted', {
+        entity: 'order',
+        action: 'submit',
+        form: null,
+        data: {},
+        response: { success: false }
+      })
       return { success: false }
     }
   }
@@ -251,6 +293,13 @@ class OrderUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:order:cleaning', {
+        entity: 'order',
+        action: 'clean',
+        form: null,
+        data: {},
+        response: null
+      })
       const response = await this.order.clean()
 
       await this.hooks.runHooks('afterCleanOrder', { response })
@@ -270,9 +319,23 @@ class OrderUI {
         document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
       }
 
+      dispatchMs3Loading('ms3:order:cleaned', {
+        entity: 'order',
+        action: 'clean',
+        form: null,
+        data: {},
+        response
+      })
       return response
     } catch (error) {
       this.message.error('Order clearing error')
+      dispatchMs3Loading('ms3:order:cleaned', {
+        entity: 'order',
+        action: 'clean',
+        form: null,
+        data: {},
+        response: { success: false }
+      })
       return { success: false }
     }
   }

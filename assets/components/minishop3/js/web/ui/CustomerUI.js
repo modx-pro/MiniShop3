@@ -118,6 +118,13 @@ class CustomerUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:customer:adding', {
+        entity: 'customer',
+        action: 'add',
+        form: null,
+        data: { key, value },
+        response: null
+      })
       const response = await this.customer.add(key, value)
 
       await this.hooks.runHooks('afterAddCustomer', { key, value, response })
@@ -130,10 +137,24 @@ class CustomerUI {
         this.message.error(response.message)
       }
 
+      dispatchMs3Loading('ms3:customer:added', {
+        entity: 'customer',
+        action: 'add',
+        form: null,
+        data: { key, value },
+        response
+      })
       return response
     } catch (error) {
       console.error('CustomerUI.handleAdd error:', error)
       this.message.error(this.t('ms3_customer_err_occurred'))
+      dispatchMs3Loading('ms3:customer:added', {
+        entity: 'customer',
+        action: 'add',
+        form: null,
+        data: { key, value },
+        response: { success: false }
+      })
       return { success: false, message: error.message }
     }
   }
@@ -154,6 +175,13 @@ class CustomerUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:customer:changing-address', {
+        entity: 'customer',
+        action: 'change-address',
+        form: null,
+        data: { key, value },
+        response: null
+      })
       const response = await this.customer.changeAddress(key, value)
 
       await this.hooks.runHooks('afterChangeAddressCustomer', { key, value, response })
@@ -166,10 +194,24 @@ class CustomerUI {
         this.message.error(response.message)
       }
 
+      dispatchMs3Loading('ms3:customer:changed-address', {
+        entity: 'customer',
+        action: 'change-address',
+        form: null,
+        data: { key, value },
+        response
+      })
       return response
     } catch (error) {
       console.error('CustomerUI.handleChangeAddress error:', error)
       this.message.error(this.t('ms3_customer_err_occurred'))
+      dispatchMs3Loading('ms3:customer:changed-address', {
+        entity: 'customer',
+        action: 'change-address',
+        form: null,
+        data: { key, value },
+        response: { success: false }
+      })
       return { success: false }
     }
   }
@@ -195,6 +237,13 @@ class CustomerUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:customer:updating-profile', {
+        entity: 'customer',
+        action: 'update-profile',
+        form: null,
+        data,
+        response: null
+      })
       const response = await this.customer.updateProfile(data)
 
       await this.hooks.runHooks('afterUpdateProfile', { data, response })
@@ -209,10 +258,24 @@ class CustomerUI {
         this.message.error(response.message || this.t('ms3_customer_profile_update_error'))
       }
 
+      dispatchMs3Loading('ms3:customer:updated-profile', {
+        entity: 'customer',
+        action: 'update-profile',
+        form: null,
+        data,
+        response
+      })
       return response
     } catch (error) {
       console.error('CustomerUI.handleProfileUpdate error:', error)
       this.message.error(this.t('ms3_customer_err_occurred_saving'))
+      dispatchMs3Loading('ms3:customer:updated-profile', {
+        entity: 'customer',
+        action: 'update-profile',
+        form: null,
+        data,
+        response: { success: false }
+      })
       return { success: false, message: error.message }
     }
   }
@@ -238,6 +301,13 @@ class CustomerUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:customer:creating-address', {
+        entity: 'customer',
+        action: 'create-address',
+        form: null,
+        data,
+        response: null
+      })
       const response = await this.customer.createAddress(data)
 
       await this.hooks.runHooks('afterCreateAddress', { data, response })
@@ -252,10 +322,24 @@ class CustomerUI {
         this.message.error(response.message || this.t('ms3_customer_address_creation_error'))
       }
 
+      dispatchMs3Loading('ms3:customer:created-address', {
+        entity: 'customer',
+        action: 'create-address',
+        form: null,
+        data,
+        response
+      })
       return response
     } catch (error) {
       console.error('CustomerUI.handleAddressCreate error:', error)
       this.message.error(this.t('ms3_customer_err_occurred_saving'))
+      dispatchMs3Loading('ms3:customer:created-address', {
+        entity: 'customer',
+        action: 'create-address',
+        form: null,
+        data,
+        response: { success: false }
+      })
       return { success: false, message: error.message }
     }
   }
@@ -288,6 +372,13 @@ class CustomerUI {
     }
 
     try {
+      dispatchMs3Loading('ms3:customer:updating-address', {
+        entity: 'customer',
+        action: 'update-address',
+        form: null,
+        data: { addressId, ...data },
+        response: null
+      })
       const response = await this.customer.updateAddress(addressId, data)
 
       await this.hooks.runHooks('afterUpdateAddress', { addressId, data, response })
@@ -302,10 +393,24 @@ class CustomerUI {
         this.message.error(response.message || this.t('ms3_customer_address_update_error'))
       }
 
+      dispatchMs3Loading('ms3:customer:updated-address', {
+        entity: 'customer',
+        action: 'update-address',
+        form: null,
+        data: { addressId, ...data },
+        response
+      })
       return response
     } catch (error) {
       console.error('CustomerUI.handleAddressUpdate error:', error)
       this.message.error(this.t('ms3_customer_err_occurred_saving'))
+      dispatchMs3Loading('ms3:customer:updated-address', {
+        entity: 'customer',
+        action: 'update-address',
+        form: null,
+        data: { addressId, ...data },
+        response: { success: false }
+      })
       return { success: false, message: error.message }
     }
   }

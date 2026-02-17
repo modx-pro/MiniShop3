@@ -233,6 +233,7 @@ return [
             "[[+jsUrl]]web\/lib\/izitoast\/iziToast.js",
             "[[+jsUrl]]web\/modules\/hooks.js",
             "[[+jsUrl]]web\/modules\/message.js",
+            "[[+jsUrl]]web\/core\/Ms3Events.js",
             "[[+jsUrl]]web\/core\/ApiClient.js",
             "[[+jsUrl]]web\/core\/TokenManager.js",
             "[[+jsUrl]]web\/core\/CartAPI.js",
