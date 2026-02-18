@@ -15,8 +15,6 @@ use MODX\Revolution\modX;
  */
 class OrderController
 {
-    use GetMs3OrFailTrait;
-
     protected modX $modx;
 
     public function __construct(modX $modx)
@@ -39,10 +37,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -74,10 +69,7 @@ class OrderController
             return Response::error('Field key is required', 400)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -108,10 +100,7 @@ class OrderController
             return Response::error('Fields array is required', 400)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -142,10 +131,7 @@ class OrderController
             return Response::error('Field key is required', 400)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -176,10 +162,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -203,10 +186,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -230,10 +210,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -257,10 +234,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -284,10 +258,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -311,10 +282,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -341,10 +309,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -368,10 +333,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -398,10 +360,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 
@@ -428,10 +387,7 @@ class OrderController
             return Response::error('Token is required', 401)->getData();
         }
 
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $order = $ms3->order;
         $order->initialize($token);
 

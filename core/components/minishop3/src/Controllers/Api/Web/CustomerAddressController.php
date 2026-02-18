@@ -17,8 +17,6 @@ use MODX\Revolution\modX;
  */
 class CustomerAddressController
 {
-    use GetMs3OrFailTrait;
-
     protected modX $modx;
 
     public function __construct(modX $modx)
@@ -35,10 +33,7 @@ class CustomerAddressController
      */
     public function getList(array $params = []): array
     {
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
@@ -67,10 +62,7 @@ class CustomerAddressController
      */
     public function get(array $params = []): array
     {
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
@@ -104,10 +96,7 @@ class CustomerAddressController
      */
     public function create(array $params = []): array
     {
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
@@ -165,10 +154,7 @@ class CustomerAddressController
      */
     public function update(array $params = []): array
     {
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
@@ -226,10 +212,7 @@ class CustomerAddressController
      */
     public function setDefault(array $params = []): array
     {
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
@@ -278,10 +261,7 @@ class CustomerAddressController
      */
     public function delete(array $params = []): array
     {
-        $ms3 = $this->getMs3OrFail();
-        if ($ms3 === null) {
-            return $this->serviceUnavailableResponse();
-        }
+        $ms3 = $this->modx->services->get('ms3');
         $customer = $this->getAuthorizedCustomer($ms3);
 
         if (!$customer) {
@@ -322,12 +302,12 @@ class CustomerAddressController
      * 1. Try API token from request/session
      * 2. Fall back to session customer_id (set by cart/order operations)
      *
-     * @param \MiniShop3\MiniShop3|null $ms3 Уже полученный сервис (избегает повторного getMs3OrFail в одном запросе)
+     * @param \MiniShop3\MiniShop3|null $ms3 Уже полученный сервис (избегает повторного services->get в одном запросе)
      * @return msCustomer|null
      */
     protected function getAuthorizedCustomer(?\MiniShop3\MiniShop3 $ms3 = null): ?msCustomer
     {
-        $ms3 = $ms3 ?? $this->getMs3OrFail();
+        $ms3 = $ms3 ?? $this->modx->services->get('ms3');
         if (!$ms3) {
             return null;
         }
