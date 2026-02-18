@@ -112,19 +112,13 @@ class Update extends UpdateProcessor
         // JSON fields like color/size are saved separately via msProductData::save()
         $options = $this->getProperty('options');
         if (!empty($options) && is_array($options)) {
-            // Filter out empty values
-            $options = array_filter($options, function ($value) {
-                return $value !== '' && $value !== null && $value !== [];
-            });
-
-            if (!empty($options)) {
-                /** @var \MiniShop3\Model\msProductData $productData */
-                $productData = $this->object->loadData();
-                if ($productData) {
-                    $service = $this->modx->services->get('ms3_product_data_service');
-                    // Don't remove other options - they come from JSON fields
-                    $service->saveOptions($productData, $options, false);
-                }
+            /** @var \MiniShop3\Model\msProductData $productData */
+            $productData = $this->object->loadData();
+            if ($productData) {
+                $service = $this->modx->services->get('ms3_product_data_service');
+                // Don't remove other options - they come from JSON fields
+                // Empty values are passed through to signal deletion
+                $service->saveOptions($productData, $options, false);
             }
         }
 
