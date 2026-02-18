@@ -17,14 +17,18 @@ class OrderUI {
     this.config = config
   }
 
+  get selectors () {
+    return this.config?.selectors || {}
+  }
+
   /**
    * Initialize UI handlers
    */
   init () {
-    const sel = this.config?.selectors || {}
-    const formOrderSel = sel.formOrder || '[data-ms3-form="order"], .ms3_order_form'
+    const selectors = this.selectors
+    const formOrderSelector = selectors.formOrder || '[data-ms3-form="order"], .ms3_order_form'
 
-    document.querySelectorAll(formOrderSel).forEach(form => {
+    document.querySelectorAll(formOrderSelector).forEach(form => {
       this.initForm(form)
     })
 
@@ -160,24 +164,24 @@ class OrderUI {
 
       if (response.success && response.data) {
         const { cost, cart_cost: cartCost, delivery_cost: deliveryCost } = response.data
-        const sel = this.config?.selectors || {}
+        const selectors = this.selectors
 
         // Update cart cost
-        const cartCostEl = document.querySelector(sel.orderCartCost || '#ms3_order_cart_cost')
-        if (cartCostEl && cartCost !== undefined) {
-          cartCostEl.textContent = this.formatPrice(cartCost)
+        const cartCostElement = document.querySelector(selectors.orderCartCost || '#ms3_order_cart_cost')
+        if (cartCostElement && cartCost !== undefined) {
+          cartCostElement.textContent = this.formatPrice(cartCost)
         }
 
         // Update delivery cost
-        const deliveryCostEl = document.querySelector(sel.orderDeliveryCost || '#ms3_order_delivery_cost')
-        if (deliveryCostEl && deliveryCost !== undefined) {
-          deliveryCostEl.textContent = this.formatPrice(deliveryCost)
+        const deliveryCostElement = document.querySelector(selectors.orderDeliveryCost || '#ms3_order_delivery_cost')
+        if (deliveryCostElement && deliveryCost !== undefined) {
+          deliveryCostElement.textContent = this.formatPrice(deliveryCost)
         }
 
         // Update total cost
-        const totalCostEl = document.querySelector(sel.orderCost || '#ms3_order_cost')
-        if (totalCostEl && cost !== undefined) {
-          totalCostEl.textContent = this.formatPrice(cost)
+        const totalCostElement = document.querySelector(selectors.orderCost || '#ms3_order_cost')
+        if (totalCostElement && cost !== undefined) {
+          totalCostElement.textContent = this.formatPrice(cost)
         }
 
         await this.hooks.runHooks('afterUpdateOrderCosts', { cost, cart_cost: cartCost, delivery_cost: deliveryCost })
@@ -268,8 +272,8 @@ class OrderUI {
       }
 
       if (response.success) {
-        const formOrderSel = (this.config?.selectors || {}).formOrder || '[data-ms3-form="order"], .ms3_order_form'
-        document.querySelectorAll(formOrderSel).forEach(form => {
+        const formOrderSelector = this.selectors.formOrder || '[data-ms3-form="order"], .ms3_order_form'
+        document.querySelectorAll(formOrderSelector).forEach(form => {
           form.reset()
         })
         document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
@@ -288,21 +292,21 @@ class OrderUI {
    * @param {Array<string>} errors - Array of field names with errors
    */
   highlightErrors (errors) {
-    const fieldErrorSel = (this.config?.selectors || {}).fieldError || '[data-ms3-error], .ms3_field_error'
+    const fieldErrorSelector = this.selectors.fieldError || '[data-ms3-error], .ms3_field_error'
 
-    document.querySelectorAll(fieldErrorSel).forEach(el => {
-      el.removeAttribute('data-ms3-error')
-      el.classList.remove('ms3_field_error')
+    document.querySelectorAll(fieldErrorSelector).forEach(element => {
+      element.removeAttribute('data-ms3-error')
+      element.classList.remove('ms3_field_error')
     })
 
     errors.forEach(fieldName => {
-      const selectors = [
+      const selectorList = [
         `[name="${fieldName}"]`,
         `[name="address_${fieldName}"]`,
         `[name="order_${fieldName}"]`
       ]
 
-      selectors.forEach(selector => {
+      selectorList.forEach(selector => {
         const field = document.querySelector(selector)
         if (field) {
           field.setAttribute('data-ms3-error', '')

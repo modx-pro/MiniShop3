@@ -31,6 +31,10 @@ class CustomerUI {
     this.config = config
   }
 
+  get selectors () {
+    return this.config?.selectors || {}
+  }
+
   /**
    * Get lexicon string (window.ms3Lexicon, then fallback, then key)
    * @param {string} key - Lexicon key
@@ -47,10 +51,10 @@ class CustomerUI {
    * Initialize UI handlers
    */
   init () {
-    const sel = this.config?.selectors || {}
-    const formCustomerSel = sel.formCustomer || '[data-ms3-form="customer"], .ms3_customer_form'
+    const selectors = this.selectors
+    const formCustomerSelector = selectors.formCustomer || '[data-ms3-form="customer"], .ms3_customer_form'
 
-    document.querySelectorAll(formCustomerSel).forEach(form => {
+    document.querySelectorAll(formCustomerSelector).forEach(form => {
       this.initForm(form)
     })
   }
@@ -75,8 +79,8 @@ class CustomerUI {
    */
   initInput (input) {
     input.addEventListener('change', async () => {
-      const formCustomerSel = (this.config?.selectors || {}).formCustomer || '[data-ms3-form="customer"], .ms3_customer_form'
-      const form = input.closest(formCustomerSel)
+      const formCustomerSelector = this.selectors.formCustomer || '[data-ms3-form="customer"], .ms3_customer_form'
+      const form = input.closest(formCustomerSelector)
       if (!form) return
 
       const parent = input.closest('div')

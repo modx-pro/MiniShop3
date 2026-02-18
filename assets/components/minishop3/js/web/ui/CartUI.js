@@ -32,6 +32,10 @@ class CartUI {
     this.config = config
   }
 
+  get selectors () {
+    return this.config?.selectors || {}
+  }
+
   /**
    * Initialize UI handlers
    */
@@ -43,13 +47,13 @@ class CartUI {
    * Product option selects: uses sel.cartOptions from config
    */
   initOptionSelects () {
-    const sel = this.config?.selectors || {}
-    const cartOptionsSel = sel.cartOptions || '[data-ms3-cart-options], .ms3_cart_options'
-    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+    const selectors = this.selectors
+    const cartOptionsSelector = selectors.cartOptions || '[data-ms3-cart-options], .ms3_cart_options'
+    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
 
-    document.querySelectorAll(cartOptionsSel).forEach(select => {
+    document.querySelectorAll(cartOptionsSelector).forEach(select => {
       select.addEventListener('change', async (e) => {
-        const form = e.target.closest(formSel)
+        const form = e.target.closest(formSelector)
         if (!form) return
 
         console.log('Option changed:', e.target.name, e.target.value)

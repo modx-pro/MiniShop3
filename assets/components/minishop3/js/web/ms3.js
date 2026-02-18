@@ -26,6 +26,10 @@
 const ms3 = {
   config: {},
 
+  get selectors () {
+    return this.config?.selectors || {}
+  },
+
   tokenManager: null,
   apiClient: null,
 
@@ -109,13 +113,12 @@ const ms3 = {
    * - etc.
    */
   initFormHandler () {
-    const sel = this.config?.selectors || {}
-    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+    const selectors = this.selectors
+    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
 
     document.addEventListener('submit', async (event) => {
       const form = event.target
-      const matches = form.matches || form.msMatchesSelector || form.webkitMatchesSelector
-      if (!matches || !matches.call(form, formSel)) {
+      if (!form.matches(formSelector)) {
         return
       }
 
@@ -142,19 +145,19 @@ const ms3 = {
    * inside forms matching sel.form. Triggers form submit.
    */
   initLinkHandler () {
-    const sel = this.config?.selectors || {}
-    const linkSel = sel.link || '.ms3_link'
-    const formSel = sel.form || '[data-ms3-form], .ms3_form'
+    const selectors = this.selectors
+    const linkSelector = selectors.link || '.ms3_link'
+    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
 
     document.addEventListener('click', async (event) => {
-      const link = event.target.closest(linkSel)
+      const link = event.target.closest(linkSelector)
       if (!link) {
         return
       }
 
-      const form = link.closest(formSel)
+      const form = link.closest(formSelector)
       if (!form) {
-        console.warn('ms3_link must be inside a form matching sel.form')
+        console.warn(`ms3_link must be inside a form matching: ${formSelector}`)
         return
       }
 
