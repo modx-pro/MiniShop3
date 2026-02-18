@@ -52,6 +52,9 @@ class OptionSyncService
 
             if (is_array($values) && !empty($values)) {
                 $this->syncOptionValues($productId, $key, $values, $existingOptions);
+            } elseif (isset($existingOptions[$key])) {
+                // Empty value explicitly passed — delete option from DB
+                $this->removeOptionKey($productId, $key);
             }
         }
 
@@ -163,6 +166,22 @@ class OptionSyncService
             }
             $addStmt->execute([$productId, $key, $newValue]);
         }
+    }
+
+    /**
+     * Remove all values for a single option key
+     *
+     * Used when an explicitly empty value is passed for an option,
+     * signaling that the option should be cleared.
+     *
+     * @param int $productId Product ID
+     * @param string $key Option key to remove
+     */
+    protected function removeOptionKey(int $productId, string $key): void
+    {
+        $table = $this->xpdo->getTableName(msProductOption::class);
+        $stmt = $this->xpdo->prepare("DELETE FROM {$table} WHERE `product_id` = ? AND `key` = ?");
+        $stmt->execute([$productId, $key]);
     }
 
     /**
