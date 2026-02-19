@@ -189,7 +189,6 @@ class OrdersController
         }
 
         $c->select(implode(', ', $selectParts));
-        $c->groupby('msOrder.id');
 
         $sortField = $this->mapSortField($sort);
         $c->sortby($sortField, $dir);
