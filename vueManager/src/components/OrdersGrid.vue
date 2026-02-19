@@ -44,6 +44,8 @@ const orders = ref([])
 const totalRecords = ref(0)
 const first = ref(0)
 const rows = ref(20)
+const sortField = ref('id')
+const sortOrder = ref(-1) // -1 = DESC, 1 = ASC
 const filterValues = ref({})
 const stats = ref({
   month_sum: '0',
@@ -69,6 +71,8 @@ async function loadOrders() {
     const params = {
       start: first.value,
       limit: rows.value,
+      sort: sortField.value,
+      dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
     }
 
     // Apply filter values
@@ -124,6 +128,16 @@ async function loadOrders() {
 function onPage(event) {
   first.value = event.first
   rows.value = event.rows
+  loadOrders()
+}
+
+/**
+ * Handle sort
+ */
+function onSort(event) {
+  sortField.value = event.sortField || 'id'
+  sortOrder.value = event.sortOrder ?? -1
+  first.value = 0
   loadOrders()
 }
 
@@ -686,10 +700,13 @@ onMounted(async () => {
           :rows="rows"
           :total-records="totalRecords"
           :lazy="true"
+          :sort-field="sortField"
+          :sort-order="sortOrder"
           striped-rows
           responsive-layout="scroll"
           data-key="id"
           @page="onPage"
+          @sort="onSort"
         >
           <!-- Selection column -->
           <Column selection-mode="multiple" header-style="width: 3rem" frozen />
