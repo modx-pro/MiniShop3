@@ -26,8 +26,8 @@ final class UpdateOrdersGridStatusFields extends AbstractMigration
         $now = date('Y-m-d H:i:s');
         $table = $this->table('ms3_grid_fields');
 
-        // Delete old status_name field
-        $this->execute("DELETE FROM {$this->prefix}ms3_grid_fields WHERE grid_key = 'orders' AND field_name = 'status_name'");
+        // Delete old status_name and cleanup new fields (idempotency for partial re-runs)
+        $this->execute("DELETE FROM {$this->prefix}ms3_grid_fields WHERE grid_key = 'orders' AND field_name IN ('status_name', 'order_status', 'status_color')");
 
         // Add new fields
         $newFields = [

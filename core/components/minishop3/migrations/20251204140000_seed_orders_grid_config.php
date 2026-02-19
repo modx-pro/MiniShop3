@@ -9,6 +9,15 @@ class SeedOrdersGridConfig extends AbstractMigration
 {
     public function up()
     {
+        $prefix = $this->adapter->getOption('table_prefix');
+
+        // Check if data already exists (idempotency for partial re-runs)
+        $count = $this->fetchRow("SELECT COUNT(*) as cnt FROM {$prefix}ms3_grid_fields WHERE grid_key = 'orders'");
+        if ($count['cnt'] > 0) {
+            $this->output->writeln('<comment>Orders grid fields already exist, skipping</comment>');
+            return;
+        }
+
         $now = date('Y-m-d H:i:s');
         $data = [
             // ID column
