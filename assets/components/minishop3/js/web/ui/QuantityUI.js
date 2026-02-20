@@ -56,9 +56,7 @@ class QuantityUI {
    * Initialize quantity buttons: uses sel.qtyInc, sel.qtyDec from config
    */
   initButtons () {
-    const selectors = this.selectors
-    const quantityIncreaseSelector = selectors.qtyInc || '[data-ms3-qty="inc"], .inc-qty'
-    const quantityDecreaseSelector = selectors.qtyDec || '[data-ms3-qty="dec"], .dec-qty'
+    const { qtyInc: quantityIncreaseSelector, qtyDec: quantityDecreaseSelector } = this.selectors
     const buttons = document.querySelectorAll([quantityIncreaseSelector, quantityDecreaseSelector].join(', '))
 
     buttons.forEach(btn => {
@@ -72,8 +70,7 @@ class QuantityUI {
    * Initialize quantity inputs: uses sel.qtyInput from config
    */
   initInputs () {
-    const selectors = this.selectors
-    const quantityInputSelector = selectors.qtyInput || '[data-ms3-qty="input"], .qty-input'
+    const quantityInputSelector = this.selectors.qtyInput
     const inputs = document.querySelectorAll(quantityInputSelector)
 
     inputs.forEach(input => {
@@ -91,11 +88,7 @@ class QuantityUI {
   async handleButtonClick (e) {
     e.preventDefault()
 
-    const selectors = this.selectors
-    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
-    const quantityInputSelector = selectors.qtyInput || '[data-ms3-qty="input"], .qty-input'
-    const quantityIncreaseSelector = selectors.qtyInc || '[data-ms3-qty="inc"], .inc-qty'
-    const quantityDecreaseSelector = selectors.qtyDec || '[data-ms3-qty="dec"], .dec-qty'
+    const { form: formSelector, qtyInput: quantityInputSelector, qtyInc: quantityIncreaseSelector, qtyDec: quantityDecreaseSelector } = this.selectors
 
     const form = e.target.closest(formSelector)
     if (!form) return
@@ -123,10 +116,7 @@ class QuantityUI {
    * @param {Event} e - Change event
    */
   async handleInputChange (e) {
-    const selectors = this.selectors
-    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
-
-    const form = e.target.closest(formSelector)
+    const form = e.target.closest(this.selectors.form)
     if (!form) return
 
     const qty = Math.max(0, parseInt(e.target.value) || 0)

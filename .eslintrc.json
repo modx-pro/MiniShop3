@@ -1,11 +1,18 @@
 {
   "root": true,
-  "extends": ["standard"],
-  "env": { "browser": true },
+  "extends": [
+    "standard"
+  ],
+  "env": {
+    "browser": true
+  },
   "globals": {
     "ms3": "readonly",
     "ms3Config": "readonly",
     "getSelectors": "readonly"
   },
-  "ignorePatterns": ["**/node_modules/**", "**/mgr/**"]
+  "ignorePatterns": ["**/node_modules/**", "**/mgr/**"],
+  "rules": {
+    "no-unused-vars": ["error", { "varsIgnorePattern": "^(CartUI|CustomerUI|OrderUI|ProductCardUI|QuantityUI)$" }]
+  }
 }

@@ -47,9 +47,7 @@ class CartUI {
    * Product option selects: uses sel.cartOptions from config
    */
   initOptionSelects () {
-    const selectors = this.selectors
-    const cartOptionsSelector = selectors.cartOptions || '[data-ms3-cart-options], .ms3_cart_options'
-    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
+    const { cartOptions: cartOptionsSelector, form: formSelector } = this.selectors
 
     document.querySelectorAll(cartOptionsSelector).forEach(select => {
       select.addEventListener('change', async (e) => {

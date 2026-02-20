@@ -53,10 +53,25 @@ const ms3 = {
     this.config = window.ms3Config || {}
 
     // Merge selectors from Selectors.js (overridable via ms3Config.selectors)
-    const selectors = typeof getSelectors === 'function'
+    const rawSelectors = typeof getSelectors === 'function'
       ? getSelectors()
       : (window.Ms3DefaultSelectors || {})
-    this.config = { ...this.config, selectors }
+    const selectorDefaults = window.Ms3DefaultSelectors || {
+      form: '[data-ms3-form], .ms3_form',
+      formOrder: '[data-ms3-form="order"], .ms3_order_form',
+      formCustomer: '[data-ms3-form="customer"], .ms3_customer_form',
+      cartOptions: '[data-ms3-cart-options], .ms3_cart_options',
+      qtyInput: '[data-ms3-qty="input"], .qty-input',
+      qtyInc: '[data-ms3-qty="inc"], .inc-qty',
+      qtyDec: '[data-ms3-qty="dec"], .dec-qty',
+      productCard: '[data-ms3-product-card], .ms3-product-card',
+      fieldError: '[data-ms3-error], .ms3_field_error',
+      orderCost: '#ms3_order_cost',
+      orderCartCost: '#ms3_order_cart_cost',
+      orderDeliveryCost: '#ms3_order_delivery_cost',
+      link: '.ms3_link'
+    }
+    this.config = { ...this.config, selectors: { ...selectorDefaults, ...rawSelectors } }
 
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
@@ -113,8 +128,7 @@ const ms3 = {
    * - etc.
    */
   initFormHandler () {
-    const selectors = this.selectors
-    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
+    const formSelector = this.selectors.form
 
     document.addEventListener('submit', async (event) => {
       const form = event.target
@@ -145,9 +159,8 @@ const ms3 = {
    * inside forms matching sel.form. Triggers form submit.
    */
   initLinkHandler () {
-    const selectors = this.selectors
-    const linkSelector = selectors.link || '.ms3_link'
-    const formSelector = selectors.form || '[data-ms3-form], .ms3_form'
+    const linkSelector = this.selectors.link
+    const formSelector = this.selectors.form
 
     document.addEventListener('click', async (event) => {
       const link = event.target.closest(linkSelector)

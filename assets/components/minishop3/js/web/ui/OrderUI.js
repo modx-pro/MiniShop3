@@ -25,10 +25,7 @@ class OrderUI {
    * Initialize UI handlers
    */
   init () {
-    const selectors = this.selectors
-    const formOrderSelector = selectors.formOrder || '[data-ms3-form="order"], .ms3_order_form'
-
-    document.querySelectorAll(formOrderSelector).forEach(form => {
+    document.querySelectorAll(this.selectors.formOrder).forEach(form => {
       this.initForm(form)
     })
 
@@ -164,22 +161,20 @@ class OrderUI {
 
       if (response.success && response.data) {
         const { cost, cart_cost: cartCost, delivery_cost: deliveryCost } = response.data
-        const selectors = this.selectors
-
         // Update cart cost
-        const cartCostElement = document.querySelector(selectors.orderCartCost || '#ms3_order_cart_cost')
+        const cartCostElement = document.querySelector(this.selectors.orderCartCost)
         if (cartCostElement && cartCost !== undefined) {
           cartCostElement.textContent = this.formatPrice(cartCost)
         }
 
         // Update delivery cost
-        const deliveryCostElement = document.querySelector(selectors.orderDeliveryCost || '#ms3_order_delivery_cost')
+        const deliveryCostElement = document.querySelector(this.selectors.orderDeliveryCost)
         if (deliveryCostElement && deliveryCost !== undefined) {
           deliveryCostElement.textContent = this.formatPrice(deliveryCost)
         }
 
         // Update total cost
-        const totalCostElement = document.querySelector(selectors.orderCost || '#ms3_order_cost')
+        const totalCostElement = document.querySelector(this.selectors.orderCost)
         if (totalCostElement && cost !== undefined) {
           totalCostElement.textContent = this.formatPrice(cost)
         }
@@ -272,8 +267,7 @@ class OrderUI {
       }
 
       if (response.success) {
-        const formOrderSelector = this.selectors.formOrder || '[data-ms3-form="order"], .ms3_order_form'
-        document.querySelectorAll(formOrderSelector).forEach(form => {
+        document.querySelectorAll(this.selectors.formOrder).forEach(form => {
           form.reset()
         })
         document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
@@ -292,9 +286,7 @@ class OrderUI {
    * @param {Array<string>} errors - Array of field names with errors
    */
   highlightErrors (errors) {
-    const fieldErrorSelector = this.selectors.fieldError || '[data-ms3-error], .ms3_field_error'
-
-    document.querySelectorAll(fieldErrorSelector).forEach(element => {
+    document.querySelectorAll(this.selectors.fieldError).forEach(element => {
       element.removeAttribute('data-ms3-error')
       element.classList.remove('ms3_field_error')
     })
