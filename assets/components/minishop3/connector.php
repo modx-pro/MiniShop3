@@ -11,6 +11,14 @@ require_once MODX_CORE_PATH . 'config/' . MODX_CONFIG_KEY . '.inc.php';
 require_once MODX_CONNECTORS_PATH . 'index.php';
 
 /** @var modX $modx */
+if (!$modx->services->has('ms3')) {
+    $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+    http_response_code(503);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['success' => false, 'message' => 'Service unavailable', 'code' => 503], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 /** @var \MiniShop3\MiniShop3 $ms3 */
 $ms3 = $modx->services->get('ms3');
 $modx->lexicon->load('minishop3:default', 'minishop3:manager');

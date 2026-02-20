@@ -7,6 +7,11 @@ use ModxPro\PdoTools\Fetch;
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 
+if (!$modx->services->has('ms3')) {
+    $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+    return '';
+}
+
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 $ms3->registerSnippet($scriptProperties, 'msOrderTotal');

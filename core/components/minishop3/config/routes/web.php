@@ -29,6 +29,7 @@ use MiniShop3\Router\Response;
 use MiniShop3\Middleware\TokenMiddleware;
 use MiniShop3\Middleware\CorsMiddleware;
 use MiniShop3\Middleware\RateLimitMiddleware;
+use MiniShop3\Middleware\ServiceCheckMiddleware;
 
 $tokenMiddleware = new TokenMiddleware($modx);
 $corsMiddleware = new CorsMiddleware([
@@ -42,6 +43,7 @@ $rateLimitMiddleware = new RateLimitMiddleware(
     $modx->getOption('ms3_rate_limit_max_attempts', null, 60),
     $modx->getOption('ms3_rate_limit_decay_seconds', null, 60)
 );
+$serviceCheckMiddleware = new ServiceCheckMiddleware($modx);
 $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
     $router->group('/cart', function($router) use ($modx) {
@@ -180,12 +182,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             return Response::success($response->getObject(), $response->getMessage());
         });
         $router->get('/token/get', function($params) use ($modx) {
-            /** @var \MiniShop3\MiniShop3 $ms3 */
             $ms3 = $modx->services->get('ms3');
-            if (!$ms3) {
-                return Response::error('MiniShop3 not initialized', 500);
-            }
-
             $ms3->initialize();
             $response = $ms3->customer->generateToken();
 
@@ -239,10 +236,10 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
         }, [$tokenMiddleware]);
 
         $router->put('/profile', function($params) use ($modx) {
+            $ms3 = $modx->services->get('ms3');
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
-            $ms3 = $modx->services->get('ms3');
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerProfileController($modx, $ms3);
             return $controller->update($data);
         }, [$tokenMiddleware]);
@@ -279,4 +276,4 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
         ]);
     });
 
-}, [$corsMiddleware, $rateLimitMiddleware]);
+}, [$corsMiddleware, $rateLimitMiddleware, $serviceCheckMiddleware]);

@@ -296,15 +296,13 @@ class CustomerAddressController
      * 1. Try API token from request/session
      * 2. Fall back to session customer_id (set by cart/order operations)
      *
+     * ServiceCheckMiddleware guarantees has('ms3') before controller is invoked.
+     *
      * @return msCustomer|null
      */
     protected function getAuthorizedCustomer(): ?msCustomer
     {
         $ms3 = $this->modx->services->get('ms3');
-        if (!$ms3) {
-            return null;
-        }
-
         $ms3->initialize();
 
         // Method 1: Try API token

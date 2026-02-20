@@ -16,6 +16,11 @@ if (isset($_POST['render'])) {
     unset($_POST['render']);
 }
 
+if (!$modx->services->has('ms3')) {
+    $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+    return '';
+}
+
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 

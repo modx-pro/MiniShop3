@@ -23,20 +23,24 @@ use MODX\Revolution\modUserProfile;
 
 switch ($modx->event->name) {
     case 'OnMODXInit':
-        // Load extensions
+        if (!$modx->services->has('ms3')) {
+            $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+            break;
+        }
         /** @var \MiniShop3\MiniShop3 $ms3 */
         $ms3 = $modx->services->get('ms3');
-        if ($ms3) {
-            $ms3->loadMap();
-        }
+        $ms3->loadMap();
         break;
 
     case 'OnManagerPageBeforeRender':
-        /** @var \MiniShop3\MiniShop3 $ms3 */
-        if ($ms3 = $modx->services->get('ms3')) {
-            $modx->controller->addLexiconTopic('minishop3:default');
-            $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms3.manager.js');
+        if (!$modx->services->has('ms3')) {
+            $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+            break;
         }
+        /** @var \MiniShop3\MiniShop3 $ms3 */
+        $ms3 = $modx->services->get('ms3');
+        $modx->controller->addLexiconTopic('minishop3:default');
+        $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms3.manager.js');
 
         $syncEnabled = (bool)$modx->getOption('ms3_customer_sync_enabled', null, false);
         if ($syncEnabled && $modx->user && $modx->user->hasSessionContext('mgr')) {
@@ -45,12 +49,14 @@ switch ($modx->event->name) {
         break;
 
     case 'OnLoadWebDocument':
+        if (!$modx->services->has('ms3')) {
+            $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+            break;
+        }
         /** @var \MiniShop3\MiniShop3 $ms3 */
         $ms3 = $modx->services->get('ms3');
-        if ($ms3) {
-            $ms3->initialize();
-            $ms3->registerFrontend();
-        }
+        $ms3->initialize();
+        $ms3->registerFrontend();
 
         // Set product fields as [[*resource]] tags
         if ($modx->resource->get('class_key') == MiniShop3\Model\msProduct::class) {

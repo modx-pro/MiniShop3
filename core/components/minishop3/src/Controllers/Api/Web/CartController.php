@@ -67,11 +67,11 @@ class CartController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401);
+            return Response::error('Token is required', 401)->getData();
         }
 
         if (empty($product_key)) {
-            return Response::error('Product key is required', 400);
+            return Response::error('Product key is required', 400)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -98,11 +98,11 @@ class CartController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401);
+            return Response::error('Token is required', 401)->getData();
         }
 
         if (empty($product_key)) {
-            return Response::error('Product key is required', 400);
+            return Response::error('Product key is required', 400)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
