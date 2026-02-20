@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0-beta1]
+
+### Added
+- Centralized selectors module (`Selectors.js`) with override via `ms3Config.selectors` (Issue #18)
+- `ServiceCheckMiddleware` for graceful 503 on missing ms3 service (Issue #68)
+- `has('ms3')` checks in all entry points, plugin events, and snippets
+- `data-ms3-*` attributes as primary selectors, CSS classes as fallback (Issue #17)
+- Rows per page selector, first/last pagination buttons, chunk hashes (Issue #78)
+- `ms3:cart:updated` event on successful order submission (#96)
+- `formatPrices` parameter for `msOrderTotal` snippet
+- Sorting in orders list grid (Vue)
+
+### Fixed
+- Lexicon corrections (Issue #21)
+- Removed `action` from miniShop3 menu configuration (#94)
+- EAV options clearing from product form
+- Empty orders list caused by unnecessary `GROUP BY`
+- Idempotent grid seed migrations
+- `Response::error` now includes correct HTTP status code in JSON response
+- `CartController::change()`/`remove()` return type (array instead of Response object)
+- Correct default order status IDs with fallback for zero values
+- `getIterator` for msProduct/msCategory — added `class_key` to criteria
+
+### Changed
+- Removed redundant permission checks from processor `initialize()` methods (#95)
+- Simplified `CustomerAddressController::getAuthorizedCustomer()` (middleware guarantees service)
+- Removed fallback service registration in `api.php` — returns 503 on bootstrap failure
+
+## [1.4.1-beta1] - 2026-02-14
+
+### Added
+- Tooltip with placeholder key on product fields
+- HTML array format support for cart options
+- QuantityUI module extracted from cart logic
+- Gallery interface localization
+- GitHub Actions workflow for automatic release creation
+
+### Changed
+- Minimum PHP version raised to 8.2
+- All px units converted to rem in Vue components
+- Dropdown components replaced with Select (PrimeVue 4)
+- Unified placeholder/value display in form controls
+- Text color variables updated for UI consistency
+
+### Fixed
+- Product copy no longer duplicates gallery images
+- JSON fields (color, size) display in product template
+- Vendor placeholder prefix (`vendor.` → `vendor_`)
+- Snippet descriptions loading
+- Calendar icon display unified across components
+
 ## [1.4.0-beta1] - 2026-02-07
 
 ### Added
