@@ -33,8 +33,7 @@ class CustomerAddressController
      */
     public function getList(array $params = []): array
     {
-        $ms3 = $this->modx->services->get('ms3');
-        $customer = $this->getAuthorizedCustomer($ms3);
+        $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -62,8 +61,7 @@ class CustomerAddressController
      */
     public function get(array $params = []): array
     {
-        $ms3 = $this->modx->services->get('ms3');
-        $customer = $this->getAuthorizedCustomer($ms3);
+        $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -96,8 +94,7 @@ class CustomerAddressController
      */
     public function create(array $params = []): array
     {
-        $ms3 = $this->modx->services->get('ms3');
-        $customer = $this->getAuthorizedCustomer($ms3);
+        $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -154,8 +151,7 @@ class CustomerAddressController
      */
     public function update(array $params = []): array
     {
-        $ms3 = $this->modx->services->get('ms3');
-        $customer = $this->getAuthorizedCustomer($ms3);
+        $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -212,8 +208,7 @@ class CustomerAddressController
      */
     public function setDefault(array $params = []): array
     {
-        $ms3 = $this->modx->services->get('ms3');
-        $customer = $this->getAuthorizedCustomer($ms3);
+        $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -261,8 +256,7 @@ class CustomerAddressController
      */
     public function delete(array $params = []): array
     {
-        $ms3 = $this->modx->services->get('ms3');
-        $customer = $this->getAuthorizedCustomer($ms3);
+        $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
             return Response::error('Customer not authorized', 401)->getData();
@@ -302,16 +296,13 @@ class CustomerAddressController
      * 1. Try API token from request/session
      * 2. Fall back to session customer_id (set by cart/order operations)
      *
-     * @param \MiniShop3\MiniShop3|null $ms3 Уже полученный сервис (избегает повторного services->get в одном запросе)
+     * ServiceCheckMiddleware guarantees has('ms3') before controller is invoked.
+     *
      * @return msCustomer|null
      */
-    protected function getAuthorizedCustomer(?\MiniShop3\MiniShop3 $ms3 = null): ?msCustomer
+    protected function getAuthorizedCustomer(): ?msCustomer
     {
-        $ms3 = $ms3 ?? $this->modx->services->get('ms3');
-        if (!$ms3) {
-            return null;
-        }
-
+        $ms3 = $this->modx->services->get('ms3');
         $ms3->initialize();
 
         // Method 1: Try API token
