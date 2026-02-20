@@ -22,9 +22,13 @@
  * - data-ms3-qty="input"|"inc"|"dec" — quantity control
  * - data-ms3-cart-options — cart options select
  */
-/* global TokenManager, ApiClient, CartAPI, OrderAPI, CustomerAPI, CartUI, OrderUI, CustomerUI, ProductCardUI */
+/* global TokenManager, ApiClient, CartAPI, OrderAPI, CustomerAPI, CartUI, OrderUI, CustomerUI, QuantityUI, ProductCardUI, getSelectors */
 const ms3 = {
   config: {},
+
+  get selectors () {
+    return this.config?.selectors || {}
+  },
 
   tokenManager: null,
   apiClient: null,
@@ -47,6 +51,27 @@ const ms3 = {
    */
   async init () {
     this.config = window.ms3Config || {}
+
+    // Merge selectors from Selectors.js (overridable via ms3Config.selectors)
+    const rawSelectors = typeof getSelectors === 'function'
+      ? getSelectors()
+      : (window.Ms3DefaultSelectors || {})
+    const selectorDefaults = window.Ms3DefaultSelectors || {
+      form: '[data-ms3-form], .ms3_form',
+      formOrder: '[data-ms3-form="order"], .ms3_order_form',
+      formCustomer: '[data-ms3-form="customer"], .ms3_customer_form',
+      cartOptions: '[data-ms3-cart-options], .ms3_cart_options',
+      qtyInput: '[data-ms3-qty="input"], .qty-input',
+      qtyInc: '[data-ms3-qty="inc"], .inc-qty',
+      qtyDec: '[data-ms3-qty="dec"], .dec-qty',
+      productCard: '[data-ms3-product-card], .ms3-product-card',
+      fieldError: '[data-ms3-error], .ms3_field_error',
+      orderCost: '#ms3_order_cost',
+      orderCartCost: '#ms3_order_cart_cost',
+      orderDeliveryCost: '#ms3_order_delivery_cost',
+      link: '.ms3_link'
+    }
+    this.config = { ...this.config, selectors: { ...selectorDefaults, ...rawSelectors } }
 
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
@@ -95,7 +120,7 @@ const ms3 = {
   },
 
   /**
-   * [data-ms3-form] submit handler (fallback: .ms3_form deprecated)
+   * Form submit handler (uses sel.form from config)
    *
    * Automatically calls appropriate API method based on ms3_action:
    * - cart/add → cartUI.handleAdd()
@@ -103,9 +128,11 @@ const ms3 = {
    * - etc.
    */
   initFormHandler () {
+    const formSelector = this.selectors.form
+
     document.addEventListener('submit', async (event) => {
       const form = event.target
-      if (!form.hasAttribute('data-ms3-form') && !form.classList.contains('ms3_form')) {
+      if (!form.matches(formSelector)) {
         return
       }
 
@@ -126,21 +153,24 @@ const ms3 = {
   },
 
   /**
-   * .ms3_link click handler
+   * Link click handler (uses sel.link, sel.form from config)
    *
-   * Handles clicks on buttons/links with .ms3_link class
-   * inside .ms3_form forms. Triggers form submit.
+   * Handles clicks on buttons/links with sel.link
+   * inside forms matching sel.form. Triggers form submit.
    */
   initLinkHandler () {
+    const linkSelector = this.selectors.link
+    const formSelector = this.selectors.form
+
     document.addEventListener('click', async (event) => {
-      const link = event.target.closest('.ms3_link')
+      const link = event.target.closest(linkSelector)
       if (!link) {
         return
       }
 
-      const form = link.closest('[data-ms3-form]') || link.closest('.ms3_form')
+      const form = link.closest(formSelector)
       if (!form) {
-        console.warn('.ms3_link must be inside a form with data-ms3-form or .ms3_form')
+        console.warn(`ms3_link must be inside a form matching: ${formSelector}`)
         return
       }
 

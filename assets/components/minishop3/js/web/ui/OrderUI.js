@@ -17,11 +17,15 @@ class OrderUI {
     this.config = config
   }
 
+  get selectors () {
+    return this.config?.selectors || {}
+  }
+
   /**
    * Initialize UI handlers
    */
   init () {
-    document.querySelectorAll('[data-ms3-form="order"], .ms3_order_form').forEach(form => {
+    document.querySelectorAll(this.selectors.formOrder).forEach(form => {
       this.initForm(form)
     })
 
@@ -157,23 +161,22 @@ class OrderUI {
 
       if (response.success && response.data) {
         const { cost, cart_cost: cartCost, delivery_cost: deliveryCost } = response.data
-
         // Update cart cost
-        const cartCostEl = document.getElementById('ms3_order_cart_cost')
-        if (cartCostEl && cartCost !== undefined) {
-          cartCostEl.textContent = this.formatPrice(cartCost)
+        const cartCostElement = document.querySelector(this.selectors.orderCartCost)
+        if (cartCostElement && cartCost !== undefined) {
+          cartCostElement.textContent = this.formatPrice(cartCost)
         }
 
         // Update delivery cost
-        const deliveryCostEl = document.getElementById('ms3_order_delivery_cost')
-        if (deliveryCostEl && deliveryCost !== undefined) {
-          deliveryCostEl.textContent = this.formatPrice(deliveryCost)
+        const deliveryCostElement = document.querySelector(this.selectors.orderDeliveryCost)
+        if (deliveryCostElement && deliveryCost !== undefined) {
+          deliveryCostElement.textContent = this.formatPrice(deliveryCost)
         }
 
         // Update total cost
-        const totalCostEl = document.getElementById('ms3_order_cost')
-        if (totalCostEl && cost !== undefined) {
-          totalCostEl.textContent = this.formatPrice(cost)
+        const totalCostElement = document.querySelector(this.selectors.orderCost)
+        if (totalCostElement && cost !== undefined) {
+          totalCostElement.textContent = this.formatPrice(cost)
         }
 
         await this.hooks.runHooks('afterUpdateOrderCosts', { cost, cart_cost: cartCost, delivery_cost: deliveryCost })
@@ -264,7 +267,7 @@ class OrderUI {
       }
 
       if (response.success) {
-        document.querySelectorAll('[data-ms3-form="order"], .ms3_order_form').forEach(form => {
+        document.querySelectorAll(this.selectors.formOrder).forEach(form => {
           form.reset()
         })
         document.dispatchEvent(new CustomEvent('ms3:cart:updated'))
@@ -283,19 +286,19 @@ class OrderUI {
    * @param {Array<string>} errors - Array of field names with errors
    */
   highlightErrors (errors) {
-    document.querySelectorAll('[data-ms3-error], .ms3_field_error').forEach(el => {
-      el.removeAttribute('data-ms3-error')
-      el.classList.remove('ms3_field_error')
+    document.querySelectorAll(this.selectors.fieldError).forEach(element => {
+      element.removeAttribute('data-ms3-error')
+      element.classList.remove('ms3_field_error')
     })
 
     errors.forEach(fieldName => {
-      const selectors = [
+      const selectorList = [
         `[name="${fieldName}"]`,
         `[name="address_${fieldName}"]`,
         `[name="order_${fieldName}"]`
       ]
 
-      selectors.forEach(selector => {
+      selectorList.forEach(selector => {
         const field = document.querySelector(selector)
         if (field) {
           field.setAttribute('data-ms3-error', '')
