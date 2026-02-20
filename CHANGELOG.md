@@ -16,71 +16,56 @@
 
 ## Февраль 2026
 
-### [2026-02-15] Исправления getIterator и статусов заказов
+### 🚀 Версия 1.5.0-beta1
 
-#### 🐛 Исправлено
-
-**Критический баг getIterator + class_key (PR #90, Issue #87):**
-- `xPDO::getIterator()` не вызывает `addDerivativeCriteria()` — в отличие от `getCollection()`
-- Для классов без собственной таблицы (msCategory, msProduct наследуют modResource) это приводило к ошибке: `Instantiated a derived class msProduct that is not a subclass of the requested class msCategory`
-- Добавлен явный фильтр `class_key` в 3 местах:
-  - `CategoryProductsController::getList()` — `class_key => msProduct::class`
-  - `CategoryProductsController::getChildCategories()` — `class_key => msCategory::class`
-  - `ReferencesController::searchProducts()` — `class_key => msProduct::class`
-  - `Settings/Option/Get::beforeOutput()` — `class_key => msCategory::class`
-
-**Ошибка "Статус с таким идентификатором не найден" при оформлении заказа (PR #91, Issue #89):**
-- Системные настройки `ms3_status_new`, `ms3_status_paid`, `ms3_status_canceled` имели дефолтное значение `0` в `_build/elements/settings.php`
-- `$modx->getOption('ms3_status_new', null, 2)` возвращает `0` (а не fallback `2`), когда настройка существует со значением `0`
-- Исправлены дефолты: `ms3_status_new` → 2, `ms3_status_paid` → 3, `ms3_status_canceled` → 5
-- Добавлен fallback `?: default` во все 11 вызовов `getOption('ms3_status_*')` в 7 файлах для существующих установок
-
----
-
-### [2026-02-14] 🚀 Версия 1.4.1-beta1
-
-**Тип релиза:** PATCH (beta) — рефакторинг UI, локализация галереи, исправления
+**Тип релиза:** MINOR (beta) — селекторы, обработка ошибок, community PRs
 
 ---
 
 #### ✨ Добавлено
 
-**Локализация загрузчика Uppy в галерее (PR #79):**
-- Все строки интерфейса Uppy переведены через lexicon (ru/en)
-- Поддержка плюрализации для русского языка (3 формы)
-- 22 новых ключа лексикона `ms3_gallery_uppy_*`
+**Централизация селекторов (Issue #18):**
+- Новый модуль `Selectors.js` с дефолтными селекторами для всех UI-компонентов
+- Переопределение через `ms3Config.selectors` — частичное слияние с дефолтами
+- UI-классы (CartUI, OrderUI, QuantityUI, CustomerUI, ProductCardUI) используют селекторы из конфига
+- Миграция для добавления `Selectors.js` в `ms3_frontend_assets`
 
-**Улучшения товаров:**
-- Tooltip с ключом плейсхолдера на полях товара в админке
-- Поддержка HTML array формата для опций товара в корзине
+**Обработка отсутствия сервиса ms3 (Issue #68):**
+- `ServiceCheckMiddleware` — проверка `has('ms3')` на уровне роутера для всех `/api/v1` маршрутов
+- Проверка `has('ms3')` в точках входа (api.php, connector.php), плагине и всех сниппетах
+- 503 + лог вместо необработанного Exception при отсутствии сервиса
 
-**Инфраструктура:**
-- Единообразное отображение иконки календаря в DatePicker (PR #83)
-- GitHub Actions workflow для автоматического создания релизов
+**data-* атрибуты как основные селекторы (Issue #17):**
+- `data-ms3-form`, `data-ms3-qty`, `data-ms3-cart-options`, `data-ms3-product-card` и др.
+- CSS-классы сохранены как fallback для обратной совместимости
 
-#### 🔧 Изменено
+**Пагинация и количество строк в гриде заказов (Issue #78):**
+- Выбор количества строк на странице
+- Кнопки перехода в начало/конец списка
+- Хеш-параметры в чанках
 
-**Рефакторинг Vue UI (PR #71):**
-- Все размеры в Vue компонентах переведены из `px` в `rem`
-- Компоненты `Dropdown` заменены на `Select` (PrimeVue 4)
-- Обновлены текстовые цветовые переменные для консистентности UI
-- Плейсхолдеры и значения в контролах приведены к единому виду
-- Обновлены стили и иконки OptionsChips и StatusesGrid
-- Обновлена конфигурация ESLint, добавлены скрипты форматирования
-- Применён Prettier ко всем Vue компонентам
-
-**Рефакторинг кода:**
-- Выделен `QuantityUI` для управления количеством товаров в корзине
-- Минимальная версия PHP повышена до 8.2
-- Удалён мёртвый PHP код
+**Прочее:**
+- Событие `ms3:cart:updated` при успешном оформлении заказа (#96)
+- Параметр `formatPrices` в сниппете `msOrderTotal`
+- Сортировка в таблице списка заказов (Vue)
 
 #### 🐛 Исправлено
 
-- Исправлено отображение JSON-полей `color` и `size` в шаблоне товара
-- Исправлен префикс плейсхолдеров вендора с `vendor.` на `vendor_`
-- Исправлено копирование товара — изображения больше не дублируются при дубликации
-- Исправлена подгрузка описаний в сниппеты (PR #70)
-- Восстановлена корректная зависимость `@primeuix/themes`
+- Исправлены неточности в лексиконах (Issue #21)
+- Удалён `action` из конфигурации меню miniShop3 (#94)
+- Очистка EAV-опций из формы товара
+- Пустой список заказов из-за лишнего `GROUP BY`
+- Идемпотентность seed-миграций грид-конфигурации
+- `Response::error` теперь включает корректный HTTP-код (`code`) в JSON-ответ
+- `CartController::change()`/`remove()` — исправлен тип возвращаемого значения (array вместо Response)
+- Корректные дефолтные ID статусов заказов с fallback для нулевых значений
+- `getIterator` для msProduct/msCategory — добавлен `class_key` в критерии
+
+#### 🔧 Изменено
+
+- Удалены избыточные проверки прав в `initialize()` процессоров (#95)
+- `CustomerAddressController::getAuthorizedCustomer()` упрощён (middleware гарантирует сервис)
+- Убран fallback-регистрация сервиса в `api.php` — при сбое bootstrap возвращается 503
 
 ---
 
