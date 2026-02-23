@@ -111,15 +111,18 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             'show_nested_products' => (bool) $this->modx->getOption('ms3_category_show_nested_products', null, true),
             'category_products_rows' => (int) $this->getOption('ms3_category_products_default_rows', null, 20),
         );
+        $canSaveCategory = $this->modx->hasPermission('save_document')
+            && $this->modx->hasPermission('mscategory_save')
+            && $this->resource->checkPolicy('save');
         $ready = array(
             'xtype' => 'ms3-page-category-update',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
             'publish_document' => $this->canPublish,
             'preview_url' => $this->previewUrl,
-            'locked' => $this->locked,
+            'locked' => $canSaveCategory ? false : $this->locked,
             'lockedText' => $this->lockedText,
-            'canSave' => $this->modx->hasPermission('mscategory_save'),
+            'canSave' => (int) $canSaveCategory,
             'canEdit' => $this->canEdit,
             'canCreate' => $this->canCreate,
             'canDuplicate' => $this->canDuplicate,

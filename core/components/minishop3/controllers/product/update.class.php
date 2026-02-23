@@ -135,15 +135,18 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'fields_config' => $fieldsConfig,
         ];
 
+        $canSaveProduct = $this->modx->hasPermission('save_document')
+            && $this->modx->hasPermission('msproduct_save')
+            && $this->resource->checkPolicy('save');
         $ready = [
             'xtype' => 'ms3-page-product-update',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
             'publish_document' => $this->canPublish,
             'preview_url' => $this->previewUrl,
-            'locked' => $this->locked,
+            'locked' => $canSaveProduct ? false : $this->locked,
             'lockedText' => $this->lockedText,
-            'canSave' => $this->canSave,
+            'canSave' => (int) $canSaveProduct,
             'canEdit' => $this->canEdit,
             'canCreate' => $this->canCreate,
             'canDuplicate' => $this->canDuplicate,
