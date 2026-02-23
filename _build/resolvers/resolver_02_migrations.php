@@ -13,6 +13,35 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use xPDO\Transport\xPDOTransport;
 use MODX\Revolution\modX;
 
+/**
+ * Check MySQL connection and reconnect if lost.
+ *
+ * Between resolvers, MySQL connection may die due to wait_timeout
+ * (e.g. after long package downloads in resolver_01).
+ * xPDO doesn't auto-reconnect because dead PDO object !== null.
+ */
+function ms3ReconnectMigrations(modX $modx): void
+{
+    if ($modx->pdo === null) {
+        $modx->connect();
+        return;
+    }
+    try {
+        $result = @$modx->pdo->query('SELECT 1');
+        if ($result !== false) {
+            return;
+        }
+    } catch (\PDOException $e) {
+        // Connection lost
+    }
+    $modx->log(modX::LOG_LEVEL_WARN, '[MiniShop3] DB connection lost, reconnecting...');
+    $modx->pdo = null;
+    if ($modx->connection) {
+        $modx->connection->pdo = null;
+    }
+    $modx->connect();
+}
+
 /** @var xPDOTransport $transport */
 /** @var array $options */
 /** @var modX $modx */
@@ -43,6 +72,9 @@ if ($transport->xpdo) {
                 $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Phinx config not found at: ' . $phinxConfig);
                 break;
             }
+
+            // Reconnect after potential long gap from resolver_01 (package downloads, up to 180s)
+            ms3ReconnectMigrations($modx);
 
             try {
                 // Загрузка Composer autoload (только если ещё не загружен)
@@ -98,6 +130,9 @@ if ($transport->xpdo) {
                 // Не прерываем установку, логируем ошибку
                 // В production можно добавить уведомление администратору
             }
+
+            // Reconnect after potentially long Phinx execution for subsequent resolvers (03-08)
+            ms3ReconnectMigrations($modx);
 
             break;
 
