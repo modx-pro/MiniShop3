@@ -125,6 +125,8 @@ class OrdersPageService extends CustomerPageService
                 $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
             }
 
+            $orderData['can_cancel'] = $this->isOrderCancellableByCustomer($order);
+
             $chunk = $this->pdoFetch->getChunk($orderTpl, $orderData);
             $ordersData[] = is_string($chunk) ? $chunk : '';
         }
@@ -153,6 +155,7 @@ class OrdersPageService extends CustomerPageService
             'statuses' => $statusesData,
             'pagination' => $pagination,
             'customer' => $this->customer->toArray(),
+            'api_url' => rtrim($this->modx->getOption('site_url'), '/') . '/assets/components/minishop3/api.php',
         ];
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);
@@ -190,12 +193,15 @@ class OrdersPageService extends CustomerPageService
         $address = $order->getOne('Address');
         $status = $order->getOne('Status');
 
+        $orderArray = array_merge($order->toArray(), [
+            'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
+            'status_color' => $status ? $status->get('color') : '',
+            'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
+            'can_cancel' => $this->isOrderCancellableByCustomer($order),
+        ]);
+
         $data = [
-            'order' => array_merge($order->toArray(), [
-                'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
-                'status_color' => $status ? $status->get('color') : '',
-                'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
-            ]),
+            'order' => $orderArray,
             'products' => $products,
             'delivery' => $delivery ? $delivery->toArray() : [],
             'payment' => $payment ? $payment->toArray() : [],
@@ -207,6 +213,7 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
+            'api_url' => rtrim($this->modx->getOption('site_url'), '/') . '/assets/components/minishop3/api.php',
         ];
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);
@@ -316,6 +323,8 @@ class OrdersPageService extends CustomerPageService
                 $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
             }
 
+            $orderData['can_cancel'] = $this->isOrderCancellableByCustomer($order);
+
             $ordersData[] = $orderData;
         }
 
@@ -379,6 +388,7 @@ class OrdersPageService extends CustomerPageService
                 'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
                 'status_color' => $status ? $status->get('color') : '',
                 'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
+                'can_cancel' => $this->isOrderCancellableByCustomer($order),
             ]),
             'products' => $products,
             'delivery' => $delivery ? $delivery->toArray() : [],
@@ -391,6 +401,7 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
+            'api_url' => rtrim($this->modx->getOption('site_url'), '/') . '/assets/components/minishop3/api.php',
         ];
     }
 
@@ -428,6 +439,37 @@ class OrdersPageService extends CustomerPageService
             'prev_offset' => max(0, $offset - $limit),
             'next_offset' => min(($totalPages - 1) * $limit, $offset + $limit),
         ];
+    }
+
+    /**
+     * Whether the customer is allowed to cancel this order (by status)
+     *
+     * @param msOrder $order
+     * @return bool
+     */
+    protected function isOrderCancellableByCustomer(msOrder $order): bool
+    {
+        return in_array((int) $order->get('status_id'), $this->getAllowedCancelStatusIds(), true);
+    }
+
+    /**
+     * Get list of status IDs from which customer is allowed to cancel order
+     *
+     * @return int[]
+     */
+    protected function getAllowedCancelStatusIds(): array
+    {
+        $setting = $this->modx->getOption('ms3_customer_cancel_allowed_statuses', null, '');
+
+        if ($setting !== '') {
+            $ids = array_map('intval', array_filter(array_map('trim', explode(',', $setting))));
+            return array_values(array_filter($ids));
+        }
+
+        $newId = (int) $this->modx->getOption('ms3_status_new', null, 2);
+        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
+
+        return array_filter([$newId, $paidId]);
     }
 
     /**

@@ -294,6 +294,11 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
+    'ms3_customer_cancel_allowed_statuses' => [
+        'value' => '2,3',
+        'xtype' => 'textfield',
+        'area' => 'ms3_customers',
+    ],
     'ms3_status_for_stat' => [
         'value' => '2,3',
         'xtype' => 'textfield',

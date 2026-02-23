@@ -1,4 +1,4 @@
-<div class="ms3-customer-order-details">
+<div class="ms3-customer-order-details" data-api-url="{$api_url|default:''}">
     {* Навигация назад *}
     <div class="mb-3">
         <a href="?" class="btn btn-sm btn-outline-secondary">
@@ -12,13 +12,20 @@
     {* Информация о заказе *}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0">
                     {'ms3_customer_order_title' | lexicon} №{$order.num}
                 </h5>
-                <span class="badge bg-light text-dark" style="color: {$order.status_color} !important;">
-                    {$order.status_name}
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                    {if $order.can_cancel}
+                    <button type="button" class="btn btn-sm btn-light ms3-order-cancel" data-order-id="{$order.id}" data-confirm="{'ms3_customer_order_cancel_confirm' | lexicon}">
+                        {'ms3_customer_order_cancel' | lexicon}
+                    </button>
+                    {/if}
+                    <span class="badge bg-light text-dark" style="color: {$order.status_color} !important;">
+                        {$order.status_name}
+                    </span>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -187,3 +194,25 @@
     </div>
     {/if}
 </div>
+<script>
+(function() {
+    const container = document.querySelector('.ms3-customer-order-details');
+    const apiBaseUrl = (container && container.getAttribute('data-api-url')) || '/assets/components/minishop3/api.php';
+    document.querySelectorAll('.ms3-order-cancel').forEach(function(cancelButton) {
+        cancelButton.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const confirmMessage = this.getAttribute('data-confirm') || 'Cancel this order?';
+            if (!confirm(confirmMessage)) return;
+            cancelButton.disabled = true;
+            fetch(apiBaseUrl + '?route=/api/v1/customer/orders/' + orderId + '/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            }).then(function(response) { return response.json(); }).then(function(responseData) {
+                if (responseData.success) location.reload();
+                else { alert(responseData.message || 'Error'); cancelButton.disabled = false; }
+            }).catch(function() { alert('Request failed'); cancelButton.disabled = false; });
+        });
+    });
+})();
+</script>
