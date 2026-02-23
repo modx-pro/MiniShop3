@@ -24,7 +24,6 @@ use MODX\Revolution\modUserProfile;
 switch ($modx->event->name) {
     case 'OnMODXInit':
         if (!$modx->services->has('ms3')) {
-            $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
             break;
         }
         /** @var \MiniShop3\MiniShop3 $ms3 */
@@ -34,7 +33,6 @@ switch ($modx->event->name) {
 
     case 'OnManagerPageBeforeRender':
         if (!$modx->services->has('ms3')) {
-            $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
             break;
         }
         /** @var \MiniShop3\MiniShop3 $ms3 */
@@ -50,7 +48,6 @@ switch ($modx->event->name) {
 
     case 'OnLoadWebDocument':
         if (!$modx->services->has('ms3')) {
-            $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
             break;
         }
         /** @var \MiniShop3\MiniShop3 $ms3 */

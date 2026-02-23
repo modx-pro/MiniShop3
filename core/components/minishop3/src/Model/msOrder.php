@@ -49,6 +49,7 @@ class msOrder extends xPDOSimpleObject
     public function save($cacheFlag = null)
     {
         $isNew = $this->isNew();
+        $this->ensureUuid();
 
         if ($this->xpdo instanceof modX) {
             $this->xpdo->invokeEvent('msOnBeforeSaveOrder', [
@@ -96,6 +97,16 @@ class msOrder extends xPDOSimpleObject
         }
 
         return $removed;
+    }
+
+    /**
+     * Ensure new orders have a non-empty uuid before save (avoids NOT NULL constraint).
+     */
+    private function ensureUuid(): void
+    {
+        if ($this->isNew() && empty($this->get('uuid'))) {
+            $this->set('uuid', (string) \Ramsey\Uuid\Uuid::uuid4());
+        }
     }
 
     /**
