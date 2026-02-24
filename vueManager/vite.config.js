@@ -79,6 +79,8 @@ export default defineConfig(({ command }) => {
             /^\[data-pc-/,
             // Комбинированные селекторы с .p- классами
             /\.p-.*\[data-/,
+            // Uppy — рендерит overlay/modal в DOM, стили без префикса
+            /^\.uppy-/,
           ],
           // Трансформация селектора
           transform: function (prefix, selector) {

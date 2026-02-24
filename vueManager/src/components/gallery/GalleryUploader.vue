@@ -66,16 +66,24 @@ onBeforeUnmount(() => {
   }
 })
 
+/**
+ * Локализация Uppy Dashboard (строки интерфейса и плюрализация для ru/en).
+ */
 const buildUppyLocale = () => {
   const isRu = (window.MODx?.cultureKey || 'en').toLowerCase().startsWith('ru')
   return {
     strings: {
+      back: _('ms3_gallery_uppy_back'),
+      addMoreFiles: _('ms3_gallery_uppy_add_more_files'),
+      addingMoreFiles: _('ms3_gallery_uppy_adding_more'),
       dropPasteFiles: _('ms3_gallery_uppy_drop_paste'),
       browse: _('ms3_gallery_uppy_browse'),
       browseFiles: _('ms3_gallery_uppy_browse_files'),
       browseFolders: _('ms3_gallery_uppy_browse_folders'),
       uploadComplete: _('ms3_gallery_uppy_upload_complete'),
       uploadFailed: _('ms3_gallery_uppy_upload_failed'),
+      /** Сообщение об ошибке загрузки одного файла (подставляет имя: %{file}) */
+      failedToUpload: _('ms3_gallery_uppy_failed_to_upload'),
       uploading: _('ms3_gallery_uppy_uploading'),
       complete: _('ms3_gallery_uppy_complete'),
       cancel: _('ms3_gallery_uppy_cancel'),
@@ -93,6 +101,54 @@ const buildUppyLocale = () => {
         1: _('ms3_gallery_uppy_upload_x_files_1'),
         2: _('ms3_gallery_uppy_upload_x_files_2'),
       },
+      noDuplicates: _('ms3_gallery_uppy_duplicate_file'),
+      additionalRestrictionsFailed: _('ms3_gallery_uppy_restrictions_failed'),
+      done: _('ms3_gallery_uppy_done'),
+      upload: _('ms3_gallery_uppy_upload'),
+      pause: _('ms3_gallery_uppy_pause'),
+      resume: _('ms3_gallery_uppy_resume'),
+      paused: _('ms3_gallery_uppy_paused'),
+      save: _('ms3_gallery_uppy_save'),
+      saveChanges: _('ms3_gallery_uppy_save_changes'),
+      finishEditingFile: _('ms3_gallery_uppy_finish_editing_file'),
+      editing: _('ms3_gallery_uppy_editing'),
+      removeFile: _('ms3_gallery_uppy_remove_file'),
+      editFile: _('ms3_gallery_uppy_edit_file'),
+      editImage: _('ms3_gallery_uppy_edit_image'),
+      dropHint: _('ms3_gallery_uppy_drop_hint'),
+      error: _('ms3_gallery_uppy_error'),
+      showErrorDetails: _('ms3_gallery_uppy_show_error_details'),
+      uploadPaused: _('ms3_gallery_uppy_upload_paused'),
+      resumeUpload: _('ms3_gallery_uppy_resume_upload'),
+      pauseUpload: _('ms3_gallery_uppy_pause_upload'),
+      retryUpload: _('ms3_gallery_uppy_retry_upload'),
+      cancelUpload: _('ms3_gallery_uppy_cancel_upload'),
+      uploadingXFiles: {
+        0: _('ms3_gallery_uppy_uploading_x_files_0'),
+        1: _('ms3_gallery_uppy_uploading_x_files_1'),
+      },
+      processingXFiles: {
+        0: _('ms3_gallery_uppy_processing_x_files_0'),
+        1: _('ms3_gallery_uppy_processing_x_files_1'),
+      },
+      poweredBy: _('ms3_gallery_uppy_powered_by'),
+      filesUploadedOfTotal: {
+        0: _('ms3_gallery_uppy_files_uploaded_of_total_0'),
+        1: _('ms3_gallery_uppy_files_uploaded_of_total_1'),
+      },
+      dataUploadedOfTotal: _('ms3_gallery_uppy_data_uploaded_of_total'),
+      dataUploadedOfUnknown: _('ms3_gallery_uppy_data_uploaded_of_unknown'),
+      xTimeLeft: _('ms3_gallery_uppy_x_time_left'),
+      uploadXNewFiles: {
+        0: _('ms3_gallery_uppy_upload_x_new_files_0'),
+        1: _('ms3_gallery_uppy_upload_x_new_files_1'),
+      },
+      xMoreFilesAdded: {
+        0: _('ms3_gallery_uppy_x_more_files_added_0'),
+        1: _('ms3_gallery_uppy_x_more_files_added_1'),
+      },
+      closeModal: _('ms3_gallery_uppy_close_modal'),
+      dashboardTitle: _('ms3_gallery_uppy_dashboard_title'),
     },
     pluralize: isRu
       ? n =>
@@ -151,6 +207,45 @@ const initUppy = () => {
     headers: {
       Accept: 'application/json',
     },
+    /**
+     * Парсит ответ сервера для Uppy: ожидается JSON с success и object.url/file.
+     * Если в ответ попал мусор (PHP notice/warning перед JSON), извлекается фрагмент между первой { и последней }.
+     */
+    getResponseData(responseTextOrXhr, response) {
+      let text = ''
+      if (typeof responseTextOrXhr === 'string') {
+        text = responseTextOrXhr
+      } else if (responseTextOrXhr && typeof responseTextOrXhr === 'object') {
+        text = responseTextOrXhr.responseText ?? responseTextOrXhr.response ?? ''
+      }
+      text = String(text ?? '').trim()
+
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (parseErr) {
+        const firstBrace = text.indexOf('{')
+        const lastBrace = text.lastIndexOf('}')
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          try {
+            data = JSON.parse(text.slice(firstBrace, lastBrace + 1))
+          } catch (_e) {
+            data = null
+          }
+        }
+        if (!data || typeof data !== 'object') {
+          const errMsg = _('ms3_gallery_uppy_response_error') || 'Server returned an invalid response. Check server logs for PHP errors.'
+          throw new Error(errMsg)
+        }
+      }
+      if (!data || typeof data !== 'object') return {}
+      if (data.success !== true || !data.object) {
+        const msg = data.message || _('ms3_gallery_uppy_upload_failed')
+        throw new Error(msg)
+      }
+      // Uppy ожидает объект с полем url; MODX возвращает object.url или object.file
+      return { ...data, url: data.object.url || data.object.file }
+    },
   })
 
   uppy.on('upload-success', (file, response) => {
@@ -159,7 +254,6 @@ const initUppy = () => {
   })
 
   uppy.on('upload-error', (file, error, response) => {
-    console.error('Upload error:', file?.name, error)
     emit('upload-error', { file, error, response })
   })
 
@@ -172,10 +266,6 @@ const initUppy = () => {
         uppy.removeFile(file.id)
       })
     }, 2000)
-  })
-
-  uppy.on('restriction-failed', (file, error) => {
-    console.warn('Restriction failed:', file?.name, error)
   })
 }
 

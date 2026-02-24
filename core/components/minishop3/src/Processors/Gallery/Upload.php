@@ -175,6 +175,11 @@ class Upload extends ModelProcessor
                 }
             }
 
+            $this->modx->log(
+                modX::LOG_LEVEL_DEBUG,
+                '[ms3Gallery] Upload success, file id=' . $uploaded_file->get('id')
+            );
+
             return $this->success('', $uploaded_file);
         } else {
             return $this->failure($this->modx->lexicon('ms3_err_gallery_save') . ': ' .

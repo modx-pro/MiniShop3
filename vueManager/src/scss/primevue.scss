@@ -296,6 +296,12 @@
   gap: 1rem;
 }
 
+/* Modal overflow — единое поведение для Dialog и ConfirmDialog */
+.p-dialog,
+.p-confirm-dialog {
+  overflow-x: hidden;
+}
+
 /* Validation Rule Option in Select dropdown */
 .p-select-overlay .rule-option,
 .p-dialog .rule-option {

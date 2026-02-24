@@ -7,9 +7,10 @@ import TabPanels from 'primevue/tabpanels'
 import Tabs from 'primevue/tabs'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 
 import ProductDataFields from '../ProductDataFields.vue'
+import ProductGallery from './ProductGallery.vue'
 
 const props = defineProps({
   productId: {
@@ -28,6 +29,13 @@ const props = defineProps({
 
 const { _ } = useLexicon()
 useToast() // Required for Toast component to work
+
+function updateProductThumb(thumb) {
+  const el = document.getElementById('ms3-product-image')
+  if (el && thumb) el.setAttribute('src', thumb)
+}
+
+provide('updateProductThumb', updateProductThumb)
 
 // Active tab value (index as string for Tabs v4)
 const activeTab = ref('0')
@@ -66,13 +74,8 @@ const tabConfig = computed(() => {
     tabs.push({
       key: 'gallery',
       title: _('ms3_tab_product_gallery'),
-      type: 'extjs',
-      xtype: 'ms3-gallery-page',
-      extConfig: {
-        record: props.record,
-        pageSize: 50,
-        border: false,
-      },
+      type: 'vue',
+      component: 'ProductGallery',
       position: 1,
     })
   }
@@ -179,38 +182,6 @@ function mountExtJS(tabKey, tabData) {
       })
 
       mountedExtComponents.value[tabKey] = extComponent
-
-      // For gallery panel - manually call initialize() to init Vue uploader
-      // and fix source combo value
-      if (tabKey === 'gallery' && typeof extComponent.initialize === 'function') {
-        setTimeout(() => {
-          extComponent.initialize()
-
-          // Fix source combo - set value after store loads
-          const sourceCombo = Ext.getCmp('ms3-resource-source')
-          if (sourceCombo && tabData.extConfig.record) {
-            const sourceValue =
-              tabData.extConfig.record.source || tabData.extConfig.record.source_id
-            if (sourceValue && sourceCombo.store) {
-              if (sourceCombo.store.getCount() > 0) {
-                sourceCombo.setValue(sourceValue)
-              } else {
-                sourceCombo.store.on(
-                  'load',
-                  function () {
-                    sourceCombo.setValue(sourceValue)
-                  },
-                  null,
-                  { single: true }
-                )
-                if (!sourceCombo.store.isLoading) {
-                  sourceCombo.store.load()
-                }
-              }
-            }
-          }
-        }, 100)
-      }
     } catch (error) {
       console.error(`[ProductTabs] Failed to mount ExtJS component ${tabKey}:`, error)
     }
@@ -402,6 +373,11 @@ onBeforeUnmount(() => {
           <!-- Vue component: ProductDataFields -->
           <template v-if="tab.type === 'vue' && tab.component === 'ProductDataFields'">
             <ProductDataFields :product-id="productId" :product-data="record" />
+          </template>
+
+          <!-- Vue component: ProductGallery -->
+          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductGallery'">
+            <ProductGallery :product-id="productId" :record="record" :config="config" />
           </template>
 
           <!-- ExtJS component container -->

@@ -64,19 +64,11 @@ class msProductUpdateManagerController extends msResourceUpdateController
         // Product Tabs Vue module (contains Properties, Gallery, Categories, Links, Options tabs)
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/product-tabs.min.css');
+        // Uppy styles for Gallery tab (GalleryUploader is in a separate chunk, its CSS must be loaded explicitly)
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/GalleryUploader.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
 
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
-        if ($show_gallery) {
-            $this->addCss($assetsUrl . 'css/mgr/vue-dist/gallery-uploader.min.css');
-            // Vue module with VueTools dependency check
-            $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/gallery-uploader.min.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/misc/ext.ddview.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.panel.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.toolbar.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.view.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.window.js');
-        }
 
         // Customizable product fields feature
         $product_fields = array_merge($this->resource->getAllFieldsNames(), ['syncsite']);
@@ -121,6 +113,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'show_links' => (bool)$this->getOption('ms3_product_tab_links', null, true),
             'show_categories' => (bool)$this->getOption('ms3_product_tab_categories', null, true),
             'default_thumb' => $this->ms3->config['defaultThumb'],
+            'sources' => $this->getMediaSourcesList(),
             'main_fields' => $product_main_fields,
             'extra_fields' => $product_extra_fields,
             'option_keys' => $product_option_keys,
@@ -203,6 +196,25 @@ class msProductUpdateManagerController extends msResourceUpdateController
         if (empty($this->resourceArray['vendor'])) {
             $this->resourceArray['vendor'] = '';
         }
+    }
+
+    /**
+     * Get list of media sources for gallery source selector
+     *
+     * @return array List of [id => int, name => string]
+     */
+    public function getMediaSourcesList()
+    {
+        $list = [];
+        $sources = $this->modx->getCollection('sources.modMediaSource', ['id:>' => 0]);
+        /** @var \MODX\Revolution\Sources\modMediaSource $source */
+        foreach ($sources as $source) {
+            $list[] = [
+                'id' => (int)$source->get('id'),
+                'name' => $source->get('name') ?: ('Source ' . $source->get('id')),
+            ];
+        }
+        return $list;
     }
 
     /**
