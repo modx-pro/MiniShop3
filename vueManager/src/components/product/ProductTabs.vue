@@ -29,6 +29,8 @@ const props = defineProps({
 const { _ } = useLexicon()
 useToast() // Required for Toast component to work
 
+const STORAGE_KEY = 'ms3-product-vue-active-tab'
+
 // Active tab value (index as string for Tabs v4)
 const activeTab = ref('0')
 
@@ -302,6 +304,14 @@ function onTabChange(newValue) {
 
   if (!currentTab) return
 
+  if (props.config.product_remember_tabs && currentTab.key) {
+    try {
+      localStorage.setItem(STORAGE_KEY, currentTab.key)
+    } catch (_e) {
+      // ignore quota or private mode
+    }
+  }
+
   nextTick(() => {
     if (currentTab.type === 'extjs' && !mountedExtComponents.value[currentTab.key]) {
       mountExtJS(currentTab.key, currentTab)
@@ -369,6 +379,16 @@ defineExpose({
 
 onMounted(() => {
   tabsReady.value = true
+
+  if (props.config.product_remember_tabs) {
+    nextTick(() => {
+      const savedKey = localStorage.getItem(STORAGE_KEY)
+      if (savedKey) {
+        const idx = tabConfig.value.findIndex(t => t.key === savedKey)
+        if (idx >= 0) activeTab.value = String(idx)
+      }
+    })
+  }
 
   // Register this instance in global registry
   if (window.MS3ProductTabsRegistry) {
