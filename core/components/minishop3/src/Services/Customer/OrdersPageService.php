@@ -48,6 +48,18 @@ class OrdersPageService extends CustomerPageService
     }
 
     /**
+     * Customer-facing API base URL (for cancel order, etc.)
+     *
+     * Uses MS3 config so custom ms3_assets_url / ms3_action_url are respected.
+     *
+     * @return string
+     */
+    protected function getCustomerApiUrl(): string
+    {
+        return $this->ms3->config['actionUrl'];
+    }
+
+    /**
      * Render order history page
      *
      * @return string HTML content
@@ -155,7 +167,8 @@ class OrdersPageService extends CustomerPageService
             'statuses' => $statusesData,
             'pagination' => $pagination,
             'customer' => $this->customer->toArray(),
-            'api_url' => rtrim($this->modx->getOption('site_url'), '/') . '/assets/components/minishop3/api.php',
+            'api_url' => $this->getCustomerApiUrl(),
+            'assets_url' => $this->ms3->config['assetsUrl'],
         ];
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);
@@ -213,7 +226,8 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
-            'api_url' => rtrim($this->modx->getOption('site_url'), '/') . '/assets/components/minishop3/api.php',
+            'api_url' => $this->getCustomerApiUrl(),
+            'assets_url' => $this->ms3->config['assetsUrl'],
         ];
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);
@@ -401,7 +415,8 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
-            'api_url' => rtrim($this->modx->getOption('site_url'), '/') . '/assets/components/minishop3/api.php',
+            'api_url' => $this->getCustomerApiUrl(),
+            'assets_url' => $this->ms3->config['assetsUrl'],
         ];
     }
 
@@ -449,27 +464,9 @@ class OrdersPageService extends CustomerPageService
      */
     protected function isOrderCancellableByCustomer(msOrder $order): bool
     {
-        return in_array((int) $order->get('status_id'), $this->getAllowedCancelStatusIds(), true);
-    }
-
-    /**
-     * Get list of status IDs from which customer is allowed to cancel order
-     *
-     * @return int[]
-     */
-    protected function getAllowedCancelStatusIds(): array
-    {
-        $setting = $this->modx->getOption('ms3_customer_cancel_allowed_statuses', null, '');
-
-        if ($setting !== '') {
-            $ids = array_map('intval', array_filter(array_map('trim', explode(',', $setting))));
-            return array_values(array_filter($ids));
-        }
-
-        $newId = (int) $this->modx->getOption('ms3_status_new', null, 2);
-        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
-
-        return array_filter([$newId, $paidId]);
+        $orderStatusService = $this->modx->services->get('ms3_order_status');
+        $allowedIds = $orderStatusService->getAllowedCancelStatusIds();
+        return in_array((int) $order->get('status_id'), $allowedIds, true);
     }
 
     /**

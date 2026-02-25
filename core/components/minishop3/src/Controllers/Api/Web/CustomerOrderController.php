@@ -17,6 +17,8 @@ use MODX\Revolution\modX;
  */
 class CustomerOrderController
 {
+    use AuthorizedCustomerTrait;
+
     protected modX $modx;
 
     public function __construct(modX $modx)
@@ -56,17 +58,17 @@ class CustomerOrderController
             return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_not_found'), 404)->getData();
         }
 
-        $allowedStatusIds = $this->getAllowedCancelStatusIds();
+        /** @var OrderStatusService $orderStatusService */
+        $orderStatusService = $this->modx->services->get('ms3_order_status');
+        $allowedStatusIds = $orderStatusService->getAllowedCancelStatusIds();
         $currentStatusId = (int) $order->get('status_id');
 
         if (!in_array($currentStatusId, $allowedStatusIds, true)) {
             return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_status'), 400)->getData();
         }
 
-        $cancelledStatusId = (int) $this->modx->getOption('ms3_status_canceled', null, 5) ?: 5;
+        $cancelledStatusId = (int) $this->modx->getOption('ms3_status_canceled', null, 5);
 
-        /** @var OrderStatusService $orderStatusService */
-        $orderStatusService = $this->modx->services->get('ms3_order_status');
         $result = $orderStatusService->change($orderId, $cancelledStatusId);
 
         if ($result !== true) {
@@ -78,61 +80,5 @@ class CustomerOrderController
             ['order_id' => $orderId, 'status_id' => $cancelledStatusId],
             $this->modx->lexicon('ms3_customer_order_cancelled')
         )->getData();
-    }
-
-    /**
-     * Get list of status IDs from which customer is allowed to cancel
-     *
-     * @return int[]
-     */
-    protected function getAllowedCancelStatusIds(): array
-    {
-        $setting = $this->modx->getOption('ms3_customer_cancel_allowed_statuses', null, '');
-
-        if ($setting !== '') {
-            $ids = array_map('intval', array_filter(array_map('trim', explode(',', $setting))));
-            return array_values(array_filter($ids));
-        }
-
-        $newId = (int) $this->modx->getOption('ms3_status_new', null, 2);
-        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
-
-        return array_filter([$newId, $paidId]);
-    }
-
-    /**
-     * Get authorized customer (session or API token)
-     *
-     * @return msCustomer|null
-     */
-    protected function getAuthorizedCustomer(): ?msCustomer
-    {
-        $ms3 = $this->modx->services->get('ms3');
-        $ms3->initialize();
-
-        $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
-
-        if (!empty($tokenString)) {
-            $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
-                'token' => $tokenString,
-                'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
-            ]);
-
-            if ($tokenObj && !$tokenObj->isExpired()) {
-                $customer = $this->modx->getObject(msCustomer::class, $tokenObj->get('customer_id'));
-                if ($customer) {
-                    return $customer;
-                }
-            }
-        }
-
-        if (!empty($_SESSION['ms3']['customer_id'])) {
-            $customer = $this->modx->getObject(msCustomer::class, (int)$_SESSION['ms3']['customer_id']);
-            if ($customer) {
-                return $customer;
-            }
-        }
-
-        return null;
     }
 }

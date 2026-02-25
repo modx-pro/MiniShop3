@@ -48,6 +48,28 @@ class OrderStatusService
     }
 
     /**
+     * Get list of status IDs from which customer is allowed to cancel order
+     *
+     * Uses ms3_customer_cancel_allowed_statuses (comma-separated) or defaults to new + paid.
+     *
+     * @return int[]
+     */
+    public function getAllowedCancelStatusIds(): array
+    {
+        $setting = $this->modx->getOption('ms3_customer_cancel_allowed_statuses', null, '');
+
+        if ($setting !== '') {
+            $ids = array_map('intval', array_filter(array_map('trim', explode(',', $setting))));
+            return array_values(array_filter($ids));
+        }
+
+        $newId = (int) $this->modx->getOption('ms3_status_new', null, 2);
+        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
+
+        return array_filter([$newId, $paidId]);
+    }
+
+    /**
      * Switch order status
      *
      * @param int $orderId The id of msOrder
