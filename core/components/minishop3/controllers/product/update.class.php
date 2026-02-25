@@ -135,18 +135,16 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'fields_config' => $fieldsConfig,
         ];
 
-        $canSaveProduct = $this->modx->hasPermission('save_document')
-            && $this->modx->hasPermission('msproduct_save')
-            && $this->resource->checkPolicy('save');
+        // Parent already sets $this->canSave (save_document, checkPolicy('save'), lock). Add component permission only.
         $ready = [
             'xtype' => 'ms3-page-product-update',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
             'publish_document' => $this->canPublish,
             'preview_url' => $this->previewUrl,
-            'locked' => $canSaveProduct ? false : $this->locked,
+            'locked' => $this->locked,
             'lockedText' => $this->lockedText,
-            'canSave' => (int) $canSaveProduct,
+            'canSave' => (int) ($this->canSave && $this->modx->hasPermission('msproduct_save')),
             'canEdit' => $this->canEdit,
             'canCreate' => $this->canCreate,
             'canDuplicate' => $this->canDuplicate,
