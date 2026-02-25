@@ -377,26 +377,24 @@ defineExpose({
   getActiveTab: () => parseInt(activeTab.value, 10),
 })
 
-onMounted(() => {
-  if (props.config.product_remember_tabs) {
-    try {
-      const savedKey = localStorage.getItem(STORAGE_KEY)
-      if (savedKey) {
-        const idx = tabConfig.value.findIndex(t => t.key === savedKey)
-        if (idx >= 0) activeTab.value = String(idx)
-      }
-    } catch (_e) {
-      // ignore quota, private mode, security policies
-    }
+/** Restore active tab from localStorage so first render shows correct tab (no flash). */
+function restoreSavedTabIfEnabled() {
+  if (!props.config.product_remember_tabs) return
+  try {
+    const savedKey = localStorage.getItem(STORAGE_KEY)
+    if (!savedKey) return
+    const idx = tabConfig.value.findIndex(t => t.key === savedKey)
+    if (idx >= 0) activeTab.value = String(idx)
+  } catch {
+    // Quota, private mode, or strict security policies — ignore
   }
+}
 
+onMounted(() => {
+  restoreSavedTabIfEnabled()
   tabsReady.value = true
-
-  // Register this instance in global registry
   if (window.MS3ProductTabsRegistry) {
-    window.MS3ProductTabsRegistry._instance = {
-      registerPluginTab,
-    }
+    window.MS3ProductTabsRegistry._instance = { registerPluginTab }
   }
 })
 
