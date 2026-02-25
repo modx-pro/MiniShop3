@@ -378,17 +378,19 @@ defineExpose({
 })
 
 onMounted(() => {
-  tabsReady.value = true
-
   if (props.config.product_remember_tabs) {
-    nextTick(() => {
+    try {
       const savedKey = localStorage.getItem(STORAGE_KEY)
       if (savedKey) {
         const idx = tabConfig.value.findIndex(t => t.key === savedKey)
         if (idx >= 0) activeTab.value = String(idx)
       }
-    })
+    } catch (_e) {
+      // ignore quota, private mode, security policies
+    }
   }
+
+  tabsReady.value = true
 
   // Register this instance in global registry
   if (window.MS3ProductTabsRegistry) {

@@ -1,11 +1,11 @@
 <script setup>
-import { useLexicon } from '@vuetools/useLexicon'
 import { Button, Card, Column, DataTable, Dialog, InputText, Select } from 'primevue'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
+import { useLexicon } from '@vuetools/useLexicon'
 
 const confirm = useConfirm()
 const toast = useToast()
@@ -114,12 +114,7 @@ const confirmRemove = field => {
     accept: () => {
       remove(field.name)
       save()
-      toast.add({
-        severity: 'success',
-        summary: _('ms3_vue_success_title'),
-        detail: _('ms3_vue_record_deleted'),
-        life: 3000,
-      })
+      toast.add({ severity: 'success', summary: _('ms3_vue_success_title'), detail: _('ms3_vue_record_deleted'), life: 3000 })
     },
   })
 }
