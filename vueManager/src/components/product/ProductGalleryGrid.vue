@@ -7,7 +7,7 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Paginator from 'primevue/paginator'
 import ProgressSpinner from 'primevue/progressspinner'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 const props = defineProps({
@@ -146,13 +146,6 @@ function onDragEnd(evt) {
     emit('reorder', { sourceId, targetId })
   }
 }
-
-watch(
-  () => props.first,
-  (v) => {
-    if (searchQuery.value !== undefined) return
-  }
-)
 </script>
 
 <template>

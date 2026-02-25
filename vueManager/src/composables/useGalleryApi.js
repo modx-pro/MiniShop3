@@ -13,7 +13,7 @@ const GALLERY_ACTIONS = {
   GenerateAll: 'MiniShop3\\Processors\\Gallery\\GenerateAll',
   Update: 'MiniShop3\\Processors\\Gallery\\Update',
 }
-const PRODUCT_UPDATE = 'MiniShop3\\Processors\\Product\\Update'
+const PRODUCT_UPDATE_SOURCE = 'MiniShop3\\Processors\\Product\\UpdateSource'
 
 function getConnectorUrl() {
   if (typeof ms3 !== 'undefined' && ms3?.config?.connector_url) {
@@ -197,7 +197,7 @@ export async function updateFile(id, payload) {
  * @param {number} sourceId
  */
 export async function updateProductSource(productId, sourceId) {
-  await connectorRequest(PRODUCT_UPDATE, {
+  await connectorRequest(PRODUCT_UPDATE_SOURCE, {
     id: productId,
     source_id: sourceId,
   })

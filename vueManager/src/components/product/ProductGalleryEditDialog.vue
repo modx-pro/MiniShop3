@@ -76,7 +76,6 @@ watch(
     pt:root:class="ms3-gallery-edit-dialog"
     :close-button-props="{ class: 'ms3-gallery-edit-dialog-close' }"
     @update:visible="(v) => $emit('update:visible', v)"
-    @hide="close"
   >
     <div class="ms3-gallery-edit-fields">
       <div class="field">

@@ -64,11 +64,12 @@ class msProductUpdateManagerController extends msResourceUpdateController
         // Product Tabs Vue module (contains Properties, Gallery, Categories, Links, Options tabs)
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/product-tabs.min.css');
-        // Uppy styles for Gallery tab (GalleryUploader is in a separate chunk, its CSS must be loaded explicitly)
-        $this->addCss($assetsUrl . 'css/mgr/vue-dist/GalleryUploader.min.css');
-        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
-
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
+        if ($show_gallery) {
+            // Uppy styles for Gallery tab (GalleryUploader is in a separate chunk, its CSS must be loaded explicitly)
+            $this->addCss($assetsUrl . 'css/mgr/vue-dist/gallery-uploader.min.css');
+        }
+        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
 
         // Customizable product fields feature
         $product_fields = array_merge($this->resource->getAllFieldsNames(), ['syncsite']);
@@ -209,6 +210,9 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $sources = $this->modx->getCollection('sources.modMediaSource', ['id:>' => 0]);
         /** @var \MODX\Revolution\Sources\modMediaSource $source */
         foreach ($sources as $source) {
+            if (!$source->checkPolicy('view')) {
+                continue;
+            }
             $list[] = [
                 'id' => (int)$source->get('id'),
                 'name' => $source->get('name') ?: ('Source ' . $source->get('id')),

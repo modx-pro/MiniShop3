@@ -203,7 +203,7 @@ watch(
 
 <template>
   <div class="product-gallery">
-    <ConfirmDialog append-to="body" />
+    <ConfirmDialog append-to="body" pt:root:class="ms3-gallery-confirm-dialog" />
     <ProductGalleryToolbar
       :sources="sources"
       :current-source-id="currentSourceId"
@@ -252,13 +252,13 @@ watch(
 
 <!-- ConfirmDialog append-to="body" renders outside .product-gallery -->
 <style>
-.p-confirm-dialog {
+.ms3-gallery-confirm-dialog {
   width: var(--ms3-modal-width, 28rem);
   max-width: 90vw;
   overflow-x: hidden;
   border-radius: var(--ms3-radius-lg, var(--p-border-radius));
 }
-.p-confirm-dialog .p-dialog-content {
+.ms3-gallery-confirm-dialog .p-dialog-content {
   white-space: normal;
   word-wrap: break-word;
 }
