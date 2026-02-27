@@ -129,6 +129,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'additional_fields' => [],
             'media_source' => $this->getSourceProperties(),
             'isHideContent' => $this->isHideContent(),
+            'product_remember_tabs' => (bool)$this->getOption('ms3_product_remember_tabs', null, true),
             'lexicon' => [
                 'ms3_product_data_vue' => $this->modx->lexicon('ms3_product_data_vue'),
             ],
