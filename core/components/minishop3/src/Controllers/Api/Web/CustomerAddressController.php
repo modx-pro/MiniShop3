@@ -17,6 +17,8 @@ use MODX\Revolution\modX;
  */
 class CustomerAddressController
 {
+    use AuthorizedCustomerTrait;
+
     protected modX $modx;
 
     public function __construct(modX $modx)
@@ -287,50 +289,6 @@ class CustomerAddressController
         $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Deleted customer address #' . $addressId);
 
         return Response::success(null, 'Address deleted successfully')->getData();
-    }
-
-    /**
-     * Get authorized customer from session or API token
-     *
-     * Authorization flow (same as TokenMiddleware):
-     * 1. Try API token from request/session
-     * 2. Fall back to session customer_id (set by cart/order operations)
-     *
-     * ServiceCheckMiddleware guarantees has('ms3') before controller is invoked.
-     *
-     * @return msCustomer|null
-     */
-    protected function getAuthorizedCustomer(): ?msCustomer
-    {
-        $ms3 = $this->modx->services->get('ms3');
-        $ms3->initialize();
-
-        // Method 1: Try API token
-        $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
-
-        if (!empty($tokenString)) {
-            $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
-                'token' => $tokenString,
-                'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
-            ]);
-
-            if ($tokenObj && !$tokenObj->isExpired()) {
-                $customer = $this->modx->getObject(msCustomer::class, $tokenObj->get('customer_id'));
-                if ($customer) {
-                    return $customer;
-                }
-            }
-        }
-
-        // Method 2: Fall back to session customer_id (consistent with TokenMiddleware)
-        if (!empty($_SESSION['ms3']['customer_id'])) {
-            $customer = $this->modx->getObject(msCustomer::class, (int)$_SESSION['ms3']['customer_id']);
-            if ($customer) {
-                return $customer;
-            }
-        }
-
-        return null;
     }
 
     /**
