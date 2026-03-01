@@ -453,7 +453,8 @@ class Customer
         }
         $_SESSION['ms3']['customer_id'] = $msCustomer->id;
 
-        // Bind existing msCustomerToken to customer
+        // Resolve current token: cookie → session → controller token
+        // ($this->token comes from $_REQUEST via middleware cookie injection)
         $currentToken = CookieHelper::getTokenFromCookie();
         if (empty($currentToken)) {
             $currentToken = $_SESSION['ms3']['customer_token'] ?? $this->token;

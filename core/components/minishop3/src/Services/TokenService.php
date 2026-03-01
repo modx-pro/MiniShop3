@@ -65,7 +65,7 @@ class TokenService
         $token = bin2hex(random_bytes(32));
 
         if ($ttl === null) {
-            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
         }
 
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
@@ -133,7 +133,7 @@ class TokenService
             if ($tokenObj) {
                 // Auto-renew expired token
                 if ($tokenObj->isExpired()) {
-                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
                     $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
                     $tokenObj->save();
                 }
@@ -176,7 +176,7 @@ class TokenService
         }
 
         if ($ttl === null) {
-            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
         }
 
         $expires = time() + $ttl;

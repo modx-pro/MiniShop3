@@ -448,4 +448,42 @@ class OrderDraftManager
     {
         return (int)($_SESSION['ms3']['customer_id'] ?? 0);
     }
+
+    /**
+     * Bind draft order to customer by token
+     *
+     * Finds draft with given token and sets customer_id if not already set.
+     * Used during login/register to preserve guest cart.
+     *
+     * @param string $token Session token
+     * @param int $customerId Customer ID to bind
+     * @return bool True if draft was found and bound
+     */
+    public function bindDraftToCustomer(string $token, int $customerId): bool
+    {
+        if (empty($token) || $customerId <= 0) {
+            return false;
+        }
+
+        $statusDraft = (int)$this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+
+        $draft = $this->modx->getObject(msOrder::class, [
+            'token' => $token,
+            'status_id' => $statusDraft,
+        ]);
+
+        if ($draft && empty($draft->get('customer_id'))) {
+            $draft->set('customer_id', $customerId);
+            $draft->save();
+
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                "[OrderDraftManager] Bound draft #{$draft->get('id')} to customer #{$customerId}"
+            );
+
+            return true;
+        }
+
+        return false;
+    }
 }

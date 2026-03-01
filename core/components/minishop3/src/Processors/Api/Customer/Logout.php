@@ -11,9 +11,8 @@ use MODX\Revolution\Processors\Processor;
 /**
  * Logout - customer logout processor
  *
- * Detaches customer from current token (session continues as guest).
- * Cookie is preserved — guest cart remains accessible.
- * Other API tokens for this customer are revoked.
+ * Revokes all customer tokens and creates a fresh anonymous token.
+ * New cookie is set — guest cart starts fresh (security: old token invalidated).
  *
  * @package MiniShop3\Processors\Api\Customer
  */
@@ -30,12 +29,6 @@ class Logout extends Processor
             return $this->success($this->modx->lexicon('ms3_customer_logout_success'));
         }
 
-        // Get current token from cookie/session
-        $currentTokenString = CookieHelper::getTokenFromCookie();
-        if (empty($currentTokenString)) {
-            $currentTokenString = $_SESSION['ms3']['customer_token'] ?? '';
-        }
-
         /** @var msCustomer $customer */
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
 
@@ -43,32 +36,8 @@ class Logout extends Processor
             /** @var AuthManager $authManager */
             $authManager = $this->modx->services->get('ms3_auth_manager');
 
-            // Revoke all OTHER api tokens for this customer
+            // Revoke ALL api tokens for this customer (including current)
             $authManager->revokeTokens($customer, 'api');
-
-            // Re-create current token as anonymous (customer_id = 0)
-            // This keeps the same token string valid for guest cart
-            if (!empty($currentTokenString)) {
-                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                    'token' => $currentTokenString,
-                    'type' => msCustomerToken::TYPE_API,
-                ]);
-
-                // Token was revoked by revokeTokens above — re-create it as anonymous
-                if (!$tokenObj) {
-                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
-                    $tokenObj = $this->modx->newObject(msCustomerToken::class);
-                    $tokenObj->set('token', $currentTokenString);
-                    $tokenObj->set('type', msCustomerToken::TYPE_API);
-                    $tokenObj->set('customer_id', 0);
-                    $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
-                    $tokenObj->set('created_at', date('Y-m-d H:i:s'));
-                    $tokenObj->save();
-                } else {
-                    $tokenObj->set('customer_id', 0);
-                    $tokenObj->save();
-                }
-            }
 
             $this->modx->log(
                 \MODX\Revolution\modX::LOG_LEVEL_INFO,
@@ -76,11 +45,29 @@ class Logout extends Processor
             );
         }
 
-        // Clear customer data from session, keep token
-        unset($_SESSION['ms3']['customer_id']);
-        unset($_SESSION['ms3']['customer_token_expires']);
+        // Generate fresh anonymous token
+        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+        $newToken = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
-        // Cookie stays — guest cart preserved
+        $tokenObj = $this->modx->newObject(msCustomerToken::class);
+        $tokenObj->set('token', $newToken);
+        $tokenObj->set('type', msCustomerToken::TYPE_API);
+        $tokenObj->set('customer_id', 0);
+        $tokenObj->set('expires_at', $expiresAt);
+        $tokenObj->set('created_at', date('Y-m-d H:i:s'));
+        $tokenObj->save();
+
+        // Update session with new anonymous token
+        if (!isset($_SESSION['ms3'])) {
+            $_SESSION['ms3'] = [];
+        }
+        unset($_SESSION['ms3']['customer_id']);
+        $_SESSION['ms3']['customer_token'] = $newToken;
+        $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
+
+        // Set new cookie
+        CookieHelper::setTokenCookie($this->modx, $newToken);
 
         return $this->success($this->modx->lexicon('ms3_customer_logout_success'));
     }

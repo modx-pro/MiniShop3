@@ -40,9 +40,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         unset($_SESSION['ms3']['customer_token_expires']);
     }
 
-    // Clear httpOnly cookie
-    \MiniShop3\Utils\CookieHelper::clearTokenCookie($modx);
-
     $loginPageId = $modx->getOption('ms3_customer_login_page_id', null, 1);
     $modx->sendRedirect($modx->makeUrl($loginPageId));
     exit;

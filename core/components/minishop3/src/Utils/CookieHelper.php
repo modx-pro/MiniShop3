@@ -32,6 +32,11 @@ class CookieHelper
             return;
         }
 
+        // Skip if cookie already has correct value (avoid duplicate Set-Cookie headers)
+        if (($_COOKIE[self::COOKIE_NAME] ?? '') === $token) {
+            return;
+        }
+
         if ($maxAge === null) {
             $maxAge = (int)$modx->getOption('ms3_customer_token_ttl', null, 604800);
         }

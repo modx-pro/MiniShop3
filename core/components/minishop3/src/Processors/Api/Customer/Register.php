@@ -3,11 +3,11 @@
 namespace MiniShop3\Processors\Api\Customer;
 
 use MiniShop3\Model\msCustomerToken;
-use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MiniShop3\Services\Customer\RateLimiter;
 use MiniShop3\Services\Customer\RegisterService;
+use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Utils\CookieHelper;
 use MODX\Revolution\Processors\Processor;
 
@@ -104,7 +104,7 @@ class Register extends Processor
                     // Bind customer to existing token
                     $tokenObj->set('customer_id', $customer->id);
 
-                    $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400);
+                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
                     $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
                     $tokenObj->save();
 
@@ -112,7 +112,9 @@ class Register extends Processor
                     $expiresAt = $tokenObj->get('expires_at');
 
                     // Bind draft order to customer
-                    $this->bindDraftToCustomer($tokenString, $customer->id);
+                    /** @var OrderDraftManager $draftManager */
+                    $draftManager = $this->modx->services->get('ms3_order_draft_manager');
+                    $draftManager->bindDraftToCustomer($tokenString, $customer->id);
                 }
             }
 
@@ -120,7 +122,7 @@ class Register extends Processor
             if (!$tokenObj) {
                 /** @var AuthManager $authManager */
                 $authManager = $this->modx->services->get('ms3_auth_manager');
-                $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400);
+                $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
                 $tokenObj = $authManager->createToken($customer, 'api', $ttl);
 
                 if ($tokenObj) {
@@ -170,21 +172,4 @@ class Register extends Processor
         ]);
     }
 
-    /**
-     * Bind draft order to customer
-     */
-    private function bindDraftToCustomer(string $token, int $customerId): void
-    {
-        $statusDraft = (int)$this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
-
-        $draft = $this->modx->getObject(msOrder::class, [
-            'token' => $token,
-            'status_id' => $statusDraft,
-        ]);
-
-        if ($draft && empty($draft->get('customer_id'))) {
-            $draft->set('customer_id', $customerId);
-            $draft->save();
-        }
-    }
 }

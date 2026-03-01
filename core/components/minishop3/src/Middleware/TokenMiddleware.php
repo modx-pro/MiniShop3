@@ -11,8 +11,16 @@ use MODX\Revolution\modX;
 /**
  * Middleware for authorization token verification (Web API)
  *
- * Checks for token in HTTP_MS3TOKEN header and saves it to session.
+ * Token resolution order:
+ * 1. Authorization: Bearer header (mobile apps)
+ * 2. HTTP_MS3TOKEN header (legacy)
+ * 3. $_REQUEST['ms3_token'] (includes httpOnly cookie via injection)
+ *
+ * Cookie injection at start of handle() copies $_COOKIE['ms3_token'] → $_REQUEST['ms3_token']
+ * for backward compatibility with controllers reading $_REQUEST.
+ *
  * For public endpoints (cart/get, product/get) token is optional.
+ * For non-public endpoints without token — auto-creates anonymous token.
  */
 class TokenMiddleware implements MiddlewareInterface
 {
@@ -89,7 +97,7 @@ class TokenMiddleware implements MiddlewareInterface
             if ($tokenObj) {
                 // Auto-renew expired token
                 if ($tokenObj->isExpired()) {
-                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
                     $newExpiresAt = date('Y-m-d H:i:s', time() + $ttl);
                     $tokenObj->set('expires_at', $newExpiresAt);
                     $tokenObj->save();
@@ -162,11 +170,7 @@ class TokenMiddleware implements MiddlewareInterface
             return $token;
         }
 
-        // 3. httpOnly cookie
-        $token = CookieHelper::getTokenFromCookie();
-        if (!empty($token)) {
-            return $token;
-        }
+        // 3. $_REQUEST parameter (includes cookie via injection at top of handle())
 
         // 4. $_REQUEST parameter (legacy URL param)
         return $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';

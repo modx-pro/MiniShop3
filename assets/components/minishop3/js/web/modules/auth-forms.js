@@ -98,8 +98,6 @@ class AuthForms {
       if (result.success) {
         this.showMessage('login-messages', this.getLexicon('ms3_customer_login_success'), 'success')
 
-        // Token is set by server via httpOnly cookie — no JS storage needed
-
         setTimeout(() => {
           this.handleRedirect(result.object)
         }, 1000)
@@ -161,7 +159,7 @@ class AuthForms {
         )
 
         if (result.object && result.object.token) {
-          // Token is set by server via httpOnly cookie — no JS storage needed
+          // Auto-login: redirect to account page
           setTimeout(() => {
             this.handleRedirect(result.object)
           }, 1500)
