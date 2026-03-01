@@ -8,7 +8,9 @@ require_once($autoload);
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Services\Customer\CustomerAddressManager;
+use MiniShop3\Utils\CookieHelper;
 use MODX\Revolution\modX;
 
 use Rakit\Validation\Validator;
@@ -438,6 +440,42 @@ class Customer
     }
 
     /**
+     * Auto-login customer after order creation
+     *
+     * Binds existing msCustomerToken to customer and sets session + cookie.
+     *
+     * @param msCustomer $msCustomer Customer to login
+     */
+    protected function autoLoginCustomer(msCustomer $msCustomer): void
+    {
+        if (!isset($_SESSION['ms3'])) {
+            $_SESSION['ms3'] = [];
+        }
+        $_SESSION['ms3']['customer_id'] = $msCustomer->id;
+
+        // Bind existing msCustomerToken to customer
+        $currentToken = CookieHelper::getTokenFromCookie();
+        if (empty($currentToken)) {
+            $currentToken = $_SESSION['ms3']['customer_token'] ?? $this->token;
+        }
+
+        if (!empty($currentToken)) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $currentToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+
+            if ($tokenObj) {
+                $tokenObj->set('customer_id', $msCustomer->id);
+                $tokenObj->save();
+            }
+
+            $_SESSION['ms3']['customer_token'] = $currentToken;
+            CookieHelper::setTokenCookie($this->modx, $currentToken);
+        }
+    }
+
+    /**
      * Find customer by email
      *
      * @param string $email Customer email
@@ -496,8 +534,7 @@ class Customer
                     $msCustomer = $registerResult['customer'];
 
                     if ($autoLogin) {
-                        $_SESSION['ms3']['customer_id'] = $msCustomer->id;
-                        $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
+                        $this->autoLoginCustomer($msCustomer);
                     }
                 } else {
                     $msCustomer = $this->findByEmail($email);
@@ -507,8 +544,7 @@ class Customer
                         $msCustomer->save();
 
                         if ($autoLogin) {
-                            $_SESSION['ms3']['customer_id'] = $msCustomer->id;
-                            $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
+                            $this->autoLoginCustomer($msCustomer);
                         }
                     }
                 }
@@ -527,8 +563,7 @@ class Customer
             $msCustomer = $this->create($customerData);
 
             if ($msCustomer && $autoLogin) {
-                $_SESSION['ms3']['customer_id'] = $msCustomer->id;
-                $_SESSION['ms3']['customer_token'] = $msCustomer->get('token');
+                $this->autoLoginCustomer($msCustomer);
             }
         }
 

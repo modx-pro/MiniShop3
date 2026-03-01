@@ -2,16 +2,20 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
+use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MiniShop3\Services\Customer\RateLimiter;
 use MiniShop3\Services\Customer\RegisterService;
+use MiniShop3\Utils\CookieHelper;
 use MODX\Revolution\Processors\Processor;
 
 /**
  * Register - processor for registering a new customer
  *
  * Creates a new customer with validation and optional email verification.
+ * On auto-login: binds existing session token to new customer (preserves guest cart).
  * Protected from spam via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
@@ -78,26 +82,61 @@ class Register extends Processor
         $autoLogin = (bool)$this->modx->getOption('ms3_customer_auto_login_after_register', null, true);
         $requireEmailVerification = (bool)$this->modx->getOption('ms3_customer_require_email_verification', null, true);
 
-        $tokenData = null;
+        $tokenString = null;
+        $expiresAt = null;
 
         if ($autoLogin && !$requireEmailVerification) {
-            /** @var AuthManager $authManager */
-            $authManager = $this->modx->services->get('ms3_auth_manager');
+            // Use existing token from cookie/session instead of creating new one
+            $currentToken = CookieHelper::getTokenFromCookie();
+            if (empty($currentToken)) {
+                $currentToken = $_SESSION['ms3']['customer_token'] ?? '';
+            }
 
-            $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400);
-            $tokenObj = $authManager->createToken($customer, 'api', $ttl);
+            $tokenObj = null;
 
-            if ($tokenObj) {
+            if (!empty($currentToken)) {
+                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token' => $currentToken,
+                    'type' => msCustomerToken::TYPE_API,
+                ]);
+
+                if ($tokenObj) {
+                    // Bind customer to existing token
+                    $tokenObj->set('customer_id', $customer->id);
+
+                    $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400);
+                    $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
+                    $tokenObj->save();
+
+                    $tokenString = $tokenObj->get('token');
+                    $expiresAt = $tokenObj->get('expires_at');
+
+                    // Bind draft order to customer
+                    $this->bindDraftToCustomer($tokenString, $customer->id);
+                }
+            }
+
+            // Edge case: no valid existing token
+            if (!$tokenObj) {
+                /** @var AuthManager $authManager */
+                $authManager = $this->modx->services->get('ms3_auth_manager');
+                $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400);
+                $tokenObj = $authManager->createToken($customer, 'api', $ttl);
+
+                if ($tokenObj) {
+                    $tokenString = $tokenObj->get('token');
+                    $expiresAt = $tokenObj->get('expires_at');
+                    CookieHelper::setTokenCookie($this->modx, $tokenString);
+                }
+            }
+
+            if ($tokenString) {
                 if (!isset($_SESSION['ms3'])) {
                     $_SESSION['ms3'] = [];
                 }
                 $_SESSION['ms3']['customer_id'] = $customer->id;
-                $_SESSION['ms3']['customer_token'] = $tokenObj->get('token');
-
-                $tokenData = [
-                    'token' => $tokenObj->get('token'),
-                    'expires_at' => $tokenObj->get('expires_at'),
-                ];
+                $_SESSION['ms3']['customer_token'] = $tokenString;
+                $_SESSION['ms3']['customer_token_expires'] = strtotime($expiresAt);
             }
         }
 
@@ -124,9 +163,28 @@ class Register extends Processor
                 'phone' => $customer->get('phone'),
                 'email_verified' => !empty($customer->get('email_verified_at')),
             ],
-            'token' => $tokenData,
+            'token' => $tokenString,
+            'expires_at' => $expiresAt,
             'email_verification_required' => $requireEmailVerification,
             'redirect_url' => $redirectUrl,
         ]);
+    }
+
+    /**
+     * Bind draft order to customer
+     */
+    private function bindDraftToCustomer(string $token, int $customerId): void
+    {
+        $statusDraft = (int)$this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+
+        $draft = $this->modx->getObject(msOrder::class, [
+            'token' => $token,
+            'status_id' => $statusDraft,
+        ]);
+
+        if ($draft && empty($draft->get('customer_id'))) {
+            $draft->set('customer_id', $customerId);
+            $draft->save();
+        }
     }
 }

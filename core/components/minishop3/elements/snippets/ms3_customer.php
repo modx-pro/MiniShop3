@@ -6,7 +6,7 @@ use MiniShop3\Services\Customer\AddressesPageService;
 use MiniShop3\Services\Customer\OrdersPageService;
 use ModxPro\PdoTools\Fetch;
 
-/** @var modX $modx */
+/** @var \MODX\Revolution\modX $modx */
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 
@@ -39,6 +39,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
         unset($_SESSION['ms3']['customer_token']);
         unset($_SESSION['ms3']['customer_token_expires']);
     }
+
+    // Clear httpOnly cookie
+    \MiniShop3\Utils\CookieHelper::clearTokenCookie($modx);
 
     $loginPageId = $modx->getOption('ms3_customer_login_page_id', null, 1);
     $modx->sendRedirect($modx->makeUrl($loginPageId));

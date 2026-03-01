@@ -52,13 +52,17 @@ class OrderDraftManager
         }
 
         // 2. Fallback: search by customer_id for authenticated customers
+        //    Sort by id DESC to get the most recent draft when multiple exist
         $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
         if ($customerId > 0) {
-            $draft = $this->modx->getObject(msOrder::class, [
+            $q = $this->modx->newQuery(msOrder::class);
+            $q->where([
                 'customer_id' => $customerId,
                 'status_id' => $status_draft,
                 'context' => $ctx,
             ]);
+            $q->sortby('id', 'DESC');
+            $draft = $this->modx->getObject(msOrder::class, $q);
 
             if ($draft) {
                 // Sync token: update draft token to match current session token
@@ -386,11 +390,15 @@ class OrderDraftManager
 
         $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
 
-        return $this->modx->getObject(msOrder::class, [
+        $q = $this->modx->newQuery(msOrder::class);
+        $q->where([
             'customer_id' => $customerId,
             'status_id' => $statusDraft,
             'context' => $ctx,
         ]);
+        $q->sortby('id', 'DESC');
+
+        return $this->modx->getObject(msOrder::class, $q);
     }
 
     /**
