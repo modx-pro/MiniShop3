@@ -457,9 +457,10 @@ class OrderDraftManager
      *
      * @param string $token Session token
      * @param int $customerId Customer ID to bind
+     * @param string $ctx Context key
      * @return bool True if draft was found and bound
      */
-    public function bindDraftToCustomer(string $token, int $customerId): bool
+    public function bindDraftToCustomer(string $token, int $customerId, string $ctx = 'web'): bool
     {
         if (empty($token) || $customerId <= 0) {
             return false;
@@ -470,6 +471,7 @@ class OrderDraftManager
         $draft = $this->modx->getObject(msOrder::class, [
             'token' => $token,
             'status_id' => $statusDraft,
+            'context' => $ctx,
         ]);
 
         if ($draft && empty($draft->get('customer_id'))) {

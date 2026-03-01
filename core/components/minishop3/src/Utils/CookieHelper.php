@@ -15,12 +15,18 @@ class CookieHelper
 {
     private const COOKIE_NAME = 'ms3_token';
 
+    /** @var bool Whether cookie was already set in this PHP request (prevents duplicate Set-Cookie headers) */
+    private static bool $cookieSetInThisRequest = false;
+
     /**
-     * Set token cookie
+     * Set token cookie (sliding expiry)
      *
      * Uses MODX session_cookie_* settings for domain, path, secure, samesite.
      * httpOnly is always true — token must not be accessible from JS.
      * Lifetime from ms3_customer_token_ttl (default 604800 = 7 days).
+     *
+     * Cookie is set once per PHP request (first call renews expires,
+     * subsequent calls are skipped to avoid duplicate Set-Cookie headers).
      *
      * @param modX $modx MODX instance (for reading system settings)
      * @param string $token Token value
@@ -32,8 +38,8 @@ class CookieHelper
             return;
         }
 
-        // Skip if cookie already has correct value (avoid duplicate Set-Cookie headers)
-        if (($_COOKIE[self::COOKIE_NAME] ?? '') === $token) {
+        // Set cookie once per request: first call renews expires, subsequent calls skip
+        if (self::$cookieSetInThisRequest) {
             return;
         }
 
@@ -54,6 +60,8 @@ class CookieHelper
             'httponly' => true,
             'samesite' => $samesite ?: 'Lax',
         ]);
+
+        self::$cookieSetInThisRequest = true;
 
         // Make cookie available in current request immediately
         $_COOKIE[self::COOKIE_NAME] = $token;

@@ -51,8 +51,7 @@ class TokenMiddleware implements MiddlewareInterface
      * Token resolution order:
      * 1. Authorization: Bearer header (for mobile apps)
      * 2. HTTP_MS3TOKEN header (legacy)
-     * 3. httpOnly cookie ms3_token
-     * 4. $_REQUEST['ms3_token'] (legacy URL parameter)
+     * 3. $_REQUEST['ms3_token'] (includes httpOnly cookie via injection + legacy URL param)
      *
      * Cookie injection: copies $_COOKIE['ms3_token'] → $_REQUEST['ms3_token']
      * so all controllers (CartController, OrderController, etc.) work without changes.
@@ -170,9 +169,7 @@ class TokenMiddleware implements MiddlewareInterface
             return $token;
         }
 
-        // 3. $_REQUEST parameter (includes cookie via injection at top of handle())
-
-        // 4. $_REQUEST parameter (legacy URL param)
+        // 3. $_REQUEST (includes cookie via injection + legacy URL param)
         return $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
     }
 
