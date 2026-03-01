@@ -98,10 +98,6 @@ class AuthForms {
       if (result.success) {
         this.showMessage('login-messages', this.getLexicon('ms3_customer_login_success'), 'success')
 
-        if (result.object && result.object.token) {
-          this.saveToken(result.object.token)
-        }
-
         setTimeout(() => {
           this.handleRedirect(result.object)
         }, 1000)
@@ -163,7 +159,7 @@ class AuthForms {
         )
 
         if (result.object && result.object.token) {
-          this.saveToken(result.object.token)
+          // Auto-login: redirect to account page
           setTimeout(() => {
             this.handleRedirect(result.object)
           }, 1500)
@@ -208,39 +204,37 @@ class AuthForms {
   }
 
   /**
-   * Save authorization token
+   * Save authorization token — no-op (httpOnly cookie managed by server)
+   * Cleans up legacy localStorage.
    *
-   * @param {string} token - API token
+   * @param {string} _token - Unused
    */
-  saveToken (token) {
-    if (!token) return
-
-    localStorage.setItem('ms3_token', token)
-
-    if (window.ms3 && window.ms3.config) {
-      window.ms3.config.token = token
+  saveToken (_token) {
+    // Clean up legacy localStorage
+    try {
+      localStorage.removeItem('ms3_token')
+    } catch (e) {
+      // Ignore
     }
-
-    console.log('[AuthForms] Token saved, length:', token.length)
   }
 
   /**
-   * Get saved token
+   * Get saved token — returns null (httpOnly cookie, not accessible from JS)
    *
-   * @returns {string|null} - Token or null
+   * @returns {null}
    */
   getToken () {
-    return localStorage.getItem('ms3_token')
+    return null
   }
 
   /**
-   * Remove token (on logout)
+   * Remove token (on logout) — cleans up legacy localStorage
    */
   clearToken () {
-    localStorage.removeItem('ms3_token')
-
-    if (window.ms3 && window.ms3.config) {
-      window.ms3.config.token = null
+    try {
+      localStorage.removeItem('ms3_token')
+    } catch (e) {
+      // Ignore
     }
   }
 
@@ -257,6 +251,7 @@ class AuthForms {
 
     const response = await fetch(url.toString(), {
       method: 'POST',
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json'

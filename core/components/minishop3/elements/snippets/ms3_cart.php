@@ -27,14 +27,11 @@ $ms3->initialize($modx->context->key);
 // Load lexicons for template
 $modx->lexicon->load('minishop3:cart');
 
-if (!empty($scriptProperties['customer_token'])) {
-    $token = $scriptProperties['customer_token'];
-} elseif (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
-    $token = $_SESSION['ms3']['customer_token'];
-} else {
-    $response = $ms3->customer->generateToken();
-    $token = $response['data']['token'];
-}
+/** @var \MiniShop3\Services\TokenService $tokenService */
+$tokenService = $modx->services->get('ms3_token_service');
+$token = !empty($scriptProperties['customer_token'])
+    ? $scriptProperties['customer_token']
+    : $tokenService->resolveOrCreateToken();
 if (!empty($_GET['msorder'])) {
     return '';
 }

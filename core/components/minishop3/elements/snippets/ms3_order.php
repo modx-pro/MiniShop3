@@ -22,12 +22,9 @@ if (!$modx->services->has('ms3')) {
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);
 
-if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
-    $token = $_SESSION['ms3']['customer_token'];
-} else {
-    $response = $ms3->customer->generateToken();
-    $token = $response['data']['token'];
-}
+/** @var \MiniShop3\Services\TokenService $tokenService */
+$tokenService = $modx->services->get('ms3_token_service');
+$token = $tokenService->resolveOrCreateToken();
 
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);

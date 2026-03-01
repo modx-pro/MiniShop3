@@ -6,7 +6,7 @@ use MiniShop3\Services\Customer\AddressesPageService;
 use MiniShop3\Services\Customer\OrdersPageService;
 use ModxPro\PdoTools\Fetch;
 
-/** @var modX $modx */
+/** @var \MODX\Revolution\modX $modx */
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 
