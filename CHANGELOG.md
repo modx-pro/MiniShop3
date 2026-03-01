@@ -56,6 +56,7 @@
 
 #### 🐛 Исправлено
 
+- **httpOnly cookie token architecture (#124):** единый httpOnly cookie `ms3_token` вместо 4 несинхронизированных хранилищ. Middleware injection для обратной совместимости. Корзина сохраняется при логине/регистрации.
 - Исправлены неточности в лексиконах (Issue #21)
 - Удалён `action` из конфигурации меню miniShop3 (#94)
 - Очистка EAV-опций из формы товара
@@ -65,6 +66,10 @@
 - `CartController::change()`/`remove()` — исправлен тип возвращаемого значения (array вместо Response)
 - Корректные дефолтные ID статусов заказов с fallback для нулевых значений
 - `getIterator` для msProduct/msCategory — добавлен `class_key` в критерии
+
+#### ⚠️ Breaking changes
+
+- **Register.php response format (#124):** поле `token` изменено с объекта `{token, expires_at}` на строку. `expires_at` вынесен на верхний уровень ответа. Кастомные темы, обращающиеся к `result.object.token.token`, потребуют обновления.
 
 #### 🔧 Изменено
 
