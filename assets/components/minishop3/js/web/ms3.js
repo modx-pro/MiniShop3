@@ -46,6 +46,7 @@ const ms3 = {
 
   hooks: null,
   message: null,
+  confirm: null,
 
   /**
    * Async initialization
@@ -82,6 +83,7 @@ const ms3 = {
 
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
+    this.confirm = window.ms3Confirm || function (msg) { return Promise.resolve(window.confirm(msg)) }
 
     this.tokenManager = new TokenManager({
       tokenName: this.config.tokenName || 'ms3_token'

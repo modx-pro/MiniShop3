@@ -5,76 +5,88 @@ declare(strict_types=1);
 use Phinx\Migration\AbstractMigration;
 
 /**
- * Migration: Add AuthUI.js to ms3_frontend_assets setting
+ * Migration: Add confirm.js and AuthUI.js to ms3_frontend_assets setting
  *
- * Adds the new AuthUI.js file to the frontend assets list.
- * The file should be added before ms3.js since ms3.js initializes all modules.
+ * Adds new JS files to the frontend assets list:
+ * - confirm.js after message.js (utility module)
+ * - AuthUI.js before ms3.js (UI module)
  */
 class AddAuthUiToFrontendAssets extends AbstractMigration
 {
     /**
-     * The new JS file to add
+     * Files to add: [file => insertAfter/insertBefore]
      */
-    private const NEW_FILE = '[[+jsUrl]]web/ui/AuthUI.js';
-
-    /**
-     * The file before which to insert (ms3.js is last and initializes all modules)
-     */
-    private const INSERT_BEFORE = '[[+jsUrl]]web/ms3.js';
+    private const FILES_TO_ADD = [
+        [
+            'file' => '[[+jsUrl]]web/modules/confirm.js',
+            'after' => '[[+jsUrl]]web/modules/message.js',
+        ],
+        [
+            'file' => '[[+jsUrl]]web/ui/AuthUI.js',
+            'before' => '[[+jsUrl]]web/ms3.js',
+        ],
+    ];
 
     public function up(): void
     {
         $prefix = $this->getAdapter()->getOption('table_prefix');
         $table = $prefix . 'system_settings';
 
-        // Get current setting value
         $row = $this->fetchRow(
             "SELECT `value` FROM `{$table}` WHERE `key` = 'ms3_frontend_assets'"
         );
 
         if (!$row) {
-            // Setting doesn't exist, skip
             return;
         }
 
-        $currentValue = $row['value'];
-
-        // Parse JSON
-        $assets = json_decode($currentValue, true);
+        $assets = json_decode($row['value'], true);
         if (!is_array($assets)) {
-            // Invalid JSON or not an array, skip
             return;
         }
 
-        // Normalize paths (remove escaped slashes for comparison)
-        $normalizedAssets = array_map(function ($path) {
-            return str_replace('\\/', '/', $path);
-        }, $assets);
+        $changed = false;
 
-        $newFileNormalized = str_replace('\\/', '/', self::NEW_FILE);
-        $insertBeforeNormalized = str_replace('\\/', '/', self::INSERT_BEFORE);
+        foreach (self::FILES_TO_ADD as $entry) {
+            $newFile = $entry['file'];
 
-        // Check if already exists
-        if (in_array($newFileNormalized, $normalizedAssets, true)) {
-            // Already exists, skip
+            // Normalize for comparison
+            $normalizedAssets = array_map(fn($p) => str_replace('\\/', '/', $p), $assets);
+            $newFileNorm = str_replace('\\/', '/', $newFile);
+
+            if (in_array($newFileNorm, $normalizedAssets, true)) {
+                continue;
+            }
+
+            if (isset($entry['after'])) {
+                $anchorNorm = str_replace('\\/', '/', $entry['after']);
+                $pos = array_search($anchorNorm, $normalizedAssets, true);
+                if ($pos !== false) {
+                    array_splice($assets, $pos + 1, 0, [$newFile]);
+                } else {
+                    $assets[] = $newFile;
+                }
+            } elseif (isset($entry['before'])) {
+                $anchorNorm = str_replace('\\/', '/', $entry['before']);
+                $pos = array_search($anchorNorm, $normalizedAssets, true);
+                if ($pos !== false) {
+                    array_splice($assets, $pos, 0, [$newFile]);
+                } else {
+                    $assets[] = $newFile;
+                }
+            } else {
+                $assets[] = $newFile;
+            }
+
+            $changed = true;
+        }
+
+        if (!$changed) {
             return;
         }
 
-        // Find position of ms3.js
-        $insertPosition = array_search($insertBeforeNormalized, $normalizedAssets, true);
-
-        if ($insertPosition !== false) {
-            // Insert before ms3.js
-            array_splice($assets, $insertPosition, 0, [self::NEW_FILE]);
-        } else {
-            // ms3.js not found, just append
-            $assets[] = self::NEW_FILE;
-        }
-
-        // Encode back to JSON with pretty formatting
         $newValue = json_encode($assets, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
-        // Update the setting
         $this->execute(
             "UPDATE `{$table}` SET `value` = " . $this->getAdapter()->getConnection()->quote($newValue) .
             " WHERE `key` = 'ms3_frontend_assets'"
@@ -86,7 +98,6 @@ class AddAuthUiToFrontendAssets extends AbstractMigration
         $prefix = $this->getAdapter()->getOption('table_prefix');
         $table = $prefix . 'system_settings';
 
-        // Get current setting value
         $row = $this->fetchRow(
             "SELECT `value` FROM `{$table}` WHERE `key` = 'ms3_frontend_assets'"
         );
@@ -95,27 +106,23 @@ class AddAuthUiToFrontendAssets extends AbstractMigration
             return;
         }
 
-        $currentValue = $row['value'];
-        $assets = json_decode($currentValue, true);
-
+        $assets = json_decode($row['value'], true);
         if (!is_array($assets)) {
             return;
         }
 
-        // Remove AuthUI.js (check both escaped and unescaped versions)
-        $assets = array_filter($assets, function ($path) {
+        $filesToRemove = array_map(
+            fn($entry) => str_replace('\\/', '/', $entry['file']),
+            self::FILES_TO_ADD
+        );
+
+        $assets = array_values(array_filter($assets, function ($path) use ($filesToRemove) {
             $normalized = str_replace('\\/', '/', $path);
-            $newFileNormalized = str_replace('\\/', '/', self::NEW_FILE);
-            return $normalized !== $newFileNormalized;
-        });
+            return !in_array($normalized, $filesToRemove, true);
+        }));
 
-        // Re-index array
-        $assets = array_values($assets);
-
-        // Encode back to JSON
         $newValue = json_encode($assets, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
-        // Update the setting
         $this->execute(
             "UPDATE `{$table}` SET `value` = " . $this->getAdapter()->getConnection()->quote($newValue) .
             " WHERE `key` = 'ms3_frontend_assets'"
