@@ -1,11 +1,11 @@
 <script setup>
+import { useLexicon } from '@vuetools/useLexicon'
 import { Button, Card, Column, DataTable, Dialog, InputText, Select } from 'primevue'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
-import { useLexicon } from '@vuetools/useLexicon'
 
 const confirm = useConfirm()
 const toast = useToast()
