@@ -18,6 +18,7 @@
  */
 const ms3Confirm = (function () {
   let modalElement = null
+  let pendingResolve = null
 
   function getOrCreateModal () {
     if (modalElement) return modalElement
@@ -58,6 +59,12 @@ const ms3Confirm = (function () {
       return window.confirm(message)
     }
 
+    // Dismiss previous dialog if still open
+    if (pendingResolve) {
+      pendingResolve(false)
+      pendingResolve = null
+    }
+
     const lexicon = (typeof window !== 'undefined' && window.ms3Lexicon) || {}
     const lang = (document.documentElement.lang || 'en').slice(0, 2)
     const i18n = { ru: { ok: 'Подтвердить', cancel: 'Отмена' }, en: { ok: 'Confirm', cancel: 'Cancel' } }
@@ -69,6 +76,7 @@ const ms3Confirm = (function () {
     }
 
     const el = getOrCreateModal()
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(el)
 
     el.querySelector('.ms3-confirm-message').textContent = message
 
@@ -80,20 +88,28 @@ const ms3Confirm = (function () {
 
     return new Promise((resolve) => {
       let resolved = false
-      const modalInstance = new bootstrap.Modal(el)
+      pendingResolve = resolve
+
+      function cleanup () {
+        okBtn.removeEventListener('click', handleConfirm)
+        el.removeEventListener('hidden.bs.modal', handleHidden)
+        if (pendingResolve === resolve) {
+          pendingResolve = null
+        }
+      }
 
       function handleConfirm () {
         if (resolved) return
         resolved = true
-        okBtn.removeEventListener('click', handleConfirm)
+        cleanup()
         modalInstance.hide()
         resolve(true)
       }
 
       function handleHidden () {
-        el.removeEventListener('hidden.bs.modal', handleHidden)
         if (resolved) return
         resolved = true
+        cleanup()
         resolve(false)
       }
 

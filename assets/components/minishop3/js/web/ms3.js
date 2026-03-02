@@ -79,11 +79,11 @@ const ms3 = {
       authRegisterForm: '#ms3-register-form',
       authForgotPassword: '#forgot-password-link'
     }
-    this.config = { ...this.config, selectors: { ...selectorDefaults, ...rawSelectors } }
-
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
     this.confirm = window.ms3Confirm || function (msg) { return Promise.resolve(window.confirm(msg)) }
+
+    this.config = { ...this.config, selectors: { ...selectorDefaults, ...rawSelectors }, confirm: this.confirm }
 
     this.tokenManager = new TokenManager({
       tokenName: this.config.tokenName || 'ms3_token'

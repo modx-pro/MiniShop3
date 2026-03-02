@@ -40,6 +40,10 @@ class OrdersPageService extends CustomerPageService
     {
         $orderUuid = isset($_GET['order']) ? (string)$_GET['order'] : null;
 
+        if ($orderUuid && !preg_match('/^[0-9a-f\-]{36}$/i', $orderUuid)) {
+            $orderUuid = null;
+        }
+
         if ($orderUuid) {
             return $this->getOrderDetailsData($orderUuid);
         }
@@ -67,6 +71,10 @@ class OrdersPageService extends CustomerPageService
     public function render(): string
     {
         $orderUuid = isset($_GET['order']) ? (string)$_GET['order'] : null;
+
+        if ($orderUuid && !preg_match('/^[0-9a-f\-]{36}$/i', $orderUuid)) {
+            $orderUuid = null;
+        }
 
         if ($orderUuid) {
             return $this->renderOrderDetails($orderUuid);

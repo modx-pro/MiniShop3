@@ -39,6 +39,10 @@ class CustomerUI {
     return this.config?.selectors || {}
   }
 
+  get confirm () {
+    return this.config?.confirm || window.ms3Confirm || function (msg) { return Promise.resolve(window.confirm(msg)) }
+  }
+
   /**
    * Get lexicon string (window.ms3Lexicon, then fallback, then key)
    * @param {string} key - Lexicon key
@@ -329,7 +333,7 @@ class CustomerUI {
         const orderId = btn.getAttribute('data-order-id')
         const confirmMessage = btn.getAttribute('data-confirm') || 'Cancel this order?'
 
-        if (!await window.ms3Confirm(confirmMessage, { confirmClass: 'btn-danger' })) return
+        if (!await this.confirm(confirmMessage, { confirmClass: 'btn-danger' })) return
 
         const hookData = { orderId }
         await this.hooks.runHooks('beforeCancelOrder', hookData)
@@ -367,7 +371,7 @@ class CustomerUI {
         const container = btn.closest('.list-group-item')
         const confirmMessage = container?.dataset.confirmSetDefault || 'Set this address as default?'
 
-        if (!await window.ms3Confirm(confirmMessage)) return
+        if (!await this.confirm(confirmMessage)) return
 
         const hookData = { addressId }
         await this.hooks.runHooks('beforeSetDefaultAddress', hookData)
@@ -396,7 +400,7 @@ class CustomerUI {
         const container = btn.closest('.list-group-item')
         const confirmMessage = container?.dataset.confirmDelete || 'Are you sure you want to delete this address?'
 
-        if (!await window.ms3Confirm(confirmMessage, { confirmClass: 'btn-danger' })) return
+        if (!await this.confirm(confirmMessage, { confirmClass: 'btn-danger' })) return
 
         const hookData = { addressId }
         await this.hooks.runHooks('beforeDeleteAddress', hookData)

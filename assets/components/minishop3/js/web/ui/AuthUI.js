@@ -235,10 +235,14 @@ class AuthUI {
     const alertDiv = document.createElement('div')
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`
     alertDiv.setAttribute('role', 'alert')
-    alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `
+    alertDiv.textContent = message
+
+    const closeBtn = document.createElement('button')
+    closeBtn.type = 'button'
+    closeBtn.className = 'btn-close'
+    closeBtn.setAttribute('data-bs-dismiss', 'alert')
+    closeBtn.setAttribute('aria-label', 'Close')
+    alertDiv.appendChild(closeBtn)
 
     container.innerHTML = ''
     container.appendChild(alertDiv)
