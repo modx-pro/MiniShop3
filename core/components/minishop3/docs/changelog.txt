@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Order cancel by customer in personal account: API endpoint, cancel button in order list/details, `ms3_customer_cancel_allowed_statuses` setting (#119, Issue #117)
 - Remember active Vue tab across product page reloads via `localStorage`, `ms3_product_remember_tabs` setting (#120, Issue #111)
 
+### Refactored
+- Standalone LK modules (order-cancel, customer-addresses, auth-forms) integrated into ms3 architecture: API → UI class → hooks → message (#126)
+- New `AuthUI` class for login/register forms with `beforeLogin`/`afterLogin`, `beforeRegister`/`afterRegister` hooks (#126)
+- `CustomerUI` extended with order cancel, address management (set default, delete) with hooks (#126)
+- `CustomerAPI` extended with `login`, `register`, `setDefaultAddress`, `cancelOrder` methods (#126)
+- New `confirm.js` module: Promise-based Bootstrap Modal confirm dialog with native fallback, i18n by `<html lang>`, declarative binding via `data-ms3-confirm` attribute (#126)
+- Order detail URLs now use UUID instead of integer ID for security (#126)
+- UUID format validation for `$_GET['order']` parameter (#126)
+- 6 new selectors in `Selectors.js` for LK components (#126)
+
 ### Fixed
 - httpOnly cookie token architecture: single `ms3_token` httpOnly cookie as source of truth instead of 4 unsynchronized storages. Middleware injection for backward compatibility. Cart preserved on login/register (#124)
 - Save button display for products and categories in MODX 3.2 — explicit `canSave`/`locked` calculation (#118)

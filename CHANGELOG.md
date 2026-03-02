@@ -23,6 +23,25 @@
 
 ---
 
+#### ♻️ Рефакторинг
+
+**Интеграция standalone ЛК-модулей в архитектуру ms3 (#126):**
+- Три standalone модуля (`order-cancel.js`, `customer-addresses.js`, `auth-forms.js`) заменены на UI-классы в единой архитектуре (API → UI → hooks → message)
+- Новый `AuthUI` — класс для форм авторизации/регистрации с хуками `beforeLogin`/`afterLogin`, `beforeRegister`/`afterRegister`
+- `CustomerUI` расширен: отмена заказов, управление адресами (set default, delete) с хуками
+- `CustomerAPI` расширен: +4 метода (`login`, `register`, `setDefaultAddress`, `cancelOrder`)
+- 6 новых селекторов в `Selectors.js` для ЛК-компонентов
+
+**Promise-based confirm dialog (#126):**
+- Новый модуль `confirm.js` — Bootstrap Modal с fallback на native `confirm()`
+- i18n кнопок по атрибуту `<html lang>` (ru/en), переопределение через `ms3Lexicon` или параметры
+- Декларативная привязка через `data-ms3-confirm` атрибут на любом элементе
+- Заменяет все `confirm()` в ЛК: отмена заказа, удаление адреса, выход
+
+**UUID в URL заказов (#126):**
+- Ссылки на детали заказа используют `uuid` вместо integer `id` — безопаснее, не раскрывает количество заказов
+- Валидация формата UUID из `$_GET` перед запросом к БД
+
 #### ✨ Добавлено
 
 **Отмена заказа покупателем (#119, Issue #117):**
