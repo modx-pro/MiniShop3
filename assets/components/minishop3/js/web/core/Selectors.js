@@ -18,7 +18,13 @@ const defaultSelectors = {
   orderCost: '#ms3_order_cost',
   orderCartCost: '#ms3_order_cart_cost',
   orderDeliveryCost: '#ms3_order_delivery_cost',
-  link: '.ms3_link'
+  link: '.ms3_link',
+  orderCancel: '.ms3-order-cancel',
+  addressSetDefault: '.set-default-address',
+  addressDelete: '.delete-address',
+  authLoginForm: '#ms3-login-form',
+  authRegisterForm: '#ms3-register-form',
+  authForgotPassword: '#forgot-password-link'
 }
 
 /**

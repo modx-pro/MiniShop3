@@ -101,5 +101,4 @@
         </div>
     </div>
 </div>
-<script src="{$assets_url|default:''}/js/web/modules/order-cancel.js"></script>
 {/block}

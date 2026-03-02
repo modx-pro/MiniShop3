@@ -8,7 +8,6 @@
 {extends 'tpl.msCustomer.base'}
 
 {block 'content'}
-<script src="{'assets_url' | option}components/minishop3/js/web/modules/customer-addresses.js"></script>
 <div class="ms3-customer-addresses">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -45,7 +44,4 @@
         </div>
     </div>
 </div>
-<script>
-new CustomerAddresses().init()
-</script>
 {/block}

@@ -1,7 +1,7 @@
 <div class="ms3-customer-order-details" data-api-url="{$api_url|default:''}">
     {* Навигация назад *}
     <div class="mb-3">
-        <a href="?" class="btn btn-sm btn-outline-secondary">
+        <a href="{'ms3_customer_orders_page_id' | option | url}" class="btn btn-sm btn-outline-secondary">
             <svg width="16" height="16" fill="currentColor" class="me-1">
                 <use xlink:href="#icon-arrow-left"/>
             </svg>
@@ -194,4 +194,3 @@
     </div>
     {/if}
 </div>
-<script src="{$assets_url|default:''}/js/web/modules/order-cancel.js"></script>

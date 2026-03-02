@@ -38,10 +38,10 @@ class OrdersPageService extends CustomerPageService
      */
     public function getData(): array
     {
-        $orderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : null;
+        $orderUuid = isset($_GET['order']) ? (string)$_GET['order'] : null;
 
-        if ($orderId) {
-            return $this->getOrderDetailsData($orderId);
+        if ($orderUuid) {
+            return $this->getOrderDetailsData($orderUuid);
         }
 
         return $this->getOrdersListData();
@@ -66,10 +66,10 @@ class OrdersPageService extends CustomerPageService
      */
     public function render(): string
     {
-        $orderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : null;
+        $orderUuid = isset($_GET['order']) ? (string)$_GET['order'] : null;
 
-        if ($orderId) {
-            return $this->renderOrderDetails($orderId);
+        if ($orderUuid) {
+            return $this->renderOrderDetails($orderUuid);
         }
 
         return $this->renderOrdersList();
@@ -178,14 +178,14 @@ class OrdersPageService extends CustomerPageService
     /**
      * Render detailed order information
      *
-     * @param int $orderId Order ID
+     * @param string $orderUuid Order UUID
      * @return string HTML content
      */
-    protected function renderOrderDetails(int $orderId): string
+    protected function renderOrderDetails(string $orderUuid): string
     {
         /** @var msOrder $order */
         $order = $this->modx->getObject(msOrder::class, [
-            'id' => $orderId,
+            'uuid' => $orderUuid,
             'customer_id' => $this->customerId,
         ]);
 
@@ -199,6 +199,7 @@ class OrdersPageService extends CustomerPageService
             'tpl.msCustomer.order.details'
         );
 
+        $orderId = (int) $order->get('id');
         $products = $this->getOrderProducts($orderId);
 
         $delivery = $order->getOne('Delivery');
@@ -372,14 +373,14 @@ class OrdersPageService extends CustomerPageService
     /**
      * Get order details data (without rendering)
      *
-     * @param int $orderId Order ID
+     * @param string $orderUuid Order UUID
      * @return array Order data
      */
-    protected function getOrderDetailsData(int $orderId): array
+    protected function getOrderDetailsData(string $orderUuid): array
     {
         /** @var msOrder $order */
         $order = $this->modx->getObject(msOrder::class, [
-            'id' => $orderId,
+            'uuid' => $orderUuid,
             'customer_id' => $this->customerId,
         ]);
 
@@ -390,6 +391,7 @@ class OrdersPageService extends CustomerPageService
             ];
         }
 
+        $orderId = (int) $order->get('id');
         $products = $this->getOrderProducts($orderId);
 
         $delivery = $order->getOne('Delivery');

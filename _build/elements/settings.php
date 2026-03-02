@@ -244,6 +244,7 @@ return [
             "[[+jsUrl]]web\/ui\/CustomerUI.js",
             "[[+jsUrl]]web\/ui\/QuantityUI.js",
             "[[+jsUrl]]web\/ui\/ProductCardUI.js",
+            "[[+jsUrl]]web\/ui\/AuthUI.js",
             "[[+jsUrl]]web\/ms3.js"
         ]',
         'xtype' => 'textarea',
