@@ -142,29 +142,13 @@
     </div>
 </div>
 
-{* Подключение и инициализация AuthForms *}
-<script src="{'assets_url' | option}components/minishop3/js/web/modules/auth-forms.js"></script>
 <script>
-(function() {
-    'use strict';
-
-    // Инициализация AuthForms
-    const authForms = new AuthForms({
-        apiUrl: '{'assets_url' | option}components/minishop3/api.php',
-        loginRoute: '/api/v1/customer/login',
-        registerRoute: '/api/v1/customer/register'
-    });
-
-    authForms.init();
-
-    // Передача лексиконов в глобальный объект (для использования в auth-forms.js)
-    window.ms3Lexicon = window.ms3Lexicon || {};
-    window.ms3Lexicon.ms3_customer_err_login_required = '{'ms3_customer_err_login_required' | lexicon}';
-    window.ms3Lexicon.ms3_customer_login_success = '{'ms3_customer_login_success' | lexicon}';
-    window.ms3Lexicon.ms3_customer_err_register_required = '{'ms3_customer_err_register_required' | lexicon}';
-    window.ms3Lexicon.ms3_customer_err_password_mismatch = '{'ms3_customer_err_password_mismatch' | lexicon}';
-    window.ms3Lexicon.ms3_customer_err_privacy_required = '{'ms3_customer_err_privacy_required' | lexicon}';
-    window.ms3Lexicon.ms3_customer_register_success = '{'ms3_customer_register_success' | lexicon}';
-    window.ms3Lexicon.ms3_err_unknown = '{'ms3_err_unknown' | lexicon}';
-})();
+window.ms3Lexicon = window.ms3Lexicon || {};
+window.ms3Lexicon.ms3_customer_err_login_required = '{'ms3_customer_err_login_required' | lexicon}';
+window.ms3Lexicon.ms3_customer_login_success = '{'ms3_customer_login_success' | lexicon}';
+window.ms3Lexicon.ms3_customer_err_register_required = '{'ms3_customer_err_register_required' | lexicon}';
+window.ms3Lexicon.ms3_customer_err_password_mismatch = '{'ms3_customer_err_password_mismatch' | lexicon}';
+window.ms3Lexicon.ms3_customer_err_privacy_required = '{'ms3_customer_err_privacy_required' | lexicon}';
+window.ms3Lexicon.ms3_customer_register_success = '{'ms3_customer_register_success' | lexicon}';
+window.ms3Lexicon.ms3_err_unknown = '{'ms3_err_unknown' | lexicon}';
 </script>

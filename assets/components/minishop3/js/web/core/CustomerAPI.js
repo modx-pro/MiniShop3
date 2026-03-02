@@ -110,4 +110,53 @@ class CustomerAPI {
   async deleteAddress (id) {
     return this.api.delete(`/api/v1/customer/addresses/${id}`)
   }
+
+  /**
+   * Login customer
+   *
+   * POST /api/v1/customer/login
+   *
+   * @param {string} email - Email
+   * @param {string} password - Password
+   * @returns {Promise<Object>}
+   */
+  async login (email, password) {
+    return this.api.post('/api/v1/customer/login', { email, password })
+  }
+
+  /**
+   * Register customer
+   *
+   * POST /api/v1/customer/register
+   *
+   * @param {Object} data - Registration data
+   * @returns {Promise<Object>}
+   */
+  async register (data) {
+    return this.api.post('/api/v1/customer/register', data)
+  }
+
+  /**
+   * Set default address
+   *
+   * PUT /api/v1/customer/addresses/{id}/set-default
+   *
+   * @param {number} id - Address ID
+   * @returns {Promise<Object>}
+   */
+  async setDefaultAddress (id) {
+    return this.api.put(`/api/v1/customer/addresses/${id}/set-default`)
+  }
+
+  /**
+   * Cancel order
+   *
+   * POST /api/v1/customer/orders/{orderId}/cancel
+   *
+   * @param {number} orderId - Order ID
+   * @returns {Promise<Object>}
+   */
+  async cancelOrder (orderId) {
+    return this.api.post(`/api/v1/customer/orders/${orderId}/cancel`)
+  }
 }

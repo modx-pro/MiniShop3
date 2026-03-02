@@ -6,6 +6,9 @@ use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Model\msDeliveryMember;
 
+/** @var modX $modx */
+/** @var array $scriptProperties */
+
 // Do not show order form when displaying details of existing order
 if (!empty($_GET['msorder'])) {
     return '';
@@ -16,8 +19,6 @@ if (!$modx->services->has('ms3')) {
     return '';
 }
 
-/** @var modX $modx */
-/** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 $ms3 = $modx->services->get('ms3');
 $ms3->initialize($modx->context->key);

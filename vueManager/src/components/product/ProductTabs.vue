@@ -307,7 +307,7 @@ function onTabChange(newValue) {
   if (props.config.product_remember_tabs && currentTab.key) {
     try {
       localStorage.setItem(STORAGE_KEY, currentTab.key)
-    } catch (_e) {
+    } catch {
       // ignore quota or private mode
     }
   }

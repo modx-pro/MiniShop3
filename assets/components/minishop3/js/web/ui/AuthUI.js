@@ -1,68 +1,73 @@
 /**
- * AuthForms - login and registration form handling
+ * UI handlers for authentication forms (login / register)
  *
- * Works with forms via connector.php (MODX processors).
- * Independent from ApiClient, uses direct Fetch API calls.
+ * Manages login and registration forms in the customer account area.
+ * Uses CustomerAPI for network requests, hooks for extensibility,
+ * and message for toast notifications.
  *
- * @example
- * const authForms = new AuthForms({
- *   apiUrl: '/assets/components/minishop3/api.php',
- *   loginRoute: '/api/v1/customer/login',
- *   registerRoute: '/api/v1/customer/register'
- * })
- * authForms.init()
+ * Form validation errors are shown inline (DOM alerts),
+ * network errors use toast notifications via this.message.
  */
-class AuthForms {
-  /**
-   * @param {Object} config - Configuration
-   * @param {string} config.apiUrl - URL api.php (frontend API)
-   * @param {string} config.loginRoute - Login route
-   * @param {string} config.registerRoute - Registration route
-   */
-  constructor (config = {}) {
-    this.config = {
-      apiUrl: config.apiUrl || '/assets/components/minishop3/api.php',
-      loginRoute: config.loginRoute || '/api/v1/customer/login',
-      registerRoute: config.registerRoute || '/api/v1/customer/register',
-      loginFormId: config.loginFormId || 'ms3-login-form',
-      registerFormId: config.registerFormId || 'ms3-register-form',
-      ...config
-    }
 
-    this.forms = {
-      login: null,
-      register: null
-    }
+/** Default strings (EN) when window.ms3Lexicon is not set by template */
+const AUTH_UI_LEXICON = {
+  ms3_customer_err_login_required: 'Please enter email and password',
+  ms3_customer_login_success: 'You have successfully logged in',
+  ms3_customer_err_register_required: 'Please enter email and password to register',
+  ms3_customer_err_password_mismatch: 'Passwords do not match',
+  ms3_customer_err_privacy_required: 'You must accept the privacy policy',
+  ms3_customer_register_success: 'Registration successful',
+  ms3_err_unknown: 'An unknown error occurred',
+  ms3_customer_password_recovery_not_available: 'Password recovery feature will be implemented in the next version'
+}
+
+class AuthUI {
+  /**
+   * @param {CustomerAPI} customerAPI - Customer API instance
+   * @param {Object} hooks - Hook system
+   * @param {Object} message - Message system (toast)
+   * @param {Object} config - Configuration
+   */
+  constructor (customerAPI, hooks, message, config) {
+    this.customer = customerAPI
+    this.hooks = hooks
+    this.message = message
+    this.config = config
+  }
+
+  get selectors () {
+    return this.config?.selectors || {}
   }
 
   /**
-   * Initialize handlers
+   * Get lexicon string (window.ms3Lexicon, then fallback, then key)
+   * @param {string} key - Lexicon key
+   * @returns {string}
+   */
+  t (key) {
+    if (typeof window !== 'undefined' && window.ms3Lexicon && window.ms3Lexicon[key]) {
+      return window.ms3Lexicon[key]
+    }
+    return AUTH_UI_LEXICON[key] || key
+  }
+
+  /**
+   * Initialize UI handlers
    */
   init () {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.bindEvents())
-    } else {
-      this.bindEvents()
-    }
-  }
-
-  /**
-   * Bind form events
-   */
-  bindEvents () {
-    this.forms.login = document.getElementById(this.config.loginFormId)
-    if (this.forms.login) {
-      this.forms.login.addEventListener('submit', (e) => this.handleLogin(e))
+    const loginForm = document.querySelector(this.selectors.authLoginForm)
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => this.handleLogin(e))
     }
 
-    this.forms.register = document.getElementById(this.config.registerFormId)
-    if (this.forms.register) {
-      this.forms.register.addEventListener('submit', (e) => this.handleRegister(e))
+    const registerForm = document.querySelector(this.selectors.authRegisterForm)
+    if (registerForm) {
+      registerForm.addEventListener('submit', (e) => this.handleRegister(e))
     }
 
-    const forgotPasswordLink = document.getElementById('forgot-password-link')
-    if (forgotPasswordLink) {
-      forgotPasswordLink.addEventListener('click', (e) => this.handleForgotPassword(e))
+    const forgotLink = document.querySelector(this.selectors.authForgotPassword)
+    if (forgotLink) {
+      forgotLink.addEventListener('click', (e) => this.handleForgotPassword(e))
     }
 
     this.initTabSupport()
@@ -80,34 +85,39 @@ class AuthForms {
     const data = this.serializeForm(form)
 
     if (!data.email || !data.password) {
-      this.showMessage('login-messages', this.getLexicon('ms3_customer_err_login_required'), 'danger')
+      this.showMessage('login-messages', this.t('ms3_customer_err_login_required'), 'danger')
       return
     }
 
     this.setButtonLoading('login-submit-btn', true)
     this.clearMessages('login-messages')
 
+    const hookData = { email: data.email }
+    await this.hooks.runHooks('beforeLogin', hookData)
+    if (hookData.cancel) {
+      this.setButtonLoading('login-submit-btn', false)
+      return
+    }
+
     try {
-      const result = await this.sendToApi(this.config.loginRoute, {
-        email: data.email,
-        password: data.password
-      })
+      const result = await this.customer.login(data.email, data.password)
 
       this.setButtonLoading('login-submit-btn', false)
 
-      if (result.success) {
-        this.showMessage('login-messages', this.getLexicon('ms3_customer_login_success'), 'success')
+      await this.hooks.runHooks('afterLogin', { email: data.email, response: result })
 
+      if (result.success) {
+        this.showMessage('login-messages', this.t('ms3_customer_login_success'), 'success')
         setTimeout(() => {
           this.handleRedirect(result.object)
         }, 1000)
       } else {
-        this.showMessage('login-messages', result.message || this.getLexicon('ms3_err_unknown'), 'danger')
+        this.showMessage('login-messages', result.message || this.t('ms3_err_unknown'), 'danger')
       }
     } catch (error) {
       this.setButtonLoading('login-submit-btn', false)
-      this.showMessage('login-messages', this.getLexicon('ms3_err_unknown'), 'danger')
-      console.error('Login error:', error)
+      this.message.error(this.t('ms3_err_unknown'))
+      console.error('AuthUI login error:', error)
     }
   }
 
@@ -123,25 +133,32 @@ class AuthForms {
     const data = this.serializeForm(form)
 
     if (!data.email || !data.password) {
-      this.showMessage('register-messages', this.getLexicon('ms3_customer_err_register_required'), 'danger')
+      this.showMessage('register-messages', this.t('ms3_customer_err_register_required'), 'danger')
       return
     }
 
     if (data.password !== data.password_confirm) {
-      this.showMessage('register-messages', this.getLexicon('ms3_customer_err_password_mismatch'), 'danger')
+      this.showMessage('register-messages', this.t('ms3_customer_err_password_mismatch'), 'danger')
       return
     }
 
     if (!data.privacy_accepted) {
-      this.showMessage('register-messages', this.getLexicon('ms3_customer_err_privacy_required'), 'danger')
+      this.showMessage('register-messages', this.t('ms3_customer_err_privacy_required'), 'danger')
       return
     }
 
     this.setButtonLoading('register-submit-btn', true)
     this.clearMessages('register-messages')
 
+    const hookData = { email: data.email }
+    await this.hooks.runHooks('beforeRegister', hookData)
+    if (hookData.cancel) {
+      this.setButtonLoading('register-submit-btn', false)
+      return
+    }
+
     try {
-      const result = await this.sendToApi(this.config.registerRoute, {
+      const result = await this.customer.register({
         email: data.email,
         password: data.password,
         first_name: data.first_name || '',
@@ -152,14 +169,15 @@ class AuthForms {
 
       this.setButtonLoading('register-submit-btn', false)
 
+      await this.hooks.runHooks('afterRegister', { email: data.email, response: result })
+
       if (result.success) {
         this.showMessage('register-messages',
-          result.message || this.getLexicon('ms3_customer_register_success'),
+          result.message || this.t('ms3_customer_register_success'),
           'success'
         )
 
         if (result.object && result.object.token) {
-          // Auto-login: redirect to account page
           setTimeout(() => {
             this.handleRedirect(result.object)
           }, 1500)
@@ -171,12 +189,12 @@ class AuthForms {
           }, 2000)
         }
       } else {
-        this.showMessage('register-messages', result.message || this.getLexicon('ms3_err_unknown'), 'danger')
+        this.showMessage('register-messages', result.message || this.t('ms3_err_unknown'), 'danger')
       }
     } catch (error) {
       this.setButtonLoading('register-submit-btn', false)
-      this.showMessage('register-messages', this.getLexicon('ms3_err_unknown'), 'danger')
-      console.error('Register error:', error)
+      this.message.error(this.t('ms3_err_unknown'))
+      console.error('AuthUI register error:', error)
     }
   }
 
@@ -187,7 +205,7 @@ class AuthForms {
    */
   handleForgotPassword (event) {
     event.preventDefault()
-    alert('Password recovery feature will be implemented in the next version')
+    this.message.info(this.t('ms3_customer_password_recovery_not_available'))
   }
 
   /**
@@ -204,66 +222,7 @@ class AuthForms {
   }
 
   /**
-   * Save authorization token — no-op (httpOnly cookie managed by server)
-   * Cleans up legacy localStorage.
-   *
-   * @param {string} _token - Unused
-   */
-  saveToken (_token) {
-    // Clean up legacy localStorage
-    try {
-      localStorage.removeItem('ms3_token')
-    } catch (e) {
-      // Ignore
-    }
-  }
-
-  /**
-   * Get saved token — returns null (httpOnly cookie, not accessible from JS)
-   *
-   * @returns {null}
-   */
-  getToken () {
-    return null
-  }
-
-  /**
-   * Remove token (on logout) — cleans up legacy localStorage
-   */
-  clearToken () {
-    try {
-      localStorage.removeItem('ms3_token')
-    } catch (e) {
-      // Ignore
-    }
-  }
-
-  /**
-   * Send data to Frontend API via api.php
-   *
-   * @param {string} route - API route (e.g., /api/v1/customer/login)
-   * @param {Object} data - Data to send
-   * @returns {Promise<Object>} - API response
-   */
-  async sendToApi (route, data) {
-    const url = new URL(this.config.apiUrl, window.location.origin)
-    url.searchParams.set('route', route)
-
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-
-    return response.json()
-  }
-
-  /**
-   * Show message in container
+   * Show message in container (inline DOM alert)
    *
    * @param {string} containerId - Message container ID
    * @param {string} message - Message text
@@ -276,10 +235,14 @@ class AuthForms {
     const alertDiv = document.createElement('div')
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`
     alertDiv.setAttribute('role', 'alert')
-    alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `
+    alertDiv.textContent = message
+
+    const closeBtn = document.createElement('button')
+    closeBtn.type = 'button'
+    closeBtn.className = 'btn-close'
+    closeBtn.setAttribute('data-bs-dismiss', 'alert')
+    closeBtn.setAttribute('aria-label', 'Close')
+    alertDiv.appendChild(closeBtn)
 
     container.innerHTML = ''
     container.appendChild(alertDiv)
@@ -389,34 +352,4 @@ class AuthForms {
       })
     })
   }
-
-  /**
-   * Get lexicon (from global object or fallback)
-   *
-   * @param {string} key - Lexicon key
-   * @returns {string} - Value
-   */
-  getLexicon (key) {
-    if (window.ms3Lexicon && window.ms3Lexicon[key]) {
-      return window.ms3Lexicon[key]
-    }
-
-    const fallbacks = {
-      ms3_customer_err_login_required: 'Please enter email and password',
-      ms3_customer_login_success: 'You have successfully logged in',
-      ms3_customer_err_register_required: 'Please enter email and password to register',
-      ms3_customer_err_password_mismatch: 'Passwords do not match',
-      ms3_customer_err_privacy_required: 'You must accept the privacy policy',
-      ms3_customer_register_success: 'Registration successful',
-      ms3_err_unknown: 'An unknown error occurred'
-    }
-
-    return fallbacks[key] || key
-  }
 }
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = AuthForms
-}
-
-window.AuthForms = AuthForms

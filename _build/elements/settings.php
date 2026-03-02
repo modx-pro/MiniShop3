@@ -233,6 +233,7 @@ return [
             "[[+jsUrl]]web\/lib\/izitoast\/iziToast.js",
             "[[+jsUrl]]web\/modules\/hooks.js",
             "[[+jsUrl]]web\/modules\/message.js",
+            "[[+jsUrl]]web\/modules\/confirm.js",
             "[[+jsUrl]]web\/core\/Selectors.js",
             "[[+jsUrl]]web\/core\/ApiClient.js",
             "[[+jsUrl]]web\/core\/TokenManager.js",
@@ -244,6 +245,7 @@ return [
             "[[+jsUrl]]web\/ui\/CustomerUI.js",
             "[[+jsUrl]]web\/ui\/QuantityUI.js",
             "[[+jsUrl]]web\/ui\/ProductCardUI.js",
+            "[[+jsUrl]]web\/ui\/AuthUI.js",
             "[[+jsUrl]]web\/ms3.js"
         ]',
         'xtype' => 'textarea',
