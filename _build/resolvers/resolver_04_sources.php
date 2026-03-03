@@ -130,6 +130,11 @@ if ($transport->xpdo) {
                         $default[$k] = $v;
                     }
                 }
+                foreach ($default as $k => $prop) {
+                    if (is_array($prop) && !array_key_exists('desc', $prop)) {
+                        $default[$k]['desc'] = '';
+                    }
+                }
                 $source->set('properties', $default);
             }
             $source->save();

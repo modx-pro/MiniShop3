@@ -41,9 +41,13 @@ switch ($options[xPDOTransport::PACKAGE_ACTION] ?? null) {
                 if (!is_array($propDef)) {
                     continue;
                 }
+                if (!array_key_exists('desc', $propDef)) {
+                    $properties[$propName]['desc'] = '';
+                    $changed = true;
+                }
                 $propKey = $propName === 'includeTVs' ? 'include_tvs' : $camelToSnake($propName);
                 $newDesc = 'ms3_prop_' . $propKey;
-                $currentDesc = $propDef['desc'] ?? '';
+                $currentDesc = $properties[$propName]['desc'] ?? '';
                 if ($currentDesc !== $newDesc) {
                     $properties[$propName]['desc'] = $newDesc;
                     $changed = true;
