@@ -49,18 +49,17 @@ async function connectorRequest(action, params, method = 'POST') {
   let url = baseUrl
   const options = { method, credentials: 'same-origin', headers: { Accept: 'application/json' } }
 
+  // Allow empty strings so updateFile can clear description; filter only undefined/null
+  const filteredParams = Object.fromEntries(
+    Object.entries(allParams).filter(([_, v]) => v !== undefined && v !== null)
+  )
+
   if (method === 'GET') {
     const search = new URLSearchParams()
-    Object.entries(allParams).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== '') search.set(k, String(v))
-    })
+    Object.entries(filteredParams).forEach(([k, v]) => search.set(k, String(v)))
     url = `${baseUrl}?${search.toString()}`
   } else {
-    options.body = new URLSearchParams(
-      Object.fromEntries(
-        Object.entries(allParams).filter(([_, v]) => v !== undefined && v !== null && v !== '')
-      )
-    )
+    options.body = new URLSearchParams(filteredParams)
   }
 
   const response = await fetch(url, options)
