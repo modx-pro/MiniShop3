@@ -254,6 +254,11 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             return $controller->verify($params);
         });
 
+        $router->post('/orders/{id}/cancel', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerOrderController($modx);
+            return $controller->cancel($params);
+        }, [$tokenMiddleware]);
+
     });
 
     $router->group('/product', function($router) use ($modx) {

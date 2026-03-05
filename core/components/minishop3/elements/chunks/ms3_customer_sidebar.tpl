@@ -130,7 +130,7 @@
 
         {* Выход *}
         <li class="nav-item">
-            <a class="nav-link text-danger" href="[[~[[*id]]]]?action=logout" onclick="return confirm('{'ms3_customer_logout_confirm' | lexicon}')">
+            <a class="nav-link text-danger" href="[[~[[*id]]]]?action=logout" data-ms3-confirm="{'ms3_customer_logout_confirm' | lexicon}">
                 <svg width="18" height="18" fill="currentColor" class="me-2">
                     <path d="M7 16 L3 16 C2 16 2 15 2 14 L2 2 C2 1 2 1 3 1 L7 1"/>
                     <path d="M7 8 L15 8 M12 5 L15 8 L12 11" stroke="currentColor" stroke-width="1.5" fill="none"/>

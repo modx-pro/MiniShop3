@@ -2,14 +2,18 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
+use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\RateLimiter;
+use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Utils\CookieHelper;
 use MODX\Revolution\Processors\Processor;
 
 /**
  * Login - customer login processor
  *
- * Authenticates customer and creates API token for session.
+ * Authenticates customer and binds existing session token to customer.
+ * Token does NOT change on login — guest cart is preserved.
  * Protected from brute-force via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
@@ -67,18 +71,65 @@ class Login extends Processor
 
         $rateLimiter->reset('login', $ip);
 
-        $ttl = (int)$this->modx->getOption('ms3_customer_api_token_ttl', null, 86400);
-        $tokenObj = $authManager->createToken($customer, 'api', $ttl);
-
-        if (!$tokenObj) {
-            return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
+        // Use existing token from cookie/session instead of creating new one
+        $currentToken = CookieHelper::getTokenFromCookie();
+        if (empty($currentToken)) {
+            $currentToken = $_SESSION['ms3']['customer_token'] ?? '';
         }
 
+        $tokenObj = null;
+        $tokenString = '';
+        $expiresAt = '';
+
+        if (!empty($currentToken)) {
+            // Find existing token in DB
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $currentToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+
+            if ($tokenObj) {
+                // Bind customer to existing token
+                $tokenObj->set('customer_id', $customer->id);
+
+                // Extend TTL
+                $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+                $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
+                $tokenObj->save();
+
+                $tokenString = $tokenObj->get('token');
+                $expiresAt = $tokenObj->get('expires_at');
+
+                // Bind draft order to customer
+                /** @var OrderDraftManager $draftManager */
+                $draftManager = $this->modx->services->get('ms3_order_draft_manager');
+                $draftManager->bindDraftToCustomer($tokenString, $customer->id);
+            }
+        }
+
+        // Edge case: no valid existing token — create new one
+        if (!$tokenObj) {
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+            $tokenObj = $authManager->createToken($customer, 'api', $ttl);
+
+            if (!$tokenObj) {
+                return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
+            }
+
+            $tokenString = $tokenObj->get('token');
+            $expiresAt = $tokenObj->get('expires_at');
+
+            // Set cookie for new token
+            CookieHelper::setTokenCookie($this->modx, $tokenString);
+        }
+
+        // Update session
         if (!isset($_SESSION['ms3'])) {
             $_SESSION['ms3'] = [];
         }
         $_SESSION['ms3']['customer_id'] = $customer->id;
-        $_SESSION['ms3']['customer_token'] = $tokenObj->get('token');
+        $_SESSION['ms3']['customer_token'] = $tokenString;
+        $_SESSION['ms3']['customer_token_expires'] = strtotime($expiresAt);
 
         $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);
         if (!$redirectPageId) {
@@ -99,9 +150,10 @@ class Login extends Processor
                 'phone' => $customer->get('phone'),
                 'email_verified' => !empty($customer->get('email_verified_at')),
             ],
-            'token' => $tokenObj->get('token'),
-            'expires_at' => $tokenObj->get('expires_at'),
+            'token' => $tokenString,
+            'expires_at' => $expiresAt,
             'redirect_url' => $redirectUrl,
         ]);
     }
+
 }

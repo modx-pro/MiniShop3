@@ -56,8 +56,10 @@ if (!$msOrder) {
     return $modx->lexicon('ms3_err_order_nf');
 }
 $customerId = null;
-if (!empty($_SESSION['ms3']) && !empty($_SESSION['ms3']['customer_token'])) {
-    $token = $_SESSION['ms3']['customer_token'];
+/** @var \MiniShop3\Services\TokenService $tokenService */
+$tokenService = $modx->services->get('ms3_token_service');
+$token = $tokenService->resolveOrCreateToken();
+if (!empty($token)) {
     $customer = $ms3->customer->getByToken($token);
     if (!empty($customer)) {
         $customerId = $customer->get('id');

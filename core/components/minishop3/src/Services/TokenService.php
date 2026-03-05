@@ -2,6 +2,8 @@
 
 namespace MiniShop3\Services;
 
+use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Utils\CookieHelper;
 use MODX\Revolution\modX;
 
 /**
@@ -12,6 +14,7 @@ use MODX\Revolution\modX;
  * - TTL (Time-To-Live) for tokens
  * - Centralized secrets management
  * - Token validation and verification
+ * - httpOnly cookie management for ms3_token
  */
 class TokenService
 {
@@ -47,6 +50,9 @@ class TokenService
             $expires = $_SESSION['ms3']['customer_token_expires'] ?? (time() + 86400);
             $lifetime = max(0, $expires - time());
 
+            // Refresh cookie TTL
+            CookieHelper::setTokenCookie($this->modx, $existingToken);
+
             return [
                 'token' => $existingToken,
                 'expires' => $expires,
@@ -59,7 +65,7 @@ class TokenService
         $token = bin2hex(random_bytes(32));
 
         if ($ttl === null) {
-            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
         }
 
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
@@ -82,6 +88,9 @@ class TokenService
         $_SESSION['ms3']['customer_token'] = $token;
         $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
 
+        // Set httpOnly cookie
+        CookieHelper::setTokenCookie($this->modx, $token);
+
         $this->modx->log(
             modX::LOG_LEVEL_INFO,
             "[TokenService] Generated customer token for customer_id={$customerId}, expires: " . $expiresAt
@@ -92,6 +101,65 @@ class TokenService
             'expires' => time() + $ttl,
             'lifetime' => $ttl * 1000,
         ];
+    }
+
+    /**
+     * Resolve existing token or create new one
+     *
+     * Resolution chain:
+     * 1. Session token → if valid, return
+     * 2. Cookie token → verify in DB (msCustomerToken type=api), restore session, return
+     * 3. Generate new token → set cookie + session, return
+     *
+     * @return string Token string
+     */
+    public function resolveOrCreateToken(): string
+    {
+        // 1. Check session
+        $sessionToken = $this->getCustomerToken();
+        if ($sessionToken) {
+            CookieHelper::setTokenCookie($this->modx, $sessionToken);
+            return $sessionToken;
+        }
+
+        // 2. Check cookie
+        $cookieToken = CookieHelper::getTokenFromCookie();
+        if (!empty($cookieToken)) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $cookieToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+
+            if ($tokenObj) {
+                // Auto-renew expired token
+                if ($tokenObj->isExpired()) {
+                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+                    $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
+                    $tokenObj->save();
+                }
+
+                // Restore session
+                if (!isset($_SESSION['ms3'])) {
+                    $_SESSION['ms3'] = [];
+                }
+                $_SESSION['ms3']['customer_token'] = $cookieToken;
+                $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
+
+                $customerId = (int)$tokenObj->get('customer_id');
+                if ($customerId > 0) {
+                    $_SESSION['ms3']['customer_id'] = $customerId;
+                }
+
+                // Refresh cookie TTL
+                CookieHelper::setTokenCookie($this->modx, $cookieToken);
+
+                return $cookieToken;
+            }
+        }
+
+        // 3. Generate new token
+        $result = $this->generateCustomerToken();
+        return $result['token'];
     }
 
     /**
@@ -108,7 +176,7 @@ class TokenService
         }
 
         if ($ttl === null) {
-            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
         }
 
         $expires = time() + $ttl;

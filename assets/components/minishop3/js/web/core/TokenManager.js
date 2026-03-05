@@ -1,24 +1,26 @@
 /**
- * Customer token manager
+ * Customer token manager (httpOnly cookie mode)
  *
- * Manages customer authorization token:
- * - Storage in localStorage
- * - Expiry validation
- * - Automatic token retrieval when missing/expired
+ * Token is stored in httpOnly cookie by the server.
+ * JS cannot read it directly — it's sent automatically with every request.
+ * This class handles initialization and legacy localStorage cleanup.
  *
  * @example
  * const tokenManager = new TokenManager({ tokenName: 'ms3_token' })
  * await tokenManager.ensureToken()
- * const token = tokenManager.getToken()
  */
 class TokenManager {
   /**
    * @param {Object} config - Configuration
-   * @param {string} config.tokenName - Key for storing token in localStorage
+   * @param {string} config.tokenName - Legacy key (for localStorage cleanup)
    */
   constructor (config) {
     this.tokenName = config.tokenName || 'ms3_token'
     this.apiClient = null
+    this.tokenInitialized = false
+
+    // Clean up legacy localStorage on construction
+    this.cleanupLegacyStorage()
   }
 
   /**
@@ -31,70 +33,47 @@ class TokenManager {
   }
 
   /**
-   * Get token from localStorage
+   * Get token — always returns null (httpOnly cookie, not accessible from JS)
    *
-   * @returns {string|null} - Token or null if missing/expired
+   * @returns {null}
    */
   getToken () {
-    const tokenData = this.getTokenData()
-    return tokenData ? tokenData.token : null
+    return null
   }
 
   /**
-   * Get full token data (token + expiry)
+   * Get full token data — always returns null (httpOnly cookie)
    *
-   * @returns {Object|null} - { token: string, expiry: number } or null
+   * @returns {null}
    */
   getTokenData () {
-    const stored = localStorage.getItem(this.tokenName)
-    if (!stored) {
-      return null
-    }
-
-    try {
-      const data = JSON.parse(stored)
-      const now = Date.now()
-
-      if (now > data.expiry) {
-        this.removeToken()
-        return null
-      }
-
-      return data
-    } catch (e) {
-      this.removeToken()
-      return null
-    }
+    return null
   }
 
   /**
-   * Save token to localStorage
+   * Set token — no-op (token is managed by server via httpOnly cookie)
    *
-   * @param {string} token - Token
-   * @param {number} lifetime - Token lifetime in seconds
+   * @param {string} _token - Unused
+   * @param {number} _lifetime - Unused
    */
-  setToken (token, lifetime) {
-    const data = {
-      token,
-      expiry: Date.now() + (lifetime * 1000)
-    }
-    localStorage.setItem(this.tokenName, JSON.stringify(data))
+  setToken (_token, _lifetime) {
+    // No-op: token is in httpOnly cookie, managed by server
   }
 
   /**
-   * Remove token from localStorage
+   * Remove token — cleans up legacy localStorage only
    */
   removeToken () {
-    localStorage.removeItem(this.tokenName)
+    this.cleanupLegacyStorage()
   }
 
   /**
-   * Check for valid token, fetch new if needed
+   * Ensure token cookie exists by requesting from server if needed
    *
    * @returns {Promise<void>}
    */
   async ensureToken () {
-    if (this.getToken()) {
+    if (this.tokenInitialized) {
       return
     }
 
@@ -102,7 +81,7 @@ class TokenManager {
   }
 
   /**
-   * Fetch new token from server
+   * Fetch new token from server (server sets httpOnly cookie)
    *
    * @returns {Promise<void>}
    */
@@ -118,6 +97,7 @@ class TokenManager {
 
       const response = await fetch(url.toString(), {
         method: 'GET',
+        credentials: 'same-origin',
         headers: {
           Accept: 'application/json',
           'X-Requested-With': 'XMLHttpRequest'
@@ -126,8 +106,8 @@ class TokenManager {
 
       const result = await response.json()
 
-      if (result.success && result.data) {
-        this.setToken(result.data.token, result.data.lifetime)
+      if (result.success) {
+        this.tokenInitialized = true
       } else {
         console.error('TokenManager: Failed to get token', result)
       }
@@ -150,11 +130,22 @@ class TokenManager {
     try {
       const response = await this.apiClient.post('/customer/token/update')
 
-      if (response.success && response.data) {
-        this.setToken(response.data.token, response.data.lifetime)
+      if (response.success) {
+        this.tokenInitialized = true
       }
     } catch (error) {
       console.error('TokenManager: Error refreshing token', error)
+    }
+  }
+
+  /**
+   * Remove legacy localStorage data
+   */
+  cleanupLegacyStorage () {
+    try {
+      localStorage.removeItem(this.tokenName)
+    } catch (e) {
+      // Ignore storage errors
     }
   }
 }

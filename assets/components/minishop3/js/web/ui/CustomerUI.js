@@ -14,7 +14,11 @@ const CUSTOMER_UI_LEXICON = {
   ms3_customer_address_updated: 'Address successfully updated',
   ms3_customer_address_creation_error: 'Address creation error',
   ms3_customer_address_update_error: 'Address update error',
-  ms3_customer_err_address_id_not_specified: 'Address ID not specified'
+  ms3_customer_err_address_id_not_specified: 'Address ID not specified',
+  ms3_customer_order_cancel_error: 'Failed to cancel order',
+  ms3_customer_order_cancel_request_error: 'Request failed',
+  ms3_customer_address_set_default_error: 'Failed to set default address',
+  ms3_customer_address_delete_error: 'Failed to delete address'
 }
 
 class CustomerUI {
@@ -33,6 +37,10 @@ class CustomerUI {
 
   get selectors () {
     return this.config?.selectors || {}
+  }
+
+  get confirm () {
+    return this.config?.confirm || window.ms3Confirm || function (msg) { return Promise.resolve(window.confirm(msg)) }
   }
 
   /**
@@ -54,6 +62,8 @@ class CustomerUI {
     document.querySelectorAll(this.selectors.formCustomer).forEach(form => {
       this.initForm(form)
     })
+    this.initOrderCancel()
+    this.initAddressManagement()
   }
 
   /**
@@ -312,5 +322,105 @@ class CustomerUI {
       this.message.error(this.t('ms3_customer_err_occurred_saving'))
       return { success: false, message: error.message }
     }
+  }
+
+  /**
+   * Initialize order cancel buttons
+   */
+  initOrderCancel () {
+    document.querySelectorAll(this.selectors.orderCancel).forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const orderId = btn.getAttribute('data-order-id')
+        const confirmMessage = btn.getAttribute('data-confirm') || 'Cancel this order?'
+
+        if (!await this.confirm(confirmMessage, { confirmClass: 'btn-danger' })) return
+
+        const hookData = { orderId }
+        await this.hooks.runHooks('beforeCancelOrder', hookData)
+        if (hookData.cancel) return
+
+        btn.disabled = true
+
+        try {
+          const response = await this.customer.cancelOrder(orderId)
+
+          await this.hooks.runHooks('afterCancelOrder', { orderId, response })
+
+          if (response.success) {
+            location.reload()
+          } else {
+            this.message.error(response.message || this.t('ms3_customer_order_cancel_error'))
+            btn.disabled = false
+          }
+        } catch (error) {
+          console.error('CustomerUI.initOrderCancel error:', error)
+          this.message.error(this.t('ms3_customer_order_cancel_request_error'))
+          btn.disabled = false
+        }
+      })
+    })
+  }
+
+  /**
+   * Initialize address management buttons (set default, delete)
+   */
+  initAddressManagement () {
+    document.querySelectorAll(this.selectors.addressSetDefault).forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const addressId = btn.dataset.addressId
+        const container = btn.closest('.list-group-item')
+        const confirmMessage = container?.dataset.confirmSetDefault || 'Set this address as default?'
+
+        if (!await this.confirm(confirmMessage)) return
+
+        const hookData = { addressId }
+        await this.hooks.runHooks('beforeSetDefaultAddress', hookData)
+        if (hookData.cancel) return
+
+        try {
+          const response = await this.customer.setDefaultAddress(addressId)
+
+          await this.hooks.runHooks('afterSetDefaultAddress', { addressId, response })
+
+          if (response.success) {
+            location.reload()
+          } else {
+            this.message.error(response.message || this.t('ms3_customer_address_set_default_error'))
+          }
+        } catch (error) {
+          console.error('CustomerUI.initAddressManagement setDefault error:', error)
+          this.message.error(this.t('ms3_customer_address_set_default_error'))
+        }
+      })
+    })
+
+    document.querySelectorAll(this.selectors.addressDelete).forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const addressId = btn.dataset.addressId
+        const container = btn.closest('.list-group-item')
+        const confirmMessage = container?.dataset.confirmDelete || 'Are you sure you want to delete this address?'
+
+        if (!await this.confirm(confirmMessage, { confirmClass: 'btn-danger' })) return
+
+        const hookData = { addressId }
+        await this.hooks.runHooks('beforeDeleteAddress', hookData)
+        if (hookData.cancel) return
+
+        try {
+          const response = await this.customer.deleteAddress(addressId)
+
+          await this.hooks.runHooks('afterDeleteAddress', { addressId, response })
+
+          if (response.success) {
+            location.reload()
+          } else {
+            this.message.error(response.message || this.t('ms3_customer_address_delete_error'))
+          }
+        } catch (error) {
+          console.error('CustomerUI.initAddressManagement delete error:', error)
+          this.message.error(this.t('ms3_customer_address_delete_error'))
+        }
+      })
+    })
   }
 }

@@ -22,7 +22,7 @@
  * - data-ms3-qty="input"|"inc"|"dec" — quantity control
  * - data-ms3-cart-options — cart options select
  */
-/* global TokenManager, ApiClient, CartAPI, OrderAPI, CustomerAPI, CartUI, OrderUI, CustomerUI, QuantityUI, ProductCardUI, getSelectors */
+/* global TokenManager, ApiClient, CartAPI, OrderAPI, CustomerAPI, CartUI, OrderUI, CustomerUI, AuthUI, QuantityUI, ProductCardUI, getSelectors */
 const ms3 = {
   config: {},
 
@@ -40,11 +40,13 @@ const ms3 = {
   cartUI: null,
   orderUI: null,
   customerUI: null,
+  authUI: null,
   quantityUI: null,
   productCardUI: null,
 
   hooks: null,
   message: null,
+  confirm: null,
 
   /**
    * Async initialization
@@ -69,12 +71,19 @@ const ms3 = {
       orderCost: '#ms3_order_cost',
       orderCartCost: '#ms3_order_cart_cost',
       orderDeliveryCost: '#ms3_order_delivery_cost',
-      link: '.ms3_link'
+      link: '.ms3_link',
+      orderCancel: '.ms3-order-cancel',
+      addressSetDefault: '.set-default-address',
+      addressDelete: '.delete-address',
+      authLoginForm: '#ms3-login-form',
+      authRegisterForm: '#ms3-register-form',
+      authForgotPassword: '#forgot-password-link'
     }
-    this.config = { ...this.config, selectors: { ...selectorDefaults, ...rawSelectors } }
-
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
+    this.confirm = window.ms3Confirm || function (msg) { return Promise.resolve(window.confirm(msg)) }
+
+    this.config = { ...this.config, selectors: { ...selectorDefaults, ...rawSelectors }, confirm: this.confirm }
 
     this.tokenManager = new TokenManager({
       tokenName: this.config.tokenName || 'ms3_token'
@@ -96,12 +105,14 @@ const ms3 = {
     this.cartUI = new CartUI(this.cartAPI, this.hooks, this.message, this.config)
     this.orderUI = new OrderUI(this.orderAPI, this.hooks, this.message, this.config)
     this.customerUI = new CustomerUI(this.customerAPI, this.hooks, this.message, this.config)
+    this.authUI = new AuthUI(this.customerAPI, this.hooks, this.message, this.config)
     this.quantityUI = new QuantityUI(this.cartAPI, this.hooks, this.message, this.config)
     this.productCardUI = new ProductCardUI(this.cartAPI, this.hooks, this.message, this.config)
 
     this.cartUI.init()
     this.orderUI.init()
     this.customerUI.init()
+    this.authUI.init()
     this.quantityUI.init()
     await this.productCardUI.init()
 

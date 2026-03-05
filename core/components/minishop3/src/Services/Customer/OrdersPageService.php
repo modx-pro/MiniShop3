@@ -38,13 +38,29 @@ class OrdersPageService extends CustomerPageService
      */
     public function getData(): array
     {
-        $orderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : null;
+        $orderUuid = isset($_GET['order']) ? (string)$_GET['order'] : null;
 
-        if ($orderId) {
-            return $this->getOrderDetailsData($orderId);
+        if ($orderUuid && !preg_match('/^[0-9a-f\-]{36}$/i', $orderUuid)) {
+            $orderUuid = null;
+        }
+
+        if ($orderUuid) {
+            return $this->getOrderDetailsData($orderUuid);
         }
 
         return $this->getOrdersListData();
+    }
+
+    /**
+     * Customer-facing API base URL (for cancel order, etc.)
+     *
+     * Uses MS3 config so custom ms3_assets_url / ms3_action_url are respected.
+     *
+     * @return string
+     */
+    protected function getCustomerApiUrl(): string
+    {
+        return $this->ms3->config['actionUrl'];
     }
 
     /**
@@ -54,10 +70,14 @@ class OrdersPageService extends CustomerPageService
      */
     public function render(): string
     {
-        $orderId = isset($_GET['order_id']) ? (int)$_GET['order_id'] : null;
+        $orderUuid = isset($_GET['order']) ? (string)$_GET['order'] : null;
 
-        if ($orderId) {
-            return $this->renderOrderDetails($orderId);
+        if ($orderUuid && !preg_match('/^[0-9a-f\-]{36}$/i', $orderUuid)) {
+            $orderUuid = null;
+        }
+
+        if ($orderUuid) {
+            return $this->renderOrderDetails($orderUuid);
         }
 
         return $this->renderOrdersList();
@@ -125,6 +145,8 @@ class OrdersPageService extends CustomerPageService
                 $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
             }
 
+            $orderData['can_cancel'] = $this->isOrderCancellableByCustomer($order);
+
             $chunk = $this->pdoFetch->getChunk($orderTpl, $orderData);
             $ordersData[] = is_string($chunk) ? $chunk : '';
         }
@@ -153,6 +175,8 @@ class OrdersPageService extends CustomerPageService
             'statuses' => $statusesData,
             'pagination' => $pagination,
             'customer' => $this->customer->toArray(),
+            'api_url' => $this->getCustomerApiUrl(),
+            'assets_url' => $this->ms3->config['assetsUrl'],
         ];
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);
@@ -162,14 +186,14 @@ class OrdersPageService extends CustomerPageService
     /**
      * Render detailed order information
      *
-     * @param int $orderId Order ID
+     * @param string $orderUuid Order UUID
      * @return string HTML content
      */
-    protected function renderOrderDetails(int $orderId): string
+    protected function renderOrderDetails(string $orderUuid): string
     {
         /** @var msOrder $order */
         $order = $this->modx->getObject(msOrder::class, [
-            'id' => $orderId,
+            'uuid' => $orderUuid,
             'customer_id' => $this->customerId,
         ]);
 
@@ -183,6 +207,7 @@ class OrdersPageService extends CustomerPageService
             'tpl.msCustomer.order.details'
         );
 
+        $orderId = (int) $order->get('id');
         $products = $this->getOrderProducts($orderId);
 
         $delivery = $order->getOne('Delivery');
@@ -190,12 +215,15 @@ class OrdersPageService extends CustomerPageService
         $address = $order->getOne('Address');
         $status = $order->getOne('Status');
 
+        $orderArray = array_merge($order->toArray(), [
+            'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
+            'status_color' => $status ? $status->get('color') : '',
+            'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
+            'can_cancel' => $this->isOrderCancellableByCustomer($order),
+        ]);
+
         $data = [
-            'order' => array_merge($order->toArray(), [
-                'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
-                'status_color' => $status ? $status->get('color') : '',
-                'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
-            ]),
+            'order' => $orderArray,
             'products' => $products,
             'delivery' => $delivery ? $delivery->toArray() : [],
             'payment' => $payment ? $payment->toArray() : [],
@@ -207,6 +235,8 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
+            'api_url' => $this->getCustomerApiUrl(),
+            'assets_url' => $this->ms3->config['assetsUrl'],
         ];
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);
@@ -316,6 +346,8 @@ class OrdersPageService extends CustomerPageService
                 $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
             }
 
+            $orderData['can_cancel'] = $this->isOrderCancellableByCustomer($order);
+
             $ordersData[] = $orderData;
         }
 
@@ -349,14 +381,14 @@ class OrdersPageService extends CustomerPageService
     /**
      * Get order details data (without rendering)
      *
-     * @param int $orderId Order ID
+     * @param string $orderUuid Order UUID
      * @return array Order data
      */
-    protected function getOrderDetailsData(int $orderId): array
+    protected function getOrderDetailsData(string $orderUuid): array
     {
         /** @var msOrder $order */
         $order = $this->modx->getObject(msOrder::class, [
-            'id' => $orderId,
+            'uuid' => $orderUuid,
             'customer_id' => $this->customerId,
         ]);
 
@@ -367,6 +399,7 @@ class OrdersPageService extends CustomerPageService
             ];
         }
 
+        $orderId = (int) $order->get('id');
         $products = $this->getOrderProducts($orderId);
 
         $delivery = $order->getOne('Delivery');
@@ -379,6 +412,7 @@ class OrdersPageService extends CustomerPageService
                 'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
                 'status_color' => $status ? $status->get('color') : '',
                 'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
+                'can_cancel' => $this->isOrderCancellableByCustomer($order),
             ]),
             'products' => $products,
             'delivery' => $delivery ? $delivery->toArray() : [],
@@ -391,6 +425,8 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
+            'api_url' => $this->getCustomerApiUrl(),
+            'assets_url' => $this->ms3->config['assetsUrl'],
         ];
     }
 
@@ -428,6 +464,19 @@ class OrdersPageService extends CustomerPageService
             'prev_offset' => max(0, $offset - $limit),
             'next_offset' => min(($totalPages - 1) * $limit, $offset + $limit),
         ];
+    }
+
+    /**
+     * Whether the customer is allowed to cancel this order (by status)
+     *
+     * @param msOrder $order
+     * @return bool
+     */
+    protected function isOrderCancellableByCustomer(msOrder $order): bool
+    {
+        $orderStatusService = $this->modx->services->get('ms3_order_status');
+        $allowedIds = $orderStatusService->getAllowedCancelStatusIds();
+        return in_array((int) $order->get('status_id'), $allowedIds, true);
     }
 
     /**

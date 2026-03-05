@@ -8,7 +8,7 @@
 {extends 'tpl.msCustomer.base'}
 
 {block 'content'}
-<div class="ms3-customer-orders">
+<div class="ms3-customer-orders" data-api-url="{$api_url|default:''}">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">{'ms3_customer_orders_title' | lexicon}</h5>

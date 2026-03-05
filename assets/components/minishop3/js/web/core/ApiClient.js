@@ -2,7 +2,7 @@
  * HTTP client for MiniShop3 REST API
  *
  * Simple wrapper over fetch() for backend API interaction.
- * Automatically adds authorization token and handles JSON.
+ * Token is sent automatically via httpOnly cookie (credentials: 'same-origin').
  * Handles token refresh on 401 errors.
  *
  * @example
@@ -38,11 +38,6 @@ class ApiClient {
 
     url.searchParams.set('route', endpoint)
 
-    const token = this.tokenManager.getToken()
-    if (token) {
-      url.searchParams.set('ms3_token', token)
-    }
-
     const headers = {
       Accept: 'application/json',
       'X-Requested-With': 'XMLHttpRequest'
@@ -50,7 +45,8 @@ class ApiClient {
 
     const options = {
       method,
-      headers
+      headers,
+      credentials: 'same-origin'
     }
 
     if (data && (method === 'POST' || method === 'PATCH' || method === 'PUT')) {
@@ -66,10 +62,9 @@ class ApiClient {
       const response = await fetch(url.toString(), options)
       const result = await response.json()
 
-      // Handle token errors: clear invalid token, get new one, and retry
+      // Handle token errors: request new token from server and retry
       if (!isRetry && response.status === 401 && this.isTokenError(result)) {
         console.log('[ApiClient] Token invalid, refreshing and retrying request')
-        this.tokenManager.removeToken()
         await this.tokenManager.fetchNewToken()
         return this.request(method, endpoint, data, true)
       }

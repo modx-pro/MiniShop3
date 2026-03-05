@@ -1,7 +1,7 @@
-<div class="ms3-customer-order-details">
+<div class="ms3-customer-order-details" data-api-url="{$api_url|default:''}">
     {* Навигация назад *}
     <div class="mb-3">
-        <a href="?" class="btn btn-sm btn-outline-secondary">
+        <a href="{'ms3_customer_orders_page_id' | option | url}" class="btn btn-sm btn-outline-secondary">
             <svg width="16" height="16" fill="currentColor" class="me-1">
                 <use xlink:href="#icon-arrow-left"/>
             </svg>
@@ -12,13 +12,20 @@
     {* Информация о заказе *}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0">
                     {'ms3_customer_order_title' | lexicon} №{$order.num}
                 </h5>
-                <span class="badge bg-light text-dark" style="color: {$order.status_color} !important;">
-                    {$order.status_name}
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                    {if $order.can_cancel}
+                    <button type="button" class="btn btn-sm btn-light ms3-order-cancel" data-order-id="{$order.id}" data-confirm="{'ms3_customer_order_cancel_confirm' | lexicon}">
+                        {'ms3_customer_order_cancel' | lexicon}
+                    </button>
+                    {/if}
+                    <span class="badge bg-light text-dark" style="color: {$order.status_color} !important;">
+                        {$order.status_name}
+                    </span>
+                </div>
             </div>
         </div>
         <div class="card-body">

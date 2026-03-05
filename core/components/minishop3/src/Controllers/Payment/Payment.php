@@ -290,6 +290,6 @@ abstract class Payment implements PaymentProviderInterface
      */
     protected function getCanceledStatusId(): int
     {
-        return (int) $this->modx->getOption('ms3_status_canceled', null, 5) ?: 5;
+        return (int) $this->modx->getOption('ms3_status_canceled', null, 5);
     }
 }

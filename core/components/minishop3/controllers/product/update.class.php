@@ -123,12 +123,14 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'additional_fields' => [],
             'media_source' => $this->getSourceProperties(),
             'isHideContent' => $this->isHideContent(),
+            'product_remember_tabs' => (bool)$this->getOption('ms3_product_remember_tabs', null, true),
             'lexicon' => [
                 'ms3_product_data_vue' => $this->modx->lexicon('ms3_product_data_vue'),
             ],
             'fields_config' => $fieldsConfig,
         ];
 
+        // Parent already sets $this->canSave (save_document, checkPolicy('save'), lock). Add component permission only.
         $ready = [
             'xtype' => 'ms3-page-product-update',
             'resource' => $this->resource->get('id'),
@@ -137,7 +139,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'preview_url' => $this->previewUrl,
             'locked' => $this->locked,
             'lockedText' => $this->lockedText,
-            'canSave' => $this->canSave,
+            'canSave' => (int) ($this->canSave && $this->modx->hasPermission('msproduct_save')),
             'canEdit' => $this->canEdit,
             'canCreate' => $this->canCreate,
             'canDuplicate' => $this->canDuplicate,

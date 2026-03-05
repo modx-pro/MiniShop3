@@ -114,7 +114,12 @@ const confirmRemove = field => {
     accept: () => {
       remove(field.name)
       save()
-      toast.add({ severity: 'success', summary: _('ms3_vue_success_title'), detail: _('ms3_vue_record_deleted'), life: 3000 })
+      toast.add({
+        severity: 'success',
+        summary: _('ms3_vue_success_title'),
+        detail: _('ms3_vue_record_deleted'),
+        life: 3000,
+      })
     },
   })
 }
