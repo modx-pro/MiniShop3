@@ -112,6 +112,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             'category_products_rows' => (int) $this->getOption('ms3_category_products_default_rows', null, 20),
         );
         // Parent already sets $this->canSave (save_document, checkPolicy('save'), lock). Add component permission only.
+        // All permission flags must be cast to (int) because MODX JS uses strict comparison (=== 1).
         $ready = array(
             'xtype' => 'ms3-page-category-update',
             'resource' => $this->resource->get('id'),
@@ -121,11 +122,12 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             'locked' => $this->locked,
             'lockedText' => $this->lockedText,
             'canSave' => (int) ($this->canSave && $this->modx->hasPermission('mscategory_save')),
-            'canEdit' => $this->canEdit,
-            'canCreate' => $this->canCreate,
-            'canDuplicate' => $this->canDuplicate,
-            'canDelete' => $this->canDelete,
-            'canPublish' => $this->canPublish,
+            'canEdit' => (int) $this->canEdit,
+            'canCreate' => (int) $this->canCreate,
+            'canCreateRoot' => (int) $this->canCreateRoot,
+            'canDuplicate' => (int) $this->canDuplicate,
+            'canDelete' => (int) $this->canDelete,
+            'canPublish' => (int) $this->canPublish,
             'show_tvs' => !empty($this->tvCounts),
             'next_page' => !empty($neighborhood['right'][0]) ? $neighborhood['right'][0] : 0,
             'prev_page' => !empty($neighborhood['left'][0]) ? $neighborhood['left'][0] : 0,
