@@ -335,6 +335,15 @@ $_lang['delete_field_confirm_title'] = 'Confirm Deletion';
 $_lang['delete_field_confirm_message'] = 'Are you sure you want to delete field "{name}"?';
 $_lang['field_deleted'] = 'Field deleted successfully';
 $_lang['error_deleting_field'] = 'Error deleting field';
+$_lang['field_editable'] = 'Editable field';
+$_lang['editor_type'] = 'Editor type';
+$_lang['editor_type_text'] = 'Text';
+$_lang['editor_type_number'] = 'Number';
+$_lang['editor_type_select'] = 'Dropdown';
+$_lang['editor_options'] = 'Options for selection';
+$_lang['inline_edit_saved'] = 'Changes saved';
+$_lang['inline_edit_error'] = 'Save error';
+$_lang['inline_edit_hint'] = 'To enable inline editing in the category products table (double-click a cell), turn on «Editable field» in the column row below or in the column edit dialog.';
 
 // Grid Fields Config - Add Field Dialog
 $_lang['add_field'] = 'Add Field';

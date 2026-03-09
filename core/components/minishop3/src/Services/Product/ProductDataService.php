@@ -483,10 +483,40 @@ class ProductDataService
     }
 
     /**
-     * Update product data
+     * Allowed fields for inline / API update (msProductData)
+     */
+    protected static array $allowedUpdateFields = [
+        'article', 'price', 'old_price', 'stock', 'weight',
+        'vendor_id', 'made_in', 'new', 'popular', 'favorite',
+    ];
+
+    /**
+     * Resource (modResource) fields updatable via same API (e.g. published)
+     */
+    protected static array $allowedResourceFields = ['published'];
+
+    /**
+     * Apply published state to product resource and save.
      *
-     * Loads product by ID, updates msProductData fields and saves
-     * Used in API controllers to update product data
+     * @param msProduct $product
+     * @param int $published 0 or 1
+     * @return bool True if saved successfully
+     */
+    protected function applyPublishedToResource(msProduct $product, int $published): bool
+    {
+        $product->set('published', $published);
+        if ($published) {
+            $product->set('publishedon', time());
+            $product->set('publishedby', $this->modx->user->get('id'));
+        } else {
+            $product->set('publishedon', 0);
+            $product->set('publishedby', 0);
+        }
+        return $product->save();
+    }
+
+    /**
+     * Update product data (msProductData and optionally resource fields like published).
      *
      * @param int $productId Product ID
      * @param array $data Data to update
@@ -496,24 +526,33 @@ class ProductDataService
     {
         /** @var msProduct $product */
         $product = $this->modx->getObject(msProduct::class, $productId);
-
         if (!$product) {
             return null;
         }
 
         /** @var msProductData $productData */
         $productData = $product->loadData();
-
         if (!$productData) {
             return null;
         }
 
-        $productData->fromArray($data);
-
-        if ($productData->save()) {
-            return $productData->toArray();
+        $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
+        $updatedResource = false;
+        if (isset($resourceData['published'])) {
+            $published = (int)(bool)$resourceData['published'];
+            $updatedResource = $this->applyPublishedToResource($product, $published);
         }
 
-        return null;
+        $filtered = array_intersect_key($data, array_flip(self::$allowedUpdateFields));
+        $productData->fromArray($filtered);
+        if (!$productData->save()) {
+            return null;
+        }
+
+        $result = $productData->toArray();
+        if ($updatedResource) {
+            $result['published'] = (bool)$product->get('published');
+        }
+        return $result;
     }
 }

@@ -184,7 +184,9 @@ class GridConfigService
                     // price type
                     'decimals', 'currency', 'currency_position', 'thousands_separator', 'decimal_separator',
                     // weight type
-                    'unit', 'unit_position'
+                    'unit', 'unit_position',
+                    // inline edit (category-products)
+                    'editable', 'editor_type', 'editor_options',
                 ];
                 foreach ($configKeys as $key) {
                     if (array_key_exists($key, $fieldData)) {

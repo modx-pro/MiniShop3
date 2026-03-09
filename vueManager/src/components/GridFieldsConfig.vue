@@ -49,11 +49,12 @@ const newField = ref({
     },
     actions: [],
     displayConfig: '',
-    // Badge config
     badge: {
       source_field: '',
       color_field: '',
     },
+    editable: false,
+    editor_type: 'text',
   },
 })
 
@@ -93,6 +94,19 @@ const fieldTypeOptions = computed(() => [
  * Types that require display config (JSON editor)
  */
 const displayConfigTypes = ['datetime', 'price', 'weight']
+
+/**
+ * Inline edit: only for category-products grid
+ */
+const isCategoryProductsGrid = computed(() => selectedGrid.value === 'category-products')
+
+/**
+ * Editor type options for editable columns (text, number; select later)
+ */
+const editorTypeOptions = computed(() => [
+  { label: _('editor_type_text'), value: 'text' },
+  { label: _('editor_type_number'), value: 'number' },
+])
 
 /**
  * Get config hint for display type
@@ -175,6 +189,8 @@ async function loadFields() {
         decimal_separator: col.decimal_separator || '',
         unit: col.unit || '',
         unit_position: col.unit_position || '',
+        editable: col.editable === true,
+        editor_type: col.editor_type || '',
       }))
     } else {
       console.error('[GridFieldsConfig] Invalid response:', response)
@@ -231,6 +247,11 @@ async function saveConfig() {
       if (field.decimal_separator) data.decimal_separator = field.decimal_separator
       if (field.unit) data.unit = field.unit
       if (field.unit_position) data.unit_position = field.unit_position
+
+      if (selectedGrid.value === 'category-products') {
+        data.editable = field.editable === true
+        if (field.editor_type) data.editor_type = field.editor_type
+      }
 
       return data
     })
@@ -370,6 +391,8 @@ function openAddDialog() {
         source_field: '',
         color_field: '',
       },
+      editable: false,
+      editor_type: 'text',
     },
   }
   showAddDialog.value = true
@@ -457,6 +480,11 @@ async function addField() {
         break
     }
 
+    if (selectedGrid.value === 'category-products') {
+      data.config.editable = newField.value.config.editable === true
+      data.config.editor_type = newField.value.config.editor_type || 'text'
+    }
+
     const result = await request.post(`/api/mgr/grid-config/${selectedGrid.value}/field`, data)
 
     if (result.field) {
@@ -499,6 +527,8 @@ async function addField() {
         decimal_separator: config.decimal_separator || '',
         unit: config.unit || '',
         unit_position: config.unit_position || '',
+        editable: config.editable === true,
+        editor_type: config.editor_type || '',
       })
     }
 
@@ -599,6 +629,8 @@ function openEditDialog(field, index) {
       ],
       displayConfig: displayConfig,
       badge: badgeConfig,
+      editable: field.editable === true,
+      editor_type: field.editor_type || 'text',
     },
   }
 
@@ -686,6 +718,11 @@ async function saveEdit() {
         break
     }
 
+    if (selectedGrid.value === 'category-products') {
+      data.config.editable = editingField.value.config.editable === true
+      data.config.editor_type = editingField.value.config.editor_type || 'text'
+    }
+
     const result = await request.put(
       `/api/mgr/grid-config/${selectedGrid.value}/field/${editingField.value.field_name}`,
       data
@@ -731,6 +768,8 @@ async function saveEdit() {
         decimal_separator: config.decimal_separator || '',
         unit: config.unit || '',
         unit_position: config.unit_position || '',
+        editable: config.editable === true,
+        editor_type: config.editor_type || '',
       }
     }
 
@@ -781,6 +820,10 @@ onMounted(() => {
       <Button :label="_('add_field')" icon="pi pi-plus" @click="openAddDialog" />
     </div>
 
+    <p v-if="isCategoryProductsGrid" class="inline-edit-hint">
+      {{ _('inline_edit_hint') }}
+    </p>
+
     <Card>
       <template #content>
         <!-- Fields table with VueDraggable -->
@@ -796,6 +839,7 @@ onMounted(() => {
                   <th style="width: 6.25rem">{{ _('sortable') }}</th>
                   <th style="width: 6.25rem">{{ _('filterable') }}</th>
                   <th style="width: 6.25rem">{{ _('frozen') }}</th>
+                  <th v-if="isCategoryProductsGrid" style="width: 6.25rem">{{ _('field_editable') }}</th>
                   <th style="width: 7.5rem">{{ _('width') }}</th>
                   <th style="width: 6.25rem">{{ _('actions') }}</th>
                 </tr>
@@ -830,6 +874,9 @@ onMounted(() => {
                     </td>
                     <td>
                       <Checkbox v-model="field.frozen" :binary="true" />
+                    </td>
+                    <td v-if="isCategoryProductsGrid">
+                      <Checkbox v-model="field.editable" :binary="true" />
                     </td>
                     <td>
                       <InputText v-model="field.width" placeholder="9.375rem" class="w-full" />
@@ -1038,6 +1085,29 @@ onMounted(() => {
         <small class="text-muted"
           >{{ _('field_display_config_hint') }}: {{ getConfigHint(newField.type) }}</small
         >
+      </div>
+
+      <!-- Inline edit (category-products only) -->
+      <div v-if="isCategoryProductsGrid" class="field mb-3">
+        <div class="flex align-items-center mb-2">
+          <Checkbox
+            v-model="newField.config.editable"
+            input-id="new-field-editable"
+            :binary="true"
+          />
+          <label for="new-field-editable" class="ml-2 cursor-pointer">{{ _('field_editable') }}</label>
+        </div>
+        <div v-if="newField.config.editable" class="ml-4">
+          <label for="new-field-editor-type">{{ _('editor_type') }}</label>
+          <Select
+            id="new-field-editor-type"
+            v-model="newField.config.editor_type"
+            :options="editorTypeOptions"
+            option-label="label"
+            option-value="value"
+            class="w-full mt-1"
+          />
+        </div>
       </div>
 
       <!-- General settings -->
@@ -1282,6 +1352,29 @@ onMounted(() => {
           >
         </div>
 
+        <!-- Inline edit (category-products only) -->
+        <div v-if="isCategoryProductsGrid" class="field mb-3">
+          <div class="flex align-items-center mb-2">
+            <Checkbox
+              v-model="editingField.config.editable"
+              input-id="edit-field-editable"
+              :binary="true"
+            />
+            <label for="edit-field-editable" class="ml-2 cursor-pointer">{{ _('field_editable') }}</label>
+          </div>
+          <div v-if="editingField.config.editable" class="ml-4">
+            <label for="edit-field-editor-type">{{ _('editor_type') }}</label>
+            <Select
+              id="edit-field-editor-type"
+              v-model="editingField.config.editor_type"
+              :options="editorTypeOptions"
+              option-label="label"
+              option-value="value"
+              class="w-full mt-1"
+            />
+          </div>
+        </div>
+
         <!-- General settings -->
         <div class="field mb-3">
           <label for="edit-field-width">{{ _('width') }}</label>
@@ -1435,5 +1528,14 @@ label.opacity-50 {
 
 .font-mono {
   font-family: monospace;
+}
+
+.inline-edit-hint {
+  margin: -0.5rem 0 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ms3-bg-muted, #f0f4f8);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--ms3-text-muted, #64748b);
 }
 </style>
