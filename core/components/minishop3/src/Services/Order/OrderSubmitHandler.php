@@ -131,7 +131,7 @@ class OrderSubmitHandler
         $validatedFields = $orderData['properties']['_validated'] ?? [];
         $errors = [];
         foreach ($requires as $field => $rules) {
-            if (empty($orderData[$field]) && empty($orderData['address_' . $field]) && empty($validatedFields[$field])) {
+            if (empty($orderData[$field]) && empty($orderData['address_' . $field]) && !isset($validatedFields[$field])) {
                 $errors[] = $field;
             }
         }
