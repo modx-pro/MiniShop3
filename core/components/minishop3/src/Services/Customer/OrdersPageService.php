@@ -5,9 +5,8 @@ namespace MiniShop3\Services\Customer;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderStatus;
-use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
-use MiniShop3\Model\msProductOption;
+use MODX\Revolution\modResource;
 
 /**
  * OrdersPageService - customer order history page service
@@ -118,15 +117,11 @@ class OrdersPageService extends CustomerPageService
         // Count total orders
         $total = $this->modx->getCount(msOrder::class, $where);
 
-        // Get orders with JOIN to status
+        [$statusMap, $statusesData] = $this->loadStatusData($statusFilter);
+
+        // Get orders
         $query = $this->modx->newQuery(msOrder::class);
         $query->where($where);
-        $query->leftJoin(msOrderStatus::class, 'Status', 'Status.id = msOrder.status_id');
-        $query->select($this->modx->getSelectColumns(msOrder::class, 'msOrder'));
-        $query->select([
-            'Status.name as status_name',
-            'Status.color as status_color',
-        ]);
         $query->sortby('msOrder.createdon', 'DESC');
         $query->limit($limit, $offset);
 
@@ -138,32 +133,16 @@ class OrdersPageService extends CustomerPageService
             $orderData = $order->toArray();
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
-
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
 
-            if (!empty($orderData['status_name'])) {
-                $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
-            }
+            $statusId = (int) $orderData['status_id'];
+            $orderData['status_name'] = $statusMap[$statusId]['name'] ?? '';
+            $orderData['status_color'] = $statusMap[$statusId]['color'] ?? '';
 
             $orderData['can_cancel'] = $this->isOrderCancellableByCustomer($order);
 
             $chunk = $this->pdoFetch->getChunk($orderTpl, $orderData);
             $ordersData[] = is_string($chunk) ? $chunk : '';
-        }
-
-        $statusQuery = $this->modx->newQuery(msOrderStatus::class);
-        $statusQuery->where(['id:!=' => 1]);
-        $statusQuery->sortby('position', 'ASC');
-        $statuses = $this->modx->getIterator(msOrderStatus::class, $statusQuery);
-        $statusesData = [];
-        /** @var msOrderStatus $status */
-        foreach ($statuses as $status) {
-            $statusesData[] = [
-                'id' => $status->get('id'),
-                'name' => $this->translateStatusName($status->get('name')),
-                'color' => $status->get('color'),
-                'selected' => $status->get('id') == $statusFilter,
-            ];
         }
 
         $pagination = $this->buildPagination($total, $limit, $offset);
@@ -253,27 +232,57 @@ class OrdersPageService extends CustomerPageService
     {
         $query = $this->modx->newQuery(msOrderProduct::class);
         $query->where(['order_id' => $orderId]);
-        $query->leftJoin(msProduct::class, 'Product', 'Product.id = msOrderProduct.product_id');
-        $query->leftJoin(msProductData::class, 'Data', 'Data.id = msOrderProduct.product_id');
-        $query->select($this->modx->getSelectColumns(msOrderProduct::class, 'msOrderProduct'));
-        $query->select([
-            'Product.pagetitle',
-            'Product.uri',
-            'Data.article',
-            'Data.price as original_price',
-        ]);
         $query->sortby('msOrderProduct.id', 'ASC');
 
         /** @var msOrderProduct[] $orderProducts */
         $orderProducts = $this->modx->getCollection(msOrderProduct::class, $query);
 
+        // Collect product IDs for batch loading
+        $productIds = [];
+        foreach ($orderProducts as $op) {
+            $productIds[] = (int) $op->get('product_id');
+        }
+        $productIds = array_unique($productIds);
+
+        // Batch load product info (pagetitle, uri) and product data (article, old_price)
+        $productMap = [];
+        $dataMap = [];
+        if (!empty($productIds)) {
+            $resQuery = $this->modx->newQuery(modResource::class);
+            $resQuery->where(['id:IN' => $productIds]);
+            foreach ($this->modx->getIterator(modResource::class, $resQuery) as $res) {
+                $productMap[$res->get('id')] = [
+                    'pagetitle' => $res->get('pagetitle'),
+                    'uri' => $res->get('uri'),
+                ];
+            }
+
+            $dataQuery = $this->modx->newQuery(msProductData::class);
+            $dataQuery->where(['id:IN' => $productIds]);
+            foreach ($this->modx->getIterator(msProductData::class, $dataQuery) as $data) {
+                $dataMap[$data->get('id')] = [
+                    'article' => $data->get('article'),
+                    'original_price' => (float) $data->get('price'),
+                    'old_price' => (float) $data->get('old_price'),
+                ];
+            }
+        }
+
         $products = [];
         foreach ($orderProducts as $orderProduct) {
             $productData = $orderProduct->toArray();
+            $pid = (int) $productData['product_id'];
 
-            $old_price = $productData['original_price'] > $productData['price']
-                ? $productData['original_price']
-                : $productData['old_price'];
+            $productData['pagetitle'] = $productMap[$pid]['pagetitle'] ?? $productData['name'];
+            $productData['uri'] = $productMap[$pid]['uri'] ?? '';
+            $productData['article'] = $dataMap[$pid]['article'] ?? '';
+
+            $originalPrice = $dataMap[$pid]['original_price'] ?? 0;
+            $catalogOldPrice = $dataMap[$pid]['old_price'] ?? 0;
+
+            $old_price = $originalPrice > $productData['price']
+                ? $originalPrice
+                : $catalogOldPrice;
 
             $discount_price = $old_price > 0 ? $old_price - $productData['price'] : 0;
 
@@ -319,15 +328,11 @@ class OrdersPageService extends CustomerPageService
         // Count total orders
         $total = $this->modx->getCount(msOrder::class, $where);
 
-        // Get orders with JOIN to status
+        [$statusMap, $statusesData] = $this->loadStatusData($statusFilter);
+
+        // Get orders
         $query = $this->modx->newQuery(msOrder::class);
         $query->where($where);
-        $query->leftJoin(msOrderStatus::class, 'Status', 'Status.id = msOrder.status_id');
-        $query->select($this->modx->getSelectColumns(msOrder::class, 'msOrder'));
-        $query->select([
-            'Status.name as status_name',
-            'Status.color as status_color',
-        ]);
         $query->sortby('msOrder.createdon', 'DESC');
         $query->limit($limit, $offset);
 
@@ -339,31 +344,15 @@ class OrdersPageService extends CustomerPageService
             $orderData = $order->toArray();
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
-
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
 
-            if (!empty($orderData['status_name'])) {
-                $orderData['status_name'] = $this->translateStatusName($orderData['status_name']);
-            }
+            $statusId = (int) $orderData['status_id'];
+            $orderData['status_name'] = $statusMap[$statusId]['name'] ?? '';
+            $orderData['status_color'] = $statusMap[$statusId]['color'] ?? '';
 
             $orderData['can_cancel'] = $this->isOrderCancellableByCustomer($order);
 
             $ordersData[] = $orderData;
-        }
-
-        $statusQuery = $this->modx->newQuery(msOrderStatus::class);
-        $statusQuery->where(['id:!=' => 1]);
-        $statusQuery->sortby('position', 'ASC');
-        $statuses = $this->modx->getIterator(msOrderStatus::class, $statusQuery);
-        $statusesData = [];
-        /** @var msOrderStatus $status */
-        foreach ($statuses as $status) {
-            $statusesData[] = [
-                'id' => $status->get('id'),
-                'name' => $this->translateStatusName($status->get('name')),
-                'color' => $status->get('color'),
-                'selected' => $status->get('id') == $statusFilter,
-            ];
         }
 
         $pagination = $this->buildPagination($total, $limit, $offset);
@@ -477,6 +466,40 @@ class OrdersPageService extends CustomerPageService
         $orderStatusService = $this->modx->services->get('ms3_order_status');
         $allowedIds = $orderStatusService->getAllowedCancelStatusIds();
         return in_array((int) $order->get('status_id'), $allowedIds, true);
+    }
+
+    /**
+     * Pre-load all order statuses into a map and filter dropdown data
+     *
+     * @param int|null $statusFilter Active status filter ID
+     * @return array{0: array, 1: array} [statusMap, statusesData]
+     */
+    private function loadStatusData(?int $statusFilter): array
+    {
+        $statusQuery = $this->modx->newQuery(msOrderStatus::class);
+        $statusQuery->sortby('position', 'ASC');
+        $allStatuses = $this->modx->getIterator(msOrderStatus::class, $statusQuery);
+
+        $statusMap = [];
+        $statusesData = [];
+        /** @var msOrderStatus $status */
+        foreach ($allStatuses as $status) {
+            $sid = $status->get('id');
+            $statusMap[$sid] = [
+                'name' => $this->translateStatusName($status->get('name')),
+                'color' => $status->get('color'),
+            ];
+            if ($sid != 1) {
+                $statusesData[] = [
+                    'id' => $sid,
+                    'name' => $statusMap[$sid]['name'],
+                    'color' => $status->get('color'),
+                    'selected' => $sid == $statusFilter,
+                ];
+            }
+        }
+
+        return [$statusMap, $statusesData];
     }
 
     /**
