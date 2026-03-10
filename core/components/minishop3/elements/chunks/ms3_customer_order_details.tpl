@@ -22,7 +22,7 @@
                         {'ms3_customer_order_cancel' | lexicon}
                     </button>
                     {/if}
-                    <span class="badge bg-light text-dark" style="color: {$order.status_color} !important;">
+                    <span class="badge bg-light text-dark"{if $order.status_color} style="color: #{$order.status_color} !important;"{/if}>
                         {$order.status_name}
                     </span>
                 </div>

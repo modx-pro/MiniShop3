@@ -8,7 +8,7 @@
         {$createdon_formatted}
     </td>
     <td>
-        <span class="badge" style="background-color: {$status_color};">
+        <span class="badge"{if $status_color} style="background-color: #{$status_color};"{/if}>
             {$status_name}
         </span>
     </td>
