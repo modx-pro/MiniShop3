@@ -388,6 +388,12 @@ class CustomersController
                 continue;
             }
 
+            // Ensure table prefix is present (fallback for configs saved without prefix)
+            $tablePrefix = $this->modx->config['table_prefix'] ?? '';
+            if ($tablePrefix !== '' && strpos($relationTable, $tablePrefix) !== 0) {
+                $relationTable = $tablePrefix . $relationTable;
+            }
+
             if ($aggregation) {
                 $selectExpr = "{$aggregation}({$relationTable}.{$displayField})";
             } else {
