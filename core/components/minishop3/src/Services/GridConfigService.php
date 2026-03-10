@@ -186,7 +186,8 @@ class GridConfigService
                     // weight type
                     'unit', 'unit_position',
                     // inline edit (category-products)
-                    'editable', 'editor_type', 'editor_options',
+                    'editable', 'editor_type',
+                    'editor_options', // TODO: select editor - not yet implemented in UI
                 ];
                 foreach ($configKeys as $key) {
                     if (array_key_exists($key, $fieldData)) {

@@ -497,6 +497,7 @@ class ProductDataService
 
     /**
      * Apply published state to product resource and save.
+     * Invokes OnDocPublished / OnDocUnPublished for plugin compatibility.
      *
      * @param msProduct $product
      * @param int $published 0 or 1
@@ -512,7 +513,15 @@ class ProductDataService
             $product->set('publishedon', 0);
             $product->set('publishedby', 0);
         }
-        return $product->save();
+        if (!$product->save()) {
+            return false;
+        }
+        $eventName = $published ? 'OnDocPublished' : 'OnDocUnPublished';
+        $this->modx->invokeEvent($eventName, [
+            'id' => $product->get('id'),
+            'resource' => $product,
+        ]);
+        return true;
     }
 
     /**

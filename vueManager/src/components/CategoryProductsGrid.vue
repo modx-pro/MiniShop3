@@ -11,7 +11,7 @@ import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, defineProps, onMounted, ref, watch } from 'vue'
+import { computed, defineProps, nextTick, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 
 import { useSelection } from '../composables/useSelection.js'
@@ -70,6 +70,8 @@ const selectAll = ref(false)
 const editingCell = ref(null)
 /** Current value in the inline edit input */
 const inlineEditValue = ref('')
+/** True while inline edit save request is in progress */
+const inlineEditSaving = ref(false)
 
 // Default thumbnail from system settings
 
@@ -368,6 +370,11 @@ function startInlineEdit(product, column) {
   editingCell.value = { productId: product.id, columnName: column.name }
   const raw = product[column.name]
   inlineEditValue.value = raw === null || raw === undefined ? '' : raw
+  // autofocus doesn't work on dynamically inserted elements; focus after DOM update
+  nextTick(() => {
+    const input = document.querySelector('.inline-edit-cell input')
+    if (input) input.focus()
+  })
 }
 
 function isBooleanColumn(column) {
@@ -407,16 +414,19 @@ function clearInlineEditState() {
 
 /**
  * Save inline edit (blur or Enter). No API call or toast if value unchanged.
+ * Uses isSaving flag to prevent double invocation (Enter triggers blur).
  */
 async function saveInlineEdit(product, column) {
   if (!editingCell.value || editingCell.value.productId !== product.id || editingCell.value.columnName !== column.name) {
     return
   }
+  if (inlineEditSaving.value) return
   const value = normalizeValueForSave(inlineEditValue.value, column)
   if (isInlineValueUnchanged(product[column.name], value, column)) {
     clearInlineEditState()
     return
   }
+  inlineEditSaving.value = true
   try {
     await request.put(`/api/mgr/product-data/${product.id}`, { [column.name]: value })
     product[column.name] = value
@@ -425,6 +435,8 @@ async function saveInlineEdit(product, column) {
     console.error('[CategoryProductsGrid] Inline edit save failed:', error)
     toast.add({ severity: 'error', summary: _('error'), detail: error.message || _('inline_edit_error'), life: 5000 })
     return
+  } finally {
+    inlineEditSaving.value = false
   }
   clearInlineEditState()
 }
@@ -1013,12 +1025,13 @@ onMounted(async () => {
                       <td
                         v-else-if="column.editable && isEditingCell(product, column)"
                         :style="{ width: column.width, minWidth: column.minWidth }"
-                        class="inline-edit-cell"
+                        :class="['inline-edit-cell', { 'inline-edit-saving': inlineEditSaving }]"
                       >
                         <Checkbox
                           v-if="isBooleanColumn(column)"
                           :model-value="!!inlineEditValue"
                           :binary="true"
+                          :disabled="inlineEditSaving"
                           @update:model-value="inlineEditValue = $event ? 1 : 0"
                           @change="saveInlineEdit(product, column)"
                         />
@@ -1026,9 +1039,9 @@ onMounted(async () => {
                           v-else-if="(column.editor_type || 'text') === 'text'"
                           v-model="inlineEditValue"
                           class="w-full"
-                          autofocus
+                          :disabled="inlineEditSaving"
                           @blur="saveInlineEdit(product, column)"
-                          @keydown.enter="saveInlineEdit(product, column)"
+                          @keydown.enter.prevent="$event.target.blur()"
                           @keydown.escape="cancelInlineEdit"
                         />
                         <InputNumber
@@ -1037,9 +1050,9 @@ onMounted(async () => {
                           class="w-full"
                           :min-fraction-digits="0"
                           :max-fraction-digits="4"
-                          autofocus
+                          :disabled="inlineEditSaving"
                           @blur="saveInlineEdit(product, column)"
-                          @keydown.enter="saveInlineEdit(product, column)"
+                          @keydown.enter.prevent="$event.target.blur()"
                           @keydown.escape="cancelInlineEdit"
                         />
                       </td>
@@ -1175,6 +1188,14 @@ onMounted(async () => {
 .inline-edit-cell :deep(input) {
   width: 100%;
   min-width: 0;
+}
+
+.inline-edit-saving {
+  opacity: 0.8;
+}
+
+.inline-edit-saving :deep(input) {
+  cursor: wait;
 }
 
 .grid-header {
