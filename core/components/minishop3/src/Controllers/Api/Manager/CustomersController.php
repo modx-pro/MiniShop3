@@ -388,6 +388,16 @@ class CustomersController
                 continue;
             }
 
+            // Fallback for configs saved before table prefix fix — can be removed
+            // after all existing relation configs are re-saved via utility page
+            $tablePrefix = $this->modx->config['table_prefix'] ?? '';
+            if ($tablePrefix !== ''
+                && !str_starts_with($relationTable, $tablePrefix)
+                && !str_starts_with($relationTable, '`')
+            ) {
+                $relationTable = $tablePrefix . $relationTable;
+            }
+
             if ($aggregation) {
                 $selectExpr = "{$aggregation}({$relationTable}.{$displayField})";
             } else {

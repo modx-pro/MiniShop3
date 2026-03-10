@@ -584,7 +584,11 @@ class GridConfigService
                 return ['success' => false, 'message' => "Invalid model class: {$tableOrModel}. " . $e->getMessage()];
             }
         } else {
-            // This is direct table name - use as is
+            // This is direct table name - add table prefix if not already present
+            $tablePrefix = $this->modx->config['table_prefix'] ?? '';
+            if ($tablePrefix !== '' && !str_starts_with($tableOrModel, $tablePrefix)) {
+                $tableOrModel = $tablePrefix . $tableOrModel;
+            }
             $config['relation']['resolvedTableName'] = $tableOrModel;
         }
 
