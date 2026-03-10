@@ -34,6 +34,8 @@ class CustomersController
         $start = (int)($params['start'] ?? 0);
         $limit = (int)($params['limit'] ?? 20);
         $query = trim($params['query'] ?? '');
+        $sort = $params['sort'] ?? 'id';
+        $dir = strtoupper($params['dir'] ?? 'DESC');
 
         $gridConfig = $this->modx->services->get('ms3_grid_config');
         $gridFields = $gridConfig ? $gridConfig->getGridConfig('customers') : [];
@@ -41,37 +43,39 @@ class CustomersController
         $relationFields = $this->extractRelationFields($gridFields);
         $computedFields = $this->extractComputedFields($gridFields);
 
-        $criteria = [];
+        $c = $this->modx->newQuery(msCustomer::class);
 
         if (!empty($query)) {
-            $criteria[] = [
+            $c->where([
                 'first_name:LIKE' => "%{$query}%",
                 'OR:last_name:LIKE' => "%{$query}%",
                 'OR:email:LIKE' => "%{$query}%",
                 'OR:phone:LIKE' => "%{$query}%",
-            ];
+            ]);
         }
 
         foreach ($params as $key => $value) {
-            if (strpos($key, 'filter_') === 0 && !empty($value)) {
+            if (str_starts_with($key, 'filter_') && !empty($value)) {
                 $fieldName = substr($key, 7);
 
                 if ($fieldName === 'active') {
-                    $criteria['is_active'] = (int)$value;
+                    $c->where(['is_active' => (int)$value]);
                 } else {
-                    $criteria[$fieldName . ':LIKE'] = "%{$value}%";
+                    $c->where([$fieldName . ':LIKE' => "%{$value}%"]);
                 }
             }
         }
 
-        $total = $this->modx->getCount(msCustomer::class, $criteria);
+        $total = $this->modx->getCount(msCustomer::class, $c);
 
-        $customers = $this->modx->getIterator(msCustomer::class, $criteria, [
-            'limit' => $limit,
-            'offset' => $start,
-            'sortby' => 'id',
-            'sortdir' => 'DESC'
-        ]);
+        $sortField = $this->mapSortField($sort);
+        if (!in_array($dir, ['ASC', 'DESC'])) {
+            $dir = 'DESC';
+        }
+        $c->sortby($sortField, $dir);
+        $c->limit($limit, $start);
+
+        $customers = $this->modx->getIterator(msCustomer::class, $c);
 
         $results = [];
 
@@ -279,6 +283,33 @@ class CustomersController
             'deleted' => $deleted,
             'failed' => $failed
         ], "Deleted {$deleted} customers")->getData();
+    }
+
+    /**
+     * Map sort field name to safe column reference
+     *
+     * @param string $sort Field name from request
+     * @return string Safe column reference for ORDER BY
+     */
+    protected function mapSortField(string $sort): string
+    {
+        $mapping = [
+            'id' => 'msCustomer.id',
+            'first_name' => 'msCustomer.first_name',
+            'last_name' => 'msCustomer.last_name',
+            'email' => 'msCustomer.email',
+            'phone' => 'msCustomer.phone',
+            'is_active' => 'msCustomer.is_active',
+            'is_blocked' => 'msCustomer.is_blocked',
+            'created_at' => 'msCustomer.created_at',
+            'updated_at' => 'msCustomer.updated_at',
+            'last_login_at' => 'msCustomer.last_login_at',
+            'orders_count' => 'msCustomer.orders_count',
+            'total_spent' => 'msCustomer.total_spent',
+            'last_order_at' => 'msCustomer.last_order_at',
+        ];
+
+        return $mapping[$sort] ?? 'msCustomer.id';
     }
 
     /**
