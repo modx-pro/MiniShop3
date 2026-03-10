@@ -388,9 +388,13 @@ class CustomersController
                 continue;
             }
 
-            // Ensure table prefix is present (fallback for configs saved without prefix)
+            // Fallback for configs saved before table prefix fix — can be removed
+            // after all existing relation configs are re-saved via utility page
             $tablePrefix = $this->modx->config['table_prefix'] ?? '';
-            if ($tablePrefix !== '' && strpos($relationTable, $tablePrefix) !== 0) {
+            if ($tablePrefix !== ''
+                && !str_starts_with($relationTable, $tablePrefix)
+                && !str_starts_with($relationTable, '`')
+            ) {
                 $relationTable = $tablePrefix . $relationTable;
             }
 

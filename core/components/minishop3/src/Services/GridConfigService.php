@@ -586,7 +586,7 @@ class GridConfigService
         } else {
             // This is direct table name - add table prefix if not already present
             $tablePrefix = $this->modx->config['table_prefix'] ?? '';
-            if ($tablePrefix !== '' && strpos($tableOrModel, $tablePrefix) !== 0) {
+            if ($tablePrefix !== '' && !str_starts_with($tableOrModel, $tablePrefix)) {
                 $tableOrModel = $tablePrefix . $tableOrModel;
             }
             $config['relation']['resolvedTableName'] = $tableOrModel;
