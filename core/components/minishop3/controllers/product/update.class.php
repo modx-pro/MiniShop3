@@ -153,7 +153,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'canDuplicate' => (int) $this->canDuplicate,
             'canDelete' => (int) $this->canDelete,
             'canPublish' => (int) $this->canPublish,
-            'show_tvs' => !empty($this->tvCounts),
+            'show_tvs' => (int) !empty($this->tvCounts),
             'next_page' => !empty($neighborhood['right'][0])
                 ? $neighborhood['right'][0]
                 : 0,
