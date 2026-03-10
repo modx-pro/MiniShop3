@@ -47,6 +47,8 @@ const customers = ref([])
 const totalRecords = ref(0)
 const first = ref(0)
 const rows = ref(20)
+const sortField = ref('id')
+const sortOrder = ref(-1)
 const filterValues = ref({})
 const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
 const searchQuery = ref('')
@@ -73,6 +75,8 @@ async function loadCustomers() {
     const params = {
       start: first.value,
       limit: rows.value,
+      sort: sortField.value,
+      dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
     }
 
     if (searchQuery.value) {
@@ -115,6 +119,16 @@ async function loadCustomers() {
 function onPage(event) {
   first.value = event.first
   rows.value = event.rows
+  loadCustomers()
+}
+
+/**
+ * Handle sort
+ */
+function onSort(event) {
+  sortField.value = event.sortField || 'id'
+  sortOrder.value = event.sortOrder ?? -1
+  first.value = 0
   loadCustomers()
 }
 
@@ -722,10 +736,13 @@ onMounted(async () => {
           :rows="rows"
           :total-records="totalRecords"
           :lazy="true"
+          :sort-field="sortField"
+          :sort-order="sortOrder"
           data-key="id"
           striped-rows
           responsive-layout="scroll"
           @page="onPage"
+          @sort="onSort"
         >
           <!-- Selection checkbox column -->
           <Column selection-mode="multiple" header-style="width: 3rem" frozen></Column>
