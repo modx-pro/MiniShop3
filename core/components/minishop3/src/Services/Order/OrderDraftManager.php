@@ -268,9 +268,36 @@ class OrderDraftManager
         }
 
         // Handle save_address in properties
-        if ($key === 'save_address' && !empty($value)) {
+        if ($key === 'save_address') {
             $properties = $draft->get('properties') ?? [];
-            $properties['save_address'] = 1;
+            if (!empty($value)) {
+                $properties['save_address'] = 1;
+            } else {
+                unset($properties['save_address']);
+            }
+            $draft->set('properties', $properties);
+            $draft->set('updatedon', time());
+            $draft->save();
+            $updated = true;
+        }
+
+        // Fallback: save non-model fields to properties['_validated']
+        if (!$updated) {
+            $properties = $draft->get('properties') ?? [];
+            $validated = $properties['_validated'] ?? [];
+
+            if ($value === null || $value === '') {
+                unset($validated[$key]);
+            } else {
+                $validated[$key] = $value;
+            }
+
+            if (empty($validated)) {
+                unset($properties['_validated']);
+            } else {
+                $properties['_validated'] = $validated;
+            }
+
             $draft->set('properties', $properties);
             $draft->set('updatedon', time());
             $draft->save();

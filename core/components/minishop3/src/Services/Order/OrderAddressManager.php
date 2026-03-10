@@ -114,12 +114,12 @@ class OrderAddressManager
      *
      * @param int $customerId Customer ID
      * @param array $orderData Order data with address fields
-     * @return msCustomerAddress|null Created address or null on failure
+     * @return bool True on success, false on failure or duplicate
      */
-    public function saveToCustomerAddresses(int $customerId, array $orderData): ?msCustomerAddress
+    public function saveToCustomerAddresses(int $customerId, array $orderData): bool
     {
         if (empty($customerId)) {
-            return null;
+            return false;
         }
 
         $addressData = [

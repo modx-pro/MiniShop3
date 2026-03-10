@@ -71,12 +71,13 @@ class OrderUI {
         feedback.textContent = ''
       }
 
-      const response = await this.handleAdd(input.name, input.value)
+      const value = input.type === 'checkbox' ? (input.checked ? '1' : '0') : input.value
+      const response = await this.handleAdd(input.name, value)
 
       if (response.success) {
         parent.classList.add('was-validated')
 
-        if (response.data && response.data[input.name] !== undefined) {
+        if (input.type !== 'checkbox' && response.data && response.data[input.name] !== undefined) {
           input.value = response.data[input.name]
         }
       } else {
