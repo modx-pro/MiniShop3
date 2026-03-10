@@ -128,9 +128,10 @@ class OrderSubmitHandler
         }
 
         $requires = $requiredResponse['data']['requires'];
+        $validatedFields = $orderData['properties']['_validated'] ?? [];
         $errors = [];
         foreach ($requires as $field => $rules) {
-            if (empty($orderData[$field]) && empty($orderData['address_' . $field])) {
+            if (empty($orderData[$field]) && empty($orderData['address_' . $field]) && empty($validatedFields[$field])) {
                 $errors[] = $field;
             }
         }
@@ -197,10 +198,14 @@ class OrderSubmitHandler
             $this->addressManager->saveToCustomerAddresses($customerId, $orderData);
         }
 
+        // Extract custom validated fields before events
+        $customFields = $properties['_validated'] ?? [];
+
         // Event: before create order
         $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateOrder', [
             'handler' => $this,
             'msOrder' => $draft,
+            'customFields' => $customFields,
         ]);
 
         if (!$response['success']) {
@@ -211,10 +216,19 @@ class OrderSubmitHandler
         $response = $this->ms3->utils->invokeEvent('msOnCreateOrder', [
             'handler' => $this,
             'msOrder' => $draft,
+            'customFields' => $customFields,
         ]);
 
         if (!$response['success']) {
             return $this->error($response['message']);
+        }
+
+        // Clean up _validated from properties
+        if (!empty($customFields)) {
+            $properties = $draft->get('properties') ?? [];
+            unset($properties['_validated']);
+            $draft->set('properties', $properties);
+            $draft->save();
         }
 
         // Store order in session

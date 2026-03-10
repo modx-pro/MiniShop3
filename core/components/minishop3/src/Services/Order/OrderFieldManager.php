@@ -66,7 +66,7 @@ class OrderFieldManager
         $value = $response['data']['value'];
 
         // Empty value = remove field
-        if (empty($value)) {
+        if ($value === null || $value === '') {
             if ($draft) {
                 $this->remove($draft, $orderData, $key);
             }
@@ -142,8 +142,12 @@ class OrderFieldManager
      */
     public function remove(msOrder $draft, array $orderData, string $key): bool
     {
+        $properties = $draft->get('properties') ?? [];
+        $existsInValidated = isset($properties['_validated'][$key]);
+
         $exists = array_key_exists($key, $orderData)
-            || array_key_exists('address_' . $key, $orderData);
+            || array_key_exists('address_' . $key, $orderData)
+            || $existsInValidated;
 
         if ($exists) {
             $response = $this->ms3->utils->invokeEvent('msOnBeforeRemoveFromOrder', [
