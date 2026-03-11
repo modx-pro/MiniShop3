@@ -147,6 +147,8 @@ class OrdersPageService extends CustomerPageService
 
         $pagination = $this->buildPagination($total, $limit, $offset);
 
+        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+
         $data = [
             'orders' => implode("\n", $ordersData),
             'orders_count' => count($ordersData),
@@ -156,6 +158,7 @@ class OrdersPageService extends CustomerPageService
             'customer' => $this->customer->toArray(),
             'api_url' => $this->getCustomerApiUrl(),
             'assets_url' => $this->ms3->config['assetsUrl'],
+            'page_url' => $pageUrl,
         ];
 
         $chunk = $this->pdoFetch->getChunk($tpl, $data);
@@ -357,6 +360,8 @@ class OrdersPageService extends CustomerPageService
 
         $pagination = $this->buildPagination($total, $limit, $offset);
 
+        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+
         return [
             'orders' => $ordersData,
             'orders_count' => count($ordersData),
@@ -364,6 +369,7 @@ class OrdersPageService extends CustomerPageService
             'statuses' => $statusesData,
             'pagination' => $pagination,
             'customer' => $this->customer->toArray(),
+            'page_url' => $pageUrl,
         ];
     }
 
