@@ -145,9 +145,11 @@ class OrdersPageService extends CustomerPageService
             $ordersData[] = is_string($chunk) ? $chunk : '';
         }
 
-        $pagination = $this->buildPagination($total, $limit, $offset);
+        $resourceId = $this->modx->resource->get('id');
+        $pageUrl = $this->modx->makeUrl($resourceId, '', '', 'full');
 
-        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+        $pagination = $this->buildPagination($total, $limit, $offset);
+        $this->enrichPaginationWithUrls($pagination, $resourceId, $statusFilter);
 
         $data = [
             'orders' => implode("\n", $ordersData),
@@ -358,9 +360,11 @@ class OrdersPageService extends CustomerPageService
             $ordersData[] = $orderData;
         }
 
-        $pagination = $this->buildPagination($total, $limit, $offset);
+        $resourceId = $this->modx->resource->get('id');
+        $pageUrl = $this->modx->makeUrl($resourceId, '', '', 'full');
 
-        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+        $pagination = $this->buildPagination($total, $limit, $offset);
+        $this->enrichPaginationWithUrls($pagination, $resourceId, $statusFilter);
 
         return [
             'orders' => $ordersData,
@@ -423,6 +427,44 @@ class OrdersPageService extends CustomerPageService
             'api_url' => $this->getCustomerApiUrl(),
             'assets_url' => $this->ms3->config['assetsUrl'],
         ];
+    }
+
+    /**
+     * Add absolute URLs to pagination entries
+     *
+     * Builds URLs via makeUrl() so that:
+     * - active status filter is preserved across pages
+     * - URLs are valid regardless of friendly_urls setting
+     *
+     * @param array $pagination Pagination data from buildPagination()
+     * @param int $resourceId Current resource ID
+     * @param int|null $statusFilter Active status filter ID
+     */
+    private function enrichPaginationWithUrls(array &$pagination, int $resourceId, ?int $statusFilter): void
+    {
+        $filterParams = $statusFilter ? ['status' => $statusFilter] : [];
+
+        foreach ($pagination['pages'] as &$page) {
+            $params = $page['offset'] > 0 ? array_merge($filterParams, ['offset' => $page['offset']]) : $filterParams;
+            $page['url'] = $this->modx->makeUrl($resourceId, '', http_build_query($params), 'full');
+        }
+        unset($page);
+
+        if ($pagination['has_prev']) {
+            $params = $pagination['prev_offset'] > 0
+                ? array_merge($filterParams, ['offset' => $pagination['prev_offset']])
+                : $filterParams;
+            $pagination['prev_url'] = $this->modx->makeUrl($resourceId, '', http_build_query($params), 'full');
+        }
+
+        if ($pagination['has_next']) {
+            $pagination['next_url'] = $this->modx->makeUrl(
+                $resourceId,
+                '',
+                http_build_query(array_merge($filterParams, ['offset' => $pagination['next_offset']])),
+                'full'
+            );
+        }
     }
 
     /**

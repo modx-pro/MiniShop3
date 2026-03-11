@@ -65,7 +65,7 @@
                 <ul class="pagination justify-content-center">
                     {if $pagination.has_prev}
                     <li class="page-item">
-                        <a class="page-link" href="{$page_url}?offset={$pagination.prev_offset}">
+                        <a class="page-link" href="{$pagination.prev_url}">
                             {'ms3_customer_orders_prev' | lexicon}
                         </a>
                     </li>
@@ -73,7 +73,7 @@
 
                     {foreach $pagination.pages as $page}
                     <li class="page-item {if $page.active}active{/if}">
-                        <a class="page-link" href="{$page_url}?offset={$page.offset}">
+                        <a class="page-link" href="{$page.url}">
                             {$page.num}
                         </a>
                     </li>
@@ -81,7 +81,7 @@
 
                     {if $pagination.has_next}
                     <li class="page-item">
-                        <a class="page-link" href="{$page_url}?offset={$pagination.next_offset}">
+                        <a class="page-link" href="{$pagination.next_url}">
                             {'ms3_customer_orders_next' | lexicon}
                         </a>
                     </li>
