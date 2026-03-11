@@ -133,13 +133,8 @@ class msProductCreateManagerController extends msResourceCreateController
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
             'publish_document' => $this->canPublish,
-            'canSave' => $this->canSave,
-            'canEdit' => $this->canEdit,
-            'canCreate' => $this->canCreate,
-            'canDuplicate' => $this->canDuplicate,
-            'canDelete' => $this->canDelete,
-            'canPublish' => $this->canPublish,
-            'show_tvs' => !empty($this->tvCounts),
+            'canSave' => (int) ($this->canSave && $this->modx->hasPermission('msproduct_save')),
+            'show_tvs' => (int) !empty($this->tvCounts),
             'mode' => 'create',
         ];
 

@@ -71,8 +71,8 @@ class msCategoryCreateManagerController extends msResourceCreateController
                 'isfolder' => true,
             ]),
             'publish_document' => $this->canPublish,
-            'canSave' => $this->modx->hasPermission('mscategory_save'),
-            'show_tvs' => !empty($this->tvCounts),
+            'canSave' => (int) ($this->canSave && $this->modx->hasPermission('mscategory_save')),
+            'show_tvs' => (int) !empty($this->tvCounts),
             'mode' => 'create',
         ];
 
