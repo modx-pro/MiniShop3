@@ -143,10 +143,13 @@ class AddressesPageService extends CustomerPageService
             'customer_id' => $this->customerId,
         ]);
 
+        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+
         $addressesData = [];
         /** @var msCustomerAddress $address */
         foreach ($addresses as $address) {
             $addressData = $address->toArray();
+            $addressData['page_url'] = $pageUrl;
 
             if (empty($addressData['name'])) {
                 $parts = array_filter([
@@ -170,6 +173,7 @@ class AddressesPageService extends CustomerPageService
             'customer' => $this->customer->toArray(),
             'success' => $_SESSION['ms3']['addresses_success'] ?? null,
             'error' => $_SESSION['ms3']['addresses_error'] ?? null,
+            'page_url' => $pageUrl,
         ];
 
         unset($_SESSION['ms3']['addresses_success']);
@@ -192,11 +196,14 @@ class AddressesPageService extends CustomerPageService
             'tpl.msCustomer.address.form'
         );
 
+        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+
         $data = [
             'mode' => 'create',
             'address' => $_SESSION['ms3']['address_form_data'] ?? [],
             'errors' => $_SESSION['ms3']['address_form_errors'] ?? [],
             'customer' => $this->customer->toArray(),
+            'page_url' => $pageUrl,
         ];
 
         unset($_SESSION['ms3']['address_form_data']);
@@ -234,11 +241,14 @@ class AddressesPageService extends CustomerPageService
             'tpl.msCustomer.address.form'
         );
 
+        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+
         $data = [
             'mode' => 'edit',
             'address' => $address->toArray(),
             'errors' => $_SESSION['ms3']['address_form_errors'] ?? [],
             'customer' => $this->customer->toArray(),
+            'page_url' => $pageUrl,
         ];
 
         unset($_SESSION['ms3']['address_form_errors']);
