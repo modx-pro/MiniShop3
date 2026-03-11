@@ -16,7 +16,7 @@
         <div class="card-body">
             {* Фильтр по статусу *}
             {if $statuses}
-            <form class="mb-4" method="get" action="">
+            <form class="mb-4" method="get" action="{$page_url}">
                 <div class="row align-items-end">
                     <div class="col-md-4">
                         <label for="status-filter" class="form-label">
@@ -32,7 +32,7 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-secondary" onclick="location.href='?'">
+                        <button type="button" class="btn btn-secondary" onclick="location.href='{$page_url}'">
                             {'ms3_customer_orders_reset_filter' | lexicon}
                         </button>
                     </div>
@@ -65,7 +65,7 @@
                 <ul class="pagination justify-content-center">
                     {if $pagination.has_prev}
                     <li class="page-item">
-                        <a class="page-link" href="?offset={$pagination.prev_offset}">
+                        <a class="page-link" href="{$pagination.prev_url}">
                             {'ms3_customer_orders_prev' | lexicon}
                         </a>
                     </li>
@@ -73,7 +73,7 @@
 
                     {foreach $pagination.pages as $page}
                     <li class="page-item {if $page.active}active{/if}">
-                        <a class="page-link" href="?offset={$page.offset}">
+                        <a class="page-link" href="{$page.url}">
                             {$page.num}
                         </a>
                     </li>
@@ -81,7 +81,7 @@
 
                     {if $pagination.has_next}
                     <li class="page-item">
-                        <a class="page-link" href="?offset={$pagination.next_offset}">
+                        <a class="page-link" href="{$pagination.next_url}">
                             {'ms3_customer_orders_next' | lexicon}
                         </a>
                     </li>

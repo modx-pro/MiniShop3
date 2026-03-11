@@ -2,7 +2,7 @@
     {* Навигация назад *}
     <div class="mb-3">
         <a href="{'ms3_customer_orders_page_id' | option | url}" class="btn btn-sm btn-outline-secondary">
-            <svg width="16" height="16" fill="currentColor" class="me-1">
+            <svg width="16" height="16" fill="none" stroke="currentColor" class="me-1">
                 <use xlink:href="#icon-arrow-left"/>
             </svg>
             {'ms3_customer_orders_back' | lexicon}
@@ -84,7 +84,7 @@
                         {if $total.delivery_cost}
                         <tr>
                             <td colspan="3" class="text-end">
-                                <svg class="me-1" width="16" height="16" fill="currentColor">
+                                <svg class="me-1" width="16" height="16" fill="none" stroke="currentColor">
                                     <use xlink:href="#icon-truck"/>
                                 </svg>
                                 {'ms3_frontend_delivery' | lexicon}:
@@ -107,7 +107,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
             <h6 class="mb-0">
-                <svg class="me-1" width="16" height="16" fill="currentColor">
+                <svg class="me-1" width="16" height="16" fill="none" stroke="currentColor">
                     <use xlink:href="#icon-map-pin"/>
                 </svg>
                 {'ms3_frontend_delivery_address' | lexicon}
@@ -139,7 +139,7 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
                     <h6 class="mb-0">
-                        <svg class="me-1" width="16" height="16" fill="currentColor">
+                        <svg class="me-1" width="16" height="16" fill="none" stroke="currentColor">
                             <use xlink:href="#icon-truck"/>
                         </svg>
                         {'ms3_frontend_delivery_method' | lexicon}
@@ -160,7 +160,7 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
                     <h6 class="mb-0">
-                        <svg class="me-1" width="16" height="16" fill="currentColor">
+                        <svg class="me-1" width="16" height="16" fill="none" stroke="currentColor">
                             <use xlink:href="#icon-credit-card"/>
                         </svg>
                         {'ms3_frontend_payment_method' | lexicon}
@@ -182,7 +182,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
             <h6 class="mb-0">
-                <svg class="me-1" width="16" height="16" fill="currentColor">
+                <svg class="me-1" width="16" height="16" fill="none" stroke="currentColor">
                     <use xlink:href="#icon-message"/>
                 </svg>
                 {'ms3_frontend_comment' | lexicon}
