@@ -24,6 +24,7 @@ class CustomerAddressController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+        $this->modx->lexicon->load('minishop3:customer');
     }
 
     /**
@@ -38,7 +39,7 @@ class CustomerAddressController
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error('Customer not authorized', 401)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_not_authorized'), 401)->getData();
         }
 
         $addresses = $this->modx->getIterator(msCustomerAddress::class, [
@@ -51,7 +52,7 @@ class CustomerAddressController
             $data[] = $this->formatAddress($address);
         }
 
-        return Response::success($data, 'Addresses retrieved successfully')->getData();
+        return Response::success($data)->getData();
     }
 
     /**
@@ -66,13 +67,13 @@ class CustomerAddressController
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error('Customer not authorized', 401)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_not_authorized'), 401)->getData();
         }
 
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error('Address ID is required', 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -81,10 +82,10 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error('Address not found', 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
         }
 
-        return Response::success($this->formatAddress($address), 'Address retrieved successfully')->getData();
+        return Response::success($this->formatAddress($address))->getData();
     }
 
     /**
@@ -99,7 +100,7 @@ class CustomerAddressController
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error('Customer not authorized', 401)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_not_authorized'), 401)->getData();
         }
 
         $input = $this->getRequestData();
@@ -107,7 +108,7 @@ class CustomerAddressController
         $required = ['name', 'city', 'street'];
         foreach ($required as $field) {
             if (empty($input[$field])) {
-                return Response::error("Field '{$field}' is required", 400)->getData();
+                return Response::error($this->modx->lexicon('ms3_customer_err_field_required'), 400)->getData();
             }
         }
 
@@ -118,7 +119,7 @@ class CustomerAddressController
         ]);
 
         if ($exists) {
-            return Response::error('Address already exists', 409, [
+            return Response::error($this->modx->lexicon('ms3_customer_address_already_exists'), 409, [
                 'existing_id' => $exists->get('id')
             ])->getData();
         }
@@ -136,12 +137,12 @@ class CustomerAddressController
         }
 
         if (!$address->save()) {
-            return Response::error('Failed to save address', 500)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_address_creation_error'), 500)->getData();
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Created customer address: ' . $addressHash . ' for customer #' . $customer->get('id'));
 
-        return Response::success($this->formatAddress($address), 'Address created successfully', 201)->getData();
+        return Response::success($this->formatAddress($address), $this->modx->lexicon('ms3_customer_address_added'), 201)->getData();
     }
 
     /**
@@ -156,13 +157,13 @@ class CustomerAddressController
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error('Customer not authorized', 401)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_not_authorized'), 401)->getData();
         }
 
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error('Address ID is required', 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -171,7 +172,7 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error('Address not found', 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
         }
 
         $input = $this->getRequestData();
@@ -192,13 +193,13 @@ class CustomerAddressController
             $address->set('updatedon', date('Y-m-d H:i:s'));
 
             if (!$address->save()) {
-                return Response::error('Failed to update address', 500)->getData();
+                return Response::error($this->modx->lexicon('ms3_customer_address_update_error'), 500)->getData();
             }
 
             $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Updated customer address #' . $addressId);
         }
 
-        return Response::success($this->formatAddress($address), 'Address updated successfully')->getData();
+        return Response::success($this->formatAddress($address), $this->modx->lexicon('ms3_customer_address_updated'))->getData();
     }
 
     /**
@@ -213,13 +214,13 @@ class CustomerAddressController
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error('Customer not authorized', 401)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_not_authorized'), 401)->getData();
         }
 
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error('Address ID is required', 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -229,7 +230,7 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error('Address not found', 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
         }
 
         $table = $this->modx->getTableName(msCustomerAddress::class);
@@ -241,12 +242,12 @@ class CustomerAddressController
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
         if (!$address->save()) {
-            return Response::error('Failed to set default address', 500)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_address_default_error'), 500)->getData();
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Set default address #' . $addressId . ' for customer #' . $customer->get('id'));
 
-        return Response::success($this->formatAddress($address), 'Default address set successfully')->getData();
+        return Response::success($this->formatAddress($address), $this->modx->lexicon('ms3_customer_address_default_set'))->getData();
     }
 
     /**
@@ -261,13 +262,13 @@ class CustomerAddressController
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error('Customer not authorized', 401)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_not_authorized'), 401)->getData();
         }
 
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error('Address ID is required', 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -276,19 +277,19 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error('Address not found', 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
         }
 
         $address->set('active', 0);
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
         if (!$address->save()) {
-            return Response::error('Failed to delete address', 500)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_address_delete_error'), 500)->getData();
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Deleted customer address #' . $addressId);
 
-        return Response::success(null, 'Address deleted successfully')->getData();
+        return Response::success(null, $this->modx->lexicon('ms3_customer_address_deleted'))->getData();
     }
 
     /**
