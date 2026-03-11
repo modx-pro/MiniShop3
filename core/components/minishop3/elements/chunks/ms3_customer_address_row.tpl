@@ -47,7 +47,7 @@
                     </svg>
                 </button>
                 {/if}
-                <a href="?mode=edit&id={$id}" class="btn btn-outline-primary" title="{'ms3_customer_address_edit' | lexicon}">
+                <a href="{$edit_url}" class="btn btn-outline-primary" title="{'ms3_customer_address_edit' | lexicon}">
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M11 2 L14 5 L5 14 L2 14 L2 11 Z"/>
                         <path d="M9 4 L12 7"/>

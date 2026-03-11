@@ -213,7 +213,7 @@
 
                 {* Кнопки *}
                 <div class="d-flex justify-content-between gap-2 mt-4">
-                    <a href="?" class="btn btn-secondary">
+                    <a href="{$page_url}" class="btn btn-secondary">
                         {'ms3_customer_cancel' | lexicon}
                     </a>
                     <button type="submit" class="btn btn-primary ms3_link">
