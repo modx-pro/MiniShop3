@@ -36,10 +36,13 @@ class AddressesPageService extends CustomerPageService
     {
         $mode = $_GET['mode'] ?? 'list';
         $addressId = isset($_GET['id']) ? (int)$_GET['id'] : null;
+        $resourceId = $this->modx->resource->get('id');
+        $pageUrl = $this->modx->makeUrl($resourceId, '', '', 'full');
 
         $data = [
             'mode' => $mode,
             'customer' => $this->customer->toArray(),
+            'page_url' => $pageUrl,
         ];
 
         switch ($mode) {
@@ -87,11 +90,19 @@ class AddressesPageService extends CustomerPageService
                         $addressData['display_name'] = $addressData['name'];
                     }
 
+                    $addressData['edit_url'] = $this->modx->makeUrl(
+                        $resourceId,
+                        '',
+                        http_build_query(['mode' => 'edit', 'id' => $addressData['id']]),
+                        'full'
+                    );
+
                     $addressesData[] = $addressData;
                 }
 
                 $data['addresses'] = $addressesData;
                 $data['addresses_count'] = count($addressesData);
+                $data['create_url'] = $this->modx->makeUrl($resourceId, '', http_build_query(['mode' => 'create']), 'full');
                 $data['success'] = $_SESSION['ms3']['addresses_success'] ?? null;
                 $data['error'] = $_SESSION['ms3']['addresses_error'] ?? null;
                 break;
@@ -143,7 +154,8 @@ class AddressesPageService extends CustomerPageService
             'customer_id' => $this->customerId,
         ]);
 
-        $pageUrl = $this->modx->makeUrl($this->modx->resource->get('id'), '', '', 'full');
+        $resourceId = $this->modx->resource->get('id');
+        $pageUrl = $this->modx->makeUrl($resourceId, '', '', 'full');
 
         $addressesData = [];
         /** @var msCustomerAddress $address */
@@ -163,6 +175,13 @@ class AddressesPageService extends CustomerPageService
                 $addressData['display_name'] = $addressData['name'];
             }
 
+            $addressData['edit_url'] = $this->modx->makeUrl(
+                $resourceId,
+                '',
+                http_build_query(['mode' => 'edit', 'id' => $addressData['id']]),
+                'full'
+            );
+
             $chunk = $this->pdoFetch->getChunk($addressTpl, $addressData);
             $addressesData[] = is_string($chunk) ? $chunk : '';
         }
@@ -174,6 +193,7 @@ class AddressesPageService extends CustomerPageService
             'success' => $_SESSION['ms3']['addresses_success'] ?? null,
             'error' => $_SESSION['ms3']['addresses_error'] ?? null,
             'page_url' => $pageUrl,
+            'create_url' => $this->modx->makeUrl($resourceId, '', http_build_query(['mode' => 'create']), 'full'),
         ];
 
         unset($_SESSION['ms3']['addresses_success']);
