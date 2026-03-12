@@ -72,6 +72,8 @@ const editingCell = ref(null)
 const inlineEditValue = ref('')
 /** True while inline edit save request is in progress */
 const inlineEditSaving = ref(false)
+/** Ref to the current inline-edit input (one of Checkbox/InputText/InputNumber) for focus */
+const inlineEditInputRef = ref(null)
 
 // Default thumbnail from system settings
 
@@ -370,10 +372,12 @@ function startInlineEdit(product, column) {
   editingCell.value = { productId: product.id, columnName: column.name }
   const raw = product[column.name]
   inlineEditValue.value = raw === null || raw === undefined ? '' : raw
-  // autofocus doesn't work on dynamically inserted elements; focus after DOM update
+  // autofocus doesn't work on dynamically inserted elements; focus via ref after DOM update
   nextTick(() => {
-    const input = document.querySelector('.inline-edit-cell input')
-    if (input) input.focus()
+    const comp = inlineEditInputRef.value
+    if (!comp) return
+    const el = comp.$el?.querySelector?.('input') ?? comp.$el ?? comp
+    if (el?.focus) el.focus()
   })
 }
 
@@ -428,8 +432,9 @@ async function saveInlineEdit(product, column) {
   }
   inlineEditSaving.value = true
   try {
-    await request.put(`/api/mgr/product-data/${product.id}`, { [column.name]: value })
-    product[column.name] = value
+    const res = await request.put(`/api/mgr/product-data/${product.id}`, { [column.name]: value })
+    if (res?.data) Object.assign(product, res.data)
+    else product[column.name] = value
     toast.add({ severity: 'success', summary: _('success'), detail: _('inline_edit_saved'), life: 2000 })
   } catch (error) {
     console.error('[CategoryProductsGrid] Inline edit save failed:', error)
@@ -1029,6 +1034,7 @@ onMounted(async () => {
                       >
                         <Checkbox
                           v-if="isBooleanColumn(column)"
+                          ref="inlineEditInputRef"
                           :model-value="!!inlineEditValue"
                           :binary="true"
                           :disabled="inlineEditSaving"
@@ -1037,6 +1043,7 @@ onMounted(async () => {
                         />
                         <InputText
                           v-else-if="(column.editor_type || 'text') === 'text'"
+                          ref="inlineEditInputRef"
                           v-model="inlineEditValue"
                           class="w-full"
                           :disabled="inlineEditSaving"
@@ -1046,6 +1053,7 @@ onMounted(async () => {
                         />
                         <InputNumber
                           v-else
+                          ref="inlineEditInputRef"
                           v-model="inlineEditValue"
                           class="w-full"
                           :min-fraction-digits="0"

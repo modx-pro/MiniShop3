@@ -525,7 +525,31 @@ class ProductDataService
     }
 
     /**
+     * Validate productData update values (minimal server-side validation).
+     *
+     * @param array $filtered Filtered allowed fields
+     * @return bool True if valid
+     */
+    protected function validateProductDataUpdate(array $filtered): bool
+    {
+        if (isset($filtered['price']) && (float)$filtered['price'] < 0) {
+            return false;
+        }
+        if (isset($filtered['old_price']) && (float)$filtered['old_price'] < 0) {
+            return false;
+        }
+        if (isset($filtered['stock']) && (int)$filtered['stock'] != $filtered['stock']) {
+            return false;
+        }
+        if (isset($filtered['weight']) && (float)$filtered['weight'] < 0) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Update product data (msProductData and optionally resource fields like published).
+     * Saves productData first, then resource (published) to avoid race and desync on failure.
      *
      * @param int $productId Product ID
      * @param array $data Data to update
@@ -533,9 +557,13 @@ class ProductDataService
      */
     public function updateProductData(int $productId, array $data): ?array
     {
+        if (!$this->modx->hasPermission('save_document')) {
+            return null;
+        }
+
         /** @var msProduct $product */
         $product = $this->modx->getObject(msProduct::class, $productId);
-        if (!$product) {
+        if (!$product || !$product->checkPolicy('save')) {
             return null;
         }
 
@@ -545,21 +573,26 @@ class ProductDataService
             return null;
         }
 
-        $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
-        $updatedResource = false;
-        if (isset($resourceData['published'])) {
-            $published = (int)(bool)$resourceData['published'];
-            $updatedResource = $this->applyPublishedToResource($product, $published);
+        $filtered = array_intersect_key($data, array_flip(self::$allowedUpdateFields));
+        if (!$this->validateProductDataUpdate($filtered)) {
+            return null;
         }
 
-        $filtered = array_intersect_key($data, array_flip(self::$allowedUpdateFields));
         $productData->fromArray($filtered);
         if (!$productData->save()) {
             return null;
         }
 
+        $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
+        if (isset($resourceData['published'])) {
+            $published = $resourceData['published'] ? 1 : 0;
+            if (!$this->applyPublishedToResource($product, $published)) {
+                return null;
+            }
+        }
+
         $result = $productData->toArray();
-        if ($updatedResource) {
+        if (isset($resourceData['published'])) {
             $result['published'] = (bool)$product->get('published');
         }
         return $result;
