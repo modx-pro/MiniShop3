@@ -109,7 +109,7 @@ $_lang['ms3_product_source'] = 'Media Source';
 $_lang['ms3_product_source_help'] = 'Media source that stores product images.';
 $_lang['ms3_product_source_id'] = 'Media Source';
 $_lang['ms3_product_source_id_help'] = 'Media source that stores product images.';
-$_lang['ms3_product_change_source_confirm'] = 'Are you sure you want to change the media source? WARNING: All changes will be saved, make sure you are ready to proceed.';
+$_lang['ms3_product_change_source_confirm'] = 'Are you sure you want to change the media source? The page will reload. Unsaved changes on other product tabs will be lost.';
 $_lang['ms3_product_count'] = 'Quantity';
 $_lang['ms3_product_options'] = 'Product Options';
 

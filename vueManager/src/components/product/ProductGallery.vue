@@ -184,7 +184,7 @@ function onSaveEdit({ id, file, name, description }) {
   updateFile(id, { file, name, description }).then(() => loadList()).catch(showError)
 }
 
-function onUploadSuccess() {
+function onUploadComplete() {
   loadList()
 }
 
@@ -216,7 +216,7 @@ watch(
       :product-id="productId"
       :source-id="currentSourceId"
       :connector-url="connectorUrl"
-      @upload-success="onUploadSuccess"
+      @upload-complete="onUploadComplete"
     />
     <ProductGalleryGrid
       :items="list"

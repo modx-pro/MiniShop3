@@ -192,6 +192,10 @@ export async function updateFile(id, payload) {
 
 /**
  * Update product media source and reload page.
+ * User is warned via lexicon (ms3_product_change_source_confirm) that unsaved changes
+ * on other tabs will be lost. To save the form first, MODx.activePage.submitForm()
+ * could be used with a success callback that then calls this and reloads (if available in MODX).
+ *
  * @param {number} productId
  * @param {number} sourceId
  */

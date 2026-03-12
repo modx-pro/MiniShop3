@@ -154,7 +154,7 @@ function onDragEnd(evt) {
       <InputGroup class="search-input-group">
         <InputText
           v-model="searchQuery"
-          :placeholder="_('search')"
+          :placeholder="_('ms3_gallery_search_placeholder')"
           class="search-input p-inputtext-sm"
           @input="onSearchInput"
           @keyup.enter="onSearchClick"
@@ -162,7 +162,7 @@ function onDragEnd(evt) {
         <Button
           icon="pi pi-search"
           severity="secondary"
-          :aria-label="_('search')"
+          :aria-label="_('ms3_gallery_search_placeholder')"
           @click="onSearchClick"
         />
         <Button

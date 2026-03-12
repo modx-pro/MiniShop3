@@ -229,6 +229,10 @@ const initUppy = () => {
         if (firstBrace !== -1 && lastBrace > firstBrace) {
           try {
             data = JSON.parse(text.slice(firstBrace, lastBrace + 1))
+            console.warn(
+              '[MiniShop3 GalleryUploader] Response contained non-JSON prefix/suffix (e.g. PHP notice). Extracted JSON fragment. Check server logs for PHP errors.',
+              { responsePreview: text.slice(0, 200) }
+            )
           } catch (_e) {
             data = null
           }
