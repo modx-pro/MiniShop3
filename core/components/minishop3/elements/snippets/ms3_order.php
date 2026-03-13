@@ -59,6 +59,12 @@ if ($response['success']) {
     $order['cart_cost'] = $ms3->format->price($cost['cart_cost']);
     $order['delivery_cost'] = $ms3->format->price($cost['delivery_cost']);
     $order['discount_cost'] = $ms3->format->price($cost['total_discount']);
+    // Pre-formatted fields with currency symbol for display in chunks
+    $order['cost_formatted'] = $ms3->format->price($cost['cost'], true);
+    $order['cart_cost_formatted'] = $ms3->format->price($cost['cart_cost'], true);
+    $order['delivery_cost_formatted'] = $ms3->format->price($cost['delivery_cost'], true);
+    $order['discount_cost_formatted'] = $ms3->format->price($cost['total_discount'], true);
+    $order['currency_symbol'] = $ms3->format->getCurrencySymbol();
 }
 
 // Check if cart is empty

@@ -42,6 +42,9 @@ class Format
     /** @var string Currency symbol position (before/after) */
     private $currencyPosition;
 
+    /** @var string Weight unit label */
+    private $weightUnit;
+
     /**
      * @param MiniShop3 $ms3
      */
@@ -73,6 +76,7 @@ class Format
 
         $this->currencySymbol = $this->modx->getOption('ms3_currency_symbol', null, '₽');
         $this->currencyPosition = $this->modx->getOption('ms3_currency_position', null, 'after');
+        $this->weightUnit = $this->modx->getOption('ms3_weight_unit', null, 'kg');
     }
 
     /**
@@ -134,7 +138,33 @@ class Format
     }
 
     /**
-     * Calculate discount percentage
+     * Format weight with unit suffix
+     *
+     * @param float|int $weight Weight
+     * @return string Formatted weight with unit (e.g. "1.5 kg")
+     */
+    public function weightWithUnit($weight = 0): string
+    {
+        $formatted = $this->formatNumber($weight, $this->weightFormat, $this->weightNoZeros);
+
+        if (!empty($this->weightUnit)) {
+            $formatted .= ' ' . $this->weightUnit;
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Get weight unit label
+     *
+     * @return string
+     */
+    public function getWeightUnit(): string
+    {
+        return $this->weightUnit;
+    }
+
+    /**
      *
      * @param float|int $oldPrice Old price
      * @param float|int $newPrice New price
@@ -224,6 +254,7 @@ class Format
                 'symbol' => $this->currencySymbol,
                 'position' => $this->currencyPosition,
             ],
+            'weight_unit' => $this->weightUnit,
         ];
     }
 }

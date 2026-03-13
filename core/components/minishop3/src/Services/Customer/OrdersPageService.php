@@ -134,6 +134,7 @@ class OrdersPageService extends CustomerPageService
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
+            $orderData['cost_with_currency'] = $this->ms3->format->price($orderData['cost'], true);
 
             $statusId = (int) $orderData['status_id'];
             $orderData['status_name'] = $statusMap[$statusId]['name'] ?? '';
@@ -214,9 +215,13 @@ class OrdersPageService extends CustomerPageService
             'address' => $address ? $address->toArray() : [],
             'total' => [
                 'cost' => $this->ms3->format->price($order->get('cost')),
+                'cost_formatted' => $this->ms3->format->price($order->get('cost'), true),
                 'cart_cost' => $this->ms3->format->price($order->get('cart_cost')),
+                'cart_cost_formatted' => $this->ms3->format->price($order->get('cart_cost'), true),
                 'delivery_cost' => $this->ms3->format->price($order->get('delivery_cost')),
+                'delivery_cost_formatted' => $this->ms3->format->price($order->get('delivery_cost'), true),
                 'weight' => $this->ms3->format->weight($order->get('weight')),
+                'weight_formatted' => $this->ms3->format->weightWithUnit($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
             'api_url' => $this->getCustomerApiUrl(),
@@ -291,12 +296,21 @@ class OrdersPageService extends CustomerPageService
 
             $discount_price = $old_price > 0 ? $old_price - $productData['price'] : 0;
 
+            $rawPrice = (float) $productData['price'];
+            $rawCost = (float) $productData['cost'];
+            $rawWeight = (float) $productData['weight'];
+
             $productData['old_price'] = $this->ms3->format->price($old_price);
-            $productData['price'] = $this->ms3->format->price($productData['price']);
-            $productData['cost'] = $this->ms3->format->price($productData['cost']);
-            $productData['weight'] = $this->ms3->format->weight($productData['weight']);
+            $productData['price'] = $this->ms3->format->price($rawPrice);
+            $productData['cost'] = $this->ms3->format->price($rawCost);
+            $productData['weight'] = $this->ms3->format->weight($rawWeight);
             $productData['discount_price'] = $this->ms3->format->price($discount_price);
             $productData['discount_cost'] = $this->ms3->format->price($productData['count'] * $discount_price);
+
+            // Pre-formatted fields with currency/unit for display in chunks
+            $productData['price_formatted'] = $this->ms3->format->price($rawPrice, true);
+            $productData['cost_formatted'] = $this->ms3->format->price($rawCost, true);
+            $productData['weight_formatted'] = $this->ms3->format->weightWithUnit($rawWeight);
 
             if (!empty($productData['options']) && is_array($productData['options'])) {
                 foreach ($productData['options'] as $option => $value) {
@@ -350,6 +364,7 @@ class OrdersPageService extends CustomerPageService
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
             $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
+            $orderData['cost_with_currency'] = $this->ms3->format->price($orderData['cost'], true);
 
             $statusId = (int) $orderData['status_id'];
             $orderData['status_name'] = $statusMap[$statusId]['name'] ?? '';
@@ -419,9 +434,13 @@ class OrdersPageService extends CustomerPageService
             'address' => $address ? $address->toArray() : [],
             'total' => [
                 'cost' => $this->ms3->format->price($order->get('cost')),
+                'cost_formatted' => $this->ms3->format->price($order->get('cost'), true),
                 'cart_cost' => $this->ms3->format->price($order->get('cart_cost')),
+                'cart_cost_formatted' => $this->ms3->format->price($order->get('cart_cost'), true),
                 'delivery_cost' => $this->ms3->format->price($order->get('delivery_cost')),
+                'delivery_cost_formatted' => $this->ms3->format->price($order->get('delivery_cost'), true),
                 'weight' => $this->ms3->format->weight($order->get('weight')),
+                'weight_formatted' => $this->ms3->format->weightWithUnit($order->get('weight')),
             ],
             'customer' => $this->customer->toArray(),
             'api_url' => $this->getCustomerApiUrl(),

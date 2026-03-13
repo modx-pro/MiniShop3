@@ -126,12 +126,22 @@ abstract class Notification
         $formattedDeliveryCost = $this->ms3->format->price($orderData['delivery_cost'] ?? 0);
         $formattedWeight = $this->ms3->format->weight($orderData['weight'] ?? 0);
 
+        // Pre-formatted with currency/unit for use in email templates
+        $formattedCostWithCurrency = $this->ms3->format->price($orderData['cost'] ?? 0, true);
+        $formattedCartCostWithCurrency = $this->ms3->format->price($orderData['cart_cost'] ?? 0, true);
+        $formattedDeliveryCostWithCurrency = $this->ms3->format->price($orderData['delivery_cost'] ?? 0, true);
+        $formattedWeightWithUnit = $this->ms3->format->weightWithUnit($orderData['weight'] ?? 0);
+
         // Start with order data spread (for backwards compatibility)
         $pls = $orderData;
         $pls['cost'] = $formattedCost;
         $pls['cart_cost'] = $formattedCartCost;
         $pls['delivery_cost'] = $formattedDeliveryCost;
         $pls['weight'] = $formattedWeight;
+        $pls['cost_formatted'] = $formattedCostWithCurrency;
+        $pls['cart_cost_formatted'] = $formattedCartCostWithCurrency;
+        $pls['delivery_cost_formatted'] = $formattedDeliveryCostWithCurrency;
+        $pls['weight_formatted'] = $formattedWeightWithUnit;
 
         // Also add as nested 'order' array (for templates using {$order.num} syntax)
         $pls['order'] = $orderData;
@@ -139,6 +149,10 @@ abstract class Notification
         $pls['order']['cart_cost'] = $formattedCartCost;
         $pls['order']['delivery_cost'] = $formattedDeliveryCost;
         $pls['order']['weight'] = $formattedWeight;
+        $pls['order']['cost_formatted'] = $formattedCostWithCurrency;
+        $pls['order']['cart_cost_formatted'] = $formattedCartCostWithCurrency;
+        $pls['order']['delivery_cost_formatted'] = $formattedDeliveryCostWithCurrency;
+        $pls['order']['weight_formatted'] = $formattedWeightWithUnit;
 
         // Add customer data
         if ($customer = $this->order->getOne('Customer')) {
@@ -166,10 +180,14 @@ abstract class Notification
         // Add totals for email template
         $pls['total'] = [
             'cost' => $formattedCost,
+            'cost_formatted' => $formattedCostWithCurrency,
             'cart_cost' => $formattedCartCost,
+            'cart_cost_formatted' => $formattedCartCostWithCurrency,
             'cart_count' => $orderData['cart_count'] ?? 0,
             'cart_weight' => $formattedWeight,
+            'cart_weight_formatted' => $formattedWeightWithUnit,
             'delivery_cost' => $formattedDeliveryCost,
+            'delivery_cost_formatted' => $formattedDeliveryCostWithCurrency,
         ];
 
         // Merge custom data
@@ -198,8 +216,16 @@ abstract class Notification
             }
 
             // Format price
-            $productData['price'] = $this->ms3->format->price($productData['price'] ?? 0);
-            $productData['cost'] = $this->ms3->format->price($productData['cost'] ?? 0);
+            $rawPrice = (float) ($productData['price'] ?? 0);
+            $rawCost = (float) ($productData['cost'] ?? 0);
+            $rawWeight = (float) ($productData['weight'] ?? 0);
+
+            $productData['price'] = $this->ms3->format->price($rawPrice);
+            $productData['cost'] = $this->ms3->format->price($rawCost);
+            $productData['weight'] = $this->ms3->format->weight($rawWeight);
+            $productData['price_formatted'] = $this->ms3->format->price($rawPrice, true);
+            $productData['cost_formatted'] = $this->ms3->format->price($rawCost, true);
+            $productData['weight_formatted'] = $this->ms3->format->weightWithUnit($rawWeight);
 
             // Parse options if stored as JSON
             if (!empty($productData['options']) && is_string($productData['options'])) {

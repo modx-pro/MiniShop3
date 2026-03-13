@@ -85,8 +85,8 @@
                                                     {/if}
                                                 </td>
                                                 <td style="{$style.th}">{$product.count} {'ms3_frontend_count_unit' | lexicon}</td>
-                                                <td style="{$style.th}">{$product.weight} {'ms3_frontend_weight_unit' | lexicon}</td>
-                                                <td style="{$style.th}">{$product.price} {'ms3_frontend_currency' | lexicon}</td>
+                                                <td style="{$style.th}">{$product.weight_formatted}</td>
+                                                <td style="{$style.th}">{$product.price_formatted}</td>
                                             </tr>
                                         {/foreach}
                                         <tfoot>
@@ -96,10 +96,10 @@
                                                 {$total.cart_count} {'ms3_frontend_count_unit' | lexicon}
                                             </th>
                                             <th style="{$style.th}">
-                                                {$total.cart_weight} {'ms3_frontend_weight_unit' | lexicon}
+                                                {$total.cart_weight_formatted}
                                             </th>
                                             <th style="{$style.th}">
-                                                {$total.cart_cost} {'ms3_frontend_currency' | lexicon}
+                                                {$total.cart_cost_formatted}
                                             </th>
                                         </tr>
                                         </tfoot>
@@ -107,10 +107,9 @@
                                     <h3 style="{$style.h}{$style.h3}">
                                         {'ms3_frontend_order_cost' | lexicon}:
                                         {if $total.delivery_cost}
-                                            {$total.cart_cost} {'ms3_frontend_currency' | lexicon} + {$total.delivery_cost}
-                                            {'ms3_frontend_currency' | lexicon} =
+                                            {$total.cart_cost_formatted} + {$total.delivery_cost_formatted} =
                                         {/if}
-                                        <strong>{$total.cost}</strong> {'ms3_frontend_currency' | lexicon}
+                                        <strong>{$total.cost_formatted}</strong>
                                     </h3>
                                 {/block}
                             </td>

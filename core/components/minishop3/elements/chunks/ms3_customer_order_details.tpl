@@ -67,11 +67,10 @@
                                 {if $product.old_price && $product.old_price > $product.price}
                                 <div class="text-decoration-line-through text-muted small">{$product.old_price}</div>
                                 {/if}
-                                <div class="fw-semibold">{$product.price}</div>
-                                <small class="text-muted">{'ms3_frontend_currency' | lexicon}</small>
+                                <div class="fw-semibold">{$product.price_formatted}</div>
                             </td>
                             <td class="text-end text-nowrap fw-bold">
-                                {$product.cost} {'ms3_frontend_currency' | lexicon}
+                                {$product.cost_formatted}
                             </td>
                         </tr>
                         {/foreach}
@@ -79,7 +78,7 @@
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="3" class="text-end fw-bold">{'ms3_frontend_cart_total' | lexicon}:</td>
-                            <td class="text-end fw-bold">{$total.cart_cost} {'ms3_frontend_currency' | lexicon}</td>
+                            <td class="text-end fw-bold">{$total.cart_cost_formatted}</td>
                         </tr>
                         {if $total.delivery_cost}
                         <tr>
@@ -89,12 +88,12 @@
                                 </svg>
                                 {'ms3_frontend_delivery' | lexicon}:
                             </td>
-                            <td class="text-end">{$total.delivery_cost} {'ms3_frontend_currency' | lexicon}</td>
+                            <td class="text-end">{$total.delivery_cost_formatted}</td>
                         </tr>
                         {/if}
                         <tr class="fw-bold">
                             <td colspan="3" class="text-end fs-5">{'ms3_frontend_total' | lexicon}:</td>
-                            <td class="text-end fs-5">{$total.cost} {'ms3_frontend_currency' | lexicon}</td>
+                            <td class="text-end fs-5">{$total.cost_formatted}</td>
                         </tr>
                     </tfoot>
                 </table>

@@ -188,12 +188,21 @@ foreach ($rows as $product) {
 
     $discount_price = $old_price > 0 ? $old_price - $product['price'] : 0;
 
+    $rawPrice = (float)$product['price'];
+    $rawCost = (float)$product['cost'];
+    $rawWeight = (float)$product['weight'];
+
     $product['old_price'] = $ms3->format->price($old_price);
-    $product['price'] = $ms3->format->price($product['price']);
-    $product['cost'] = $ms3->format->price($product['cost']);
-    $product['weight'] = $ms3->format->weight($product['weight']);
+    $product['price'] = $ms3->format->price($rawPrice);
+    $product['cost'] = $ms3->format->price($rawCost);
+    $product['weight'] = $ms3->format->weight($rawWeight);
     $product['discount_price'] = $ms3->format->price($discount_price);
     $product['discount_cost'] = $ms3->format->price($product['count'] * $discount_price);
+
+    // Pre-formatted fields with currency/unit for display in chunks
+    $product['price_formatted'] = $ms3->format->price($rawPrice, true);
+    $product['cost_formatted'] = $ms3->format->price($rawCost, true);
+    $product['weight_formatted'] = $ms3->format->weightWithUnit($rawWeight);
 
     $product['id'] = (int)$product['id'];
     if (empty($product['name'])) {
@@ -238,10 +247,15 @@ try {
             : [],
         'total' => [
             'cost' => $ms3->format->price($msOrder->get('cost')),
+            'cost_formatted' => $ms3->format->price($msOrder->get('cost'), true),
             'cart_cost' => $ms3->format->price($msOrder->get('cart_cost')),
+            'cart_cost_formatted' => $ms3->format->price($msOrder->get('cart_cost'), true),
             'delivery_cost' => $ms3->format->price($msOrder->get('delivery_cost')),
+            'delivery_cost_formatted' => $ms3->format->price($msOrder->get('delivery_cost'), true),
             'weight' => $ms3->format->weight($msOrder->get('weight')),
+            'weight_formatted' => $ms3->format->weightWithUnit($msOrder->get('weight')),
             'cart_weight' => $ms3->format->weight($msOrder->get('weight')),
+            'cart_weight_formatted' => $ms3->format->weightWithUnit($msOrder->get('weight')),
             'cart_count' => $cart_count,
             'cart_discount' => $cart_discount_cost
         ],

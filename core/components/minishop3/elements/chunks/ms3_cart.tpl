@@ -90,16 +90,16 @@
                         </form>
                     </td>
                     <td class="ms-weight">
-                        <span class="text-nowrap">{$product.weight} {'ms3_frontend_weight_unit' | lexicon}</span>
+                        <span class="text-nowrap">{$product.weight_formatted}</span>
                     </td>
                     <td class="ms-price">
-                        <span class="mr-2 text-nowrap">{$product.price} {'ms3_frontend_currency' | lexicon}</span>
+                        <span class="mr-2 text-nowrap">{$product.price_formatted}</span>
                         {if $product.old_price?}
-                            <span class="old_price text-nowrap">{$product.old_price} {'ms3_frontend_currency' | lexicon}</span>
+                            <span class="old_price text-nowrap">{$product.old_price_formatted}</span>
                         {/if}
                     </td>
                     <td class="ms-cost">
-                        <span class="mr-2 text-nowrap"><span class="ms3_cost">{$product.cost}</span> {'ms3_frontend_currency' | lexicon}</span>
+                        <span class="mr-2 text-nowrap ms3_cost">{$product.cost_formatted}</span>
                     </td>
                     <td class="ms-remove">
                         <form method="post" class="ms3_form text-md-right" data-ms3-form>
@@ -118,12 +118,10 @@
                     {'ms3_frontend_count_unit' | lexicon}
                 </th>
                 <th class="total_weight text-nowrap" colspan="2">
-                    <span class="ms3_total_weight">{$total.weight}</span>
-                    {'ms3_frontend_weight_unit' | lexicon}
+                    <span class="ms3_total_weight">{$total.weight_formatted}</span>
                 </th>
                 <th class="total_cost text-nowrap" colspan="2">
-                    <span class="ms3_total_cost">{$total.cost}</span>
-                    {'ms3_frontend_currency' | lexicon}
+                    <span class="ms3_total_cost">{$total.cost_formatted}</span>
                 </th>
             </tr>
         </table>

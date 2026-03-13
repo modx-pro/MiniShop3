@@ -182,6 +182,8 @@ $_lang['setting_ms3_currency_symbol'] = 'Currency symbol';
 $_lang['setting_ms3_currency_symbol_desc'] = 'Currency symbol for price display. Default is "₽" (ruble). Examples: $, €, £, ₽, ₴, ¥, ₸.';
 $_lang['setting_ms3_currency_position'] = 'Currency symbol position';
 $_lang['setting_ms3_currency_position_desc'] = 'Where to display currency symbol relative to price. Valid values: "before" (before price: $ 100) or "after" (after price: 100 ₽). Default is "after".';
+$_lang['setting_ms3_weight_unit'] = 'Weight unit';
+$_lang['setting_ms3_weight_unit_desc'] = 'Weight unit label displayed next to the value. Examples: kg, g, lbs, oz. Default is "kg".';
 
 // Customer Authentication & Registration
 $_lang['setting_ms3_customer_login_page_id'] = 'Login page ID';
