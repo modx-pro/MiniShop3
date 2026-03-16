@@ -115,9 +115,8 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             MODx.perm.tree_show_resource_ids = ' . ($this->modx->hasPermission('tree_show_resource_ids') ? 1 : 0) . ';
         // ]]>
         </script>');
-//
-//        // load RTE
-        //$this->loadRichTextEditor();
+        // Load RTE
+        $this->loadRichTextEditor();
         $this->modx->invokeEvent('msOnManagerCustomCssJs', array('controller' => $this, 'page' => 'category_update'));
     }
 }
