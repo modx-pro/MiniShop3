@@ -63,19 +63,18 @@ class ProductDataController extends BaseApiController
         }
 
         try {
-            /** @var \MiniShop3\Services\ProductDataService */
+            /** @var \MiniShop3\Services\Product\ProductDataService $productDataService */
             $productDataService = $this->modx->services->get('ms3_product_data_service');
 
             $result = $productDataService->updateProductData($productId, $data);
 
-            if ($result) {
-                return Response::success([
-                    'updated' => true,
-                    'data' => $result
-                ]);
-            } else {
-                return Response::error('Failed to save product data', 500);
+            if (!empty($result['ok']) && !empty($result['data'])) {
+                return Response::success($result['data']);
             }
+
+            $code = $result['code'] ?? 500;
+            $message = $result['message'] ?? 'Failed to save product data';
+            return Response::error($message, $code);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
             return Response::error('Failed to save product data: ' . $e->getMessage(), 500);

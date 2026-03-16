@@ -1537,5 +1537,7 @@ label.opacity-50 {
   border-radius: 0.375rem;
   font-size: 0.875rem;
   color: var(--ms3-text-muted, #64748b);
+  max-width: 100%;
+    overflow-wrap: break-word;
 }
 </style>

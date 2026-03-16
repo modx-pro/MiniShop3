@@ -538,8 +538,10 @@ class ProductDataService
         if (isset($filtered['old_price']) && (float)$filtered['old_price'] < 0) {
             return false;
         }
-        if (isset($filtered['stock']) && (int)$filtered['stock'] != $filtered['stock']) {
-            return false;
+        if (isset($filtered['stock'])) {
+            if ((int)$filtered['stock'] != $filtered['stock'] || (int)$filtered['stock'] < 0) {
+                return false;
+            }
         }
         if (isset($filtered['weight']) && (float)$filtered['weight'] < 0) {
             return false;
@@ -547,47 +549,65 @@ class ProductDataService
         return true;
     }
 
+    /** Error codes for updateProductData */
+    public const ERROR_FORBIDDEN = 403;
+    public const ERROR_NOT_FOUND = 404;
+    public const ERROR_VALIDATION = 422;
+    public const ERROR_SAVE = 500;
+
     /**
      * Update product data (msProductData and optionally resource fields like published).
-     * Saves productData first, then resource (published) to avoid race and desync on failure.
+     * Saves productData first, then resource (published). On resource failure, rolls back productData.
      *
      * @param int $productId Product ID
      * @param array $data Data to update
-     * @return array|null Updated data or null on error
+     * @return array Success: ['ok' => true, 'data' => array]. Error: ['ok' => false, 'code' => int, 'message' => string]
      */
-    public function updateProductData(int $productId, array $data): ?array
+    public function updateProductData(int $productId, array $data): array
     {
         if (!$this->modx->hasPermission('save_document')) {
-            return null;
+            return ['ok' => false, 'code' => self::ERROR_FORBIDDEN, 'message' => 'Permission denied'];
         }
 
         /** @var msProduct $product */
         $product = $this->modx->getObject(msProduct::class, $productId);
-        if (!$product || !$product->checkPolicy('save')) {
-            return null;
+        if (!$product) {
+            return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product not found'];
+        }
+        if (!$product->checkPolicy('save')) {
+            return ['ok' => false, 'code' => self::ERROR_FORBIDDEN, 'message' => 'Save permission denied'];
         }
 
         /** @var msProductData $productData */
         $productData = $product->loadData();
         if (!$productData) {
-            return null;
+            return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product data not found'];
         }
 
         $filtered = array_intersect_key($data, array_flip(self::$allowedUpdateFields));
-        if (!$this->validateProductDataUpdate($filtered)) {
-            return null;
-        }
-
-        $productData->fromArray($filtered);
-        if (!$productData->save()) {
-            return null;
-        }
-
         $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
+
+        if (!$this->validateProductDataUpdate($filtered)) {
+            return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => 'Validation failed'];
+        }
+
+        $fieldsToUpdate = array_intersect_key($filtered, array_flip(self::$allowedUpdateFields));
+        $oldValues = [];
+        foreach (array_keys($fieldsToUpdate) as $key) {
+            $oldValues[$key] = $productData->get($key);
+        }
+
+        $productData->fromArray($fieldsToUpdate);
+        if (!$productData->save()) {
+            return ['ok' => false, 'code' => self::ERROR_SAVE, 'message' => 'Failed to save product data'];
+        }
+
         if (isset($resourceData['published'])) {
             $published = $resourceData['published'] ? 1 : 0;
             if (!$this->applyPublishedToResource($product, $published)) {
-                return null;
+                $productData->fromArray($oldValues);
+                $productData->save();
+                return ['ok' => false, 'code' => self::ERROR_SAVE, 'message' => 'Failed to update published state'];
             }
         }
 
@@ -595,6 +615,6 @@ class ProductDataService
         if (isset($resourceData['published'])) {
             $result['published'] = (bool)$product->get('published');
         }
-        return $result;
+        return ['ok' => true, 'data' => $result];
     }
 }

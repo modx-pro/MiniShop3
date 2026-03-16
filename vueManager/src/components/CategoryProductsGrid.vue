@@ -365,10 +365,12 @@ function isEditingCell(product, column) {
 }
 
 /**
- * Start inline edit on double-click
+ * Start inline edit on double-click.
+ * Blocks if another cell is currently saving to avoid race condition.
  */
 function startInlineEdit(product, column) {
   if (!column.editable) return
+  if (inlineEditSaving.value) return
   editingCell.value = { productId: product.id, columnName: column.name }
   const raw = product[column.name]
   inlineEditValue.value = raw === null || raw === undefined ? '' : raw
@@ -381,8 +383,9 @@ function startInlineEdit(product, column) {
   })
 }
 
+/** Boolean columns (e.g. published) use type, not editor_type (select not in UI yet) */
 function isBooleanColumn(column) {
-  return column.type === 'boolean' || column.editor_type === 'boolean'
+  return column.type === 'boolean'
 }
 
 function normalizeValueForSave(rawValue, column) {
@@ -433,8 +436,14 @@ async function saveInlineEdit(product, column) {
   inlineEditSaving.value = true
   try {
     const res = await request.put(`/api/mgr/product-data/${product.id}`, { [column.name]: value })
-    if (res?.data) Object.assign(product, res.data)
-    else product[column.name] = value
+    const idx = products.value.findIndex(p => p.id === product.id)
+    if (idx >= 0) {
+      if (res && typeof res === 'object') {
+        products.value[idx] = { ...products.value[idx], ...res }
+      } else {
+        products.value[idx] = { ...products.value[idx], [column.name]: value }
+      }
+    }
     toast.add({ severity: 'success', summary: _('success'), detail: _('inline_edit_saved'), life: 2000 })
   } catch (error) {
     console.error('[CategoryProductsGrid] Inline edit save failed:', error)
@@ -1051,18 +1060,22 @@ onMounted(async () => {
                           @keydown.enter.prevent="$event.target.blur()"
                           @keydown.escape="cancelInlineEdit"
                         />
-                        <InputNumber
+                        <div
                           v-else
-                          ref="inlineEditInputRef"
-                          v-model="inlineEditValue"
-                          class="w-full"
-                          :min-fraction-digits="0"
-                          :max-fraction-digits="4"
-                          :disabled="inlineEditSaving"
-                          @blur="saveInlineEdit(product, column)"
-                          @keydown.enter.prevent="$event.target.blur()"
-                          @keydown.escape="cancelInlineEdit"
-                        />
+                          class="inline-edit-input-wrapper w-full"
+                          @keydown.enter.capture.prevent="$event.target?.blur?.()"
+                          @keydown.escape.capture.prevent="cancelInlineEdit"
+                        >
+                          <InputNumber
+                            ref="inlineEditInputRef"
+                            v-model="inlineEditValue"
+                            class="w-full"
+                            :min-fraction-digits="0"
+                            :max-fraction-digits="4"
+                            :disabled="inlineEditSaving"
+                            @blur="saveInlineEdit(product, column)"
+                          />
+                        </div>
                       </td>
 
                       <!-- Image column -->
@@ -1191,6 +1204,10 @@ onMounted(async () => {
 
 .editable-cell {
   cursor: text;
+}
+
+.editable-cell:hover {
+  background: var(--ms3-bg-muted, rgba(0 0 0 / 0.04));
 }
 
 .inline-edit-cell :deep(input) {
