@@ -10,7 +10,7 @@ import Dashboard from '@uppy/dashboard'
 import ImageEditor from '@uppy/image-editor'
 import XHRUpload from '@uppy/xhr-upload'
 import { useLexicon } from '@vuetools/useLexicon'
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 
 const { _ } = useLexicon()
 
@@ -74,6 +74,9 @@ const buildUppyLocale = () => {
       browse: _('ms3_gallery_uppy_browse'),
       browseFiles: _('ms3_gallery_uppy_browse_files'),
       browseFolders: _('ms3_gallery_uppy_browse_folders'),
+      back: _('ms3_gallery_uppy_back'),
+      addMoreFiles: _('ms3_gallery_uppy_add_more_files'),
+      dropHint: _('ms3_gallery_uppy_drop_hint'),
       uploadComplete: _('ms3_gallery_uppy_upload_complete'),
       uploadFailed: _('ms3_gallery_uppy_upload_failed'),
       uploading: _('ms3_gallery_uppy_uploading'),
@@ -83,6 +86,12 @@ const buildUppyLocale = () => {
       edit: _('ms3_gallery_uppy_edit'),
       retry: _('ms3_gallery_uppy_retry'),
       addMore: _('ms3_gallery_uppy_add_more'),
+      error: _('ms3_gallery_uppy_error'),
+      failedToUpload: _('ms3_gallery_uppy_failed_to_upload'),
+      noDuplicates: _('ms3_gallery_uppy_no_duplicates'),
+      noFilesFound: _('ms3_gallery_uppy_no_files_found'),
+      pauseUpload: _('ms3_gallery_uppy_pause_upload'),
+      resumeUpload: _('ms3_gallery_uppy_resume_upload'),
       xFilesSelected: {
         0: _('ms3_gallery_uppy_x_files_selected_0'),
         1: _('ms3_gallery_uppy_x_files_selected_1'),
@@ -200,25 +209,18 @@ const formatBytes = (bytes, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-const updateSettings = newSettings => {
-  if (uppy) {
-    uppy.setOptions(newSettings)
+// Watch sourceId to rebuild upload URL
+watch(
+  () => props.sourceId,
+  () => {
+    if (uppy) {
+      const xhrPlugin = uppy.getPlugin('XHRUpload')
+      if (xhrPlugin) {
+        xhrPlugin.setOptions({ endpoint: buildUploadUrl() })
+      }
+    }
   }
-}
-
-const addFiles = files => {
-  if (uppy) {
-    files.forEach(file => {
-      uppy.addFile(file)
-    })
-  }
-}
-
-defineExpose({
-  updateSettings,
-  addFiles,
-  uppy,
-})
+)
 </script>
 
 <style src="../../../node_modules/@uppy/core/dist/style.min.css"></style>

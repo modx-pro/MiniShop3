@@ -19,7 +19,6 @@ const DevInput = {
 const ProdInput = {
   'fields-management': 'src/entries/fields-management.js',
   'extra-fields': 'src/entries/extra-fields.js',
-  'gallery-uploader': 'src/entries/gallery-uploader.js',
   'product-tabs': 'src/entries/product-tabs.js',
   'customers': 'src/entries/customers.js',
   'orders': 'src/entries/orders.js',
@@ -68,6 +67,9 @@ export default defineConfig(({ command }) => {
             /^\.vueApp/,
             // PrimeIcons - не префиксируем иконочные классы
             /^\.pi/,
+            // Uppy — стили рендерятся в body (overlay), не префиксируем
+            /^\.uppy-/,
+            /^\.uppy_/,
             /^\[class\^=["']pi-/,
             /^\[class\*=["'] pi-/,
             // PrimeVue компоненты - не префиксируем (Dialog рендерится в body)
