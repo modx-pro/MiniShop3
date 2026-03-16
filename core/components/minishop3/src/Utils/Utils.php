@@ -243,7 +243,8 @@ class Utils
         if (!str_starts_with($key, 'options-')) {
             return null;
         }
-        return rtrim(substr($key, 8), '[]');
+        $optionKey = rtrim(substr($key, 8), '[]');
+        return $optionKey !== '' ? $optionKey : null;
     }
 
     public static function getVendorId($modx, $name)
