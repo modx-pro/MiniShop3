@@ -96,15 +96,15 @@ class Create extends CreateProcessor
             $this->modx->context->aliasMap = $results['aliasMap'];
         }
 
-        // Save product options from options-* form fields (always set in beforeSet)
+        // Save product options from options-* form fields (parsed in beforeSet)
+        // Only runs when form actually contained options-* fields
         $options = $this->getProperty('options');
-        if (is_array($options)) {
+        if (!empty($options) && is_array($options)) {
             /** @var \MiniShop3\Model\msProductData $productData */
             $productData = $this->object->loadData();
             if ($productData) {
                 $service = $this->modx->services->get('ms3_product_data_service');
-                $removeOther = empty($options);
-                $service->saveOptions($productData, $options, $removeOther);
+                $service->saveOptions($productData, $options, false);
             }
         }
 

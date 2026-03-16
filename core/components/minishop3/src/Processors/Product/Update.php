@@ -48,7 +48,9 @@ class Update extends UpdateProcessor
                 $this->unsetProperty($key);
             }
         }
-        $this->setProperty('options', $options);
+        if (!empty($options)) {
+            $this->setProperty('options', $options);
+        }
 
         if (!empty($properties['vendor_id'])) {
             $vendor_id = Utils::getVendorId($this->modx, $properties['vendor_id']);
@@ -106,17 +108,16 @@ class Update extends UpdateProcessor
     {
         $result = parent::afterSave();
 
-        // Save product options from options-* form fields (always set in beforeSet)
+        // Save product options from options-* form fields (parsed in beforeSet)
+        // Only runs when form actually contained options-* fields
+        // removeOther=false: JSON-based options (color, size) are saved separately via msProductData::save()
         $options = $this->getProperty('options');
-        if (is_array($options)) {
+        if (!empty($options) && is_array($options)) {
             /** @var \MiniShop3\Model\msProductData $productData */
             $productData = $this->object->loadData();
             if ($productData) {
                 $service = $this->modx->services->get('ms3_product_data_service');
-                // When empty: user cleared form → remove all (removeOther=true)
-                // When has values: preserve JSON options (removeOther=false)
-                $removeOther = empty($options);
-                $service->saveOptions($productData, $options, $removeOther);
+                $service->saveOptions($productData, $options, false);
             }
         }
 
