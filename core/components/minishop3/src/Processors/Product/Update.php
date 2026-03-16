@@ -42,14 +42,13 @@ class Update extends UpdateProcessor
         $properties = $this->getProperties();
         $options = [];
         foreach ($properties as $key => $value) {
-            if (strpos($key, 'options-') === 0) {
-                $options[substr($key, 8)] = $value;
+            $optionKey = Utils::extractOptionKey($key);
+            if ($optionKey !== null) {
+                $options[$optionKey] = $value;
                 $this->unsetProperty($key);
             }
         }
-        if (!empty($options)) {
-            $this->setProperty('options', $options);
-        }
+        $this->setProperty('options', $options);
 
         if (!empty($properties['vendor_id'])) {
             $vendor_id = Utils::getVendorId($this->modx, $properties['vendor_id']);

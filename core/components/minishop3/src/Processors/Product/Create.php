@@ -51,8 +51,9 @@ class Create extends CreateProcessor
         $properties = $this->getProperties();
         $options = [];
         foreach ($properties as $key => $value) {
-            if (strpos($key, 'options-') === 0) {
-                $options[substr($key, 8)] = $value;
+            $optionKey = Utils::extractOptionKey($key);
+            if ($optionKey !== null) {
+                $options[$optionKey] = $value;
                 $this->unsetProperty($key);
             }
         }

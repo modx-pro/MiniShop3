@@ -40,11 +40,14 @@ class OptionSyncService
      */
     public function saveProductOptions(int $productId, array $options, bool $removeOther = true): bool
     {
-        if (empty($options) || !is_array($options)) {
+        $existingOptions = $this->getForProduct($productId);
+
+        if (empty($options)) {
+            if ($removeOther) {
+                $this->removeUnusedOptions($productId, [], $existingOptions);
+            }
             return true;
         }
-
-        $existingOptions = $this->getForProduct($productId);
 
         // Process each option
         foreach ($options as $key => $values) {
