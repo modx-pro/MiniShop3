@@ -57,6 +57,16 @@ if (!empty($scriptProperties['formatPrices'])) {
     $total['total_weight'] = $ms3->format->weight($total['total_weight']);
 }
 
+// Pre-formatted fields with currency/unit — always available for chunks
+$data = $response['success'] ? ($response['data'] ?? []) : [];
+$total['cost_formatted'] = $ms3->format->price($data['cost'] ?? 0, true);
+$total['cart_cost_formatted'] = $ms3->format->price($data['cart_cost'] ?? 0, true);
+$total['delivery_cost_formatted'] = $ms3->format->price($data['delivery_cost'] ?? 0, true);
+$total['payment_cost_formatted'] = $ms3->format->price($data['payment_cost'] ?? 0, true);
+$total['total_cost_formatted'] = $ms3->format->price($data['total_cost'] ?? 0, true);
+$total['total_discount_formatted'] = $ms3->format->price($data['total_discount'] ?? 0, true);
+$total['total_weight_formatted'] = $ms3->format->weightWithUnit($data['total_weight'] ?? 0);
+
 if ($return === 'data') {
     return $total;
 }

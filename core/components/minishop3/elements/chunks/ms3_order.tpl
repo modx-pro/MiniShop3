@@ -260,20 +260,20 @@
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Товары:</span>
                     <span class="fw-semibold">
-                        <span id="ms3_order_cart_cost">{$order.cart_cost ?: 0}</span> {'ms3_frontend_currency' | lexicon}
+                        <span id="ms3_order_cart_cost">{$order.cart_cost ?: 0}</span> {$order.currency_symbol}
                     </span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Доставка:</span>
                     <span class="fw-semibold">
-                        <span id="ms3_order_delivery_cost">{$order.delivery_cost ?: 0}</span> {'ms3_frontend_currency' | lexicon}
+                        <span id="ms3_order_delivery_cost">{$order.delivery_cost ?: 0}</span> {$order.currency_symbol}
                     </span>
                 </div>
                 <hr class="my-2">
                 <div class="d-flex justify-content-between">
                     <span class="h5 mb-0">{'ms3_frontend_order_cost' | lexicon}:</span>
                     <span class="h4 mb-0 text-primary">
-                        <span id="ms3_order_cost">{$order.cost ?: 0}</span> {'ms3_frontend_currency' | lexicon}
+                        <span id="ms3_order_cost">{$order.cost ?: 0}</span> {$order.currency_symbol}
                     </span>
                 </div>
             </div>

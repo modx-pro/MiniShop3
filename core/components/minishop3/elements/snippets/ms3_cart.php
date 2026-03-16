@@ -162,6 +162,16 @@ foreach ($cart as $key => $entry) {
     $product['discount_price'] = $ms3->format->price($discount_price);
     $product['discount_cost'] = $entry['count'] * $discount_price;
 
+    // Pre-formatted fields with currency/unit for display in chunks
+    $product['old_cost'] = $old_price > 0 ? $entry['count'] * $old_price : 0;
+    $product['price_formatted'] = $ms3->format->price($entry['price'], true);
+    $product['old_price_formatted'] = $old_price > 0 ? $ms3->format->price($old_price, true) : '';
+    $product['cost_formatted'] = $ms3->format->price($entry['count'] * $entry['price'], true);
+    $product['old_cost_formatted'] = $old_price > 0 ? $ms3->format->price($entry['count'] * $old_price, true) : '';
+    $product['discount_price_formatted'] = $discount_price > 0 ? $ms3->format->price($discount_price, true) : '';
+    $product['discount_cost_formatted'] = $discount_price > 0 ? $ms3->format->price($entry['count'] * $discount_price, true) : '';
+    $product['weight_formatted'] = $ms3->format->weightWithUnit($entry['weight']);
+
     // Additional properties of product in cart
     if (!empty($entry['options']) && is_array($entry['options'])) {
         $product['options'] = $entry['options'];
@@ -186,6 +196,10 @@ $outputData = [
     'total' => $total,
     'products' => $products,
 ];
+
+// Pre-formatted totals with currency/unit for display in chunks
+$outputData['total']['cost_formatted'] = $ms3->format->price($total['cost'], true);
+$outputData['total']['weight_formatted'] = $ms3->format->weightWithUnit($total['weight']);
 
 if ($return === 'data') {
     return $outputData;

@@ -69,14 +69,13 @@
                                 <span class="badge bg-secondary">{$product.count} {'ms3_frontend_count_unit' | lexicon}</span>
                             </td>
                             <td class="text-end text-nowrap">
-                                {if $product.old_price > $product.price}
-                                    <div class="text-decoration-line-through text-muted small">{$product.old_price}</div>
+                                {if $product.old_price_formatted?}
+                                    <div class="text-decoration-line-through text-muted small">{$product.old_price_formatted}</div>
                                 {/if}
-                                <div class="fw-semibold">{$product.price}</div>
-                                <small class="text-muted">{'ms3_frontend_currency' | lexicon}</small>
+                                <div class="fw-semibold">{$product.price_formatted}</div>
                             </td>
                             <td class="text-end text-nowrap fw-bold">
-                                {$product.cost} {'ms3_frontend_currency' | lexicon}
+                                {$product.cost_formatted}
                             </td>
                         </tr>
                     {/foreach}
@@ -84,7 +83,7 @@
                 <tfoot class="table-light">
                     <tr>
                         <td colspan="3" class="text-end fw-bold">Товары:</td>
-                        <td class="text-end fw-bold">{$total.cart_cost} {'ms3_frontend_currency' | lexicon}</td>
+                        <td class="text-end fw-bold">{$total.cart_cost_formatted}</td>
                     </tr>
                     {if $total.delivery_cost}
                         <tr>
@@ -94,12 +93,12 @@
                                 </svg>
                                 Доставка:
                             </td>
-                            <td class="text-end">{$total.delivery_cost} {'ms3_frontend_currency' | lexicon}</td>
+                            <td class="text-end">{$total.delivery_cost_formatted}</td>
                         </tr>
                     {/if}
                     <tr class="table-primary">
                         <td colspan="3" class="text-end fw-bold fs-5">Итого:</td>
-                        <td class="text-end fw-bold fs-5 text-primary">{$total.cost} {'ms3_frontend_currency' | lexicon}</td>
+                        <td class="text-end fw-bold fs-5 text-primary">{$total.cost_formatted}</td>
                     </tr>
                 </tfoot>
             </table>

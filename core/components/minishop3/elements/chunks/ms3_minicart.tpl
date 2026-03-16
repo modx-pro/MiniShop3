@@ -24,9 +24,9 @@
                             <div class="d-flex">
                                 <div class="col-12 col-md-6 d-flex flex-column justify-content-around justify-content-md-start">
                                     <a href="/{$product.product_id | url}" class="font-weight-bold">{$product.pagetitle}</a>
-                                    <span class="price ml-md-3">{$product.price} x {$product.count} = {$product.cost} {'ms3_frontend_currency' | lexicon}</span>
-                                    {if $old_price > 0?}
-                                        <span class="old_price ml-md-3 text-decoration-line-through">{$old_price} x {$product.count} = {$product.old_cost} {'ms3_frontend_currency' | lexicon}</span>
+                                    <span class="price ml-md-3">{$product.price_formatted} x {$product.count} = {$product.cost_formatted}</span>
+                                    {if $product.old_price_formatted?}
+                                        <span class="old_price ml-md-3 text-decoration-line-through">{$product.old_price_formatted} x {$product.count} = {$product.old_cost_formatted}</span>
                                     {/if}
                                 </div>
                                 <div class="col-12 col-md-6">

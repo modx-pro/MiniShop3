@@ -480,6 +480,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_product',
     ],
+    'ms3_weight_unit' => [
+        'value' => 'kg',
+        'xtype' => 'textfield',
+        'area' => 'ms3_product',
+    ],
 
     // API Settings
     'ms3_api_debug' => [
