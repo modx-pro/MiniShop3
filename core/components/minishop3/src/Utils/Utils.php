@@ -232,6 +232,21 @@ class Utils
         $mail->reset();
     }
 
+    /**
+     * Extract option key from form field name (e.g. options-color[] → color)
+     *
+     * @param string $key Form field key (options-{key} or options-{key}[])
+     * @return string|null Option key or null if not an options field
+     */
+    public static function extractOptionKey(string $key): ?string
+    {
+        if (!str_starts_with($key, 'options-')) {
+            return null;
+        }
+        $optionKey = rtrim(substr($key, 8), '[]');
+        return $optionKey !== '' ? $optionKey : null;
+    }
+
     public static function getVendorId($modx, $name)
     {
         $criteria = [

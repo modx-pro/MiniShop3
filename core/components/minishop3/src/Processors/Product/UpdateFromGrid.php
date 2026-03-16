@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Processors\Product;
 
+use MiniShop3\Utils\Utils;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\Processor;
@@ -70,10 +71,11 @@ class UpdateFromGrid extends Update
     public function beforeSet()
     {
         $properties = $this->getProperties();
-        $options = $this->object->loadData()->get('options');
+        $options = $this->object->loadData()->get('options') ?? [];
         foreach ($properties as $key => $value) {
-            if (strpos($key, 'options-') === 0) {
-                $options[substr($key, 8)] = $value;
+            $optionKey = Utils::extractOptionKey($key);
+            if ($optionKey !== null) {
+                $options[$optionKey] = $value;
                 $this->unsetProperty($key);
             }
         }
