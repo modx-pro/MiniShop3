@@ -49,9 +49,8 @@ Ext.extend(ms3.panel.Category, MODx.panel.Resource, {
                 pageSettingsTab && item.items.push(pageSettingsTab);
                 accessPermissionsTab && item.items.push(accessPermissionsTab);
             }
-            if (item.id !== 'modx-resource-content') {
-                fields.push(item);
-            }
+            // Include modx-resource-content so TinyMCE/visual editor can attach (fixes raw HTML instead of RTE)
+            fields.push(item);
         }
 
         return fields;
@@ -80,13 +79,14 @@ Ext.extend(ms3.panel.Category, MODx.panel.Resource, {
                     item_j.border = false;
                     item_j.fieldLabel = _('content');
                     item_j.itemCls = 'contentblocks_replacement';
-                    item_j.msgTarget = "under";
+                    item_j.msgTarget = 'under';
                     item_j.description = '<b>[[*content]]</b>';
-                    if (MODx.config['ms3_category_content_default'] && config['mode'] === 'create') {
+                    if (config['mode'] === 'create' && MODx.config['ms3_category_content_default']) {
                         item_j.value = MODx.config['ms3_category_content_default'];
+                    } else if (config['mode'] === 'create') {
+                        item_j.value = '<p></p>';
                     }
-                    item_j.value = "<p></p>"
-                    //item_j.hidden = ms3.config.isHideContent;
+                    // item_j.hidden = ms3.config.isHideContent;
                     item_j.hidden = false;
                 }
                 fields.push(item_j);
