@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0-beta1]
+
+### Added
+- Inline editing in category products grid: double-click to edit text, number, boolean fields directly in table (#116, #134)
+- Editable field configuration in Utilities → Grid Fields for category-products grid (#134)
+- Formatted currency and weight placeholders: `price_formatted`, `cost_formatted`, `old_price_formatted`, `old_cost_formatted`, `weight_formatted`, `discount_price_formatted`, `discount_cost_formatted` (#144, #147)
+- New `ms3_weight_unit` system setting, `Format::weightWithUnit()` and `Format::getWeightUnit()` methods (#147)
+- Custom fields support in order validation: fields from delivery validation rules persist in draft properties between `order/add` and `order/submit` (#135)
+
+### Refactored
+- Removed unused `ms3_category_grid_fields` setting and `Processors\Category\GetList` processor (#145, #146)
+- Simplified `Product\GetList` processor: removed non-combo logic, added `combo: true` validation (#151, #152)
+- Migrated product gallery from ExtJS to Vue: 6 ExtJS files (~900 lines) replaced with 5 Vue components + composable (~1300 lines) (#112, #150)
+- New `Product\UpdateSource` processor for media source change without full form save (#150)
+
+### Fixed
+- Product options not deletable in admin: `options-color[]` parsed as `color[]` instead of `color` — extracted to `Utils::extractOptionKey()` (#148, #149)
+- Visual editor (TinyMCE) broken in product category: unconditional value reset and missing `modx-resource-content` block restored (#156)
+- Custom category options deleted on product save: `saveOptions(null, true)` removed options not in auto-collected JSON fields — now forces `removeOther=false` when `options=null` (#153, #158)
+- "Create Document" missing from category context menu: fallback to `pnew` class when `pnew_modDocument` not set by Form Customization (#153, #158)
+- Duplicate/Delete buttons missing for products and categories: permission flags compared with `=== 1` but `json_encode(true)` produces `true` — added `(int)` cast (#128, #133)
+- `empty('0')` in `OrderFieldManager::add()`: value `'0'` no longer treated as empty (#135)
+- `OrderAddressManager::saveToCustomerAddresses()` return type fixed from `?msCustomerAddress` to `bool` (#135)
+- `save_address` checkbox uncheck now correctly removes key from properties (#135)
+- Table prefix missing for relation fields in grid config — aggregate values returned zeros (#136)
+- Customers grid sorting and server-side pagination: `getIterator()` received sort/pagination params as `$cacheFlag` (#137)
+- Order status not displayed in customer order history: ad-hoc JOIN fields not hydrated — replaced with status map preloading (#139)
+- Incorrect URLs in customer orders: reset button and pagination links pointed to site root — URLs built server-side via `makeUrl()` (#141)
+- Incorrect URLs and hardcoded English messages in customer addresses — URLs built server-side, messages replaced with lexicon keys (#142)
+- Missing `desc` key in snippet and source properties during package build (#127)
+
+### Breaking Changes
+- `cost_formatted` in customer order list now includes currency symbol — custom chunks adding currency manually will get double symbol (#147)
+
 ## [1.6.0-beta1]
 
 ### Added
