@@ -25,6 +25,14 @@
 
 #### ♻️ Рефакторинг
 
+**Миграция галереи товара с ExtJS на Vue (#112, #150):**
+- ExtJS прослойка (gallery.panel, toolbar, view, window, ext.ddview) заменена чистыми Vue-компонентами
+- Новая архитектура: `ProductGallery` (оркестратор) → `ProductGalleryGrid` (vuedraggable + ContextMenu + поиск + пагинация) + `ProductGalleryToolbar` (выбор source + bulk actions) + `ProductGalleryEditDialog`
+- `useGalleryApi` composable — все API-вызовы к Gallery процессорам через коннектор
+- Новый процессор `Product\UpdateSource` — смена media source без сохранения всей формы
+- `GalleryUploader` (Uppy) встроен в `product-tabs` бандл, отдельный entry point `gallery-uploader` удалён
+- Удалено 6 ExtJS-файлов (~900 строк), добавлено 5 Vue-компонентов + composable (~1300 строк)
+
 **Интеграция standalone ЛК-модулей в архитектуру ms3 (#126):**
 - Три standalone модуля (`order-cancel.js`, `customer-addresses.js`, `auth-forms.js`) заменены на UI-классы в единой архитектуре (API → UI → hooks → message)
 - Новый `AuthUI` — класс для форм авторизации/регистрации с хуками `beforeLogin`/`afterLogin`, `beforeRegister`/`afterRegister`
@@ -44,6 +52,24 @@
 
 #### ✨ Добавлено
 
+**Поддержка кастомных полей в валидации заказа (#135):**
+- Кастомные поля из правил валидации доставки (например, чекбокс `agreement` с правилом `required|accepted`) сохраняются в `draft->properties['_validated']` между `order/add` и `order/submit`
+- При создании заказа кастомные поля передаются в события `msOnBeforeCreateOrder` / `msOnCreateOrder` через параметр `customFields`, после чего очищаются
+- Чекбоксы на фронтенде отправляют состояние `input.checked` (`'1'`/`'0'`) вместо статического атрибута `value`
+
+#### 🐛 Исправлено
+
+- **`empty('0')` в OrderFieldManager::add() (#135):** значение `'0'` больше не считается пустым — фикс PHP-ловушки `empty('0') === true`
+- **Return type `OrderAddressManager::saveToCustomerAddresses()` (#135):** метод возвращал `bool`, но был объявлен как `?msCustomerAddress` — исправлен на `bool`
+- **`save_address` при снятии чекбокса (#135):** раньше снятие чекбокса игнорировалось (значение `'0'` не заходило в обработчик), теперь корректно удаляет ключ из properties
+- **Табличный префикс в relation-полях grid config (#136):** при указании прямого имени таблицы (например `ms3_orders`) в конфигурации связанного поля не добавлялся префикс MODX — агрегатные значения (COUNT, SUM и др.) возвращали нули
+- **Сортировка и серверная пагинация в таблице клиентов (#137):** клик по заголовку сортируемой колонки менял иконку, но данные не сортировались — `getIterator()` получал параметры сортировки/пагинации как `$cacheFlag` вместо xPDO-запроса
+- **Статус заказа не отображался в истории заказов клиента (#139):** ad-hoc поля из LEFT JOIN (`status_name`, `status_color`) не гидрировались в xPDO-объекты (`hydrate_adhoc_fields` выключен по умолчанию) — заменено на предзагрузку статусов в map. Та же проблема исправлена для данных товаров в деталях заказа (`pagetitle`, `article`, `old_price`). Добавлен `#` к CSS-цветам в чанках
+- **Некорректные URL в ЛК заказов клиента (#141):** кнопка «Сбросить» фильтра и ссылки пагинации вели на корень сайта (`/?`) из-за `<base href>` в шаблоне MODX — URL формируются server-side через `makeUrl()` + `http_build_query()`, пагинация сохраняет фильтр по статусу. Добавлены недостающие SVG-иконки в спрайт (`icon-arrow-left`, `icon-truck`, `icon-credit-card`, `icon-message`), исправлен `fill` → `stroke` для Feather-иконок в деталях заказа
+- **Некорректные URL и хардкод английских сообщений в ЛК адресов (#142):** кнопки «Добавить адрес», «Редактировать», «Отмена» вели на корень сайта — URL формируются server-side через `makeUrl()` + `http_build_query()`. API-контроллер `CustomerAddressController` содержал хардкод английских строк вместо лексиконов — все сообщения заменены на `$this->modx->lexicon()`, добавлено 7 ключей в ru/en лексиконы
+
+---
+
 **Отмена заказа покупателем (#119, Issue #117):**
 - API endpoint `POST /api/v1/customer/orders/{id}/cancel` с авторизацией
 - Кнопка «Отменить заказ» в списке заказов и на странице деталей
@@ -55,6 +81,7 @@
 
 #### 🐛 Исправлено
 
+- **Отсутствие ключа `desc` в свойствах сниппетов и источников при сборке пакета (#127):** добавлена инициализация `desc` пустой строкой если ключ отсутствует в определении свойства — устраняет warning/ошибку в `resolver_04_sources` и `resolver_08_snippet_properties`
 - **httpOnly cookie token architecture (#124):** единый httpOnly cookie `ms3_token` вместо 4 несинхронизированных хранилищ (localStorage, `$_SESSION`, `ms3_customer_tokens`, `msCustomer.token`). Middleware injection (`$_COOKIE` → `$_REQUEST`) для обратной совместимости. Корзина сохраняется при логине/регистрации.
 - Корректное отображение кнопки «Сохранить» для товаров и категорий в MODX 3.2 (#118) — явное вычисление `canSave`/`locked` с учётом `save_document`, компонентных permissions и `checkPolicy('save')`
 - Формат `data` в политиках доступа для совместимости с апгрейдом MODX (#107, Issue #100) — устранено двойное JSON-кодирование при сборке пакета
