@@ -184,7 +184,9 @@ class GridConfigService
                     // price type
                     'decimals', 'currency', 'currency_position', 'thousands_separator', 'decimal_separator',
                     // weight type
-                    'unit', 'unit_position'
+                    'unit', 'unit_position',
+                    // inline edit (category-products). Add 'editor_options' when select editor is implemented in UI
+                    'editable', 'editor_type',
                 ];
                 foreach ($configKeys as $key) {
                     if (array_key_exists($key, $fieldData)) {

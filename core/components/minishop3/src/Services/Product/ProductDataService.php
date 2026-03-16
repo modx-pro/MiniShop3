@@ -483,37 +483,138 @@ class ProductDataService
     }
 
     /**
-     * Update product data
+     * Allowed fields for inline / API update (msProductData)
+     */
+    protected static array $allowedUpdateFields = [
+        'article', 'price', 'old_price', 'stock', 'weight',
+        'vendor_id', 'made_in', 'new', 'popular', 'favorite',
+    ];
+
+    /**
+     * Resource (modResource) fields updatable via same API (e.g. published)
+     */
+    protected static array $allowedResourceFields = ['published'];
+
+    /**
+     * Apply published state to product resource and save.
+     * Invokes OnDocPublished / OnDocUnPublished for plugin compatibility.
      *
-     * Loads product by ID, updates msProductData fields and saves
-     * Used in API controllers to update product data
+     * @param msProduct $product
+     * @param int $published 0 or 1
+     * @return bool True if saved successfully
+     */
+    protected function applyPublishedToResource(msProduct $product, int $published): bool
+    {
+        $product->set('published', $published);
+        if ($published) {
+            $product->set('publishedon', time());
+            $product->set('publishedby', $this->modx->user->get('id'));
+        } else {
+            $product->set('publishedon', 0);
+            $product->set('publishedby', 0);
+        }
+        if (!$product->save()) {
+            return false;
+        }
+        $eventName = $published ? 'OnDocPublished' : 'OnDocUnPublished';
+        $this->modx->invokeEvent($eventName, [
+            'id' => $product->get('id'),
+            'resource' => $product,
+        ]);
+        return true;
+    }
+
+    /**
+     * Validate productData update values (minimal server-side validation).
+     *
+     * @param array $filtered Filtered allowed fields
+     * @return bool True if valid
+     */
+    protected function validateProductDataUpdate(array $filtered): bool
+    {
+        if (isset($filtered['price']) && (float)$filtered['price'] < 0) {
+            return false;
+        }
+        if (isset($filtered['old_price']) && (float)$filtered['old_price'] < 0) {
+            return false;
+        }
+        if (isset($filtered['stock'])) {
+            if ((int)$filtered['stock'] != $filtered['stock'] || (int)$filtered['stock'] < 0) {
+                return false;
+            }
+        }
+        if (isset($filtered['weight']) && (float)$filtered['weight'] < 0) {
+            return false;
+        }
+        return true;
+    }
+
+    /** Error codes for updateProductData */
+    public const ERROR_FORBIDDEN = 403;
+    public const ERROR_NOT_FOUND = 404;
+    public const ERROR_VALIDATION = 422;
+    public const ERROR_SAVE = 500;
+
+    /**
+     * Update product data (msProductData and optionally resource fields like published).
+     * Saves productData first, then resource (published). On resource failure, rolls back productData.
      *
      * @param int $productId Product ID
      * @param array $data Data to update
-     * @return array|null Updated data or null on error
+     * @return array Success: ['ok' => true, 'data' => array]. Error: ['ok' => false, 'code' => int, 'message' => string]
      */
-    public function updateProductData(int $productId, array $data): ?array
+    public function updateProductData(int $productId, array $data): array
     {
+        if (!$this->modx->hasPermission('save_document')) {
+            return ['ok' => false, 'code' => self::ERROR_FORBIDDEN, 'message' => 'Permission denied'];
+        }
+
         /** @var msProduct $product */
         $product = $this->modx->getObject(msProduct::class, $productId);
-
         if (!$product) {
-            return null;
+            return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product not found'];
+        }
+        if (!$product->checkPolicy('save')) {
+            return ['ok' => false, 'code' => self::ERROR_FORBIDDEN, 'message' => 'Save permission denied'];
         }
 
         /** @var msProductData $productData */
         $productData = $product->loadData();
-
         if (!$productData) {
-            return null;
+            return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product data not found'];
         }
 
-        $productData->fromArray($data);
+        $filtered = array_intersect_key($data, array_flip(self::$allowedUpdateFields));
+        $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
 
-        if ($productData->save()) {
-            return $productData->toArray();
+        if (!$this->validateProductDataUpdate($filtered)) {
+            return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => 'Validation failed'];
         }
 
-        return null;
+        $fieldsToUpdate = array_intersect_key($filtered, array_flip(self::$allowedUpdateFields));
+        $oldValues = [];
+        foreach (array_keys($fieldsToUpdate) as $key) {
+            $oldValues[$key] = $productData->get($key);
+        }
+
+        $productData->fromArray($fieldsToUpdate);
+        if (!$productData->save()) {
+            return ['ok' => false, 'code' => self::ERROR_SAVE, 'message' => 'Failed to save product data'];
+        }
+
+        if (isset($resourceData['published'])) {
+            $published = $resourceData['published'] ? 1 : 0;
+            if (!$this->applyPublishedToResource($product, $published)) {
+                $productData->fromArray($oldValues);
+                $productData->save();
+                return ['ok' => false, 'code' => self::ERROR_SAVE, 'message' => 'Failed to update published state'];
+            }
+        }
+
+        $result = $productData->toArray();
+        if (isset($resourceData['published'])) {
+            $result['published'] = (bool)$product->get('published');
+        }
+        return ['ok' => true, 'data' => $result];
     }
 }

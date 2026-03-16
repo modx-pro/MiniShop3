@@ -4,13 +4,14 @@ import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
 import ConfirmDialog from 'primevue/confirmdialog'
+import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, defineProps, onMounted, ref, watch } from 'vue'
+import { computed, defineProps, nextTick, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 
 import { useSelection } from '../composables/useSelection.js'
@@ -64,6 +65,15 @@ const dragEnabled = ref(true)
 const sortField = ref('menuindex')
 const sortOrder = ref(1)
 const selectAll = ref(false)
+
+/** Inline edit: { productId, columnName } when a cell is being edited */
+const editingCell = ref(null)
+/** Current value in the inline edit input */
+const inlineEditValue = ref('')
+/** True while inline edit save request is in progress */
+const inlineEditSaving = ref(false)
+/** Ref to the current inline-edit input (one of Checkbox/InputText/InputNumber) for focus */
+const inlineEditInputRef = ref(null)
 
 // Default thumbnail from system settings
 
@@ -341,6 +351,115 @@ function renderField(data, column) {
     return column.template.replace(/\{(\w+)\}/g, (match, key) => data[key] ?? '')
   }
   return data[column.name] ?? ''
+}
+
+/**
+ * Check if a cell is in edit mode
+ */
+function isEditingCell(product, column) {
+  return (
+    editingCell.value &&
+    editingCell.value.productId === product.id &&
+    editingCell.value.columnName === column.name
+  )
+}
+
+/**
+ * Start inline edit on double-click.
+ * Blocks if another cell is currently saving to avoid race condition.
+ */
+function startInlineEdit(product, column) {
+  if (!column.editable) return
+  if (inlineEditSaving.value) return
+  editingCell.value = { productId: product.id, columnName: column.name }
+  const raw = product[column.name]
+  inlineEditValue.value = raw === null || raw === undefined ? '' : raw
+  // autofocus doesn't work on dynamically inserted elements; focus via ref after DOM update
+  nextTick(() => {
+    const comp = inlineEditInputRef.value
+    if (!comp) return
+    const el = comp.$el?.querySelector?.('input') ?? comp.$el ?? comp
+    if (el?.focus) el.focus()
+  })
+}
+
+/** Boolean columns (e.g. published) use type, not editor_type (select not in UI yet) */
+function isBooleanColumn(column) {
+  return column.type === 'boolean'
+}
+
+function normalizeValueForSave(rawValue, column) {
+  if (isBooleanColumn(column)) return rawValue ? 1 : 0
+  const editorType = column.editor_type || 'text'
+  if (editorType === 'number') {
+    if (rawValue === '' || rawValue === null) return null
+    const num = Number(rawValue)
+    return Number.isNaN(num) ? null : num
+  }
+  return rawValue
+}
+
+function isInlineValueUnchanged(original, value, column) {
+  if (isBooleanColumn(column)) {
+    return (original ? 1 : 0) === value
+  }
+  const editorType = column.editor_type || 'text'
+  if (editorType === 'number') {
+    const norm = (v) =>
+      v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v)
+    return norm(original) === norm(value)
+  }
+  const origStr = original === null || original === undefined ? '' : String(original)
+  const valStr = value === null || value === undefined ? '' : String(value)
+  return origStr === valStr
+}
+
+function clearInlineEditState() {
+  editingCell.value = null
+  inlineEditValue.value = ''
+}
+
+/**
+ * Save inline edit (blur or Enter). No API call or toast if value unchanged.
+ * Uses isSaving flag to prevent double invocation (Enter triggers blur).
+ */
+async function saveInlineEdit(product, column) {
+  if (!editingCell.value || editingCell.value.productId !== product.id || editingCell.value.columnName !== column.name) {
+    return
+  }
+  if (inlineEditSaving.value) return
+  const value = normalizeValueForSave(inlineEditValue.value, column)
+  if (isInlineValueUnchanged(product[column.name], value, column)) {
+    clearInlineEditState()
+    return
+  }
+  inlineEditSaving.value = true
+  try {
+    const res = await request.put(`/api/mgr/product-data/${product.id}`, { [column.name]: value })
+    const idx = products.value.findIndex(p => p.id === product.id)
+    if (idx >= 0) {
+      if (res && typeof res === 'object') {
+        products.value[idx] = { ...products.value[idx], ...res }
+      } else {
+        products.value[idx] = { ...products.value[idx], [column.name]: value }
+      }
+    }
+    toast.add({ severity: 'success', summary: _('success'), detail: _('inline_edit_saved'), life: 2000 })
+  } catch (error) {
+    console.error('[CategoryProductsGrid] Inline edit save failed:', error)
+    toast.add({ severity: 'error', summary: _('error'), detail: error.message || _('inline_edit_error'), life: 5000 })
+    return
+  } finally {
+    inlineEditSaving.value = false
+  }
+  clearInlineEditState()
+}
+
+/**
+ * Cancel inline edit (Escape)
+ */
+function cancelInlineEdit() {
+  clearInlineEditState()
 }
 
 /**
@@ -916,6 +1035,49 @@ onMounted(async () => {
                         />
                       </td>
 
+                      <!-- Editable column: inline edit mode -->
+                      <td
+                        v-else-if="column.editable && isEditingCell(product, column)"
+                        :style="{ width: column.width, minWidth: column.minWidth }"
+                        :class="['inline-edit-cell', { 'inline-edit-saving': inlineEditSaving }]"
+                      >
+                        <Checkbox
+                          v-if="isBooleanColumn(column)"
+                          ref="inlineEditInputRef"
+                          :model-value="!!inlineEditValue"
+                          :binary="true"
+                          :disabled="inlineEditSaving"
+                          @update:model-value="inlineEditValue = $event ? 1 : 0"
+                          @change="saveInlineEdit(product, column)"
+                        />
+                        <InputText
+                          v-else-if="(column.editor_type || 'text') === 'text'"
+                          ref="inlineEditInputRef"
+                          v-model="inlineEditValue"
+                          class="w-full"
+                          :disabled="inlineEditSaving"
+                          @blur="saveInlineEdit(product, column)"
+                          @keydown.enter.prevent="$event.target.blur()"
+                          @keydown.escape="cancelInlineEdit"
+                        />
+                        <div
+                          v-else
+                          class="inline-edit-input-wrapper w-full"
+                          @keydown.enter.capture.prevent="$event.target?.blur?.()"
+                          @keydown.escape.capture.prevent="cancelInlineEdit"
+                        >
+                          <InputNumber
+                            ref="inlineEditInputRef"
+                            v-model="inlineEditValue"
+                            class="w-full"
+                            :min-fraction-digits="0"
+                            :max-fraction-digits="4"
+                            :disabled="inlineEditSaving"
+                            @blur="saveInlineEdit(product, column)"
+                          />
+                        </div>
+                      </td>
+
                       <!-- Image column -->
                       <td v-else-if="column.type === 'image'" :style="{ width: column.width }">
                         <img
@@ -926,7 +1088,12 @@ onMounted(async () => {
                       </td>
 
                       <!-- Boolean column -->
-                      <td v-else-if="column.type === 'boolean'" :style="{ width: column.width }">
+                      <td
+                        v-else-if="column.type === 'boolean'"
+                        :style="{ width: column.width }"
+                        :class="{ 'editable-cell': column.editable }"
+                        @dblclick="column.editable && startInlineEdit(product, column)"
+                      >
                         <Tag
                           :value="product[column.name] ? _('yes') : _('no')"
                           :severity="product[column.name] ? 'success' : 'secondary'"
@@ -934,12 +1101,22 @@ onMounted(async () => {
                       </td>
 
                       <!-- Price column -->
-                      <td v-else-if="column.type === 'price'" :style="{ width: column.width }">
+                      <td
+                        v-else-if="column.type === 'price'"
+                        :style="{ width: column.width }"
+                        :class="{ 'editable-cell': column.editable }"
+                        @dblclick="column.editable && startInlineEdit(product, column)"
+                      >
                         {{ formatPrice(product[column.name]) }}
                       </td>
 
                       <!-- Weight column -->
-                      <td v-else-if="column.type === 'weight'" :style="{ width: column.width }">
+                      <td
+                        v-else-if="column.type === 'weight'"
+                        :style="{ width: column.width }"
+                        :class="{ 'editable-cell': column.editable }"
+                        @dblclick="column.editable && startInlineEdit(product, column)"
+                      >
                         {{ formatWeight(product[column.name]) }}
                       </td>
 
@@ -947,6 +1124,8 @@ onMounted(async () => {
                       <td
                         v-else-if="column.type === 'template'"
                         :style="{ width: column.width, minWidth: column.minWidth }"
+                        :class="{ 'editable-cell': column.editable }"
+                        @dblclick="column.editable && startInlineEdit(product, column)"
                       >
                         <div v-if="nested && product.category_name" class="nested-product">
                           <span v-html="renderField(product, column)"></span>
@@ -956,7 +1135,12 @@ onMounted(async () => {
                       </td>
 
                       <!-- Regular columns -->
-                      <td v-else :style="{ width: column.width, minWidth: column.minWidth }">
+                      <td
+                        v-else
+                        :style="{ width: column.width, minWidth: column.minWidth }"
+                        :class="{ 'editable-cell': column.editable }"
+                        @dblclick="column.editable && startInlineEdit(product, column)"
+                      >
                         {{ product[column.name] }}
                       </td>
                     </template>
@@ -1016,6 +1200,27 @@ onMounted(async () => {
 <style scoped>
 .category-products-grid {
   padding: 0.625rem;
+}
+
+.editable-cell {
+  cursor: text;
+}
+
+.editable-cell:hover {
+  background: var(--ms3-bg-muted, rgba(0 0 0 / 0.04));
+}
+
+.inline-edit-cell :deep(input) {
+  width: 100%;
+  min-width: 0;
+}
+
+.inline-edit-saving {
+  opacity: 0.8;
+}
+
+.inline-edit-saving :deep(input) {
+  cursor: wait;
 }
 
 .grid-header {

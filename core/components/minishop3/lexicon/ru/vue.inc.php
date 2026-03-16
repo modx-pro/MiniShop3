@@ -295,6 +295,13 @@ $_lang['delete_field_confirm_title'] = 'Подтверждение удален�
 $_lang['delete_field_confirm_message'] = 'Вы уверены, что хотите удалить поле "{name}"?';
 $_lang['field_deleted'] = 'Поле успешно удалено';
 $_lang['error_deleting_field'] = 'Ошибка при удалении поля';
+$_lang['field_editable'] = 'Редактируемое поле';
+$_lang['editor_type'] = 'Тип редактора';
+$_lang['editor_type_text'] = 'Текст';
+$_lang['editor_type_number'] = 'Число';
+$_lang['inline_edit_saved'] = 'Изменения сохранены';
+$_lang['inline_edit_error'] = 'Ошибка сохранения';
+$_lang['inline_edit_hint'] = 'Для быстрого редактирования в таблице товаров категории (двойной клик по ячейке) включите «Редактируемое поле» в колонке таблицы ниже или в диалоге редактирования колонки.';
 
 // Customers Grid Widget
 $_lang['customers_title'] = 'Клиенты';
