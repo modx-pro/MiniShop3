@@ -3,23 +3,23 @@
 namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msCategory;
-use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msVendor;
-use MODX\Revolution\modResource;
 use MODX\Revolution\Processors\Model\GetListProcessor;
-use xPDO\Om\xPDOObject;
 use xPDO\Om\xPDOQuery;
 use xPDO\Om\xPDOQueryCondition;
 
+/**
+ * Combo processor for product search/selection.
+ * Used by ms3.combo.Product (always called with combo: true).
+ */
 class GetList extends GetListProcessor
 {
     public $classKey = msProduct::class;
     public $languageTopics = ['default', 'minishop3:product'];
     public $defaultSortField = 'menuindex';
     public $defaultSortDirection = 'ASC';
-    public $parent = 0;
 
     protected $item_id = 0;
 
@@ -28,7 +28,10 @@ class GetList extends GetListProcessor
      */
     public function initialize()
     {
-        if ($this->getProperty('combo') && !$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
+        if (!$this->getProperty('combo')) {
+            return $this->failure($this->modx->lexicon('ms3_err_processor_combo_required'));
+        }
+        if (!$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
             $this->item_id = $id;
         }
         if (!$this->getProperty('limit')) {
@@ -49,22 +52,12 @@ class GetList extends GetListProcessor
     {
         $c->where(['class_key' => 'MiniShop3\Model\msProduct']);
         $c->leftJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
-        $c->leftJoin(msCategoryMember::class, 'Member', 'msProduct.id = Member.product_id');
         $c->leftJoin(msVendor::class, 'Vendor', 'Data.vendor_id = Vendor.id');
         $c->leftJoin(msCategory::class, 'Category', 'Category.id = msProduct.parent');
-        if ($this->getProperty('combo')) {
-            $c->select('msProduct.id,msProduct.pagetitle,msProduct.context_key');
-        } else {
-            $c->select($this->modx->getSelectColumns(msProduct::class, 'msProduct'));
-            $c->select($this->modx->getSelectColumns(msProductData::class, 'Data', '', ['id'], true));
-            $c->select($this->modx->getSelectColumns(msVendor::class, 'Vendor', 'vendor_', ['name']));
-            $c->select($this->modx->getSelectColumns(msCategory::class, 'Category', 'category_', ['pagetitle']));
-        }
+        $c->select('msProduct.id,msProduct.pagetitle,msProduct.context_key');
+
         if ($this->item_id) {
             $c->where(['msProduct.id' => $this->item_id]);
-            if ($parent = (int)$this->getProperty('parent')) {
-                $this->parent = $parent;
-            }
         } else {
             $query = trim($this->getProperty('query'));
             if (!empty($query)) {
@@ -85,33 +78,6 @@ class GetList extends GetListProcessor
                         'OR:Category.pagetitle:LIKE' => "%{$query}%",
                     ]);
                 }
-            }
-
-            $parent = (int)$this->getProperty('parent');
-            if (!empty($parent)) {
-                $category = $this->modx->getObject(modResource::class, $parent);
-                $this->parent = $parent;
-                $parents = [$parent];
-
-                $nested = $this->getProperty('nested', null);
-                $nested = $nested === null && $this->modx->getOption(
-                        'ms3_category_show_nested_products',
-                        null,
-                        true
-                    ) || (bool)$nested;
-                if ($nested) {
-                    $tmp = $this->modx->getChildIds($parent, 10, ['context' => $category->get('context_key')]);
-                    foreach ($tmp as $v) {
-                        $parents[] = $v;
-                    }
-                }
-                $parents = "(" . implode(',', $parents) . ")";
-                $c->query['where'][] = [
-                    [
-                        new xPDOQueryCondition(['sql' => 'msProduct.parent IN ' . $parents, 'conjunction' => 'OR']),
-                        new xPDOQueryCondition(['sql' => 'Member.category_id IN ' . $parents, 'conjunction' => 'OR'])
-                    ]
-                ];
             }
         }
 
@@ -211,158 +177,25 @@ class GetList extends GetListProcessor
      */
     public function prepareArray(array $array)
     {
-        if ($this->getProperty('combo')) {
-            $array['parents'] = [];
-            $parents = $this->modx->getParentIds($array['id'], 2, [
-                'context' => $array['context_key'],
-            ]);
-            if (empty($parents[count($parents) - 1])) {
-                unset($parents[count($parents) - 1]);
-            }
-            if (!empty($parents) && is_array($parents)) {
-                $q = $this->modx->newQuery(msCategory::class, ['id:IN' => $parents]);
-                $q->select('id,pagetitle');
-                if ($q->prepare() && $q->stmt->execute()) {
-                    while ($row = $q->stmt->fetch(\PDO::FETCH_ASSOC)) {
-                        $key = array_search($row['id'], $parents);
-                        if ($key !== false) {
-                            $parents[$key] = $row;
-                        }
+        $array['parents'] = [];
+        $parents = $this->modx->getParentIds($array['id'], 2, [
+            'context' => $array['context_key'],
+        ]);
+        if (empty($parents[count($parents) - 1])) {
+            unset($parents[count($parents) - 1]);
+        }
+        if (!empty($parents) && is_array($parents)) {
+            $q = $this->modx->newQuery(msCategory::class, ['id:IN' => $parents]);
+            $q->select('id,pagetitle');
+            if ($q->prepare() && $q->stmt->execute()) {
+                while ($row = $q->stmt->fetch(\PDO::FETCH_ASSOC)) {
+                    $key = array_search($row['id'], $parents);
+                    if ($key !== false) {
+                        $parents[$key] = $row;
                     }
                 }
-                $array['parents'] = array_reverse($parents);
             }
-        } else {
-            if ($array['parent'] != $this->parent) {
-                $array['cls'] = 'multicategory';
-                $array['category_name'] = $array['category_pagetitle'];
-            } else {
-                $array['cls'] = $array['category_name'] = '';
-            }
-
-            $array['price'] = round($array['price'], 2);
-            $array['old_price'] = round($array['old_price'], 2);
-            $array['weight'] = round($array['weight'], 3);
-
-            $this->modx->getContext($array['context_key']);
-            $array['preview_url'] = $this->modx->makeUrl($array['id'], $array['context_key']);
-
-            $array['actions'] = [];
-
-            // View
-            if (!empty($array['preview_url'])) {
-                $array['actions'][] = [
-                    'cls' => '',
-                    'icon' => 'icon icon-eye',
-                    'title' => $this->modx->lexicon('ms3_product_view'),
-                    'action' => 'viewProduct',
-                    'button' => true,
-                    'menu' => true,
-                ];
-            }
-            //Regenerate image
-            $array['actions'][] = [
-                'cls' => 'fw-900',
-                'icon' => 'icon icon-refresh',
-                'title' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
-                'multiple' => $this->modx->lexicon('ms3_gallery_file_generate_thumbs'),
-                'action' => 'generatePreview',
-                'button' => true,
-                'menu' => true,
-            ];
-            // Edit
-            $array['actions'][] = [
-                'cls' => '',
-                'icon' => 'icon icon-edit',
-                'title' => $this->modx->lexicon('ms3_product_edit'),
-                'action' => 'editProduct',
-                'button' => false,
-                'menu' => true,
-            ];
-            // Duplicate
-            $array['actions'][] = [
-                'cls' => '',
-                'icon' => 'icon icon-files-o',
-                'title' => $this->modx->lexicon('ms3_product_duplicate'),
-                'action' => 'duplicateProduct',
-                'button' => false,
-                'menu' => true,
-            ];
-            // Publish
-            if (!$array['published']) {
-                $array['actions'][] = [
-                    'cls' => 'fw-900',
-                    'icon' => 'icon icon-power-off action-green',
-                    'title' => $this->modx->lexicon('ms3_product_publish'),
-                    'multiple' => $this->modx->lexicon('ms3_product_publish'),
-                    'action' => 'publishProduct',
-                    'button' => true,
-                    'menu' => true,
-                ];
-            } else {
-                $array['actions'][] = [
-                    'cls' => 'fw-900',
-                    'icon' => 'icon icon-power-off action-gray',
-                    'title' => $this->modx->lexicon('ms3_product_unpublish'),
-                    'multiple' => $this->modx->lexicon('ms3_product_unpublish'),
-                    'action' => 'unpublishProduct',
-                    'button' => true,
-                    'menu' => true,
-                ];
-            }
-            // Show in tree
-            if (!$array['show_in_tree']) {
-                $array['actions'][] = [
-                    'cls' => '',
-                    'icon' => 'icon icon-plus',
-                    'title' => $this->modx->lexicon('ms3_product_show_in_tree'),
-                    'multiple' => $this->modx->lexicon('ms3_product_show_in_tree'),
-                    'action' => 'showProduct',
-                    'button' => false,
-                    'menu' => true,
-                ];
-            } else {
-                $array['actions'][] = [
-                    'cls' => '',
-                    'icon' => 'icon icon-minus',
-                    'title' => $this->modx->lexicon('ms3_product_hide_in_tree'),
-                    'multiple' => $this->modx->lexicon('ms3_product_hide_in_tree'),
-                    'action' => 'hideProduct',
-                    'button' => false,
-                    'menu' => true,
-                ];
-            }
-            // Delete
-            if (!$array['deleted']) {
-                $array['actions'][] = [
-                    'cls' => '',
-                    'icon' => 'icon icon-trash-o action-red',
-                    'title' => $this->modx->lexicon('ms3_product_delete'),
-                    'multiple' => $this->modx->lexicon('ms3_product_delete'),
-                    'action' => 'deleteProduct',
-                    'button' => false,
-                    'menu' => true,
-                ];
-            } else {
-                $array['actions'][] = [
-                    'cls' => '',
-                    'icon' => 'icon icon-undo action-green',
-                    'title' => $this->modx->lexicon('ms3_product_undelete'),
-                    'multiple' => $this->modx->lexicon('ms3_product_undelete'),
-                    'action' => 'undeleteProduct',
-                    'button' => true,
-                    'menu' => true,
-                ];
-            }
-            // Menu
-            $array['actions'][] = [
-                'cls' => 'fw-900',
-                'icon' => 'icon icon-cog actions-menu',
-                'menu' => false,
-                'button' => true,
-                'action' => 'showMenu',
-                'type' => 'menu',
-            ];
+            $array['parents'] = array_reverse($parents);
         }
 
         return $array;
