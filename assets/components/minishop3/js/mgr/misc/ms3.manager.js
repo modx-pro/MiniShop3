@@ -106,80 +106,79 @@ Ext.override(MODx.tree.Resource, {
         e.stopEvent();
     },
 
-    _getMSMenu: function(n) {
+    _getMSMenu: function (n) {
         let a = n.attributes;
         let ui = n.getUI();
-        console.log(ui)
         let m = [];
         m.push({
-            text: '<b>'+a.text+'</b>'
-            ,handler: function() {return false;}
-            ,header: true
+            text: '<b>' + a.text + '</b>',
+            handler: function () { return false; },
+            header: true
         });
         m.push('-');
         if (ui.hasClass('pview')) {
             m.push({
-                text: _('resource_overview')
-                ,handler: this.overviewResource
+                text: _('resource_overview'),
+                handler: this.overviewResource
             });
         }
         if (ui.hasClass('pedit')) {
             m.push({
-                text: _('resource_edit')
-                ,handler: this.editResource
+                text: _('resource_edit'),
+                handler: this.editResource
             });
         }
         if (ui.hasClass('pqupdate')) {
             m.push({
-                text: _('quick_update_resource')
-                ,classKey: a.classKey
-                ,handler: this.quickUpdateResource
+                text: _('quick_update_resource'),
+                classKey: a.classKey,
+                handler: this.quickUpdateResource
             });
         }
         if (ui.hasClass('pduplicate')) {
             m.push({
-                text: _('resource_duplicate')
-                ,handler: this.duplicateResource
+                text: _('resource_duplicate'),
+                handler: this.duplicateResource
             });
         }
         m.push({
-            text: _('resource_refresh')
-            ,handler: this.refreshResource
-            ,scope: this
+            text: _('resource_refresh'),
+            handler: this.refreshResource,
+            scope: this
         });
 
         if (ui.hasClass('pnew')) {
             m.push('-');
-            this._getCreateMenus(m,null,ui);
+            this._getCreateMenus(m, null, ui);
         }
 
         if (ui.hasClass('psave')) {
             m.push('-');
             if (ui.hasClass('ppublish') && ui.hasClass('unpublished')) {
                 m.push({
-                    text: _('resource_publish')
-                    ,handler: this.publishDocument
+                    text: _('resource_publish'),
+                    handler: this.publishDocument
                 });
             } else if (ui.hasClass('punpublish')) {
                 m.push({
-                    text: _('resource_unpublish')
-                    ,handler: this.unpublishDocument
+                    text: _('resource_unpublish'),
+                    handler: this.unpublishDocument
                 });
             }
             if (ui.hasClass('pundelete') && ui.hasClass('deleted')) {
                 m.push({
-                    text: _('resource_undelete')
-                    ,handler: this.undeleteDocument
+                    text: _('resource_undelete'),
+                    handler: this.undeleteDocument
                 });
             } else if (ui.hasClass('pdelete') && !ui.hasClass('deleted')) {
                 m.push({
-                    text: _('resource_delete')
-                    ,handler: this.deleteDocument
+                    text: _('resource_delete'),
+                    handler: this.deleteDocument
                 });
             }
         }
 
-        if(!ui.hasClass('x-tree-node-leaf')) {
+        if (!ui.hasClass('x-tree-node-leaf')) {
             m.push('-');
             m.push(this._getSortMenu());
         }
@@ -187,54 +186,58 @@ Ext.override(MODx.tree.Resource, {
         if (ui.hasClass('pview') && a.preview_url != '') {
             m.push('-');
             m.push({
-                text: _('resource_view')
-                ,handler: this.preview
+                text: _('resource_view'),
+                handler: this.preview
             });
         }
         return m;
-    }
+    },
 
-    ,_getCreateMenus: function(m,pk,ui) {
+    _getCreateMenus: function (m, pk, ui) {
         var types = MODx.config.resource_classes;
-        var o = this.fireEvent('loadCreateMenus',types);
+        var o = this.fireEvent('loadCreateMenus', types);
         if (Ext.isObject(o)) {
-            Ext.apply(types,o);
+            Ext.apply(types, o);
         }
         var coreTypes = ['MODX\\Revolution\\modDocument'];
         var ct = [];
         var qct = [];
         for (var k in types) {
+            var canCreate;
             if (coreTypes.indexOf(k) != -1) {
-                if (!ui.hasClass('pnew_'+k)) {
-                    continue;
-                }
+                canCreate = ui.hasClass('pnew_' + k) || ui.hasClass('pnew');
+            } else {
+                canCreate = true;
+            }
+            if (!canCreate) {
+                continue;
             }
             ct.push({
-                text: types[k]['text_create_here']
-                ,classKey: k
-                ,usePk: pk ? pk : false
-                ,handler: this.createResourceHere
-                ,scope: this
+                text: types[k]['text_create_here'],
+                classKey: k,
+                usePk: pk ? pk : false,
+                handler: this.createResourceHere,
+                scope: this
             });
             if (ui && ui.hasClass('pqcreate')) {
                 qct.push({
-                    text: types[k]['text_create']
-                    ,classKey: k
-                    ,handler: this.createResource
-                    ,scope: this
+                    text: types[k]['text_create'],
+                    classKey: k,
+                    handler: this.createResource,
+                    scope: this
                 });
             }
         }
         m.push({
-            text: _('create')
-            ,handler: function() {return false;}
-            ,menu: {items: ct}
+            text: _('create'),
+            handler: function () { return false; },
+            menu: { items: ct }
         });
         if (ui && ui.hasClass('pqcreate')) {
             m.push({
-                text: _('quick_create')
-                ,handler: function() {return false;}
-                ,menu: {items: qct}
+                text: _('quick_create'),
+                handler: function () { return false; },
+                menu: { items: qct }
             });
         }
 
