@@ -115,6 +115,7 @@ class ProductDataService
     {
         $productId = $productData->get('id');
 
+        $optionsExplicit = $options !== null;
         if ($options === null) {
             $options = [];
             foreach ($productData->_fieldMeta as $key => $value) {
@@ -124,6 +125,9 @@ class ProductDataService
                 }
             }
         }
+
+        // When options=null we only sync JSON fields — do not remove custom category options
+        $removeOther = $optionsExplicit ? $removeOther : false;
 
         /** @var msProductOption $optionInstance */
         $optionInstance = $this->modx->newObject(msProductOption::class);
