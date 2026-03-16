@@ -69,8 +69,8 @@
                                 <span class="badge bg-secondary">{$product.count} {'ms3_frontend_count_unit' | lexicon}</span>
                             </td>
                             <td class="text-end text-nowrap">
-                                {if $product.old_price > $product.price}
-                                    <div class="text-decoration-line-through text-muted small">{$product.old_price}</div>
+                                {if $product.old_price_formatted?}
+                                    <div class="text-decoration-line-through text-muted small">{$product.old_price_formatted}</div>
                                 {/if}
                                 <div class="fw-semibold">{$product.price_formatted}</div>
                             </td>

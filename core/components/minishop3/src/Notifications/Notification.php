@@ -5,6 +5,7 @@ namespace MiniShop3\Notifications;
 use MODX\Revolution\modX;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msProductData;
 use MiniShop3\Notifications\Messages\EmailMessage;
 use MiniShop3\Notifications\Messages\TelegramMessage;
 use MiniShop3\Notifications\Messages\SmsMessage;
@@ -204,10 +205,31 @@ abstract class Notification
     protected function getOrderProducts(): array
     {
         $products = [];
+        $productIds = [];
+
+        /** @var \MiniShop3\Model\msOrderProduct $orderProduct */
+        foreach ($this->order->getMany('Products') as $orderProduct) {
+            $productIds[] = (int) $orderProduct->get('product_id');
+        }
+        $productIds = array_unique($productIds);
+
+        // Batch load product data for old_price
+        $dataMap = [];
+        if (!empty($productIds)) {
+            $dataQuery = $this->modx->newQuery(msProductData::class);
+            $dataQuery->where(['id:IN' => $productIds]);
+            foreach ($this->modx->getIterator(msProductData::class, $dataQuery) as $data) {
+                $dataMap[$data->get('id')] = [
+                    'original_price' => (float) $data->get('price'),
+                    'old_price' => (float) $data->get('old_price'),
+                ];
+            }
+        }
 
         /** @var \MiniShop3\Model\msOrderProduct $orderProduct */
         foreach ($this->order->getMany('Products') as $orderProduct) {
             $productData = $orderProduct->toArray();
+            $pid = (int) $productData['product_id'];
 
             // Add product resource data if available
             if ($product = $orderProduct->getOne('Product')) {
@@ -220,11 +242,28 @@ abstract class Notification
             $rawCost = (float) ($productData['cost'] ?? 0);
             $rawWeight = (float) ($productData['weight'] ?? 0);
 
+            $originalPrice = $dataMap[$pid]['original_price'] ?? 0;
+            $catalogOldPrice = $dataMap[$pid]['old_price'] ?? 0;
+            $old_price = $originalPrice > $rawPrice ? $originalPrice : $catalogOldPrice;
+            $discount_price = $old_price > 0 ? $old_price - $rawPrice : 0;
+
             $productData['price'] = $this->ms3->format->price($rawPrice);
             $productData['cost'] = $this->ms3->format->price($rawCost);
             $productData['weight'] = $this->ms3->format->weight($rawWeight);
             $productData['price_formatted'] = $this->ms3->format->price($rawPrice, true);
+            $productData['old_price_formatted'] = $old_price > 0 && $old_price > $rawPrice
+                ? $this->ms3->format->price($old_price, true)
+                : '';
             $productData['cost_formatted'] = $this->ms3->format->price($rawCost, true);
+            $productData['old_cost_formatted'] = $old_price > 0 && $old_price > $rawPrice
+                ? $this->ms3->format->price(($productData['count'] ?? 0) * $old_price, true)
+                : '';
+            $productData['discount_price_formatted'] = $discount_price > 0
+                ? $this->ms3->format->price($discount_price, true)
+                : '';
+            $productData['discount_cost_formatted'] = $discount_price > 0
+                ? $this->ms3->format->price(($productData['count'] ?? 0) * $discount_price, true)
+                : '';
             $productData['weight_formatted'] = $this->ms3->format->weightWithUnit($rawWeight);
 
             // Parse options if stored as JSON

@@ -201,7 +201,19 @@ foreach ($rows as $product) {
 
     // Pre-formatted fields with currency/unit for display in chunks
     $product['price_formatted'] = $ms3->format->price($rawPrice, true);
+    $product['old_price_formatted'] = $old_price > 0 && $old_price > $rawPrice
+        ? $ms3->format->price($old_price, true)
+        : '';
     $product['cost_formatted'] = $ms3->format->price($rawCost, true);
+    $product['old_cost_formatted'] = $old_price > 0 && $old_price > $rawPrice
+        ? $ms3->format->price($product['count'] * $old_price, true)
+        : '';
+    $product['discount_price_formatted'] = $discount_price > 0
+        ? $ms3->format->price($discount_price, true)
+        : '';
+    $product['discount_cost_formatted'] = $discount_price > 0
+        ? $ms3->format->price($product['count'] * $discount_price, true)
+        : '';
     $product['weight_formatted'] = $ms3->format->weightWithUnit($rawWeight);
 
     $product['id'] = (int)$product['id'];

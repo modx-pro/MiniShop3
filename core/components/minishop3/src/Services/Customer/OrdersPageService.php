@@ -133,8 +133,7 @@ class OrdersPageService extends CustomerPageService
             $orderData = $order->toArray();
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
-            $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
-            $orderData['cost_with_currency'] = $this->ms3->format->price($orderData['cost'], true);
+            $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost'], true);
 
             $statusId = (int) $orderData['status_id'];
             $orderData['status_name'] = $statusMap[$statusId]['name'] ?? '';
@@ -309,7 +308,19 @@ class OrdersPageService extends CustomerPageService
 
             // Pre-formatted fields with currency/unit for display in chunks
             $productData['price_formatted'] = $this->ms3->format->price($rawPrice, true);
+            $productData['old_price_formatted'] = $old_price > 0 && $old_price > $rawPrice
+                ? $this->ms3->format->price($old_price, true)
+                : '';
             $productData['cost_formatted'] = $this->ms3->format->price($rawCost, true);
+            $productData['old_cost_formatted'] = $old_price > 0 && $old_price > $rawPrice
+                ? $this->ms3->format->price($productData['count'] * $old_price, true)
+                : '';
+            $productData['discount_price_formatted'] = $discount_price > 0
+                ? $this->ms3->format->price($discount_price, true)
+                : '';
+            $productData['discount_cost_formatted'] = $discount_price > 0
+                ? $this->ms3->format->price($productData['count'] * $discount_price, true)
+                : '';
             $productData['weight_formatted'] = $this->ms3->format->weightWithUnit($rawWeight);
 
             if (!empty($productData['options']) && is_array($productData['options'])) {
@@ -363,8 +374,7 @@ class OrdersPageService extends CustomerPageService
             $orderData = $order->toArray();
 
             $orderData['createdon_formatted'] = date('d.m.Y H:i', strtotime($orderData['createdon']));
-            $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost']);
-            $orderData['cost_with_currency'] = $this->ms3->format->price($orderData['cost'], true);
+            $orderData['cost_formatted'] = $this->ms3->format->price($orderData['cost'], true);
 
             $statusId = (int) $orderData['status_id'];
             $orderData['status_name'] = $statusMap[$statusId]['name'] ?? '';

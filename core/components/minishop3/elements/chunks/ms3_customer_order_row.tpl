@@ -13,7 +13,7 @@
         </span>
     </td>
     <td class="text-end text-nowrap fw-bold">
-        {$cost_with_currency}
+        {$cost_formatted}
     </td>
     <td class="text-end">
         <div class="d-flex gap-2 justify-content-end" role="group">

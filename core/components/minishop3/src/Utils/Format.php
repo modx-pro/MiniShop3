@@ -165,6 +165,7 @@ class Format
     }
 
     /**
+     * Calculate discount percentage
      *
      * @param float|int $oldPrice Old price
      * @param float|int $newPrice New price
