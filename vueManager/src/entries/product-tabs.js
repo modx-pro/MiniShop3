@@ -13,6 +13,7 @@ import Aura from '@primeuix/themes/aura'
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
+import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 import { createApp } from 'vue'
 
@@ -139,6 +140,7 @@ function createVueApp(props) {
   })
 
   app.use(ToastService)
+  app.use(ConfirmationService)
 
   return app
 }

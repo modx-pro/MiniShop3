@@ -67,16 +67,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
 
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);
-        if ($show_gallery) {
-            $this->addCss($assetsUrl . 'css/mgr/vue-dist/gallery-uploader.min.css');
-            // Vue module with VueTools dependency check
-            $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/gallery-uploader.min.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/misc/ext.ddview.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.panel.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.toolbar.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.view.js');
-            $this->addLastJavascript($assetsUrl . 'js/mgr/product/gallery/gallery.window.js');
-        }
 
         // Customizable product fields feature
         $product_fields = array_merge($this->resource->getAllFieldsNames(), ['syncsite']);
@@ -128,6 +118,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'data_fields' => $product_data_fields,
             'additional_fields' => [],
             'media_source' => $this->getSourceProperties(),
+            'sources' => $this->getMediaSourcesList(),
             'isHideContent' => $this->isHideContent(),
             'product_remember_tabs' => (bool)$this->getOption('ms3_product_remember_tabs', null, true),
             'lexicon' => [
@@ -227,5 +218,28 @@ class msProductUpdateManagerController extends msResourceUpdateController
         }
 
         return $properties;
+    }
+
+    /**
+     * Get list of available media sources
+     *
+     * @return array<int, array{id: int, name: string}>
+     */
+    public function getMediaSourcesList(): array
+    {
+        $sources = [];
+        $c = $this->modx->newQuery(\MODX\Revolution\Sources\modMediaSource::class);
+        $c->sortby('name', 'ASC');
+        $collection = $this->modx->getIterator(\MODX\Revolution\Sources\modMediaSource::class, $c);
+        foreach ($collection as $source) {
+            if ($source->checkPolicy('view')) {
+                $sources[] = [
+                    'id' => $source->get('id'),
+                    'name' => $source->get('name'),
+                ];
+            }
+        }
+
+        return $sources;
     }
 }

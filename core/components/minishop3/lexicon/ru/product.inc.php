@@ -156,9 +156,9 @@ $_lang['ms3_gallery_file_generate_thumbs'] = 'Обновить превьюшк�
 $_lang['ms3_gallery_file_generate_thumbs_confirm'] = 'Вы действительно хотите обновить превью всех файлов?';
 $_lang['ms3_gallery_file_delete'] = 'Удалить файл';
 $_lang['ms3_gallery_file_delete_all'] = 'Удалить все';
-$_lang['ms3_gallery_file_delete_confirm'] = 'Вы действительно хотите удалить этот файл вместе со всеми его уменьшенными копиями?<br/>Эта операция необратима.';
+$_lang['ms3_gallery_file_delete_confirm'] = 'Вы действительно хотите удалить этот файл вместе со всеми его уменьшенными копиями? Эта операция необратима.';
 $_lang['ms3_gallery_file_delete_multiple'] = 'Удалить файлы';
-$_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Вы действительно хотите удалить эти файлы со всеми их уменьшенными копиями?<br/>Эта операция необратима.';
+$_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Вы действительно хотите удалить эти файлы со всеми их уменьшенными копиями? Эта операция необратима.';
 
 $_lang['ms3_gallery_errors'] = 'Ошибки при загрузке';
 
@@ -183,5 +183,19 @@ $_lang['ms3_gallery_uppy_upload_x_files_0'] = 'Загрузить %{smart_count}
 $_lang['ms3_gallery_uppy_upload_x_files_1'] = 'Загрузить %{smart_count} файла';
 $_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Загрузить %{smart_count} файлов';
 $_lang['ms3_gallery_uppy_note_max_size'] = 'Макс. размер: %{maxSize}';
+$_lang['ms3_gallery_uppy_back'] = 'Назад';
+$_lang['ms3_gallery_uppy_add_more_files'] = 'Добавить ещё файлы';
+$_lang['ms3_gallery_uppy_drop_hint'] = 'Перетащите файлы сюда';
+$_lang['ms3_gallery_uppy_error'] = 'Ошибка';
+$_lang['ms3_gallery_uppy_failed_to_upload'] = 'Не удалось загрузить %{file}';
+$_lang['ms3_gallery_uppy_no_duplicates'] = 'Нельзя добавить дубликат файла \'%{fileName}\', он уже существует';
+$_lang['ms3_gallery_uppy_no_files_found'] = 'У вас нет файлов или папок';
+$_lang['ms3_gallery_uppy_pause_upload'] = 'Приостановить загрузку';
+$_lang['ms3_gallery_uppy_resume_upload'] = 'Возобновить загрузку';
+
+$_lang['ms3_gallery_search_placeholder'] = 'Поиск файлов...';
+$_lang['ms3_gallery_empty_text'] = 'Файлов нет. Загрузите через область выше.';
+$_lang['ms3_gallery_drag_hint'] = 'Перетащите для изменения порядка';
+$_lang['ms3_product_change_source_confirm'] = 'Вы уверены, что хотите изменить источник файлов? Страница будет перезагружена.';
 
 $_lang['ms3_product_data_vue'] = 'Данные товара (Vue)';

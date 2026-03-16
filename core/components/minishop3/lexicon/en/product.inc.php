@@ -154,9 +154,9 @@ $_lang['ms3_gallery_file_generate_thumbs'] = 'Regenerate Thumbnails';
 $_lang['ms3_gallery_file_generate_thumbs_confirm'] = 'Are you sure you want to regenerate thumbnails for all files?';
 $_lang['ms3_gallery_file_delete'] = 'Delete File';
 $_lang['ms3_gallery_file_delete_all'] = 'Delete All';
-$_lang['ms3_gallery_file_delete_confirm'] = 'Are you sure you want to delete this file with all its thumbnails?<br/>This operation is irreversible.';
+$_lang['ms3_gallery_file_delete_confirm'] = 'Are you sure you want to delete this file with all its thumbnails? This operation is irreversible.';
 $_lang['ms3_gallery_file_delete_multiple'] = 'Delete Files';
-$_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Are you sure you want to delete these files with all their thumbnails?<br/>This operation is irreversible.';
+$_lang['ms3_gallery_file_delete_multiple_confirm'] = 'Are you sure you want to delete these files with all their thumbnails? This operation is irreversible.';
 
 $_lang['ms3_gallery_errors'] = 'Upload Errors';
 
@@ -181,6 +181,20 @@ $_lang['ms3_gallery_uppy_upload_x_files_0'] = 'Upload %{smart_count} file';
 $_lang['ms3_gallery_uppy_upload_x_files_1'] = 'Upload %{smart_count} files';
 $_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Upload %{smart_count} files';
 $_lang['ms3_gallery_uppy_note_max_size'] = 'Maximum size: %{maxSize}';
+$_lang['ms3_gallery_uppy_back'] = 'Back';
+$_lang['ms3_gallery_uppy_add_more_files'] = 'Add more files';
+$_lang['ms3_gallery_uppy_drop_hint'] = 'Drop your files here';
+$_lang['ms3_gallery_uppy_error'] = 'Error';
+$_lang['ms3_gallery_uppy_failed_to_upload'] = 'Failed to upload %{file}';
+$_lang['ms3_gallery_uppy_no_duplicates'] = 'Cannot add the duplicate file \'%{fileName}\', it already exists';
+$_lang['ms3_gallery_uppy_no_files_found'] = 'You have no files or folders here';
+$_lang['ms3_gallery_uppy_pause_upload'] = 'Pause upload';
+$_lang['ms3_gallery_uppy_resume_upload'] = 'Resume upload';
+
+$_lang['ms3_gallery_search_placeholder'] = 'Search files...';
+$_lang['ms3_gallery_empty_text'] = 'No images yet. Upload files using the area above.';
+$_lang['ms3_gallery_drag_hint'] = 'Drag to reorder';
+$_lang['ms3_product_change_source_confirm'] = 'Are you sure you want to change the media source? The page will be reloaded.';
 
 $_lang['ms3_product_data_vue'] = 'Product Data (Vue)';
 
