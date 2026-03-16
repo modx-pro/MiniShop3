@@ -228,7 +228,9 @@ class msProductUpdateManagerController extends msResourceUpdateController
     public function getMediaSourcesList(): array
     {
         $sources = [];
-        $collection = $this->modx->getIterator(\MODX\Revolution\Sources\modMediaSource::class);
+        $c = $this->modx->newQuery(\MODX\Revolution\Sources\modMediaSource::class);
+        $c->sortby('name', 'ASC');
+        $collection = $this->modx->getIterator(\MODX\Revolution\Sources\modMediaSource::class, $c);
         foreach ($collection as $source) {
             if ($source->checkPolicy('view')) {
                 $sources[] = [

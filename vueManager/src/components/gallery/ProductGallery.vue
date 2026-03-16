@@ -47,7 +47,7 @@ const images = ref([])
 const total = ref(0)
 const searchQuery = ref('')
 const currentStart = ref(0)
-const pageSize = 20
+const pageSize = 50
 
 // Edit dialog
 const editDialogVisible = ref(false)
@@ -57,13 +57,25 @@ const editingFile = ref(null)
 const sources = ref(props.config.sources || [])
 const currentSourceId = ref(props.record.source_id || props.record.source || 1)
 
-// Connector URL
+// Connector URL for uploader
 const connectorUrl =
   (typeof ms3 !== 'undefined' && ms3?.config?.connector_url) ||
   '/assets/components/minishop3/connector.php'
 
 // Media source config
 const mediaSource = props.config.media_source || {}
+
+// Build allowed file types from media source config
+const allowedFileTypes = (() => {
+  if (mediaSource.allowedFileTypes) {
+    const exts = mediaSource.allowedFileTypes
+      .split(',')
+      .map(e => '.' + e.trim().toLowerCase())
+      .filter(Boolean)
+    if (exts.length > 0) return exts
+  }
+  return ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/heic']
+})()
 
 /**
  * Update product thumbnail in the page
@@ -289,8 +301,17 @@ function onChangeSource(sourceId) {
     message: _('ms3_product_change_source_confirm'),
     header: _('ms3_product_source'),
     icon: 'pi pi-exclamation-triangle',
-    accept: () => {
-      updateProductSource(props.productId, sourceId)
+    accept: async () => {
+      try {
+        await updateProductSource(props.productId, sourceId)
+      } catch (error) {
+        toast.add({
+          severity: 'error',
+          summary: _('ms3_gallery_errors'),
+          detail: error.message,
+          life: 5000,
+        })
+      }
     },
   })
 }
@@ -324,6 +345,9 @@ onMounted(() => {
       :source-id="currentSourceId"
       :connector-url="connectorUrl"
       :max-file-size="Number(mediaSource.maxUploadSize) || 10485760"
+      :max-width="Number(mediaSource.maxUploadWidth) || 1920"
+      :max-height="Number(mediaSource.maxUploadHeight) || 1080"
+      :allowed-file-types="allowedFileTypes"
       @upload-complete="onUploadComplete"
     />
 

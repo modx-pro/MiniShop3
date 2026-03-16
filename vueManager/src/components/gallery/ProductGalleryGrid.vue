@@ -3,7 +3,7 @@ import { useLexicon } from '@vuetools/useLexicon'
 import ContextMenu from 'primevue/contextmenu'
 import InputText from 'primevue/inputtext'
 import Paginator from 'primevue/paginator'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 
 import { debounce } from '../../utils/modx.js'
@@ -73,13 +73,16 @@ const contextMenuItems = computed(() => [
   },
 ])
 
-// Local copy for draggable (mutated via v-model)
-const localImages = computed({
-  get: () => props.images,
-  set: () => {
-    // Handled by onDragEnd
+// Local copy for draggable — allows instant visual reorder
+const localImages = ref([])
+
+watch(
+  () => props.images,
+  val => {
+    localImages.value = [...val]
   },
-})
+  { immediate: true }
+)
 
 const debouncedSearch = debounce(query => {
   currentPage.value = 0
@@ -152,7 +155,7 @@ function onContextMenu(event, image) {
     <!-- Image grid -->
     <draggable
       v-else
-      :model-value="localImages"
+      v-model="localImages"
       item-key="id"
       class="gallery-images"
       ghost-class="gallery-ghost"
