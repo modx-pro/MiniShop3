@@ -1,7 +1,6 @@
 <?php
 
 use MiniShop3\Model\msCategory;
-use MiniShop3\Model\msProduct;
 
 if (!class_exists('msResourceUpdateController')) {
     require_once dirname(__FILE__, 2) . '/resource_update.class.php';
@@ -41,30 +40,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $mgrUrl = $this->getOption('manager_url', null, MODX_MANAGER_URL);
         $assetsUrl = $this->ms3->config['assetsUrl'];
 
-        $category_option_keys = array();
         $showOptions = (bool)$this->getOption('ms3_category_show_options', null, true);
-        if ($showOptions) {
-            $category_option_keys = $this->resource->getOptionKeys();
-        }
-
-        /** @var msProduct $product */
-        $product = $this->modx->newObject(msProduct::class);
-        $product_fields = array_merge(
-            $product->getAllFieldsNames(),
-            $category_option_keys,
-            array('actions', 'preview_url', 'cls', 'vendor_name', 'category_name')
-        );
-
-        $category_grid_fields = $this->getOption('ms3_category_grid_fields');
-        if (!$category_grid_fields) {
-            $category_grid_fields = 'id,pagetitle,article,price,weight,image';
-        }
-
-        $category_grid_fields = array_map('trim', explode(',', $category_grid_fields));
-        $grid_fields = array_values(array_intersect($category_grid_fields, $product_fields));
-        if (!in_array('actions', $grid_fields)) {
-            $grid_fields[] = 'actions';
-        }
 
         if ($this->resource instanceof msCategory) {
             $neighborhood = $this->resource->getNeighborhood();
@@ -94,19 +70,10 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-products.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-products.min.js');
 
-        $category_option_fields = array();
-        if ($showOptions) {
-            $category_option_fields = $this->resource->getOptionFields($grid_fields);
-        }
-
         $config = array(
             'assets_url' => $this->ms3->config['assetsUrl'],
             'connector_url' => $this->ms3->config['connectorUrl'],
             'show_options' => $showOptions,
-            'product_fields' => $product_fields,
-            'grid_fields' => $grid_fields,
-            'option_keys' => $category_option_keys,
-            'option_fields' => $category_option_fields,
             'default_thumb' => $this->ms3->config['defaultThumb'],
             'show_nested_products' => (bool) $this->modx->getOption('ms3_category_show_nested_products', null, true),
             'category_products_rows' => (int) $this->getOption('ms3_category_products_default_rows', null, 20),

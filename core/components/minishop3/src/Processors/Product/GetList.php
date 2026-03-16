@@ -4,7 +4,6 @@ namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryMember;
-use MiniShop3\Model\msOption;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msVendor;
@@ -23,7 +22,6 @@ class GetList extends GetListProcessor
     public $parent = 0;
 
     protected $item_id = 0;
-    protected $options = [];
 
     /**
      * @return bool
@@ -32,13 +30,6 @@ class GetList extends GetListProcessor
     {
         if ($this->getProperty('combo') && !$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
             $this->item_id = $id;
-        } else {
-            $showOptions = (bool)$this->modx->getOption('ms3_category_show_options', null, true);
-            if ($showOptions) {
-                $grid_fields = $this->modx->getOption('ms3_category_grid_fields');
-                $grid_fields = array_map('trim', explode(',', $grid_fields));
-                $this->options = $this->modx->getIterator('msOption', ['key:IN' => $grid_fields]);
-            }
         }
         if (!$this->getProperty('limit')) {
             $this->setProperty('limit', 20);
@@ -255,14 +246,6 @@ class GetList extends GetListProcessor
 
             $this->modx->getContext($array['context_key']);
             $array['preview_url'] = $this->modx->makeUrl($array['id'], $array['context_key']);
-
-            // Options
-            if (!empty($this->options)) {
-                /** @var msOption $option */
-                foreach ($this->options as $option) {
-                    $array['options-' . $option->get('key')] = $option->getRowValue($array['id']);
-                }
-            }
 
             $array['actions'] = [];
 
