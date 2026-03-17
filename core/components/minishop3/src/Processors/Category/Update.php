@@ -54,6 +54,15 @@ class Update extends UpdateProcessor
 
 
     /**
+     * @return void
+     */
+    public function handleCheckBoxes()
+    {
+        parent::handleCheckBoxes();
+        $this->setCheckbox('hide_children_in_tree');
+    }
+
+    /**
      * @return bool
      */
     public function beforeSave()
