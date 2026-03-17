@@ -132,7 +132,7 @@ class msProductCreateManagerController extends msResourceCreateController
             'xtype' => 'ms3-page-product-create',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
-            'publish_document' => $this->canPublish,
+            'publish_document' => (int) $this->canPublish,
             'canSave' => (int) ($this->canSave && $this->modx->hasPermission('msproduct_save')),
             'show_tvs' => (int) !empty($this->tvCounts),
             'mode' => 'create',
