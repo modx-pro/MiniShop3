@@ -23,9 +23,18 @@ import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref } from 'vue'
+import {
+  computed,
+  defineExpose,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 
 import request from '../request.js'
+import { normalizeOrderPluginTab } from '../utils/orderPluginTab.js'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -96,8 +105,11 @@ const customerSuggestions = ref([])
 const searchingCustomers = ref(false)
 const createCustomerFromData = ref(false)
 
-// Order tabs
+// Order tabs: built-ins (info/products/address/history) + MS3OrderTabsRegistry plugin tabs
 const orderActiveTab = ref('info')
+const pluginTabs = ref([])
+/** ExtJS plugin panels mounted lazily per tab key; destroyed in onBeforeUnmount */
+const mountedExtPluginComponents = ref({})
 
 // Duplicate customer dialog state
 const showDuplicateDialog = ref(false)
@@ -123,6 +135,27 @@ const orderId = computed(() => {
 
 const isCreateMode = computed(() => {
   return orderId.value === 'new' || orderId.value === 0
+})
+
+const managerConfig = computed(() => {
+  return typeof ms3 !== 'undefined' ? ms3.config : {}
+})
+
+/** Fixed positions 0–3; must stay in sync with RESERVED_ORDER_TAB_KEYS in orderPluginTab.js */
+const builtInOrderTabs = computed(() => [
+  { key: 'info', title: _('order_info'), position: 0, hideOnCreate: false, kind: 'builtin' },
+  { key: 'products', title: _('order_products'), position: 1, hideOnCreate: true, kind: 'builtin' },
+  { key: 'address', title: _('order_address'), position: 2, hideOnCreate: false, kind: 'builtin' },
+  { key: 'history', title: _('order_history'), position: 3, hideOnCreate: true, kind: 'builtin' },
+])
+
+/** Built-in + plugin tabs, sorted by `position`; respects hideOnCreate per tab */
+const orderTabsConfig = computed(() => {
+  const builtIn = builtInOrderTabs.value.filter(t => !(t.hideOnCreate && isCreateMode.value))
+  const plugins = pluginTabs.value
+    .filter(t => !(t.hideOnCreate && isCreateMode.value))
+    .map(t => ({ ...t, kind: 'plugin' }))
+  return [...builtIn, ...plugins].sort((a, b) => (a.position ?? 100) - (b.position ?? 100))
 })
 
 // Draft status ID (typically 1)
@@ -1598,6 +1631,142 @@ function goBack() {
 }
 
 /**
+ * Registers a plugin tab (called by window.MS3OrderTabsRegistry or tests).
+ * Validation lives in normalizeOrderPluginTab().
+ */
+function registerPluginTab(tabData) {
+  const normalized = normalizeOrderPluginTab(tabData)
+  if (!normalized.ok) {
+    console.warn(`[OrderView] ${normalized.reason}`, tabData)
+    return false
+  }
+  const exists = pluginTabs.value.some(t => t.key === normalized.tab.key)
+  if (exists) {
+    console.warn(`[OrderView] Tab with key "${normalized.tab.key}" already registered`)
+    return false
+  }
+  pluginTabs.value.push(normalized.tab)
+  return true
+}
+
+defineExpose({ registerPluginTab })
+
+/**
+ * Props passed to Vue plugin tab components (same contract as ExtJS tabs below).
+ * User `tab.props` is spread first; core fields override name collisions intentionally.
+ */
+function pluginVueProps(tab) {
+  return {
+    ...(tab.props || {}),
+    orderId: orderId.value,
+    order: order.value,
+    config: managerConfig.value,
+    isCreateMode: isCreateMode.value,
+  }
+}
+
+/** Polls for TabPanel DOM (PrimeVue may render the panel slightly after tab switch). */
+function waitForOrderTabElement(id, callback, maxAttempts = 100) {
+  let attempts = 0
+  const check = () => {
+    const element = document.getElementById(id)
+    if (element) {
+      callback(element)
+    } else if (attempts < maxAttempts) {
+      attempts++
+      setTimeout(check, 50)
+    } else {
+      console.warn(`[OrderView] Element #${id} not found after ${maxAttempts} attempts`)
+    }
+  }
+  check()
+}
+
+/**
+ * Lazy-mounts an ExtJS panel into the plugin tab container.
+ * Merge order: xtype/renderTo/width, then extConfig, then core fields (order, orderId, config, isCreateMode).
+ *
+ * The Ext instance is created once per tab key when the user first selects the tab. Later changes to
+ * Vue’s `order` (after API load, save, etc.) are not pushed into Ext — plugin panels must implement
+ * their own listeners, polling, or `load` hooks if they need live data.
+ */
+function mountExtJSOrderPlugin(tab) {
+  if (mountedExtPluginComponents.value[tab.key]) {
+    return
+  }
+  const containerId = `ms3-order-tab-${tab.key}`
+  waitForOrderTabElement(containerId, container => {
+    try {
+      if (typeof Ext === 'undefined') {
+        console.error('[OrderView] Ext is not defined')
+        return
+      }
+      const extComponent = Ext.create({
+        xtype: tab.xtype,
+        renderTo: container,
+        width: '100%',
+        ...tab.extConfig,
+        order: order.value,
+        orderId: orderId.value,
+        config: managerConfig.value,
+        isCreateMode: isCreateMode.value,
+      })
+      mountedExtPluginComponents.value[tab.key] = extComponent
+    } catch (error) {
+      console.error(`[OrderView] Failed to mount ExtJS order tab ${tab.key}:`, error)
+    }
+  })
+}
+
+function destroyPluginExtComponents() {
+  Object.keys(mountedExtPluginComponents.value).forEach(key => {
+    const component = mountedExtPluginComponents.value[key]
+    if (component && typeof component.destroy === 'function') {
+      try {
+        component.destroy()
+      } catch (e) {
+        console.warn(`[OrderView] Error destroying plugin ExtJS component ${key}:`, e)
+      }
+    }
+  })
+  mountedExtPluginComponents.value = {}
+}
+
+watch(
+  () => orderTabsConfig.value.map(t => t.key),
+  keys => {
+    if (keys.length === 0) return
+    if (!keys.includes(orderActiveTab.value)) {
+      orderActiveTab.value = keys[0]
+    }
+  },
+  { immediate: true }
+)
+
+watch(orderActiveTab, () => {
+  nextTick(() => {
+    const tab = orderTabsConfig.value.find(t => t.key === orderActiveTab.value)
+    if (
+      tab &&
+      tab.kind === 'plugin' &&
+      tab.type === 'extjs' &&
+      tab.xtype &&
+      !mountedExtPluginComponents.value[tab.key]
+    ) {
+      mountExtJSOrderPlugin(tab)
+    }
+  })
+})
+
+onBeforeUnmount(() => {
+  destroyPluginExtComponents()
+  // Clears registry root so late register() calls queue again if the app remounts in the same page
+  if (window.MS3OrderTabsRegistry) {
+    window.MS3OrderTabsRegistry._onUnmounted()
+  }
+})
+
+/**
  * Format date
  */
 function formatDate(dateString) {
@@ -2187,13 +2356,11 @@ onMounted(async () => {
     <template v-else-if="order">
       <Tabs v-model:value="orderActiveTab">
         <TabList>
-          <Tab value="info">{{ _('order_info') }}</Tab>
-          <Tab v-if="!isCreateMode" value="products">{{ _('order_products') }}</Tab>
-          <Tab value="address">{{ _('order_address') }}</Tab>
-          <Tab v-if="!isCreateMode" value="history">{{ _('order_history') }}</Tab>
+          <Tab v-for="t in orderTabsConfig" :key="t.key" :value="t.key">{{ t.title }}</Tab>
         </TabList>
         <TabPanels>
-          <TabPanel value="info">
+          <TabPanel v-for="tab in orderTabsConfig" :key="tab.key" :value="tab.key">
+            <template v-if="tab.kind === 'builtin' && tab.key === 'info'">
             <!-- Static Order Summary Section (only in edit mode) -->
             <Fieldset
               v-if="!isCreateMode"
@@ -2392,10 +2559,9 @@ onMounted(async () => {
                 @click="goBack"
               />
             </div>
-          </TabPanel>
+            </template>
 
-          <!-- Products Tab (dynamic columns from grid config) - hidden in create mode -->
-          <TabPanel v-if="!isCreateMode" value="products">
+            <template v-else-if="tab.kind === 'builtin' && tab.key === 'products'">
             <div class="products-toolbar mb-3">
               <Button
                 :label="_('order_add_product')"
@@ -2546,10 +2712,9 @@ onMounted(async () => {
                 />
               </template>
             </DataTable>
-          </TabPanel>
+            </template>
 
-          <!-- Address Tab (dynamic fields grouped by sections) -->
-          <TabPanel value="address">
+            <template v-else-if="tab.kind === 'builtin' && tab.key === 'address'">
             <!-- Customer Search Section (in create mode or when order is draft) -->
             <Fieldset
               v-if="isCreateMode || isDraft"
@@ -2736,10 +2901,9 @@ onMounted(async () => {
                 @click="goBack"
               />
             </div>
-          </TabPanel>
+            </template>
 
-          <!-- History Tab - hidden in create mode -->
-          <TabPanel v-if="!isCreateMode" value="history">
+            <template v-else-if="tab.kind === 'builtin' && tab.key === 'history'">
             <DataTable :value="logs" striped-rows responsive-layout="scroll">
               <Column field="timestamp" :header="_('log_date')" style="width: 11.25rem">
                 <template #body="{ data }">
@@ -2754,6 +2918,15 @@ onMounted(async () => {
                 </template>
               </Column>
             </DataTable>
+            </template>
+
+            <!-- Third-party tabs: window.MS3OrderTabsRegistry (see order.js, orderPluginTab.js) -->
+            <template v-else-if="tab.kind === 'plugin' && tab.type === 'vue' && tab.component">
+              <component :is="tab.component" v-bind="pluginVueProps(tab)" />
+            </template>
+            <template v-else-if="tab.kind === 'plugin' && tab.type === 'extjs' && tab.xtype">
+              <div :id="`ms3-order-tab-${tab.key}`" class="order-extjs-tab-container"></div>
+            </template>
           </TabPanel>
         </TabPanels>
       </Tabs>
@@ -2775,6 +2948,18 @@ onMounted(async () => {
   padding: 1.25rem;
 }
 
+.order-extjs-tab-container {
+  min-height: 18.75rem;
+  width: 100%;
+}
+
+.order-extjs-tab-container :deep(.x-panel) {
+  width: 100% !important;
+}
+
+.order-extjs-tab-container :deep(.x-panel-body) {
+  padding: 0.625rem;
+}
 .order-header {
   display: flex;
   align-items: center;

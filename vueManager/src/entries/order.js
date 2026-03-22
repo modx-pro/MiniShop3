@@ -17,6 +17,111 @@ import { createApp } from 'vue'
 
 import OrderView from '../components/OrderView.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+import { normalizeOrderPluginTab, snapshotOrderTabConfigForQueue } from '../utils/orderPluginTab.js'
+
+/**
+ * Plugin registry for third-party order manager tabs (Vue / ExtJS). See GitHub #166.
+ * Same lifecycle as ProductTabsRegistry: call `register()` before or after Vue mount;
+ * pre-mount entries are queued (snapshotted) and flushed in `_onMounted(instance)`.
+ *
+ * Tab config fields:
+ * - `key` (string, required) — unique id; must not be info|products|address|history
+ * - `title` (string, required) — header label
+ * - `type` — `'vue'` (default) or `'extjs'`
+ * - `component` — Vue: options object (imported SFC) or registered component name string
+ * - `xtype` — ExtJS: component xtype
+ * - `extConfig` — extra ExtJS config; merged before core props (see OrderView mountExtJSOrderPlugin)
+ * - `props` — extra Vue props (merged before orderId, order, config, isCreateMode)
+ * - `position` (number, default 100) — lower sorts earlier
+ * - `hideOnCreate` — hide tab while creating a new order (draft flow)
+ *
+ * Vue and ExtJS tabs receive: `orderId`, `order`, `config` (mgr ms3.config), `isCreateMode`.
+ *
+ * **Vue tabs** get reactive updates: props change when `order` loads or is edited in the manager.
+ *
+ * **ExtJS tabs** are created once when the user first opens the tab; `order` / `orderId` / `isCreateMode`
+ * are snapshots at creation time. The core does not push later Vue state into the Ext instance — implement
+ * `listeners`, a custom `initComponent`, or reload logic inside your xtype if you need live data.
+ *
+ * @example Vue tab (prefer a component definition from your bundle; string names need app.component())
+ * window.MS3OrderTabsRegistry.register({
+ *   key: 'tracking',
+ *   title: 'Tracking',
+ *   type: 'vue',
+ *   component: MyTrackingTab,
+ *   position: 10,
+ * })
+ *
+ * @example ExtJS tab — extConfig merges first; order, orderId, config, isCreateMode override extConfig keys
+ * window.MS3OrderTabsRegistry.register({
+ *   key: 'delivery',
+ *   title: 'Delivery',
+ *   type: 'extjs',
+ *   xtype: 'my-delivery-panel',
+ *   extConfig: { foo: 1 },
+ * })
+ */
+class OrderTabsRegistry {
+  constructor() {
+    /** @type {object[]} snapshotted tab configs (see `snapshotOrderTabConfigForQueue`) queued before mount */
+    this.pendingTabs = []
+    /** @type {import('vue').ComponentPublicInstance | null} */
+    this._instance = null
+    this._mounted = false
+  }
+
+  /**
+   * Before mount, valid configs are queued as a shallow snapshot (see `snapshotOrderTabConfigForQueue`)
+   * so later mutations of the caller’s object do not change the queued registration.
+   *
+   * @param {object} tabConfig
+   * @returns {boolean} false if validation failed or duplicate key
+   */
+  register(tabConfig) {
+    if (this._mounted && this._instance) {
+      return this._instance.registerPluginTab(tabConfig)
+    }
+
+    const normalized = normalizeOrderPluginTab(tabConfig)
+    if (!normalized.ok) {
+      console.warn(`[OrderTabsRegistry] ${normalized.reason}`, tabConfig)
+      return false
+    }
+
+    const existsInPending = this.pendingTabs.some(t => t.key === normalized.tab.key)
+    if (existsInPending) {
+      console.warn(`[OrderTabsRegistry] Tab "${normalized.tab.key}" already registered`)
+      return false
+    }
+
+    this.pendingTabs.push(snapshotOrderTabConfigForQueue(tabConfig))
+    return true
+  }
+
+  /**
+   * Called from `init()` after app.mount(). Flushes queued configs through `registerPluginTab` (single normalize).
+   * @param {import('vue').ComponentPublicInstance} instance
+   */
+  _onMounted(instance) {
+    this._instance = instance
+    this._mounted = true
+
+    this.pendingTabs.forEach(tab => {
+      if (instance.registerPluginTab) {
+        instance.registerPluginTab(tab)
+      }
+    })
+    this.pendingTabs = []
+  }
+
+  /** Called from OrderView onBeforeUnmount; clears root so new registrations can queue again */
+  _onUnmounted() {
+    this._instance = null
+    this._mounted = false
+  }
+}
+
+window.MS3OrderTabsRegistry = window.MS3OrderTabsRegistry || new OrderTabsRegistry()
 
 /**
  * Creates and configures Vue application
@@ -44,6 +149,9 @@ function createVueApp() {
 
 /**
  * Widget initialization
+ *
+ * @returns {import('vue').App | null} Vue application (historical contract).
+ *   Mounted root instance is available as non-enumerable `__ms3OrderRootInstance` for integrations.
  */
 export function init(selector = '#ms3-order-vue-wrapper') {
   const $el = document.querySelector(selector)
@@ -57,9 +165,18 @@ export function init(selector = '#ms3-order-vue-wrapper') {
   }
 
   const app = createVueApp()
-  app.mount(selector)
+  const instance = app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'
+
+  // Links registry to OrderView (defineExpose registerPluginTab) for queued + late plugin tabs
+  window.MS3OrderTabsRegistry._onMounted(instance)
+
+  Object.defineProperty(app, '__ms3OrderRootInstance', {
+    value: instance,
+    enumerable: false,
+    configurable: true,
+  })
 
   return app
 }
