@@ -14,6 +14,10 @@ use MODX\Revolution\modX;
  * - core/config/ms3_routes_manager.custom.php - переопределения Manager API
  * - core/config/ms3_routes_web.custom.php - переопределения Web API
  *
+ * Модульные фрагменты аддонов (отдельные .php на аддон):
+ * - core/config/ms3.routes.d/manager/*.php
+ * - core/config/ms3.routes.d/web/*.php
+ *
  * @var xPDOTransport $transport
  * @var array $options
  * @var modX $modx
@@ -87,6 +91,30 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
             }
         }
 
+        // ============================================
+        // 3. Каталоги модульных роутов аддонов (ms3.routes.d)
+        // ============================================
+        $routesDBase = MODX_CORE_PATH . 'config/ms3.routes.d/';
+        $routesDWeb = $routesDBase . 'web';
+        $routesDManager = $routesDBase . 'manager';
+
+        foreach ([$routesDWeb, $routesDManager] as $addonRoutesDir) {
+            $relative = 'core/config/ms3.routes.d/' . basename($addonRoutesDir) . '/';
+            if (is_dir($addonRoutesDir)) {
+                $modx->log(modX::LOG_LEVEL_INFO,
+                    '✅ [MiniShop3] Addon routes directory exists (preserved): ' . $relative
+                );
+            } elseif (@mkdir($addonRoutesDir, 0755, true)) {
+                $modx->log(modX::LOG_LEVEL_INFO,
+                    '✅ [MiniShop3] Addon routes directory created: ' . $relative
+                );
+            } else {
+                $modx->log(modX::LOG_LEVEL_WARN,
+                    '[MiniShop3] Could not create addon routes directory: ' . $addonRoutesDir
+                );
+            }
+        }
+
         $modx->log(modX::LOG_LEVEL_INFO,
             '📁 [MiniShop3] System routes are in: core/components/minishop3/config/routes/'
         );
@@ -103,6 +131,9 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         );
         $modx->log(modX::LOG_LEVEL_INFO,
             '   - core/config/ms3_routes_web.custom.php'
+        );
+        $modx->log(modX::LOG_LEVEL_INFO,
+            '   - core/config/ms3.routes.d/ (web/, manager/)'
         );
         $modx->log(modX::LOG_LEVEL_INFO,
             '   Remove manually if needed.'

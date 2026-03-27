@@ -84,6 +84,8 @@ try {
         $router->loadRoutes($customRoutesFile);
     }
 
+    $router->loadRoutesFromDirectory(\MiniShop3\Router\Router::coreAddonRoutesDirectory('web'));
+
     // Строим dispatcher
     $router->build();
 

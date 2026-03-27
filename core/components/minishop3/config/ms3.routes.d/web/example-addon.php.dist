@@ -1,0 +1,43 @@
+<?php
+/**
+ * Пример фрагмента Web API роутов для аддона MiniShop3
+ *
+ * УСТАНОВКА:
+ * =========
+ * Скопируйте этот файл в:
+ *   core/config/ms3.routes.d/web/50-myaddon.php
+ * (имя с префиксом для порядка загрузки; файлы сортируются по алфавиту.)
+ *
+ * ПОРЯДОК ЗАГРУЗКИ (Web API, api.php):
+ * ====================================
+ * 1. config/routes/web.php (системные)
+ * 2. core/config/ms3_routes_web.custom.php
+ * 3. core/config/ms3.routes.d/web/*.php (алфавитный порядок)
+ * 4. build() диспетчера
+ *
+ * Переопределение: тот же HTTP-метод и тот же полный путь заменяют предыдущий маршрут
+ * (внутренний ключ METHOD:PATTERN).
+ *
+ * ДОСТУПНЫЕ ПЕРЕМЕННЫЕ:
+ * ====================
+ * @var \MiniShop3\Router\Router $router
+ * @var \MODX\Revolution\modX $modx
+ *
+ * Сигнатура обработчика: function (array $vars, \MODX\Revolution\modX $modx)
+ *
+ * УДАЛЕНИЕ АДДОНА:
+ * ================
+ * Удалите свой файл из core/config/ms3.routes.d/web/
+ */
+
+use MiniShop3\Router\Response;
+use MiniShop3\Middleware\TokenMiddleware;
+
+// Пример: группа с префиксом и middleware (раскомментируйте после копирования в .php)
+/*
+$router->group('/api/v1/myaddon', function ($router) use ($modx) {
+    $router->get('/ping', function (array $vars, \MODX\Revolution\modX $modx) {
+        return Response::success(['ok' => true]);
+    });
+}, [new TokenMiddleware($modx)]);
+*/

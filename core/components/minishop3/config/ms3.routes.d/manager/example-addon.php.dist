@@ -1,0 +1,23 @@
+<?php
+/**
+ * Пример фрагмента Manager API роутов для аддона MiniShop3
+ *
+ * Скопируйте в: core/config/ms3.routes.d/manager/50-myaddon.php
+ *
+ * Порядок (connector: Index и Processors\Api\Router): системные manager.php → web.php →
+ * ms3_routes_manager.custom.php → ms3.routes.d/manager/*.php → ms3.routes.d/web/*.php.
+ *
+ * @var \MiniShop3\Router\Router $router
+ * @var \MODX\Revolution\modX $modx
+ *
+ * Сигнатура обработчика: function (array $vars, \MODX\Revolution\modX $modx)
+ */
+
+use MiniShop3\Router\Middleware\AuthMiddleware;
+use MiniShop3\Router\Response;
+
+/*
+$router->get('/api/mgr/myaddon/ping', function (array $vars, \MODX\Revolution\modX $modx) {
+    return Response::success(['ok' => true]);
+}, [new AuthMiddleware($modx, 'mgr')]);
+*/

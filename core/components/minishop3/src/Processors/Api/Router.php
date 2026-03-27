@@ -46,11 +46,20 @@ class Router extends Processor
 
             $router->loadRoutes($systemRoutesFile);
 
+            $webRoutesFile = $componentPath . 'config/routes/web.php';
+
+            if (file_exists($webRoutesFile)) {
+                $router->loadRoutes($webRoutesFile);
+            }
+
             $customRoutesFile = MODX_CORE_PATH . 'config/ms3_routes_manager.custom.php';
 
             if (file_exists($customRoutesFile)) {
                 $router->loadRoutes($customRoutesFile);
             }
+
+            $router->loadRoutesFromDirectory(ApiRouter::coreAddonRoutesDirectory('manager'));
+            $router->loadRoutesFromDirectory(ApiRouter::coreAddonRoutesDirectory('web'));
 
             $router->build();
 

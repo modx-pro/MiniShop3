@@ -72,6 +72,9 @@ class Index extends Processor
                 $router->loadRoutes($customRoutesFile);
             }
 
+            $router->loadRoutesFromDirectory(ApiRouter::coreAddonRoutesDirectory('manager'));
+            $router->loadRoutesFromDirectory(ApiRouter::coreAddonRoutesDirectory('web'));
+
             $router->build();
 
             $response = $router->dispatch($route, $_SERVER['REQUEST_METHOD']);

@@ -35,6 +35,14 @@ class Router
     }
 
     /**
+     * Absolute path: core/config/ms3.routes.d/{manager|web}
+     */
+    public static function coreAddonRoutesDirectory(string $segment): string
+    {
+        return MODX_CORE_PATH . 'config/ms3.routes.d/' . $segment;
+    }
+
+    /**
      * Load routes from configuration file
      *
      * @param string $routesFile
@@ -46,12 +54,66 @@ class Router
             throw new \RuntimeException("Routes file not found: {$routesFile}");
         }
 
+        $this->requireRoutesFile($routesFile);
+
+        return $this;
+    }
+
+    /**
+     * Load route fragments from a directory (*.php, sorted alphabetically).
+     *
+     * Missing directory is ignored. A broken file is logged; other files still load.
+     *
+     * @param string $dir Absolute path to directory (with or without trailing slash)
+     * @return self
+     */
+    public function loadRoutesFromDirectory(string $dir): self
+    {
+        $dir = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR;
+
+        if (!is_dir($dir)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_DEBUG,
+                "[MiniShop3 Router] Routes directory not found: {$dir}"
+            );
+
+            return $this;
+        }
+
+        $files = glob($dir . '*.php');
+        if ($files === false || $files === []) {
+            return $this;
+        }
+
+        sort($files, SORT_STRING);
+
+        foreach ($files as $file) {
+            try {
+                $this->requireRoutesFile($file);
+            } catch (\Throwable $e) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    sprintf(
+                        '[MiniShop3 Router] Failed to load routes file %s: %s',
+                        $file,
+                        $e->getMessage()
+                    )
+                );
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $routesFile Must exist and be readable
+     */
+    private function requireRoutesFile(string $routesFile): void
+    {
         $modx = $this->modx;
         $router = $this;
 
         require $routesFile;
-
-        return $this;
     }
 
     /**
