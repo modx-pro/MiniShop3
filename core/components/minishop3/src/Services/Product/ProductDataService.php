@@ -35,7 +35,7 @@ class ProductDataService
      * Performs comprehensive product data preparation:
      * - Prepare array fields (tags, color, size etc.) - remove duplicates, empty values
      * - Set source_id for new products
-     * - Cast numeric fields (price, old_price, weight) to float type
+     * - Cast numeric and boolean fields to proper types (including extra fields)
      *
      * @param msProductData $productData
      * @return void
@@ -54,28 +54,18 @@ class ProductDataService
         // Cast all numeric and boolean fields (including extra fields) to proper types
         // Prevents MySQL errors when empty string '' is sent for decimal/int/tinyint columns
         foreach ($productData->_fieldMeta as $key => $meta) {
+            if ($key === 'id') {
+                continue;
+            }
             $phptype = $meta['phptype'] ?? '';
+            $value = $productData->get($key);
+
             if ($phptype === 'float') {
-                $value = $productData->get($key);
-                if ($value === '' || $value === null) {
-                    $productData->set($key, 0.0);
-                } else {
-                    $productData->set($key, (float)$value);
-                }
+                $productData->set($key, ($value === '' || $value === null) ? 0.0 : (float)$value);
             } elseif ($phptype === 'integer') {
-                $value = $productData->get($key);
-                if ($value === '' || $value === null) {
-                    $productData->set($key, 0);
-                } else {
-                    $productData->set($key, (int)$value);
-                }
+                $productData->set($key, ($value === '' || $value === null) ? 0 : (int)$value);
             } elseif ($phptype === 'boolean') {
-                $value = $productData->get($key);
-                if ($value === '' || $value === null) {
-                    $productData->set($key, false);
-                } else {
-                    $productData->set($key, (bool)$value);
-                }
+                $productData->set($key, ($value === '' || $value === null) ? false : (bool)$value);
             }
         }
     }
