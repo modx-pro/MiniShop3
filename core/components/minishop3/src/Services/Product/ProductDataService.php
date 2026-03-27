@@ -51,9 +51,33 @@ class ProductDataService
             $productData->set('source_id', $this->modx->getOption('ms3_product_source_default', null, 1));
         }
 
-        $productData->set('price', (float)$productData->get('price'));
-        $productData->set('old_price', (float)$productData->get('old_price'));
-        $productData->set('weight', (float)$productData->get('weight'));
+        // Cast all numeric and boolean fields (including extra fields) to proper types
+        // Prevents MySQL errors when empty string '' is sent for decimal/int/tinyint columns
+        foreach ($productData->_fieldMeta as $key => $meta) {
+            $phptype = $meta['phptype'] ?? '';
+            if ($phptype === 'float') {
+                $value = $productData->get($key);
+                if ($value === '' || $value === null) {
+                    $productData->set($key, 0.0);
+                } else {
+                    $productData->set($key, (float)$value);
+                }
+            } elseif ($phptype === 'integer') {
+                $value = $productData->get($key);
+                if ($value === '' || $value === null) {
+                    $productData->set($key, 0);
+                } else {
+                    $productData->set($key, (int)$value);
+                }
+            } elseif ($phptype === 'boolean') {
+                $value = $productData->get($key);
+                if ($value === '' || $value === null) {
+                    $productData->set($key, false);
+                } else {
+                    $productData->set($key, (bool)$value);
+                }
+            }
+        }
     }
 
     /**
