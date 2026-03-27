@@ -35,7 +35,7 @@ class ProductDataService
      * Performs comprehensive product data preparation:
      * - Prepare array fields (tags, color, size etc.) - remove duplicates, empty values
      * - Set source_id for new products
-     * - Cast numeric fields (price, old_price, weight) to float type
+     * - Cast numeric and boolean fields to proper types (including extra fields)
      *
      * @param msProductData $productData
      * @return void
@@ -51,9 +51,23 @@ class ProductDataService
             $productData->set('source_id', $this->modx->getOption('ms3_product_source_default', null, 1));
         }
 
-        $productData->set('price', (float)$productData->get('price'));
-        $productData->set('old_price', (float)$productData->get('old_price'));
-        $productData->set('weight', (float)$productData->get('weight'));
+        // Cast all numeric and boolean fields (including extra fields) to proper types
+        // Prevents MySQL errors when empty string '' is sent for decimal/int/tinyint columns
+        foreach ($productData->_fieldMeta as $key => $meta) {
+            if ($key === 'id') {
+                continue;
+            }
+            $phptype = $meta['phptype'] ?? '';
+            $value = $productData->get($key);
+
+            if ($phptype === 'float') {
+                $productData->set($key, ($value === '' || $value === null) ? 0.0 : (float)$value);
+            } elseif ($phptype === 'integer') {
+                $productData->set($key, ($value === '' || $value === null) ? 0 : (int)$value);
+            } elseif ($phptype === 'boolean') {
+                $productData->set($key, ($value === '' || $value === null) ? false : (bool)$value);
+            }
+        }
     }
 
     /**
