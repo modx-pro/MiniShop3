@@ -62,6 +62,11 @@
 - При создании заказа кастомные поля передаются в события `msOnBeforeCreateOrder` / `msOnCreateOrder` через параметр `customFields`, после чего очищаются
 - Чекбоксы на фронтенде отправляют состояние `input.checked` (`'1'`/`'0'`) вместо статического атрибута `value`
 
+**Модульная регистрация роутов для аддонов — `core/config/ms3.routes.d/` (#169):**
+- Загрузка фрагментов `*.php` из `ms3.routes.d/web/` и `ms3.routes.d/manager/` (алфавитный порядок) после системных и custom-файлов, до `build()`; переопределение по ключу `METHOD:PATTERN`
+- Метод `Router::loadRoutesFromDirectory()`, путь `Router::coreAddonRoutesDirectory('manager'|'web')` с проверкой аргумента; `api.php` и `Processors\Api\Index` грузят web-фрагменты; `Processors\Api\Router` (встроенная админка) — только manager-фрагменты
+- Resolver создаёт каталоги при установке; примеры `example-addon.php.dist` в компоненте для копирования в `core/config/`
+
 #### 🐛 Исправлено
 
 - **Не удалялись опции товара в админке (#148, #149):** форма отправляла `options-color[]`, но `substr($key, 8)` давал ключ `color[]` вместо `color` — опция не матчилась и не удалялась. Парсинг вынесен в `Utils::extractOptionKey()` с `rtrim('[]')`. Также исправлена обработка пустого массива опций в `OptionSyncService`

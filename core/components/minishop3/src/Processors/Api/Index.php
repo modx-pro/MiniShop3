@@ -6,7 +6,10 @@ use MiniShop3\Router\Router as ApiRouter;
 use MODX\Revolution\Processors\Processor;
 
 /**
- * Processor for handling API requests through connector.php
+ * Processor for handling API requests through connector.php (кастомные фронты / Vue-менеджер).
+ *
+ * Полная цепочка: manager.php, web.php, custom-файлы, ms3.routes.d/manager и ms3.routes.d/web.
+ * Встроенная админка MODX использует Processors\Api\Router — без web-роутов и без web-фрагментов.
  *
  * Usage:
  * connector.php?action=api&route=/api/mgr/test/success
@@ -71,6 +74,9 @@ class Index extends Processor
             if (file_exists($customRoutesFile)) {
                 $router->loadRoutes($customRoutesFile);
             }
+
+            $router->loadRoutesFromDirectory(ApiRouter::coreAddonRoutesDirectory('manager'));
+            $router->loadRoutesFromDirectory(ApiRouter::coreAddonRoutesDirectory('web'));
 
             $router->build();
 
