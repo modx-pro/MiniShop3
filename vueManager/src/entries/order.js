@@ -121,7 +121,10 @@ class OrderTabsRegistry {
   }
 }
 
-window.MS3OrderTabsRegistry = window.MS3OrderTabsRegistry || new OrderTabsRegistry()
+// Preserve pendingTabs from early registrations (plugins that run before this module)
+const earlyPending = window.MS3OrderTabsRegistry?.pendingTabs || []
+window.MS3OrderTabsRegistry = new OrderTabsRegistry()
+earlyPending.forEach(tab => window.MS3OrderTabsRegistry.register(tab))
 
 /**
  * Creates and configures Vue application
