@@ -17,9 +17,9 @@
 
 ## Март 2026
 
-### 🚀 Версия 1.7.0-beta1
+### 🚀 Версия 1.8.0-beta1
 
-**Тип релиза:** MINOR (beta) — inline-edit, форматированные плейсхолдеры, миграция галереи на Vue, баг-фиксы
+**Тип релиза:** MINOR (beta) — Order Tabs Registry, модульные роуты аддонов, inline-edit, миграция галереи на Vue, баг-фиксы
 
 ---
 
@@ -62,6 +62,15 @@
 - При создании заказа кастомные поля передаются в события `msOnBeforeCreateOrder` / `msOnCreateOrder` через параметр `customFields`, после чего очищаются
 - Чекбоксы на фронтенде отправляют состояние `input.checked` (`'1'`/`'0'`) вместо статического атрибута `value`
 
+**MS3OrderTabsRegistry — кастомные вкладки в окне заказа (#166, #167):**
+- `window.MS3OrderTabsRegistry.register()` — регистрация Vue и ExtJS вкладок на странице заказа без правки ядра
+- Pre-mount очередь: плагины через `msOnManagerCustomCssJs` могут регистрировать табы до маунта Vue
+- Общие пропсы для плагин-табов: `orderId`, `order`, `config`, `isCreateMode`
+- `hideOnCreate` — скрытие вкладки в режиме создания заказа
+- Защита reserved keys (info, products, address, history), валидация конфига, snapshot очереди
+- Ленивый маунт ExtJS-панелей при первом открытии вкладки, cleanup в `onBeforeUnmount`
+- Утилита `orderPluginTab.js` — валидация и нормализация конфига
+
 **Модульная регистрация роутов для аддонов — `core/config/ms3.routes.d/` (#169):**
 - Загрузка фрагментов `*.php` из `ms3.routes.d/web/` и `ms3.routes.d/manager/` (алфавитный порядок) после системных и custom-файлов, до `build()`; переопределение по ключу `METHOD:PATTERN`
 - Метод `Router::loadRoutesFromDirectory()`, путь `Router::coreAddonRoutesDirectory('manager'|'web')` с проверкой аргумента; `api.php` и `Processors\Api\Index` грузят web-фрагменты; `Processors\Api\Router` (встроенная админка) — только manager-фрагменты
@@ -83,6 +92,10 @@
 - **Некорректные URL в ЛК заказов клиента (#141):** кнопка «Сбросить» фильтра и ссылки пагинации вели на корень сайта (`/?`) из-за `<base href>` в шаблоне MODX — URL формируются server-side через `makeUrl()` + `http_build_query()`, пагинация сохраняет фильтр по статусу. Добавлены недостающие SVG-иконки в спрайт (`icon-arrow-left`, `icon-truck`, `icon-credit-card`, `icon-message`), исправлен `fill` → `stroke` для Feather-иконок в деталях заказа
 - **Некорректные URL и хардкод английских сообщений в ЛК адресов (#142):** кнопки «Добавить адрес», «Редактировать», «Отмена» вели на корень сайта — URL формируются server-side через `makeUrl()` + `http_build_query()`. API-контроллер `CustomerAddressController` содержал хардкод английских строк вместо лексиконов — все сообщения заменены на `$this->modx->lexicon()`, добавлено 7 ключей в ru/en лексиконы
 - **Отсутствие ключа `desc` в свойствах сниппетов и источников при сборке пакета (#127):** добавлена инициализация `desc` пустой строкой если ключ отсутствует в определении свойства — устраняет warning/ошибку в `resolver_04_sources` и `resolver_08_snippet_properties`
+- **Пустая строка в decimal/int Extra Fields ломала сохранение товара (#170):** пустое значение кастомного поля (например `wholesale_price`) вызывало MySQL ошибку `Incorrect decimal value`, `save()` возвращал `false` и категории/опции/ссылки молча не сохранялись — хардкод каста `price`/`old_price`/`weight` заменён на универсальный цикл по `_fieldMeta` для всех `float`, `integer` и `boolean` полей
+- **Чекбокс «Скрыть дочерние ресурсы» не сохранялся в категориях (#161, #160):** `hide_children_in_tree` не обрабатывался в `handleCheckBoxes()` процессоров `Category/Update` и `Category/Create` — unchecked-состояние не передавалось в POST и значение сбрасывалось
+- **`publish_document` передавался как bool вместо int в контроллерах (#160):** `canPublish` не приводился к `(int)` в массиве JS-конфига — MODX JS использует строгое сравнение `=== 1`, из-за чего флаг мог не срабатывать. Исправлено во всех 4 контроллерах
+- **Кнопки «Дублировать» и «Опубликовать» не отображались в гриде товаров категории (#143, #163):** миграция обновляет конфиг колонки `actions` в `ms3_grid_fields` — добавлены действия `duplicate` и `publish` (логика уже была в Vue-компоненте)
 
 #### ⚠️ Breaking changes
 

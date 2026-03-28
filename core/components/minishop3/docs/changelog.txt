@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0-beta1]
+
+### Added
+- `MS3OrderTabsRegistry`: plugin API for custom order tabs (Vue and ExtJS) without core modification. Pre-mount queue via `msOnManagerCustomCssJs`, shared props (`orderId`, `order`, `config`, `isCreateMode`), `hideOnCreate` flag, reserved keys protection, lazy ExtJS mount (#166, #167)
+- Modular addon routes via `core/config/ms3.routes.d/`: each addon places own route file, no conflicts. `Router::loadRoutesFromDirectory()`, separate `web/` and `manager/` directories, alphabetical loading order (#169, #171)
+- Duplicate and Publish action buttons in category products grid: migration updates `ms3_grid_fields` actions column config (#143, #163)
+
+### Fixed
+- Empty string in decimal/int Extra Fields broke product save: MySQL error `Incorrect decimal value` caused `save()` to return false, silently skipping categories/options/links. Hardcoded cast of `price`/`old_price`/`weight` replaced with universal loop over `_fieldMeta` for all `float`, `integer` and `boolean` fields (#170)
+- `hide_children_in_tree` checkbox not saved in categories: `handleCheckBoxes()` added to `Category/Update` and `Category/Create` processors (#161, #160)
+- `publish_document` passed as bool instead of int in all 4 controllers (product/create, product/update, category/create, category/update) — MODX JS uses strict `=== 1` comparison (#160)
+
 ## [1.7.0-beta1]
 
 ### Added
