@@ -133,7 +133,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'xtype' => 'ms3-page-product-update',
             'resource' => $this->resource->get('id'),
             'record' => $this->resourceArray,
-            'publish_document' => $this->canPublish,
+            'publish_document' => (int) $this->canPublish,
             'preview_url' => $this->previewUrl,
             'locked' => $this->locked,
             'lockedText' => $this->lockedText,

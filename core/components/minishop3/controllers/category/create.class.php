@@ -70,7 +70,7 @@ class msCategoryCreateManagerController extends msResourceCreateController
             'record' => array_merge($this->resourceArray, [
                 'isfolder' => true,
             ]),
-            'publish_document' => $this->canPublish,
+            'publish_document' => (int) $this->canPublish,
             'canSave' => (int) ($this->canSave && $this->modx->hasPermission('mscategory_save')),
             'show_tvs' => (int) !empty($this->tvCounts),
             'mode' => 'create',
