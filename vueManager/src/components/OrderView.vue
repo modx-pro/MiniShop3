@@ -1649,8 +1649,6 @@ function registerPluginTab(tabData) {
   return true
 }
 
-defineExpose({ registerPluginTab })
-
 /**
  * Props passed to Vue plugin tab components (same contract as ExtJS tabs below).
  * User `tab.props` is spread first; core fields override name collisions intentionally.
@@ -1666,7 +1664,7 @@ function pluginVueProps(tab) {
 }
 
 /** Polls for TabPanel DOM (PrimeVue may render the panel slightly after tab switch). */
-function waitForOrderTabElement(id, callback, maxAttempts = 100) {
+function waitForOrderTabElement(id, callback, maxAttempts = 20) {
   let attempts = 0
   const check = () => {
     const element = document.getElementById(id)
@@ -1765,6 +1763,8 @@ onBeforeUnmount(() => {
     window.MS3OrderTabsRegistry._onUnmounted()
   }
 })
+
+defineExpose({ registerPluginTab })
 
 /**
  * Format date
@@ -2960,6 +2960,7 @@ onMounted(async () => {
 .order-extjs-tab-container :deep(.x-panel-body) {
   padding: 0.625rem;
 }
+
 .order-header {
   display: flex;
   align-items: center;

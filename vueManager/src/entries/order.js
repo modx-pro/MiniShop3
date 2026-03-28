@@ -94,7 +94,7 @@ class OrderTabsRegistry {
       return false
     }
 
-    this.pendingTabs.push(snapshotOrderTabConfigForQueue(tabConfig))
+    this.pendingTabs.push(snapshotOrderTabConfigForQueue(normalized.tab))
     return true
   }
 
