@@ -35,10 +35,18 @@ class Router
     }
 
     /**
-     * Absolute path: core/config/ms3.routes.d/{manager|web}
+     * Absolute path: core/config/ms3.routes.d/manager or .../web
+     *
+     * @param 'manager'|'web' $segment
      */
     public static function coreAddonRoutesDirectory(string $segment): string
     {
+        if ($segment !== 'manager' && $segment !== 'web') {
+            throw new \InvalidArgumentException(
+                "coreAddonRoutesDirectory: segment must be 'manager' or 'web', got: {$segment}"
+            );
+        }
+
         return MODX_CORE_PATH . 'config/ms3.routes.d/' . $segment;
     }
 

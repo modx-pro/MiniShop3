@@ -64,7 +64,7 @@
 
 **Модульная регистрация роутов для аддонов — `core/config/ms3.routes.d/` (#169):**
 - Загрузка фрагментов `*.php` из `ms3.routes.d/web/` и `ms3.routes.d/manager/` (алфавитный порядок) после системных и custom-файлов, до `build()`; переопределение по ключу `METHOD:PATTERN`
-- Метод `Router::loadRoutesFromDirectory()`, общий путь `Router::coreAddonRoutesDirectory()`, подключение в `api.php`, `Processors\Api\Index` и `Processors\Api\Router` (connector-входы согласованы)
+- Метод `Router::loadRoutesFromDirectory()`, путь `Router::coreAddonRoutesDirectory('manager'|'web')` с проверкой аргумента; `api.php` и `Processors\Api\Index` грузят web-фрагменты; `Processors\Api\Router` (встроенная админка) — только manager-фрагменты
 - Resolver создаёт каталоги при установке; примеры `example-addon.php.dist` в компоненте для копирования в `core/config/`
 
 #### 🐛 Исправлено

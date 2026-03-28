@@ -4,8 +4,10 @@
  *
  * Скопируйте в: core/config/ms3.routes.d/manager/50-myaddon.php
  *
- * Порядок (connector: Index и Processors\Api\Router): системные manager.php → web.php →
- * ms3_routes_manager.custom.php → ms3.routes.d/manager/*.php → ms3.routes.d/web/*.php.
+ * Порядок (Processors\Api\Router — встроенная админка MODX): системные manager.php →
+ * ms3_routes_manager.custom.php → ms3.routes.d/manager/*.php (web.php и ms3.routes.d/web/ не грузятся).
+ *
+ * Processors\Api\Index (кастомные фронты / Vue-менеджер): дополнительно web.php и ms3.routes.d/web/*.php.
  *
  * @var \MiniShop3\Router\Router $router
  * @var \MODX\Revolution\modX $modx
