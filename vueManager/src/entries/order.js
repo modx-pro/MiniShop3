@@ -17,7 +17,7 @@ import { createApp } from 'vue'
 
 import OrderView from '../components/OrderView.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { normalizeOrderPluginTab, snapshotOrderTabConfigForQueue } from '../utils/orderPluginTab.js'
+import { snapshotOrderTabConfigForQueue,validateOrderPluginTabConfig } from '../utils/orderPluginTab.js'
 
 /**
  * Plugin registry for third-party order manager tabs (Vue / ExtJS). See GitHub #166.
@@ -82,19 +82,19 @@ class OrderTabsRegistry {
       return this._instance.registerPluginTab(tabConfig)
     }
 
-    const normalized = normalizeOrderPluginTab(tabConfig)
-    if (!normalized.ok) {
-      console.warn(`[OrderTabsRegistry] ${normalized.reason}`, tabConfig)
+    const validation = validateOrderPluginTabConfig(tabConfig)
+    if (!validation.ok) {
+      console.error(`[OrderTabsRegistry] ${validation.reason}`, tabConfig)
       return false
     }
 
-    const existsInPending = this.pendingTabs.some(t => t.key === normalized.tab.key)
+    const existsInPending = this.pendingTabs.some(t => t.key === tabConfig.key)
     if (existsInPending) {
-      console.warn(`[OrderTabsRegistry] Tab "${normalized.tab.key}" already registered`)
+      console.warn(`[OrderTabsRegistry] Tab "${tabConfig.key}" already registered`)
       return false
     }
 
-    this.pendingTabs.push(snapshotOrderTabConfigForQueue(normalized.tab))
+    this.pendingTabs.push(snapshotOrderTabConfigForQueue(tabConfig))
     return true
   }
 
@@ -150,8 +150,7 @@ function createVueApp() {
 /**
  * Widget initialization
  *
- * @returns {import('vue').App | null} Vue application (historical contract).
- *   Mounted root instance is available as non-enumerable `__ms3OrderRootInstance` for integrations.
+ * @returns {import('vue').App | null} Vue application
  */
 export function init(selector = '#ms3-order-vue-wrapper') {
   const $el = document.querySelector(selector)
@@ -171,12 +170,6 @@ export function init(selector = '#ms3-order-vue-wrapper') {
 
   // Links registry to OrderView (defineExpose registerPluginTab) for queued + late plugin tabs
   window.MS3OrderTabsRegistry._onMounted(instance)
-
-  Object.defineProperty(app, '__ms3OrderRootInstance', {
-    value: instance,
-    enumerable: false,
-    configurable: true,
-  })
 
   return app
 }

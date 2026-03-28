@@ -25,7 +25,6 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import {
   computed,
-  defineExpose,
   nextTick,
   onBeforeUnmount,
   onMounted,
@@ -1637,7 +1636,7 @@ function goBack() {
 function registerPluginTab(tabData) {
   const normalized = normalizeOrderPluginTab(tabData)
   if (!normalized.ok) {
-    console.warn(`[OrderView] ${normalized.reason}`, tabData)
+    console.error(`[OrderView] ${normalized.reason}`, tabData)
     return false
   }
   const exists = pluginTabs.value.some(t => t.key === normalized.tab.key)
@@ -1663,21 +1662,21 @@ function pluginVueProps(tab) {
   }
 }
 
-/** Polls for TabPanel DOM (PrimeVue may render the panel slightly after tab switch). */
-function waitForOrderTabElement(id, callback, maxAttempts = 20) {
-  let attempts = 0
-  const check = () => {
-    const element = document.getElementById(id)
-    if (element) {
-      callback(element)
-    } else if (attempts < maxAttempts) {
-      attempts++
-      setTimeout(check, 50)
-    } else {
-      console.warn(`[OrderView] Element #${id} not found after ${maxAttempts} attempts`)
-    }
+/** Waits for TabPanel DOM element via MutationObserver (consistent with other entry points). */
+function waitForOrderTabElement(id, callback) {
+  const element = document.getElementById(id)
+  if (element) {
+    callback(element)
+    return
   }
-  check()
+  const observer = new MutationObserver(() => {
+    const el = document.getElementById(id)
+    if (el) {
+      observer.disconnect()
+      callback(el)
+    }
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
 }
 
 /**
@@ -2922,7 +2921,7 @@ onMounted(async () => {
 
             <!-- Third-party tabs: window.MS3OrderTabsRegistry (see order.js, orderPluginTab.js) -->
             <template v-else-if="tab.kind === 'plugin' && tab.type === 'vue' && tab.component">
-              <component :is="tab.component" v-bind="pluginVueProps(tab)" />
+              <component :is="tab.component" v-if="orderActiveTab === tab.key" v-bind="pluginVueProps(tab)" />
             </template>
             <template v-else-if="tab.kind === 'plugin' && tab.type === 'extjs' && tab.xtype">
               <div :id="`ms3-order-tab-${tab.key}`" class="order-extjs-tab-container"></div>
