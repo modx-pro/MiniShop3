@@ -540,7 +540,7 @@ function getDefaultColumns() {
       minWidth: '12.5rem',
       type: 'template',
       template:
-        '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>',
+        '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" class="product-link">{pagetitle}</a>',
     },
     {
       name: 'article',

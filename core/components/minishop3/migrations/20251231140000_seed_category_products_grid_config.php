@@ -60,7 +60,7 @@ class SeedCategoryProductsGridConfig extends AbstractMigration
                 'min_width' => '200px',
                 'config' => json_encode([
                     'type' => 'template',
-                    'template' => '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" target="_blank" class="product-link">{pagetitle}</a>'
+                    'template' => '<span class="product-id">({id})</span> <a href="?a=resource/update&id={id}" class="product-link">{pagetitle}</a>'
                 ], JSON_UNESCAPED_UNICODE),
                 'is_system' => 0,
                 'is_default' => 1,
