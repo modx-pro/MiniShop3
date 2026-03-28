@@ -116,7 +116,7 @@ class Router
     /**
      * @param string $routesFile Must exist and be readable
      */
-    private function requireRoutesFile(string $routesFile): void
+    protected function requireRoutesFile(string $routesFile): void
     {
         $modx = $this->modx;
         $router = $this;
