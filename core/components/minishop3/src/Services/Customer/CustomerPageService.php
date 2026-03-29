@@ -53,7 +53,6 @@ abstract class CustomerPageService
         $this->ms3 = $ms3;
         $this->scriptProperties = $scriptProperties;
 
-        /** @var Fetch $pdoFetch */
         $this->pdoFetch = $this->modx->services->get(Fetch::class);
 
         $this->modx->lexicon->load('minishop3:customer');

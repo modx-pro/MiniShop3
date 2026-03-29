@@ -50,13 +50,15 @@ class Import extends Processor
         $fields = $this->getProperty('fields');
 
         if (empty($mapping) && empty($fields)) {
-            return $this->addFieldError('fields', $this->modx->lexicon('field_required'));
+            $this->addFieldError('fields', $this->modx->lexicon('field_required'));
+            return $this->failure();
         }
 
         $required = ['importfile', 'delimiter'];
         foreach ($required as $field) {
             if (!trim($this->getProperty($field, ''))) {
-                return $this->addFieldError($field, $this->modx->lexicon('field_required'));
+                $this->addFieldError($field, $this->modx->lexicon('field_required'));
+                return $this->failure();
             }
         }
 
@@ -104,19 +106,15 @@ class Import extends Processor
             $result = $importCSV->process($importParams);
 
             // Convert utils response format to processor format
-            if (is_array($result)) {
-                $data = $result['data'] ?? [];
-                $data['import_id'] = $importId;
-                $message = $result['message'] ?? '';
+            $data = $result['data'] ?? [];
+            $data['import_id'] = $importId;
+            $message = $result['message'] ?? '';
 
-                if (!empty($result['success'])) {
-                    return $this->success($message, $data);
-                } else {
-                    return $this->failure($message, $data);
-                }
+            if (!empty($result['success'])) {
+                return $this->success($message, $data);
+            } else {
+                return $this->failure($message, $data);
             }
-
-            return $result;
         }
 
         // Asynchronous import via Scheduler

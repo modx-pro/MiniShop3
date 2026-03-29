@@ -320,6 +320,7 @@ class FieldConfigManager
     {
         $this->modx->log(
             modX::LOG_LEVEL_WARN,
+            'FieldConfigManager::saveFieldsConfig() is deprecated'
         );
         return true;
     }

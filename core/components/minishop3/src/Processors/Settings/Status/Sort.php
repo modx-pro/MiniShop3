@@ -42,7 +42,7 @@ class Sort extends ModelProcessor
      * @param msOrderStatus $source
      * @param msOrderStatus $target
      *
-     * @return array|string
+     * @return void
      */
     public function sort(msOrderStatus $source, msOrderStatus $target)
     {

@@ -149,7 +149,7 @@ class msCategory extends modResource
     }
 
     /**
-     * @param null $cacheFlag
+     * @param bool|int|null $cacheFlag
      *
      * @return bool
      */

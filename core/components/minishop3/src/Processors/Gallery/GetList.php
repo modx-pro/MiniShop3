@@ -80,7 +80,7 @@ class GetList extends GetListProcessor
     {
         $beforeQuery = $this->beforeQuery();
         if ($beforeQuery !== true) {
-            return $this->failure($beforeQuery);
+            return $this->failure(is_string($beforeQuery) ? $beforeQuery : '');
         }
         $data = $this->getData();
 

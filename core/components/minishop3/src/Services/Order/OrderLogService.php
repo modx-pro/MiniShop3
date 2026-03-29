@@ -82,7 +82,7 @@ class OrderLogService
             return false;
         }
 
-        if (empty($this->modx->request)) {
+        if (!$this->modx->request) {
             $this->modx->getRequest();
         }
 
@@ -121,7 +121,7 @@ class OrderLogService
             return false;
         }
 
-        if (empty($this->modx->request)) {
+        if (!$this->modx->request) {
             $this->modx->getRequest();
         }
 

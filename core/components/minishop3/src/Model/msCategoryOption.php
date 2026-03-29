@@ -26,7 +26,7 @@ class msCategoryOption extends xPDOObject
      *
      * Delegates to OptionCategoryService for optimized batch operations
      *
-     * @param null $cacheFlag
+     * @param bool|int|null $cacheFlag
      * @return bool
      */
     public function save($cacheFlag = null)

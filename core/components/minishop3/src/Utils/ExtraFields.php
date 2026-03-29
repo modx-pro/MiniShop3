@@ -198,7 +198,7 @@ class ExtraFields
      */
     private function getFieldInfo(msExtraField $field): mixed
     {
-        if ($field == null || !($field instanceof msExtraField)) {
+        if ($field == null) {
             return null;
         }
 

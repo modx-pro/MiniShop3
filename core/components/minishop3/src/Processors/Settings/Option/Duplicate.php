@@ -18,12 +18,14 @@ class Duplicate extends DuplicateProcessor
 
 
     /**
-     *
+     * @return bool
      */
     public function afterSave()
     {
         $this->duplicateCategories();
         $this->duplicateProducts();
+
+        return true;
     }
 
 

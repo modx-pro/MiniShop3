@@ -456,7 +456,7 @@ if (!empty($rows) && is_array($rows)) {
 
 $log = '';
 if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
-    $log .= '<pre class="msProductsLog">' . print_r($pdoFetch->getTime(), 1) . '</pre>';
+    $log .= '<pre class="msProductsLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';
 }
 
 if ($scriptProperties['return'] == 'json') {

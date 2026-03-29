@@ -56,7 +56,7 @@ class msProduct extends modResource
 
     /**
      * @param string $k
-     * @param null $v
+     * @param mixed $v
      * @param string $vType
      *
      * @return bool
@@ -141,7 +141,7 @@ class msProduct extends modResource
     }
 
     /**
-     * @param null $cacheFlag
+     * @param bool|int|null $cacheFlag
      *
      * @return bool
      */
@@ -156,8 +156,8 @@ class msProduct extends modResource
 
     /**
      * @param array|string $k
-     * @param null $format
-     * @param null $formatTemplate
+     * @param array|string|null $format
+     * @param array|string|null $formatTemplate
      *
      * @return array|mixed|null|xPDOObject
      */

@@ -9,7 +9,7 @@ class Show extends Update
     public $classKey = msProduct::class;
 
     /**
-     * @return bool
+     * @return array|string|bool
      */
     public function beforeSet()
     {

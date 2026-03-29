@@ -19,15 +19,14 @@ class Upload extends ModelProcessor
     public $mediaSource;
     /** @var MiniShop3 $ms3 */
     protected $ms3;
-    /** @var msProduct $product */
-    private $product = 0;
+    /** @var msProduct|null $product */
+    private $product = null;
 
     /**
      * @return bool|null|string
      */
     public function initialize()
     {
-        /** @var msProduct $product */
         $id = (int)$this->getProperty('id', @$_GET['id']);
         $this->product = $this->modx->getObject(msProduct::class, $id);
         if (!$this->product) {
@@ -211,8 +210,9 @@ class Upload extends ModelProcessor
 
         clearstatcache(true, $tf);
         if (file_exists($tf) && !empty($name) && $size = filesize($tf)) {
-            /** @var msProductFile $o */
-            $hash = ($o = $this->modx->newObject($this->classKey)) ? $o->generateHash($tf) : '';
+            /** @var msProductFile|null $o */
+            $o = $this->modx->newObject($this->classKey);
+            $hash = $o ? $o->generateHash($tf) : '';
             $data = [
                 'name' => $name,
                 'tmp_name' => $tf,

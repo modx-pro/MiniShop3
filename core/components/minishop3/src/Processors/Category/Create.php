@@ -35,7 +35,6 @@ class Create extends CreateProcessor
      */
     public function handleCheckBoxes()
     {
-        parent::handleCheckBoxes();
         $this->setCheckbox('hide_children_in_tree');
     }
 
@@ -51,7 +50,6 @@ class Create extends CreateProcessor
 
     /**
      * @return mixed
-     * @throws
      */
     public function afterSave()
     {

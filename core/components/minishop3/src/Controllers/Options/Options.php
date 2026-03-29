@@ -95,6 +95,7 @@ class Options
         if (!empty($sorting)) {
             $sorting = array_map('trim', is_array($sorting) ? $sorting : explode(',', $sorting));
             foreach ($sorting as $sort) {
+                $first = null;
                 @list($key, $order, $type, $first) = explode(':', $sort);
                 if (array_key_exists($key, $options)) {
                     $order = empty($order) ? SORT_ASC : constant($order);
@@ -107,7 +108,7 @@ class Options
 
                     array_multisort($values, $order, $type);
 
-                    if (!is_null($first) && ($index = array_search($first, $values)) !== false) {
+                    if ($first !== null && ($index = array_search($first, $values)) !== false) {
                         unset($values[$index]);
                         array_unshift($values, $first);
                     }

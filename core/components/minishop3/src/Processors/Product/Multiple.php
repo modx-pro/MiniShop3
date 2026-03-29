@@ -9,9 +9,7 @@ class Multiple extends ModelProcessor
 {
     public $classKey = msProduct::class;
     /**
-     * @return array|string]
-     *
-     * @throws
+     * @return array|string
      */
     public function process()
     {

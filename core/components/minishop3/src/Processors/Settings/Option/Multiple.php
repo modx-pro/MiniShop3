@@ -8,9 +8,7 @@ use MODX\Revolution\Processors\ModelProcessor;
 class Multiple extends ModelProcessor
 {
     /**
-     * @return array|string]
-     *
-     * @throws
+     * @return array|string
      */
     public function process()
     {

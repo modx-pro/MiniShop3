@@ -41,7 +41,7 @@ class Sort extends ModelProcessor
      * @param msDelivery $source
      * @param msDelivery $target
      *
-     * @return array|string
+     * @return void
      */
     public function sort(msDelivery $source, msDelivery $target)
     {

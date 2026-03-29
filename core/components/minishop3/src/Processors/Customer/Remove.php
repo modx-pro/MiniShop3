@@ -17,11 +17,11 @@ class Remove extends RemoveProcessor
     {
         $canRemove = $this->beforeRemove();
         if ($canRemove !== true) {
-            return $this->failure($canRemove);
+            return $this->failure(is_string($canRemove) ? $canRemove : '');
         }
         $preventRemoval = $this->fireBeforeRemoveEvent();
         if (!empty($preventRemoval)) {
-            return $this->failure($preventRemoval);
+            return $this->failure(is_string($preventRemoval) ? $preventRemoval : '');
         }
 
         $this->customerId = $this->object->get('id');

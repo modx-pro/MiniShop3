@@ -174,7 +174,7 @@
     ]);
 
     if ($modx->user->hasSessionContext('mgr') && !empty($showLog)) {
-        $output .= '<pre class="msGalleryLog">' . print_r($pdoFetch->getTime(), 1) . '</pre>';
+        $output .= '<pre class="msGalleryLog">' . print_r($pdoFetch->getTime(), true) . '</pre>';
     }
 
     if (!empty($toPlaceholder)) {

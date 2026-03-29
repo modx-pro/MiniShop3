@@ -87,7 +87,7 @@ class msProductFile extends xPDOSimpleObject
     }
 
     /**
-     * @param null $cacheFlag
+     * @param bool|int|null $cacheFlag
      *
      * @return bool
      */
