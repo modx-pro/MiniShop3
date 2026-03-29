@@ -139,6 +139,12 @@ parameters:
 			path: core/components/minishop3/src/Controllers/Customer/Customer.php
 
 		-
+			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: core/components/minishop3/src/Controllers/Options/Options.php
+
+		-
 			message: '#^Parameter \#3 \$args of method MODX\\Revolution\\modX\:\:makeUrl\(\) expects string, array\<string, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
