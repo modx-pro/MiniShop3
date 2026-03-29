@@ -10,7 +10,7 @@ class Hide extends Update
 
 
     /**
-     * @return bool
+     * @return array|string|bool
      */
     public function beforeSet()
     {

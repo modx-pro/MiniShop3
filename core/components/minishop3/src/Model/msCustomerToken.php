@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Model;
 
+use xPDO\Om\xPDOObject;
 use xPDO\Om\xPDOSimpleObject;
 
 /**
@@ -64,7 +65,7 @@ class msCustomerToken extends xPDOSimpleObject
     /**
      * Get customer by token
      *
-     * @return msCustomer|null
+     * @return msCustomer|xPDOObject|null
      */
     public function getCustomer()
     {

@@ -65,7 +65,6 @@ class Update extends UpdateProcessor
             }
         }
 
-        /** @var msProduct $product */
         if ($product = $this->object->getOne('Product')) {
             $productData = $product->getOne('Data');
             if ($productData) {

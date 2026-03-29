@@ -29,7 +29,8 @@ class GetList extends GetListProcessor
     public function initialize()
     {
         if (!$this->getProperty('combo')) {
-            return $this->failure($this->modx->lexicon('ms3_err_processor_combo_required'));
+            $this->addFieldError('combo', $this->modx->lexicon('ms3_err_processor_combo_required'));
+            return false;
         }
         if (!$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
             $this->item_id = $id;

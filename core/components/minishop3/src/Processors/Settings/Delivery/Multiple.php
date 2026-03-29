@@ -9,9 +9,7 @@ use MODX\Revolution\Processors\ProcessorResponse;
 class Multiple extends ModelProcessor
 {
     /**
-     * @return array|string]
-     *
-     * @throws
+     * @return array|string
      */
     public function process()
     {

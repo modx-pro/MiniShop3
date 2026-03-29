@@ -107,7 +107,7 @@ class Options
 
                     array_multisort($values, $order, $type);
 
-                    if (!is_null($first) && ($index = array_search($first, $values)) !== false) {
+                    if (!empty($first) && ($index = array_search($first, $values)) !== false) {
                         unset($values[$index]);
                         array_unshift($values, $first);
                     }

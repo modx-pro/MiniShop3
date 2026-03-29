@@ -10,8 +10,6 @@ class Multiple extends ModelProcessor
 {
     /**
      * @return array|string
-     *
-     * @throws
      */
     public function process()
     {

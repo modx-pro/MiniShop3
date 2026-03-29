@@ -157,7 +157,6 @@ class ProductService
      */
     public function processForDisplay(msProduct $product): void
     {
-        /** @var msProductData $data */
         if ($data = $product->getOne('Data')) {
             $placeholders = $data->toArray();
 
@@ -186,7 +185,6 @@ class ProductService
             $this->modx->setPlaceholders($options ?? []);
         }
 
-        /** @var msVendor $vendor */
         if ($vendor = $product->getOne('Vendor')) {
             $this->modx->setPlaceholders($vendor->toArray('vendor_'));
         }

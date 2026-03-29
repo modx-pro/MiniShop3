@@ -139,7 +139,7 @@ abstract class Delivery implements DeliveryProviderInterface
                 return $deliveryCost;
             }
 
-            $addPrice = $cartCost / 100 * $percent;
+            $addPrice = $cost / 100 * $percent;
         } else {
             // Fixed cost
             $addPrice = (float)$addPrice;

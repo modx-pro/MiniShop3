@@ -22,8 +22,7 @@ class GetNodes extends CategoryNodes
         } elseif ($options = $this->getProperty('options')) {
             $options = json_decode($options, true);
             if (is_array($options) && count($options) === 1) {
-                /** @var msOption $option */
-                if ($option = $this->modx->getObject(msOption::class, ['id' => $options[0]])) {
+                if (($option = $this->modx->getObject(msOption::class, ['id' => $options[0]])) !== null) {
                     $categories = $option->getMany('OptionCategories');
                     $tmp = [];
                     /** @var msCategoryOption $cat */

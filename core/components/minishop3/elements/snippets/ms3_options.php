@@ -19,6 +19,7 @@ $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msOptions');
 if (!empty($input) && empty($product)) {
     $product = $input;
 }
+$options = $options ?? '';
 if (!empty($name) && empty($options)) {
     $options = $name;
 }

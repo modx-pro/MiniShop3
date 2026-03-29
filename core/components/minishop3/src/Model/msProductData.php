@@ -43,7 +43,7 @@ class msProductData extends xPDOSimpleObject
     public $mediaSource;
     protected $optionKeys = null;
 
-    /** @var msProductOption $msProductOptionInstance */
+    /** @var msProductOption|null $msProductOptionInstance */
     protected $msProductOptionInstance = null;
 
     /** @var ProductDataService|null */
@@ -68,7 +68,7 @@ class msProductData extends xPDOSimpleObject
     /**
      * All json fields of product are synchronized with msProduct Options
      *
-     * @param null $cacheFlag
+     * @param bool|int|null $cacheFlag
      *
      * @return bool
      */
@@ -206,8 +206,8 @@ class msProductData extends xPDOSimpleObject
 
     /**
      * @param array|string $k
-     * @param null $format
-     * @param null $formatTemplate
+     * @param array|string|null $format
+     * @param array|string|null $formatTemplate
      *
      * @return array|null
      */

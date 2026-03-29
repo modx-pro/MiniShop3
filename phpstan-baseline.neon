@@ -1,0 +1,871 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^PHPDoc tag @var with type MiniShop3\\Services\\Customer\\CustomerPageService is not subtype of native type MiniShop3\\Services\\Customer\\AddressesPageService\|MiniShop3\\Services\\Customer\\OrdersPageService\|MiniShop3\\Services\\Customer\\ProfilePageService\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: core/components/minishop3/elements/snippets/ms3_customer.php
+
+		-
+			message: '#^Cannot call method getProperties\(\) on MODX\\Revolution\\modMediaSource\|true\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: core/components/minishop3/elements/snippets/ms3_gallery.php
+
+		-
+			message: '#^Property xPDO\\xPDO\:\:\$queryTime \(int\) does not accept float\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: core/components/minishop3/elements/snippets/ms3_gallery.php
+
+		-
+			message: '#^Parameter \#2 \$delta of method ModxPro\\PdoTools\\CoreTools\:\:addTime\(\) expects null, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/elements/snippets/ms3_products.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: core/components/minishop3/elements/tasks/csvImport.php
+
+		-
+			message: '#^PHPDoc tag @var with type modX is not subtype of native type MODX\\Revolution\\modX\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: core/components/minishop3/elements/tasks/csvImport.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Utils\\ImportCSV constructor expects MODX\\Revolution\\modX, modX given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/elements/tasks/csvImport.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Notifications\\Order\\StatusChangedNotification constructor expects MODX\\Revolution\\modX, modX given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/elements/tasks/sendNotification.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Manager/CategoryProductsController.php
+
+		-
+			message: '#^Parameter \#3 \$cacheFlag of method xPDO\\xPDO\:\:getIterator\(\) expects bool, array\<string, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Manager/CustomerAddressesController.php
+
+		-
+			message: '#^Parameter \#3 \$cacheFlag of method xPDO\\xPDO\:\:getIterator\(\) expects bool, array\<string, int\|string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Manager/NotificationsController.php
+
+		-
+			message: '#^Parameter \#3 \$cacheFlag of method xPDO\\xPDO\:\:getIterator\(\) expects bool, array\<string, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Manager/NotificationsController.php
+
+		-
+			message: '#^Call to static method uuid4\(\) on an unknown class Ramsey\\Uuid\\Uuid\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Manager/OrdersController.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Manager/OrdersController.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<string, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Manager/VendorsController.php
+
+		-
+			message: '#^Call to method getProductData\(\) on an unknown class MiniShop3\\Services\\ProductDataService\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/ProductDataController.php
+
+		-
+			message: '#^PHPDoc tag @var contains unknown class MiniShop3\\Services\\ProductDataService\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/ProductDataController.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: core/components/minishop3/src/Controllers/Api/ReferencesController.php
+
+		-
+			message: '#^Call to method make\(\) on an unknown class Rakit\\Validation\\Validator\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Web/CustomerProfileController.php
+
+		-
+			message: '#^Instantiated class Rakit\\Validation\\Validator not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Controllers/Api/Web/CustomerProfileController.php
+
+		-
+			message: '#^Call to function is_numeric\(\) with int\<min, \-1\>\|int\<1, max\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: core/components/minishop3/src/Controllers/Cart/Cart.php
+
+		-
+			message: '#^Call to method validate\(\) on an unknown class Rakit\\Validation\\Validator\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Controllers/Customer/Customer.php
+
+		-
+			message: '#^Instantiated class Rakit\\Validation\\Validator not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Controllers/Customer/Customer.php
+
+		-
+			message: '#^Parameter \#3 \$args of method MODX\\Revolution\\modX\:\:makeUrl\(\) expects string, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Controllers/Payment/DefaultPayment.php
+
+		-
+			message: '#^Call to an undefined method xPDO\\xPDO\:\:lexicon\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: core/components/minishop3/src/Model/msCategory.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Category\\CategoryOptionService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msCategory.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Category\\CategoryService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msCategory.php
+
+		-
+			message: '#^Parameter \#2 \$criteria of method xPDO\\xPDO\:\:addDerivativeCriteria\(\) expects xPDO\\Om\\xPDOQuery, xPDO\\Om\\xPDOCriteria given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msCategory.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Delivery\\DeliveryService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msDelivery.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Order\\OrderService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msOrder.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Payment\\PaymentService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msPayment.php
+
+		-
+			message: '#^Call to an undefined method xPDO\\xPDO\:\:lexicon\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: core/components/minishop3/src/Model/msProduct.php
+
+		-
+			message: '#^Method MiniShop3\\Model\\msProduct\:\:load\(\) should return MiniShop3\\Model\\msProduct but returns \(T of xPDO\\Om\\xPDOObject\)\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: core/components/minishop3/src/Model/msProduct.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Product\\ProductService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msProduct.php
+
+		-
+			message: '#^Parameter \#2 \$criteria \(null\) of method MiniShop3\\Model\\msProduct\:\:getMany\(\) should be compatible with parameter \$criteria \(object\) of method MODX\\Revolution\\modResource\:\:getMany\(\)$#'
+			identifier: method.childParameterType
+			count: 1
+			path: core/components/minishop3/src/Model/msProduct.php
+
+		-
+			message: '#^Parameter \#2 \$criteria \(null\) of method MiniShop3\\Model\\msProduct\:\:getOne\(\) should be compatible with parameter \$criteria \(object\) of method xPDO\\Om\\xPDOObject\:\:getOne\(\)$#'
+			identifier: method.childParameterType
+			count: 1
+			path: core/components/minishop3/src/Model/msProduct.php
+
+		-
+			message: '#^Parameter \#2 \$criteria of method xPDO\\xPDO\:\:addDerivativeCriteria\(\) expects xPDO\\Om\\xPDOQuery, xPDO\\Om\\xPDOCriteria given\.$#'
+			identifier: argument.type
+			count: 2
+			path: core/components/minishop3/src/Model/msProduct.php
+
+		-
+			message: '#^Property MiniShop3\\Model\\msProduct\:\:\$Vendor \(MiniShop3\\Model\\msVendor\) does not accept xPDO\\Om\\xPDOObject\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: core/components/minishop3/src/Model/msProduct.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Product\\ProductDataService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msProductData.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Product\\ProductImageService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msProductData.php
+
+		-
+			message: '#^Binary operation "\." between array and ''\.'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: core/components/minishop3/src/Model/msProductFile.php
+
+		-
+			message: '#^Offset ''file'' does not exist on array\{\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: core/components/minishop3/src/Model/msProductFile.php
+
+		-
+			message: '#^Offset ''file'' on array\{\} in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: core/components/minishop3/src/Model/msProductFile.php
+
+		-
+			message: '#^Parameter \#1 \$modx of class MiniShop3\\Services\\Vendor\\VendorService constructor expects MODX\\Revolution\\modX, xPDO\\xPDO given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Model/msVendor.php
+
+		-
+			message: '#^Call to method getTask\(\) on an unknown class Scheduler\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Notifications/NotificationManager.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$scheduler contains unknown class Scheduler\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Notifications/NotificationManager.php
+
+		-
+			message: '#^Parameter \#1 \$className of method xPDO\\xPDO\:\:newObject\(\) expects class\-string\<xPDO\\Om\\xPDOObject\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Notifications/NotificationManager.php
+
+		-
+			message: '#^Access to constant MAIL_BODY on an unknown class modMail\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Api/Customer/ForgotPassword.php
+
+		-
+			message: '#^Access to constant MAIL_FROM on an unknown class modMail\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Api/Customer/ForgotPassword.php
+
+		-
+			message: '#^Access to constant MAIL_FROM_NAME on an unknown class modMail\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Api/Customer/ForgotPassword.php
+
+		-
+			message: '#^Access to constant MAIL_SUBJECT on an unknown class modMail\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Api/Customer/ForgotPassword.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<string, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Category/GetNodes.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, int\<min, \-1\>\|int\<1, max\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: core/components/minishop3/src/Processors/Category/GetNodes.php
+
+		-
+			message: '#^Property MiniShop3\\Processors\\Category\\Option\\Duplicate\:\:\$to_object \(MiniShop3\\Model\\msCategory\) does not accept xPDO\\Om\\xPDOObject\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: core/components/minishop3/src/Processors/Category/Option/Duplicate.php
+
+		-
+			message: '#^Property MODX\\Revolution\\Processors\\ModelProcessor\:\:\$object \(xPDO\\Om\\xPDOObject\) in empty\(\) is not falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: core/components/minishop3/src/Processors/Category/Option/Remove.php
+
+		-
+			message: '#^Property MODX\\Revolution\\Processors\\ModelProcessor\:\:\$object \(xPDO\\Om\\xPDOObject\) in empty\(\) is not falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: core/components/minishop3/src/Processors/Category/Option/Update.php
+
+		-
+			message: '#^Parameter \#1 \$className of method xPDO\\xPDO\:\:getObject\(\) expects class\-string\<xPDO\\Om\\xPDOObject\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Gallery/GetList.php
+
+		-
+			message: '#^Parameter \#1 \$productData of method MiniShop3\\Services\\Product\\ProductImageService\:\:removeProductCatalog\(\) expects MiniShop3\\Model\\msProductData, xPDO\\Om\\xPDOObject given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Gallery/Remove.php
+
+		-
+			message: '#^Parameter \#1 \$productData of method MiniShop3\\Services\\Product\\ProductImageService\:\:updateProductImage\(\) expects MiniShop3\\Model\\msProductData, xPDO\\Om\\xPDOObject given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Gallery/Remove.php
+
+		-
+			message: '#^Part \$product_id \(non\-empty\-array\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: core/components/minishop3/src/Processors/Gallery/Sort.php
+
+		-
+			message: '#^Parameter \#1 \$productData of method MiniShop3\\Services\\Product\\ProductImageService\:\:updateProductImage\(\) expects MiniShop3\\Model\\msProductData, xPDO\\Om\\xPDOObject given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Gallery/Update.php
+
+		-
+			message: '#^Access to private property MiniShop3\\Services\\ImageService\:\:\$imageManager\.$#'
+			identifier: property.private
+			count: 1
+			path: core/components/minishop3/src/Processors/Gallery/Upload.php
+
+		-
+			message: '#^Call to method read\(\) on an unknown class Intervention\\Image\\ImageManager\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Gallery/Upload.php
+
+		-
+			message: '#^Parameter \#1 \$productData of method MiniShop3\\Services\\Product\\ProductImageService\:\:updateProductImage\(\) expects MiniShop3\\Model\\msProductData, xPDO\\Om\\xPDOObject given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Gallery/Upload.php
+
+		-
+			message: '#^Parameter \#2 \$target of method MiniShop3\\Processors\\Product\\Sort\:\:sort\(\) expects MiniShop3\\Model\\msProduct, xPDO\\Om\\xPDOObject\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Product/Sort.php
+
+		-
+			message: '#^Class modResource not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Product/Update.php
+
+		-
+			message: '#^Property MODX\\Revolution\\Processors\\Resource\\Update\:\:\$newParent \(MODX\\Revolution\\modResource\) in empty\(\) is not falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: core/components/minishop3/src/Processors/Product/Update.php
+
+		-
+			message: '#^Property MODX\\Revolution\\Processors\\Resource\\Update\:\:\$oldParent \(MODX\\Revolution\\modResource\) in empty\(\) is not falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: core/components/minishop3/src/Processors/Product/Update.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: core/components/minishop3/src/Processors/Product/Update.php
+
+		-
+			message: '#^Property MiniShop3\\Processors\\Settings\\Delivery\\Payments\\Disable\:\:\$object \(MiniShop3\\Model\\msPayment\) does not accept xPDO\\Om\\xPDOObject\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: core/components/minishop3/src/Processors/Settings/Delivery/Payments/Disable.php
+
+		-
+			message: '#^Property MiniShop3\\Processors\\Settings\\Delivery\\Payments\\Disable\:\:\$object \(MiniShop3\\Model\\msPayment\) in empty\(\) is not falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: core/components/minishop3/src/Processors/Settings/Delivery/Payments/Disable.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Settings/Option/Get.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Settings/Option/GetList.php
+
+		-
+			message: '#^Property MiniShop3\\Processors\\Settings\\Payment\\Deliveries\\Disable\:\:\$object \(MiniShop3\\Model\\msDelivery\) does not accept xPDO\\Om\\xPDOObject\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: core/components/minishop3/src/Processors/Settings/Payment/Deliveries/Disable.php
+
+		-
+			message: '#^Property MiniShop3\\Processors\\Settings\\Payment\\Deliveries\\Disable\:\:\$object \(MiniShop3\\Model\\msDelivery\) in empty\(\) is not falsy\.$#'
+			identifier: empty.property
+			count: 1
+			path: core/components/minishop3/src/Processors/Settings/Payment/Deliveries/Disable.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: core/components/minishop3/src/Processors/Utilities/Import/Fields.php
+
+		-
+			message: '#^Call to method getTask\(\) on an unknown class Scheduler\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Utilities/Import/Import.php
+
+		-
+			message: '#^Instantiated class Scheduler not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Processors/Utilities/Import/Import.php
+
+		-
+			message: '#^Parameter \#1 \$className of method xPDO\\xPDO\:\:newObject\(\) expects class\-string\<xPDO\\Om\\xPDOObject\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Processors/Utilities/Import/Import.php
+
+		-
+			message: '#^Access to constant FOUND on an unknown class FastRoute\\Dispatcher\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Access to constant METHOD_NOT_ALLOWED on an unknown class FastRoute\\Dispatcher\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Access to constant NOT_FOUND on an unknown class FastRoute\\Dispatcher\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Call to method addRoute\(\) on an unknown class FastRoute\\RouteCollector\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Call to method dispatch\(\) on an unknown class FastRoute\\Dispatcher\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Function FastRoute\\simpleDispatcher not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Parameter \$r of anonymous function has invalid type FastRoute\\RouteCollector\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Property MiniShop3\\Router\\Router\:\:\$dispatcher has unknown class FastRoute\\Dispatcher as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Used function FastRoute\\simpleDispatcher not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: core/components/minishop3/src/Router/Router.php
+
+		-
+			message: '#^Class MiniShop3\\Services\\ConfigManager not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/ServiceRegistry.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Category/CategoryOptionService.php
+
+		-
+			message: '#^Offset ''sort_order'' on array\{id\: int, key\: mixed, lexicon_key\: mixed, sort_order\: int, hidden\: bool, is_default\: bool, label\: mixed\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: core/components/minishop3/src/Services/ConfigService.php
+
+		-
+			message: '#^Offset string on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 2
+			path: core/components/minishop3/src/Services/ConfigService.php
+
+		-
+			message: '#^Method MiniShop3\\Services\\Customer\\EmailVerificationService\:\:verifyToken\(\) should return MiniShop3\\Model\\msCustomer\|null but returns xPDO\\Om\\xPDOObject\.$#'
+			identifier: return.type
+			count: 1
+			path: core/components/minishop3/src/Services/Customer/EmailVerificationService.php
+
+		-
+			message: '#^Call to method migrate\(\) on an unknown class Phinx\\Migration\\Manager\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ExtraFieldsService.php
+
+		-
+			message: '#^Instantiated class Phinx\\Config\\Config not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ExtraFieldsService.php
+
+		-
+			message: '#^Instantiated class Phinx\\Migration\\Manager not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ExtraFieldsService.php
+
+		-
+			message: '#^Offset string on array\{\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 2
+			path: core/components/minishop3/src/Services/FieldConfigManager.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/FilterConfigManager.php
+
+		-
+			message: '#^Call to method cover\(\) on an unknown class Intervention\\Image\\Interfaces\\ImageInterface\.$#'
+			identifier: class.notFound
+			count: 2
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Call to method driver\(\) on an unknown class Intervention\\Image\\ImageManager\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Call to method read\(\) on an unknown class Intervention\\Image\\ImageManager\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Call to method resize\(\) on an unknown class Intervention\\Image\\Interfaces\\ImageInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Call to method scale\(\) on an unknown class Intervention\\Image\\Interfaces\\ImageInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Call to method scaleDown\(\) on an unknown class Intervention\\Image\\Interfaces\\ImageInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Class Intervention\\Image\\Drivers\\Imagick\\Driver not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\Drivers\\Gd\\Driver not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\Drivers\\Imagick\\Driver not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\Encoders\\AvifEncoder not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\Encoders\\GifEncoder not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\Encoders\\JpegEncoder not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\Encoders\\PngEncoder not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\Encoders\\WebpEncoder not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Instantiated class Intervention\\Image\\ImageManager not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Method MiniShop3\\Services\\ImageService\:\:getEncoder\(\) has invalid return type Intervention\\Image\\Encoders\\EncoderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Method MiniShop3\\Services\\ImageService\:\:getEncoder\(\) should return Intervention\\Image\\Encoders\\EncoderInterface but returns Intervention\\Image\\Encoders\\AvifEncoder\|Intervention\\Image\\Encoders\\GifEncoder\|Intervention\\Image\\Encoders\\JpegEncoder\|Intervention\\Image\\Encoders\\PngEncoder\|Intervention\\Image\\Encoders\\WebpEncoder\.$#'
+			identifier: return.type
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Parameter \$image of method MiniShop3\\Services\\ImageService\:\:applyResize\(\) has invalid type Intervention\\Image\\Interfaces\\ImageInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Property MiniShop3\\Services\\ImageService\:\:\$imageManager has unknown class Intervention\\Image\\ImageManager as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/ImageService.php
+
+		-
+			message: '#^Call to function is_array\(\) with non\-empty\-array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: core/components/minishop3/src/Services/Option/OptionCategoryService.php
+
+		-
+			message: '#^Parameter \#1 \$columns of method xPDO\\Om\\xPDOQuery\:\:select\(\) expects string, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Option/OptionLoaderService.php
+
+		-
+			message: '#^Call to static method uuid4\(\) on an unknown class Ramsey\\Uuid\\Uuid\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderDraftManager.php
+
+		-
+			message: '#^Method MiniShop3\\Services\\Order\\OrderDraftManager\:\:ensureAddress\(\) should return MiniShop3\\Model\\msOrderAddress but returns xPDO\\Om\\xPDOObject\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderDraftManager.php
+
+		-
+			message: '#^Call to method validate\(\) on an unknown class Rakit\\Validation\\Validator\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderFieldManager.php
+
+		-
+			message: '#^Instantiated class Rakit\\Validation\\Validator not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderFieldManager.php
+
+		-
+			message: '#^Call to an undefined method MiniShop3\\MiniShop3\:\:loadCustomClasses\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderStatusService.php
+
+		-
+			message: '#^Parameter \#3 \$args of method MODX\\Revolution\\modX\:\:makeUrl\(\) expects string, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderSubmitHandler.php
+
+		-
+			message: '#^Call to an undefined method xPDO\\Om\\xPDOObject\:\:cleanAlias\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderUserResolver.php
+
+		-
+			message: '#^Class modResource not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderUserResolver.php
+
+		-
+			message: '#^Parameter \#1 \$className of method xPDO\\xPDO\:\:newObject\(\) expects class\-string\<xPDO\\Om\\xPDOObject\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Order/OrderUserResolver.php
+
+		-
+			message: '#^Offset ''data'' on array\{data\: array\} in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Offset ''data'' on null in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Offset ''price'' on null in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Offset ''weight'' on null in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Parameter \#1 \$product_id of method MiniShop3\\Model\\msProductOption\:\:getOptionFields\(\) expects int, array\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Parameter \#1 \$product_id of method MiniShop3\\Model\\msProductOption\:\:getOptionKeys\(\) expects int, array\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Parameter \#1 \$product_id of method MiniShop3\\Model\\msProductOption\:\:saveProductOptions\(\) expects int, array\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductDataService.php
+
+		-
+			message: '#^Cannot call method getErrors\(\) on MODX\\Revolution\\modMediaSource\|true\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductImageService.php
+
+		-
+			message: '#^Cannot call method removeContainer\(\) on MODX\\Revolution\\modMediaSource\|true\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductImageService.php
+
+		-
+			message: '#^Method MiniShop3\\Services\\Product\\ProductImageService\:\:initializeMediaSource\(\) has invalid return type MODX\\Revolution\\modMediaSource\.$#'
+			identifier: class.notFound
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductImageService.php
+
+		-
+			message: '#^Parameter \#1 \$className of method xPDO\\xPDO\:\:getObject\(\) expects class\-string\<xPDO\\Om\\xPDOObject\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductImageService.php
+
+		-
+			message: '#^Parameter \#1 \$mediaSource of method MiniShop3\\Model\\msProductFile\:\:generateThumbnails\(\) expects MODX\\Revolution\\Sources\\modMediaSource\|null, MODX\\Revolution\\modMediaSource\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/Product/ProductImageService.php
+
+		-
+			message: '#^Parameter \#1 \$className of method xPDO\\xPDO\:\:getObject\(\) expects class\-string\<xPDO\\Om\\xPDOObject\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/TokenService.php
+
+		-
+			message: '#^Parameter \#1 \$className of method xPDO\\xPDO\:\:newObject\(\) expects class\-string\<xPDO\\Om\\xPDOObject\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/components/minishop3/src/Services/TokenService.php
+
+		-
+			message: '#^Method MiniShop3\\Utils\\ImportCSV\:\:findExistingProduct\(\) should return MODX\\Revolution\\modResource\|null but returns xPDO\\Om\\xPDOObject\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: core/components/minishop3/src/Utils/ImportCSV.php
+
+		-
+			message: '#^Parameter \#2 \$return of function print_r expects bool, int given\.$#'
+			identifier: argument.type
+			count: 7
+			path: core/components/minishop3/src/Utils/ImportCSV.php

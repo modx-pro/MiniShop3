@@ -39,7 +39,7 @@ class GetList extends GetListProcessor
             if ($order_id = $this->getProperty('order_id')) {
                 /** @var msOrder $order */
                 $order = $this->modx->getObject(msOrder::class, ['id' => $order_id]);
-                /** @var msOrderStatus $status */
+                $status = null;
                 if ($order) {
                     $status = $order->getOne('Status');
                 }

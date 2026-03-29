@@ -30,7 +30,6 @@ class Update extends UpdateProcessor
      */
     public static function getInstance(modX $modx, $className, $properties = [])
     {
-        /** @var Processor $processor */
         return new $className($modx, $properties);
     }
 
