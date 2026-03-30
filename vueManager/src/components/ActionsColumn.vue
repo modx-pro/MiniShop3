@@ -23,7 +23,10 @@
  *   label: 'edit',          // Lexicon key or text
  *   severity: null,         // PrimeVue severity: danger, secondary, success, etc.
  *   confirm: false,         // Confirmation required
+ *   confirmTitle: '...',    // Confirm dialog title (lexicon key, optional)
  *   confirmMessage: '...',  // Confirmation message (lexicon key)
+ *   confirmAccept: '...',   // Accept button label (lexicon key, optional)
+ *   confirmReject: '...',   // Reject button label (lexicon key, optional)
  *   permission: 'ms3_save', // Access permission (optional)
  *   visible: true,          // Button visibility
  *   disabled: false,        // Disabled state

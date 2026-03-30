@@ -680,8 +680,8 @@ class GridConfigService
             return ['success' => false, 'message' => 'actions must be an array'];
         }
 
-        // Validate each action
-        $allowedHandlers = ['edit', 'delete', 'view', 'refresh'];
+        // Built-in Vue manager handlers (see vueManager/src/actionRegistry.js)
+        $allowedHandlers = ['edit', 'delete', 'view', 'refresh', 'addresses', 'publish', 'duplicate'];
         $actionNames = [];
 
         foreach ($actions as $index => $action) {
