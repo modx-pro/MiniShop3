@@ -2,23 +2,16 @@
 import { useLexicon } from '@vuetools/useLexicon'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
-import Fieldset from 'primevue/fieldset'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
 import Select from 'primevue/select'
 import Tab from 'primevue/tab'
 import TabList from 'primevue/tablist'
 import TabPanel from 'primevue/tabpanel'
 import TabPanels from 'primevue/tabpanels'
 import Tabs from 'primevue/tabs'
-import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -34,6 +27,10 @@ import {
 
 import request from '../request.js'
 import { normalizeOrderPluginTab } from '../utils/orderPluginTab.js'
+import OrderAddressTab from './order/OrderAddressTab.vue'
+import OrderHistoryTab from './order/OrderHistoryTab.vue'
+import OrderInfoTab from './order/OrderInfoTab.vue'
+import OrderProductsTab from './order/OrderProductsTab.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -983,57 +980,6 @@ async function loadLogs() {
 }
 
 /**
- * Load statuses list
- */
-// eslint-disable-next-line no-unused-vars
-async function loadStatuses() {
-  try {
-    const response = await request.get('/api/mgr/statuses-dropdown')
-    statuses.value = (response.results || response || []).map(s => ({
-      value: s.id,
-      label: s.name,
-    }))
-  } catch (error) {
-    console.error('[OrderView] Error loading statuses:', error)
-    statuses.value = []
-  }
-}
-
-/**
- * Load deliveries list
- */
-// eslint-disable-next-line no-unused-vars
-async function loadDeliveries() {
-  try {
-    const response = await request.get('/api/mgr/deliveries-active')
-    deliveries.value = (response.results || response || []).map(d => ({
-      value: d.id,
-      label: d.name,
-    }))
-  } catch (error) {
-    console.error('[OrderView] Error loading deliveries:', error)
-    deliveries.value = []
-  }
-}
-
-/**
- * Load payments list
- */
-// eslint-disable-next-line no-unused-vars
-async function loadPayments() {
-  try {
-    const response = await request.get('/api/mgr/payments')
-    payments.value = (response.results || response || []).map(p => ({
-      value: p.id,
-      label: p.name,
-    }))
-  } catch (error) {
-    console.error('[OrderView] Error loading payments:', error)
-    payments.value = []
-  }
-}
-
-/**
  * Get options for combo field (order fields)
  * Returns options array from combo config with metadata
  */
@@ -1729,6 +1675,63 @@ function destroyPluginExtComponents() {
   mountedExtPluginComponents.value = {}
 }
 
+const infoTabProps = computed(() => ({
+  order: order.value,
+  isCreateMode: isCreateMode.value,
+  orderFieldsBySection: orderFieldsBySection.value,
+  isDraft: isDraft.value,
+  finalizing: finalizing.value,
+  saving: saving.value,
+  formatDate,
+  formatPrice,
+  getFieldWidthClass,
+  isFieldEditable,
+  getFieldDisplayValue,
+  getFieldCompareField,
+  getFieldOptions,
+  confirmFinalizeOrder,
+  createOrder,
+  saveOrder,
+  goBack,
+}))
+
+const productsTabProps = computed(() => ({
+  products: products.value,
+  productsColumns: productsColumns.value,
+  formatOptions,
+  formatPrice,
+  renderProductField,
+  getProductLink,
+  handleProductAction,
+  openAddProductDialog,
+}))
+
+const addressTabProps = computed(() => ({
+  order: order.value,
+  isCreateMode: isCreateMode.value,
+  isDraft: isDraft.value,
+  addressFieldsBySection: addressFieldsBySection.value,
+  customerSuggestions: customerSuggestions.value,
+  searchingCustomers: searchingCustomers.value,
+  saving: saving.value,
+  formatPrice,
+  getFieldWidthClass,
+  getAddressFieldCompareField,
+  getAddressFieldOptions,
+  searchCustomers,
+  onCustomerSelect,
+  clearCustomer,
+  createOrder,
+  saveOrder,
+  goBack,
+}))
+
+const historyTabProps = computed(() => ({
+  logs: logs.value,
+  formatDate,
+  formatLogEntry,
+}))
+
 watch(
   () => orderTabsConfig.value.map(t => t.key),
   keys => {
@@ -1912,26 +1915,6 @@ function getFieldDisplayValue(field, value) {
       return value
     }
   }
-}
-
-/**
- * Get status severity for tag
- */
-// eslint-disable-next-line no-unused-vars
-function getStatusSeverity(color) {
-  if (!color) return 'secondary'
-  const colorMap = {
-    '#97b94d': 'success',
-    '#81d742': 'success',
-    green: 'success',
-    '#dd3d36': 'danger',
-    red: 'danger',
-    '#f0ad4e': 'warn',
-    yellow: 'warn',
-    '#5bc0de': 'info',
-    blue: 'info',
-  }
-  return colorMap[color?.toLowerCase()] || 'secondary'
 }
 
 onMounted(async () => {
@@ -2359,573 +2342,27 @@ onMounted(async () => {
         </TabList>
         <TabPanels>
           <TabPanel v-for="tab in orderTabsConfig" :key="tab.key" :value="tab.key">
-            <template v-if="tab.kind === 'builtin' && tab.key === 'info'">
-            <!-- Static Order Summary Section (only in edit mode) -->
-            <Fieldset
-              v-if="!isCreateMode"
-              :legend="_('order_summary')"
-              class="mb-3 order-summary-section"
-              :toggleable="false"
-            >
-              <div class="order-summary-grid">
-                <!-- Order number -->
-                <div class="summary-item summary-num">
-                  <span class="summary-label">{{ _('order_num') }}</span>
-                  <span class="summary-value summary-value-lg">{{
-                    order.num ? '#' + order.num : '-'
-                  }}</span>
-                </div>
-                <!-- Total cost -->
-                <div class="summary-item summary-cost">
-                  <span class="summary-label">{{ _('order_cost') }}</span>
-                  <span class="summary-value summary-value-lg summary-value-primary">{{
-                    order.cost_formatted || formatPrice(order.cost)
-                  }}</span>
-                </div>
-                <!-- Cart cost -->
-                <div class="summary-item">
-                  <span class="summary-label">{{ _('order_cart_cost') }}</span>
-                  <span class="summary-value">{{
-                    order.cart_cost_formatted || formatPrice(order.cart_cost)
-                  }}</span>
-                </div>
-                <!-- Delivery cost -->
-                <div class="summary-item">
-                  <span class="summary-label">{{ _('order_delivery_cost') }}</span>
-                  <span class="summary-value">{{
-                    order.delivery_cost_formatted || formatPrice(order.delivery_cost)
-                  }}</span>
-                </div>
-                <!-- Weight -->
-                <div class="summary-item">
-                  <span class="summary-label">{{ _('order_weight') }}</span>
-                  <span class="summary-value">{{
-                    order.weight_formatted || order.weight || '-'
-                  }}</span>
-                </div>
-                <!-- Created date -->
-                <div class="summary-item">
-                  <span class="summary-label">{{ _('order_createdon') }}</span>
-                  <span class="summary-value">{{ formatDate(order.createdon) }}</span>
-                </div>
-                <!-- Updated date -->
-                <div class="summary-item">
-                  <span class="summary-label">{{ _('order_updatedon') }}</span>
-                  <span class="summary-value">{{ formatDate(order.updatedon) }}</span>
-                </div>
-              </div>
-            </Fieldset>
-
-            <!-- Order sections with fields (dynamic from configuration) -->
-            <template v-for="section in orderFieldsBySection" :key="section.id || 'no_section'">
-              <Fieldset :legend="section.label" class="mb-3" :toggleable="true">
-                <div class="fields-grid">
-                  <template v-for="field in section.fields" :key="field.id">
-                    <div :class="['field-wrapper', getFieldWidthClass(field)]">
-                      <div class="field">
-                        <label>{{ field.label_display || field.label || field.name }}</label>
-
-                        <!-- Read-only fields -->
-                        <template v-if="!isFieldEditable(field.name)">
-                          <div class="field-value">
-                            {{ getFieldDisplayValue(field, order[field.name]) }}
-                          </div>
-                        </template>
-
-                        <!-- Combo (Select) -->
-                        <template v-else-if="field.xtype === 'combo'">
-                          <Select
-                            v-model="order[getFieldCompareField(field.name)]"
-                            :options="getFieldOptions(field.name)"
-                            option-label="label"
-                            option-value="value"
-                            :placeholder="field.placeholder"
-                            class="w-full"
-                          />
-                        </template>
-
-                        <!-- Textarea -->
-                        <template v-else-if="field.xtype === 'textarea'">
-                          <Textarea
-                            v-model="order[field.name]"
-                            :placeholder="field.placeholder"
-                            rows="3"
-                            class="w-full"
-                          />
-                        </template>
-
-                        <!-- Number field -->
-                        <template v-else-if="field.xtype === 'numberfield'">
-                          <InputNumber
-                            v-model="order[field.name]"
-                            :placeholder="field.placeholder"
-                            class="w-full"
-                            :min-fraction-digits="0"
-                            :max-fraction-digits="2"
-                          />
-                        </template>
-
-                        <!-- Date field -->
-                        <template v-else-if="field.xtype === 'datefield'">
-                          <DatePicker
-                            v-model="order[field.name]"
-                            :placeholder="field.placeholder"
-                            date-format="dd.mm.yy"
-                            show-time
-                            hour-format="24"
-                            show-icon
-                            fluid
-                            icon-display="input"
-                          />
-                        </template>
-
-                        <!-- Checkbox -->
-                        <template v-else-if="field.xtype === 'checkbox'">
-                          <div class="flex align-items-center">
-                            <Checkbox v-model="order[field.name]" :binary="true" />
-                          </div>
-                        </template>
-
-                        <!-- Text field (default) -->
-                        <template v-else>
-                          <InputText
-                            v-model="order[field.name]"
-                            :placeholder="field.placeholder"
-                            class="w-full"
-                          />
-                        </template>
-
-                        <!-- Description/help text -->
-                        <small v-if="field.description_display" class="field-description">
-                          {{ field.description_display }}
-                        </small>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-              </Fieldset>
-            </template>
-
-            <!-- Fallback if no fields configured -->
-            <div v-if="orderFieldsBySection.length === 0" class="no-fields-message">
-              <p>{{ _('ms3_model_fields_empty') }}</p>
-            </div>
-
-            <!-- Draft order finalization panel -->
-            <Message
-              v-if="!isCreateMode && isDraft"
-              severity="info"
-              :closable="false"
-              class="finalize-info-panel mt-3"
-            >
-              <template #icon>
-                <i class="pi pi-info-circle"></i>
-              </template>
-              <div class="finalize-info-content">
-                <p class="finalize-info-text">{{ _('ms3_order_finalize_info') }}</p>
-                <Button
-                  :label="_('ms3_order_finalize_btn')"
-                  icon="pi pi-check-circle"
-                  severity="success"
-                  :loading="finalizing"
-                  class="finalize-button"
-                  @click="confirmFinalizeOrder"
-                />
-              </div>
-            </Message>
-
-            <!-- Save/Create button -->
-            <div class="actions-bar mt-3">
-              <Button
-                v-if="isCreateMode"
-                :label="_('ms3_order_create')"
-                icon="pi pi-plus"
-                severity="success"
-                :loading="saving"
-                @click="createOrder"
-              />
-              <Button
-                v-else
-                :label="_('save')"
-                icon="pi pi-check"
-                :loading="saving"
-                @click="saveOrder"
-              />
-              <Button
-                :label="_('cancel')"
-                icon="pi pi-times"
-                severity="secondary"
-                @click="goBack"
-              />
-            </div>
-            </template>
-
-            <template v-else-if="tab.kind === 'builtin' && tab.key === 'products'">
-            <div class="products-toolbar mb-3">
-              <Button
-                :label="_('order_add_product')"
-                icon="pi pi-plus"
-                severity="primary"
-                size="small"
-                @click="openAddProductDialog"
-              />
-            </div>
-            <DataTable :value="products" striped-rows responsive-layout="scroll">
-              <template v-for="column in productsColumns.filter(c => c.visible)" :key="column.name">
-                <!-- Image column -->
-                <Column
-                  v-if="column.type === 'image'"
-                  :field="column.name"
-                  :header="column.label"
-                  :style="{ width: column.width }"
-                >
-                  <template #body="{ data }">
-                    <img
-                      v-if="data[column.name]"
-                      :src="data[column.name]"
-                      :alt="data.name"
-                      class="product-thumbnail"
-                      :style="{
-                        width: (column.width || 50) + 'px',
-                        height: (column.height || 50) + 'px',
-                        objectFit: 'cover',
-                      }"
-                    />
-                    <span v-else class="no-image">—</span>
-                  </template>
-                </Column>
-
-                <!-- Options column (chips) -->
-                <Column
-                  v-else-if="column.type === 'options'"
-                  :field="column.name"
-                  :header="column.label"
-                  :style="{ width: column.width, minWidth: column.minWidth }"
-                >
-                  <template #body="{ data }">
-                    <div class="options-chips">
-                      <Tag
-                        v-for="(opt, idx) in formatOptions(data[column.name])"
-                        :key="idx"
-                        :value="opt"
-                        severity="secondary"
-                        class="mr-1 mb-1"
-                      />
-                      <span v-if="!formatOptions(data[column.name]).length">—</span>
-                    </div>
-                  </template>
-                </Column>
-
-                <!-- Price column -->
-                <Column
-                  v-else-if="column.type === 'price'"
-                  :field="column.name"
-                  :header="column.label"
-                  :sortable="column.sortable"
-                  :style="{ width: column.width, minWidth: column.minWidth }"
-                >
-                  <template #body="{ data }">
-                    {{ formatPrice(data[column.name]) }}
-                  </template>
-                </Column>
-
-                <!-- Number column -->
-                <Column
-                  v-else-if="column.type === 'number'"
-                  :field="column.name"
-                  :header="column.label"
-                  :sortable="column.sortable"
-                  :style="{ width: column.width, minWidth: column.minWidth }"
-                >
-                  <template #body="{ data }">
-                    {{ data[column.name] }}
-                  </template>
-                </Column>
-
-                <!-- Weight column -->
-                <Column
-                  v-else-if="column.type === 'weight'"
-                  :field="column.name"
-                  :header="column.label"
-                  :sortable="column.sortable"
-                  :style="{ width: column.width, minWidth: column.minWidth }"
-                >
-                  <template #body="{ data }">
-                    {{ data[column.name + '_formatted'] || data[column.name] }}
-                  </template>
-                </Column>
-
-                <!-- Template column (name with link) -->
-                <Column
-                  v-else-if="column.type === 'template'"
-                  :field="column.name"
-                  :header="column.label"
-                  :sortable="column.sortable"
-                  :style="{ width: column.width, minWidth: column.minWidth }"
-                >
-                  <template #body="{ data }">
-                    <a
-                      v-if="getProductLink(data, column)"
-                      :href="getProductLink(data, column)"
-                      target="_blank"
-                      class="product-link"
-                    >
-                      {{ renderProductField(data, column) }}
-                    </a>
-                    <span v-else>
-                      {{ renderProductField(data, column) || '—' }}
-                    </span>
-                  </template>
-                </Column>
-
-                <!-- Actions column -->
-                <Column
-                  v-else-if="column.type === 'actions'"
-                  :header="column.label"
-                  :frozen="column.frozen"
-                  :style="{ width: column.width }"
-                >
-                  <template #body="{ data }">
-                    <div class="actions-buttons">
-                      <Button
-                        v-for="action in column.actions || []"
-                        :key="action.name"
-                        :icon="'pi ' + action.icon"
-                        :severity="action.severity || 'secondary'"
-                        text
-                        rounded
-                        size="small"
-                        @click="handleProductAction(action, data)"
-                      />
-                    </div>
-                  </template>
-                </Column>
-
-                <!-- Default column (text) -->
-                <Column
-                  v-else
-                  :field="column.name"
-                  :header="column.label"
-                  :sortable="column.sortable"
-                  :style="{ width: column.width, minWidth: column.minWidth }"
-                />
-              </template>
-            </DataTable>
-            </template>
-
-            <template v-else-if="tab.kind === 'builtin' && tab.key === 'address'">
-            <!-- Customer Search Section (in create mode or when order is draft) -->
-            <Fieldset
-              v-if="isCreateMode || isDraft"
-              :legend="_('order_customer')"
-              class="mb-3"
-              :toggleable="true"
-            >
-              <div class="customer-search-content">
-                <div class="customer-search-field">
-                  <AutoComplete
-                    v-model="selectedCustomer"
-                    :suggestions="customerSuggestions"
-                    option-label="display"
-                    :placeholder="_('ms3_order_search_customer')"
-                    :loading="searchingCustomers"
-                    class="w-full"
-                    :min-length="2"
-                    @complete="searchCustomers"
-                    @item-select="onCustomerSelect"
-                  >
-                    <template #option="{ option }">
-                      <div class="customer-suggestion">
-                        <div class="customer-suggestion-info">
-                          <div class="customer-suggestion-name">
-                            {{ option.first_name }} {{ option.last_name }}
-                          </div>
-                          <div class="customer-suggestion-meta">
-                            <span v-if="option.email" class="email">{{ option.email }}</span>
-                            <span v-if="option.phone" class="phone">{{ option.phone }}</span>
-                          </div>
-                          <div class="customer-suggestion-stats">
-                            <span v-if="option.orders_count"
-                              >{{ _('orders') }}: {{ option.orders_count }}</span
-                            >
-                            <span v-if="option.total_spent"
-                              >{{ _('total') }}: {{ formatPrice(option.total_spent) }}</span
-                            >
-                          </div>
-                        </div>
-                      </div>
-                    </template>
-                  </AutoComplete>
-                  <small class="customer-search-hint">{{ _('ms3_order_customer_hint') }}</small>
-                </div>
-
-                <!-- Selected customer info -->
-                <div v-if="selectedCustomer && selectedCustomer.id" class="selected-customer-info">
-                  <div class="selected-customer-badge">
-                    <i class="pi pi-user"></i>
-                    <span class="customer-name"
-                      >{{ selectedCustomer.first_name }} {{ selectedCustomer.last_name }}</span
-                    >
-                    <span v-if="selectedCustomer.email" class="customer-email">{{
-                      selectedCustomer.email
-                    }}</span>
-                    <Button
-                      icon="pi pi-times"
-                      severity="secondary"
-                      text
-                      rounded
-                      size="small"
-                      :title="_('ms3_order_clear_customer')"
-                      @click="clearCustomer"
-                    />
-                  </div>
-                  <small class="text-success">{{ _('ms3_order_customer_selected') }}</small>
-                </div>
-                <div v-else class="no-customer-hint">
-                  <i class="pi pi-info-circle"></i>
-                  <span>{{ _('ms3_order_no_customer') }}</span>
-                </div>
-
-                <!-- Create customer checkbox -->
-                <div class="create-customer-checkbox mt-3">
-                  <Checkbox
-                    v-model="createCustomerFromData"
-                    input-id="createCustomer"
-                    :binary="true"
-                    :disabled="!!selectedCustomer?.id"
-                  />
-                  <label
-                    for="createCustomer"
-                    class="ml-2"
-                    :class="{ 'text-muted': !!selectedCustomer?.id }"
-                  >
-                    {{ _('ms3_order_create_customer_from_data') }}
-                  </label>
-                </div>
-              </div>
-            </Fieldset>
-
-            <template v-for="section in addressFieldsBySection" :key="section.id || 'no_section'">
-              <Fieldset :legend="section.label" class="mb-3" :toggleable="true">
-                <div class="fields-grid">
-                  <template v-for="field in section.fields" :key="field.id">
-                    <div :class="['field-wrapper', getFieldWidthClass(field)]">
-                      <div class="field">
-                        <label>{{ field.label_display || field.label || field.name }}</label>
-
-                        <!-- Combo (Select) -->
-                        <template v-if="field.xtype === 'combo'">
-                          <Select
-                            v-model="order[getAddressFieldCompareField(field.name)]"
-                            :options="getAddressFieldOptions(field.name)"
-                            option-label="label"
-                            option-value="value"
-                            :placeholder="field.placeholder"
-                            class="w-full"
-                          />
-                        </template>
-
-                        <!-- Textarea -->
-                        <template v-else-if="field.xtype === 'textarea'">
-                          <Textarea
-                            v-model="order[field.name]"
-                            :placeholder="field.placeholder"
-                            rows="3"
-                            class="w-full"
-                          />
-                        </template>
-
-                        <!-- Number field -->
-                        <template v-else-if="field.xtype === 'numberfield'">
-                          <InputNumber
-                            v-model="order[field.name]"
-                            :placeholder="field.placeholder"
-                            class="w-full"
-                          />
-                        </template>
-
-                        <!-- Checkbox -->
-                        <template v-else-if="field.xtype === 'checkbox'">
-                          <div class="flex align-items-center">
-                            <Checkbox v-model="order[field.name]" :binary="true" />
-                          </div>
-                        </template>
-
-                        <!-- Text field (default) -->
-                        <template v-else>
-                          <InputText
-                            v-model="order[field.name]"
-                            :placeholder="field.placeholder"
-                            class="w-full"
-                          />
-                        </template>
-
-                        <!-- Description/help text -->
-                        <small v-if="field.description_display" class="field-description">
-                          {{ field.description_display }}
-                        </small>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-              </Fieldset>
-            </template>
-
-            <!-- Fallback if no fields configured -->
-            <div v-if="addressFieldsBySection.length === 0" class="no-fields-message">
-              <p>{{ _('ms3_model_fields_empty') }}</p>
-            </div>
-
-            <!-- Action buttons for address tab -->
-            <div class="actions-bar mt-3">
-              <Button
-                v-if="isCreateMode"
-                :label="_('ms3_order_create')"
-                icon="pi pi-plus"
-                severity="success"
-                :loading="saving"
-                @click="createOrder"
-              />
-              <Button
-                v-else
-                :label="_('save')"
-                icon="pi pi-check"
-                :loading="saving"
-                @click="saveOrder"
-              />
-              <Button
-                :label="_('cancel')"
-                icon="pi pi-times"
-                severity="secondary"
-                @click="goBack"
-              />
-            </div>
-            </template>
-
-            <template v-else-if="tab.kind === 'builtin' && tab.key === 'history'">
-            <DataTable :value="logs" striped-rows responsive-layout="scroll">
-              <Column field="timestamp" :header="_('log_date')" style="width: 11.25rem">
-                <template #body="{ data }">
-                  {{ formatDate(data.timestamp || data.createdon) }}
-                </template>
-              </Column>
-              <Column field="action" :header="_('log_action')" />
-              <Column field="user_name" :header="_('log_user')" style="width: 9.375rem" />
-              <Column field="entry_formatted" :header="_('log_entry')">
-                <template #body="{ data }">
-                  <span v-html="data.entry_formatted || formatLogEntry(data)"></span>
-                </template>
-              </Column>
-            </DataTable>
-            </template>
-
-            <!-- Third-party tabs: window.MS3OrderTabsRegistry (see order.js, orderPluginTab.js) -->
+            <OrderInfoTab v-if="tab.key === 'info'" v-bind="infoTabProps" />
+            <OrderProductsTab v-else-if="tab.key === 'products'" v-bind="productsTabProps" />
+            <OrderAddressTab
+              v-else-if="tab.key === 'address'"
+              v-bind="addressTabProps"
+              v-model:selected-customer="selectedCustomer"
+              v-model:create-customer-from-data="createCustomerFromData"
+            />
+            <OrderHistoryTab v-else-if="tab.key === 'history'" v-bind="historyTabProps" />
             <template v-else-if="tab.kind === 'plugin' && tab.type === 'vue' && tab.component">
-              <component :is="tab.component" v-if="orderActiveTab === tab.key" v-bind="pluginVueProps(tab)" />
+              <component
+                :is="tab.component"
+                v-if="orderActiveTab === tab.key"
+                v-bind="pluginVueProps(tab)"
+              />
             </template>
-            <template v-else-if="tab.kind === 'plugin' && tab.type === 'extjs' && tab.xtype">
-              <div :id="`ms3-order-tab-${tab.key}`" class="order-extjs-tab-container"></div>
-            </template>
+            <div
+              v-else-if="tab.kind === 'plugin' && tab.type === 'extjs' && tab.xtype"
+              :id="`ms3-order-tab-${tab.key}`"
+              class="order-extjs-tab-container"
+            />
           </TabPanel>
         </TabPanels>
       </Tabs>
@@ -2982,200 +2419,9 @@ onMounted(async () => {
   text-align: center;
 }
 
-/* 12-column grid for fields */
-.fields-grid {
-  display: flex;
-  flex-wrap: wrap;
-  margin: -0.5rem;
-}
-
-.field-wrapper {
-  padding: 0.5rem;
-  box-sizing: border-box;
-}
-
-/* Width classes (12-column grid) */
-.col-1 {
-  width: 8.333%;
-}
-.col-2 {
-  width: 16.666%;
-}
-.col-3 {
-  width: 25%;
-}
-.col-4 {
-  width: 33.333%;
-}
-.col-5 {
-  width: 41.666%;
-}
-.col-6 {
-  width: 50%;
-}
-.col-7 {
-  width: 58.333%;
-}
-.col-8 {
-  width: 66.666%;
-}
-.col-9 {
-  width: 75%;
-}
-.col-10 {
-  width: 83.333%;
-}
-.col-11 {
-  width: 91.666%;
-}
-.col-12 {
-  width: 100%;
-}
-
-/* Responsive: on small screens all fields become full-width */
-@media (max-width: 48rem) {
-  .col-1,
-  .col-2,
-  .col-3,
-  .col-4,
-  .col-5,
-  .col-6,
-  .col-7,
-  .col-8,
-  .col-9,
-  .col-10,
-  .col-11,
-  .col-12 {
-    width: 100%;
-  }
-}
-
+/* Dialog / header utilities (tab-specific layout lives in components/order/) */
 .field {
   margin-bottom: 0;
-}
-
-.field label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--ms3-text-muted);
-  font-size: 0.875rem;
-}
-
-.field-value {
-  font-size: 1rem;
-  color: var(--ms3-text-darkest);
-  min-height: 2.5rem;
-  display: flex;
-  align-items: center;
-}
-
-.field-description {
-  display: block;
-  margin-top: 0.25rem;
-  color: var(--ms3-text-light);
-  font-size: 0.75rem;
-}
-
-.costs-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-@media (max-width: 48rem) {
-  .costs-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Order Summary Section */
-.order-summary-section :deep(.p-fieldset-legend) {
-  background: var(--ms3-accent-primary);
-  color: var(--ms3-text-on-primary);
-}
-
-.order-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-@media (max-width: 75rem) {
-  .order-summary-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 48rem) {
-  .order-summary-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 30rem) {
-  .order-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.summary-item {
-  display: flex;
-  flex-direction: column;
-  padding: var(--ms3-spacing-3) 1rem;
-  background: var(--ms3-bg-slate);
-  border-radius: 0.5rem;
-  border-left: var(--ms3-border-width-accent) solid var(--ms3-border-color);
-}
-
-.summary-item.summary-num {
-  border-left-color: var(--ms3-accent-primary);
-}
-
-.summary-item.summary-cost {
-  border-left-color: var(--ms3-text-success);
-}
-
-.summary-label {
-  font-size: 0.75rem;
-  color: var(--ms3-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
-}
-
-.summary-value {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--ms3-text-darkest);
-}
-
-.summary-value-lg {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.summary-value-primary {
-  color: var(--ms3-text-success);
-}
-
-.actions-bar {
-  display: flex;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--ms3-bg-slate);
-  border-radius: 0.5rem;
-}
-
-.no-fields-message {
-  padding: 1rem;
-  text-align: center;
-  color: var(--ms3-text-muted);
-  font-style: italic;
-}
-
-.mt-3 {
-  margin-top: 1rem;
 }
 
 .mb-3 {
@@ -3184,61 +2430,6 @@ onMounted(async () => {
 
 .w-full {
   width: 100%;
-}
-
-.flex {
-  display: flex;
-}
-
-.align-items-center {
-  align-items: center;
-}
-
-/* Fieldset styles */
-:deep(.p-fieldset) {
-  border: var(--ms3-border-width) solid var(--ms3-border-color);
-  border-radius: 0.5rem;
-}
-
-:deep(.p-fieldset .p-fieldset-legend) {
-  font-size: 0.95rem;
-  padding: 0.5rem 1rem;
-  background: var(--ms3-bg-slate);
-  border-radius: 0.25rem;
-}
-
-:deep(.p-fieldset .p-fieldset-content) {
-  padding: 1rem;
-}
-
-/* Products table styles */
-.product-thumbnail {
-  border-radius: 0.25rem;
-  object-fit: cover;
-}
-
-.no-image {
-  color: var(--ms3-text-muted-light);
-}
-
-.product-link {
-  color: var(--ms3-accent-primary);
-  text-decoration: none;
-}
-
-.product-link:hover {
-  text-decoration: underline;
-}
-
-.options-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.actions-buttons {
-  display: flex;
-  gap: 0.25rem;
 }
 
 /* Edit product dialog styles */
@@ -3390,139 +2581,6 @@ onMounted(async () => {
   text-align: right;
 }
 
-.products-toolbar {
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Customer Search Section Styles */
-.customer-search-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.customer-search-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.customer-search-hint {
-  color: var(--ms3-text-muted);
-  font-size: 0.75rem;
-}
-
-.customer-suggestion {
-  display: flex;
-  align-items: center;
-  gap: var(--ms3-spacing-3);
-  padding: 0.25rem 0;
-}
-
-.customer-suggestion-info {
-  flex: 1;
-}
-
-.customer-suggestion-name {
-  font-weight: 500;
-  color: var(--ms3-text-darkest);
-}
-
-.customer-suggestion-meta {
-  font-size: 0.75rem;
-  color: var(--ms3-text-muted);
-  display: flex;
-  gap: var(--ms3-spacing-3);
-}
-
-.customer-suggestion-meta .email {
-  color: var(--ms3-accent-primary);
-}
-
-.customer-suggestion-meta .phone {
-  color: var(--ms3-text-muted);
-}
-
-.customer-suggestion-stats {
-  font-size: 0.7rem;
-  color: var(--ms3-text-light);
-  display: flex;
-  gap: var(--ms3-spacing-3);
-  margin-top: 0.25rem;
-}
-
-.selected-customer-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.selected-customer-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem var(--ms3-spacing-3);
-  background: var(--ms3-bg-success);
-  border: var(--ms3-border-width) solid var(--ms3-border-success);
-  border-radius: 0.5rem;
-}
-
-.selected-customer-badge i {
-  color: var(--ms3-text-success);
-}
-
-.selected-customer-badge .customer-name {
-  font-weight: 500;
-  color: var(--ms3-text-darkest);
-}
-
-.selected-customer-badge .customer-email {
-  color: var(--ms3-text-muted);
-  font-size: 0.875rem;
-}
-
-.no-customer-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem var(--ms3-spacing-3);
-  background: var(--ms3-bg-slate);
-  border: var(--ms3-border-width) dashed var(--ms3-border-color);
-  border-radius: 0.5rem;
-  color: var(--ms3-text-muted);
-  font-size: 0.875rem;
-}
-
-.no-customer-hint i {
-  color: var(--ms3-text-light);
-}
-
-.text-success {
-  color: var(--ms3-text-success);
-}
-
-/* Create customer checkbox */
-.create-customer-checkbox {
-  display: flex;
-  align-items: center;
-  padding: var(--ms3-spacing-3);
-  background: var(--ms3-bg-warning-light);
-  border: var(--ms3-border-width) solid var(--ms3-border-warning-alt);
-  border-radius: 0.5rem;
-}
-
-.create-customer-checkbox label {
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: var(--ms3-text-warning-dark);
-}
-
-.create-customer-checkbox label.text-muted {
-  color: var(--ms3-text-light);
-  cursor: not-allowed;
-}
-
 /* Duplicate customer dialog */
 .duplicate-customer-dialog {
   display: flex;
@@ -3575,60 +2633,6 @@ onMounted(async () => {
   color: var(--ms3-text-darkest);
   font-size: 0.875rem;
   font-weight: 500;
-}
-
-/* Finalize order info panel */
-.finalize-info-panel {
-  border: var(--ms3-border-width) solid var(--ms3-border-accent);
-  background: linear-gradient(135deg, var(--ms3-bg-accent) 0%, var(--ms3-bg-accent-alt) 100%);
-  border-radius: 0.5rem;
-}
-
-.finalize-info-panel :deep(.p-message-wrapper) {
-  padding: 1rem 1.25rem;
-}
-
-.finalize-info-panel :deep(.p-message-icon) {
-  color: var(--ms3-accent-primary);
-  font-size: 1.25rem;
-}
-
-.finalize-info-content {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-}
-
-.finalize-info-text {
-  flex: 1;
-  min-width: 12.5rem;
-  margin: 0;
-  color: var(--ms3-text-accent-dark);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.finalize-button {
-  flex-shrink: 0;
-}
-
-@media (max-width: 40rem) {
-  .finalize-info-content {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-
-  .finalize-info-text {
-    min-width: auto;
-  }
-
-  .finalize-button {
-    width: 100%;
-  }
 }
 </style>
 

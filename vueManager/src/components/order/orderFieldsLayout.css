@@ -1,0 +1,143 @@
+/* Shared layout for dynamic order/address field sections (imported in tab SFCs). */
+
+.fields-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -0.5rem;
+}
+
+.field-wrapper {
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.col-1 {
+  width: 8.333%;
+}
+
+.col-2 {
+  width: 16.666%;
+}
+
+.col-3 {
+  width: 25%;
+}
+
+.col-4 {
+  width: 33.333%;
+}
+
+.col-5 {
+  width: 41.666%;
+}
+
+.col-6 {
+  width: 50%;
+}
+
+.col-7 {
+  width: 58.333%;
+}
+
+.col-8 {
+  width: 66.666%;
+}
+
+.col-9 {
+  width: 75%;
+}
+
+.col-10 {
+  width: 83.333%;
+}
+
+.col-11 {
+  width: 91.666%;
+}
+
+.col-12 {
+  width: 100%;
+}
+
+@media (width <= 48rem) {
+  .col-1,
+  .col-2,
+  .col-3,
+  .col-4,
+  .col-5,
+  .col-6,
+  .col-7,
+  .col-8,
+  .col-9,
+  .col-10,
+  .col-11,
+  .col-12 {
+    width: 100%;
+  }
+}
+
+.field {
+  margin-bottom: 0;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--ms3-text-muted);
+  font-size: 0.875rem;
+}
+
+.field-value {
+  font-size: 1rem;
+  color: var(--ms3-text-darkest);
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.field-description {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--ms3-text-light);
+  font-size: 0.75rem;
+}
+
+.no-fields-message {
+  padding: 1rem;
+  text-align: center;
+  color: var(--ms3-text-muted);
+  font-style: italic;
+}
+
+.actions-bar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--ms3-bg-slate);
+  border-radius: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
