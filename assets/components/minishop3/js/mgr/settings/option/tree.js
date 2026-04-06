@@ -74,18 +74,17 @@ Ext.extend(ms3.tree.OptionCategories, MODx.tree.Tree, {
             handler: function () {
                 const activeNode = this.cm.activeNode;
                 const checkchange = this.getListeners().checkchange;
+                const tree = this;
 
-                function massCheck(node)
-                {
-                    node.getUI().toggleCheck(true);
-                    node.expand(false,false,function (node) {
-                        node.eachChild(massCheck);
-                        if (node == activeNode) {
-                            checkchange();
-                        }
+                // Expand subtree first so lazy/async children exist, then check all nodes once.
+                // The previous expand(false,false,callback) fired checkchange before deep children finished.
+                activeNode.expand(true, false, function () {
+                    activeNode.cascade(function (n) {
+                        n.getUI().toggleCheck(true);
+                        return true;
                     });
-                }
-                massCheck(activeNode);
+                    checkchange.call(tree);
+                });
             }
         },{
             text: '<i class="x-menu-item-icon icon icon-square-o"></i> ' + _('ms3_menu_clear_all'),

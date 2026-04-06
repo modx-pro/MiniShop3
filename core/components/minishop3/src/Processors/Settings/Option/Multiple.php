@@ -30,7 +30,7 @@ class Multiple extends ModelProcessor
             if ($categories && $options) {
                 foreach ($options as $option) {
                     foreach ($categories as $category) {
-                        $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Delivery\\Assign', [
+                        $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Option\\Assign', [
                             'option_id' => $option,
                             'category_id' => $category,
                         ]);
