@@ -204,6 +204,9 @@ function mountOptionsTab() {
       const groupsByModCategoryId = new Map()
 
       for (const option of optionFields) {
+        if (!option?.key) {
+          continue
+        }
         const field = ms3.utils.getExtField(
           { record: props.record, mode: 'update' },
           option.key,
@@ -214,7 +217,7 @@ function mountOptionsTab() {
           continue
         }
 
-        const modCategoryId = option.modcategory_id ?? 0
+        const modCategoryId = Number(option.modcategory_id) || 0
         let panel = groupsByModCategoryId.get(modCategoryId)
         if (!panel) {
           panel = {
