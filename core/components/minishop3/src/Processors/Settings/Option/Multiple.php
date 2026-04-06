@@ -23,18 +23,18 @@ class Multiple extends ModelProcessor
         }
 
         $ids = json_decode($this->getProperty('ids'), true);
-        if (empty($ids)) {
+        if (!is_array($ids) || $ids === []) {
             return $this->success();
         }
 
         $method = ucfirst($methodRaw);
         foreach ($ids as $id) {
-            /** @var ProcessorResponse $response */
             $response = $this->modx->runProcessor('MiniShop3\\Processors\\Settings\\Option\\' . $method, [
                 'id' => $id,
             ]);
-            if ($response->isError()) {
-                return $response->getResponse();
+            $failure = $this->failureFromProcessorResponse($response);
+            if ($failure !== null) {
+                return $failure;
             }
         }
 
@@ -50,23 +50,40 @@ class Multiple extends ModelProcessor
         $ms3 = $this->modx->services->get('ms3');
         $categories = json_decode($this->getProperty('categories', '[]'), true);
         $options = json_decode($this->getProperty('options', '[]'), true);
-        if (empty($categories) || empty($options)) {
+        if (!is_array($categories) || !is_array($options) || $categories === [] || $options === []) {
             return $this->success();
         }
 
         foreach ($options as $option) {
             foreach ($categories as $category) {
-                /** @var ProcessorResponse $response */
                 $response = $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Option\\Assign', [
-                    'option_id' => $option,
-                    'category_id' => $category,
+                    'option_id' => (int) $option,
+                    'category_id' => (int) $category,
                 ]);
-                if ($response->isError()) {
-                    return $response->getResponse();
+                $failure = $this->failureFromProcessorResponse($response);
+                if ($failure !== null) {
+                    return $failure;
                 }
             }
         }
 
         return $this->success();
+    }
+
+    /**
+     * @param mixed $response
+     *
+     * @return array|string|null null if OK
+     */
+    protected function failureFromProcessorResponse($response)
+    {
+        if (!$response instanceof ProcessorResponse) {
+            return $this->failure();
+        }
+        if ($response->isError()) {
+            return $response->getResponse();
+        }
+
+        return null;
     }
 }

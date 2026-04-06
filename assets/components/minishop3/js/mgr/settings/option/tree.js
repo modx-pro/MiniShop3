@@ -55,6 +55,9 @@ Ext.extend(ms3.tree.OptionCategories, MODx.tree.Tree, {
         this.cm.removeAll();
 
         function bulkToggleChecks(root, checked, treePanel) {
+            if (!root || typeof root.expand !== 'function') {
+                return;
+            }
             var sync = treePanel.getListeners().checkchange;
             root.expand(true, false, function () {
                 root.cascade(function (node) {
