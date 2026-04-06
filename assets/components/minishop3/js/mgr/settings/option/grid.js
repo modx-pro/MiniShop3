@@ -1,3 +1,6 @@
+/** Combo page size: option-group filter must list all distinct modCategories (default 20 hides groups). */
+var MS3_OPTION_GRID_MODCATEGORY_PAGE_SIZE = 500;
+
 ms3.grid.Option = function (config) {
     config = config || {};
     if (!config.id) {
@@ -87,7 +90,7 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
         }, '->', {
             xtype: 'ms3-combo-modcategory',
             id: config.id + '-modcategory',
-            pageSize: 500,
+            pageSize: MS3_OPTION_GRID_MODCATEGORY_PAGE_SIZE,
             listeners: {
                 select: {
                     fn: function (field) {
