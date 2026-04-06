@@ -24,6 +24,8 @@ class GetCategories extends GetListProcessor
     {
 
         $c->innerJoin(msOption::class, 'msOption', 'msOption.modcategory_id=modCategory.id');
+        // One row per MODX category (inner join multiplies rows when many options share a group)
+        $c->groupby('modCategory.id');
 
         return $c;
     }

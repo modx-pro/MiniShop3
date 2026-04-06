@@ -87,6 +87,7 @@ Ext.extend(ms3.grid.Option, ms3.grid.Default, {
         }, '->', {
             xtype: 'ms3-combo-modcategory',
             id: config.id + '-modcategory',
+            pageSize: 500,
             listeners: {
                 select: {
                     fn: function (field) {
