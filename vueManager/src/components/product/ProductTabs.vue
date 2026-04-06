@@ -200,7 +200,7 @@ function mountOptionsTab() {
         return
       }
 
-      // Build option groups from config
+      // Build option groups from config (group by modcategory_id from msOption, not legacy `category`)
       const options = props.config.option_fields || []
       const optionGroups = []
 
@@ -215,9 +215,11 @@ function mountOptionsTab() {
 
         if (!field) continue
 
+        const groupId = option.modcategory_id ?? 0
+
         let found = false
         for (let j = 0; j < optionGroups.length; j++) {
-          if (optionGroups[j].category === option.category) {
+          if (optionGroups[j].groupId === groupId) {
             optionGroups[j].items.push(field)
             found = true
             break
@@ -226,10 +228,10 @@ function mountOptionsTab() {
 
         if (!found) {
           optionGroups.push({
-            id: 'ms3-options-tab-' + option.category,
+            id: 'ms3-options-tab-' + groupId,
             layout: 'form',
             labelAlign: 'top',
-            category: option.category,
+            groupId,
             title: option.category_name || _('ms3_ft_nogroup'),
             bodyCssClass: 'main-wrapper',
             items: [field],
