@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Settings\Option;
 
 use MiniShop3\MiniShop3;
 use MODX\Revolution\Processors\ModelProcessor;
+use MODX\Revolution\Processors\ProcessorResponse;
 
 class Multiple extends ModelProcessor
 {
@@ -12,39 +13,58 @@ class Multiple extends ModelProcessor
      */
     public function process()
     {
-        $method = $this->getProperty('method', false);
-        if (!$method) {
+        $methodRaw = $this->getProperty('method', false);
+        if (!$methodRaw) {
             return $this->failure();
         }
-        $method = ucfirst($method);
+
+        if (strcasecmp($methodRaw, 'assign') === 0) {
+            return $this->processAssign();
+        }
+
         $ids = json_decode($this->getProperty('ids'), true);
         if (empty($ids)) {
             return $this->success();
         }
 
-        if ($method == 'assign') {
-            /** @var MiniShop3 $ms3 */
-            $ms3 = $this->modx->services->get('ms3');
-            $categories = json_decode($this->getProperty('categories'), true);
-            $options = json_decode($this->getProperty('options'), true);
-            if ($categories && $options) {
-                foreach ($options as $option) {
-                    foreach ($categories as $category) {
-                        $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Option\\Assign', [
-                            'option_id' => $option,
-                            'category_id' => $category,
-                        ]);
-                    }
+        $method = ucfirst($methodRaw);
+        foreach ($ids as $id) {
+            /** @var ProcessorResponse $response */
+            $response = $this->modx->runProcessor('MiniShop3\\Processors\\Settings\\Option\\' . $method, [
+                'id' => $id,
+            ]);
+            if ($response->isError()) {
+                return $response->getResponse();
+            }
+        }
+
+        return $this->success();
+    }
+
+    /**
+     * @return array|string
+     */
+    protected function processAssign()
+    {
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+        $categories = json_decode($this->getProperty('categories', '[]'), true);
+        $options = json_decode($this->getProperty('options', '[]'), true);
+        if (empty($categories) || empty($options)) {
+            return $this->success();
+        }
+
+        foreach ($options as $option) {
+            foreach ($categories as $category) {
+                /** @var ProcessorResponse $response */
+                $response = $ms3->utils->runProcessor('MiniShop3\\Processors\\Settings\\Option\\Assign', [
+                    'option_id' => $option,
+                    'category_id' => $category,
+                ]);
+                if ($response->isError()) {
+                    return $response->getResponse();
                 }
             }
-        } elseif ($ids = json_decode($this->getProperty('ids'), true)) {
-            foreach ($ids as $id) {
-                $this->modx->runProcessor('MiniShop3\Processors\Settings\Option\\' . $method, [
-                    'id' => $id,
-                ]);
-            }
-
-            return $this->success();
         }
 
         return $this->success();

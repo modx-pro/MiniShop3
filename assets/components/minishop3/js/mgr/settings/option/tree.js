@@ -53,6 +53,18 @@ Ext.extend(ms3.tree.OptionCategories, MODx.tree.Tree, {
         n.select();
         this.cm.activeNode = n;
         this.cm.removeAll();
+
+        function bulkToggleChecks(root, checked, treePanel) {
+            var sync = treePanel.getListeners().checkchange;
+            root.expand(true, false, function () {
+                root.cascade(function (node) {
+                    node.getUI().toggleCheck(checked);
+                    return true;
+                });
+                sync.call(treePanel);
+            });
+        }
+
         const m = [];
         m.push({
             text: '<i class="x-menu-item-icon icon icon-refresh"></i> ' + _('directory_refresh'),
@@ -72,35 +84,12 @@ Ext.extend(ms3.tree.OptionCategories, MODx.tree.Tree, {
         },{
             text: '<i class="x-menu-item-icon icon icon-check-square-o"></i> ' + _('ms3_menu_select_all'),
             handler: function () {
-                const activeNode = this.cm.activeNode;
-                const checkchange = this.getListeners().checkchange;
-                const tree = this;
-
-                // Expand subtree first so lazy/async children exist, then check all nodes once.
-                // The previous expand(false,false,callback) fired checkchange before deep children finished.
-                activeNode.expand(true, false, function () {
-                    activeNode.cascade(function (n) {
-                        n.getUI().toggleCheck(true);
-                        return true;
-                    });
-                    checkchange.call(tree);
-                });
+                bulkToggleChecks(this.cm.activeNode, true, this);
             }
         },{
             text: '<i class="x-menu-item-icon icon icon-square-o"></i> ' + _('ms3_menu_clear_all'),
             handler: function () {
-                const activeNode = this.cm.activeNode;
-                const checkchange = this.getListeners().checkchange;
-
-                function massUncheck(node)
-                {
-                    node.getUI().toggleCheck(false);
-                    node.eachChild(massUncheck);
-                    if (node == activeNode) {
-                        checkchange();
-                    }
-                }
-                massUncheck(activeNode);
+                bulkToggleChecks(this.cm.activeNode, false, this);
             }
         });
         this.addContextMenuItem(m);
