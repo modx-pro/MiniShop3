@@ -200,45 +200,38 @@ function mountOptionsTab() {
         return
       }
 
-      // Build option groups from config (group by modcategory_id from msOption, not legacy `category`)
-      const options = props.config.option_fields || []
-      const optionGroups = []
+      const optionFields = props.config.option_fields || []
+      const groupsByModCategoryId = new Map()
 
-      for (let i = 0; i < options.length; i++) {
-        const option = options[i]
+      for (const option of optionFields) {
         const field = ms3.utils.getExtField(
           { record: props.record, mode: 'update' },
           option.key,
           option,
           'extra-field'
         )
-
-        if (!field) continue
-
-        const groupId = option.modcategory_id ?? 0
-
-        let found = false
-        for (let j = 0; j < optionGroups.length; j++) {
-          if (optionGroups[j].groupId === groupId) {
-            optionGroups[j].items.push(field)
-            found = true
-            break
-          }
+        if (!field) {
+          continue
         }
 
-        if (!found) {
-          optionGroups.push({
-            id: 'ms3-options-tab-' + groupId,
+        const modCategoryId = option.modcategory_id ?? 0
+        let panel = groupsByModCategoryId.get(modCategoryId)
+        if (!panel) {
+          panel = {
+            id: 'ms3-options-tab-' + modCategoryId,
             layout: 'form',
             labelAlign: 'top',
-            groupId,
+            groupId: modCategoryId,
             title: option.category_name || _('ms3_ft_nogroup'),
             bodyCssClass: 'main-wrapper',
-            items: [field],
-          })
+            items: [],
+          }
+          groupsByModCategoryId.set(modCategoryId, panel)
         }
+        panel.items.push(field)
       }
 
+      const optionGroups = Array.from(groupsByModCategoryId.values())
       if (optionGroups.length === 0) {
         return
       }
