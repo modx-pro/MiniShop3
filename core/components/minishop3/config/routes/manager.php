@@ -794,6 +794,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
     // Statuses dropdown (with translated names for order forms)
     $router->get('/statuses-dropdown', function($params) use ($modx) {
+        $modx->lexicon->load('minishop3:manager');
         $results = [];
         $collection = $modx->getIterator(\MiniShop3\Model\msOrderStatus::class);
         foreach ($collection as $item) {
@@ -811,10 +812,18 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
     // Dropdown list of active deliveries (for order forms)
     $router->get('/deliveries-active', function($params) use ($modx) {
+        $modx->lexicon->load('minishop3:default');
         $results = [];
         $collection = $modx->getIterator(\MiniShop3\Model\msDelivery::class, ['active' => 1]);
         foreach ($collection as $item) {
-            $results[] = $item->toArray();
+            $data = $item->toArray();
+            if (!empty($data['name']) && str_starts_with($data['name'], 'ms3_')) {
+                $translated = $modx->lexicon($data['name']);
+                if ($translated !== $data['name']) {
+                    $data['name'] = $translated;
+                }
+            }
+            $results[] = $data;
         }
         return \MiniShop3\Router\Response::success(['results' => $results])->getData();
     });

@@ -307,8 +307,11 @@ class ModelFieldsController
             return Response::error('Invalid model type', 400)->getData();
         }
 
-        // Load lexicon topics for label translation
+        // `comboOptions` may include status/payment/delivery names stored as lexicon keys.
+        // Load all topics needed both for field labels (`vue`) and option labels.
         $this->modx->lexicon->load('minishop3:vue');
+        $this->modx->lexicon->load('minishop3:default');
+        $this->modx->lexicon->load('minishop3:manager');
 
         // Get sections for the model
         $sections = $this->getSectionsForModel($model);
