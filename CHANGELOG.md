@@ -41,6 +41,7 @@
 
 #### 🐛 Исправлено
 
+- **Manager API затирал `msOrder.properties` данными адреса (#191):** `array_merge($order->toArray(), $address->toArray())` перезаписывал `properties` заказа значением `null` из `msOrderAddress` — выделен `mergeAddressIntoOrderData()` с исключением конфликтующих полей
 - **В форме заказа manager UI показывались raw lexicon keys в списках статусов, оплат и доставок (#193):** `GET /api/mgr/model-fields/visible/msOrder` загружал только `minishop3:vue`, из-за чего `comboOptions` не переводили значения из `minishop3:default` и `minishop3:manager`; дополнительно исправлены order-form dropdown routes для статусов и активных доставок
 - **Пустая строка в decimal/int Extra Fields ломала сохранение товара (#170):** пустое значение кастомного поля (например `wholesale_price`) вызывало MySQL ошибку `Incorrect decimal value`, `save()` возвращал `false` и категории/опции/ссылки молча не сохранялись — хардкод каста `price`/`old_price`/`weight` заменён на универсальный цикл по `_fieldMeta` для всех `float`, `integer` и `boolean` полей
 - **Чекбокс «Скрыть дочерние ресурсы» не сохранялся в категориях (#161, #160):** `hide_children_in_tree` не обрабатывался в `handleCheckBoxes()` процессоров `Category/Update` и `Category/Create` — unchecked-состояние не передавалось в POST и значение сбрасывалось
