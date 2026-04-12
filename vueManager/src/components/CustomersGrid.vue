@@ -65,6 +65,19 @@ const editingAddress = ref(null)
 const addressFormVisible = ref(false)
 const savingAddress = ref(false)
 
+/** Delete row action: aligned with `20251127000002_seed_customers_grid_config` (lexicon keys). */
+const CUSTOMER_GRID_DELETE_ACTION = {
+  name: 'delete',
+  handler: 'delete',
+  icon: 'pi-trash',
+  label: 'delete',
+  severity: 'danger',
+  confirm: true,
+  confirmTitle: 'customer_delete_confirm_title',
+  confirmMessage: 'customer_delete_confirm_message',
+  confirmAccept: 'delete',
+}
+
 /**
  * Load customers list
  */
@@ -203,42 +216,29 @@ async function saveCustomer() {
 }
 
 /**
- * Delete customer
+ * Delete customer (called after confirmation in ActionsColumn / useActions)
  */
-function deleteCustomer(customer) {
-  confirm.require({
-    message: _('customer_delete_confirm_message').replace(
-      '{name}',
-      getCustomerDisplayName(customer)
-    ),
-    header: _('customer_delete_confirm_title'),
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: _('delete'),
-    rejectLabel: _('cancel'),
-    acceptClass: 'p-button-danger',
-    accept: async () => {
-      try {
-        await request.delete(`/api/mgr/customers/${customer.id}`)
+async function deleteCustomer(customer) {
+  try {
+    await request.delete(`/api/mgr/customers/${customer.id}`)
 
-        toast.add({
-          severity: 'success',
-          summary: _('success'),
-          detail: _('customer_deleted'),
-          life: 3000,
-        })
+    toast.add({
+      severity: 'success',
+      summary: _('success'),
+      detail: _('customer_deleted'),
+      life: 3000,
+    })
 
-        await loadCustomers()
-      } catch (error) {
-        console.error('[CustomersGrid] Error deleting customer:', error)
-        toast.add({
-          severity: 'error',
-          summary: _('error'),
-          detail: error.message || _('error_deleting_data'),
-          life: 5000,
-        })
-      }
-    },
-  })
+    await loadCustomers()
+  } catch (error) {
+    console.error('[CustomersGrid] Error deleting customer:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_deleting_data'),
+      life: 5000,
+    })
+  }
 }
 
 /**
@@ -583,40 +583,40 @@ function getDefaultColumns() {
       actions: [
         { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        {
-          name: 'delete',
-          handler: 'delete',
-          icon: 'pi-trash',
-          label: 'delete',
-          severity: 'danger',
-          confirm: true,
-          confirmMessage: 'customer_delete_confirm_message',
-        },
+        { ...CUSTOMER_GRID_DELETE_ACTION },
       ],
     },
   ]
 }
 
 /**
+ * Ensure delete action uses customer-specific confirm copy (covers API-loaded grid config).
+ */
+function applyCustomerDeleteConfirmDefaults(actions) {
+  return actions.map(action => {
+    const handler = action.handler || action.name
+    if (handler !== 'delete') return action
+    return {
+      ...action,
+      confirmTitle: action.confirmTitle || 'customer_delete_confirm_title',
+      confirmMessage: action.confirmMessage || 'customer_delete_confirm_message',
+      confirmAccept: action.confirmAccept || 'delete',
+    }
+  })
+}
+
+/**
  * Get action configuration for column
  */
 function getActionsConfig(column) {
-  if (!column.actions || column.actions.length === 0) {
-    return [
-      { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
-      { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-      {
-        name: 'delete',
-        handler: 'delete',
-        icon: 'pi-trash',
-        label: 'delete',
-        severity: 'danger',
-        confirm: true,
-        confirmMessage: 'customer_delete_confirm_message',
-      },
-    ]
-  }
-  return column.actions
+  const fallback = [
+    { name: 'addresses', handler: 'addresses', icon: 'pi-map-marker', label: 'addresses' },
+    { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+    { ...CUSTOMER_GRID_DELETE_ACTION },
+  ]
+  const raw =
+    !column.actions || column.actions.length === 0 ? fallback : column.actions
+  return applyCustomerDeleteConfirmDefaults(raw)
 }
 
 /**

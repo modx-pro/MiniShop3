@@ -41,7 +41,10 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'frozen' => 0,
                 'width' => null,
                 'min_width' => '200px',
-                'config' => json_encode(['type' => 'template', 'template' => '{first_name} {last_name}'], JSON_UNESCAPED_UNICODE),
+                'config' => json_encode(
+                    ['type' => 'template', 'template' => '{first_name} {last_name}'],
+                    JSON_UNESCAPED_UNICODE
+                ),
                 'is_system' => 0,
                 'is_default' => 1,
             ],
@@ -129,10 +132,30 @@ class SeedCustomersGridConfig extends AbstractMigration
                 'config' => json_encode([
                     'type' => 'actions',
                     'actions' => [
-                        ['name' => 'addresses', 'handler' => 'addresses', 'icon' => 'pi-map-marker', 'label' => 'addresses'],
-                        ['name' => 'edit', 'handler' => 'edit', 'icon' => 'pi-pencil', 'label' => 'edit'],
-                        ['name' => 'delete', 'handler' => 'delete', 'icon' => 'pi-trash', 'label' => 'delete', 'severity' => 'danger', 'confirm' => true, 'confirmMessage' => 'customer_delete_confirm_message']
-                    ]
+                        [
+                            'name' => 'addresses',
+                            'handler' => 'addresses',
+                            'icon' => 'pi-map-marker',
+                            'label' => 'addresses',
+                        ],
+                        [
+                            'name' => 'edit',
+                            'handler' => 'edit',
+                            'icon' => 'pi-pencil',
+                            'label' => 'edit',
+                        ],
+                        [
+                            'name' => 'delete',
+                            'handler' => 'delete',
+                            'icon' => 'pi-trash',
+                            'label' => 'delete',
+                            'severity' => 'danger',
+                            'confirm' => true,
+                            'confirmTitle' => 'customer_delete_confirm_title',
+                            'confirmMessage' => 'customer_delete_confirm_message',
+                            'confirmAccept' => 'delete',
+                        ],
+                    ],
                 ], JSON_UNESCAPED_UNICODE),
                 'is_system' => 1,
                 'is_default' => 1,
