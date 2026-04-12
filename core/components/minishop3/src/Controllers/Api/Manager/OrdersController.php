@@ -60,6 +60,28 @@ class OrdersController
     }
 
     /**
+     * Merge address fields into order payload without overwriting order-level fields.
+     *
+     * msOrderAddress has its own `id`, `properties`, `createdon`, `updatedon` which
+     * must not overwrite the corresponding msOrder fields in the API response.
+     */
+    protected function mergeAddressIntoOrderData(array $orderData, ?\xPDO\Om\xPDOObject $address): array
+    {
+        if (!$address) {
+            return $orderData;
+        }
+
+        $excludeFields = ['id', 'order_id', 'createdon', 'updatedon', 'properties'];
+        foreach ($address->toArray() as $key => $value) {
+            if (!in_array($key, $excludeFields, true)) {
+                $orderData[$key] = $value;
+            }
+        }
+
+        return $orderData;
+    }
+
+    /**
      * Load extra fields into xPDO map
      * This ensures dynamic columns added via Object Extension are available
      */
@@ -238,7 +260,7 @@ class OrdersController
         $status = $order->getOne('Status');
         $delivery = $order->getOne('Delivery');
         $payment = $order->getOne('Payment');
-        $address = $this->modx->getObject(msOrderAddress::class, ['order_id' => $id]);
+        $address = $order->getOne('Address');
 
         $data = $order->toArray();
         $data['status_name'] = $status ? $status->get('name') : '';
@@ -252,17 +274,10 @@ class OrdersController
             $data[$fieldKey] = $order->get($fieldKey);
         }
 
-        // Load all address fields dynamically
-        if ($address) {
-            $addressData = $address->toArray();
-            // Exclude system fields that should not be exposed
-            $excludeFields = ['id', 'order_id', 'createdon', 'updatedon'];
-            foreach ($addressData as $key => $value) {
-                if (!in_array($key, $excludeFields)) {
-                    $data[$key] = $value;
-                }
-            }
+        // Merge address fields (excluding conflicting keys like properties)
+        $data = $this->mergeAddressIntoOrderData($data, $address);
 
+        if ($address) {
             // Load extra fields for msOrderAddress (stored as real DB columns)
             $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
             foreach ($addressExtraFields as $fieldKey) {
@@ -530,7 +545,7 @@ class OrdersController
 
         // Return created order with address data
         $orderData = $order->toArray();
-        $orderData = array_merge($orderData, $address->toArray());
+        $orderData = $this->mergeAddressIntoOrderData($orderData, $address);
         $orderData['customer_created'] = $createCustomer && $customerId > 0;
 
         return Response::success($this->formatOrder($orderData), 'Order draft created')->getData();
@@ -599,9 +614,7 @@ class OrdersController
 
         // Get address data
         $address = $order->getOne('Address');
-        if ($address) {
-            $orderData = array_merge($orderData, $address->toArray());
-        }
+        $orderData = $this->mergeAddressIntoOrderData($orderData, $address);
 
         return Response::success($this->formatOrder($orderData), 'ms3_order_finalized')->getData();
     }
