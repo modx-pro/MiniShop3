@@ -2,7 +2,6 @@
 
 namespace MiniShop3\Processors\Settings\Payment;
 
-use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msPayment;
 use MODX\Revolution\Processors\ModelProcessor;
 
@@ -26,9 +25,9 @@ class Sort extends ModelProcessor
             return $this->failure();
         }
         foreach ($sources as $id) {
-            /** @var msDelivery $source */
+            /** @var msPayment $source */
             $source = $this->modx->getObject($this->classKey, compact('id'));
-            /** @var msDelivery $target */
+            /** @var msPayment $target */
             $target = $this->modx->getObject($this->classKey, ['id' => $this->getProperty('target')]);
             $this->sort($source, $target);
         }
@@ -39,12 +38,12 @@ class Sort extends ModelProcessor
 
 
     /**
-     * @param msDelivery $source
-     * @param msDelivery $target
+     * @param msPayment $source
+     * @param msPayment $target
      *
      * @return void
      */
-    public function sort(msDelivery $source, msDelivery $target)
+    public function sort(msPayment $source, msPayment $target)
     {
         $c = $this->modx->newQuery($this->classKey);
         $c->command('UPDATE');
