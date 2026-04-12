@@ -16,6 +16,8 @@ class GetCategories extends GetListProcessor
 
 
     /**
+     * Inner join lists only modCategories used as option groups; GROUP BY collapses join duplicates.
+     *
      * @param xPDOQuery $c
      *
      * @return xPDOQuery
@@ -24,6 +26,7 @@ class GetCategories extends GetListProcessor
     {
 
         $c->innerJoin(msOption::class, 'msOption', 'msOption.modcategory_id=modCategory.id');
+        $c->groupby('modCategory.id');
 
         return $c;
     }
