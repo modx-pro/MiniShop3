@@ -39,12 +39,6 @@
 - Метод `Router::loadRoutesFromDirectory()`, путь `Router::coreAddonRoutesDirectory('manager'|'web')` с проверкой аргумента; `api.php` и `Processors\Api\Index` грузят web-фрагменты; `Processors\Api\Router` (встроенная админка) — только manager-фрагменты
 - Resolver создаёт каталоги при установке; примеры `example-addon.php.dist` в компоненте для копирования в `core/config/`
 
-#### 🔧 Качество кода
-
-- **PHPStan baseline сокращён с 277 до 169 ошибок (#174):** исправлены PHPDoc-аннотации (`@throws`, `@return`, `@var`, `@param`), типы параметров `failure()`, `print_r()`, `save()`, `get()`, `set()`; добавлены недостающие `return` в `sort()`/`afterSave()` процессорах; удалены redundant проверки `is_null()`/`instanceof`/`is_array()`
-- **Баг: undefined `$cartCost` в расчёте процентной стоимости доставки (#174):** переменная `$cartCost` не существовала в `Delivery.php` — заменена на параметр `$cost`
-- **`handleCheckBoxes()` вызывал несуществующий parent в `Category\Create` (#174):** метод есть только в `Resource\Update`, не в `Resource\Create`
-
 #### 🐛 Исправлено
 
 - **Manager API затирал `msOrder.properties` данными адреса (#191):** `array_merge($order->toArray(), $address->toArray())` перезаписывал `properties` заказа значением `null` из `msOrderAddress` — выделен `mergeAddressIntoOrderData()` с исключением конфликтующих полей

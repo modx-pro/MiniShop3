@@ -64,6 +64,10 @@ class OrdersController
      *
      * msOrderAddress has its own `id`, `properties`, `createdon`, `updatedon` which
      * must not overwrite the corresponding msOrder fields in the API response.
+     *
+     * Note: extra fields for msOrderAddress are loaded separately in get() since
+     * they require explicit column reads; create()/finalize() return transient
+     * responses where the address is either empty or just created.
      */
     protected function mergeAddressIntoOrderData(array $orderData, ?\xPDO\Om\xPDOObject $address): array
     {
