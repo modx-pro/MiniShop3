@@ -320,32 +320,84 @@ class AuthUI {
   }
 
   /**
+   * Nearest ancestor that contains auth form(s) and tab toggles (login/register UI).
+   * Limits fallback tab handling to MiniShop3 auth block, not the whole page.
+   *
+   * @returns {HTMLElement|null}
+   */
+  _findAuthTabScope () {
+    const login = document.querySelector(this.selectors.authLoginForm)
+    const register = document.querySelector(this.selectors.authRegisterForm)
+    const anchor = login || register
+    if (!anchor) {
+      return null
+    }
+    const mustContain = [login, register].filter(Boolean)
+    let el = anchor.parentElement
+    while (el) {
+      if (!el.querySelector('[data-bs-toggle="tab"]')) {
+        el = el.parentElement
+        continue
+      }
+      if (!mustContain.every((node) => el.contains(node))) {
+        el = el.parentElement
+        continue
+      }
+      return el
+    }
+    return null
+  }
+
+  /**
    * Initialize tab support (fallback if Bootstrap JS is missing)
    */
   initTabSupport () {
     if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
       return
     }
+    if (this._tabSupportInitialized) {
+      return
+    }
 
-    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]')
+    const scope = this._findAuthTabScope()
+    if (!scope) {
+      return
+    }
+
+    const tabButtons = scope.querySelectorAll('[data-bs-toggle="tab"]')
+    if (tabButtons.length === 0) {
+      return
+    }
+
+    this._tabSupportInitialized = true
+
     tabButtons.forEach((tabButton) => {
       tabButton.addEventListener('click', (e) => {
         e.preventDefault()
 
-        document.querySelectorAll('.nav-link').forEach((link) => {
-          link.classList.remove('active')
-          link.setAttribute('aria-selected', 'false')
-        })
+        const targetSelector = tabButton.getAttribute('data-bs-target')
+        const targetPane = targetSelector
+          ? document.querySelector(targetSelector)
+          : null
 
-        document.querySelectorAll('.tab-pane').forEach((pane) => {
-          pane.classList.remove('show', 'active')
-        })
+        const nav = tabButton.closest('.nav')
+        if (nav) {
+          nav.querySelectorAll('.nav-link').forEach((link) => {
+            link.classList.remove('active')
+            link.setAttribute('aria-selected', 'false')
+          })
+        }
+
+        const tabContent = targetPane?.parentElement
+        if (tabContent) {
+          tabContent.querySelectorAll(':scope > .tab-pane').forEach((pane) => {
+            pane.classList.remove('show', 'active')
+          })
+        }
 
         tabButton.classList.add('active')
         tabButton.setAttribute('aria-selected', 'true')
 
-        const targetId = tabButton.getAttribute('data-bs-target')
-        const targetPane = document.querySelector(targetId)
         if (targetPane) {
           targetPane.classList.add('show', 'active')
         }
