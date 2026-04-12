@@ -41,6 +41,7 @@
 
 #### 🐛 Исправлено
 
+- **Manager API `GET /api/mgr/orders/{id}` затирал `msOrder.properties` полем `properties` адреса (#191):** при сборке payload через `array_merge($order->toArray(), $address->toArray())` значение `msOrderAddress.properties` (часто `null`) перезаписывало свойства заказа — добавлен `mergeAddressIntoOrderData()` с исключением конфликтующих полей (`properties`, `id`, `order_id`, `createdon`, `updatedon`)
 - **Пустая строка в decimal/int Extra Fields ломала сохранение товара (#170):** пустое значение кастомного поля (например `wholesale_price`) вызывало MySQL ошибку `Incorrect decimal value`, `save()` возвращал `false` и категории/опции/ссылки молча не сохранялись — хардкод каста `price`/`old_price`/`weight` заменён на универсальный цикл по `_fieldMeta` для всех `float`, `integer` и `boolean` полей
 - **Чекбокс «Скрыть дочерние ресурсы» не сохранялся в категориях (#161, #160):** `hide_children_in_tree` не обрабатывался в `handleCheckBoxes()` процессоров `Category/Update` и `Category/Create` — unchecked-состояние не передавалось в POST и значение сбрасывалось
 - **`publish_document` передавался как bool вместо int в контроллерах (#160):** `canPublish` не приводился к `(int)` в массиве JS-конфига — MODX JS использует строгое сравнение `=== 1`, из-за чего флаг мог не срабатывать. Исправлено во всех 4 контроллерах

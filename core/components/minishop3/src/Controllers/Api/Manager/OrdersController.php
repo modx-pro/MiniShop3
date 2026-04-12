@@ -17,6 +17,7 @@ use MiniShop3\Router\Response;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
+use MiniShop3\Services\ModelFieldDefaults;
 use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 
@@ -69,6 +70,29 @@ class OrdersController
         if ($ms3) {
             $ms3->loadMap();
         }
+    }
+
+    /**
+     * Merge address fields into order payload without overwriting order-level fields.
+     *
+     * `msOrderAddress` also has its own `properties`, but manager API must return
+     * `msOrder.properties` in the top-level `properties` field.
+     */
+    protected function mergeAddressIntoOrderData(array $orderData, ?msOrderAddress $address): array
+    {
+        if (!$address) {
+            return $orderData;
+        }
+
+        $addressData = $address->toArray();
+        $excludeFields = ['id', 'order_id', 'createdon', 'updatedon', 'properties'];
+        foreach ($addressData as $key => $value) {
+            if (!in_array($key, $excludeFields, true)) {
+                $orderData[$key] = $value;
+            }
+        }
+
+        return $orderData;
     }
 
     /**
@@ -238,7 +262,7 @@ class OrdersController
         $status = $order->getOne('Status');
         $delivery = $order->getOne('Delivery');
         $payment = $order->getOne('Payment');
-        $address = $this->modx->getObject(msOrderAddress::class, ['order_id' => $id]);
+        $address = $order->getOne('Address');
 
         $data = $order->toArray();
         $data['status_name'] = $status ? $status->get('name') : '';
@@ -254,20 +278,64 @@ class OrdersController
 
         // Load all address fields dynamically
         if ($address) {
-            $addressData = $address->toArray();
-            // Exclude system fields that should not be exposed
-            $excludeFields = ['id', 'order_id', 'createdon', 'updatedon'];
-            foreach ($addressData as $key => $value) {
-                if (!in_array($key, $excludeFields)) {
-                    $data[$key] = $value;
-                }
-            }
+            $data = $this->mergeAddressIntoOrderData($data, $address);
 
             // Load extra fields for msOrderAddress (stored as real DB columns)
             $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
             foreach ($addressExtraFields as $fieldKey) {
                 $data[$fieldKey] = $address->get($fieldKey);
             }
+        } else {
+            // No address row yet: expose same keys as configured (or built-in defaults) so Vue/forms bind to nulls
+            $addressNames = $this->getModelFieldNames('msOrderAddress');
+            if ($addressNames === []) {
+                foreach (ModelFieldDefaults::getRowsForModel(msModelField::MODEL_ORDER_ADDRESS) as $row) {
+                    $addressNames[] = $row['name'];
+                }
+            }
+            $addressNames = array_values(array_unique($addressNames));
+            foreach ($addressNames as $name) {
+                if (!array_key_exists($name, $data)) {
+                    $data[$name] = null;
+                }
+            }
+            foreach ($this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress') as $fieldKey) {
+                if (!array_key_exists($fieldKey, $data)) {
+                    $data[$fieldKey] = null;
+                }
+            }
+        }
+
+        if ($this->modx->getOption('ms3_api_debug', null, false)) {
+            $addrNames = $this->getModelFieldNames('msOrderAddress');
+            if ($addrNames === [] && !$address) {
+                $addrNames = array_column(
+                    ModelFieldDefaults::getRowsForModel(msModelField::MODEL_ORDER_ADDRESS),
+                    'name'
+                );
+            }
+            $addrNonEmpty = 0;
+            foreach ($addrNames as $n) {
+                if (!array_key_exists($n, $data)) {
+                    continue;
+                }
+                $v = $data[$n];
+                if ($v !== null && $v !== '') {
+                    ++$addrNonEmpty;
+                }
+            }
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                '[MiniShop3][orders.get] ' . json_encode([
+                    'order_id' => $id,
+                    'num' => $data['num'] ?? null,
+                    'address_row_loaded' => $address !== null,
+                    'address_field_name_count' => count($addrNames),
+                    'address_non_empty_in_payload' => $addrNonEmpty,
+                    'payload_key_count' => count($data),
+                    'address_keys_sample' => array_slice($addrNames, 0, 12),
+                ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)
+            );
         }
 
         return Response::success($this->formatOrder($data))->getData();
@@ -530,7 +598,7 @@ class OrdersController
 
         // Return created order with address data
         $orderData = $order->toArray();
-        $orderData = array_merge($orderData, $address->toArray());
+        $orderData = $this->mergeAddressIntoOrderData($orderData, $address);
         $orderData['customer_created'] = $createCustomer && $customerId > 0;
 
         return Response::success($this->formatOrder($orderData), 'Order draft created')->getData();
@@ -599,9 +667,7 @@ class OrdersController
 
         // Get address data
         $address = $order->getOne('Address');
-        if ($address) {
-            $orderData = array_merge($orderData, $address->toArray());
-        }
+        $orderData = $this->mergeAddressIntoOrderData($orderData, $address);
 
         return Response::success($this->formatOrder($orderData), 'ms3_order_finalized')->getData();
     }
@@ -736,14 +802,35 @@ class OrdersController
             );
         }
 
-        // Handle address fields
+        // Handle address fields (create row on first save if missing)
         $address = $this->modx->getObject(msOrderAddress::class, ['order_id' => $id]);
+
+        $addressFields = $this->getModelFieldNames('msOrderAddress');
+        if ($addressFields === []) {
+            foreach (ModelFieldDefaults::getRowsForModel(msModelField::MODEL_ORDER_ADDRESS) as $row) {
+                $addressFields[] = $row['name'];
+            }
+        }
+        $addressFields = array_values(array_unique($addressFields));
+        $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
+        $addressParamKeys = array_unique(array_merge($addressFields, $addressExtraFields));
+
+        $hasAddressInParams = false;
+        foreach ($addressParamKeys as $key) {
+            if (array_key_exists($key, $params)) {
+                $hasAddressInParams = true;
+                break;
+            }
+        }
+
+        if (!$address && $hasAddressInParams) {
+            $address = $this->modx->newObject(msOrderAddress::class);
+            $address->set('order_id', $id);
+        }
+
         if ($address) {
-            $oldAddressValues = $address->toArray();
             $changedAddressFields = [];
 
-            // Get editable address fields from msModelField configuration
-            $addressFields = $this->getModelFieldNames('msOrderAddress');
             foreach ($addressFields as $field) {
                 if (array_key_exists($field, $params)) {
                     $oldValue = $address->get($field);
@@ -755,8 +842,6 @@ class OrdersController
                 }
             }
 
-            // Handle extra fields for msOrderAddress (stored as real DB columns via Object Extension)
-            $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
             foreach ($addressExtraFields as $extraField) {
                 if (array_key_exists($extraField, $params)) {
                     $oldValue = $address->get($extraField);
@@ -768,9 +853,10 @@ class OrdersController
                 }
             }
 
-            $address->save();
+            if (!$address->save()) {
+                return Response::error('Failed to save order address', 500)->getData();
+            }
 
-            // Log address changes
             if (!empty($changedAddressFields)) {
                 $this->getOrderLog()->addEntry(
                     $id,
@@ -1412,6 +1498,9 @@ class OrdersController
     protected function formatOrder(array $data): array
     {
         $ms3 = $this->modx->services->get('ms3');
+
+        // Payment/delivery titles use keys from minishop3:default (not auto-loaded in mgr API)
+        $this->modx->lexicon->load('minishop3:default');
 
         if (!empty($data['status_name']) && str_starts_with($data['status_name'], 'ms3_')) {
             $translated = $this->modx->lexicon($data['status_name']);
