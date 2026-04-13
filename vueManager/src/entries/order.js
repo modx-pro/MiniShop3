@@ -17,7 +17,10 @@ import { createApp } from 'vue'
 
 import OrderView from '../components/OrderView.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { snapshotOrderTabConfigForQueue,validateOrderPluginTabConfig } from '../utils/orderPluginTab.js'
+import {
+  snapshotOrderTabConfigForQueue,
+  validateOrderPluginTabConfig,
+} from '../utils/orderPluginTab.js'
 
 /**
  * Plugin registry for third-party order manager tabs (Vue / ExtJS). See GitHub #166.

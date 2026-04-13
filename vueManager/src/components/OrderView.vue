@@ -16,14 +16,7 @@ import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
 import { normalizeOrderPluginTab } from '../utils/orderPluginTab.js'

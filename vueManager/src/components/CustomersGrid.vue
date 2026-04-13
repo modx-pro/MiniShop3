@@ -614,8 +614,7 @@ function getActionsConfig(column) {
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
     { ...CUSTOMER_GRID_DELETE_ACTION },
   ]
-  const raw =
-    !column.actions || column.actions.length === 0 ? fallback : column.actions
+  const raw = !column.actions || column.actions.length === 0 ? fallback : column.actions
   return applyCustomerDeleteConfirmDefaults(raw)
 }
 

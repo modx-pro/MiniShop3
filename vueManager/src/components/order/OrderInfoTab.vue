@@ -198,19 +198,8 @@ const { _ } = useLexicon()
         :loading="saving"
         @click="createOrder"
       />
-      <Button
-        v-else
-        :label="_('save')"
-        icon="pi pi-check"
-        :loading="saving"
-        @click="saveOrder"
-      />
-      <Button
-        :label="_('cancel')"
-        icon="pi pi-times"
-        severity="secondary"
-        @click="goBack"
-      />
+      <Button v-else :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveOrder" />
+      <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="goBack" />
     </div>
   </div>
 </template>

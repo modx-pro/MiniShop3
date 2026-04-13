@@ -119,12 +119,7 @@ const { _ } = useLexicon()
               ]"
               :key="`${column.name}-${index}-${cell.link ?? 'nolink'}`"
             >
-              <a
-                v-if="cell.link"
-                :href="cell.link"
-                target="_blank"
-                class="product-link"
-              >
+              <a v-if="cell.link" :href="cell.link" target="_blank" class="product-link">
                 {{ cell.label }}
               </a>
               <span v-else>{{ cell.label }}</span>

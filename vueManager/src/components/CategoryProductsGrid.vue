@@ -405,7 +405,7 @@ function isInlineValueUnchanged(original, value, column) {
   }
   const editorType = column.editor_type || 'text'
   if (editorType === 'number') {
-    const norm = (v) =>
+    const norm = v =>
       v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v)
     return norm(original) === norm(value)
   }
@@ -424,7 +424,11 @@ function clearInlineEditState() {
  * Uses isSaving flag to prevent double invocation (Enter triggers blur).
  */
 async function saveInlineEdit(product, column) {
-  if (!editingCell.value || editingCell.value.productId !== product.id || editingCell.value.columnName !== column.name) {
+  if (
+    !editingCell.value ||
+    editingCell.value.productId !== product.id ||
+    editingCell.value.columnName !== column.name
+  ) {
     return
   }
   if (inlineEditSaving.value) return
@@ -444,10 +448,20 @@ async function saveInlineEdit(product, column) {
         products.value[idx] = { ...products.value[idx], [column.name]: value }
       }
     }
-    toast.add({ severity: 'success', summary: _('success'), detail: _('inline_edit_saved'), life: 2000 })
+    toast.add({
+      severity: 'success',
+      summary: _('success'),
+      detail: _('inline_edit_saved'),
+      life: 2000,
+    })
   } catch (error) {
     console.error('[CategoryProductsGrid] Inline edit save failed:', error)
-    toast.add({ severity: 'error', summary: _('error'), detail: error.message || _('inline_edit_error'), life: 5000 })
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('inline_edit_error'),
+      life: 5000,
+    })
     return
   } finally {
     inlineEditSaving.value = false

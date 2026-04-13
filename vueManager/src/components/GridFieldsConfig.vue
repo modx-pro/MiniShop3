@@ -839,7 +839,9 @@ onMounted(() => {
                   <th style="width: 6.25rem">{{ _('sortable') }}</th>
                   <th style="width: 6.25rem">{{ _('filterable') }}</th>
                   <th style="width: 6.25rem">{{ _('frozen') }}</th>
-                  <th v-if="isCategoryProductsGrid" style="width: 6.25rem">{{ _('field_editable') }}</th>
+                  <th v-if="isCategoryProductsGrid" style="width: 6.25rem">
+                    {{ _('field_editable') }}
+                  </th>
                   <th style="width: 7.5rem">{{ _('width') }}</th>
                   <th style="width: 6.25rem">{{ _('actions') }}</th>
                 </tr>
@@ -1095,7 +1097,9 @@ onMounted(() => {
             input-id="new-field-editable"
             :binary="true"
           />
-          <label for="new-field-editable" class="ml-2 cursor-pointer">{{ _('field_editable') }}</label>
+          <label for="new-field-editable" class="ml-2 cursor-pointer">{{
+            _('field_editable')
+          }}</label>
         </div>
         <div v-if="newField.config.editable" class="ml-4">
           <label for="new-field-editor-type">{{ _('editor_type') }}</label>
@@ -1360,7 +1364,9 @@ onMounted(() => {
               input-id="edit-field-editable"
               :binary="true"
             />
-            <label for="edit-field-editable" class="ml-2 cursor-pointer">{{ _('field_editable') }}</label>
+            <label for="edit-field-editable" class="ml-2 cursor-pointer">{{
+              _('field_editable')
+            }}</label>
           </div>
           <div v-if="editingField.config.editable" class="ml-4">
             <label for="edit-field-editor-type">{{ _('editor_type') }}</label>
@@ -1538,6 +1544,6 @@ label.opacity-50 {
   font-size: 0.875rem;
   color: var(--ms3-text-muted, #64748b);
   max-width: 100%;
-    overflow-wrap: break-word;
+  overflow-wrap: break-word;
 }
 </style>
