@@ -234,13 +234,14 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.options-chips-wrapper {
+<style>
+/* Non-scoped: prevents Vite code-splitting from generating different scoped hashes per chunk */
+.vueApp .options-chips-wrapper {
   position: relative;
   width: 100%;
 }
 
-.chips-container {
+.vueApp .chips-container {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -254,17 +255,17 @@ onMounted(() => {
   transition: border-color 0.2s;
 }
 
-.chips-container:hover {
+.vueApp .chips-container:hover {
   border-color: var(--ms3-text-light);
 }
 
-.chips-container:focus-within {
+.vueApp .chips-container:focus-within {
   border-color: var(--ms3-accent-primary);
   outline: none;
   box-shadow: 0 0 0 0.2rem var(--ms3-accent-focus);
 }
 
-.chip-item {
+.vueApp .chip-item {
   display: inline-flex;
   align-items: center;
   background: var(--ms3-accent-primary);
@@ -275,11 +276,11 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.chip-text {
+.vueApp .chip-text {
   margin-right: 0.25rem;
 }
 
-.chip-remove {
+.vueApp .chip-remove {
   cursor: pointer;
   margin-left: 0.375rem;
   opacity: 0.9;
@@ -297,17 +298,17 @@ onMounted(() => {
   font-size: 0.65rem;
 }
 
-.chip-remove i {
+.vueApp .chip-remove i {
   font-size: inherit;
 }
 
-.chip-remove:hover {
+.vueApp .chip-remove:hover {
   opacity: 1;
   background: rgba(255, 255, 255, 0.4);
   transform: scale(1.15);
 }
 
-.chip-input {
+.vueApp .chip-input {
   flex: 1;
   border: none;
   outline: none;
@@ -317,12 +318,12 @@ onMounted(() => {
   background: transparent;
 }
 
-.chip-input:disabled {
+.vueApp .chip-input:disabled {
   background: var(--ms3-bg-neutral);
   cursor: not-allowed;
 }
 
-.suggestions-panel {
+.vueApp .suggestions-panel {
   position: absolute;
   top: 100%;
   left: 0;
@@ -337,13 +338,13 @@ onMounted(() => {
   box-shadow: var(--ms3-shadow-dropdown);
 }
 
-.suggestion-item {
+.vueApp .suggestion-item {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
-.suggestion-item:hover {
+.vueApp .suggestion-item:hover {
   background: var(--ms3-bg-slate-alt);
 }
 </style>

@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
+use MiniShop3\Model\msExtraField;
 use MiniShop3\Model\msVendor;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
@@ -18,9 +19,58 @@ class VendorsController
 {
     protected modX $modx;
 
+    /** @var string[] Cached extra field keys for msVendor */
+    protected array $extraFieldKeys = [];
+
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+        $this->loadExtraFieldsMap();
+        $this->extraFieldKeys = $this->getExtraFieldKeys();
+    }
+
+    /**
+     * Load extra fields into xPDO map
+     */
+    protected function loadExtraFieldsMap(): void
+    {
+        $ms3 = $this->modx->services->get('ms3');
+        if ($ms3) {
+            $ms3->loadMap();
+        }
+    }
+
+    /**
+     * Get active extra field keys for msVendor
+     *
+     * @return string[]
+     */
+    protected function getExtraFieldKeys(): array
+    {
+        $keys = [];
+        $query = $this->modx->newQuery(msExtraField::class);
+        $query->where([
+            'class' => 'MiniShop3\\Model\\msVendor',
+            'active' => true,
+        ]);
+
+        foreach ($this->modx->getIterator(msExtraField::class, $query) as $field) {
+            $keys[] = $field->get('key');
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Get allowed fields for create/update including extra fields
+     *
+     * @return string[]
+     */
+    protected function getAllowedFields(): array
+    {
+        $baseFields = ['name', 'description', 'country', 'logo', 'address', 'phone', 'email', 'resource_id', 'position', 'properties'];
+
+        return array_merge($baseFields, $this->extraFieldKeys);
     }
 
     /**
@@ -113,7 +163,7 @@ class VendorsController
 
         $vendor = $this->modx->newObject(msVendor::class);
 
-        $allowedFields = ['name', 'description', 'country', 'logo', 'address', 'phone', 'email', 'resource_id', 'position', 'properties'];
+        $allowedFields = $this->getAllowedFields();
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
@@ -149,7 +199,7 @@ class VendorsController
             return Response::error('Vendor not found', 404)->getData();
         }
 
-        $allowedFields = ['name', 'description', 'country', 'logo', 'address', 'phone', 'email', 'resource_id', 'position', 'properties'];
+        $allowedFields = $this->getAllowedFields();
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
@@ -282,19 +332,11 @@ class VendorsController
      */
     protected function formatVendor(msVendor $vendor): array
     {
-        return [
-            'id' => $vendor->get('id'),
-            'name' => $vendor->get('name'),
-            'description' => $vendor->get('description'),
-            'country' => $vendor->get('country'),
-            'logo' => $vendor->get('logo'),
-            'address' => $vendor->get('address'),
-            'phone' => $vendor->get('phone'),
-            'email' => $vendor->get('email'),
-            'resource_id' => $vendor->get('resource_id'),
-            'position' => $vendor->get('position'),
-            'pagetitle' => $vendor->get('pagetitle'),
-            'properties' => $vendor->get('properties'),
-        ];
+        $data = $vendor->toArray();
+
+        // pagetitle comes from JOIN, not from msVendor fields
+        $data['pagetitle'] = $vendor->get('pagetitle');
+
+        return $data;
     }
 }

@@ -63,7 +63,10 @@ class ExtraFieldsService
         $this->extraFieldsUtil->loadMap();
         $this->extraFieldsUtil->clearCache();
 
-        $this->createProductFieldFromExtra($field);
+        // Only create msProductField for product-related models
+        if ($field->get('class') === 'MiniShop3\\Model\\msProductData') {
+            $this->createProductFieldFromExtra($field);
+        }
 
         return [
             'success' => true,
@@ -102,7 +105,10 @@ class ExtraFieldsService
         @unlink($migrationFile);
         $this->modx->log(modX::LOG_LEVEL_INFO, "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile));
 
-        $this->deleteProductFieldsByName($field->get('key'));
+        // Only delete msProductField for product-related models
+        if ($field->get('class') === 'MiniShop3\\Model\\msProductData') {
+            $this->deleteProductFieldsByName($field->get('key'));
+        }
 
         $field->remove();
 
@@ -300,7 +306,10 @@ class ExtraFieldsService
             return ['success' => false, 'message' => 'Failed to update field in database'];
         }
 
-        $this->updateProductFieldFromExtra($field);
+        // Only update msProductField for product-related models
+        if ($field->get('class') === 'MiniShop3\\Model\\msProductData') {
+            $this->updateProductFieldFromExtra($field);
+        }
 
         $this->extraFieldsUtil->clearCache();
 

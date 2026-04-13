@@ -42,6 +42,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         // Vue shared components CSS
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/FileBrowser.min.css');
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/DynamicField.min.css');
 
         // Vue Grids CSS
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/deliveries.min.css');
