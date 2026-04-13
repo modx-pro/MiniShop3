@@ -50,13 +50,45 @@ $status = $response['data']['status'];
 $products = [];
 $total = ['count' => 0, 'weight' => 0, 'cost' => 0, 'discount' => 0, 'positions' => 0];
 
+/**
+ * Overwrite snippet totals with cart status (after msOnGetStatusCart). Keys match CartItemManager::calculateStatus().
+ *
+ * If a plugin only overrides part of $status (e.g. only total_cost), line-derived total.discount may no longer
+ * match total.cost; treat matching keys in $status as canonical for header totals — row-level discount_* on products
+ * still reflect per-position math.
+ */
+$applyStatusToTotal = static function (array &$total, array $status): void {
+    $map = [
+        'total_cost' => ['cost', 'float'],
+        'total_count' => ['count', 'int'],
+        'total_weight' => ['weight', 'float'],
+        'total_discount' => ['discount', 'float'],
+        'total_positions' => ['positions', 'int'],
+    ];
+    foreach ($map as $statusKey => [$totalKey, $type]) {
+        if (!isset($status[$statusKey]) || !is_numeric($status[$statusKey])) {
+            continue;
+        }
+        $total[$totalKey] = $type === 'int' ? (int) $status[$statusKey] : (float) $status[$statusKey];
+    }
+};
+
+$formatTotalForDisplay = static function (array &$total, MiniShop3 $ms3): void {
+    $total['cost_formatted'] = $ms3->format->price($total['cost'], true);
+    $total['weight_formatted'] = $ms3->format->weightWithUnit($total['weight']);
+};
+
 if (empty($status['total_count'])) {
+    $applyStatusToTotal($total, $status);
+    $formatTotalForDisplay($total, $ms3);
     if ($scriptProperties['return'] === 'tpl') {
         return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
     return compact('total', 'products', 'status');
 }
 if (empty($cart)) {
+    $applyStatusToTotal($total, $status);
+    $formatTotalForDisplay($total, $ms3);
     if ($scriptProperties['return'] === 'tpl') {
         return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
@@ -192,21 +224,14 @@ foreach ($cart as $key => $entry) {
     $total['positions']++;
 }
 
+$applyStatusToTotal($total, $status);
+$formatTotalForDisplay($total, $ms3);
+
 $outputData = [
     'total' => $total,
     'products' => $products,
     'status' => $status,
 ];
-
-// Cart line sums may differ from data.status.total_cost when plugins adjust the aggregate
-// (e.g. msOnGetStatusCart). Prefer total_cost for chunk totals when it is set.
-if (isset($status['total_cost']) && is_numeric($status['total_cost'])) {
-    $outputData['total']['cost'] = (float) $status['total_cost'];
-}
-
-// Pre-formatted totals with currency/unit for display in chunks
-$outputData['total']['cost_formatted'] = $ms3->format->price($outputData['total']['cost'], true);
-$outputData['total']['weight_formatted'] = $ms3->format->weightWithUnit($outputData['total']['weight']);
 
 if ($return === 'data') {
     return $outputData;
