@@ -5,7 +5,6 @@ import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Paginator from 'primevue/paginator'
 import Tab from 'primevue/tab'
@@ -23,6 +22,7 @@ import draggable from 'vuedraggable'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
+import DynamicField from './DynamicField.vue'
 import FileBrowser from './FileBrowser.vue'
 
 const toast = useToast()
@@ -107,26 +107,29 @@ const fieldsBySection = computed(() => {
 })
 
 /**
- * Check if field should use FileBrowser (for image/file fields)
+ * Build field config for DynamicField component.
+ * Converts legacy fields (e.g. logo) to proper xtypes.
  */
-function isFileBrowserField(field) {
-  // Logo field always uses FileBrowser
-  if (field.name === 'logo') return true
-
-  // Check xtype for file-related types
-  const fileXtypes = ['file', 'image', 'filebrowser', 'imagebrowser']
-  return fileXtypes.includes(field.xtype?.toLowerCase())
-}
-
-/**
- * Get allowed file types for FileBrowser field
- */
-function getAllowedFileTypes(field) {
-  if (field.name === 'logo') {
-    return 'jpg,jpeg,png,gif,webp,svg'
+function getDynamicFieldConfig(field) {
+  // Logo and other file fields → filebrowser xtype
+  if (
+    field.name === 'logo' ||
+    ['file', 'image', 'filebrowser', 'imagebrowser'].includes(field.xtype?.toLowerCase())
+  ) {
+    return {
+      ...field,
+      xtype: 'filebrowser',
+      allowedFileTypes:
+        field.name === 'logo' ? 'jpg,jpeg,png,gif,webp,svg' : field.config?.allowedTypes || '',
+    }
   }
-  // Default for file fields
-  return field.config?.allowedTypes || ''
+
+  // Default xtype for fields without one
+  if (!field.xtype) {
+    return { ...field, xtype: 'textfield' }
+  }
+
+  return field
 }
 
 /**
@@ -771,47 +774,15 @@ onMounted(async () => {
                         class="form-row mb-3"
                         :style="{ gridColumn: `span ${field.width || 6}` }"
                       >
-                        <label>
+                        <label :for="`vendor-field-${field.name}`">
                           {{ getFieldLabel(field) }}
                           <span v-if="isFieldRequired(field)" class="required">*</span>
                         </label>
 
-                        <!-- FileBrowser for logo and file fields -->
-                        <template v-if="isFileBrowserField(field)">
-                          <FileBrowser
-                            v-model="editingVendor[field.name]"
-                            :placeholder="field.placeholder || ''"
-                            :allowed-file-types="getAllowedFileTypes(field)"
-                          />
-                        </template>
-
-                        <!-- Textarea for text fields -->
-                        <template v-else-if="field.xtype === 'textarea'">
-                          <Textarea
-                            v-model="editingVendor[field.name]"
-                            class="w-full"
-                            :rows="3"
-                            :placeholder="field.placeholder || ''"
-                          />
-                        </template>
-
-                        <!-- Number field -->
-                        <template v-else-if="field.xtype === 'numberfield'">
-                          <InputNumber
-                            v-model="editingVendor[field.name]"
-                            class="w-full"
-                            :placeholder="field.placeholder || ''"
-                          />
-                        </template>
-
-                        <!-- Default: text field -->
-                        <template v-else>
-                          <InputText
-                            v-model="editingVendor[field.name]"
-                            class="w-full"
-                            :placeholder="field.placeholder || ''"
-                          />
-                        </template>
+                        <DynamicField
+                          v-model="editingVendor[field.name]"
+                          :field-config="getDynamicFieldConfig(field)"
+                        />
 
                         <!-- Description/help text -->
                         <small v-if="field.description_display" class="form-hint">

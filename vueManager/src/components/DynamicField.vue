@@ -3,8 +3,9 @@
     <!-- Text field -->
     <InputText
       v-if="fieldConfig.xtype === 'textfield'"
-      :id="fieldConfig.id"
+      :id="fieldHtmlId"
       v-model="localValue"
+      class="w-full"
       :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
@@ -15,8 +16,10 @@
     <!-- Number field -->
     <InputNumber
       v-else-if="fieldConfig.xtype === 'numberfield'"
-      :id="fieldConfig.id"
       v-model="localValue"
+      :input-id="fieldHtmlId"
+      class="w-full"
+      fluid
       :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
@@ -37,7 +40,7 @@
     <div v-else-if="fieldConfig.xtype === 'xcheckbox' || fieldConfig.xtype === 'checkbox'">
       <Checkbox
         v-model="localValue"
-        :input-id="fieldConfig.name"
+        :input-id="fieldHtmlId"
         :disabled="disabled"
         :binary="true"
         :true-value="fieldConfig.inputValue ?? 1"
@@ -52,7 +55,7 @@
     <ToggleSwitch
       v-else-if="fieldConfig.xtype === 'switch'"
       v-model="localValue"
-      :input-id="fieldConfig.id"
+      :input-id="fieldHtmlId"
       :disabled="disabled"
       :true-value="fieldConfig.props?.trueValue ?? true"
       :false-value="fieldConfig.props?.falseValue ?? false"
@@ -62,8 +65,9 @@
     <!-- Textarea -->
     <Textarea
       v-else-if="fieldConfig.xtype === 'textarea'"
-      :id="fieldConfig.id"
+      :id="fieldHtmlId"
       v-model="localValue"
+      class="w-full"
       :name="fieldConfig.name"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
@@ -75,8 +79,9 @@
     <!-- Combobox / Select -->
     <Select
       v-else-if="fieldConfig.xtype === 'combobox'"
-      :id="fieldConfig.id"
+      :id="fieldHtmlId"
       v-model="localValue"
+      class="w-full"
       :options="fieldConfig.props?.options ?? []"
       :option-label="fieldConfig.props?.optionLabel ?? 'label'"
       :option-value="fieldConfig.props?.optionValue ?? 'value'"
@@ -90,7 +95,8 @@
     <DatePicker
       v-else-if="fieldConfig.xtype === 'datefield'"
       v-model="localValue"
-      :input-id="fieldConfig.id"
+      class="w-full"
+      :input-id="fieldHtmlId"
       :placeholder="fieldConfig.placeholder"
       :disabled="disabled"
       show-icon
@@ -103,7 +109,7 @@
     <!-- Color picker -->
     <ColorPicker
       v-else-if="fieldConfig.xtype === 'colorpicker'"
-      :id="fieldConfig.id"
+      :id="fieldHtmlId"
       v-model="localValue"
       :disabled="disabled"
       :inline="fieldConfig.props?.inline ?? false"
@@ -114,7 +120,7 @@
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-vendor'">
       <VendorCombo
         v-model="localValue"
-        :input-id="fieldConfig.name"
+        :input-id="fieldHtmlId"
         :placeholder="fieldConfig.placeholder || 'Select vendor'"
         :disabled="disabled"
         @change="handleBlur"
@@ -127,7 +133,7 @@
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-autocomplete'">
       <AutocompleteCombo
         v-model="localValue"
-        :input-id="fieldConfig.name"
+        :input-id="fieldHtmlId"
         :field-name="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Start typing...'"
         :disabled="disabled"
@@ -141,7 +147,7 @@
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-options'">
       <OptionsChips
         v-model="localValue"
-        :input-id="fieldConfig.name"
+        :input-id="fieldHtmlId"
         :option-key="fieldConfig.name"
         :placeholder="fieldConfig.placeholder || 'Add options...'"
         :disabled="disabled"
@@ -163,7 +169,7 @@
     <template v-else-if="fieldConfig.xtype === 'ms3-combo-select'">
       <Select
         v-model="localValue"
-        :input-id="fieldConfig.name"
+        :input-id="fieldHtmlId"
         :options="selectOptions"
         option-label="label"
         option-value="value"
@@ -183,6 +189,15 @@
         {{ getExtJSComboLabel(fieldConfig.xtype) }}
       </Message>
     </div>
+
+    <!-- FileBrowser for image/file fields -->
+    <FileBrowser
+      v-else-if="isFileBrowserXtype"
+      v-model="localValue"
+      :placeholder="fieldConfig.placeholder || ''"
+      :allowed-file-types="fieldConfig.config?.allowedTypes || fieldConfig.allowedFileTypes || ''"
+      :disabled="disabled"
+    />
 
     <!-- Unknown field type -->
     <div v-else class="unknown-field">
@@ -208,6 +223,7 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
 import AutocompleteCombo from './AutocompleteCombo.vue'
+import FileBrowser from './FileBrowser.vue'
 import OptionsChips from './OptionsChips.vue'
 import VendorCombo from './VendorCombo.vue'
 
@@ -246,6 +262,22 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+})
+
+/**
+ * Stable HTML id for label association (for/id).
+ * Prefer explicit fieldConfig.htmlId, otherwise generate from name.
+ */
+const fieldHtmlId = computed(() => {
+  return props.fieldConfig.htmlId || `vendor-field-${props.fieldConfig.name}`
+})
+
+/**
+ * Determine if field should use FileBrowser (image/file fields)
+ */
+const isFileBrowserXtype = computed(() => {
+  const xtype = props.fieldConfig.xtype?.toLowerCase()
+  return ['file', 'image', 'filebrowser', 'imagebrowser'].includes(xtype)
 })
 
 /**
@@ -356,10 +388,6 @@ const handleBlur = () => {
 
 <style scoped>
 .field-wrapper {
-  width: 100%;
-}
-
-.field-wrapper :deep(.w-full) {
   width: 100%;
 }
 
