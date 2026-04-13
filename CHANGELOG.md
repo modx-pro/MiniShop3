@@ -41,6 +41,7 @@
 
 #### 🐛 Исправлено
 
+- **Сниппет `ms3_cart` (#197):** после `msOnGetStatusCart` итоги в чанке/`return=data` выравниваются со всеми числовыми полями статуса (`total_cost`, `total_count`, `total_weight`, `total_discount`, `total_positions`), в том числе на ранних выходах при пустой корзине; `cost_formatted`/`weight_formatted` считаются от финального `$total`; без мутации `$outputData` после сборки
 - **Manager API затирал `msOrder.properties` данными адреса (#191):** `array_merge($order->toArray(), $address->toArray())` перезаписывал `properties` заказа значением `null` из `msOrderAddress` — выделен `mergeAddressIntoOrderData()` с исключением конфликтующих полей
 - **В форме заказа manager UI показывались raw lexicon keys в списках статусов, оплат и доставок (#193):** `GET /api/mgr/model-fields/visible/msOrder` загружал только `minishop3:vue`, из-за чего `comboOptions` не переводили значения из `minishop3:default` и `minishop3:manager`; дополнительно исправлены order-form dropdown routes для статусов и активных доставок
 - **Пустая строка в decimal/int Extra Fields ломала сохранение товара (#170):** пустое значение кастомного поля (например `wholesale_price`) вызывало MySQL ошибку `Incorrect decimal value`, `save()` возвращал `false` и категории/опции/ссылки молча не сохранялись — хардкод каста `price`/`old_price`/`weight` заменён на универсальный цикл по `_fieldMeta` для всех `float`, `integer` и `boolean` полей
