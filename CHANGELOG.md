@@ -4,14 +4,62 @@
 
 ## Навигация
 
-- **Текущий месяц:** [Март 2026](#март-2026) (ниже)
-- **Предыдущий месяц:** [Февраль 2026](#февраль-2026) (ниже)
-- **Ещё раньше:** [Январь 2026](#январь-2026) (ниже)
+- **Текущий месяц:** [Апрель 2026](#апрель-2026) (ниже)
+- **Предыдущий месяц:** [Март 2026](#март-2026) (ниже)
+- **Ещё раньше:** [Февраль 2026](#февраль-2026), [Январь 2026](#январь-2026) (ниже)
 - **Архив по месяцам:**
   - [Декабрь 2025](changelogs/2025-12.md)
   - [Ноябрь 2025](changelogs/2025-11.md)
   - [Октябрь 2025](changelogs/2025-10.md)
   - [Архив (2024 и ранее)](changelogs/archive.md)
+
+---
+
+## Апрель 2026
+
+### 🚀 Версия 1.9.0-beta1
+
+**Тип релиза:** MINOR (beta) — vendor extra fields, ms3_cart status sync, рефакторинг опций и заказа
+
+---
+
+#### ✨ Добавлено
+
+**Сниппет `ms3_cart` — синхронизация итогов со статусом (#197):**
+- После `msOnGetStatusCart` итоги в чанке/`return=data` выравниваются со всеми числовыми полями статуса (`total_cost`, `total_count`, `total_weight`, `total_discount`, `total_positions`)
+- Синхронизация работает и на ранних выходах при пустой корзине
+- `cost_formatted`/`weight_formatted` считаются от финального `$total` без мутации `$outputData`
+- В чанк и `return=data` добавлен ключ `status` — доступ к `{$status.total_cost}` и т.д.
+
+**Vendor extra fields — DynamicField для формы вендора (#198):**
+- `VendorsGrid` заменена ручная цепочка `v-if` (3 типа) на компонент `DynamicField` (13+ типов полей, включая checkbox)
+- `VendorsController`: загрузка xPDO map для extra fields, динамический `allowedFields`, `toArray()` в `formatVendor`
+- `ExtraFieldsService`: создание `msProductField` только для `msProductData` (не для msVendor и других моделей)
+- `DynamicField`: поддержка FileBrowser для файловых полей, `w-full` на всех инпутах, `fluid` на InputNumber, prop `idPrefix` для label/id accessibility
+
+#### 🐛 Исправлено
+
+- **Manager API затирал `msOrder.properties` данными адреса (#191):** `array_merge($order->toArray(), $address->toArray())` перезаписывал `properties` заказа значением `null` из `msOrderAddress` — выделен `mergeAddressIntoOrderData()` с исключением конфликтующих полей
+- **В форме заказа manager UI показывались raw lexicon keys (#193):** `GET /api/mgr/model-fields/visible/msOrder` загружал только `minishop3:vue`, из-за чего `comboOptions` не переводили значения из `minishop3:default` и `minishop3:manager`; дополнительно исправлены order-form dropdown routes для статусов и активных доставок
+- **Удаление клиента из грида не работало (#179):** DELETE-запрос выполнялся только после подтверждения в диалоге, но сетевой запрос не отправлялся
+- **AuthUI.initTabSupport() сбрасывала все вкладки Bootstrap (#180):** fallback без Bootstrap JS ограничен областью блока логина/регистрации, сброс `.nav-link` и `.tab-pane` только внутри своей группы
+- **Фильтр групп опций дублировал категории (#186):** dedupe список modCategory в фильтре, увеличен page size комбобокса
+- **Массовое назначение опций категориям (#187):** исправлен bulk assign processor и логика select-all в дереве категорий
+- **Вкладки групп опций в карточке товара (#188):** опции группируются по `modcategory_id`, нормализация id, guard для пустых `option_fields`
+- **msPayment type hints в Payment Sort процессоре (#177):** заменены устаревшие type hints на msPayment
+
+#### ♻️ Рефакторинг
+
+- **OrderView разбит на подкомпоненты (#176):** монолитный `OrderView.vue` разделён на `OrderInfoTab`, `OrderProductsTab`, `OrderAddressTab`, `OrderHistoryTab` + вынесен `orderFieldsLayout.css`
+- **Опции товара:** Map по `modcategory_id` для вкладок, именованный page size комбобокса под `ms3.grid`, документирован GROUP BY
+- **PHPStan (#174):** исправлено 109 ошибок, baseline уменьшен с 277 до 168
+- **OptionsChips:** стили вынесены из scoped в non-scoped с `.vueApp` префиксом (фикс несовпадения Vite scoped хешей между чанками)
+- **Prettier:** форматирование 25 Vue-компонентов
+
+#### 📦 Зависимости
+
+- `lodash` 4.17.23 → 4.18.1
+- `vite` 6.4.1 → 6.4.2
 
 ---
 
@@ -41,14 +89,10 @@
 
 #### 🐛 Исправлено
 
-- **Сниппет `ms3_cart` (#197):** после `msOnGetStatusCart` итоги в чанке/`return=data` выравниваются со всеми числовыми полями статуса (`total_cost`, `total_count`, `total_weight`, `total_discount`, `total_positions`), в том числе на ранних выходах при пустой корзине; `cost_formatted`/`weight_formatted` считаются от финального `$total`; без мутации `$outputData` после сборки
-- **Manager API затирал `msOrder.properties` данными адреса (#191):** `array_merge($order->toArray(), $address->toArray())` перезаписывал `properties` заказа значением `null` из `msOrderAddress` — выделен `mergeAddressIntoOrderData()` с исключением конфликтующих полей
-- **В форме заказа manager UI показывались raw lexicon keys в списках статусов, оплат и доставок (#193):** `GET /api/mgr/model-fields/visible/msOrder` загружал только `minishop3:vue`, из-за чего `comboOptions` не переводили значения из `minishop3:default` и `minishop3:manager`; дополнительно исправлены order-form dropdown routes для статусов и активных доставок
 - **Пустая строка в decimal/int Extra Fields ломала сохранение товара (#170):** пустое значение кастомного поля (например `wholesale_price`) вызывало MySQL ошибку `Incorrect decimal value`, `save()` возвращал `false` и категории/опции/ссылки молча не сохранялись — хардкод каста `price`/`old_price`/`weight` заменён на универсальный цикл по `_fieldMeta` для всех `float`, `integer` и `boolean` полей
 - **Чекбокс «Скрыть дочерние ресурсы» не сохранялся в категориях (#161, #160):** `hide_children_in_tree` не обрабатывался в `handleCheckBoxes()` процессоров `Category/Update` и `Category/Create` — unchecked-состояние не передавалось в POST и значение сбрасывалось
 - **`publish_document` передавался как bool вместо int в контроллерах (#160):** `canPublish` не приводился к `(int)` в массиве JS-конфига — MODX JS использует строгое сравнение `=== 1`, из-за чего флаг мог не срабатывать. Исправлено во всех 4 контроллерах
 - **Кнопки «Дублировать» и «Опубликовать» не отображались в гриде товаров категории (#143, #163):** миграция обновляет конфиг колонки `actions` в `ms3_grid_fields` — добавлены действия `duplicate` и `publish` (логика уже была в Vue-компоненте)
-- **AuthUI.initTabSupport() сбрасывала все вкладки Bootstrap на странице (#180):** fallback без Bootstrap JS ограничен областью блока логина/регистрации (`_findAuthTabScope`), сброс `.nav-link` и `.tab-pane` только внутри своей группы (`closest('.nav')`, `:scope > .tab-pane`), защита от повторной инициализации
 
 ---
 

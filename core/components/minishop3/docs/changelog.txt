@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0-beta1]
+
+### Added
+- `ms3_cart` snippet: sync all status aggregates (`total_cost`, `total_count`, `total_weight`, `total_discount`, `total_positions`) with chunk totals after `msOnGetStatusCart`, including early exits on empty cart; `status` key available in chunk and `return=data` (#197)
+- Vendor extra fields support: `DynamicField` component replaces hardcoded `v-if` chain (3 types → 13+ field types including checkbox); `VendorsController` loads xPDO map, dynamic `allowedFields`; `ExtraFieldsService` creates `msProductField` only for `msProductData` (#198)
+- `DynamicField`: FileBrowser support for file/image fields, `w-full` on all inputs, `fluid` on InputNumber, `idPrefix` prop for label/id accessibility (#198)
+
+### Fixed
+- Manager API overwrote `msOrder.properties` with address data: `mergeAddressIntoOrderData()` excludes conflicting fields (#191)
+- Raw lexicon keys in manager order form dropdowns: additional lexicon topics loaded for `comboOptions` translation (#193)
+- Customer delete from grid not sending network request after confirmation (#179)
+- `AuthUI.initTabSupport()` breaking all Bootstrap tabs on page: scoped to auth block only (#180)
+- Options modCategory filter duplicated categories: dedupe + increased combo page size (#186)
+- Bulk assign options to categories: fixed processor and select-all tree logic (#187)
+- Product option tabs: grouped by `modcategory_id`, normalized id, guarded empty `option_fields` (#188)
+- `msPayment` type hints in Payment Sort processor (#177)
+
+### Refactored
+- `OrderView.vue` split into `OrderInfoTab`, `OrderProductsTab`, `OrderAddressTab`, `OrderHistoryTab` + `orderFieldsLayout.css` (#176)
+- Product options: Map keyed by `modcategory_id` for tabs, named combo page size under `ms3.grid`, documented GROUP BY
+- PHPStan: resolved 109 errors, baseline reduced from 277 to 168 (#174)
+- `OptionsChips`: styles moved from scoped to non-scoped with `.vueApp` prefix (Vite hash mismatch fix)
+- Prettier formatting for 25 Vue components
+
+### Dependencies
+- `lodash` 4.17.23 → 4.18.1
+- `vite` 6.4.1 → 6.4.2
+
 ## [1.8.0-beta1]
 
 ### Added
