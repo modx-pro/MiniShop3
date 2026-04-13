@@ -262,14 +262,23 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+
+  /**
+   * Prefix for generating HTML id (for label association).
+   * Each form should pass a unique prefix to avoid id collisions.
+   */
+  idPrefix: {
+    type: String,
+    default: 'df',
+  },
 })
 
 /**
  * Stable HTML id for label association (for/id).
- * Prefer explicit fieldConfig.htmlId, otherwise generate from name.
+ * Prefer explicit fieldConfig.htmlId, otherwise generate from prefix + name.
  */
 const fieldHtmlId = computed(() => {
-  return props.fieldConfig.htmlId || `vendor-field-${props.fieldConfig.name}`
+  return props.fieldConfig.htmlId || `${props.idPrefix}-field-${props.fieldConfig.name}`
 })
 
 /**

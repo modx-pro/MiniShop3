@@ -782,6 +782,7 @@ onMounted(async () => {
                         <DynamicField
                           v-model="editingVendor[field.name]"
                           :field-config="getDynamicFieldConfig(field)"
+                          id-prefix="vendor"
                         />
 
                         <!-- Description/help text -->
