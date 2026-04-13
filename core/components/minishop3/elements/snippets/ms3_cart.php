@@ -52,15 +52,15 @@ $total = ['count' => 0, 'weight' => 0, 'cost' => 0, 'discount' => 0, 'positions'
 
 if (empty($status['total_count'])) {
     if ($scriptProperties['return'] === 'tpl') {
-        return $pdoFetch->getChunk($tpl, compact('total', 'products'));
+        return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
-    return compact('total', 'products');
+    return compact('total', 'products', 'status');
 }
 if (empty($cart)) {
     if ($scriptProperties['return'] === 'tpl') {
-        return $pdoFetch->getChunk($tpl, compact('total', 'products'));
+        return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
-    return compact('total', 'products');
+    return compact('total', 'products', 'status');
 }
 
 // Select cart products
@@ -195,11 +195,18 @@ foreach ($cart as $key => $entry) {
 $outputData = [
     'total' => $total,
     'products' => $products,
+    'status' => $status,
 ];
 
+// Cart line sums may differ from data.status.total_cost when plugins adjust the aggregate
+// (e.g. msOnGetStatusCart). Prefer total_cost for chunk totals when it is set.
+if (isset($status['total_cost']) && is_numeric($status['total_cost'])) {
+    $outputData['total']['cost'] = (float) $status['total_cost'];
+}
+
 // Pre-formatted totals with currency/unit for display in chunks
-$outputData['total']['cost_formatted'] = $ms3->format->price($total['cost'], true);
-$outputData['total']['weight_formatted'] = $ms3->format->weightWithUnit($total['weight']);
+$outputData['total']['cost_formatted'] = $ms3->format->price($outputData['total']['cost'], true);
+$outputData['total']['weight_formatted'] = $ms3->format->weightWithUnit($outputData['total']['weight']);
 
 if ($return === 'data') {
     return $outputData;
