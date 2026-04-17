@@ -121,8 +121,11 @@ class ProductDataService
      * via msProductOption::saveProductOptions() method
      *
      * @param msProductData $productData
-     * @param array|null $options Options to save (if null - collected from JSON fields)
-     * @param bool $removeOther Remove options not in $options array (default true for JSON fields, false for custom options)
+     * @param array|null $options If null: built from non-empty JSON fields on $productData only. If array: explicit
+     *                           keys/values (e.g. manager POST options-*); then $removeOther is honored.
+     * @param bool $removeOther When $options is non-null: if true, delete msProductOption rows whose keys are absent
+     *                         from $options. When $options is null: ignored — always treated as false so category-only
+     *                         options not mirrored in JSON fields are preserved (#153, #158).
      * @return void
      */
     public function saveOptions(msProductData $productData, ?array $options = null, bool $removeOther = true): void

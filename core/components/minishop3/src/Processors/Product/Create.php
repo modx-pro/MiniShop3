@@ -98,13 +98,16 @@ class Create extends CreateProcessor
 
         // Save product options from options-* form fields (parsed in beforeSet)
         // Only runs when form actually contained options-* fields
+        // removeOther=true: POST is the full set of options from the form — keys missing after removal must be
+        // deleted from DB (#199). JSON-only sync uses saveOptions(null) in msProductData::save() →
+        // removeOther=false (#153, #158)
         $options = $this->getProperty('options');
         if (!empty($options) && is_array($options)) {
             /** @var \MiniShop3\Model\msProductData $productData */
             $productData = $this->object->loadData();
             if ($productData) {
                 $service = $this->modx->services->get('ms3_product_data_service');
-                $service->saveOptions($productData, $options, false);
+                $service->saveOptions($productData, $options, true);
             }
         }
 

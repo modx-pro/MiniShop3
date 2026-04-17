@@ -39,6 +39,7 @@
 
 #### 🐛 Исправлено
 
+- **Удалённая опция товара в админке снова появлялась после сохранения (#199):** при сохранении из полей `options-*` использовался `removeOther=false`, из‑за чего строки в `msProductOption` для ключей, которых больше нет в POST (после удаления опции в форме, в т.ч. после копирования товара), не удалялись — для явного массива опций из процессора теперь `removeOther=true`; автосинхронизация только JSON-полей по-прежнему через `saveOptions(null)` с принудительным `removeOther=false` (#153, #158)
 - **Manager API затирал `msOrder.properties` данными адреса (#191):** `array_merge($order->toArray(), $address->toArray())` перезаписывал `properties` заказа значением `null` из `msOrderAddress` — выделен `mergeAddressIntoOrderData()` с исключением конфликтующих полей
 - **В форме заказа manager UI показывались raw lexicon keys (#193):** `GET /api/mgr/model-fields/visible/msOrder` загружал только `minishop3:vue`, из-за чего `comboOptions` не переводили значения из `minishop3:default` и `minishop3:manager`; дополнительно исправлены order-form dropdown routes для статусов и активных доставок
 - **Удаление клиента из грида не работало (#179):** DELETE-запрос выполнялся только после подтверждения в диалоге, но сетевой запрос не отправлялся
