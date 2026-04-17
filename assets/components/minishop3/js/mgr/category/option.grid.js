@@ -29,8 +29,9 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
 
     getFields: function () {
         return [
-            'id', 'key', 'caption', 'type', 'active', 'required', 'position', 'value',
-            'category_id', 'option_id', 'actions'
+            'id', 'key', 'caption', 'global_caption', 'caption_effective', 'category_caption', 'category_description',
+            'type', 'active', 'required', 'position', 'value',
+            'category_id', 'option_id', 'actions',
         ];
     },
 
@@ -38,7 +39,20 @@ Ext.extend(ms3.grid.CategoryOption, ms3.grid.Default, {
         return [
             {header: _('id'), dataIndex: 'id', width: 35, sortable: true},
             {header: _('ms3_ft_name'), dataIndex: 'key', width: 50, sortable: true},
-            {header: _('ms3_ft_caption'), dataIndex: 'caption', width: 75, sortable: true},
+            {header: _('ms3_global_caption'), dataIndex: 'global_caption', width: 70, sortable: true},
+            {header: _('ms3_effective_caption'), dataIndex: 'caption', width: 85, sortable: true},
+            {
+                header: _('ms3_category_option_caption_override'),
+                dataIndex: 'category_caption',
+                width: 90,
+                editor: {xtype: 'textfield'},
+            },
+            {
+                header: _('ms3_category_option_description_override'),
+                dataIndex: 'category_description',
+                width: 100,
+                editor: {xtype: 'textarea', grow: true},
+            },
             {header: _('ms3_ft_type'), dataIndex: 'type', width: 75, renderer: this._renderType},
             {header: _('ms3_default_value'), dataIndex: 'value', width: 75, editor: {xtype: 'textfield'}},
             {header: _('ms3_ft_position'), dataIndex: 'position', width: 50, editor: {xtype: 'numberfield'}, hidden: true, sortable: true},

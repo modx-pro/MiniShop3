@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Category\Option;
 
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
+use MiniShop3\Services\Option\OptionService;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use xPDO\Om\xPDOObject;
 use xPDO\Om\xPDOQuery;
@@ -29,13 +30,20 @@ class GetList extends GetListProcessor
         ]);
         $c->innerJoin(msOption::class, 'Option');
         $c->select($this->modx->getSelectColumns(msCategoryOption::class, 'msCategoryOption'));
-        $c->select($this->modx->getSelectColumns(msOption::class, 'Option', '', ['key', 'caption', 'description', 'type']));
+        $c->select([
+            'Option.key',
+            'Option.type',
+            'Option.caption AS global_caption',
+            'Option.description AS global_description',
+        ]);
 
         $query = trim($this->getProperty('query'));
         if (!empty($query)) {
             $c->where([
                 'Option.key:LIKE' => "%{$query}%",
                 'OR:Option.caption:LIKE' => "%{$query}%",
+                'OR:msCategoryOption.caption:LIKE' => "%{$query}%",
+                'OR:msCategoryOption.description:LIKE' => "%{$query}%",
             ]);
         }
 
@@ -51,6 +59,26 @@ class GetList extends GetListProcessor
     public function prepareRow(xPDOObject $object)
     {
         $array = $object->toArray();
+
+        /** @var OptionService $optSvc */
+        $optSvc = $this->modx->services->get('ms3_option_service');
+        $loader = $optSvc->getLoader();
+        $globCap = (string)($array['global_caption'] ?? '');
+        $globDesc = (string)($array['global_description'] ?? '');
+        $catCap = array_key_exists('caption', $array) ? $array['caption'] : null;
+        $catDesc = array_key_exists('description', $array) ? $array['description'] : null;
+        $array['category_caption'] = $catCap;
+        $array['category_description'] = $catDesc;
+        $array['caption_effective'] = $loader->mergeCaptionDescription(
+            $catCap !== null ? (string)$catCap : null,
+            $globCap
+        );
+        $array['description_effective'] = $loader->mergeCaptionDescription(
+            $catDesc !== null ? (string)$catDesc : null,
+            $globDesc
+        );
+        $array['caption'] = $array['caption_effective'];
+
         $array['actions'] = [];
 
         if (!$array['active']) {

@@ -94,6 +94,12 @@ $_lang['ms3_category_view'] = 'View on site';
 $_lang['ms3_category_new'] = 'New category';
 $_lang['ms3_category_option_add'] = 'Add option';
 $_lang['ms3_category_option_rank'] = 'Sort order';
+$_lang['ms3_category_option_caption_override'] = 'Caption for this category';
+$_lang['ms3_category_option_caption_override_desc'] = 'Empty: use the global option caption.';
+$_lang['ms3_category_option_description_override'] = 'Description for this category';
+$_lang['ms3_category_option_description_override_desc'] = 'Empty: use the global option description.';
+$_lang['ms3_global_caption'] = 'Global';
+$_lang['ms3_effective_caption'] = 'As on site';
 $_lang['ms3_category_show_nested'] = 'Show nested products';
 
 $_lang['ms3_product'] = 'Shop product';

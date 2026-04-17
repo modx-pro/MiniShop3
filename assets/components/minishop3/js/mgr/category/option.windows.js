@@ -22,6 +22,19 @@ Ext.extend(ms3.window.AddOption, ms3.window.Default, {
         }, {
             xtype: 'textfield',
             anchor: '99%',
+            name: 'caption',
+            fieldLabel: _('ms3_category_option_caption_override'),
+            emptyText: _('ms3_category_option_caption_override_desc'),
+        }, {
+            xtype: 'textarea',
+            anchor: '99%',
+            name: 'description',
+            fieldLabel: _('ms3_category_option_description_override'),
+            emptyText: _('ms3_category_option_description_override_desc'),
+            height: 80,
+        }, {
+            xtype: 'textfield',
+            anchor: '99%',
             name: 'value',
             fieldLabel: _('ms3_default_value')
         }, {

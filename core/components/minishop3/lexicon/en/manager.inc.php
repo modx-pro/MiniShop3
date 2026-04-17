@@ -130,6 +130,12 @@ $_lang['ms3_ft_selected_unrequire'] = 'Make Optional';
 $_lang['ms3_ft_selected_assign'] = 'Assign to Category';
 $_lang['ms3_options_remove_confirm'] = 'Are you sure you want to delete all selected options? Values of these options in products will be deleted without possibility of recovery.';
 $_lang['ms3_category_options_assign'] = 'Assign options to category.';
+$_lang['ms3_category_option_caption_override'] = 'Caption for this category';
+$_lang['ms3_category_option_caption_override_desc'] = 'Empty: use the global option caption.';
+$_lang['ms3_category_option_description_override'] = 'Description for this category';
+$_lang['ms3_category_option_description_override_desc'] = 'Empty: use the global option description.';
+$_lang['ms3_global_caption'] = 'Global';
+$_lang['ms3_effective_caption'] = 'As on site';
 
 $_lang['ms3_ft_textfield'] = 'Text Field';
 $_lang['ms3_ft_numberfield'] = 'Number Field';

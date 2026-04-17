@@ -37,6 +37,17 @@ class Update extends UpdateProcessor
         $this->setCheckbox('active');
         $this->setCheckbox('required');
 
+        if ($this->getProperty('category_caption') !== null) {
+            $v = $this->getProperty('category_caption');
+            $this->object->set('caption', $v === '' ? null : $v);
+            $this->unsetProperty('category_caption');
+        }
+        if ($this->getProperty('category_description') !== null) {
+            $v = $this->getProperty('category_description');
+            $this->object->set('description', $v === '' ? null : $v);
+            $this->unsetProperty('category_description');
+        }
+
         return true;
     }
 }

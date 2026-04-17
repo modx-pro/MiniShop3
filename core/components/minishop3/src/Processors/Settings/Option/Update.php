@@ -96,7 +96,9 @@ class Update extends UpdateProcessor
             ));
 
             if ($ftCat) {
-                $ftCat->fromArray($this->getProperties());
+                $allowed = ['value', 'active', 'required', 'position', 'caption', 'description'];
+                $props = array_intersect_key($this->getProperties(), array_flip($allowed));
+                $ftCat->fromArray($props);
                 $ftCat->save();
             }
         }

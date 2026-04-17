@@ -37,6 +37,12 @@
 - `ExtraFieldsService`: создание `msProductField` только для `msProductData` (не для msVendor и других моделей)
 - `DynamicField`: поддержка FileBrowser для файловых полей, `w-full` на всех инпутах, `fluid` на InputNumber, prop `idPrefix` для label/id accessibility
 
+**Переопределение caption/description опции на связи опция–категория (#200):**
+- В `ms3_category_options` добавлены поля `caption` и `description`; при пустом значении используются глобальные поля `msOption`
+- `OptionLoaderService`: оверлей для витрины в `loadForProduct`, `getFieldsForProduct`; в `loadForProducts` — пакетная подгрузка контекстов категорий и одна выборка `msCategoryOption` по объединению категорий (без N+1 на каждый товар)
+- Разрешение конфликта при нескольких категориях: приоритет строки с категорией-родителем товара, затем минимальный `position`, затем минимальный `category_id`
+- Процессоры и ExtJS: редактирование в карточке категории; лексиконы ru/en
+
 #### 🐛 Исправлено
 
 - **Удалённая опция товара в админке снова появлялась после сохранения (#199):** при сохранении из полей `options-*` использовался `removeOther=false`, из‑за чего строки в `msProductOption` для ключей, которых больше нет в POST (после удаления опции в форме, в т.ч. после копирования товара), не удалялись — для явного массива опций из процессора теперь `removeOther=true`; автосинхронизация только JSON-полей по-прежнему через `saveOptions(null)` с принудительным `removeOther=false` (#153, #158)

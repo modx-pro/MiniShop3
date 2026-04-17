@@ -50,6 +50,12 @@ class Add extends CreateProcessor
         $rank = $this->modx->getCount($this->classKey, ['category_id' => $category]);
         $this->object->set('position', $rank);
 
+        foreach (['caption', 'description'] as $field) {
+            if ($this->getProperty($field) === '') {
+                $this->setProperty($field, null);
+            }
+        }
+
         return parent::beforeSet();
     }
 }

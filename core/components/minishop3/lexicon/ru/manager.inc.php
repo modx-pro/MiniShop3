@@ -130,6 +130,12 @@ $_lang['ms3_ft_selected_unrequire'] = 'Сделать необязательно
 $_lang['ms3_ft_selected_assign'] = 'Назначить в категорию';
 $_lang['ms3_options_remove_confirm'] = 'Вы уверены, что хотите удалить все выбранные опции? Значения этих опций в товарах будут удалены без возможности восстановления.';
 $_lang['ms3_category_options_assign'] = 'Назначить опции в категории.';
+$_lang['ms3_category_option_caption_override'] = 'Название для категории';
+$_lang['ms3_category_option_caption_override_desc'] = 'Пусто — используется глобальное название опции.';
+$_lang['ms3_category_option_description_override'] = 'Описание для категории';
+$_lang['ms3_category_option_description_override_desc'] = 'Пусто — используется глобальное описание опции.';
+$_lang['ms3_global_caption'] = 'Глобально';
+$_lang['ms3_effective_caption'] = 'Как на сайте';
 
 $_lang['ms3_ft_textfield'] = 'Текстовое поле';
 $_lang['ms3_ft_numberfield'] = 'Числовое поле';
