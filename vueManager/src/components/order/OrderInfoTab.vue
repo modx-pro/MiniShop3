@@ -1,5 +1,4 @@
 <script setup>
-/* eslint-disable vue/no-mutating-props -- `order` is parent-owned reactive object (same as inline OrderView) */
 import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
@@ -10,26 +9,40 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
+import { inject } from 'vue'
+
+import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
 
 defineProps({
-  order: { type: Object, required: true },
-  isCreateMode: { type: Boolean, required: true },
   orderFieldsBySection: { type: Array, required: true },
-  isDraft: { type: Boolean, required: true },
-  finalizing: { type: Boolean, required: true },
-  saving: { type: Boolean, required: true },
-  formatDate: { type: Function, required: true },
-  formatPrice: { type: Function, required: true },
-  getFieldWidthClass: { type: Function, required: true },
-  isFieldEditable: { type: Function, required: true },
-  getFieldDisplayValue: { type: Function, required: true },
-  getFieldCompareField: { type: Function, required: true },
-  getFieldOptions: { type: Function, required: true },
-  confirmFinalizeOrder: { type: Function, required: true },
-  createOrder: { type: Function, required: true },
-  saveOrder: { type: Function, required: true },
-  goBack: { type: Function, required: true },
 })
+
+const orderCtx = inject(ORDER_CONTEXT_KEY, null)
+if (import.meta.env.DEV && !orderCtx) {
+  console.error('[OrderInfoTab] Missing inject: orderContext (must be used inside OrderView)')
+}
+if (!orderCtx) {
+  throw new Error('[OrderInfoTab] orderContext is required. Use OrderView as parent.')
+}
+
+const {
+  order,
+  isCreateMode,
+  isDraft,
+  finalizing,
+  saving,
+  formatDate,
+  formatPrice,
+  getFieldWidthClass,
+  isFieldEditable,
+  getFieldDisplayValue,
+  getFieldCompareField,
+  getFieldOptions,
+  confirmFinalizeOrder,
+  createOrder,
+  saveOrder,
+  goBack,
+} = orderCtx
 
 const { _ } = useLexicon()
 </script>

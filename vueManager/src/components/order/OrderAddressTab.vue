@@ -1,5 +1,4 @@
 <script setup>
-/* eslint-disable vue/no-mutating-props -- `order` is parent-owned reactive object (same as inline OrderView) */
 import { useLexicon } from '@vuetools/useLexicon'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
@@ -9,6 +8,9 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
+import { inject } from 'vue'
+
+import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
 
 const selectedCustomer = defineModel('selectedCustomer', {
   type: Object,
@@ -20,24 +22,35 @@ const createCustomerFromData = defineModel('createCustomerFromData', {
 })
 
 defineProps({
-  order: { type: Object, required: true },
-  isCreateMode: { type: Boolean, required: true },
-  isDraft: { type: Boolean, required: true },
   addressFieldsBySection: { type: Array, required: true },
-  customerSuggestions: { type: Array, required: true },
-  searchingCustomers: { type: Boolean, required: true },
-  saving: { type: Boolean, required: true },
-  formatPrice: { type: Function, required: true },
-  getFieldWidthClass: { type: Function, required: true },
-  getAddressFieldCompareField: { type: Function, required: true },
-  getAddressFieldOptions: { type: Function, required: true },
-  searchCustomers: { type: Function, required: true },
-  onCustomerSelect: { type: Function, required: true },
-  clearCustomer: { type: Function, required: true },
-  createOrder: { type: Function, required: true },
-  saveOrder: { type: Function, required: true },
-  goBack: { type: Function, required: true },
 })
+
+const orderCtx = inject(ORDER_CONTEXT_KEY, null)
+if (import.meta.env.DEV && !orderCtx) {
+  console.error('[OrderAddressTab] Missing inject: orderContext (must be used inside OrderView)')
+}
+if (!orderCtx) {
+  throw new Error('[OrderAddressTab] orderContext is required. Use OrderView as parent.')
+}
+
+const {
+  order,
+  isCreateMode,
+  isDraft,
+  customerSuggestions,
+  searchingCustomers,
+  saving,
+  formatPrice,
+  getFieldWidthClass,
+  getAddressFieldCompareField,
+  getAddressFieldOptions,
+  searchCustomers,
+  onCustomerSelect,
+  clearCustomer,
+  createOrder,
+  saveOrder,
+  goBack,
+} = orderCtx
 
 const { _ } = useLexicon()
 </script>

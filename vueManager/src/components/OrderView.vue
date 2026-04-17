@@ -16,8 +16,11 @@ import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 
+import { ORDER_CONTEXT_KEY } from '../composables/orderContext.js'
+import { useOrderFieldHelpers } from '../composables/useOrderFieldHelpers.js'
+import { useOrderFormatters } from '../composables/useOrderFormatters.js'
 import request from '../request.js'
 import { normalizeOrderPluginTab } from '../utils/orderPluginTab.js'
 import OrderAddressTab from './order/OrderAddressTab.vue'
@@ -401,44 +404,19 @@ function getDefaultProductsColumns() {
   ]
 }
 
-/**
- * Render product field value based on column type
- */
-function renderProductField(data, column) {
-  if (column.template) {
-    return column.template.replace(/\{(\w+)\}/g, (match, key) => data[key] ?? '')
-  }
-  return data[column.name]
-}
+const { formatDate, formatPrice, getFieldWidthClass } = useOrderFormatters()
 
-/**
- * Format options for display
- */
-function formatOptions(options) {
-  if (!options) return []
-  if (typeof options === 'string') {
-    try {
-      options = JSON.parse(options)
-    } catch {
-      return []
-    }
-  }
-  if (Array.isArray(options)) {
-    return options.map(opt => (typeof opt === 'object' ? `${opt.key}: ${opt.value}` : opt))
-  }
-  if (typeof options === 'object') {
-    return Object.entries(options).map(([key, value]) => `${key}: ${value}`)
-  }
-  return []
-}
-
-/**
- * Get product link URL
- */
-function getProductLink(data, column) {
-  if (!column.link?.condition || !data[column.link.condition]) return null
-  return column.link.url.replace(/\{(\w+)\}/g, (match, key) => data[key] ?? '')
-}
+const fieldHelpers = useOrderFieldHelpers({
+  formatDate,
+  formatPrice,
+  order,
+  orderComboOptions,
+  addressComboOptions,
+  statuses,
+  deliveries,
+  payments,
+  _,
+})
 
 /**
  * Handle product action (edit, delete)
@@ -973,101 +951,6 @@ async function loadLogs() {
 }
 
 /**
- * Get options for combo field (order fields)
- * Returns options array from combo config with metadata
- */
-function getFieldOptions(fieldName) {
-  // Check combo options from API first (new format with metadata)
-  if (orderComboOptions.value[fieldName]) {
-    const config = orderComboOptions.value[fieldName]
-    // New format: { options: [...], compareField: '...', valueField: '...' }
-    if (config.options) {
-      return config.options
-    }
-    // Legacy format: direct array
-    return config
-  }
-
-  // Legacy fallback for hardcoded refs
-  switch (fieldName) {
-    case 'status_id':
-      return statuses.value
-    case 'delivery_id':
-      return deliveries.value
-    case 'payment_id':
-      return payments.value
-    default:
-      return []
-  }
-}
-
-/**
- * Get compareField for a combo field (order fields)
- * Used to determine which order field to use for value binding
- */
-function getFieldCompareField(fieldName) {
-  if (orderComboOptions.value[fieldName]?.compareField) {
-    return orderComboOptions.value[fieldName].compareField
-  }
-  // Default: use field name itself
-  return fieldName
-}
-
-/**
- * Get options for combo field (address fields)
- */
-function getAddressFieldOptions(fieldName) {
-  // Check combo options from API (new format with metadata)
-  if (addressComboOptions.value[fieldName]) {
-    const config = addressComboOptions.value[fieldName]
-    // New format: { options: [...], compareField: '...', valueField: '...' }
-    if (config.options) {
-      return config.options
-    }
-    // Legacy format: direct array
-    return config
-  }
-  return []
-}
-
-/**
- * Get compareField for a combo field (address fields)
- * Used to determine which address field to use for value binding
- */
-function getAddressFieldCompareField(fieldName) {
-  if (addressComboOptions.value[fieldName]?.compareField) {
-    return addressComboOptions.value[fieldName].compareField
-  }
-  // Default: use field name itself
-  return fieldName
-}
-
-/**
- * Check if field is editable
- */
-function isFieldEditable(fieldName) {
-  // Read-only fields
-  const readOnlyFields = [
-    'num',
-    'createdon',
-    'updatedon',
-    'cost',
-    'cart_cost',
-    'delivery_cost',
-    'weight',
-  ]
-  return !readOnlyFields.includes(fieldName)
-}
-
-/**
- * Get CSS class for field width (12-column grid)
- */
-function getFieldWidthClass(field) {
-  const width = field.width || 6
-  return `col-${width}`
-}
-
-/**
  * Save order
  */
 async function saveOrder() {
@@ -1077,7 +960,7 @@ async function saveOrder() {
     // Collect all editable order fields
     const orderData = {}
     for (const field of orderFields.value) {
-      if (isFieldEditable(field.name) && order.value[field.name] !== undefined) {
+      if (fieldHelpers.isFieldEditable(field.name) && order.value[field.name] !== undefined) {
         orderData[field.name] = order.value[field.name]
       }
     }
@@ -1668,62 +1551,28 @@ function destroyPluginExtComponents() {
   mountedExtPluginComponents.value = {}
 }
 
-const infoTabProps = computed(() => ({
-  order: order.value,
-  isCreateMode: isCreateMode.value,
-  orderFieldsBySection: orderFieldsBySection.value,
-  isDraft: isDraft.value,
-  finalizing: finalizing.value,
-  saving: saving.value,
+provide(ORDER_CONTEXT_KEY, {
+  order,
+  saving,
+  isDraft,
+  isCreateMode,
+  finalizing,
+  customerSuggestions,
+  searchingCustomers,
+  ...fieldHelpers,
   formatDate,
   formatPrice,
   getFieldWidthClass,
-  isFieldEditable,
-  getFieldDisplayValue,
-  getFieldCompareField,
-  getFieldOptions,
-  confirmFinalizeOrder,
-  createOrder,
   saveOrder,
+  createOrder,
   goBack,
-}))
-
-const productsTabProps = computed(() => ({
-  products: products.value,
-  productsColumns: productsColumns.value,
-  formatOptions,
-  formatPrice,
-  renderProductField,
-  getProductLink,
+  confirmFinalizeOrder,
   handleProductAction,
   openAddProductDialog,
-}))
-
-const addressTabProps = computed(() => ({
-  order: order.value,
-  isCreateMode: isCreateMode.value,
-  isDraft: isDraft.value,
-  addressFieldsBySection: addressFieldsBySection.value,
-  customerSuggestions: customerSuggestions.value,
-  searchingCustomers: searchingCustomers.value,
-  saving: saving.value,
-  formatPrice,
-  getFieldWidthClass,
-  getAddressFieldCompareField,
-  getAddressFieldOptions,
   searchCustomers,
   onCustomerSelect,
   clearCustomer,
-  createOrder,
-  saveOrder,
-  goBack,
-}))
-
-const historyTabProps = computed(() => ({
-  logs: logs.value,
-  formatDate,
-  formatLogEntry,
-}))
+})
 
 watch(
   () => orderTabsConfig.value.map(t => t.key),
@@ -1760,155 +1609,6 @@ onBeforeUnmount(() => {
 })
 
 defineExpose({ registerPluginTab })
-
-/**
- * Format date
- */
-function formatDate(dateString) {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleString('ru-RU', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-/**
- * Format log entry (fallback when entry_formatted not available)
- */
-function formatLogEntry(data) {
-  if (!data || !data.entry) return '-'
-
-  // If entry is already a string, return it
-  if (typeof data.entry === 'string') {
-    // Try to parse as JSON
-    try {
-      const parsed = JSON.parse(data.entry)
-      return formatLogEntryObject(data.action, parsed)
-    } catch {
-      return data.entry
-    }
-  }
-
-  // If entry is an object
-  if (typeof data.entry === 'object') {
-    return formatLogEntryObject(data.action, data.entry)
-  }
-
-  return String(data.entry)
-}
-
-/**
- * Format log entry object based on action type
- */
-function formatLogEntryObject(action, entry) {
-  if (!entry) return '-'
-
-  switch (action) {
-    case 'status':
-      if (entry.new_status_name) {
-        return entry.new_status_name
-      }
-      if (entry.status_id) {
-        return `Status ID: ${entry.status_id}`
-      }
-      break
-
-    case 'products': {
-      const op = entry.operation || 'unknown'
-      const productName = entry.product_name || ''
-      const count = entry.count ? ` (×${entry.count})` : ''
-      return `${capitalizeFirst(op)}: ${productName}${count}`
-    }
-
-    case 'field': {
-      if (entry.fields) {
-        const fieldNames = Object.keys(entry.fields)
-        return `Fields: ${fieldNames.join(', ')}`
-      }
-      break
-    }
-
-    case 'address': {
-      if (entry.fields) {
-        const fieldNames = Object.keys(entry.fields)
-        return `Address: ${fieldNames.join(', ')}`
-      }
-      break
-    }
-
-    case 'payment': {
-      const payOp = entry.operation || 'unknown'
-      const amount = entry.amount || 0
-      return `${capitalizeFirst(payOp)}: ${formatPrice(amount)}`
-    }
-
-    default: {
-      // Generic fallback: show key-value pairs
-      const pairs = Object.entries(entry)
-        .filter(([, v]) => v !== null && v !== undefined)
-        .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
-        .slice(0, 3) // Limit to 3 pairs
-      return pairs.join(', ') || '-'
-    }
-  }
-
-  return JSON.stringify(entry)
-}
-
-/**
- * Capitalize first letter
- */
-function capitalizeFirst(str) {
-  if (!str) return ''
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
-/**
- * Format price
- */
-function formatPrice(value) {
-  if (value === null || value === undefined) return '-'
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value)
-}
-
-/**
- * Get display value for field
- * For combo fields, uses compareField to get the actual value from order
- */
-function getFieldDisplayValue(field, value) {
-  if (value === null || value === undefined) return '-'
-
-  switch (field.xtype) {
-    case 'datefield': {
-      return formatDate(value)
-    }
-    case 'numberfield': {
-      return formatPrice(value)
-    }
-    case 'combo': {
-      // For combo fields, use compareField to get the correct value
-      const compareField = getFieldCompareField(field.name)
-      const actualValue = order.value?.[compareField] ?? value
-      const options = getFieldOptions(field.name)
-      const option = options.find(o => o.value === actualValue)
-      return option?.label || actualValue
-    }
-    case 'checkbox': {
-      return value ? _('yes') : _('no')
-    }
-    default: {
-      return value
-    }
-  }
-}
 
 onMounted(async () => {
   if (isCreateMode.value) {
@@ -2335,15 +2035,22 @@ onMounted(async () => {
         </TabList>
         <TabPanels>
           <TabPanel v-for="tab in orderTabsConfig" :key="tab.key" :value="tab.key">
-            <OrderInfoTab v-if="tab.key === 'info'" v-bind="infoTabProps" />
-            <OrderProductsTab v-else-if="tab.key === 'products'" v-bind="productsTabProps" />
+            <OrderInfoTab
+              v-if="tab.key === 'info'"
+              :order-fields-by-section="orderFieldsBySection"
+            />
+            <OrderProductsTab
+              v-else-if="tab.key === 'products'"
+              :products="products"
+              :products-columns="productsColumns"
+            />
             <OrderAddressTab
               v-else-if="tab.key === 'address'"
-              v-bind="addressTabProps"
               v-model:selected-customer="selectedCustomer"
               v-model:create-customer-from-data="createCustomerFromData"
+              :address-fields-by-section="addressFieldsBySection"
             />
-            <OrderHistoryTab v-else-if="tab.key === 'history'" v-bind="historyTabProps" />
+            <OrderHistoryTab v-else-if="tab.key === 'history'" :logs="logs" />
             <template v-else-if="tab.kind === 'plugin' && tab.type === 'vue' && tab.component">
               <component
                 :is="tab.component"

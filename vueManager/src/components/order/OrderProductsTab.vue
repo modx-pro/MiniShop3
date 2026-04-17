@@ -3,19 +3,28 @@ import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
+import { inject } from 'vue'
 
+import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
+import { useOrderFormatters } from '../../composables/useOrderFormatters.js'
 import OrderProductOptionsChips from './OrderProductOptionsChips.vue'
 
 defineProps({
   products: { type: Array, required: true },
   productsColumns: { type: Array, required: true },
-  formatOptions: { type: Function, required: true },
-  formatPrice: { type: Function, required: true },
-  renderProductField: { type: Function, required: true },
-  getProductLink: { type: Function, required: true },
-  handleProductAction: { type: Function, required: true },
-  openAddProductDialog: { type: Function, required: true },
 })
+
+const { formatOptions, formatPrice, renderProductField, getProductLink } = useOrderFormatters()
+
+const orderCtx = inject(ORDER_CONTEXT_KEY, null)
+if (import.meta.env.DEV && !orderCtx) {
+  console.error('[OrderProductsTab] Missing inject: orderContext (must be used inside OrderView)')
+}
+if (!orderCtx) {
+  throw new Error('[OrderProductsTab] orderContext is required. Use OrderView as parent.')
+}
+
+const { handleProductAction, openAddProductDialog } = orderCtx
 
 const { _ } = useLexicon()
 </script>
