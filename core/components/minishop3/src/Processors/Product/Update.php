@@ -109,14 +109,16 @@ class Update extends UpdateProcessor
 
         // Save product options from options-* form fields (parsed in beforeSet)
         // Only runs when form actually contained options-* fields
-        // removeOther=false: JSON-based options (color, size) are saved separately via msProductData::save()
+        // removeOther=true: POST contains the full set of options shown on the form — keys missing after
+        // user removal must be deleted from DB (see #199). JSON-only sync still uses saveOptions(null)
+        // in msProductData::save(), which forces removeOther=false (#153, #158).
         $options = $this->getProperty('options');
         if (!empty($options) && is_array($options)) {
             /** @var \MiniShop3\Model\msProductData $productData */
             $productData = $this->object->loadData();
             if ($productData) {
                 $service = $this->modx->services->get('ms3_product_data_service');
-                $service->saveOptions($productData, $options, false);
+                $service->saveOptions($productData, $options, true);
             }
         }
 
