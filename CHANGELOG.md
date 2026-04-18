@@ -50,6 +50,7 @@
 
 #### ♻️ Рефакторинг
 
+- **Экран заказа — provide/inject вместо props-цепочки (#196):** `provide(ORDER_CONTEXT_KEY)` в `OrderView`, composables `useOrderFormatters`, `useOrderFieldHelpers`, `useOrderLogFormatters`; вкладки получают только данные вкладки через props; безопасный `inject` до деструктуризации
 - **OrderView разбит на подкомпоненты (#176):** монолитный `OrderView.vue` разделён на `OrderInfoTab`, `OrderProductsTab`, `OrderAddressTab`, `OrderHistoryTab` + вынесен `orderFieldsLayout.css`
 - **Опции товара:** Map по `modcategory_id` для вкладок, именованный page size комбобокса под `ms3.grid`, документирован GROUP BY
 - **PHPStan (#174):** исправлено 109 ошибок, baseline уменьшен с 277 до 168

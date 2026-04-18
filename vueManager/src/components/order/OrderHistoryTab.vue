@@ -3,11 +3,15 @@ import { useLexicon } from '@vuetools/useLexicon'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 
+import { useOrderFormatters } from '../../composables/useOrderFormatters.js'
+import { useOrderLogFormatters } from '../../composables/useOrderLogFormatters.js'
+
 defineProps({
   logs: { type: Array, required: true },
-  formatDate: { type: Function, required: true },
-  formatLogEntry: { type: Function, required: true },
 })
+
+const { formatDate, formatPrice } = useOrderFormatters()
+const { formatLogEntry } = useOrderLogFormatters({ formatPrice })
 
 const { _ } = useLexicon()
 </script>
