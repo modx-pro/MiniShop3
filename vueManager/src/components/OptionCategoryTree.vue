@@ -267,6 +267,8 @@ defineExpose({
       :filter="true"
       filter-mode="lenient"
       :filter-value="filterValue"
+      :propagate-selection-up="false"
+      :propagate-selection-down="false"
       class="tree-body"
       @update:selection-keys="onSelectionChange"
       @node-expand="onNodeExpand"
