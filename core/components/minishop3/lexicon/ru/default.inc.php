@@ -94,12 +94,6 @@ $_lang['ms3_category_view'] = 'Просмотреть на сайте';
 $_lang['ms3_category_new'] = 'Новая категория';
 $_lang['ms3_category_option_add'] = 'Добавить характеристику';
 $_lang['ms3_category_option_rank'] = 'Порядок сортировки';
-$_lang['ms3_category_option_caption_override'] = 'Название для категории';
-$_lang['ms3_category_option_caption_override_desc'] = 'Пусто — используется глобальное название опции.';
-$_lang['ms3_category_option_description_override'] = 'Описание для категории';
-$_lang['ms3_category_option_description_override_desc'] = 'Пусто — используется глобальное описание опции.';
-$_lang['ms3_global_caption'] = 'Глобально';
-$_lang['ms3_effective_caption'] = 'Как на сайте';
 $_lang['ms3_category_show_nested'] = 'Показывать вложенные товары';
 
 $_lang['ms3_product'] = 'Товар магазина';

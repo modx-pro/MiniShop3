@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Category\Option;
 
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
+use MiniShop3\Services\Option\OptionLoaderService;
 use MiniShop3\Services\Option\OptionService;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use xPDO\Om\xPDOObject;
@@ -14,8 +15,22 @@ class GetList extends GetListProcessor
     public $classKey = msCategoryOption::class;
     public $defaultSortField = 'position';
     public $defaultSortDirection = 'asc';
-    public $languageTopics = ['minishop3:default'];
+    public $languageTopics = ['minishop3:default', 'minishop3:manager'];
 
+    /** @var OptionLoaderService|null */
+    protected $optionLoader;
+
+    public function initialize()
+    {
+        if (!parent::initialize()) {
+            return false;
+        }
+        /** @var OptionService $optSvc */
+        $optSvc = $this->modx->services->get('ms3_option_service');
+        $this->optionLoader = $optSvc->getLoader();
+
+        return true;
+    }
 
     /**
      * @param xPDOQuery $c
@@ -60,9 +75,7 @@ class GetList extends GetListProcessor
     {
         $array = $object->toArray();
 
-        /** @var OptionService $optSvc */
-        $optSvc = $this->modx->services->get('ms3_option_service');
-        $loader = $optSvc->getLoader();
+        $loader = $this->optionLoader;
         $globCap = (string)($array['global_caption'] ?? '');
         $globDesc = (string)($array['global_description'] ?? '');
         $catCap = array_key_exists('caption', $array) ? $array['caption'] : null;

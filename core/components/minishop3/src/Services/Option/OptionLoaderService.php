@@ -178,6 +178,8 @@ class OptionLoaderService
         // Preload ALL option values with single query (fixes N+1 Problem)
         $preloadedValues = $this->getValuesForProduct($productId);
 
+        // Materialize iterator to an array: we need two passes (globals map, then field building).
+        // Same rows as getCollection would load; iterator avoids duplicating the query.
         $options = [];
         foreach ($this->xpdo->getIterator(msOption::class, $c) as $option) {
             $options[] = $option;
@@ -191,7 +193,11 @@ class OptionLoaderService
                 'description' => (string)($option->get('description') ?? ''),
             ];
         }
-        $effectiveByOptionId = $this->resolveEffectiveCaptionDescriptionByOptionIds($productId, $globalsByOptionId);
+        $effectiveByOptionId = $this->resolveEffectiveCaptionDescriptionByOptionIds(
+            $productId,
+            $globalsByOptionId,
+            $parentId
+        );
 
         /** @var msOption $option */
         foreach ($options as $option) {
@@ -363,8 +369,11 @@ class OptionLoaderService
      *
      * @return array{category_ids: int[], parent_category_id: int}
      */
-    protected function getProductCategoriesContext(int $productId, ?int $fallbackParentId = null): array
-    {
+    protected function getProductCategoriesContext(
+        int $productId,
+        ?int $fallbackParentId = null,
+        ?int $knownParentCategoryId = null
+    ): array {
         $memberIds = [];
         $q = $this->xpdo->newQuery(msCategoryMember::class, ['product_id' => $productId]);
         $q->select('category_id');
@@ -372,12 +381,16 @@ class OptionLoaderService
             $memberIds = $q->stmt->fetchAll(\PDO::FETCH_COLUMN);
         }
 
-        $product = $this->xpdo->getObject(msProduct::class, $productId);
         $parentCategoryId = 0;
-        if ($product) {
-            $parentCategoryId = (int)$product->get('parent');
-        } elseif ($fallbackParentId !== null) {
-            $parentCategoryId = (int)$fallbackParentId;
+        if ($knownParentCategoryId !== null && $knownParentCategoryId > 0) {
+            $parentCategoryId = (int)$knownParentCategoryId;
+        } else {
+            $product = $this->xpdo->getObject(msProduct::class, $productId);
+            if ($product) {
+                $parentCategoryId = (int)$product->get('parent');
+            } elseif ($fallbackParentId !== null) {
+                $parentCategoryId = (int)$fallbackParentId;
+            }
         }
 
         $ids = $memberIds;
@@ -452,13 +465,16 @@ class OptionLoaderService
      * @param array<int, array{caption: string, description: string}> $globalsByOptionId
      * @return array<int, array{caption: string, description: string}>
      */
-    protected function resolveEffectiveCaptionDescriptionByOptionIds(int $productId, array $globalsByOptionId): array
-    {
+    protected function resolveEffectiveCaptionDescriptionByOptionIds(
+        int $productId,
+        array $globalsByOptionId,
+        ?int $knownParentCategoryId = null
+    ): array {
         if ($globalsByOptionId === []) {
             return [];
         }
 
-        $ctx = $this->getProductCategoriesContext($productId);
+        $ctx = $this->getProductCategoriesContext($productId, null, $knownParentCategoryId);
         if ($ctx['category_ids'] === []) {
             return $globalsByOptionId;
         }
@@ -533,15 +549,17 @@ class OptionLoaderService
             'option_id:IN' => $optionIds,
             'category_id:IN' => $categoryIds,
         ]);
-        $links = $this->xpdo->getCollection(msCategoryOption::class, $c);
+        $c->select($this->xpdo->getSelectColumns(msCategoryOption::class, 'msCategoryOption'));
 
         $linksByOptionId = [];
-        foreach ($links as $link) {
-            $oid = (int)$link->get('option_id');
-            if (!isset($linksByOptionId[$oid])) {
-                $linksByOptionId[$oid] = [];
+        if ($c->prepare() && $c->stmt->execute()) {
+            while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
+                $oid = (int)$row['option_id'];
+                if (!isset($linksByOptionId[$oid])) {
+                    $linksByOptionId[$oid] = [];
+                }
+                $linksByOptionId[$oid][] = $row;
             }
-            $linksByOptionId[$oid][] = $link->toArray();
         }
 
         return $linksByOptionId;
@@ -703,19 +721,7 @@ class OptionLoaderService
         array $context,
         array $linksByOptionIdForProduct
     ): array {
-        $globalsByOptionId = [];
-        $keyByOptionId = [];
-        foreach ($lastRowByOptionKey as $key => $row) {
-            $oid = (int)($row['id'] ?? 0);
-            if ($oid < 1) {
-                continue;
-            }
-            $globalsByOptionId[$oid] = [
-                'caption' => (string)($row['caption'] ?? ''),
-                'description' => (string)($row['description'] ?? ''),
-            ];
-            $keyByOptionId[$oid] = $key;
-        }
+        [$globalsByOptionId, $keyByOptionId] = $this->extractGlobalsAndKeyMap($lastRowByOptionKey);
 
         $effectiveById = $this->resolveEffectiveCaptionDescriptionWithContext(
             $globalsByOptionId,
@@ -739,6 +745,25 @@ class OptionLoaderService
      */
     protected function buildCaptionDescriptionOverlayForProduct(int $productId, array $lastRowByOptionKey): array
     {
+        [$globalsByOptionId, $keyByOptionId] = $this->extractGlobalsAndKeyMap($lastRowByOptionKey);
+
+        $effectiveById = $this->resolveEffectiveCaptionDescriptionByOptionIds($productId, $globalsByOptionId);
+        $out = [];
+        foreach ($keyByOptionId as $oid => $key) {
+            if (isset($effectiveById[$oid])) {
+                $out[$key] = $effectiveById[$oid];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $lastRowByOptionKey
+     * @return array{0: array<int, array{caption: string, description: string}>, 1: array<int, string>}
+     */
+    protected function extractGlobalsAndKeyMap(array $lastRowByOptionKey): array
+    {
         $globalsByOptionId = [];
         $keyByOptionId = [];
         foreach ($lastRowByOptionKey as $key => $row) {
@@ -753,15 +778,7 @@ class OptionLoaderService
             $keyByOptionId[$oid] = $key;
         }
 
-        $effectiveById = $this->resolveEffectiveCaptionDescriptionByOptionIds($productId, $globalsByOptionId);
-        $out = [];
-        foreach ($keyByOptionId as $oid => $key) {
-            if (isset($effectiveById[$oid])) {
-                $out[$key] = $effectiveById[$oid];
-            }
-        }
-
-        return $out;
+        return [$globalsByOptionId, $keyByOptionId];
     }
 }
 
