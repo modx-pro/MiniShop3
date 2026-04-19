@@ -60,4 +60,23 @@ abstract class msOptionType
      * @return mixed
      */
     abstract public function getField($field);
+
+    /**
+     * Declarative schema for Vue renderer (replaces ExtJS JS-string from getField()).
+     *
+     * Returns: [
+     *   'type'  => short type key (e.g. 'textfield', 'comboBoolean', 'comboMultiple'),
+     *   'props' => type-specific props (e.g. values for combobox, colors for comboColors)
+     * ]
+     *
+     * @param array $field Full option row (includes properties, value, required, etc.)
+     * @return array
+     */
+    public function getSchema(array $field): array
+    {
+        return [
+            'type' => lcfirst(substr(static::class, strrpos(static::class, '\\') + 1)),
+            'props' => $field['properties'] ?? [],
+        ];
+    }
 }

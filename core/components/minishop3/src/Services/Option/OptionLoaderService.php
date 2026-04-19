@@ -181,6 +181,7 @@ class OptionLoaderService
 
             $field['value'] = !is_null($value) ? $value : $field['value'];
             $field['ext_field'] = $option->getManagerField($field);
+            $field['schema'] = $option->getSchema($field);
             $fields[] = $field;
         }
 
