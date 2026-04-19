@@ -5,8 +5,6 @@ import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
@@ -29,7 +27,6 @@ const totalRecords = ref(0)
 const loading = ref(false)
 const first = ref(0)
 const rows = ref(20)
-const searchQuery = ref('')
 const modcategoryFilter = ref(null)
 const selectedCategories = ref([])
 const selectedRows = ref([])
@@ -86,7 +83,6 @@ async function loadOptions() {
   loading.value = true
   try {
     const params = { start: first.value, limit: rows.value }
-    if (searchQuery.value.trim() !== '') params.query = searchQuery.value.trim()
     if (modcategoryFilter.value) params.modcategory_id = modcategoryFilter.value
     if (selectedCategories.value.length > 0) {
       params.categories = JSON.stringify(selectedCategories.value)
@@ -105,11 +101,6 @@ async function loadOptions() {
 function onPage(event) {
   first.value = event.first
   rows.value = event.rows
-  loadOptions()
-}
-
-function onSearch() {
-  first.value = 0
   loadOptions()
 }
 
@@ -365,15 +356,6 @@ onMounted(() => {
             class="modcategory-filter"
           />
 
-          <IconField class="search-field">
-            <InputIcon><i class="pi pi-search" /></InputIcon>
-            <InputText
-              v-model="searchQuery"
-              :placeholder="_('search') || 'Поиск'"
-              @keyup.enter="onSearch"
-            />
-          </IconField>
-
           <Button
             v-if="selectedRows.length > 0"
             icon="pi pi-link"
@@ -625,8 +607,7 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.vueApp .options-grid-app .toolbar .modcategory-filter,
-.vueApp .options-grid-app .toolbar .search-field {
+.vueApp .options-grid-app .toolbar .modcategory-filter {
   min-width: 12rem;
 }
 
