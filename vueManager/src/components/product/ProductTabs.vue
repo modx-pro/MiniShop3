@@ -11,6 +11,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import ProductGallery from '../gallery/ProductGallery.vue'
 import ProductDataFields from '../ProductDataFields.vue'
+import ProductOptionsTab from './ProductOptionsTab.vue'
 
 const props = defineProps({
   productId: {
@@ -107,7 +108,8 @@ const tabConfig = computed(() => {
     tabs.push({
       key: 'options',
       title: _('ms3_tab_product_options'),
-      type: 'extjs-options',
+      type: 'vue',
+      component: 'ProductOptionsTab',
       position: 4,
     })
   }
@@ -184,80 +186,6 @@ function mountExtJS(tabKey, tabData) {
 }
 
 /**
- * Mount Options tab with vertical tabs (special handling)
- */
-function mountOptionsTab() {
-  if (mountedExtComponents.value['options']) {
-    return
-  }
-
-  const containerId = 'ms3-product-tab-options'
-
-  waitForElement(containerId, container => {
-    try {
-      if (typeof Ext === 'undefined') {
-        console.error('[ProductTabs] Ext is not defined')
-        return
-      }
-
-      const optionFields = props.config.option_fields || []
-      const groupsByModCategoryId = new Map()
-
-      for (const option of optionFields) {
-        if (!option?.key) {
-          continue
-        }
-        const field = ms3.utils.getExtField(
-          { record: props.record, mode: 'update' },
-          option.key,
-          option,
-          'extra-field'
-        )
-        if (!field) {
-          continue
-        }
-
-        const modCategoryId = Number(option.modcategory_id) || 0
-        let panel = groupsByModCategoryId.get(modCategoryId)
-        if (!panel) {
-          panel = {
-            id: 'ms3-options-tab-' + modCategoryId,
-            layout: 'form',
-            labelAlign: 'top',
-            groupId: modCategoryId,
-            title: option.category_name || _('ms3_ft_nogroup'),
-            bodyCssClass: 'main-wrapper',
-            items: [],
-          }
-          groupsByModCategoryId.set(modCategoryId, panel)
-        }
-        panel.items.push(field)
-      }
-
-      const optionGroups = Array.from(groupsByModCategoryId.values())
-      if (optionGroups.length === 0) {
-        return
-      }
-
-      const vtabs = Ext.create({
-        xtype: 'modx-vtabs',
-        renderTo: container,
-        autoTabs: true,
-        border: false,
-        plain: true,
-        deferredRender: false,
-        id: 'ms3-options-vtabs-vue',
-        items: optionGroups,
-      })
-
-      mountedExtComponents.value['options'] = vtabs
-    } catch (error) {
-      console.error('[ProductTabs] Failed to mount Options tab:', error)
-    }
-  })
-}
-
-/**
  * Handle tab change - mount ExtJS components lazily
  */
 function onTabChange(newValue) {
@@ -277,8 +205,6 @@ function onTabChange(newValue) {
   nextTick(() => {
     if (currentTab.type === 'extjs' && !mountedExtComponents.value[currentTab.key]) {
       mountExtJS(currentTab.key, currentTab)
-    } else if (currentTab.type === 'extjs-options' && !mountedExtComponents.value['options']) {
-      mountOptionsTab()
     }
   })
 }
@@ -391,14 +317,14 @@ onBeforeUnmount(() => {
             <ProductGallery :product-id="productId" :record="record" :config="config" />
           </template>
 
+          <!-- Vue component: ProductOptionsTab -->
+          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductOptionsTab'">
+            <ProductOptionsTab :option-fields="config.option_fields || []" />
+          </template>
+
           <!-- ExtJS component container -->
           <template v-else-if="tab.type === 'extjs'">
             <div :id="`ms3-product-tab-${tab.key}`" class="extjs-container"></div>
-          </template>
-
-          <!-- ExtJS Options with vtabs -->
-          <template v-else-if="tab.type === 'extjs-options'">
-            <div id="ms3-product-tab-options" class="extjs-container extjs-options-container"></div>
           </template>
 
           <!-- Plugin Vue component -->
@@ -430,10 +356,6 @@ onBeforeUnmount(() => {
 .extjs-container {
   min-height: 18.75rem;
   width: 100%;
-}
-
-.extjs-options-container {
-  min-height: 25rem;
 }
 
 /* Ensure ExtJS components fill their containers */
