@@ -611,6 +611,92 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Options CRUD (Settings → Options)
+    $router->group('/options', function($router) use ($modx) {
+        // Static routes must come before /{id} to avoid shadowing.
+        $router->get('/types', function() use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getTypes();
+        });
+        $router->get('/tree', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getTree($allParams);
+        });
+        $router->get('/modcategories', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getModcategories($allParams);
+        });
+        $router->post('/bulk/assign', function() use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->bulkAssign($data);
+        });
+        $router->delete('/bulk', function() use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->bulkDelete($data);
+        });
+
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getList($allParams);
+        });
+        $router->post('', function() use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->create($data);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->delete($params);
+        });
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
+    // Category → Options (link management for a specific category)
+    $router->group('/categories/{category_id}/options', function($router) use ($modx) {
+        $router->post('/sort', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['category_id'] = $params['category_id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\CategoryOptionsController($modx))->sort($data);
+        });
+        $router->post('/bulk', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['category_id'] = $params['category_id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\CategoryOptionsController($modx))->bulk($data);
+        });
+        $router->post('/duplicate', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['category_id'] = $params['category_id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\CategoryOptionsController($modx))->duplicate($data);
+        });
+
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+            return (new \MiniShop3\Controllers\Api\Manager\CategoryOptionsController($modx))->getList($allParams);
+        });
+        $router->post('', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['category_id'] = $params['category_id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\CategoryOptionsController($modx))->create($data);
+        });
+        $router->put('/{option_id}', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['category_id'] = $params['category_id'] ?? null;
+            $data['option_id'] = $params['option_id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\CategoryOptionsController($modx))->update($data);
+        });
+        $router->delete('/{option_id}', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\CategoryOptionsController($modx))->delete($params);
+        });
+    }, [
+        new PermissionMiddleware($modx, 'mscategory_save')
+    ]);
+
     // Statuses CRUD (for settings page)
     $router->group('/statuses', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
