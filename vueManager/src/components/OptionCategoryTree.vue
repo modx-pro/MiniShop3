@@ -1,5 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
+import Checkbox from 'primevue/checkbox'
 import ContextMenu from 'primevue/contextmenu'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
@@ -34,12 +35,20 @@ const emit = defineEmits(['update:modelValue'])
 const { _ } = useLexicon()
 
 const nodes = ref([])
-const selectionKeys = ref({})
 const expandedKeys = ref({})
 const loading = ref(false)
 const filterValue = ref('')
 const contextMenu = ref(null)
 const contextNode = ref(null)
+
+/**
+ * Independent checkbox state: Set<categoryId>.
+ * PrimeVue Tree with selection-mode=checkbox hard-codes parent↔child propagation with no
+ * opt-out (v4.3.1). We render a native PrimeVue Checkbox inside the node slot and manage
+ * selection ourselves — ticking a parent does NOT cascade to children, unticking a child
+ * does NOT unselect the parent.
+ */
+const checkedSet = ref(new Set())
 
 const contextMenuItems = computed(() => [
   {
@@ -102,9 +111,24 @@ function normalizeNode(row) {
     // PrimeVue treats presence of `children` (even empty) as "loaded" — keep undefined until we load.
   }
   if (row.checked) {
-    selectionKeys.value[node.key] = { checked: true, partialChecked: false }
+    checkedSet.value.add(row.id)
   }
   return node
+}
+
+function isChecked(node) {
+  return checkedSet.value.has(node.id)
+}
+
+function toggleNode(node, checked) {
+  const next = new Set(checkedSet.value)
+  if (checked) {
+    next.add(node.id)
+  } else {
+    next.delete(node.id)
+  }
+  checkedSet.value = next
+  emitSelection()
 }
 
 async function loadRoot() {
@@ -180,19 +204,19 @@ async function bulkToggleChecks(node, checked) {
   if (!node) return
   await ensureChildrenLoaded(node)
 
-  const next = { ...selectionKeys.value }
+  const next = new Set(checkedSet.value)
   function walk(n) {
     if (checked) {
-      next[n.key] = { checked: true, partialChecked: false }
+      next.add(n.id)
     } else {
-      delete next[n.key]
+      next.delete(n.id)
     }
     if (Array.isArray(n.children)) {
       n.children.forEach(walk)
     }
   }
   walk(node)
-  selectionKeys.value = next
+  checkedSet.value = next
   emitSelection()
 }
 
@@ -208,19 +232,8 @@ async function ensureChildrenLoaded(node) {
   }
 }
 
-function onSelectionChange() {
-  emitSelection()
-}
-
 function emitSelection() {
-  const ids = []
-  for (const key in selectionKeys.value) {
-    const val = selectionKeys.value[key]
-    if (val?.checked) {
-      ids.push(parseInt(key, 10))
-    }
-  }
-  emit('update:modelValue', ids)
+  emit('update:modelValue', Array.from(checkedSet.value))
 }
 
 function onNodeContextMenu(event, node) {
@@ -231,13 +244,7 @@ function onNodeContextMenu(event, node) {
 watch(
   () => props.modelValue,
   newIds => {
-    const next = {}
-    ;(newIds || []).forEach(id => {
-      next[String(id)] = { checked: true, partialChecked: false }
-    })
-    // Preserve partial-checked ancestors that the user hasn't explicitly ticked.
-    // PrimeVue recalculates them once children are expanded, so we only rewrite explicit picks here.
-    selectionKeys.value = next
+    checkedSet.value = new Set(newIds || [])
   },
   { deep: true }
 )
@@ -259,23 +266,25 @@ defineExpose({
     </IconField>
 
     <Tree
-      v-model:selection-keys="selectionKeys"
       v-model:expanded-keys="expandedKeys"
       :value="nodes"
-      selection-mode="checkbox"
       :loading="loading"
       :filter="true"
       filter-mode="lenient"
       :filter-value="filterValue"
-      :propagate-selection-up="false"
-      :propagate-selection-down="false"
       class="tree-body"
-      @update:selection-keys="onSelectionChange"
       @node-expand="onNodeExpand"
     >
       <template #default="{ node }">
-        <span class="tree-node-label" @contextmenu.prevent="onNodeContextMenu($event, node)">
-          {{ node.label }}
+        <span class="tree-node-row" @contextmenu.prevent="onNodeContextMenu($event, node)">
+          <Checkbox
+            :model-value="isChecked(node)"
+            :binary="true"
+            :input-id="'opt-cat-' + node.id"
+            class="tree-node-check"
+            @update:model-value="toggleNode(node, $event)"
+          />
+          <label :for="'opt-cat-' + node.id" class="tree-node-label">{{ node.label }}</label>
         </span>
       </template>
     </Tree>
@@ -305,8 +314,14 @@ defineExpose({
   border-radius: 0.375rem;
 }
 
+.vueApp .option-category-tree .tree-node-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .vueApp .option-category-tree .tree-node-label {
-  cursor: default;
+  cursor: pointer;
   user-select: none;
 }
 </style>
