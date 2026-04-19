@@ -131,6 +131,26 @@ $_lang['ms3_ft_selected_assign'] = 'Назначить в категорию';
 $_lang['ms3_options_remove_confirm'] = 'Вы уверены, что хотите удалить все выбранные опции? Значения этих опций в товарах будут удалены без возможности восстановления.';
 $_lang['ms3_category_options_assign'] = 'Назначить опции в категории.';
 
+/* Options (Vue refactor) */
+$_lang['ms3_option_create'] = 'Создать опцию';
+$_lang['ms3_option_update'] = 'Редактировать опцию';
+$_lang['ms3_option_created'] = 'Опция создана';
+$_lang['ms3_option_updated'] = 'Опция сохранена';
+$_lang['ms3_option_deleted'] = 'Опция удалена';
+$_lang['ms3_option_remove_confirm'] = 'Удалить эту опцию? Значения в товарах будут удалены без возможности восстановления.';
+$_lang['ms3_options_empty'] = 'Опций не найдено';
+$_lang['ms3_options_assign'] = 'Назначить в категории';
+$_lang['ms3_options_assign_hint'] = 'Выберите категории — в них будут созданы связи для выбранных опций (существующие останутся).';
+$_lang['ms3_options_assigned'] = 'Опции назначены категориям';
+$_lang['ms3_modcategory_filter'] = 'Группа (modCategory)';
+$_lang['ms3_copy_from_category'] = 'Исходная категория';
+$_lang['ms3_copy_category_hint'] = 'Опции, которые уже есть в текущей категории, будут пропущены. Значения опций у товаров будут обновлены автоматически.';
+$_lang['ms3_category_options_empty'] = 'Опций в этой категории ещё нет';
+$_lang['ms3_default_values'] = 'Значения';
+$_lang['ms3_add_value'] = 'Добавить значение';
+$_lang['ms3_actions'] = 'Действия';
+$_lang['ms3_categories'] = 'Категории';
+
 $_lang['ms3_ft_textfield'] = 'Текстовое поле';
 $_lang['ms3_ft_numberfield'] = 'Числовое поле';
 $_lang['ms3_ft_textarea'] = 'Текстовая область';

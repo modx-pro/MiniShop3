@@ -131,6 +131,26 @@ $_lang['ms3_ft_selected_assign'] = 'Assign to Category';
 $_lang['ms3_options_remove_confirm'] = 'Are you sure you want to delete all selected options? Values of these options in products will be deleted without possibility of recovery.';
 $_lang['ms3_category_options_assign'] = 'Assign options to category.';
 
+/* Options (Vue refactor) */
+$_lang['ms3_option_create'] = 'Create option';
+$_lang['ms3_option_update'] = 'Edit option';
+$_lang['ms3_option_created'] = 'Option created';
+$_lang['ms3_option_updated'] = 'Option saved';
+$_lang['ms3_option_deleted'] = 'Option deleted';
+$_lang['ms3_option_remove_confirm'] = 'Delete this option? Values assigned to products will be deleted permanently.';
+$_lang['ms3_options_empty'] = 'No options found';
+$_lang['ms3_options_assign'] = 'Assign to categories';
+$_lang['ms3_options_assign_hint'] = 'Pick categories — links for selected options will be created (existing ones stay).';
+$_lang['ms3_options_assigned'] = 'Options assigned to categories';
+$_lang['ms3_modcategory_filter'] = 'Group (modCategory)';
+$_lang['ms3_copy_from_category'] = 'Source category';
+$_lang['ms3_copy_category_hint'] = 'Options already linked to the current category are skipped. Product-level values are updated automatically.';
+$_lang['ms3_category_options_empty'] = 'No options linked to this category yet';
+$_lang['ms3_default_values'] = 'Values';
+$_lang['ms3_add_value'] = 'Add value';
+$_lang['ms3_actions'] = 'Actions';
+$_lang['ms3_categories'] = 'Categories';
+
 $_lang['ms3_ft_textfield'] = 'Text Field';
 $_lang['ms3_ft_numberfield'] = 'Number Field';
 $_lang['ms3_ft_textarea'] = 'Text Area';
