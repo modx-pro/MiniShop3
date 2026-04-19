@@ -2,9 +2,6 @@
 import { useLexicon } from '@vuetools/useLexicon'
 import Checkbox from 'primevue/checkbox'
 import ContextMenu from 'primevue/contextmenu'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
 import Tree from 'primevue/tree'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -37,7 +34,6 @@ const { _ } = useLexicon()
 const nodes = ref([])
 const expandedKeys = ref({})
 const loading = ref(false)
-const filterValue = ref('')
 const contextMenu = ref(null)
 const contextNode = ref(null)
 
@@ -260,18 +256,13 @@ defineExpose({
 
 <template>
   <div class="option-category-tree">
-    <IconField class="tree-filter">
-      <InputIcon><i class="pi pi-search" /></InputIcon>
-      <InputText v-model="filterValue" class="w-full" :placeholder="_('search') || 'Поиск'" />
-    </IconField>
-
     <Tree
       v-model:expanded-keys="expandedKeys"
       :value="nodes"
       :loading="loading"
       :filter="true"
       filter-mode="lenient"
-      :filter-value="filterValue"
+      :filter-placeholder="_('search') || 'Поиск'"
       class="tree-body"
       @node-expand="onNodeExpand"
     >
@@ -300,11 +291,6 @@ defineExpose({
   flex-direction: column;
   height: 100%;
   min-height: 20rem;
-}
-
-.vueApp .option-category-tree .tree-filter {
-  margin-bottom: 0.5rem;
-  display: block;
 }
 
 .vueApp .option-category-tree .tree-body {
