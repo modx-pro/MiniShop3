@@ -325,10 +325,24 @@ class OptionsController
             $checkedSet[$catId] = true;
         }
 
+        // Only msCategory nodes (same rule as legacy ExtJS Processors\Category\GetNodes).
+        // leaf is derived from a child-count subquery: a node is a leaf when it has no msCategory children.
         $q = $this->modx->newQuery(modResource::class);
-        $q->where(['parent' => $parent, 'deleted' => 0]);
-        $q->sortby('menuindex', 'ASC');
-        $q->select('id,pagetitle,menutitle,parent,isfolder,published,hidemenu,class_key');
+        $q->leftJoin(modResource::class, 'Child', [
+            'modResource.id = Child.parent',
+            'Child.class_key:LIKE' => '%msCategory',
+            'Child.deleted' => 0,
+        ]);
+        $q->where([
+            'modResource.parent' => $parent,
+            'modResource.deleted' => 0,
+            'modResource.class_key:LIKE' => '%msCategory',
+        ]);
+        $q->select('modResource.id, modResource.pagetitle, modResource.menutitle, '
+            . 'modResource.parent, modResource.published, modResource.hidemenu, modResource.class_key, '
+            . 'COUNT(Child.id) AS childrenCount');
+        $q->groupby('modResource.id');
+        $q->sortby('modResource.menuindex', 'ASC');
 
         $nodes = [];
         if ($q->prepare() && $q->stmt->execute()) {
@@ -337,7 +351,7 @@ class OptionsController
                 $nodes[] = [
                     'id' => $id,
                     'label' => $row['menutitle'] !== '' ? $row['menutitle'] : $row['pagetitle'],
-                    'leaf' => !(int)$row['isfolder'],
+                    'leaf' => (int)$row['childrenCount'] === 0,
                     'checked' => isset($checkedSet[$id]),
                     'class_key' => $row['class_key'],
                     'published' => (int)$row['published'],
