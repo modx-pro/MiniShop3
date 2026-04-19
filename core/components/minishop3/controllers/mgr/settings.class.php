@@ -1,7 +1,5 @@
 <?php
 
-use MiniShop3\Controllers\Options\Types\msOptionType;
-
 if (!class_exists('msManagerController')) {
     require_once dirname(__FILE__, 2) . '/manager.class.php';
 }
@@ -50,6 +48,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/vendors.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/statuses.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/links.min.css');
+        $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/options.min.css');
 
         // Vue modules with VueTools dependency check
         $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/deliveries.min.js');
@@ -57,26 +56,11 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/vendors.min.js');
         $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/statuses.min.js');
         $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/links.min.js');
-
-        // Options (ExtJS - not migrated yet)
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/grid.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/window.js');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/tree.js');
+        $this->addVueModule($this->ms3->config['jsUrl'] . 'mgr/vue-dist/options.min.js');
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/settings.panel.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/settings.js');
         $this->addJavascript(MODX_MANAGER_URL . 'assets/modext/util/datetime.js');
-
-        $types = $this->ms3->options->loadOptionTypeList();
-        foreach ($types as $type) {
-            $className = $this->ms3->options->loadOptionType($type);
-            if (class_exists($className)) {
-                /** @var msOptionType $className */
-                if ($className::$script) {
-                    $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/settings/option/types/' . $className::$script);
-                }
-            }
-        }
 
         $config = $this->ms3->config;
         $config['default_thumb'] = $this->ms3->config['defaultThumb'];

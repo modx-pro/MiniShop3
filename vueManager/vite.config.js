@@ -32,6 +32,7 @@ const ProdInput = {
   'payments': 'src/entries/payments.js',
   'vendors': 'src/entries/vendors.js',
   'statuses': 'src/entries/statuses.js',
+  'options': 'src/entries/options.js',
   'links': 'src/entries/links.js',
   'category-products': 'src/entries/category-products.js',
   'help': 'src/entries/help.js',
