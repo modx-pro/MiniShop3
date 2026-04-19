@@ -428,6 +428,7 @@ onMounted(() => {
     <!-- Create/Edit dialog -->
     <Dialog
       v-model:visible="dialogVisible"
+      class="ms3-option-dialog vueApp"
       :header="
         isNewOption
           ? _('ms3_option_create') || 'Создать опцию'
@@ -544,6 +545,7 @@ onMounted(() => {
     <!-- Bulk assign dialog -->
     <Dialog
       v-model:visible="assignDialogVisible"
+      class="ms3-option-dialog vueApp"
       :header="_('ms3_options_assign') || 'Назначить опции в категории'"
       modal
       :style="{ width: '32rem', height: '32rem' }"
@@ -617,38 +619,45 @@ onMounted(() => {
   color: var(--p-text-muted-color, #9ca3af);
 }
 
-.vueApp .options-grid-app .dialog-layout {
+/* Dialog is teleported out of .options-grid-app by PrimeVue — scope by .ms3-option-dialog instead */
+.ms3-option-dialog .dialog-layout {
   display: grid;
   grid-template-columns: 1fr 16rem;
   gap: 1rem;
   min-height: 28rem;
 }
 
-.vueApp .options-grid-app .dialog-form {
+.ms3-option-dialog .dialog-form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   min-width: 0;
 }
 
-.vueApp .options-grid-app .dialog-tree {
+.ms3-option-dialog .dialog-tree {
   border-left: 1px solid var(--p-content-border-color, #e5e7eb);
   padding-left: 1rem;
   display: flex;
   flex-direction: column;
 }
 
-.vueApp .options-grid-app .form-row {
+.ms3-option-dialog .form-row {
   display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ms3-option-dialog .form-row.two-cols {
+  flex-direction: row;
   gap: 0.75rem;
 }
 
-.vueApp .options-grid-app .form-row.two-cols > .form-field {
+.ms3-option-dialog .form-row.two-cols > .form-field {
   flex: 1;
   min-width: 0;
 }
 
-.vueApp .options-grid-app .form-field {
+.ms3-option-dialog .form-field {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -656,19 +665,23 @@ onMounted(() => {
   min-width: 0;
 }
 
-.vueApp .options-grid-app .form-field label {
+.ms3-option-dialog .form-field label {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--p-text-color, #374151);
 }
 
-.vueApp .options-grid-app .form-field .req {
+.ms3-option-dialog .form-field .req {
   color: var(--p-red-500, #ef4444);
 }
 
-.vueApp .options-grid-app .dialog-hint {
+.ms3-option-dialog .dialog-hint {
   margin-top: 0;
   color: var(--p-text-muted-color, #9ca3af);
   font-size: 0.9rem;
+}
+
+.ms3-option-dialog .option-category-tree {
+  min-height: 18rem;
 }
 </style>
