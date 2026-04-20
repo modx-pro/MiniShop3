@@ -55,6 +55,8 @@ class CategoryOptionsController
             $q->where([
                 'Option.key:LIKE' => "%{$query}%",
                 'OR:Option.caption:LIKE' => "%{$query}%",
+                'OR:msCategoryOption.caption:LIKE' => "%{$query}%",
+                'OR:msCategoryOption.description:LIKE' => "%{$query}%",
             ]);
         }
 
@@ -98,7 +100,9 @@ class CategoryOptionsController
             $categoryId,
             (string)($data['value'] ?? ''),
             (bool)($data['active'] ?? true),
-            $position
+            $position,
+            isset($data['caption']) && $data['caption'] !== '' ? (string)$data['caption'] : null,
+            isset($data['description']) && $data['description'] !== '' ? (string)$data['description'] : null
         );
 
         if (!$ok) {
@@ -143,12 +147,16 @@ class CategoryOptionsController
             return Response::error('Link not found', 404)->getData();
         }
 
-        // caption/description per-link overrides land here once PR #203 is merged.
-        $allowed = ['value', 'active', 'required', 'position'];
+        $allowed = ['value', 'active', 'required', 'position', 'caption', 'description'];
         foreach ($allowed as $field) {
-            if (array_key_exists($field, $data)) {
-                $link->set($field, $data[$field]);
+            if (!array_key_exists($field, $data)) {
+                continue;
             }
+            $value = $data[$field];
+            if (($field === 'caption' || $field === 'description') && $value === '') {
+                $value = null;
+            }
+            $link->set($field, $value);
         }
 
         if (!$link->save()) {
@@ -336,9 +344,22 @@ class CategoryOptionsController
 
     /**
      * Format a msCategoryOption row joined with msOption fields.
+     *
+     * Emits both the per-category override and the global msOption caption/description as well
+     * as the effective value that the storefront actually shows: non-empty override wins,
+     * otherwise the global value is used.
      */
     protected function formatRow(array $row): array
     {
+        $overrideCaption = $row['caption'] ?? null;
+        $overrideDescription = $row['description'] ?? null;
+        $globalCaption = (string)($row['global_caption'] ?? '');
+        $globalDescription = (string)($row['global_description'] ?? '');
+
+        $effectiveCaption = ($overrideCaption !== null && trim((string)$overrideCaption) !== '')
+            ? (string)$overrideCaption
+            : $globalCaption;
+
         return [
             'id' => (int)$row['id'],
             'option_id' => (int)$row['option_id'],
@@ -350,8 +371,11 @@ class CategoryOptionsController
             'key' => $row['key'],
             'type' => $row['type'],
             'measure_unit' => $row['measure_unit'] ?? null,
-            'caption' => (string)($row['global_caption'] ?? ''),
-            'description' => (string)($row['global_description'] ?? ''),
+            'caption' => $effectiveCaption,
+            'global_caption' => $globalCaption,
+            'global_description' => $globalDescription,
+            'category_caption' => $overrideCaption,
+            'category_description' => $overrideDescription,
             'properties' => $this->decodeJson($row['option_properties'] ?? null),
         ];
     }

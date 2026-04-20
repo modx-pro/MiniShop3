@@ -200,9 +200,19 @@ class OptionService
         int $categoryId,
         string $defaultValue = '',
         bool $active = true,
-        int $position = 0
+        int $position = 0,
+        ?string $caption = null,
+        ?string $description = null
     ): bool {
-        return $this->category->addToCategory($optionId, $categoryId, $defaultValue, $active, $position);
+        return $this->category->addToCategory(
+            $optionId,
+            $categoryId,
+            $defaultValue,
+            $active,
+            $position,
+            $caption,
+            $description
+        );
     }
 
     /**

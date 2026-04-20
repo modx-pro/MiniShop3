@@ -556,6 +556,8 @@
                default="0" index="index"/>
         <field key="required" dbtype="tinyint" precision="1" attributes="unsigned" phptype="boolean" null="false"
                default="0" index="index"/>
+        <field key="caption" dbtype="varchar" precision="191" phptype="string" null="true"/>
+        <field key="description" dbtype="text" phptype="string" null="true"/>
         <field key="value" dbtype="text" phptype="string" null="true" index="fulltext"/>
 
         <index alias="PRIMARY" name="PRIMARY" primary="true" unique="true" type="BTREE">

@@ -39,6 +39,8 @@ const addOptionId = ref(null)
 const addValue = ref('')
 const addActive = ref(true)
 const addRequired = ref(false)
+const addCaptionOverride = ref('')
+const addDescriptionOverride = ref('')
 const addSaving = ref(false)
 
 // Copy from category dialog
@@ -100,10 +102,21 @@ async function loadAvailableCategories() {
 
 async function saveCellEdit(event) {
   const { newData, field } = event
-  if (!['value', 'position'].includes(field)) return
+  // category_caption / category_description are per-link overrides on msCategoryOption
+  // that fall back to msOption.caption / .description when empty.
+  const editable = ['value', 'position', 'category_caption', 'category_description']
+  if (!editable.includes(field)) return
+
+  // Backend expects 'caption'/'description' for the per-link override (schema columns).
+  const serverField = field === 'category_caption'
+    ? 'caption'
+    : field === 'category_description'
+      ? 'description'
+      : field
+
   try {
     await request.put(`/api/mgr/categories/${props.categoryId}/options/${newData.option_id}`, {
-      [field]: newData[field],
+      [serverField]: newData[field],
     })
     const idx = links.value.findIndex(l => l.option_id === newData.option_id)
     if (idx >= 0) links.value[idx] = { ...links.value[idx], [field]: newData[field] }
@@ -171,6 +184,8 @@ function openAddDialog() {
   addValue.value = ''
   addActive.value = true
   addRequired.value = false
+  addCaptionOverride.value = ''
+  addDescriptionOverride.value = ''
   addDialogVisible.value = true
   loadAvailableOptions()
 }
@@ -184,6 +199,8 @@ async function addOption() {
       value: addValue.value,
       active: addActive.value,
       required: addRequired.value,
+      caption: addCaptionOverride.value,
+      description: addDescriptionOverride.value,
     })
     toast.add({ severity: 'success', summary: _('success') || 'OK', detail: 'Added', life: 3000 })
     addDialogVisible.value = false
@@ -344,7 +361,29 @@ onMounted(() => {
       <Column row-reorder header-style="width: 3rem" />
       <Column selection-mode="multiple" header-style="width: 3rem" />
       <Column field="key" :header="_('ms3_ft_name') || 'Ключ'" />
-      <Column field="caption" :header="_('ms3_ft_caption') || 'Название'" />
+      <Column field="global_caption" :header="_('ms3_global_caption') || 'Глобально'">
+        <template #body="{ data }">
+          <span style="opacity: 0.7">{{ data.global_caption }}</span>
+        </template>
+      </Column>
+      <Column
+        field="category_caption"
+        :header="_('ms3_category_option_caption_override') || 'Название (для категории)'"
+      >
+        <template #body="{ data }">
+          <span v-if="data.category_caption">{{ data.category_caption }}</span>
+          <span v-else style="opacity: 0.5; font-style: italic">—</span>
+        </template>
+        <template #editor="{ data, field }">
+          <InputText
+            v-model="data[field]"
+            class="w-full"
+            :placeholder="_('ms3_category_option_caption_override_desc') || 'Пусто: берётся глобальное'"
+            autofocus
+            @keyup.enter.stop
+          />
+        </template>
+      </Column>
       <Column :header="_('ms3_ft_type') || 'Тип'">
         <template #body="{ data }">{{ typeCaption(data.type) }}</template>
       </Column>
@@ -417,6 +456,32 @@ onMounted(() => {
       <div class="form-row">
         <label for="add-value">{{ _('ms3_default_value') || 'Значение по умолчанию' }}</label>
         <InputText id="add-value" v-model="addValue" class="w-full" />
+      </div>
+      <div class="form-row">
+        <label for="add-caption-override">
+          {{ _('ms3_category_option_caption_override') || 'Название (для категории)' }}
+        </label>
+        <InputText
+          id="add-caption-override"
+          v-model="addCaptionOverride"
+          class="w-full"
+          :placeholder="
+            _('ms3_category_option_caption_override_desc') || 'Пусто — берётся глобальное'
+          "
+        />
+      </div>
+      <div class="form-row">
+        <label for="add-description-override">
+          {{ _('ms3_category_option_description_override') || 'Описание (для категории)' }}
+        </label>
+        <InputText
+          id="add-description-override"
+          v-model="addDescriptionOverride"
+          class="w-full"
+          :placeholder="
+            _('ms3_category_option_description_override_desc') || 'Пусто — берётся глобальное'
+          "
+        />
       </div>
       <div class="form-row form-row-inline">
         <Checkbox v-model="addActive" input-id="add-active" binary />
