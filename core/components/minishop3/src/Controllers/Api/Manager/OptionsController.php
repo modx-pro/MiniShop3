@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
+use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
 use MiniShop3\Router\Response;
@@ -327,17 +328,16 @@ class OptionsController
 
         // Only msCategory nodes (same rule as legacy ExtJS Processors\Category\GetNodes).
         // leaf is derived from a child-count subquery: a node is a leaf when it has no msCategory children.
-        $msCategoryClass = 'MiniShop3\\Model\\msCategory';
         $q = $this->modx->newQuery(modResource::class);
         $q->leftJoin(modResource::class, 'Child', [
             'modResource.id = Child.parent',
-            'Child.class_key' => $msCategoryClass,
+            'Child.class_key' => msCategory::class,
             'Child.deleted' => 0,
         ]);
         $q->where([
             'modResource.parent' => $parent,
             'modResource.deleted' => 0,
-            'modResource.class_key' => $msCategoryClass,
+            'modResource.class_key' => msCategory::class,
         ]);
         $q->select('modResource.id, modResource.pagetitle, modResource.menutitle, '
             . 'modResource.parent, modResource.published, modResource.hidemenu, modResource.class_key, '

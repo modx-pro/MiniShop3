@@ -359,9 +359,14 @@ class CategoryOptionsController
         $globalCaption = (string)($row['global_caption'] ?? '');
         $globalDescription = (string)($row['global_description'] ?? '');
 
-        $effectiveCaption = ($overrideCaption !== null && trim((string)$overrideCaption) !== '')
-            ? (string)$overrideCaption
-            : $globalCaption;
+        // Use the same merge helper as the storefront overlay (OptionLoaderService): non-empty
+        // trimmed override wins, otherwise fall back to global. Keeps admin/grid in sync with
+        // the value users actually see on site — trailing whitespace doesn't sneak through.
+        $loader = $this->optionService->getLoader();
+        $effectiveCaption = $loader->mergeCaptionDescription(
+            $overrideCaption !== null ? (string)$overrideCaption : null,
+            $globalCaption
+        );
 
         return [
             'id' => (int)$row['id'],
