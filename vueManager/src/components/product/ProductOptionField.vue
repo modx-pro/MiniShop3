@@ -211,15 +211,10 @@ const multiArrayValue = computed({
         class="w-full"
         @change="onChange"
       />
-      <input
-        v-for="(v, i) in multiArrayValue"
-        :key="i"
-        type="hidden"
-        :name="`${fieldName}[]`"
-        :value="v"
-      />
-      <!-- Empty marker to keep POST field present even when unset -->
-      <input v-if="multiArrayValue.length === 0" type="hidden" :name="`${fieldName}[]`" value="" />
+      <!-- One hidden input with JSON array payload: ExtJS BasicForm.getValues() reads only -->
+      <!-- the last DOM input for a given name, which would drop all but the last pick when -->
+      <!-- using {name}[] siblings. The Product Update/Create processor decodes this JSON. -->
+      <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
     <!-- ComboColors (multi with color swatches) -->
@@ -239,14 +234,7 @@ const multiArrayValue = computed({
           <span>{{ slot.option.label }}</span>
         </template>
       </MultiSelect>
-      <input
-        v-for="(v, i) in multiArrayValue"
-        :key="i"
-        type="hidden"
-        :name="`${fieldName}[]`"
-        :value="v"
-      />
-      <input v-if="multiArrayValue.length === 0" type="hidden" :name="`${fieldName}[]`" value="" />
+      <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
     <!-- ComboOptions (free-form multi tags with autocomplete) -->
@@ -263,14 +251,7 @@ const multiArrayValue = computed({
         placeholder="Введите значения"
         @change="onChange"
       />
-      <input
-        v-for="(v, i) in multiArrayValue"
-        :key="i"
-        type="hidden"
-        :name="`${fieldName}[]`"
-        :value="v"
-      />
-      <input v-if="multiArrayValue.length === 0" type="hidden" :name="`${fieldName}[]`" value="" />
+      <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
     <!-- Datefield -->
