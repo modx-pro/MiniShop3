@@ -130,6 +130,26 @@ async function loadSuggestions(event) {
     suggestions.value = []
   }
 }
+
+/**
+ * PrimeVue AutoComplete in multiple mode only adds a token on Enter when it matches a
+ * suggestion. For comboOptions we want the user to be able to add any free-form string,
+ * so Enter on an unmatched input value is picked up here and pushed into the model.
+ */
+function onAutocompleteKeydown(event) {
+  if (event.key !== 'Enter') return
+  const input = event.target
+  const typed = (input?.value || '').trim()
+  if (typed === '') return
+
+  event.preventDefault()
+  const current = Array.isArray(value.value) ? value.value : []
+  if (!current.includes(typed)) {
+    value.value = [...current, typed]
+    onChange()
+  }
+  input.value = ''
+}
 </script>
 
 <template>
@@ -274,6 +294,7 @@ async function loadSuggestions(event) {
         placeholder="Введите значение и нажмите Enter"
         @complete="loadSuggestions"
         @change="onChange"
+        @keydown="onAutocompleteKeydown"
       />
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
