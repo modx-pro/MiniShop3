@@ -154,6 +154,7 @@ $_lang['ms3_copy_category_hint'] = 'Options already linked to the current catego
 $_lang['ms3_category_options_empty'] = 'No options linked to this category yet';
 $_lang['ms3_default_values'] = 'Values';
 $_lang['ms3_add_value'] = 'Add value';
+$_lang['ms3_combo_options_chips_placeholder'] = 'Type a value — Enter, comma, or click outside to add';
 $_lang['ms3_actions'] = 'Actions';
 $_lang['ms3_categories'] = 'Categories';
 

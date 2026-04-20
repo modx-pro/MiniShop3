@@ -1,4 +1,5 @@
 <script setup>
+import { useLexicon } from '@vuetools/useLexicon'
 import Checkbox from 'primevue/checkbox'
 import DatePicker from 'primevue/datepicker'
 import InputChips from 'primevue/inputchips'
@@ -12,6 +13,8 @@ import { computed, ref, watch } from 'vue'
 const props = defineProps({
   option: { type: Object, required: true },
 })
+
+const { _ } = useLexicon()
 
 const emit = defineEmits(['change'])
 
@@ -96,10 +99,10 @@ const selectOptions = computed(() => {
   })
 })
 
-const booleanOptions = [
-  { label: 'Да', value: 1 },
-  { label: 'Нет', value: 0 },
-]
+const booleanOptions = computed(() => [
+  { label: _('yes') || 'Да', value: 1 },
+  { label: _('no') || 'Нет', value: 0 },
+])
 
 const multiArrayValue = computed({
   get: () => (Array.isArray(value.value) ? value.value : []),
@@ -247,7 +250,7 @@ const multiArrayValue = computed({
         class="w-full"
         separator=","
         :add-on-blur="true"
-        placeholder="Введите значение — Enter, запятая или клик вне поля добавят его"
+        :placeholder="_('ms3_combo_options_chips_placeholder') || 'Введите значение — Enter, запятая или клик вне поля добавят его'"
         @add="onChange"
         @remove="onChange"
       />

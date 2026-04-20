@@ -42,7 +42,19 @@ class CategoryOptionsController
 
         $query = trim((string)($params['query'] ?? ''));
 
-        $q = $this->modx->newQuery(msCategoryOption::class, ['category_id' => $categoryId]);
+        $criteria = ['category_id' => $categoryId];
+        if ($query !== '') {
+            // Wrap OR-conditions into a nested array so xPDO groups them as (a OR b OR c OR d)
+            // and the AND with category_id stays correct.
+            $criteria[] = [
+                'Option.key:LIKE' => "%{$query}%",
+                'OR:Option.caption:LIKE' => "%{$query}%",
+                'OR:msCategoryOption.caption:LIKE' => "%{$query}%",
+                'OR:msCategoryOption.description:LIKE' => "%{$query}%",
+            ];
+        }
+
+        $q = $this->modx->newQuery(msCategoryOption::class, $criteria);
         $q->innerJoin(msOption::class, 'Option');
         $q->select($this->modx->getSelectColumns(msCategoryOption::class, 'msCategoryOption'));
         $q->select(
@@ -50,15 +62,6 @@ class CategoryOptionsController
             . 'Option.caption AS global_caption, Option.description AS global_description, '
             . 'Option.measure_unit, Option.properties AS option_properties'
         );
-
-        if ($query !== '') {
-            $q->where([
-                'Option.key:LIKE' => "%{$query}%",
-                'OR:Option.caption:LIKE' => "%{$query}%",
-                'OR:msCategoryOption.caption:LIKE' => "%{$query}%",
-                'OR:msCategoryOption.description:LIKE' => "%{$query}%",
-            ]);
-        }
 
         $total = $this->modx->getCount(msCategoryOption::class, $q);
         $q->sortby('msCategoryOption.position', 'ASC');
