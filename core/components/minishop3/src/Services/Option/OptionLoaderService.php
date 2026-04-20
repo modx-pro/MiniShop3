@@ -297,30 +297,33 @@ class OptionLoaderService
     }
 
     /**
-     * Convert preloaded values to format expected by option type
+     * Convert preloaded values to format expected by option type.
      *
-     * Different option types expect different value formats:
-     * - Textfield, Combobox: single value (string or null)
-     * - ComboMultiple: array of objects [['value' => 'S'], ['value' => 'M']]
+     * - Multi-value types (comboMultiple, comboColors, comboOptions): return all values
+     *   as [['value' => 'S'], ['value' => 'M']]
+     * - Scalar types (textfield, numberfield, combobox, comboBoolean, etc.): return first value
+     *
+     * msOption.type is stored lowerCamelCase (numberfield, comboMultiple, …), so match
+     * case-insensitively — the legacy 'ComboMultiple' string match dropped all but the first
+     * value when reloading the product form.
      *
      * @param array $values Array of values from getValuesForProduct()
-     * @param string $optionType Option type (Textfield, Combobox, ComboMultiple, etc.)
+     * @param string $optionType Option type
      * @return mixed Converted value
      */
     protected function convertPreloadedValue(array $values, string $optionType)
     {
-        // ComboMultiple expects array of objects: [['value' => 'S'], ['value' => 'M']]
-        if ($optionType === 'ComboMultiple') {
+        $multiTypes = ['combomultiple', 'combocolors', 'combooptions'];
+        if (in_array(strtolower($optionType), $multiTypes, true)) {
             $result = [];
             foreach ($values as $val) {
-                if ($val !== '') {  // Skip empty values
+                if ($val !== '') {
                     $result[] = ['value' => $val];
                 }
             }
             return $result;
         }
 
-        // Other types (Textfield, Combobox, Numberfield, etc.) expect single value
         return !empty($values) ? $values[0] : null;
     }
 }
