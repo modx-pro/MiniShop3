@@ -435,14 +435,22 @@ class OptionsController
 
     /**
      * Apply only writable fields from incoming payload onto the msOption object.
+     *
+     * modcategory_id is NOT NULL in the schema but user may clear the dropdown,
+     * so we coerce null → 0 for that one field.
      */
     protected function applyWritableFields(msOption $option, array $data): void
     {
         $allowed = ['key', 'caption', 'description', 'measure_unit', 'modcategory_id', 'type', 'properties'];
         foreach ($allowed as $field) {
-            if (array_key_exists($field, $data)) {
-                $option->set($field, $data[$field]);
+            if (!array_key_exists($field, $data)) {
+                continue;
             }
+            $value = $data[$field];
+            if ($field === 'modcategory_id' && ($value === null || $value === '')) {
+                $value = 0;
+            }
+            $option->set($field, $value);
         }
     }
 
