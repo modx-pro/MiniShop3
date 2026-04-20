@@ -1,7 +1,7 @@
 <script setup>
 import Checkbox from 'primevue/checkbox'
-import Chips from 'primevue/chips'
 import DatePicker from 'primevue/datepicker'
+import InputChips from 'primevue/inputchips'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import MultiSelect from 'primevue/multiselect'
@@ -241,12 +241,13 @@ const multiArrayValue = computed({
 
     <!-- ComboOptions (free-form multi tags) -->
     <template v-else-if="optionType === 'combooptions'">
-      <Chips
+      <InputChips
         v-model="multiArrayValue"
         :input-id="fieldId"
         class="w-full"
         separator=","
-        placeholder="Введите значение, Enter или запятая — добавить"
+        :add-on-blur="true"
+        placeholder="Введите значение — Enter, запятая или клик вне поля добавят его"
         @add="onChange"
         @remove="onChange"
       />
