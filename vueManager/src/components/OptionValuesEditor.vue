@@ -1,6 +1,7 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
+import ColorPicker from 'primevue/colorpicker'
 import InputText from 'primevue/inputtext'
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
@@ -65,6 +66,21 @@ function onDragEnd(event) {
 function isValidHex(hex) {
   return typeof hex === 'string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex.trim())
 }
+
+/**
+ * PrimeVue ColorPicker uses hex without '#'; option.properties stores it with '#'.
+ * These adapters keep the storage contract ('#FF0000') while giving the picker
+ * the format it expects ('FF0000').
+ */
+function hexWithoutHash(v) {
+  if (typeof v !== 'string') return ''
+  return v.replace(/^#/, '')
+}
+
+function hexWithHash(v) {
+  if (typeof v !== 'string' || v === '') return ''
+  return v.startsWith('#') ? v : '#' + v
+}
 </script>
 
 <template>
@@ -97,15 +113,13 @@ function isValidHex(hex) {
               placeholder="Название"
               @update:model-value="updateColor(index, 'value', $event)"
             />
-            <span
-              class="color-swatch"
-              :class="{ invalid: !isValidHex(items[index]?.name) && items[index]?.name }"
-              :style="{
-                backgroundColor: isValidHex(items[index]?.name)
-                  ? items[index]?.name
-                  : 'transparent',
-              }"
-            ></span>
+            <ColorPicker
+              :model-value="hexWithoutHash(items[index]?.name)"
+              format="hex"
+              class="value-picker"
+              :pt="{ input: { class: !isValidHex(items[index]?.name) && items[index]?.name ? 'invalid' : '' } }"
+              @update:model-value="updateColor(index, 'name', hexWithHash($event))"
+            />
             <InputText
               :model-value="items[index]?.name || ''"
               class="value-input value-input-hex"
@@ -184,18 +198,20 @@ function isValidHex(hex) {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-.vueApp .option-values-editor .color-swatch {
-  display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 0.25rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+.vueApp .option-values-editor .value-picker {
   flex-shrink: 0;
 }
 
-.vueApp .option-values-editor .color-swatch.invalid {
+.vueApp .option-values-editor .value-picker .p-colorpicker-preview {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.vueApp .option-values-editor .value-picker .p-colorpicker-preview.invalid {
   border-color: var(--p-red-500, #ef4444);
-  background: repeating-linear-gradient(45deg, #fee, #fee 2px, transparent 2px, transparent 4px);
 }
 
 .vueApp .option-values-editor .add-button {
