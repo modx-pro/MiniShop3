@@ -8,24 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.10.0-beta1]
 
 ### Added
-- Full Vue migration of product options management (Settings → Options, Category → Options tab, Product → Options tab) replacing the legacy ExtJS UI.
+- Full Vue migration of product options management (Settings → Options, Category → Options tab, Product → Options tab) replacing the legacy ExtJS UI (#205).
 - REST API for options: `/api/mgr/options` (CRUD + tree, types, modcategories, suggestions, bulk assign/delete) and `/api/mgr/categories/{id}/options` (CRUD + sort + bulk + duplicate from another category).
 - Settings → Options Vue screen: DataTable grid, MODX category tree (PrimeVue Tree) with independent checkboxes and context menu (refresh, expand/collapse subtree, select/clear all), create/edit dialog with category assignment tree and values editor for combobox/comboMultiple/comboColors (drag-drop sort, PrimeVue ColorPicker).
 - Category → Options Vue tab: link grid with drag-drop reorder, inline default-value editor, bulk activate/deactivate/require/unrequire/remove, `Add option` and `Copy from category` dialogs.
-- Product → Options Vue tab: universal ProductOptionField that renders all 10 option types; comboOptions now uses PrimeVue InputChips (Enter / comma / blur commit) with a `/api/mgr/options/suggestions` backend endpoint for other-product value reuse.
-- `msOptionType::getSchema()` — declarative schema API replacing ExtJS JS-string output; option_fields now ship both legacy `ext_field` and new `schema`.
+- Product → Options Vue tab: universal ProductOptionField that renders all 10 option types; comboOptions uses PrimeVue InputChips (Enter / comma / blur commit) with a suggestions strip below the field powered by `/api/mgr/options/suggestions`.
+- Per-category caption/description override on `ms3_category_options` (#200): non-empty override wins over the global `msOption.caption/description` both in the storefront overlay and the admin. Inline-editable column in the category options grid + fields in the Add Option dialog. Batch prefetch avoids N+1 for `loadForProducts`.
+- `msOptionType::getSchema()` — declarative schema API replacing ExtJS JS-string output; option_fields ship both legacy `ext_field` and new `schema`.
+- Self-heal migration `20260420120000_repair_order_model_fields_if_missing` (#201): if `SeedModelFields` / `SeedModelFieldSections` did not fully complete (admin showed `ms3_model_fields_empty`), the migration re-seeds only the missing `msOrder` / `msOrderAddress` records. User customizations are preserved — the update is guarded by `WHERE section_id IS NULL`.
 
 ### Refactored
 - Deleted 7 ExtJS UI files (settings/option/* + category/option.*) and 22 PHP processors (Settings/Option, Category/Option), ~2600 lines of legacy code.
+- Order edit screen: provide/inject instead of props chain (#196, #204). `ORDER_CONTEXT_KEY` symbol provides the shared ref/action/helpers set to all tabs; composables `useOrderFormatters`, `useOrderFieldHelpers`, `useOrderLogFormatters` extract what used to be inline helpers. Tabs receive only tab-specific data via props.
 - Product form multi-value option POST: single hidden JSON field instead of `name[]` siblings (ExtJS BasicForm.getValues() only kept the last DOM match, silently dropping extras). Server-side decoding via `Utils::decodeOptionValue()` in `Processors\\Product\\Update` and `Processors\\Product\\Create`.
 - `OptionLoaderService::convertPreloadedValue()` match is now case-insensitive and covers all three multi-value types (comboMultiple, comboColors, comboOptions) — previously only strict `ComboMultiple` matched, truncating reloaded arrays to their first value.
 
 ### Fixed
-- Checkbox-type options on the product form no longer render as a 25%-wide sliver on top-aligned labels (the root cause, `anchor: '25%'` in legacy ms3.utils.js, is gone along with the ExtJS UI).
-- Category tree in the options dialog no longer lists non-category resources; filters by `class_key LIKE '%msCategory'` and uses an accurate COUNT-based leaf flag instead of `isfolder`.
-- Independent checkboxes in category tree: selecting/deselecting a parent no longer cascades to children (PrimeVue Tree's default propagation was replaced by a custom checkbox render).
+- Removed product option reappeared on save (#199, #202): `removeOther=true` is now used for the explicit options array from the form POST so keys absent after deletion/copy are removed from `msProductOption`. JSON-only auto-sync still forces `removeOther=false` to preserve category-only options (regression guard for #153/#158).
+- Checkbox-type options on the product form no longer render as a 25%-wide sliver on top-aligned labels (root cause `anchor: '25%'` in legacy ms3.utils.js is gone along with the ExtJS UI).
+- Category tree in the options dialog no longer lists non-category resources; filters by `class_key = MiniShop3\\Model\\msCategory` (exact) and uses an accurate COUNT-based leaf flag instead of `isfolder`.
+- Independent checkboxes in category tree: selecting/deselecting a parent no longer cascades to children (PrimeVue Tree's default propagation replaced by a custom checkbox render).
 - Optional `modcategory_id` on option create/update (null/empty payload is coerced to 0 for the NOT NULL column).
-- Dialog styles now apply in teleported PrimeVue Dialog markup (class='ms3-option-dialog vueApp' on the dialog root + .ms3-option-dialog-scoped selectors).
+- Dialog styles now apply in teleported PrimeVue Dialog markup (class='ms3-option-dialog vueApp' on the dialog root + .ms3-option-dialog scoped selectors).
+- DatePicker for `datefield` no longer sends a day-early value — `toISOString()` (UTC) replaced by local `getFullYear/getMonth/getDate` when serializing into the hidden POST field.
 
 ## [1.9.0-beta1]
 
