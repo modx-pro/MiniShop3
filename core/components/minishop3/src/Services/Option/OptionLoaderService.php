@@ -163,13 +163,16 @@ class OptionLoaderService
         // Join MODX category for category_name (for grouping in admin UI)
         $c->leftJoin(modCategory::class, '`Category`', '`Category`.id = `msOption`.modcategory_id');
 
+        // Exclude msCategoryOption.caption/description from the select — after PR #203 these
+        // columns shadow msOption.caption/description during xPDO hydration and leave the option
+        // labels empty. The per-category override is layered on top via the overlay below.
         $c->select([
             $this->xpdo->getSelectColumns(msOption::class, '`msOption`'),
             $this->xpdo->getSelectColumns(
                 msCategoryOption::class,
                 '`msCategoryOption`',
                 '',
-                ['id', 'option_id', 'category_id'],
+                ['id', 'option_id', 'category_id', 'caption', 'description'],
                 true
             ),
             '`Category`.category AS `category_name`',
