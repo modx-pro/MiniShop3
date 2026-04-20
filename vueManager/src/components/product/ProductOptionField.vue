@@ -268,7 +268,8 @@ async function loadSuggestions(event) {
         :input-id="fieldId"
         :suggestions="suggestions"
         multiple
-        :typeahead="false"
+        :min-length="1"
+        :delay="200"
         class="w-full"
         placeholder="Введите значение и нажмите Enter"
         @complete="loadSuggestions"
