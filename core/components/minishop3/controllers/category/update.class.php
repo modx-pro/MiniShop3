@@ -61,14 +61,14 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/category.common.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/category/option.grid.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/category/option.windows.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/update.js');
 
-        // Vue Category Products Grid with VueTools dependency check
+        // Vue modules with VueTools dependency check
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-products.min.css');
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-options.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-products.min.js');
+        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-options.min.js');
 
         $config = array(
             'assets_url' => $this->ms3->config['assetsUrl'],

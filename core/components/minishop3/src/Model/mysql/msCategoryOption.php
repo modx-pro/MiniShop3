@@ -20,6 +20,8 @@ class msCategoryOption extends \MiniShop3\Model\msCategoryOption
                 'position' => 0,
                 'active' => 0,
                 'required' => 0,
+                'caption' => null,
+                'description' => null,
                 'value' => null,
             ],
         'fieldMeta' =>
@@ -70,6 +72,19 @@ class msCategoryOption extends \MiniShop3\Model\msCategoryOption
                         'null' => false,
                         'default' => 0,
                         'index' => 'index',
+                    ],
+                'caption' =>
+                    [
+                        'dbtype' => 'varchar',
+                        'precision' => '191',
+                        'phptype' => 'string',
+                        'null' => true,
+                    ],
+                'description' =>
+                    [
+                        'dbtype' => 'text',
+                        'phptype' => 'string',
+                        'null' => true,
                     ],
                 'value' =>
                     [

@@ -102,7 +102,9 @@ class OptionCategoryService
         int $categoryId,
         string $defaultValue = '',
         bool $active = true,
-        int $position = 0
+        int $position = 0,
+        ?string $caption = null,
+        ?string $description = null
     ): bool {
         // Check if link already exists
         $existing = $this->xpdo->getObject(msCategoryOption::class, [
@@ -115,6 +117,12 @@ class OptionCategoryService
             $existing->set('value', $defaultValue);
             $existing->set('active', $active);
             $existing->set('position', $position);
+            if ($caption !== null) {
+                $existing->set('caption', $caption === '' ? null : $caption);
+            }
+            if ($description !== null) {
+                $existing->set('description', $description === '' ? null : $description);
+            }
             return $existing->save();
         }
 
@@ -125,6 +133,8 @@ class OptionCategoryService
         $link->set('value', $defaultValue);
         $link->set('active', $active);
         $link->set('position', $position);
+        $link->set('caption', $caption === null || $caption === '' ? null : $caption);
+        $link->set('description', $description === null || $description === '' ? null : $description);
 
         // Auto-assignment to products will be triggered by lifecycle hook save()
         return $link->save();

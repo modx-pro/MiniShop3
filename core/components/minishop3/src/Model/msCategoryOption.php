@@ -12,6 +12,8 @@ use xPDO\Om\xPDOObject;
  * @property integer $position
  * @property boolean $active
  * @property boolean $required
+ * @property string|null $caption Per-category caption override; null/empty inherits msOption.caption
+ * @property string|null $description Per-category description override; null/empty inherits msOption.description
  * @property string $value
  *
  * @package MiniShop3\Model

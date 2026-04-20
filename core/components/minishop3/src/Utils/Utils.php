@@ -247,6 +247,28 @@ class Utils
         return $optionKey !== '' ? $optionKey : null;
     }
 
+    /**
+     * Decode an option value coming from the product form.
+     *
+     * Multi-value option types (comboMultiple, comboColors, comboOptions) post their value as a
+     * JSON-encoded array in a single hidden input, because ExtJS BasicForm.getValues() reads only
+     * the last matching DOM node for a given name — which would drop all but one pick if we used
+     * repeated name[] inputs. All other types post a scalar string or a native array. This helper
+     * turns a JSON array string back into an array and leaves other shapes untouched.
+     *
+     * @param mixed $value Raw POST value
+     * @return mixed Array if value was a JSON array string, otherwise the value unchanged.
+     */
+    public static function decodeOptionValue($value)
+    {
+        if (!is_string($value) || $value === '' || $value[0] !== '[') {
+            return $value;
+        }
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : $value;
+    }
+
     public static function getVendorId($modx, $name)
     {
         $criteria = [

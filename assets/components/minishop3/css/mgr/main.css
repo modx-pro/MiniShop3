@@ -420,21 +420,14 @@ a.x-menu-item .x-menu-item-text .icon {
     overflow: hidden;
 }
 
-#ms3-categories-tree .x-tree-node-el,
-#options .x-tree-node-el,
-#ms3-window-option-update-option-categories .x-tree-node-el,
-#ms3-window-option-create .x-tree-node-el {
+#ms3-categories-tree .x-tree-node-el {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 2px;
 }
 
-#ms3-categories-tree .x-tree-node-el .x-tree-ec-icon,
-#options .x-tree-node-el .x-tree-ec-icon,
-#ms3-window-option-update-option-categories .x-tree-node-el .x-tree-ec-icon,
-#ms3-window-option-create .x-tree-node-el .x-tree-ec-icon
-{
+#ms3-categories-tree .x-tree-node-el .x-tree-ec-icon {
     height: auto;
 }
 

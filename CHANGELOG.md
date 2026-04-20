@@ -17,6 +17,37 @@
 
 ## Апрель 2026
 
+### 🚀 Версия 1.10.0-beta1
+
+**Тип релиза:** MINOR (beta) — полный перевод управления опциями с ExtJS на Vue
+
+---
+
+#### ✨ Добавлено
+
+**Управление опциями товара полностью на Vue (несколько PR):**
+- `Настройки → Опции` — грид (DataTable), дерево категорий MODX (`PrimeVue Tree`) с независимыми чекбоксами и контекстным меню (обновить / развернуть / свернуть / выделить все вложенные / снять все), диалог создания-редактирования с формой и деревом категорий для привязки, редактор значений для `combobox` / `comboMultiple` / `comboColors` (drag-drop сортировка через `vuedraggable`, `PrimeVue ColorPicker` для цветов)
+- `Категория товара → вкладка Опции` — Vue-грид привязок: drag-drop сортировка (`rowReorder`), inline-редактор поля «Значение по умолчанию», массовые действия (активировать / деактивировать / обязательная / необязательная / удалить), диалоги «Добавить опцию» и «Копировать опции из другой категории»
+- `Карточка товара → вкладка Опции товара` — универсальный рендер всех 10 типов (textfield, numberfield, textarea, checkbox, comboBoolean, combobox, comboMultiple, comboColors, comboOptions, datefield); `comboOptions` работает как чипы (PrimeVue `InputChips`) с автодобавлением по Enter / запятой / blur
+- REST API `/api/mgr/options/*` и `/api/mgr/categories/{id}/options/*` заменил legacy `Processors/Settings/Option/*` и `Processors/Category/Option/*`
+- Decl. schema API в `msOptionType::getSchema()` — backend отдаёт декларативное описание типа вместо ExtJS JS-строк
+
+#### ♻️ Рефакторинг
+
+- Удалены 7 ExtJS-файлов (`settings/option/*`, `category/option.*`) и 22 PHP-процессора (~2600 строк устаревшего кода)
+- `OptionLoaderService::convertPreloadedValue` — case-insensitive матч типов; multi-значения теперь корректно восстанавливаются при reload для `comboMultiple`, `comboColors`, `comboOptions` (раньше возвращалось только первое)
+- Multi-value опции товара отправляются одним hidden input с JSON-массивом + декодирование на сервере через `Utils::decodeOptionValue()` — обход ограничения `ExtJS BasicForm.getValues()`, который читал только последний input при нескольких hidden с одинаковым name
+- `ProductTabs.vue` — вкладка опций больше не монтирует `Ext.create('modx-vtabs')` + `ms3.utils.getExtField()`, всё рендерится Vue-компонентом `ProductOptionsTab` с вертикальными группами по `modcategory_id`
+
+#### 🐛 Исправлено
+
+- Checkbox-опции товара `boolean`/`modx-combo-boolean`/`combo-boolean` отображались узкой полоской («V\|») при `labelAlign: 'top'` — регрессия `anchor: '25%'` из `ms3.utils.js`; старый путь удалён вместе с ExtJS UI, опции теперь рендерятся через PrimeVue
+- Дерево категорий в старом ExtJS-диалоге опций выводило все resource'ы и ориентировалось на `isfolder` — в Vue-дереве фильтр `class_key LIKE '%msCategory'` и leaf по `COUNT(Child.id)`
+- Множественный выбор в `comboMultiple`/`comboColors` в старом коде терял все значения кроме последнего при сохранении товара
+- `modcategory_id` опции можно очистить (null коэрсится в 0, поле больше не обязательно)
+
+---
+
 ### 🚀 Версия 1.9.0-beta1
 
 **Тип релиза:** MINOR (beta) — vendor extra fields, ms3_cart status sync, рефакторинг опций и заказа

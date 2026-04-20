@@ -53,7 +53,7 @@ class Create extends CreateProcessor
         foreach ($properties as $key => $value) {
             $optionKey = Utils::extractOptionKey($key);
             if ($optionKey !== null) {
-                $options[$optionKey] = $value;
+                $options[$optionKey] = Utils::decodeOptionValue($value);
                 $this->unsetProperty($key);
             }
         }

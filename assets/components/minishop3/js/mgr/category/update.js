@@ -168,6 +168,7 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
     },
 
     addOptions: function (config, items) {
+        var categoryId = config['record'] ? config['record']['id'] : 0;
         return [{
             layout: 'form',
             items: [items, {
@@ -175,9 +176,9 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
                 style: 'margin-top: 20px',
                 border: false,
             }, {
-                xtype: 'ms3-grid-category-option',
-                border: false,
-                record: config['record'],
+                xtype: 'container',
+                cls: 'main-wrapper',
+                html: '<div id="ms3-vue-category-options" class="vueApp" data-category-id="' + categoryId + '"></div>',
             }]
         }];
     },

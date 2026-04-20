@@ -127,4 +127,18 @@ class msOption extends xPDOSimpleObject
             return null;
         }
     }
+
+    /**
+     * Declarative schema for Vue renderer (see msOptionType::getSchema()).
+     *
+     * @param array $field
+     * @return array|null
+     */
+    public function getSchema(array $field): ?array
+    {
+        /** @var msOptionType $type */
+        $type = $this->ms3->options->getOptionType($this);
+
+        return $type ? $type->getSchema($field) : null;
+    }
 }

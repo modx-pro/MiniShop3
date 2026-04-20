@@ -100,16 +100,9 @@ ms3.panel.Settings = function (config) {
                     html: _('ms3_options_intro'),
                     bodyCssClass: 'panel-desc',
                 }, {
-                    layout: 'column',
+                    xtype: 'container',
                     cls: 'main-wrapper',
-                    items: [{
-                        xtype: 'ms3-tree-option-categories',
-                        optionGrid: 'ms3-grid-option',
-                        columnWidth: .25
-                    }, {
-                        xtype: 'ms3-grid-option',
-                        columnWidth: .75,
-                    }]
+                    html: '<div id="ms3-vue-options" class="vueApp"></div>',
                 }]
             }]
         }]
