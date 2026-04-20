@@ -10,6 +10,8 @@ import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import { computed, ref, watch } from 'vue'
 
+import request from '../../request.js'
+
 const props = defineProps({
   option: { type: Object, required: true },
 })
@@ -126,6 +128,53 @@ const multiArrayValue = computed({
   },
 })
 
+/**
+ * Distinct values already saved for this option key by other products. Shown under the
+ * InputChips as clickable pills — the autocomplete flavor of the comboOptions type.
+ * Loaded lazily on the first keystroke and re-filtered client-side as the user types
+ * so we don't spam the server on every key.
+ */
+const suggestions = ref([])
+const suggestionsLoaded = ref(false)
+let comboOptionsInputEl = null
+
+async function loadComboOptionsSuggestions() {
+  if (optionType.value !== 'combooptions' || suggestionsLoaded.value) return
+  suggestionsLoaded.value = true
+  try {
+    const r = await request.get('/api/mgr/options/suggestions', {
+      key: props.option.key,
+      limit: 100,
+    })
+    suggestions.value = Array.isArray(r?.results) ? r.results : []
+  } catch {
+    suggestions.value = []
+  }
+}
+
+function onComboOptionsKeyup(event) {
+  if (!comboOptionsInputEl && event?.target) {
+    comboOptionsInputEl = event.target
+  }
+  loadComboOptionsSuggestions()
+}
+
+// Hide already-added values and narrow by what the user is currently typing.
+const filteredSuggestions = computed(() => {
+  const picked = new Set(multiArrayValue.value)
+  const typed = (comboOptionsInputEl?.value || '').trim().toLowerCase()
+  return suggestions.value
+    .filter(s => !picked.has(s))
+    .filter(s => typed === '' || s.toLowerCase().includes(typed))
+    .slice(0, 20)
+})
+
+function addSuggestion(s) {
+  if (multiArrayValue.value.includes(s)) return
+  value.value = [...multiArrayValue.value, s]
+  if (comboOptionsInputEl) comboOptionsInputEl.value = ''
+  onChange()
+}
 </script>
 
 <template>
@@ -257,7 +306,9 @@ const multiArrayValue = computed({
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
-    <!-- ComboOptions (free-form multi tags) -->
+    <!-- ComboOptions (free-form multi tags with autocomplete) -->
+    <!-- Chips for committed tags (Enter / comma / blur add the typed value) + suggestions list -->
+    <!-- below the field that pulls values already saved by other products for the same key. -->
     <template v-else-if="optionType === 'combooptions'">
       <InputChips
         v-model="multiArrayValue"
@@ -268,7 +319,27 @@ const multiArrayValue = computed({
         :placeholder="_('ms3_combo_options_chips_placeholder') || 'Введите значение — Enter, запятая или клик вне поля добавят его'"
         @add="onChange"
         @remove="onChange"
+        @keyup="onComboOptionsKeyup"
       />
+      <div
+        v-if="suggestions.length > 0"
+        class="combo-options-suggestions"
+        role="listbox"
+        aria-label="Подсказки"
+      >
+        <span class="combo-options-suggestions-label">
+          {{ _('ms3_combo_options_suggestions') || 'Подсказки' }}:
+        </span>
+        <button
+          v-for="s in filteredSuggestions"
+          :key="s"
+          type="button"
+          class="combo-options-suggestion"
+          @click="addSuggestion(s)"
+        >
+          {{ s }}
+        </button>
+      </div>
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
@@ -350,5 +421,41 @@ const multiArrayValue = computed({
 
 .w-full {
   width: 100%;
+}
+
+.combo-options-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  background: var(--p-content-background, #f9fafb);
+  border: 1px solid var(--p-content-border-color, #e5e7eb);
+  border-radius: 0.25rem;
+}
+
+.combo-options-suggestions-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-right: 0.15rem;
+}
+
+.combo-options-suggestion {
+  padding: 0.15rem 0.55rem;
+  background: #fff;
+  border: 1px solid var(--p-content-border-color, #d1d5db);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.combo-options-suggestion:hover {
+  background: var(--p-primary-color, #10b981);
+  border-color: var(--p-primary-color, #10b981);
+  color: #fff;
 }
 </style>

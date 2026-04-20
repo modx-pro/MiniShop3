@@ -155,6 +155,7 @@ $_lang['ms3_category_options_empty'] = 'Опций в этой категори�
 $_lang['ms3_default_values'] = 'Значения';
 $_lang['ms3_add_value'] = 'Добавить значение';
 $_lang['ms3_combo_options_chips_placeholder'] = 'Введите значение — Enter, запятая или клик вне поля добавят его';
+$_lang['ms3_combo_options_suggestions'] = 'Подсказки';
 $_lang['ms3_actions'] = 'Действия';
 $_lang['ms3_categories'] = 'Категории';
 
