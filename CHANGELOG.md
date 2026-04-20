@@ -19,32 +19,38 @@
 
 ### 🚀 Версия 1.10.0-beta1
 
-**Тип релиза:** MINOR (beta) — полный перевод управления опциями с ExtJS на Vue
+**Тип релиза:** MINOR (beta) — полный перевод управления опциями с ExtJS на Vue, рефакторинг карточки заказа, self-heal миграция
 
 ---
 
 #### ✨ Добавлено
 
-**Управление опциями товара полностью на Vue (несколько PR):**
+**Управление опциями товара полностью на Vue (#205, в т.ч. #200, #203):**
 - `Настройки → Опции` — грид (DataTable), дерево категорий MODX (`PrimeVue Tree`) с независимыми чекбоксами и контекстным меню (обновить / развернуть / свернуть / выделить все вложенные / снять все), диалог создания-редактирования с формой и деревом категорий для привязки, редактор значений для `combobox` / `comboMultiple` / `comboColors` (drag-drop сортировка через `vuedraggable`, `PrimeVue ColorPicker` для цветов)
 - `Категория товара → вкладка Опции` — Vue-грид привязок: drag-drop сортировка (`rowReorder`), inline-редактор поля «Значение по умолчанию», массовые действия (активировать / деактивировать / обязательная / необязательная / удалить), диалоги «Добавить опцию» и «Копировать опции из другой категории»
-- `Карточка товара → вкладка Опции товара` — универсальный рендер всех 10 типов (textfield, numberfield, textarea, checkbox, comboBoolean, combobox, comboMultiple, comboColors, comboOptions, datefield); `comboOptions` работает как чипы (PrimeVue `InputChips`) с автодобавлением по Enter / запятой / blur
+- `Карточка товара → вкладка Опции товара` — универсальный рендер всех 10 типов (textfield, numberfield, textarea, checkbox, comboBoolean, combobox, comboMultiple, comboColors, comboOptions, datefield); `comboOptions` работает как чипы (PrimeVue `InputChips`) с автодобавлением по Enter / запятой / blur + клик-подсказки под полем из `/api/mgr/options/suggestions`
+- Per-category caption/description override в `ms3_category_options` (#200): при непустом значении показывается вместо глобального `msOption.caption/description` и на витрине, и в админке; inline-редактор в гриде категории + поля в диалоге «Добавить опцию»; пакетная подгрузка без N+1 для `loadForProducts`
 - REST API `/api/mgr/options/*` и `/api/mgr/categories/{id}/options/*` заменил legacy `Processors/Settings/Option/*` и `Processors/Category/Option/*`
-- Decl. schema API в `msOptionType::getSchema()` — backend отдаёт декларативное описание типа вместо ExtJS JS-строк
+- Декларативный schema API в `msOptionType::getSchema()` — backend отдаёт декларативное описание типа вместо ExtJS JS-строк
+
+**Self-heal миграция `msOrder` / `msOrderAddress` (#201):** если seed `ms3_model_fields` / `ms3_model_field_sections` частично не применился (админка показывала `ms3_model_fields_empty`), миграция `20260420120000_repair_order_model_fields_if_missing` добавляет только отсутствующие записи — пользовательские настройки секций/ширин не затирает (update ограничен `WHERE section_id IS NULL`).
 
 #### ♻️ Рефакторинг
 
-- Удалены 7 ExtJS-файлов (`settings/option/*`, `category/option.*`) и 22 PHP-процессора (~2600 строк устаревшего кода)
+- **Опции:** удалены 7 ExtJS-файлов (`settings/option/*`, `category/option.*`) и 22 PHP-процессора (~2600 строк устаревшего кода)
+- **Карточка заказа — provide/inject вместо props-цепочки (#196, #204):** `provide(ORDER_CONTEXT_KEY)` в `OrderView`, composables `useOrderFormatters`, `useOrderFieldHelpers`, `useOrderLogFormatters`; вкладки получают только специфичные данные через props; безопасный `inject` до деструктуризации
 - `OptionLoaderService::convertPreloadedValue` — case-insensitive матч типов; multi-значения теперь корректно восстанавливаются при reload для `comboMultiple`, `comboColors`, `comboOptions` (раньше возвращалось только первое)
 - Multi-value опции товара отправляются одним hidden input с JSON-массивом + декодирование на сервере через `Utils::decodeOptionValue()` — обход ограничения `ExtJS BasicForm.getValues()`, который читал только последний input при нескольких hidden с одинаковым name
 - `ProductTabs.vue` — вкладка опций больше не монтирует `Ext.create('modx-vtabs')` + `ms3.utils.getExtField()`, всё рендерится Vue-компонентом `ProductOptionsTab` с вертикальными группами по `modcategory_id`
 
 #### 🐛 Исправлено
 
+- **Удалённая опция товара снова появлялась после сохранения (#199, #202):** при сохранении из полей `options-*` теперь используется `removeOther=true` — ключи, которых нет в POST (после ручного удаления или копирования), удаляются из `msProductOption`. Автосинхронизация только JSON-полей по-прежнему через `saveOptions(null)` с принудительным `removeOther=false`, чтобы не повторить регрессию #153/#158.
 - Checkbox-опции товара `boolean`/`modx-combo-boolean`/`combo-boolean` отображались узкой полоской («V\|») при `labelAlign: 'top'` — регрессия `anchor: '25%'` из `ms3.utils.js`; старый путь удалён вместе с ExtJS UI, опции теперь рендерятся через PrimeVue
-- Дерево категорий в старом ExtJS-диалоге опций выводило все resource'ы и ориентировалось на `isfolder` — в Vue-дереве фильтр `class_key LIKE '%msCategory'` и leaf по `COUNT(Child.id)`
+- Дерево категорий в старом ExtJS-диалоге опций выводило все resource'ы и ориентировалось на `isfolder` — в Vue-дереве точный фильтр `class_key = MiniShop3\\Model\\msCategory` и leaf по `COUNT(Child.id)`
 - Множественный выбор в `comboMultiple`/`comboColors` в старом коде терял все значения кроме последнего при сохранении товара
 - `modcategory_id` опции можно очистить (null коэрсится в 0, поле больше не обязательно)
+- DatePicker для `datefield` отправлял UTC-сдвиг (`toISOString()` давал дату на день раньше в TZ восточнее UTC) — теперь формат через `getFullYear/getMonth/getDate`
 
 ---
 
