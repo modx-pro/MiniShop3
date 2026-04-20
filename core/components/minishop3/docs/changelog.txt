@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0-beta1]
+
+### Added
+- Full Vue migration of product options management (Settings → Options, Category → Options tab, Product → Options tab) replacing the legacy ExtJS UI.
+- REST API for options: `/api/mgr/options` (CRUD + tree, types, modcategories, suggestions, bulk assign/delete) and `/api/mgr/categories/{id}/options` (CRUD + sort + bulk + duplicate from another category).
+- Settings → Options Vue screen: DataTable grid, MODX category tree (PrimeVue Tree) with independent checkboxes and context menu (refresh, expand/collapse subtree, select/clear all), create/edit dialog with category assignment tree and values editor for combobox/comboMultiple/comboColors (drag-drop sort, PrimeVue ColorPicker).
+- Category → Options Vue tab: link grid with drag-drop reorder, inline default-value editor, bulk activate/deactivate/require/unrequire/remove, `Add option` and `Copy from category` dialogs.
+- Product → Options Vue tab: universal ProductOptionField that renders all 10 option types; comboOptions now uses PrimeVue InputChips (Enter / comma / blur commit) with a `/api/mgr/options/suggestions` backend endpoint for other-product value reuse.
+- `msOptionType::getSchema()` — declarative schema API replacing ExtJS JS-string output; option_fields now ship both legacy `ext_field` and new `schema`.
+
+### Refactored
+- Deleted 7 ExtJS UI files (settings/option/* + category/option.*) and 22 PHP processors (Settings/Option, Category/Option), ~2600 lines of legacy code.
+- Product form multi-value option POST: single hidden JSON field instead of `name[]` siblings (ExtJS BasicForm.getValues() only kept the last DOM match, silently dropping extras). Server-side decoding via `Utils::decodeOptionValue()` in `Processors\\Product\\Update` and `Processors\\Product\\Create`.
+- `OptionLoaderService::convertPreloadedValue()` match is now case-insensitive and covers all three multi-value types (comboMultiple, comboColors, comboOptions) — previously only strict `ComboMultiple` matched, truncating reloaded arrays to their first value.
+
+### Fixed
+- Checkbox-type options on the product form no longer render as a 25%-wide sliver on top-aligned labels (the root cause, `anchor: '25%'` in legacy ms3.utils.js, is gone along with the ExtJS UI).
+- Category tree in the options dialog no longer lists non-category resources; filters by `class_key LIKE '%msCategory'` and uses an accurate COUNT-based leaf flag instead of `isfolder`.
+- Independent checkboxes in category tree: selecting/deselecting a parent no longer cascades to children (PrimeVue Tree's default propagation was replaced by a custom checkbox render).
+- Optional `modcategory_id` on option create/update (null/empty payload is coerced to 0 for the NOT NULL column).
+- Dialog styles now apply in teleported PrimeVue Dialog markup (class='ms3-option-dialog vueApp' on the dialog root + .ms3-option-dialog-scoped selectors).
+
 ## [1.9.0-beta1]
 
 ### Added
