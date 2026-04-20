@@ -1,6 +1,6 @@
 <script setup>
-import AutoComplete from 'primevue/autocomplete'
 import Checkbox from 'primevue/checkbox'
+import Chips from 'primevue/chips'
 import DatePicker from 'primevue/datepicker'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
@@ -8,8 +8,6 @@ import MultiSelect from 'primevue/multiselect'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import { computed, ref, watch } from 'vue'
-
-import request from '../../request.js'
 
 const props = defineProps({
   option: { type: Object, required: true },
@@ -110,46 +108,6 @@ const multiArrayValue = computed({
   },
 })
 
-/**
- * Suggestions for comboOptions AutoComplete — distinct values already used for this option key
- * across all products (fetched on @complete). The user can also enter free text that isn't in
- * the suggestion list; AutoComplete's multiple mode accepts freeform tokens on Enter.
- */
-const suggestions = ref([])
-
-async function loadSuggestions(event) {
-  if (optionType.value !== 'combooptions') return
-  try {
-    const r = await request.get('/api/mgr/options/suggestions', {
-      key: props.option.key,
-      query: event.query || '',
-      limit: 50,
-    })
-    suggestions.value = r?.results || []
-  } catch {
-    suggestions.value = []
-  }
-}
-
-/**
- * PrimeVue AutoComplete in multiple mode only adds a token on Enter when it matches a
- * suggestion. For comboOptions we want the user to be able to add any free-form string,
- * so Enter on an unmatched input value is picked up here and pushed into the model.
- */
-function onAutocompleteKeydown(event) {
-  if (event.key !== 'Enter') return
-  const input = event.target
-  const typed = (input?.value || '').trim()
-  if (typed === '') return
-
-  event.preventDefault()
-  const current = Array.isArray(value.value) ? value.value : []
-  if (!current.includes(typed)) {
-    value.value = [...current, typed]
-    onChange()
-  }
-  input.value = ''
-}
 </script>
 
 <template>
@@ -281,20 +239,16 @@ function onAutocompleteKeydown(event) {
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
-    <!-- ComboOptions (free-form multi tags with autocomplete) -->
+    <!-- ComboOptions (free-form multi tags) -->
     <template v-else-if="optionType === 'combooptions'">
-      <AutoComplete
+      <Chips
         v-model="multiArrayValue"
         :input-id="fieldId"
-        :suggestions="suggestions"
-        multiple
-        :min-length="1"
-        :delay="200"
         class="w-full"
-        placeholder="Введите значение и нажмите Enter"
-        @complete="loadSuggestions"
-        @change="onChange"
-        @keydown="onAutocompleteKeydown"
+        separator=","
+        placeholder="Введите значение, Enter или запятая — добавить"
+        @add="onChange"
+        @remove="onChange"
       />
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
