@@ -117,7 +117,11 @@ function hexWithHash(v) {
               :model-value="hexWithoutHash(items[index]?.name)"
               format="hex"
               class="value-picker"
-              :pt="{ input: { class: !isValidHex(items[index]?.name) && items[index]?.name ? 'invalid' : '' } }"
+              :pt="{
+                input: {
+                  class: !isValidHex(items[index]?.name) && items[index]?.name ? 'invalid' : '',
+                },
+              }"
               @update:model-value="updateColor(index, 'name', hexWithHash($event))"
             />
             <InputText

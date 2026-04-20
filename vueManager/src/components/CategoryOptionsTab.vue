@@ -8,7 +8,6 @@ import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
-import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Toast from 'primevue/toast'
@@ -108,11 +107,12 @@ async function saveCellEdit(event) {
   if (!editable.includes(field)) return
 
   // Backend expects 'caption'/'description' for the per-link override (schema columns).
-  const serverField = field === 'category_caption'
-    ? 'caption'
-    : field === 'category_description'
-      ? 'description'
-      : field
+  const serverField =
+    field === 'category_caption'
+      ? 'caption'
+      : field === 'category_description'
+        ? 'description'
+        : field
 
   try {
     await request.put(`/api/mgr/categories/${props.categoryId}/options/${newData.option_id}`, {
@@ -378,7 +378,9 @@ onMounted(() => {
           <InputText
             v-model="data[field]"
             class="w-full"
-            :placeholder="_('ms3_category_option_caption_override_desc') || 'Пусто: берётся глобальное'"
+            :placeholder="
+              _('ms3_category_option_caption_override_desc') || 'Пусто: берётся глобальное'
+            "
             autofocus
             @keyup.enter.stop
           />

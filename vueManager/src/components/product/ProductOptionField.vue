@@ -316,7 +316,10 @@ function addSuggestion(s) {
         class="w-full"
         separator=","
         :add-on-blur="true"
-        :placeholder="_('ms3_combo_options_chips_placeholder') || 'Введите значение — Enter, запятая или клик вне поля добавят его'"
+        :placeholder="
+          _('ms3_combo_options_chips_placeholder') ||
+          'Введите значение — Enter, запятая или клик вне поля добавят его'
+        "
         @add="onChange"
         @remove="onChange"
         @keyup="onComboOptionsKeyup"
