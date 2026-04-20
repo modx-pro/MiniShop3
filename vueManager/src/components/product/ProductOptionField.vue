@@ -1,4 +1,5 @@
 <script setup>
+import AutoComplete from 'primevue/autocomplete'
 import Checkbox from 'primevue/checkbox'
 import DatePicker from 'primevue/datepicker'
 import InputNumber from 'primevue/inputnumber'
@@ -7,6 +8,8 @@ import MultiSelect from 'primevue/multiselect'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import { computed, ref, watch } from 'vue'
+
+import request from '../../request.js'
 
 const props = defineProps({
   option: { type: Object, required: true },
@@ -106,6 +109,27 @@ const multiArrayValue = computed({
     value.value = v
   },
 })
+
+/**
+ * Suggestions for comboOptions AutoComplete — distinct values already used for this option key
+ * across all products (fetched on @complete). The user can also enter free text that isn't in
+ * the suggestion list; AutoComplete's multiple mode accepts freeform tokens on Enter.
+ */
+const suggestions = ref([])
+
+async function loadSuggestions(event) {
+  if (optionType.value !== 'combooptions') return
+  try {
+    const r = await request.get('/api/mgr/options/suggestions', {
+      key: props.option.key,
+      query: event.query || '',
+      limit: 50,
+    })
+    suggestions.value = r?.results || []
+  } catch {
+    suggestions.value = []
+  }
+}
 </script>
 
 <template>
@@ -239,16 +263,15 @@ const multiArrayValue = computed({
 
     <!-- ComboOptions (free-form multi tags with autocomplete) -->
     <template v-else-if="optionType === 'combooptions'">
-      <MultiSelect
+      <AutoComplete
         v-model="multiArrayValue"
         :input-id="fieldId"
-        :options="multiArrayValue.map(v => ({ label: v, value: v }))"
-        option-label="label"
-        option-value="value"
-        :filter="true"
-        :show-toggle-all="false"
+        :suggestions="suggestions"
+        multiple
+        :typeahead="false"
         class="w-full"
-        placeholder="Введите значения"
+        placeholder="Введите значение и нажмите Enter"
+        @complete="loadSuggestions"
         @change="onChange"
       />
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />

@@ -625,6 +625,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $allParams = array_merge($_GET, $params);
             return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getModcategories($allParams);
         });
+        $router->get('/suggestions', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getSuggestions($allParams);
+        });
         $router->post('/bulk/assign', function() use ($modx) {
             $data = json_decode(file_get_contents('php://input'), true) ?: [];
             return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->bulkAssign($data);

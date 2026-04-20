@@ -397,6 +397,44 @@ class OptionsController
         return Response::success(['results' => $results, 'total' => $total])->getData();
     }
 
+    /**
+     * GET /api/mgr/options/suggestions
+     *
+     * Distinct values previously saved for an option key across all products. Used as
+     * the autocomplete source for the free-form `comboOptions` type on the product form.
+     *
+     * @param array $params key (required), query (optional, substring match), limit (default 50)
+     */
+    public function getSuggestions(array $params = []): array
+    {
+        $key = trim((string)($params['key'] ?? ''));
+        if ($key === '') {
+            return Response::error('key is required', 400)->getData();
+        }
+
+        $query = trim((string)($params['query'] ?? ''));
+        $limit = (int)($params['limit'] ?? 50);
+        if ($limit <= 0 || $limit > 500) {
+            $limit = 50;
+        }
+
+        $c = $this->modx->newQuery(\MiniShop3\Model\msProductOption::class);
+        $c->where(['key' => $key, 'value:!=' => '']);
+        if ($query !== '') {
+            $c->where(['value:LIKE' => "%{$query}%"]);
+        }
+        $c->select('DISTINCT value');
+        $c->sortby('value', 'ASC');
+        $c->limit($limit);
+
+        $results = [];
+        if ($c->prepare() && $c->stmt->execute()) {
+            $results = $c->stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+        }
+
+        return Response::success(['results' => $results, 'total' => count($results)])->getData();
+    }
+
     /* ---------------- Internal ---------------- */
 
     /**
