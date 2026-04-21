@@ -45,7 +45,7 @@ class CustomerOrderController
         $orderId = (int)($params['id'] ?? 0);
 
         if (!$orderId) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_no_order'), 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_no_order'), Response::HTTP_BAD_REQUEST)->getData();
         }
 
         /** @var msOrder|null $order */
@@ -55,7 +55,7 @@ class CustomerOrderController
         ]);
 
         if (!$order) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_not_found'), 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_not_found'), Response::HTTP_NOT_FOUND)->getData();
         }
 
         /** @var OrderStatusService $orderStatusService */
@@ -64,7 +64,7 @@ class CustomerOrderController
         $currentStatusId = (int) $order->get('status_id');
 
         if (!in_array($currentStatusId, $allowedStatusIds, true)) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_status'), 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_status'), Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $cancelledStatusId = (int) $this->modx->getOption('ms3_status_canceled', null, 5);
@@ -73,7 +73,7 @@ class CustomerOrderController
 
         if ($result !== true) {
             $message = is_string($result) ? $result : $this->modx->lexicon('ms3_customer_order_cancel_err_failed');
-            return Response::error($message, 400)->getData();
+            return Response::error($message, Response::HTTP_BAD_REQUEST)->getData();
         }
 
         return Response::success(

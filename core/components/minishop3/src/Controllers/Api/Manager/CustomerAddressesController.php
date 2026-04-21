@@ -33,12 +33,12 @@ class CustomerAddressesController
         $customerId = (int)($params['id'] ?? 0);
 
         if (!$customerId) {
-            return Response::error('Customer ID is required', 400)->getData();
+            return Response::error('Customer ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
         if (!$customer) {
-            return Response::error('Customer not found', 404)->getData();
+            return Response::error('Customer not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         $addresses = $this->modx->getIterator(msCustomerAddress::class, [
@@ -72,12 +72,12 @@ class CustomerAddressesController
         $customerId = (int)($data['customer_id'] ?? 0);
 
         if (!$customerId) {
-            return Response::error('Customer ID is required', 400)->getData();
+            return Response::error('Customer ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
         if (!$customer) {
-            return Response::error('Customer not found', 404)->getData();
+            return Response::error('Customer not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         /** @var msCustomerAddress $address */
@@ -100,7 +100,7 @@ class CustomerAddressesController
         $address->set('createdon', date('Y-m-d H:i:s'));
 
         if (!$address->save()) {
-            return Response::error('Failed to create address', 500)->getData();
+            return Response::error('Failed to create address', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success(
@@ -122,7 +122,7 @@ class CustomerAddressesController
         $addressId = (int)($data['id'] ?? 0);
 
         if (!$customerId || !$addressId) {
-            return Response::error('Customer ID and Address ID are required', 400)->getData();
+            return Response::error('Customer ID and Address ID are required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -131,7 +131,7 @@ class CustomerAddressesController
         ]);
 
         if (!$address) {
-            return Response::error('Address not found', 404)->getData();
+            return Response::error('Address not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         $allowedFields = [
@@ -149,7 +149,7 @@ class CustomerAddressesController
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
         if (!$address->save()) {
-            return Response::error('Failed to update address', 500)->getData();
+            return Response::error('Failed to update address', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success(
@@ -171,7 +171,7 @@ class CustomerAddressesController
         $addressId = (int)($params['address_id'] ?? 0);
 
         if (!$customerId || !$addressId) {
-            return Response::error('Customer ID and Address ID are required', 400)->getData();
+            return Response::error('Customer ID and Address ID are required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -180,11 +180,11 @@ class CustomerAddressesController
         ]);
 
         if (!$address) {
-            return Response::error('Address not found', 404)->getData();
+            return Response::error('Address not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         if (!$address->remove()) {
-            return Response::error('Failed to delete address', 500)->getData();
+            return Response::error('Failed to delete address', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Address deleted successfully')->getData();

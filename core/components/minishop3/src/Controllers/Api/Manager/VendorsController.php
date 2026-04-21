@@ -136,13 +136,13 @@ class VendorsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Vendor ID is required', 400)->getData();
+            return Response::error('Vendor ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $vendor = $this->modx->getObject(msVendor::class, $id);
 
         if (!$vendor) {
-            return Response::error('Vendor not found', 404)->getData();
+            return Response::error('Vendor not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatVendor($vendor))->getData();
@@ -158,7 +158,7 @@ class VendorsController
     public function create(array $data = []): array
     {
         if (empty($data['name'])) {
-            return Response::error('Vendor name is required', 400)->getData();
+            return Response::error('Vendor name is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $vendor = $this->modx->newObject(msVendor::class);
@@ -172,7 +172,7 @@ class VendorsController
         }
 
         if (!$vendor->save()) {
-            return Response::error('Failed to create vendor', 500)->getData();
+            return Response::error('Failed to create vendor', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatVendor($vendor), 'Vendor created successfully')->getData();
@@ -190,13 +190,13 @@ class VendorsController
         $id = (int)($data['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Vendor ID is required', 400)->getData();
+            return Response::error('Vendor ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $vendor = $this->modx->getObject(msVendor::class, $id);
 
         if (!$vendor) {
-            return Response::error('Vendor not found', 404)->getData();
+            return Response::error('Vendor not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         $allowedFields = $this->getAllowedFields();
@@ -208,7 +208,7 @@ class VendorsController
         }
 
         if (!$vendor->save()) {
-            return Response::error('Failed to save vendor', 500)->getData();
+            return Response::error('Failed to save vendor', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatVendor($vendor), 'Vendor updated successfully')->getData();
@@ -226,17 +226,17 @@ class VendorsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Vendor ID is required', 400)->getData();
+            return Response::error('Vendor ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $vendor = $this->modx->getObject(msVendor::class, $id);
 
         if (!$vendor) {
-            return Response::error('Vendor not found', 404)->getData();
+            return Response::error('Vendor not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         if (!$vendor->remove()) {
-            return Response::error('Failed to delete vendor', 500)->getData();
+            return Response::error('Failed to delete vendor', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Vendor deleted successfully')->getData();
@@ -254,7 +254,7 @@ class VendorsController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Vendor IDs array is required for sorting', 400)->getData();
+            return Response::error('Vendor IDs array is required for sorting', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $position = 0;
@@ -285,7 +285,7 @@ class VendorsController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Vendor IDs array is required', 400)->getData();
+            return Response::error('Vendor IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $ids = array_filter(array_map('intval', $ids), function ($id) {
@@ -293,7 +293,7 @@ class VendorsController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid vendor IDs provided', 400)->getData();
+            return Response::error('No valid vendor IDs provided', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -315,7 +315,7 @@ class VendorsController
         }
 
         if ($deleted === 0) {
-            return Response::error('Failed to delete vendors', 500)->getData();
+            return Response::error('Failed to delete vendors', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([

@@ -149,7 +149,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             );
 
             if ($response->isError()) {
-                return Response::error($response->getMessage(), 400);
+                return Response::error($response->getMessage(), Response::HTTP_BAD_REQUEST);
             }
 
             return Response::success($response->getObject(), $response->getMessage());
@@ -178,7 +178,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             );
 
             if ($response->isError()) {
-                return Response::error($response->getMessage(), 400);
+                return Response::error($response->getMessage(), Response::HTTP_BAD_REQUEST);
             }
 
             return Response::success($response->getObject(), $response->getMessage());

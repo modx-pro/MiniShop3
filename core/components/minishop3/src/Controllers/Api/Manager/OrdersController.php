@@ -275,13 +275,13 @@ class OrdersController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Order ID is required', 400)->getData();
+            return Response::error('Order ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $order = $this->modx->getObject(msOrder::class, $id);
 
         if (!$order) {
-            return Response::error('Order not found', 404)->getData();
+            return Response::error('Order not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         $status = $order->getOne('Status');
@@ -327,13 +327,13 @@ class OrdersController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Order ID is required', 400)->getData();
+            return Response::error('Order ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $order = $this->modx->getObject(msOrder::class, $id);
 
         if (!$order) {
-            return Response::error('Order not found', 404)->getData();
+            return Response::error('Order not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         $addresses = $this->modx->getIterator(msOrderAddress::class, ['order_id' => $id]);
@@ -347,7 +347,7 @@ class OrdersController
         }
 
         if (!$order->remove()) {
-            return Response::error('Failed to delete order', 500)->getData();
+            return Response::error('Failed to delete order', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Order deleted successfully')->getData();
@@ -365,7 +365,7 @@ class OrdersController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Order IDs array is required', 400)->getData();
+            return Response::error('Order IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Sanitize IDs
@@ -374,7 +374,7 @@ class OrdersController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid order IDs provided', 400)->getData();
+            return Response::error('No valid order IDs provided', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -414,7 +414,7 @@ class OrdersController
         }
 
         if ($deleted === 0) {
-            return Response::error('Failed to delete orders', 500)->getData();
+            return Response::error('Failed to delete orders', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([
@@ -495,7 +495,7 @@ class OrdersController
                     modX::LOG_LEVEL_ERROR,
                     "[OrdersController] Failed to create customer: " . $e->getMessage()
                 );
-                return Response::error('Failed to create customer: ' . $e->getMessage(), 500)->getData();
+                return Response::error('Failed to create customer: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
             }
         }
 
@@ -536,7 +536,7 @@ class OrdersController
         $order->set('weight', 0);
 
         if (!$order->save()) {
-            return Response::error('Failed to create order', 500)->getData();
+            return Response::error('Failed to create order', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         // Create empty address
@@ -601,7 +601,7 @@ class OrdersController
     {
         $orderId = (int) ($params['id'] ?? 0);
         if (!$orderId) {
-            return Response::error('Order ID is required', 400)->getData();
+            return Response::error('Order ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $options = [
@@ -628,13 +628,13 @@ class OrdersController
                 $translatedMessage = $message;
             }
 
-            return Response::error($translatedMessage, 400, $result['data'] ?? [])->getData();
+            return Response::error($translatedMessage, Response::HTTP_BAD_REQUEST, $result['data'] ?? [])->getData();
         }
 
         // Reload order with full data
         $order = $this->modx->getObject(msOrder::class, $orderId);
         if (!$order) {
-            return Response::error('Order not found after finalization', 500)->getData();
+            return Response::error('Order not found after finalization', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         $orderData = $order->toArray();
@@ -719,13 +719,13 @@ class OrdersController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Order ID is required', 400)->getData();
+            return Response::error('Order ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $order = $this->modx->getObject(msOrder::class, $id);
 
         if (!$order) {
-            return Response::error('Order not found', 404)->getData();
+            return Response::error('Order not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Store old values for logging
@@ -763,7 +763,7 @@ class OrdersController
         $order->set('updatedon', date('Y-m-d H:i:s'));
 
         if (!$order->save()) {
-            return Response::error('Failed to update order', 500)->getData();
+            return Response::error('Failed to update order', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         // Log order field changes (excluding status_id which is logged separately)
@@ -857,7 +857,7 @@ class OrdersController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Order ID is required', 400)->getData();
+            return Response::error('Order ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $c = $this->modx->newQuery(\MiniShop3\Model\msOrderProduct::class);
@@ -890,29 +890,29 @@ class OrdersController
         $productId = (int)($params['product_id'] ?? 0);
 
         if (!$orderId) {
-            return Response::error('Order ID is required', 400)->getData();
+            return Response::error('Order ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         if (!$productId) {
-            return Response::error('Product ID is required', 400)->getData();
+            return Response::error('Product ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Get the order
         $order = $this->modx->getObject(msOrder::class, $orderId);
         if (!$order) {
-            return Response::error('Order not found', 404)->getData();
+            return Response::error('Order not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Check order status (should not be final)
         $status = $this->modx->getObject(\MiniShop3\Model\msOrderStatus::class, $order->get('status_id'));
         if ($status && $status->get('final')) {
-            return Response::error('Cannot add products to finalized order', 400)->getData();
+            return Response::error('Cannot add products to finalized order', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Get the product
         $product = $this->modx->getObject(\MiniShop3\Model\msProduct::class, $productId);
         if (!$product) {
-            return Response::error('Product not found', 404)->getData();
+            return Response::error('Product not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Get product data
@@ -966,11 +966,11 @@ class OrdersController
 
         $response = $this->getMs3Utils()->invokeEvent('msOnBeforeCreateOrderProduct', $eventContext);
         if (!$response['success']) {
-            return Response::error($response['message'], 400)->getData();
+            return Response::error($response['message'], Response::HTTP_BAD_REQUEST)->getData();
         }
 
         if (!$orderProduct->save()) {
-            return Response::error('Failed to add product to order', 500)->getData();
+            return Response::error('Failed to add product to order', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         // After-event: row already persisted, a plugin error cannot roll it back. Log and continue
@@ -1021,7 +1021,7 @@ class OrdersController
         $productId = (int)($params['product_id'] ?? 0);
 
         if (!$orderId || !$productId) {
-            return Response::error('Order ID and Product ID are required', 400)->getData();
+            return Response::error('Order ID and Product ID are required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Find the order product record
@@ -1031,13 +1031,13 @@ class OrdersController
         ]);
 
         if (!$orderProduct) {
-            return Response::error('Order product not found', 404)->getData();
+            return Response::error('Order product not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Get the order to recalculate totals
         $order = $this->modx->getObject(msOrder::class, $orderId);
         if (!$order) {
-            return Response::error('Order not found', 404)->getData();
+            return Response::error('Order not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Store old values for logging
@@ -1084,7 +1084,7 @@ class OrdersController
         }
 
         if (!$updated) {
-            return Response::error('No fields to update', 400)->getData();
+            return Response::error('No fields to update', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Recalculate cost
@@ -1108,11 +1108,11 @@ class OrdersController
 
         $response = $this->getMs3Utils()->invokeEvent('msOnBeforeUpdateOrderProduct', $eventContext);
         if (!$response['success']) {
-            return Response::error($response['message'], 400)->getData();
+            return Response::error($response['message'], Response::HTTP_BAD_REQUEST)->getData();
         }
 
         if (!$orderProduct->save()) {
-            return Response::error('Failed to update order product', 500)->getData();
+            return Response::error('Failed to update order product', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         // After-event: row already persisted, a plugin error cannot roll it back. Log and continue
@@ -1162,7 +1162,7 @@ class OrdersController
         $productId = (int)($params['product_id'] ?? 0);
 
         if (!$orderId || !$productId) {
-            return Response::error('Order ID and Product ID are required', 400)->getData();
+            return Response::error('Order ID and Product ID are required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Find the order product record
@@ -1172,19 +1172,19 @@ class OrdersController
         ]);
 
         if (!$orderProduct) {
-            return Response::error('Order product not found', 404)->getData();
+            return Response::error('Order product not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Get the order to recalculate totals
         $order = $this->modx->getObject(msOrder::class, $orderId);
         if (!$order) {
-            return Response::error('Order not found', 404)->getData();
+            return Response::error('Order not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Check if this is the last product
         $productCount = $this->modx->getCount(\MiniShop3\Model\msOrderProduct::class, ['order_id' => $orderId]);
         if ($productCount <= 1) {
-            return Response::error('Cannot delete the last product from order', 400)->getData();
+            return Response::error('Cannot delete the last product from order', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Store data for logging before removal
@@ -1206,11 +1206,11 @@ class OrdersController
 
         $response = $this->getMs3Utils()->invokeEvent('msOnBeforeRemoveOrderProduct', $eventContext);
         if (!$response['success']) {
-            return Response::error($response['message'], 400)->getData();
+            return Response::error($response['message'], Response::HTTP_BAD_REQUEST)->getData();
         }
 
         if (!$orderProduct->remove()) {
-            return Response::error('Failed to delete order product', 500)->getData();
+            return Response::error('Failed to delete order product', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         // After-event: row already removed, a plugin error cannot roll it back. Log and continue
@@ -1285,7 +1285,7 @@ class OrdersController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Order ID is required', 400)->getData();
+            return Response::error('Order ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $c = $this->modx->newQuery(\MiniShop3\Model\msOrderLog::class);

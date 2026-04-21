@@ -73,7 +73,7 @@ class CustomerAddressController
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -82,7 +82,7 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), Response::HTTP_NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatAddress($address))->getData();
@@ -108,7 +108,7 @@ class CustomerAddressController
         $required = ['name', 'city', 'street'];
         foreach ($required as $field) {
             if (empty($input[$field])) {
-                return Response::error($this->modx->lexicon('ms3_customer_err_field_required'), 400)->getData();
+                return Response::error($this->modx->lexicon('ms3_customer_err_field_required'), Response::HTTP_BAD_REQUEST)->getData();
             }
         }
 
@@ -137,7 +137,7 @@ class CustomerAddressController
         }
 
         if (!$address->save()) {
-            return Response::error($this->modx->lexicon('ms3_customer_address_creation_error'), 500)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_address_creation_error'), Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Created customer address: ' . $addressHash . ' for customer #' . $customer->get('id'));
@@ -163,7 +163,7 @@ class CustomerAddressController
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -172,7 +172,7 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), Response::HTTP_NOT_FOUND)->getData();
         }
 
         $input = $this->getRequestData();
@@ -193,7 +193,7 @@ class CustomerAddressController
             $address->set('updatedon', date('Y-m-d H:i:s'));
 
             if (!$address->save()) {
-                return Response::error($this->modx->lexicon('ms3_customer_address_update_error'), 500)->getData();
+                return Response::error($this->modx->lexicon('ms3_customer_address_update_error'), Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
             }
 
             $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Updated customer address #' . $addressId);
@@ -220,7 +220,7 @@ class CustomerAddressController
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -230,7 +230,7 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), Response::HTTP_NOT_FOUND)->getData();
         }
 
         $table = $this->modx->getTableName(msCustomerAddress::class);
@@ -242,7 +242,7 @@ class CustomerAddressController
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
         if (!$address->save()) {
-            return Response::error($this->modx->lexicon('ms3_customer_address_default_error'), 500)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_address_default_error'), Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Set default address #' . $addressId . ' for customer #' . $customer->get('id'));
@@ -268,7 +268,7 @@ class CustomerAddressController
         $addressId = (int)($params['id'] ?? 0);
 
         if (!$addressId) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), 400)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_id_not_specified'), Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $address = $this->modx->getObject(msCustomerAddress::class, [
@@ -277,14 +277,14 @@ class CustomerAddressController
         ]);
 
         if (!$address) {
-            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), 404)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_err_address_not_found'), Response::HTTP_NOT_FOUND)->getData();
         }
 
         $address->set('active', 0);
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
         if (!$address->save()) {
-            return Response::error($this->modx->lexicon('ms3_customer_address_delete_error'), 500)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_address_delete_error'), Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, '[MS3] Deleted customer address #' . $addressId);
