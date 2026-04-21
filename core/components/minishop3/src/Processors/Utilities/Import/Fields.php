@@ -124,7 +124,7 @@ class Fields extends Processor
         $tvs = [];
 
         // Get product template
-        $productTemplate = $this->modx->getOption('ms3_product_default_template', null, 0);
+        $productTemplate = $this->modx->getOption('ms3_template_product_default', null, 0);
 
         $q = $this->modx->newQuery(modTemplateVar::class);
         $q->select(['id', 'name', 'caption']);
