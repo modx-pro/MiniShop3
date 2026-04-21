@@ -14,6 +14,8 @@ use MiniShop3\Model\msOrderLog;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Router\Response;
+use MiniShop3\Utils\Utils;
+use MODX\Revolution\modSystemEvent;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
@@ -24,6 +26,10 @@ use MODX\Revolution\modX;
  * API controller for order management (Manager API)
  *
  * Handles CRUD operations for orders in admin panel.
+ *
+ * Order line items: msOnCreateOrderProduct, msOnUpdateOrderProduct, msOnRemoveOrderProduct run after
+ * save/remove; a failing "after" plugin cannot roll back persistence — veto or validation belongs in the
+ * matching msOnBefore* handlers or by mutating the object in before-hooks.
  *
  * @package MiniShop3\Controllers\Api\Manager
  */
@@ -57,6 +63,17 @@ class OrdersController
             }
         }
         return $this->orderLog;
+    }
+
+    /**
+     * @return Utils MiniShop3 utils (invokeEvent with success/message handling)
+     */
+    protected function getMs3Utils(): Utils
+    {
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+
+        return $ms3->utils;
     }
 
     /**
@@ -933,8 +950,25 @@ class OrdersController
         $orderProduct->set('cost', $count * $price);
         $orderProduct->set('options', !empty($options) ? json_encode($options) : null);
 
+        $eventContext = [
+            'mode' => modSystemEvent::MODE_NEW,
+            'object' => $orderProduct,
+            'msOrderProduct' => $orderProduct,
+            'msOrder' => $order,
+        ];
+
+        $response = $this->getMs3Utils()->invokeEvent('msOnBeforeCreateOrderProduct', $eventContext);
+        if (!$response['success']) {
+            return Response::error($response['message'], 400)->getData();
+        }
+
         if (!$orderProduct->save()) {
             return Response::error('Failed to add product to order', 500)->getData();
+        }
+
+        $response = $this->getMs3Utils()->invokeEvent('msOnCreateOrderProduct', $eventContext);
+        if (!$response['success']) {
+            return Response::error($response['message'], 400)->getData();
         }
 
         // Log product addition
@@ -1051,8 +1085,25 @@ class OrdersController
             $changes['cost'] = ['old' => $oldValues['cost'], 'new' => $newCost];
         }
 
+        $eventContext = [
+            'mode' => modSystemEvent::MODE_UPD,
+            'object' => $orderProduct,
+            'msOrderProduct' => $orderProduct,
+            'msOrder' => $order,
+        ];
+
+        $response = $this->getMs3Utils()->invokeEvent('msOnBeforeUpdateOrderProduct', $eventContext);
+        if (!$response['success']) {
+            return Response::error($response['message'], 400)->getData();
+        }
+
         if (!$orderProduct->save()) {
             return Response::error('Failed to update order product', 500)->getData();
+        }
+
+        $response = $this->getMs3Utils()->invokeEvent('msOnUpdateOrderProduct', $eventContext);
+        if (!$response['success']) {
+            return Response::error($response['message'], 400)->getData();
         }
 
         // Log product update if there were changes
@@ -1125,8 +1176,25 @@ class OrdersController
             'cost' => $orderProduct->get('cost'),
         ];
 
+        $eventContext = [
+            'id' => $orderProduct->get('id'),
+            'object' => $orderProduct,
+            'msOrderProduct' => $orderProduct,
+            'msOrder' => $order,
+        ];
+
+        $response = $this->getMs3Utils()->invokeEvent('msOnBeforeRemoveOrderProduct', $eventContext);
+        if (!$response['success']) {
+            return Response::error($response['message'], 400)->getData();
+        }
+
         if (!$orderProduct->remove()) {
             return Response::error('Failed to delete order product', 500)->getData();
+        }
+
+        $response = $this->getMs3Utils()->invokeEvent('msOnRemoveOrderProduct', $eventContext);
+        if (!$response['success']) {
+            return Response::error($response['message'], 400)->getData();
         }
 
         // Log product removal
