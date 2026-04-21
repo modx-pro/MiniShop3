@@ -262,7 +262,7 @@ class Router
 
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
-                return Response::error('Route not found', 404);
+                return Response::error('Route not found', Response::HTTP_NOT_FOUND);
 
             case Dispatcher::METHOD_NOT_ALLOWED:
                 return Response::error('Method not allowed', 405);
@@ -274,7 +274,7 @@ class Router
                 return $this->executeRoute($routeData, $vars);
         }
 
-        return Response::error('Unknown error', 500);
+        return Response::error('Unknown error', Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -311,20 +311,20 @@ class Router
             [$controllerClass, $method] = explode('@', $handler);
 
             if (!class_exists($controllerClass)) {
-                return Response::error("Controller not found: {$controllerClass}", 500);
+                return Response::error("Controller not found: {$controllerClass}", Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             $controller = new $controllerClass($this->modx);
 
             if (!method_exists($controller, $method)) {
-                return Response::error("Method not found: {$method}", 500);
+                return Response::error("Method not found: {$method}", Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             $result = $controller->$method($vars);
             return $this->normalizeResponse($result);
         }
 
-        return Response::error('Invalid handler', 500);
+        return Response::error('Invalid handler', Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -349,7 +349,7 @@ class Router
             return new Response($result, $statusCode);
         }
 
-        return Response::error('Invalid response type', 500);
+        return Response::error('Invalid response type', Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
     /**

@@ -91,13 +91,13 @@ class PaymentsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Payment ID is required', 400)->getData();
+            return Response::error('Payment ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $payment = $this->modx->getObject(msPayment::class, $id);
 
         if (!$payment) {
-            return Response::error('Payment not found', 404)->getData();
+            return Response::error('Payment not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatPayment($payment))->getData();
@@ -113,7 +113,7 @@ class PaymentsController
     public function create(array $data = []): array
     {
         if (empty($data['name'])) {
-            return Response::error('Payment name is required', 400)->getData();
+            return Response::error('Payment name is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $payment = $this->modx->newObject(msPayment::class);
@@ -140,7 +140,7 @@ class PaymentsController
         }
 
         if (!$payment->save()) {
-            return Response::error('Failed to create payment', 500)->getData();
+            return Response::error('Failed to create payment', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatPayment($payment), 'Payment created successfully')->getData();
@@ -158,13 +158,13 @@ class PaymentsController
         $id = (int)($data['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Payment ID is required', 400)->getData();
+            return Response::error('Payment ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $payment = $this->modx->getObject(msPayment::class, $id);
 
         if (!$payment) {
-            return Response::error('Payment not found', 404)->getData();
+            return Response::error('Payment not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         $allowedFields = ['name', 'description', 'price', 'logo', 'position', 'active', 'class', 'properties'];
@@ -176,7 +176,7 @@ class PaymentsController
         }
 
         if (!$payment->save()) {
-            return Response::error('Failed to save payment', 500)->getData();
+            return Response::error('Failed to save payment', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatPayment($payment), 'Payment updated successfully')->getData();
@@ -194,13 +194,13 @@ class PaymentsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Payment ID is required', 400)->getData();
+            return Response::error('Payment ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $payment = $this->modx->getObject(msPayment::class, $id);
 
         if (!$payment) {
-            return Response::error('Payment not found', 404)->getData();
+            return Response::error('Payment not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         // Delete related delivery members
@@ -209,7 +209,7 @@ class PaymentsController
         }
 
         if (!$payment->remove()) {
-            return Response::error('Failed to delete payment', 500)->getData();
+            return Response::error('Failed to delete payment', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Payment deleted successfully')->getData();
@@ -227,7 +227,7 @@ class PaymentsController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Payment IDs array is required for sorting', 400)->getData();
+            return Response::error('Payment IDs array is required for sorting', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $position = 0;
@@ -258,7 +258,7 @@ class PaymentsController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Payment IDs array is required', 400)->getData();
+            return Response::error('Payment IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $ids = array_filter(array_map('intval', $ids), function ($id) {
@@ -266,7 +266,7 @@ class PaymentsController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid payment IDs provided', 400)->getData();
+            return Response::error('No valid payment IDs provided', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -293,7 +293,7 @@ class PaymentsController
         }
 
         if ($deleted === 0) {
-            return Response::error('Failed to delete payments', 500)->getData();
+            return Response::error('Failed to delete payments', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([
@@ -314,7 +314,7 @@ class PaymentsController
         $positions = $data['positions'] ?? [];
 
         if (empty($positions) || !is_array($positions)) {
-            return Response::error('Positions array is required', 400)->getData();
+            return Response::error('Positions array is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $updated = 0;
@@ -364,7 +364,7 @@ class PaymentsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Payment ID is required', 400)->getData();
+            return Response::error('Payment ID is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $results = [];
@@ -391,7 +391,7 @@ class PaymentsController
         $deliveryId = (int)($data['delivery_id'] ?? 0);
 
         if (!$paymentId || !$deliveryId) {
-            return Response::error('Payment ID and Delivery ID are required', 400)->getData();
+            return Response::error('Payment ID and Delivery ID are required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         // Check if relationship already exists
@@ -409,7 +409,7 @@ class PaymentsController
         $member->set('payment_id', $paymentId);
 
         if (!$member->save()) {
-            return Response::error('Failed to add delivery to payment', 500)->getData();
+            return Response::error('Failed to add delivery to payment', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Delivery added to payment')->getData();
@@ -428,7 +428,7 @@ class PaymentsController
         $deliveryId = (int)($params['delivery_id'] ?? 0);
 
         if (!$paymentId || !$deliveryId) {
-            return Response::error('Payment ID and Delivery ID are required', 400)->getData();
+            return Response::error('Payment ID and Delivery ID are required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $member = $this->modx->getObject(msDeliveryMember::class, [
@@ -437,11 +437,11 @@ class PaymentsController
         ]);
 
         if (!$member) {
-            return Response::error('Delivery link not found', 404)->getData();
+            return Response::error('Delivery link not found', Response::HTTP_NOT_FOUND)->getData();
         }
 
         if (!$member->remove()) {
-            return Response::error('Failed to remove delivery from payment', 500)->getData();
+            return Response::error('Failed to remove delivery from payment', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Delivery removed from payment')->getData();

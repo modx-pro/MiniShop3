@@ -55,7 +55,7 @@ use MiniShop3\Router\Response;
 //
 //     $resource = $modx->getObject('modResource', $id);
 //     if (!$resource) {
-//         return Response::error('Resource not found', 404);
+//         return Response::error('Resource not found', Response::HTTP_NOT_FOUND);
 //     }
 //
 //     return Response::success(['resource' => $resource->toArray()]);

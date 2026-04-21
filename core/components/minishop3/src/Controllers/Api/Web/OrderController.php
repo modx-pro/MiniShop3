@@ -66,7 +66,7 @@ class OrderController
         }
 
         if (empty($key)) {
-            return Response::error('Field key is required', 400)->getData();
+            return Response::error('Field key is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -97,7 +97,7 @@ class OrderController
         }
 
         if (empty($fields) || !is_array($fields)) {
-            return Response::error('Fields array is required', 400)->getData();
+            return Response::error('Fields array is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -128,7 +128,7 @@ class OrderController
         }
 
         if (empty($key)) {
-            return Response::error('Field key is required', 400)->getData();
+            return Response::error('Field key is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -140,7 +140,7 @@ class OrderController
         if ($exists) {
             return Response::success(['removed' => $key], 'Field removed successfully')->getData();
         } else {
-            return Response::error('Field not found', 404)->getData();
+            return Response::error('Field not found', Response::HTTP_NOT_FOUND)->getData();
         }
     }
 
@@ -425,7 +425,7 @@ class OrderController
         if ($result['success']) {
             return Response::success($result['data'], $result['message'] ?? '')->getData();
         } else {
-            return Response::error($result['message'] ?? 'Unknown error', 400, $result['data'] ?? [])->getData();
+            return Response::error($result['message'] ?? 'Unknown error', Response::HTTP_BAD_REQUEST, $result['data'] ?? [])->getData();
         }
     }
 }

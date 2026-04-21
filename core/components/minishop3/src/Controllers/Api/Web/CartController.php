@@ -71,7 +71,7 @@ class CartController
         }
 
         if (empty($product_key)) {
-            return Response::error('Product key is required', 400)->getData();
+            return Response::error('Product key is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -102,7 +102,7 @@ class CartController
         }
 
         if (empty($product_key)) {
-            return Response::error('Product key is required', 400)->getData();
+            return Response::error('Product key is required', Response::HTTP_BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -203,7 +203,7 @@ class CartController
         if ($result['success']) {
             return Response::success($result['data'], $result['message'] ?? '')->getData();
         } else {
-            return Response::error($result['message'] ?? 'Unknown error', 400, $result['data'] ?? [])->getData();
+            return Response::error($result['message'] ?? 'Unknown error', Response::HTTP_BAD_REQUEST, $result['data'] ?? [])->getData();
         }
     }
 

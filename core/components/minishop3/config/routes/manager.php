@@ -85,7 +85,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $alias = $params['alias'] ?? '';
 
             if (empty($alias)) {
-                return Response::error('Model alias is required', 400);
+                return Response::error('Model alias is required', Response::HTTP_BAD_REQUEST);
             }
 
             try {
@@ -95,7 +95,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 $modelClass = $fieldConfigManager->getModelClassByAlias($alias);
 
                 if (!$modelClass) {
-                    return Response::error("Model alias not found: {$alias}", 404);
+                    return Response::error("Model alias not found: {$alias}", Response::HTTP_NOT_FOUND);
                 }
 
                 $fields = $fieldConfigManager->getModelFields($modelClass);
@@ -107,7 +107,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 ]);
             } catch (\Exception $e) {
                 $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[FieldConfigManager] ' . $e->getMessage());
-                return Response::error('Failed to load model fields: ' . $e->getMessage(), 500);
+                return Response::error('Failed to load model fields: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         });
 
@@ -177,20 +177,20 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 ]);
             } catch (\Exception $e) {
                 $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to load extra fields: ' . $e->getMessage(), 500);
+                return Response::error('Failed to load extra fields: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         });
         $router->get('/{id}', function($params) use ($modx) {
             $id = (int)($params['id'] ?? 0);
 
             if (!$id) {
-                return Response::error('Field ID is required', 400);
+                return Response::error('Field ID is required', Response::HTTP_BAD_REQUEST);
             }
 
             $field = $modx->getObject(\MiniShop3\Model\msExtraField::class, $id);
 
             if (!$field) {
-                return Response::error('Field not found', 404);
+                return Response::error('Field not found', Response::HTTP_NOT_FOUND);
             }
 
             $data = $field->toArray();
@@ -205,7 +205,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 $data = json_decode(file_get_contents('php://input'), true);
 
                 if (empty($data)) {
-                    return Response::error('Request body is empty', 400);
+                    return Response::error('Request body is empty', Response::HTTP_BAD_REQUEST);
                 }
 
                 /** @var \MiniShop3\Services\ExtraFieldsService $service */
@@ -214,7 +214,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 $result = $service->createField($data);
 
                 if (!$result['success']) {
-                    return Response::error($result['message'], 400);
+                    return Response::error($result['message'], Response::HTTP_BAD_REQUEST);
                 }
 
                 return Response::success([
@@ -224,21 +224,21 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 ]);
             } catch (\Exception $e) {
                 $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to create field: ' . $e->getMessage(), 500);
+                return Response::error('Failed to create field: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         });
         $router->put('/{id}', function($params) use ($modx) {
             $id = (int)($params['id'] ?? 0);
 
             if (!$id) {
-                return Response::error('Field ID is required', 400);
+                return Response::error('Field ID is required', Response::HTTP_BAD_REQUEST);
             }
 
             try {
                 $data = json_decode(file_get_contents('php://input'), true);
 
                 if (empty($data)) {
-                    return Response::error('Request body is empty', 400);
+                    return Response::error('Request body is empty', Response::HTTP_BAD_REQUEST);
                 }
 
                 /** @var \MiniShop3\Services\ExtraFieldsService $service */
@@ -247,7 +247,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 $result = $service->updateField($id, $data);
 
                 if (!$result['success']) {
-                    return Response::error($result['message'], 400);
+                    return Response::error($result['message'], Response::HTTP_BAD_REQUEST);
                 }
 
                 return Response::success([
@@ -256,14 +256,14 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 ]);
             } catch (\Exception $e) {
                 $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to update field: ' . $e->getMessage(), 500);
+                return Response::error('Failed to update field: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         });
         $router->delete('/{id}', function($params) use ($modx) {
             $id = (int)($params['id'] ?? 0);
 
             if (!$id) {
-                return Response::error('Field ID is required', 400);
+                return Response::error('Field ID is required', Response::HTTP_BAD_REQUEST);
             }
 
             try {
@@ -273,7 +273,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 $result = $service->deleteField($id);
 
                 if (!$result['success']) {
-                    return Response::error($result['message'], 400);
+                    return Response::error($result['message'], Response::HTTP_BAD_REQUEST);
                 }
 
                 return Response::success([
@@ -282,7 +282,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
                 ]);
             } catch (\Exception $e) {
                 $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to delete field: ' . $e->getMessage(), 500);
+                return Response::error('Failed to delete field: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         });
 

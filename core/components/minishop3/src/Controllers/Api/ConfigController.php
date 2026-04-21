@@ -21,7 +21,7 @@ class ConfigController extends BaseApiController
         $pageKey = $params['page_key'] ?? '';
 
         if (empty($pageKey)) {
-            return Response::error('Page key is required', 400);
+            return Response::error('Page key is required', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -33,7 +33,7 @@ class ConfigController extends BaseApiController
             return Response::success($config);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to load config: ' . $e->getMessage(), 500);
+            return Response::error('Failed to load config: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -49,7 +49,7 @@ class ConfigController extends BaseApiController
         $pageKey = $params['page_key'] ?? '';
 
         if (empty($pageKey)) {
-            return Response::error('Page key is required', 400);
+            return Response::error('Page key is required', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -61,7 +61,7 @@ class ConfigController extends BaseApiController
             return Response::success($result);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to load fields: ' . $e->getMessage(), 500);
+            return Response::error('Failed to load fields: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -77,13 +77,13 @@ class ConfigController extends BaseApiController
         $pageKey = $params['page_key'] ?? '';
 
         if (empty($pageKey)) {
-            return Response::error('Page key is required', 400);
+            return Response::error('Page key is required', Response::HTTP_BAD_REQUEST);
         }
 
         $data = $this->getRequestData();
 
         if (!isset($data['fields']) || !is_array($data['fields'])) {
-            return Response::error('Fields array is required', 400);
+            return Response::error('Fields array is required', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -97,11 +97,11 @@ class ConfigController extends BaseApiController
                     'message' => 'Configuration saved successfully',
                 ]);
             } else{
-                return Response::error('Failed to save configuration', 500);
+                return Response::error('Failed to save configuration', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to save config: ' . $e->getMessage(), 500);
+            return Response::error('Failed to save config: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -119,7 +119,7 @@ class ConfigController extends BaseApiController
         $fieldName = $params['field_name'] ?? '';
 
         if (empty($pageKey) || empty($fieldName)) {
-            return Response::error('Page key and field name are required', 400);
+            return Response::error('Page key and field name are required', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -133,11 +133,11 @@ class ConfigController extends BaseApiController
                     'message' => 'Override removed successfully',
                 ]);
             } else {
-                return Response::error('Failed to remove override', 500);
+                return Response::error('Failed to remove override', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to remove override: ' . $e->getMessage(), 500);
+            return Response::error('Failed to remove override: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -153,7 +153,7 @@ class ConfigController extends BaseApiController
         $pageKey = $params['page_key'] ?? '';
 
         if (empty($pageKey)) {
-            return Response::error('Page key is required', 400);
+            return Response::error('Page key is required', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -167,7 +167,7 @@ class ConfigController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to load sections: ' . $e->getMessage(), 500);
+            return Response::error('Failed to load sections: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -183,13 +183,13 @@ class ConfigController extends BaseApiController
         $pageKey = $params['page_key'] ?? '';
 
         if (empty($pageKey)) {
-            return Response::error('Page key is required', 400);
+            return Response::error('Page key is required', Response::HTTP_BAD_REQUEST);
         }
 
         $data = $this->getRequestData();
 
         if (!isset($data['sections']) || !is_array($data['sections'])) {
-            return Response::error('Sections array is required', 400);
+            return Response::error('Sections array is required', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -203,11 +203,11 @@ class ConfigController extends BaseApiController
                     'message' => 'Sections saved successfully',
                 ]);
             } else {
-                return Response::error('Failed to save sections', 500);
+                return Response::error('Failed to save sections', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to save sections: ' . $e->getMessage(), 500);
+            return Response::error('Failed to save sections: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -224,7 +224,7 @@ class ConfigController extends BaseApiController
         $sectionKey = $params['section_key'] ?? '';
 
         if (empty($pageKey) || empty($sectionKey)) {
-            return Response::error('Page key and section key are required', 400);
+            return Response::error('Page key and section key are required', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -238,11 +238,11 @@ class ConfigController extends BaseApiController
                     'message' => 'Section deleted successfully',
                 ]);
             } else {
-                return Response::error('Failed to delete section (base sections cannot be deleted)', 400);
+                return Response::error('Failed to delete section (base sections cannot be deleted)', Response::HTTP_BAD_REQUEST);
             }
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to delete section: ' . $e->getMessage(), 500);
+            return Response::error('Failed to delete section: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
