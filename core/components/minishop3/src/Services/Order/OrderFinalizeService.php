@@ -70,8 +70,9 @@ class OrderFinalizeService
             }
         }
 
-        // Event: before finalize (similar to msOnSubmitOrder but for manager)
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeFinalizeOrder', [
+        // Event: before manager-side order creation (finalize = draft → real order).
+        // Sibling of msOnSubmitOrder but fires in the manager finalize flow.
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeMgrCreateOrder', [
             'service' => $this,
             'msOrder' => $order,
             'from_manager' => true,
@@ -157,8 +158,8 @@ class OrderFinalizeService
         // Reload order after status change
         $order = $this->modx->getObject(msOrder::class, $orderId);
 
-        // Event: after finalize
-        $this->ms3->utils->invokeEvent('msOnFinalizeOrder', [
+        // Event: manager-side order creation finished (draft finalized).
+        $this->ms3->utils->invokeEvent('msOnMgrCreateOrder', [
             'service' => $this,
             'msOrder' => $order,
             'from_manager' => true,
