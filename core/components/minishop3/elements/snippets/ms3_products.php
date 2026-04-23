@@ -368,11 +368,21 @@ if (!empty($scriptProperties['usePackages'])) {
 if (!empty($rows) && is_array($rows)) {
     $productIds = array_column($rows, 'id');
     $modx->invokeEvent('msOnProductsLoad', [
-        'rows' => &$rows,
+        'rows' => $rows,
         'productIds' => $productIds,
         'usePackages' => $usePackages,
         'scriptProperties' => $scriptProperties,
     ]);
+    // Apply plugin mutations via returnedValues (by-ref params don't propagate
+    // through MODX invokeEvent scope isolation). Plugins should set
+    // $modx->event->returnedValues = ['rows' => [...]] with full rows collection
+    // (typically enriched copy of the original array).
+    if (isset($modx->event->returnedValues) && is_array($modx->event->returnedValues)) {
+        $returned = $modx->event->returnedValues;
+        if (isset($returned['rows']) && is_array($returned['rows'])) {
+            $rows = $returned['rows'];
+        }
+    }
     $pdoFetch->addTime('Invoked msOnProductsLoad event');
 }
 
@@ -440,10 +450,18 @@ if (!empty($rows) && is_array($rows)) {
 
         // Event: msOnProductPrepare - enrich single product data from external packages
         $modx->invokeEvent('msOnProductPrepare', [
-            'row' => &$rows[$k],
+            'row' => $rows[$k],
             'productId' => $row['id'],
             'idx' => $row['idx'],
         ]);
+        // Apply plugin mutations via returnedValues (by-ref params don't propagate
+        // through MODX invokeEvent scope isolation).
+        if (isset($modx->event->returnedValues) && is_array($modx->event->returnedValues)) {
+            $returned = $modx->event->returnedValues;
+            if (isset($returned['row']) && is_array($returned['row'])) {
+                $rows[$k] = array_merge($rows[$k], $returned['row']);
+            }
+        }
         $row = $rows[$k]; // Update local variable after event modifications
 
         if ($scriptProperties['return'] == 'data') {

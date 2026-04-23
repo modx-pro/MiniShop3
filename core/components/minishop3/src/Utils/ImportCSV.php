@@ -123,8 +123,16 @@ class ImportCSV
         // Fire before import event
         $eventResult = $this->modx->invokeEvent('msOnBeforeImport', [
             'file' => $this->params['file'],
-            'params' => &$this->params,
+            'params' => $this->params,
         ]);
+        // Apply plugin mutations via returnedValues (by-ref params don't propagate
+        // through MODX invokeEvent scope isolation).
+        if (isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)) {
+            $returned = $this->modx->event->returnedValues;
+            if (isset($returned['params']) && is_array($returned['params'])) {
+                $this->params = array_merge($this->params, $returned['params']);
+            }
+        }
         if ($this->isEventCancelled($eventResult)) {
             $error = $this->modx->lexicon('ms3_utilities_import_cancelled');
             return $this->ms3->utils->error($error);
@@ -347,11 +355,28 @@ class ImportCSV
         $eventResult = $this->modx->invokeEvent('msOnImportRow', [
             'row' => $this->rows,
             'csv' => $csv,
-            'data' => &$data,
-            'tvData' => &$tvData,
-            'optionData' => &$optionData,
-            'gallery' => &$gallery,
+            'data' => $data,
+            'tvData' => $tvData,
+            'optionData' => $optionData,
+            'gallery' => $gallery,
         ]);
+        // Apply plugin mutations via returnedValues (by-ref params don't propagate
+        // through MODX invokeEvent scope isolation).
+        if (isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)) {
+            $returned = $this->modx->event->returnedValues;
+            if (isset($returned['data']) && is_array($returned['data'])) {
+                $data = array_merge($data, $returned['data']);
+            }
+            if (isset($returned['tvData']) && is_array($returned['tvData'])) {
+                $tvData = array_merge($tvData, $returned['tvData']);
+            }
+            if (isset($returned['optionData']) && is_array($returned['optionData'])) {
+                $optionData = array_merge($optionData, $returned['optionData']);
+            }
+            if (isset($returned['gallery']) && is_array($returned['gallery'])) {
+                $gallery = $returned['gallery'];
+            }
+        }
         if ($this->isEventCancelled($eventResult)) {
             $this->skipped++;
             return true;

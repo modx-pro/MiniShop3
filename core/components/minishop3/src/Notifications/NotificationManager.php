@@ -71,10 +71,23 @@ class NotificationManager
         // Fire before event - allows plugins to modify or cancel notification
         $eventResult = $this->modx->invokeEvent('msOnBeforeSendNotification', [
             'notification' => $notification,
-            'recipient' => &$recipient,
+            'recipient' => $recipient,
             'recipientType' => $recipientType,
-            'channels' => &$channels,
+            'channels' => $channels,
         ]);
+
+        // Apply plugin mutations via returnedValues (MODX invokeEvent scope isolation
+        // prevents by-ref params from propagating, so plugins must set
+        // $modx->event->returnedValues = ['recipient' => [...], 'channels' => [...]]).
+        if (isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)) {
+            $returned = $this->modx->event->returnedValues;
+            if (isset($returned['recipient']) && is_array($returned['recipient'])) {
+                $recipient = array_merge($recipient, $returned['recipient']);
+            }
+            if (isset($returned['channels']) && is_array($returned['channels'])) {
+                $channels = $returned['channels'];
+            }
+        }
 
         // Check if notification was cancelled by plugin
         $cancelled = false;
