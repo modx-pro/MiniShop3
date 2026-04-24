@@ -253,17 +253,17 @@ class ServiceRegistry
      */
     protected function loadMainConfig(): void
     {
-        $customConfigPath = $this->modx->getOption(
-            'ms3_services_config',
-            null,
-            MODX_CORE_PATH . 'config/ms3.services.php'
-        );
+        $defaultConfigPath = MODX_CORE_PATH . 'config/ms3.services.php';
+        $configuredPath = $this->modx->getOption('ms3_services_config');
+        $customConfigPath = $configuredPath ?: $defaultConfigPath;
 
         if (!file_exists($customConfigPath)) {
-            $this->modx->log(
-                modX::LOG_LEVEL_DEBUG,
-                "[MiniShop3 ServiceRegistry] Custom config not found: {$customConfigPath}"
-            );
+            if (!empty($configuredPath)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_DEBUG,
+                    "[MiniShop3 ServiceRegistry] Custom config not found: {$customConfigPath}"
+                );
+            }
             return;
         }
 
@@ -309,17 +309,17 @@ class ServiceRegistry
      */
     protected function loadAddonConfigs(): void
     {
-        $addonsDir = $this->modx->getOption(
-            'ms3_services_addons_dir',
-            null,
-            MODX_CORE_PATH . 'config/ms3.services.d/'
-        );
+        $defaultAddonsDir = MODX_CORE_PATH . 'config/ms3.services.d/';
+        $configuredAddonsDir = $this->modx->getOption('ms3_services_addons_dir');
+        $addonsDir = $configuredAddonsDir ?: $defaultAddonsDir;
 
         if (!is_dir($addonsDir)) {
-            $this->modx->log(
-                modX::LOG_LEVEL_DEBUG,
-                "[MiniShop3 ServiceRegistry] Addons directory not found: {$addonsDir}"
-            );
+            if (!empty($configuredAddonsDir)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_DEBUG,
+                    "[MiniShop3 ServiceRegistry] Addons directory not found: {$addonsDir}"
+                );
+            }
             return;
         }
 
