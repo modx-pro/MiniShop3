@@ -17,6 +17,7 @@ $_lang['ms3_cart_cost'] = 'Cost';
 $_lang['ms3_cart_remove'] = 'Remove';
 $_lang['ms3_cart_total'] = 'Total';
 
+$_lang['ms3_cart_get_success'] = 'Cart data retrieved';
 $_lang['ms3_cart_add_success'] = 'Product successfully added to cart: [[+count]]';
 $_lang['ms3_cart_add_err_id'] = 'Error adding to cart: product identifier not specified';
 $_lang['ms3_cart_add_err_nf'] = 'Error adding to cart: product not found';
