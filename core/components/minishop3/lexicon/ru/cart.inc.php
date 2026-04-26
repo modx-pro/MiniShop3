@@ -17,6 +17,7 @@ $_lang['ms3_cart_cost'] = 'Стоимость';
 $_lang['ms3_cart_remove'] = 'Удалить';
 $_lang['ms3_cart_total'] = 'Итого';
 
+$_lang['ms3_cart_get_success'] = 'Данные корзины получены';
 $_lang['ms3_cart_add_success'] = 'Товар успешно добавлен в корзину: [[+count]]';
 $_lang['ms3_cart_add_err_id'] = 'Ошибка добавления в корзину: не указан идентификатор товара';
 $_lang['ms3_cart_add_err_nf'] = 'Ошибка добавления в корзину: товар не найден';
