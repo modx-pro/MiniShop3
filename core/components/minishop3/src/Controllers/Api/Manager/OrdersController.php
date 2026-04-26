@@ -2,8 +2,6 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
-use MiniShop3\Services\Order\OrderLogService;
-use MiniShop3\Services\Order\OrderStatusService;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msExtraField;
@@ -14,11 +12,13 @@ use MiniShop3\Model\msOrderLog;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Router\Response;
-use MiniShop3\Utils\Utils;
-use MODX\Revolution\modSystemEvent;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
+use MiniShop3\Services\Order\OrderLogService;
+use MiniShop3\Services\Order\OrderStatusService;
+use MiniShop3\Utils\Utils;
+use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 
@@ -27,9 +27,11 @@ use MODX\Revolution\modX;
  *
  * Handles CRUD operations for orders in admin panel.
  *
- * Order line items: msOnCreateOrderProduct, msOnUpdateOrderProduct, msOnRemoveOrderProduct run after
- * save/remove; a failing "after" plugin cannot roll back persistence — veto or validation belongs in the
- * matching msOnBefore* handlers or by mutating the object in before-hooks.
+ * Order line items: msOnCreateOrderProduct, msOnUpdateOrderProduct, msOnRemoveOrderProduct run AFTER
+ * save/remove. A failing "after" plugin cannot roll back persistence; we therefore log its error
+ * but never propagate a 4xx response to the client — that would mislead the user into thinking
+ * the action failed when in fact the row is already in DB. Veto or validation belongs in the
+ * matching msOnBefore* handlers, which DO short-circuit with an HTTP error before persistence.
  *
  * @package MiniShop3\Controllers\Api\Manager
  */
@@ -37,6 +39,7 @@ class OrdersController
 {
     protected modX $modx;
     protected ?OrderLogService $orderLog = null;
+    protected ?Utils $ms3Utils = null;
 
     public function __construct(modX $modx)
     {
@@ -70,10 +73,13 @@ class OrdersController
      */
     protected function getMs3Utils(): Utils
     {
-        /** @var MiniShop3 $ms3 */
-        $ms3 = $this->modx->services->get('ms3');
+        if ($this->ms3Utils === null) {
+            /** @var MiniShop3 $ms3 */
+            $ms3 = $this->modx->services->get('ms3');
+            $this->ms3Utils = $ms3->utils;
+        }
 
-        return $ms3->utils;
+        return $this->ms3Utils;
     }
 
     /**
@@ -952,6 +958,7 @@ class OrdersController
 
         $eventContext = [
             'mode' => modSystemEvent::MODE_NEW,
+            // 'object' — MS2-style alias, 'msOrderProduct' — MS3-style; both point at the same row
             'object' => $orderProduct,
             'msOrderProduct' => $orderProduct,
             'msOrder' => $order,
@@ -966,9 +973,15 @@ class OrdersController
             return Response::error('Failed to add product to order', 500)->getData();
         }
 
+        // After-event: row already persisted, a plugin error cannot roll it back. Log and continue
+        // so the client doesn't get a 4xx for a request that actually succeeded server-side.
         $response = $this->getMs3Utils()->invokeEvent('msOnCreateOrderProduct', $eventContext);
         if (!$response['success']) {
-            return Response::error($response['message'], 400)->getData();
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[ms3] msOnCreateOrderProduct after-plugin reported error (persistence already done): '
+                . $response['message']
+            );
         }
 
         // Log product addition
@@ -1087,6 +1100,7 @@ class OrdersController
 
         $eventContext = [
             'mode' => modSystemEvent::MODE_UPD,
+            // 'object' — MS2-style alias, 'msOrderProduct' — MS3-style; both point at the same row
             'object' => $orderProduct,
             'msOrderProduct' => $orderProduct,
             'msOrder' => $order,
@@ -1101,9 +1115,15 @@ class OrdersController
             return Response::error('Failed to update order product', 500)->getData();
         }
 
+        // After-event: row already persisted, a plugin error cannot roll it back. Log and continue
+        // so the client doesn't get a 4xx for a request that actually succeeded server-side.
         $response = $this->getMs3Utils()->invokeEvent('msOnUpdateOrderProduct', $eventContext);
         if (!$response['success']) {
-            return Response::error($response['message'], 400)->getData();
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[ms3] msOnUpdateOrderProduct after-plugin reported error (persistence already done): '
+                . $response['message']
+            );
         }
 
         // Log product update if there were changes
@@ -1178,6 +1198,7 @@ class OrdersController
 
         $eventContext = [
             'id' => $orderProduct->get('id'),
+            // 'object' — MS2-style alias, 'msOrderProduct' — MS3-style; both point at the same row
             'object' => $orderProduct,
             'msOrderProduct' => $orderProduct,
             'msOrder' => $order,
@@ -1192,9 +1213,15 @@ class OrdersController
             return Response::error('Failed to delete order product', 500)->getData();
         }
 
+        // After-event: row already removed, a plugin error cannot roll it back. Log and continue
+        // so the client doesn't get a 4xx for a request that actually succeeded server-side.
         $response = $this->getMs3Utils()->invokeEvent('msOnRemoveOrderProduct', $eventContext);
         if (!$response['success']) {
-            return Response::error($response['message'], 400)->getData();
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[ms3] msOnRemoveOrderProduct after-plugin reported error (persistence already done): '
+                . $response['message']
+            );
         }
 
         // Log product removal
