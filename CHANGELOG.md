@@ -17,6 +17,54 @@
 
 ## Апрель 2026
 
+### [2026-04-27] 🚀 Версия 1.10.1-beta1
+
+**Тип релиза:** PATCH (beta) — точечные исправления и восстановление контракта событий
+
+---
+
+#### 🐛 Исправлено
+
+**Manager API — события жизненного цикла позиции заказа (#208, closes #207):**
+- Vue-админка дёргает `msOnBefore/Create/Update/Remove OrderProduct` через `Utils::invokeEvent` при добавлении/изменении/удалении позиций заказа — раньше события были зарегистрированы в `events.php`, но `OrdersController` их не вызывал, и сторонние подписчики (ms3PromoCode и т.п.) не срабатывали.
+- Before-hooks могут заблокировать операцию через `Response::error(400)`. After-hooks логируются на WARN-уровне с маркером `(persistence already done)` — ошибка плагина после `save()`/`remove()` не возвращается клиенту как 4xx, потому что persistence уже произошёл.
+
+**Опции товара — переключение групп больше не сбрасывает значения (#230):**
+- `ProductOptionsTab.vue` рендерит все группы сразу с `v-show` вместо `v-if`-style монтирования только активной — локальные `value = ref(...)` и hidden inputs сохраняются между переключениями вкладок.
+- Раньше значения, введённые в неактивной группе, терялись и не доезжали на бэкенд (MODX/ExtJS `BasicForm.getValues()` собирает только инпуты, физически присутствующие в DOM на момент сабмита).
+
+**Опции товара — висячие `modcategory_id` после удаления категории (#228):**
+- Плагин `MiniShop3` подписан на `OnCategoryRemove` — обнуляет `msOption.modcategory_id` для всех опций, ссылавшихся на удалённую `modCategory`. Зеркалит штатный паттерн MODX, где `modCategory::remove()` сбрасывает `category` у `modChunk`/`modPlugin`/`modSnippet`/`modTemplate`/`modTemplateVar`.
+- Без фикса в карточке товара мог появиться второй таб «Без группы» с разными мёртвыми `modcategory_id`.
+
+**OrderFinalizeService вызывал несуществующие события (#217):**
+- `msOnBeforeFinalizeOrder` / `msOnFinalizeOrder` нигде не были зарегистрированы как `modEvent`, подписать плагин через UI было нельзя. Заменены на `msOnBeforeMgrCreateOrder` / `msOnMgrCreateOrder` — уже существовали в билдере, но никем не вызывались.
+
+**Импорт товаров — неправильный ключ system setting для дефолтного шаблона (#210):**
+- `Processors\Utilities\Import\Fields::getTvFields()` использовал несуществующий ключ `ms3_product_default_template`. Корректный ключ — `ms3_template_product_default` (используется в `controllers/product/create.class.php`). Из-за опечатки на экране импорта блок «TV-поля» перечислял все TV вместо только привязанных к шаблону-дефолту.
+
+**Cart API — отсутствующий лексикон (#223, closes #222):**
+- Добавлен ключ `ms3_cart_get_success` в `lexicon/{ru,en}/cart.inc.php` — ключ использовался в `Cart::get()`, но без перевода MODX писал в лог `Language string not found`.
+
+**ServiceRegistry — лишний debug-шум в логах (#225, closes #224):**
+- На штатной установке без кастомизации сервисов `loadMainConfig()` / `loadAddonConfigs()` писали DEBUG про отсутствие дефолтных override-путей. Теперь логирование срабатывает только если оператор явно задал `ms3_services_config` / `ms3_services_addons_dir` через system settings, а файла/папки по этому пути нет.
+
+#### 📁 Изменённые файлы
+
+```
+_build/elements/plugins.php
+core/components/minishop3/elements/plugins/minishop3.php
+core/components/minishop3/lexicon/en/cart.inc.php
+core/components/minishop3/lexicon/ru/cart.inc.php
+core/components/minishop3/src/Controllers/Api/Manager/OrdersController.php
+core/components/minishop3/src/Processors/Utilities/Import/Fields.php
+core/components/minishop3/src/ServiceRegistry.php
+core/components/minishop3/src/Services/Order/OrderFinalizeService.php
+vueManager/src/components/product/ProductOptionsTab.vue
+```
+
+---
+
 ### 🚀 Версия 1.10.0-beta1
 
 **Тип релиза:** MINOR (beta) — полный перевод управления опциями с ExtJS на Vue, рефакторинг карточки заказа, self-heal миграция
