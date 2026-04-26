@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1-beta1]
+
+### Fixed
+- Manager API now invokes `msOnBefore/Create/Update/Remove OrderProduct` events when adding, updating, or removing order line items via the Vue admin (#208, closes #207). Before-hooks may abort with HTTP 400; after-hooks are observe-only and their failures are logged at WARN level (`persistence already done`) without returning a 4xx — the row is already in DB. Previously third-party plugins (ms3PromoCode etc.) silently missed these events.
+- Product Options tab: switching between option groups no longer wipes user-entered values (#230). All groups are kept mounted via `v-show` instead of `v-if`-style remount, so per-field local state and hidden inputs survive tab switches and reach the form on submit.
+- Cleared dangling `msOption.modcategory_id` references when a `modCategory` is removed (#228). Plugin subscribes to `OnCategoryRemove` and resets the link to 0, mirroring how MODX core handles `modChunk` / `modPlugin` / `modSnippet` / `modTemplate` / `modTemplateVar` on category removal. Prevents the duplicate "no group" tab in the product options UI when a third-party component is uninstalled.
+- `OrderFinalizeService` now invokes registered `msOnBeforeMgrCreateOrder` / `msOnMgrCreateOrder` instead of non-existent `msOnBeforeFinalizeOrder` / `msOnFinalizeOrder` (#217). The old names were never registered as `modEvent`, so plugins could not subscribe via the UI.
+- Import → TV fields panel uses the correct setting key `ms3_template_product_default` (was: non-existent `ms3_product_default_template`), so the panel lists only TVs bound to the configured default product template instead of every TV in the system (#210).
+- Added missing lexicon `ms3_cart_get_success` in `lexicon/{ru,en}/cart.inc.php` — the key was used by `Cart::get()` but missing from translations, producing `Language string not found` warnings in MODX logs (#223, closes #222).
+- `ServiceRegistry` no longer logs DEBUG noise for missing default optional override paths (`core/config/ms3.services.php`, `core/config/ms3.services.d/`) on stock installations (#225, closes #224). The DEBUG log is preserved when the operator explicitly sets `ms3_services_config` / `ms3_services_addons_dir` system settings to a missing path.
+
 ## [1.10.0-beta1]
 
 ### Added
