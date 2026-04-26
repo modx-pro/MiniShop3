@@ -46,8 +46,6 @@ watch(
   { immediate: true }
 )
 
-const activeGroup = computed(() => groups.value.find(g => g.id === activeGroupId.value) || null)
-
 function onOptionChange(payload) {
   // Hidden inputs propagate values into the MODX form POST automatically.
   // Hook left here for future dirty-tracking / validation wiring.
@@ -89,9 +87,22 @@ function onOptionChange(payload) {
         </button>
       </nav>
 
-      <section class="vtabs-panel" role="tabpanel">
+      <!--
+        All groups are rendered at once and toggled via v-show. This preserves
+        per-field state (local refs, focus, partial input) when the user switches
+        between tabs and — more importantly — keeps every hidden input mounted
+        in the DOM so the MODX/ExtJS form picks them up at submit. v-if-driven
+        unmount/remount loses both.
+      -->
+      <section
+        v-for="group in groups"
+        v-show="group.id === activeGroupId"
+        :key="group.id"
+        class="vtabs-panel"
+        role="tabpanel"
+      >
         <ProductOptionField
-          v-for="option in activeGroup?.options || []"
+          v-for="option in group.options"
           :key="option.key"
           :option="option"
           @change="onOptionChange"
