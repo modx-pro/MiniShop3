@@ -17,6 +17,7 @@
 
 use MiniShop3\Router\Middleware\AuthMiddleware;
 use MiniShop3\Router\Middleware\PermissionMiddleware;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 // $router->get('/api/mgr/my-custom-route', function() use ($modx) {
 //     return Response::success(['message' => 'Custom Manager route works!']);
@@ -55,7 +56,7 @@ use MiniShop3\Router\Response;
 //
 //     $resource = $modx->getObject('modResource', $id);
 //     if (!$resource) {
-//         return Response::error('Resource not found', Response::HTTP_NOT_FOUND);
+//         return Response::error('Resource not found', HttpStatus::NOT_FOUND);
 //     }
 //
 //     return Response::success(['resource' => $resource->toArray()]);

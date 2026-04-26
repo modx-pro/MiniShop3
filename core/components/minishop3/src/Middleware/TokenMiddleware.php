@@ -3,6 +3,7 @@
 namespace MiniShop3\Middleware;
 
 use MiniShop3\Router\Middleware\MiddlewareInterface;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\TokenService;
 use MiniShop3\Utils\CookieHelper;
@@ -125,7 +126,7 @@ class TokenMiddleware implements MiddlewareInterface
                     modX::LOG_LEVEL_ERROR,
                     "[TokenMiddleware] Token not found in database. Token: " . substr($token, 0, 16) . "..."
                 );
-                return Response::error('ms3_err_token_invalid', 401);
+                return Response::error('ms3_err_token_invalid', HttpStatus::UNAUTHORIZED);
             }
         }
 
@@ -141,7 +142,7 @@ class TokenMiddleware implements MiddlewareInterface
                 return null;
             }
 
-            return Response::error('ms3_err_token', 401);
+            return Response::error('ms3_err_token', HttpStatus::UNAUTHORIZED);
         }
 
         return null;

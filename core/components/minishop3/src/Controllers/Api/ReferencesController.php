@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Controllers\Api;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 
 /**
@@ -49,7 +50,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load vendors: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load vendors: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -67,18 +68,18 @@ class ReferencesController extends BaseApiController
             $searchQuery = $_GET['query'] ?? null;
 
             if (empty($fieldName)) {
-                return Response::error('Field name is required', Response::HTTP_BAD_REQUEST);
+                return Response::error('Field name is required', HttpStatus::BAD_REQUEST);
             }
 
             $modelMeta = $this->modx->getFields('MiniShop3\\Model\\msProductData');
             if (!isset($modelMeta[$fieldName])) {
-                return Response::error("Field '{$fieldName}' not found in msProductData", Response::HTTP_BAD_REQUEST);
+                return Response::error("Field '{$fieldName}' not found in msProductData", HttpStatus::BAD_REQUEST);
             }
 
             $tableName = $this->modx->getTableName('MiniShop3\\Model\\msProductData');
 
             if (!preg_match('/^[a-zA-Z0-9_]+$/', $fieldName)) {
-                return Response::error("Invalid field name", Response::HTTP_BAD_REQUEST);
+                return Response::error("Invalid field name", HttpStatus::BAD_REQUEST);
             }
 
             $sql = "SELECT DISTINCT `{$fieldName}` as `value`
@@ -127,7 +128,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load autocomplete: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load autocomplete: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -146,7 +147,7 @@ class ReferencesController extends BaseApiController
             $exclude = isset($_GET['exclude']) ? json_decode($_GET['exclude'], true) : [];
 
             if (empty($key)) {
-                return Response::error('Option key is required', Response::HTTP_BAD_REQUEST);
+                return Response::error('Option key is required', HttpStatus::BAD_REQUEST);
             }
 
             $key = preg_replace('#^options-#', '', $key);
@@ -200,7 +201,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load options: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load options: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -251,7 +252,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load product option fields: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load product option fields: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -270,16 +271,16 @@ class ReferencesController extends BaseApiController
             $searchQuery = $_GET['query'] ?? null;
 
             if (empty($fieldName)) {
-                return Response::error('Field name is required', Response::HTTP_BAD_REQUEST);
+                return Response::error('Field name is required', HttpStatus::BAD_REQUEST);
             }
 
             if (empty($productId)) {
-                return Response::error('Product ID is required', Response::HTTP_BAD_REQUEST);
+                return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
             }
 
             // Validate field name (alphanumeric and underscore only)
             if (!preg_match('/^[a-zA-Z0-9_]+$/', $fieldName)) {
-                return Response::error('Invalid field name', Response::HTTP_BAD_REQUEST);
+                return Response::error('Invalid field name', HttpStatus::BAD_REQUEST);
             }
 
             // Known option fields in msProductData
@@ -292,7 +293,7 @@ class ReferencesController extends BaseApiController
             ]);
 
             if (!in_array($fieldName, $allowedFields) && !$customField) {
-                return Response::error("Field '{$fieldName}' is not available for options", Response::HTTP_BAD_REQUEST);
+                return Response::error("Field '{$fieldName}' is not available for options", HttpStatus::BAD_REQUEST);
             }
 
             $tableName = $this->modx->getTableName('MiniShop3\\Model\\msProductData');
@@ -363,7 +364,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to load field values: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load field values: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -450,7 +451,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to search products: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to search products: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -538,7 +539,7 @@ class ReferencesController extends BaseApiController
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
-            return Response::error('Failed to search customers: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to search customers: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 }

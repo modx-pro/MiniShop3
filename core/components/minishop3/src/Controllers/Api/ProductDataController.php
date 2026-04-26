@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Controllers\Api;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 
 /**
@@ -21,7 +22,7 @@ class ProductDataController extends BaseApiController
         $productId = (int)($params['id'] ?? 0);
 
         if (!$productId) {
-            return Response::error('Product ID is required', Response::HTTP_BAD_REQUEST);
+            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
         }
 
         try {
@@ -31,13 +32,13 @@ class ProductDataController extends BaseApiController
             $data = $productDataService->getProductData($productId);
 
             if (!$data) {
-                return Response::error('Product data not found', Response::HTTP_NOT_FOUND);
+                return Response::error('Product data not found', HttpStatus::NOT_FOUND);
             }
 
             return Response::success($data);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
-            return Response::error('Failed to load product data: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to load product data: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -53,13 +54,13 @@ class ProductDataController extends BaseApiController
         $productId = (int)($params['id'] ?? 0);
 
         if (!$productId) {
-            return Response::error('Product ID is required', Response::HTTP_BAD_REQUEST);
+            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
         }
 
         $data = $this->getRequestData();
 
         if (!$data) {
-            return Response::error('Invalid request data', Response::HTTP_BAD_REQUEST);
+            return Response::error('Invalid request data', HttpStatus::BAD_REQUEST);
         }
 
         try {
@@ -77,7 +78,7 @@ class ProductDataController extends BaseApiController
             return Response::error($message, $code);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
-            return Response::error('Failed to save product data: ' . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+            return Response::error('Failed to save product data: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 }

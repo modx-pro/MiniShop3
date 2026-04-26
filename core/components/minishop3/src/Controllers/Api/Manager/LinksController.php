@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msLink;
 use MiniShop3\Model\msProductLink;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -89,13 +90,13 @@ class LinksController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Link ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Link ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $link = $this->modx->getObject(msLink::class, $id);
 
         if (!$link) {
-            return Response::error('Link not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Link not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatLink($link))->getData();
@@ -134,15 +135,15 @@ class LinksController
     public function create(array $data = []): array
     {
         if (empty($data['name'])) {
-            return Response::error('Link name is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Link name is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (empty($data['type'])) {
-            return Response::error('Link type is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Link type is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!in_array($data['type'], $this->linkTypes)) {
-            return Response::error('Invalid link type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid link type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $link = $this->modx->newObject(msLink::class);
@@ -156,7 +157,7 @@ class LinksController
         }
 
         if (!$link->save()) {
-            return Response::error('Failed to create link', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to create link', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatLink($link), 'Link created successfully')->getData();
@@ -174,13 +175,13 @@ class LinksController
         $id = (int)($data['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Link ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Link ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $link = $this->modx->getObject(msLink::class, $id);
 
         if (!$link) {
-            return Response::error('Link not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Link not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         // Note: type cannot be changed after creation
@@ -193,7 +194,7 @@ class LinksController
         }
 
         if (!$link->save()) {
-            return Response::error('Failed to save link', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to save link', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatLink($link), 'Link updated successfully')->getData();
@@ -211,23 +212,23 @@ class LinksController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Link ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Link ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $link = $this->modx->getObject(msLink::class, $id);
 
         if (!$link) {
-            return Response::error('Link not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Link not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         // Check if link is used by products
         $usageCount = $this->modx->getCount(msProductLink::class, ['link_id' => $id]);
         if ($usageCount > 0) {
-            return Response::error("Cannot delete link: it is used by {$usageCount} product connections", Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error("Cannot delete link: it is used by {$usageCount} product connections", HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!$link->remove()) {
-            return Response::error('Failed to delete link', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete link', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Link deleted successfully')->getData();
@@ -245,7 +246,7 @@ class LinksController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Link IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Link IDs array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ids = array_filter(array_map('intval', $ids), function ($id) {
@@ -253,7 +254,7 @@ class LinksController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid link IDs provided', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('No valid link IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -284,9 +285,9 @@ class LinksController
 
         if ($deleted === 0) {
             if ($inUse > 0) {
-                return Response::error("Cannot delete: {$inUse} links are in use", Response::HTTP_BAD_REQUEST)->getData();
+                return Response::error("Cannot delete: {$inUse} links are in use", HttpStatus::BAD_REQUEST)->getData();
             }
-            return Response::error('Failed to delete links', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete links', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([

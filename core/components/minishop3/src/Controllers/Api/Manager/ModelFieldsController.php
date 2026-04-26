@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msModelField;
 use MiniShop3\Model\msModelFieldSection;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\ComboConfigManager;
 use MODX\Revolution\modX;
@@ -106,13 +107,13 @@ class ModelFieldsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Field ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Field ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $field = $this->modx->getObject(msModelField::class, $id);
 
         if (!$field) {
-            return Response::error('Field not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Field not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatField($field))->getData();
@@ -131,11 +132,11 @@ class ModelFieldsController
         $name = $params['name'] ?? '';
 
         if (empty($model) || empty($name)) {
-            return Response::error('Model and name are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Model and name are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!in_array($model, msModelField::getAvailableModels())) {
-            return Response::error('Invalid model type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid model type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Check if field already exists
@@ -145,7 +146,7 @@ class ModelFieldsController
         ]);
 
         if ($existing) {
-            return Response::error('Field with this name already exists for this model', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Field with this name already exists for this model', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $field = $this->modx->newObject(msModelField::class);
@@ -165,10 +166,10 @@ class ModelFieldsController
         ]);
 
         if (!$field->save()) {
-            return Response::error('Failed to create field', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to create field', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
-        return Response::success($this->formatField($field), 'Field created successfully', 201)->getData();
+        return Response::success($this->formatField($field), 'Field created successfully', HttpStatus::CREATED)->getData();
     }
 
     /**
@@ -183,13 +184,13 @@ class ModelFieldsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Field ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Field ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $field = $this->modx->getObject(msModelField::class, $id);
 
         if (!$field) {
-            return Response::error('Field not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Field not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         // Check uniqueness if name or model changed
@@ -205,13 +206,13 @@ class ModelFieldsController
                 ]);
 
                 if ($existing) {
-                    return Response::error('Field with this name already exists for this model', Response::HTTP_BAD_REQUEST)->getData();
+                    return Response::error('Field with this name already exists for this model', HttpStatus::BAD_REQUEST)->getData();
                 }
             }
         }
 
         if (isset($params['model']) && !in_array($params['model'], msModelField::getAvailableModels())) {
-            return Response::error('Invalid model type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid model type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $updateFields = ['model', 'name', 'label', 'xtype', 'visible', 'required', 'sort_order', 'section_id', 'width', 'placeholder', 'description', 'config'];
@@ -230,7 +231,7 @@ class ModelFieldsController
         }
 
         if (!$field->save()) {
-            return Response::error('Failed to update field', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to update field', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatField($field), 'Field updated successfully')->getData();
@@ -248,17 +249,17 @@ class ModelFieldsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Field ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Field ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $field = $this->modx->getObject(msModelField::class, $id);
 
         if (!$field) {
-            return Response::error('Field not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Field not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         if (!$field->remove()) {
-            return Response::error('Failed to delete field', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete field', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success(null, 'Field deleted successfully')->getData();
@@ -300,11 +301,11 @@ class ModelFieldsController
         $model = $params['model'] ?? '';
 
         if (empty($model)) {
-            return Response::error('Model is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Model is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!in_array($model, msModelField::getAvailableModels())) {
-            return Response::error('Invalid model type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid model type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // `comboOptions` may include status/payment/delivery names stored as lexicon keys.
@@ -396,7 +397,7 @@ class ModelFieldsController
         $ranks = $params['ranks'] ?? [];
 
         if (empty($ranks) || !is_array($ranks)) {
-            return Response::error('Ranks array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Ranks array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         foreach ($ranks as $item) {
@@ -505,11 +506,11 @@ class ModelFieldsController
         $model = $params['model'] ?? '';
 
         if (empty($model)) {
-            return Response::error('Model is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Model is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!in_array($model, msModelFieldSection::getAvailableModels())) {
-            return Response::error('Invalid model type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid model type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $this->modx->lexicon->load('minishop3:vue');
@@ -536,11 +537,11 @@ class ModelFieldsController
         $sectionKey = $params['section_key'] ?? '';
 
         if (empty($model) || empty($sectionKey)) {
-            return Response::error('Model and section_key are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Model and section_key are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!in_array($model, msModelFieldSection::getAvailableModels())) {
-            return Response::error('Invalid model type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid model type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Check if section already exists
@@ -550,7 +551,7 @@ class ModelFieldsController
         ]);
 
         if ($existing) {
-            return Response::error('Section with this key already exists for this model', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Section with this key already exists for this model', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $section = $this->modx->newObject(msModelFieldSection::class);
@@ -565,11 +566,11 @@ class ModelFieldsController
         ]);
 
         if (!$section->save()) {
-            return Response::error('Failed to create section', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to create section', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         $this->modx->lexicon->load('minishop3:vue');
-        return Response::success($this->formatSection($section), 'Section created successfully', 201)->getData();
+        return Response::success($this->formatSection($section), 'Section created successfully', HttpStatus::CREATED)->getData();
     }
 
     /**
@@ -584,13 +585,13 @@ class ModelFieldsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Section ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Section ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $section = $this->modx->getObject(msModelFieldSection::class, $id);
 
         if (!$section) {
-            return Response::error('Section not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Section not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $updateFields = ['label', 'lexicon_key', 'hidden', 'sort_order'];
@@ -607,7 +608,7 @@ class ModelFieldsController
         }
 
         if (!$section->save()) {
-            return Response::error('Failed to update section', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to update section', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         $this->modx->lexicon->load('minishop3:vue');
@@ -626,18 +627,18 @@ class ModelFieldsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Section ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Section ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $section = $this->modx->getObject(msModelFieldSection::class, $id);
 
         if (!$section) {
-            return Response::error('Section not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Section not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         // Check if it's a default section
         if ($section->get('is_default')) {
-            return Response::error('Cannot delete default section', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Cannot delete default section', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Set fields in this section to null
@@ -649,7 +650,7 @@ class ModelFieldsController
         }
 
         if (!$section->remove()) {
-            return Response::error('Failed to delete section', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete section', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success(null, 'Section deleted successfully')->getData();
@@ -667,7 +668,7 @@ class ModelFieldsController
         $ranks = $params['ranks'] ?? [];
 
         if (empty($ranks) || !is_array($ranks)) {
-            return Response::error('Ranks array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Ranks array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         foreach ($ranks as $item) {
@@ -704,11 +705,11 @@ class ModelFieldsController
         $model = $params['model'] ?? '';
 
         if (empty($model)) {
-            return Response::error('Model is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Model is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!in_array($model, msModelField::getAvailableModels())) {
-            return Response::error('Invalid model type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid model type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Get fields with combo xtypes (select, combobox, dropdown, etc.)
@@ -749,11 +750,11 @@ class ModelFieldsController
         $fieldName = $params['field_name'] ?? '';
 
         if (empty($model) || empty($fieldName)) {
-            return Response::error('Model and field_name are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Model and field_name are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!in_array($model, msModelField::getAvailableModels())) {
-            return Response::error('Invalid model type', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Invalid model type', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Get field from database

@@ -7,11 +7,6 @@ namespace MiniShop3\Router;
  */
 class Response
 {
-    public const HTTP_OK = HttpStatus::OK;
-    public const HTTP_BAD_REQUEST = HttpStatus::BAD_REQUEST;
-    public const HTTP_NOT_FOUND = HttpStatus::NOT_FOUND;
-    public const HTTP_INTERNAL_SERVER_ERROR = HttpStatus::INTERNAL_SERVER_ERROR;
-
     protected $data;
     protected $statusCode;
     protected $headers = [];
@@ -26,7 +21,7 @@ class Response
     /**
      * Create success response
      */
-    public static function success(mixed $data = null, ?string $message = null, int $statusCode = self::HTTP_OK): self
+    public static function success(mixed $data = null, ?string $message = null, int $statusCode = HttpStatus::OK): self
     {
         return new self([
             'success' => true,
@@ -38,7 +33,7 @@ class Response
     /**
      * Create error response
      */
-    public static function error(string $message, int $statusCode = self::HTTP_BAD_REQUEST, mixed $errors = null): self
+    public static function error(string $message, int $statusCode = HttpStatus::BAD_REQUEST, mixed $errors = null): self
     {
         return new self([
             'success' => false,

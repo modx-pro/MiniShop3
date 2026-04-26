@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Controllers\Api\Web;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -34,7 +35,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -62,11 +63,11 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         if (empty($key)) {
-            return Response::error('Field key is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Field key is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -93,11 +94,11 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         if (empty($fields) || !is_array($fields)) {
-            return Response::error('Fields array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Fields array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -124,11 +125,11 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         if (empty($key)) {
-            return Response::error('Field key is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Field key is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -140,7 +141,7 @@ class OrderController
         if ($exists) {
             return Response::success(['removed' => $key], 'Field removed successfully')->getData();
         } else {
-            return Response::error('Field not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Field not found', HttpStatus::NOT_FOUND)->getData();
         }
     }
 
@@ -159,7 +160,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -183,7 +184,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -207,7 +208,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -231,7 +232,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -255,7 +256,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -279,7 +280,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -306,7 +307,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -330,7 +331,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -357,7 +358,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -384,7 +385,7 @@ class OrderController
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
-            return Response::error('Token is required', 401)->getData();
+            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -425,7 +426,7 @@ class OrderController
         if ($result['success']) {
             return Response::success($result['data'], $result['message'] ?? '')->getData();
         } else {
-            return Response::error($result['message'] ?? 'Unknown error', Response::HTTP_BAD_REQUEST, $result['data'] ?? [])->getData();
+            return Response::error($result['message'] ?? 'Unknown error', HttpStatus::BAD_REQUEST, $result['data'] ?? [])->getData();
         }
     }
 }

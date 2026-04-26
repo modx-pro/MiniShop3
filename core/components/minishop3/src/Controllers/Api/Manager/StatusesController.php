@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msOrderStatus;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -78,13 +79,13 @@ class StatusesController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Status ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Status ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $status = $this->modx->getObject(msOrderStatus::class, $id);
 
         if (!$status) {
-            return Response::error('Status not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Status not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatStatus($status))->getData();
@@ -100,7 +101,7 @@ class StatusesController
     public function create(array $data = []): array
     {
         if (empty($data['name'])) {
-            return Response::error('Status name is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Status name is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Get max position for new status
@@ -131,7 +132,7 @@ class StatusesController
         $status->set('position', $maxPosition + 1);
 
         if (!$status->save()) {
-            return Response::error('Failed to create status', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to create status', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatStatus($status), 'Status created successfully')->getData();
@@ -149,13 +150,13 @@ class StatusesController
         $id = (int)($data['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Status ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Status ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $status = $this->modx->getObject(msOrderStatus::class, $id);
 
         if (!$status) {
-            return Response::error('Status not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Status not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $allowedFields = ['name', 'description', 'color', 'active', 'final', 'fixed', 'editable'];
@@ -172,7 +173,7 @@ class StatusesController
         }
 
         if (!$status->save()) {
-            return Response::error('Failed to save status', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to save status', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatStatus($status), 'Status updated successfully')->getData();
@@ -190,23 +191,23 @@ class StatusesController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Status ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Status ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $status = $this->modx->getObject(msOrderStatus::class, $id);
 
         if (!$status) {
-            return Response::error('Status not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Status not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         // Check if status is used by orders
         $ordersCount = $this->modx->getCount('MiniShop3\\Model\\msOrder', ['status_id' => $id]);
         if ($ordersCount > 0) {
-            return Response::error("Cannot delete status: {$ordersCount} orders are using it", Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error("Cannot delete status: {$ordersCount} orders are using it", HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (!$status->remove()) {
-            return Response::error('Failed to delete status', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete status', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Status deleted successfully')->getData();
@@ -224,7 +225,7 @@ class StatusesController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Status IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Status IDs array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ids = array_filter(array_map('intval', $ids), function ($id) {
@@ -232,7 +233,7 @@ class StatusesController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid status IDs provided', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('No valid status IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -263,9 +264,9 @@ class StatusesController
 
         if ($deleted === 0) {
             if ($inUse > 0) {
-                return Response::error("Cannot delete: {$inUse} statuses are in use by orders", Response::HTTP_BAD_REQUEST)->getData();
+                return Response::error("Cannot delete: {$inUse} statuses are in use by orders", HttpStatus::BAD_REQUEST)->getData();
             }
-            return Response::error('Failed to delete statuses', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete statuses', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([
@@ -287,7 +288,7 @@ class StatusesController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Status IDs array is required for sorting', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Status IDs array is required for sorting', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $position = 0;

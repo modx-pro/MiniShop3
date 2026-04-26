@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -130,13 +131,13 @@ class CustomersController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Customer ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Customer ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $customer = $this->modx->getObject(msCustomer::class, $id);
 
         if (!$customer) {
-            return Response::error('Customer not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Customer not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatCustomer($customer))->getData();
@@ -154,13 +155,13 @@ class CustomersController
         $id = (int)($data['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Customer ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Customer ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $customer = $this->modx->getObject(msCustomer::class, $id);
 
         if (!$customer) {
-            return Response::error('Customer not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Customer not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $allowedFields = ['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_blocked'];
@@ -177,7 +178,7 @@ class CustomersController
         }
 
         if (!$customer->save()) {
-            return Response::error('Failed to save customer', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to save customer', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success($this->formatCustomer($customer), 'Customer updated successfully')->getData();
@@ -195,13 +196,13 @@ class CustomersController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Customer ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Customer ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $customer = $this->modx->getObject(msCustomer::class, $id);
 
         if (!$customer) {
-            return Response::error('Customer not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Customer not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $addresses = $this->modx->getIterator(\MiniShop3\Model\msCustomerAddress::class, ['customer_id' => $id]);
@@ -215,7 +216,7 @@ class CustomersController
         }
 
         if (!$customer->remove()) {
-            return Response::error('Failed to delete customer', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete customer', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Customer deleted successfully')->getData();
@@ -233,7 +234,7 @@ class CustomersController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Customer IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Customer IDs array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Sanitize IDs
@@ -242,7 +243,7 @@ class CustomersController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid customer IDs provided', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('No valid customer IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -276,7 +277,7 @@ class CustomersController
         }
 
         if ($deleted === 0) {
-            return Response::error('Failed to delete customers', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete customers', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([

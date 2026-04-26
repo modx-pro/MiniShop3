@@ -27,6 +27,7 @@
  * @version 1.0.0
  */
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Middleware\TokenMiddleware;
 use MiniShop3\Middleware\CorsMiddleware;
@@ -149,7 +150,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             );
 
             if ($response->isError()) {
-                return Response::error($response->getMessage(), Response::HTTP_BAD_REQUEST);
+                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
             }
 
             return Response::success($response->getObject(), $response->getMessage());
@@ -178,7 +179,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             );
 
             if ($response->isError()) {
-                return Response::error($response->getMessage(), Response::HTTP_BAD_REQUEST);
+                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
             }
 
             return Response::success($response->getObject(), $response->getMessage());

@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msCategory;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\FilterConfigManager;
 use MODX\Revolution\modX;
@@ -37,12 +38,12 @@ class CategoryProductsController
         $categoryId = (int)($params['id'] ?? 0);
 
         if (!$categoryId) {
-            return Response::error('Category ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $category = $this->modx->getObject(msCategory::class, $categoryId);
         if (!$category) {
-            return Response::error('Category not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Category not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $start = (int)($params['start'] ?? 0);
@@ -197,11 +198,11 @@ class CategoryProductsController
         $items = $params['items'] ?? [];
 
         if (!$categoryId) {
-            return Response::error('Category ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (empty($items) || !is_array($items)) {
-            return Response::error('Items array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Items array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $updated = 0;
@@ -245,11 +246,11 @@ class CategoryProductsController
         $ids = $params['ids'] ?? [];
 
         if (empty($method)) {
-            return Response::error('Method is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Method is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Product IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Product IDs array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Sanitize IDs
@@ -258,7 +259,7 @@ class CategoryProductsController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid product IDs provided', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('No valid product IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $success = 0;
@@ -325,7 +326,7 @@ class CategoryProductsController
         }
 
         if ($success === 0) {
-            return Response::error('No products were updated', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('No products were updated', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([
@@ -360,13 +361,13 @@ class CategoryProductsController
         $published = isset($params['published']) ? (int)$params['published'] : null;
 
         if (!$productId) {
-            return Response::error('Product ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $product = $this->modx->getObject(msProduct::class, $productId);
 
         if (!$product) {
-            return Response::error('Product not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Product not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         // If published param not provided, toggle current state
@@ -384,7 +385,7 @@ class CategoryProductsController
         }
 
         if (!$product->save()) {
-            return Response::error('Failed to update product', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to update product', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([

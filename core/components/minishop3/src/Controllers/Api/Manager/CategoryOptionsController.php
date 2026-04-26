@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Option\OptionService;
 use MODX\Revolution\modX;
@@ -37,7 +38,7 @@ class CategoryOptionsController
     {
         $categoryId = (int)($params['category_id'] ?? 0);
         if (!$categoryId) {
-            return Response::error('category_id is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('category_id is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $query = trim((string)($params['query'] ?? ''));
@@ -89,11 +90,11 @@ class CategoryOptionsController
         $categoryId = (int)($data['category_id'] ?? 0);
         $optionId = (int)($data['option_id'] ?? 0);
         if (!$categoryId || !$optionId) {
-            return Response::error('category_id and option_id are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('category_id and option_id are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         if ($this->modx->getCount(msCategoryOption::class, ['category_id' => $categoryId, 'option_id' => $optionId]) > 0) {
-            return Response::error('Option already assigned to this category', 422)->getData();
+            return Response::error('Option already assigned to this category', HttpStatus::UNPROCESSABLE_ENTITY)->getData();
         }
 
         $position = $this->modx->getCount(msCategoryOption::class, ['category_id' => $categoryId]);
@@ -109,7 +110,7 @@ class CategoryOptionsController
         );
 
         if (!$ok) {
-            return Response::error('Failed to add option to category', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to add option to category', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         if (!empty($data['required'])) {
@@ -139,7 +140,7 @@ class CategoryOptionsController
         $categoryId = (int)($data['category_id'] ?? 0);
         $optionId = (int)($data['option_id'] ?? 0);
         if (!$categoryId || !$optionId) {
-            return Response::error('category_id and option_id are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('category_id and option_id are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $link = $this->modx->getObject(msCategoryOption::class, [
@@ -147,7 +148,7 @@ class CategoryOptionsController
             'option_id' => $optionId,
         ]);
         if (!$link) {
-            return Response::error('Link not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Link not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $allowed = ['value', 'active', 'required', 'position', 'caption', 'description'];
@@ -163,7 +164,7 @@ class CategoryOptionsController
         }
 
         if (!$link->save()) {
-            return Response::error('Failed to update link', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to update link', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Link updated')->getData();
@@ -177,12 +178,12 @@ class CategoryOptionsController
         $categoryId = (int)($params['category_id'] ?? 0);
         $optionId = (int)($params['option_id'] ?? 0);
         if (!$categoryId || !$optionId) {
-            return Response::error('category_id and option_id are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('category_id and option_id are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ok = $this->optionService->removeOptionFromCategory($optionId, $categoryId);
         if (!$ok) {
-            return Response::error('Failed to remove link', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to remove link', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Link removed')->getData();
@@ -202,7 +203,7 @@ class CategoryOptionsController
             $optionIds = is_array($decoded) ? $decoded : [];
         }
         if (!$categoryId || !is_array($optionIds) || $optionIds === []) {
-            return Response::error('category_id and option_ids are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('category_id and option_ids are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $position = 0;
@@ -241,12 +242,12 @@ class CategoryOptionsController
         $optionIds = array_values(array_filter(array_map('intval', is_array($optionIds) ? $optionIds : [])));
 
         if (!$categoryId || $optionIds === []) {
-            return Response::error('category_id and option_ids are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('category_id and option_ids are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $allowedActions = ['activate', 'deactivate', 'require', 'unrequire', 'remove'];
         if (!in_array($action, $allowedActions, true)) {
-            return Response::error("Unknown action '{$action}'", Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error("Unknown action '{$action}'", HttpStatus::BAD_REQUEST)->getData();
         }
 
         $affected = 0;
@@ -300,16 +301,16 @@ class CategoryOptionsController
         $categoryTo = (int)($data['category_id'] ?? 0);
         $categoryFrom = (int)($data['category_from'] ?? 0);
         if (!$categoryTo || !$categoryFrom) {
-            return Response::error('category_id and category_from are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('category_id and category_from are required', HttpStatus::BAD_REQUEST)->getData();
         }
         if ($categoryTo === $categoryFrom) {
-            return Response::error('Source and target categories must be different', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Source and target categories must be different', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $fromCategory = $this->modx->getObject(msCategory::class, $categoryFrom);
         $toCategory = $this->modx->getObject(msCategory::class, $categoryTo);
         if (!$fromCategory || !$toCategory) {
-            return Response::error('Category not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Category not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $copied = 0;

@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msDeliveryMember;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -89,13 +90,13 @@ class DeliveriesController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Delivery ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $delivery = $this->modx->getObject(msDelivery::class, $id);
 
         if (!$delivery) {
-            return Response::error('Delivery not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Delivery not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $data = $this->formatDelivery($delivery);
@@ -120,7 +121,7 @@ class DeliveriesController
     public function create(array $data = []): array
     {
         if (empty($data['name'])) {
-            return Response::error('Delivery name is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery name is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $delivery = $this->modx->newObject(msDelivery::class);
@@ -146,7 +147,7 @@ class DeliveriesController
         }
 
         if (!$delivery->save()) {
-            return Response::error('Failed to create delivery', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to create delivery', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         // Handle payments assignment
@@ -169,13 +170,13 @@ class DeliveriesController
         $id = (int)($data['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Delivery ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $delivery = $this->modx->getObject(msDelivery::class, $id);
 
         if (!$delivery) {
-            return Response::error('Delivery not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Delivery not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $allowedFields = ['name', 'description', 'price', 'weight_price', 'distance_price',
@@ -189,7 +190,7 @@ class DeliveriesController
         }
 
         if (!$delivery->save()) {
-            return Response::error('Failed to save delivery', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to save delivery', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         // Handle payments assignment
@@ -212,13 +213,13 @@ class DeliveriesController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Delivery ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $delivery = $this->modx->getObject(msDelivery::class, $id);
 
         if (!$delivery) {
-            return Response::error('Delivery not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Delivery not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         // Delete related payment members
@@ -227,7 +228,7 @@ class DeliveriesController
         }
 
         if (!$delivery->remove()) {
-            return Response::error('Failed to delete delivery', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete delivery', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Delivery deleted successfully')->getData();
@@ -245,7 +246,7 @@ class DeliveriesController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Delivery IDs array is required for sorting', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery IDs array is required for sorting', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $position = 0;
@@ -276,7 +277,7 @@ class DeliveriesController
         $ids = $data['ids'] ?? [];
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Delivery IDs array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery IDs array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ids = array_filter(array_map('intval', $ids), function ($id) {
@@ -284,7 +285,7 @@ class DeliveriesController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid delivery IDs provided', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('No valid delivery IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -311,7 +312,7 @@ class DeliveriesController
         }
 
         if ($deleted === 0) {
-            return Response::error('Failed to delete deliveries', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete deliveries', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([
@@ -332,7 +333,7 @@ class DeliveriesController
         $positions = $data['positions'] ?? [];
 
         if (empty($positions) || !is_array($positions)) {
-            return Response::error('Positions array is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Positions array is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $updated = 0;
@@ -386,7 +387,7 @@ class DeliveriesController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Delivery ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $results = [];
@@ -413,7 +414,7 @@ class DeliveriesController
         $paymentId = (int)($data['payment_id'] ?? 0);
 
         if (!$deliveryId || !$paymentId) {
-            return Response::error('Delivery ID and Payment ID are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery ID and Payment ID are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         // Check if relationship already exists
@@ -431,7 +432,7 @@ class DeliveriesController
         $member->set('payment_id', $paymentId);
 
         if (!$member->save()) {
-            return Response::error('Failed to add payment to delivery', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to add payment to delivery', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Payment added to delivery')->getData();
@@ -450,7 +451,7 @@ class DeliveriesController
         $paymentId = (int)($params['payment_id'] ?? 0);
 
         if (!$deliveryId || !$paymentId) {
-            return Response::error('Delivery ID and Payment ID are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Delivery ID and Payment ID are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $member = $this->modx->getObject(msDeliveryMember::class, [
@@ -459,11 +460,11 @@ class DeliveriesController
         ]);
 
         if (!$member) {
-            return Response::error('Payment link not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Payment link not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         if (!$member->remove()) {
-            return Response::error('Failed to remove payment from delivery', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to remove payment from delivery', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Payment removed from delivery')->getData();

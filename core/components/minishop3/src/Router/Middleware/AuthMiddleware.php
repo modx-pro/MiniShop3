@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Router\Middleware;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -32,7 +33,7 @@ class AuthMiddleware implements MiddlewareInterface
     public function handle(array $params)
     {
         if (!$this->modx->user || !$this->modx->user->isAuthenticated($this->context)) {
-            return Response::error('Unauthorized. Please log in.', 401);
+            return Response::error('Unauthorized. Please log in.', HttpStatus::UNAUTHORIZED);
         }
 
         if ($this->context === 'mgr') {
@@ -55,11 +56,11 @@ class AuthMiddleware implements MiddlewareInterface
         $providedToken = $_SERVER['HTTP_MODAUTH'] ?? $_REQUEST['HTTP_MODAUTH'] ?? null;
 
         if (!$providedToken) {
-            return Response::error('Missing HTTP_MODAUTH token', 401);
+            return Response::error('Missing HTTP_MODAUTH token', HttpStatus::UNAUTHORIZED);
         }
 
         if (!hash_equals($expectedToken, $providedToken)) {
-            return Response::error('Invalid HTTP_MODAUTH token', 401);
+            return Response::error('Invalid HTTP_MODAUTH token', HttpStatus::UNAUTHORIZED);
         }
 
         return null;

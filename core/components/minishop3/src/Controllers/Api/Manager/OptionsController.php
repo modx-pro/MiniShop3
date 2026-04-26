@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Option\OptionCategoryService;
 use MiniShop3\Services\Option\OptionService;
@@ -96,12 +97,12 @@ class OptionsController
     {
         $id = (int)($params['id'] ?? 0);
         if (!$id) {
-            return Response::error('Option ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Option ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $option = $this->modx->getObject(msOption::class, $id);
         if (!$option) {
-            return Response::error('Option not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Option not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $data = $this->formatOption($option);
@@ -117,19 +118,19 @@ class OptionsController
     {
         $key = trim((string)($data['key'] ?? ''));
         if ($key === '') {
-            return Response::error('Option key is required', Response::HTTP_BAD_REQUEST, ['errors' => ['key']])->getData();
+            return Response::error('Option key is required', HttpStatus::BAD_REQUEST, ['errors' => ['key']])->getData();
         }
         $key = str_replace('.', '_', $key);
 
         if ($this->modx->getCount(msOption::class, ['key' => $key]) > 0) {
-            return Response::error("Option with key '{$key}' already exists", 422, ['errors' => ['key']])->getData();
+            return Response::error("Option with key '{$key}' already exists", HttpStatus::UNPROCESSABLE_ENTITY, ['errors' => ['key']])->getData();
         }
 
         $option = $this->modx->newObject(msOption::class);
         $this->applyWritableFields($option, array_merge($data, ['key' => $key]));
 
         if (!$option->save()) {
-            return Response::error('Failed to create option', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to create option', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         $this->syncCategoriesFromPayload($option, $data['categories'] ?? null);
@@ -149,23 +150,23 @@ class OptionsController
     {
         $id = (int)($data['id'] ?? 0);
         if (!$id) {
-            return Response::error('Option ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Option ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $option = $this->modx->getObject(msOption::class, $id);
         if (!$option) {
-            return Response::error('Option not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Option not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $oldKey = $option->get('key');
         if (isset($data['key'])) {
             $newKey = str_replace('.', '_', trim((string)$data['key']));
             if ($newKey === '') {
-                return Response::error('Option key is required', Response::HTTP_BAD_REQUEST, ['errors' => ['key']])->getData();
+                return Response::error('Option key is required', HttpStatus::BAD_REQUEST, ['errors' => ['key']])->getData();
             }
             if ($newKey !== $oldKey
                 && $this->modx->getCount(msOption::class, ['key' => $newKey, 'id:!=' => $id]) > 0) {
-                return Response::error("Option with key '{$newKey}' already exists", 422, ['errors' => ['key']])->getData();
+                return Response::error("Option with key '{$newKey}' already exists", HttpStatus::UNPROCESSABLE_ENTITY, ['errors' => ['key']])->getData();
             }
             $data['key'] = $newKey;
         }
@@ -173,7 +174,7 @@ class OptionsController
         $this->applyWritableFields($option, $data);
 
         if (!$option->save()) {
-            return Response::error('Failed to save option', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to save option', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         $this->syncCategoriesFromPayload($option, $data['categories'] ?? null);
@@ -199,16 +200,16 @@ class OptionsController
     {
         $id = (int)($params['id'] ?? 0);
         if (!$id) {
-            return Response::error('Option ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Option ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $option = $this->modx->getObject(msOption::class, $id);
         if (!$option) {
-            return Response::error('Option not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Option not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         if (!$option->remove()) {
-            return Response::error('Failed to delete option', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete option', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], 'Option deleted')->getData();
@@ -223,7 +224,7 @@ class OptionsController
     {
         $ids = $this->decodeIntArray($data['ids'] ?? null);
         if ($ids === []) {
-            return Response::error('No valid option IDs provided', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('No valid option IDs provided', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $deleted = 0;
@@ -238,7 +239,7 @@ class OptionsController
         }
 
         if ($deleted === 0) {
-            return Response::error('No options were deleted', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('No options were deleted', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([
@@ -260,7 +261,7 @@ class OptionsController
         $categoryIds = $this->decodeIntArray($data['categories'] ?? null);
 
         if ($optionIds === [] || $categoryIds === []) {
-            return Response::error('Both options and categories are required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Both options and categories are required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $assigned = 0;
@@ -410,7 +411,7 @@ class OptionsController
     {
         $key = trim((string)($params['key'] ?? ''));
         if ($key === '') {
-            return Response::error('key is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('key is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $query = trim((string)($params['query'] ?? ''));

@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Order\OrderStatusService;
 use MODX\Revolution\modX;
@@ -39,13 +40,13 @@ class CustomerOrderController
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_unauthorized'), 401)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_unauthorized'), HttpStatus::UNAUTHORIZED)->getData();
         }
 
         $orderId = (int)($params['id'] ?? 0);
 
         if (!$orderId) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_no_order'), Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_no_order'), HttpStatus::BAD_REQUEST)->getData();
         }
 
         /** @var msOrder|null $order */
@@ -55,7 +56,7 @@ class CustomerOrderController
         ]);
 
         if (!$order) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_not_found'), Response::HTTP_NOT_FOUND)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_not_found'), HttpStatus::NOT_FOUND)->getData();
         }
 
         /** @var OrderStatusService $orderStatusService */
@@ -64,7 +65,7 @@ class CustomerOrderController
         $currentStatusId = (int) $order->get('status_id');
 
         if (!in_array($currentStatusId, $allowedStatusIds, true)) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_status'), Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_status'), HttpStatus::BAD_REQUEST)->getData();
         }
 
         $cancelledStatusId = (int) $this->modx->getOption('ms3_status_canceled', null, 5);
@@ -73,7 +74,7 @@ class CustomerOrderController
 
         if ($result !== true) {
             $message = is_string($result) ? $result : $this->modx->lexicon('ms3_customer_order_cancel_err_failed');
-            return Response::error($message, Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error($message, HttpStatus::BAD_REQUEST)->getData();
         }
 
         return Response::success(

@@ -3,6 +3,7 @@
 namespace MiniShop3\Middleware;
 
 use MiniShop3\Router\Middleware\MiddlewareInterface;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -29,7 +30,7 @@ class ServiceCheckMiddleware implements MiddlewareInterface
     {
         if (!$this->modx->services->has('ms3')) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
-            return Response::error('Service unavailable', 503);
+            return Response::error('Service unavailable', HttpStatus::SERVICE_UNAVAILABLE);
         }
 
         return null;

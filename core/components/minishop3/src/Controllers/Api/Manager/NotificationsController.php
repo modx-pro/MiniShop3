@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msNotificationConfig;
 use MiniShop3\Model\msOrderStatus;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -88,13 +89,13 @@ class NotificationsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Notification config ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Notification config ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $config = $this->modx->getObject(msNotificationConfig::class, $id);
 
         if (!$config) {
-            return Response::error('Notification config not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Notification config not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         return Response::success($this->formatConfig($config))->getData();
@@ -112,7 +113,7 @@ class NotificationsController
         $required = ['event', 'recipient_type', 'channel'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
-                return Response::error("Field '{$field}' is required", Response::HTTP_BAD_REQUEST)->getData();
+                return Response::error("Field '{$field}' is required", HttpStatus::BAD_REQUEST)->getData();
             }
         }
 
@@ -124,7 +125,7 @@ class NotificationsController
         ]);
 
         if ($exists) {
-            return Response::error('Notification config with this combination already exists', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Notification config with this combination already exists', HttpStatus::BAD_REQUEST)->getData();
         }
 
         /** @var msNotificationConfig $config */
@@ -145,7 +146,7 @@ class NotificationsController
         }
 
         if (!$config->save()) {
-            return Response::error('Failed to save notification config', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to save notification config', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success(
@@ -166,13 +167,13 @@ class NotificationsController
         $id = (int)($data['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Notification config ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Notification config ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $config = $this->modx->getObject(msNotificationConfig::class, $id);
 
         if (!$config) {
-            return Response::error('Notification config not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Notification config not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         $allowedFields = ['event', 'status_id', 'recipient_type', 'channel', 'enabled', 'subject', 'template', 'delay', 'position'];
@@ -205,7 +206,7 @@ class NotificationsController
         }
 
         if (!$config->save()) {
-            return Response::error('Failed to save notification config', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to save notification config', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success(
@@ -226,17 +227,17 @@ class NotificationsController
         $id = (int)($params['id'] ?? 0);
 
         if (!$id) {
-            return Response::error('Notification config ID is required', Response::HTTP_BAD_REQUEST)->getData();
+            return Response::error('Notification config ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
         $config = $this->modx->getObject(msNotificationConfig::class, $id);
 
         if (!$config) {
-            return Response::error('Notification config not found', Response::HTTP_NOT_FOUND)->getData();
+            return Response::error('Notification config not found', HttpStatus::NOT_FOUND)->getData();
         }
 
         if (!$config->remove()) {
-            return Response::error('Failed to delete notification config', Response::HTTP_INTERNAL_SERVER_ERROR)->getData();
+            return Response::error('Failed to delete notification config', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
         return Response::success([], $this->modx->lexicon('ms3_notification_deleted'))->getData();
