@@ -174,6 +174,10 @@ $_lang['setting_ms3_password_reset_token_ttl'] = 'Время жизни токе
 $_lang['setting_ms3_password_reset_token_ttl_desc'] = 'Время в секундах, в течение которого ссылка для сброса пароля остается действительной. По умолчанию 3600 (1 час).';
 $_lang['setting_ms3_email_verification_token_ttl'] = 'Время жизни токена верификации email (TTL)';
 $_lang['setting_ms3_email_verification_token_ttl_desc'] = 'Время в секундах, в течение которого ссылка для верификации email остается действительной. По умолчанию 86400 (24 часа).';
+$_lang['setting_ms3_email_verification_url'] = 'Свой URL подтверждения email (необязательно)';
+$_lang['setting_ms3_email_verification_url_desc'] = 'Если пусто, в письме подставляется ссылка на Web API (api.php), маршрут верификации. Для своей страницы укажите полный URL и плейсхолдер [[+token]] или {token} для подстановки токена.';
+$_lang['setting_ms3_email_verification_success_url'] = 'URL редиректа после успешной верификации email (необязательно)';
+$_lang['setting_ms3_email_verification_success_url_desc'] = 'Используется при переходе по ссылке из письма (параметр html=1). Если пусто — берётся site_url; к URL добавляется параметр ms3_email_verified=1.';
 $_lang['setting_ms3_payment_secret'] = 'Секретный ключ для платежей';
 $_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платежных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
 

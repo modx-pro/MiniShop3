@@ -159,4 +159,15 @@ class CustomerAPI {
   async cancelOrder (orderId) {
     return this.api.post(`/api/v1/customer/orders/${orderId}/cancel`)
   }
+
+  /**
+   * Resend email verification (cabinet; requires customer session)
+   *
+   * POST /api/v1/customer/email/resend-verification
+   *
+   * @returns {Promise<Object>}
+   */
+  async resendVerificationEmail () {
+    return this.api.post('/api/v1/customer/email/resend-verification', {})
+  }
 }

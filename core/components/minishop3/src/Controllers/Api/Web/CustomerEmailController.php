@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\modX;
 
@@ -81,20 +82,34 @@ class CustomerEmailController
      *
      * GET /api/v1/customer/email/verify?token={token}
      *
+     * - `format=json` — всегда JSON (интеграции, отладка).
+     * - `html=1` (как в ссылке из письма) — после успеха/ошибки HTTP 302 на сайт (см. GH-226).
+     *
      * @param array $params Request parameters
-     * @return array ['success' => bool, 'message' => string]
+     * @return array|Response
      */
-    public function verify(array $params): array
+    public function verify(array $params): array|Response
     {
+        $formatJson = ($params['format'] ?? '') === 'json';
+        $htmlFlow = ($params['html'] ?? '') === '1';
+
         $token = $params['token'] ?? '';
 
         if (empty($token)) {
+            if ($htmlFlow && !$formatJson) {
+                return Response::redirect($this->buildEmailVerificationFailedRedirectUrl(), 302);
+            }
+
             return $this->error($this->modx->lexicon('ms3_customer_err_token_required'));
         }
 
         $customer = $this->emailVerification->verifyToken($token);
 
         if (!$customer) {
+            if ($htmlFlow && !$formatJson) {
+                return Response::redirect($this->buildEmailVerificationFailedRedirectUrl(), 302);
+            }
+
             return $this->error($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
         }
 
@@ -106,10 +121,38 @@ class CustomerEmailController
             "[CustomerEmailController] Email verified and customer #{$customer->id} auto-logged in"
         );
 
+        if ($htmlFlow && !$formatJson) {
+            return Response::redirect($this->buildEmailVerificationSuccessRedirectUrl(), 302);
+        }
+
         return $this->success(
             $this->modx->lexicon('ms3_customer_email_verified'),
             ['customer_id' => $customer->id]
         );
+    }
+
+    /**
+     * Куда вести пользователя после успешной верификации (браузер, html=1)
+     */
+    protected function buildEmailVerificationSuccessRedirectUrl(): string
+    {
+        $target = trim((string) $this->modx->getOption('ms3_email_verification_success_url', null, ''));
+        if ($target === '') {
+            $target = rtrim((string) $this->modx->getOption('site_url', null, '/'), '/');
+        }
+        $sep = str_contains($target, '?') ? '&' : '?';
+
+        return $target . $sep . 'ms3_email_verified=1';
+    }
+
+    /**
+     * Куда вести при невалидном/просроченном токене (браузер, html=1)
+     */
+    protected function buildEmailVerificationFailedRedirectUrl(): string
+    {
+        $base = rtrim((string) $this->modx->getOption('site_url', null, '/'), '/');
+
+        return $base . '?ms3_email_verified=0';
     }
 
     /**

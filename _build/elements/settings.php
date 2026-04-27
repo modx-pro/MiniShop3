@@ -419,6 +419,16 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_security',
     ],
+    'ms3_email_verification_url' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_security',
+    ],
+    'ms3_email_verification_success_url' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_security',
+    ],
     'ms3_payment_secret' => [
         'value' => '',
         'xtype' => 'textfield',

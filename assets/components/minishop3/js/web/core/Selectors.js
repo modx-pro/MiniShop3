@@ -22,6 +22,8 @@ const defaultSelectors = {
   orderCancel: '.ms3-order-cancel',
   addressSetDefault: '.set-default-address',
   addressDelete: '.delete-address',
+  resendVerificationEmail:
+    '#resend-verification-email, [data-ms3-resend-verification]',
   authLoginForm: '#ms3-login-form',
   authRegisterForm: '#ms3-register-form',
   authForgotPassword: '#forgot-password-link'

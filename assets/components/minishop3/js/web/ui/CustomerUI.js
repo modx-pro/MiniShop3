@@ -18,7 +18,8 @@ const CUSTOMER_UI_LEXICON = {
   ms3_customer_order_cancel_error: 'Failed to cancel order',
   ms3_customer_order_cancel_request_error: 'Request failed',
   ms3_customer_address_set_default_error: 'Failed to set default address',
-  ms3_customer_address_delete_error: 'Failed to delete address'
+  ms3_customer_address_delete_error: 'Failed to delete address',
+  ms3_email_verification_sent: 'Verification email has been sent'
 }
 
 class CustomerUI {
@@ -64,6 +65,7 @@ class CustomerUI {
     })
     this.initOrderCancel()
     this.initAddressManagement()
+    this.initResendVerification()
   }
 
   /**
@@ -322,6 +324,49 @@ class CustomerUI {
       this.message.error(this.t('ms3_customer_err_occurred_saving'))
       return { success: false, message: error.message }
     }
+  }
+
+  /**
+   * Resend email verification (profile / cabinet)
+   */
+  initResendVerification () {
+    const selector = this.selectors.resendVerificationEmail
+    if (!selector) {
+      return
+    }
+    document.querySelectorAll(selector).forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault()
+        if (btn.disabled) {
+          return
+        }
+        const hookData = { button: btn }
+        await this.hooks.runHooks('beforeResendVerificationEmail', hookData)
+        if (hookData.cancel) {
+          return
+        }
+        btn.disabled = true
+        try {
+          const response = await this.customer.resendVerificationEmail()
+          await this.hooks.runHooks('afterResendVerificationEmail', { response, button: btn })
+          if (response.success) {
+            this.message.success(
+              response.message || this.t('ms3_email_verification_sent')
+            )
+            setTimeout(() => {
+              window.location.reload()
+            }, 1200)
+          } else {
+            this.message.error(response.message || this.t('ms3_customer_err_occurred'))
+            btn.disabled = false
+          }
+        } catch (error) {
+          console.error('CustomerUI.initResendVerification error:', error)
+          this.message.error(this.t('ms3_customer_err_occurred'))
+          btn.disabled = false
+        }
+      })
+    })
   }
 
   /**

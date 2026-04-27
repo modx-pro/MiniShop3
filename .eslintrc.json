@@ -13,6 +13,6 @@
   },
   "ignorePatterns": ["**/node_modules/**", "**/mgr/**"],
   "rules": {
-    "no-unused-vars": ["error", { "varsIgnorePattern": "^(CartUI|CustomerUI|OrderUI|ProductCardUI|QuantityUI)$" }]
+    "no-unused-vars": ["error", { "varsIgnorePattern": "^(CartUI|CustomerAPI|CustomerUI|OrderUI|ProductCardUI|QuantityUI)$" }]
   }
 }
