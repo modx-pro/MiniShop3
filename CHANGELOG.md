@@ -38,6 +38,9 @@
 
 #### 🐛 Исправлено
 
+**Опции товара — удаление не применялось после сохранения (дополнение к #199 / #202):**
+- В `Processors\Product\Update` после вызова родительского `afterSave()` свойство процессора `options` в MODX 3 часто пустое, из‑за чего не выполнялся `ProductDataService::saveOptions(..., removeOther: true)` и строки в `ms3_product_options` не синхронизировались с формой. Массив из полей `options-*` сохраняется в `beforeSet` в `$ms3ProductFormOptions` и передаётся в сервис после сохранения ресурса.
+
 **Manager API — события жизненного цикла позиции заказа (#208, closes #207):**
 - Vue-админка дёргает `msOnBefore/Create/Update/Remove OrderProduct` через `Utils::invokeEvent` при добавлении/изменении/удалении позиций заказа — раньше события были зарегистрированы в `events.php`, но `OrdersController` их не вызывал, и сторонние подписчики (ms3PromoCode и т.п.) не срабатывали.
 - Before-hooks могут заблокировать операцию через `Response::error(400)`. After-hooks логируются на WARN-уровне с маркером `(persistence already done)` — ошибка плагина после `save()`/`remove()` не возвращается клиенту как 4xx, потому что persistence уже произошёл.
