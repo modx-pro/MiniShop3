@@ -89,6 +89,13 @@
 
 ## Апрель 2026
 
+### Улучшения (в разработке)
+
+**Заказ / поля форм (#234):**
+- Во вкладках «Информация» и «Адрес» при пустом наборе полей — отдельные лексиконы (`ms3_order_tab_*_model_fields_empty_hint`), ссылка «Настроить поля» на `?a=mgr/utilities&namespace=minishop3&tab=ms3-utilities-model-fields-tab&model=…` (тот же `a`, что в меню MS3), в т.ч. в режиме создания заказа на вкладке «Информация».
+- Ext-утилиты: deep link по `tab=` и/или `model=`; в коде зафиксирована связка id вкладки с `MS3_UTILITIES_MODEL_FIELDS_TAB_ID` (`managerModelFieldsUrl.js`); `ModelFieldsGrid` — предвыбор модели из allowlist API, синхронизация URL (`tab` + `model`), удаление невалидного `model` из адресной строки.
+- `aria-label` на ссылках; `ms3_model_fields_empty` остаётся для экрана настройки полей, не для карточки заказа.
+
 ### [2026-04-27] 🚀 Версия 1.10.1-beta1
 
 **Тип релиза:** PATCH (beta) — точечные исправления и восстановление контракта событий
@@ -126,6 +133,9 @@
 - `Response` и `api.php` поддерживают HTTP-редирект вместо JSON для таких маршрутов.
 - Подключены `CustomerAPI::resendVerificationEmail`, `CustomerUI`, селекторы и `ms3_customer_profile.tpl` — кнопка resend инициирует `POST /api/v1/customer/email/resend-verification`. Добавлены README, лексиконы, smoke-тест `core/components/minishop3/tests/EmailVerificationUrlTest.php`.
 
+**Карточка заказа (Vue) — кнопки «Сохранить»/«Отмена» при пустом наборе полей (#182):**
+- На вкладках «Информация о заказе» и «Адрес» панель действий скрывается, если нет настроенных полей формы; в режиме создания заказа и для черновика с блоком клиента кнопки по-прежнему показываются.
+
 #### 📁 Изменённые файлы
 
 ```
@@ -137,6 +147,8 @@ core/components/minishop3/src/Controllers/Api/Manager/OrdersController.php
 core/components/minishop3/src/Processors/Utilities/Import/Fields.php
 core/components/minishop3/src/ServiceRegistry.php
 core/components/minishop3/src/Services/Order/OrderFinalizeService.php
+vueManager/src/components/order/OrderAddressTab.vue
+vueManager/src/components/order/OrderInfoTab.vue
 vueManager/src/components/product/ProductOptionsTab.vue
 ```
 
