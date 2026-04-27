@@ -600,6 +600,11 @@ $_lang['ms3_model_field_shown'] = 'Field is visible';
 $_lang['ms3_model_field_hidden'] = 'Field is hidden';
 $_lang['ms3_model_field_order_updated'] = 'Field order updated';
 $_lang['ms3_model_fields_empty'] = 'No fields found. Add your first field.';
+$_lang['ms3_order_tab_info_model_fields_empty_hint'] = 'No order form fields are configured for this tab.';
+$_lang['ms3_order_tab_address_model_fields_empty_hint'] = 'No address form fields are configured for this tab.';
+$_lang['ms3_order_open_model_fields_settings'] = 'Configure fields';
+$_lang['ms3_order_open_model_fields_settings_aria'] = 'Open Utilities, Form fields tab, order (msOrder) model';
+$_lang['ms3_order_open_model_fields_address_aria'] = 'Open Utilities, Form fields tab, order address (msOrderAddress) model';
 
 // Model names for dropdown
 $_lang['ms3_model_order'] = 'Order';

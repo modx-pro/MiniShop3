@@ -600,6 +600,11 @@ $_lang['ms3_model_field_shown'] = 'Поле отображается';
 $_lang['ms3_model_field_hidden'] = 'Поле скрыто';
 $_lang['ms3_model_field_order_updated'] = 'Порядок полей обновлён';
 $_lang['ms3_model_fields_empty'] = 'Поля не найдены. Добавьте первое поле.';
+$_lang['ms3_order_tab_info_model_fields_empty_hint'] = 'Для этой вкладки не настроены поля формы заказа.';
+$_lang['ms3_order_tab_address_model_fields_empty_hint'] = 'Для этой вкладки не настроены поля адреса.';
+$_lang['ms3_order_open_model_fields_settings'] = 'Настроить поля';
+$_lang['ms3_order_open_model_fields_settings_aria'] = 'Открыть утилиты MiniShop3, вкладка «Поля форм», модель заказа (msOrder)';
+$_lang['ms3_order_open_model_fields_address_aria'] = 'Открыть утилиты MiniShop3, вкладка «Поля форм», модель адреса (msOrderAddress)';
 
 // Model names for dropdown
 $_lang['ms3_model_order'] = 'Заказ';

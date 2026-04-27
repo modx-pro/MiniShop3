@@ -8,9 +8,11 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
-import { inject } from 'vue'
+import { computed, inject } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
+import { buildManagerModelFieldsSettingsUrl, MS3_MODEL_ORDER_ADDRESS } from '../../utils/managerModelFieldsUrl.js'
+import OrderFormActionsBar from './OrderFormActionsBar.vue'
 
 const selectedCustomer = defineModel('selectedCustomer', {
   type: Object,
@@ -21,7 +23,7 @@ const createCustomerFromData = defineModel('createCustomerFromData', {
   default: false,
 })
 
-defineProps({
+const props = defineProps({
   addressFieldsBySection: { type: Array, required: true },
 })
 
@@ -53,6 +55,22 @@ const {
 } = orderCtx
 
 const { _ } = useLexicon()
+
+const hasAddressFieldSections = computed(
+  () => (props.addressFieldsBySection?.length ?? 0) > 0
+)
+
+/**
+ * Скрыть «Сохранить»/«Отмена», если нет полей адреса и нет сценария с клиентом (#182):
+ * create / draft (блок выбора клиента) / есть секции полей.
+ */
+const showAddressTabActions = computed(
+  () => isCreateMode.value || isDraft.value || hasAddressFieldSections.value
+)
+
+const addressModelFieldsSettingsUrl = computed(() =>
+  buildManagerModelFieldsSettingsUrl(MS3_MODEL_ORDER_ADDRESS)
+)
 </script>
 
 <template>
@@ -206,21 +224,24 @@ const { _ } = useLexicon()
     </template>
 
     <div v-if="addressFieldsBySection.length === 0" class="no-fields-message">
-      <p>{{ _('ms3_model_fields_empty') }}</p>
+      <p>{{ _('ms3_order_tab_address_model_fields_empty_hint') }}</p>
+      <a
+        :href="addressModelFieldsSettingsUrl"
+        class="ms3-model-fields-link"
+        :aria-label="_('ms3_order_open_model_fields_address_aria')"
+      >
+        {{ _('ms3_order_open_model_fields_settings') }}
+      </a>
     </div>
 
-    <div class="actions-bar mt-3">
-      <Button
-        v-if="isCreateMode"
-        :label="_('ms3_order_create')"
-        icon="pi pi-plus"
-        severity="success"
-        :loading="saving"
-        @click="createOrder"
-      />
-      <Button v-else :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveOrder" />
-      <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="goBack" />
-    </div>
+    <OrderFormActionsBar
+      v-if="showAddressTabActions"
+      :is-create-mode="isCreateMode"
+      :saving="saving"
+      @create="createOrder"
+      @save="saveOrder"
+      @cancel="goBack"
+    />
   </div>
 </template>
 
