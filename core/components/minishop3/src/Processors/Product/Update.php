@@ -20,6 +20,15 @@ class Update extends UpdateProcessor
     public $object;
 
     /**
+     * Values parsed from options-* request fields in beforeSet(). On MODX 3, getProperty('options') is
+     * often empty after the parent afterSave() call, so this copy is used for
+     * ProductDataService::saveOptions(..., removeOther: true) — #199. Null if the request had no options-*.
+     *
+     * @var array<string, mixed>|null
+     */
+    protected $ms3ProductFormOptions = null;
+
+    /**
      * Allow for Resources to use derivative classes for their processors
      *
      * @static
@@ -38,14 +47,20 @@ class Update extends UpdateProcessor
      */
     public function beforeSet()
     {
+        $this->ms3ProductFormOptions = null;
         $properties = $this->getProperties();
         $options = [];
+        $hadOptionFieldsInRequest = false;
         foreach ($properties as $key => $value) {
             $optionKey = Utils::extractOptionKey($key);
             if ($optionKey !== null) {
+                $hadOptionFieldsInRequest = true;
                 $options[$optionKey] = Utils::decodeOptionValue($value);
                 $this->unsetProperty($key);
             }
+        }
+        if ($hadOptionFieldsInRequest) {
+            $this->ms3ProductFormOptions = $options;
         }
         if (!empty($options)) {
             $this->setProperty('options', $options);
@@ -107,18 +122,12 @@ class Update extends UpdateProcessor
     {
         $result = parent::afterSave();
 
-        // Save product options from options-* form fields (parsed in beforeSet)
-        // Only runs when form actually contained options-* fields
-        // removeOther=true: POST contains the full set of options shown on the form — keys missing after
-        // user removal must be deleted from DB (see #199). JSON-only sync still uses saveOptions(null)
-        // in msProductData::save(), which forces removeOther=false (#153, #158).
-        $options = $this->getProperty('options');
-        if (!empty($options) && is_array($options)) {
+        if ($this->ms3ProductFormOptions !== null) {
             /** @var \MiniShop3\Model\msProductData $productData */
             $productData = $this->object->loadData();
             if ($productData) {
                 $service = $this->modx->services->get('ms3_product_data_service');
-                $service->saveOptions($productData, $options, true);
+                $service->saveOptions($productData, $this->ms3ProductFormOptions, true);
             }
         }
 
