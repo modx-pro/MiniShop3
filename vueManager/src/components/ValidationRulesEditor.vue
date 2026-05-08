@@ -7,9 +7,37 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+
+import request from '../request.js'
 
 const { _ } = useLexicon()
+
+/** Technical msOrder columns — not offered as checkout fields for delivery rules */
+const ORDER_FIELD_BLOCKLIST = new Set([
+  'id',
+  'user_id',
+  'customer_id',
+  'token',
+  'uuid',
+  'createdon',
+  'updatedon',
+  'cost',
+  'cart_cost',
+  'delivery_cost',
+  'weight',
+  'status_id',
+  'delivery_id',
+  'payment_id',
+  'context',
+  'properties',
+  'num',
+])
+
+/** Technical msOrderAddress columns */
+const ADDRESS_FIELD_BLOCKLIST = new Set(['id', 'order_id', 'createdon', 'updatedon', 'properties'])
+
+const FIELD_GROUP_SORT = { order: 0, address: 1 }
 
 // Editor mode: visual or json
 const isJsonMode = ref(false)
@@ -48,6 +76,9 @@ const fieldDefinitions = [
   { name: 'comment', group: 'address' },
   { name: 'text_address', group: 'address' },
 ]
+
+/** Extra definitions from model fields + Object Extension (filled on mount) */
+const extensionFieldDefinitions = ref([])
 
 // Available validation rules from rakit/validation
 const ruleDefinitions = [
@@ -99,11 +130,105 @@ const ruleDefinitions = [
   { name: 'required_without_all', hasParam: true, paramType: 'text' },
 ]
 
+const mergedFieldDefinitions = computed(() => [...fieldDefinitions, ...extensionFieldDefinitions.value])
+
+async function loadExtensionFieldDefinitions() {
+  const staticNames = new Set(fieldDefinitions.map(f => f.name))
+  const collected = []
+
+  const pushModelRows = (rows, model, blocklist) => {
+    const group = model === 'msOrder' ? 'order' : 'address'
+    for (const row of rows || []) {
+      const name = row.name
+      if (!name || blocklist.has(name) || staticNames.has(name)) {
+        continue
+      }
+      collected.push({
+        name,
+        group,
+        labelHint: row.label_translated || row.label || name,
+        sortRank: [FIELD_GROUP_SORT[group], row.sort_order ?? 0, name],
+      })
+    }
+  }
+
+  try {
+    const [orderRes, addressRes] = await Promise.all([
+      request.get('/api/mgr/model-fields', { model: 'msOrder', limit: 500, start: 0 }),
+      request.get('/api/mgr/model-fields', { model: 'msOrderAddress', limit: 500, start: 0 }),
+    ])
+    pushModelRows(orderRes.results, 'msOrder', ORDER_FIELD_BLOCKLIST)
+    pushModelRows(addressRes.results, 'msOrderAddress', ADDRESS_FIELD_BLOCKLIST)
+  } catch (e) {
+    console.warn('[ValidationRulesEditor] Failed to load model-fields:', e)
+  }
+
+  try {
+    const pushExtraRows = (fields, group) => {
+      for (const f of fields || []) {
+        if (!f.active) {
+          continue
+        }
+        const name = f.key
+        if (!name || staticNames.has(name)) {
+          continue
+        }
+        collected.push({
+          name,
+          group,
+          labelHint: f.label || name,
+          sortRank: [FIELD_GROUP_SORT[group], 1e6, name],
+        })
+      }
+    }
+    const [orderExtra, addressExtra] = await Promise.all([
+      request.get('/api/mgr/extra-fields', { class: 'msOrder' }),
+      request.get('/api/mgr/extra-fields', { class: 'msOrderAddress' }),
+    ])
+    pushExtraRows(orderExtra.fields, 'order')
+    pushExtraRows(addressExtra.fields, 'address')
+  } catch (e) {
+    console.warn('[ValidationRulesEditor] Failed to load extra-fields:', e)
+  }
+
+  const byName = new Map()
+  for (const c of collected) {
+    if (byName.has(c.name)) {
+      continue
+    }
+    byName.set(c.name, c)
+  }
+
+  const sorted = [...byName.values()].sort((a, b) => {
+    for (let i = 0; i < 3; i++) {
+      const av = a.sortRank[i]
+      const bv = b.sortRank[i]
+      if (av < bv) {
+        return -1
+      }
+      if (av > bv) {
+        return 1
+      }
+    }
+    return 0
+  })
+
+  extensionFieldDefinitions.value = sorted.map(c => ({
+    name: c.name,
+    group: c.group,
+    labelHint: c.labelHint,
+  }))
+}
+
+onMounted(() => {
+  void loadExtensionFieldDefinitions()
+})
+
 // Build available fields with localized labels (flat list)
 const availableFields = computed(() => {
-  return fieldDefinitions.map(field => ({
+  return mergedFieldDefinitions.value.map(field => ({
     ...field,
-    label: _(`validation_field_${field.name}`),
+    label: field.labelHint || _(`validation_field_${field.name}`),
     groupLabel: _(`validation_field_group_${field.group}`),
   }))
 })
