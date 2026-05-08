@@ -39,6 +39,10 @@ const ADDRESS_FIELD_BLOCKLIST = new Set(['id', 'order_id', 'createdon', 'updated
 
 const FIELD_GROUP_SORT = { order: 0, address: 1 }
 
+function blocklistForGroup(group) {
+  return group === 'order' ? ORDER_FIELD_BLOCKLIST : ADDRESS_FIELD_BLOCKLIST
+}
+
 // Editor mode: visual or json
 const isJsonMode = ref(false)
 const jsonText = ref('')
@@ -165,12 +169,13 @@ async function loadExtensionFieldDefinitions() {
 
   try {
     const pushExtraRows = (fields, group) => {
+      const blocklist = blocklistForGroup(group)
       for (const f of fields || []) {
         if (!f.active) {
           continue
         }
         const name = f.key
-        if (!name || staticNames.has(name)) {
+        if (!name || staticNames.has(name) || blocklist.has(name)) {
           continue
         }
         collected.push({
@@ -191,6 +196,7 @@ async function loadExtensionFieldDefinitions() {
     console.warn('[ValidationRulesEditor] Failed to load extra-fields:', e)
   }
 
+  // validation_rules JSON keys are a single flat namespace (field name → rules)
   const byName = new Map()
   for (const c of collected) {
     if (byName.has(c.name)) {
