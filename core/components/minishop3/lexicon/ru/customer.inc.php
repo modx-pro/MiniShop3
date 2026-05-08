@@ -60,6 +60,7 @@ $_lang['ms3_customer_err_token_invalid'] = 'Неверный или истекш
 $_lang['ms3_customer_err_token_create'] = 'Ошибка создания токена';
 $_lang['ms3_customer_err_save'] = 'Ошибка сохранения данных';
 $_lang['ms3_customer_err_register_rate_limit'] = 'Превышен лимит регистраций. Попробуйте позже.';
+$_lang['ms3_customer_err_field_not_allowed'] = 'Это поле нельзя изменить через быстрый профиль';
 
 // Email Verification
 $_lang['ms3_customer_email_verified'] = 'Email успешно подтвержден';

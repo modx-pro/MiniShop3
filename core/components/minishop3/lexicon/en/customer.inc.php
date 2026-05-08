@@ -60,6 +60,7 @@ $_lang['ms3_customer_err_token_invalid'] = 'Invalid or expired token';
 $_lang['ms3_customer_err_token_create'] = 'Error creating token';
 $_lang['ms3_customer_err_save'] = 'Error saving data';
 $_lang['ms3_customer_err_register_rate_limit'] = 'Registration limit exceeded. Please try again later.';
+$_lang['ms3_customer_err_field_not_allowed'] = 'This field cannot be changed through the quick profile endpoint';
 
 // Email Verification
 $_lang['ms3_customer_email_verified'] = 'Email successfully verified';

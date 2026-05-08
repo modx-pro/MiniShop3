@@ -26,6 +26,11 @@
 - `msOnBeforeImport` и `msOnImportRow` применяют `returnedValues` к параметрам импорта и данным строки (`data`, `tvData`, `optionData`, `gallery`).
 - `msOnProductsLoad` и `msOnProductPrepare` применяют `returnedValues['rows']` / `returnedValues['row']`, чтобы bulk-обогащение списка товаров и подготовка отдельной строки доходили до рендера.
 
+**Web API покупателя — отсутствующие маршруты CustomerAPI (#241):**
+- Добавлен `POST /api/v1/customer/add` для быстрого обновления полей профиля (`first_name`, `last_name`, `email`, `phone`) через существующий `CustomerAPI.add()` и `CustomerUI.handleAdd()`.
+- Добавлен `POST /api/v1/customer/changeAddress` как совместимый endpoint для выбора сохранённого адреса в черновике заказа по `address_hash`.
+- Для быстрого обновления профиля добавлена whitelist-валидация и отдельное сообщение lexicon на `ru/en`; проверка уникальности email и сброс `email_verified_at` вынесены в общие методы контроллера профиля.
+
 ---
 
 ## Апрель 2026

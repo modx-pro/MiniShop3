@@ -50,22 +50,16 @@ class CustomerProfileController
             return $this->error($this->modx->lexicon('ms3_customer_err_login_required'));
         }
 
-        $customerId = (int)$_SESSION['ms3']['customer_id'];
-
         /** @var msCustomer $customer */
-        $customer = $this->modx->getObject(msCustomer::class, $customerId);
+        $customer = $this->getCurrentCustomer();
 
         if (!$customer) {
             return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
         }
 
+        $customerId = (int)$customer->get('id');
         $validator = new Validator();
-        $validation = $validator->make($data, [
-            'first_name' => 'required|min:2|max:100',
-            'last_name' => 'required|min:2|max:100',
-            'email' => 'required|email',
-            'phone' => 'required|min:10|max:20',
-        ]);
+        $validation = $validator->make($data, $this->getProfileFieldRules());
 
         $validation->validate();
 
@@ -79,29 +73,16 @@ class CustomerProfileController
             );
         }
 
-        $oldEmail = $customer->get('email');
         $newEmail = trim($data['email']);
 
-        if ($oldEmail !== $newEmail) {
-            $existingCustomer = $this->modx->getObject(msCustomer::class, [
-                'email' => $newEmail,
-                'id:!=' => $customerId,
-            ]);
-
-            if ($existingCustomer) {
-                $_SESSION['ms3']['customer_profile_errors'] = [
-                    'email' => $this->modx->lexicon('ms3_customer_err_email_exists')
-                ];
-                return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
-            }
-
-            $customer->set('email_verified_at', null);
-
-            $this->modx->log(
-                modX::LOG_LEVEL_INFO,
-                "[CustomerProfileController] Email changed for customer #{$customerId}: {$oldEmail} → {$newEmail}. Verification reset."
-            );
+        if (!$this->isEmailAvailable($customer, $newEmail)) {
+            $_SESSION['ms3']['customer_profile_errors'] = [
+                'email' => $this->modx->lexicon('ms3_customer_err_email_exists')
+            ];
+            return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
         }
+
+        $this->resetEmailVerificationIfChanged($customer, $newEmail);
 
         $customer->set('first_name', trim($data['first_name']));
         $customer->set('last_name', trim($data['last_name']));
@@ -122,6 +103,119 @@ class CustomerProfileController
         return $this->success(
             $this->modx->lexicon('ms3_customer_profile_updated'),
             ['customer' => $customer->toArray()]
+        );
+    }
+
+    /**
+     * Update a single customer profile field.
+     *
+     * POST /api/v1/customer/add
+     *
+     * @param array $data Request data with key and value
+     * @return array ['success' => bool, 'message' => string, 'data' => array]
+     */
+    public function updateField(array $data): array
+    {
+        if (empty($_SESSION['ms3']['customer_id'])) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_login_required'));
+        }
+
+        $customer = $this->getCurrentCustomer();
+        if (!$customer) {
+            return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
+        }
+
+        $key = trim((string)($data['key'] ?? ''));
+        if ($key === '') {
+            return $this->error($this->modx->lexicon('ms3_customer_key_empty'));
+        }
+
+        $rules = $this->getProfileFieldRules();
+        if (!isset($rules[$key])) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
+        }
+
+        $value = trim((string)($data['value'] ?? ''));
+        $validation = (new Validator())->make([$key => $value], [$key => $rules[$key]]);
+        $validation->validate();
+
+        if ($validation->fails()) {
+            $errors = $validation->errors()->firstOfAll();
+
+            return $this->error(
+                $this->modx->lexicon('ms3_customer_err_validation'),
+                ['errors' => $errors]
+            );
+        }
+
+        if ($key === 'email' && !$this->isEmailAvailable($customer, $value)) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
+        }
+
+        if ($key === 'email') {
+            $this->resetEmailVerificationIfChanged($customer, $value);
+        }
+
+        $customer->set($key, $value);
+
+        if (!$customer->save()) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_save'));
+        }
+
+        return $this->success(
+            $this->modx->lexicon('ms3_customer_profile_updated'),
+            [
+                $key => $customer->get($key),
+                'customer' => $customer->toArray(),
+            ]
+        );
+    }
+
+    protected function getCurrentCustomer(): ?msCustomer
+    {
+        if (empty($_SESSION['ms3']['customer_id'])) {
+            return null;
+        }
+
+        $customer = $this->modx->getObject(msCustomer::class, (int)$_SESSION['ms3']['customer_id']);
+
+        return $customer instanceof msCustomer ? $customer : null;
+    }
+
+    protected function getProfileFieldRules(): array
+    {
+        return [
+            'first_name' => 'required|min:2|max:100',
+            'last_name' => 'required|min:2|max:100',
+            'email' => 'required|email',
+            'phone' => 'required|min:10|max:20',
+        ];
+    }
+
+    protected function isEmailAvailable(msCustomer $customer, string $email): bool
+    {
+        if ((string)$customer->get('email') === $email) {
+            return true;
+        }
+
+        return !$this->modx->getObject(msCustomer::class, [
+            'email' => $email,
+            'id:!=' => $customer->get('id'),
+        ]);
+    }
+
+    protected function resetEmailVerificationIfChanged(msCustomer $customer, string $email): void
+    {
+        $oldEmail = (string)$customer->get('email');
+        if ($oldEmail === $email) {
+            return;
+        }
+
+        $customer->set('email_verified_at', null);
+
+        $this->modx->log(
+            modX::LOG_LEVEL_INFO,
+            "[CustomerProfileController] Email changed for customer #{$customer->get('id')}: {$oldEmail} → {$email}. Verification reset."
         );
     }
 
