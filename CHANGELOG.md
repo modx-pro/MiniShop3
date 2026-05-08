@@ -26,6 +26,12 @@
 - `msOnBeforeImport` и `msOnImportRow` применяют `returnedValues` к параметрам импорта и данным строки (`data`, `tvData`, `optionData`, `gallery`).
 - `msOnProductsLoad` и `msOnProductPrepare` применяют `returnedValues['rows']` / `returnedValues['row']`, чтобы bulk-обогащение списка товаров и подготовка отдельной строки доходили до рендера.
 
+#### ✨ Улучшено
+
+**Сниппеты msOrder / msGetOrder — числовые суммы для шаблонов (#242):**
+- В массив `$order` сниппета **msOrder** добавлены `cost_numeric`, `cart_cost_numeric`, `delivery_cost_numeric`, `discount_cost_numeric` (float из ответа `getCost()`): для Fenom/pdoTools доступен безопасный `|number` и арифметика; поля `cost`, `cart_cost`, `delivery_cost`, `discount_cost` по-прежнему отформатированные строки для совместимости с чанками.
+- В **msGetOrder** в плейсхолдер `total` добавлены `cost_numeric`, `cart_cost_numeric`, `delivery_cost_numeric` (значения из модели заказа).
+
 ---
 
 ## Апрель 2026

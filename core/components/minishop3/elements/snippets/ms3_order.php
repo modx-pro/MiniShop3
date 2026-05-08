@@ -55,11 +55,17 @@ if ($response['success']) {
 $response = $ms3->order->getCost();
 if ($response['success']) {
     $cost = $response['data'];
+    // Суммы в cost, cart_cost, delivery_cost и discount_cost — это строки с локальным форматом
+    // (разделители тысяч, десятичный разделитель), как в стандартных чанках. Те же величины
+    // как числа — в полях с суффиксом _numeric (удобно для |number в Fenom и арифметики).
     $order['cost'] = $ms3->format->price($cost['cost']);
     $order['cart_cost'] = $ms3->format->price($cost['cart_cost']);
     $order['delivery_cost'] = $ms3->format->price($cost['delivery_cost']);
     $order['discount_cost'] = $ms3->format->price($cost['total_discount']);
-    // Pre-formatted fields with currency symbol for display in chunks
+    $order['cost_numeric'] = (float)($cost['cost'] ?? 0);
+    $order['cart_cost_numeric'] = (float)($cost['cart_cost'] ?? 0);
+    $order['delivery_cost_numeric'] = (float)($cost['delivery_cost'] ?? 0);
+    $order['discount_cost_numeric'] = (float)($cost['total_discount'] ?? 0);
     $order['cost_formatted'] = $ms3->format->price($cost['cost'], true);
     $order['cart_cost_formatted'] = $ms3->format->price($cost['cart_cost'], true);
     $order['delivery_cost_formatted'] = $ms3->format->price($cost['delivery_cost'], true);
