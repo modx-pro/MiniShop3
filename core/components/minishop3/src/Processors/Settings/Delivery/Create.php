@@ -3,9 +3,10 @@
 namespace MiniShop3\Processors\Settings\Delivery;
 
 use MiniShop3\Model\msDelivery;
+use MiniShop3\Utils\PriceAdjustment;
 use MODX\Revolution\Processors\Model\CreateProcessor;
 
-class Create extends  CreateProcessor
+class Create extends CreateProcessor
 {
     /** @var msDelivery $object */
     public $object;
@@ -33,8 +34,7 @@ class Create extends  CreateProcessor
 
         $prices = ['price', 'distance_price', 'weight_price', 'free_delivery_amount'];
         foreach ($prices as $field) {
-            $tmp = $this->preparePrice($tmp);
-            $this->setProperty($field, $tmp);
+            $this->setProperty($field, PriceAdjustment::normalize($this->getProperty($field, 0)));
         }
 
         return !$this->hasErrors();
@@ -51,24 +51,5 @@ class Create extends  CreateProcessor
         ]);
 
         return parent::beforeSave();
-    }
-
-    public function preparePrice($price = 0)
-    {
-        $sign = '';
-        $price = preg_replace(['#[^\d%\-,\.]#', '#,#'], ['', '.'], $price);
-        if (strpos($price, '-') !== false) {
-            $price = str_replace('-', '', $price);
-            $sign = '-';
-        }
-        if (strpos($price, '%') !== false) {
-            $price = str_replace('%', '', $price) . '%';
-        }
-        $price = $sign . $price;
-        if (empty($price)) {
-            $price = 0;
-        }
-
-        return $price;
     }
 }

@@ -6,6 +6,7 @@ use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Utils\PriceAdjustment;
 use MODX\Revolution\modX;
 
 /**
@@ -132,7 +133,7 @@ class DeliveriesController
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
-                $delivery->set($field, $data[$field]);
+                $delivery->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }
 
@@ -185,7 +186,7 @@ class DeliveriesController
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
-                $delivery->set($field, $data[$field]);
+                $delivery->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }
 
@@ -490,5 +491,10 @@ class DeliveriesController
             $member->set('payment_id', (int)$paymentId);
             $member->save();
         }
+    }
+
+    protected function prepareFieldValue(string $field, $value)
+    {
+        return $field === 'price' ? PriceAdjustment::normalize($value) : $value;
     }
 }

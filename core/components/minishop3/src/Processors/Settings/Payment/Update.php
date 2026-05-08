@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Settings\Payment;
 
 use MiniShop3\Model\msPayment;
+use MiniShop3\Utils\PriceAdjustment;
 use MODX\Revolution\Processors\Model\UpdateProcessor;
 
 class Update extends UpdateProcessor
@@ -38,31 +39,12 @@ class Update extends UpdateProcessor
 
         $prices = ['price'];
         foreach ($prices as $field) {
-            if ($tmp = $this->getProperty($field)) {
-                $tmp = $this->preparePrice($tmp);
-                $this->setProperty($field, $tmp);
+            $price = $this->getProperty($field);
+            if ($price !== null) {
+                $this->setProperty($field, PriceAdjustment::normalize($price));
             }
         }
 
         return !$this->hasErrors();
-    }
-
-    public function preparePrice($price = 0)
-    {
-        $sign = '';
-        $price = preg_replace(['#[^\d%\-,\.]#', '#,#'], ['', '.'], $price);
-        if (strpos($price, '-') !== false) {
-            $price = str_replace('-', '', $price);
-            $sign = '-';
-        }
-        if (strpos($price, '%') !== false) {
-            $price = str_replace('%', '', $price) . '%';
-        }
-        $price = $sign . $price;
-        if (empty($price)) {
-            $price = 0;
-        }
-
-        return $price;
     }
 }
