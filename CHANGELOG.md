@@ -26,6 +26,23 @@
 - `msOnBeforeImport` и `msOnImportRow` применяют `returnedValues` к параметрам импорта и данным строки (`data`, `tvData`, `optionData`, `gallery`).
 - `msOnProductsLoad` и `msOnProductPrepare` применяют `returnedValues['rows']` / `returnedValues['row']`, чтобы bulk-обогащение списка товаров и подготовка отдельной строки доходили до рендера.
 
+### [2026-05-08] 🐛 Исправления Manager API и сохранения товара (#238)
+
+#### 🐛 Исправлено
+
+**Категория → опции — PHP Warning `Undefined array key "id"` (PHP 8+):**
+- У `msCategoryOption` составной первичный ключ; в выборке списка нет столбца `id`. `CategoryOptionsController::formatRow()` больше не обращается к несуществующему ключу: если `id` нет в строке PDO, для поля ответа `id` используется `option_id` (в рамках одной категории уникально; Vue-грид и так использует `data-key="option_id"`).
+
+**Товар — сохранение без вкладки «Категории» обнуляло дополнительные категории:**
+- `ProductDataService::saveCategories()` при отсутствии ключа `categories` в `_fields` (POST не содержит поля, пока дерево вкладки не отрисовалось) больше не трактует это как пустой список и не вызывает `removeCollection`. Поведение согласовано с `saveLinks()`: явная передача `categories` по-прежнему синхронизирует `msCategoryMember` (в том числе пустой массив после открытия вкладки).
+
+#### 📁 Изменённые файлы
+
+```
+core/components/minishop3/src/Controllers/Api/Manager/CategoryOptionsController.php
+core/components/minishop3/src/Services/Product/ProductDataService.php
+```
+
 ---
 
 ## Апрель 2026
