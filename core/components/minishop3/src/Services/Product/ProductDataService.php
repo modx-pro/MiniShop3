@@ -79,6 +79,9 @@ class ProductDataService
      * IMPORTANT: msProductData::get('categories') is overridden and reads from DB,
      * so we use reflection to get the value from $_fields (POST data)
      *
+     * If `categories` was not sent (e.g. manager save before the Categories tab mounted its
+     * hidden field), leave msCategoryMember untouched — same contract as saveLinks().
+     *
      * @param msProductData $productData
      * @return void
      */
@@ -90,7 +93,12 @@ class ProductDataService
         $property = $reflection->getProperty('_fields');
         $property->setAccessible(true);
         $fields = $property->getValue($productData);
-        $categories = $fields['categories'] ?? null;
+
+        if (!array_key_exists('categories', $fields)) {
+            return;
+        }
+
+        $categories = $fields['categories'];
 
         if (is_string($categories)) {
             $categories = json_decode($categories, true);
