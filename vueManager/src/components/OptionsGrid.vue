@@ -14,6 +14,7 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
+import { getMs3Config } from '../utils/modx.js'
 import { onOptionGroupsChanged } from '../utils/optionGroupsBus.js'
 import OptionCategoryTree from './OptionCategoryTree.vue'
 import OptionValuesEditor from './OptionValuesEditor.vue'
@@ -21,6 +22,8 @@ import OptionValuesEditor from './OptionValuesEditor.vue'
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+
+const optionCategoryTreeRootParent = computed(() => getMs3Config()?.optionCategoryTreeParent ?? 0)
 
 // Grid state
 const options = ref([])
@@ -348,7 +351,7 @@ onBeforeUnmount(() => {
       <!-- Category filter tree (left pane) -->
       <aside class="options-tree-pane">
         <h4 class="pane-title">{{ _('ms3_categories') || 'Категории' }}</h4>
-        <OptionCategoryTree v-model="selectedCategories" />
+        <OptionCategoryTree v-model="selectedCategories" :root-parent="optionCategoryTreeRootParent" />
       </aside>
 
       <!-- Main grid + toolbar + dialog (right pane) -->
@@ -542,7 +545,11 @@ onBeforeUnmount(() => {
 
         <div class="dialog-tree">
           <h4 class="pane-title">{{ _('ms3_categories') || 'Категории' }}</h4>
-          <OptionCategoryTree v-model="editingCategories" :option-id="editing.id || 0" />
+          <OptionCategoryTree
+            v-model="editingCategories"
+            :option-id="editing.id || 0"
+            :root-parent="optionCategoryTreeRootParent"
+          />
         </div>
       </div>
 
@@ -572,7 +579,7 @@ onBeforeUnmount(() => {
           'Выберите категории — в них будут созданы связи для выбранных опций (существующие останутся).'
         }}
       </p>
-      <OptionCategoryTree v-model="assignCategories" />
+      <OptionCategoryTree v-model="assignCategories" :root-parent="optionCategoryTreeRootParent" />
       <template #footer>
         <Button
           :label="_('cancel') || 'Отмена'"

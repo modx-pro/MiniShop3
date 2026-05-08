@@ -75,6 +75,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
             'connector_url' => $this->ms3->config['connectorUrl'],
             'show_options' => $showOptions,
             'default_thumb' => $this->ms3->config['defaultThumb'],
+            'optionCategoryTreeParent' => (int)$this->modx->getOption('ms3_option_category_tree_parent', null, 0),
             'show_nested_products' => (bool) $this->modx->getOption('ms3_category_show_nested_products', null, true),
             'category_products_rows' => (int) $this->getOption('ms3_category_products_default_rows', null, 20),
         );

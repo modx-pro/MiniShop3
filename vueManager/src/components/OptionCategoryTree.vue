@@ -24,7 +24,7 @@ const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   /** Pre-fetch checked state from the option's current links. Pass 0/null to skip. */
   optionId: { type: [Number, String], default: 0 },
-  /** Root resource id. 0 = site root. */
+  /** Root resource id for first tree request. 0 = semantic site root (resolved on API via ms3_option_category_tree_parent when set). */
   rootParent: { type: Number, default: 0 },
 })
 

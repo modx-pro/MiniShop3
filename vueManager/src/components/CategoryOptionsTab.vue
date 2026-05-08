@@ -13,9 +13,10 @@ import Select from 'primevue/select'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
+import { getMs3Config } from '../utils/modx.js'
 
 const props = defineProps({
   categoryId: { type: Number, required: true },
@@ -24,6 +25,8 @@ const props = defineProps({
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+
+const optionCategoryTreeRootParent = computed(() => getMs3Config()?.optionCategoryTreeParent ?? 0)
 
 const links = ref([])
 const loading = ref(false)
@@ -86,7 +89,7 @@ async function loadAvailableCategories() {
   // flattened: just fetch the first level of resources for now (limit to obvious set).
   // A richer picker would use the full tree, but a flat Select is consistent with the
   // legacy ExtJS behavior.
-  const r = await request.get('/api/mgr/options/tree', { parent: 0 })
+  const r = await request.get('/api/mgr/options/tree', { parent: optionCategoryTreeRootParent.value })
   const roots = r?.results || []
   // Expand one level for convenience (walk all children of each msCategory root).
   const expanded = [...roots]

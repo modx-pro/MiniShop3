@@ -21,6 +21,7 @@ $_lang['area_ms3_customers'] = 'Customers';
 $_lang['area_ms3_security'] = 'Security';
 $_lang['area_ms3_api'] = 'API';
 $_lang['area_ms3_notifications'] = 'Notifications';
+$_lang['area_ms3_options'] = 'Product options';
 
 $_lang['setting_ms3_chunks_categories'] = 'Categories for chunks list';
 $_lang['setting_ms3_chunks_categories_desc'] = 'Comma-separated list of category IDs for chunks list.';
@@ -56,6 +57,8 @@ $_lang['setting_ms3_category_show_nested_products'] = 'Show nested category prod
 $_lang['setting_ms3_category_show_nested_products_desc'] = 'If you enable this option, all nested products will be shown in category. They are highlighted with different color and have their parent category name under pagetitle.';
 $_lang['setting_ms3_category_show_options'] = 'Show category product options';
 $_lang['setting_ms3_category_show_options_desc'] = 'Show options for category products.';
+$_lang['setting_ms3_option_category_tree_parent'] = 'Options UI: category tree root resource ID';
+$_lang['setting_ms3_option_category_tree_parent_desc'] = 'When product categories (msCategory) are not direct children of the site root (parent = 0), set this to the container resource ID under which categories live. The manager options tree and category pickers then load the first level relative to this parent. Use 0 for default behavior (only msCategory resources with parent = 0).';
 $_lang['setting_ms3_category_remember_grid'] = 'Remember category grid';
 $_lang['setting_ms3_category_remember_grid_desc'] = 'If enabled, category grid state will be remembered and restored on page load, including page number and search string.';
 $_lang['setting_ms3_category_id_as_alias'] = 'Category id as alias';

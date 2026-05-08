@@ -64,6 +64,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
 
         $config = $this->ms3->config;
         $config['default_thumb'] = $this->ms3->config['defaultThumb'];
+        $config['optionCategoryTreeParent'] = (int)$this->modx->getOption('ms3_option_category_tree_parent', null, 0);
 
         $this->addHtml('<script>
             ms3.config = ' . json_encode($config) . ';

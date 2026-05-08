@@ -319,11 +319,13 @@ class OptionsController
      * MODX resource tree for category selection. Optional ?option_id= to flag which
      * categories already have the option linked (for checkbox UI).
      *
-     * @param array $params parent (default 0), option_id (optional), categories[] (prechecked)
+     * @param array $params parent (default 0 = semantic root; resolved via ms3_option_category_tree_parent when set),
+     *                     option_id (optional), categories[] (prechecked)
      */
     public function getTree(array $params = []): array
     {
-        $parent = (int)($params['parent'] ?? 0);
+        $requestedParent = (int)($params['parent'] ?? 0);
+        $parent = $this->resolveOptionsTreeParentId($requestedParent);
         $optionId = isset($params['option_id']) ? (int)$params['option_id'] : 0;
         $preChecked = $this->decodeIntArray($params['categories'] ?? null);
 
@@ -597,6 +599,20 @@ class OptionsController
         }
 
         return [$enabled, $disabled];
+    }
+
+    /**
+     * Map semantic tree root (client sends parent=0) to real MODX resource parent id when
+     * msCategory resources are not direct children of site root.
+     */
+    private function resolveOptionsTreeParentId(int $requestedParent): int
+    {
+        if ($requestedParent !== 0) {
+            return $requestedParent;
+        }
+        $configured = (int)$this->modx->getOption('ms3_option_category_tree_parent', null, 0);
+
+        return $configured > 0 ? $configured : 0;
     }
 
     /**
