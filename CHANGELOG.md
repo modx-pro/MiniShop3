@@ -41,6 +41,12 @@
 - `ProductDataService::saveCategories()` при отсутствии ключа `categories` в `_fields` (POST не содержит поля, пока дерево вкладки не отрисовалось) больше не трактует это как пустой список и не вызывает `removeCollection`. Поведение согласовано с `saveLinks()`: явная передача `categories` по-прежнему синхронизирует `msCategoryMember` (в том числе пустой массив после открытия вкладки).
 - **⚠️ Изменение контракта:** интеграции, сознательно полагавшиеся на «нет `categories` в POST → очистить связи», должны теперь передавать пустой массив явно.
 
+#### ✨ Улучшено
+
+**Сниппеты `msOrder` / `msGetOrder` — числовые суммы для шаблонов (#242):**
+- В массив `$order` сниппета **msOrder** добавлены `cost_numeric`, `cart_cost_numeric`, `delivery_cost_numeric`, `discount_cost_numeric` (float из ответа `getCost()`): для Fenom/pdoTools доступен безопасный `|number` и арифметика; поля `cost`, `cart_cost`, `delivery_cost`, `discount_cost` по-прежнему отформатированные строки для совместимости с чанками.
+- В **msGetOrder** в плейсхолдер `total` добавлены `cost_numeric`, `cart_cost_numeric`, `delivery_cost_numeric` (значения из модели заказа).
+
 ---
 
 ## Апрель 2026

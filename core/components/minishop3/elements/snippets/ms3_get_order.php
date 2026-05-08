@@ -257,13 +257,18 @@ try {
         'payment' => ($payment = $msOrder->getOne('Payment'))
             ? $payment->toArray()
             : [],
+        // Блок total: cost, cart_cost и delivery_cost — отформатированные строки для шаблона;
+        // поля с суффиксом _numeric — те же суммы числом, из записи заказа в БД.
         'total' => [
             'cost' => $ms3->format->price($msOrder->get('cost')),
             'cost_formatted' => $ms3->format->price($msOrder->get('cost'), true),
+            'cost_numeric' => (float)$msOrder->get('cost'),
             'cart_cost' => $ms3->format->price($msOrder->get('cart_cost')),
             'cart_cost_formatted' => $ms3->format->price($msOrder->get('cart_cost'), true),
+            'cart_cost_numeric' => (float)$msOrder->get('cart_cost'),
             'delivery_cost' => $ms3->format->price($msOrder->get('delivery_cost')),
             'delivery_cost_formatted' => $ms3->format->price($msOrder->get('delivery_cost'), true),
+            'delivery_cost_numeric' => (float)$msOrder->get('delivery_cost'),
             'weight' => $ms3->format->weight($msOrder->get('weight')),
             'weight_formatted' => $ms3->format->weightWithUnit($msOrder->get('weight')),
             'cart_weight' => $ms3->format->weight($msOrder->get('weight')),
