@@ -364,15 +364,38 @@ if (!empty($scriptProperties['usePackages'])) {
     $usePackages = array_map('trim', explode(',', $scriptProperties['usePackages']));
 }
 
+$clearEventReturnedValues = static function () use ($modx): void {
+    if (isset($modx->event->returnedValues)) {
+        $modx->event->returnedValues = null;
+    }
+};
+$getEventReturnedValues = static function () use ($modx): array {
+    return isset($modx->event->returnedValues) && is_array($modx->event->returnedValues)
+        ? $modx->event->returnedValues
+        : [];
+};
+$applyReturnedArray = static function (array $current, array $returnedValues, string $key): array {
+    if (!isset($returnedValues[$key]) || !is_array($returnedValues[$key])) {
+        return $current;
+    }
+
+    // Lists are complete replacements; associative arrays may patch existing keys.
+    return array_is_list($returnedValues[$key])
+        ? $returnedValues[$key]
+        : array_replace($current, $returnedValues[$key]);
+};
+
 // Event: msOnProductsLoad - bulk loading of additional data from external packages
 if (!empty($rows) && is_array($rows)) {
     $productIds = array_column($rows, 'id');
+    $clearEventReturnedValues();
     $modx->invokeEvent('msOnProductsLoad', [
-        'rows' => &$rows,
+        'rows' => $rows,
         'productIds' => $productIds,
         'usePackages' => $usePackages,
         'scriptProperties' => $scriptProperties,
     ]);
+    $rows = $applyReturnedArray($rows, $getEventReturnedValues(), 'rows');
     $pdoFetch->addTime('Invoked msOnProductsLoad event');
 }
 
@@ -439,11 +462,13 @@ if (!empty($rows) && is_array($rows)) {
         $opt_time += microtime(true) - $opt_time_start;
 
         // Event: msOnProductPrepare - enrich single product data from external packages
+        $clearEventReturnedValues();
         $modx->invokeEvent('msOnProductPrepare', [
-            'row' => &$rows[$k],
+            'row' => $rows[$k],
             'productId' => $row['id'],
             'idx' => $row['idx'],
         ]);
+        $rows[$k] = $applyReturnedArray($rows[$k], $getEventReturnedValues(), 'row');
         $row = $rows[$k]; // Update local variable after event modifications
 
         if ($scriptProperties['return'] == 'data') {

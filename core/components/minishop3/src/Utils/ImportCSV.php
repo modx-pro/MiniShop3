@@ -121,10 +121,12 @@ class ImportCSV
         }
 
         // Fire before import event
+        $this->clearEventReturnedValues();
         $eventResult = $this->modx->invokeEvent('msOnBeforeImport', [
             'file' => $this->params['file'],
-            'params' => &$this->params,
+            'params' => $this->params,
         ]);
+        $this->params = $this->applyReturnedArray($this->params, $this->getEventReturnedValues(), 'params');
         if ($this->isEventCancelled($eventResult)) {
             $error = $this->modx->lexicon('ms3_utilities_import_cancelled');
             return $this->ms3->utils->error($error);
@@ -344,14 +346,20 @@ class ImportCSV
         }
 
         // Fire event to allow modification of row data
+        $this->clearEventReturnedValues();
         $eventResult = $this->modx->invokeEvent('msOnImportRow', [
             'row' => $this->rows,
             'csv' => $csv,
-            'data' => &$data,
-            'tvData' => &$tvData,
-            'optionData' => &$optionData,
-            'gallery' => &$gallery,
+            'data' => $data,
+            'tvData' => $tvData,
+            'optionData' => $optionData,
+            'gallery' => $gallery,
         ]);
+        $returnedValues = $this->getEventReturnedValues();
+        $data = $this->applyReturnedArray($data, $returnedValues, 'data');
+        $tvData = $this->applyReturnedArray($tvData, $returnedValues, 'tvData');
+        $optionData = $this->applyReturnedArray($optionData, $returnedValues, 'optionData');
+        $gallery = $this->applyReturnedArray($gallery, $returnedValues, 'gallery');
         if ($this->isEventCancelled($eventResult)) {
             $this->skipped++;
             return true;
@@ -658,6 +666,32 @@ class ImportCSV
             }
         }
         return false;
+    }
+
+    private function clearEventReturnedValues(): void
+    {
+        if (isset($this->modx->event->returnedValues)) {
+            $this->modx->event->returnedValues = null;
+        }
+    }
+
+    private function getEventReturnedValues(): array
+    {
+        return isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)
+            ? $this->modx->event->returnedValues
+            : [];
+    }
+
+    private function applyReturnedArray(array $current, array $returnedValues, string $key): array
+    {
+        if (!isset($returnedValues[$key]) || !is_array($returnedValues[$key])) {
+            return $current;
+        }
+
+        // Lists are complete replacements; associative arrays may patch existing keys.
+        return array_is_list($returnedValues[$key])
+            ? $returnedValues[$key]
+            : array_replace($current, $returnedValues[$key]);
     }
 
     /**
