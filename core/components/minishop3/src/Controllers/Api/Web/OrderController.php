@@ -304,6 +304,26 @@ class OrderController
         $input = $this->getRequestData();
 
         $addressHash = $input['address_hash'] ?? null;
+        return $this->setCustomerAddressByHash($addressHash);
+    }
+
+    /**
+     * Set customer address from CustomerAPI legacy payload.
+     * POST /api/v1/customer/changeAddress
+     *
+     * @param array $params URL parameters
+     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     */
+    public function changeCustomerAddress(array $params = []): array
+    {
+        $input = $this->getRequestData();
+
+        $addressHash = $input['address_hash'] ?? ($input['value'] ?? null);
+        return $this->setCustomerAddressByHash($addressHash);
+    }
+
+    protected function setCustomerAddressByHash(?string $addressHash = null): array
+    {
         $token = $_REQUEST['ms3_token'] ?? '';
 
         if (empty($token)) {
