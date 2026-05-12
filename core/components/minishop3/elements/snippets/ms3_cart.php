@@ -32,7 +32,12 @@ $tokenService = $modx->services->get('ms3_token_service');
 $token = !empty($scriptProperties['customer_token'])
     ? $scriptProperties['customer_token']
     : $tokenService->resolveOrCreateToken();
-if (!empty($_GET['msorder'])) {
+
+$suppressRaw = $modx->getOption('suppressWhenMsOrder', $scriptProperties, false);
+$suppressWhenMsOrder = is_bool($suppressRaw)
+    ? $suppressRaw
+    : filter_var($suppressRaw, FILTER_VALIDATE_BOOLEAN);
+if ($suppressWhenMsOrder && !empty($_GET['msorder'])) {
     return '';
 }
 
@@ -81,7 +86,7 @@ $formatTotalForDisplay = static function (array &$total, MiniShop3 $ms3): void {
 if (empty($status['total_count'])) {
     $applyStatusToTotal($total, $status);
     $formatTotalForDisplay($total, $ms3);
-    if ($scriptProperties['return'] === 'tpl') {
+    if ($return === 'tpl') {
         return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
     return compact('total', 'products', 'status');
@@ -89,7 +94,7 @@ if (empty($status['total_count'])) {
 if (empty($cart)) {
     $applyStatusToTotal($total, $status);
     $formatTotalForDisplay($total, $ms3);
-    if ($scriptProperties['return'] === 'tpl') {
+    if ($return === 'tpl') {
         return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
     return compact('total', 'products', 'status');
@@ -166,7 +171,7 @@ $default = [
     'return' => 'data',
     'nestedChunkPrefix' => 'ms3_',
 ];
-if ($scriptProperties['return'] === 'tpl') {
+if ($return === 'tpl') {
     unset($scriptProperties['return']);
 }
 // Merge all properties and run!

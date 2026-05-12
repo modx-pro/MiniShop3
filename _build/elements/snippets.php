@@ -135,6 +135,10 @@ return [
         'file' => 'ms3_cart',
         'description' => '',
         'properties' => [
+            'suppressWhenMsOrder' => [
+                'type' => 'combo-boolean',
+                'value' => false,
+            ],
             'tpl' => [
                 'type' => 'textfield',
                 'value' => 'tpl.msCart',
