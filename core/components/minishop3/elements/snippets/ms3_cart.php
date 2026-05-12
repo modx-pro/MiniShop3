@@ -32,7 +32,17 @@ $tokenService = $modx->services->get('ms3_token_service');
 $token = !empty($scriptProperties['customer_token'])
     ? $scriptProperties['customer_token']
     : $tokenService->resolveOrCreateToken();
-if (!empty($_GET['msorder'])) {
+
+// hideOnThanks: when set to 1/true, this msCart call returns empty on the
+// thanks page (detected by the ?msorder= URL parameter MS3 redirects to
+// after a successful order). Default: false — cart renders normally even
+// on the thanks page, so mini-cart blocks in the global layout keep showing
+// the (typically empty) cart state.
+$hideRaw = $modx->getOption('hideOnThanks', $scriptProperties, false);
+$hideOnThanks = is_bool($hideRaw)
+    ? $hideRaw
+    : filter_var($hideRaw, FILTER_VALIDATE_BOOLEAN);
+if ($hideOnThanks && !empty($_GET['msorder'])) {
     return '';
 }
 
@@ -81,7 +91,7 @@ $formatTotalForDisplay = static function (array &$total, MiniShop3 $ms3): void {
 if (empty($status['total_count'])) {
     $applyStatusToTotal($total, $status);
     $formatTotalForDisplay($total, $ms3);
-    if ($scriptProperties['return'] === 'tpl') {
+    if ($return === 'tpl') {
         return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
     return compact('total', 'products', 'status');
@@ -89,7 +99,7 @@ if (empty($status['total_count'])) {
 if (empty($cart)) {
     $applyStatusToTotal($total, $status);
     $formatTotalForDisplay($total, $ms3);
-    if ($scriptProperties['return'] === 'tpl') {
+    if ($return === 'tpl') {
         return $pdoFetch->getChunk($tpl, compact('total', 'products', 'status'));
     }
     return compact('total', 'products', 'status');
@@ -166,7 +176,7 @@ $default = [
     'return' => 'data',
     'nestedChunkPrefix' => 'ms3_',
 ];
-if ($scriptProperties['return'] === 'tpl') {
+if ($return === 'tpl') {
     unset($scriptProperties['return']);
 }
 // Merge all properties and run!
