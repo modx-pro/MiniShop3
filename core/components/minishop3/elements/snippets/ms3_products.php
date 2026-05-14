@@ -389,8 +389,13 @@ $applyReturnedArray = static function (array $current, array $returnedValues, st
 if (!empty($rows) && is_array($rows)) {
     $productIds = array_column($rows, 'id');
     $clearEventReturnedValues();
+    // Two propagation paths supported:
+    //   1) by-ref mutation of $rows in the plugin scope — preserved for plugins
+    //      (ms3Variants and others) that mutate $scriptProperties['rows'] directly.
+    //   2) $modx->event->returnedValues['rows'] — the explicit channel introduced
+    //      in #219/#245 for plugins that prefer the returned-values contract.
     $modx->invokeEvent('msOnProductsLoad', [
-        'rows' => $rows,
+        'rows' => &$rows,
         'productIds' => $productIds,
         'usePackages' => $usePackages,
         'scriptProperties' => $scriptProperties,
@@ -463,8 +468,9 @@ if (!empty($rows) && is_array($rows)) {
 
         // Event: msOnProductPrepare - enrich single product data from external packages
         $clearEventReturnedValues();
+        // by-ref + returnedValues — see msOnProductsLoad comment above.
         $modx->invokeEvent('msOnProductPrepare', [
-            'row' => $rows[$k],
+            'row' => &$rows[$k],
             'productId' => $row['id'],
             'idx' => $row['idx'],
         ]);

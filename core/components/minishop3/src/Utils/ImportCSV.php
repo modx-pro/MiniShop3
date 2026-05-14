@@ -120,11 +120,17 @@ class ImportCSV
             }
         }
 
-        // Fire before import event
+        // Fire before import event.
+        //
+        // Two propagation paths supported:
+        //   1) by-ref mutation of $this->params in the plugin scope — preserved
+        //      for plugins that mutate $scriptProperties['params'] directly.
+        //   2) $modx->event->returnedValues['params'] — explicit channel from
+        //      #219/#245 for plugins that prefer the returned-values contract.
         $this->clearEventReturnedValues();
         $eventResult = $this->modx->invokeEvent('msOnBeforeImport', [
             'file' => $this->params['file'],
-            'params' => $this->params,
+            'params' => &$this->params,
         ]);
         $this->params = $this->applyReturnedArray($this->params, $this->getEventReturnedValues(), 'params');
         if ($this->isEventCancelled($eventResult)) {
@@ -345,15 +351,23 @@ class ImportCSV
             }
         }
 
-        // Fire event to allow modification of row data
+        // Fire event to allow modification of row data.
+        //
+        // Two propagation paths supported:
+        //   1) by-ref mutation of $data/$tvData/$optionData/$gallery in the
+        //      plugin scope — preserved for plugins that mutate $scriptProperties
+        //      directly (long-standing extension contract).
+        //   2) $modx->event->returnedValues['data'|'tvData'|'optionData'|'gallery']
+        //      — explicit channel from #219/#245 for plugins that prefer the
+        //      returned-values contract.
         $this->clearEventReturnedValues();
         $eventResult = $this->modx->invokeEvent('msOnImportRow', [
             'row' => $this->rows,
             'csv' => $csv,
-            'data' => $data,
-            'tvData' => $tvData,
-            'optionData' => $optionData,
-            'gallery' => $gallery,
+            'data' => &$data,
+            'tvData' => &$tvData,
+            'optionData' => &$optionData,
+            'gallery' => &$gallery,
         ]);
         $returnedValues = $this->getEventReturnedValues();
         $data = $this->applyReturnedArray($data, $returnedValues, 'data');

@@ -68,13 +68,21 @@ class NotificationManager
         $channels = $notification->via($recipientType);
         $order = $notification->getOrder();
 
-        // Fire before event - allows plugins to modify or cancel notification
+        // Fire before event - allows plugins to modify or cancel notification.
+        //
+        // Two propagation paths supported:
+        //   1) by-ref mutation of $recipient/$channels in the plugin scope —
+        //      preserved for plugins that mutate $scriptProperties directly
+        //      (long-standing extension contract for third-party packages).
+        //   2) $modx->event->returnedValues['recipient']/['channels'] —
+        //      explicit channel introduced in #219/#245 for plugins that prefer
+        //      the returned-values contract.
         $this->clearEventReturnedValues();
         $eventResult = $this->modx->invokeEvent('msOnBeforeSendNotification', [
             'notification' => $notification,
-            'recipient' => $recipient,
+            'recipient' => &$recipient,
             'recipientType' => $recipientType,
-            'channels' => $channels,
+            'channels' => &$channels,
         ]);
         $returnedValues = $this->getEventReturnedValues();
         $recipient = $this->applyReturnedArray($recipient, $returnedValues, 'recipient');
