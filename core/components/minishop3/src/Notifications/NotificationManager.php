@@ -69,12 +69,18 @@ class NotificationManager
         $order = $notification->getOrder();
 
         // Fire before event - allows plugins to modify or cancel notification
+        $this->clearEventReturnedValues();
         $eventResult = $this->modx->invokeEvent('msOnBeforeSendNotification', [
             'notification' => $notification,
-            'recipient' => &$recipient,
+            'recipient' => $recipient,
             'recipientType' => $recipientType,
-            'channels' => &$channels,
+            'channels' => $channels,
         ]);
+        $returnedValues = $this->getEventReturnedValues();
+        $recipient = $this->applyReturnedArray($recipient, $returnedValues, 'recipient');
+        if (isset($returnedValues['channels']) && is_array($returnedValues['channels'])) {
+            $channels = $returnedValues['channels'];
+        }
 
         // Check if notification was cancelled by plugin
         $cancelled = false;
@@ -262,5 +268,31 @@ class NotificationManager
     protected function isSchedulerAvailable(): bool
     {
         return $this->modx->services->has('scheduler');
+    }
+
+    protected function clearEventReturnedValues(): void
+    {
+        if (isset($this->modx->event->returnedValues)) {
+            $this->modx->event->returnedValues = null;
+        }
+    }
+
+    protected function getEventReturnedValues(): array
+    {
+        return isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)
+            ? $this->modx->event->returnedValues
+            : [];
+    }
+
+    protected function applyReturnedArray(array $current, array $returnedValues, string $key): array
+    {
+        if (!isset($returnedValues[$key]) || !is_array($returnedValues[$key])) {
+            return $current;
+        }
+
+        // Lists are complete replacements; associative arrays may patch existing keys.
+        return array_is_list($returnedValues[$key])
+            ? $returnedValues[$key]
+            : array_replace($current, $returnedValues[$key]);
     }
 }
