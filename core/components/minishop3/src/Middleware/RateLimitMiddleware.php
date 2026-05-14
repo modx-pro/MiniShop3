@@ -3,6 +3,7 @@
 namespace MiniShop3\Middleware;
 
 use MiniShop3\Router\Middleware\MiddlewareInterface;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 
 /**
@@ -62,7 +63,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         if ($attempts >= $this->maxAttempts) {
             $retryAfter = $resetTime - time();
             header("Retry-After: $retryAfter");
-            return Response::error('ms3_err_rate_limit', 429);
+            return Response::error('ms3_err_rate_limit', HttpStatus::TOO_MANY_REQUESTS);
         }
 
         // Increment counter

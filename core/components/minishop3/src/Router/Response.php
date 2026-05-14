@@ -11,7 +11,7 @@ class Response
     protected $statusCode;
     protected $headers = [];
 
-    public function __construct($data, int $statusCode = 200, array $headers = [])
+    public function __construct($data, int $statusCode = HttpStatus::OK, array $headers = [])
     {
         $this->data = $data;
         $this->statusCode = $statusCode;
@@ -21,7 +21,7 @@ class Response
     /**
      * Create success response
      */
-    public static function success($data = null, string $message = null, int $statusCode = 200): self
+    public static function success(mixed $data = null, ?string $message = null, int $statusCode = HttpStatus::OK): self
     {
         return new self([
             'success' => true,
@@ -33,7 +33,7 @@ class Response
     /**
      * Create error response
      */
-    public static function error(string $message, int $statusCode = 400, $errors = null): self
+    public static function error(string $message, int $statusCode = HttpStatus::BAD_REQUEST, mixed $errors = null): self
     {
         return new self([
             'success' => false,
