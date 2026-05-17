@@ -185,13 +185,25 @@ class GridConfigService
                     'decimals', 'currency', 'currency_position', 'thousands_separator', 'decimal_separator',
                     // weight type
                     'unit', 'unit_position',
-                    // inline edit (category-products). Add 'editor_options' when select editor is implemented in UI
-                    'editable', 'editor_type',
+                    // inline edit (category-products)
+                    'editable', 'editor_type', 'editor_options', 'editor_reference', 'editor_combo_endpoint',
                 ];
                 foreach ($configKeys as $key) {
                     if (array_key_exists($key, $fieldData)) {
                         $config[$key] = $fieldData[$key];
                     }
+                }
+
+                if (($config['editor_type'] ?? '') !== GridColumnEditorType::COMBO) {
+                    unset($config['editor_reference'], $config['editor_combo_endpoint']);
+                }
+
+                $comboCheck = GridEditorReferenceRegistry::validateComboEditorConfig($config);
+                if (!$comboCheck['success']) {
+                    $this->modx->log(modX::LOG_LEVEL_ERROR,
+                        '[GridConfigService] Combo editor validation failed for ' . $gridKey . '.' . $fieldName . ': ' . ($comboCheck['message'] ?? ''));
+
+                    return false;
                 }
 
                 $field->set('config', json_encode($config, JSON_UNESCAPED_UNICODE));
@@ -354,6 +366,15 @@ class GridConfigService
             // Add type to config
             $config['type'] = $type;
 
+            if (($config['editor_type'] ?? '') !== GridColumnEditorType::COMBO) {
+                unset($config['editor_reference'], $config['editor_combo_endpoint']);
+            }
+
+            $comboCheck = GridEditorReferenceRegistry::validateComboEditorConfig($config);
+            if (!$comboCheck['success']) {
+                return ['success' => false, 'message' => $comboCheck['message'] ?? 'Invalid combo editor configuration'];
+            }
+
             // Get maximum sort_order
             $maxSortOrder = 0;
             $query = $this->modx->newQuery(msGridField::class);
@@ -470,6 +491,15 @@ class GridConfigService
 
             // Add type to config
             $config['type'] = $type;
+
+            if (($config['editor_type'] ?? '') !== GridColumnEditorType::COMBO) {
+                unset($config['editor_reference'], $config['editor_combo_endpoint']);
+            }
+
+            $comboCheck = GridEditorReferenceRegistry::validateComboEditorConfig($config);
+            if (!$comboCheck['success']) {
+                return ['success' => false, 'message' => $comboCheck['message'] ?? 'Invalid combo editor configuration'];
+            }
 
             // Update field
             if (isset($data['label'])) {

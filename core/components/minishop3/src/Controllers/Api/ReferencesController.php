@@ -44,9 +44,18 @@ class ReferencesController extends BaseApiController
                 ];
             }
 
+            $options = [];
+            foreach ($vendors as $row) {
+                $options[] = [
+                    'value' => $row['id'],
+                    'label' => (string)$row['name'],
+                ];
+            }
+
             return Response::success([
                 'vendors' => $vendors,
-                'total' => count($vendors)
+                'options' => $options,
+                'total' => count($vendors),
             ]);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
