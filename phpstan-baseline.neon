@@ -111,13 +111,13 @@ parameters:
 		-
 			message: '#^Call to method make\(\) on an unknown class Rakit\\Validation\\Validator\.$#'
 			identifier: class.notFound
-			count: 1
+			count: 2
 			path: core/components/minishop3/src/Controllers/Api/Web/CustomerProfileController.php
 
 		-
 			message: '#^Instantiated class Rakit\\Validation\\Validator not found\.$#'
 			identifier: class.notFound
-			count: 1
+			count: 2
 			path: core/components/minishop3/src/Controllers/Api/Web/CustomerProfileController.php
 
 		-
