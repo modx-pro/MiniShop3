@@ -19,6 +19,30 @@ use Rakit\Validation\Validator;
  */
 class CustomerProfileController
 {
+    /**
+     * Field names never editable via POST /api/v1/customer/add (security & system counters).
+     *
+     * @var list<string>
+     */
+    private const PROFILE_QUICK_UPDATE_FORBIDDEN = [
+        'id',
+        'token',
+        'user_id',
+        'password',
+        'email_verified_at',
+        'is_active',
+        'is_blocked',
+        'failed_login_attempts',
+        'blocked_until',
+        'created_at',
+        'updated_at',
+        'last_login_at',
+        'orders_count',
+        'total_spent',
+        'last_order_at',
+        'privacy_ip',
+    ];
+
     /** @var modX */
     protected modX $modx;
 
@@ -125,35 +149,49 @@ class CustomerProfileController
             return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
         }
 
-        $key = trim((string)($data['key'] ?? ''));
+        $key = trim((string) ($data['key'] ?? ''));
         if ($key === '') {
             return $this->error($this->modx->lexicon('ms3_customer_key_empty'));
         }
 
-        $rules = $this->getProfileFieldRules();
-        if (!isset($rules[$key])) {
+        $this->ms3->loadMap();
+        $fieldMeta = $this->modx->getFieldMeta(msCustomer::class);
+        if (!is_array($fieldMeta) || $fieldMeta === []) {
             return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
         }
 
-        $value = trim((string)($data['value'] ?? ''));
-        $validation = (new Validator())->make([$key => $value], [$key => $rules[$key]]);
-        $validation->validate();
-
-        if ($validation->fails()) {
-            $errors = $validation->errors()->firstOfAll();
-
-            return $this->error(
-                $this->modx->lexicon('ms3_customer_err_validation'),
-                ['errors' => $errors]
-            );
+        if (in_array($key, self::PROFILE_QUICK_UPDATE_FORBIDDEN, true)) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
         }
 
-        if ($key === 'email' && !$this->isEmailAvailable($customer, $value)) {
+        if (!isset($fieldMeta[$key])) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
+        }
+
+        $rules = $this->getProfileFieldRules();
+        if (isset($rules[$key])) {
+            $value = trim((string) ($data['value'] ?? ''));
+            $validation = (new Validator())->make([$key => $value], [$key => $rules[$key]]);
+            $validation->validate();
+
+            if ($validation->fails()) {
+                $errors = $validation->errors()->firstOfAll();
+
+                return $this->error(
+                    $this->modx->lexicon('ms3_customer_err_validation'),
+                    ['errors' => $errors]
+                );
+            }
+        } else {
+            $value = $this->normalizeQuickProfileValue($data['value'] ?? null, $fieldMeta[$key]);
+        }
+
+        if ($key === 'email' && !$this->isEmailAvailable($customer, (string) $value)) {
             return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
         }
 
         if ($key === 'email') {
-            $this->resetEmailVerificationIfChanged($customer, $value);
+            $this->resetEmailVerificationIfChanged($customer, (string) $value);
         }
 
         $customer->set($key, $value);
@@ -190,6 +228,35 @@ class CustomerProfileController
             'email' => 'required|email',
             'phone' => 'required|min:10|max:20',
         ];
+    }
+
+    /**
+     * Coerce a single-field quick update value using xPDO field metadata (extra columns & OE fields).
+     *
+     * @param mixed $raw
+     * @param array<string, mixed> $meta
+     * @return mixed
+     */
+    private function normalizeQuickProfileValue(mixed $raw, array $meta): mixed
+    {
+        $phptype = isset($meta['phptype']) ? (string) $meta['phptype'] : 'string';
+
+        return match ($phptype) {
+            'integer' => (int) $raw,
+            'float', 'double' => is_numeric($raw) ? (float) $raw : 0.0,
+            'boolean' => $this->normalizeBooleanQuickValue($raw),
+            default => trim((string) $raw),
+        };
+    }
+
+    private function normalizeBooleanQuickValue(mixed $raw): bool
+    {
+        if (is_bool($raw)) {
+            return $raw;
+        }
+        $s = strtolower(trim((string) $raw));
+
+        return in_array($s, ['1', 'true', 'yes', 'on'], true);
     }
 
     protected function isEmailAvailable(msCustomer $customer, string $email): bool
