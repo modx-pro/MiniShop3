@@ -174,6 +174,10 @@ $_lang['setting_ms3_password_reset_token_ttl'] = 'Password reset token Time-To-L
 $_lang['setting_ms3_password_reset_token_ttl_desc'] = 'Time in seconds for which the password reset link remains valid. Default is 3600 (1 hour).';
 $_lang['setting_ms3_email_verification_token_ttl'] = 'Email verification token Time-To-Live (TTL)';
 $_lang['setting_ms3_email_verification_token_ttl_desc'] = 'Time in seconds for which the email verification link remains valid. Default is 86400 (24 hours).';
+$_lang['setting_ms3_email_verification_url'] = 'Custom email verification link (optional)';
+$_lang['setting_ms3_email_verification_url_desc'] = 'If empty, the link points to the Web API (api.php) verify route. To use your own page, set a full URL and include the placeholder [[+token]] or {token} where the token must appear.';
+$_lang['setting_ms3_email_verification_success_url'] = 'Redirect URL after successful email verification (optional)';
+$_lang['setting_ms3_email_verification_success_url_desc'] = 'Used when the user opens the verification link from email (html=1). If empty, site_url is used; the query parameter ms3_email_verified=1 is appended.';
 $_lang['setting_ms3_payment_secret'] = 'Payment secret key';
 $_lang['setting_ms3_payment_secret_desc'] = 'Secret key for generating payment notification signatures. Recommended to set a unique value for improved security.';
 

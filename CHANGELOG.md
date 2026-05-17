@@ -82,6 +82,11 @@
 **ServiceRegistry — лишний debug-шум в логах (#225, closes #224):**
 - На штатной установке без кастомизации сервисов `loadMainConfig()` / `loadAddonConfigs()` писали DEBUG про отсутствие дефолтных override-путей. Теперь логирование срабатывает только если оператор явно задал `ms3_services_config` / `ms3_services_addons_dir` через system settings, а файла/папки по этому пути нет.
 
+**Подтверждение email на витрине — ссылка из письма и повторная отправка в ЛК (#226):**
+- Ссылка по умолчанию ведёт на Web API `api.php?route=…/email/verify&token=…&html=1` (раньше — несуществующий `verify-email` на `site_url`); кастомный URL — системная настройка `ms3_email_verification_url`. После клика в письме: редирект на сайт с `ms3_email_verified=1|0` (для success — опционально `ms3_email_verification_success_url`); `format=json` по-прежнему отдаёт JSON.
+- `Response` и `api.php` поддерживают HTTP-редирект вместо JSON для таких маршрутов.
+- Подключены `CustomerAPI::resendVerificationEmail`, `CustomerUI`, селекторы и `ms3_customer_profile.tpl` — кнопка resend инициирует `POST /api/v1/customer/email/resend-verification`. Добавлены README, лексиконы, smoke-тест `core/components/minishop3/tests/EmailVerificationUrlTest.php`.
+
 #### 📁 Изменённые файлы
 
 ```

@@ -11,11 +11,30 @@ class Response
     protected $statusCode;
     protected $headers = [];
 
+    /** @var string|null HTTP redirect target (Location) */
+    protected ?string $redirectUrl = null;
+
     public function __construct($data, int $statusCode = HttpStatus::OK, array $headers = [])
     {
         $this->data = $data;
         $this->statusCode = $statusCode;
         $this->headers = $headers;
+    }
+
+    /**
+     * Redirect response (e.g. email verification in browser; api.php sends Location)
+     */
+    public static function redirect(string $url, int $statusCode = 302): self
+    {
+        $r = new self(null, $statusCode);
+        $r->redirectUrl = $url;
+
+        return $r;
+    }
+
+    public function getRedirectUrl(): ?string
+    {
+        return $this->redirectUrl;
     }
 
     /**
@@ -58,6 +77,14 @@ class Response
     public function send(): void
     {
         http_response_code($this->statusCode);
+
+        if ($this->redirectUrl !== null) {
+            header('Location: ' . $this->redirectUrl);
+            foreach ($this->headers as $name => $value) {
+                header("{$name}: {$value}");
+            }
+            exit;
+        }
 
         header('Content-Type: application/json; charset=utf-8');
         foreach ($this->headers as $name => $value) {

@@ -15,8 +15,7 @@
  * @package MiniShop3
  */
 
-// Устанавливаем заголовки для JSON API
-header('Content-Type: application/json; charset=utf-8');
+// JSON Content-Type выставляется только при отдаче тела (не при HTTP redirect)
 
 // Проверяем наличие параметра route
 if (empty($_REQUEST['route'])) {
@@ -92,14 +91,19 @@ try {
     // Обрабатываем запрос
     $response = $router->dispatch($route, $_SERVER['REQUEST_METHOD']);
 
-    // Получаем данные ответа
-    $responseData = $response->getData();
     $statusCode = $response->getStatusCode();
+    $redirectUrl = $response->getRedirectUrl();
+    if ($redirectUrl !== null && $redirectUrl !== '') {
+        http_response_code($statusCode);
+        header('Location: ' . $redirectUrl);
+        exit;
+    }
 
-    // Устанавливаем HTTP статус код
+    $responseData = $response->getData();
+
     http_response_code($statusCode);
+    header('Content-Type: application/json; charset=utf-8');
 
-    // Выводим JSON
     echo json_encode($responseData, JSON_UNESCAPED_UNICODE);
 
 } catch (\Exception $e) {

@@ -81,6 +81,7 @@
                         <button class="btn btn-outline-warning"
                                 type="button"
                                 id="resend-verification-email"
+                                data-ms3-resend-verification
                                 data-customer-id="{$customer.id}">
                             {'ms3_customer_email_send_verification' | lexicon}
                         </button>

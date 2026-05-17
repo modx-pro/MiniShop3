@@ -84,6 +84,12 @@ php _build/build.php
 - [REST API](https://docs.modx.pro/components/minishop3/development/api) — интеграция с внешними системами
 - [События](https://docs.modx.pro/components/minishop3/development/events) — расширение функциональности
 
+### Подтверждение email (Web API)
+
+Ссылка в письме ведёт на `api.php` с путём верификации и параметром `html=1` — в ответ сервер отдаёт **HTTP-редирект** (302) на сайт с признаком `ms3_email_verified=1` либо `ms3_email_verified=0`. URL после успешной проверки задаётся системной настройкой `ms3_email_verification_success_url` (если пусто — `site_url`).
+
+Если открыть тот же URL **без** `html=1` или с `format=json`, ответ будет **JSON** (удобно для API-клиентов; в браузере увидите «сырое» тело).
+
 ## 🏗️ Структура проекта
 
 ```

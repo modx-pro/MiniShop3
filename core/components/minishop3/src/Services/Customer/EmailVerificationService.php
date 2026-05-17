@@ -99,9 +99,7 @@ class EmailVerificationService
         }
 
         $token = $tokenObj->get('token');
-
-        $siteUrl = $this->modx->getOption('site_url');
-        $verificationUrl = $siteUrl . 'verify-email?token=' . $token;
+        $verificationUrl = $this->buildEmailVerificationUrl($token);
 
         $email = $customer->get('email');
         $siteName = $this->modx->getOption('site_name');
@@ -138,6 +136,54 @@ class EmailVerificationService
         );
 
         return false;
+    }
+
+    /**
+     * Public URL for email confirmation (GET Web API, see routes/web.php).
+     *
+     * Optional system setting ms3_email_verification_url: use [[+token]] or {token} placeholder
+     * for a custom page; leave empty to use api.php route (fixes GH-226 when verify-email page is absent).
+     */
+    protected function buildEmailVerificationUrl(string $token): string
+    {
+        $custom = trim((string) $this->modx->getOption('ms3_email_verification_url', null, ''));
+        if ($custom !== '') {
+            return str_replace(
+                ['[[+token]]', '{token}'],
+                [rawurlencode($token), rawurlencode($token)],
+                $custom
+            );
+        }
+
+        $assetsUrl = $this->modx->getOption(
+            'ms3_assets_url',
+            null,
+            $this->modx->getOption('assets_url', null, '') . 'components/minishop3/'
+        );
+        $apiBase = rtrim($assetsUrl, '/') . '/api.php';
+        if (!str_starts_with($apiBase, 'http://') && !str_starts_with($apiBase, 'https://') && !str_starts_with($apiBase, '//')) {
+            $apiBase = rtrim($this->modx->getOption('site_url', null, ''), '/') . '/' . ltrim($apiBase, '/');
+        }
+
+        return self::buildDefaultVerifyRequestUrl($apiBase, $token, true);
+    }
+
+    /**
+     * Собирает query для Web API подтверждения email (тесты и единая логика с письмом).
+     *
+     * @param string $apiPhpAbsoluteUrl Полный URL до api.php
+     * @param bool   $includeHtmlParam  false — только JSON; true — в ссылку добавляется html=1 (редирект после клика в письме)
+     */
+    public static function buildDefaultVerifyRequestUrl(string $apiPhpAbsoluteUrl, string $token, bool $includeHtmlParam = true): string
+    {
+        $sep = str_contains($apiPhpAbsoluteUrl, '?') ? '&' : '?';
+        $q = 'route=' . rawurlencode('/api/v1/customer/email/verify')
+            . '&token=' . rawurlencode($token);
+        if ($includeHtmlParam) {
+            $q .= '&html=1';
+        }
+
+        return $apiPhpAbsoluteUrl . $sep . $q;
     }
 
     /**
