@@ -369,10 +369,15 @@ class CategoryOptionsController
             $globalCaption
         );
 
+        // msCategoryOption has composite PK (category_id, option_id); SQL select has no `id` column.
+        $categoryId = (int)($row['category_id'] ?? 0);
+        $optionId = (int)($row['option_id'] ?? 0);
+        $rowId = array_key_exists('id', $row) ? (int)$row['id'] : $optionId;
+
         return [
-            'id' => (int)$row['id'],
-            'option_id' => (int)$row['option_id'],
-            'category_id' => (int)$row['category_id'],
+            'id' => $rowId,
+            'option_id' => $optionId,
+            'category_id' => $categoryId,
             'position' => (int)($row['position'] ?? 0),
             'active' => (bool)($row['active'] ?? false),
             'required' => (bool)($row['required'] ?? false),
