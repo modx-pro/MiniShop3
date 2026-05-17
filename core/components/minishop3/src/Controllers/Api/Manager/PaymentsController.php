@@ -6,6 +6,7 @@ use MiniShop3\Model\msPayment;
 use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Utils\PriceAdjustment;
 use MODX\Revolution\modX;
 
 /**
@@ -123,7 +124,7 @@ class PaymentsController
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
-                $payment->set($field, $data[$field]);
+                $payment->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }
 
@@ -172,7 +173,7 @@ class PaymentsController
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
-                $payment->set($field, $data[$field]);
+                $payment->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }
 
@@ -446,5 +447,10 @@ class PaymentsController
         }
 
         return Response::success([], 'Delivery removed from payment')->getData();
+    }
+
+    protected function prepareFieldValue(string $field, $value)
+    {
+        return $field === 'price' ? PriceAdjustment::normalize($value) : $value;
     }
 }

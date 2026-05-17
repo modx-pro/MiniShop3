@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Payment;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
+use MiniShop3\Utils\PriceAdjustment;
 use MODX\Revolution\modX;
 
 /**
@@ -141,41 +142,28 @@ abstract class Payment implements PaymentProviderInterface
      */
     public function getCost(msOrder $order, msPayment $payment, float $cost): float
     {
-        $add_price = $payment->get('price');
+        $addPrice = $payment->get('price');
 
-        if (empty($add_price)) {
+        if (empty($addPrice)) {
             return $cost;
         }
 
-        // Percentage fee
-        if (str_ends_with($add_price, '%')) {
-            $percent = (float)str_replace('%', '', $add_price);
-
-            // Validate 0-100% range
-            if ($percent < 0 || $percent > 100) {
+        if (PriceAdjustment::isPercent($addPrice)) {
+            $percent = PriceAdjustment::getPercent($addPrice);
+            if (!PriceAdjustment::isAllowedPercent($percent)) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "[Payment] Invalid percent value for payment #{$payment->get('id')}: {$percent}%. Must be 0-100%."
-                );
-                return $cost;
-            }
-
-            $add_price = $cost / 100 * $percent;
-        } else {
-            // Fixed fee
-            $add_price = (float)$add_price;
-
-            // Validate non-negative
-            if ($add_price < 0) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[Payment] Invalid fixed price for payment #{$payment->get('id')}: {$add_price}. Must be >= 0."
+                    sprintf(
+                        '[Payment] Invalid percent value for payment #%s: %s%%. Must be between -100%% and 100%%.',
+                        $payment->get('id'),
+                        $percent
+                    )
                 );
                 return $cost;
             }
         }
 
-        return $cost + $add_price;
+        return $cost + PriceAdjustment::calculate($cost, $addPrice);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Delivery;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Utils\PriceAdjustment;
 use MODX\Revolution\modX;
 
 /**
@@ -126,34 +127,22 @@ abstract class Delivery implements DeliveryProviderInterface
             return $deliveryCost;
         }
 
-        // Percentage cost
-        if (str_ends_with($addPrice, '%')) {
-            $percent = (float)str_replace('%', '', $addPrice);
-
-            // Validate 0-100% range
-            if ($percent < 0 || $percent > 100) {
+        if (PriceAdjustment::isPercent($addPrice)) {
+            $percent = PriceAdjustment::getPercent($addPrice);
+            if (!PriceAdjustment::isAllowedPercent($percent)) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "[Delivery] Invalid percent value for delivery #{$delivery->get('id')}: {$percent}%. Must be 0-100%."
-                );
-                return $deliveryCost;
-            }
-
-            $addPrice = $cost / 100 * $percent;
-        } else {
-            // Fixed cost
-            $addPrice = (float)$addPrice;
-
-            if ($addPrice < 0) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[Delivery] Invalid fixed price for delivery #{$delivery->get('id')}: {$addPrice}. Must be >= 0."
+                    sprintf(
+                        '[Delivery] Invalid percent value for delivery #%s: %s%%. Must be between -100%% and 100%%.',
+                        $delivery->get('id'),
+                        $percent
+                    )
                 );
                 return $deliveryCost;
             }
         }
 
-        return $deliveryCost + $addPrice;
+        return $deliveryCost + PriceAdjustment::calculate($cost, $addPrice);
     }
 
     /**
