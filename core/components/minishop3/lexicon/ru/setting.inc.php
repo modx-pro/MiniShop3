@@ -21,7 +21,6 @@ $_lang['area_ms3_customers'] = 'Клиенты';
 $_lang['area_ms3_security'] = 'Безопасность';
 $_lang['area_ms3_api'] = 'API';
 $_lang['area_ms3_notifications'] = 'Уведомления';
-$_lang['area_ms3_options'] = 'Опции товаров';
 
 $_lang['setting_ms3_chunks_categories'] = 'Категории для списка чанков';
 $_lang['setting_ms3_chunks_categories_desc'] = 'Список ID категорий через запятую  для списка чанков.';
@@ -57,8 +56,6 @@ $_lang['setting_ms3_category_show_nested_products'] = 'Показывать вл
 $_lang['setting_ms3_category_show_nested_products_desc'] = 'Если вы включаете эту опцию, то в категории будут показаны все вложенные товары. Они выделены другим цветом и у них есть имя родной категории под pagetitle.';
 $_lang['setting_ms3_category_show_options'] = 'Показывать опции товаров категории';
 $_lang['setting_ms3_category_show_options_desc'] = 'Показывать опции к товарам категории.';
-$_lang['setting_ms3_option_category_tree_parent'] = 'UI опций: ID ресурса-корня дерева категорий';
-$_lang['setting_ms3_option_category_tree_parent_desc'] = 'Если категории магазина (msCategory) не являются прямыми детьми корня сайта (parent = 0), укажите ID контейнерного ресурса, под которым они лежат. Тогда дерево категорий в настройках опций и селекторах загрузит первый уровень относительно этого родителя. 0 — только категории с parent = 0 (поведение по умолчанию).';
 $_lang['setting_ms3_category_remember_grid'] = 'Запоминание таблицы категории';
 $_lang['setting_ms3_category_remember_grid_desc'] = 'Если включено, состояние таблицы категории будет запоминаться и восстанавливаться при загрузке страницы, включая номер страницы и строку поиска.';
 $_lang['setting_ms3_category_id_as_alias'] = 'Id категории как псевдоним';

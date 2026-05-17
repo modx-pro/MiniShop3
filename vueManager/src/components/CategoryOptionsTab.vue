@@ -13,10 +13,9 @@ import Select from 'primevue/select'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
-import { getMs3Config } from '../utils/modx.js'
 
 const props = defineProps({
   categoryId: { type: Number, required: true },
@@ -25,8 +24,6 @@ const props = defineProps({
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
-
-const optionCategoryTreeRootParent = computed(() => getMs3Config()?.optionCategoryTreeParent ?? 0)
 
 const links = ref([])
 const loading = ref(false)
@@ -85,21 +82,28 @@ async function loadAvailableOptions() {
 }
 
 async function loadAvailableCategories() {
-  // Source categories for copy — all msCategory resources. We reuse the tree endpoint
-  // flattened: just fetch the first level of resources for now (limit to obvious set).
-  // A richer picker would use the full tree, but a flat Select is consistent with the
-  // legacy ExtJS behavior.
-  const r = await request.get('/api/mgr/options/tree', { parent: optionCategoryTreeRootParent.value })
-  const roots = r?.results || []
-  // Expand one level for convenience (walk all children of each msCategory root).
-  const expanded = [...roots]
-  for (const root of roots) {
-    const children = await request.get('/api/mgr/options/tree', { parent: root.id })
-    expanded.push(...(children?.results || []).map(c => ({ ...c, label: `  ${c.label}` })))
-  }
-  availableCategories.value = expanded
+  // Source categories for copy — all selectable msCategory resources from the semantic tree.
+  const categories = await collectSelectableCategories(0)
+  availableCategories.value = categories
     .filter(c => c.id !== props.categoryId)
     .map(c => ({ id: c.id, label: c.label }))
+}
+
+async function collectSelectableCategories(parent = 0, level = 0) {
+  const r = await request.get('/api/mgr/options/tree', { parent })
+  const rows = r?.results || []
+  const categories = []
+
+  for (const row of rows) {
+    if (row.selectable) {
+      categories.push({ ...row, label: `${'  '.repeat(level)}${row.label}` })
+    }
+    if (!row.leaf) {
+      categories.push(...(await collectSelectableCategories(row.id, level + 1)))
+    }
+  }
+
+  return categories
 }
 
 async function saveCellEdit(event) {

@@ -24,8 +24,6 @@ const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   /** Pre-fetch checked state from the option's current links. Pass 0/null to skip. */
   optionId: { type: [Number, String], default: 0 },
-  /** Root resource id for first tree request. 0 = semantic site root (resolved on API via ms3_option_category_tree_parent when set). */
-  rootParent: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -101,6 +99,7 @@ function normalizeNode(row) {
     leaf: !!row.leaf,
     data: {
       class_key: row.class_key,
+      selectable: !!row.selectable,
       published: row.published,
       hidemenu: row.hidemenu,
     },
@@ -112,11 +111,18 @@ function normalizeNode(row) {
   return node
 }
 
+function isSelectableNode(node) {
+  return !!node?.data?.selectable
+}
+
 function isChecked(node) {
   return checkedSet.value.has(node.id)
 }
 
 function toggleNode(node, checked) {
+  if (!isSelectableNode(node)) {
+    return
+  }
   const next = new Set(checkedSet.value)
   if (checked) {
     next.add(node.id)
@@ -130,7 +136,7 @@ function toggleNode(node, checked) {
 async function loadRoot() {
   loading.value = true
   try {
-    nodes.value = await fetchChildren(props.rootParent)
+    nodes.value = await fetchChildren(0)
   } finally {
     loading.value = false
   }
@@ -202,6 +208,12 @@ async function bulkToggleChecks(node, checked) {
 
   const next = new Set(checkedSet.value)
   function walk(n) {
+    if (!isSelectableNode(n)) {
+      if (Array.isArray(n.children)) {
+        n.children.forEach(walk)
+      }
+      return
+    }
     if (checked) {
       next.add(n.id)
     } else {
@@ -267,15 +279,23 @@ defineExpose({
       @node-expand="onNodeExpand"
     >
       <template #default="{ node }">
-        <span class="tree-node-row" @contextmenu.prevent="onNodeContextMenu($event, node)">
+        <span
+          class="tree-node-row"
+          :class="{ 'tree-node-row-navigation': !isSelectableNode(node) }"
+          @contextmenu.prevent="onNodeContextMenu($event, node)"
+        >
           <Checkbox
+            v-if="isSelectableNode(node)"
             :model-value="isChecked(node)"
             :binary="true"
             :input-id="'opt-cat-' + node.id"
             class="tree-node-check"
             @update:model-value="toggleNode(node, $event)"
           />
-          <label :for="'opt-cat-' + node.id" class="tree-node-label">{{ node.label }}</label>
+          <label v-if="isSelectableNode(node)" :for="'opt-cat-' + node.id" class="tree-node-label">
+            {{ node.label }}
+          </label>
+          <span v-else class="tree-node-label tree-node-label-navigation">{{ node.label }}</span>
         </span>
       </template>
     </Tree>
@@ -309,5 +329,14 @@ defineExpose({
 .vueApp .option-category-tree .tree-node-label {
   cursor: pointer;
   user-select: none;
+}
+
+.vueApp .option-category-tree .tree-node-row-navigation {
+  opacity: 0.72;
+}
+
+.vueApp .option-category-tree .tree-node-label-navigation {
+  cursor: default;
+  font-style: italic;
 }
 </style>

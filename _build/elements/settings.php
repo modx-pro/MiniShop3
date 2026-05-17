@@ -35,11 +35,6 @@ return [
         'xtype' => 'combo-boolean',
         'area' => 'ms3_category',
     ],
-    'ms3_option_category_tree_parent' => [
-        'value' => 0,
-        'xtype' => 'numberfield',
-        'area' => 'ms3_options',
-    ],
     'ms3_template_category_default' => [
         'value' => '',
         'xtype' => 'modx-combo-template',

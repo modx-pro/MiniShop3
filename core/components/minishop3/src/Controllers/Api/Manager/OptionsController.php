@@ -23,6 +23,20 @@ use MODX\Revolution\modX;
  */
 class OptionsController
 {
+    private const OPTION_TREE_CATEGORY_CLASS_KEYS = [
+        msCategory::class,
+        'msCategory',
+    ];
+
+    private const OPTION_TREE_CONTAINER_CLASS_KEYS = [
+        modResource::class,
+        'MODX\\Revolution\\modDocument',
+        'MODX\\Revolution\\modWebLink',
+        'modResource',
+        'modDocument',
+        'modWebLink',
+    ];
+
     protected modX $modx;
     protected OptionService $optionService;
 
@@ -319,13 +333,17 @@ class OptionsController
      * MODX resource tree for category selection. Optional ?option_id= to flag which
      * categories already have the option linked (for checkbox UI).
      *
-     * @param array $params parent (default 0 = semantic root; resolved via ms3_option_category_tree_parent when set),
-     *                     option_id (optional), categories[] (prechecked)
+     * The tree intentionally includes navigation containers so category pickers work
+     * with nested or multi-store resource structures without system settings:
+     *   - msCategory: visible and selectable;
+     *   - MODX folder resources/web links: visible for navigation only;
+     *   - msProduct and plain content resources: excluded.
+     *
+     * @param array $params parent (default 0), option_id (optional), categories[] (prechecked)
      */
     public function getTree(array $params = []): array
     {
-        $requestedParent = (int)($params['parent'] ?? 0);
-        $parent = $this->resolveOptionsTreeParentId($requestedParent);
+        $parent = (int)($params['parent'] ?? 0);
         $optionId = isset($params['option_id']) ? (int)$params['option_id'] : 0;
         $preChecked = $this->decodeIntArray($params['categories'] ?? null);
 
@@ -341,19 +359,22 @@ class OptionsController
             $checkedSet[$catId] = true;
         }
 
-        // Only msCategory nodes (same rule as legacy ExtJS Processors\Category\GetNodes).
-        // leaf is derived from a child-count subquery: a node is a leaf when it has no msCategory children.
+        $treeClassKeysSql = $this->quoteSqlStringList($this->getOptionTreeClassKeys());
+        $categoryClassKeysSql = $this->quoteSqlStringList(self::OPTION_TREE_CATEGORY_CLASS_KEYS);
+        $treeNodeWhere = $this->getOptionTreeNodeSqlFilter('modResource', $treeClassKeysSql, $categoryClassKeysSql);
+        $childNodeWhere = $this->getOptionTreeNodeSqlFilter('Child', $treeClassKeysSql, $categoryClassKeysSql);
+
         $q = $this->modx->newQuery(modResource::class);
-        $q->leftJoin(modResource::class, 'Child', [
-            'modResource.id = Child.parent',
-            'Child.class_key' => msCategory::class,
-            'Child.deleted' => 0,
-        ]);
+        $q->leftJoin(
+            modResource::class,
+            'Child',
+            "`modResource`.`id` = `Child`.`parent` AND `Child`.`deleted` = 0 AND {$childNodeWhere}"
+        );
         $q->where([
             'modResource.parent' => $parent,
             'modResource.deleted' => 0,
-            'modResource.class_key' => msCategory::class,
         ]);
+        $q->where($treeNodeWhere);
         $q->select('modResource.id, modResource.pagetitle, modResource.menutitle, '
             . 'modResource.parent, modResource.published, modResource.hidemenu, modResource.class_key, '
             . 'COUNT(Child.id) AS childrenCount');
@@ -364,11 +385,14 @@ class OptionsController
         if ($q->prepare() && $q->stmt->execute()) {
             while ($row = $q->stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $id = (int)$row['id'];
+                $selectable = $this->isOptionTreeCategoryClass((string)$row['class_key']);
+                $label = (string)($row['menutitle'] ?: $row['pagetitle']);
                 $nodes[] = [
                     'id' => $id,
-                    'label' => $row['menutitle'] !== '' ? $row['menutitle'] : $row['pagetitle'],
+                    'label' => $label,
                     'leaf' => (int)$row['childrenCount'] === 0,
-                    'checked' => isset($checkedSet[$id]),
+                    'checked' => $selectable && isset($checkedSet[$id]),
+                    'selectable' => $selectable,
                     'class_key' => $row['class_key'],
                     'published' => (int)$row['published'],
                     'hidemenu' => (int)$row['hidemenu'],
@@ -601,18 +625,34 @@ class OptionsController
         return [$enabled, $disabled];
     }
 
-    /**
-     * Map semantic tree root (client sends parent=0) to real MODX resource parent id when
-     * msCategory resources are not direct children of site root.
-     */
-    private function resolveOptionsTreeParentId(int $requestedParent): int
+    private function getOptionTreeNodeSqlFilter(string $alias, string $treeClassKeysSql, string $categoryClassKeysSql): string
     {
-        if ($requestedParent !== 0) {
-            return $requestedParent;
-        }
-        $configured = (int)$this->modx->getOption('ms3_option_category_tree_parent', null, 0);
+        return "(`{$alias}`.`class_key` IN ({$treeClassKeysSql}) "
+            . "AND (`{$alias}`.`class_key` IN ({$categoryClassKeysSql}) OR `{$alias}`.`isfolder` = 1))";
+    }
 
-        return $configured > 0 ? $configured : 0;
+    /**
+     * @return string[]
+     */
+    private function getOptionTreeClassKeys(): array
+    {
+        return array_values(array_unique(array_merge(
+            self::OPTION_TREE_CATEGORY_CLASS_KEYS,
+            self::OPTION_TREE_CONTAINER_CLASS_KEYS
+        )));
+    }
+
+    private function isOptionTreeCategoryClass(string $classKey): bool
+    {
+        return in_array($classKey, self::OPTION_TREE_CATEGORY_CLASS_KEYS, true);
+    }
+
+    /**
+     * @param string[] $values
+     */
+    private function quoteSqlStringList(array $values): string
+    {
+        return implode(', ', array_map(fn(string $value): string => $this->modx->quote($value), $values));
     }
 
     /**

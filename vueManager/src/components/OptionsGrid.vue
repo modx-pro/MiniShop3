@@ -23,8 +23,6 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
-const optionCategoryTreeRootParent = computed(() => getMs3Config()?.optionCategoryTreeParent ?? 0)
-
 // Grid state
 const options = ref([])
 const totalRecords = ref(0)
@@ -351,7 +349,7 @@ onBeforeUnmount(() => {
       <!-- Category filter tree (left pane) -->
       <aside class="options-tree-pane">
         <h4 class="pane-title">{{ _('ms3_categories') || 'Категории' }}</h4>
-        <OptionCategoryTree v-model="selectedCategories" :root-parent="optionCategoryTreeRootParent" />
+        <OptionCategoryTree v-model="selectedCategories" />
       </aside>
 
       <!-- Main grid + toolbar + dialog (right pane) -->
@@ -548,7 +546,6 @@ onBeforeUnmount(() => {
           <OptionCategoryTree
             v-model="editingCategories"
             :option-id="editing.id || 0"
-            :root-parent="optionCategoryTreeRootParent"
           />
         </div>
       </div>
@@ -579,7 +576,7 @@ onBeforeUnmount(() => {
           'Выберите категории — в них будут созданы связи для выбранных опций (существующие останутся).'
         }}
       </p>
-      <OptionCategoryTree v-model="assignCategories" :root-parent="optionCategoryTreeRootParent" />
+      <OptionCategoryTree v-model="assignCategories" />
       <template #footer>
         <Button
           :label="_('cancel') || 'Отмена'"
