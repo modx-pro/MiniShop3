@@ -188,15 +188,30 @@ class OrderUI {
   }
 
   /**
-   * Format price for display
+   * Format numeric amount without currency (matches lightweight storefront display).
    *
-   * @param {number} price - Price value
+   * @param {number} num - Parsed finite number
+   * @returns {string}
+   */
+  formatPlainAmount (num) {
+    return num % 1 === 0 ? num.toString() : num.toFixed(2).replace(/\.?0+$/, '')
+  }
+
+  /**
+   * Format price for display (amount + optional currency from ms3Config).
+   *
+   * @param {number|string} price - Price value
    * @returns {string} Formatted price
    */
   formatPrice (price) {
     const num = parseFloat(price) || 0
-    // Format with 2 decimals, remove trailing zeros
-    return num % 1 === 0 ? num.toString() : num.toFixed(2).replace(/\.?0+$/, '')
+    const str = this.formatPlainAmount(num)
+    const sym = this.config?.currencySymbol ? String(this.config.currencySymbol) : ''
+    if (!sym) {
+      return str
+    }
+    const pos = this.config?.currencyPosition || 'after'
+    return pos === 'before' ? `${sym} ${str}` : `${str} ${sym}`
   }
 
   /**

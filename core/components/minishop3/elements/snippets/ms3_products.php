@@ -443,18 +443,6 @@ if (!empty($rows) && is_array($rows)) {
             $row = $product->modifyFields($row);
         }
 
-        $row['discount'] = 0;
-        if (!empty($row['old_price']) && $row['old_price'] > 0 && !empty($row['price']) && $row['price'] > 0) {
-            $row['discount'] = $ms3->format->discount($row['old_price'], $row['price']);
-        }
-
-        if (!empty($scriptProperties['formatPrices'])) {
-            $withCurrency = !empty($scriptProperties['withCurrency']);
-            $row['price'] = $ms3->format->price($row['price'], $withCurrency);
-            $row['old_price'] = $ms3->format->price($row['old_price'], $withCurrency);
-            $row['weight'] = $ms3->format->weight($row['weight']);
-        }
-
         $row['idx'] = $pdoFetch->idx++;
 
         $opt_time_start = microtime(true);
@@ -475,7 +463,28 @@ if (!empty($rows) && is_array($rows)) {
             'idx' => $row['idx'],
         ]);
         $rows[$k] = $applyReturnedArray($rows[$k], $getEventReturnedValues(), 'row');
-        $row = $rows[$k]; // Update local variable after event modifications
+        $row = $rows[$k];
+
+        $rawPrice = (float)($row['price'] ?? 0);
+        $rawOldPrice = (float)($row['old_price'] ?? 0);
+        $rawWeight = (float)($row['weight'] ?? 0);
+        $row['price'] = $rawPrice;
+        $row['old_price'] = $rawOldPrice;
+        $row['weight'] = $rawWeight;
+
+        $row['discount'] = 0;
+        if ($rawOldPrice > 0 && $rawPrice > 0) {
+            $row['discount'] = $ms3->format->discount($rawOldPrice, $rawPrice);
+        }
+
+        $withCurrency = !empty($scriptProperties['withCurrency']);
+        $row['price_formatted'] = $ms3->format->price($rawPrice, $withCurrency);
+        $row['old_price_formatted'] = $rawOldPrice > 0
+            ? $ms3->format->price($rawOldPrice, $withCurrency)
+            : '';
+        $row['weight_formatted'] = $ms3->format->weightWithUnit($rawWeight);
+
+        $rows[$k] = $row;
 
         if ($scriptProperties['return'] == 'data') {
             $tpl = $pdoFetch->defineChunk($row);
