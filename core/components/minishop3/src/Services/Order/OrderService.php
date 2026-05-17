@@ -27,6 +27,43 @@ class OrderService
     }
 
     /**
+     * Clamp computed order total so it never goes negative (defence-in-depth vs misconfigured discounts).
+     *
+     * @param msOrder|null $order Optional persisted order — used only for log context; null allowed for drafts without ID.
+     */
+    public function clampComputedTotal(
+        ?msOrder $order,
+        float $cartCost,
+        float $deliveryCost,
+        float $paymentCost = 0.0
+    ): float {
+        $total = $cartCost + $deliveryCost + $paymentCost;
+        if ($total >= 0.0) {
+            return $total;
+        }
+
+        $orderCtx = null === $order
+            ? 'no order context'
+            : (((int) $order->get('id')) > 0
+                ? 'order #' . $order->get('id')
+                : 'order (unsaved)');
+
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            '[MiniShop3][Order] Negative total clamped to 0 ('
+                . $orderCtx
+                . '): cart_cost='
+                . $cartCost
+                . ', delivery_cost='
+                . $deliveryCost
+                . ', payment_cost='
+                . $paymentCost
+        );
+
+        return 0.0;
+    }
+
+    /**
      * Recalculate products in order
      *
      * Recalculates total cart cost, weight and final order cost
@@ -49,7 +86,7 @@ class OrderService
         }
 
         $order->fromArray([
-            'cost' => $cart_cost + $delivery_cost,
+            'cost' => $this->clampComputedTotal($order, (float) $cart_cost, (float) $delivery_cost, 0.0),
             'cart_cost' => $cart_cost,
             'weight' => $weight,
             'update_products' => true

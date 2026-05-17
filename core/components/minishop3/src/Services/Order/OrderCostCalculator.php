@@ -236,7 +236,14 @@ class OrderCostCalculator
         $paymentCostResponse = $this->getPaymentCost($draft, $orderData, $token, $ctx);
         $paymentCost = $paymentCostResponse['success'] ? $paymentCostResponse['data']['cost'] : 0;
 
-        $cost = $cartCost + $deliveryCost + $paymentCost;
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $cost = $orderService->clampComputedTotal(
+            $draft,
+            (float) $cartCost,
+            (float) $deliveryCost,
+            (float) $paymentCost
+        );
 
         if ($onlyCost) {
             return $this->success('ms3_order_getcost_success', ['cost' => $cost]);
