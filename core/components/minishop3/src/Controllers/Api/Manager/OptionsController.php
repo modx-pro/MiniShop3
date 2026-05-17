@@ -23,7 +23,7 @@ use MODX\Revolution\modX;
  */
 class OptionsController
 {
-    /** FQCN + short name — `class_key` в БД может отличаться между MODX 2→3 и кастомными классами. */
+    /** FQCN + short name. */
     private const OPTION_TREE_CATEGORY_CLASS_KEYS = [
         msCategory::class,
         'msCategory',
