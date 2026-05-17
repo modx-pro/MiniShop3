@@ -21,6 +21,10 @@
 
 #### 🐛 Исправлено
 
+**Копирование товара «Дублировать ресурс» — пустые опции (#257):**
+- После `modResource::duplicate()` значения из `ms3_product_options` снова выравниваются с исходным товаром через `OptionService` (чтение с `product_id` оригинала и полная синхронизация для копии).
+- `Processors\Product\Create` выровнен с `Update`: массив из полей `options-*` хранится в `$ms3ProductFormOptions`, а `ProductDataService::saveOptions(..., removeOther: true)` вызывается только если в запросе **были** ключи `options-*` — запрос без этих полей больше не обнуляет опции через отличие `!empty($options)` от «поля не пришли».
+
 **События с мутацией данных через `returnedValues` (#219):**
 - `msOnBeforeSendNotification` теперь применяет `returnedValues['recipient']` и `returnedValues['channels']`, поэтому плагины могут изменить получателя и каналы перед отправкой уведомления.
 - `msOnBeforeImport` и `msOnImportRow` применяют `returnedValues` к параметрам импорта и данным строки (`data`, `tvData`, `optionData`, `gallery`).
