@@ -42,6 +42,7 @@ assets/customScript.js
 *.bat
 
 # Personal AI assistant files
+AGENTS.md
 *.md
 !CHANGELOG.md
 !changelogs/*.md
