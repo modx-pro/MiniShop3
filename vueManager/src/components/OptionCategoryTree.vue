@@ -91,6 +91,11 @@ async function fetchChildren(parent = 0) {
   return results.map(row => normalizeNode(row))
 }
 
+/** Backend adds `selectable`; older responses without it were msCategory-only (all selectable). */
+function isApiRowSelectable(row) {
+  return typeof row.selectable === 'boolean' ? row.selectable : true
+}
+
 function normalizeNode(row) {
   const node = {
     key: String(row.id),
@@ -99,7 +104,7 @@ function normalizeNode(row) {
     leaf: !!row.leaf,
     data: {
       class_key: row.class_key,
-      selectable: !!row.selectable,
+      selectable: isApiRowSelectable(row),
       published: row.published,
       hidemenu: row.hidemenu,
     },

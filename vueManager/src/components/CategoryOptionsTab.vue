@@ -89,14 +89,20 @@ async function loadAvailableCategories() {
     .map(c => ({ id: c.id, label: c.label }))
 }
 
+/** Must match OptionCategoryTree: absent `selectable` means legacy msCategory-only payload. */
+function isTreeRowSelectable(row) {
+  return typeof row.selectable === 'boolean' ? row.selectable : true
+}
+
 async function collectSelectableCategories(parent = 0, level = 0) {
   const r = await request.get('/api/mgr/options/tree', { parent })
   const rows = r?.results || []
   const categories = []
+  const indent = '  '.repeat(level)
 
   for (const row of rows) {
-    if (row.selectable) {
-      categories.push({ ...row, label: `${'  '.repeat(level)}${row.label}` })
+    if (isTreeRowSelectable(row)) {
+      categories.push({ ...row, label: `${indent}${row.label}` })
     }
     if (!row.leaf) {
       categories.push(...(await collectSelectableCategories(row.id, level + 1)))
