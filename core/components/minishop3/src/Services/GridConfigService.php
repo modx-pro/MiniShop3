@@ -2,8 +2,10 @@
 
 namespace MiniShop3\Services;
 
-use MODX\Revolution\modX;
 use MiniShop3\Model\msGridField;
+use MiniShop3\Services\Grid\GridOptionColumnResolver;
+use MiniShop3\Services\Grid\OptionColumnSpec;
+use MODX\Revolution\modX;
 
 /**
  * Service for managing grid configurations
@@ -177,6 +179,8 @@ class GridConfigService
                     'relation',
                     // computed type
                     'computed',
+                    // option type
+                    'option',
                     // badge type
                     'source_field', 'color_field',
                     // datetime type
@@ -349,6 +353,13 @@ class GridConfigService
                         return $validation;
                     }
                     break;
+
+                case 'option':
+                    $validation = $this->validateOptionConfig($config);
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
             }
 
             // Add type to config
@@ -462,6 +473,12 @@ class GridConfigService
                     break;
                 case 'actions':
                     $validation = $this->validateActionsConfig($config);
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
+                case 'option':
+                    $validation = $this->validateOptionConfig($config);
                     if (!$validation['success']) {
                         return $validation;
                     }
@@ -720,6 +737,44 @@ class GridConfigService
         }
 
         return ['success' => true];
+    }
+
+    /**
+     * Validate Option field configuration
+     *
+     * @param array $config
+     * @return array
+     */
+    protected function validateOptionConfig(array $config): array
+    {
+        $option = $config['option'] ?? [];
+
+        if (empty($option['key'])) {
+            return ['success' => false, 'message' => 'option.key is required for option field'];
+        }
+
+        $key = (string) $option['key'];
+        if (!OptionColumnSpec::isValidOptionKey($key)) {
+            return ['success' => false, 'message' => 'option.key must contain only letters, numbers and underscores'];
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Extract option fields from grid config for JOIN building
+     *
+     * Re-validates option.key on read (defense in depth) — config can be modified directly in DB.
+     *
+     * @param array $gridFields Array of grid field configs
+     * @return array List of option field definitions: [['fieldName' => 'option_length', 'key' => 'length', 'alias' => 'opt_length'], ...]
+     */
+    public function extractOptionFields(array $gridFields): array
+    {
+        return array_map(
+            static fn (OptionColumnSpec $spec) => $spec->toJoinDescriptor(),
+            GridOptionColumnResolver::resolve($gridFields)
+        );
     }
 
     /**

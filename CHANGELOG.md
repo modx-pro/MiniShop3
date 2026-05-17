@@ -181,6 +181,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 #### ♻️ Рефакторинг
 
+- **Грид товаров категории — option-колонки (#140, #154):** вынесены построение SQL и форматирование строк в `CategoryProductsListService` (`ms3_category_products_list`); DTO `OptionColumnSpec` и `GridOptionColumnResolver` для единой валидации ключа опции и спецификации JOIN; один метод агрегации `GROUP_CONCAT(DISTINCT …)` для SELECT и ORDER BY; `GridConfigService::extractOptionFields` делегирует resolver’у
 - **Экран заказа — provide/inject вместо props-цепочки (#196):** `provide(ORDER_CONTEXT_KEY)` в `OrderView`, composables `useOrderFormatters`, `useOrderFieldHelpers`, `useOrderLogFormatters`; вкладки получают только данные вкладки через props; безопасный `inject` до деструктуризации
 - **OrderView разбит на подкомпоненты (#176):** монолитный `OrderView.vue` разделён на `OrderInfoTab`, `OrderProductsTab`, `OrderAddressTab`, `OrderHistoryTab` + вынесен `orderFieldsLayout.css`
 - **Опции товара:** Map по `modcategory_id` для вкладок, именованный page size комбобокса под `ms3.grid`, документирован GROUP BY
