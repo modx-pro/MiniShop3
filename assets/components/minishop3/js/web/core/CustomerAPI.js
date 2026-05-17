@@ -21,7 +21,7 @@ class CustomerAPI {
    *
    * POST /api/v1/customer/add
    *
-   * @param {string} key - Field key (email, phone, fullname, etc.)
+   * @param {string} key - Field key (first_name, last_name, email, phone)
    * @param {string} value - Field value
    * @returns {Promise<Object>}
    *

@@ -184,6 +184,16 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
             return Response::success($response->getObject(), $response->getMessage());
         });
+
+        $router->post('/add', function($params) use ($modx) {
+            $ms3 = $modx->services->get('ms3');
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerProfileController($modx, $ms3);
+            return $controller->updateField($data);
+        }, [$tokenMiddleware]);
+
         $router->get('/token/get', function($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $ms3->initialize();
@@ -246,6 +256,12 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerProfileController($modx, $ms3);
             return $controller->update($data);
         }, [$tokenMiddleware]);
+
+        $router->post('/changeAddress', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
+            return $controller->changeCustomerAddress($params);
+        }, [$tokenMiddleware]);
+
         $router->post('/email/resend-verification', function($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
