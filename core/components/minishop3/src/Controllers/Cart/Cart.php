@@ -345,6 +345,9 @@ class Cart
         if (!$response['success']) {
             return $this->error($response['message']);
         }
+        if (isset($response['data']['options']) && is_array($response['data']['options'])) {
+            $options = $response['data']['options'];
+        }
 
         $count = $this->cart[$productKey]['count'];
 

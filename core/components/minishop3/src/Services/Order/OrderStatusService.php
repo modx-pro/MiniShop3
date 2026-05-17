@@ -126,6 +126,23 @@ class OrderStatusService
             return $response['message'];
         }
 
+        $resolvedStatusId = $statusId;
+        $incomingStatus = $response['data']['status'] ?? null;
+        if (is_numeric($incomingStatus)) {
+            $resolvedStatusId = (int) $incomingStatus;
+        }
+
+        if ($resolvedStatusId !== $statusId) {
+            $statusId = $resolvedStatusId;
+            $status = $this->modx->getObject(msOrderStatusModel::class, ['id' => $statusId, 'active' => 1]);
+            if (!$status) {
+                return $this->modx->lexicon('ms3_err_status_nf');
+            }
+            if ($msOrder->get('status_id') == $statusId) {
+                return $this->modx->lexicon('ms3_err_status_same');
+            }
+        }
+
         $msOrder->set('status_id', $statusId);
 
         if ($msOrder->save()) {
