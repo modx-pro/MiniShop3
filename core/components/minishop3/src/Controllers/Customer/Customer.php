@@ -264,13 +264,26 @@ class Customer
             if ($validation->fails()) {
                 $errors = $validation->errors();
 
-                // Allow plugins to handle validation errors
+                // Allow plugins to handle validation errors.
+                // Contract (Utils::invokeEvent merges returnedValues into data):
+                // - success=false → caller gets [$key => message] from the wrapper.
+                // - success=true and data.errors is set (array, may be empty) → return that shape;
+                //   omitted key keeps standard $errors->firstOfAll().
                 $response = $this->ms3->utils->invokeEvent('msOnErrorValidateCustomerValue', [
                     'key' => $key,
                     'value' => $value,
                     'errors' => $errors->firstOfAll(),
                     'customer' => $this,
                 ]);
+
+                if (!$response['success']) {
+                    return [$key => $response['message']];
+                }
+
+                $data = $response['data'] ?? [];
+                if (array_key_exists('errors', $data) && is_array($data['errors'])) {
+                    return $data['errors'];
+                }
 
                 return $errors->firstOfAll();
             }
@@ -400,7 +413,11 @@ class Customer
             return 0;
         }
 
-        $msCustomer = $this->getObject();
+        if (!empty($response['data']['msCustomer']) && $response['data']['msCustomer'] instanceof msCustomer) {
+            $msCustomer = $response['data']['msCustomer'];
+        } else {
+            $msCustomer = $this->getObject();
+        }
 
         if (empty($msCustomer)) {
             if ($orderData === null) {

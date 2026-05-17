@@ -45,6 +45,10 @@ class OrderUserResolver
             return 0;
         }
 
+        if (isset($response['data']['orderData']) && is_array($response['data']['orderData'])) {
+            $orderData = $response['data']['orderData'];
+        }
+
         if (!empty($response['data']['user']) && $response['data']['user'] instanceof modUser) {
             $modUser = $response['data']['user'];
         }
