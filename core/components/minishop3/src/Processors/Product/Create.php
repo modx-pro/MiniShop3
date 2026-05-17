@@ -3,7 +3,6 @@
 namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msProduct;
-use MiniShop3\Model\msVendor;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 
@@ -16,6 +15,15 @@ class Create extends CreateProcessor
     public $afterSaveEvent = 'OnDocFormSave';
     /** @var msProduct $object */
     public $object;
+
+    /**
+     * Parsed from options-* request fields in beforeSet(). Used for
+     * ProductDataService::saveOptions(..., removeOther: true) after the resource exists — same contract as
+     * {@see Update::$ms3ProductFormOptions} (#199). Null when the request had no options-* keys (#257).
+     *
+     * @var array<string, mixed>|null
+     */
+    protected $ms3ProductFormOptions = null;
 
     /**
      * @return string
@@ -37,6 +45,7 @@ class Create extends CreateProcessor
      */
     public function beforeSet()
     {
+        $this->ms3ProductFormOptions = null;
         $this->setDefaultProperties([
             'show_in_tree' => $this->modx->getOption('ms3_product_show_in_tree_default', null, false),
             'hidemenu' => $this->modx->getOption('hidemenu_default', null, true),
@@ -50,14 +59,21 @@ class Create extends CreateProcessor
 
         $properties = $this->getProperties();
         $options = [];
+        $hadOptionFieldsInRequest = false;
         foreach ($properties as $key => $value) {
             $optionKey = Utils::extractOptionKey($key);
             if ($optionKey !== null) {
+                $hadOptionFieldsInRequest = true;
                 $options[$optionKey] = Utils::decodeOptionValue($value);
                 $this->unsetProperty($key);
             }
         }
-        $this->setProperty('options', $options);
+        if ($hadOptionFieldsInRequest) {
+            $this->ms3ProductFormOptions = $options;
+        }
+        if (!empty($options)) {
+            $this->setProperty('options', $options);
+        }
 
         if (!empty($properties['vendor_id'])) {
             $vendor_id = Utils::getVendorId($this->modx, $properties['vendor_id']);
@@ -96,21 +112,18 @@ class Create extends CreateProcessor
             $this->modx->context->aliasMap = $results['aliasMap'];
         }
 
-        // Save product options from options-* form fields (parsed in beforeSet)
-        // Only runs when form actually contained options-* fields
-        // removeOther=true: POST is the full set of options from the form — keys missing after removal must be
-        // deleted from DB (#199). JSON-only sync uses saveOptions(null) in msProductData::save() →
-        // removeOther=false (#153, #158)
-        $options = $this->getProperty('options');
-        if (!empty($options) && is_array($options)) {
+        $result = parent::afterSave();
+
+        // Same contract as Update::afterSave (#199): only sync when the request contained options-* keys (#257).
+        if ($this->ms3ProductFormOptions !== null) {
             /** @var \MiniShop3\Model\msProductData $productData */
             $productData = $this->object->loadData();
             if ($productData) {
                 $service = $this->modx->services->get('ms3_product_data_service');
-                $service->saveOptions($productData, $options, true);
+                $service->saveOptions($productData, $this->ms3ProductFormOptions, true);
             }
         }
 
-        return parent::afterSave();
+        return $result;
     }
 }
