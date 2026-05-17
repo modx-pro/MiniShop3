@@ -17,6 +17,7 @@ use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
 use MiniShop3\Services\Order\OrderLogService;
+use MiniShop3\Services\Order\OrderService;
 use MiniShop3\Services\Order\OrderStatusService;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\modSystemEvent;
@@ -532,8 +533,11 @@ class OrdersController
 
         // Initial costs (will be recalculated after adding products)
         $order->set('cart_cost', 0);
-        $order->set('delivery_cost', (float) ($params['delivery_cost'] ?? 0));
-        $order->set('cost', (float) ($params['delivery_cost'] ?? 0));
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $deliveryCost = (float) ($params['delivery_cost'] ?? 0);
+        $order->set('delivery_cost', $deliveryCost);
+        $order->set('cost', $orderService->clampComputedTotal(null, 0.0, $deliveryCost, 0.0));
         $order->set('weight', 0);
 
         if (!$order->save()) {
@@ -1267,9 +1271,11 @@ class OrdersController
         $order->set('cart_cost', $cartCost);
         $order->set('weight', $weight);
 
-        // Recalculate total cost (cart + delivery)
-        $deliveryCost = (float)$order->get('delivery_cost');
-        $order->set('cost', $cartCost + $deliveryCost);
+        // Recalculate total cost (cart + delivery; payment deltas are reflected in cost when persisted elsewhere)
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $deliveryCost = (float) $order->get('delivery_cost');
+        $order->set('cost', $orderService->clampComputedTotal($order, $cartCost, $deliveryCost, 0.0));
 
         $order->save();
     }

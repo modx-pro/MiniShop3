@@ -169,15 +169,15 @@ class OrderSubmitHandler
             return $this->error($costResponse['message']);
         }
 
-        $deliveryCost = $costResponse['data']['delivery_cost'];
-        $cartCost = $costResponse['data']['cart_cost'];
+        $costData = $costResponse['data'];
+        $deliveryCost = $costData['delivery_cost'];
+        $cartCost = $costData['cart_cost'];
+        $totalCost = (float) $costData['cost'];
 
         // Generate order number
         $num = $this->getNewOrderNum();
 
-        // Update draft with final data
-        // Total cost = cart cost + delivery cost
-        $totalCost = $cartCost + $deliveryCost;
+        // Update draft with final data (cost matches calculator: cart + delivery + payment)
 
         $draft->fromArray([
             'customer_id' => $customerId,
