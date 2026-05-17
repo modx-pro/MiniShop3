@@ -9,7 +9,7 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
-import { computed, inject } from 'vue'
+import { computed, inject, watch } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
 import OrderFormActionsBar from './OrderFormActionsBar.vue'
@@ -43,7 +43,46 @@ const {
   createOrder,
   saveOrder,
   goBack,
+  recalculateOrderCost,
+  recalculatingCost,
+  costRecalcWarnings,
+  manualDeliveryCost,
+  hasUnsavedShippingPaymentChanges,
 } = orderCtx
+
+/** Синхронно с константами ManagerOrderCostRecalculator (PHP). */
+const CostRecalcWarning = Object.freeze({
+  DELIVERY_MANUAL_REQUIRED: 'delivery_manual_required',
+  PAYMENT_MANUAL_REQUIRED: 'payment_manual_required',
+})
+
+const recalculateBlocked = computed(
+  () => saving.value || recalculatingCost.value || hasUnsavedShippingPaymentChanges.value,
+)
+
+const showDeliveryManualBlock = computed(() =>
+  (costRecalcWarnings.value || []).includes(CostRecalcWarning.DELIVERY_MANUAL_REQUIRED),
+)
+
+const showPaymentManualHint = computed(() =>
+  (costRecalcWarnings.value || []).includes(CostRecalcWarning.PAYMENT_MANUAL_REQUIRED),
+)
+
+watch(
+  () => showDeliveryManualBlock.value,
+  visible => {
+    if (visible && order.value?.delivery_cost !== undefined) {
+      manualDeliveryCost.value = parseFloat(order.value.delivery_cost) || 0
+    }
+  },
+)
+
+async function applyManualDeliveryCost() {
+  await recalculateOrderCost({
+    mode: 'manual',
+    manual_delivery_cost: manualDeliveryCost.value,
+  })
+}
 
 const { _ } = useLexicon()
 
@@ -98,9 +137,54 @@ const showOrderInfoActions = computed(
           <span class="summary-label">{{ _('order_createdon') }}</span>
           <span class="summary-value">{{ formatDate(order.createdon) }}</span>
         </div>
-        <div class="summary-item">
-          <span class="summary-label">{{ _('order_updatedon') }}</span>
-          <span class="summary-value">{{ formatDate(order.updatedon) }}</span>
+        <div class="summary-item summary-row-actions summary-item-wide">
+          <span class="summary-label">{{ _('order_cost_recalculate') }}</span>
+          <div class="cost-recalc-controls">
+            <Button
+              :label="_('order_cost_recalculate')"
+              icon="pi pi-sync"
+              size="small"
+              class="cost-recalc-btn"
+              :disabled="recalculateBlocked"
+              :loading="recalculatingCost"
+              @click="recalculateOrderCost()"
+            />
+          </div>
+        </div>
+      </div>
+      <Message
+        v-if="hasUnsavedShippingPaymentChanges"
+        severity="warn"
+        :closable="false"
+        class="mt-3"
+      >
+        {{ _('order_cost_recalc_shippay_notice') }} — {{ _('order_cost_recalc_save_first') }}
+      </Message>
+      <Message v-if="showPaymentManualHint" severity="info" :closable="false" class="mt-2">
+        {{ _('order_cost_recalc_payment_manual_hint') }}
+      </Message>
+      <div v-if="showDeliveryManualBlock" class="manual-delivery-panel mt-2">
+        <Message severity="warn" :closable="false" class="mb-2">
+          {{ _('order_cost_recalc_delivery_manual_hint') }}
+        </Message>
+        <div class="manual-delivery-row flex gap-2 align-items-end flex-wrap">
+          <div class="manual-delivery-input">
+            <label class="block mb-1" for="manual-delivery-cost">{{ _('ms3_order_delivery_cost') }}</label>
+            <InputNumber
+              v-model="manualDeliveryCost"
+              input-id="manual-delivery-cost"
+              class="w-full"
+              :min-fraction-digits="0"
+              :max-fraction-digits="2"
+            />
+          </div>
+          <Button
+            :label="_('order_cost_recalc_apply_manual')"
+            icon="pi pi-check"
+            :loading="recalculatingCost"
+            type="button"
+            @click="applyManualDeliveryCost()"
+          />
         </div>
       </div>
     </Fieldset>
@@ -293,6 +377,20 @@ const showOrderInfoActions = computed(
 
 .summary-value-primary {
   color: var(--ms3-text-success);
+}
+
+.summary-item-wide {
+  grid-column: 1 / -1;
+}
+
+.cost-recalc-controls {
+  margin-top: 0.35rem;
+}
+
+.manual-delivery-input {
+  flex: 1;
+  min-width: 12rem;
+  max-width: 20rem;
 }
 
 .finalize-info-panel {
