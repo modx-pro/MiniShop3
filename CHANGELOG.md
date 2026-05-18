@@ -136,9 +136,6 @@
 - `Response` и `api.php` поддерживают HTTP-редирект вместо JSON для таких маршрутов.
 - Подключены `CustomerAPI::resendVerificationEmail`, `CustomerUI`, селекторы и `ms3_customer_profile.tpl` — кнопка resend инициирует `POST /api/v1/customer/email/resend-verification`. Добавлены README, лексиконы, smoke-тест `core/components/minishop3/tests/EmailVerificationUrlTest.php`.
 
-**Карточка заказа (Vue) — кнопки «Сохранить»/«Отмена» при пустом наборе полей (#182):**
-- На вкладках «Информация о заказе» и «Адрес» панель действий скрывается, если нет настроенных полей формы; в режиме создания заказа и для черновика с блоком клиента кнопки по-прежнему показываются.
-
 #### 📁 Изменённые файлы
 
 ```
