@@ -19,7 +19,7 @@ class msOption extends \MiniShop3\Model\msOption
                 'caption' => '',
                 'description' => null,
                 'measure_unit' => null,
-                'modcategory_id' => null,
+                'option_group_id' => null,
                 'type' => '',
                 'properties' => null,
             ],
@@ -55,13 +55,14 @@ class msOption extends \MiniShop3\Model\msOption
                         'phptype' => 'string',
                         'null' => true,
                     ],
-                'modcategory_id' =>
+                'option_group_id' =>
                     [
                         'dbtype' => 'int',
                         'precision' => '10',
                         'attributes' => 'unsigned',
                         'phptype' => 'integer',
-                        'null' => false,
+                        'null' => true,
+                        'default' => null,
                     ],
                 'type' =>
                     [
@@ -113,15 +114,15 @@ class msOption extends \MiniShop3\Model\msOption
                                     ],
                             ],
                     ],
-                'modcategory_id' =>
+                'option_group_id' =>
                     [
-                        'alias' => 'modcategory_id',
+                        'alias' => 'option_group_id',
                         'primary' => false,
                         'unique' => false,
                         'type' => 'BTREE',
                         'columns' =>
                             [
-                                'modcategory_id' =>
+                                'option_group_id' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',
@@ -151,10 +152,10 @@ class msOption extends \MiniShop3\Model\msOption
             ],
         'aggregates' =>
             [
-                'Category' =>
+                'Group' =>
                     [
-                        'class' => 'MODX\\Revolution\\modCategory',
-                        'local' => 'modcategory_id',
+                        'class' => 'MiniShop3\\Model\\msOptionGroup',
+                        'local' => 'option_group_id',
                         'foreign' => 'id',
                         'owner' => 'foreign',
                         'cardinality' => 'one',
