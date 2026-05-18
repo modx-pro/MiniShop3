@@ -12,7 +12,6 @@ import Textarea from 'primevue/textarea'
 import { computed, inject } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
-import { buildManagerModelFieldsSettingsUrl, MS3_MODEL_ORDER } from '../../utils/managerModelFieldsUrl.js'
 import OrderFormActionsBar from './OrderFormActionsBar.vue'
 
 const props = defineProps({
@@ -55,10 +54,6 @@ const hasOrderFieldSections = computed(
 /** Скрыть «Сохранить»/«Отмена», если нет полей заказа (#182); в режиме создания кнопки нужны. */
 const showOrderInfoActions = computed(
   () => isCreateMode.value || hasOrderFieldSections.value
-)
-
-const orderModelFieldsSettingsUrl = computed(() =>
-  buildManagerModelFieldsSettingsUrl(MS3_MODEL_ORDER)
 )
 </script>
 
@@ -193,13 +188,6 @@ const orderModelFieldsSettingsUrl = computed(() =>
 
     <div v-if="orderFieldsBySection.length === 0" class="no-fields-message">
       <p>{{ _('ms3_order_tab_info_model_fields_empty_hint') }}</p>
-      <a
-        :href="orderModelFieldsSettingsUrl"
-        class="ms3-model-fields-link"
-        :aria-label="_('ms3_order_open_model_fields_settings_aria')"
-      >
-        {{ _('ms3_order_open_model_fields_settings') }}
-      </a>
     </div>
 
     <Message

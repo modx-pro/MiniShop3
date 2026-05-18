@@ -110,19 +110,6 @@
   font-style: italic;
 }
 
-.no-fields-message .ms3-model-fields-link {
-  display: inline-block;
-  margin-top: 0.5rem;
-  color: var(--ms3-accent-primary);
-  font-style: normal;
-  font-weight: 500;
-  text-decoration: underline;
-}
-
-.no-fields-message .ms3-model-fields-link:hover {
-  color: var(--ms3-text-accent-dark, var(--ms3-accent-primary));
-}
-
 .actions-bar {
   display: flex;
   gap: 0.5rem;

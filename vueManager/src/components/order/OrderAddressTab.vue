@@ -11,7 +11,6 @@ import Textarea from 'primevue/textarea'
 import { computed, inject } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
-import { buildManagerModelFieldsSettingsUrl, MS3_MODEL_ORDER_ADDRESS } from '../../utils/managerModelFieldsUrl.js'
 import OrderFormActionsBar from './OrderFormActionsBar.vue'
 
 const selectedCustomer = defineModel('selectedCustomer', {
@@ -66,10 +65,6 @@ const hasAddressFieldSections = computed(
  */
 const showAddressTabActions = computed(
   () => isCreateMode.value || isDraft.value || hasAddressFieldSections.value
-)
-
-const addressModelFieldsSettingsUrl = computed(() =>
-  buildManagerModelFieldsSettingsUrl(MS3_MODEL_ORDER_ADDRESS)
 )
 </script>
 
@@ -225,13 +220,6 @@ const addressModelFieldsSettingsUrl = computed(() =>
 
     <div v-if="addressFieldsBySection.length === 0" class="no-fields-message">
       <p>{{ _('ms3_order_tab_address_model_fields_empty_hint') }}</p>
-      <a
-        :href="addressModelFieldsSettingsUrl"
-        class="ms3-model-fields-link"
-        :aria-label="_('ms3_order_open_model_fields_address_aria')"
-      >
-        {{ _('ms3_order_open_model_fields_settings') }}
-      </a>
     </div>
 
     <OrderFormActionsBar
