@@ -12,32 +12,12 @@ ms3.panel.Utilities = function (config) {
             deferredRender: false,
             listeners: {
                 afterrender: function(panel) {
-                    var sp = new URLSearchParams(window.location.search);
-                    var tabParam = sp.get("tab");
-                    // Model fields tab id must stay in sync with Vue:
-                    // vueManager/src/utils/managerModelFieldsUrl.js → MS3_UTILITIES_MODEL_FIELDS_TAB_ID
-                    // and items[].id below (ms3-utilities-model-fields-tab). #234 deep link ?tab= / ?model=
-                    var modelFieldsTab = Ext.getCmp(
-                      "ms3-utilities-model-fields-tab",
-                    );
-                    // Deep link: ?model=… and/or ?tab=ms3-utilities-model-fields-tab (#234)
-                    if (
-                      sp.get("model") ||
-                      tabParam === "ms3-utilities-model-fields-tab"
-                    ) {
-                      if (modelFieldsTab) {
-                        panel.setActiveTab(modelFieldsTab);
-                      }
-                    } else {
-                      var savedId = localStorage.getItem(
-                        "ms3-utilities-active-tab",
-                      );
-                      if (savedId) {
+                    var savedId = localStorage.getItem('ms3-utilities-active-tab');
+                    if (savedId) {
                         var tab = Ext.getCmp(savedId);
                         if (tab) {
-                          panel.setActiveTab(tab);
+                            panel.setActiveTab(tab);
                         }
-                      }
                     }
                     // Enable saving only after initial restore
                     panel.tabStateReady = true;

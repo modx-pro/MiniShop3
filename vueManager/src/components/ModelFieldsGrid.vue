@@ -21,10 +21,6 @@ import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 import request from '../request.js'
-import {
-  getModelQueryParam,
-  MS3_UTILITIES_MODEL_FIELDS_TAB_ID,
-} from '../utils/managerModelFieldsUrl.js'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -88,38 +84,13 @@ const sectionOptions = computed(() => {
 /**
  * Load available models
  */
-function removeInvalidModelFromUrl(list) {
-  if (typeof window === 'undefined') {
-    return
-  }
-  const raw = getModelQueryParam()
-  if (!raw || !list.length) {
-    return
-  }
-  if (list.some(m => m.value === raw)) {
-    return
-  }
-  const u = new URL(window.location.href)
-  u.searchParams.delete('model')
-  window.history.replaceState({}, '', `${u.pathname}${u.search}${u.hash}`)
-}
-
 async function loadModels() {
   try {
     const response = await request.get('/api/mgr/model-fields/models')
     if (response && response.models) {
       models.value = response.models
-      if (models.value.length > 0) {
-        const fromUrl = getModelQueryParam()
-        const allowed = models.value.some(m => m.value === fromUrl)
-        if (fromUrl && !allowed) {
-          removeInvalidModelFromUrl(models.value)
-        }
-        if (fromUrl && allowed) {
-          filterModel.value = fromUrl
-        } else if (!filterModel.value) {
-          filterModel.value = models.value[0].value
-        }
+      if (models.value.length > 0 && !filterModel.value) {
+        filterModel.value = models.value[0].value
       }
     }
   } catch (error) {
@@ -195,18 +166,7 @@ async function loadSections() {
   }
 }
 
-function syncModelQueryToUrl() {
-  if (typeof window === 'undefined' || !filterModel.value) {
-    return
-  }
-  const u = new URL(window.location.href)
-  u.searchParams.set('tab', MS3_UTILITIES_MODEL_FIELDS_TAB_ID)
-  u.searchParams.set('model', filterModel.value)
-  window.history.replaceState({}, '', `${u.pathname}${u.search}${u.hash}`)
-}
-
 function onModelChange() {
-  syncModelQueryToUrl()
   loadFields()
   loadSections()
 }
