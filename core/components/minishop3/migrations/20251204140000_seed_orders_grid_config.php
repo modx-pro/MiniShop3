@@ -9,7 +9,13 @@ class SeedOrdersGridConfig extends AbstractMigration
 {
     public function up()
     {
-        $prefix = $this->adapter->getOption('table_prefix');
+        $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
+
+        // Defensive: ensure table exists
+        if (!$this->hasTable($prefix . 'ms3_grid_fields')) {
+            $this->output->writeln('<comment>Table ms3_grid_fields does not exist, skipping orders grid seed</comment>');
+            return;
+        }
 
         // Check if data already exists (idempotency for partial re-runs)
         $count = $this->fetchRow("SELECT COUNT(*) as cnt FROM {$prefix}ms3_grid_fields WHERE grid_key = 'orders'");
@@ -328,6 +334,10 @@ class SeedOrdersGridConfig extends AbstractMigration
 
     public function down()
     {
-        $this->execute("DELETE FROM ms3_grid_fields WHERE grid_key = 'orders'");
+        $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
+        if (!$this->hasTable($prefix . 'ms3_grid_fields')) {
+            return;
+        }
+        $this->execute("DELETE FROM {$prefix}ms3_grid_fields WHERE grid_key = 'orders'");
     }
 }
