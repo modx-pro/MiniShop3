@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Order;
 use MiniShop3\Controllers\Delivery\DefaultDelivery;
 use MiniShop3\Controllers\Payment\DefaultPayment;
 use MiniShop3\MiniShop3;
+use MiniShop3\Utils\PriceAdjustment;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
@@ -106,7 +107,10 @@ class ManagerOrderCostRecalculator
         $warnings = array_merge($warnings, $paymentResult['warnings']);
 
         $paymentFee = $paymentResult['payment_fee'];
-        $cost = round($cartCost + $deliveryCost + $paymentFee, 6);
+
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $cost = round($orderService->clampComputedTotal($order, $cartCost, $deliveryCost, $paymentFee), 6);
 
         $before = [
             'cart_cost' => (float)$order->get('cart_cost'),
@@ -285,7 +289,7 @@ class ManagerOrderCostRecalculator
 
                 return [
                     'success' => true,
-                    'payment_fee' => round(max(0, $withFee - $paymentBase), 6),
+                    'payment_fee' => round($withFee - $paymentBase, 6),
                     'warnings' => $warnings,
                 ];
             } catch (\Throwable $e) {
@@ -343,50 +347,57 @@ class ManagerOrderCostRecalculator
 
         $deliveryCost += $weightPrice * $orderWeight;
 
-        $addPriceRaw = $delivery->get('price');
-        if (empty($addPriceRaw)) {
+        $addPrice = $delivery->get('price');
+        if (empty($addPrice)) {
             return round($deliveryCost, 6);
         }
 
-        $addPrice = $addPriceRaw;
-        if (is_string($addPriceRaw) && str_ends_with($addPriceRaw, '%')) {
-            $percent = (float) str_replace('%', '', $addPriceRaw);
-            if ($percent < 0 || $percent > 100) {
-                return round($deliveryCost, 6);
-            }
-            $addPrice = $cartCost / 100 * $percent;
-        } else {
-            $addPrice = (float)$addPriceRaw;
-            if ($addPrice < 0) {
+        if (PriceAdjustment::isPercent($addPrice)) {
+            $percent = PriceAdjustment::getPercent($addPrice);
+            if (!PriceAdjustment::isAllowedPercent($percent)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    sprintf(
+                        '[ManagerOrderCostRecalculator] Invalid percent for delivery #%s: %s%%. Must be between -100%% and 100%%.',
+                        $delivery->get('id'),
+                        $percent
+                    )
+                );
+
                 return round($deliveryCost, 6);
             }
         }
 
-        return round($deliveryCost + $addPrice, 6);
+        return round($deliveryCost + PriceAdjustment::calculate($cartCost, $addPrice), 6);
     }
 
     /**
-     * Port of {@see \MiniShop3\Controllers\Payment\Payment::getCost()} surcharge only (excluding base).
+     * Surcharge only (excluding base), aligned with {@see \MiniShop3\Controllers\Payment\Payment::getCost()}.
      */
     protected function calculateDefaultPaymentCommission(msPayment $payment, float $baseCost): float
     {
-        $raw = $payment->get('price');
-        if (empty($raw)) {
+        $addPrice = $payment->get('price');
+        if (empty($addPrice)) {
             return 0.0;
         }
 
-        if (is_string($raw) && str_ends_with($raw, '%')) {
-            $percent = (float) str_replace('%', '', $raw);
-            if ($percent < 0 || $percent > 100) {
+        if (PriceAdjustment::isPercent($addPrice)) {
+            $percent = PriceAdjustment::getPercent($addPrice);
+            if (!PriceAdjustment::isAllowedPercent($percent)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    sprintf(
+                        '[ManagerOrderCostRecalculator] Invalid percent for payment #%s: %s%%. Must be between -100%% and 100%%.',
+                        $payment->get('id'),
+                        $percent
+                    )
+                );
+
                 return 0.0;
             }
-
-            return round($baseCost / 100 * $percent, 6);
         }
 
-        $fixed = (float)$raw;
-
-        return $fixed < 0 ? 0.0 : round($fixed, 6);
+        return round(PriceAdjustment::calculate($baseCost, $addPrice), 6);
     }
 
     protected function isSimpleDelivery(msDelivery $delivery): bool
