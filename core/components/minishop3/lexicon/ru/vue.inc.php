@@ -600,6 +600,8 @@ $_lang['ms3_model_field_shown'] = 'Поле отображается';
 $_lang['ms3_model_field_hidden'] = 'Поле скрыто';
 $_lang['ms3_model_field_order_updated'] = 'Порядок полей обновлён';
 $_lang['ms3_model_fields_empty'] = 'Поля не найдены. Добавьте первое поле.';
+$_lang['ms3_order_tab_info_model_fields_empty_hint'] = 'Для этой вкладки не настроены поля формы заказа.';
+$_lang['ms3_order_tab_address_model_fields_empty_hint'] = 'Для этой вкладки не настроены поля адреса.';
 
 // Model names for dropdown
 $_lang['ms3_model_order'] = 'Заказ';

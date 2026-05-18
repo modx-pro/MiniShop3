@@ -77,6 +77,11 @@
 - В списке выбора поля для `validation_rules` доставки доступны кастомные колонки и подписи из админки; служебные поля (id, стоимости, delivery_id и т.д.) отфильтрованы.
 - Те же исключения применяются и к ключам Object Extension, чтобы не предлагать служебные имена.
 
+**Поля форм заказа — пустое состояние и управление видимостью кнопок (#182, #234):**
+- Во вкладках «Информация» и «Адрес» при пустом наборе полей — отдельные описательные лексиконы (`ms3_order_tab_info_model_fields_empty_hint`, `ms3_order_tab_address_model_fields_empty_hint`).
+- Скрытие панели «Сохранить»/«Отмена» при пустом наборе полей (`v-if="showOrderInfoActions"` / `showAddressTabActions`) — убирает лишний шум, когда сохранять нечего.
+- Выделение дублирующейся панели действий заказа в общий компонент `OrderFormActionsBar.vue`.
+
 #### ⚠️ Изменено (breaking, витринные сниппеты — контракт сумм/цен)
 
 Согласовано с обсуждением PR **#259** (ревью): **без суффикса** — число (`float`) для арифметики и `|number` в Fenom; **готовая строка для вывода** — только в полях `*_formatted` (цена с локалью и валютой при необходимости, вес с единицей). Поля `*_numeric` не используются.
@@ -142,6 +147,8 @@ core/components/minishop3/src/Controllers/Api/Manager/OrdersController.php
 core/components/minishop3/src/Processors/Utilities/Import/Fields.php
 core/components/minishop3/src/ServiceRegistry.php
 core/components/minishop3/src/Services/Order/OrderFinalizeService.php
+vueManager/src/components/order/OrderAddressTab.vue
+vueManager/src/components/order/OrderInfoTab.vue
 vueManager/src/components/product/ProductOptionsTab.vue
 ```
 
