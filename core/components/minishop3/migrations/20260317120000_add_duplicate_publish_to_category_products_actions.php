@@ -19,6 +19,13 @@ final class AddDuplicatePublishToCategoryProductsActions extends AbstractMigrati
     {
         $this->prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
         $table = $this->prefix . 'ms3_grid_fields';
+
+        // Defensive: skip if table doesn't exist
+        if (!$this->hasTable($table)) {
+            $this->output->writeln('<comment>Table ms3_grid_fields does not exist, skipping</comment>');
+            return;
+        }
+
         $now = date('Y-m-d H:i:s');
 
         $config = [
@@ -61,6 +68,12 @@ final class AddDuplicatePublishToCategoryProductsActions extends AbstractMigrati
     {
         $this->prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
         $table = $this->prefix . 'ms3_grid_fields';
+
+        // Defensive: skip if table doesn't exist
+        if (!$this->hasTable($table)) {
+            return;
+        }
+
         $now = date('Y-m-d H:i:s');
 
         $config = [
