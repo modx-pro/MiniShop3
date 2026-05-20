@@ -14,7 +14,6 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
-import { getMs3Config } from '../utils/modx.js'
 import { onOptionGroupsChanged } from '../utils/optionGroupsBus.js'
 import OptionCategoryTree from './OptionCategoryTree.vue'
 import OptionValuesEditor from './OptionValuesEditor.vue'
