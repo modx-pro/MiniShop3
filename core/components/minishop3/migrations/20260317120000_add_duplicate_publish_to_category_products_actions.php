@@ -21,7 +21,7 @@ final class AddDuplicatePublishToCategoryProductsActions extends AbstractMigrati
         $table = $this->prefix . 'ms3_grid_fields';
 
         // Defensive: skip if table doesn't exist
-        if (!$this->hasTable($table)) {
+        if (!$this->hasTable('ms3_grid_fields')) {
             $this->output->writeln('<comment>Table ms3_grid_fields does not exist, skipping</comment>');
             return;
         }
@@ -70,7 +70,7 @@ final class AddDuplicatePublishToCategoryProductsActions extends AbstractMigrati
         $table = $this->prefix . 'ms3_grid_fields';
 
         // Defensive: skip if table doesn't exist
-        if (!$this->hasTable($table)) {
+        if (!$this->hasTable('ms3_grid_fields')) {
             return;
         }
 

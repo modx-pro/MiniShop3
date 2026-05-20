@@ -17,10 +17,10 @@ class FixOrdersGridFilterable extends AbstractMigration
     public function up()
     {
         $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
-        $table = $prefix . 'ms3_grid_fields';
+        $table = $prefix . 'ms3_grid_fields'; // raw-SQL FQN
 
-        // Defensive: skip if table doesn't exist
-        if (!$this->hasTable($table)) {
+        // Defensive: skip if table doesn't exist. Phinx API auto-prefixes — pass unprefixed name.
+        if (!$this->hasTable('ms3_grid_fields')) {
             $this->output->writeln('<comment>Table ms3_grid_fields does not exist, skipping</comment>');
             return;
         }
@@ -37,10 +37,10 @@ class FixOrdersGridFilterable extends AbstractMigration
     public function down()
     {
         $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
-        $table = $prefix . 'ms3_grid_fields';
+        $table = $prefix . 'ms3_grid_fields'; // raw-SQL FQN
 
-        // Defensive: skip if table doesn't exist
-        if (!$this->hasTable($table)) {
+        // Defensive: skip if table doesn't exist. Phinx API auto-prefixes — pass unprefixed name.
+        if (!$this->hasTable('ms3_grid_fields')) {
             return;
         }
 

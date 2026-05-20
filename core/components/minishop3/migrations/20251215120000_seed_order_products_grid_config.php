@@ -16,7 +16,7 @@ class SeedOrderProductsGridConfig extends AbstractMigration
         $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
 
         // Defensive: ensure table exists
-        if (!$this->hasTable($prefix . 'ms3_grid_fields')) {
+        if (!$this->hasTable('ms3_grid_fields')) {
             $this->output->writeln('<comment>Table ms3_grid_fields does not exist, skipping order_products grid seed</comment>');
             return;
         }
@@ -258,7 +258,7 @@ class SeedOrderProductsGridConfig extends AbstractMigration
     public function down()
     {
         $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
-        if (!$this->hasTable($prefix . 'ms3_grid_fields')) {
+        if (!$this->hasTable('ms3_grid_fields')) {
             return;
         }
         $this->execute("DELETE FROM {$prefix}ms3_grid_fields WHERE grid_key = 'order_products'");

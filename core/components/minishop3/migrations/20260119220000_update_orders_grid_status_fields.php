@@ -25,7 +25,7 @@ final class UpdateOrdersGridStatusFields extends AbstractMigration
         $this->prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
 
         // Defensive: ensure table exists
-        if (!$this->hasTable($this->prefix . 'ms3_grid_fields')) {
+        if (!$this->hasTable('ms3_grid_fields')) {
             $this->output->writeln('<comment>Table ms3_grid_fields does not exist, skipping</comment>');
             return;
         }
@@ -153,7 +153,7 @@ final class UpdateOrdersGridStatusFields extends AbstractMigration
         $this->prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
 
         // Defensive: skip if table doesn't exist
-        if (!$this->hasTable($this->prefix . 'ms3_grid_fields')) {
+        if (!$this->hasTable('ms3_grid_fields')) {
             return;
         }
 
