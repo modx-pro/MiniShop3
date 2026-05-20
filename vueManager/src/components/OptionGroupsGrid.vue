@@ -21,7 +21,17 @@ import request from '../request.js'
  *
  * Sortable list (drag-n-drop), inline create/edit/delete, bulk selection.
  * Endpoints under /api/mgr/option-groups.
+ *
+ * Cross-component sync: emits a global `ms3:option-groups:changed` DOM event
+ * on every mutation so that sibling components (e.g. OptionsGrid) can refresh
+ * their cached lists.
  */
+
+const OPTION_GROUPS_CHANGED_EVENT = 'ms3:option-groups:changed'
+
+function notifyOptionGroupsChanged() {
+  document.dispatchEvent(new CustomEvent(OPTION_GROUPS_CHANGED_EVENT))
+}
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -139,6 +149,7 @@ async function saveGroup() {
     editDialogVisible.value = false
     editingGroup.value = null
     await loadGroups()
+    notifyOptionGroupsChanged()
   } catch (e) {
     console.error('Failed to save option group:', e)
     toast.add({
@@ -180,6 +191,7 @@ async function deleteGroup(group) {
     })
     selectedIds.value.delete(group.id)
     await loadGroups()
+    notifyOptionGroupsChanged()
   } catch (e) {
     console.error('Failed to delete option group:', e)
     toast.add({
@@ -216,6 +228,7 @@ async function bulkDelete(ids) {
     })
     selectedIds.value = new Set()
     await loadGroups()
+    notifyOptionGroupsChanged()
   } catch (e) {
     console.error('Failed to bulk delete option groups:', e)
     toast.add({
@@ -232,6 +245,7 @@ async function onDragEnd() {
   try {
     const ids = groups.value.map(g => g.id)
     await request.put('/api/mgr/option-groups/positions', { ids })
+    notifyOptionGroupsChanged()
   } catch (e) {
     console.error('Failed to reorder option groups:', e)
     toast.add({
@@ -405,12 +419,15 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-.ms3-option-groups {
+<style>
+/* Non-scoped + .vueApp prefix: scoped styles fail across multiple Vite-bundled chunks
+   in MS3 admin (hash mismatch). Same pattern as other shared MS3 admin grids. */
+
+.vueApp .ms3-option-groups {
   width: 100%;
 }
 
-.grid-toolbar {
+.vueApp .ms3-option-groups .grid-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -418,26 +435,26 @@ onMounted(() => {
   margin-bottom: 0.75rem;
 }
 
-.grid-toolbar .left {
+.vueApp .ms3-option-groups .grid-toolbar .left {
   display: flex;
   gap: 0.5rem;
 }
 
-.status-row,
-.empty-state {
+.vueApp .ms3-option-groups .status-row,
+.vueApp .ms3-option-groups .empty-state {
   padding: 2rem;
   text-align: center;
   color: var(--ms3-text-muted);
 }
 
-.reorder-hint {
+.vueApp .ms3-option-groups .reorder-hint {
   margin: 0.5rem 0 0.75rem 0;
   font-size: 0.8rem;
   color: var(--ms3-text-muted);
 }
 
-.list-header,
-.list-row {
+.vueApp .ms3-option-groups .list-header,
+.vueApp .ms3-option-groups .list-row {
   display: grid;
   grid-template-columns: 2rem 2rem 1fr 2fr 8rem 7rem;
   align-items: center;
@@ -445,7 +462,7 @@ onMounted(() => {
   padding: 0.625rem 0.75rem;
 }
 
-.list-header {
+.vueApp .ms3-option-groups .list-header {
   font-weight: 600;
   color: var(--ms3-text-muted);
   font-size: 0.8rem;
@@ -454,66 +471,66 @@ onMounted(() => {
   border-bottom: var(--ms3-border-width) solid var(--ms3-border-color);
 }
 
-.list-row {
+.vueApp .ms3-option-groups .list-row {
   border: var(--ms3-border-width) solid var(--ms3-border-color);
   border-radius: 0.375rem;
   background: var(--ms3-bg-slate);
   margin-bottom: 0.5rem;
 }
 
-.list-row.selected {
+.vueApp .ms3-option-groups .list-row.selected {
   background: var(--ms3-bg-info);
 }
 
-.col-handle .reorder-handle {
+.vueApp .ms3-option-groups .col-handle .reorder-handle {
   cursor: grab;
   color: var(--ms3-text-muted);
 }
 
-.col-handle .reorder-handle:active {
+.vueApp .ms3-option-groups .col-handle .reorder-handle:active {
   cursor: grabbing;
 }
 
-.col-name {
+.vueApp .ms3-option-groups .col-name {
   font-weight: 500;
 }
 
-.col-actions {
+.vueApp .ms3-option-groups .col-actions {
   display: flex;
   gap: 0.25rem;
   justify-content: flex-end;
 }
 
-.text-muted {
+.vueApp .ms3-option-groups .text-muted {
   color: var(--ms3-text-muted);
 }
 
-.dragging-ghost {
+.vueApp .ms3-option-groups .dragging-ghost {
   opacity: 0.5;
   background: var(--ms3-bg-info);
 }
 
-.edit-form {
+.vueApp .ms3-option-groups .edit-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.form-row {
+.vueApp .ms3-option-groups .form-row {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
-.form-row label {
+.vueApp .ms3-option-groups .form-row label {
   font-weight: 500;
 }
 
-.required {
+.vueApp .ms3-option-groups .required {
   color: var(--ms3-text-danger-alt);
 }
 
-.w-full {
+.vueApp .ms3-option-groups .w-full {
   width: 100%;
 }
 </style>

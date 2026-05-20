@@ -11,7 +11,7 @@ import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
 import OptionCategoryTree from './OptionCategoryTree.vue'
@@ -321,8 +321,22 @@ function typeCaption(typeName) {
   return row ? row.caption : typeName
 }
 
+// Sync with OptionGroupsGrid (sibling tab): refresh dropdown when groups are
+// created / updated / deleted / reordered there. See OPTION_GROUPS_CHANGED_EVENT
+// in OptionGroupsGrid.vue.
+const OPTION_GROUPS_CHANGED_EVENT = 'ms3:option-groups:changed'
+
+function onOptionGroupsChanged() {
+  loadOptionGroups()
+}
+
 onMounted(() => {
   Promise.all([loadOptionTypes(), loadOptionGroups()]).then(() => loadOptions())
+  document.addEventListener(OPTION_GROUPS_CHANGED_EVENT, onOptionGroupsChanged)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener(OPTION_GROUPS_CHANGED_EVENT, onOptionGroupsChanged)
 })
 </script>
 
