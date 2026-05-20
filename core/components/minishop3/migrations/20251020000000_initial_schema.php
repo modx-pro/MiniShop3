@@ -127,13 +127,15 @@ class InitialSchema extends AbstractMigration
     {
         $this->output->writeln('<info>Adding foreign key constraints...</info>');
 
-        $prefix = $this->adapter->getOption('table_prefix');
-
+        // Phinx API (hasTable / $this->table / addForeignKey target) auto-prefixes
+        // table names — pass UNPREFIXED. The previous code prepended $prefix manually,
+        // resulting in double-prefixed lookups (modx_modx_*) which silently never matched,
+        // so FK constraints were never created. Same bug fix as #276 for seed-migrations.
         // msProductField.section -> msPageSection.id
-        if ($this->hasTable($prefix . 'ms3_product_fields') && $this->hasTable($prefix . 'ms3_page_sections')) {
+        if ($this->hasTable('ms3_product_fields') && $this->hasTable('ms3_page_sections')) {
             try {
-                $table = $this->table($prefix . 'ms3_product_fields');
-                $table->addForeignKey('section', $prefix . 'ms3_page_sections', 'id', [
+                $table = $this->table('ms3_product_fields');
+                $table->addForeignKey('section', 'ms3_page_sections', 'id', [
                     'delete' => 'RESTRICT',
                     'update' => 'CASCADE',
                     'constraint' => 'fk_product_fields_section',
@@ -158,19 +160,22 @@ class InitialSchema extends AbstractMigration
         $prefix = $this->adapter->getOption('table_prefix');
 
         foreach ($this->modelClasses as $className) {
-            $tableName = $prefix . 'ms3_' . $this->camelToSnake($className);
+            // Unprefixed name for Phinx API; prefixed FQN only for logging.
+            $tableName = 'ms3_' . $this->camelToSnake($className);
+            $tableFqn = $prefix . $tableName;
 
             if ($this->hasTable($tableName)) {
                 $this->table($tableName)->drop()->save();
-                $this->output->writeln("<info>  ✓ Dropped table: {$tableName}</info>");
+                $this->output->writeln("<info>  ✓ Dropped table: {$tableFqn}</info>");
             }
         }
 
         // Drop migrations table
-        $migrationsTable = $prefix . 'ms3_migrations';
+        $migrationsTable = 'ms3_migrations';
+        $migrationsTableFqn = $prefix . $migrationsTable;
         if ($this->hasTable($migrationsTable)) {
             $this->table($migrationsTable)->drop()->save();
-            $this->output->writeln("<info>  ✓ Dropped migrations table: {$migrationsTable}</info>");
+            $this->output->writeln("<info>  ✓ Dropped migrations table: {$migrationsTableFqn}</info>");
         }
 
         $this->output->writeln('<info>MiniShop3 schema removal completed!</info>');
