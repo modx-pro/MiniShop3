@@ -123,6 +123,13 @@ const ms3 = {
       this.quantityUI.reinit()
     })
 
+    // Public refresh contract (#274): external components that mutate the catalog DOM
+    // (mFilter tpl-switch / AJAX pagination, mSearch2, custom AJAX, infinite scroll, …)
+    // call window.ms3.refresh() — or dispatch the event directly — to re-bind MS3 UI
+    // state on the new markup. MS3 does NOT listen for any third-party event names;
+    // dependency direction is component-→-MS3, not the other way around.
+    document.addEventListener('ms3:refresh', () => this.handleRefresh())
+
     this.initFormHandler()
 
     this.initLinkHandler()
@@ -130,6 +137,34 @@ const ms3 = {
     document.dispatchEvent(new Event('ms3:ready'))
 
     console.log('MiniShop3 initialized')
+  },
+
+  /**
+   * Refresh MS3 UI state after external DOM mutation (#274).
+   *
+   * Re-syncs every UI module whose state is bound to product-list / cart markup,
+   * so that newly-injected HTML behaves the same as the server-rendered original.
+   * Safe to call before / during init (optional chaining guards) and idempotent.
+   */
+  handleRefresh () {
+    try {
+      this.productCardUI?.updateAllCards?.()
+      this.quantityUI?.reinit?.()
+    } catch (e) {
+      console.error('[MiniShop3] ms3:refresh handler error:', e)
+    }
+  },
+
+  /**
+   * Public refresh API (#274) — sugar over `dispatchEvent('ms3:refresh')`.
+   *
+   * Usage in third-party components after they replace catalog DOM:
+   *   window.ms3?.refresh?.()
+   *
+   * The optional chaining lets callers stay safe on pages where MS3 isn't loaded.
+   */
+  refresh () {
+    document.dispatchEvent(new CustomEvent('ms3:refresh'))
   },
 
   /**
@@ -362,6 +397,13 @@ const ms3 = {
       return false
     }
   }
+}
+
+// Expose `ms3` on the global window so third-party components and inline scripts
+// can reach the public API (`window.ms3.refresh()` etc., #274). A top-level
+// `const` would otherwise stay in Script-binding and never reach window.
+if (typeof window !== 'undefined') {
+  window.ms3 = ms3
 }
 
 document.addEventListener('DOMContentLoaded', () => {
