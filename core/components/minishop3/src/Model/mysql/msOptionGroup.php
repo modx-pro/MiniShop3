@@ -72,7 +72,12 @@ class msOptionGroup extends \MiniShop3\Model\msOptionGroup
                 ],
             ],
         ],
-        'composites' => [
+        'aggregates' => [
+            // Group does NOT own its options — defining this as `composites` would
+            // make $group->remove() cascade-delete every msOption in the group,
+            // which contradicts the documented behavior: deleting a group should
+            // detach its options (option_group_id = NULL), not destroy them.
+            // OptionGroupsController calls detachOptionsFromGroup() explicitly before remove().
             'Options' => [
                 'class' => 'MiniShop3\\Model\\msOption',
                 'local' => 'id',

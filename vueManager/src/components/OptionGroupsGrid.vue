@@ -15,6 +15,7 @@ import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 import request from '../request.js'
+import { notifyOptionGroupsChanged } from '../utils/optionGroupsBus.js'
 
 /**
  * Option groups grid — manage msOptionGroup rows (#10).
@@ -22,16 +23,9 @@ import request from '../request.js'
  * Sortable list (drag-n-drop), inline create/edit/delete, bulk selection.
  * Endpoints under /api/mgr/option-groups.
  *
- * Cross-component sync: emits a global `ms3:option-groups:changed` DOM event
- * on every mutation so that sibling components (e.g. OptionsGrid) can refresh
- * their cached lists.
+ * Cross-component sync: emits `ms3:option-groups:changed` after every mutation
+ * via optionGroupsBus so that sibling components (OptionsGrid) refresh.
  */
-
-const OPTION_GROUPS_CHANGED_EVENT = 'ms3:option-groups:changed'
-
-function notifyOptionGroupsChanged() {
-  document.dispatchEvent(new CustomEvent(OPTION_GROUPS_CHANGED_EVENT))
-}
 
 const toast = useToast()
 const confirm = useConfirm()

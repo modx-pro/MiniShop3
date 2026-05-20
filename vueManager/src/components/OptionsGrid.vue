@@ -14,6 +14,7 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
+import { onOptionGroupsChanged } from '../utils/optionGroupsBus.js'
 import OptionCategoryTree from './OptionCategoryTree.vue'
 import OptionValuesEditor from './OptionValuesEditor.vue'
 
@@ -322,21 +323,19 @@ function typeCaption(typeName) {
 }
 
 // Sync with OptionGroupsGrid (sibling tab): refresh dropdown when groups are
-// created / updated / deleted / reordered there. See OPTION_GROUPS_CHANGED_EVENT
-// in OptionGroupsGrid.vue.
-const OPTION_GROUPS_CHANGED_EVENT = 'ms3:option-groups:changed'
-
-function onOptionGroupsChanged() {
-  loadOptionGroups()
-}
+// created / updated / deleted / reordered there. See utils/optionGroupsBus.js.
+let unsubscribeOptionGroupsChanged = null
 
 onMounted(() => {
   Promise.all([loadOptionTypes(), loadOptionGroups()]).then(() => loadOptions())
-  document.addEventListener(OPTION_GROUPS_CHANGED_EVENT, onOptionGroupsChanged)
+  unsubscribeOptionGroupsChanged = onOptionGroupsChanged(loadOptionGroups)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener(OPTION_GROUPS_CHANGED_EVENT, onOptionGroupsChanged)
+  if (unsubscribeOptionGroupsChanged) {
+    unsubscribeOptionGroupsChanged()
+    unsubscribeOptionGroupsChanged = null
+  }
 })
 </script>
 

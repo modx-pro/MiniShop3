@@ -83,9 +83,17 @@ class OptionsController
             $q->limit($limit, $start);
         }
 
-        $results = [];
+        // Materialize first so we can preload group names in a single query (avoid N+1
+        // inside formatOption when there are up to {limit} options per page).
+        $options = [];
         foreach ($this->modx->getIterator(msOption::class, $q) as $option) {
-            $results[] = $this->formatOption($option);
+            $options[] = $option;
+        }
+        $groupNamesMap = $this->buildGroupNamesMap($options);
+
+        $results = [];
+        foreach ($options as $option) {
+            $results[] = $this->formatOption($option, $groupNamesMap);
         }
 
         return Response::success([
@@ -416,17 +424,26 @@ class OptionsController
     /**
      * Return representative fields + properties for list/detail responses.
      */
-    protected function formatOption(msOption $option): array
+    /**
+     * @param array<int, string> $groupNamesMap Optional id→name map; when omitted,
+     *        falls back to one lazy `getOne('Group')` (used by single-object endpoints
+     *        like get/create/update; not safe to call in a list loop — use the map).
+     */
+    protected function formatOption(msOption $option, array $groupNamesMap = []): array
     {
         $groupId = $option->get('option_group_id');
         $groupId = ($groupId === null || $groupId === '') ? null : (int)$groupId;
 
         $groupName = null;
         if ($groupId !== null) {
-            /** @var msOptionGroup|null $group */
-            $group = $option->getOne('Group');
-            if ($group) {
-                $groupName = (string)$group->get('name');
+            if (array_key_exists($groupId, $groupNamesMap)) {
+                $groupName = $groupNamesMap[$groupId];
+            } else {
+                /** @var msOptionGroup|null $group */
+                $group = $option->getOne('Group');
+                if ($group) {
+                    $groupName = (string)$group->get('name');
+                }
             }
         }
 
@@ -441,6 +458,38 @@ class OptionsController
             'type' => $option->get('type'),
             'properties' => $option->get('properties') ?: [],
         ];
+    }
+
+    /**
+     * Single query to resolve all distinct option_group_id → name for a batch of msOption.
+     * Returns empty map when none of the options is in a group.
+     *
+     * @param msOption[] $options
+     * @return array<int, string>
+     */
+    protected function buildGroupNamesMap(array $options): array
+    {
+        $groupIds = [];
+        foreach ($options as $option) {
+            $gid = $option->get('option_group_id');
+            if ($gid !== null && $gid !== '' && (int)$gid > 0) {
+                $groupIds[(int)$gid] = true;
+            }
+        }
+        if (empty($groupIds)) {
+            return [];
+        }
+
+        $map = [];
+        $q = $this->modx->newQuery(msOptionGroup::class, ['id:IN' => array_keys($groupIds)]);
+        $q->select('msOptionGroup.id, msOptionGroup.name');
+        if ($q->prepare() && $q->stmt->execute()) {
+            foreach ($q->stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $map[(int)$row['id']] = (string)$row['name'];
+            }
+        }
+
+        return $map;
     }
 
     /**

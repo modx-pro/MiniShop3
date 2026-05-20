@@ -58,8 +58,9 @@ class OptionGroupsController
         }
 
         // Attach options_count via single grouped query (avoids N+1).
+        // Filter by ids on the current page so paginated calls don't aggregate the whole table.
         if (!empty($results)) {
-            $counts = $this->getOptionsCountByGroup();
+            $counts = $this->getOptionsCountByGroup(array_column($results, 'id'));
             foreach ($results as &$row) {
                 $row['options_count'] = $counts[$row['id']] ?? 0;
             }
@@ -181,7 +182,14 @@ class OptionGroupsController
         }
 
         // Detach options (set option_group_id = NULL) before removing the group.
-        $this->detachOptionsFromGroup($id);
+        // After switching Options from composites → aggregates the model no longer
+        // cascade-deletes options, but we still detach explicitly so the group
+        // stops being referenced before it vanishes. Bail out if detach actually
+        // failed (DB error) — don't silently drop the group with options still
+        // pointing at a now-missing id.
+        if (!$this->detachOptionsFromGroup($id)) {
+            return Response::error('Failed to detach options before group removal', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+        }
 
         if (!$group->remove()) {
             return Response::error('Failed to delete option group', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
@@ -217,7 +225,10 @@ class OptionGroupsController
                 $failed++;
                 continue;
             }
-            $this->detachOptionsFromGroup($id);
+            if (!$this->detachOptionsFromGroup($id)) {
+                $failed++;
+                continue;
+            }
             if ($group->remove()) {
                 $deleted++;
             } else {
@@ -322,14 +333,20 @@ class OptionGroupsController
 
     /**
      * Set option_group_id = NULL for all options previously in this group.
+     *
+     * @return bool false if the update statement itself failed (return value of
+     *              xPDO::updateCollection() was false); true otherwise — including
+     *              the case when zero rows matched (the group had no options).
      */
-    protected function detachOptionsFromGroup(int $groupId): void
+    protected function detachOptionsFromGroup(int $groupId): bool
     {
-        $this->modx->updateCollection(
+        $affected = $this->modx->updateCollection(
             msOption::class,
             ['option_group_id' => null],
             ['option_group_id' => $groupId]
         );
+
+        return $affected !== false;
     }
 
     /**
