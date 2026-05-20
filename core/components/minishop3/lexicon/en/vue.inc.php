@@ -778,6 +778,37 @@ $_lang['delivery_delete_confirm_message'] = 'Are you sure you want to delete del
 $_lang['ms3_delivery'] = 'Delivery';
 $_lang['ms3_settings'] = 'Settings';
 $_lang['ms3_payments'] = 'Payment Methods';
+
+// --- Option groups (#10) ---
+$_lang['ms3_options'] = 'Options';
+$_lang['ms3_option_groups'] = 'Option Groups';
+$_lang['ms3_option_group'] = 'Group';
+$_lang['ms3_option_group_filter'] = 'Filter by group';
+$_lang['ms3_option_group_no_group'] = 'No group';
+$_lang['ms3_option_group_name'] = 'Name';
+$_lang['ms3_option_group_name_placeholder'] = 'e.g. Sizes';
+$_lang['ms3_option_group_name_required'] = 'Group name is required';
+$_lang['ms3_option_group_description'] = 'Description';
+$_lang['ms3_option_group_description_placeholder'] = 'Short description (optional)';
+$_lang['ms3_option_group_options_count'] = 'Options';
+$_lang['ms3_option_group_create'] = 'Create group';
+$_lang['ms3_option_group_edit'] = 'Edit group';
+$_lang['ms3_option_group_created'] = 'Group created';
+$_lang['ms3_option_group_updated'] = 'Group updated';
+$_lang['ms3_option_group_deleted'] = 'Group deleted';
+$_lang['ms3_option_groups_bulk_deleted'] = 'Deleted groups: {count}';
+$_lang['ms3_option_group_save_error'] = 'Failed to save group';
+$_lang['ms3_option_group_delete_error'] = 'Failed to delete group';
+$_lang['ms3_option_group_reorder_error'] = 'Failed to reorder groups';
+$_lang['ms3_option_groups_load_error'] = 'Failed to load option groups';
+$_lang['ms3_option_group_delete_header'] = 'Delete group';
+$_lang['ms3_option_group_delete_confirm'] = 'Delete group? Its options will remain but lose the grouping.';
+$_lang['ms3_option_group_delete_confirm_with_options'] = 'The group has {count} options. Delete it? Options will remain but lose the grouping.';
+$_lang['ms3_option_group_bulk_delete_confirm'] = 'Delete {count} group(s)? Their options will remain but lose the grouping.';
+$_lang['ms3_option_groups_empty'] = 'No groups yet. Create your first group.';
+$_lang['ms3_option_groups_reorder_hint'] = 'Drag by the handle on the left to reorder groups.';
+$_lang['ms3_option_groups_drag_to_reorder'] = 'Drag to reorder';
+
 $_lang['ms3_validation_rules'] = 'Validation Rules';
 $_lang['ms3_order_validation_rules_help'] = 'JSON validation rules for order fields';
 $_lang['ms3_add_cost'] = 'Additional Cost';
