@@ -27,6 +27,7 @@ $xpdo_meta_map = [
                     'MiniShop3\\Model\\msCustomer',
                     'MiniShop3\\Model\\msCustomerAddress',
                     'MiniShop3\\Model\\msOption',
+                    'MiniShop3\\Model\\msOptionGroup',
                 ],
             'xPDO\\Om\\xPDOObject' =>
                 [

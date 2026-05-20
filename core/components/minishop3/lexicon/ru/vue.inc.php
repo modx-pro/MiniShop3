@@ -783,6 +783,37 @@ $_lang['delivery_delete_confirm_message'] = 'Вы уверены, что хот�
 $_lang['ms3_delivery'] = 'Доставка';
 $_lang['ms3_settings'] = 'Настройки';
 $_lang['ms3_payments'] = 'Способы оплаты';
+
+// --- Option groups (#10) ---
+$_lang['ms3_options'] = 'Опции';
+$_lang['ms3_option_groups'] = 'Группы опций';
+$_lang['ms3_option_group'] = 'Группа';
+$_lang['ms3_option_group_filter'] = 'Фильтр по группе';
+$_lang['ms3_option_group_no_group'] = 'Без группы';
+$_lang['ms3_option_group_name'] = 'Название';
+$_lang['ms3_option_group_name_placeholder'] = 'Например: Размеры';
+$_lang['ms3_option_group_name_required'] = 'Укажите название группы';
+$_lang['ms3_option_group_description'] = 'Описание';
+$_lang['ms3_option_group_description_placeholder'] = 'Краткое описание (необязательно)';
+$_lang['ms3_option_group_options_count'] = 'Опций';
+$_lang['ms3_option_group_create'] = 'Создать группу';
+$_lang['ms3_option_group_edit'] = 'Редактировать группу';
+$_lang['ms3_option_group_created'] = 'Группа создана';
+$_lang['ms3_option_group_updated'] = 'Группа обновлена';
+$_lang['ms3_option_group_deleted'] = 'Группа удалена';
+$_lang['ms3_option_groups_bulk_deleted'] = 'Удалено групп: {count}';
+$_lang['ms3_option_group_save_error'] = 'Не удалось сохранить группу';
+$_lang['ms3_option_group_delete_error'] = 'Не удалось удалить группу';
+$_lang['ms3_option_group_reorder_error'] = 'Не удалось изменить порядок групп';
+$_lang['ms3_option_groups_load_error'] = 'Не удалось загрузить группы опций';
+$_lang['ms3_option_group_delete_header'] = 'Удаление группы';
+$_lang['ms3_option_group_delete_confirm'] = 'Удалить группу? Опции в ней останутся, но потеряют группировку.';
+$_lang['ms3_option_group_delete_confirm_with_options'] = 'В группе {count} опций. Удалить группу? Опции в ней останутся, но потеряют группировку.';
+$_lang['ms3_option_group_bulk_delete_confirm'] = 'Удалить {count} группы(групп)? Опции в них останутся, но потеряют группировку.';
+$_lang['ms3_option_groups_empty'] = 'Групп нет. Создайте первую группу.';
+$_lang['ms3_option_groups_reorder_hint'] = 'Перетащите за иконку слева, чтобы изменить порядок групп.';
+$_lang['ms3_option_groups_drag_to_reorder'] = 'Перетащите для сортировки';
+
 $_lang['ms3_validation_rules'] = 'Правила валидации';
 $_lang['ms3_order_validation_rules_help'] = 'JSON правила валидации полей заказа';
 $_lang['ms3_add_cost'] = 'Доп. стоимость';

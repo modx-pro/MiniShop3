@@ -5,7 +5,7 @@ namespace MiniShop3\Services\Category;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
-use MODX\Revolution\modCategory;
+use MiniShop3\Model\msOptionGroup;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
@@ -65,7 +65,7 @@ class CategoryOptionService
     {
         $query = $this->modx->newQuery(msOption::class);
         $query->leftJoin(msCategoryOption::class, 'msCategoryOption', 'msCategoryOption.option_id = msOption.id');
-        $query->leftJoin(modCategory::class, 'Category', 'Category.id = msOption.category_id');
+        $query->leftJoin(msOptionGroup::class, 'OptionGroup', 'OptionGroup.id = msOption.option_group_id');
         $query->sortby('msCategoryOption.position');
         $query->where(['msCategoryOption.active' => 1]);
 
@@ -101,7 +101,7 @@ class CategoryOptionService
                 ['id', 'option_id', 'category_id'],
                 true
             ),
-            'Category.category AS category_name',
+            'OptionGroup.name AS group_name',
         ]);
 
         if (!empty($keys)) {

@@ -622,10 +622,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $allParams = array_merge($_GET, $params);
             return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getTree($allParams);
         });
-        $router->get('/modcategories', function($params) use ($modx) {
-            $allParams = array_merge($_GET, $params);
-            return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getModcategories($allParams);
-        });
+        // /options/modcategories removed in #10 — use /option-groups instead.
         $router->get('/suggestions', function($params) use ($modx) {
             $allParams = array_merge($_GET, $params);
             return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->getSuggestions($allParams);
@@ -657,6 +654,40 @@ $router->group('/api/mgr', function($router) use ($modx) {
         });
         $router->delete('/{id}', function($params) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OptionsController($modx))->delete($params);
+        });
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
+
+    // Option groups (#10) — dedicated grouping model replacing legacy msOption.modcategory_id
+    $router->group('/option-groups', function($router) use ($modx) {
+        $router->put('/positions', function() use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OptionGroupsController($modx))->updatePositions($data);
+        });
+        $router->delete('/bulk', function() use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OptionGroupsController($modx))->bulkDelete($data);
+        });
+
+        $router->get('', function($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+            return (new \MiniShop3\Controllers\Api\Manager\OptionGroupsController($modx))->getList($allParams);
+        });
+        $router->post('', function() use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OptionGroupsController($modx))->create($data);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OptionGroupsController($modx))->get($params);
+        });
+        $router->put('/{id}', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\OptionGroupsController($modx))->update($data);
+        });
+        $router->delete('/{id}', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OptionGroupsController($modx))->delete($params);
         });
     }, [
         new PermissionMiddleware($modx, 'mssetting_save')

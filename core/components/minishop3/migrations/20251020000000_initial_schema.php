@@ -25,6 +25,7 @@ class InitialSchema extends AbstractMigration
         'msLink',
         'msNotificationConfig',
         'msOption',
+        'msOptionGroup',
         'msOrder',
         'msOrderAddress',
         'msOrderLog',
