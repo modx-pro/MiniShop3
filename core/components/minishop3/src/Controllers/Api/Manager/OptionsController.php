@@ -5,11 +5,11 @@ namespace MiniShop3\Controllers\Api\Manager;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
+use MiniShop3\Model\msOptionGroup;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Option\OptionCategoryService;
 use MiniShop3\Services\Option\OptionService;
-use MODX\Revolution\modCategory;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 
@@ -35,14 +35,13 @@ class OptionsController
     /**
      * GET /api/mgr/options
      *
-     * @param array $params start, limit, query, modcategory_id, category_id, categories[]
+     * @param array $params start, limit, query, option_group_id, category_id, categories[]
      */
     public function getList(array $params = []): array
     {
         $start = (int)($params['start'] ?? 0);
         $limit = (int)($params['limit'] ?? 20);
         $query = trim($params['query'] ?? '');
-        $modcategoryId = isset($params['modcategory_id']) ? (int)$params['modcategory_id'] : null;
         $categoryId = isset($params['category_id']) ? (int)$params['category_id'] : null;
         $categories = $this->decodeIntArray($params['categories'] ?? null);
 
@@ -53,8 +52,13 @@ class OptionsController
                 'OR:msOption.caption:LIKE' => "%{$query}%",
             ];
         }
-        if ($modcategoryId !== null) {
-            $criteria['msOption.modcategory_id'] = $modcategoryId;
+        // option_group_id may be explicit 0 — meaning "no group" (option_group_id IS NULL)
+        if (array_key_exists('option_group_id', $params) && $params['option_group_id'] !== '' && $params['option_group_id'] !== null) {
+            if ((int)$params['option_group_id'] === 0) {
+                $criteria['msOption.option_group_id:IS'] = null;
+            } else {
+                $criteria['msOption.option_group_id'] = (int)$params['option_group_id'];
+            }
         }
 
         $q = $this->modx->newQuery(msOption::class, $criteria);
@@ -365,39 +369,9 @@ class OptionsController
         return Response::success(['results' => $nodes, 'total' => count($nodes)])->getData();
     }
 
-    /**
-     * GET /api/mgr/options/modcategories
-     *
-     * Flat list of MODX categories (from modCategory, not resource tree) for grouping
-     * dropdown in option form.
-     */
-    public function getModcategories(array $params = []): array
-    {
-        $query = trim((string)($params['query'] ?? ''));
-        $limit = (int)($params['limit'] ?? 500);
-
-        $criteria = [];
-        if ($query !== '') {
-            $criteria['category:LIKE'] = "%{$query}%";
-        }
-
-        $total = $this->modx->getCount(modCategory::class, $criteria);
-        $q = $this->modx->newQuery(modCategory::class, $criteria);
-        $q->sortby('category', 'ASC');
-        if ($limit > 0) {
-            $q->limit($limit);
-        }
-
-        $results = [];
-        foreach ($this->modx->getIterator(modCategory::class, $q) as $cat) {
-            $results[] = [
-                'id' => (int)$cat->get('id'),
-                'category' => $cat->get('category'),
-            ];
-        }
-
-        return Response::success(['results' => $results, 'total' => $total])->getData();
-    }
+    // GET /api/mgr/options/modcategories removed in #10 — replaced by GET /api/mgr/option-groups
+    // (OptionGroupsController). The previous endpoint returned MODX categories for the grouping
+    // dropdown; now options are grouped through msOptionGroup.
 
     /**
      * GET /api/mgr/options/suggestions
@@ -444,13 +418,26 @@ class OptionsController
      */
     protected function formatOption(msOption $option): array
     {
+        $groupId = $option->get('option_group_id');
+        $groupId = ($groupId === null || $groupId === '') ? null : (int)$groupId;
+
+        $groupName = null;
+        if ($groupId !== null) {
+            /** @var msOptionGroup|null $group */
+            $group = $option->getOne('Group');
+            if ($group) {
+                $groupName = (string)$group->get('name');
+            }
+        }
+
         return [
             'id' => (int)$option->get('id'),
             'key' => $option->get('key'),
             'caption' => $option->get('caption'),
             'description' => $option->get('description'),
             'measure_unit' => $option->get('measure_unit'),
-            'modcategory_id' => $option->get('modcategory_id') !== null ? (int)$option->get('modcategory_id') : null,
+            'option_group_id' => $groupId,
+            'option_group_name' => $groupName,
             'type' => $option->get('type'),
             'properties' => $option->get('properties') ?: [],
         ];
@@ -476,19 +463,22 @@ class OptionsController
     /**
      * Apply only writable fields from incoming payload onto the msOption object.
      *
-     * modcategory_id is NOT NULL in the schema but user may clear the dropdown,
-     * so we coerce null → 0 for that one field.
+     * option_group_id is nullable — empty payload value becomes NULL ("no group").
      */
     protected function applyWritableFields(msOption $option, array $data): void
     {
-        $allowed = ['key', 'caption', 'description', 'measure_unit', 'modcategory_id', 'type', 'properties'];
+        $allowed = ['key', 'caption', 'description', 'measure_unit', 'option_group_id', 'type', 'properties'];
         foreach ($allowed as $field) {
             if (!array_key_exists($field, $data)) {
                 continue;
             }
             $value = $data[$field];
-            if ($field === 'modcategory_id' && ($value === null || $value === '')) {
-                $value = 0;
+            if ($field === 'option_group_id') {
+                if ($value === null || $value === '' || (int)$value <= 0) {
+                    $value = null;
+                } else {
+                    $value = (int)$value;
+                }
             }
             $option->set($field, $value);
         }
