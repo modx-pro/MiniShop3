@@ -123,12 +123,8 @@ const ms3 = {
       this.quantityUI.reinit()
     })
 
-    // Public refresh contract (#274): external components that mutate the catalog DOM
-    // (mFilter tpl-switch / AJAX pagination, mSearch2, custom AJAX, infinite scroll, …)
-    // call window.ms3.refresh() — or dispatch the event directly — to re-bind MS3 UI
-    // state on the new markup. MS3 does NOT listen for any third-party event names;
-    // dependency direction is component-→-MS3, not the other way around.
-    document.addEventListener('ms3:refresh', () => this.handleRefresh())
+    // ms3:refresh listener is registered ONCE at module-scope below (outside init()),
+    // not here — so repeated init() calls don't accumulate duplicate listeners.
 
     this.initFormHandler()
 
@@ -144,9 +140,20 @@ const ms3 = {
    *
    * Re-syncs every UI module whose state is bound to product-list / cart markup,
    * so that newly-injected HTML behaves the same as the server-rendered original.
-   * Safe to call before / during init (optional chaining guards) and idempotent.
+   *
+   * Idempotent. No-op when MS3 hasn't finished init() yet — UI modules are still
+   * null at that point, optional chaining skips silently. Note that the event
+   * variant (`refresh()` → `dispatchEvent`) ALSO becomes a no-op pre-init, since
+   * the listener is registered at module scope and just routes to this method
+   * via optional chaining as well.
+   *
+   * The `detail` argument is currently unused — reserved for future scoping
+   * (e.g. `{ scope: containerElement }` to refresh only one block).
+   *
+   * @param {Object} [detail] - Optional CustomEvent detail forwarded from refresh()
    */
-  handleRefresh () {
+  // eslint-disable-next-line no-unused-vars
+  handleRefresh (detail = {}) {
     try {
       this.productCardUI?.updateAllCards?.()
       this.quantityUI?.reinit?.()
@@ -161,10 +168,16 @@ const ms3 = {
    * Usage in third-party components after they replace catalog DOM:
    *   window.ms3?.refresh?.()
    *
-   * The optional chaining lets callers stay safe on pages where MS3 isn't loaded.
+   * Optional chaining lets callers stay safe on pages where MS3 isn't loaded.
+   *
+   * The `detail` argument is forwarded to the CustomEvent and currently ignored
+   * by the handler. It's part of the API contract so future scoped refreshes
+   * (e.g. `ms3.refresh({ scope: container })`) don't require a breaking change.
+   *
+   * @param {Object} [detail] - Reserved for future use. Forwarded as event.detail.
    */
-  refresh () {
-    document.dispatchEvent(new CustomEvent('ms3:refresh'))
+  refresh (detail = {}) {
+    document.dispatchEvent(new CustomEvent('ms3:refresh', { detail }))
   },
 
   /**
@@ -404,6 +417,16 @@ const ms3 = {
 // `const` would otherwise stay in Script-binding and never reach window.
 if (typeof window !== 'undefined') {
   window.ms3 = ms3
+}
+
+// Single ms3:refresh listener registered at module scope (#274) — not inside init().
+// Survives repeated init() calls (e.g. SPA / modal scenarios) without piling up
+// duplicates. Pre-init dispatches stay safe: handleRefresh() guards every UI
+// module with optional chaining and becomes a no-op when modules aren't ready yet.
+if (typeof document !== 'undefined') {
+  document.addEventListener('ms3:refresh', (event) => {
+    ms3.handleRefresh(event?.detail || {})
+  })
 }
 
 document.addEventListener('DOMContentLoaded', () => {
