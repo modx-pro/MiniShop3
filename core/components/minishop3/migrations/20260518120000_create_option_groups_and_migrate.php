@@ -14,17 +14,22 @@ use Phinx\Migration\AbstractMigration;
  * 4) Drop the legacy `modcategory_id` column.
  *
  * Each step is idempotent (re-runs safely after a partial failure — Phinx + MySQL has no DDL transactions).
+ *
+ * NOTE on table names: Phinx API methods (`hasTable`, `$this->table()`, `hasColumn`) accept the
+ * UNPREFIXED table name — the adapter applies `table_prefix` automatically. Raw SQL and the
+ * xPDO Manager call do need the prefix manually.
  */
 class CreateOptionGroupsAndMigrate extends AbstractMigration
 {
     public function up(): void
     {
         $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
-        $optionGroupsTable = $prefix . 'ms3_option_groups';
-        $optionsTable = $prefix . 'ms3_options';
+        // Fully-qualified names for raw SQL / xPDO logging only.
+        $optionGroupsFqn = $prefix . 'ms3_option_groups';
+        $optionsFqn = $prefix . 'ms3_options';
 
         // --- Step 1: create ms3_option_groups table via xPDO Manager ---
-        if (!$this->hasTable($optionGroupsTable)) {
+        if (!$this->hasTable('ms3_option_groups')) {
             $modx = $this->bootstrapModx();
             if ($modx === null) {
                 $this->output->writeln('<error>Cannot bootstrap MODX, aborting migration</error>');
@@ -33,23 +38,23 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
             $manager = $modx->getManager();
             $created = $manager->createObjectContainer(\MiniShop3\Model\msOptionGroup::class);
             if (!$created) {
-                $this->output->writeln('<error>Failed to create table ' . $optionGroupsTable . '</error>');
+                $this->output->writeln('<error>Failed to create table ' . $optionGroupsFqn . '</error>');
                 return;
             }
-            $this->output->writeln('<info>Created table ' . $optionGroupsTable . '</info>');
+            $this->output->writeln('<info>Created table ' . $optionGroupsFqn . '</info>');
         } else {
-            $this->output->writeln('<comment>Table ' . $optionGroupsTable . ' already exists, skipping create</comment>');
+            $this->output->writeln('<comment>Table ' . $optionGroupsFqn . ' already exists, skipping create</comment>');
         }
 
-        if (!$this->hasTable($optionsTable)) {
-            $this->output->writeln('<comment>Table ' . $optionsTable . ' does not exist, skipping column/data migration</comment>');
+        if (!$this->hasTable('ms3_options')) {
+            $this->output->writeln('<comment>Table ' . $optionsFqn . ' does not exist, skipping column/data migration</comment>');
             return;
         }
 
         // --- Step 2: add option_group_id column to ms3_options ---
-        $optionsTableHelper = $this->table($optionsTable);
-        if (!$optionsTableHelper->hasColumn('option_group_id')) {
-            $optionsTableHelper
+        $optionsTable = $this->table('ms3_options');
+        if (!$optionsTable->hasColumn('option_group_id')) {
+            $optionsTable
                 ->addColumn('option_group_id', 'integer', [
                     'null' => true,
                     'default' => null,
@@ -58,30 +63,31 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
                 ])
                 ->addIndex('option_group_id', ['name' => 'option_group_id'])
                 ->update();
-            $this->output->writeln('<info>Added column option_group_id to ' . $optionsTable . '</info>');
+            $this->output->writeln('<info>Added column option_group_id to ' . $optionsFqn . '</info>');
         } else {
-            $this->output->writeln('<comment>Column option_group_id already exists in ' . $optionsTable . ', skipping add</comment>');
+            $this->output->writeln('<comment>Column option_group_id already exists in ' . $optionsFqn . ', skipping add</comment>');
         }
 
         // --- Step 3: migrate data from modcategory_id ---
         // Only run while modcategory_id still exists; on re-run after step 4 this becomes a no-op.
-        if ($optionsTableHelper->hasColumn('modcategory_id')) {
+        $optionsTable = $this->table('ms3_options'); // refresh handle after schema change
+        if ($optionsTable->hasColumn('modcategory_id')) {
             $modxPrefix = $this->getModxTablePrefix();
             if ($modxPrefix !== null) {
-                $this->migrateGroupData($prefix, $modxPrefix, $optionsTable, $optionGroupsTable);
+                $this->migrateGroupData($modxPrefix, $optionsFqn, $optionGroupsFqn);
             } else {
                 $this->output->writeln('<error>Cannot resolve MODX table prefix — skipping data migration. Existing modcategory_id values will be lost on column drop.</error>');
             }
 
             // --- Step 4: drop modcategory_id ---
-            $optionsTableHelper = $this->table($optionsTable); // refresh handle
-            if ($optionsTableHelper->hasIndex('modcategory_id')) {
-                $optionsTableHelper->removeIndexByName('modcategory_id')->update();
+            $optionsTable = $this->table('ms3_options'); // refresh handle
+            if ($optionsTable->hasIndex('modcategory_id')) {
+                $optionsTable->removeIndexByName('modcategory_id')->update();
             }
-            $this->table($optionsTable)
+            $this->table('ms3_options')
                 ->removeColumn('modcategory_id')
                 ->update();
-            $this->output->writeln('<info>Dropped column modcategory_id from ' . $optionsTable . '</info>');
+            $this->output->writeln('<info>Dropped column modcategory_id from ' . $optionsFqn . '</info>');
         } else {
             $this->output->writeln('<comment>Column modcategory_id already removed, skipping data migration + drop</comment>');
         }
@@ -89,19 +95,15 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
 
     public function down(): void
     {
-        $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
-        $optionGroupsTable = $prefix . 'ms3_option_groups';
-        $optionsTable = $prefix . 'ms3_options';
-
-        if (!$this->hasTable($optionsTable)) {
+        if (!$this->hasTable('ms3_options')) {
             return;
         }
 
-        $optionsTableHelper = $this->table($optionsTable);
+        $optionsTable = $this->table('ms3_options');
 
         // Restore modcategory_id (data NOT restored — irreversible by design)
-        if (!$optionsTableHelper->hasColumn('modcategory_id')) {
-            $optionsTableHelper
+        if (!$optionsTable->hasColumn('modcategory_id')) {
+            $optionsTable
                 ->addColumn('modcategory_id', 'integer', [
                     'null' => false,
                     'default' => 0,
@@ -113,17 +115,17 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
         }
 
         // Drop option_group_id
-        $optionsTableHelper = $this->table($optionsTable);
-        if ($optionsTableHelper->hasIndex('option_group_id')) {
-            $optionsTableHelper->removeIndexByName('option_group_id')->update();
+        $optionsTable = $this->table('ms3_options');
+        if ($optionsTable->hasIndex('option_group_id')) {
+            $optionsTable->removeIndexByName('option_group_id')->update();
         }
-        if ($this->table($optionsTable)->hasColumn('option_group_id')) {
-            $this->table($optionsTable)->removeColumn('option_group_id')->update();
+        if ($this->table('ms3_options')->hasColumn('option_group_id')) {
+            $this->table('ms3_options')->removeColumn('option_group_id')->update();
         }
 
         // Drop ms3_option_groups table
-        if ($this->hasTable($optionGroupsTable)) {
-            $this->table($optionGroupsTable)->drop()->update();
+        if ($this->hasTable('ms3_option_groups')) {
+            $this->table('ms3_option_groups')->drop()->update();
         }
     }
 
@@ -202,13 +204,12 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
      * Then UPDATE ms3_options.option_group_id by old → new id mapping.
      */
     private function migrateGroupData(
-        string $msPrefix,
         string $modxPrefix,
-        string $optionsTable,
-        string $optionGroupsTable
+        string $optionsFqn,
+        string $optionGroupsFqn
     ): void {
         // Already migrated? (re-run safety)
-        $existingGroups = $this->fetchRow("SELECT COUNT(*) AS cnt FROM `{$optionGroupsTable}`");
+        $existingGroups = $this->fetchRow("SELECT COUNT(*) AS cnt FROM `{$optionGroupsFqn}`");
         if (isset($existingGroups['cnt']) && (int) $existingGroups['cnt'] > 0) {
             $this->output->writeln('<comment>Option groups table already populated, skipping data migration</comment>');
             return;
@@ -221,7 +222,7 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
                 o.modcategory_id AS old_id,
                 c.category AS name,
                 c.`rank` AS modx_rank
-            FROM `{$optionsTable}` o
+            FROM `{$optionsFqn}` o
             LEFT JOIN `{$modxPrefix}categories` c ON c.id = o.modcategory_id
             WHERE o.modcategory_id IS NOT NULL AND o.modcategory_id > 0
             GROUP BY o.modcategory_id, c.category, c.`rank`
@@ -252,7 +253,7 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
             }
 
             $stmt = $pdo->prepare(
-                "INSERT INTO `{$optionGroupsTable}` (name, sort_order, created_at) VALUES (:name, :sort_order, :created_at)"
+                "INSERT INTO `{$optionGroupsFqn}` (name, sort_order, created_at) VALUES (:name, :sort_order, :created_at)"
             );
             $stmt->execute([
                 ':name' => $name,
@@ -273,7 +274,7 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
         // Apply mapping: UPDATE option_group_id per old modcategory_id (small N, separate statements OK).
         foreach ($idMap as $oldId => $newId) {
             $stmt = $pdo->prepare(
-                "UPDATE `{$optionsTable}` SET option_group_id = :new_id WHERE modcategory_id = :old_id"
+                "UPDATE `{$optionsFqn}` SET option_group_id = :new_id WHERE modcategory_id = :old_id"
             );
             $stmt->execute([
                 ':new_id' => $newId,
