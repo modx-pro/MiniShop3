@@ -87,6 +87,17 @@
 - Скрытие панели «Сохранить»/«Отмена» при пустом наборе полей (`v-if="showOrderInfoActions"` / `showAddressTabActions`) — убирает лишний шум, когда сохранять нечего.
 - Выделение дублирующейся панели действий заказа в общий компонент `OrderFormActionsBar.vue`.
 
+**Группировка опций товара — новая модель `msOptionGroup` (#10, ⚠️ breaking):**
+- Группировка опций больше не использует `modCategory` — введена собственная модель `msOptionGroup` (id, name, description, sort_order, timestamps). Это убирает мусор от чужих компонентов в выпадающем списке группы и даёт удобную сортировку через drag-n-drop.
+- **Схема**: `msOption.modcategory_id` → `msOption.option_group_id` (nullable, FK на `ms3_option_groups`). Миграция Phinx `20260518120000_create_option_groups_and_migrate` автоматически переносит данные: для каждой уникальной `modcategory_id`, на которую ссылаются опции, создаётся `msOptionGroup` с именем из `modCategory.category`. Старая колонка `modcategory_id` дропается.
+- **REST API**: новый набор endpoint'ов `GET/POST/PUT/DELETE /api/mgr/option-groups` (CRUD), `PUT /api/mgr/option-groups/positions` (drag-n-drop reorder), `DELETE /api/mgr/option-groups/bulk`. Прежний `GET /api/mgr/options/modcategories` удалён.
+- **`OptionsController`**: фильтр `option_group_id` (значение `0` → опции без группы); `formatOption` возвращает `option_group_id` + `option_group_name`; `applyWritableFields` принимает `option_group_id` как nullable.
+- **`OptionLoaderService` / `CategoryOptionService`**: JOIN с `modCategory` → JOIN с `msOptionGroup`. Алиас `category_name` → `group_name` в выдаче.
+- **Vue-админка**: страница опций обёрнута в Tabs — «Опции» (`OptionsGrid`) и «Группы опций» (новый `OptionGroupsGrid` с drag-n-drop сортировкой и CRUD). В форме редактирования опции выпадающий список «Группа» заменён на `msOptionGroup`.
+- **Snippet `ms3_product_options`**: фильтрация/сортировка по `group_name` (раньше — `category` / `category_name`).
+- **Plugin `MiniShop3`**: handler `OnCategoryRemove` удалён (опции больше не ссылаются на `modCategory`, не требует чистки висячих ссылок).
+- **Миграция кастомных чанков**: если в чанках использовался `{$option.category}` или `{$option.category_name}` — замените на `{$option.group_name}`. Поле `modcategory_id` в данных опции больше недоступно; используйте `option_group_id`.
+
 #### ⚠️ Изменено (breaking, витринные сниппеты — контракт сумм/цен)
 
 Согласовано с обсуждением PR **#259** (ревью): **без суффикса** — число (`float`) для арифметики и `|number` в Fenom; **готовая строка для вывода** — только в полях `*_formatted` (цена с локалью и валютой при необходимости, вес с единицей). Поля `*_numeric` не используются.
