@@ -560,6 +560,16 @@ $_lang['select_status'] = 'Выберите статус';
 $_lang['select_delivery'] = 'Выберите способ доставки';
 $_lang['select_payment'] = 'Выберите способ оплаты';
 $_lang['order_saved'] = 'Заказ сохранён';
+$_lang['order_cost_recalculate'] = 'Пересчитать стоимость';
+$_lang['order_cost_recalculated'] = 'Стоимость пересчитана';
+$_lang['order_cost_recalc_save_first'] = 'Сначала сохраните заказ, затем пересчитайте стоимость';
+$_lang['order_cost_recalc_shippay_notice'] = 'Способ доставки или оплаты изменён — стоимость может быть неактуальной';
+$_lang['order_cost_recalc_delivery_manual_hint'] =
+    'Автоматический расчёт доставки не выполнен — укажите стоимость доставки вручную и примените';
+$_lang['order_cost_recalc_payment_manual_hint'] =
+    'Автоматический расчёт оплаты не выполнен — итог может не включать комиссию способа оплаты';
+$_lang['order_cost_recalc_manual_delivery_applied'] = 'Применена ручная стоимость доставки';
+$_lang['order_cost_recalc_apply_manual'] = 'Применить доставку';
 $_lang['order_not_found'] = 'Заказ не найден';
 $_lang['product_name'] = 'Наименование';
 $_lang['product_article'] = 'Артикул';

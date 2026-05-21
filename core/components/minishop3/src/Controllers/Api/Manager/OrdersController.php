@@ -16,6 +16,7 @@ use MiniShop3\Router\Response;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
+use MiniShop3\Services\Order\ManagerOrderCostRecalculator;
 use MiniShop3\Services\Order\OrderLogService;
 use MiniShop3\Services\Order\OrderService;
 use MiniShop3\Services\Order\OrderStatusService;
@@ -286,6 +287,95 @@ class OrdersController
             return Response::error('Order not found', HttpStatus::NOT_FOUND)->getData();
         }
 
+        return Response::success($this->buildOrderPayloadFromModel($order))->getData();
+    }
+
+    /**
+     * Пересчитать стоимость заказа по сохранённым позициям и текущим delivery_id/payment_id.
+     *
+     * POST /api/mgr/orders/{id}/recalculate-cost
+     * Body JSON: mode (auto|manual|force_provider), optional manual_delivery_cost
+     *
+     * Ответ дополняет поля заказа (как GET) ключами breakdown и warnings из пересчёта.
+     */
+    public function recalculateCost(array $params = []): array
+    {
+        $this->modx->lexicon->load('minishop3:default');
+
+        $id = (int)($params['id'] ?? 0);
+        if (!$id) {
+            return Response::error('Order ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        $order = $this->modx->getObject(msOrder::class, $id);
+        if (!$order) {
+            return Response::error('Order not found', HttpStatus::NOT_FOUND)->getData();
+        }
+
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+
+        $modeIn = strtolower(trim((string)($params['mode'] ?? ManagerOrderCostRecalculator::MODE_AUTO)));
+        $allowedModes = [
+            ManagerOrderCostRecalculator::MODE_AUTO,
+            ManagerOrderCostRecalculator::MODE_MANUAL,
+            ManagerOrderCostRecalculator::MODE_FORCE_PROVIDER,
+        ];
+        if (!in_array($modeIn, $allowedModes, true)) {
+            $modeIn = ManagerOrderCostRecalculator::MODE_AUTO;
+        }
+
+        $options = ['mode' => $modeIn];
+        if (array_key_exists('manual_delivery_cost', $params)) {
+            $options['manual_delivery_cost'] = $params['manual_delivery_cost'];
+        }
+
+        $recalculator = new ManagerOrderCostRecalculator($this->modx, $ms3);
+        $result = $recalculator->recalculate($order, $options);
+
+        if (empty($result['success'])) {
+            return Response::error(
+                $this->lexiconMessageOrKey((string)($result['message'] ?? 'ms3_err_unknown')),
+                HttpStatus::BAD_REQUEST
+            )->getData();
+        }
+
+        $serviceData = is_array($result['data']) ? $result['data'] : [];
+
+        /** @var msOrder|false $fresh */
+        $fresh = $this->modx->getObject(msOrder::class, $id);
+        if (!$fresh instanceof msOrder) {
+            return Response::error('Order not found after recalculation', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+        }
+
+        $payload = $this->buildOrderPayloadFromModel($fresh);
+        if (!empty($serviceData['breakdown'])) {
+            $payload['breakdown'] = $serviceData['breakdown'];
+        }
+        $payload['warnings'] = $serviceData['warnings'] ?? [];
+
+        $messageKey = 'ms3_order_cost_recalc_success';
+        $message = $this->lexiconMessageOrKey($messageKey);
+        if ($message === $messageKey) {
+            $message = '';
+        }
+
+        return Response::success($payload, $message)->getData();
+    }
+
+    /** Human-readable lexicon entry, or original key when missing/empty translation. */
+    protected function lexiconMessageOrKey(string $key): string
+    {
+        $text = $this->modx->lexicon($key);
+
+        return ($text !== $key && $text !== '') ? $text : $key;
+    }
+
+    /**
+     * Снимок данных заказа для API карточки (как в {@see get()} после загрузки).
+     */
+    protected function buildOrderPayloadFromModel(msOrder $order): array
+    {
         $status = $order->getOne('Status');
         $delivery = $order->getOne('Delivery');
         $payment = $order->getOne('Payment');
@@ -297,24 +387,21 @@ class OrdersController
         $data['delivery_name'] = $delivery ? $delivery->get('name') : '';
         $data['payment_name'] = $payment ? $payment->get('name') : '';
 
-        // Load extra fields for msOrder (stored as real DB columns)
         $orderExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrder');
         foreach ($orderExtraFields as $fieldKey) {
             $data[$fieldKey] = $order->get($fieldKey);
         }
 
-        // Merge address fields (excluding conflicting keys like properties)
         $data = $this->mergeAddressIntoOrderData($data, $address);
 
         if ($address) {
-            // Load extra fields for msOrderAddress (stored as real DB columns)
             $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
             foreach ($addressExtraFields as $fieldKey) {
                 $data[$fieldKey] = $address->get($fieldKey);
             }
         }
 
-        return Response::success($this->formatOrder($data))->getData();
+        return $this->formatOrder($data);
     }
 
     /**

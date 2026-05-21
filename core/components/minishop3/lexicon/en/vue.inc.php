@@ -560,6 +560,16 @@ $_lang['select_status'] = 'Select status';
 $_lang['select_delivery'] = 'Select delivery';
 $_lang['select_payment'] = 'Select payment';
 $_lang['order_saved'] = 'Order saved';
+$_lang['order_cost_recalculate'] = 'Recalculate cost';
+$_lang['order_cost_recalculated'] = 'Cost recalculated';
+$_lang['order_cost_recalc_save_first'] = 'Save the order first, then recalculate cost';
+$_lang['order_cost_recalc_shippay_notice'] = 'Delivery or payment changed; totals may be out of date';
+$_lang['order_cost_recalc_delivery_manual_hint'] =
+    'Automatic delivery cost could not be calculated — enter manual delivery cost and apply.';
+$_lang['order_cost_recalc_payment_manual_hint'] =
+    'Automatic payment surcharge was not calculated; total may not include payment commission';
+$_lang['order_cost_recalc_manual_delivery_applied'] = 'Manual delivery cost applied';
+$_lang['order_cost_recalc_apply_manual'] = 'Apply manual delivery';
 $_lang['order_not_found'] = 'Order not found';
 $_lang['product_name'] = 'Name';
 $_lang['product_article'] = 'Article';
