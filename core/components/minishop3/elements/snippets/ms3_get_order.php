@@ -8,6 +8,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Model\msVendor;
+use MiniShop3\Utils\ProductThumbnailJoin;
 use ModxPro\PdoTools\Fetch;
 
 /** @var modX $modx */
@@ -129,7 +130,7 @@ if (!empty($includeThumbs)) {
         foreach ($thumbs as $thumb) {
             $leftJoin[$thumb] = [
                 'class' => msProductFile::class,
-                'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.parent != 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%'",
+                'on' => ProductThumbnailJoin::buildLeftJoinOn($modx, $thumb, $thumb),
             ];
             $select[$thumb] = "`{$thumb}`.url as '{$thumb}'";
         }

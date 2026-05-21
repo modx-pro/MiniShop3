@@ -9,6 +9,7 @@ use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Model\msVendor;
+use MiniShop3\Utils\ProductThumbnailJoin;
 use MODX\Revolution\modPlugin;
 use MODX\Revolution\modPluginEvent;
 use ModxPro\PdoTools\Fetch;
@@ -97,10 +98,9 @@ if (!empty($includeThumbs)) {
         }
         $leftJoin[$thumb] = [
             'class' => msProductFile::class,
-            'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.`position` = 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%'",
+            'on' => ProductThumbnailJoin::buildLeftJoinOn($modx, $thumb, $thumb),
         ];
         $select[$thumb] = "`{$thumb}`.url as `{$thumb}`";
-        $groupby[] = "`{$thumb}`.url";
     }
 }
 
