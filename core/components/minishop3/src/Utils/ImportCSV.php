@@ -341,6 +341,12 @@ class ImportCSV
                 continue;
             }
 
+            // MS2 compatibility: remains -> stock
+            if ($v === 'remains') {
+                $data['stock'] = $value;
+                continue;
+            }
+
             // Handle multiple values for same field
             if (isset($data[$v]) && !is_array($data[$v])) {
                 $data[$v] = [$data[$v], $value];
