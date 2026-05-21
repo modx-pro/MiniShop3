@@ -542,7 +542,10 @@ onBeforeUnmount(() => {
 
         <div class="dialog-tree">
           <h4 class="pane-title">{{ _('ms3_categories') || 'Категории' }}</h4>
-          <OptionCategoryTree v-model="editingCategories" :option-id="editing.id || 0" />
+          <OptionCategoryTree
+            v-model="editingCategories"
+            :option-id="editing.id || 0"
+          />
         </div>
       </div>
 
