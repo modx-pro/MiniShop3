@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0-beta1]
+
+### Added
+- New `msOptionGroup` model replaces `modCategory` for grouping product options (#10). Migration converts existing `msOption.modcategory_id` → `option_group_id` automatically (each distinct `modcategory_id` becomes a row in `ms3_option_groups` using `modCategory.category` as name). Admin: separate "Option Groups" tab next to "Options" with CRUD, drag-and-drop ordering, options-per-group counter.
+- Public `window.ms3.refresh()` storefront JS API and `ms3:refresh` DOM event (#274) for integration with third-party AJAX components that replace catalog DOM (mFilter / mSearch2 / custom AJAX / infinite scroll). The component dispatches `ms3:refresh` after its DOM swap — MS3 re-binds `ProductCardUI` / `QuantityUI` state. MS3 does NOT listen for vendor-specific events; dependency direction is component-→-MS3.
+- Manager API endpoint `POST /api/mgr/orders/{id}/recalculate-cost` and "Recalculate cost" button in the order admin (#212). Three modes: `auto` (DefaultDelivery/DefaultPayment by fields, no external provider calls), `manual` (operator-provided `manual_delivery_cost`), `force_provider` (explicit provider call in try/catch). Honours discounts via `PriceAdjustment` and total clamp via `OrderService::clampComputedTotal()`.
+- Negative additional cost for delivery and payment methods (#211): the `price` field now accepts fixed discounts (`-10`) and percent discounts (`-10%`). Common normalizer `MiniShop3\Utils\PriceAdjustment` shared between manager API and legacy processors.
+- Negative total guard `OrderService::clampComputedTotal(?msOrder, float, float, float = 0.0)` (#265): when sum of cart + delivery + payment costs goes below zero (e.g. misconfigured discounts), total is clamped to 0 and a `LOG_LEVEL_WARN` line with the breakdown is written. Wired into all calculation paths.
+- Vue admin: live "Discount" / "Markup" badges on the `price` field of delivery/payment edit forms (#265).
+- Validation rules editor for deliveries now lists model fields and Object Extension fields for `msOrder` / `msOrderAddress` (#215) in addition to the static set.
+- Order fields tabs: "Configure fields" empty-state hint and conditional action bar visibility on Info / Address tabs (#182).
+- Import: product `stock` field is now available in the field mapping (#283), with auto-mapping of typical CSV headers (`stock`, `remains`, `quantity`, `qty`).
+- Web API for customer profile: `POST /api/v1/customer/add` (quick profile field update incl. extra fields, #241/#261), `POST /api/v1/customer/changeAddress`, `GET /api/v1/customer/email/verify` (with HTML redirect support), `POST /api/v1/customer/email/resend-verification` (#226).
+- System settings: `ms3_email_verification_url`, `ms3_email_verification_success_url` for customizing the email-verification flow.
+
+### Changed (breaking)
+- **Storefront snippets — numeric placeholders contract** (#242, breaking). Plain placeholders (`cost`, `cart_cost`, `delivery_cost`, `price`, `weight`, …) are now plain `float` for arithmetic and Fenom `|number`. Display strings with locale / currency / unit live in `*_formatted`. Removed `formatPrices` no-op in `msProducts` and `msOrderTotal`. Migration: change `{$order.cost}` (which used to render `5 300 ₽`) to `{$order.cost_formatted}`, or keep `{$order.cost}` only for arithmetic / `|number`. Affects `msOrder`, `msGetOrder`, `msCart`, `msProducts`, `msOrderTotal`, default `ms3_order.tpl`.
+- **Schema — `msOption.modcategory_id` → `msOption.option_group_id`** (#10, breaking for direct DB readers). Data migration is automatic. Custom code reading `modcategory_id` directly must switch to `option_group_id`; the join alias `category_name` in `OptionLoaderService` / `CategoryOptionService` is renamed to `group_name`. Snippet `msProductOptions` filters/sorts by `group_name`.
+- **Manager API — `GET /api/mgr/options/modcategories` removed**, replaced by `/api/mgr/option-groups` (CRUD + reorder + bulk delete + per-group options count).
+- `msCart` snippet no longer suppresses output on `?msorder=...` by default (#249) — the cart loads and renders the chunk as usual, so mini-cart blocks in the global layout keep working on the "thank you" page. New `hideOnThanks=1` parameter brings back the previous "blank on thanks page" behavior for a specific call.
+- `Processors\Product\Update`: option deletion now applies on save (#199 follow-up). Form options are captured in `beforeSet` into `$ms3ProductFormOptions` and passed to `ProductDataService::saveOptions(..., removeOther: true)` after the parent `afterSave` — avoids MODX 3 quirk where the processor's `options` property is often empty post-save.
+- `ProductDataService::saveCategories()`: missing `categories` key in the form payload no longer wipes extra category links (#238). Behavior is now symmetric with `saveLinks()` — explicit empty array still clears, but absence of the key (tab not rendered yet) is a no-op. Integrations relying on "no `categories` in POST → clear all" must pass `categories: []` explicitly.
+- Web API `POST /api/v1/customer/add` allows all columns present in the `msCustomer` xPDO map (including Object Extension after `loadMap()`), with an explicit denylist of sensitive/system fields (#261). Rakit-validation preserved for `first_name` / `last_name` / `email` / `phone`; other allowed columns are normalized by `phptype`.
+
+### Fixed
+- Product duplicate via MODX context menu: option values now copy over to the new product (#257). After `modResource::duplicate()`, `OptionService` re-syncs `ms3_product_options` rows from the source.
+- `Processors\Product\Create`: empty option fields no longer wipe options on save. Aligned with `Update` — sync only when the request contained `options-*` keys.
+- Plugin events that mutate data via `returnedValues` (#219, #221): `msOnBeforeSendNotification`, `msOnBeforeImport`, `msOnImportRow`, `msOnProductsLoad`, `msOnProductPrepare` apply mutations from the MODX `returnedValues` channel; `Cart::changeOption`, `Customer::validate`, `Customer::getOrCreate`, `OrderStatusService::change`, `OrderUserResolver::getUserId` consume merged `$response['data']` after `invokeEvent`.
+- Option category tree for nested catalogs and multi-store setups (#237): tree returns `msCategory` (selectable) plus `modResource`/`modDocument`/`modWebLink` with `isfolder=1` (navigation-only) — no system setting required.
+- Product list duplicates on `includeThumbs` (#281): one thumbnail per product via shared `ProductThumbnailJoin` helper in `msProducts`, `msCart`, `msGetOrder`. Fixed `parent` → `parent_id` typo in `msGetOrder`.
+- Delivery / payment numeric fields can finally be cleared from the admin form — the controller no longer silently drops `null` values (`isset` → `array_key_exists`).
+- Email verification flow: link in the email points to Web API by default (`api.php?route=…/email/verify&token=…&html=1`), with optional custom URL via `ms3_email_verification_url` (#226).
+- Phinx defensive checks added in 1.10.x-era seed migrations no longer skip every install due to double `table_prefix` (#276): API methods (`hasTable`, `$this->table()`, `hasColumn`) now receive unprefixed names; raw SQL keeps `{$prefix}name`. Initial schema's foreign-key step also fixed (FK constraints were never being created on fresh installs).
+- Many smaller fixes — see project CHANGELOG.md for details.
+
 ## [1.10.1-beta1]
 
 ### Fixed
