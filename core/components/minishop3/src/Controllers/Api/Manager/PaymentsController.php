@@ -123,7 +123,7 @@ class PaymentsController
         $allowedFields = ['name', 'description', 'price', 'logo', 'position', 'active', 'class', 'properties'];
 
         foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
+            if (array_key_exists($field, $data)) {
                 $payment->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }
@@ -172,7 +172,7 @@ class PaymentsController
         $allowedFields = ['name', 'description', 'price', 'logo', 'position', 'active', 'class', 'properties'];
 
         foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
+            if (array_key_exists($field, $data)) {
                 $payment->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }
