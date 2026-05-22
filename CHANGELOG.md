@@ -17,7 +17,25 @@
 
 ## Май 2026
 
-### Разработка
+### [2026-05-22] 🚀 Версия 1.11.1-beta1
+
+**Тип релиза:** PATCH (beta) — точечные хотфиксы установки и каталога с превью
+
+#### 🐛 Исправлено
+
+**SQL-ошибка в `msProducts` / `msCart` / `msGetOrder` при `includeThumbs` (#293):**
+- Хелпер `ProductThumbnailJoin::buildLeftJoinOn()` оборачивал результат `$modx->getTableName()` ещё одной парой backticks. xPDO `getTableName()` уже экранирует имя таблицы — в итоге в runtime SQL появлялись тройные backticks вокруг имени, MySQL отвергал запрос как `Error 42000`. Любой вызов `includeThumbs=...` на витрине после установки 1.11.0-beta1 отдавал пустой каталог.
+- Фикс — убраны внешние backticks вокруг `%4$s` в sprintf-шаблоне `ProductThumbnailJoin`. В код добавлен комментарий чтобы не наступить повторно.
+
+**Установка пакета 1.11.0-beta1 падала с `Data too long for column 'metadata'` (#296):**
+- В `_build/build.php` через `setPackageAttributes` передавался полный `core/components/minishop3/docs/changelog.txt` (~33 KB истории с 1.0.0-alpha) + `license.txt` (~15 KB) + `readme.txt`. На MODX-установках с колонкой `modx_transport_packages.metadata` типа `TEXT` (лимит 65 535 байт) сериализованные attributes не помещались — INSERT падал с `SQLSTATE 22001 / 1406`. В предыдущих релизах changelog был меньше и проблема не проявлялась.
+- В transport metadata теперь идёт **только блок текущего релиза** (~7 KB вместо 33 KB) через новый метод `readLatestChangelogEntry()`. Полный changelog по-прежнему есть внутри пакета (`docs/changelog.txt`) — пользователь видит полную историю в файле, а в карточке пакета MODX — последний релиз.
+
+---
+
+### [2026-05-21] 🚀 Версия 1.11.0-beta1
+
+**Тип релиза:** MINOR (beta) — крупный цикл с breaking changes и новыми фичами
 
 #### ✨ Добавлено
 

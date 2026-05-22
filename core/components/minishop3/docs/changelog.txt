@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1-beta1]
+
+### Fixed
+- `msProducts` / `msCart` / `msGetOrder` with `includeThumbs` returned an SQL syntax error in 1.11.0-beta1 (#293). The new `ProductThumbnailJoin` helper wrapped `$modx->getTableName()` result in extra backticks; xPDO already escapes the name itself, so runtime SQL had triple backticks around the table and MySQL rejected the statement. Storefront catalog listings with thumbnails were empty until reload. Fixed by stripping the outer backticks in the sprintf template.
+- Package upgrade to 1.11.0-beta1 failed on MODX installs where `modx_transport_packages.metadata` is `TEXT` (#296). The full project changelog (~33 KB of history since 1.0.0-alpha) plus license + readme + requires, serialized into package attributes, overflowed the 65 535-byte limit. Transport-package metadata now contains only the current release block from the changelog (~7 KB); the full file remains in `core/components/minishop3/docs/changelog.txt` inside the installed package.
+
 ## [1.11.0-beta1]
 
 ### Added
