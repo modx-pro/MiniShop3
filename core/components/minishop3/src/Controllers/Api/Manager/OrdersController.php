@@ -644,7 +644,7 @@ class OrdersController
             'comment', 'text_address'
         ];
         foreach ($addressFields as $field) {
-            if (isset($params[$field])) {
+            if (array_key_exists($field, $params)) {
                 $address->set($field, $params[$field]);
             }
         }
@@ -1146,7 +1146,7 @@ class OrdersController
         $changes = [];
 
         foreach ($allowedFields as $field) {
-            if (isset($params[$field])) {
+            if (array_key_exists($field, $params)) {
                 $oldValue = $orderProduct->get($field);
                 $value = $params[$field];
 
@@ -1160,9 +1160,11 @@ class OrdersController
                     $value = max(0, (float)$value);
                 }
 
-                // Handle options (JSON)
-                if ($field === 'options' && is_array($value)) {
-                    $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                // Handle options (JSON); null clears options (OrderView getOptionsForSave())
+                if ($field === 'options') {
+                    if (is_array($value)) {
+                        $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                    }
                 }
 
                 // Track changes for logging

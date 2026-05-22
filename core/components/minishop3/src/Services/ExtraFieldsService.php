@@ -297,7 +297,7 @@ class ExtraFieldsService
         $allowedFields = ['label', 'description', 'xtype', 'active', 'select_options'];
 
         foreach ($allowedFields as $fieldName) {
-            if (isset($data[$fieldName])) {
+            if (array_key_exists($fieldName, $data)) {
                 $field->set($fieldName, $data[$fieldName]);
             }
         }

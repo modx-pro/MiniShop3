@@ -230,7 +230,12 @@ class CustomerAddressManager
         }
 
         // Regenerate hash if address changed
-        if (isset($data['city']) || isset($data['street']) || isset($data['building']) || isset($data['room'])) {
+        if (
+            array_key_exists('city', $data)
+            || array_key_exists('street', $data)
+            || array_key_exists('building', $data)
+            || array_key_exists('room', $data)
+        ) {
             $address->set('hash', $this->generateHash(array_merge($address->toArray(), $data)));
         }
 
