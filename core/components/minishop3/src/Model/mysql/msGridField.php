@@ -123,16 +123,15 @@ class msGridField extends \MiniShop3\Model\msGridField
                 'default' => 1,
             ],
             'created_at' => [
-                'dbtype' => 'timestamp',
-                'phptype' => 'timestamp',
+                'dbtype' => 'datetime',
+                'phptype' => 'datetime',
                 'null' => false,
                 'default' => 'CURRENT_TIMESTAMP',
             ],
             'updated_at' => [
-                'dbtype' => 'timestamp',
-                'phptype' => 'timestamp',
+                'dbtype' => 'datetime',
+                'phptype' => 'datetime',
                 'null' => true,
-                'extra' => 'on update CURRENT_TIMESTAMP',
             ],
         ],
         'indexes' => [
