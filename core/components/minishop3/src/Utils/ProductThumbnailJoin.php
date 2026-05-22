@@ -28,6 +28,10 @@ final class ProductThumbnailJoin
             return '1 = 0';
         }
 
+        // xPDO::getTableName() already returns the name escaped with backticks
+        // (e.g. "`modx_ms3_product_files`"). DO NOT wrap %4$s in extra backticks
+        // — that produced triple backticks at runtime and an SQL syntax error
+        // on `includeThumbs=...` (regression introduced in #282 / 1.11.0-beta1).
         $filesTable = $modx->getTableName(msProductFile::class);
 
         return sprintf(
@@ -35,7 +39,7 @@ final class ProductThumbnailJoin
             . ' AND `%1$s`.parent_id != 0'
             . ' AND `%1$s`.path LIKE \'%%/%3$s/%%\''
             . ' AND `%1$s`.parent_id = ('
-            . 'SELECT `main`.`id` FROM `%4$s` `main`'
+            . 'SELECT `main`.`id` FROM %4$s `main`'
             . ' WHERE `main`.`product_id` = `%2$s`.`id`'
             . ' AND `main`.`parent_id` = 0'
             . ' AND `main`.`type` = \'image\''
