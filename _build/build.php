@@ -109,7 +109,11 @@ class MiniShop3Package
         $this->builder->putVehicle($vehicle);
 
         $this->builder->setPackageAttributes([
-            'changelog' => $this->readDocFile('changelog.txt'),
+            // Only the current release block from changelog goes into transport metadata.
+            // Full history stays in core/components/minishop3/docs/changelog.txt inside
+            // the package. Without trimming, serialized metadata exceeds the TEXT column
+            // limit of modx_transport_packages.metadata on some MODX 3.x installs (#296).
+            'changelog' => $this->readLatestChangelogEntry('changelog.txt'),
             'license' => $this->readDocFile('license.txt'),
             'readme' => $this->readDocFile('readme.txt'),
             'requires' => [
@@ -576,6 +580,36 @@ class MiniShop3Package
         }
 
         return $content;
+    }
+
+    /**
+     * Return only the latest release block from a Keep a Changelog-formatted file.
+     *
+     * "Latest" = the first `## [version]` heading and everything up to the next
+     * `## [` heading (or end of file). Used to keep transport package metadata
+     * small enough to fit into `modx_transport_packages.metadata` (TEXT column
+     * on legacy MODX 3.x installs — see #296).
+     *
+     * Falls back to the full file when the format is unrecognised, and to an
+     * empty string when the file is missing.
+     *
+     * @param string $filename
+     * @return string
+     */
+    private function readLatestChangelogEntry(string $filename): string
+    {
+        $full = $this->readDocFile($filename);
+        if ($full === '') {
+            return '';
+        }
+
+        // Match the first "## [version]" block, capturing everything up to (but not
+        // including) the next "## [" heading or end of input.
+        if (preg_match('/^##\s+\[[^\]]+\][^\n]*\n.*?(?=^##\s+\[|\z)/ms', $full, $matches)) {
+            return rtrim($matches[0]);
+        }
+
+        return $full;
     }
 
     /**
