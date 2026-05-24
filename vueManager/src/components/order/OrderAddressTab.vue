@@ -11,6 +11,7 @@ import Textarea from 'primevue/textarea'
 import { computed, inject } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
+import OrderExtraFieldsSection from './OrderExtraFieldsSection.vue'
 import OrderFormActionsBar from './OrderFormActionsBar.vue'
 
 const selectedCustomer = defineModel('selectedCustomer', {
@@ -24,6 +25,7 @@ const createCustomerFromData = defineModel('createCustomerFromData', {
 
 const props = defineProps({
   addressFieldsBySection: { type: Array, required: true },
+  addressExtraFields: { type: Array, default: () => [] },
 })
 
 const orderCtx = inject(ORDER_CONTEXT_KEY, null)
@@ -59,12 +61,18 @@ const hasAddressFieldSections = computed(
   () => (props.addressFieldsBySection?.length ?? 0) > 0
 )
 
+const hasAddressExtraFields = computed(() => (props.addressExtraFields?.length ?? 0) > 0)
+
 /**
  * Скрыть «Сохранить»/«Отмена», если нет полей адреса и нет сценария с клиентом (#182):
  * create / draft (блок выбора клиента) / есть секции полей.
  */
 const showAddressTabActions = computed(
-  () => isCreateMode.value || isDraft.value || hasAddressFieldSections.value
+  () =>
+    isCreateMode.value ||
+    isDraft.value ||
+    hasAddressFieldSections.value ||
+    hasAddressExtraFields.value
 )
 </script>
 
@@ -218,7 +226,15 @@ const showAddressTabActions = computed(
       </Fieldset>
     </template>
 
-    <div v-if="addressFieldsBySection.length === 0" class="no-fields-message">
+    <OrderExtraFieldsSection
+      :extra-fields="addressExtraFields"
+      :legend="_('ms3_vue_order_address_extra_fields')"
+    />
+
+    <div
+      v-if="addressFieldsBySection.length === 0 && !hasAddressExtraFields"
+      class="no-fields-message"
+    >
       <p>{{ _('ms3_order_tab_address_model_fields_empty_hint') }}</p>
     </div>
 

@@ -4,6 +4,7 @@ namespace MiniShop3\Services;
 
 use MiniShop3\Model\msExtraField;
 use MiniShop3\Model\msProductField;
+use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\modX;
 use Phinx\Config\Config;
@@ -29,6 +30,11 @@ class ExtraFieldsService
      */
     public function createField(array $data): array
     {
+        $repeaterError = $this->applyRepeaterConstraints($data);
+        if ($repeaterError !== null) {
+            return $repeaterError;
+        }
+
         $validation = $this->validateFieldData($data);
         if (!$validation['success']) {
             return $validation;
@@ -252,7 +258,13 @@ class ExtraFieldsService
         $config = null;
         if ($extraField->get('xtype') === 'ms3-combo-select' && $extraField->get('select_options')) {
             $config = ['select_options' => $extraField->get('select_options')];
+        } elseif ($extraField->get('xtype') === RepeaterFieldService::XTYPE && $extraField->get('repeater_config')) {
+            $config = [
+                'repeater_config' => $this->getRepeaterFieldService()->parseConfig($extraField->get('repeater_config')),
+            ];
         }
+
+        $width = $extraField->get('xtype') === RepeaterFieldService::XTYPE ? 12 : 6;
 
         $productField->fromArray([
             'name' => $extraField->get('key'),
@@ -263,7 +275,7 @@ class ExtraFieldsService
             'visible' => $extraField->get('active') ? 1 : 0,
             'required' => 0,
             'sort_order' => 999,
-            'width' => 6,
+            'width' => $width,
             'is_system' => 0,
             'is_default' => 0,
             'config' => $config,
@@ -294,7 +306,16 @@ class ExtraFieldsService
             return ['success' => false, 'message' => 'Field not found'];
         }
 
-        $allowedFields = ['label', 'description', 'xtype', 'active', 'select_options'];
+        if (($data['xtype'] ?? $field->get('xtype')) === RepeaterFieldService::XTYPE) {
+            $repeaterPayload = array_merge($field->toArray(), $data);
+            $repeaterError = $this->applyRepeaterConstraints($repeaterPayload);
+            if ($repeaterError !== null) {
+                return $repeaterError;
+            }
+            $data['repeater_config'] = $repeaterPayload['repeater_config'] ?? null;
+        }
+
+        $allowedFields = ['label', 'description', 'xtype', 'active', 'select_options', 'repeater_config'];
 
         // Per-field null semantics:
         //   - `description`, `select_options` (optional text/json): null = clear
@@ -313,6 +334,10 @@ class ExtraFieldsService
             }
 
             $field->set($fieldName, $value);
+        }
+
+        if ($field->get('xtype') !== RepeaterFieldService::XTYPE) {
+            $field->set('repeater_config', null);
         }
 
         if (!$field->save()) {
@@ -353,8 +378,18 @@ class ExtraFieldsService
             $config = $productField->get('config') ?: [];
             if ($extraField->get('xtype') === 'ms3-combo-select') {
                 $config['select_options'] = $extraField->get('select_options') ?: '';
-            } else {
+                unset($config['repeater_config']);
+            } elseif ($extraField->get('xtype') === RepeaterFieldService::XTYPE) {
+                $config['repeater_config'] = $this->getRepeaterFieldService()->parseConfig(
+                    $extraField->get('repeater_config')
+                );
                 unset($config['select_options']);
+            } else {
+                unset($config['select_options'], $config['repeater_config']);
+            }
+
+            if ($extraField->get('xtype') === RepeaterFieldService::XTYPE) {
+                $productField->set('width', 12);
             }
             $productField->set('config', !empty($config) ? $config : null);
 
@@ -380,5 +415,41 @@ class ExtraFieldsService
         }
 
         $this->modx->log(modX::LOG_LEVEL_INFO, "[ExtraFieldsService] Deleted msProductField: {$fieldName}");
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array{success: false, message: string}|null
+     */
+    private function applyRepeaterConstraints(array &$data): ?array
+    {
+        if (($data['xtype'] ?? '') !== RepeaterFieldService::XTYPE) {
+            return null;
+        }
+
+        $data['dbtype'] = 'json';
+        $data['phptype'] = 'json';
+        $data['precision'] = '';
+        $data['null'] = true;
+
+        $configValidation = $this->getRepeaterFieldService()->validateConfigSchema($data['repeater_config'] ?? '');
+        if (!$configValidation['success']) {
+            return [
+                'success' => false,
+                'message' => $configValidation['message'] ?? 'Invalid repeater configuration',
+            ];
+        }
+
+        $data['repeater_config'] = $this->getRepeaterFieldService()->encodeConfig($configValidation['config']);
+
+        return null;
+    }
+
+    private function getRepeaterFieldService(): RepeaterFieldService
+    {
+        /** @var RepeaterFieldService $service */
+        $service = $this->modx->services->get('ms3_repeater_field');
+
+        return $service;
     }
 }

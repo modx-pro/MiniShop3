@@ -13,6 +13,7 @@ use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
@@ -843,15 +844,29 @@ class OrdersController
 
         // Handle extra fields for msOrder (stored as real DB columns via Object Extension)
         $orderExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrder');
-        foreach ($orderExtraFields as $extraField) {
-            if (array_key_exists($extraField, $params)) {
-                $oldValue = $order->get($extraField);
-                $newValue = $params[$extraField];
-                if ($oldValue != $newValue) {
-                    $changedOrderFields[$extraField] = ['old' => $oldValue, 'new' => $newValue];
-                }
-                $order->set($extraField, $newValue);
+        foreach ($orderExtraFields as $extraFieldKey) {
+            if (!array_key_exists($extraFieldKey, $params)) {
+                continue;
             }
+
+            $normalized = $this->normalizeExtraFieldValue(
+                'MiniShop3\\Model\\msOrder',
+                $extraFieldKey,
+                $params[$extraFieldKey]
+            );
+            if (!$normalized['ok']) {
+                return Response::error(
+                    $normalized['message'],
+                    HttpStatus::UNPROCESSABLE_ENTITY
+                )->getData();
+            }
+
+            $newValue = $normalized['value'];
+            $oldValue = $order->get($extraFieldKey);
+            if ($oldValue != $newValue) {
+                $changedOrderFields[$extraFieldKey] = ['old' => $oldValue, 'new' => $newValue];
+            }
+            $order->set($extraFieldKey, $newValue);
         }
 
         $order->set('updatedon', date('Y-m-d H:i:s'));
@@ -891,15 +906,29 @@ class OrdersController
 
             // Handle extra fields for msOrderAddress (stored as real DB columns via Object Extension)
             $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
-            foreach ($addressExtraFields as $extraField) {
-                if (array_key_exists($extraField, $params)) {
-                    $oldValue = $address->get($extraField);
-                    $newValue = $params[$extraField];
-                    if ($oldValue != $newValue) {
-                        $changedAddressFields[$extraField] = ['old' => $oldValue, 'new' => $newValue];
-                    }
-                    $address->set($extraField, $newValue);
+            foreach ($addressExtraFields as $extraFieldKey) {
+                if (!array_key_exists($extraFieldKey, $params)) {
+                    continue;
                 }
+
+                $normalized = $this->normalizeExtraFieldValue(
+                    'MiniShop3\\Model\\msOrderAddress',
+                    $extraFieldKey,
+                    $params[$extraFieldKey]
+                );
+                if (!$normalized['ok']) {
+                    return Response::error(
+                        $normalized['message'],
+                        HttpStatus::UNPROCESSABLE_ENTITY
+                    )->getData();
+                }
+
+                $newValue = $normalized['value'];
+                $oldValue = $address->get($extraFieldKey);
+                if ($oldValue != $newValue) {
+                    $changedAddressFields[$extraFieldKey] = ['old' => $oldValue, 'new' => $newValue];
+                }
+                $address->set($extraFieldKey, $newValue);
             }
 
             $address->save();
@@ -1678,6 +1707,41 @@ class OrdersController
         }
 
         return $data;
+    }
+
+    /**
+     * @return array{ok: bool, value?: mixed, message?: string}
+     */
+    protected function normalizeExtraFieldValue(string $modelClass, string $fieldKey, mixed $value): array
+    {
+        /** @var msExtraField|null $definition */
+        $definition = $this->modx->getObject(msExtraField::class, [
+            'class' => $modelClass,
+            'key' => $fieldKey,
+            'active' => true,
+        ]);
+
+        if (!$definition || $definition->get('xtype') !== RepeaterFieldService::XTYPE) {
+            return ['ok' => true, 'value' => $value];
+        }
+
+        /** @var RepeaterFieldService $repeaterService */
+        $repeaterService = $this->modx->services->get('ms3_repeater_field');
+        $config = $repeaterService->parseConfig($definition->get('repeater_config'));
+
+        try {
+            return ['ok' => true, 'value' => $repeaterService->processValue($value, $config)];
+        } catch (\InvalidArgumentException $e) {
+            $this->modx->lexicon->load('minishop3:default');
+
+            return [
+                'ok' => false,
+                'message' => $this->modx->lexicon('ms3_repeater_validation_error', [
+                    'field' => $fieldKey,
+                    'error' => $e->getMessage(),
+                ]),
+            ];
+        }
     }
 
     /**

@@ -8,6 +8,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
+use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MODX\Revolution\modX;
 
 /**
@@ -21,12 +22,37 @@ class ProductDataService
     /** @var modX */
     protected $modx;
 
+    /** @var array<string, array>|null */
+    protected ?array $productRepeaterFields = null;
+
     /**
      * @param modX $modx
      */
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+    }
+
+    protected function getRepeaterFieldService(): RepeaterFieldService
+    {
+        /** @var RepeaterFieldService $service */
+        $service = $this->modx->services->get('ms3_repeater_field');
+
+        return $service;
+    }
+
+    /**
+     * @return array<string, array>
+     */
+    protected function getProductRepeaterFields(): array
+    {
+        if ($this->productRepeaterFields === null) {
+            $this->productRepeaterFields = $this->getRepeaterFieldService()->getRepeaterFieldsForClass(
+                'MiniShop3\\Model\\msProductData'
+            );
+        }
+
+        return $this->productRepeaterFields;
     }
 
     /**
@@ -42,7 +68,23 @@ class ProductDataService
      */
     public function prepareObject(msProductData $productData): void
     {
+        $repeaterFields = $this->getProductRepeaterFields();
+        $repeaterService = $this->getRepeaterFieldService();
+
         foreach ($productData->getArraysValues() as $name => $array) {
+            if (isset($repeaterFields[$name])) {
+                try {
+                    $normalized = $repeaterService->processValue($array, $repeaterFields[$name]);
+                    $productData->set($name, $normalized);
+                } catch (\InvalidArgumentException $e) {
+                    $this->modx->log(
+                        modX::LOG_LEVEL_ERROR,
+                        '[ProductDataService] Repeater validation failed for ' . $name . ': ' . $e->getMessage()
+                    );
+                }
+                continue;
+            }
+
             $array = $productData->prepareOptionValues($array);
             $productData->set($name, $array);
         }
@@ -141,10 +183,15 @@ class ProductDataService
         $productId = $productData->get('id');
 
         $optionsExplicit = $options !== null;
+        $repeaterKeys = array_keys($this->getProductRepeaterFields());
+
         if ($options === null) {
             $options = [];
             foreach ($productData->_fieldMeta as $key => $value) {
                 if ($value['phptype'] === 'json' && !empty($productData->get($key))) {
+                    if (in_array($key, $repeaterKeys, true)) {
+                        continue;
+                    }
                     // Use field name as key, not numeric index from array_merge
                     $options[$key] = $productData->get($key);
                 }

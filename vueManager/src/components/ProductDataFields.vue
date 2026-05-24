@@ -7,6 +7,7 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../request.js'
+import { parseRepeaterModelValue, REPEATER_XTYPE } from '../utils/repeaterField.js'
 import DynamicField from './DynamicField.vue'
 
 const props = defineProps({
@@ -106,6 +107,8 @@ async function loadConfig() {
             } else {
               value = parseInt(value) || 0
             }
+          } else if (field.xtype === REPEATER_XTYPE) {
+            value = parseRepeaterModelValue(value)
           }
 
           fieldValues.value[fieldName] = value
@@ -260,7 +263,7 @@ onMounted(() => {
                 :key="field.name"
                 :class="[
                   'field-item',
-                  `col-${field.width || 4}`,
+                  field.xtype === REPEATER_XTYPE ? 'col-12' : `col-${field.width || 4}`,
                   { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' },
                 ]"
               >

@@ -182,6 +182,14 @@
       <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
+    <!-- Repeater (ms3-repeater) -->
+    <RepeaterField
+      v-else-if="fieldConfig.xtype === 'ms3-repeater'"
+      v-model="localValue"
+      :config="repeaterConfig"
+      :disabled="disabled"
+    />
+
     <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
     <!-- For now, we display them as simple text info since editing happens in ExtJS form -->
     <div v-else-if="isExtJSComboField" class="extjs-combo-info">
@@ -222,9 +230,11 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
+import { getRepeaterConfigFromField, parseRepeaterModelValue } from '../utils/repeaterField.js'
 import AutocompleteCombo from './AutocompleteCombo.vue'
 import FileBrowser from './FileBrowser.vue'
 import OptionsChips from './OptionsChips.vue'
+import RepeaterField from './RepeaterField.vue'
 import VendorCombo from './VendorCombo.vue'
 
 const props = defineProps({
@@ -310,12 +320,6 @@ const isExtJSComboField = computed(() => {
   return props.fieldConfig.xtype.startsWith('ms3-combo-')
 })
 
-/**
- * Parse select_options string into array for ms3-combo-select
- * Format: "value1==label1\nvalue2==label2" or just "value1\nvalue2"
- * Note: select_options may be in fieldConfig.config.select_options or fieldConfig.select_options
- * depending on how the config was merged in PHP
- */
 const selectOptions = computed(() => {
   const optionsString =
     props.fieldConfig.config?.select_options || props.fieldConfig.select_options || ''
@@ -332,6 +336,15 @@ const selectOptions = computed(() => {
       return { value: line.trim(), label: line.trim() }
     })
 })
+
+const repeaterConfig = computed(() => getRepeaterConfigFromField(props.fieldConfig))
+
+function normalizeIncomingValue(value) {
+  if (props.fieldConfig.xtype === 'ms3-repeater') {
+    return parseRepeaterModelValue(value)
+  }
+  return value
+}
 
 /**
  * Get ExtJS combo field description
@@ -371,13 +384,13 @@ const serializedValue = computed(() => {
 const emit = defineEmits(['update:modelValue', 'blur'])
 
 // Local value for v-model
-const localValue = ref(props.modelValue)
+const localValue = ref(normalizeIncomingValue(props.modelValue))
 
 // Watch for external changes
 watch(
   () => props.modelValue,
   newValue => {
-    localValue.value = newValue
+    localValue.value = normalizeIncomingValue(newValue)
   }
 )
 

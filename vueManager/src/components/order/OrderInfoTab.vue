@@ -12,10 +12,12 @@ import Textarea from 'primevue/textarea'
 import { computed, inject, watch } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
+import OrderExtraFieldsSection from './OrderExtraFieldsSection.vue'
 import OrderFormActionsBar from './OrderFormActionsBar.vue'
 
 const props = defineProps({
   orderFieldsBySection: { type: Array, required: true },
+  orderExtraFields: { type: Array, default: () => [] },
 })
 
 const orderCtx = inject(ORDER_CONTEXT_KEY, null)
@@ -90,9 +92,11 @@ const hasOrderFieldSections = computed(
   () => (props.orderFieldsBySection?.length ?? 0) > 0
 )
 
+const hasOrderExtraFields = computed(() => (props.orderExtraFields?.length ?? 0) > 0)
+
 /** Скрыть «Сохранить»/«Отмена», если нет полей заказа (#182); в режиме создания кнопки нужны. */
 const showOrderInfoActions = computed(
-  () => isCreateMode.value || hasOrderFieldSections.value
+  () => isCreateMode.value || hasOrderFieldSections.value || hasOrderExtraFields.value
 )
 </script>
 
@@ -270,7 +274,9 @@ const showOrderInfoActions = computed(
       </Fieldset>
     </template>
 
-    <div v-if="orderFieldsBySection.length === 0" class="no-fields-message">
+    <OrderExtraFieldsSection :extra-fields="orderExtraFields" />
+
+    <div v-if="orderFieldsBySection.length === 0 && !hasOrderExtraFields" class="no-fields-message">
       <p>{{ _('ms3_order_tab_info_model_fields_empty_hint') }}</p>
     </div>
 
