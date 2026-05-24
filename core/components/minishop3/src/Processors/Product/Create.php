@@ -9,6 +9,8 @@ use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 
 class Create extends CreateProcessor
 {
+    use ProductDataPayloadTrait;
+
     public $classKey = msProduct::class;
     public $languageTopics = ['resource', 'minishop3:default'];
     public $permission = 'msproduct_save';
@@ -71,6 +73,8 @@ class Create extends CreateProcessor
             ),
         ]);
 
+        $this->captureProductDataPayload();
+
         $properties = $this->getProperties();
         $options = [];
         $hadOptionFieldsInRequest = false;
@@ -105,6 +109,8 @@ class Create extends CreateProcessor
     public function beforeSave()
     {
         $this->object->set('isfolder', false);
+        $this->applyProductDataPayload();
+
         return parent::beforeSave();
     }
 
