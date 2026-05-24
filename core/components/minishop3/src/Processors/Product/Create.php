@@ -109,7 +109,6 @@ class Create extends CreateProcessor
     public function beforeSave()
     {
         $this->object->set('isfolder', false);
-        $this->applyProductDataPayload();
 
         return parent::beforeSave();
     }
@@ -133,6 +132,9 @@ class Create extends CreateProcessor
         }
 
         $result = parent::afterSave();
+
+        // msProductData needs resource id; composite may not persist payload fields on insert (#297).
+        $this->persistProductDataPayload();
 
         // Same contract as Update::afterSave (#199): only sync when the request contained options-* keys (#257).
         if ($this->ms3ProductFormOptions !== null) {

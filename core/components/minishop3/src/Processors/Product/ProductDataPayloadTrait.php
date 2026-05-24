@@ -9,7 +9,8 @@ use MiniShop3\Model\msProductData;
  * Applies msProductData fields from the `Data` block and flat request keys (#297).
  *
  * Resource Create/Update call `$object->fromArray($properties)` without ignoreInvalid,
- * so msProductData columns must be applied in beforeSave().
+ * so msProductData columns must be applied explicitly. On Create the msProductData row
+ * needs a resource id — persist in afterSave(); on Update beforeSave() is enough.
  *
  * @property \MODX\Revolution\modX $modx
  * @property msProduct $object
@@ -32,15 +33,44 @@ trait ProductDataPayloadTrait
 
         $this->unsetProperty(self::PRODUCT_DATA_PROPERTY);
 
+        if (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            if (is_array($decoded)) {
+                $payload = $decoded;
+            } else {
+                return;
+            }
+        }
+
         if (is_array($payload)) {
             $this->ms3ProductDataPayload = $payload;
         }
     }
 
+    /**
+     * Assign msProductData fields on the in-memory composite (Update / pre-save).
+     */
     protected function applyProductDataPayload(): void
     {
+        $this->assignProductDataPayload(false);
+    }
+
+    /**
+     * Assign and save msProductData after the resource id exists (Create).
+     */
+    protected function persistProductDataPayload(): bool
+    {
+        return $this->assignProductDataPayload(true);
+    }
+
+    private function assignProductDataPayload(bool $persist): bool
+    {
         if (!$this->object instanceof msProduct) {
-            return;
+            return false;
+        }
+
+        if ($persist && (int) $this->object->get('id') <= 0) {
+            return false;
         }
 
         $this->ensureProductDataFieldMapLoaded();
@@ -50,12 +80,19 @@ trait ProductDataPayloadTrait
         $nestedFields = $this->collectNestedProductDataFields($allowedFields);
 
         if ($flatFields === [] && $nestedFields === []) {
-            return;
+            return false;
         }
 
         $productData = $this->object->loadData();
+
+        if ($persist) {
+            $productData->set('id', (int) $this->object->get('id'));
+        }
+
         $this->assignProductDataFields($productData, $flatFields);
         $this->assignProductDataFields($productData, $nestedFields);
+
+        return $persist ? (bool) $productData->save() : true;
     }
 
     private function ensureProductDataFieldMapLoaded(): void
