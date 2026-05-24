@@ -44,7 +44,6 @@ export function parseRepeaterConfig(raw) {
 
 export function normalizeRepeaterRows(rows, config) {
   const schema = parseRepeaterConfig(config)
-  const rankField = schema.rankField || 'rank'
   const columns = schema.columns || []
 
   return (Array.isArray(rows) ? rows : []).map((row, index) => {
@@ -62,9 +61,20 @@ export function normalizeRepeaterRows(rows, config) {
         normalized[column.key] = value ?? ''
       }
     }
-    normalized[rankField] = index
     normalized._ms3RowId = row?._ms3RowId ?? `row-${index}-${Date.now()}`
     return normalized
+  })
+}
+
+export function stripRepeaterRowMeta(rows, config) {
+  const schema = parseRepeaterConfig(config)
+  const rankField = schema.rankField || 'rank'
+
+  return (Array.isArray(rows) ? rows : []).map(row => {
+    const clean = { ...row }
+    delete clean._ms3RowId
+    delete clean[rankField]
+    return clean
   })
 }
 

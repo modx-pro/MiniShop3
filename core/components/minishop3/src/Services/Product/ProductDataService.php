@@ -73,15 +73,8 @@ class ProductDataService
 
         foreach ($productData->getArraysValues() as $name => $array) {
             if (isset($repeaterFields[$name])) {
-                try {
-                    $normalized = $repeaterService->processValue($array, $repeaterFields[$name]);
-                    $productData->set($name, $normalized);
-                } catch (\InvalidArgumentException $e) {
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        '[ProductDataService] Repeater validation failed for ' . $name . ': ' . $e->getMessage()
-                    );
-                }
+                $normalized = $repeaterService->processValue($array, $repeaterFields[$name]);
+                $productData->set($name, $normalized);
                 continue;
             }
 
@@ -668,6 +661,11 @@ class ProductDataService
         }
 
         $fieldsToUpdate = array_intersect_key($filtered, array_flip(self::$allowedUpdateFields));
+
+        $repeaterError = $this->normalizeRepeaterFieldsInPayload($fieldsToUpdate);
+        if ($repeaterError !== null) {
+            return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => $repeaterError];
+        }
         $oldValues = [];
         foreach (array_keys($fieldsToUpdate) as $key) {
             $oldValues[$key] = $productData->get($key);
@@ -692,5 +690,38 @@ class ProductDataService
             $result['published'] = (bool)$product->get('published');
         }
         return ['ok' => true, 'data' => $result];
+    }
+
+    /**
+     * Validate and normalize repeater extra fields in manager API payload.
+     *
+     * @param array<string, mixed> $payload
+     */
+    protected function normalizeRepeaterFieldsInPayload(array &$payload): ?string
+    {
+        $repeaterFields = $this->getProductRepeaterFields();
+        if ($repeaterFields === []) {
+            return null;
+        }
+
+        $repeaterService = $this->getRepeaterFieldService();
+        $this->modx->lexicon->load('minishop3:default');
+
+        foreach ($repeaterFields as $fieldKey => $config) {
+            if (!array_key_exists($fieldKey, $payload)) {
+                continue;
+            }
+
+            try {
+                $payload[$fieldKey] = $repeaterService->processValue($payload[$fieldKey], $config);
+            } catch (\InvalidArgumentException $e) {
+                return $this->modx->lexicon('ms3_repeater_validation_error', [
+                    'field' => $fieldKey,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return null;
     }
 }

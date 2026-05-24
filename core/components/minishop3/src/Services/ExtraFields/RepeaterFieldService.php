@@ -209,13 +209,14 @@ class RepeaterFieldService
     public function processValue(mixed $value, array $config): array
     {
         $rows = $this->decodeValue($value);
-        $validation = $this->validateRows($rows, $config);
+        $normalized = $this->normalizeRows($rows, $config);
+        $validation = $this->validateRows($normalized, $config);
 
         if (!$validation['ok']) {
             throw new \InvalidArgumentException(implode('; ', $validation['errors'] ?? []));
         }
 
-        return $this->normalizeRows($rows, $config);
+        return $normalized;
     }
 
     /**

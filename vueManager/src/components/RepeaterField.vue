@@ -11,6 +11,7 @@ import {
   normalizeRepeaterRows,
   parseRepeaterConfig,
   parseRepeaterModelValue,
+  stripRepeaterRowMeta,
 } from '../utils/repeaterField.js'
 
 const props = defineProps({
@@ -39,7 +40,8 @@ watch(
 )
 
 function emitRows() {
-  emit('update:modelValue', normalizeRepeaterRows(internalRows.value, schema.value))
+  const normalized = normalizeRepeaterRows(internalRows.value, schema.value)
+  emit('update:modelValue', stripRepeaterRowMeta(normalized, schema.value))
 }
 
 const canAddRow = computed(() => {
