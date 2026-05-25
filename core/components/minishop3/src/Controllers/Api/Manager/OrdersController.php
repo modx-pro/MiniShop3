@@ -155,11 +155,7 @@ class OrdersController
             }
         }
 
-        $showDrafts = $this->modx->getOption('ms3_order_show_drafts', null, false);
-        if (!$showDrafts) {
-            $statusDrafts = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
-            $c->where(['status_id:!=' => $statusDrafts]);
-        }
+        $this->applyDraftVisibilityFilter($c, $params);
 
         if (!empty($query)) {
             if (is_numeric($query)) {
@@ -1550,6 +1546,38 @@ class OrdersController
             'month_sum' => number_format(round($data['sum'] ?? 0), 0, '.', ' '),
             'month_total' => number_format($data['total'] ?? 0, 0, '.', ' '),
         ];
+    }
+
+    /**
+     * Whether draft orders should be included in manager list/stats queries.
+     *
+     * Request param `show_drafts` overrides the system setting `ms3_order_show_drafts`.
+     */
+    protected function shouldShowDrafts(array $params): bool
+    {
+        if (array_key_exists('show_drafts', $params)) {
+            $value = $params['show_drafts'];
+            if ($value === '' || $value === null) {
+                return (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
+            }
+
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        return (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
+    }
+
+    /**
+     * Exclude draft status from query unless drafts are explicitly shown.
+     */
+    protected function applyDraftVisibilityFilter($c, array $params): void
+    {
+        if ($this->shouldShowDrafts($params)) {
+            return;
+        }
+
+        $statusDrafts = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+        $c->where(['status_id:!=' => $statusDrafts]);
     }
 
     /**

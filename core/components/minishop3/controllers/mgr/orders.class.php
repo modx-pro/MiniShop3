@@ -38,6 +38,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/orders/orders.wrapper.js');
 
         $config = $this->ms3->config;
+        $config['order_show_drafts'] = (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
         $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
 
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
