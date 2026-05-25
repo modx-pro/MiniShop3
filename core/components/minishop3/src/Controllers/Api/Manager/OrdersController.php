@@ -1549,26 +1549,29 @@ class OrdersController
     }
 
     /**
-     * Whether draft orders should be included in manager list/stats queries.
+     * Whether draft orders should be included in the manager orders list query.
      *
-     * Request param `show_drafts` overrides the system setting `ms3_order_show_drafts`.
+     * When `show_drafts` is present in request params it overrides `ms3_order_show_drafts`.
+     * The Vue orders grid always sends this flag (initialized from ms3.config.order_show_drafts).
      */
     protected function shouldShowDrafts(array $params): bool
     {
-        if (array_key_exists('show_drafts', $params)) {
-            $value = $params['show_drafts'];
-            if ($value === '' || $value === null) {
-                return (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
-            }
+        $default = (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
 
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        if (!array_key_exists('show_drafts', $params)) {
+            return $default;
         }
 
-        return (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
+        $value = $params['show_drafts'];
+        if ($value === '' || $value === null) {
+            return $default;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
-     * Exclude draft status from query unless drafts are explicitly shown.
+     * Exclude draft status from getList query unless drafts are explicitly shown.
      */
     protected function applyDraftVisibilityFilter($c, array $params): void
     {

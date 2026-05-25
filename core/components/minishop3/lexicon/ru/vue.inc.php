@@ -489,6 +489,7 @@ $_lang['confirm_delete'] = 'Подтверждение удаления';
 $_lang['orders_title'] = 'Заказы';
 $_lang['orders_month'] = 'Заказов';
 $_lang['orders_month_sum'] = 'На сумму';
+$_lang['orders_stat_tooltip'] = 'Количество и сумма по оформленным заказам; черновики не учитываются';
 $_lang['ms3_orders_show_drafts'] = 'Показывать черновики';
 $_lang['order_num'] = 'Номер';
 $_lang['order_customer'] = 'Клиент';

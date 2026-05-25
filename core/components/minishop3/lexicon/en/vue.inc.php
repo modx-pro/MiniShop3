@@ -489,6 +489,7 @@ $_lang['confirm_delete'] = 'Confirm deletion';
 $_lang['orders_title'] = 'Orders';
 $_lang['orders_month'] = 'Orders';
 $_lang['orders_month_sum'] = 'Total sum';
+$_lang['orders_stat_tooltip'] = 'Count and sum for placed orders only; drafts are not included';
 $_lang['ms3_orders_show_drafts'] = 'Show drafts';
 $_lang['order_num'] = 'Number';
 $_lang['order_customer'] = 'Customer';

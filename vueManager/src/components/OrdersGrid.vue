@@ -569,7 +569,7 @@ onMounted(async () => {
               @click="createNewOrder"
             />
           </div>
-          <div class="grid-stats">
+          <div class="grid-stats" :title="_('orders_stat_tooltip')">
             <span class="stat-item">
               <i class="pi pi-calendar"></i>
               {{ _('orders_month') }}: <strong>{{ stats.month_total }}</strong>
@@ -855,6 +855,7 @@ onMounted(async () => {
   gap: 1.5rem;
   font-size: 0.9rem;
   color: var(--ms3-text-muted);
+  cursor: help;
 }
 
 .stat-item {
