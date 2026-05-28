@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Utils\Utils;
+use MODX\Revolution\modDocument;
 use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 
 class Create extends CreateProcessor
@@ -24,6 +25,19 @@ class Create extends CreateProcessor
      * @var array<string, mixed>|null
      */
     protected $ms3ProductFormOptions = null;
+
+    /**
+     * @return bool|string
+     */
+    public function initialize()
+    {
+        $requestedClassKey = $this->getProperty('class_key');
+        if ($requestedClassKey === null || $requestedClassKey === '' || $requestedClassKey === modDocument::class) {
+            $this->setProperty('class_key', $this->classKey);
+        }
+
+        return parent::initialize();
+    }
 
     /**
      * @return string
