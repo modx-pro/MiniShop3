@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MODX\Revolution\modX;
 
 /**
  * Applies msProductData fields from the `Data` block and flat request keys (#297).
@@ -38,6 +39,11 @@ trait ProductDataPayloadTrait
             if (is_array($decoded)) {
                 $payload = $decoded;
             } else {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    '[msProduct] malformed Data JSON payload: ' . json_last_error_msg()
+                );
+
                 return;
             }
         }
@@ -80,7 +86,7 @@ trait ProductDataPayloadTrait
         $nestedFields = $this->collectNestedProductDataFields($allowedFields);
 
         if ($flatFields === [] && $nestedFields === []) {
-            return false;
+            return true;
         }
 
         $productData = $this->object->loadData();
