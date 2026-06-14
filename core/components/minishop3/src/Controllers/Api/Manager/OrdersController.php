@@ -1167,13 +1167,20 @@ class OrdersController
 
             $oldValue = $orderProduct->get($field);
 
-            if ($field === 'count') {
-                $value = max(1, (int)$value);
-            } elseif (in_array($field, ['price', 'weight'], true)) {
-                $value = max(0, (float)$value);
-            } elseif (is_array($value)) {
-                // options (JSON) — null passes through, arrays get encoded
-                $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+            switch ($field) {
+                case 'count':
+                    $value = max(1, (int)$value);
+                    break;
+                case 'price':
+                case 'weight':
+                    $value = max(0, (float)$value);
+                    break;
+                case 'options':
+                    // null passes through (clear), arrays get encoded as JSON
+                    if (is_array($value)) {
+                        $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                    }
+                    break;
             }
 
             // Track changes for logging
