@@ -106,6 +106,7 @@ $dbConfig = [
     'collation' => $mysqlCollation,
     'table_prefix' => $modx->getOption('table_prefix', null, ''),
 ];
+$migrationTable = $dbConfig['table_prefix'] . 'ms3_migrations';
 
 return [
     'paths' => [
@@ -113,7 +114,7 @@ return [
         'seeds' => __DIR__ . '/seeds'
     ],
     'environments' => [
-        'default_migration_table' => 'ms3_migrations',
+        'default_migration_table' => $migrationTable,
         'default_environment' => 'production',
         'production' => $dbConfig,
         'development' => $dbConfig,
