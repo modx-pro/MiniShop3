@@ -637,6 +637,8 @@ class OrdersController
         $address->set('createdon', time());
 
         // Address fields from params
+        // Safe to use array_key_exists: new entity, no previous value to silently overwrite;
+        // all address columns are nullable VARCHAR/TEXT.
         $addressFields = [
             'first_name', 'last_name', 'phone', 'email',
             'country', 'index', 'region', 'city', 'metro',
@@ -644,7 +646,7 @@ class OrdersController
             'comment', 'text_address'
         ];
         foreach ($addressFields as $field) {
-            if (isset($params[$field])) {
+            if (array_key_exists($field, $params)) {
                 $address->set($field, $params[$field]);
             }
         }
@@ -1145,34 +1147,42 @@ class OrdersController
         $updated = false;
         $changes = [];
 
+        // Per-field null semantics:
+        //   - `options` (JSON): null = explicit clear from frontend (OrderView getOptionsForSave())
+        //   - `count`/`price`/`weight` (numeric): null skipped — coercing null to 0/1 would
+        //     silently destroy data when a partial payload accidentally carries `null`
+        //     (PrimeVue InputNumber on clear, third-party API, batch scripts).
+        //     Frontend must send explicit 0 / valid number to actually update these.
+        $nullClearable = ['options'];
+
         foreach ($allowedFields as $field) {
-            if (isset($params[$field])) {
-                $oldValue = $orderProduct->get($field);
-                $value = $params[$field];
-
-                // Validate count
-                if ($field === 'count') {
-                    $value = max(1, (int)$value);
-                }
-
-                // Validate price/weight
-                if (in_array($field, ['price', 'weight'])) {
-                    $value = max(0, (float)$value);
-                }
-
-                // Handle options (JSON)
-                if ($field === 'options' && is_array($value)) {
-                    $value = json_encode($value, JSON_UNESCAPED_UNICODE);
-                }
-
-                // Track changes for logging
-                if ($oldValue != $value) {
-                    $changes[$field] = ['old' => $oldValue, 'new' => $value];
-                }
-
-                $orderProduct->set($field, $value);
-                $updated = true;
+            if (!array_key_exists($field, $params)) {
+                continue;
             }
+            $value = $params[$field];
+
+            if ($value === null && !in_array($field, $nullClearable, true)) {
+                continue;
+            }
+
+            $oldValue = $orderProduct->get($field);
+
+            if ($field === 'count') {
+                $value = max(1, (int)$value);
+            } elseif (in_array($field, ['price', 'weight'], true)) {
+                $value = max(0, (float)$value);
+            } elseif (is_array($value)) {
+                // options (JSON) — null passes through, arrays get encoded
+                $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+            }
+
+            // Track changes for logging
+            if ($oldValue != $value) {
+                $changes[$field] = ['old' => $oldValue, 'new' => $value];
+            }
+
+            $orderProduct->set($field, $value);
+            $updated = true;
         }
 
         if (!$updated) {
