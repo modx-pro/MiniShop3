@@ -50,14 +50,12 @@ class InitialSchema extends AbstractMigration
         // Get MODX instance
         $modxConfigPath = dirname(__FILE__, 5) . '/config.core.php';
         if (!file_exists($modxConfigPath)) {
-            $this->output->writeln('<error>MODX config.core.php not found</error>');
-            return;
+            throw new \RuntimeException('MODX config.core.php not found');
         }
 
         require_once $modxConfigPath;
         if (!defined('MODX_CORE_PATH')) {
-            $this->output->writeln('<error>MODX_CORE_PATH not defined</error>');
-            return;
+            throw new \RuntimeException('MODX_CORE_PATH not defined');
         }
 
         require_once MODX_CORE_PATH . 'vendor/autoload.php';
@@ -71,6 +69,7 @@ class InitialSchema extends AbstractMigration
         $modx->addPackage('MiniShop3\\Model', $modelPath, null, 'MiniShop3\\');
 
         $manager = $modx->getManager();
+        $failedTables = [];
 
         $this->output->writeln('<info>Creating MiniShop3 tables...</info>');
         $this->output->writeln("<comment>Model path: {$modelPath}</comment>");
@@ -82,6 +81,7 @@ class InitialSchema extends AbstractMigration
             $mysqlClass = 'MiniShop3\\Model\\mysql\\' . $className;
             if (!class_exists($mysqlClass)) {
                 $this->output->writeln("<error>  ✗ Model class not found: {$mysqlClass}</error>");
+                $failedTables[] = $this->resolveLogicalTableName($className) ?? $className;
                 continue;
             }
 
@@ -102,16 +102,30 @@ class InitialSchema extends AbstractMigration
             if ($created) {
                 $this->output->writeln("<info>  ✓ Created table: {$tableName}</info>");
             } else {
+                $logicalTable = $this->resolveLogicalTableName($className) ?? trim($tableName, '`');
                 $this->output->writeln("<error>  ✗ Failed to create table: {$tableName}</error>");
+                $failedTables[] = $logicalTable;
 
-                // Log xPDO errors
-                $errors = $modx->errorHandler->errors;
-                if (!empty($errors)) {
-                    foreach ($errors as $error) {
-                        $this->output->writeln("<error>    " . print_r($error, true) . "</error>");
-                    }
+                foreach ($modx->errorHandler->errors as $error) {
+                    $message = is_array($error) ? ($error['message'] ?? json_encode($error)) : (string) $error;
+                    $this->output->writeln("<error>    {$message}</error>");
                 }
+                continue;
             }
+
+            $logicalTable = $this->resolveLogicalTableName($className);
+            if ($logicalTable !== null && !$this->hasTable($logicalTable)) {
+                $this->output->writeln(
+                    "<error>  ✗ Failed to create table: {$tableName} (createObjectContainer succeeded but table is missing)</error>"
+                );
+                $failedTables[] = $logicalTable;
+            }
+        }
+
+        if ($failedTables !== []) {
+            throw new \RuntimeException(
+                'MiniShop3 initial schema failed for tables: ' . implode(', ', $failedTables)
+            );
         }
 
         $this->output->writeln('<info>MiniShop3 schema creation completed!</info>');
@@ -179,6 +193,19 @@ class InitialSchema extends AbstractMigration
         }
 
         $this->output->writeln('<info>MiniShop3 schema removal completed!</info>');
+    }
+
+    /**
+     * Unprefixed Phinx table name for a model class (e.g. msGridField -> ms3_grid_fields).
+     */
+    protected function resolveLogicalTableName(string $className): ?string
+    {
+        $mysqlClass = 'MiniShop3\\Model\\mysql\\' . $className;
+        if (!class_exists($mysqlClass)) {
+            return null;
+        }
+
+        return $mysqlClass::$metaMap['table'] ?? null;
     }
 
     /**
