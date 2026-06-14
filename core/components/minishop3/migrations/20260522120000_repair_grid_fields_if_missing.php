@@ -71,10 +71,10 @@ final class RepairGridFieldsIfMissing extends AbstractMigration
 
         foreach ($emptyGridKeys as $gridKey) {
             $plan = self::GRID_REPAIR_PLAN[$gridKey];
-            $this->runChildMigration($plan['seed']['class']);
+            $this->runChildMigration($plan['seed']['class'], $plan['seed']['file']);
 
             foreach ($plan['patches'] ?? [] as $patch) {
-                $this->runChildMigration($patch['class']);
+                $this->runChildMigration($patch['class'], $patch['file']);
             }
         }
     }
@@ -147,12 +147,18 @@ final class RepairGridFieldsIfMissing extends AbstractMigration
         }
     }
 
-    private function runChildMigration(string $migrationClass): void
+    private function runChildMigration(string $migrationClass, string $migrationFile): void
     {
+        $version = (int) substr($migrationFile, 0, 14);
+
         /** @var AbstractMigration $migration */
-        $migration = new $migrationClass();
+        $migration = new $migrationClass(
+            $this->getEnvironment(),
+            $version,
+            null,
+            $this->output
+        );
         $migration->setAdapter($this->getAdapter());
-        $migration->setOutput($this->output);
         $migration->up();
     }
 

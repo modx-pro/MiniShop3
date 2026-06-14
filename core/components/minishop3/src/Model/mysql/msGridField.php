@@ -132,6 +132,7 @@ class msGridField extends \MiniShop3\Model\msGridField
                 'dbtype' => 'datetime',
                 'phptype' => 'datetime',
                 'null' => true,
+                'extra' => 'on update CURRENT_TIMESTAMP',
             ],
         ],
         'indexes' => [
