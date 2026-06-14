@@ -38,17 +38,6 @@ function readShowDraftsPreference() {
 
 const showDrafts = ref(readShowDraftsPreference())
 
-/** Filter keys sent as direct API params (not filter_ prefix). */
-const DIRECT_FILTER_KEYS = new Set([
-  'query',
-  'status_id',
-  'delivery_id',
-  'payment_id',
-  'context_key',
-  'createdon_from',
-  'createdon_to',
-])
-
 // Bulk selection
 const {
   selectedItems,
@@ -68,6 +57,7 @@ const {
 
 const columns = ref([])
 const filters = ref({})
+const directFilterKeys = ref(new Set())
 const loading = ref(false)
 const orders = ref([])
 const totalRecords = ref(0)
@@ -89,6 +79,15 @@ const sortedFilters = computed(() => {
     .map(([key, config]) => ({ key, ...config }))
     .sort((a, b) => (a.position || 100) - (b.position || 100))
 })
+
+function addFilterParam(params, key, value) {
+  if (directFilterKeys.value.has(key)) {
+    params[key] = value
+    return
+  }
+
+  params[`filter_${key}`] = value
+}
 
 /**
  * Load orders list
@@ -112,17 +111,23 @@ async function loadOrders() {
         const filterConfig = filters.value[key]
         if (filterConfig?.type === 'daterange' && Array.isArray(value)) {
           if (value[0]) {
-            params[filterConfig.fields?.from || `${key}_from`] = formatDateForApi(value[0])
+            addFilterParam(
+              params,
+              filterConfig.fields?.from || `${key}_from`,
+              formatDateForApi(value[0])
+            )
           }
           if (value[1]) {
-            params[filterConfig.fields?.to || `${key}_to`] = formatDateForApi(value[1])
+            addFilterParam(
+              params,
+              filterConfig.fields?.to || `${key}_to`,
+              formatDateForApi(value[1])
+            )
           }
         } else if (filterConfig?.type === 'datepicker' && value) {
-          params[key] = formatDateForApi(value)
-        } else if (DIRECT_FILTER_KEYS.has(key)) {
-          params[key] = value
+          addFilterParam(params, key, formatDateForApi(value))
         } else {
-          params[`filter_${key}`] = value
+          addFilterParam(params, key, value)
         }
       }
     })
@@ -421,9 +426,11 @@ async function loadGridConfig() {
   try {
     const response = await request.get('/api/mgr/grid-config/orders')
     columns.value = response.columns || []
+    directFilterKeys.value = new Set(response.direct_filter_keys || [])
   } catch (error) {
     console.error('[OrdersGrid] Failed to load grid config:', error)
     columns.value = getDefaultColumns()
+    directFilterKeys.value = new Set()
   }
 }
 

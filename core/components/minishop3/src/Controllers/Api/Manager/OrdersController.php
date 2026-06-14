@@ -40,6 +40,29 @@ use MODX\Revolution\modX;
  */
 class OrdersController
 {
+    protected const DIRECT_FILTER_KEYS = [
+        'query', // handled separately in getList(), not via applyDirectFilters
+        'status_id',
+        'delivery_id',
+        'payment_id',
+        'context_key',
+        'createdon_from',
+        'createdon_to',
+    ];
+
+    protected const DIRECT_FILTER_FIELD_MAP = [
+        'status_id' => 'status_id',
+        'delivery_id' => 'delivery_id',
+        'payment_id' => 'payment_id',
+        'context_key' => 'context',
+    ];
+
+    protected const ADDRESS_FILTER_KEYS = [
+        'customer',
+        'email',
+        'phone',
+    ];
+
     protected modX $modx;
     protected ?OrderLogService $orderLog = null;
     protected ?Utils $ms3Utils = null;
@@ -50,6 +73,11 @@ class OrdersController
 
         // Ensure extra fields are loaded into xPDO map
         $this->loadExtraFieldsMap();
+    }
+
+    public static function getDirectFilterKeys(): array
+    {
+        return self::DIRECT_FILTER_KEYS;
     }
 
     /**
@@ -183,31 +211,7 @@ class OrdersController
             }
         }
 
-        // Direct filter params (from filter config)
-        if ($statusId = ($params['status_id'] ?? null)) {
-            $c->where(['status_id' => (int)$statusId]);
-        }
-        if ($deliveryId = ($params['delivery_id'] ?? null)) {
-            $c->where(['delivery_id' => (int)$deliveryId]);
-        }
-        if ($paymentId = ($params['payment_id'] ?? null)) {
-            $c->where(['payment_id' => (int)$paymentId]);
-        }
-        if ($contextKey = ($params['context_key'] ?? null)) {
-            $c->where(['context' => $contextKey]);
-        }
-
-        // Date range filters
-        if ($dateFrom = ($params['createdon_from'] ?? $params['date_start'] ?? null)) {
-            $c->where([
-                'msOrder.createdon:>=' => date('Y-m-d 00:00:00', strtotime($dateFrom)),
-            ]);
-        }
-        if ($dateTo = ($params['createdon_to'] ?? $params['date_end'] ?? null)) {
-            $c->where([
-                'msOrder.createdon:<=' => date('Y-m-d 23:59:59', strtotime($dateTo)),
-            ]);
-        }
+        $this->applyDirectFilters($c, $params);
 
         // Legacy params for backward compatibility
         if ($customer = ($params['customer'] ?? null)) {
@@ -1492,6 +1496,10 @@ class OrdersController
     {
         $c = $this->modx->newQuery(msOrder::class);
 
+        if ($this->hasAddressFilter($params)) {
+            $c->leftJoin(msOrderAddress::class, 'Address', '`Address`.order_id = msOrder.id');
+        }
+
         // Filter by statuses for statistics (ms3_status_for_stat)
         // Only count orders with these statuses (e.g. paid, completed)
         $statusForStat = $this->modx->getOption('ms3_status_for_stat', null, '2,3');
@@ -1510,31 +1518,7 @@ class OrdersController
             }
         }
 
-        // Direct filter params
-        if ($statusId = ($params['status_id'] ?? null)) {
-            $c->where(['status_id' => (int)$statusId]);
-        }
-        if ($deliveryId = ($params['delivery_id'] ?? null)) {
-            $c->where(['delivery_id' => (int)$deliveryId]);
-        }
-        if ($paymentId = ($params['payment_id'] ?? null)) {
-            $c->where(['payment_id' => (int)$paymentId]);
-        }
-        if ($contextKey = ($params['context_key'] ?? null)) {
-            $c->where(['context' => $contextKey]);
-        }
-
-        // Date range filters
-        if ($dateFrom = ($params['createdon_from'] ?? $params['date_start'] ?? null)) {
-            $c->where([
-                'msOrder.createdon:>=' => date('Y-m-d 00:00:00', strtotime($dateFrom)),
-            ]);
-        }
-        if ($dateTo = ($params['createdon_to'] ?? $params['date_end'] ?? null)) {
-            $c->where([
-                'msOrder.createdon:<=' => date('Y-m-d 23:59:59', strtotime($dateTo)),
-            ]);
-        }
+        $this->applyDirectFilters($c, $params);
 
         // Calculate sum and count
         $c->select('SUM(msOrder.cost) as sum, COUNT(msOrder.id) as total');
@@ -1546,6 +1530,18 @@ class OrdersController
             'month_sum' => number_format(round($data['sum'] ?? 0), 0, '.', ' '),
             'month_total' => number_format($data['total'] ?? 0, 0, '.', ' '),
         ];
+    }
+
+    protected function hasAddressFilter(array $params): bool
+    {
+        foreach (self::ADDRESS_FILTER_KEYS as $fieldName) {
+            $value = $params['filter_' . $fieldName] ?? null;
+            if ($value !== null && $value !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1627,6 +1623,36 @@ class OrdersController
                 break;
             default:
                 break;
+        }
+    }
+
+    protected function applyDirectFilters($c, array $params): void
+    {
+        foreach (self::DIRECT_FILTER_FIELD_MAP as $paramKey => $fieldName) {
+            $value = $params[$paramKey] ?? null;
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (in_array($paramKey, ['status_id', 'delivery_id', 'payment_id'], true)) {
+                $value = (int)$value;
+            }
+
+            $c->where([$fieldName => $value]);
+        }
+
+        $dateFrom = $params['createdon_from'] ?? $params['date_start'] ?? null;
+        if ($dateFrom) {
+            $c->where([
+                'msOrder.createdon:>=' => date('Y-m-d 00:00:00', strtotime($dateFrom)),
+            ]);
+        }
+
+        $dateTo = $params['createdon_to'] ?? $params['date_end'] ?? null;
+        if ($dateTo) {
+            $c->where([
+                'msOrder.createdon:<=' => date('Y-m-d 23:59:59', strtotime($dateTo)),
+            ]);
         }
     }
 

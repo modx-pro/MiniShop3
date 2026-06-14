@@ -42,6 +42,7 @@ const {
 })
 
 const columns = ref([])
+const directFilterKeys = ref(new Set())
 const loading = ref(false)
 const customers = ref([])
 const totalRecords = ref(0)
@@ -78,6 +79,15 @@ const CUSTOMER_GRID_DELETE_ACTION = {
   confirmAccept: 'delete',
 }
 
+function addFilterParam(params, key, value) {
+  if (directFilterKeys.value.has(key)) {
+    params[key] = value
+    return
+  }
+
+  params[`filter_${key}`] = value
+}
+
 /**
  * Load customers list
  */
@@ -99,7 +109,7 @@ async function loadCustomers() {
     Object.keys(filterValues.value).forEach(key => {
       const value = filterValues.value[key]
       if (value !== null && value !== undefined && value !== '') {
-        params[`filter_${key}`] = value
+        addFilterParam(params, key, value)
       }
     })
 
@@ -506,10 +516,12 @@ async function loadGridConfig() {
   try {
     const response = await request.get('/api/mgr/grid-config/customers')
     columns.value = response.columns || []
+    directFilterKeys.value = new Set(response.direct_filter_keys || [])
     initFilters()
   } catch (error) {
     console.error('[CustomersGrid] Failed to load grid config:', error)
     columns.value = getDefaultColumns()
+    directFilterKeys.value = new Set()
     initFilters()
   }
 }
