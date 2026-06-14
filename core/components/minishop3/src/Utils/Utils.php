@@ -269,6 +269,30 @@ class Utils
         return is_array($decoded) ? $decoded : $value;
     }
 
+    /**
+     * Parse option values coming from CSV import.
+     *
+     * CSV import accepts the same JSON array format as the product form. For known multi-value
+     * option types it also accepts a comma-separated cell value, matching the manager UI chips.
+     *
+     * @param mixed $value Raw CSV cell value
+     * @param bool $isMultiValueType Whether the option type stores multiple values
+     * @return mixed Parsed array for multi-value cells, otherwise scalar value unchanged
+     */
+    public static function parseImportedOptionValue($value, bool $isMultiValueType)
+    {
+        $value = self::decodeOptionValue($value);
+
+        if (!$isMultiValueType || !is_string($value)) {
+            return $value;
+        }
+
+        return array_values(array_filter(
+            array_map('trim', explode(',', $value)),
+            static fn(string $item): bool => $item !== ''
+        ));
+    }
+
     public static function getVendorId($modx, $name)
     {
         $criteria = [
