@@ -48,7 +48,7 @@ class ProductDataService
     {
         if ($this->productRepeaterFields === null) {
             $this->productRepeaterFields = $this->getRepeaterFieldService()->getRepeaterFieldsForClass(
-                'MiniShop3\\Model\\msProductData'
+                msProductData::class
             );
         }
 

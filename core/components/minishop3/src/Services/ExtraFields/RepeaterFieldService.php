@@ -11,7 +11,7 @@ class RepeaterFieldService
 
     private modX $modx;
 
-    /** @var array<string, array<string, array>>|null */
+    /** Request-scoped cache of repeater field configs keyed by model class. */
     private ?array $fieldsByClass = null;
 
     public function __construct(modX $modx)
@@ -37,8 +37,9 @@ class RepeaterFieldService
 
     /**
      * @param mixed $json JSON string or array
+     * @param string|null $fieldKey Extra field key for log context when config JSON is invalid
      */
-    public function parseConfig(mixed $json): array
+    public function parseConfig(mixed $json, ?string $fieldKey = null): array
     {
         $config = $this->defaultConfig();
 
@@ -46,6 +47,12 @@ class RepeaterFieldService
             $decoded = json_decode($json, true);
             if (is_array($decoded)) {
                 $config = array_merge($config, $decoded);
+            } else {
+                $context = $fieldKey !== null && $fieldKey !== '' ? " for field \"{$fieldKey}\"" : '';
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    '[ms3-repeater] malformed repeater_config JSON' . $context . ': ' . json_last_error_msg()
+                );
             }
         } elseif (is_array($json)) {
             $config = array_merge($config, $json);
@@ -161,14 +168,9 @@ class RepeaterFieldService
     {
         $errors = [];
         $minRows = (int)($config['minRows'] ?? 0);
-        $maxRows = $config['maxRows'] ?? null;
 
         if (count($rows) < $minRows) {
             $errors[] = "Minimum {$minRows} rows required";
-        }
-
-        if ($maxRows !== null && count($rows) > (int)$maxRows) {
-            $errors[] = "Maximum {$maxRows} rows allowed";
         }
 
         foreach ($rows as $index => $row) {
@@ -245,7 +247,7 @@ class RepeaterFieldService
             if ($key === '') {
                 continue;
             }
-            $map[$key] = $this->parseConfig($field->get('repeater_config'));
+            $map[$key] = $this->parseConfig($field->get('repeater_config'), $key);
         }
 
         $this->fieldsByClass[$modelClass] = $map;
