@@ -1572,8 +1572,10 @@ class OrdersController
 
     /**
      * Exclude draft status from getList query unless drafts are explicitly shown.
+     *
+     * @param \xPDO\Om\xPDOQuery $c Query object
      */
-    protected function applyDraftVisibilityFilter($c, array $params): void
+    protected function applyDraftVisibilityFilter(\xPDO\Om\xPDOQuery $c, array $params): void
     {
         if ($this->shouldShowDrafts($params)) {
             return;

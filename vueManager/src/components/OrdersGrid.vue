@@ -22,7 +22,21 @@ const toast = useToast()
 const { _ } = useLexicon()
 
 const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
-const showDrafts = ref(Boolean(ms3Config?.order_show_drafts))
+const SHOW_DRAFTS_STORAGE_KEY = 'ms3_orders_show_drafts'
+
+function readShowDraftsPreference() {
+  try {
+    const stored = localStorage.getItem(SHOW_DRAFTS_STORAGE_KEY)
+    if (stored !== null) {
+      return stored === '1'
+    }
+  } catch {
+    /* localStorage unavailable */
+  }
+  return Boolean(ms3Config?.order_show_drafts)
+}
+
+const showDrafts = ref(readShowDraftsPreference())
 
 /** Filter keys sent as direct API params (not filter_ prefix). */
 const DIRECT_FILTER_KEYS = new Set([
@@ -391,6 +405,11 @@ const hasActiveFilters = computed(() => {
 })
 
 function toggleShowDrafts() {
+  try {
+    localStorage.setItem(SHOW_DRAFTS_STORAGE_KEY, showDrafts.value ? '1' : '0')
+  } catch {
+    /* localStorage unavailable */
+  }
   first.value = 0
   loadOrders()
 }
@@ -569,6 +588,15 @@ onMounted(async () => {
               @click="createNewOrder"
             />
           </div>
+          <div class="show-drafts-toggle">
+            <Checkbox
+              v-model="showDrafts"
+              input-id="orders-show-drafts"
+              binary
+              @change="toggleShowDrafts"
+            />
+            <label for="orders-show-drafts">{{ _('ms3_orders_show_drafts') }}</label>
+          </div>
           <div class="grid-stats" :title="_('orders_stat_tooltip')">
             <span class="stat-item">
               <i class="pi pi-calendar"></i>
@@ -670,15 +698,6 @@ onMounted(async () => {
 
           <!-- Filter buttons -->
           <div class="filter-buttons">
-            <div class="show-drafts-toggle">
-              <Checkbox
-                v-model="showDrafts"
-                input-id="orders-show-drafts"
-                binary
-                @change="toggleShowDrafts"
-              />
-              <label for="orders-show-drafts">{{ _('ms3_orders_show_drafts') }}</label>
-            </div>
             <Button
               :label="_('apply_filters')"
               icon="pi pi-filter"
@@ -917,7 +936,6 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-right: auto;
 }
 
 .show-drafts-toggle label {
