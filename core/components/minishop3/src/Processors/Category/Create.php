@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Category;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCategory;
+use MODX\Revolution\modDocument;
 use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 
 class Create extends CreateProcessor
@@ -13,6 +14,19 @@ class Create extends CreateProcessor
     public $permission = 'mscategory_save';
     public $beforeSaveEvent = 'OnBeforeDocFormSave';
     public $afterSaveEvent = 'OnDocFormSave';
+
+    /**
+     * @return bool|string
+     */
+    public function initialize()
+    {
+        $requestedClassKey = $this->getProperty('class_key');
+        if ($requestedClassKey === null || $requestedClassKey === '' || $requestedClassKey === modDocument::class) {
+            $this->setProperty('class_key', $this->classKey);
+        }
+
+        return parent::initialize();
+    }
 
     /**
      * @return string
