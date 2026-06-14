@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Services\Option;
 
+use MiniShop3\Controllers\Options\Types\msOptionType;
 use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
@@ -353,8 +354,7 @@ class OptionLoaderService
      */
     protected function convertPreloadedValue(array $values, string $optionType)
     {
-        $multiTypes = ['combomultiple', 'combocolors', 'combooptions'];
-        if (in_array(strtolower($optionType), $multiTypes, true)) {
+        if (msOptionType::isMultiValueType($optionType)) {
             $result = [];
             foreach ($values as $val) {
                 if ($val !== '') {

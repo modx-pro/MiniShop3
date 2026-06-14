@@ -30,6 +30,11 @@ abstract class msOptionType
         $this->config = array_merge($this->config, $config);
     }
 
+    public static function isMultiValueType(?string $type): bool
+    {
+        return $type !== null && in_array(strtolower($type), ['combomultiple', 'combocolors', 'combooptions'], true);
+    }
+
     /**
      * @param $criteria
      *
