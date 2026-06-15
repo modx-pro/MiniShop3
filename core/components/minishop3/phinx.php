@@ -106,6 +106,29 @@ $dbConfig = [
     'collation' => $mysqlCollation,
     'table_prefix' => $modx->getOption('table_prefix', null, ''),
 ];
+
+if ($dbConfig['table_prefix'] !== '' && $modx->pdo !== null) {
+    $prefix = $dbConfig['table_prefix'];
+    $hasOld = (bool) $modx->pdo->query("SHOW TABLES LIKE 'ms3_migrations'")?->fetch();
+    $hasNew = (bool) $modx->pdo->query("SHOW TABLES LIKE '{$prefix}ms3_migrations'")?->fetch();
+
+    if ($hasOld && !$hasNew) {
+        $modx->pdo->exec("RENAME TABLE `ms3_migrations` TO `{$prefix}ms3_migrations`");
+
+        $infoLogLevel = 1;
+        if (class_exists(\MODX\Revolution\modX::class, false)) {
+            $infoLogLevel = \MODX\Revolution\modX::LOG_LEVEL_INFO;
+        } elseif (class_exists('modX', false)) {
+            $infoLogLevel = modX::LOG_LEVEL_INFO;
+        }
+
+        $modx->log(
+            $infoLogLevel,
+            '[MiniShop3] Renamed legacy Phinx metadata table ms3_migrations -> ' . $prefix . 'ms3_migrations'
+        );
+    }
+}
+
 $migrationTable = $dbConfig['table_prefix'] . 'ms3_migrations';
 
 return [
