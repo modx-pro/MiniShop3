@@ -303,7 +303,7 @@ const isFileBrowserXtype = computed(() => {
  * Determine if field is complex type (requires hidden field with JSON)
  */
 const isComplexField = computed(() => {
-  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect']
+  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect', 'ms3-repeater']
   return complexTypes.includes(props.fieldConfig.xtype)
 })
 

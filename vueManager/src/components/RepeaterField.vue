@@ -27,10 +27,16 @@ const schema = computed(() => parseRepeaterConfig(props.config))
 const columnCount = computed(() => schema.value.columns?.length || 2)
 
 const internalRows = ref([])
+let isInternalEmit = false
 
 watch(
   [() => props.modelValue, () => props.config],
   () => {
+    if (isInternalEmit) {
+      isInternalEmit = false
+      return
+    }
+
     internalRows.value = normalizeRepeaterRows(
       parseRepeaterModelValue(props.modelValue),
       schema.value
@@ -41,6 +47,7 @@ watch(
 
 function emitRows() {
   const normalized = normalizeRepeaterRows(internalRows.value, schema.value)
+  isInternalEmit = true
   emit('update:modelValue', stripRepeaterRowMeta(normalized, schema.value))
 }
 
