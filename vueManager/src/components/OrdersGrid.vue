@@ -588,24 +588,26 @@ onMounted(async () => {
               @click="createNewOrder"
             />
           </div>
-          <div class="show-drafts-toggle">
-            <Checkbox
-              v-model="showDrafts"
-              input-id="orders-show-drafts"
-              binary
-              @change="toggleShowDrafts"
-            />
-            <label for="orders-show-drafts">{{ _('ms3_orders_show_drafts') }}</label>
-          </div>
-          <div class="grid-stats" :title="_('orders_stat_tooltip')">
-            <span class="stat-item">
-              <i class="pi pi-calendar"></i>
-              {{ _('orders_month') }}: <strong>{{ stats.month_total }}</strong>
-            </span>
-            <span class="stat-item">
-              <i class="pi pi-wallet"></i>
-              {{ _('orders_month_sum') }}: <strong>{{ stats.month_sum }}</strong>
-            </span>
+          <div class="grid-header-right">
+            <div class="grid-stats" :title="_('orders_stat_tooltip')">
+              <span class="stat-item">
+                <i class="pi pi-calendar"></i>
+                {{ _('orders_month') }}: <strong>{{ stats.month_total }}</strong>
+              </span>
+              <span class="stat-item">
+                <i class="pi pi-wallet"></i>
+                {{ _('orders_month_sum') }}: <strong>{{ stats.month_sum }}</strong>
+              </span>
+            </div>
+            <div class="show-drafts-toggle">
+              <Checkbox
+                v-model="showDrafts"
+                input-id="orders-show-drafts"
+                binary
+                @change="toggleShowDrafts"
+              />
+              <label for="orders-show-drafts">{{ _('ms3_orders_show_drafts') }}</label>
+            </div>
           </div>
         </div>
       </template>
@@ -869,10 +871,17 @@ onMounted(async () => {
   gap: 1rem;
 }
 
+.grid-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
+  font-size: 1rem;
+}
+
 .grid-stats {
   display: flex;
   gap: 1.5rem;
-  font-size: 0.9rem;
   color: var(--ms3-text-muted);
   cursor: help;
 }
@@ -936,11 +945,13 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .show-drafts-toggle label {
   cursor: pointer;
   user-select: none;
+  font-size: 1rem;
 }
 
 /* Bulk actions toolbar */
