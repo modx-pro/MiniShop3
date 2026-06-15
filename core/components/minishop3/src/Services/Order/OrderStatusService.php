@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Order;
 use MiniShop3\Controllers\Payment\Payment;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
@@ -211,10 +212,10 @@ class OrderStatusService
     /**
      * Get customer recipient data for all notification channels
      *
-     * Returns all available contact information for the customer:
-     * - email: for EmailChannel
-     * - phone: for SmsChannel
-     * - telegram_chat_id: for TelegramChannel
+     * Contact resolution order (order-scoped first, then fallbacks):
+     * 1. msOrderAddress — email/phone from this order's checkout form
+     * 2. msCustomer — fallback email/phone, plus telegram_chat_id and customer payload
+     * 3. modUserProfile — last fallback for email/phone/telegram when still empty
      *
      * @return array|null Returns null only if no contact info available
      */
@@ -229,21 +230,32 @@ class OrderStatusService
 
         $hasContact = false;
 
-        // Try to get contact info from msCustomer
+        /** @var msOrderAddress|null $address */
+        $address = $msOrder->getOne('Address');
+        if ($address) {
+            if ($email = $address->get('email')) {
+                $recipient['email'] = $email;
+                $hasContact = true;
+            }
+            if ($phone = $address->get('phone')) {
+                $recipient['phone'] = $phone;
+                $hasContact = true;
+            }
+        }
+
         /** @var msCustomer|null $customer */
         $customer = $msOrder->getOne('Customer');
         if ($customer) {
             $recipient['customer'] = $customer->toArray();
 
-            if ($email = $customer->get('email')) {
+            if (empty($recipient['email']) && ($email = $customer->get('email'))) {
                 $recipient['email'] = $email;
                 $hasContact = true;
             }
-            if ($phone = $customer->get('phone')) {
+            if (empty($recipient['phone']) && ($phone = $customer->get('phone'))) {
                 $recipient['phone'] = $phone;
                 $hasContact = true;
             }
-            // telegram_chat_id may be stored in extended fields
             $extended = $customer->get('extended');
             if (is_array($extended) && !empty($extended['telegram_chat_id'])) {
                 $recipient['telegram_chat_id'] = $extended['telegram_chat_id'];
@@ -251,7 +263,7 @@ class OrderStatusService
             }
         }
 
-        // Fallback/supplement from modUserProfile
+        // Fallback from modUserProfile when order address / customer data is missing
         $userId = $msOrder->get('user_id');
         if ($userId) {
             /** @var modUserProfile|null $profile */
