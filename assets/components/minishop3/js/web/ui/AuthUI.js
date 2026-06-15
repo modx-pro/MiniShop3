@@ -109,7 +109,7 @@ class AuthUI {
       if (result.success) {
         this.showMessage('login-messages', this.t('ms3_customer_login_success'), 'success')
         setTimeout(() => {
-          this.handleRedirect(result.object)
+          this.handleRedirect(ApiClient.getPayload(result))
         }, 1000)
       } else {
         this.showMessage('login-messages', result.message || this.t('ms3_err_unknown'), 'danger')
@@ -177,9 +177,10 @@ class AuthUI {
           'success'
         )
 
-        if (result.object && result.object.token) {
+        const payload = ApiClient.getPayload(result)
+        if (payload && payload.token) {
           setTimeout(() => {
-            this.handleRedirect(result.object)
+            this.handleRedirect(payload)
           }, 1500)
         } else {
           setTimeout(() => {

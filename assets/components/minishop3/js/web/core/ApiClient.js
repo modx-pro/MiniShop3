@@ -90,6 +90,19 @@ class ApiClient {
   }
 
   /**
+   * Web API returns payload in `data`; legacy processors used `object`.
+   *
+   * @param {Object|null|undefined} result - API response
+   * @returns {Object|null}
+   */
+  static getPayload (result) {
+    if (!result) {
+      return null
+    }
+    return result.data ?? result.object ?? null
+  }
+
+  /**
    * GET request
    *
    * @param {string} endpoint - API endpoint

@@ -6,6 +6,9 @@ use MiniShop3\Controllers\Auth\AuthProviderInterface;
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Utils\CookieHelper;
+use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 
 /**
@@ -155,6 +158,66 @@ class AuthManager
         );
 
         return null;
+    }
+
+    /**
+     * Bind authenticated customer to API token, session, cookie, and draft order.
+     *
+     * Reuses guest token from cookie/session when possible so cart is preserved.
+     *
+     * @return array{token: string, expires_at: string}|null
+     */
+    public function establishCustomerSession(msCustomer $customer): ?array
+    {
+        SessionHelper::ensureActive();
+
+        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+        $currentToken = CookieHelper::getTokenFromCookie();
+        if ($currentToken === '') {
+            $currentToken = $_SESSION['ms3']['customer_token'] ?? '';
+        }
+
+        $tokenObj = null;
+        if ($currentToken !== '') {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $currentToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
+
+        if ($tokenObj) {
+            $tokenObj->set('customer_id', $customer->id);
+            $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
+            if (!$tokenObj->save()) {
+                return null;
+            }
+        } else {
+            $tokenObj = $this->createToken($customer, msCustomerToken::TYPE_API, $ttl);
+            if (!$tokenObj) {
+                return null;
+            }
+        }
+
+        $tokenString = $tokenObj->get('token');
+        $expiresAt = $tokenObj->get('expires_at');
+
+        CookieHelper::setTokenCookie($this->modx, $tokenString);
+
+        /** @var OrderDraftManager $draftManager */
+        $draftManager = $this->modx->services->get('ms3_order_draft_manager');
+        $draftManager->bindDraftToCustomer($tokenString, $customer->id);
+
+        if (!isset($_SESSION['ms3'])) {
+            $_SESSION['ms3'] = [];
+        }
+        $_SESSION['ms3']['customer_id'] = $customer->id;
+        $_SESSION['ms3']['customer_token'] = $tokenString;
+        $_SESSION['ms3']['customer_token_expires'] = strtotime($expiresAt);
+
+        return [
+            'token' => $tokenString,
+            'expires_at' => $expiresAt,
+        ];
     }
 
     /**

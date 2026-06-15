@@ -4,6 +4,8 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\TokenService;
+use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 use ModxPro\PdoTools\Fetch;
 
@@ -66,6 +68,15 @@ abstract class CustomerPageService
      */
     public function checkAuth(): bool
     {
+        if ($this->modx->services->has('ms3_token_service')) {
+            /** @var TokenService $tokenService */
+            $tokenService = $this->modx->services->get('ms3_token_service');
+            $tokenService->ensureSessionActive();
+            $tokenService->restoreSessionFromCookie();
+        } else {
+            SessionHelper::ensureActive();
+        }
+
         if (empty($_SESSION['ms3']['customer_id'])) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,

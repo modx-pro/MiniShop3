@@ -7,6 +7,7 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\TokenService;
 use MiniShop3\Utils\CookieHelper;
+use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 
 /**
@@ -71,10 +72,7 @@ class TokenMiddleware implements MiddlewareInterface
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $isPublic = $this->isPublicRoute($uri);
 
-        // Ensure session is active
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        SessionHelper::ensureActive();
 
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');

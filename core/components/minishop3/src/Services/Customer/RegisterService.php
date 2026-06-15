@@ -82,7 +82,7 @@ class RegisterService
      */
     public function register(array $data): array
     {
-        $email = trim($data['email'] ?? '');
+        $email = PasswordAuthProvider::normalizeEmail($data['email'] ?? '');
 
         if (empty($email)) {
             return [

@@ -197,7 +197,6 @@ class TokenService
             }
         }
 
-        // 3. Generate new token
         $result = $this->generateCustomerToken();
         return $result['token'];
     }

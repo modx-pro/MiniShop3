@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
+use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
@@ -177,13 +178,19 @@ class CustomersController
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
-                $customer->set($field, $data[$field]);
+                $value = $data[$field];
+                if ($field === 'email' && is_string($value)) {
+                    $value = PasswordAuthProvider::normalizeEmail($value);
+                }
+                $customer->set($field, $value);
             }
         }
 
-        if (!empty($data['password'])) {
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-            $customer->set('password', $hashedPassword);
+        if (isset($data['password'])) {
+            $password = trim((string)$data['password']);
+            if ($password !== '') {
+                $customer->set('password', PasswordAuthProvider::hashPassword($password));
+            }
         }
 
         if (!$customer->save()) {

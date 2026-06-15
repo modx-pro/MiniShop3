@@ -41,6 +41,14 @@ class PasswordAuthProvider implements AuthProviderInterface
     }
 
     /**
+     * Normalize email for lookup and storage.
+     */
+    public static function normalizeEmail(string $email): string
+    {
+        return strtolower(trim($email));
+    }
+
+    /**
      * Authenticate by email and password
      *
      * @param array $credentials Must contain 'email' and 'password'
@@ -48,7 +56,7 @@ class PasswordAuthProvider implements AuthProviderInterface
      */
     public function authenticate(array $credentials): ?msCustomer
     {
-        $email = trim($credentials['email'] ?? '');
+        $email = self::normalizeEmail($credentials['email'] ?? '');
         $password = $credentials['password'] ?? '';
 
         if (empty($email) || empty($password)) {
