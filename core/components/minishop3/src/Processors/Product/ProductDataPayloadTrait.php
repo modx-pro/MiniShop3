@@ -115,7 +115,7 @@ trait ProductDataPayloadTrait
      */
     private function getAllowedProductDataFieldNames(): array
     {
-        $fields = array_flip($this->object->getDataFieldsNames());
+        $fields = array_fill_keys($this->object->getDataFieldsNames(), true);
         unset($fields['id']);
 
         return $fields;
