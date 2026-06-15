@@ -213,9 +213,11 @@ class OrderStatusService
      * Get customer recipient data for all notification channels
      *
      * Contact resolution order (order-scoped first, then fallbacks):
-     * 1. msOrderAddress — email/phone from this order's checkout form
+     * 1. msOrderAddress — email/phone from this order's checkout form (also in recipient['address'])
      * 2. msCustomer — fallback email/phone, plus telegram_chat_id and customer payload
      * 3. modUserProfile — last fallback for email/phone/telegram when still empty
+     *
+     * Resolved email/phone are mirrored into recipient['customer'] when present (for plugins/templates).
      *
      * @return array|null Returns null only if no contact info available
      */
@@ -233,6 +235,8 @@ class OrderStatusService
         /** @var msOrderAddress|null $address */
         $address = $msOrder->getOne('Address');
         if ($address) {
+            $recipient['address'] = $address->toArray();
+
             if ($email = $address->get('email')) {
                 $recipient['email'] = $email;
                 $hasContact = true;
@@ -269,7 +273,6 @@ class OrderStatusService
             /** @var modUserProfile|null $profile */
             $profile = $this->modx->getObject(modUserProfile::class, ['internalKey' => $userId]);
             if ($profile) {
-                // Only use profile data if customer data is missing
                 if (empty($recipient['email']) && $profile->get('email')) {
                     $recipient['email'] = $profile->get('email');
                     $hasContact = true;
@@ -284,6 +287,15 @@ class OrderStatusService
                     $recipient['telegram_chat_id'] = $extended['telegram_chat_id'];
                     $hasContact = true;
                 }
+            }
+        }
+
+        if (!empty($recipient['customer']) && is_array($recipient['customer'])) {
+            if (!empty($recipient['email'])) {
+                $recipient['customer']['email'] = $recipient['email'];
+            }
+            if (!empty($recipient['phone'])) {
+                $recipient['customer']['phone'] = $recipient['phone'];
             }
         }
 
