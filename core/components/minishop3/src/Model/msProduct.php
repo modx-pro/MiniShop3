@@ -352,7 +352,10 @@ class msProduct extends modResource
      *
      * @return array
      */
-    public function getDataFieldsNames()
+    /**
+     * @return list<string>
+     */
+    public function getDataFieldsNames(): array
     {
         return array_keys($this->loadData()->_fieldMeta);
     }
