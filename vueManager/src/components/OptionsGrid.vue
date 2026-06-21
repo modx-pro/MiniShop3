@@ -11,9 +11,10 @@ import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
+import { onOptionGroupsChanged } from '../utils/optionGroupsBus.js'
 import OptionCategoryTree from './OptionCategoryTree.vue'
 import OptionValuesEditor from './OptionValuesEditor.vue'
 
@@ -27,13 +28,13 @@ const totalRecords = ref(0)
 const loading = ref(false)
 const first = ref(0)
 const rows = ref(20)
-const modcategoryFilter = ref(null)
+const optionGroupFilter = ref(null)
 const selectedCategories = ref([])
 const selectedRows = ref([])
 
 // Reference data
 const optionTypes = ref([])
-const modcategories = ref([])
+const optionGroups = ref([])
 
 // Dialog state
 const dialogVisible = ref(false)
@@ -58,7 +59,7 @@ function createBlankOption() {
     caption: '',
     description: '',
     measure_unit: '',
-    modcategory_id: null,
+    option_group_id: null,
     type: 'textfield',
     properties: {},
   }
@@ -74,16 +75,18 @@ async function loadOptionTypes() {
   optionTypes.value = r?.results || []
 }
 
-async function loadModcategories() {
-  const r = await request.get('/api/mgr/options/modcategories', { limit: 500 })
-  modcategories.value = r?.results || []
+async function loadOptionGroups() {
+  const r = await request.get('/api/mgr/option-groups', { limit: 0 })
+  optionGroups.value = r?.results || []
 }
 
 async function loadOptions() {
   loading.value = true
   try {
     const params = { start: first.value, limit: rows.value }
-    if (modcategoryFilter.value) params.modcategory_id = modcategoryFilter.value
+    if (optionGroupFilter.value !== null && optionGroupFilter.value !== '') {
+      params.option_group_id = optionGroupFilter.value
+    }
     if (selectedCategories.value.length > 0) {
       params.categories = JSON.stringify(selectedCategories.value)
     }
@@ -104,7 +107,7 @@ function onPage(event) {
   loadOptions()
 }
 
-watch(modcategoryFilter, () => {
+watch(optionGroupFilter, () => {
   first.value = 0
   loadOptions()
 })
@@ -141,7 +144,7 @@ async function openEditDialog(row) {
       caption: data.caption || '',
       description: data.description || '',
       measure_unit: data.measure_unit || '',
-      modcategory_id: data.modcategory_id ?? null,
+      option_group_id: data.option_group_id ?? null,
       type: data.type || 'textfield',
       properties: data.properties || {},
     }
@@ -178,7 +181,7 @@ async function saveOption() {
       caption: editing.value.caption,
       description: editing.value.description,
       measure_unit: editing.value.measure_unit,
-      modcategory_id: editing.value.modcategory_id,
+      option_group_id: editing.value.option_group_id,
       type: editing.value.type,
       properties: buildProperties(),
       categories: editingCategories.value,
@@ -319,8 +322,20 @@ function typeCaption(typeName) {
   return row ? row.caption : typeName
 }
 
+// Sync with OptionGroupsGrid (sibling tab): refresh dropdown when groups are
+// created / updated / deleted / reordered there. See utils/optionGroupsBus.js.
+let unsubscribeOptionGroupsChanged = null
+
 onMounted(() => {
-  Promise.all([loadOptionTypes(), loadModcategories()]).then(() => loadOptions())
+  Promise.all([loadOptionTypes(), loadOptionGroups()]).then(() => loadOptions())
+  unsubscribeOptionGroupsChanged = onOptionGroupsChanged(loadOptionGroups)
+})
+
+onBeforeUnmount(() => {
+  if (unsubscribeOptionGroupsChanged) {
+    unsubscribeOptionGroupsChanged()
+    unsubscribeOptionGroupsChanged = null
+  }
 })
 </script>
 
@@ -347,13 +362,13 @@ onMounted(() => {
           />
 
           <Select
-            v-model="modcategoryFilter"
-            :options="modcategories"
-            option-label="category"
+            v-model="optionGroupFilter"
+            :options="optionGroups"
+            option-label="name"
             option-value="id"
-            :placeholder="_('ms3_modcategory_filter') || 'Группа (modCategory)'"
+            :placeholder="_('ms3_option_group_filter')"
             show-clear
-            class="modcategory-filter"
+            class="option-group-filter"
           />
 
           <Button
@@ -477,14 +492,14 @@ onMounted(() => {
               />
             </div>
             <div class="form-field">
-              <label for="opt-modcategory">{{ _('ms3_ft_group') || 'Группа' }}</label>
+              <label for="opt-option-group">{{ _('ms3_option_group') }}</label>
               <Select
-                id="opt-modcategory"
-                v-model="editing.modcategory_id"
-                :options="modcategories"
-                option-label="category"
+                id="opt-option-group"
+                v-model="editing.option_group_id"
+                :options="optionGroups"
+                option-label="name"
                 option-value="id"
-                :placeholder="_('ms3_ft_nogroup') || 'Без группы'"
+                :placeholder="_('ms3_option_group_no_group')"
                 show-clear
                 class="w-full"
                 :disabled="dialogSaving"
@@ -527,7 +542,10 @@ onMounted(() => {
 
         <div class="dialog-tree">
           <h4 class="pane-title">{{ _('ms3_categories') || 'Категории' }}</h4>
-          <OptionCategoryTree v-model="editingCategories" :option-id="editing.id || 0" />
+          <OptionCategoryTree
+            v-model="editingCategories"
+            :option-id="editing.id || 0"
+          />
         </div>
       </div>
 
@@ -609,7 +627,7 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.vueApp .options-grid-app .toolbar .modcategory-filter {
+.vueApp .options-grid-app .toolbar .option-group-filter {
   min-width: 12rem;
 }
 

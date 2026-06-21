@@ -16,7 +16,9 @@ use MiniShop3\Router\Response;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
+use MiniShop3\Services\Order\ManagerOrderCostRecalculator;
 use MiniShop3\Services\Order\OrderLogService;
+use MiniShop3\Services\Order\OrderService;
 use MiniShop3\Services\Order\OrderStatusService;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\modSystemEvent;
@@ -153,11 +155,7 @@ class OrdersController
             }
         }
 
-        $showDrafts = $this->modx->getOption('ms3_order_show_drafts', null, false);
-        if (!$showDrafts) {
-            $statusDrafts = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
-            $c->where(['status_id:!=' => $statusDrafts]);
-        }
+        $this->applyDraftVisibilityFilter($c, $params);
 
         if (!empty($query)) {
             if (is_numeric($query)) {
@@ -285,6 +283,95 @@ class OrdersController
             return Response::error('Order not found', HttpStatus::NOT_FOUND)->getData();
         }
 
+        return Response::success($this->buildOrderPayloadFromModel($order))->getData();
+    }
+
+    /**
+     * Пересчитать стоимость заказа по сохранённым позициям и текущим delivery_id/payment_id.
+     *
+     * POST /api/mgr/orders/{id}/recalculate-cost
+     * Body JSON: mode (auto|manual|force_provider), optional manual_delivery_cost
+     *
+     * Ответ дополняет поля заказа (как GET) ключами breakdown и warnings из пересчёта.
+     */
+    public function recalculateCost(array $params = []): array
+    {
+        $this->modx->lexicon->load('minishop3:default');
+
+        $id = (int)($params['id'] ?? 0);
+        if (!$id) {
+            return Response::error('Order ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        $order = $this->modx->getObject(msOrder::class, $id);
+        if (!$order) {
+            return Response::error('Order not found', HttpStatus::NOT_FOUND)->getData();
+        }
+
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+
+        $modeIn = strtolower(trim((string)($params['mode'] ?? ManagerOrderCostRecalculator::MODE_AUTO)));
+        $allowedModes = [
+            ManagerOrderCostRecalculator::MODE_AUTO,
+            ManagerOrderCostRecalculator::MODE_MANUAL,
+            ManagerOrderCostRecalculator::MODE_FORCE_PROVIDER,
+        ];
+        if (!in_array($modeIn, $allowedModes, true)) {
+            $modeIn = ManagerOrderCostRecalculator::MODE_AUTO;
+        }
+
+        $options = ['mode' => $modeIn];
+        if (array_key_exists('manual_delivery_cost', $params)) {
+            $options['manual_delivery_cost'] = $params['manual_delivery_cost'];
+        }
+
+        $recalculator = new ManagerOrderCostRecalculator($this->modx, $ms3);
+        $result = $recalculator->recalculate($order, $options);
+
+        if (empty($result['success'])) {
+            return Response::error(
+                $this->lexiconMessageOrKey((string)($result['message'] ?? 'ms3_err_unknown')),
+                HttpStatus::BAD_REQUEST
+            )->getData();
+        }
+
+        $serviceData = is_array($result['data']) ? $result['data'] : [];
+
+        /** @var msOrder|false $fresh */
+        $fresh = $this->modx->getObject(msOrder::class, $id);
+        if (!$fresh instanceof msOrder) {
+            return Response::error('Order not found after recalculation', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+        }
+
+        $payload = $this->buildOrderPayloadFromModel($fresh);
+        if (!empty($serviceData['breakdown'])) {
+            $payload['breakdown'] = $serviceData['breakdown'];
+        }
+        $payload['warnings'] = $serviceData['warnings'] ?? [];
+
+        $messageKey = 'ms3_order_cost_recalc_success';
+        $message = $this->lexiconMessageOrKey($messageKey);
+        if ($message === $messageKey) {
+            $message = '';
+        }
+
+        return Response::success($payload, $message)->getData();
+    }
+
+    /** Human-readable lexicon entry, or original key when missing/empty translation. */
+    protected function lexiconMessageOrKey(string $key): string
+    {
+        $text = $this->modx->lexicon($key);
+
+        return ($text !== $key && $text !== '') ? $text : $key;
+    }
+
+    /**
+     * Снимок данных заказа для API карточки (как в {@see get()} после загрузки).
+     */
+    protected function buildOrderPayloadFromModel(msOrder $order): array
+    {
         $status = $order->getOne('Status');
         $delivery = $order->getOne('Delivery');
         $payment = $order->getOne('Payment');
@@ -296,24 +383,21 @@ class OrdersController
         $data['delivery_name'] = $delivery ? $delivery->get('name') : '';
         $data['payment_name'] = $payment ? $payment->get('name') : '';
 
-        // Load extra fields for msOrder (stored as real DB columns)
         $orderExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrder');
         foreach ($orderExtraFields as $fieldKey) {
             $data[$fieldKey] = $order->get($fieldKey);
         }
 
-        // Merge address fields (excluding conflicting keys like properties)
         $data = $this->mergeAddressIntoOrderData($data, $address);
 
         if ($address) {
-            // Load extra fields for msOrderAddress (stored as real DB columns)
             $addressExtraFields = $this->getExtraFieldKeys('MiniShop3\\Model\\msOrderAddress');
             foreach ($addressExtraFields as $fieldKey) {
                 $data[$fieldKey] = $address->get($fieldKey);
             }
         }
 
-        return Response::success($this->formatOrder($data))->getData();
+        return $this->formatOrder($data);
     }
 
     /**
@@ -532,8 +616,11 @@ class OrdersController
 
         // Initial costs (will be recalculated after adding products)
         $order->set('cart_cost', 0);
-        $order->set('delivery_cost', (float) ($params['delivery_cost'] ?? 0));
-        $order->set('cost', (float) ($params['delivery_cost'] ?? 0));
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $deliveryCost = (float) ($params['delivery_cost'] ?? 0);
+        $order->set('delivery_cost', $deliveryCost);
+        $order->set('cost', $orderService->clampComputedTotal(null, 0.0, $deliveryCost, 0.0));
         $order->set('weight', 0);
 
         if (!$order->save()) {
@@ -546,6 +633,8 @@ class OrdersController
         $address->set('createdon', time());
 
         // Address fields from params
+        // Safe to use array_key_exists: new entity, no previous value to silently overwrite;
+        // all address columns are nullable VARCHAR/TEXT.
         $addressFields = [
             'first_name', 'last_name', 'phone', 'email',
             'country', 'index', 'region', 'city', 'metro',
@@ -553,7 +642,7 @@ class OrdersController
             'comment', 'text_address'
         ];
         foreach ($addressFields as $field) {
-            if (isset($params[$field])) {
+            if (array_key_exists($field, $params)) {
                 $address->set($field, $params[$field]);
             }
         }
@@ -1054,34 +1143,49 @@ class OrdersController
         $updated = false;
         $changes = [];
 
+        // Per-field null semantics:
+        //   - `options` (JSON): null = explicit clear from frontend (OrderView getOptionsForSave())
+        //   - `count`/`price`/`weight` (numeric): null skipped — coercing null to 0/1 would
+        //     silently destroy data when a partial payload accidentally carries `null`
+        //     (PrimeVue InputNumber on clear, third-party API, batch scripts).
+        //     Frontend must send explicit 0 / valid number to actually update these.
+        $nullClearable = ['options'];
+
         foreach ($allowedFields as $field) {
-            if (isset($params[$field])) {
-                $oldValue = $orderProduct->get($field);
-                $value = $params[$field];
-
-                // Validate count
-                if ($field === 'count') {
-                    $value = max(1, (int)$value);
-                }
-
-                // Validate price/weight
-                if (in_array($field, ['price', 'weight'])) {
-                    $value = max(0, (float)$value);
-                }
-
-                // Handle options (JSON)
-                if ($field === 'options' && is_array($value)) {
-                    $value = json_encode($value, JSON_UNESCAPED_UNICODE);
-                }
-
-                // Track changes for logging
-                if ($oldValue != $value) {
-                    $changes[$field] = ['old' => $oldValue, 'new' => $value];
-                }
-
-                $orderProduct->set($field, $value);
-                $updated = true;
+            if (!array_key_exists($field, $params)) {
+                continue;
             }
+            $value = $params[$field];
+
+            if ($value === null && !in_array($field, $nullClearable, true)) {
+                continue;
+            }
+
+            $oldValue = $orderProduct->get($field);
+
+            switch ($field) {
+                case 'count':
+                    $value = max(1, (int)$value);
+                    break;
+                case 'price':
+                case 'weight':
+                    $value = max(0, (float)$value);
+                    break;
+                case 'options':
+                    // null passes through (clear), arrays get encoded as JSON
+                    if (is_array($value)) {
+                        $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                    }
+                    break;
+            }
+
+            // Track changes for logging
+            if ($oldValue != $value) {
+                $changes[$field] = ['old' => $oldValue, 'new' => $value];
+            }
+
+            $orderProduct->set($field, $value);
+            $updated = true;
         }
 
         if (!$updated) {
@@ -1267,9 +1371,11 @@ class OrdersController
         $order->set('cart_cost', $cartCost);
         $order->set('weight', $weight);
 
-        // Recalculate total cost (cart + delivery)
-        $deliveryCost = (float)$order->get('delivery_cost');
-        $order->set('cost', $cartCost + $deliveryCost);
+        // Recalculate total cost (cart + delivery; payment deltas are reflected in cost when persisted elsewhere)
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $deliveryCost = (float) $order->get('delivery_cost');
+        $order->set('cost', $orderService->clampComputedTotal($order, $cartCost, $deliveryCost, 0.0));
 
         $order->save();
     }
@@ -1440,6 +1546,43 @@ class OrdersController
             'month_sum' => number_format(round($data['sum'] ?? 0), 0, '.', ' '),
             'month_total' => number_format($data['total'] ?? 0, 0, '.', ' '),
         ];
+    }
+
+    /**
+     * Whether draft orders should be included in the manager orders list query.
+     *
+     * When `show_drafts` is present in request params it overrides `ms3_order_show_drafts`.
+     * The Vue orders grid always sends this flag (initialized from ms3.config.order_show_drafts).
+     */
+    protected function shouldShowDrafts(array $params): bool
+    {
+        $default = (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
+
+        if (!array_key_exists('show_drafts', $params)) {
+            return $default;
+        }
+
+        $value = $params['show_drafts'];
+        if ($value === '' || $value === null) {
+            return $default;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Exclude draft status from getList query unless drafts are explicitly shown.
+     *
+     * @param \xPDO\Om\xPDOQuery $c Query object
+     */
+    protected function applyDraftVisibilityFilter(\xPDO\Om\xPDOQuery $c, array $params): void
+    {
+        if ($this->shouldShowDrafts($params)) {
+            return;
+        }
+
+        $statusDrafts = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+        $c->where(['status_id:!=' => $statusDrafts]);
     }
 
     /**

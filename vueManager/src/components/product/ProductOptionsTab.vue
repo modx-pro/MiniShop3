@@ -14,18 +14,19 @@ const props = defineProps({
 const { _ } = useLexicon()
 
 /**
- * Group options by modcategory_id (msOption.modcategory_id).
- * Group titles come from the category name; options without a group end up under "Без группы".
+ * Group options by option_group_id (msOption.option_group_id, #10).
+ * Group titles come from option_group_name (joined msOptionGroup.name);
+ * options without a group end up under "Без группы".
  */
 const groups = computed(() => {
   const map = new Map()
   for (const option of props.optionFields) {
     if (!option || !option.key) continue
-    const groupId = Number(option.modcategory_id) || 0
+    const groupId = Number(option.option_group_id) || 0
     if (!map.has(groupId)) {
       map.set(groupId, {
         id: groupId,
-        title: option.category_name || _('ms3_ft_nogroup'),
+        title: option.group_name || option.option_group_name || _('ms3_option_group_no_group'),
         options: [],
       })
     }

@@ -17,9 +17,76 @@
 
 ## Май 2026
 
-### Разработка
+### [2026-05-22] 🚀 Версия 1.11.1-beta1
+
+**Тип релиза:** PATCH (beta) — точечные хотфиксы установки и каталога с превью
 
 #### 🐛 Исправлено
+
+**SQL-ошибка в `msProducts` / `msCart` / `msGetOrder` при `includeThumbs` (#293):**
+- Хелпер `ProductThumbnailJoin::buildLeftJoinOn()` оборачивал результат `$modx->getTableName()` ещё одной парой backticks. xPDO `getTableName()` уже экранирует имя таблицы — в итоге в runtime SQL появлялись тройные backticks вокруг имени, MySQL отвергал запрос как `Error 42000`. Любой вызов `includeThumbs=...` на витрине после установки 1.11.0-beta1 отдавал пустой каталог.
+- Фикс — убраны внешние backticks вокруг `%4$s` в sprintf-шаблоне `ProductThumbnailJoin`. В код добавлен комментарий чтобы не наступить повторно.
+
+**Установка пакета 1.11.0-beta1 падала с `Data too long for column 'metadata'` (#296):**
+- В `_build/build.php` через `setPackageAttributes` передавался полный `core/components/minishop3/docs/changelog.txt` (~33 KB истории с 1.0.0-alpha) + `license.txt` (~15 KB) + `readme.txt`. На MODX-установках с колонкой `modx_transport_packages.metadata` типа `TEXT` (лимит 65 535 байт) сериализованные attributes не помещались — INSERT падал с `SQLSTATE 22001 / 1406`. В предыдущих релизах changelog был меньше и проблема не проявлялась.
+- В transport metadata теперь идёт **только блок текущего релиза** (~7 KB вместо 33 KB) через новый метод `readLatestChangelogEntry()`. Полный changelog по-прежнему есть внутри пакета (`docs/changelog.txt`) — пользователь видит полную историю в файле, а в карточке пакета MODX — последний релиз.
+
+---
+
+### [2026-05-21] 🚀 Версия 1.11.0-beta1
+
+**Тип релиза:** MINOR (beta) — крупный цикл с breaking changes и новыми фичами
+
+#### ✨ Добавлено
+
+**Публичный refresh-API витринного JS (#274):**
+- `window.ms3.refresh()` + событие `ms3:refresh` — единая точка для интеграции со сторонними AJAX-компонентами (mFilter / mSearch2 / собственный AJAX / бесконечный скролл и т.д.), которые заменяют DOM каталога. После замены сторонний компонент вызывает `window.ms3?.refresh?.()` — MS3 ре-привязывает состояние своих UI-модулей (`ProductCardUI.updateAllCards()`, `QuantityUI.reinit()`, в будущем — другие).
+- MS3 **не** слушает специфические события сторонних компонентов (`mfilter:contentLoaded`, `mse2_load.response` и т.п.) — связь односторонняя: сторонний компонент → MS3.
+- Optional chaining в публичном API делает вызов безопасным на страницах, где MS3 не загружен.
+- Listener регистрируется один раз на module scope — повторные `init()` (SPA / модальные сценарии) не дублируют подписку.
+- Аргумент `detail` зарезервирован для будущего scoped-refresh (например, `ms3.refresh({ scope: container })`); сейчас не используется, но включён в сигнатуру, чтобы будущие изменения не ломали API.
+
+**Менеджер — пересчёт стоимости заказа (#212):**
+- Явный endpoint `POST /api/mgr/orders/{id}/recalculate-cost` (без побочных эффектов в общем `PUT` заказа): пересчитывает `cart_cost`/`weight` по сохранённым позициям, `delivery_cost` и итог `cost`; комиссия способа оплаты включается в `cost`, в отдельное поле не пишется; в ответе — те же данные заказа, что и в `GET`, плюс `breakdown` и `warnings`.
+- Режимы: `auto` (простая доставка/оплата по полям без вызова внешних провайдеров; для кастомных классов — предупреждение и сохранение прежней `delivery_cost` или комиссии 0), `manual` + `manual_delivery_cost`, расширенный `force_provider` (провайдер в `try/catch`, без молчаливого затирания при ошибке).
+- Vue: кнопка «Пересчитать стоимость» в сводке заказа, подсказка при несохранённой смене доставки/оплаты, блок для ручной стоимости доставки при предупреждении backend.
+
+#### 🐛 Исправлено
+
+**Дублирование товаров при `includeThumbs` (#281):**
+- В сниппетах `msProducts`, `msCart`, `msGetOrder` LEFT JOIN превью выбирал все картинки галереи товара — `GROUP BY` по URL размножал первую строку столько раз, сколько фото в галерее.
+- Новый общий хелпер `MiniShop3\Utils\ProductThumbnailJoin::buildLeftJoinOn()` формирует SQL ON: одно превью на товар (превью главного фото — `parent_id = 0`, минимальный `position`), аналогично `ProductImageService::updateProductImage()`. Алиасы и size-папка санитизируются.
+- Попутно исправлена опечатка `parent` → `parent_id` в `msGetOrder` (нет такого поля в `ms3_product_files`, JOIN тихо игнорировался).
+
+**Дерево категорий в UI привязки опций — поддержка вложенного каталога и мульти-магазина (#237):**
+- `OptionsController::getTree` отдаёт на каждом уровне `msCategory` (выбираемые, с чекбоксом) и `modResource`/`modDocument`/`modWebLink` с `isfolder=1` (навигационные, без чекбокса). `msProduct` и обычные страницы без `isfolder` исключаются.
+- В ответе для каждого узла появился флаг `selectable: bool` — Vue `OptionCategoryTree` рендерит чекбокс только для `selectable=true`, навигационные узлы можно раскрывать, но не выбирать.
+- Системная настройка `ms3_option_category_tree_parent` (была введена в первой попытке) **удалена** — дерево работает на семантике ресурсов, без необходимости в фиксированном root-id.
+
+**Очистка числовых полей доставки/оплаты не сохранялась:**
+- В формах настроек способов доставки и оплаты при попытке очистить поле (например, `free_delivery_amount`) старое значение оставалось в БД. Ввод явного `0` сохранялся правильно.
+- Причина — `isset($data[$field])` в `DeliveriesController` / `PaymentsController` возвращал `false` для значения `null` (PrimeVue `InputNumber` при очистке шлёт `null`), и поле пропускалось при сохранении. Заменено на `array_key_exists($field, $data)`.
+- Аналогичный паттерн в других контроллерах Manager API зафиксирован в issue #289.
+
+**Импорт товаров — поддержка поля «Остаток на складе» (#283):**
+- В конфигурации импорта (`config/import-fields.php`) добавлены поля `stock` и `remains` (алиас MS2). При обработке CSV `ImportCSV` маппит `remains` → `stock` для совместимости с легаси-настройками `ms3_utility_import_fields`.
+- В Vue-форме маппинга автоподстановка типичных заголовков CSV (`stock`, `remains`, `quantity`, `qty`) → товарное поле `stock`.
+
+**Двойной префикс в Phinx defensive-checks из PR #271 (#276):**
+- `TablePrefixAdapter::hasTable($name)` / `$this->table($name)` / `hasColumn` сами добавляют `table_prefix`. Ручной конкат `$prefix . 'ms3_grid_fields'` в defensive-проверках после #271 приводил к двойному префиксу (`modx_modx_*`) — Phinx никогда не находил таблицу и seed-миграции всегда уходили в no-op.
+- **Воздействие**: на свежих установках MS3 ≥ 1.10.1 таблица `ms3_grid_fields` создавалась, но не наполнялась — гриды (заказы, клиенты, доставки, оплаты, вендоры, позиции заказа, товары категории) загружались без default-конфигурации. На существующих установках, где seed успел выполниться до #271, последствий нет.
+- **Затронуты** все 9 seed/fix-миграций после #271 + `initial_schema` (метод `addForeignKeys()` — FK constraints из-за того же бага никогда не создавались на свежих установках).
+- В Phinx API-методах теперь передаём UNPREFIXED имя; raw SQL через `$this->execute()` / `fetchAll()` по-прежнему получает `{$prefix}name` (он не префиксируется автоматически).
+
+**Отрицательный итог заказа; бейджи «Скидка / Наценка» во Vue менеджере (#265):**
+- `OrderService::clampComputedTotal()` при сумме меньше нуля ограничивает итог нулём и записывает в журнал MODX предупреждение с разбивкой `cart_cost`, `delivery_cost`, `payment_cost`.
+- Вызов защиты добавлен при расчёте стоимости в `OrderCostCalculator`, пересчёте черновика (`OrderDraftManager`), финализации заказа (`OrderFinalizeService`), пересчёте сумм менеджерского API и при `OrderService::updateProducts()`.
+- При оформлении заказа в поле `msOrder.cost` записывается итог из калькулятора **вместе с доп. стоимостью оплаты** (а не только корзина + доставка).
+- Формы способов доставки и оплаты во Vue показывают реактивный бейдж «Скидка» (значение вида минус или отрицательное число) / «Наценка» (положительное).
+
+**Копирование товара «Дублировать ресурс» — пустые опции (#257):**
+- После `modResource::duplicate()` значения из `ms3_product_options` снова выравниваются с исходным товаром через `OptionService` (чтение с `product_id` оригинала и полная синхронизация для копии).
+- `Processors\Product\Create` выровнен с `Update`: массив из полей `options-*` хранится в `$ms3ProductFormOptions`, а `ProductDataService::saveOptions(..., removeOther: true)` вызывается только если в запросе **были** ключи `options-*` — запрос без этих полей больше не обнуляет опции через отличие `!empty($options)` от «поля не пришли».
 
 **События с мутацией данных через `returnedValues` (#219):**
 - `msOnBeforeSendNotification` теперь применяет `returnedValues['recipient']` и `returnedValues['channels']`, поэтому плагины могут изменить получателя и каналы перед отправкой уведомления.
@@ -34,6 +101,11 @@
 **Опции товара — удаление не применялось после сохранения (дополнение к #199 / #202):**
 - В `Processors\Product\Update` после вызова родительского `afterSave()` свойство процессора `options` в MODX 3 часто пустое, из‑за чего не выполнялся `ProductDataService::saveOptions(..., removeOther: true)` и строки в `ms3_product_options` не синхронизировались с формой. Массив из полей `options-*` сохраняется в `beforeSet` в `$ms3ProductFormOptions` и передаётся в сервис после сохранения ресурса.
 
+
+|**Миграции grid-конфигураций — защита от отсутствия таблицы при установке:**
+|- Все seed-миграции `ms3_grid_fields` теперь проверяют существование таблицы перед выполнением (`hasTable()` defensive check), предотвращая ошибку `SQLSTATE[42S02]: Base table or view not found` при частичной или повторной установке.
+|- Методы `down()` также защищены от отсутствия таблицы для безопасного отката миграций.
+
 **Категория → опции — PHP Warning `Undefined array key "id"` (PHP 8+) (#238):**
 - У `msCategoryOption` составной первичный ключ; в выборке списка нет столбца `id`. `CategoryOptionsController::formatRow()` больше не обращается к несуществующему ключу: если `id` нет в строке PDO, для поля ответа `id` используется `option_id` (в рамках одной категории уникально; Vue-грид и так использует `data-key="option_id"`).
 
@@ -42,9 +114,18 @@
 - **⚠️ Изменение контракта:** интеграции, сознательно полагавшиеся на «нет `categories` в POST → очистить связи», должны теперь передавать пустой массив явно.
 
 **Web API покупателя — отсутствующие маршруты CustomerAPI (#241):**
-- Добавлен `POST /api/v1/customer/add` для быстрого обновления полей профиля (`first_name`, `last_name`, `email`, `phone`) через существующий `CustomerAPI.add()` и `CustomerUI.handleAdd()`.
+- Добавлен `POST /api/v1/customer/add` для быстрого обновления полей профиля через `CustomerAPI.add()` и `CustomerUI.handleAdd()`.
 - Добавлен `POST /api/v1/customer/changeAddress` как совместимый endpoint для выбора сохранённого адреса в черновике заказа по `address_hash`.
-- Для быстрого обновления профиля добавлена whitelist-валидация и отдельное сообщение lexicon на `ru/en`; проверка уникальности email и сброс `email_verified_at` вынесены в общие методы контроллера профиля.
+- Для быстрого обновления профиля добавлена валидация и отдельное сообщение lexicon на `ru/en`; проверка уникальности email и сброс `email_verified_at` вынесены в общие методы контроллера профиля.
+
+**Быстрый профиль `POST /api/v1/customer/add` — extra fields `msCustomer` (#261):**
+- Вместо whitelist по четырём полям разрешены все колонки, присутствующие в xPDO-карте `msCustomer` (включая Object Extension после `loadMap()`), с явным списком запрещённых полей (`id`, `user_id`, `token`, пароль, служебные статусы, агрегаты заказов и т.д.).
+- Для `first_name`, `last_name`, `email`, `phone` сохранена прежняя валидация Rakit; для остальных допустимых колонок значение нормализуется по `phptype` метаданных поля.
+
+**Потребители `invokeEvent` не теряют merged `data` (#221):**
+- Корзина, клиент заказа, смена статуса и резолвер пользователя заказа подхватывают мутации плагинов из `$response['data']` там, где раньше использовались только исходные переменные.
+- Переопределение `status` в `msOnBeforeChangeOrderStatus` применяется только если новое значение **числовое** (`is_numeric`); иное значение игнорируется, чтобы не получить «случайный» id из приведения типов.
+- **`msOnErrorValidateCustomerValue`:** при неуспехе события `Customer::validate()` возвращает `[$key => сообщение]`; при успехе, если ключ **`errors`** есть в merged `data` и это массив (включая пустой), результат валидации берётся из него, иначе — стандартный набор ошибок Rakit после сбоя правил.
 
 #### ✨ Добавлено
 
@@ -52,6 +133,43 @@
 - Поле `price` у способов доставки и оплаты теперь поддерживает отрицательные фиксированные значения и проценты (`-100%`…`100%`).
 - Сохранение настроек доставки и оплаты использует общий нормализатор доп. стоимости, чтобы одинаково обрабатывать `-10`, `-10%`, запятые и лишние символы.
 - Подсказки Vue-админки уточняют, что доп. стоимость может быть отрицательной и процентной.
+
+**Редактор правил доставки — поля из расширенной конфигурации (#215):**
+- `ValidationRulesEditor` подгружает поля `msOrder` и `msOrderAddress` из API «поля модели» и активные поля Object Extension для этих классов.
+- В списке выбора поля для `validation_rules` доставки доступны кастомные колонки и подписи из админки; служебные поля (id, стоимости, delivery_id и т.д.) отфильтрованы.
+- Те же исключения применяются и к ключам Object Extension, чтобы не предлагать служебные имена.
+
+**Поля форм заказа — пустое состояние и управление видимостью кнопок (#182, #234):**
+- Во вкладках «Информация» и «Адрес» при пустом наборе полей — отдельные описательные лексиконы (`ms3_order_tab_info_model_fields_empty_hint`, `ms3_order_tab_address_model_fields_empty_hint`).
+- Скрытие панели «Сохранить»/«Отмена» при пустом наборе полей (`v-if="showOrderInfoActions"` / `showAddressTabActions`) — убирает лишний шум, когда сохранять нечего.
+- Выделение дублирующейся панели действий заказа в общий компонент `OrderFormActionsBar.vue`.
+
+**Группировка опций товара — новая модель `msOptionGroup` (#10, ⚠️ breaking):**
+- Группировка опций больше не использует `modCategory` — введена собственная модель `msOptionGroup` (id, name, description, sort_order, timestamps). Это убирает мусор от чужих компонентов в выпадающем списке группы и даёт удобную сортировку через drag-n-drop.
+- **Схема**: `msOption.modcategory_id` → `msOption.option_group_id` (nullable, FK на `ms3_option_groups`). Миграция Phinx `20260518120000_create_option_groups_and_migrate` автоматически переносит данные: для каждой уникальной `modcategory_id`, на которую ссылаются опции, создаётся `msOptionGroup` с именем из `modCategory.category`. Старая колонка `modcategory_id` дропается.
+- **REST API**: новый набор endpoint'ов `GET/POST/PUT/DELETE /api/mgr/option-groups` (CRUD), `PUT /api/mgr/option-groups/positions` (drag-n-drop reorder), `DELETE /api/mgr/option-groups/bulk`. Прежний `GET /api/mgr/options/modcategories` удалён.
+- **`OptionsController`**: фильтр `option_group_id` (значение `0` → опции без группы); `formatOption` возвращает `option_group_id` + `option_group_name`; `applyWritableFields` принимает `option_group_id` как nullable.
+- **`OptionLoaderService` / `CategoryOptionService`**: JOIN с `modCategory` → JOIN с `msOptionGroup`. Алиас `category_name` → `group_name` в выдаче.
+- **Vue-админка**: страница опций обёрнута в Tabs — «Опции» (`OptionsGrid`) и «Группы опций» (новый `OptionGroupsGrid` с drag-n-drop сортировкой и CRUD). В форме редактирования опции выпадающий список «Группа» заменён на `msOptionGroup`.
+- **Snippet `ms3_product_options`**: фильтрация/сортировка по `group_name` (раньше — `category` / `category_name`).
+- **Plugin `MiniShop3`**: handler `OnCategoryRemove` удалён (опции больше не ссылаются на `modCategory`, не требует чистки висячих ссылок).
+- **Попутный фикс `CategoryOptionService::buildOptionQuery`**: старый код пытался джойнить `modCategory` по `msOption.category_id` — поле с таким именем в `msOption` никогда не существовало (правильное было `modcategory_id`), из-за чего LEFT JOIN всегда давал NULL и `category_name` оставался пустым. После миграции на `msOptionGroup` имя группы (`group_name`) фактически начинает заполняться. Если в кастомных чанках было `{if $option.category_name == ''}` или похожие проверки — теперь они станут срабатывать иначе.
+- **Миграция кастомных чанков**: если в чанках использовался `{$option.category}` или `{$option.category_name}` — замените на `{$option.group_name}`. Поле `modcategory_id` в данных опции больше недоступно; используйте `option_group_id`.
+- **Окно перехода во время апгрейда**: Phinx-миграция последовательно добавляет `option_group_id`, переносит данные и дропает `modcategory_id`. Между шагами обе колонки кратковременно существуют. Если в этот момент старый код успеет сохранить опцию, новый `option_group_id` останется `NULL`. MS3 апгрейдится оффлайн через MODX, кейс маловероятен, но если ловите рассинхрон — пересохраните опцию в админке.
+- **Уборка после апгрейда**: модельная категория MODX, под которой раньше группировались опции (обычно «Options» или одноимённая магазину), после успешной миграции остаётся в дереве `modCategory` неиспользованной. MS3 не имеет права чистить чужие категории — удалите её вручную, если она не нужна другим компонентам.
+
+#### ⚠️ Изменено (breaking, витринные сниппеты — контракт сумм/цен)
+
+Согласовано с обсуждением PR **#259** (ревью): **без суффикса** — число (`float`) для арифметики и `|number` в Fenom; **готовая строка для вывода** — только в полях `*_formatted` (цена с локалью и валютой при необходимости, вес с единицей). Поля `*_numeric` не используются.
+
+- **msOrder:** `cost`, `cart_cost`, `delivery_cost`, `discount_cost` — float из `getCost()`; отображение в чанках — `cost_formatted`, `cart_cost_formatted`, `delivery_cost_formatted`, `discount_cost_formatted`. Дефолтный чанк `ms3_order.tpl` обновлён под вывод через `*_formatted`.
+- **msGetOrder:** в позициях заказа и в `total` базовые суммы/цены/вес — float; строки — `*_formatted` / `weight_formatted`.
+- **msCart:** числовые `price`, `cost`, `weight`, скидки; строки вывода — как ранее через `*_formatted`.
+- **msProducts:** `price`, `old_price`, `weight` — float; форматирование — `price_formatted`, `old_price_formatted`, `weight_formatted` (флаг `withCurrency` влияет на вид `*_formatted`).
+- **msOrderTotal:** числовые поля из `getCost()` не перезаписываются отформатированными строками; `*_formatted` по-прежнему для чанков.
+- **Витринный JS:** в `ms3Config` добавлены `currencySymbol` и `currencyPosition`; `OrderUI.formatPrice()` дополняет сумму символом валюты при обновлении блоков заказа после AJAX (в духе прежнего «число + символ» в шаблоне).
+
+**Миграция шаблонов:** замените вывод `{$order.cost}` на `{$order.cost_formatted}` или оставьте `{$order.cost}` только для числовой логики / `{$order.cost | number : 2}`; то же для корзины, позиций заказа и товаров в каталоге.
 
 ---
 
@@ -105,6 +223,8 @@ core/components/minishop3/src/Controllers/Api/Manager/OrdersController.php
 core/components/minishop3/src/Processors/Utilities/Import/Fields.php
 core/components/minishop3/src/ServiceRegistry.php
 core/components/minishop3/src/Services/Order/OrderFinalizeService.php
+vueManager/src/components/order/OrderAddressTab.vue
+vueManager/src/components/order/OrderInfoTab.vue
 vueManager/src/components/product/ProductOptionsTab.vue
 ```
 

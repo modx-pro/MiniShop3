@@ -110,6 +110,14 @@ return [
             'label' => 'ms3_product_old_price',
             'type' => 'float',
         ],
+        'stock' => [
+            'label' => 'ms3_product_stock',
+            'type' => 'integer',
+        ],
+        'remains' => [
+            'label' => 'ms3_product_remains',
+            'type' => 'integer',
+        ],
         'weight' => [
             'label' => 'ms3_product_weight',
             'type' => 'float',

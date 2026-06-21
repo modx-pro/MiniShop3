@@ -161,8 +161,10 @@ class OrderDraftManager
             }
         }
 
-        $delivery_cost = $draft->get('delivery_cost');
-        $cost = $cart_cost + $delivery_cost;
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $delivery_cost = (float) $draft->get('delivery_cost');
+        $cost = $orderService->clampComputedTotal($draft, (float) $cart_cost, $delivery_cost, 0.0);
 
         // TODO: event on recalculating order
         $draft->set('updatedon', time());
@@ -312,8 +314,11 @@ class OrderDraftManager
      */
     public function setDeliveryCost(msOrder $draft, float $deliveryCost): void
     {
-        $cartCost = $draft->get('cart_cost') ?? 0;
-        $cost = $cartCost + $deliveryCost;
+        $cartCost = (float) ($draft->get('cart_cost') ?? 0);
+
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $cost = $orderService->clampComputedTotal($draft, $cartCost, $deliveryCost, 0.0);
 
         $draft->set('delivery_cost', $deliveryCost);
         $draft->set('cost', $cost);

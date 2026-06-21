@@ -622,8 +622,8 @@
         <field key="config" dbtype="text" phptype="json" null="true"/>
         <field key="is_system" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="0"/>
         <field key="is_default" dbtype="tinyint" precision="1" phptype="boolean" null="false" default="1"/>
-        <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
-        <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
+        <field key="created_at" dbtype="datetime" phptype="datetime" null="false" default="CURRENT_TIMESTAMP"/>
+        <field key="updated_at" dbtype="datetime" phptype="datetime" null="true" extra="on update CURRENT_TIMESTAMP"/>
 
         <index alias="idx_grid_field" name="idx_grid_field" primary="false" unique="true" type="BTREE">
             <column key="grid_key" length="" collation="A" null="false"/>

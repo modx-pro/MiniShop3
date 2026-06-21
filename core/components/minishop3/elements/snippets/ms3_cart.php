@@ -6,6 +6,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Model\msVendor;
+use MiniShop3\Utils\ProductThumbnailJoin;
 use ModxPro\PdoTools\Fetch;
 
 /** @var modX $modx */
@@ -141,7 +142,7 @@ if (!empty($includeThumbs)) {
         foreach ($thumbs as $thumb) {
             $leftJoin[$thumb] = [
                 'class' => msProductFile::class,
-                'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.parent_id != 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%' AND `{$thumb}`.`position` = 0",
+                'on' => ProductThumbnailJoin::buildLeftJoinOn($modx, $thumb, $thumb),
             ];
             $select[$thumb] = "`{$thumb}`.url as '{$thumb}'";
         }
@@ -200,19 +201,26 @@ foreach ($cart as $key => $entry) {
     }
     $discount_price = $old_price > 0 ? $old_price - $entry['price'] : 0;
 
-    $product['old_price'] = $old_price;
-    $product['discount_price'] = $ms3->format->price($discount_price);
-    $product['discount_cost'] = $entry['count'] * $discount_price;
+    $linePrice = (float)$entry['price'];
+    $lineWeight = (float)$entry['weight'];
+    $oldPriceNum = (float)$old_price;
+    $discountPriceNum = (float)$discount_price;
+
+    $product['price'] = $linePrice;
+    $product['weight'] = $lineWeight;
+    $product['old_price'] = $oldPriceNum;
+    $product['discount_price'] = $discountPriceNum;
+    $product['discount_cost'] = (float)$entry['count'] * $discountPriceNum;
 
     // Pre-formatted fields with currency/unit for display in chunks
-    $product['old_cost'] = $old_price > 0 ? $entry['count'] * $old_price : 0;
-    $product['price_formatted'] = $ms3->format->price($entry['price'], true);
-    $product['old_price_formatted'] = $old_price > 0 ? $ms3->format->price($old_price, true) : '';
-    $product['cost_formatted'] = $ms3->format->price($entry['count'] * $entry['price'], true);
-    $product['old_cost_formatted'] = $old_price > 0 ? $ms3->format->price($entry['count'] * $old_price, true) : '';
-    $product['discount_price_formatted'] = $discount_price > 0 ? $ms3->format->price($discount_price, true) : '';
-    $product['discount_cost_formatted'] = $discount_price > 0 ? $ms3->format->price($entry['count'] * $discount_price, true) : '';
-    $product['weight_formatted'] = $ms3->format->weightWithUnit($entry['weight']);
+    $product['old_cost'] = $oldPriceNum > 0 ? (float)$entry['count'] * $oldPriceNum : 0.0;
+    $product['price_formatted'] = $ms3->format->price($linePrice, true);
+    $product['old_price_formatted'] = $oldPriceNum > 0 ? $ms3->format->price($oldPriceNum, true) : '';
+    $product['cost_formatted'] = $ms3->format->price($entry['count'] * $linePrice, true);
+    $product['old_cost_formatted'] = $oldPriceNum > 0 ? $ms3->format->price($entry['count'] * $oldPriceNum, true) : '';
+    $product['discount_price_formatted'] = $discountPriceNum > 0 ? $ms3->format->price($discountPriceNum, true) : '';
+    $product['discount_cost_formatted'] = $discountPriceNum > 0 ? $ms3->format->price($entry['count'] * $discountPriceNum, true) : '';
+    $product['weight_formatted'] = $ms3->format->weightWithUnit($lineWeight);
 
     // Additional properties of product in cart
     if (!empty($entry['options']) && is_array($entry['options'])) {

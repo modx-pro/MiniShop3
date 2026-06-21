@@ -8,6 +8,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Model\msVendor;
+use MiniShop3\Utils\ProductThumbnailJoin;
 use ModxPro\PdoTools\Fetch;
 
 /** @var modX $modx */
@@ -129,7 +130,7 @@ if (!empty($includeThumbs)) {
         foreach ($thumbs as $thumb) {
             $leftJoin[$thumb] = [
                 'class' => msProductFile::class,
-                'on' => "`{$thumb}`.product_id = msProduct.id AND `{$thumb}`.parent != 0 AND `{$thumb}`.path LIKE '%/{$thumb}/%'",
+                'on' => ProductThumbnailJoin::buildLeftJoinOn($modx, $thumb, $thumb),
             ];
             $select[$thumb] = "`{$thumb}`.url as '{$thumb}'";
         }
@@ -192,27 +193,31 @@ foreach ($rows as $product) {
     $rawCost = (float)$product['cost'];
     $rawWeight = (float)$product['weight'];
 
-    $product['old_price'] = $ms3->format->price($old_price);
-    $product['price'] = $ms3->format->price($rawPrice);
-    $product['cost'] = $ms3->format->price($rawCost);
-    $product['weight'] = $ms3->format->weight($rawWeight);
-    $product['discount_price'] = $ms3->format->price($discount_price);
-    $product['discount_cost'] = $ms3->format->price($product['count'] * $discount_price);
+    $oldPriceNum = (float)$old_price;
+    $discountPriceNum = (float)$discount_price;
+    $lineDiscountCostNum = (float)$product['count'] * $discountPriceNum;
+
+    $product['old_price'] = $oldPriceNum;
+    $product['price'] = $rawPrice;
+    $product['cost'] = $rawCost;
+    $product['weight'] = $rawWeight;
+    $product['discount_price'] = $discountPriceNum;
+    $product['discount_cost'] = $lineDiscountCostNum;
 
     // Pre-formatted fields with currency/unit for display in chunks
     $product['price_formatted'] = $ms3->format->price($rawPrice, true);
-    $product['old_price_formatted'] = $old_price > 0 && $old_price > $rawPrice
-        ? $ms3->format->price($old_price, true)
+    $product['old_price_formatted'] = $oldPriceNum > 0 && $oldPriceNum > $rawPrice
+        ? $ms3->format->price($oldPriceNum, true)
         : '';
     $product['cost_formatted'] = $ms3->format->price($rawCost, true);
-    $product['old_cost_formatted'] = $old_price > 0 && $old_price > $rawPrice
-        ? $ms3->format->price($product['count'] * $old_price, true)
+    $product['old_cost_formatted'] = $oldPriceNum > 0 && $oldPriceNum > $rawPrice
+        ? $ms3->format->price($product['count'] * $oldPriceNum, true)
         : '';
-    $product['discount_price_formatted'] = $discount_price > 0
-        ? $ms3->format->price($discount_price, true)
+    $product['discount_price_formatted'] = $discountPriceNum > 0
+        ? $ms3->format->price($discountPriceNum, true)
         : '';
-    $product['discount_cost_formatted'] = $discount_price > 0
-        ? $ms3->format->price($product['count'] * $discount_price, true)
+    $product['discount_cost_formatted'] = $discountPriceNum > 0
+        ? $ms3->format->price($lineDiscountCostNum, true)
         : '';
     $product['weight_formatted'] = $ms3->format->weightWithUnit($rawWeight);
 
@@ -258,18 +263,18 @@ try {
             ? $payment->toArray()
             : [],
         'total' => [
-            'cost' => $ms3->format->price($msOrder->get('cost')),
+            'cost' => (float)$msOrder->get('cost'),
             'cost_formatted' => $ms3->format->price($msOrder->get('cost'), true),
-            'cart_cost' => $ms3->format->price($msOrder->get('cart_cost')),
+            'cart_cost' => (float)$msOrder->get('cart_cost'),
             'cart_cost_formatted' => $ms3->format->price($msOrder->get('cart_cost'), true),
-            'delivery_cost' => $ms3->format->price($msOrder->get('delivery_cost')),
+            'delivery_cost' => (float)$msOrder->get('delivery_cost'),
             'delivery_cost_formatted' => $ms3->format->price($msOrder->get('delivery_cost'), true),
-            'weight' => $ms3->format->weight($msOrder->get('weight')),
+            'weight' => (float)$msOrder->get('weight'),
             'weight_formatted' => $ms3->format->weightWithUnit($msOrder->get('weight')),
-            'cart_weight' => $ms3->format->weight($msOrder->get('weight')),
+            'cart_weight' => (float)$msOrder->get('weight'),
             'cart_weight_formatted' => $ms3->format->weightWithUnit($msOrder->get('weight')),
             'cart_count' => $cart_count,
-            'cart_discount' => $cart_discount_cost
+            'cart_discount' => (float)$cart_discount_cost,
         ],
     ]);
 } catch (\Exception $e) {

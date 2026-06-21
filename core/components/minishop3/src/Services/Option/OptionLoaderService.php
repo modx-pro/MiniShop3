@@ -2,12 +2,13 @@
 
 namespace MiniShop3\Services\Option;
 
+use MiniShop3\Controllers\Options\Types\msOptionType;
 use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
+use MiniShop3\Model\msOptionGroup;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductOption;
-use MODX\Revolution\modCategory;
 use xPDO\Om\xPDOQuery;
 use xPDO\xPDO;
 
@@ -39,7 +40,7 @@ class OptionLoaderService
      * Replaces: msProductOption::loadOptions()
      *
      * @param int $productId Product ID
-     * @param bool $includeMetadata Include category metadata (default: true for backward compatibility)
+     * @param bool $includeMetadata Include option group metadata (default: true for backward compatibility)
      * @return array Option data with keys like ['color' => ['Red'], 'color.caption' => 'Color']
      */
     public function loadForProduct(int $productId, bool $includeMetadata = true): array
@@ -48,8 +49,8 @@ class OptionLoaderService
         $c->rightJoin(msOption::class, 'msOption', 'msProductOption.key=msOption.key');
 
         if ($includeMetadata) {
-            $c->leftJoin(modCategory::class, 'Category', 'Category.id=msOption.modcategory_id');
-            $c->select('Category.category AS category_name');
+            $c->leftJoin(msOptionGroup::class, 'OptionGroup', 'OptionGroup.id=msOption.option_group_id');
+            $c->select('OptionGroup.name AS group_name');
         }
 
         $c->where(['msProductOption.product_id' => $productId]);
@@ -91,7 +92,7 @@ class OptionLoaderService
      * NEW METHOD - prevents N+1 problem in catalog listings
      *
      * @param array $productIds Array of product IDs
-     * @param bool $includeMetadata Include category metadata
+     * @param bool $includeMetadata Include option group metadata
      * @return array Nested array: [product_id => option_data]
      */
     public function loadForProducts(array $productIds, bool $includeMetadata = false): array
@@ -104,8 +105,8 @@ class OptionLoaderService
         $c->rightJoin(msOption::class, 'msOption', 'msProductOption.key=msOption.key');
 
         if ($includeMetadata) {
-            $c->leftJoin(modCategory::class, 'Category', 'Category.id=msOption.modcategory_id');
-            $c->select('Category.category AS category_name');
+            $c->leftJoin(msOptionGroup::class, 'OptionGroup', 'OptionGroup.id=msOption.option_group_id');
+            $c->select('OptionGroup.name AS group_name');
         }
 
         $c->where(['msProductOption.product_id:IN' => $productIds]);
@@ -160,8 +161,8 @@ class OptionLoaderService
         $c = $this->prepareOptionListCriteria($productId, $parentId);
         $c->sortby('msCategoryOption.position');
 
-        // Join MODX category for category_name (for grouping in admin UI)
-        $c->leftJoin(modCategory::class, '`Category`', '`Category`.id = `msOption`.modcategory_id');
+        // Join msOptionGroup for group_name (for grouping in admin UI)
+        $c->leftJoin(msOptionGroup::class, '`OptionGroup`', '`OptionGroup`.id = `msOption`.option_group_id');
 
         // Exclude msCategoryOption.caption/description from the select — after PR #203 these
         // columns shadow msOption.caption/description during xPDO hydration and leave the option
@@ -175,7 +176,7 @@ class OptionLoaderService
                 ['id', 'option_id', 'category_id', 'caption', 'description'],
                 true
             ),
-            '`Category`.category AS `category_name`',
+            '`OptionGroup`.name AS `group_name`',
         ]);
 
         // Preload ALL option values with single query (fixes N+1 Problem)
@@ -353,8 +354,7 @@ class OptionLoaderService
      */
     protected function convertPreloadedValue(array $values, string $optionType)
     {
-        $multiTypes = ['combomultiple', 'combocolors', 'combooptions'];
-        if (in_array(strtolower($optionType), $multiTypes, true)) {
+        if (msOptionType::isMultiValueType($optionType)) {
             $result = [];
             foreach ($values as $val) {
                 if ($val !== '') {
@@ -648,12 +648,9 @@ class OptionLoaderService
         }
 
         foreach ($productIds as $pid) {
-            $out[$pid]['category_ids'] = array_values(array_unique(array_filter(
-                $out[$pid]['category_ids'],
-                static function ($id) {
-                    return (int)$id > 0;
-                }
-            )));
+            $out[$pid]['category_ids'] = array_values(array_unique(
+                array_filter($out[$pid]['category_ids'])
+            ));
         }
 
         return $out;

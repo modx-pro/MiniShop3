@@ -99,6 +99,11 @@ class EmailChannel implements ChannelInterface
             return $recipient['customer']['email'] ?? null;
         }
 
+        // Address email (fallback, same order as SmsChannel phone)
+        if (!empty($recipient['address']['email'])) {
+            return $recipient['address']['email'];
+        }
+
         return null;
     }
 

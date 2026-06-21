@@ -55,11 +55,11 @@ if ($response['success']) {
 $response = $ms3->order->getCost();
 if ($response['success']) {
     $cost = $response['data'];
-    $order['cost'] = $ms3->format->price($cost['cost']);
-    $order['cart_cost'] = $ms3->format->price($cost['cart_cost']);
-    $order['delivery_cost'] = $ms3->format->price($cost['delivery_cost']);
-    $order['discount_cost'] = $ms3->format->price($cost['total_discount']);
-    // Pre-formatted fields with currency symbol for display in chunks
+    // Базовые ключи — float (ответ getCost); для вывода — только *_formatted (строка, в т.ч. с валютой).
+    $order['cost'] = (float)($cost['cost'] ?? 0);
+    $order['cart_cost'] = (float)($cost['cart_cost'] ?? 0);
+    $order['delivery_cost'] = (float)($cost['delivery_cost'] ?? 0);
+    $order['discount_cost'] = (float)($cost['total_discount'] ?? 0);
     $order['cost_formatted'] = $ms3->format->price($cost['cost'], true);
     $order['cart_cost_formatted'] = $ms3->format->price($cost['cart_cost'], true);
     $order['delivery_cost_formatted'] = $ms3->format->price($cost['delivery_cost'], true);

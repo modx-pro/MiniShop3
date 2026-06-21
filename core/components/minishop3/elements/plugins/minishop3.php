@@ -10,17 +10,14 @@
  * - OnUserSave: Synchronize msCustomer ↔ modUser (create/update)
  * - OnBeforeUserFormSave: Synchronize msCustomer when modUser profile changes
  * - OnUserRemove: Unlink msCustomer from deleted modUser
- * - OnCategoryRemove: Clear modcategory_id on msOption rows pointing at the removed modCategory
  *
  * @var \MODX\Revolution\modX $modx
  * @var array $scriptProperties
  */
 
 use MiniShop3\Model\msCustomer;
-use MiniShop3\Model\msOption;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Services\Product\ProductService;
-use MODX\Revolution\modCategory;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modX;
@@ -205,36 +202,6 @@ switch ($modx->event->name) {
         }
         break;
 
-    /**
-     * OnCategoryRemove - clear orphan modcategory_id on msOption
-     *
-     * When a modCategory is removed (e.g. on uninstall of a third-party component),
-     * any msOption rows that referenced it would otherwise keep a dangling
-     * modcategory_id and show up as a separate "no group" tab in the product
-     * options UI. Reset the link to 0 so they fall into the real "no group" bucket.
-     */
-    case 'OnCategoryRemove':
-        /** @var modCategory $category */
-        if (!isset($category) || !$category instanceof modCategory) {
-            break;
-        }
-
-        $categoryId = (int)$category->get('id');
-        if ($categoryId <= 0) {
-            break;
-        }
-
-        $count = $modx->updateCollection(
-            msOption::class,
-            ['modcategory_id' => 0],
-            ['modcategory_id' => $categoryId]
-        );
-
-        if (is_int($count) && $count > 0) {
-            $modx->log(
-                modX::LOG_LEVEL_INFO,
-                "[MiniShop3] Cleared modcategory_id for {$count} option(s) after removing modCategory #{$categoryId}"
-            );
-        }
-        break;
+    // OnCategoryRemove handler removed in #10 — msOption no longer references modCategory.
+    // Options now belong to msOptionGroup, which is independent of the MODX category tree.
 }

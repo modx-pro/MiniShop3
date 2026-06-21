@@ -352,7 +352,10 @@ class msProduct extends modResource
      *
      * @return array
      */
-    public function getDataFieldsNames()
+    /**
+     * @return list<string>
+     */
+    public function getDataFieldsNames(): array
     {
         return array_keys($this->loadData()->_fieldMeta);
     }
@@ -396,10 +399,39 @@ class msProduct extends modResource
         parent::set('image', '');
         parent::set('thumb', '');
 
+        $sourceId = (int)$this->get('id');
+
         /** @var msProduct $newProduct */
         $newProduct = parent::duplicate($options);
 
+        // Ensure ms3_product_options rows match the source (#257). Core duplicate() persists JSON
+        // and ProductDataService::save(null), but a full sync from normalized table state is reliable
+        // (dynamic keys, partial JSON mirrors, first-save ordering).
+        if ($newProduct instanceof msProduct && $sourceId > 0) {
+            $targetId = (int)$newProduct->get('id');
+            if ($targetId > 0) {
+                $this->syncDuplicatedProductOptions($sourceId, $targetId);
+            }
+        }
+
         return $newProduct;
+    }
+
+    /**
+     * Copy option values in ms3_product_options from source product to duplicated product.
+     *
+     * @param int $sourceProductId Original product id (before duplicate)
+     * @param int $targetProductId New product id returned by modResource::duplicate()
+     */
+    protected function syncDuplicatedProductOptions(int $sourceProductId, int $targetProductId): void
+    {
+        if (!$this->xpdo->services->has('ms3_option_service')) {
+            return;
+        }
+        /** @var \MiniShop3\Services\Option\OptionService $optionService */
+        $optionService = $this->xpdo->services->get('ms3_option_service');
+        $values = $optionService->getProductOptionValues($sourceProductId, []);
+        $optionService->saveProductOptions($targetProductId, $values, true);
     }
 
     /**

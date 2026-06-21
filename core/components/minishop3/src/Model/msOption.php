@@ -14,10 +14,11 @@ use xPDO\xPDO;
  * @property string $caption
  * @property string $description
  * @property string $measure_unit
- * @property integer $modcategory_id
+ * @property integer|null $option_group_id
  * @property string $type
  * @property array $properties
  *
+ * @property msOptionGroup|null $Group
  * @property msCategoryOption[] $OptionCategories
  * @property msProductOption[] $OptionProducts
  *
