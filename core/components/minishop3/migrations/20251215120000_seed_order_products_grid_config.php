@@ -13,6 +13,21 @@ class SeedOrderProductsGridConfig extends AbstractMigration
 {
     public function up()
     {
+        $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
+
+        // Defensive: ensure table exists
+        if (!$this->hasTable('ms3_grid_fields')) {
+            $this->output->writeln('<comment>Table ms3_grid_fields does not exist, skipping order_products grid seed</comment>');
+            return;
+        }
+
+        // Idempotency check
+        $count = $this->fetchRow("SELECT COUNT(*) as cnt FROM {$prefix}ms3_grid_fields WHERE grid_key = 'order_products'");
+        if ($count['cnt'] > 0) {
+            $this->output->writeln('<comment>Order products grid fields already exist, skipping</comment>');
+            return;
+        }
+
         $now = date('Y-m-d H:i:s');
         $data = [
             // ID column (system, hidden by default)
@@ -242,6 +257,10 @@ class SeedOrderProductsGridConfig extends AbstractMigration
 
     public function down()
     {
-        $this->execute("DELETE FROM ms3_grid_fields WHERE grid_key = 'order_products'");
+        $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
+        if (!$this->hasTable('ms3_grid_fields')) {
+            return;
+        }
+        $this->execute("DELETE FROM {$prefix}ms3_grid_fields WHERE grid_key = 'order_products'");
     }
 }

@@ -89,7 +89,6 @@ async function loadModels() {
     const response = await request.get('/api/mgr/model-fields/models')
     if (response && response.models) {
       models.value = response.models
-      // Set default filter to first model
       if (models.value.length > 0 && !filterModel.value) {
         filterModel.value = models.value[0].value
       }

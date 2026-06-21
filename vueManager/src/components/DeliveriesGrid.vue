@@ -1,5 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
+import Badge from 'primevue/badge'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
@@ -24,6 +25,7 @@ import draggable from 'vuedraggable'
 
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
+import { resolveAddCostPriceBadgeKind } from '../utils/addCostPriceBadgeKind.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 import ValidationRulesEditor from './ValidationRulesEditor.vue'
@@ -69,6 +71,10 @@ const selectAll = ref(false)
 const payments = ref([])
 const deliveryPayments = ref([])
 const loadingPayments = ref(false)
+
+const deliveryAddCostBadgeKind = computed(() =>
+  editingDelivery.value ? resolveAddCostPriceBadgeKind(editingDelivery.value.price) : null,
+)
 
 /**
  * Load deliveries list
@@ -789,7 +795,21 @@ onMounted(async () => {
                 <div class="form-row-group mb-3">
                   <div class="form-row">
                     <label>{{ _('ms3_add_cost') }}</label>
-                    <InputText v-model="editingDelivery.price" class="w-full" />
+                    <div class="ms3-add-cost-field">
+                      <InputText v-model="editingDelivery.price" class="w-full flex-1 min-w-[8rem]" />
+                      <Badge
+                        v-if="deliveryAddCostBadgeKind === 'discount'"
+                        severity="success"
+                        :value="_('ms3_price_badge_discount')"
+                        class="ms3-add-cost-badge"
+                      />
+                      <Badge
+                        v-else-if="deliveryAddCostBadgeKind === 'markup'"
+                        severity="secondary"
+                        :value="_('ms3_price_badge_markup')"
+                        class="ms3-add-cost-badge"
+                      />
+                    </div>
                     <small class="form-hint">{{ _('ms3_add_cost_help') }}</small>
                   </div>
 
@@ -1154,5 +1174,17 @@ onMounted(async () => {
   align-items: center;
   padding: 3rem;
   color: var(--ms3-text-muted);
+}
+
+.ms3-add-cost-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.ms3-add-cost-badge {
+  flex-shrink: 0;
 }
 </style>

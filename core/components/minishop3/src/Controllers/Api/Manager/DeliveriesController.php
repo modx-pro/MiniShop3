@@ -132,7 +132,7 @@ class DeliveriesController
                           'validation_rules', 'free_delivery_amount'];
 
         foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
+            if (array_key_exists($field, $data)) {
                 $delivery->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }
@@ -185,7 +185,7 @@ class DeliveriesController
                           'validation_rules', 'free_delivery_amount'];
 
         foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
+            if (array_key_exists($field, $data)) {
                 $delivery->set($field, $this->prepareFieldValue($field, $data[$field]));
             }
         }

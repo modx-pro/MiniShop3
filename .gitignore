@@ -41,7 +41,6 @@ assets/customScript.js
 *.ps1
 *.bat
 
-# Personal AI assistant files
 *.md
 !CHANGELOG.md
 !changelogs/*.md

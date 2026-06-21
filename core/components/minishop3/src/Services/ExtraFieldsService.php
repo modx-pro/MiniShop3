@@ -296,10 +296,23 @@ class ExtraFieldsService
 
         $allowedFields = ['label', 'description', 'xtype', 'active', 'select_options'];
 
+        // Per-field null semantics:
+        //   - `description`, `select_options` (optional text/json): null = clear
+        //   - `label`, `xtype`, `active` (required for rendering): null skipped — a partial
+        //     payload with `xtype: null` would silently break the field's UI.
+        $nullClearable = ['description', 'select_options'];
+
         foreach ($allowedFields as $fieldName) {
-            if (isset($data[$fieldName])) {
-                $field->set($fieldName, $data[$fieldName]);
+            if (!array_key_exists($fieldName, $data)) {
+                continue;
             }
+            $value = $data[$fieldName];
+
+            if ($value === null && !in_array($fieldName, $nullClearable, true)) {
+                continue;
+            }
+
+            $field->set($fieldName, $value);
         }
 
         if (!$field->save()) {

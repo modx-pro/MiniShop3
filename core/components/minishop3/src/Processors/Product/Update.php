@@ -11,6 +11,8 @@ use MODX\Revolution\Processors\Resource\Update as UpdateProcessor;
 
 class Update extends UpdateProcessor
 {
+    use ProductDataPayloadTrait;
+
     public $classKey = msProduct::class;
     public $languageTopics = ['resource', 'minishop3:default'];
     public $permission = 'msproduct_save';
@@ -48,6 +50,9 @@ class Update extends UpdateProcessor
     public function beforeSet()
     {
         $this->ms3ProductFormOptions = null;
+
+        $this->captureProductDataPayload();
+
         $properties = $this->getProperties();
         $options = [];
         $hadOptionFieldsInRequest = false;
@@ -109,6 +114,7 @@ class Update extends UpdateProcessor
     public function beforeSave()
     {
         $this->object->set('isfolder', false);
+        $this->applyProductDataPayload();
 
         return parent::beforeSave();
     }

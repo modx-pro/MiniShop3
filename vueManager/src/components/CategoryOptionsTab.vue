@@ -82,21 +82,34 @@ async function loadAvailableOptions() {
 }
 
 async function loadAvailableCategories() {
-  // Source categories for copy — all msCategory resources. We reuse the tree endpoint
-  // flattened: just fetch the first level of resources for now (limit to obvious set).
-  // A richer picker would use the full tree, but a flat Select is consistent with the
-  // legacy ExtJS behavior.
-  const r = await request.get('/api/mgr/options/tree', { parent: 0 })
-  const roots = r?.results || []
-  // Expand one level for convenience (walk all children of each msCategory root).
-  const expanded = [...roots]
-  for (const root of roots) {
-    const children = await request.get('/api/mgr/options/tree', { parent: root.id })
-    expanded.push(...(children?.results || []).map(c => ({ ...c, label: `  ${c.label}` })))
-  }
-  availableCategories.value = expanded
+  // Source categories for copy — all selectable msCategory resources from the semantic tree.
+  const categories = await collectSelectableCategories(0)
+  availableCategories.value = categories
     .filter(c => c.id !== props.categoryId)
     .map(c => ({ id: c.id, label: c.label }))
+}
+
+/** Must match OptionCategoryTree: absent `selectable` means legacy msCategory-only payload. */
+function isTreeRowSelectable(row) {
+  return typeof row.selectable === 'boolean' ? row.selectable : true
+}
+
+async function collectSelectableCategories(parent = 0, level = 0) {
+  const r = await request.get('/api/mgr/options/tree', { parent })
+  const rows = r?.results || []
+  const categories = []
+  const indent = '  '.repeat(level)
+
+  for (const row of rows) {
+    if (isTreeRowSelectable(row)) {
+      categories.push({ ...row, label: `${indent}${row.label}` })
+    }
+    if (!row.leaf) {
+      categories.push(...(await collectSelectableCategories(row.id, level + 1)))
+    }
+  }
+
+  return categories
 }
 
 async function saveCellEdit(event) {

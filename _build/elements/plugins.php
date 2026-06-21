@@ -12,7 +12,6 @@ return [
             'OnUserSave',
             'OnBeforeUserFormSave',
             'OnUserRemove',
-            'OnCategoryRemove',
         ],
     ],
 ];

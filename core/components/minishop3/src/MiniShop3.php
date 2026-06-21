@@ -20,7 +20,7 @@ use xPDO\xPDO;
 
 class MiniShop3
 {
-    public $version = '1.10.1-beta1';
+    public $version = '1.11.1-beta1';
 
     /** @var modX $modx */
     public $modx;
@@ -156,6 +156,8 @@ class MiniShop3
                     'connectorUrl' => $this->config['connectorUrl'],
                     'ctx' => $ctx,
                     'tokenName' => $tokenName,
+                    'currencySymbol' => $this->modx->getOption('ms3_currency_symbol', null, '₽'),
+                    'currencyPosition' => $this->modx->getOption('ms3_currency_position', null, 'after'),
                     'render' => [
                         'cart' => []
                     ],

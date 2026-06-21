@@ -2,8 +2,9 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
-use MiniShop3\Services\GridConfigService;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\GridConfigService;
+use MiniShop3\Services\GridEditorReferenceRegistry;
 use MODX\Revolution\modX;
 
 /**
@@ -48,7 +49,12 @@ class GridConfigController
         $includeHidden = !empty($params['include_hidden']);
         $config = $this->service->getGridConfig($gridKey, $includeHidden);
 
-        return Response::success(['columns' => $config])->getData();
+        $payload = ['columns' => $config];
+        if ($gridKey === 'category-products') {
+            $payload['editor_references'] = GridEditorReferenceRegistry::listForClient();
+        }
+
+        return Response::success($payload)->getData();
     }
 
     /**

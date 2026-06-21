@@ -1,5 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
+import Badge from 'primevue/badge'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
@@ -23,6 +24,7 @@ import draggable from 'vuedraggable'
 
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
+import { resolveAddCostPriceBadgeKind } from '../utils/addCostPriceBadgeKind.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 
@@ -67,6 +69,10 @@ const selectAll = ref(false)
 const deliveries = ref([])
 const paymentDeliveries = ref([])
 const loadingDeliveries = ref(false)
+
+const paymentAddCostBadgeKind = computed(() =>
+  editingPayment.value ? resolveAddCostPriceBadgeKind(editingPayment.value.price) : null,
+)
 
 /**
  * Load payments list
@@ -745,7 +751,21 @@ onMounted(async () => {
 
                 <div class="form-row mb-3">
                   <label>{{ _('ms3_add_cost') }}</label>
-                  <InputText v-model="editingPayment.price" class="w-full" />
+                  <div class="ms3-add-cost-field">
+                    <InputText v-model="editingPayment.price" class="w-full flex-1 min-w-[8rem]" />
+                    <Badge
+                      v-if="paymentAddCostBadgeKind === 'discount'"
+                      severity="success"
+                      :value="_('ms3_price_badge_discount')"
+                      class="ms3-add-cost-badge"
+                    />
+                    <Badge
+                      v-else-if="paymentAddCostBadgeKind === 'markup'"
+                      severity="secondary"
+                      :value="_('ms3_price_badge_markup')"
+                      class="ms3-add-cost-badge"
+                    />
+                  </div>
                   <small class="form-hint">{{ _('ms3_payment_add_cost_help') }}</small>
                 </div>
               </div>
@@ -1065,5 +1085,17 @@ onMounted(async () => {
   align-items: center;
   padding: 3rem;
   color: var(--ms3-text-muted);
+}
+
+.ms3-add-cost-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.ms3-add-cost-badge {
+  flex-shrink: 0;
 }
 </style>

@@ -66,8 +66,8 @@ foreach ($optionKeys as $key) {
         }
     }
 
-    $skip = (!empty($ignoreGroups) && (in_array($option['category'], $ignoreGroups) || in_array($option['category_name'], $ignoreGroups)))
-        || (!empty($groups) && !in_array($option['category'], $groups) && !in_array($option['category_name'], $groups));
+    $skip = (!empty($ignoreGroups) && in_array($option['group_name'] ?? null, $ignoreGroups, true))
+        || (!empty($groups) && !in_array($option['group_name'] ?? null, $groups, true));
 
     if (!$skip) {
         $option['value'] = $product->get($key);
@@ -80,10 +80,8 @@ foreach ($optionKeys as $key) {
 if (!empty($sortGroups) && !empty($options)) {
     $sortGroups = array_map('mb_strtolower', $sortGroups);
     uasort($options, function ($a, $b) use ($sortGroups) {
-        $ai = array_search(mb_strtolower($a['category'], 'utf-8'), $sortGroups, true);
-        $ai = $ai !== false ? $ai : array_search(mb_strtolower($a['category_name'], 'utf-8'), $sortGroups, true);
-        $bi = array_search(mb_strtolower($b['category'], 'utf-8'), $sortGroups, true);
-        $bi = $bi !== false ? $bi : array_search(mb_strtolower($b['category_name'], 'utf-8'), $sortGroups, true);
+        $ai = array_search(mb_strtolower((string)($a['group_name'] ?? ''), 'utf-8'), $sortGroups, true);
+        $bi = array_search(mb_strtolower((string)($b['group_name'] ?? ''), 'utf-8'), $sortGroups, true);
         if ($ai === false && $bi === false) {
             return 0;
         } elseif ($ai === false) {

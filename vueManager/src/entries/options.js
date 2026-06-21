@@ -12,7 +12,7 @@ import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 import { createApp } from 'vue'
 
-import OptionsGrid from '../components/OptionsGrid.vue'
+import OptionsAndGroupsTabs from '../components/OptionsAndGroupsTabs.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 const MOUNT_ID = 'ms3-vue-options'
@@ -24,7 +24,7 @@ function mountApp() {
   if (!container) return false
   if (app) return true
 
-  app = createApp(OptionsGrid)
+  app = createApp(OptionsAndGroupsTabs)
 
   app.use(PrimeVue, {
     theme: {

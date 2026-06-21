@@ -5,11 +5,11 @@ namespace MiniShop3\Controllers\Api\Manager;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
+use MiniShop3\Model\msOptionGroup;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Option\OptionCategoryService;
 use MiniShop3\Services\Option\OptionService;
-use MODX\Revolution\modCategory;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 
@@ -23,6 +23,21 @@ use MODX\Revolution\modX;
  */
 class OptionsController
 {
+    /** FQCN + short name. */
+    private const OPTION_TREE_CATEGORY_CLASS_KEYS = [
+        msCategory::class,
+        'msCategory',
+    ];
+
+    private const OPTION_TREE_CONTAINER_CLASS_KEYS = [
+        modResource::class,
+        'MODX\\Revolution\\modDocument',
+        'MODX\\Revolution\\modWebLink',
+        'modResource',
+        'modDocument',
+        'modWebLink',
+    ];
+
     protected modX $modx;
     protected OptionService $optionService;
 
@@ -35,14 +50,13 @@ class OptionsController
     /**
      * GET /api/mgr/options
      *
-     * @param array $params start, limit, query, modcategory_id, category_id, categories[]
+     * @param array $params start, limit, query, option_group_id, category_id, categories[]
      */
     public function getList(array $params = []): array
     {
         $start = (int)($params['start'] ?? 0);
         $limit = (int)($params['limit'] ?? 20);
         $query = trim($params['query'] ?? '');
-        $modcategoryId = isset($params['modcategory_id']) ? (int)$params['modcategory_id'] : null;
         $categoryId = isset($params['category_id']) ? (int)$params['category_id'] : null;
         $categories = $this->decodeIntArray($params['categories'] ?? null);
 
@@ -53,8 +67,13 @@ class OptionsController
                 'OR:msOption.caption:LIKE' => "%{$query}%",
             ];
         }
-        if ($modcategoryId !== null) {
-            $criteria['msOption.modcategory_id'] = $modcategoryId;
+        // option_group_id may be explicit 0 — meaning "no group" (option_group_id IS NULL)
+        if (array_key_exists('option_group_id', $params) && $params['option_group_id'] !== '' && $params['option_group_id'] !== null) {
+            if ((int)$params['option_group_id'] === 0) {
+                $criteria['msOption.option_group_id:IS'] = null;
+            } else {
+                $criteria['msOption.option_group_id'] = (int)$params['option_group_id'];
+            }
         }
 
         $q = $this->modx->newQuery(msOption::class, $criteria);
@@ -79,9 +98,17 @@ class OptionsController
             $q->limit($limit, $start);
         }
 
-        $results = [];
+        // Materialize first so we can preload group names in a single query (avoid N+1
+        // inside formatOption when there are up to {limit} options per page).
+        $options = [];
         foreach ($this->modx->getIterator(msOption::class, $q) as $option) {
-            $results[] = $this->formatOption($option);
+            $options[] = $option;
+        }
+        $groupNamesMap = $this->buildGroupNamesMap($options);
+
+        $results = [];
+        foreach ($options as $option) {
+            $results[] = $this->formatOption($option, $groupNamesMap);
         }
 
         return Response::success([
@@ -307,6 +334,12 @@ class OptionsController
      * MODX resource tree for category selection. Optional ?option_id= to flag which
      * categories already have the option linked (for checkbox UI).
      *
+     * The tree intentionally includes navigation containers so category pickers work
+     * with nested or multi-store resource structures without system settings:
+     *   - msCategory: visible and selectable;
+     *   - MODX folder resources/web links: visible for navigation only;
+     *   - msProduct and plain content resources: excluded.
+     *
      * @param array $params parent (default 0), option_id (optional), categories[] (prechecked)
      */
     public function getTree(array $params = []): array
@@ -327,19 +360,22 @@ class OptionsController
             $checkedSet[$catId] = true;
         }
 
-        // Only msCategory nodes (same rule as legacy ExtJS Processors\Category\GetNodes).
-        // leaf is derived from a child-count subquery: a node is a leaf when it has no msCategory children.
+        $treeClassKeysSql = $this->quoteSqlStringList($this->getOptionTreeClassKeys());
+        $categoryClassKeysSql = $this->quoteSqlStringList(self::OPTION_TREE_CATEGORY_CLASS_KEYS);
+        $treeNodeWhere = $this->getOptionTreeNodeSqlFilter('modResource', $treeClassKeysSql, $categoryClassKeysSql);
+        $childNodeWhere = $this->getOptionTreeNodeSqlFilter('Child', $treeClassKeysSql, $categoryClassKeysSql);
+
         $q = $this->modx->newQuery(modResource::class);
-        $q->leftJoin(modResource::class, 'Child', [
-            'modResource.id = Child.parent',
-            'Child.class_key' => msCategory::class,
-            'Child.deleted' => 0,
-        ]);
+        $q->leftJoin(
+            modResource::class,
+            'Child',
+            "`modResource`.`id` = `Child`.`parent` AND `Child`.`deleted` = 0 AND {$childNodeWhere}"
+        );
         $q->where([
             'modResource.parent' => $parent,
             'modResource.deleted' => 0,
-            'modResource.class_key' => msCategory::class,
         ]);
+        $q->where($treeNodeWhere);
         $q->select('modResource.id, modResource.pagetitle, modResource.menutitle, '
             . 'modResource.parent, modResource.published, modResource.hidemenu, modResource.class_key, '
             . 'COUNT(Child.id) AS childrenCount');
@@ -350,11 +386,14 @@ class OptionsController
         if ($q->prepare() && $q->stmt->execute()) {
             while ($row = $q->stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $id = (int)$row['id'];
+                $selectable = $this->isOptionTreeCategoryClass((string)$row['class_key']);
+                $label = (string)($row['menutitle'] ?: $row['pagetitle']);
                 $nodes[] = [
                     'id' => $id,
-                    'label' => $row['menutitle'] !== '' ? $row['menutitle'] : $row['pagetitle'],
+                    'label' => $label,
                     'leaf' => (int)$row['childrenCount'] === 0,
-                    'checked' => isset($checkedSet[$id]),
+                    'checked' => $selectable && isset($checkedSet[$id]),
+                    'selectable' => $selectable,
                     'class_key' => $row['class_key'],
                     'published' => (int)$row['published'],
                     'hidemenu' => (int)$row['hidemenu'],
@@ -365,39 +404,9 @@ class OptionsController
         return Response::success(['results' => $nodes, 'total' => count($nodes)])->getData();
     }
 
-    /**
-     * GET /api/mgr/options/modcategories
-     *
-     * Flat list of MODX categories (from modCategory, not resource tree) for grouping
-     * dropdown in option form.
-     */
-    public function getModcategories(array $params = []): array
-    {
-        $query = trim((string)($params['query'] ?? ''));
-        $limit = (int)($params['limit'] ?? 500);
-
-        $criteria = [];
-        if ($query !== '') {
-            $criteria['category:LIKE'] = "%{$query}%";
-        }
-
-        $total = $this->modx->getCount(modCategory::class, $criteria);
-        $q = $this->modx->newQuery(modCategory::class, $criteria);
-        $q->sortby('category', 'ASC');
-        if ($limit > 0) {
-            $q->limit($limit);
-        }
-
-        $results = [];
-        foreach ($this->modx->getIterator(modCategory::class, $q) as $cat) {
-            $results[] = [
-                'id' => (int)$cat->get('id'),
-                'category' => $cat->get('category'),
-            ];
-        }
-
-        return Response::success(['results' => $results, 'total' => $total])->getData();
-    }
+    // GET /api/mgr/options/modcategories removed in #10 — replaced by GET /api/mgr/option-groups
+    // (OptionGroupsController). The previous endpoint returned MODX categories for the grouping
+    // dropdown; now options are grouped through msOptionGroup.
 
     /**
      * GET /api/mgr/options/suggestions
@@ -442,18 +451,72 @@ class OptionsController
     /**
      * Return representative fields + properties for list/detail responses.
      */
-    protected function formatOption(msOption $option): array
+    /**
+     * @param array<int, string> $groupNamesMap Optional id→name map; when omitted,
+     *        falls back to one lazy `getOne('Group')` (used by single-object endpoints
+     *        like get/create/update; not safe to call in a list loop — use the map).
+     */
+    protected function formatOption(msOption $option, array $groupNamesMap = []): array
     {
+        $groupId = $option->get('option_group_id');
+        $groupId = ($groupId === null || $groupId === '') ? null : (int)$groupId;
+
+        $groupName = null;
+        if ($groupId !== null) {
+            if (array_key_exists($groupId, $groupNamesMap)) {
+                $groupName = $groupNamesMap[$groupId];
+            } else {
+                /** @var msOptionGroup|null $group */
+                $group = $option->getOne('Group');
+                if ($group) {
+                    $groupName = (string)$group->get('name');
+                }
+            }
+        }
+
         return [
             'id' => (int)$option->get('id'),
             'key' => $option->get('key'),
             'caption' => $option->get('caption'),
             'description' => $option->get('description'),
             'measure_unit' => $option->get('measure_unit'),
-            'modcategory_id' => $option->get('modcategory_id') !== null ? (int)$option->get('modcategory_id') : null,
+            'option_group_id' => $groupId,
+            'option_group_name' => $groupName,
             'type' => $option->get('type'),
             'properties' => $option->get('properties') ?: [],
         ];
+    }
+
+    /**
+     * Single query to resolve all distinct option_group_id → name for a batch of msOption.
+     * Returns empty map when none of the options is in a group.
+     *
+     * @param msOption[] $options
+     * @return array<int, string>
+     */
+    protected function buildGroupNamesMap(array $options): array
+    {
+        $groupIds = [];
+        foreach ($options as $option) {
+            $gid = $option->get('option_group_id');
+            if ($gid !== null && $gid !== '' && (int)$gid > 0) {
+                $groupIds[(int)$gid] = true;
+            }
+        }
+        if (empty($groupIds)) {
+            return [];
+        }
+
+        $map = [];
+        $q = $this->modx->newQuery(msOptionGroup::class, ['id:IN' => array_keys($groupIds)]);
+        $q->select('msOptionGroup.id, msOptionGroup.name');
+        if ($q->prepare() && $q->stmt->execute()) {
+            foreach ($q->stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $map[(int)$row['id']] = (string)$row['name'];
+            }
+        }
+
+        return $map;
     }
 
     /**
@@ -476,19 +539,22 @@ class OptionsController
     /**
      * Apply only writable fields from incoming payload onto the msOption object.
      *
-     * modcategory_id is NOT NULL in the schema but user may clear the dropdown,
-     * so we coerce null → 0 for that one field.
+     * option_group_id is nullable — empty payload value becomes NULL ("no group").
      */
     protected function applyWritableFields(msOption $option, array $data): void
     {
-        $allowed = ['key', 'caption', 'description', 'measure_unit', 'modcategory_id', 'type', 'properties'];
+        $allowed = ['key', 'caption', 'description', 'measure_unit', 'option_group_id', 'type', 'properties'];
         foreach ($allowed as $field) {
             if (!array_key_exists($field, $data)) {
                 continue;
             }
             $value = $data[$field];
-            if ($field === 'modcategory_id' && ($value === null || $value === '')) {
-                $value = 0;
+            if ($field === 'option_group_id') {
+                if ($value === null || $value === '' || (int)$value <= 0) {
+                    $value = null;
+                } else {
+                    $value = (int)$value;
+                }
             }
             $option->set($field, $value);
         }
@@ -558,6 +624,36 @@ class OptionsController
         }
 
         return [$enabled, $disabled];
+    }
+
+    private function getOptionTreeNodeSqlFilter(string $alias, string $treeClassKeysSql, string $categoryClassKeysSql): string
+    {
+        return "(`{$alias}`.`class_key` IN ({$treeClassKeysSql}) "
+            . "AND (`{$alias}`.`class_key` IN ({$categoryClassKeysSql}) OR `{$alias}`.`isfolder` = 1))";
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getOptionTreeClassKeys(): array
+    {
+        return array_values(array_unique(array_merge(
+            self::OPTION_TREE_CATEGORY_CLASS_KEYS,
+            self::OPTION_TREE_CONTAINER_CLASS_KEYS
+        )));
+    }
+
+    private function isOptionTreeCategoryClass(string $classKey): bool
+    {
+        return in_array($classKey, self::OPTION_TREE_CATEGORY_CLASS_KEYS, true);
+    }
+
+    /**
+     * @param string[] $values
+     */
+    private function quoteSqlStringList(array $values): string
+    {
+        return implode(', ', array_map(fn(string $value): string => $this->modx->quote($value), $values));
     }
 
     /**

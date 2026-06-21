@@ -415,7 +415,9 @@ class OrderFinalizeService
         // Update order weight
         $order->set('weight', $weight);
 
-        $totalCost = $cartCost + $deliveryCost;
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $totalCost = $orderService->clampComputedTotal($order, (float) $cartCost, (float) $deliveryCost, 0.0);
 
         return $this->success('', [
             'cart_cost' => $cartCost,

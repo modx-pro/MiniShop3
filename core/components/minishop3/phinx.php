@@ -20,13 +20,81 @@ if (!isset($modx)) {
         die('MODX_CORE_PATH not defined in config.core.php');
     }
 
-    if (!class_exists('modX')) {
+    $modxClass = 'MODX\\Revolution\\modX';
+
+    if (!class_exists($modxClass)) {
         require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
     }
 
-    $modx = new modX();
+    if (!class_exists($modxClass) && class_exists('modX')) {
+        $modxClass = 'modX';
+    }
+
+    $modx = new $modxClass();
     $modx->initialize('mgr');
 }
+
+if (!function_exists('ms3PhinxExtractDsnCharset')) {
+    function ms3PhinxExtractDsnCharset(?string $dsn): ?string
+    {
+        if ($dsn === null || $dsn === '') {
+            return null;
+        }
+
+        if (preg_match('/(?:^|;)charset=([^;]+)/i', $dsn, $matches) !== 1) {
+            return null;
+        }
+
+        return trim($matches[1]);
+    }
+}
+
+if (!function_exists('ms3PhinxNormalizeMysqlCharset')) {
+    function ms3PhinxNormalizeMysqlCharset(?string $charset, bool $preferUtf8mb4 = false): string
+    {
+        $normalized = strtolower(trim((string) $charset));
+        $normalized = str_replace('-', '', $normalized);
+
+        return match ($normalized) {
+            '', 'utf8', 'utf8mb3' => $preferUtf8mb4 ? 'utf8mb4' : 'utf8',
+            'utf8mb4' => 'utf8mb4',
+            default => preg_replace('/[^a-z0-9_]/', '', $normalized) ?: 'utf8mb4',
+        };
+    }
+}
+
+if (!function_exists('ms3PhinxDefaultMysqlCollation')) {
+    function ms3PhinxDefaultMysqlCollation(string $charset): string
+    {
+        return match ($charset) {
+            'utf8' => 'utf8_general_ci',
+            'utf8mb4' => 'utf8mb4_unicode_ci',
+            default => $charset . '_general_ci',
+        };
+    }
+}
+
+$dsnCharset = ms3PhinxExtractDsnCharset($modx->getOption('database_dsn', null, null));
+$databaseCharset = $modx->getOption('database_charset', null, null);
+
+if ($dsnCharset !== null) {
+    $mysqlCharset = ms3PhinxNormalizeMysqlCharset($dsnCharset);
+} elseif ($databaseCharset !== null && trim((string) $databaseCharset) !== '') {
+    $mysqlCharset = ms3PhinxNormalizeMysqlCharset($databaseCharset);
+} else {
+    $mysqlCharset = ms3PhinxNormalizeMysqlCharset($modx->getOption('charset', null, 'utf8mb4'), true);
+}
+
+$mysqlCollation = $modx->getOption(
+    'database_collation',
+    null,
+    $modx->getOption(
+        'collation',
+        null,
+        ms3PhinxDefaultMysqlCollation($mysqlCharset)
+    )
+);
+
 $dbConfig = [
     'adapter' => 'mysql',
     'host' => $modx->getOption('host', null, 'localhost'),
@@ -34,10 +102,34 @@ $dbConfig = [
     'user' => $modx->getOption('username'),
     'pass' => $modx->getOption('password'),
     'port' => $modx->getOption('port', null, '3306'),
-    'charset' => $modx->getOption('charset', null, 'utf8mb4'),
-    'collation' => $modx->getOption('collation', null, 'utf8mb4_unicode_ci'),
+    'charset' => $mysqlCharset,
+    'collation' => $mysqlCollation,
     'table_prefix' => $modx->getOption('table_prefix', null, ''),
 ];
+
+if ($dbConfig['table_prefix'] !== '' && $modx->pdo !== null) {
+    $prefix = $dbConfig['table_prefix'];
+    $hasOld = (bool) $modx->pdo->query("SHOW TABLES LIKE 'ms3_migrations'")?->fetch();
+    $hasNew = (bool) $modx->pdo->query("SHOW TABLES LIKE '{$prefix}ms3_migrations'")?->fetch();
+
+    if ($hasOld && !$hasNew) {
+        $modx->pdo->exec("RENAME TABLE `ms3_migrations` TO `{$prefix}ms3_migrations`");
+
+        $infoLogLevel = 1;
+        if (class_exists(\MODX\Revolution\modX::class, false)) {
+            $infoLogLevel = \MODX\Revolution\modX::LOG_LEVEL_INFO;
+        } elseif (class_exists('modX', false)) {
+            $infoLogLevel = modX::LOG_LEVEL_INFO;
+        }
+
+        $modx->log(
+            $infoLogLevel,
+            '[MiniShop3] Renamed legacy Phinx metadata table ms3_migrations -> ' . $prefix . 'ms3_migrations'
+        );
+    }
+}
+
+$migrationTable = $dbConfig['table_prefix'] . 'ms3_migrations';
 
 return [
     'paths' => [
@@ -45,7 +137,7 @@ return [
         'seeds' => __DIR__ . '/seeds'
     ],
     'environments' => [
-        'default_migration_table' => 'ms3_migrations',
+        'default_migration_table' => $migrationTable,
         'default_environment' => 'production',
         'production' => $dbConfig,
         'development' => $dbConfig,

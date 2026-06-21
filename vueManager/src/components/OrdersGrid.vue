@@ -2,6 +2,7 @@
 import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import DataTable from 'primevue/datatable'
@@ -19,6 +20,34 @@ import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const { _ } = useLexicon()
+
+const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
+const SHOW_DRAFTS_STORAGE_KEY = 'ms3_orders_show_drafts'
+
+function readShowDraftsPreference() {
+  try {
+    const stored = localStorage.getItem(SHOW_DRAFTS_STORAGE_KEY)
+    if (stored !== null) {
+      return stored === '1'
+    }
+  } catch {
+    /* localStorage unavailable */
+  }
+  return Boolean(ms3Config?.order_show_drafts)
+}
+
+const showDrafts = ref(readShowDraftsPreference())
+
+/** Filter keys sent as direct API params (not filter_ prefix). */
+const DIRECT_FILTER_KEYS = new Set([
+  'query',
+  'status_id',
+  'delivery_id',
+  'payment_id',
+  'context_key',
+  'createdon_from',
+  'createdon_to',
+])
 
 // Bulk selection
 const {
@@ -73,13 +102,13 @@ async function loadOrders() {
       limit: rows.value,
       sort: sortField.value,
       dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
+      show_drafts: showDrafts.value ? 1 : 0,
     }
 
     // Apply filter values
     Object.keys(filterValues.value).forEach(key => {
       const value = filterValues.value[key]
       if (value !== null && value !== undefined && value !== '') {
-        // Handle daterange type
         const filterConfig = filters.value[key]
         if (filterConfig?.type === 'daterange' && Array.isArray(value)) {
           if (value[0]) {
@@ -90,8 +119,10 @@ async function loadOrders() {
           }
         } else if (filterConfig?.type === 'datepicker' && value) {
           params[key] = formatDateForApi(value)
-        } else {
+        } else if (DIRECT_FILTER_KEYS.has(key)) {
           params[key] = value
+        } else {
+          params[`filter_${key}`] = value
         }
       }
     })
@@ -373,6 +404,16 @@ const hasActiveFilters = computed(() => {
   return Object.values(filterValues.value).some(v => v !== null && v !== '' && v !== undefined)
 })
 
+function toggleShowDrafts() {
+  try {
+    localStorage.setItem(SHOW_DRAFTS_STORAGE_KEY, showDrafts.value ? '1' : '0')
+  } catch {
+    /* localStorage unavailable */
+  }
+  first.value = 0
+  loadOrders()
+}
+
 /**
  * Load grid configuration
  */
@@ -547,15 +588,26 @@ onMounted(async () => {
               @click="createNewOrder"
             />
           </div>
-          <div class="grid-stats">
-            <span class="stat-item">
-              <i class="pi pi-calendar"></i>
-              {{ _('orders_month') }}: <strong>{{ stats.month_total }}</strong>
-            </span>
-            <span class="stat-item">
-              <i class="pi pi-wallet"></i>
-              {{ _('orders_month_sum') }}: <strong>{{ stats.month_sum }}</strong>
-            </span>
+          <div class="grid-header-right">
+            <div class="grid-stats" :title="_('orders_stat_tooltip')">
+              <span class="stat-item">
+                <i class="pi pi-calendar"></i>
+                {{ _('orders_month') }}: <strong>{{ stats.month_total }}</strong>
+              </span>
+              <span class="stat-item">
+                <i class="pi pi-wallet"></i>
+                {{ _('orders_month_sum') }}: <strong>{{ stats.month_sum }}</strong>
+              </span>
+            </div>
+            <div class="show-drafts-toggle">
+              <Checkbox
+                v-model="showDrafts"
+                input-id="orders-show-drafts"
+                binary
+                @change="toggleShowDrafts"
+              />
+              <label for="orders-show-drafts">{{ _('ms3_orders_show_drafts') }}</label>
+            </div>
           </div>
         </div>
       </template>
@@ -819,11 +871,19 @@ onMounted(async () => {
   gap: 1rem;
 }
 
+.grid-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
+  font-size: 1rem;
+}
+
 .grid-stats {
   display: flex;
   gap: 1.5rem;
-  font-size: 0.9rem;
   color: var(--ms3-text-muted);
+  cursor: help;
 }
 
 .stat-item {
@@ -876,7 +936,22 @@ onMounted(async () => {
 
 .filter-buttons {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.show-drafts-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.show-drafts-toggle label {
+  cursor: pointer;
+  user-select: none;
+  font-size: 1rem;
 }
 
 /* Bulk actions toolbar */

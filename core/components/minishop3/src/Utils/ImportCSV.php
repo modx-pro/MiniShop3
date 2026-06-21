@@ -2,11 +2,13 @@
 
 namespace MiniShop3\Utils;
 
+use MiniShop3\Controllers\Options\Types\msOptionType;
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msOption;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
-use MiniShop3\Model\msProductOption;
 use MiniShop3\Model\msVendor;
+use MiniShop3\Services\Option\OptionService;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 use xPDO\xPDO;
@@ -341,6 +343,12 @@ class ImportCSV
                 continue;
             }
 
+            // MS2 compatibility: remains -> stock
+            if ($v === 'remains') {
+                $data['stock'] = $value;
+                continue;
+            }
+
             // Handle multiple values for same field
             if (isset($data[$v]) && !is_array($data[$v])) {
                 $data[$v] = [$data[$v], $value];
@@ -599,31 +607,50 @@ class ImportCSV
         }
     }
 
-    /**
-     * Process product options
-     */
     private function processOptions(int $productId, array $optionData): void
     {
+        $keys = array_values(array_filter(array_keys($optionData), static fn($key): bool => $key !== ''));
+        if ($keys === []) {
+            return;
+        }
+
+        $typesByKey = $this->loadOptionTypesByKey($keys);
+        $parsedOptions = [];
+
         foreach ($optionData as $key => $value) {
-            if (empty($key)) {
+            if ($key === '') {
                 continue;
             }
 
-            // Find or create option
-            $option = $this->modx->getObject(msProductOption::class, [
-                'product_id' => $productId,
-                'key' => $key,
-            ]);
-
-            if (!$option) {
-                $option = $this->modx->newObject(msProductOption::class);
-                $option->set('product_id', $productId);
-                $option->set('key', $key);
-            }
-
-            $option->set('value', $value);
-            $option->save();
+            $parsedOptions[$key] = Utils::parseImportedOptionValue(
+                $value,
+                msOptionType::isMultiValueType($typesByKey[$key] ?? null)
+            );
         }
+
+        /** @var OptionService $optionService */
+        $optionService = $this->modx->services->get('ms3_option_service');
+        $optionService->saveProductOptions($productId, $parsedOptions, false);
+    }
+
+    private function loadOptionTypesByKey(array $keys): array
+    {
+        $query = $this->modx->newQuery(msOption::class);
+        $query->select(['key', 'type']);
+        $query->where(['key:IN' => $keys]);
+
+        if (!$query->prepare() || !$query->stmt->execute()) {
+            return [];
+        }
+
+        $typesByKey = [];
+        while ($row = $query->stmt->fetch(\PDO::FETCH_ASSOC)) {
+            if (is_string($row['key'] ?? null) && is_string($row['type'] ?? null)) {
+                $typesByKey[$row['key']] = $row['type'];
+            }
+        }
+
+        return $typesByKey;
     }
 
     private function processGallery(array $resource, array $gallery): void
