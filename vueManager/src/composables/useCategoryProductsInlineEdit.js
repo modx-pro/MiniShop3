@@ -1,4 +1,4 @@
-import { nextTick, ref } from 'vue'
+import { nextTick, onUnmounted, ref } from 'vue'
 
 import {
   GridColumnEditorType,
@@ -29,9 +29,47 @@ export function useCategoryProductsInlineEdit(deps) {
   const inlineEditSaving = ref(false)
   const inlineEditInputRef = ref(null)
   const comboOptions = ref([])
+  const currentEditorType = ref(null)
 
   function isBooleanColumn(column) {
     return column.type === 'boolean'
+  }
+
+  /**
+   * Coerce raw value to match the type of the editor options.
+   * Fixes PrimeVue Select strict-comparison issue when editor_options uses
+   * different type than stored data (e.g. value:1/0 vs true/false).
+   */
+  function coerceValueToOptionType(raw, options) {
+    if (raw === '' || raw === null || raw === undefined) {
+      return raw
+    }
+    if (!Array.isArray(options) || options.length === 0) {
+      return raw
+    }
+    const sample = options[0]?.value
+    if (sample === undefined || sample === null) {
+      return raw
+    }
+    const sampleType = typeof sample
+    const rawType = typeof raw
+    if (sampleType === rawType) {
+      return raw
+    }
+    if (sampleType === 'number' && rawType === 'boolean') {
+      return raw ? 1 : 0
+    }
+    if (sampleType === 'boolean' && rawType === 'number') {
+      return raw === 1 || raw === true
+    }
+    if (sampleType === 'string') {
+      return String(raw)
+    }
+    if (sampleType === 'number' && rawType === 'string') {
+      const n = Number(raw)
+      return Number.isNaN(n) ? raw : n
+    }
+    return raw
   }
 
   function isEditingCell(product, column) {
@@ -84,6 +122,7 @@ export function useCategoryProductsInlineEdit(deps) {
     editingCell.value = null
     inlineEditValue.value = ''
     comboOptions.value = []
+    currentEditorType.value = null
   }
 
   async function loadComboOptions(column) {
@@ -117,10 +156,19 @@ export function useCategoryProductsInlineEdit(deps) {
       return
     }
     editingCell.value = { productId: product.id, columnName: column.name }
+    currentEditorType.value = normalizeGridColumnEditorType(column.editor_type)
     const raw = product[column.name]
-    inlineEditValue.value = raw === null || raw === undefined ? '' : raw
+    let initial = raw === null || raw === undefined ? '' : raw
+    if (
+      normalizeGridColumnEditorType(column.editor_type) === GridColumnEditorType.SELECT
+      && Array.isArray(column.editor_options)
+    ) {
+      initial = coerceValueToOptionType(initial, column.editor_options)
+    }
+    inlineEditValue.value = initial
     if (isComboEditorType(column.editor_type)) {
       await loadComboOptions(column)
+      inlineEditValue.value = coerceValueToOptionType(inlineEditValue.value, comboOptions.value)
     }
     nextTick(() => {
       const comp = inlineEditInputRef.value
@@ -191,6 +239,53 @@ export function useCategoryProductsInlineEdit(deps) {
   function cancelInlineEdit() {
     clearInlineEditState()
   }
+
+  /**
+   * Global dismiss handlers: ESC and click outside the active editing cell.
+   *
+   * ESC at element-level doesn't work for PrimeVue Select (it captures the event
+   * for closing its own dropdown). Document-level handler catches it reliably.
+   *
+   * Click-outside is needed because there's no mouse way to dismiss otherwise —
+   * only saving or activating another cell, both have side effects.
+   *
+   * PrimeVue Select renders its dropdown via teleport (.p-select-overlay), so
+   * clicks on options must NOT trigger dismiss.
+   */
+  function handleGlobalKeydown(event) {
+    if (event.key === 'Escape' && editingCell.value && !inlineEditSaving.value) {
+      cancelInlineEdit()
+    }
+  }
+
+  function handleGlobalClick(event) {
+    if (!editingCell.value || inlineEditSaving.value) {
+      return
+    }
+    const target = event.target
+    if (!(target instanceof Element)) {
+      return
+    }
+    if (target.closest('.inline-edit-cell')) {
+      return
+    }
+    if (target.closest('.p-select-overlay, .p-overlay, .p-component-overlay')) {
+      return
+    }
+    // Use `click` (not `mousedown`) so @blur on text/number inputs fires first
+    // and triggers saveInlineEdit. If save happened, editingCell is already
+    // null and cancelInlineEdit is a no-op. For Select/Checkbox (no @blur),
+    // this acts as primary dismiss.
+    cancelInlineEdit()
+  }
+
+  document.addEventListener('keydown', handleGlobalKeydown)
+  document.addEventListener('click', handleGlobalClick)
+
+  onUnmounted(() => {
+    document.removeEventListener('keydown', handleGlobalKeydown)
+    document.removeEventListener('click', handleGlobalClick)
+  })
 
   /** Options for unified Select: static select uses column.editor_options; combo uses loaded list. */
   function selectOptionsForColumn(column) {
