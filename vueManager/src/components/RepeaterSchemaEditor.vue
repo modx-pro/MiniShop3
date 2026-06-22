@@ -155,41 +155,42 @@ function updateColumn(index, patch) {
   </div>
 </template>
 
-<style scoped>
-.repeater-schema-editor {
+<!-- Non-scoped + .vueApp prefix: scoped <style> drops styles across Vite chunks in MS3 admin. -->
+<style>
+.vueApp .repeater-schema-editor {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.schema-toolbar {
+.vueApp .repeater-schema-editor .schema-toolbar {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.checkbox-field {
+.vueApp .repeater-schema-editor .checkbox-field {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding-top: 1.5rem;
 }
 
-.columns-header {
+.vueApp .repeater-schema-editor .columns-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-weight: 600;
 }
 
-.column-row {
+.vueApp .repeater-schema-editor .column-row {
   display: grid;
   grid-template-columns: 1fr 1fr 10rem auto 2.5rem;
   gap: 0.5rem;
   align-items: center;
 }
 
-.column-required {
+.vueApp .repeater-schema-editor .column-required {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -197,12 +198,12 @@ function updateColumn(index, patch) {
 }
 
 @media (max-width: 48rem) {
-  .schema-toolbar,
-  .column-row {
+  .vueApp .repeater-schema-editor .schema-toolbar,
+  .vueApp .repeater-schema-editor .column-row {
     grid-template-columns: 1fr;
   }
 
-  .checkbox-field {
+  .vueApp .repeater-schema-editor .checkbox-field {
     padding-top: 0;
   }
 }

@@ -195,8 +195,9 @@ function onDragEnd() {
   </div>
 </template>
 
-<style scoped>
-.ms3-repeater-field {
+<!-- Non-scoped + .vueApp prefix: scoped <style> drops styles across Vite chunks in MS3 admin. -->
+<style>
+.vueApp .ms3-repeater-field {
   width: 100%;
   border: 1px solid var(--p-content-border-color, #e5e7eb);
   border-radius: 0.375rem;
@@ -204,33 +205,33 @@ function onDragEnd() {
   background: var(--p-content-background, #fff);
 }
 
-.ms3-repeater-empty {
+.vueApp .ms3-repeater-empty {
   color: var(--p-text-muted-color, #6b7280);
   font-size: 0.875rem;
 }
 
-.ms3-repeater-header,
-.ms3-repeater-row {
+.vueApp .ms3-repeater-header,
+.vueApp .ms3-repeater-row {
   display: grid;
   grid-template-columns: 2rem repeat(var(--ms3-repeater-cols, 2), minmax(0, 1fr)) 2.5rem;
   gap: 0.5rem;
   align-items: center;
 }
 
-.ms3-repeater-header {
+.vueApp .ms3-repeater-header {
   margin-bottom: 0.5rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--p-text-muted-color, #6b7280);
 }
 
-.ms3-repeater-rows {
+.vueApp .ms3-repeater-rows {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
 }
 
-.drag-handle {
+.vueApp .ms3-repeater-field .drag-handle {
   cursor: grab;
   color: var(--p-text-muted-color, #9ca3af);
   display: inline-flex;
@@ -238,15 +239,15 @@ function onDragEnd() {
   justify-content: center;
 }
 
-.drag-handle:active {
+.vueApp .ms3-repeater-field .drag-handle:active {
   cursor: grabbing;
 }
 
-.required-mark {
+.vueApp .ms3-repeater-field .required-mark {
   color: var(--p-red-500, #ef4444);
 }
 
-.ms3-repeater-add {
+.vueApp .ms3-repeater-add {
   margin-top: 0.75rem;
 }
 </style>

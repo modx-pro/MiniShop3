@@ -183,12 +183,20 @@
     </template>
 
     <!-- Repeater (ms3-repeater) -->
-    <RepeaterField
-      v-else-if="fieldConfig.xtype === 'ms3-repeater'"
-      v-model="localValue"
-      :config="repeaterConfig"
-      :disabled="disabled"
-    />
+    <template v-else-if="fieldConfig.xtype === 'ms3-repeater'">
+      <RepeaterField v-model="localValue" :config="repeaterConfig" :disabled="disabled" />
+      <!--
+        Hidden input bridges Vue state to the legacy MODX Resource form POST.
+        Without it the Resource\Update processor (and ProductDataPayloadTrait from #298)
+        never sees `repeater` in $_POST, and prepareObject() normalises the in-memory
+        null to [] on save — silent loss of user input.
+      -->
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="serializeRepeaterForPost(localValue)"
+      />
+    </template>
 
     <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
     <!-- For now, we display them as simple text info since editing happens in ExtJS form -->
@@ -344,6 +352,22 @@ function normalizeIncomingValue(value) {
     return parseRepeaterModelValue(value)
   }
   return value
+}
+
+/**
+ * Serialise the repeater value for the hidden legacy-form input.
+ * RepeaterField emits an array; the processor expects JSON string or array.
+ * Empty/missing → `[]` so xPDO json field stays a valid array, not null.
+ */
+function serializeRepeaterForPost(value) {
+  if (!Array.isArray(value)) {
+    return '[]'
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return '[]'
+  }
 }
 
 /**

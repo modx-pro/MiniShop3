@@ -653,14 +653,22 @@ class ProductDataService
             return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product data not found'];
         }
 
-        $filtered = array_intersect_key($data, array_flip(self::$allowedUpdateFields));
+        // Static whitelist + active repeater extra-field keys for msProductData.
+        // Without the extra keys, repeater values get silently dropped here and
+        // prepareObject() then normalises the in-memory null/empty to [] on save —
+        // user input is lost with no error (#301).
+        $allowedKeys = array_merge(
+            self::$allowedUpdateFields,
+            array_keys($this->getProductRepeaterFields())
+        );
+        $filtered = array_intersect_key($data, array_flip($allowedKeys));
         $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
 
         if (!$this->validateProductDataUpdate($filtered)) {
             return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => 'Validation failed'];
         }
 
-        $fieldsToUpdate = array_intersect_key($filtered, array_flip(self::$allowedUpdateFields));
+        $fieldsToUpdate = $filtered;
 
         $repeaterError = $this->normalizeRepeaterFieldsInPayload($fieldsToUpdate);
         if ($repeaterError !== null) {
