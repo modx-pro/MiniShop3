@@ -516,7 +516,7 @@
                index="fulltext"/>
         <field key="description" dbtype="text" phptype="string" null="true"/>
         <field key="measure_unit" dbtype="tinytext" phptype="string" null="true"/>
-        <field key="modcategory_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
+        <field key="option_group_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true" default="NULL"/>
         <field key="type" dbtype="varchar" precision="191" phptype="string" null="false" default="" index="index"/>
         <field key="properties" dbtype="text" phptype="json" null="true"/>
 
@@ -526,8 +526,8 @@
         <index alias="caption_ft" name="caption_ft" primary="false" unique="false" type="FULLTEXT">
             <column key="caption" length="" collation="A" null="false"/>
         </index>
-        <index alias="modcategory_id" name="modcategory_id" primary="false" unique="false" type="BTREE">
-            <column key="modcategory_id" length="" collation="A" null="false"/>
+        <index alias="option_group_id" name="option_group_id" primary="false" unique="false" type="BTREE">
+            <column key="option_group_id" length="" collation="A" null="false"/>
         </index>
         <index alias="type" name="key" primary="false" unique="false" type="BTREE">
             <column key="type" length="" collation="A" null="false"/>
@@ -537,7 +537,7 @@
                    owner="local"/>
         <composite alias="OptionProducts" class="MiniShop3\Model\msProductOption" local="key" foreign="key" cardinality="many"
                    owner="local"/>
-        <aggregate alias="Category" class="MODX\Revolution\modCategory" local="modcategory_id" foreign="id" owner="foreign"
+        <aggregate alias="Group" class="MiniShop3\Model\msOptionGroup" local="option_group_id" foreign="id" owner="foreign"
                    cardinality="one"/>
         <validation>
             <rule field="key" name="invalid" type="preg_match"
@@ -546,6 +546,28 @@
                   rule="/^(?!(id|type|contentType|pagetitle|longtitle|description|alias|link_attributes|published|pub_date|unpub_date|parent|isfolder|introtext|content|richtext|template|menuindex|searchable|cacheable|createdby|createdon|editedby|editedon|deleted|deletedby|deletedon|publishedon|publishedby|menutitle|donthit|privateweb|privatemgr|content_dispo|hidemenu|class_key|context_key|content_type|uri|uri_override|hide_children_in_tree|show_in_tree|article|price|old_price|weight|image|thumb|vendor|made_in|new|popular|favorite|tags|color|size|source|action)$)/"
                   message="ms3_option_err_reserved_key"/>
         </validation>
+    </object>
+
+    <object class="msOptionGroup" table="ms3_option_groups" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="name" dbtype="varchar" precision="255" phptype="string" null="false" default=""/>
+        <field key="description" dbtype="text" phptype="string" null="true"/>
+        <field key="sort_order" dbtype="int" precision="10" phptype="integer" null="false" default="0"/>
+        <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
+        <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
+
+        <index alias="idx_sort_order" name="idx_sort_order" primary="false" unique="false" type="BTREE">
+            <column key="sort_order" length="" collation="A" null="false"/>
+        </index>
+
+        <!--
+          Group does NOT own its options — defining this as `composites` would
+          make $group->remove() cascade-delete every msOption in the group,
+          which contradicts the documented behavior: deleting a group should
+          detach its options (option_group_id = NULL), not destroy them.
+          OptionGroupsController calls detachOptionsFromGroup() explicitly before remove().
+        -->
+        <aggregate alias="Options" class="MiniShop3\Model\msOption" local="id" foreign="option_group_id" cardinality="many"
+                   owner="local"/>
     </object>
 
     <object class="msCategoryOption" table="ms3_category_options" extends="xPDO\Om\xPDOObject">
