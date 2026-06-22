@@ -182,6 +182,22 @@
       <input type="hidden" :name="fieldConfig.name" :value="localValue || ''" />
     </template>
 
+    <!-- Repeater (ms3-repeater) -->
+    <template v-else-if="fieldConfig.xtype === 'ms3-repeater'">
+      <RepeaterField v-model="localValue" :config="repeaterConfig" :disabled="disabled" />
+      <!--
+        Hidden input bridges Vue state to the legacy MODX Resource form POST.
+        Without it the Resource\Update processor (and ProductDataPayloadTrait from #298)
+        never sees `repeater` in $_POST, and prepareObject() normalises the in-memory
+        null to [] on save — silent loss of user input.
+      -->
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="serializeRepeaterForPost(localValue)"
+      />
+    </template>
+
     <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
     <!-- For now, we display them as simple text info since editing happens in ExtJS form -->
     <div v-else-if="isExtJSComboField" class="extjs-combo-info">
@@ -222,9 +238,11 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
+import { getRepeaterConfigFromField, parseRepeaterModelValue } from '../utils/repeaterField.js'
 import AutocompleteCombo from './AutocompleteCombo.vue'
 import FileBrowser from './FileBrowser.vue'
 import OptionsChips from './OptionsChips.vue'
+import RepeaterField from './RepeaterField.vue'
 import VendorCombo from './VendorCombo.vue'
 
 const props = defineProps({
@@ -293,7 +311,7 @@ const isFileBrowserXtype = computed(() => {
  * Determine if field is complex type (requires hidden field with JSON)
  */
 const isComplexField = computed(() => {
-  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect']
+  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect', 'ms3-repeater']
   return complexTypes.includes(props.fieldConfig.xtype)
 })
 
@@ -310,12 +328,6 @@ const isExtJSComboField = computed(() => {
   return props.fieldConfig.xtype.startsWith('ms3-combo-')
 })
 
-/**
- * Parse select_options string into array for ms3-combo-select
- * Format: "value1==label1\nvalue2==label2" or just "value1\nvalue2"
- * Note: select_options may be in fieldConfig.config.select_options or fieldConfig.select_options
- * depending on how the config was merged in PHP
- */
 const selectOptions = computed(() => {
   const optionsString =
     props.fieldConfig.config?.select_options || props.fieldConfig.select_options || ''
@@ -332,6 +344,31 @@ const selectOptions = computed(() => {
       return { value: line.trim(), label: line.trim() }
     })
 })
+
+const repeaterConfig = computed(() => getRepeaterConfigFromField(props.fieldConfig))
+
+function normalizeIncomingValue(value) {
+  if (props.fieldConfig.xtype === 'ms3-repeater') {
+    return parseRepeaterModelValue(value)
+  }
+  return value
+}
+
+/**
+ * Serialise the repeater value for the hidden legacy-form input.
+ * RepeaterField emits an array; the processor expects JSON string or array.
+ * Empty/missing → `[]` so xPDO json field stays a valid array, not null.
+ */
+function serializeRepeaterForPost(value) {
+  if (!Array.isArray(value)) {
+    return '[]'
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return '[]'
+  }
+}
 
 /**
  * Get ExtJS combo field description
@@ -371,13 +408,13 @@ const serializedValue = computed(() => {
 const emit = defineEmits(['update:modelValue', 'blur'])
 
 // Local value for v-model
-const localValue = ref(props.modelValue)
+const localValue = ref(normalizeIncomingValue(props.modelValue))
 
 // Watch for external changes
 watch(
   () => props.modelValue,
   newValue => {
-    localValue.value = newValue
+    localValue.value = normalizeIncomingValue(newValue)
   }
 )
 

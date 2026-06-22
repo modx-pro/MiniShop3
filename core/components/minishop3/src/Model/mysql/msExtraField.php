@@ -28,6 +28,7 @@ class msExtraField extends \MiniShop3\Model\msExtraField
             'index_type' => 'NONE',
             'active' => 0,
             'select_options' => null,
+            'repeater_config' => null,
         ],
         'fieldMeta' => [
             'class' => [
@@ -122,7 +123,12 @@ class msExtraField extends \MiniShop3\Model\msExtraField
                 'dbtype' => 'text',
                 'phptype' => 'string',
                 'null' => true,
-            ]
+            ],
+            'repeater_config' => [
+                'dbtype' => 'text',
+                'phptype' => 'string',
+                'null' => true,
+            ],
         ],
         'indexes' => [],
         'composites' => [],

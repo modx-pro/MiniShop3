@@ -23,6 +23,7 @@ import { useOrderFieldHelpers } from '../composables/useOrderFieldHelpers.js'
 import { useOrderFormatters } from '../composables/useOrderFormatters.js'
 import request from '../request.js'
 import { normalizeOrderPluginTab } from '../utils/orderPluginTab.js'
+import { parseRepeaterModelValue, REPEATER_XTYPE } from '../utils/repeaterField.js'
 import OrderAddressTab from './order/OrderAddressTab.vue'
 import OrderHistoryTab from './order/OrderHistoryTab.vue'
 import OrderInfoTab from './order/OrderInfoTab.vue'
@@ -246,6 +247,21 @@ function groupFieldsBySection(fields, sections) {
 /**
  * Load order data
  */
+/**
+ * Parse repeater extra field values from API (string JSON → array).
+ */
+function hydrateRepeaterExtraFields(fields) {
+  if (!order.value || !Array.isArray(fields)) {
+    return
+  }
+
+  for (const field of fields) {
+    if (field.xtype === REPEATER_XTYPE && field.key) {
+      order.value[field.key] = parseRepeaterModelValue(order.value[field.key])
+    }
+  }
+}
+
 async function loadOrder() {
   if (!orderId.value) {
     toast.add({
@@ -275,6 +291,9 @@ async function loadOrder() {
       loadAddressExtraFields(),
       loadOrderCustomer(),
     ])
+
+    hydrateRepeaterExtraFields(orderExtraFields.value)
+    hydrateRepeaterExtraFields(addressExtraFields.value)
   } catch (error) {
     console.error('[OrderView] Error loading order:', error)
     toast.add({
@@ -2137,6 +2156,7 @@ onMounted(async () => {
             <OrderInfoTab
               v-if="tab.key === 'info'"
               :order-fields-by-section="orderFieldsBySection"
+              :order-extra-fields="orderExtraFields"
             />
             <OrderProductsTab
               v-else-if="tab.key === 'products'"
@@ -2148,6 +2168,7 @@ onMounted(async () => {
               v-model:selected-customer="selectedCustomer"
               v-model:create-customer-from-data="createCustomerFromData"
               :address-fields-by-section="addressFieldsBySection"
+              :address-extra-fields="addressExtraFields"
             />
             <OrderHistoryTab v-else-if="tab.key === 'history'" :logs="logs" />
             <template v-else-if="tab.kind === 'plugin' && tab.type === 'vue' && tab.component">

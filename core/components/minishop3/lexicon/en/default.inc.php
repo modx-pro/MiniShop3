@@ -170,6 +170,7 @@ $_lang['ms3_err_unknown'] = 'Unknown error';
 $_lang['ms3_err_ns'] = 'This field is required';
 $_lang['ms3_err_ae'] = 'This field must be unique';
 $_lang['ms3_err_json'] = 'This field requires JSON string';
+$_lang['ms3_repeater_validation_error'] = 'Repeater field "[[+field]]": [[+error]]';
 
 $_lang['ms3_err_user_nf'] = 'User not found.';
 $_lang['ms3_err_order_nf'] = 'Order with this identifier not found.';

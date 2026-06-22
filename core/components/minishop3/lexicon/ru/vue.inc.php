@@ -160,6 +160,7 @@ $_lang['ms3_vue_xtype_numberfield'] = 'Числовое поле';
 $_lang['ms3_vue_xtype_textarea'] = 'Текстовая область';
 $_lang['ms3_vue_xtype_xcheckbox'] = 'Флажок';
 $_lang['ms3_vue_xtype_combo_select'] = 'Выпадающий список';
+$_lang['ms3_vue_xtype_repeater'] = 'Повторитель (таблица строк)';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Производитель (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Автодополнение (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Опции товара (chips)';
@@ -168,6 +169,25 @@ $_lang['ms3_vue_xtype_combo_options'] = 'Опции товара (chips)';
 $_lang['ms3_vue_select_options_label'] = 'Варианты списка';
 $_lang['ms3_vue_select_options_placeholder'] = "value1==Первый вариант\nvalue2==Второй вариант\nvalue3==Третий вариант";
 $_lang['ms3_vue_select_options_help'] = 'Формат: значение==подпись (по одному на строку). Если подпись не указана, будет использовано значение.';
+
+// Repeater field
+$_lang['ms3_vue_repeater_schema_label'] = 'Схема повторителя';
+$_lang['ms3_vue_repeater_schema_help'] = 'Определите колонки для каждой строки. Порядок сохраняется с автоматическим rank.';
+$_lang['ms3_vue_repeater_columns'] = 'Колонки';
+$_lang['ms3_vue_repeater_add_column'] = 'Добавить колонку';
+$_lang['ms3_vue_repeater_column_key'] = 'Ключ';
+$_lang['ms3_vue_repeater_column_label'] = 'Подпись';
+$_lang['ms3_vue_repeater_required'] = 'Обязательное';
+$_lang['ms3_vue_repeater_rank_field'] = 'Поле rank';
+$_lang['ms3_vue_repeater_min_rows'] = 'Мин. строк';
+$_lang['ms3_vue_repeater_max_rows'] = 'Макс. строк';
+$_lang['ms3_vue_repeater_unlimited'] = 'Без ограничения';
+$_lang['ms3_vue_repeater_sortable'] = 'Сортировка перетаскиванием';
+$_lang['ms3_vue_repeater_add_row'] = 'Добавить строку';
+$_lang['ms3_vue_repeater_no_columns'] = 'Настройте колонки повторителя в параметрах extra field.';
+$_lang['ms3_vue_repeater_drag_hint'] = 'Перетащите для изменения порядка';
+$_lang['ms3_vue_order_extra_fields'] = 'Дополнительные поля заказа';
+$_lang['ms3_vue_order_address_extra_fields'] = 'Дополнительные поля адреса';
 
 // Типы данных БД (dbtype)
 $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (строка)';

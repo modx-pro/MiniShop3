@@ -160,6 +160,7 @@ $_lang['ms3_vue_xtype_numberfield'] = 'Number Field';
 $_lang['ms3_vue_xtype_textarea'] = 'Text Area';
 $_lang['ms3_vue_xtype_xcheckbox'] = 'Checkbox';
 $_lang['ms3_vue_xtype_combo_select'] = 'Dropdown List';
+$_lang['ms3_vue_xtype_repeater'] = 'Repeater (rows grid)';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Vendor (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Autocomplete (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Product Options (chips)';
@@ -168,6 +169,25 @@ $_lang['ms3_vue_xtype_combo_options'] = 'Product Options (chips)';
 $_lang['ms3_vue_select_options_label'] = 'List Options';
 $_lang['ms3_vue_select_options_placeholder'] = "value1==First option\nvalue2==Second option\nvalue3==Third option";
 $_lang['ms3_vue_select_options_help'] = 'Format: value==label (one per line). If label is not specified, the value will be used.';
+
+// Repeater field
+$_lang['ms3_vue_repeater_schema_label'] = 'Repeater schema';
+$_lang['ms3_vue_repeater_schema_help'] = 'Define columns for each row. Order is saved with automatic rank.';
+$_lang['ms3_vue_repeater_columns'] = 'Columns';
+$_lang['ms3_vue_repeater_add_column'] = 'Add column';
+$_lang['ms3_vue_repeater_column_key'] = 'Key';
+$_lang['ms3_vue_repeater_column_label'] = 'Label';
+$_lang['ms3_vue_repeater_required'] = 'Required';
+$_lang['ms3_vue_repeater_rank_field'] = 'Rank field';
+$_lang['ms3_vue_repeater_min_rows'] = 'Min rows';
+$_lang['ms3_vue_repeater_max_rows'] = 'Max rows';
+$_lang['ms3_vue_repeater_unlimited'] = 'Unlimited';
+$_lang['ms3_vue_repeater_sortable'] = 'Drag-and-drop sorting';
+$_lang['ms3_vue_repeater_add_row'] = 'Add row';
+$_lang['ms3_vue_repeater_no_columns'] = 'Configure repeater columns in extra field settings.';
+$_lang['ms3_vue_repeater_drag_hint'] = 'Drag to reorder';
+$_lang['ms3_vue_order_extra_fields'] = 'Additional order fields';
+$_lang['ms3_vue_order_address_extra_fields'] = 'Additional address fields';
 
 // Database types (dbtype)
 $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (string)';

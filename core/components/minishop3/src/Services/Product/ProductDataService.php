@@ -8,6 +8,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
+use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MODX\Revolution\modX;
 
 /**
@@ -21,12 +22,37 @@ class ProductDataService
     /** @var modX */
     protected $modx;
 
+    /** @var array<string, array>|null */
+    protected ?array $productRepeaterFields = null;
+
     /**
      * @param modX $modx
      */
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+    }
+
+    protected function getRepeaterFieldService(): RepeaterFieldService
+    {
+        /** @var RepeaterFieldService $service */
+        $service = $this->modx->services->get('ms3_repeater_field');
+
+        return $service;
+    }
+
+    /**
+     * @return array<string, array>
+     */
+    protected function getProductRepeaterFields(): array
+    {
+        if ($this->productRepeaterFields === null) {
+            $this->productRepeaterFields = $this->getRepeaterFieldService()->getRepeaterFieldsForClass(
+                msProductData::class
+            );
+        }
+
+        return $this->productRepeaterFields;
     }
 
     /**
@@ -42,7 +68,16 @@ class ProductDataService
      */
     public function prepareObject(msProductData $productData): void
     {
+        $repeaterFields = $this->getProductRepeaterFields();
+        $repeaterService = $this->getRepeaterFieldService();
+
         foreach ($productData->getArraysValues() as $name => $array) {
+            if (isset($repeaterFields[$name])) {
+                $normalized = $repeaterService->processValue($array, $repeaterFields[$name]);
+                $productData->set($name, $normalized);
+                continue;
+            }
+
             $array = $productData->prepareOptionValues($array);
             $productData->set($name, $array);
         }
@@ -141,10 +176,15 @@ class ProductDataService
         $productId = $productData->get('id');
 
         $optionsExplicit = $options !== null;
+        $repeaterKeys = array_keys($this->getProductRepeaterFields());
+
         if ($options === null) {
             $options = [];
             foreach ($productData->_fieldMeta as $key => $value) {
                 if ($value['phptype'] === 'json' && !empty($productData->get($key))) {
+                    if (in_array($key, $repeaterKeys, true)) {
+                        continue;
+                    }
                     // Use field name as key, not numeric index from array_merge
                     $options[$key] = $productData->get($key);
                 }
@@ -613,14 +653,27 @@ class ProductDataService
             return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product data not found'];
         }
 
-        $filtered = array_intersect_key($data, array_flip(self::$allowedUpdateFields));
+        // Static whitelist + active repeater extra-field keys for msProductData.
+        // Without the extra keys, repeater values get silently dropped here and
+        // prepareObject() then normalises the in-memory null/empty to [] on save —
+        // user input is lost with no error (#301).
+        $allowedKeys = array_merge(
+            self::$allowedUpdateFields,
+            array_keys($this->getProductRepeaterFields())
+        );
+        $filtered = array_intersect_key($data, array_flip($allowedKeys));
         $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
 
         if (!$this->validateProductDataUpdate($filtered)) {
             return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => 'Validation failed'];
         }
 
-        $fieldsToUpdate = array_intersect_key($filtered, array_flip(self::$allowedUpdateFields));
+        $fieldsToUpdate = $filtered;
+
+        $repeaterError = $this->normalizeRepeaterFieldsInPayload($fieldsToUpdate);
+        if ($repeaterError !== null) {
+            return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => $repeaterError];
+        }
         $oldValues = [];
         foreach (array_keys($fieldsToUpdate) as $key) {
             $oldValues[$key] = $productData->get($key);
@@ -645,5 +698,38 @@ class ProductDataService
             $result['published'] = (bool)$product->get('published');
         }
         return ['ok' => true, 'data' => $result];
+    }
+
+    /**
+     * Validate and normalize repeater extra fields in manager API payload.
+     *
+     * @param array<string, mixed> $payload
+     */
+    protected function normalizeRepeaterFieldsInPayload(array &$payload): ?string
+    {
+        $repeaterFields = $this->getProductRepeaterFields();
+        if ($repeaterFields === []) {
+            return null;
+        }
+
+        $repeaterService = $this->getRepeaterFieldService();
+        $this->modx->lexicon->load('minishop3:default');
+
+        foreach ($repeaterFields as $fieldKey => $config) {
+            if (!array_key_exists($fieldKey, $payload)) {
+                continue;
+            }
+
+            try {
+                $payload[$fieldKey] = $repeaterService->processValue($payload[$fieldKey], $config);
+            } catch (\InvalidArgumentException $e) {
+                return $this->modx->lexicon('ms3_repeater_validation_error', [
+                    'field' => $fieldKey,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return null;
     }
 }
