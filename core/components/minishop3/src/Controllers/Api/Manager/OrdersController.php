@@ -46,10 +46,17 @@ class OrdersController
         'delivery_id',
         'payment_id',
         'context_key',
-        'createdon_from',
+        'createdon_from', // date keys handled in applyDirectFilters(), not in FIELD_MAP
         'createdon_to',
     ];
 
+    protected const DIRECT_FILTER_INT_KEYS = [
+        'status_id',
+        'delivery_id',
+        'payment_id',
+    ];
+
+    /** Param key => msOrder column for direct (unprefixed) filter params. */
     protected const DIRECT_FILTER_FIELD_MAP = [
         'status_id' => 'status_id',
         'delivery_id' => 'delivery_id',
@@ -1626,6 +1633,12 @@ class OrdersController
         }
     }
 
+    /**
+     * Apply direct (unprefixed) filter params to an orders query.
+     *
+     * @param \xPDO\Om\xPDOQuery $c Query object
+     * @param array $params Request parameters
+     */
     protected function applyDirectFilters($c, array $params): void
     {
         foreach (self::DIRECT_FILTER_FIELD_MAP as $paramKey => $fieldName) {
@@ -1634,7 +1647,7 @@ class OrdersController
                 continue;
             }
 
-            if (in_array($paramKey, ['status_id', 'delivery_id', 'payment_id'], true)) {
+            if (in_array($paramKey, self::DIRECT_FILTER_INT_KEYS, true)) {
                 $value = (int)$value;
             }
 

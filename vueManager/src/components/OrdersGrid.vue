@@ -14,6 +14,7 @@ import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 
+import { useGridFilterParams } from '../composables/useGridFilterParams.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
@@ -57,7 +58,7 @@ const {
 
 const columns = ref([])
 const filters = ref({})
-const directFilterKeys = ref(new Set())
+const { setDirectFilterKeys, addFilterParam } = useGridFilterParams()
 const loading = ref(false)
 const orders = ref([])
 const totalRecords = ref(0)
@@ -79,15 +80,6 @@ const sortedFilters = computed(() => {
     .map(([key, config]) => ({ key, ...config }))
     .sort((a, b) => (a.position || 100) - (b.position || 100))
 })
-
-function addFilterParam(params, key, value) {
-  if (directFilterKeys.value.has(key)) {
-    params[key] = value
-    return
-  }
-
-  params[`filter_${key}`] = value
-}
 
 /**
  * Load orders list
@@ -426,11 +418,11 @@ async function loadGridConfig() {
   try {
     const response = await request.get('/api/mgr/grid-config/orders')
     columns.value = response.columns || []
-    directFilterKeys.value = new Set(response.direct_filter_keys || [])
+    setDirectFilterKeys(response.direct_filter_keys)
   } catch (error) {
     console.error('[OrdersGrid] Failed to load grid config:', error)
     columns.value = getDefaultColumns()
-    directFilterKeys.value = new Set()
+    setDirectFilterKeys([])
   }
 }
 

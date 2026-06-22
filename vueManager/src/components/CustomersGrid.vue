@@ -16,6 +16,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
+import { useGridFilterParams } from '../composables/useGridFilterParams.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
@@ -42,7 +43,7 @@ const {
 })
 
 const columns = ref([])
-const directFilterKeys = ref(new Set())
+const { setDirectFilterKeys, addFilterParam } = useGridFilterParams()
 const loading = ref(false)
 const customers = ref([])
 const totalRecords = ref(0)
@@ -77,15 +78,6 @@ const CUSTOMER_GRID_DELETE_ACTION = {
   confirmTitle: 'customer_delete_confirm_title',
   confirmMessage: 'customer_delete_confirm_message',
   confirmAccept: 'delete',
-}
-
-function addFilterParam(params, key, value) {
-  if (directFilterKeys.value.has(key)) {
-    params[key] = value
-    return
-  }
-
-  params[`filter_${key}`] = value
 }
 
 /**
@@ -516,12 +508,12 @@ async function loadGridConfig() {
   try {
     const response = await request.get('/api/mgr/grid-config/customers')
     columns.value = response.columns || []
-    directFilterKeys.value = new Set(response.direct_filter_keys || [])
+    setDirectFilterKeys(response.direct_filter_keys)
     initFilters()
   } catch (error) {
     console.error('[CustomersGrid] Failed to load grid config:', error)
     columns.value = getDefaultColumns()
-    directFilterKeys.value = new Set()
+    setDirectFilterKeys([])
     initFilters()
   }
 }

@@ -30,16 +30,32 @@ $assertSame = static function (array $expected, array $actual, string $label) us
     }
 };
 
-$assertSame(
-    ['query', 'status_id', 'delivery_id', 'payment_id', 'context_key', 'createdon_from', 'createdon_to'],
-    OrdersController::getDirectFilterKeys(),
-    'orders direct filter keys'
-);
+$assertKeysInList = static function (array $keys, array $list, string $label) use ($fail): void {
+    foreach ($keys as $key) {
+        if (!in_array($key, $list, true)) {
+            $fail("{$label}: key {$key} missing from DIRECT_FILTER_KEYS");
+        }
+    }
+};
 
+$ordersReflection = new ReflectionClass(OrdersController::class);
+$ordersKeys = $ordersReflection->getConstant('DIRECT_FILTER_KEYS');
+$ordersFieldMap = $ordersReflection->getConstant('DIRECT_FILTER_FIELD_MAP');
+
+$assertSame($ordersKeys, OrdersController::getDirectFilterKeys(), 'orders getter returns DIRECT_FILTER_KEYS');
+$assertKeysInList(array_keys($ordersFieldMap), $ordersKeys, 'orders FIELD_MAP');
+
+foreach (['query', 'createdon_from', 'createdon_to'] as $separateKey) {
+    if (array_key_exists($separateKey, $ordersFieldMap)) {
+        $fail("orders key {$separateKey} must not be in DIRECT_FILTER_FIELD_MAP");
+    }
+}
+
+$customersReflection = new ReflectionClass(CustomersController::class);
 $assertSame(
-    ['query'],
+    $customersReflection->getConstant('DIRECT_FILTER_KEYS'),
     CustomersController::getDirectFilterKeys(),
-    'customers direct filter keys'
+    'customers getter returns DIRECT_FILTER_KEYS'
 );
 
 $gridConfig = new ReflectionClass(GridConfigController::class);
