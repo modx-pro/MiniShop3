@@ -2,11 +2,11 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
-use MiniShop3\Model\msProduct;
-use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msCategory;
+use MiniShop3\Model\msProduct;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Category\CategoryProductsListService;
 use MiniShop3\Services\FilterConfigManager;
 use MODX\Revolution\modX;
 
@@ -35,7 +35,7 @@ class CategoryProductsController
      */
     public function getList(array $params = []): array
     {
-        $categoryId = (int)($params['id'] ?? 0);
+        $categoryId = (int) ($params['id'] ?? 0);
 
         if (!$categoryId) {
             return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
@@ -46,121 +46,39 @@ class CategoryProductsController
             return Response::error('Category not found', HttpStatus::NOT_FOUND)->getData();
         }
 
-        $start = (int)($params['start'] ?? 0);
-        $limit = (int)($params['limit'] ?? 20);
+        $start = (int) ($params['start'] ?? 0);
+        $limit = (int) ($params['limit'] ?? 20);
         $sortBy = $params['sort'] ?? 'menuindex';
-        $sortDir = strtoupper($params['dir'] ?? 'ASC');
-        $query = trim($params['query'] ?? '');
-        $nested = (bool)($params['nested'] ?? false);
+        $sortDir = strtoupper((string) ($params['dir'] ?? 'ASC'));
+        $nested = (bool) ($params['nested'] ?? false);
 
-        // Validate sort direction
-        if (!in_array($sortDir, ['ASC', 'DESC'])) {
+        if (!in_array($sortDir, ['ASC', 'DESC'], true)) {
             $sortDir = 'ASC';
         }
 
-        // Build query
-        $c = $this->modx->newQuery(msProduct::class);
-        $c->innerJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
+        $gridConfig = $this->modx->services->get('ms3_grid_config');
+        $gridFields = $gridConfig ? $gridConfig->getGridConfig('category-products', true) : [];
 
-        // class_key filter (getIterator doesn't call addDerivativeCriteria)
-        $c->where(['msProduct.class_key' => msProduct::class]);
-
-        // Parent filter
-        if ($nested) {
-            // Get all child category IDs
-            $categoryIds = $this->getChildCategories($categoryId);
-            $categoryIds[] = $categoryId;
-            $c->where(['msProduct.parent:IN' => $categoryIds]);
-        } else {
-            $c->where(['msProduct.parent' => $categoryId]);
+        /** @var CategoryProductsListService|null $listService */
+        $listService = $this->modx->services->get('ms3_category_products_list');
+        if (!$listService) {
+            return Response::error('Category products list service is not available', 500)->getData();
         }
 
-        // Search filter
-        if (!empty($query)) {
-            $c->where([
-                'msProduct.pagetitle:LIKE' => "%{$query}%",
-                'OR:Data.article:LIKE' => "%{$query}%",
-            ]);
-        }
-
-        // Boolean filters for msProduct fields
-        $productBooleanFields = ['published', 'deleted', 'hidemenu', 'isfolder'];
-        foreach ($productBooleanFields as $field) {
-            if (isset($params[$field]) && $params[$field] !== '') {
-                $c->where(["msProduct.{$field}" => (int)$params[$field]]);
-            }
-        }
-
-        // Boolean filters for msProductData fields
-        $dataBooleanFields = ['new', 'popular', 'favorite'];
-        foreach ($dataBooleanFields as $field) {
-            if (isset($params[$field]) && $params[$field] !== '') {
-                $c->where(["Data.{$field}" => (int)$params[$field]]);
-            }
-        }
-
-        // Text filters for msProduct fields (LIKE search)
-        $productTextFields = ['pagetitle', 'longtitle', 'alias', 'description', 'introtext', 'content'];
-        foreach ($productTextFields as $field) {
-            if (!empty($params[$field])) {
-                $c->where(["msProduct.{$field}:LIKE" => "%{$params[$field]}%"]);
-            }
-        }
-
-        // Text filters for msProductData fields (LIKE search)
-        $dataTextFields = ['article', 'made_in'];
-        foreach ($dataTextFields as $field) {
-            if (!empty($params[$field])) {
-                $c->where(["Data.{$field}:LIKE" => "%{$params[$field]}%"]);
-            }
-        }
-
-        // Numeric filters for msProductData fields (exact match)
-        $dataNumericFields = ['price', 'old_price', 'weight', 'vendor_id'];
-        foreach ($dataNumericFields as $field) {
-            if (isset($params[$field]) && $params[$field] !== '') {
-                $c->where(["Data.{$field}" => $params[$field]]);
-            }
-        }
-
-        // Default: hide deleted if not explicitly filtered
-        if (!isset($params['deleted']) || $params['deleted'] === '') {
-            $c->where(['msProduct.deleted' => 0]);
-        }
-
-        // Get total count
-        $total = $this->modx->getCount(msProduct::class, $c);
-
-        // Apply sorting and pagination
-        $c->sortby($sortBy, $sortDir);
-        $c->limit($limit, $start);
-
-        // Select fields
-        $c->select([
-            'msProduct.*',
-            'Data.article',
-            'Data.price',
-            'Data.old_price',
-            'Data.weight',
-            'Data.image',
-            'Data.thumb',
-            'Data.vendor_id',
-            'Data.made_in',
-            'Data.new',
-            'Data.popular',
-            'Data.favorite',
-        ]);
-
-        $products = $this->modx->getIterator(msProduct::class, $c);
-
-        $results = [];
-        foreach ($products as $product) {
-            $results[] = $this->formatProduct($product, $nested);
-        }
+        $page = $listService->getPage(
+            $categoryId,
+            $params,
+            $nested,
+            $gridFields,
+            $start,
+            $limit,
+            (string) $sortBy,
+            $sortDir
+        );
 
         return Response::success([
-            'results' => $results,
-            'total' => $total
+            'results' => $page['results'],
+            'total' => $page['total'],
         ])->getData();
     }
 
@@ -194,7 +112,7 @@ class CategoryProductsController
      */
     public function sort(array $params = []): array
     {
-        $categoryId = (int)($params['id'] ?? 0);
+        $categoryId = (int) ($params['id'] ?? 0);
         $items = $params['items'] ?? [];
 
         if (!$categoryId) {
@@ -208,8 +126,8 @@ class CategoryProductsController
         $updated = 0;
 
         foreach ($items as $item) {
-            $productId = (int)($item['id'] ?? 0);
-            $menuindex = (int)($item['menuindex'] ?? 0);
+            $productId = (int) ($item['id'] ?? 0);
+            $menuindex = (int) ($item['menuindex'] ?? 0);
 
             if (!$productId) {
                 continue;
@@ -217,7 +135,7 @@ class CategoryProductsController
 
             $product = $this->modx->getObject(msProduct::class, [
                 'id' => $productId,
-                'parent' => $categoryId
+                'parent' => $categoryId,
             ]);
 
             if ($product) {
@@ -229,7 +147,7 @@ class CategoryProductsController
         }
 
         return Response::success([
-            'updated' => $updated
+            'updated' => $updated,
         ], 'Products reordered successfully')->getData();
     }
 
@@ -331,7 +249,7 @@ class CategoryProductsController
 
         return Response::success([
             'success' => $success,
-            'failed' => $failed
+            'failed' => $failed,
         ], "{$success} products updated")->getData();
     }
 
@@ -345,6 +263,7 @@ class CategoryProductsController
     public function bulkDelete(array $params = []): array
     {
         $params['method'] = 'delete';
+
         return $this->multiple($params);
     }
 
@@ -357,8 +276,8 @@ class CategoryProductsController
      */
     public function publish(array $params = []): array
     {
-        $productId = (int)($params['productId'] ?? 0);
-        $published = isset($params['published']) ? (int)$params['published'] : null;
+        $productId = (int) ($params['productId'] ?? 0);
+        $published = isset($params['published']) ? (int) $params['published'] : null;
 
         if (!$productId) {
             return Response::error('Product ID is required', HttpStatus::BAD_REQUEST)->getData();
@@ -390,81 +309,8 @@ class CategoryProductsController
 
         return Response::success([
             'id' => $productId,
-            'published' => $published
+            'published' => $published,
         ], $published ? 'Product published' : 'Product unpublished')->getData();
-    }
-
-    /**
-     * Format product for API response
-     *
-     * @param msProduct $product
-     * @param bool $nested
-     * @return array
-     */
-    protected function formatProduct(msProduct $product, bool $nested = false): array
-    {
-        $data = [
-            'id' => $product->get('id'),
-            'pagetitle' => $product->get('pagetitle'),
-            'longtitle' => $product->get('longtitle'),
-            'alias' => $product->get('alias'),
-            'parent' => $product->get('parent'),
-            'menuindex' => $product->get('menuindex'),
-            'published' => (bool)$product->get('published'),
-            'deleted' => (bool)$product->get('deleted'),
-            'hidemenu' => (bool)$product->get('hidemenu'),
-            'createdon' => $product->get('createdon'),
-            'editedon' => $product->get('editedon'),
-            // Product data
-            'article' => $product->get('article'),
-            'price' => (float)$product->get('price'),
-            'old_price' => (float)$product->get('old_price'),
-            'weight' => (float)$product->get('weight'),
-            'image' => $product->get('image'),
-            'thumb' => $product->get('thumb'),
-            'vendor_id' => (int)$product->get('vendor_id'),
-            'made_in' => $product->get('made_in'),
-            'new' => (bool)$product->get('new'),
-            'popular' => (bool)$product->get('popular'),
-            'favorite' => (bool)$product->get('favorite'),
-            // Preview URL
-            'preview_url' => $this->modx->makeUrl($product->get('id'), '', '', 'full'),
-        ];
-
-        // Add category name for nested products
-        if ($nested && $product->get('parent') != 0) {
-            $parent = $this->modx->getObject(msCategory::class, $product->get('parent'));
-            if ($parent) {
-                $data['category_name'] = $parent->get('pagetitle');
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * Get all child category IDs recursively
-     *
-     * @param int $parentId
-     * @return array
-     */
-    protected function getChildCategories(int $parentId): array
-    {
-        $ids = [];
-
-        $children = $this->modx->getIterator(msCategory::class, [
-            'parent' => $parentId,
-            'deleted' => 0,
-            'class_key' => msCategory::class,
-        ]);
-
-        foreach ($children as $child) {
-            $childId = $child->get('id');
-            $ids[] = $childId;
-            $ids = array_merge($ids, $this->getChildCategories($childId));
-        }
-
-        return $ids;
     }
 
     /**

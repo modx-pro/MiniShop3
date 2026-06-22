@@ -2,8 +2,9 @@
 
 namespace MiniShop3\Services;
 
-use MODX\Revolution\modX;
 use MiniShop3\Model\msGridField;
+use MiniShop3\Services\Grid\OptionColumnSpec;
+use MODX\Revolution\modX;
 
 /**
  * Service for managing grid configurations
@@ -177,6 +178,8 @@ class GridConfigService
                     'relation',
                     // computed type
                     'computed',
+                    // option type
+                    'option',
                     // badge type
                     'source_field', 'color_field',
                     // datetime type
@@ -361,6 +364,16 @@ class GridConfigService
                         return $validation;
                     }
                     break;
+
+                case 'option':
+                    $validation = $this->validateOptionConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? '')
+                    );
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
             }
 
             // Add type to config
@@ -483,6 +496,15 @@ class GridConfigService
                     break;
                 case 'actions':
                     $validation = $this->validateActionsConfig($config);
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
+                case 'option':
+                    $validation = $this->validateOptionConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? $fieldName)
+                    );
                     if (!$validation['success']) {
                         return $validation;
                     }
@@ -747,6 +769,37 @@ class GridConfigService
                     return ['success' => false, 'message' => "Invalid severity for action {$action['name']}. Allowed: " . implode(', ', $allowedSeverities)];
                 }
             }
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Validate Option field configuration
+     *
+     * @param array $config
+     * @return array
+     */
+    protected function validateOptionConfig(array $config, string $fieldName = ''): array
+    {
+        $option = $config['option'] ?? [];
+
+        if (empty($option['key'])) {
+            return ['success' => false, 'message' => 'option.key is required for option field'];
+        }
+
+        $key = (string) $option['key'];
+        if (!OptionColumnSpec::isValidOptionKey($key)) {
+            return ['success' => false, 'message' => 'option.key must contain only letters, numbers and underscores'];
+        }
+
+        if ($fieldName !== '' && !OptionColumnSpec::isValidFieldName($fieldName)) {
+            return [
+                'success' => false,
+                'message' => "Field name '{$fieldName}' is not allowed for option columns: "
+                    . "it collides with a builtin product column or contains invalid characters. "
+                    . "Use a name like 'option_{$key}' instead.",
+            ];
         }
 
         return ['success' => true];

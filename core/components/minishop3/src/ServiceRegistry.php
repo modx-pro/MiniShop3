@@ -186,6 +186,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\GridConfigService::class,
             'interface' => null,
         ],
+        'ms3_category_products_list' => [
+            'class' => \MiniShop3\Services\Category\CategoryProductsListService::class,
+            'interface' => null,
+        ],
         'ms3_filter_config' => [
             'class' => \MiniShop3\Services\FilterConfigManager::class,
             'interface' => null,

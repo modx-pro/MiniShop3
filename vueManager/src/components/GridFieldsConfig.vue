@@ -46,6 +46,9 @@ const newField = ref({
       displayField: '',
       aggregation: null,
     },
+    option: {
+      key: '',
+    },
     computed: {
       className: '',
     },
@@ -90,6 +93,7 @@ const fieldTypeOptions = computed(() => [
   { label: _('field_type_model'), value: 'model' },
   { label: _('field_type_template'), value: 'template' },
   { label: _('field_type_relation'), value: 'relation' },
+  { label: _('field_type_option'), value: 'option' },
   { label: _('field_type_computed'), value: 'computed' },
   { label: _('field_type_image'), value: 'image' },
   { label: _('field_type_boolean'), value: 'boolean' },
@@ -232,6 +236,7 @@ async function loadFields() {
         type: col.type || 'model',
         template: col.template || '',
         relation: col.relation || null,
+        option: col.option || null,
         computed: col.computed || null,
         actions: col.actions || null,
         // Display config
@@ -293,6 +298,7 @@ async function saveConfig() {
       if (field.type) data.type = field.type
       if (field.template) data.template = field.template
       if (field.relation) data.relation = field.relation
+      if (field.option) data.option = field.option
       if (field.computed) data.computed = field.computed
       if (field.actions) data.actions = field.actions
 
@@ -436,6 +442,9 @@ function openAddDialog() {
         displayField: '',
         aggregation: null,
       },
+      option: {
+        key: '',
+      },
       computed: {
         className: '',
       },
@@ -500,6 +509,13 @@ async function addField() {
             foreignKey: newField.value.config.relation.foreignKey,
             displayField: newField.value.config.relation.displayField,
             aggregation: newField.value.config.relation.aggregation,
+          },
+        }
+        break
+      case 'option':
+        data.config = {
+          option: {
+            key: newField.value.config.option?.key || '',
           },
         }
         break
@@ -625,6 +641,7 @@ async function addField() {
         type: config.type || 'model',
         template: config.template || '',
         relation: config.relation || null,
+        option: config.option || null,
         computed: config.computed || null,
         actions: config.actions || null,
         // Display config
@@ -717,6 +734,8 @@ function openEditDialog(field, index) {
     className: '',
   }
 
+  const optionConfig = field.option || { key: '' }
+
   editingField.value = {
     field_name: field.name,
     label: field.label || '',
@@ -729,6 +748,7 @@ function openEditDialog(field, index) {
     config: {
       template: field.template || '',
       relation: relationConfig,
+      option: optionConfig,
       computed: computedConfig,
       actions: field.actions || [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
@@ -788,6 +808,13 @@ async function saveEdit() {
             foreignKey: editingField.value.config.relation.foreignKey,
             displayField: editingField.value.config.relation.displayField,
             aggregation: editingField.value.config.relation.aggregation,
+          },
+        }
+        break
+      case 'option':
+        data.config = {
+          option: {
+            key: editingField.value.config.option?.key || '',
           },
         }
         break
@@ -916,6 +943,7 @@ async function saveEdit() {
         type: config.type || 'model',
         template: config.template || '',
         relation: config.relation || null,
+        option: config.option || null,
         computed: config.computed || null,
         actions: config.actions || null,
         // Display config
@@ -1186,6 +1214,17 @@ onMounted(() => {
         <small class="text-muted">{{ _('relation_hint') }}</small>
       </div>
 
+      <div v-if="newField.type === 'option'" class="field mb-3">
+        <label for="new-field-option-key" class="required">{{ _('option_key') }}</label>
+        <InputText
+          id="new-field-option-key"
+          v-model="newField.config.option.key"
+          class="w-full"
+          :placeholder="_('option_key_placeholder')"
+        />
+        <small class="text-muted">{{ _('option_key_hint') }}</small>
+      </div>
+
       <div v-if="newField.type === 'computed'" class="field mb-3">
         <label for="new-field-computed-class" class="required">{{
           _('computed_class_name')
@@ -1253,8 +1292,8 @@ onMounted(() => {
         >
       </div>
 
-      <!-- Inline edit (category-products only) -->
-      <div v-if="isCategoryProductsGrid" class="field mb-3">
+      <!-- Inline edit (category-products only; option columns are read-only) -->
+      <div v-if="isCategoryProductsGrid && newField.type !== 'option'" class="field mb-3">
         <div class="flex align-items-center mb-2">
           <Checkbox
             v-model="newField.config.editable"
@@ -1486,6 +1525,17 @@ onMounted(() => {
           <small class="text-muted">{{ _('relation_hint') }}</small>
         </div>
 
+        <div v-if="editingField.type === 'option'" class="field mb-3">
+          <label for="edit-field-option-key" class="required">{{ _('option_key') }}</label>
+          <InputText
+            id="edit-field-option-key"
+            v-model="editingField.config.option.key"
+            class="w-full"
+            :placeholder="_('option_key_placeholder')"
+          />
+          <small class="text-muted">{{ _('option_key_hint') }}</small>
+        </div>
+
         <div v-if="editingField.type === 'computed'" class="field mb-3">
           <label for="edit-field-computed-class" class="required">{{
             _('computed_class_name')
@@ -1553,8 +1603,8 @@ onMounted(() => {
           >
         </div>
 
-        <!-- Inline edit (category-products only) -->
-        <div v-if="isCategoryProductsGrid" class="field mb-3">
+        <!-- Inline edit (category-products only; option columns are read-only) -->
+        <div v-if="isCategoryProductsGrid && editingField.type !== 'option'" class="field mb-3">
           <div class="flex align-items-center mb-2">
             <Checkbox
               v-model="editingField.config.editable"
