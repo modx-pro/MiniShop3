@@ -16,6 +16,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
+import { useGridFilterParams } from '../composables/useGridFilterParams.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
@@ -42,6 +43,7 @@ const {
 })
 
 const columns = ref([])
+const { setDirectFilterKeys, addFilterParam } = useGridFilterParams()
 const loading = ref(false)
 const customers = ref([])
 const totalRecords = ref(0)
@@ -99,7 +101,7 @@ async function loadCustomers() {
     Object.keys(filterValues.value).forEach(key => {
       const value = filterValues.value[key]
       if (value !== null && value !== undefined && value !== '') {
-        params[`filter_${key}`] = value
+        addFilterParam(params, key, value)
       }
     })
 
@@ -506,10 +508,12 @@ async function loadGridConfig() {
   try {
     const response = await request.get('/api/mgr/grid-config/customers')
     columns.value = response.columns || []
+    setDirectFilterKeys(response.direct_filter_keys)
     initFilters()
   } catch (error) {
     console.error('[CustomersGrid] Failed to load grid config:', error)
     columns.value = getDefaultColumns()
+    setDirectFilterKeys([])
     initFilters()
   }
 }

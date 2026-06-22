@@ -16,11 +16,20 @@ use MODX\Revolution\modX;
  */
 class CustomersController
 {
+    protected const DIRECT_FILTER_KEYS = [
+        'query',
+    ];
+
     protected modX $modx;
 
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+    }
+
+    public static function getDirectFilterKeys(): array
+    {
+        return self::DIRECT_FILTER_KEYS;
     }
 
     /**

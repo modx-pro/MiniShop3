@@ -12,6 +12,11 @@ use MODX\Revolution\modX;
  */
 class GridConfigController
 {
+    private const DIRECT_FILTER_KEY_PROVIDERS = [
+        'orders' => OrdersController::class,
+        'customers' => CustomersController::class,
+    ];
+
     /** @var modX */
     protected $modx;
 
@@ -49,12 +54,25 @@ class GridConfigController
         $includeHidden = !empty($params['include_hidden']);
         $config = $this->service->getGridConfig($gridKey, $includeHidden);
 
-        $payload = ['columns' => $config];
+        $payload = [
+            'columns' => $config,
+            'direct_filter_keys' => $this->getDirectFilterKeys($gridKey),
+        ];
         if ($gridKey === 'category-products') {
             $payload['editor_references'] = GridEditorReferenceRegistry::listForClient();
         }
 
         return Response::success($payload)->getData();
+    }
+
+    private function getDirectFilterKeys(string $gridKey): array
+    {
+        $provider = self::DIRECT_FILTER_KEY_PROVIDERS[$gridKey] ?? null;
+        if (!$provider || !method_exists($provider, 'getDirectFilterKeys')) {
+            return [];
+        }
+
+        return $provider::getDirectFilterKeys();
     }
 
     /**
