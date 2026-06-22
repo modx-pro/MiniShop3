@@ -156,11 +156,7 @@ class OrdersController
             }
         }
 
-        $showDrafts = $this->modx->getOption('ms3_order_show_drafts', null, false);
-        if (!$showDrafts) {
-            $statusDrafts = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
-            $c->where(['status_id:!=' => $statusDrafts]);
-        }
+        $this->applyDraftVisibilityFilter($c, $params);
 
         if (!empty($query)) {
             if (is_numeric($query)) {
@@ -1579,6 +1575,43 @@ class OrdersController
             'month_sum' => number_format(round($data['sum'] ?? 0), 0, '.', ' '),
             'month_total' => number_format($data['total'] ?? 0, 0, '.', ' '),
         ];
+    }
+
+    /**
+     * Whether draft orders should be included in the manager orders list query.
+     *
+     * When `show_drafts` is present in request params it overrides `ms3_order_show_drafts`.
+     * The Vue orders grid always sends this flag (initialized from ms3.config.order_show_drafts).
+     */
+    protected function shouldShowDrafts(array $params): bool
+    {
+        $default = (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
+
+        if (!array_key_exists('show_drafts', $params)) {
+            return $default;
+        }
+
+        $value = $params['show_drafts'];
+        if ($value === '' || $value === null) {
+            return $default;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Exclude draft status from getList query unless drafts are explicitly shown.
+     *
+     * @param \xPDO\Om\xPDOQuery $c Query object
+     */
+    protected function applyDraftVisibilityFilter(\xPDO\Om\xPDOQuery $c, array $params): void
+    {
+        if ($this->shouldShowDrafts($params)) {
+            return;
+        }
+
+        $statusDrafts = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+        $c->where(['status_id:!=' => $statusDrafts]);
     }
 
     /**

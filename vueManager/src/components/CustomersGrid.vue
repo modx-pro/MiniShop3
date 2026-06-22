@@ -14,7 +14,7 @@ import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
@@ -183,6 +183,7 @@ async function saveCustomer() {
   if (!editingCustomer.value) return
 
   saving.value = true
+  const queryBeforeSave = searchQuery.value
 
   try {
     const data = { ...editingCustomer.value }
@@ -201,6 +202,8 @@ async function saveCustomer() {
     })
 
     editDialogVisible.value = false
+    await nextTick()
+    searchQuery.value = queryBeforeSave
     await loadCustomers()
   } catch (error) {
     console.error('[CustomersGrid] Error saving customer:', error)
@@ -655,6 +658,8 @@ onMounted(async () => {
         <div class="p-inputgroup mb-3">
           <InputText
             v-model="searchQuery"
+            name="ms3-customers-grid-search"
+            autocomplete="off"
             :placeholder="_('search_placeholder')"
             @keyup.enter="onSearch"
           />
@@ -814,45 +819,73 @@ onMounted(async () => {
       :style="{ width: '34.375rem' }"
       :append-to="'self'"
     >
-      <div v-if="editingCustomer" class="customer-form">
+      <form
+        v-if="editingCustomer"
+        class="customer-form"
+        autocomplete="off"
+        @submit.prevent="saveCustomer"
+      >
         <!-- Row 1: First and Last Name -->
         <div class="form-row">
           <div class="form-col">
-            <label for="first_name">{{ _('customer_first_name') }}</label>
-            <InputText id="first_name" v-model="editingCustomer.first_name" class="w-full" />
+            <label for="ms3-customer-first_name">{{ _('customer_first_name') }}</label>
+            <InputText
+              id="ms3-customer-first_name"
+              v-model="editingCustomer.first_name"
+              autocomplete="off"
+              class="w-full"
+            />
           </div>
           <div class="form-col">
-            <label for="last_name">{{ _('customer_last_name') }}</label>
-            <InputText id="last_name" v-model="editingCustomer.last_name" class="w-full" />
+            <label for="ms3-customer-last_name">{{ _('customer_last_name') }}</label>
+            <InputText
+              id="ms3-customer-last_name"
+              v-model="editingCustomer.last_name"
+              autocomplete="off"
+              class="w-full"
+            />
           </div>
         </div>
 
         <!-- Row 2: Email and Phone -->
         <div class="form-row">
           <div class="form-col">
-            <label for="email">{{ _('customer_email') }}</label>
-            <InputText id="email" v-model="editingCustomer.email" type="email" class="w-full" />
+            <label for="ms3-customer-email">{{ _('customer_email') }}</label>
+            <InputText
+              id="ms3-customer-email"
+              v-model="editingCustomer.email"
+              type="email"
+              autocomplete="off"
+              class="w-full"
+            />
           </div>
           <div class="form-col">
-            <label for="phone">{{ _('customer_phone') }}</label>
-            <InputText id="phone" v-model="editingCustomer.phone" class="w-full" />
+            <label for="ms3-customer-phone">{{ _('customer_phone') }}</label>
+            <InputText
+              id="ms3-customer-phone"
+              v-model="editingCustomer.phone"
+              autocomplete="off"
+              class="w-full"
+            />
           </div>
         </div>
 
         <!-- Row 3: New Password -->
         <div class="form-row">
           <div class="form-col-full">
-            <label for="new_password">{{ _('customer_new_password') }}</label>
+            <label for="ms3-customer-new_password">{{ _('customer_new_password') }}</label>
             <InputGroup>
               <InputText
-                id="new_password"
+                id="ms3-customer-new_password"
                 v-model="newPassword"
                 :type="showPassword ? 'text' : 'password'"
+                autocomplete="new-password"
                 :placeholder="_('customer_password_placeholder')"
                 class="w-full"
               />
               <InputGroupAddon>
                 <Button
+                  type="button"
                   :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"
                   text
                   :title="showPassword ? _('hide_password') : _('show_password')"
@@ -861,6 +894,7 @@ onMounted(async () => {
               </InputGroupAddon>
               <InputGroupAddon>
                 <Button
+                  type="button"
                   icon="pi pi-refresh"
                   text
                   :title="_('generate_password')"
@@ -894,16 +928,23 @@ onMounted(async () => {
             }}</label>
           </div>
         </div>
-      </div>
+      </form>
 
       <template #footer>
         <Button
+          type="button"
           :label="_('cancel')"
           icon="pi pi-times"
           class="p-button-text"
           @click="editDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveCustomer" />
+        <Button
+          type="button"
+          :label="_('save')"
+          icon="pi pi-check"
+          :loading="saving"
+          @click="saveCustomer"
+        />
       </template>
     </Dialog>
 

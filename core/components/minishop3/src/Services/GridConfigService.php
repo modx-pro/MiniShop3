@@ -2,8 +2,9 @@
 
 namespace MiniShop3\Services;
 
-use MODX\Revolution\modX;
 use MiniShop3\Model\msGridField;
+use MiniShop3\Services\Grid\OptionColumnSpec;
+use MODX\Revolution\modX;
 
 /**
  * Service for managing grid configurations
@@ -177,6 +178,8 @@ class GridConfigService
                     'relation',
                     // computed type
                     'computed',
+                    // option type
+                    'option',
                     // badge type
                     'source_field', 'color_field',
                     // datetime type
@@ -185,13 +188,25 @@ class GridConfigService
                     'decimals', 'currency', 'currency_position', 'thousands_separator', 'decimal_separator',
                     // weight type
                     'unit', 'unit_position',
-                    // inline edit (category-products). Add 'editor_options' when select editor is implemented in UI
-                    'editable', 'editor_type',
+                    // inline edit (category-products)
+                    'editable', 'editor_type', 'editor_options', 'editor_reference', 'editor_combo_endpoint',
                 ];
                 foreach ($configKeys as $key) {
                     if (array_key_exists($key, $fieldData)) {
                         $config[$key] = $fieldData[$key];
                     }
+                }
+
+                if (($config['editor_type'] ?? '') !== GridColumnEditorType::COMBO) {
+                    unset($config['editor_reference'], $config['editor_combo_endpoint']);
+                }
+
+                $comboCheck = GridEditorReferenceRegistry::validateComboEditorConfig($config);
+                if (!$comboCheck['success']) {
+                    $this->modx->log(modX::LOG_LEVEL_ERROR,
+                        '[GridConfigService] Combo editor validation failed for ' . $gridKey . '.' . $fieldName . ': ' . ($comboCheck['message'] ?? ''));
+
+                    return false;
                 }
 
                 $field->set('config', json_encode($config, JSON_UNESCAPED_UNICODE));
@@ -349,10 +364,29 @@ class GridConfigService
                         return $validation;
                     }
                     break;
+
+                case 'option':
+                    $validation = $this->validateOptionConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? '')
+                    );
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
             }
 
             // Add type to config
             $config['type'] = $type;
+
+            if (($config['editor_type'] ?? '') !== GridColumnEditorType::COMBO) {
+                unset($config['editor_reference'], $config['editor_combo_endpoint']);
+            }
+
+            $comboCheck = GridEditorReferenceRegistry::validateComboEditorConfig($config);
+            if (!$comboCheck['success']) {
+                return ['success' => false, 'message' => $comboCheck['message'] ?? 'Invalid combo editor configuration'];
+            }
 
             // Get maximum sort_order
             $maxSortOrder = 0;
@@ -466,10 +500,28 @@ class GridConfigService
                         return $validation;
                     }
                     break;
+                case 'option':
+                    $validation = $this->validateOptionConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? $fieldName)
+                    );
+                    if (!$validation['success']) {
+                        return $validation;
+                    }
+                    break;
             }
 
             // Add type to config
             $config['type'] = $type;
+
+            if (($config['editor_type'] ?? '') !== GridColumnEditorType::COMBO) {
+                unset($config['editor_reference'], $config['editor_combo_endpoint']);
+            }
+
+            $comboCheck = GridEditorReferenceRegistry::validateComboEditorConfig($config);
+            if (!$comboCheck['success']) {
+                return ['success' => false, 'message' => $comboCheck['message'] ?? 'Invalid combo editor configuration'];
+            }
 
             // Update field
             if (isset($data['label'])) {
@@ -717,6 +769,37 @@ class GridConfigService
                     return ['success' => false, 'message' => "Invalid severity for action {$action['name']}. Allowed: " . implode(', ', $allowedSeverities)];
                 }
             }
+        }
+
+        return ['success' => true];
+    }
+
+    /**
+     * Validate Option field configuration
+     *
+     * @param array $config
+     * @return array
+     */
+    protected function validateOptionConfig(array $config, string $fieldName = ''): array
+    {
+        $option = $config['option'] ?? [];
+
+        if (empty($option['key'])) {
+            return ['success' => false, 'message' => 'option.key is required for option field'];
+        }
+
+        $key = (string) $option['key'];
+        if (!OptionColumnSpec::isValidOptionKey($key)) {
+            return ['success' => false, 'message' => 'option.key must contain only letters, numbers and underscores'];
+        }
+
+        if ($fieldName !== '' && !OptionColumnSpec::isValidFieldName($fieldName)) {
+            return [
+                'success' => false,
+                'message' => "Field name '{$fieldName}' is not allowed for option columns: "
+                    . "it collides with a builtin product column or contains invalid characters. "
+                    . "Use a name like 'option_{$key}' instead.",
+            ];
         }
 
         return ['success' => true];

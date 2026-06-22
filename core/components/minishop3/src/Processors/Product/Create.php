@@ -5,10 +5,13 @@ namespace MiniShop3\Processors\Product;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\modDocument;
+use MODX\Revolution\modX;
 use MODX\Revolution\Processors\Resource\Create as CreateProcessor;
 
 class Create extends CreateProcessor
 {
+    use ProductDataPayloadTrait;
+
     public $classKey = msProduct::class;
     public $languageTopics = ['resource', 'minishop3:default'];
     public $permission = 'msproduct_save';
@@ -71,6 +74,8 @@ class Create extends CreateProcessor
             ),
         ]);
 
+        $this->captureProductDataPayload();
+
         $properties = $this->getProperties();
         $options = [];
         $hadOptionFieldsInRequest = false;
@@ -105,6 +110,7 @@ class Create extends CreateProcessor
     public function beforeSave()
     {
         $this->object->set('isfolder', false);
+
         return parent::beforeSave();
     }
 
@@ -127,6 +133,15 @@ class Create extends CreateProcessor
         }
 
         $result = parent::afterSave();
+
+        // msProductData needs resource id; composite may not persist payload fields on insert (#297).
+        if (!$this->persistProductDataPayload()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[msProduct/Create] failed to persist msProductData for resource id '
+                . $this->object->get('id')
+            );
+        }
 
         // Same contract as Update::afterSave (#199): only sync when the request contained options-* keys (#257).
         if ($this->ms3ProductFormOptions !== null) {
