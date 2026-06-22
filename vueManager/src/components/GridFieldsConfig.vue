@@ -442,6 +442,9 @@ function openAddDialog() {
         displayField: '',
         aggregation: null,
       },
+      option: {
+        key: '',
+      },
       computed: {
         className: '',
       },
@@ -1289,8 +1292,8 @@ onMounted(() => {
         >
       </div>
 
-      <!-- Inline edit (category-products only) -->
-      <div v-if="isCategoryProductsGrid" class="field mb-3">
+      <!-- Inline edit (category-products only; option columns are read-only) -->
+      <div v-if="isCategoryProductsGrid && newField.type !== 'option'" class="field mb-3">
         <div class="flex align-items-center mb-2">
           <Checkbox
             v-model="newField.config.editable"
@@ -1600,8 +1603,8 @@ onMounted(() => {
           >
         </div>
 
-        <!-- Inline edit (category-products only) -->
-        <div v-if="isCategoryProductsGrid" class="field mb-3">
+        <!-- Inline edit (category-products only; option columns are read-only) -->
+        <div v-if="isCategoryProductsGrid && editingField.type !== 'option'" class="field mb-3">
           <div class="flex align-items-center mb-2">
             <Checkbox
               v-model="editingField.config.editable"
