@@ -12,6 +12,26 @@ final readonly class OptionColumnSpec
     /** Same rule as {@see \MiniShop3\Services\GridConfigService::validateOptionConfig()} */
     private const OPTION_KEY_PATTERN = '/^[a-z0-9_]+$/i';
 
+    /** Same rule as OPTION_KEY_PATTERN; fieldName also lands in `SELECT … AS \`{name}\``. */
+    private const FIELD_NAME_PATTERN = '/^[a-z0-9_]+$/i';
+
+    /**
+     * Builtin product / product-data column names that already appear in SELECT.
+     * If user picks one as option fieldName, PDO FETCH_ASSOC overwrites the builtin
+     * with GROUP_CONCAT string → cast in formatProductRow returns 0 / garbage.
+     * Disallow at spec creation to prevent silent data corruption.
+     */
+    private const RESERVED_NAMES = [
+        // modResource
+        'id', 'pagetitle', 'longtitle', 'alias', 'parent', 'menuindex',
+        'published', 'deleted', 'hidemenu', 'createdon', 'editedon',
+        // msProductData
+        'article', 'price', 'old_price', 'weight', 'image', 'thumb',
+        'vendor_id', 'made_in', 'new', 'popular', 'favorite',
+        // formatProductRow synthetics
+        'preview_url', 'category_name',
+    ];
+
     public function __construct(
         public string $fieldName,
         public string $key,
@@ -43,6 +63,10 @@ final readonly class OptionColumnSpec
             return null;
         }
 
+        if (!self::isValidFieldName((string) $name)) {
+            return null;
+        }
+
         return new self((string) $name, $key, 'opt_' . $key);
     }
 
@@ -52,14 +76,15 @@ final readonly class OptionColumnSpec
     }
 
     /**
-     * @return array{fieldName: string, key: string, alias: string}
+     * fieldName must match [a-z0-9_] (lands in SQL AS clause) and must not
+     * collide with any builtin product/data column emitted in the same SELECT.
      */
-    public function toJoinDescriptor(): array
+    public static function isValidFieldName(string $name): bool
     {
-        return [
-            'fieldName' => $this->fieldName,
-            'key' => $this->key,
-            'alias' => $this->alias,
-        ];
+        if (!preg_match(self::FIELD_NAME_PATTERN, $name)) {
+            return false;
+        }
+        return !in_array(strtolower($name), self::RESERVED_NAMES, true);
     }
+
 }

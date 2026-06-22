@@ -73,7 +73,8 @@ final class CategoryProductsListService
         foreach ($optionSpecs as $spec) {
             $selectParts[] = $this->aggregateOptionValueSql($spec->alias) . " AS `{$spec->fieldName}`";
         }
-        $c->select($selectParts);
+        // xPDOQuery::select() declares string, accepts both at runtime but PHPStan is strict.
+        $c->select(implode(', ', $selectParts));
         if ($optionSpecs !== []) {
             $c->groupby('msProduct.id');
         }

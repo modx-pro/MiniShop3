@@ -3,7 +3,6 @@
 namespace MiniShop3\Services;
 
 use MiniShop3\Model\msGridField;
-use MiniShop3\Services\Grid\GridOptionColumnResolver;
 use MiniShop3\Services\Grid\OptionColumnSpec;
 use MODX\Revolution\modX;
 
@@ -367,7 +366,10 @@ class GridConfigService
                     break;
 
                 case 'option':
-                    $validation = $this->validateOptionConfig($config);
+                    $validation = $this->validateOptionConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? '')
+                    );
                     if (!$validation['success']) {
                         return $validation;
                     }
@@ -499,7 +501,10 @@ class GridConfigService
                     }
                     break;
                 case 'option':
-                    $validation = $this->validateOptionConfig($config);
+                    $validation = $this->validateOptionConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? $fieldName)
+                    );
                     if (!$validation['success']) {
                         return $validation;
                     }
@@ -775,7 +780,7 @@ class GridConfigService
      * @param array $config
      * @return array
      */
-    protected function validateOptionConfig(array $config): array
+    protected function validateOptionConfig(array $config, string $fieldName = ''): array
     {
         $option = $config['option'] ?? [];
 
@@ -788,23 +793,16 @@ class GridConfigService
             return ['success' => false, 'message' => 'option.key must contain only letters, numbers and underscores'];
         }
 
-        return ['success' => true];
-    }
+        if ($fieldName !== '' && !OptionColumnSpec::isValidFieldName($fieldName)) {
+            return [
+                'success' => false,
+                'message' => "Field name '{$fieldName}' is not allowed for option columns: "
+                    . "it collides with a builtin product column or contains invalid characters. "
+                    . "Use a name like 'option_{$key}' instead.",
+            ];
+        }
 
-    /**
-     * Extract option fields from grid config for JOIN building
-     *
-     * Re-validates option.key on read (defense in depth) — config can be modified directly in DB.
-     *
-     * @param array $gridFields Array of grid field configs
-     * @return array List of option field definitions: [['fieldName' => 'option_length', 'key' => 'length', 'alias' => 'opt_length'], ...]
-     */
-    public function extractOptionFields(array $gridFields): array
-    {
-        return array_map(
-            static fn (OptionColumnSpec $spec) => $spec->toJoinDescriptor(),
-            GridOptionColumnResolver::resolve($gridFields)
-        );
+        return ['success' => true];
     }
 
     /**
