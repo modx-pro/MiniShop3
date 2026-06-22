@@ -12,7 +12,7 @@ return [
     'name' => 'MiniShop3',
     'name_lower' => 'minishop3',
     'name_short' => 'ms3',
-    'version' => '1.11.1',
+    'version' => '1.12.0',
     'release' => 'beta1',
     // Install package to site right after build
     'install' => false,

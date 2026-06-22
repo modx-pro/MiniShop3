@@ -4,14 +4,109 @@
 
 ## Навигация
 
-- **Текущий месяц:** [Май 2026](#май-2026) (ниже)
-- **Предыдущий месяц:** [Апрель 2026](#апрель-2026) (ниже)
-- **Ещё раньше:** [Март 2026](#март-2026), [Февраль 2026](#февраль-2026), [Январь 2026](#январь-2026) (ниже)
+- **Текущий месяц:** [Июнь 2026](#июнь-2026) (ниже)
+- **Предыдущий месяц:** [Май 2026](#май-2026) (ниже)
+- **Ещё раньше:** [Апрель 2026](#апрель-2026), [Март 2026](#март-2026), [Февраль 2026](#февраль-2026), [Январь 2026](#январь-2026) (ниже)
 - **Архив по месяцам:**
   - [Декабрь 2025](changelogs/2025-12.md)
   - [Ноябрь 2025](changelogs/2025-11.md)
   - [Октябрь 2025](changelogs/2025-10.md)
   - [Архив (2024 и ранее)](changelogs/archive.md)
+
+---
+
+## Июнь 2026
+
+### [2026-06-22] 🚀 Версия 1.12.0-beta1
+
+**Тип релиза:** MINOR (beta) — три новые фичи в админке + обширная серия фиксов install reliability, processor флоу и Manager API.
+
+#### ✨ Добавлено
+
+**Тип extra field «повторитель» — `ms3-repeater` (#299, #301):** JSON-массив объектов со схемой колонок, drag-and-drop сортировкой строк и автоматическим проставлением `rank` при сохранении (MIGX-паттерн).
+
+- **Backend.** Миграция `add_repeater_config_to_extra_fields` добавляет колонку `repeater_config TEXT` в `ms3_extra_fields`. Новый сервис `RepeaterFieldService` (`ms3_repeater_field`) с pipeline `decode → normalize → validate`: парсит schema, валидирует `minRows`/`maxRows`/`required`/`numberfield` cells, авто-простановка `rank` от 0. Интеграция в `ExtraFieldsService::applyRepeaterConstraints()` форсит `dbtype=json, phptype=json, null=true` для repeater extra field. `ProductDataService::prepareObject()` исключает repeater из option-sync. `OrdersController` отдаёт 422 при invalid payload для repeater-полей `msOrder`/`msOrderAddress`.
+- **Vue Manager.** Компонент `RepeaterField` (рендер таблицы + dnd через `vuedraggable`), `RepeaterSchemaEditor` в `ExtraFieldsManager` (настройка колонок), `OrderExtraFieldsSection` для msOrder/msOrderAddress extra fields, утилита `repeaterField.js` (parse/normalize/encode). `DynamicField` рендерит `<RepeaterField>` + hidden input для bridge'а в legacy POST формы товара.
+- **Public output.** На странице товара `{$_modx->resource.repeater}` нативно возвращает массив (xPDO `phptype='json'` авто-декод). В листингах через `msProducts` — raw JSON string, требует `\| json_decode : true` (MIGX-паттерн).
+
+**Грид товаров категории — option-колонки (#140, #154):** новый тип колонки `option` показывает значения опций товара (`msProductOption`) в гриде с сортировкой и фильтром.
+
+- Read-only display: `LEFT JOIN msProductOption` + `GROUP_CONCAT(DISTINCT ...)` для multi-value опций. Контроллер `CategoryProductsListService` (`ms3_category_products_list`) делегирует SQL-сборку сервису; DTO `OptionColumnSpec` валидирует `option.key` (`[a-z0-9_]+`) и `fieldName` (whitelist + denylist builtin полей вроде `price`, `article` — иначе FETCH_ASSOC overwrite ломал бы реальные значения). Filter — `filter_{fieldName}` LIKE по значению опции; контракт фронт-фильтрации стыкуется с `direct_filter_keys` (см. #317).
+- В `GridFieldsConfig.vue` появился новый тип «Опция товара» в Add/Edit диалогах + поле «Ключ опции»; чекбокс «Редактируемое поле» автоматически скрывается для option-колонок (option-колонки read-only by design — редактирование опций товара делается в карточке товара).
+
+**Грид товаров категории — inline-edit с Select / Combo (#155, #157):** для редактируемых колонок добавлены два новых типа редактора: `select` (статический список из `editor_options` JSON) и `combo` (API-источник через `editor_reference`).
+
+- Реестр allowed reference-ключей в `GridEditorReferenceRegistry` (на старте — `vendors`), валидация combo при сохранении конфига колонки. Override-URL через `editor_combo_endpoint` принимается только если путь в allowlist (`/api/mgr/references/`). Endpoint `GET /api/mgr/grid-config/category-products` теперь отдаёт `editor_references` (список доступных reference-ключей) для UI настройки. Эндпойнт `GET /api/mgr/references/vendors` дополняет ответ единым массивом `options: [{value, label}]`; поле `vendors` сохранено для обратной совместимости.
+- Vue composable `useCategoryProductsInlineEdit` инкапсулирует state inline-edit, загрузку combo, type coercion (фикс `bool ↔ int` mismatch'а в PrimeVue Select), global ESC handler и click-outside dismiss. Утилиты `gridEditorOptions.js`: allowlist URL, маппинг ответа API → options.
+
+#### 🐛 Исправлено
+
+**Сохранение `Data` и extra fields в процессорах товаров (#297, #298):** при вызове `MiniShop3\Processors\Product\Create|Update` (импорт CSV, сторонние интеграции, alias `Resource\Create::getInstance()` для `class_key=msProduct`) значения колонок `msProductData` молча терялись.
+
+- Корневые причины: `Resource\Create|Update` вызывает `$object->fromArray($properties)` **без** `ignoreInvalid` — колонки `msProductData` не попадали на объект; на `Create` composite `Data` требовал `id` ресурса, которого ещё не было в `beforeSave()`.
+- Решение — trait `ProductDataPayloadTrait`: захват блока `Data` в `beforeSet()` (с логом при невалидном JSON), whitelist через `getDataFieldsNames()` + `loadMap()` для extra fields, применение через `applyProductDataPayload()` в `beforeSave()` (Update) и `persistProductDataPayload()` в `afterSave()` (Create). Alias-классы `msProductCreateProcessor` / `msProductUpdateProcessor` для резолвера `Resource\Create|Update::getInstance()`.
+
+**Per-field null payload semantics в Manager API (#289, #310):** контракт `null` в payload теперь определяется явно для каждого поля.
+
+- Раньше во всех API-ручках Manager (`OrdersController::updateProduct/create`, `ExtraFieldsService::updateField`, `CustomerAddressManager::update`) проверка через `isset($data[$field])` молча пропускала `null` → пользователь не мог очистить поле, отправляя `null` из PrimeVue `InputNumber`. Прямой замены на `array_key_exists` оказалось мало — открывала risk обнуления `count`/`price`/`weight` при случайном `null` в partial payload.
+- Per-field семантика: для числовых полей (`count`, `price`, `weight`) и required-полей (`label`, `xtype`, `active`) — `null` skip; для JSON/options/text nullable (`options`, `select_options`, `description`, адресные поля) — `null` = очистить. Документировано в коде.
+- **Advisory для апгрейдеров.** Сторонним API-клиентам, которые слали `null` для текстовых nullable-полей с намерением «очистить» — теперь работает как ожидается; если кто-то слал `null` рассчитывая на silent skip — теперь поле очистится. Поведение для числовых полей не меняется.
+
+**Установка не создавала grid_fields правильно (#270, #294):** на части установок таблица `ms3_grid_fields` отсутствовала или была частично заполнена.
+
+- `initial_schema` теперь **fail-fast**: при ошибке `createObjectContainer()` или если таблица не создалась после `success=true`, миграция бросает `RuntimeException` с перечнем проблемных таблиц вместо тихого продолжения. Repair-миграция `20260522120000_repair_grid_fields_if_missing.php` self-heal'ит установки, где таблица отсутствует или отдельные `grid_key` пусты (в т.ч. после no-op seed из #276). ALTER-миграция `20260528120000_alter_grid_fields_datetime_columns.php` переводит существующие установки с TIMESTAMP на DATETIME для `created_at`/`updated_at` (новые установки получают DATETIME сразу).
+
+**Установка падала на установках с не-utf8 MODX-кодировкой (#307, #308):** Phinx брал из `$modx->getOption('charset')` веб-кодировку вроде `UTF-8`, MySQL не знал такого имени → сидированные русские темы email-уведомлений писались битыми.
+
+- В `phinx.php` добавлены: парсинг charset из `database_dsn`, нормализатор `ms3PhinxNormalizeMysqlCharset()` (`UTF-8` → `utf8mb4`, `utf8mb3` → `utf8mb4` для новых установок, и т.п.), резолвер collation. Каскад приоритетов: DSN charset > `database_charset` > MODX `charset` (с `$preferUtf8mb4=true` для fallback). Статический тест `tests/PhinxCharsetConfigTest.php` без MODX bootstrap.
+
+**Phinx-таблица миграций не получала table_prefix (#313, #318):** Phinx писал `ms3_migrations` без префикса, в то время как остальные таблицы компонента создавались с `{table_prefix}ms3_*`.
+
+- Конфиг `phinx.php` теперь подставляет `$dbConfig['table_prefix']` в `default_migration_table`. Для существующих установок с непустым префиксом и legacy таблицей без префикса добавлен safe `RENAME TABLE` перед стартом Phinx — иначе Phinx посчитал бы установку «свежей» и попытался прогнать все миграции с нуля. Логирование в MODX-лог. Тест `tests/PhinxMigrationTablePrefixTest.php` покрывает четыре сценария (rename / both exist noop / fresh install / empty prefix).
+
+**Customer-уведомления использовали устаревший email клиента (#218, #320):** при оформлении нескольких заказов в одной сессии с разными контактами уведомления слались по email из `msCustomer`, а не из формы заказа.
+
+- `OrderStatusService::getCustomerRecipient()` теперь резолвит контакты в порядке `msOrderAddress` → `msCustomer` → `modUserProfile`. Дополнительный ключ `recipient['address']` доступен плагинам/шаблонам; резолвленные `email`/`phone` зеркалятся в `recipient['customer']` для backward compat. `EmailChannel::getRecipientEmail()` симметричен `SmsChannel::getRecipientPhone()` (fallback на address.email). Логика создания/обновления `msCustomer` не менялась.
+
+**Customers grid — autofill ломал строку поиска (#286, #319):** браузер после сохранения клиента автозаполнял логин MODX-пользователя в строку поиска грида, список пропадал.
+
+- Слоёная защита от browser autofill: `<form autocomplete="off">` обёртка формы редактирования, префиксные ID полей (`ms3-customer-*`), `autocomplete="new-password"` для пароля, явный `type="button"` на кнопках формы. Defensive restore: `searchQuery` сохраняется до save и восстанавливается через `nextTick` после закрытия модалки.
+
+**class_key не подставлялся при создании msProduct/msCategory через резолвер (#305, #306, #315):** при вызове `Resource\Create::getInstance()` без явного `class_key` (импорт CSV, сторонние интеграции) ресурс создавался как `modDocument`.
+
+- `Product\Create::initialize()` и `Category\Create::initialize()` теперь подставляют `$this->classKey` (= `msProduct::class` / `msCategory::class`), если в payload `class_key` отсутствует / пустой / равен `modDocument::class`. Явно переданный `class_key` (например, `msVariation` от кастомного клиента) — сохраняется.
+
+**Импорт CSV — multi-value option columns (#309, #312):** ячейка CSV вида `"мука, вода, соль"` для multi-value опций (`comboMultiple`, `comboColors`, `comboOptions`) сохранялась одной записью в `ms3_product_options`.
+
+- Парсер `Utils::parseImportedOptionValue()` в pipeline `JSON decode → comma-split → trim → filter empty`. Для single-value типов запятая остаётся литералом (текстовые опции не ломаются). Поле `msOption.type` читается одним запросом для всех ключей (N+1 fix), импорт делегирует `OptionService::saveProductOptions(..., removeOther: false)` — partial update, не затирает не указанные в CSV опции. Helper `msOptionType::isMultiValueType()` централизует whitelist.
+
+**Orders grid — переключатель черновиков + фильтры (#302, #303):** в Vue-гриде заказов добавлен чекбокс «Показывать черновики» с persistence через `localStorage`. Стартовое значение читается из системной настройки `ms3_order_show_drafts`.
+
+- На бэкенде `OrdersController::applyDraftVisibilityFilter()` — отдельный метод, переиспользуется в `getList()` и `getOrdersStats()`. Параметр `show_drafts` в запросе перебивает системную настройку через `FILTER_VALIDATE_BOOLEAN`. Подсказка над блоком статистики «Количество и сумма по оформленным заказам; черновики не учитываются» (счётчик намеренно не реагирует на drafts toggle — статистика по «оформленным»).
+- Tooltip над статистикой объясняет почему счётчик и грид могут показывать разные числа.
+
+#### ♻️ Рефакторинг
+
+**Единый контракт `direct_filter_keys` для гридов (#314, #317):** список фильтров, отправляемых без префикса `filter_`, теперь живёт **на backend** и отдаётся фронту вместе с конфигом грида. Убрано дублирование между Vue-гридами и PHP-контроллерами.
+
+- `OrdersController::DIRECT_FILTER_KEYS`, `CustomersController::DIRECT_FILTER_KEYS` + статический `getDirectFilterKeys()`. `GridConfigController::DIRECT_FILTER_KEY_PROVIDERS` маппит `grid_key` на класс провайдера и добавляет ключи в ответ `/api/mgr/grid-config/{key}`.
+- Vue composable `useGridFilterParams` (для OrdersGrid и CustomersGrid): `addFilterParam(params, key, value)` решает префикс на основе массива от backend. При пустом списке (старый/кэшированный backend) — safe fallback на `filter_`-префикс.
+- Дополнительные правки `OrdersController`: общий `applyDirectFilters()` для `getList()` и `getOrdersStats()` (раньше — дублирующийся inline-блок ~24 строк); попутный bug fix — address JOIN в stats query при наличии `filter_customer/email/phone` (до этого фильтрация по адресу в stats тихо валилась).
+
+**XML-схема синхронизирована с msOptionGroup (#10, #322):** `core/components/minishop3/schema/minishop3.mysql.schema.xml` отставал от `src/Model/mysql/*` после введения `msOptionGroup` в 1.11.0.
+
+- `msOption.modcategory_id` → `option_group_id` (nullable, default NULL); индекс и aggregate переименованы; `Group → msOptionGroup` вместо `Category → modCategory`.
+- Добавлен `<object class="msOptionGroup">` (таблица `ms3_option_groups`, 5 полей, BTREE на `sort_order`, aggregate `Options` **local owner** — не composite, чтобы `$group->remove()` не каскадно удалял опции).
+- Runtime source of truth — `src/Model/mysql/*`, XML остаётся как справочный документ.
+
+#### 📋 Документация
+
+- `docs/components/minishop3/development/events/notifications.md` — новая подтаблица `recipient` для customer-получателя (резолв `address → customer → profile`, зеркалирование в `recipient['customer']`, ссылка на issue #218). Закрывает гэп после PR #320.
+- `docs/components/minishop3/development/routing.md` — новый раздел «Конфигурация гридов (`/grid-config`)» с CRUD-эндпойнтами, известными `grid_key`, структурой ответа (`columns` / `direct_filter_keys` / `editor_references`) и контрактом фронт-фильтрации `useGridFilterParams`. Раньше в доке этой группы роутов не было вообще.
+
+#### 📦 Зависимости
+
+Без изменений.
 
 ---
 
