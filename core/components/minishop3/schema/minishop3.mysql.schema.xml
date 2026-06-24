@@ -625,6 +625,7 @@
         <field key="index_type" dbtype="varchar" precision="50" phptype="string" null="true" default="NONE"/>
         <field key="select_options" dbtype="text" phptype="string" null="true"/>
         <field key="repeater_config" dbtype="text" phptype="string" null="true"/>
+        <field key="key_value_config" dbtype="text" phptype="string" null="true"/>
 
         <field key="active" dbtype="tinyint" precision="1" phptype="boolean" null="true" default="0"/>
 

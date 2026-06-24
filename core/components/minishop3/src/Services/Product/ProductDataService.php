@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Product;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductOption;
+use MiniShop3\Services\ExtraFields\KeyValueFieldService;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MODX\Revolution\modX;
 
@@ -35,6 +36,7 @@ class ProductDataService
     protected $modx;
 
     protected ProductRepeaterSupport $repeaterSupport;
+    protected ProductKeyValueSupport $keyValueSupport;
     protected ProductCategoryMembershipWriter $categoryWriter;
     protected ProductOptionsWriter $optionsWriter;
     protected ProductLinksWriter $linksWriter;
@@ -45,6 +47,7 @@ class ProductDataService
     {
         $this->modx = $modx;
         $this->repeaterSupport = new ProductRepeaterSupport($modx);
+        $this->keyValueSupport = new ProductKeyValueSupport($modx);
         $this->categoryWriter = new ProductCategoryMembershipWriter($modx);
         $this->optionsWriter = new ProductOptionsWriter($modx);
         $this->linksWriter = new ProductLinksWriter($modx);
@@ -67,17 +70,38 @@ class ProductDataService
         return $this->repeaterSupport->getProductRepeaterFields();
     }
 
+    protected function getKeyValueFieldService(): KeyValueFieldService
+    {
+        return $this->keyValueSupport->getKeyValueFieldService();
+    }
+
     /**
-     * Prepare object before saving: array/repeater fields, source_id, numeric casts.
+     * Overridable hook for tests (see TestableProductDataService).
+     *
+     * @return array<string, array>
+     */
+    protected function getProductKeyValueFields(): array
+    {
+        return $this->keyValueSupport->getProductKeyValueFields();
+    }
+
+    /**
+     * Prepare object before saving: array/repeater/key-value fields, source_id, numeric casts.
      */
     public function prepareObject(msProductData $productData): void
     {
         $repeaterFields = $this->getProductRepeaterFields();
+        $keyValueFields = $this->getProductKeyValueFields();
         $repeaterService = $this->getRepeaterFieldService();
+        $keyValueService = $this->getKeyValueFieldService();
 
         foreach ($productData->getArraysValues() as $name => $array) {
             if (isset($repeaterFields[$name])) {
                 $productData->set($name, $repeaterService->processValue($array, $repeaterFields[$name]));
+                continue;
+            }
+            if (isset($keyValueFields[$name])) {
+                $productData->set($name, $keyValueService->processValue($array, $keyValueFields[$name]));
                 continue;
             }
 
@@ -122,11 +146,15 @@ class ProductDataService
      */
     public function saveOptions(msProductData $productData, ?array $options = null, bool $removeOther = true): void
     {
+        $excludedJsonKeys = array_merge(
+            array_keys($this->getProductRepeaterFields()),
+            array_keys($this->getProductKeyValueFields())
+        );
         $this->optionsWriter->saveOptions(
             $productData,
             $options,
             $removeOther,
-            array_keys($this->getProductRepeaterFields())
+            $excludedJsonKeys
         );
     }
 
@@ -287,13 +315,17 @@ class ProductDataService
             return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product data not found'];
         }
 
-        // Static whitelist + active repeater extra-field keys for msProductData.
-        // Without the extra keys, repeater values get silently dropped here and
+        // Static whitelist + active repeater/key-value extra-field keys for msProductData.
+        // Without the extra keys, values get silently dropped here and
         // prepareObject() then normalises the in-memory null/empty to [] on save —
         // user input is lost with no error (#301).
         $filtered = array_intersect_key(
             $data,
-            array_flip(array_merge(self::$allowedUpdateFields, array_keys($this->getProductRepeaterFields())))
+            array_flip(array_merge(
+                self::$allowedUpdateFields,
+                array_keys($this->getProductRepeaterFields()),
+                array_keys($this->getProductKeyValueFields())
+            ))
         );
         $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
 
@@ -304,6 +336,10 @@ class ProductDataService
         $repeaterError = $this->normalizeRepeaterFieldsInPayload($filtered);
         if ($repeaterError !== null) {
             return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => $repeaterError];
+        }
+        $keyValueError = $this->normalizeKeyValueFieldsInPayload($filtered);
+        if ($keyValueError !== null) {
+            return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => $keyValueError];
         }
 
         $oldValues = [];
@@ -344,6 +380,19 @@ class ProductDataService
         return $this->repeaterSupport->normalizeRepeaterFieldsInPayload(
             $payload,
             $this->getProductRepeaterFields()
+        );
+    }
+
+    /**
+     * Validate and normalize key-value extra fields in manager API payload.
+     *
+     * @param array<string, mixed> $payload
+     */
+    protected function normalizeKeyValueFieldsInPayload(array &$payload): ?string
+    {
+        return $this->keyValueSupport->normalizeKeyValueFieldsInPayload(
+            $payload,
+            $this->getProductKeyValueFields()
         );
     }
 }

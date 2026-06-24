@@ -161,6 +161,7 @@ $_lang['ms3_vue_xtype_textarea'] = 'Text Area';
 $_lang['ms3_vue_xtype_xcheckbox'] = 'Checkbox';
 $_lang['ms3_vue_xtype_combo_select'] = 'Dropdown List';
 $_lang['ms3_vue_xtype_repeater'] = 'Repeater (rows grid)';
+$_lang['ms3_vue_xtype_key_value'] = 'Key-Value (map)';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Vendor (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Autocomplete (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Product Options (chips)';
@@ -186,6 +187,25 @@ $_lang['ms3_vue_repeater_sortable'] = 'Drag-and-drop sorting';
 $_lang['ms3_vue_repeater_add_row'] = 'Add row';
 $_lang['ms3_vue_repeater_no_columns'] = 'Configure repeater columns in extra field settings.';
 $_lang['ms3_vue_repeater_drag_hint'] = 'Drag to reorder';
+
+// Key-Value field
+$_lang['ms3_vue_key_value_schema_label'] = 'Key-Value schema';
+$_lang['ms3_vue_key_value_schema_help'] = 'Define keys for fixed mode or use free mode for any pairs.';
+$_lang['ms3_vue_key_value_mode'] = 'Mode';
+$_lang['ms3_vue_key_value_mode_fixed'] = 'Fixed keys';
+$_lang['ms3_vue_key_value_mode_free'] = 'Free keys';
+$_lang['ms3_vue_key_value_keys'] = 'Keys';
+$_lang['ms3_vue_key_value_add_key'] = 'Add key';
+$_lang['ms3_vue_key_value_key'] = 'Key';
+$_lang['ms3_vue_key_value_label'] = 'Label';
+$_lang['ms3_vue_key_value_value'] = 'Value';
+$_lang['ms3_vue_key_value_add_pair'] = 'Add pair';
+$_lang['ms3_vue_key_value_value_type'] = 'Value type';
+$_lang['ms3_vue_key_value_value_type_string'] = 'String';
+$_lang['ms3_vue_key_value_value_type_number'] = 'Number';
+$_lang['ms3_vue_key_value_required'] = 'Required';
+$_lang['ms3_vue_key_value_no_keys'] = 'No keys defined. Add keys in extra field settings for fixed mode.';
+
 $_lang['ms3_vue_order_extra_fields'] = 'Additional order fields';
 $_lang['ms3_vue_order_address_extra_fields'] = 'Additional address fields';
 
