@@ -174,6 +174,7 @@ $_lang['ms3_err_field_nf'] = 'Field not found';
 $_lang['ms3_err_ae'] = 'This field must be unique';
 $_lang['ms3_err_json'] = 'This field requires JSON string';
 $_lang['ms3_repeater_validation_error'] = 'Repeater field "[[+field]]": [[+error]]';
+$_lang['ms3_key_value_validation_error'] = 'Key-value field "[[+field]]": [[+error]]';
 
 $_lang['ms3_err_user_nf'] = 'User not found.';
 $_lang['ms3_err_order_nf'] = 'Order with this identifier not found.';

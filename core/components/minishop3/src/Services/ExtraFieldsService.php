@@ -4,6 +4,7 @@ namespace MiniShop3\Services;
 
 use MiniShop3\Model\msExtraField;
 use MiniShop3\Model\msProductField;
+use MiniShop3\Services\ExtraFields\KeyValueFieldService;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\modX;
@@ -33,6 +34,10 @@ class ExtraFieldsService
         $repeaterError = $this->applyRepeaterConstraints($data);
         if ($repeaterError !== null) {
             return $repeaterError;
+        }
+        $keyValueError = $this->applyKeyValueConstraints($data);
+        if ($keyValueError !== null) {
+            return $keyValueError;
         }
 
         $validation = $this->validateFieldData($data);
@@ -64,7 +69,10 @@ class ExtraFieldsService
         }
 
         @unlink($migrationFile);
-        $this->modx->log(modX::LOG_LEVEL_INFO, "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile));
+        $this->modx->log(
+            modX::LOG_LEVEL_INFO,
+            "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile)
+        );
 
         $this->extraFieldsUtil->loadMap();
         $this->extraFieldsUtil->clearCache();
@@ -109,7 +117,10 @@ class ExtraFieldsService
         }
 
         @unlink($migrationFile);
-        $this->modx->log(modX::LOG_LEVEL_INFO, "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile));
+        $this->modx->log(
+            modX::LOG_LEVEL_INFO,
+            "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile)
+        );
 
         // Only delete msProductField for product-related models
         if ($field->get('class') === 'MiniShop3\\Model\\msProductData') {
@@ -235,7 +246,6 @@ class ExtraFieldsService
                 'success' => true,
                 'output' => $outputText
             ];
-
         } catch (\Exception $e) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, '[ExtraFieldsService] Migration error: ' . $e->getMessage());
 
@@ -260,11 +270,19 @@ class ExtraFieldsService
             $config = ['select_options' => $extraField->get('select_options')];
         } elseif ($extraField->get('xtype') === RepeaterFieldService::XTYPE && $extraField->get('repeater_config')) {
             $config = [
-                'repeater_config' => $this->getRepeaterFieldService()->parseConfig($extraField->get('repeater_config')),
+                'repeater_config' => $this->getRepeaterFieldService()->parseConfig(
+                    $extraField->get('repeater_config')
+                ),
+            ];
+        } elseif ($extraField->get('xtype') === KeyValueFieldService::XTYPE && $extraField->get('key_value_config')) {
+            $config = [
+                'key_value_config' => $this->getKeyValueFieldService()->parseConfig(
+                    $extraField->get('key_value_config')
+                ),
             ];
         }
 
-        $width = $extraField->get('xtype') === RepeaterFieldService::XTYPE ? 12 : 6;
+        $width = $this->isWideFieldXtype($extraField->get('xtype')) ? 12 : 6;
 
         $productField->fromArray([
             'name' => $extraField->get('key'),
@@ -282,11 +300,15 @@ class ExtraFieldsService
         ]);
 
         if ($productField->save()) {
-            $this->modx->log(modX::LOG_LEVEL_INFO,
-                "[ExtraFieldsService] Auto-created msProductField: {$extraField->get('key')}");
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                "[ExtraFieldsService] Auto-created msProductField: {$extraField->get('key')}"
+            );
         } else {
-            $this->modx->log(modX::LOG_LEVEL_WARN,
-                "[ExtraFieldsService] Failed to auto-create msProductField: {$extraField->get('key')}");
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                "[ExtraFieldsService] Failed to auto-create msProductField: {$extraField->get('key')}"
+            );
         }
     }
 
@@ -314,14 +336,30 @@ class ExtraFieldsService
             }
             $data['repeater_config'] = $repeaterPayload['repeater_config'] ?? null;
         }
+        if (($data['xtype'] ?? $field->get('xtype')) === KeyValueFieldService::XTYPE) {
+            $keyValuePayload = array_merge($field->toArray(), $data);
+            $keyValueError = $this->applyKeyValueConstraints($keyValuePayload);
+            if ($keyValueError !== null) {
+                return $keyValueError;
+            }
+            $data['key_value_config'] = $keyValuePayload['key_value_config'] ?? null;
+        }
 
-        $allowedFields = ['label', 'description', 'xtype', 'active', 'select_options', 'repeater_config'];
+        $allowedFields = [
+            'label',
+            'description',
+            'xtype',
+            'active',
+            'select_options',
+            'repeater_config',
+            'key_value_config',
+        ];
 
         // Per-field null semantics:
         //   - `description`, `select_options` (optional text/json): null = clear
         //   - `label`, `xtype`, `active` (required for rendering): null skipped — a partial
         //     payload with `xtype: null` would silently break the field's UI.
-        $nullClearable = ['description', 'select_options'];
+        $nullClearable = ['description', 'select_options', 'repeater_config', 'key_value_config'];
 
         foreach ($allowedFields as $fieldName) {
             if (!array_key_exists($fieldName, $data)) {
@@ -338,6 +376,9 @@ class ExtraFieldsService
 
         if ($field->get('xtype') !== RepeaterFieldService::XTYPE) {
             $field->set('repeater_config', null);
+        }
+        if ($field->get('xtype') !== KeyValueFieldService::XTYPE) {
+            $field->set('key_value_config', null);
         }
 
         if (!$field->save()) {
@@ -378,27 +419,36 @@ class ExtraFieldsService
             $config = $productField->get('config') ?: [];
             if ($extraField->get('xtype') === 'ms3-combo-select') {
                 $config['select_options'] = $extraField->get('select_options') ?: '';
-                unset($config['repeater_config']);
+                unset($config['repeater_config'], $config['key_value_config']);
             } elseif ($extraField->get('xtype') === RepeaterFieldService::XTYPE) {
                 $config['repeater_config'] = $this->getRepeaterFieldService()->parseConfig(
                     $extraField->get('repeater_config')
                 );
-                unset($config['select_options']);
-            } else {
+                unset($config['select_options'], $config['key_value_config']);
+            } elseif ($extraField->get('xtype') === KeyValueFieldService::XTYPE) {
+                $config['key_value_config'] = $this->getKeyValueFieldService()->parseConfig(
+                    $extraField->get('key_value_config')
+                );
                 unset($config['select_options'], $config['repeater_config']);
+            } else {
+                unset($config['select_options'], $config['repeater_config'], $config['key_value_config']);
             }
 
-            if ($extraField->get('xtype') === RepeaterFieldService::XTYPE) {
+            if ($this->isWideFieldXtype($extraField->get('xtype'))) {
                 $productField->set('width', 12);
             }
             $productField->set('config', !empty($config) ? $config : null);
 
             if ($productField->save()) {
-                $this->modx->log(modX::LOG_LEVEL_INFO,
-                    "[ExtraFieldsService] Updated msProductField: {$extraField->get('key')}");
+                $this->modx->log(
+                    modX::LOG_LEVEL_INFO,
+                    "[ExtraFieldsService] Updated msProductField: {$extraField->get('key')}"
+                );
             } else {
-                $this->modx->log(modX::LOG_LEVEL_WARN,
-                    "[ExtraFieldsService] Failed to update msProductField: {$extraField->get('key')}");
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    "[ExtraFieldsService] Failed to update msProductField: {$extraField->get('key')}"
+                );
             }
         }
     }
@@ -445,11 +495,52 @@ class ExtraFieldsService
         return null;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array{success: false, message: string}|null
+     */
+    private function applyKeyValueConstraints(array &$data): ?array
+    {
+        if (($data['xtype'] ?? '') !== KeyValueFieldService::XTYPE) {
+            return null;
+        }
+
+        $data['dbtype'] = 'json';
+        $data['phptype'] = 'json';
+        $data['precision'] = '';
+        $data['null'] = true;
+
+        $configValidation = $this->getKeyValueFieldService()->validateConfigSchema($data['key_value_config'] ?? '');
+        if (!$configValidation['success']) {
+            return [
+                'success' => false,
+                'message' => $configValidation['message'] ?? 'Invalid key-value configuration',
+            ];
+        }
+
+        $data['key_value_config'] = $this->getKeyValueFieldService()->encodeConfig($configValidation['config']);
+
+        return null;
+    }
+
     private function getRepeaterFieldService(): RepeaterFieldService
     {
         /** @var RepeaterFieldService $service */
         $service = $this->modx->services->get('ms3_repeater_field');
 
         return $service;
+    }
+
+    private function getKeyValueFieldService(): KeyValueFieldService
+    {
+        /** @var KeyValueFieldService $service */
+        $service = $this->modx->services->get('ms3_key_value_field');
+
+        return $service;
+    }
+
+    private function isWideFieldXtype(?string $xtype): bool
+    {
+        return in_array($xtype, [RepeaterFieldService::XTYPE, KeyValueFieldService::XTYPE], true);
     }
 }

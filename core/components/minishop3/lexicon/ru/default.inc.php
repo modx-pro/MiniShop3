@@ -174,6 +174,7 @@ $_lang['ms3_err_field_nf'] = 'Поле не найдено';
 $_lang['ms3_err_ae'] = 'Это поле должно быть уникально';
 $_lang['ms3_err_json'] = 'Это поле требует JSON строку';
 $_lang['ms3_repeater_validation_error'] = 'Поле повторителя «[[+field]]»: [[+error]]';
+$_lang['ms3_key_value_validation_error'] = 'Поле key-value «[[+field]]»: [[+error]]';
 
 $_lang['ms3_err_user_nf'] = 'Пользователь не найден.';
 $_lang['ms3_err_order_nf'] = 'Заказ с таким идентификатором не найден.';
