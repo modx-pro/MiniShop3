@@ -164,8 +164,9 @@ class ProductDataService
      * via msProductOption::saveProductOptions() method
      *
      * @param msProductData $productData
-     * @param array|null $options If null: built from non-empty JSON fields on $productData only. If array: explicit
-     *                           keys/values (e.g. manager POST options-*); then $removeOther is honored.
+     * @param array|null $options If null: built from JSON fields explicitly present in POST/_fields on
+     *                           $productData (including cleared empty values). If array: explicit keys/values
+     *                           (e.g. manager POST options-*); then $removeOther is honored.
      * @param bool $removeOther When $options is non-null: if true, delete msProductOption rows whose keys are absent
      *                         from $options. When $options is null: ignored — always treated as false so category-only
      *                         options not mirrored in JSON fields are preserved (#153, #158).
@@ -180,14 +181,24 @@ class ProductDataService
 
         if ($options === null) {
             $options = [];
-            foreach ($productData->_fieldMeta as $key => $value) {
-                if ($value['phptype'] === 'json' && !empty($productData->get($key))) {
-                    if (in_array($key, $repeaterKeys, true)) {
-                        continue;
-                    }
-                    // Use field name as key, not numeric index from array_merge
-                    $options[$key] = $productData->get($key);
+            $reflection = new \ReflectionClass($productData);
+            $property = $reflection->getProperty('_fields');
+            $property->setAccessible(true);
+            $rawFields = $property->getValue($productData);
+
+            foreach ($productData->_fieldMeta as $key => $meta) {
+                if (($meta['phptype'] ?? '') !== 'json') {
+                    continue;
                 }
+                if (in_array($key, $repeaterKeys, true)) {
+                    continue;
+                }
+                if (!array_key_exists($key, $rawFields)) {
+                    continue;
+                }
+
+                $fieldValue = $productData->get($key);
+                $options[$key] = !empty($fieldValue) ? $fieldValue : null;
             }
         }
 
