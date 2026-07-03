@@ -3,6 +3,7 @@
 namespace MiniShop3\Services;
 
 use MiniShop3\Model\msGridField;
+use MiniShop3\Services\Grid\GridColumnRules;
 use MiniShop3\Services\Grid\OptionColumnSpec;
 use MODX\Revolution\modX;
 
@@ -341,7 +342,11 @@ class GridConfigService
                     break;
 
                 case 'relation':
-                    $validation = $this->validateRelationConfig($config);
+                    $validation = $this->validateRelationConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? ''),
+                        $gridKey
+                    );
                     if (!$validation['success']) {
                         return $validation;
                     }
@@ -479,11 +484,14 @@ class GridConfigService
                     }
                     break;
                 case 'relation':
-                    $validation = $this->validateRelationConfig($config);
+                    $validation = $this->validateRelationConfig(
+                        $config,
+                        (string) ($data['field_name'] ?? $fieldName),
+                        $gridKey
+                    );
                     if (!$validation['success']) {
                         return $validation;
                     }
-                    // Use updated config with resolvedTableName
                     if (isset($validation['config'])) {
                         $config = $validation['config'];
                     }
@@ -595,7 +603,7 @@ class GridConfigService
      * @param array $config
      * @return array
      */
-    protected function validateRelationConfig(array $config): array
+    protected function validateRelationConfig(array $config, string $fieldName = '', string $gridKey = ''): array
     {
         $relation = $config['relation'] ?? [];
 
@@ -611,12 +619,38 @@ class GridConfigService
             return ['success' => false, 'message' => 'relation.displayField is required'];
         }
 
+        if (!GridColumnRules::isValidSqlIdentifier((string) $relation['foreignKey'])) {
+            return ['success' => false, 'message' => 'relation.foreignKey must contain only letters, numbers and underscores'];
+        }
+
+        if (!GridColumnRules::isValidSqlIdentifier((string) $relation['displayField'])) {
+            return ['success' => false, 'message' => 'relation.displayField must contain only letters, numbers and underscores'];
+        }
+
+        if ($gridKey === 'category-products' && $fieldName !== ''
+            && !GridColumnRules::isValidCategoryProductExtraFieldName($fieldName)
+        ) {
+            return [
+                'success' => false,
+                'message' => "Field name '{$fieldName}' is not allowed for relation columns: "
+                    . 'it collides with a builtin product column or contains invalid characters. '
+                    . "Use a distinct name like 'vendor_address' instead.",
+            ];
+        }
+
         // Validate aggregation
         $aggregation = $relation['aggregation'] ?? null;
         $allowedAggregations = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX'];
 
-        if ($aggregation !== null && !in_array($aggregation, $allowedAggregations)) {
+        if ($aggregation !== null && !in_array($aggregation, $allowedAggregations, true)) {
             return ['success' => false, 'message' => "Invalid aggregation type. Allowed: " . implode(', ', $allowedAggregations)];
+        }
+
+        if ($gridKey === 'category-products' && $aggregation !== null) {
+            return [
+                'success' => false,
+                'message' => 'Relation aggregation is not supported for category-products grid',
+            ];
         }
 
         // Determine type: model or direct table name
@@ -626,6 +660,10 @@ class GridConfigService
         if ($isModel) {
             // This is model class - get table name
             try {
+                if (!class_exists($tableOrModel)) {
+                    return ['success' => false, 'message' => "Invalid model class: {$tableOrModel}"];
+                }
+
                 $tableName = $this->modx->getTableName($tableOrModel);
 
                 if (empty($tableName)) {
@@ -634,6 +672,7 @@ class GridConfigService
 
                 // Save resolved table name in config for query usage
                 $config['relation']['resolvedTableName'] = $tableName;
+                $config['relation']['resolvedModelClass'] = $tableOrModel;
             } catch (\Exception $e) {
                 return ['success' => false, 'message' => "Invalid model class: {$tableOrModel}. " . $e->getMessage()];
             }
@@ -644,6 +683,11 @@ class GridConfigService
                 $tableOrModel = $tablePrefix . $tableOrModel;
             }
             $config['relation']['resolvedTableName'] = $tableOrModel;
+
+            $modelClass = $this->resolveModelClass((string) $relation['table']);
+            if ($modelClass !== null) {
+                $config['relation']['resolvedModelClass'] = $modelClass;
+            }
         }
 
         return ['success' => true, 'config' => $config];
@@ -844,15 +888,21 @@ class GridConfigService
             $displayField = $relation['displayField'];
             $fieldName = $field['name'];
 
+            if (!GridColumnRules::isValidSqlIdentifier((string) $foreignKey)
+                || !GridColumnRules::isValidSqlIdentifier((string) $displayField)
+            ) {
+                continue;
+            }
+
             // Group key: table + foreignKey (same table with same FK = one JOIN)
             $groupKey = "{$table}_{$foreignKey}";
 
             if (!isset($relationGroups[$groupKey])) {
-                // Resolve model class from table name
-                $modelClass = $this->resolveModelClass($table);
+                $modelClass = $this->resolveModelClassFromRelation($relation);
 
-                // Generate unique alias for this JOIN
-                $alias = "rel_{$table}_{$foreignKey}";
+                // Generate unique alias for this JOIN (safe identifier, no namespace chars)
+                $tableKey = $this->relationTableKey($relation);
+                $alias = "rel_{$tableKey}_{$foreignKey}";
 
                 $relationGroups[$groupKey] = [
                     'table' => $table,
@@ -881,25 +931,112 @@ class GridConfigService
      */
     protected function resolveModelClass(string $tableName): ?string
     {
-        // Known MiniShop3 model mappings
+        $tableName = $this->normalizeTableIdentifier($tableName);
+
+        // Known MiniShop3 model mappings (short class names and physical table names)
         $modelMap = [
             'msOrder' => 'MiniShop3\\Model\\msOrder',
+            'ms3_orders' => 'MiniShop3\\Model\\msOrder',
             'msOrderStatus' => 'MiniShop3\\Model\\msOrderStatus',
+            'ms3_order_statuses' => 'MiniShop3\\Model\\msOrderStatus',
             'msOrderAddress' => 'MiniShop3\\Model\\msOrderAddress',
+            'ms3_order_addresses' => 'MiniShop3\\Model\\msOrderAddress',
             'msOrderProduct' => 'MiniShop3\\Model\\msOrderProduct',
+            'ms3_order_products' => 'MiniShop3\\Model\\msOrderProduct',
             'msDelivery' => 'MiniShop3\\Model\\msDelivery',
+            'ms3_deliveries' => 'MiniShop3\\Model\\msDelivery',
             'msPayment' => 'MiniShop3\\Model\\msPayment',
+            'ms3_payments' => 'MiniShop3\\Model\\msPayment',
             'msProduct' => 'MiniShop3\\Model\\msProduct',
+            'ms3_products' => 'MiniShop3\\Model\\msProduct',
             'msProductData' => 'MiniShop3\\Model\\msProductData',
+            'ms3_product_data' => 'MiniShop3\\Model\\msProductData',
             'msCategory' => 'MiniShop3\\Model\\msCategory',
             'msCategoryMember' => 'MiniShop3\\Model\\msCategoryMember',
+            'ms3_category_members' => 'MiniShop3\\Model\\msCategoryMember',
             'msVendor' => 'MiniShop3\\Model\\msVendor',
+            'ms3_vendors' => 'MiniShop3\\Model\\msVendor',
             'msCustomer' => 'MiniShop3\\Model\\msCustomer',
+            'ms3_customers' => 'MiniShop3\\Model\\msCustomer',
             'modUser' => 'MODX\\Revolution\\modUser',
             'modUserProfile' => 'MODX\\Revolution\\modUserProfile',
             'modResource' => 'MODX\\Revolution\\modResource',
+            'site_content' => 'MODX\\Revolution\\modResource',
         ];
 
-        return $modelMap[$tableName] ?? null;
+        if (isset($modelMap[$tableName])) {
+            return $modelMap[$tableName];
+        }
+
+        // Fallback: match by xPDO table name for any mapped model class
+        foreach (array_unique(array_values($modelMap)) as $class) {
+            $physicalTable = $this->normalizeTableIdentifier($this->modx->getTableName($class));
+            if ($physicalTable === $tableName) {
+                return $class;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve model class from relation config (supports short names, table names, FQCN).
+     *
+     * @param array<string, mixed> $relation
+     */
+    protected function resolveModelClassFromRelation(array $relation): ?string
+    {
+        $resolvedModelClass = $relation['resolvedModelClass'] ?? null;
+        if (is_string($resolvedModelClass) && $resolvedModelClass !== '' && class_exists($resolvedModelClass)) {
+            return $resolvedModelClass;
+        }
+
+        $table = (string) ($relation['table'] ?? '');
+        if ($table !== '' && str_contains($table, '\\') && class_exists($table)) {
+            return $table;
+        }
+
+        $modelClass = $this->resolveModelClass($table);
+        if ($modelClass !== null) {
+            return $modelClass;
+        }
+
+        $resolvedTableName = (string) ($relation['resolvedTableName'] ?? '');
+        if ($resolvedTableName !== '') {
+            return $this->resolveModelClass($resolvedTableName);
+        }
+
+        return null;
+    }
+
+    /**
+     * Short table key for SQL JOIN alias (no prefix, no namespace).
+     *
+     * @param array<string, mixed> $relation
+     */
+    protected function relationTableKey(array $relation): string
+    {
+        $table = (string) ($relation['table'] ?? '');
+        if (str_contains($table, '\\')) {
+            $parts = explode('\\', $table);
+
+            return (string) end($parts);
+        }
+
+        return $this->normalizeTableIdentifier($table);
+    }
+
+    /**
+     * Strip table prefix and normalize user input (msVendor, ms3_vendors, modx_ms3_vendors).
+     */
+    protected function normalizeTableIdentifier(string $tableName): string
+    {
+        $tableName = trim($tableName);
+        $prefix = $this->modx->config['table_prefix'] ?? '';
+        if ($prefix !== '' && str_starts_with($tableName, $prefix)) {
+            $tableName = substr($tableName, strlen($prefix));
+        }
+
+        return $tableName;
     }
 }
