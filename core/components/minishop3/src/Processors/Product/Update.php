@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Processors\Resource\EnsureTargetClassKeyTrait;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\Processor;
@@ -11,6 +12,7 @@ use MODX\Revolution\Processors\Resource\Update as UpdateProcessor;
 
 class Update extends UpdateProcessor
 {
+    use EnsureTargetClassKeyTrait;
     use ProductDataPayloadTrait;
 
     public $classKey = msProduct::class;
