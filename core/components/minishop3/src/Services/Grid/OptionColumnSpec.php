@@ -9,28 +9,8 @@ namespace MiniShop3\Services\Grid;
  */
 final readonly class OptionColumnSpec
 {
-    /** Same rule as {@see \MiniShop3\Services\Grid\GridColumnTypeValidator::validateOptionConfig()} */
-    private const OPTION_KEY_PATTERN = '/^[a-z0-9_]+$/i';
-
-    /** Same rule as OPTION_KEY_PATTERN; fieldName also lands in `SELECT … AS \`{name}\``. */
-    private const FIELD_NAME_PATTERN = '/^[a-z0-9_]+$/i';
-
-    /**
-     * Builtin product / product-data column names that already appear in SELECT.
-     * If user picks one as option fieldName, PDO FETCH_ASSOC overwrites the builtin
-     * with GROUP_CONCAT string → cast in formatProductRow returns 0 / garbage.
-     * Disallow at spec creation to prevent silent data corruption.
-     */
-    private const RESERVED_NAMES = [
-        // modResource
-        'id', 'pagetitle', 'longtitle', 'alias', 'parent', 'menuindex',
-        'published', 'deleted', 'hidemenu', 'createdon', 'editedon',
-        // msProductData
-        'article', 'price', 'old_price', 'weight', 'image', 'thumb',
-        'vendor_id', 'made_in', 'new', 'popular', 'favorite',
-        // formatProductRow synthetics
-        'preview_url', 'category_name',
-    ];
+    /** Same rule as {@see GridColumnRules::SQL_IDENTIFIER_PATTERN} */
+    private const OPTION_KEY_PATTERN = GridColumnRules::SQL_IDENTIFIER_PATTERN;
 
     public function __construct(
         public string $fieldName,
@@ -81,10 +61,6 @@ final readonly class OptionColumnSpec
      */
     public static function isValidFieldName(string $name): bool
     {
-        if (!preg_match(self::FIELD_NAME_PATTERN, $name)) {
-            return false;
-        }
-        return !in_array(strtolower($name), self::RESERVED_NAMES, true);
+        return GridColumnRules::isValidCategoryProductExtraFieldName($name);
     }
-
 }

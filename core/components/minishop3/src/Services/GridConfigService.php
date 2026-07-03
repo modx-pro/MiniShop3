@@ -281,7 +281,8 @@ class GridConfigService
             $prepared = $this->prepareTypedConfig(
                 (string) ($data['type'] ?? 'model'),
                 is_array($data['config'] ?? null) ? $data['config'] : [],
-                (string) $data['field_name']
+                (string) $data['field_name'],
+                $gridKey
             );
             if (!$prepared['success']) {
                 return $prepared;
@@ -348,7 +349,8 @@ class GridConfigService
             $prepared = $this->prepareTypedConfig(
                 (string) ($data['type'] ?? 'model'),
                 is_array($data['config'] ?? null) ? $data['config'] : [],
-                (string) ($data['field_name'] ?? $fieldName)
+                (string) ($data['field_name'] ?? $fieldName),
+                $gridKey
             );
             if (!$prepared['success']) {
                 return $prepared;
@@ -439,9 +441,9 @@ class GridConfigService
      * @param array<string, mixed> $config
      * @return array{success: bool, message?: string, config?: array<string, mixed>}
      */
-    private function prepareTypedConfig(string $type, array $config, string $fieldName): array
+    private function prepareTypedConfig(string $type, array $config, string $fieldName, string $gridKey = ''): array
     {
-        $validation = $this->typeValidator->validateForType($type, $config, $fieldName);
+        $validation = $this->typeValidator->validateForType($type, $config, $fieldName, $gridKey);
         if (!$validation['success']) {
             return $validation;
         }
