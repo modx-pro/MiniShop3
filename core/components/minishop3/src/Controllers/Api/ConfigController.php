@@ -12,7 +12,7 @@ class ConfigController extends BaseApiController
 {
     /**
      * GET /api/mgr/config/page-fields/{page_key}
-     * Get page field configuration with applied overrides
+     * Get page field configuration from ms3_product_fields
      *
      * @param array $params
      * @return Response
@@ -40,7 +40,7 @@ class ConfigController extends BaseApiController
 
     /**
      * GET /api/mgr/config/page-fields/{page_key}/all
-     * Get ALL available fields (including hidden) from model with overrides
+     * Get all available fields (including hidden) from ms3_product_fields
      *
      * @param array $params
      * @return Response
@@ -68,7 +68,7 @@ class ConfigController extends BaseApiController
 
     /**
      * PUT /api/mgr/config/page-fields/{page_key}
-     * Save bulk field overrides
+     * Save field configuration to ms3_product_fields
      *
      * @param array $params
      * @return Response
@@ -91,54 +91,18 @@ class ConfigController extends BaseApiController
             /** @var \MiniShop3\Services\ConfigService */
             $configService = $this->modx->services->get('ms3_config_service');
 
-            $success = $configService->saveFieldsConfig($pageKey, $data['fields']);
+            $success = $configService->saveFieldsConfig($data['fields']);
 
             if ($success) {
                 return Response::success([
                     'message' => 'Configuration saved successfully',
                 ]);
-            } else{
-                return Response::error('Failed to save configuration', HttpStatus::INTERNAL_SERVER_ERROR);
             }
+
+            return Response::error('Failed to save configuration', HttpStatus::INTERNAL_SERVER_ERROR);
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
             return Response::error('Failed to save config: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * DELETE /api/mgr/config/page-fields/{page_key}/{field_name}
-     * Delete override for specific field
-     *
-     * @deprecated Table ms3_field_config_overrides removed. Endpoint kept for backward compatibility.
-     * @param array $params
-     * @return Response
-     */
-    public function deleteFieldOverride(array $params): Response
-    {
-        $pageKey = $params['page_key'] ?? '';
-        $fieldName = $params['field_name'] ?? '';
-
-        if (empty($pageKey) || empty($fieldName)) {
-            return Response::error('Page key and field name are required', HttpStatus::BAD_REQUEST);
-        }
-
-        try {
-            /** @var \MiniShop3\Services\ConfigService */
-            $configService = $this->modx->services->get('ms3_config_service');
-
-            $success = $configService->removeFieldOverride($pageKey, $fieldName);
-
-            if ($success) {
-                return Response::success([
-                    'message' => 'Override removed successfully',
-                ]);
-            } else {
-                return Response::error('Failed to remove override', HttpStatus::INTERNAL_SERVER_ERROR);
-            }
-        } catch (\Exception $e) {
-            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ConfigController] ' . $e->getMessage());
-            return Response::error('Failed to remove override: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 
