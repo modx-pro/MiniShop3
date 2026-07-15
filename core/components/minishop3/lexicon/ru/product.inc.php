@@ -109,7 +109,6 @@ $_lang['ms3_product_source'] = 'Источник файлов';
 $_lang['ms3_product_source_help'] = 'Источник файлов, который хранит изображения товара.';
 $_lang['ms3_product_source_id'] = 'Источник файлов';
 $_lang['ms3_product_source_id_help'] = 'Источник файлов, который хранит изображения товара.';
-$_lang['ms3_product_change_source_confirm'] = 'Вы уверены, что хотите изменить источник файлов? ВНИМАНИЕ: При этом будут сохранены все изменения, убедитесь, что вы готовы сделать это перед продолжением.';
 $_lang['ms3_product_count'] = 'Количество';
 $_lang['ms3_product_options'] = 'Опции товаров';
 
@@ -133,8 +132,6 @@ $_lang['ms3_product_selected_publish'] = 'Включить выбранные т
 $_lang['ms3_product_selected_unpublish'] = 'Отключить выбранные товары';
 $_lang['ms3_product_selected_delete'] = 'Удалить выбранные товары';
 $_lang['ms3_product_selected_undelete'] = 'Восстановить выбранные товары';
-
-//$_lang['ms3_disabled_while_creating'] = '<i>Эта функция отключена при создании нового товара.</i>';
 
 $_lang['ms3_gallery_emptymsg'] = '<p style="padding: 20px 0 0 5px;color:#555;">Файлов не найдено.<br/><br/>Вы можете загрузить их, перетащив прямо на эту панель или выбрав кнопкой вверху.</p>';
 $_lang['ms3_gallery_unavailablemsg'] = 'Для загрузки файлов в Галерею необходимо сначала создать (сохранить) товар.';

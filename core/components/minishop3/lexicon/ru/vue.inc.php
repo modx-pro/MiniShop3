@@ -291,7 +291,6 @@ $_lang['ms3_vue_error_deleting_field'] = 'Не удалось удалить п�
 
 // Grid Fields Config Widget
 $_lang['ms3_grid_fields_config'] = 'Поля таблиц';
-$_lang['grid_fields_config_title'] = 'Поля таблиц';
 $_lang['select_grid'] = 'Выберите грид';
 $_lang['grid_customers'] = 'Клиенты';
 $_lang['grid_orders'] = 'Заказы';
@@ -417,7 +416,6 @@ $_lang['field_added'] = 'Поле успешно добавлено';
 $_lang['error_adding_field'] = 'Ошибка при добавлении поля';
 
 // Edit field dialog
-$_lang['edit'] = 'Редактировать';
 $_lang['edit_field_dialog_title'] = 'Редактирование поля';
 $_lang['field_name_readonly_hint'] = 'Имя поля нельзя изменить после создания';
 $_lang['field_updated'] = 'Поле успешно обновлено';
@@ -508,7 +506,7 @@ $_lang['ms3_notification_edit'] = 'Редактирование уведомле
 $_lang['ms3_notification_created'] = 'Уведомление создано';
 $_lang['ms3_notification_updated'] = 'Уведомление обновлено';
 $_lang['ms3_notification_deleted'] = 'Уведомление удалено';
-$_lang['ms3_notification_enabled'] = 'Уведомление включено';
+$_lang['ms3_notification_was_enabled'] = 'Уведомление включено';
 $_lang['ms3_notification_disabled'] = 'Уведомление отключено';
 $_lang['ms3_notification_delete_confirm'] = 'Удалить это уведомление?';
 $_lang['ms3_notification_subject_placeholder'] = 'Заказ #{$num} - изменение статуса';
@@ -569,8 +567,6 @@ $_lang['order_search_product'] = 'Поиск товара...';
 $_lang['order_product_added'] = 'Товар добавлен в заказ';
 $_lang['order_product_select'] = 'Выберите товар';
 $_lang['order_cannot_add_to_finalized'] = 'Невозможно добавить товар в завершённый заказ';
-$_lang['confirm_delete'] = 'Подтверждение удаления';
-$_lang['warning'] = 'Предупреждение';
 
 // Options editing
 $_lang['options_mode_table'] = 'Таблица';
@@ -725,7 +721,7 @@ $_lang['ms3_model_section_deleted'] = 'Секция удалена';
 $_lang['ms3_model_section_delete_confirm'] = 'Удалить эту секцию? Поля будут переназначены без секции.';
 $_lang['ms3_model_section_cannot_delete_default'] = 'Нельзя удалить системную секцию';
 $_lang['ms3_model_section_shown'] = 'Секция отображается';
-$_lang['ms3_model_section_hidden'] = 'Секция скрыта';
+$_lang['ms3_model_section_now_hidden'] = 'Секция скрыта';
 $_lang['ms3_model_section_order_updated'] = 'Порядок секций обновлён';
 $_lang['ms3_model_sections_empty'] = 'Секции не найдены. Добавьте первую секцию.';
 
@@ -763,10 +759,8 @@ $_lang['ms3_customer_duplicate_found'] = 'Найден похожий клиен
 $_lang['ms3_customer_duplicate_message'] = 'Клиент с такими данными уже существует в системе. Выберите действие:';
 $_lang['ms3_customer_use_existing'] = 'Использовать существующего';
 $_lang['ms3_customer_create_new'] = 'Создать нового';
-$_lang['customer_name'] = 'Имя';
 $_lang['ms3_customer_validation_email_or_phone'] = 'Для создания клиента необходимо указать email или телефон';
 $_lang['ms3_customer_validation_invalid_email'] = 'Указан некорректный email адрес';
-$_lang['warning'] = 'Внимание';
 
 // Order finalization (admin)
 $_lang['ms3_order_finalize_btn'] = 'Оформить заказ';
@@ -795,8 +789,6 @@ $_lang['ms3_order_err_building'] = 'Не указан дом';
 $_lang['ms3_order_err_room'] = 'Не указана квартира/офис';
 
 // Filters
-$_lang['apply_filters'] = 'Применить фильтры';
-$_lang['clear_filters'] = 'Сбросить фильтры';
 $_lang['filter_by'] = 'Фильтр по {field}';
 
 // Bulk selection and actions
@@ -927,12 +919,9 @@ $_lang['ms3_add_validation_rule'] = 'Добавить правило валид�
 $_lang['ms3_select_rule'] = 'Выберите правило';
 $_lang['ms3_select_rule_placeholder'] = 'Выберите правило из списка';
 $_lang['add'] = 'Добавить';
-$_lang['create'] = 'Создать';
 $_lang['total'] = 'Всего';
-$_lang['all'] = 'Все';
 $_lang['yes'] = 'Да';
 $_lang['no'] = 'Нет';
-$_lang['confirm_delete'] = 'Подтверждение удаления';
 
 // Validation rules
 $_lang['validation_rule_required'] = 'Обязательное';
@@ -1129,8 +1118,6 @@ $_lang['category_create'] = 'Добавить подкатегорию';
 $_lang['product_create'] = 'Добавить товар';
 $_lang['product_image'] = 'Изображение';
 $_lang['product_pagetitle'] = 'Название';
-$_lang['product_article'] = 'Артикул';
-$_lang['product_price'] = 'Цена';
 $_lang['product_weight'] = 'Вес';
 $_lang['publish'] = 'Опубликовать';
 $_lang['unpublish'] = 'Снять с публикации';

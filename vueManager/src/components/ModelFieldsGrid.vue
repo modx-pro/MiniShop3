@@ -491,7 +491,7 @@ async function toggleSectionHidden(section) {
     toast.add({
       severity: 'success',
       summary: _('success'),
-      detail: section.hidden ? _('ms3_model_section_hidden') : _('ms3_model_section_shown'),
+      detail: section.hidden ? _('ms3_model_section_now_hidden') : _('ms3_model_section_shown'),
       life: 2000,
     })
   } catch (error) {

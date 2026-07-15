@@ -126,7 +126,7 @@ class CustomerEmailController
         }
 
         return $this->success(
-            $this->modx->lexicon('ms3_customer_email_verified'),
+            $this->modx->lexicon('ms3_customer_email_verify_success'),
             ['customer_id' => $customer->id]
         );
     }
