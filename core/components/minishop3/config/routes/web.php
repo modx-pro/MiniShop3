@@ -209,10 +209,6 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             }
         });
 
-        $router->post('/token/refresh', function ($params) use ($modx) {
-            return Response::success(['message' => 'Customer token/refresh endpoint - not implemented yet']);
-        });
-
         $router->group('/addresses', function ($router) use ($modx) {
             $router->get('', function ($params) use ($modx) {
                 $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);

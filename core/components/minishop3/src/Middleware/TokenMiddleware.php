@@ -35,7 +35,6 @@ class TokenMiddleware implements MiddlewareInterface
         '/api/v1/product/get',
         '/api/v1/product/list',
         '/api/v1/customer/token/get',
-        '/api/v1/customer/token/refresh',
         '/api/v1/customer/logout',
         '/api/v1/health',
     ];
