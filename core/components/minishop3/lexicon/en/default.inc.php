@@ -176,6 +176,8 @@ $_lang['ms3_err_json'] = 'This field requires JSON string';
 $_lang['ms3_repeater_validation_error'] = 'Repeater field "[[+field]]": [[+error]]';
 
 $_lang['ms3_err_user_nf'] = 'User not found.';
+$_lang['ms3_err_product_nf'] = 'Product not found.';
+$_lang['ms3_err_product_id_ns'] = 'Product ID is required.';
 $_lang['ms3_err_order_nf'] = 'Order with this identifier not found.';
 $_lang['ms3_err_order_load'] = 'Error loading order.';
 $_lang['ms3_err_order_num_lock'] = 'Could not acquire a lock to generate the order number. Please try again.';

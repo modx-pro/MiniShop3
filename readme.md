@@ -84,6 +84,21 @@ php _build/build.php
 - [REST API](https://docs.modx.pro/components/minishop3/development/api) — интеграция с внешними системами
 - [События](https://docs.modx.pro/components/minishop3/development/events) — расширение функциональности
 
+### Каталог товаров (Web API)
+
+Публичные endpoints без токена. В выборку попадают только товары с `published=1`, `deleted=0`, `hidemenu=0` в указанном (или текущем) `context`.
+
+```
+GET /assets/components/minishop3/api.php?route=/api/v1/product/get/{id}
+GET /assets/components/minishop3/api.php?route=/api/v1/product/list
+```
+
+Параметры: `parent` / `category` (только primary parent, без `msCategoryMember`), `limit` (max 100), `offset` / `page`, `sort` + `dir`, `query`, `context`, `include_options`, `include_content`.
+
+Ответ `list`: `{ items, total, limit, offset }`. Цена и вес — через `msOnGetProductPrice` / `msOnGetProductWeight`; поля ответа allowlist’ятся после `msOnGetProductFields`.
+
+Полный справочник REST — на [docs.modx.pro](https://docs.modx.pro/components/minishop3/development/api) (раздел каталога стоит синхронизировать с этим релизом).
+
 ### Подтверждение email (Web API)
 
 Ссылка в письме ведёт на `api.php` с путём верификации и параметром `html=1` — в ответ сервер отдаёт **HTTP-редирект** (302) на сайт с признаком `ms3_email_verified=1` либо `ms3_email_verified=0`. URL после успешной проверки задаётся системной настройкой `ms3_email_verification_success_url` (если пусто — `site_url`).

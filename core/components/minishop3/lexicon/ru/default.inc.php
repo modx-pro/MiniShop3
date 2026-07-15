@@ -176,6 +176,8 @@ $_lang['ms3_err_json'] = 'Это поле требует JSON строку';
 $_lang['ms3_repeater_validation_error'] = 'Поле повторителя «[[+field]]»: [[+error]]';
 
 $_lang['ms3_err_user_nf'] = 'Пользователь не найден.';
+$_lang['ms3_err_product_nf'] = 'Товар не найден.';
+$_lang['ms3_err_product_id_ns'] = 'Не указан ID товара.';
 $_lang['ms3_err_order_nf'] = 'Заказ с таким идентификатором не найден.';
 $_lang['ms3_err_order_load'] = 'Ошибка при загрузке заказа.';
 $_lang['ms3_err_order_num_lock'] = 'Не удалось получить блокировку для генерации номера заказа. Попробуйте ещё раз.';

@@ -10,6 +10,8 @@
  *
  * Использование:
  * api.php?route=/api/v1/customer/token/get
+ * api.php?route=/api/v1/product/list
+ * api.php?route=/api/v1/product/get/123
  * api.php?route=/api/v1/cart/add
  *
  * @package MiniShop3
