@@ -1,30 +1,17 @@
+import {
+  formatDate,
+  formatPrice,
+  renderField as renderProductField,
+} from '../utils/displayFormatters.js'
+
 /**
  * Pure formatters for order UI (no order state).
+ * Shared date/price/field helpers live in utils/displayFormatters.js.
  */
 export function useOrderFormatters() {
-  function formatDate(dateString) {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    return date.toLocaleString('ru-RU', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  function formatPrice(value) {
-    if (value === null || value === undefined) return '-'
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'decimal',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(value)
-  }
-
   function formatOptions(options) {
     if (!options) return []
+
     let parsed = options
     if (typeof options === 'string') {
       try {
@@ -33,25 +20,20 @@ export function useOrderFormatters() {
         return []
       }
     }
+
     if (Array.isArray(parsed)) {
       return parsed.map(opt => (typeof opt === 'object' ? `${opt.key}: ${opt.value}` : opt))
     }
-    if (typeof parsed === 'object') {
+
+    if (parsed && typeof parsed === 'object') {
       return Object.entries(parsed).map(([key, value]) => `${key}: ${value}`)
     }
+
     return []
   }
 
   function getFieldWidthClass(field) {
-    const width = field.width || 6
-    return `col-${width}`
-  }
-
-  function renderProductField(data, column) {
-    if (column.template) {
-      return column.template.replace(/\{(\w+)\}/g, (match, key) => data[key] ?? '')
-    }
-    return data[column.name]
+    return `col-${field.width || 6}`
   }
 
   function getProductLink(data, column) {

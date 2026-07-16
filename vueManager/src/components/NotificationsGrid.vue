@@ -16,15 +16,13 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 
+import { useCrudDialog } from '../composables/useCrudDialog.js'
+import { useResourceList } from '../composables/useResourceList.js'
 import request from '../request.js'
 
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
-
-const loading = ref(false)
-const notifications = ref([])
-const totalRecords = ref(0)
 
 const references = ref({
   statuses: [],
@@ -37,10 +35,53 @@ const filterStatusId = ref(null)
 const filterChannel = ref(null)
 const filterRecipientType = ref(null)
 
-const editDialogVisible = ref(false)
-const editingNotification = ref(null)
-const saving = ref(false)
-const isNewRecord = ref(false)
+const {
+  loading,
+  items: notifications,
+  load: loadNotifications,
+  resetPageAndLoad,
+} = useResourceList({
+  fetchPage: ({ signal }) => {
+    const params = {}
+
+    if (filterStatusId.value !== null) {
+      params.status_id = filterStatusId.value
+    }
+    if (filterChannel.value) {
+      params.channel = filterChannel.value
+    }
+    if (filterRecipientType.value) {
+      params.recipient_type = filterRecipientType.value
+    }
+
+    return request.get('/api/mgr/notifications', params, { signal })
+  },
+})
+
+const {
+  visible: editDialogVisible,
+  isNew: isNewRecord,
+  saving,
+  item: editingNotification,
+  openCreate,
+  openEdit,
+  close,
+  runSave,
+  toastSuccess,
+} = useCrudDialog({
+  createDefaults: () => ({
+    event: 'order_status_changed',
+    status_id: null,
+    recipient_type: 'customer',
+    channel: 'email',
+    enabled: true,
+    subject: '',
+    template: '',
+    delay: 0,
+    position: 0,
+    config: {},
+  }),
+})
 
 /**
  * Load references
@@ -56,116 +97,30 @@ async function loadReferences() {
   }
 }
 
-/**
- * Load notifications list
- */
-async function loadNotifications() {
-  loading.value = true
-
-  try {
-    const params = {}
-
-    if (filterStatusId.value !== null) {
-      params.status_id = filterStatusId.value
-    }
-    if (filterChannel.value) {
-      params.channel = filterChannel.value
-    }
-    if (filterRecipientType.value) {
-      params.recipient_type = filterRecipientType.value
-    }
-
-    const response = await request.get('/api/mgr/notifications', params)
-
-    if (response && response.results) {
-      notifications.value = response.results
-      totalRecords.value = response.total || 0
-    } else {
-      notifications.value = []
-      totalRecords.value = 0
-    }
-  } catch (error) {
-    console.error('[NotificationsGrid] Error loading notifications:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_data'),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-function applyFilters() {
-  loadNotifications()
-}
-
 function clearFilters() {
   filterStatusId.value = null
   filterChannel.value = null
   filterRecipientType.value = null
-  loadNotifications()
-}
-
-function createNotification() {
-  editingNotification.value = {
-    event: 'order_status_changed',
-    status_id: null,
-    recipient_type: 'customer',
-    channel: 'email',
-    enabled: true,
-    subject: '',
-    template: '',
-    delay: 0,
-    position: 0,
-    config: {},
-  }
-  isNewRecord.value = true
-  editDialogVisible.value = true
-}
-
-function editNotification(notification) {
-  editingNotification.value = { ...notification }
-  isNewRecord.value = false
-  editDialogVisible.value = true
+  resetPageAndLoad()
 }
 
 async function saveNotification() {
   if (!editingNotification.value) return
 
-  saving.value = true
-
-  try {
-    if (isNewRecord.value) {
+  const created = isNewRecord.value
+  await runSave(async () => {
+    if (created) {
       await request.post('/api/mgr/notifications', editingNotification.value)
+      toastSuccess(_('ms3_notification_created'))
     } else {
       await request.put(
         `/api/mgr/notifications/${editingNotification.value.id}`,
         editingNotification.value
       )
+      toastSuccess(_('ms3_notification_updated'))
     }
-
-    toast.add({
-      severity: 'success',
-      summary: _('success'),
-      detail: isNewRecord.value ? _('ms3_notification_created') : _('ms3_notification_updated'),
-      life: 3000,
-    })
-
-    editDialogVisible.value = false
     await loadNotifications()
-  } catch (error) {
-    console.error('[NotificationsGrid] Error saving notification:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 function deleteNotification(notification) {
@@ -297,11 +252,7 @@ onMounted(async () => {
       <template #content>
         <!-- Toolbar -->
         <div class="toolbar mb-3">
-          <Button
-            :label="_('ms3_notification_add')"
-            icon="pi pi-plus"
-            @click="createNotification"
-          />
+          <Button :label="_('ms3_notification_add')" icon="pi pi-plus" @click="openCreate" />
         </div>
 
         <!-- Filters -->
@@ -350,7 +301,7 @@ onMounted(async () => {
               />
             </div>
             <div style="display: flex; gap: 0.5rem">
-              <Button :label="_('apply')" icon="pi pi-filter" @click="applyFilters" />
+              <Button :label="_('apply')" icon="pi pi-filter" @click="resetPageAndLoad" />
               <Button
                 :label="_('clear')"
                 icon="pi pi-filter-slash"
@@ -425,7 +376,7 @@ onMounted(async () => {
                   text
                   severity="secondary"
                   :title="_('edit')"
-                  @click="editNotification(data)"
+                  @click="openEdit(data)"
                 />
                 <Button
                   icon="pi pi-trash"
@@ -566,12 +517,7 @@ onMounted(async () => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          icon="pi pi-times"
-          class="p-button-text"
-          @click="editDialogVisible = false"
-        />
+        <Button :label="_('cancel')" icon="pi pi-times" class="p-button-text" @click="close" />
         <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveNotification" />
       </template>
     </Dialog>

@@ -159,6 +159,9 @@ class Request {
 
       return unwrapResponsePayload(responseData)
     } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw error
+      }
       if (error instanceof RequestError) {
         throw error
       }

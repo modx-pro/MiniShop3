@@ -14,7 +14,10 @@ import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
+import { useCrudDialog } from '../composables/useCrudDialog.js'
+import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
+import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
 
@@ -39,13 +42,44 @@ const {
   getItemName: item => item.name,
 })
 
-const loading = ref(false)
-const statuses = ref([])
-const totalRecords = ref(0)
-const editDialogVisible = ref(false)
-const editingStatus = ref(null)
-const isNewStatus = ref(false)
-const saving = ref(false)
+const {
+  loading,
+  items: statuses,
+  total: totalRecords,
+  load: loadStatuses,
+} = useResourceList({
+  fetchPage: ({ signal }) => request.get('/api/mgr/statuses', { limit: 0 }, { signal }),
+})
+
+const {
+  visible: editDialogVisible,
+  isNew: isNewStatus,
+  saving,
+  item: editingStatus,
+  openCreate,
+  openEdit,
+  close,
+  runSave,
+  toastSuccess,
+  toastWarn,
+} = useCrudDialog({
+  createDefaults: () => ({
+    name: '',
+    description: '',
+    color: '000000',
+    active: true,
+    final: false,
+    fixed: false,
+  }),
+})
+
+const { onDragEnd } = useSortableList({
+  items: statuses,
+  sortUrl: '/api/mgr/statuses/sort',
+  successMessage: _('status_order_saved'),
+  reload: loadStatuses,
+})
+
 const selectAll = ref(false)
 
 // Default color palette (similar to ExtJS)
@@ -93,107 +127,25 @@ const colorPalette = [
 ]
 
 /**
- * Load statuses list
- */
-async function loadStatuses() {
-  loading.value = true
-
-  try {
-    const response = await request.get('/api/mgr/statuses', { limit: 0 })
-
-    if (response && response.results) {
-      statuses.value = response.results
-      totalRecords.value = response.total || 0
-    } else {
-      statuses.value = []
-      totalRecords.value = 0
-    }
-  } catch (error) {
-    console.error('[StatusesGrid] Error loading statuses:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_data'),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-/**
- * Open create modal
- */
-function createStatus() {
-  editingStatus.value = {
-    name: '',
-    description: '',
-    color: '000000',
-    active: true,
-    final: false,
-    fixed: false,
-  }
-  isNewStatus.value = true
-  editDialogVisible.value = true
-}
-
-/**
- * Open edit modal
- */
-function editStatus(status) {
-  editingStatus.value = { ...status }
-  isNewStatus.value = false
-  editDialogVisible.value = true
-}
-
-/**
  * Save status (create or update)
  */
 async function saveStatus() {
   if (!editingStatus.value.name) {
-    toast.add({
-      severity: 'warn',
-      summary: _('warning'),
-      detail: _('status_name_required'),
-      life: 3000,
-    })
+    toastWarn(_('status_name_required'))
     return
   }
 
-  saving.value = true
-
-  try {
-    let response
-    if (isNewStatus.value) {
-      response = await request.post('/api/mgr/statuses', editingStatus.value)
+  const created = isNewStatus.value
+  await runSave(async () => {
+    if (created) {
+      await request.post('/api/mgr/statuses', editingStatus.value)
+      toastSuccess(_('status_created'))
     } else {
-      response = await request.put(
-        `/api/mgr/statuses/${editingStatus.value.id}`,
-        editingStatus.value
-      )
+      await request.put(`/api/mgr/statuses/${editingStatus.value.id}`, editingStatus.value)
+      toastSuccess(_('status_updated'))
     }
-
-    if (response) {
-      toast.add({
-        severity: 'success',
-        summary: _('success'),
-        detail: isNewStatus.value ? _('status_created') : _('status_updated'),
-        life: 3000,
-      })
-      editDialogVisible.value = false
-      loadStatuses()
-    }
-  } catch (error) {
-    console.error('[StatusesGrid] Error saving status:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-  } finally {
-    saving.value = false
-  }
+    await loadStatuses()
+  })
 }
 
 /**
@@ -228,34 +180,6 @@ function deleteStatus(status) {
       }
     },
   })
-}
-
-/**
- * Handle drag end (vuedraggable)
- */
-async function onDragEnd() {
-  // Extract IDs in new order
-  const ids = statuses.value.map(s => s.id)
-
-  try {
-    await request.post('/api/mgr/statuses/sort', { ids })
-    toast.add({
-      severity: 'success',
-      summary: _('success'),
-      detail: _('status_order_saved'),
-      life: 2000,
-    })
-  } catch (error) {
-    console.error('[StatusesGrid] Error saving order:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-    // Reload to restore original order
-    loadStatuses()
-  }
 }
 
 /**
@@ -342,12 +266,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="grid-header-right">
-            <Button
-              :label="_('create')"
-              icon="pi pi-plus"
-              severity="success"
-              @click="createStatus"
-            />
+            <Button :label="_('create')" icon="pi pi-plus" severity="success" @click="openCreate" />
           </div>
         </div>
       </template>
@@ -453,7 +372,7 @@ onMounted(() => {
                         :data="status"
                         :actions="getActionsConfig()"
                         grid-id="statuses"
-                        @edit="editStatus"
+                        @edit="openEdit"
                         @delete="deleteStatus"
                         @refresh="loadStatuses"
                       />
@@ -543,12 +462,7 @@ onMounted(() => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          icon="pi pi-times"
-          severity="secondary"
-          @click="editDialogVisible = false"
-        />
+        <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
         <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveStatus" />
       </template>
     </Dialog>

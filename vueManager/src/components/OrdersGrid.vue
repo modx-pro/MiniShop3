@@ -12,13 +12,18 @@ import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
-import { useGridFilterParams } from '../composables/useGridFilterParams.js'
+import { useGridConfig } from '../composables/useGridConfig.js'
+import { useGridFilters } from '../composables/useGridFilters.js'
+import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
-import { useStaleRequestGuard } from '../composables/useStaleRequestGuard.js'
 import request from '../request.js'
-import { formatLocalDateYmd } from '../utils/formatLocalDateYmd.js'
+import {
+  formatDatePattern,
+  formatPriceConfigured,
+  renderField,
+} from '../utils/displayFormatters.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -40,6 +45,83 @@ function readShowDraftsPreference() {
 }
 
 const showDrafts = ref(readShowDraftsPreference())
+const stats = ref({
+  month_sum: '0',
+  month_total: '0',
+})
+
+const {
+  filterValues,
+  sortedFilters,
+  hasActiveFilters,
+  setFilters,
+  setDirectFilterKeys,
+  appendFilterParams,
+  initFilterValues,
+} = useGridFilters()
+
+const { columns, loadGridConfig } = useGridConfig({
+  gridId: 'orders',
+  responseKey: 'columns',
+  getFallbackColumns: getDefaultColumns,
+  onLoaded: response => {
+    setDirectFilterKeys(response?.direct_filter_keys || [])
+  },
+})
+
+
+/**
+ * Build GET params shared by list and stats endpoints (#469).
+ *
+ * @param {{ includePagination?: boolean, start?: number, limit?: number, sort?: string|null, dir?: number }} options
+ */
+function buildOrderListParams({
+  includePagination = true,
+  start = null,
+  limit = null,
+  sort = null,
+  dir = null,
+} = {}) {
+  const params = {
+    show_drafts: showDrafts.value ? 1 : 0,
+  }
+
+  if (includePagination) {
+    params.start = start ?? 0
+    params.limit = limit ?? 20
+    params.sort = sort || 'id'
+    params.dir = dir === 1 ? 'ASC' : 'DESC'
+  }
+
+  appendFilterParams(params)
+  return params
+}
+
+const {
+  loading,
+  items: orders,
+  total: totalRecords,
+  first,
+  rows,
+  sortField,
+  sortOrder,
+  load: loadOrders,
+  onPage,
+  onSort,
+} = useResourceList({
+  defaultSortField: 'id',
+  defaultSortOrder: -1,
+  fetchPage: async ({ first: start, rows: limit, sortField: sort, sortOrder: dir, signal }) => {
+    const params = buildOrderListParams({
+      includePagination: true,
+      start,
+      limit,
+      sort,
+      dir,
+    })
+    return request.get('/api/mgr/orders', params, { signal })
+  },
+})
 
 // Bulk selection
 const {
@@ -58,117 +140,15 @@ const {
   getItemName: item => `#${item.num || item.id}`,
 })
 
-const columns = ref([])
-const filters = ref({})
-const { setDirectFilterKeys, addFilterParam } = useGridFilterParams()
-const { runGuarded } = useStaleRequestGuard()
-const loading = ref(false)
-const orders = ref([])
-const totalRecords = ref(0)
-const first = ref(0)
-const rows = ref(20)
-const sortField = ref('id')
-const sortOrder = ref(-1) // -1 = DESC, 1 = ASC
-const filterValues = ref({})
-const stats = ref({
-  month_sum: '0',
-  month_total: '0',
-})
-
-/**
- * Get sorted filters list
- */
-const sortedFilters = computed(() => {
-  return Object.entries(filters.value)
-    .map(([key, config]) => ({ key, ...config }))
-    .sort((a, b) => (a.position || 100) - (b.position || 100))
-})
-
-/**
- * Build GET params shared by list and stats endpoints.
- *
- * @param {{ includePagination?: boolean }} options
- */
-function buildOrderListParams({ includePagination = true } = {}) {
-  const params = {
-    show_drafts: showDrafts.value ? 1 : 0,
-  }
-
-  if (includePagination) {
-    params.start = first.value
-    params.limit = rows.value
-    params.sort = sortField.value
-    params.dir = sortOrder.value === 1 ? 'ASC' : 'DESC'
-  }
-
-  Object.keys(filterValues.value).forEach(key => {
-    const value = filterValues.value[key]
-    if (value !== null && value !== undefined && value !== '') {
-      const filterConfig = filters.value[key]
-      if (filterConfig?.type === 'daterange' && Array.isArray(value)) {
-        if (value[0]) {
-          addFilterParam(
-            params,
-            filterConfig.fields?.from || `${key}_from`,
-            formatLocalDateYmd(value[0])
-          )
-        }
-        if (value[1]) {
-          addFilterParam(
-            params,
-            filterConfig.fields?.to || `${key}_to`,
-            formatLocalDateYmd(value[1])
-          )
-        }
-      } else if (filterConfig?.type === 'datepicker' && value) {
-        addFilterParam(params, key, formatLocalDateYmd(value))
-      } else {
-        addFilterParam(params, key, value)
-      }
-    }
-  })
-
-  return params
-}
-
-/**
- * Load orders list (stats via GET /orders/stats — #353).
- */
-async function loadOrders() {
-  try {
-    await runGuarded(loading, async (signal, isCurrent) => {
-      const response = await request.get('/api/mgr/orders', buildOrderListParams(), { signal })
-
-      if (!isCurrent()) {
-        return
-      }
-
-      if (response && response.results) {
-        orders.value = response.results
-        totalRecords.value = response.total || 0
-      } else {
-        console.error('[OrdersGrid] Invalid response:', response)
-        orders.value = []
-        totalRecords.value = 0
-      }
-    })
-  } catch (error) {
-    console.error('[OrdersGrid] Error loading orders:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_data'),
-      life: 5000,
-    })
-  }
-}
-
 /**
  * Load header stats for current filters (parallel to list, no pagination).
  */
 async function loadOrderStats() {
   try {
-    const response = await request.get('/api/mgr/orders/stats', buildOrderListParams({ includePagination: false }))
+    const response = await request.get(
+      '/api/mgr/orders/stats',
+      buildOrderListParams({ includePagination: false })
+    )
     if (response && (response.month_total !== undefined || response.month_sum !== undefined)) {
       stats.value = response
     }
@@ -181,23 +161,15 @@ async function refreshGrid() {
   await Promise.all([loadOrders(), loadOrderStats()])
 }
 
-/**
- * Handle pagination
- */
-function onPage(event) {
-  first.value = event.first
-  rows.value = event.rows
-  loadOrders()
+function applyFilters() {
+  first.value = 0
+  return refreshGrid()
 }
 
-/**
- * Handle sort
- */
-function onSort(event) {
-  sortField.value = event.sortField || 'id'
-  sortOrder.value = event.sortOrder ?? -1
+function clearFilters() {
+  initFilterValues()
   first.value = 0
-  loadOrders()
+  return refreshGrid()
 }
 
 /**
@@ -243,60 +215,16 @@ async function deleteOrder(order) {
 
 /**
  * Format date with configurable format
- * @param {string} dateString - Date string to format
- * @param {object} column - Column config with optional format property
  */
 function formatDate(dateString, column = {}) {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-
-  // Custom format from column config
-  const format = column.format || 'dd.MM.yyyy HH:mm'
-
-  // Simple format replacement
-  const pad = n => n.toString().padStart(2, '0')
-
-  return format
-    .replace('yyyy', date.getFullYear())
-    .replace('yy', date.getFullYear().toString().slice(-2))
-    .replace('MM', pad(date.getMonth() + 1))
-    .replace('dd', pad(date.getDate()))
-    .replace('HH', pad(date.getHours()))
-    .replace('mm', pad(date.getMinutes()))
-    .replace('ss', pad(date.getSeconds()))
+  return formatDatePattern(dateString, column.format || 'dd.MM.yyyy HH:mm')
 }
 
 /**
  * Format price with configurable options
- * @param {number} value - Price value
- * @param {object} column - Column config with optional formatting properties
  */
 function formatPrice(value, column = {}) {
-  if (value === null || value === undefined) return '-'
-
-  // Get config from column or use defaults from ms3.config
-  // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let'
-
-  const ms3Config = typeof ms3 !== 'undefined' ? ms3.config : null
-  const decimals = column.decimals ?? ms3Config?.price_decimals ?? 2
-  const thousandsSeparator =
-    column.thousands_separator ?? ms3Config?.price_thousands_separator ?? ' '
-  const decimalSeparator = column.decimal_separator ?? ms3Config?.price_decimal_separator ?? ','
-  const currency = column.currency ?? ms3Config?.price_currency ?? ''
-  const currencyPosition = column.currency_position ?? ms3Config?.price_currency_position ?? 'after'
-
-  // Format number
-  const parts = Number(value).toFixed(decimals).split('.')
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator)
-  let formatted = parts.join(decimalSeparator)
-
-  // Add currency
-  if (currency) {
-    formatted =
-      currencyPosition === 'before' ? `${currency}${formatted}` : `${formatted} ${currency}`
-  }
-
-  return formatted
+  return formatPriceConfigured(value, column, ms3Config)
 }
 
 /**
@@ -375,53 +303,12 @@ function getBadgeColor(data, column) {
 async function loadFiltersConfig() {
   try {
     const response = await request.get('/api/mgr/orders/filters')
-    filters.value = response.filters || response || {}
-    initFilterValues()
+    setFilters(response.filters || response || {})
   } catch (error) {
     console.error('[OrdersGrid] Failed to load filters config:', error)
-    filters.value = {}
+    setFilters({})
   }
 }
-
-/**
- * Initialize filter values
- */
-function initFilterValues() {
-  const newValues = {}
-  Object.keys(filters.value).forEach(key => {
-    const filterConfig = filters.value[key]
-    if (filterConfig.type === 'daterange') {
-      newValues[key] = null
-    } else {
-      newValues[key] = null
-    }
-  })
-  filterValues.value = newValues
-}
-
-/**
- * Apply filters
- */
-function applyFilters() {
-  first.value = 0
-  refreshGrid()
-}
-
-/**
- * Clear filters
- */
-function clearFilters() {
-  initFilterValues()
-  first.value = 0
-  refreshGrid()
-}
-
-/**
- * Check if any filter has value
- */
-const hasActiveFilters = computed(() => {
-  return Object.values(filterValues.value).some(v => v !== null && v !== '' && v !== undefined)
-})
 
 function toggleShowDrafts() {
   try {
@@ -430,22 +317,7 @@ function toggleShowDrafts() {
     /* localStorage unavailable */
   }
   first.value = 0
-  refreshGrid()
-}
-
-/**
- * Load grid configuration
- */
-async function loadGridConfig() {
-  try {
-    const response = await request.get('/api/mgr/grid-config/orders')
-    columns.value = response.columns || []
-    setDirectFilterKeys(response.direct_filter_keys)
-  } catch (error) {
-    console.error('[OrdersGrid] Failed to load grid config:', error)
-    columns.value = getDefaultColumns()
-    setDirectFilterKeys([])
-  }
+  return refreshGrid()
 }
 
 /**
@@ -563,16 +435,6 @@ function getActionsConfig(column) {
     ]
   }
   return column.actions
-}
-
-/**
- * Render column value by template
- */
-function renderField(data, column) {
-  if (column.template) {
-    return column.template.replace(/\{(\w+)\}/g, (match, key) => data[key] || '')
-  }
-  return data[column.name]
 }
 
 /**

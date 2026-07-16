@@ -23,9 +23,14 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
+import { useCrudDialog } from '../composables/useCrudDialog.js'
+import { useGridConfig } from '../composables/useGridConfig.js'
+import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
+import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { resolveAddCostPriceBadgeKind } from '../utils/addCostPriceBadgeKind.js'
+import { formatValue, getDisplayName } from '../utils/displayFormatters.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 import ValidationRulesEditor from './ValidationRulesEditor.vue'
@@ -51,41 +56,29 @@ const {
   getItemName: item => item.name,
 })
 
-const columns = ref([])
-const loading = ref(false)
-const deliveries = ref([])
-const totalRecords = ref(0)
-const first = ref(0)
-const rows = ref(20)
+const { columns, loadGridConfig } = useGridConfig({
+  gridId: 'deliveries',
+  responseKey: 'fields',
+  getFallbackColumns,
+})
+
 const filterValues = ref({})
 const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
 const searchQuery = ref('')
-const editDialogVisible = ref(false)
-const editingDelivery = ref(null)
-const isNewDelivery = ref(false)
-const saving = ref(false)
 const activeTab = ref('0')
 const selectAll = ref(false)
 
-// Payments tab
-const payments = ref([])
-const deliveryPayments = ref([])
-const loadingPayments = ref(false)
-
-const deliveryAddCostBadgeKind = computed(() =>
-  editingDelivery.value ? resolveAddCostPriceBadgeKind(editingDelivery.value.price) : null,
-)
-
-/**
- * Load deliveries list
- */
-async function loadDeliveries() {
-  loading.value = true
-
-  try {
+const {
+  loading,
+  items: deliveries,
+  total: totalRecords,
+  load: loadDeliveries,
+  resetPageAndLoad,
+} = useResourceList({
+  fetchPage: ({ first: start, rows: limit, signal }) => {
     const params = {
-      start: first.value,
-      limit: rows.value,
+      start,
+      limit,
     }
 
     if (searchQuery.value) {
@@ -99,47 +92,52 @@ async function loadDeliveries() {
       }
     })
 
-    const response = await request.get('/api/mgr/deliveries', params)
+    return request.get('/api/mgr/deliveries', params, { signal })
+  },
+})
 
-    if (response && response.results) {
-      deliveries.value = response.results
-      totalRecords.value = response.total || 0
-    } else {
-      console.error('[DeliveriesGrid] Invalid response:', response)
-      deliveries.value = []
-      totalRecords.value = 0
-    }
-  } catch (error) {
-    console.error('[DeliveriesGrid] Error loading deliveries:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_data'),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  visible: editDialogVisible,
+  isNew: isNewDelivery,
+  saving,
+  item: editingDelivery,
+  openCreate,
+  openEdit,
+  close,
+  runSave,
+  toastSuccess,
+  toastWarn,
+} = useCrudDialog({
+  createDefaults: () => ({
+    name: '',
+    description: '',
+    price: '0',
+    weight_price: 0,
+    distance_price: 0,
+    free_delivery_amount: 0,
+    position: 0,
+    active: true,
+    class: '',
+    logo: '',
+    validation_rules: '',
+  }),
+})
 
-/**
- * Handle pagination
- */
-// eslint-disable-next-line no-unused-vars
-function onPage(event) {
-  first.value = event.first
-  rows.value = event.rows
-  loadDeliveries()
-}
+// Payments tab
+const payments = ref([])
+const deliveryPayments = ref([])
+const loadingPayments = ref(false)
 
-/**
- * Handle search
- */
-// eslint-disable-next-line no-unused-vars
-function onSearch() {
-  first.value = 0
-  loadDeliveries()
-}
+const deliveryAddCostBadgeKind = computed(() =>
+  editingDelivery.value ? resolveAddCostPriceBadgeKind(editingDelivery.value.price) : null
+)
+
+const { onDragEnd } = useSortableList({
+  items: deliveries,
+  sortUrl: '/api/mgr/deliveries/sort',
+  successMessage: _('delivery_order_saved'),
+  reload: loadDeliveries,
+})
 
 /**
  * Handle select all checkbox
@@ -154,28 +152,67 @@ function onSelectAllChange(checked) {
 }
 
 /**
- * Handle drag-drop reorder
+ * Get fallback grid columns
  */
-async function onDragEnd() {
-  const ids = deliveries.value.map(d => d.id)
-  try {
-    await request.post('/api/mgr/deliveries/sort', { ids })
-    toast.add({
-      severity: 'success',
-      summary: _('success'),
-      detail: _('delivery_order_saved'),
-      life: 2000,
-    })
-  } catch (error) {
-    console.error('[DeliveriesGrid] Error saving order:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-    loadDeliveries()
-  }
+function getFallbackColumns() {
+  return [
+    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
+    {
+      name: 'name',
+      label: _('delivery_name'),
+      visible: true,
+      sortable: true,
+      filterable: true,
+    },
+    {
+      name: 'price',
+      label: _('delivery_price'),
+      visible: true,
+      sortable: true,
+      width: '7.5rem',
+    },
+    {
+      name: 'free_delivery_amount',
+      label: _('delivery_free_amount'),
+      visible: true,
+      sortable: true,
+      width: '9.375rem',
+    },
+    {
+      name: 'active',
+      label: _('delivery_active'),
+      visible: true,
+      sortable: true,
+      type: 'boolean',
+      width: '6.25rem',
+    },
+    {
+      name: 'position',
+      label: _('delivery_position'),
+      visible: true,
+      sortable: true,
+      width: '6.25rem',
+    },
+    {
+      name: 'actions',
+      label: _('actions'),
+      visible: true,
+      frozen: true,
+      type: 'actions',
+      width: '7.5rem',
+      actions: [
+        { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: false,
+        },
+      ],
+    },
+  ]
 }
 
 /**
@@ -193,35 +230,17 @@ function normalizeImagePath(path) {
  * Open create modal
  */
 function createDelivery() {
-  editingDelivery.value = {
-    name: '',
-    description: '',
-    price: '0',
-    weight_price: 0,
-    distance_price: 0,
-    free_delivery_amount: 0,
-    position: 0,
-    active: true,
-    class: '',
-    logo: '',
-    validation_rules: '',
-  }
-  isNewDelivery.value = true
+  openCreate()
   activeTab.value = '0'
   deliveryPayments.value = []
-  editDialogVisible.value = true
 }
 
 /**
  * Open edit modal
  */
 async function editDelivery(delivery) {
-  editingDelivery.value = { ...delivery }
-  isNewDelivery.value = false
+  openEdit(delivery)
   activeTab.value = '0'
-  editDialogVisible.value = true
-
-  // Load payments for this delivery
   await loadDeliveryPayments(delivery.id)
 }
 
@@ -268,13 +287,9 @@ function isPaymentEnabled(paymentId) {
 
 /**
  * Get translated payment name
- * If translation exists, return it; otherwise return original name
  */
 function getPaymentName(name) {
-  if (!name) return ''
-  const translated = _(name)
-  // If translation returns the same key, it means no translation found
-  return translated !== name ? translated : name
+  return getDisplayName(name, _)
 }
 
 /**
@@ -322,49 +337,21 @@ async function togglePayment(paymentId, newValue) {
  */
 async function saveDelivery() {
   if (!editingDelivery.value.name) {
-    toast.add({
-      severity: 'warn',
-      summary: _('warning'),
-      detail: _('delivery_name_required'),
-      life: 3000,
-    })
+    toastWarn(_('delivery_name_required'))
     return
   }
 
-  saving.value = true
-
-  try {
-    let response
-    if (isNewDelivery.value) {
-      response = await request.post('/api/mgr/deliveries', editingDelivery.value)
+  const created = isNewDelivery.value
+  await runSave(async () => {
+    if (created) {
+      await request.post('/api/mgr/deliveries', editingDelivery.value)
+      toastSuccess(_('delivery_created'))
     } else {
-      response = await request.put(
-        `/api/mgr/deliveries/${editingDelivery.value.id}`,
-        editingDelivery.value
-      )
+      await request.put(`/api/mgr/deliveries/${editingDelivery.value.id}`, editingDelivery.value)
+      toastSuccess(_('delivery_updated'))
     }
-
-    if (response) {
-      toast.add({
-        severity: 'success',
-        summary: _('success'),
-        detail: isNewDelivery.value ? _('delivery_created') : _('delivery_updated'),
-        life: 3000,
-      })
-      editDialogVisible.value = false
-      loadDeliveries()
-    }
-  } catch (error) {
-    console.error('[DeliveriesGrid] Error saving delivery:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-  } finally {
-    saving.value = false
-  }
+    await loadDeliveries()
+  })
 }
 
 /**
@@ -405,8 +392,7 @@ function deleteDelivery(delivery) {
  * Apply filters
  */
 function applyFilters() {
-  first.value = 0
-  loadDeliveries()
+  resetPageAndLoad()
 }
 
 /**
@@ -414,8 +400,7 @@ function applyFilters() {
  */
 function clearFilters() {
   filterValues.value = {}
-  first.value = 0
-  loadDeliveries()
+  resetPageAndLoad()
 }
 
 /**
@@ -430,107 +415,17 @@ function getActionsConfig(column) {
 }
 
 /**
- * Load grid configuration
- */
-async function loadGridConfig() {
-  try {
-    const response = await request.get('/api/mgr/grid-config/deliveries')
-
-    if (response && response.fields) {
-      columns.value = response.fields
-    } else {
-      // Fallback default columns
-      columns.value = [
-        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
-        {
-          name: 'name',
-          label: _('delivery_name'),
-          visible: true,
-          sortable: true,
-          filterable: true,
-        },
-        {
-          name: 'price',
-          label: _('delivery_price'),
-          visible: true,
-          sortable: true,
-          width: '7.5rem',
-        },
-        {
-          name: 'free_delivery_amount',
-          label: _('delivery_free_amount'),
-          visible: true,
-          sortable: true,
-          width: '9.375rem',
-        },
-        {
-          name: 'active',
-          label: _('delivery_active'),
-          visible: true,
-          sortable: true,
-          type: 'boolean',
-          width: '6.25rem',
-        },
-        {
-          name: 'position',
-          label: _('delivery_position'),
-          visible: true,
-          sortable: true,
-          width: '6.25rem',
-        },
-        {
-          name: 'actions',
-          label: _('actions'),
-          visible: true,
-          frozen: true,
-          type: 'actions',
-          width: '7.5rem',
-          actions: [
-            { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-            {
-              name: 'delete',
-              handler: 'delete',
-              icon: 'pi-trash',
-              label: 'delete',
-              severity: 'danger',
-              confirm: false,
-            },
-          ],
-        },
-      ]
-    }
-  } catch (error) {
-    console.error('[DeliveriesGrid] Error loading grid config:', error)
-  }
-}
-
-/**
  * Format value for display
  */
-function formatValue(value, column) {
-  if (value === null || value === undefined) return ''
-
-  if (column.type === 'boolean') {
-    return value ? _('yes') : _('no')
-  }
-
-  if (column.format === 'number') {
-    return Number(value).toLocaleString()
-  }
-
-  return value
+function formatCellValue(value, column) {
+  return formatValue(value, column, _)
 }
 
 /**
  * Get display name - check if value is a lexicon key
- * If translation exists, return it; otherwise return original value
  */
-function getDisplayName(name) {
-  if (!name) return ''
-  const translated = _(name)
-  // If translation was found (different from key), return it
-  // Otherwise return original name
-  return translated !== name ? translated : name
+function resolveDisplayName(name) {
+  return getDisplayName(name, _)
 }
 
 onMounted(async () => {
@@ -688,7 +583,7 @@ onMounted(async () => {
                   </td>
                   <!-- Name column with lexicon support -->
                   <td v-else-if="column.name === 'name'">
-                    {{ getDisplayName(delivery.name) }}
+                    {{ resolveDisplayName(delivery.name) }}
                   </td>
                   <!-- Image column -->
                   <td v-else-if="column.type === 'image'">
@@ -711,7 +606,7 @@ onMounted(async () => {
                   </td>
                   <!-- Regular column -->
                   <td v-else>
-                    {{ formatValue(delivery[column.name], column) }}
+                    {{ formatCellValue(delivery[column.name], column) }}
                   </td>
                 </template>
               </tr>
@@ -796,7 +691,10 @@ onMounted(async () => {
                   <div class="form-row">
                     <label>{{ _('ms3_add_cost') }}</label>
                     <div class="ms3-add-cost-field">
-                      <InputText v-model="editingDelivery.price" class="w-full flex-1 min-w-[8rem]" />
+                      <InputText
+                        v-model="editingDelivery.price"
+                        class="w-full flex-1 min-w-[8rem]"
+                      />
                       <Badge
                         v-if="deliveryAddCostBadgeKind === 'discount'"
                         severity="success"
@@ -900,12 +798,7 @@ onMounted(async () => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          icon="pi pi-times"
-          severity="secondary"
-          @click="editDialogVisible = false"
-        />
+        <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
         <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveDelivery" />
       </template>
     </Dialog>

@@ -15,6 +15,8 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 
+import { useCrudDialog } from '../composables/useCrudDialog.js'
+import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
 import ActionsColumn from './ActionsColumn.vue'
@@ -40,16 +42,46 @@ const {
   getItemName: item => item.name,
 })
 
-const loading = ref(false)
-const links = ref([])
-const totalRecords = ref(0)
-const first = ref(0)
-const rows = ref(20)
 const linkTypes = ref([])
-const editDialogVisible = ref(false)
-const editingLink = ref(null)
-const isNewLink = ref(false)
-const saving = ref(false)
+
+const {
+  loading,
+  items: links,
+  total: totalRecords,
+  first,
+  rows,
+  load: loadLinks,
+  onPage,
+} = useResourceList({
+  fetchPage: ({ first: start, rows: limit, signal }) =>
+    request.get(
+      '/api/mgr/links',
+      {
+        start,
+        limit,
+      },
+      { signal }
+    ),
+})
+
+const {
+  visible: editDialogVisible,
+  isNew: isNewLink,
+  saving,
+  item: editingLink,
+  openCreate,
+  openEdit,
+  close,
+  runSave,
+  toastSuccess,
+  toastWarn,
+} = useCrudDialog({
+  createDefaults: () => ({
+    name: '',
+    type: '',
+    description: '',
+  }),
+})
 
 /**
  * Get display name with lexicon translation
@@ -75,66 +107,12 @@ async function loadLinkTypes() {
 }
 
 /**
- * Load links list
- */
-async function loadLinks() {
-  loading.value = true
-
-  try {
-    const response = await request.get('/api/mgr/links', {
-      start: first.value,
-      limit: rows.value,
-    })
-
-    if (response && response.results) {
-      links.value = response.results
-      totalRecords.value = response.total || 0
-    } else {
-      links.value = []
-      totalRecords.value = 0
-    }
-  } catch (error) {
-    console.error('[LinksGrid] Error loading links:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_data'),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-/**
- * Handle pagination
- */
-function onPage(event) {
-  first.value = event.first
-  rows.value = event.rows
-  loadLinks()
-}
-
-/**
  * Open create modal
  */
 function createLink() {
-  editingLink.value = {
-    name: '',
+  openCreate({
     type: linkTypes.value.length > 0 ? linkTypes.value[0].value : '',
-    description: '',
-  }
-  isNewLink.value = true
-  editDialogVisible.value = true
-}
-
-/**
- * Open edit modal
- */
-function editLink(link) {
-  editingLink.value = { ...link }
-  isNewLink.value = false
-  editDialogVisible.value = true
+  })
 }
 
 /**
@@ -142,56 +120,26 @@ function editLink(link) {
  */
 async function saveLink() {
   if (!editingLink.value.name) {
-    toast.add({
-      severity: 'warn',
-      summary: _('warning'),
-      detail: _('link_name_required'),
-      life: 3000,
-    })
+    toastWarn(_('link_name_required'))
     return
   }
 
   if (isNewLink.value && !editingLink.value.type) {
-    toast.add({
-      severity: 'warn',
-      summary: _('warning'),
-      detail: _('link_type_required'),
-      life: 3000,
-    })
+    toastWarn(_('link_type_required'))
     return
   }
 
-  saving.value = true
-
-  try {
-    let response
-    if (isNewLink.value) {
-      response = await request.post('/api/mgr/links', editingLink.value)
+  const created = isNewLink.value
+  await runSave(async () => {
+    if (created) {
+      await request.post('/api/mgr/links', editingLink.value)
+      toastSuccess(_('link_created'))
     } else {
-      response = await request.put(`/api/mgr/links/${editingLink.value.id}`, editingLink.value)
+      await request.put(`/api/mgr/links/${editingLink.value.id}`, editingLink.value)
+      toastSuccess(_('link_updated'))
     }
-
-    if (response) {
-      toast.add({
-        severity: 'success',
-        summary: _('success'),
-        detail: isNewLink.value ? _('link_created') : _('link_updated'),
-        life: 3000,
-      })
-      editDialogVisible.value = false
-      loadLinks()
-    }
-  } catch (error) {
-    console.error('[LinksGrid] Error saving link:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-  } finally {
-    saving.value = false
-  }
+    await loadLinks()
+  })
 }
 
 /**
@@ -353,7 +301,7 @@ onMounted(() => {
                 :data="data"
                 :actions="getActionsConfig()"
                 grid-id="links"
-                @edit="editLink"
+                @edit="openEdit"
                 @delete="deleteLink"
                 @refresh="loadLinks"
               />
@@ -416,12 +364,7 @@ onMounted(() => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          icon="pi pi-times"
-          severity="secondary"
-          @click="editDialogVisible = false"
-        />
+        <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
         <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveLink" />
       </template>
     </Dialog>

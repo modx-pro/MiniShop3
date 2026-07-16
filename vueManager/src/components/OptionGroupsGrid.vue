@@ -14,6 +14,10 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
+import { useCrudDialog } from '../composables/useCrudDialog.js'
+import { useResourceList } from '../composables/useResourceList.js'
+import { useSelection } from '../composables/useSelection.js'
+import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { notifyOptionGroupsChanged } from '../utils/optionGroupsBus.js'
 
@@ -31,137 +35,103 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
-const groups = ref([])
-const loading = ref(false)
-const reordering = ref(false)
 const searchQuery = ref('')
-const selectedIds = ref(new Set())
-const editDialogVisible = ref(false)
-const editingGroup = ref(null)
-const isNewGroup = ref(false)
-const saving = ref(false)
+
+const {
+  loading,
+  items: groups,
+  load: loadGroups,
+} = useResourceList({
+  fetchPage: ({ signal }) => request.get('/api/mgr/option-groups', { limit: 0 }, { signal }),
+})
+
+const {
+  visible: editDialogVisible,
+  isNew: isNewGroup,
+  saving,
+  item: editingGroup,
+  openCreate: openCreateDialog,
+  openEdit: openEditDialog,
+  close,
+  runSave,
+  toastSuccess,
+  toastWarn,
+} = useCrudDialog({
+  createDefaults: () => ({ id: null, name: '', description: '' }),
+})
+
+const {
+  selectedItems,
+  selectedIds,
+  selectionCount,
+  isSelected,
+  toggleItem,
+  selectAll,
+  clearSelection,
+} = useSelection({})
+
+const { sorting: reordering, onDragEnd } = useSortableList({
+  items: groups,
+  sortUrl: '/api/mgr/option-groups/positions',
+  method: 'put',
+  reload: loadGroups,
+  onSuccess: () => {
+    notifyOptionGroupsChanged()
+  },
+})
 
 const filteredGroups = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return groups.value
-  return groups.value.filter(g =>
-    (g.name || '').toLowerCase().includes(q)
-    || (g.description || '').toLowerCase().includes(q),
+  return groups.value.filter(
+    g => (g.name || '').toLowerCase().includes(q) || (g.description || '').toLowerCase().includes(q)
   )
 })
 
 const hasGroups = computed(() => groups.value.length > 0)
-const selectionCount = computed(() => selectedIds.value.size)
-const allSelected = computed(() =>
-  hasGroups.value && groups.value.every(g => selectedIds.value.has(g.id)),
-)
-
-async function loadGroups() {
-  loading.value = true
-  try {
-    const response = await request.get('/api/mgr/option-groups', { limit: 0 })
-    groups.value = response.results || []
-  } catch (e) {
-    console.error('Failed to load option groups:', e)
-    toast.add({
-      severity: 'error',
-      summary: _('ms3_error'),
-      detail: e?.message || _('ms3_option_groups_load_error'),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-function toggleSelect(id) {
-  const next = new Set(selectedIds.value)
-  if (next.has(id)) {
-    next.delete(id)
-  } else {
-    next.add(id)
-  }
-  selectedIds.value = next
-}
+const allSelected = computed(() => hasGroups.value && groups.value.every(g => isSelected(g)))
 
 function toggleSelectAll() {
   if (allSelected.value) {
-    selectedIds.value = new Set()
+    clearSelection()
   } else {
-    selectedIds.value = new Set(groups.value.map(g => g.id))
+    selectAll(groups.value)
   }
-}
-
-function openCreateDialog() {
-  isNewGroup.value = true
-  editingGroup.value = { id: null, name: '', description: '' }
-  editDialogVisible.value = true
-}
-
-function openEditDialog(group) {
-  isNewGroup.value = false
-  editingGroup.value = { ...group }
-  editDialogVisible.value = true
 }
 
 async function saveGroup() {
   if (!editingGroup.value) return
   const name = (editingGroup.value.name || '').trim()
   if (!name) {
-    toast.add({
-      severity: 'warn',
-      summary: _('ms3_warning'),
-      detail: _('ms3_option_group_name_required'),
-      life: 4000,
-    })
+    toastWarn(_('ms3_option_group_name_required'))
     return
   }
 
-  saving.value = true
-  try {
+  const created = isNewGroup.value
+  await runSave(async () => {
     const payload = {
       name,
       description: editingGroup.value.description ?? null,
     }
-    if (isNewGroup.value) {
+    if (created) {
       await request.post('/api/mgr/option-groups', payload)
-      toast.add({
-        severity: 'success',
-        summary: _('ms3_success'),
-        detail: _('ms3_option_group_created'),
-        life: 3000,
-      })
+      toastSuccess(_('ms3_option_group_created'))
     } else {
       await request.put(`/api/mgr/option-groups/${editingGroup.value.id}`, payload)
-      toast.add({
-        severity: 'success',
-        summary: _('ms3_success'),
-        detail: _('ms3_option_group_updated'),
-        life: 3000,
-      })
+      toastSuccess(_('ms3_option_group_updated'))
     }
-    editDialogVisible.value = false
     editingGroup.value = null
     await loadGroups()
     notifyOptionGroupsChanged()
-  } catch (e) {
-    console.error('Failed to save option group:', e)
-    toast.add({
-      severity: 'error',
-      summary: _('ms3_error'),
-      detail: e?.message || _('ms3_option_group_save_error'),
-      life: 5000,
-    })
-  } finally {
-    saving.value = false
-  }
+  })
 }
 
 function confirmDelete(group) {
   const count = Number(group.options_count) || 0
-  const detail = count > 0
-    ? _('ms3_option_group_delete_confirm_with_options').replace('{count}', String(count))
-    : _('ms3_option_group_delete_confirm')
+  const detail =
+    count > 0
+      ? _('ms3_option_group_delete_confirm_with_options').replace('{count}', String(count))
+      : _('ms3_option_group_delete_confirm')
 
   confirm.require({
     message: detail,
@@ -183,7 +153,7 @@ async function deleteGroup(group) {
       detail: _('ms3_option_group_deleted'),
       life: 3000,
     })
-    selectedIds.value.delete(group.id)
+    selectedItems.value = selectedItems.value.filter(item => item.id !== group.id)
     await loadGroups()
     notifyOptionGroupsChanged()
   } catch (e) {
@@ -220,7 +190,7 @@ async function bulkDelete(ids) {
       detail: _('ms3_option_groups_bulk_deleted').replace('{count}', String(ids.length)),
       life: 3000,
     })
-    selectedIds.value = new Set()
+    clearSelection()
     await loadGroups()
     notifyOptionGroupsChanged()
   } catch (e) {
@@ -231,26 +201,6 @@ async function bulkDelete(ids) {
       detail: e?.message || _('ms3_option_group_delete_error'),
       life: 5000,
     })
-  }
-}
-
-async function onDragEnd() {
-  reordering.value = true
-  try {
-    const ids = groups.value.map(g => g.id)
-    await request.put('/api/mgr/option-groups/positions', { ids })
-    notifyOptionGroupsChanged()
-  } catch (e) {
-    console.error('Failed to reorder option groups:', e)
-    toast.add({
-      severity: 'error',
-      summary: _('ms3_error'),
-      detail: e?.message || _('ms3_option_group_reorder_error'),
-      life: 5000,
-    })
-    await loadGroups()
-  } finally {
-    reordering.value = false
   }
 }
 
@@ -285,11 +235,7 @@ onMounted(() => {
             />
           </div>
           <div class="right">
-            <InputText
-              v-model="searchQuery"
-              :placeholder="_('search')"
-              size="small"
-            />
+            <InputText v-model="searchQuery" :placeholder="_('search')" size="small" />
           </div>
         </div>
 
@@ -303,11 +249,7 @@ onMounted(() => {
 
         <template v-else>
           <div class="list-header">
-            <Checkbox
-              :model-value="allSelected"
-              :binary="true"
-              @change="toggleSelectAll"
-            />
+            <Checkbox :model-value="allSelected" :binary="true" @change="toggleSelectAll" />
             <span class="col-handle"></span>
             <span class="col-name">{{ _('ms3_option_group_name') }}</span>
             <span class="col-description">{{ _('ms3_option_group_description') }}</span>
@@ -331,12 +273,12 @@ onMounted(() => {
               <div
                 v-show="filteredGroups.includes(element)"
                 class="list-row"
-                :class="{ selected: selectedIds.has(element.id) }"
+                :class="{ selected: isSelected(element) }"
               >
                 <Checkbox
-                  :model-value="selectedIds.has(element.id)"
+                  :model-value="isSelected(element)"
                   :binary="true"
-                  @change="toggleSelect(element.id)"
+                  @change="toggleItem(element)"
                 />
                 <span class="col-handle">
                   <i
@@ -406,7 +348,7 @@ onMounted(() => {
         </div>
       </div>
       <template #footer>
-        <Button :label="_('cancel')" severity="secondary" @click="editDialogVisible = false" />
+        <Button :label="_('cancel')" severity="secondary" @click="close" />
         <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveGroup" />
       </template>
     </Dialog>
