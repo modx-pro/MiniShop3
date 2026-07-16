@@ -81,8 +81,8 @@ class OrderService
         }
 
         return [
-            'cart_cost' => $cartCost,
-            'weight' => $weight,
+            'cart_cost' => round($cartCost, 6),
+            'weight' => round($weight, 6),
         ];
     }
 
