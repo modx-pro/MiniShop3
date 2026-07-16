@@ -133,8 +133,9 @@ $assertTrue(($valid['ok'] ?? false) === true, 'validate nutrition map ok');
 $missingRequired = $service->validateMap(['calories' => '', 'protein' => null], $nutritionConfig);
 $assertTrue(($missingRequired['ok'] ?? true) === false, 'required key fails');
 
+// validateMap runs after normalizeMap; unknown keys are already stripped (strip-first).
 $unknownKey = $service->validateMap(['calories' => '1', 'weird' => 'x'], $nutritionConfig);
-$assertTrue(($unknownKey['ok'] ?? true) === false, 'unknown fixed key fails');
+$assertTrue(($unknownKey['ok'] ?? false) === true, 'validateMap ignores unknown keys after strip-first');
 
 $freeConfig = ['mode' => 'free', 'keys' => []];
 $freeNormalized = $service->normalizeMap(['' => 'skip', ' meta ' => ' value '], $freeConfig);
@@ -165,6 +166,18 @@ $assertSame(
     ),
     'processValue strips unknown keys in fixed mode'
 );
+
+$assertSame(
+    1000,
+    $service->processValue(
+        ['calories' => '1', 'protein' => '1e3'],
+        $nutritionConfig
+    )['protein'],
+    'processValue casts exponential numeric strings'
+);
+
+$encoded = $service->encodeConfig($nutritionConfig);
+$assertTrue(is_string($encoded) && $encoded !== '', 'encodeConfig returns JSON string');
 
 fwrite(STDOUT, "OK KeyValueFieldServiceTest\n");
 exit(0);

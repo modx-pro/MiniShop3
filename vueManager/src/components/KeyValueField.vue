@@ -3,6 +3,7 @@ import { useLexicon } from '@vuetools/useLexicon'
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
 import { computed, ref, watch } from 'vue'
 
 import {
@@ -25,6 +26,7 @@ const schema = computed(() => parseKeyValueConfig(props.config))
 
 const internalMap = ref({})
 const freeModePairs = ref([])
+const freeModeDuplicateKey = ref('')
 let isInternalEmit = false
 let nextFreePairId = 1
 
@@ -43,14 +45,33 @@ function mapToFreePairs(map) {
 
 function freePairsToMap(pairs) {
   const nextMap = {}
+  const seen = new Set()
+  let duplicate = ''
+
   for (const pair of pairs) {
     const key = (pair.key || '').trim()
     if (key === '') {
       continue
     }
+    if (seen.has(key)) {
+      duplicate = key
+      continue
+    }
+    seen.add(key)
     nextMap[key] = pair.value
   }
+
+  freeModeDuplicateKey.value = duplicate
   return nextMap
+}
+
+function freePairValueType(key) {
+  const trimmed = (key || '').trim()
+  if (!trimmed) {
+    return 'string'
+  }
+  const keyDef = (schema.value.keys || []).find(item => item.key === trimmed)
+  return keyDef?.valueType === 'number' ? 'number' : 'string'
 }
 
 watch(
@@ -66,6 +87,7 @@ watch(
       schema.value
     )
     internalMap.value = normalized
+    freeModeDuplicateKey.value = ''
 
     if (schema.value.mode === 'free') {
       freeModePairs.value = mapToFreePairs(normalized)
@@ -144,6 +166,15 @@ function removeFreePair(index) {
 
     <!-- Free Mode -->
     <div v-else class="ms3-key-value-free">
+      <Message
+        v-if="freeModeDuplicateKey"
+        severity="warn"
+        class="ms3-key-value-duplicate"
+        :closable="false"
+      >
+        {{ _('ms3_vue_key_value_duplicate_key', { key: freeModeDuplicateKey }) }}
+      </Message>
+
       <div class="ms3-key-value-header">
         <span class="ms3-key-value-header-cell">{{ _('ms3_vue_key_value_key') }}</span>
         <span class="ms3-key-value-header-cell">{{ _('ms3_vue_key_value_value') }}</span>
@@ -166,7 +197,16 @@ function removeFreePair(index) {
             />
           </div>
           <div class="ms3-key-value-value-cell">
+            <InputNumber
+              v-if="freePairValueType(pair.key) === 'number'"
+              :model-value="pair.value === '' || pair.value == null ? null : Number(pair.value)"
+              class="w-full"
+              :disabled="disabled"
+              :use-grouping="false"
+              @update:model-value="updateFreePair(index, { value: $event })"
+            />
             <InputText
+              v-else
               :model-value="pair.value"
               class="w-full"
               :disabled="disabled"
@@ -212,6 +252,10 @@ function removeFreePair(index) {
 .vueApp .ms3-key-value-empty {
   color: var(--p-text-muted-color, #6b7280);
   font-size: 0.875rem;
+}
+
+.vueApp .ms3-key-value-duplicate {
+  margin-bottom: 0.75rem;
 }
 
 .vueApp .ms3-key-value-header,

@@ -205,6 +205,7 @@ $_lang['ms3_vue_key_value_value_type_string'] = 'Строка';
 $_lang['ms3_vue_key_value_value_type_number'] = 'Число';
 $_lang['ms3_vue_key_value_required'] = 'Обязательное';
 $_lang['ms3_vue_key_value_no_keys'] = 'Ключи не заданы. Добавьте ключи в параметрах extra field для фиксированного режима.';
+$_lang['ms3_vue_key_value_duplicate_key'] = 'Дублирующий ключ «[[+key]]». Сохраняется только первое значение.';
 
 $_lang['ms3_vue_order_extra_fields'] = 'Дополнительные поля заказа';
 $_lang['ms3_vue_order_address_extra_fields'] = 'Дополнительные поля адреса';

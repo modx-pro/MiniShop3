@@ -81,7 +81,14 @@ class KeyValueFieldService
 
     public function encodeConfig(array $config): string
     {
-        return json_encode($config, JSON_UNESCAPED_UNICODE);
+        $encoded = json_encode($config, JSON_UNESCAPED_UNICODE);
+        if ($encoded === false) {
+            throw new \InvalidArgumentException(
+                'Failed to encode key_value_config: ' . json_last_error_msg()
+            );
+        }
+
+        return $encoded;
     }
 
     /**
@@ -197,11 +204,6 @@ class KeyValueFieldService
         }
 
         foreach ($map as $key => $value) {
-            if ($mode === 'fixed' && !isset($schemaMap[$key])) {
-                $errors[] = "Key {$key} is not allowed";
-                continue;
-            }
-
             $valueType = $schemaMap[$key]['valueType'] ?? 'string';
             if ($valueType === 'number' && $this->isInvalidNumericValue($value)) {
                 $errors[] = "Key {$key} must be numeric";
@@ -212,7 +214,9 @@ class KeyValueFieldService
     }
 
     /**
-     * Decode, validate and normalize key-value payload.
+     * Decode, normalize, then validate key-value payload.
+     *
+     * Fixed mode strips unknown keys during normalize (strip-first contract).
      *
      * @return array<string, mixed>
      */
@@ -321,15 +325,16 @@ class KeyValueFieldService
             return $value;
         }
 
-        if (!is_numeric($value)) {
-            return $value;
-        }
-
         $stringValue = trim((string)$value);
         if ($stringValue === '') {
             return '';
         }
 
-        return str_contains($stringValue, '.') ? (float)$stringValue : (int)$stringValue;
+        $float = filter_var($stringValue, FILTER_VALIDATE_FLOAT);
+        if ($float === false) {
+            return $value;
+        }
+
+        return $float == (int)$float ? (int)$float : $float;
     }
 }

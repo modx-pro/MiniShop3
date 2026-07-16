@@ -105,8 +105,20 @@ class ProductDataService
                 continue;
             }
             if (isset($keyValueFields[$name])) {
-                $normalized = $keyValueService->processValue($array, $keyValueFields[$name]);
-                $productData->set($name, $normalized);
+                try {
+                    $normalized = $keyValueService->processValue($array, $keyValueFields[$name]);
+                    $productData->set($name, $normalized);
+                } catch (\InvalidArgumentException $e) {
+                    $this->modx->lexicon->load('minishop3:default');
+                    throw new \InvalidArgumentException(
+                        $this->modx->lexicon('ms3_key_value_validation_error', [
+                            'field' => $name,
+                            'error' => $e->getMessage(),
+                        ]),
+                        0,
+                        $e
+                    );
+                }
                 continue;
             }
 
