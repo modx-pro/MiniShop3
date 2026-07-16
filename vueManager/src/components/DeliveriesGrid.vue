@@ -30,7 +30,7 @@ import { useSelection } from '../composables/useSelection.js'
 import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { resolveAddCostPriceBadgeKind } from '../utils/addCostPriceBadgeKind.js'
-import { formatValue, getDisplayName } from '../utils/displayFormatters.js'
+import { formatValue, getDisplayName, normalizeImagePath } from '../utils/displayFormatters.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 import ValidationRulesEditor from './ValidationRulesEditor.vue'
@@ -64,7 +64,6 @@ const { columns, loadGridConfig } = useGridConfig({
 
 const filterValues = ref({})
 const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
-const searchQuery = ref('')
 const activeTab = ref('0')
 const selectAll = ref(false)
 
@@ -79,10 +78,6 @@ const {
     const params = {
       start,
       limit,
-    }
-
-    if (searchQuery.value) {
-      params.query = searchQuery.value
     }
 
     Object.keys(filterValues.value).forEach(key => {
@@ -213,17 +208,6 @@ function getFallbackColumns() {
       ],
     },
   ]
-}
-
-/**
- * Normalize image path to always start with /
- */
-function normalizeImagePath(path) {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
-    return path
-  }
-  return '/' + path
 }
 
 /**

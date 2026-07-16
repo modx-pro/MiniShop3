@@ -123,7 +123,7 @@ const {
   },
 })
 
-// Bulk selection
+// After useResourceList so onSuccess can call loadOrders from the list composable.
 const {
   selectedItems,
   hasSelection,

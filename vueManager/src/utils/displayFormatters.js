@@ -110,3 +110,14 @@ export function formatValue(value, column, translate) {
 
   return value
 }
+
+/**
+ * Normalize media path for <img src>: keep absolute URLs, ensure leading slash.
+ */
+export function normalizeImagePath(path) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
+    return path
+  }
+  return `/${path}`
+}

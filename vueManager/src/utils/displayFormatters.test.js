@@ -8,6 +8,7 @@ import {
   formatPriceConfigured,
   formatValue,
   getDisplayName,
+  normalizeImagePath,
   renderField,
 } from './displayFormatters.js'
 
@@ -55,7 +56,14 @@ describe('displayFormatters', () => {
     const translate = key => (key === 'yes' ? 'Да' : 'Нет')
     assert.equal(formatValue(true, { type: 'boolean' }, translate), 'Да')
     assert.equal(formatValue(false, { type: 'boolean' }, translate), 'Нет')
-    assert.match(formatValue(1000, { format: 'number' }, translate), /^1.000$/)
+    assert.equal(formatValue(1000, { format: 'number' }, translate), Number(1000).toLocaleString())
     assert.equal(formatValue(null, {}, translate), '')
+  })
+
+  it('normalizeImagePath keeps absolute URLs and adds leading slash', () => {
+    assert.equal(normalizeImagePath(''), '')
+    assert.equal(normalizeImagePath('/assets/a.png'), '/assets/a.png')
+    assert.equal(normalizeImagePath('https://x/a.png'), 'https://x/a.png')
+    assert.equal(normalizeImagePath('assets/a.png'), '/assets/a.png')
   })
 })

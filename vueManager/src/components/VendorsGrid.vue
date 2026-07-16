@@ -24,6 +24,7 @@ import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
 import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
+import { formatValue, normalizeImagePath } from '../utils/displayFormatters.js'
 import ActionsColumn from './ActionsColumn.vue'
 import DynamicField from './DynamicField.vue'
 import FileBrowser from './FileBrowser.vue'
@@ -453,33 +454,8 @@ function getDefaultColumns() {
   ]
 }
 
-/**
- * Format value for display
- */
-function formatValue(value, column) {
-  if (value === null || value === undefined) return ''
-
-  if (column.type === 'boolean') {
-    return value ? _('yes') : _('no')
-  }
-
-  if (column.format === 'number') {
-    return Number(value).toLocaleString()
-  }
-
-  return value
-}
-
-/**
- * Normalize image path to start with /
- */
-function normalizeImagePath(path) {
-  if (!path) return ''
-  // If path is already absolute URL or starts with /, return as is
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
-    return path
-  }
-  return '/' + path
+function formatCellValue(value, column) {
+  return formatValue(value, column, _)
 }
 
 /**
@@ -659,7 +635,7 @@ onMounted(async () => {
 
                       <!-- Regular columns -->
                       <td v-else :style="{ width: column.width, minWidth: column.minWidth }">
-                        {{ formatValue(vendor[column.name], column) }}
+                        {{ formatCellValue(vendor[column.name], column) }}
                       </td>
                     </template>
                   </tr>
