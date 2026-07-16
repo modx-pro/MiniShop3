@@ -9,6 +9,50 @@ namespace MODX\Revolution;
  */
 class modX
 {
+    /** @var object|null */
+    public $user;
+
+    /** @var object|null */
+    public $context;
+
+    /** @var array<string, bool> */
+    private array $permissions = [];
+
+    public function __construct()
+    {
+        $this->context = new class {
+            public function get(string $key): string
+            {
+                return $key === 'key' ? 'mgr' : '';
+            }
+        };
+
+        $this->user = new class {
+            public function isAuthenticated(string $context): bool
+            {
+                return $context === 'mgr';
+            }
+
+            public function getUserToken(string $contextKey): string
+            {
+                return 'test-modauth-token';
+            }
+        };
+    }
+
+    /**
+     * @param list<string> $permissions
+     */
+    public function setPermissions(array $permissions): void
+    {
+        $this->permissions = array_fill_keys($permissions, true);
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return !empty($this->permissions[$permission]);
+    }
+
     public function log($level, $message): void
     {
     }

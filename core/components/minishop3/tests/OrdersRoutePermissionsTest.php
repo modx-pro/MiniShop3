@@ -4,6 +4,7 @@
  * Router-level check: /api/mgr/orders reads use msorder_list, writes use msorder_save (#377).
  *
  * Uses a stub modX so manager routes can load without a full MODX install.
+ * Also dispatches sample routes to assert runtime 403 when the required permission is missing.
  *
  * Run: php tests/OrdersRoutePermissionsTest.php
  */
@@ -50,9 +51,36 @@ $permissionFromMiddlewares = static function (array $middlewares) use ($fail): ?
     return $found;
 };
 
+$buildRouter = static function (modX $modx): Router {
+    $router = new Router($modx);
+    $router->loadRoutes(dirname(__DIR__) . '/config/routes/manager.php');
+    $router->build();
+
+    return $router;
+};
+
+$assertDenied = static function (
+    Router $router,
+    string $method,
+    string $uri,
+    string $requiredPermission,
+    string $label
+) use ($assertSame, $fail): void {
+    $response = $router->dispatch($uri, $method);
+    $data = $response->getData();
+    $assertSame(403, $response->getStatusCode(), "{$label}: status");
+    $assertSame(false, $data['success'] ?? null, "{$label}: success");
+    $assertSame(403, $data['code'] ?? null, "{$label}: body code");
+    $message = (string) ($data['message'] ?? '');
+    if (!str_contains($message, $requiredPermission)) {
+        $fail("{$label}: message should mention {$requiredPermission}, got: {$message}");
+    }
+};
+
+$_SERVER['HTTP_MODAUTH'] = 'test-modauth-token';
+
 $modx = new modX();
-$router = new Router($modx);
-$router->loadRoutes(dirname(__DIR__) . '/config/routes/manager.php');
+$router = $buildRouter($modx);
 
 $routesProperty = new ReflectionProperty(Router::class, 'routes');
 $registered = $routesProperty->getValue($router);
@@ -95,6 +123,16 @@ $unknown = array_diff(array_keys($actual), array_keys($expected));
 if ($unknown !== []) {
     $fail('unexpected orders routes: ' . implode(', ', $unknown));
 }
+
+// Runtime: list-only cannot mutate; save-only cannot read (#377)
+$modx->setPermissions(['msorder_list']);
+$assertDenied($router, 'PUT', '/api/mgr/orders/1', 'msorder_save', 'list-only PUT order');
+$assertDenied($router, 'POST', '/api/mgr/orders/1/finalize', 'msorder_save', 'list-only finalize');
+$assertDenied($router, 'DELETE', '/api/mgr/orders/1/products/2', 'msorder_save', 'list-only delete product');
+
+$modx->setPermissions(['msorder_save']);
+$assertDenied($router, 'GET', '/api/mgr/orders', 'msorder_list', 'save-only GET list');
+$assertDenied($router, 'GET', '/api/mgr/orders/1', 'msorder_list', 'save-only GET order');
 
 fwrite(STDOUT, "OK OrdersRoutePermissionsTest\n");
 exit(0);
