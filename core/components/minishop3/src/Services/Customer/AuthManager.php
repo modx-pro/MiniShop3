@@ -7,7 +7,7 @@ use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Services\Order\OrderDraftManager;
-use MiniShop3\Utils\CookieHelper;
+use MiniShop3\Services\TokenService;
 use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 
@@ -46,6 +46,9 @@ class AuthManager
     /** @var AuthProviderInterface[] Registered authentication providers */
     protected array $providers = [];
 
+    /** Last authenticate() failure: invalid_credentials|blocked|inactive|none */
+    protected string $lastAuthFailure = 'none';
+
     /**
      * @param modX $modx
      */
@@ -54,6 +57,14 @@ class AuthManager
         $this->modx = $modx;
 
         $this->registerProvider(new PasswordAuthProvider($modx));
+    }
+
+    /**
+     * Reason of the last failed authenticate() call.
+     */
+    public function getLastAuthFailure(): string
+    {
+        return $this->lastAuthFailure;
     }
 
     /**
@@ -105,6 +116,8 @@ class AuthManager
      */
     public function authenticate(array $credentials): ?msCustomer
     {
+        $this->lastAuthFailure = 'invalid_credentials';
+
         foreach ($this->providers as $provider) {
             if ($provider->supports($credentials)) {
                 $this->modx->log(
@@ -118,6 +131,7 @@ class AuthManager
                     if ($customer->get('is_blocked')) {
                         $blockedUntil = $customer->get('blocked_until');
                         if ($blockedUntil && strtotime($blockedUntil) > time()) {
+                            $this->lastAuthFailure = 'blocked';
                             $this->modx->log(
                                 modX::LOG_LEVEL_WARN,
                                 "[AuthManager] Customer #{$customer->id} is blocked until {$blockedUntil}"
@@ -131,6 +145,7 @@ class AuthManager
                     }
 
                     if (!$customer->get('is_active')) {
+                        $this->lastAuthFailure = 'inactive';
                         $this->modx->log(
                             modX::LOG_LEVEL_WARN,
                             "[AuthManager] Customer #{$customer->id} is not active"
@@ -142,6 +157,7 @@ class AuthManager
                     $customer->set('failed_login_attempts', 0);
                     $customer->save();
 
+                    $this->lastAuthFailure = 'none';
                     $this->modx->log(
                         modX::LOG_LEVEL_INFO,
                         "[AuthManager] Customer #{$customer->id} authenticated via {$provider->getName()}"
@@ -172,10 +188,10 @@ class AuthManager
         SessionHelper::ensureActive();
 
         $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
-        $currentToken = CookieHelper::getTokenFromCookie();
-        if ($currentToken === '') {
-            $currentToken = $_SESSION['ms3']['customer_token'] ?? '';
-        }
+
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $currentToken = $tokenService->getBindableTokenString();
 
         $tokenObj = null;
         if ($currentToken !== '') {
@@ -185,7 +201,12 @@ class AuthManager
             ]);
         }
 
-        if ($tokenObj) {
+        // Rebind only guest tokens (preserve cart). Never hijack another customer's token.
+        $canReuse = $tokenObj
+            && ((int)$tokenObj->get('customer_id') === 0
+                || (int)$tokenObj->get('customer_id') === (int)$customer->id);
+
+        if ($canReuse) {
             $tokenObj->set('customer_id', $customer->id);
             $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
             if (!$tokenObj->save()) {
@@ -198,25 +219,26 @@ class AuthManager
             }
         }
 
-        $tokenString = $tokenObj->get('token');
-        $expiresAt = $tokenObj->get('expires_at');
-
-        CookieHelper::setTokenCookie($this->modx, $tokenString);
+        $tokenString = (string)$tokenObj->get('token');
 
         /** @var OrderDraftManager $draftManager */
         $draftManager = $this->modx->services->get('ms3_order_draft_manager');
-        $draftManager->bindDraftToCustomer($tokenString, $customer->id);
-
-        if (!isset($_SESSION['ms3'])) {
-            $_SESSION['ms3'] = [];
+        if (!$draftManager->bindDraftToCustomer($tokenString, $customer->id)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                "[AuthManager] bindDraftToCustomer failed for customer #{$customer->id}"
+            );
         }
-        $_SESSION['ms3']['customer_id'] = $customer->id;
-        $_SESSION['ms3']['customer_token'] = $tokenString;
-        $_SESSION['ms3']['customer_token_expires'] = strtotime($expiresAt);
+
+        $tokenService->syncSessionFromToken($tokenObj);
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
 
         return [
             'token' => $tokenString,
-            'expires_at' => $expiresAt,
+            'expires_at' => $tokenObj->get('expires_at'),
         ];
     }
 
@@ -233,7 +255,7 @@ class AuthManager
         /** @var msCustomerToken $token */
         $token = $this->modx->newObject(msCustomerToken::class);
 
-        $tokenString = bin2hex(random_bytes(64));
+        $tokenString = bin2hex(random_bytes(32));
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
         $token->set('customer_id', $customer->id);
@@ -405,5 +427,22 @@ class AuthManager
         }
 
         $customer->save();
+    }
+
+    /**
+     * Record failed login by normalized email when the account exists.
+     */
+    public function handleFailedLoginByEmail(string $email): void
+    {
+        $email = PasswordAuthProvider::normalizeEmail($email);
+        if ($email === '') {
+            return;
+        }
+
+        /** @var msCustomer|null $customer */
+        $customer = $this->modx->getObject(msCustomer::class, ['email' => $email]);
+        if ($customer) {
+            $this->handleFailedLogin($customer);
+        }
     }
 }

@@ -35,6 +35,7 @@
                             {'ms3_customer_email' | lexicon} <span class="text-danger">*</span>
                         </label>
                         <input type="email" class="form-control" id="login-email" name="email"
+                               autocomplete="username"
                                placeholder="{'ms3_customer_email_placeholder' | lexicon}" required>
                     </div>
 
@@ -43,6 +44,7 @@
                             {'ms3_customer_password' | lexicon} <span class="text-danger">*</span>
                         </label>
                         <input type="password" class="form-control" id="login-password" name="password"
+                               autocomplete="current-password"
                                placeholder="{'ms3_customer_password_placeholder' | lexicon}" required>
                     </div>
 
@@ -79,6 +81,7 @@
                             {'ms3_customer_email' | lexicon} <span class="text-danger">*</span>
                         </label>
                         <input type="email" class="form-control" id="register-email" name="email"
+                               autocomplete="email"
                                placeholder="{'ms3_customer_email_placeholder' | lexicon}" required>
                     </div>
 
@@ -112,6 +115,7 @@
                             {'ms3_customer_password' | lexicon} <span class="text-danger">*</span>
                         </label>
                         <input type="password" class="form-control" id="register-password" name="password"
+                               autocomplete="new-password"
                                placeholder="{'ms3_customer_password_placeholder' | lexicon}" required>
                         <small class="form-text text-muted">
                             {'ms3_customer_password_hint' | lexicon}
@@ -123,6 +127,7 @@
                             {'ms3_customer_password_confirm' | lexicon} <span class="text-danger">*</span>
                         </label>
                         <input type="password" class="form-control" id="register-password-confirm" name="password_confirm"
+                               autocomplete="new-password"
                                placeholder="{'ms3_customer_password_confirm_placeholder' | lexicon}" required>
                     </div>
 
@@ -151,4 +156,5 @@ window.ms3Lexicon.ms3_customer_err_password_mismatch = '{'ms3_customer_err_passw
 window.ms3Lexicon.ms3_customer_err_privacy_required = '{'ms3_customer_err_privacy_required' | lexicon}';
 window.ms3Lexicon.ms3_customer_register_success = '{'ms3_customer_register_success' | lexicon}';
 window.ms3Lexicon.ms3_err_unknown = '{'ms3_err_unknown' | lexicon}';
+window.ms3Lexicon.ms3_customer_password_recovery_not_available = '{'ms3_customer_password_recovery_not_available' | lexicon}';
 </script>

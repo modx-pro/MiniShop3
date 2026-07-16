@@ -88,10 +88,12 @@ class Register extends Processor
             $authManager = $this->modx->services->get('ms3_auth_manager');
             $session = $authManager->establishCustomerSession($customer);
 
-            if ($session) {
-                $tokenString = $session['token'];
-                $expiresAt = $session['expires_at'];
+            if (!$session) {
+                return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
             }
+
+            $tokenString = $session['token'];
+            $expiresAt = $session['expires_at'];
         }
 
         $rateLimiter->reset('login', $ip);

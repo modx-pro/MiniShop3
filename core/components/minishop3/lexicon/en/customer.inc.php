@@ -36,6 +36,7 @@ $_lang['ms3_customer_password'] = 'Password';
 $_lang['ms3_customer_password_confirm'] = 'Confirm Password';
 $_lang['ms3_customer_register_success'] = 'Registration successful';
 $_lang['ms3_customer_login_success'] = 'You have successfully logged in';
+$_lang['ms3_customer_password_recovery_not_available'] = 'Password recovery is not available yet';
 $_lang['ms3_customer_logout'] = 'Logout';
 $_lang['ms3_customer_logout_success'] = 'You have been logged out';
 $_lang['ms3_customer_logout_confirm'] = 'Are you sure you want to logout?';

@@ -4,6 +4,7 @@ namespace MiniShop3\Services;
 
 use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Utils\CookieHelper;
+use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 
 /**
@@ -45,12 +46,11 @@ class TokenService
      */
     public function generateCustomerToken(?int $ttl = null): array
     {
-        $existingToken = $this->getCustomerToken();
-        if ($existingToken) {
-            $expires = $_SESSION['ms3']['customer_token_expires'] ?? (time() + 86400);
+        $existingToken = $this->ensureCustomerTokenLoaded();
+        if ($existingToken !== null) {
+            $expires = (int)($_SESSION['ms3']['customer_token_expires'] ?? (time() + 86400));
             $lifetime = max(0, $expires - time());
 
-            // Refresh cookie TTL
             CookieHelper::setTokenCookie($this->modx, $existingToken);
 
             return [
@@ -197,8 +197,14 @@ class TokenService
             }
         }
 
-        $result = $this->generateCustomerToken();
-        return $result['token'];
+    /**
+     * Renew expired API token TTL and hydrate $_SESSION from DB row.
+     */
+    public function syncSessionFromToken(msCustomerToken $tokenObj): void
+    {
+        $this->renewTokenIfExpired($tokenObj);
+        $this->applyTokenToSession($tokenObj);
+        CookieHelper::setTokenCookie($this->modx, $tokenObj->get('token'));
     }
 
     /**
@@ -413,6 +419,56 @@ class TokenService
             return $this->modx->cacheManager->delete($token, $options);
         } else {
             return $this->modx->cacheManager->clean($options);
+        }
+    }
+
+    /**
+     * Load valid session/cookie token without minting a new one.
+     */
+    private function ensureCustomerTokenLoaded(): ?string
+    {
+        SessionHelper::ensureActive();
+
+        $token = $this->getCustomerToken();
+        if ($token !== null) {
+            return $token;
+        }
+
+        $this->restoreSessionFromCookie();
+
+        return $this->getCustomerToken();
+    }
+
+    private function renewTokenIfExpired(msCustomerToken $tokenObj): void
+    {
+        if (!$tokenObj->isExpired()) {
+            return;
+        }
+
+        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+        $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
+        $tokenObj->save();
+    }
+
+    /**
+     * Write token row into $_SESSION without overwriting an authenticated customer with guest token.
+     */
+    private function applyTokenToSession(msCustomerToken $tokenObj): void
+    {
+        SessionHelper::ensureActive();
+
+        if (!isset($_SESSION['ms3'])) {
+            $_SESSION['ms3'] = [];
+        }
+
+        $_SESSION['ms3']['customer_token'] = $tokenObj->get('token');
+        $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
+
+        $tokenCustomerId = (int)$tokenObj->get('customer_id');
+        if ($tokenCustomerId > 0) {
+            $_SESSION['ms3']['customer_id'] = $tokenCustomerId;
+        } elseif (empty($_SESSION['ms3']['customer_id'])) {
+            $_SESSION['ms3']['customer_id'] = 0;
         }
     }
 }

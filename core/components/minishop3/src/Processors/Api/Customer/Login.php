@@ -11,7 +11,7 @@ use MODX\Revolution\Processors\Processor;
  * Login - customer login processor
  *
  * Authenticates customer and binds existing session token to customer.
- * Token does NOT change on login — guest cart is preserved.
+ * Token reuses guest cart token when possible; otherwise mints a new API token.
  * Protected from brute-force via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
@@ -59,6 +59,10 @@ class Login extends Processor
         ]);
 
         if (!$customer) {
+            if ($authManager->getLastAuthFailure() === 'invalid_credentials') {
+                $authManager->handleFailedLoginByEmail($email);
+            }
+
             $this->modx->log(
                 \MODX\Revolution\modX::LOG_LEVEL_WARN,
                 "[Login] Failed login attempt for email: {$email} from IP: {$ip}"
