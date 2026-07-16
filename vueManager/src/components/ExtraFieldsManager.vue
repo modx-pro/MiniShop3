@@ -20,6 +20,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import request from '../request.js'
 import {
   defaultKeyValueConfig,
+  encodeKeyValueConfig,
   KEY_VALUE_XTYPE,
   parseKeyValueConfig,
 } from '../utils/keyValueField.js'
@@ -160,32 +161,26 @@ const isKeyValueField = computed(() => fieldForm.value.xtype === KEY_VALUE_XTYPE
 watch(
   () => fieldForm.value.xtype,
   xtype => {
-    if (xtype === REPEATER_XTYPE) {
-      fieldForm.value.dbtype = 'json'
-      fieldForm.value.phptype = 'json'
-      fieldForm.value.precision = ''
-      fieldForm.value.null = true
-      if (!fieldForm.value.repeater_config?.columns?.length) {
-        fieldForm.value.repeater_config = defaultRepeaterConfig()
-      }
-    } else if (xtype === KEY_VALUE_XTYPE) {
-      fieldForm.value.dbtype = 'json'
-      fieldForm.value.phptype = 'json'
-      fieldForm.value.precision = ''
-      fieldForm.value.null = true
-      if (!fieldForm.value.key_value_config?.mode) {
-        fieldForm.value.key_value_config = defaultKeyValueConfig()
-      }
+    if (xtype !== REPEATER_XTYPE && xtype !== KEY_VALUE_XTYPE) {
+      return
+    }
+
+    fieldForm.value.dbtype = 'json'
+    fieldForm.value.phptype = 'json'
+    fieldForm.value.precision = ''
+    fieldForm.value.null = true
+
+    if (xtype === REPEATER_XTYPE && !fieldForm.value.repeater_config?.columns?.length) {
+      fieldForm.value.repeater_config = defaultRepeaterConfig()
+    }
+    if (xtype === KEY_VALUE_XTYPE && !fieldForm.value.key_value_config?.mode) {
+      fieldForm.value.key_value_config = defaultKeyValueConfig()
     }
   }
 )
 
 function buildRepeaterConfigPayload() {
   return JSON.stringify(parseRepeaterConfig(fieldForm.value.repeater_config))
-}
-
-function buildKeyValueConfigPayload() {
-  return JSON.stringify(parseKeyValueConfig(fieldForm.value.key_value_config))
 }
 
 /**
@@ -337,7 +332,7 @@ async function createField() {
         fieldForm.value.active === 'true' ||
         fieldForm.value.active === 1,
       repeater_config: isRepeaterField.value ? buildRepeaterConfigPayload() : '',
-      key_value_config: isKeyValueField.value ? buildKeyValueConfigPayload() : '',
+      key_value_config: isKeyValueField.value ? encodeKeyValueConfig(fieldForm.value.key_value_config) : '',
     }
 
     delete payload.id
@@ -389,7 +384,7 @@ async function updateField() {
       select_options:
         fieldForm.value.xtype === 'ms3-combo-select' ? fieldForm.value.select_options : '',
       repeater_config: isRepeaterField.value ? buildRepeaterConfigPayload() : '',
-      key_value_config: isKeyValueField.value ? buildKeyValueConfigPayload() : '',
+      key_value_config: isKeyValueField.value ? encodeKeyValueConfig(fieldForm.value.key_value_config) : '',
     }
 
     const response = await request.put(`/api/mgr/extra-fields/${fieldForm.value.id}`, payload)
@@ -779,7 +774,7 @@ onMounted(() => {
                 v-model="fieldForm.precision"
                 :placeholder="_('ms3_vue_dialog_precision_placeholder')"
                 class="w-full"
-                :disabled="isEditMode || isRepeaterField"
+                :disabled="isEditMode || isRepeaterField || isKeyValueField"
               />
             </div>
 

@@ -256,8 +256,9 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
-import { getKeyValueConfigFromField, parseKeyValueModelValue, serializeKeyValueForPost } from '../utils/keyValueField.js'
-import { getRepeaterConfigFromField, parseRepeaterModelValue } from '../utils/repeaterField.js'
+import { getKeyValueConfigFromField, serializeKeyValueForPost } from '../utils/keyValueField.js'
+import { getRepeaterConfigFromField } from '../utils/repeaterField.js'
+import { parseStructuredExtraFieldValue } from '../utils/structuredExtraField.js'
 import AutocompleteCombo from './AutocompleteCombo.vue'
 import FileBrowser from './FileBrowser.vue'
 import KeyValueField from './KeyValueField.vue'
@@ -369,13 +370,7 @@ const repeaterConfig = computed(() => getRepeaterConfigFromField(props.fieldConf
 const keyValueConfig = computed(() => getKeyValueConfigFromField(props.fieldConfig))
 
 function normalizeIncomingValue(value) {
-  if (props.fieldConfig.xtype === 'ms3-repeater') {
-    return parseRepeaterModelValue(value)
-  }
-  if (props.fieldConfig.xtype === 'ms3-key-value') {
-    return parseKeyValueModelValue(value)
-  }
-  return value
+  return parseStructuredExtraFieldValue(props.fieldConfig.xtype, value)
 }
 
 /**

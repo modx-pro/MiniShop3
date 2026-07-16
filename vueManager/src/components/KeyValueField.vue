@@ -24,7 +24,34 @@ const { _ } = useLexicon()
 const schema = computed(() => parseKeyValueConfig(props.config))
 
 const internalMap = ref({})
+const freeModePairs = ref([])
 let isInternalEmit = false
+let nextFreePairId = 1
+
+function createFreePairId() {
+  nextFreePairId += 1
+  return `kv-${nextFreePairId}`
+}
+
+function mapToFreePairs(map) {
+  return Object.entries(map).map(([key, value]) => ({
+    key,
+    value: value ?? '',
+    _ms3Id: createFreePairId(),
+  }))
+}
+
+function freePairsToMap(pairs) {
+  const nextMap = {}
+  for (const pair of pairs) {
+    const key = (pair.key || '').trim()
+    if (key === '') {
+      continue
+    }
+    nextMap[key] = pair.value
+  }
+  return nextMap
+}
 
 watch(
   [() => props.modelValue, () => props.config],
@@ -34,85 +61,50 @@ watch(
       return
     }
 
-    internalMap.value = normalizeKeyValueMap(
+    const normalized = normalizeKeyValueMap(
       parseKeyValueModelValue(props.modelValue),
       schema.value
     )
+    internalMap.value = normalized
+
+    if (schema.value.mode === 'free') {
+      freeModePairs.value = mapToFreePairs(normalized)
+    }
   },
   { immediate: true, deep: true }
 )
 
-function emitMap() {
-  const normalized = normalizeKeyValueMap(internalMap.value, schema.value)
+function emitMap(map) {
+  const normalized = normalizeKeyValueMap(map, schema.value)
   isInternalEmit = true
+  internalMap.value = normalized
   emit('update:modelValue', normalized)
 }
 
-// For free mode: we need an array of pairs to work with UI
-const freeModePairs = ref([])
-
-watch(
-  internalMap,
-  (newMap) => {
-    if (schema.value.mode === 'free') {
-      const pairs = Object.entries(newMap).map(([key, value]) => ({
-        key,
-        value,
-        _ms3Id: Math.random().toString(36).substring(7)
-      }))
-      // Only update if keys/values actually changed to avoid cursor jumps
-      const currentKeys = freeModePairs.value.map(p => p.key).join('|')
-      const newKeys = pairs.map(p => p.key).join('|')
-      const currentValues = freeModePairs.value.map(p => p.value).join('|')
-      const newValues = pairs.map(p => p.value).join('|')
-      
-      if (currentKeys !== newKeys || currentValues !== newValues || (freeModePairs.value.length === 0 && pairs.length > 0)) {
-        freeModePairs.value = pairs
-      }
-    }
-  },
-  { immediate: true, deep: true }
-)
-
 function updateFixedValue(key, value) {
-  internalMap.value = { ...internalMap.value, [key]: value }
-  emitMap()
+  emitMap({ ...internalMap.value, [key]: value })
+}
+
+function emitFreeModeFromPairs() {
+  emitMap(freePairsToMap(freeModePairs.value))
 }
 
 function updateFreePair(index, patch) {
-  const pair = freeModePairs.value[index]
-  const updatedPair = { ...pair, ...patch }
-  freeModePairs.value[index] = updatedPair
-  
-  // Rebuild map from pairs
-  const nextMap = {}
-  freeModePairs.value.forEach(p => {
-    if (p.key) {
-      nextMap[p.key] = p.value
-    }
-  })
-  internalMap.value = nextMap
-  emitMap()
+  freeModePairs.value[index] = { ...freeModePairs.value[index], ...patch }
+  emitFreeModeFromPairs()
 }
 
 function addFreePair() {
   freeModePairs.value.push({
     key: '',
     value: '',
-    _ms3Id: Math.random().toString(36).substring(7)
+    _ms3Id: createFreePairId(),
   })
 }
 
 function removeFreePair(index) {
   freeModePairs.value.splice(index, 1)
-  const nextMap = {}
-  freeModePairs.value.forEach(p => {
-    if (p.key) {
-      nextMap[p.key] = p.value
-    }
-  })
-  internalMap.value = nextMap
-  emitMap()
+  emitFreeModeFromPairs()
 }
 </script>
 
@@ -159,7 +151,11 @@ function removeFreePair(index) {
       </div>
 
       <div class="ms3-key-value-rows">
-        <div v-for="(pair, index) in freeModePairs" :key="pair._ms3Id" class="ms3-key-value-row free-row">
+        <div
+          v-for="(pair, index) in freeModePairs"
+          :key="pair._ms3Id"
+          class="ms3-key-value-row free-row"
+        >
           <div class="ms3-key-value-key-cell">
             <InputText
               :model-value="pair.key"
