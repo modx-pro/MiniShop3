@@ -5,11 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-- New extra field type `ms3-key-value` (#300). Flat JSON object map (key → value) for nutrition/meta/config-style data. Backend: `key_value_config` column in `ms3_extra_fields`, `KeyValueFieldService` (decode → normalize → validate; modes `fixed` / `free`; required + numeric checks). Frontend: `KeyValueField` + `KeyValueSchemaEditor`, product data tab and order/address extra fields. Saved via product `Data` payload or Vue ProductData PUT; API/xPDO returns an associative array. Fenom: `{$nutrition.calories}`. SQL: `JSON_EXTRACT(ms3_products.nutrition, '$.calories')`. Unlike plain `json`+textarea, values bypass `prepareOptionValues()` so object keys are not destroyed.
-
 ## [1.12.0-beta1]
 
 ### Added
