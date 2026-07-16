@@ -7,7 +7,7 @@ use MiniShop3\Router\Router as ApiRouter;
 /**
  * Shared connector.php dispatch for manager API routes (Index / Router).
  *
- * Manager routes only via ManagerConnectorRouteLoader; storefront /api/v1 rejected (#384).
+ * Manager routes only via Router::loadManagerRoutes(); storefront /api/v1 rejected (#384).
  */
 trait ProcessesManagerConnectorRouteTrait
 {
@@ -23,7 +23,7 @@ trait ProcessesManagerConnectorRouteTrait
                 return $this->failure('Route parameter is required', ['code' => 400]);
             }
 
-            if (ManagerConnectorRouteLoader::isStorefrontRoute($route)) {
+            if (ApiRouter::isStorefrontRoute($route)) {
                 return $this->failure(
                     'Storefront API is not available via manager connector. Use api.php.',
                     ['code' => 404]
@@ -47,7 +47,7 @@ trait ProcessesManagerConnectorRouteTrait
             }
 
             $router = new ApiRouter($this->modx);
-            ManagerConnectorRouteLoader::load($router, $componentPath, MODX_CORE_PATH);
+            $router->loadManagerRoutes($componentPath, MODX_CORE_PATH);
             $router->build();
 
             $response = $router->dispatch($route, $_SERVER['REQUEST_METHOD']);
