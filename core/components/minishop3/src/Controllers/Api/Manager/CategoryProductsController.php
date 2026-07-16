@@ -6,6 +6,7 @@ use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Category\CategoryProductActionPermissions;
 use MiniShop3\Services\Category\CategoryProductsListService;
 use MiniShop3\Services\FilterConfigManager;
 use MODX\Revolution\modX;
@@ -167,6 +168,20 @@ class CategoryProductsController
             return Response::error('Method is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
+        $permission = CategoryProductActionPermissions::forMethod($method);
+        if ($permission === null) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                "[CategoryProductsController] Unknown method: {$method}"
+            );
+
+            return Response::error('Unknown method', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        if ($denied = $this->denyWithoutPermission($permission)) {
+            return $denied;
+        }
+
         if (empty($ids) || !is_array($ids)) {
             return Response::error('Product IDs array is required', HttpStatus::BAD_REQUEST)->getData();
         }
@@ -191,50 +206,14 @@ class CategoryProductsController
                 continue;
             }
 
-            $result = false;
-
-            switch ($method) {
-                case 'publish':
-                    $product->set('published', 1);
-                    $product->set('publishedon', time());
-                    $product->set('publishedby', $this->modx->user->get('id'));
-                    $result = $product->save();
-                    break;
-
-                case 'unpublish':
-                    $product->set('published', 0);
-                    $product->set('publishedon', 0);
-                    $product->set('publishedby', 0);
-                    $result = $product->save();
-                    break;
-
-                case 'delete':
-                    $product->set('deleted', 1);
-                    $product->set('deletedon', time());
-                    $product->set('deletedby', $this->modx->user->get('id'));
-                    $result = $product->save();
-                    break;
-
-                case 'undelete':
-                    $product->set('deleted', 0);
-                    $product->set('deletedon', 0);
-                    $product->set('deletedby', 0);
-                    $result = $product->save();
-                    break;
-
-                case 'show':
-                    $product->set('hidemenu', 0);
-                    $result = $product->save();
-                    break;
-
-                case 'hide':
-                    $product->set('hidemenu', 1);
-                    $result = $product->save();
-                    break;
-
-                default:
-                    $this->modx->log(modX::LOG_LEVEL_WARN, "[CategoryProductsController] Unknown method: {$method}");
-            }
+            $result = match ($method) {
+                'publish' => $this->applyPublish($product, true),
+                'unpublish' => $this->applyPublish($product, false),
+                'delete' => $this->applyDelete($product, true),
+                'undelete' => $this->applyDelete($product, false),
+                'show' => $this->applyHideMenu($product, false),
+                'hide' => $this->applyHideMenu($product, true),
+            };
 
             if ($result) {
                 $success++;
@@ -283,6 +262,10 @@ class CategoryProductsController
             return Response::error('Product ID is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
+        if ($denied = $this->denyWithoutPermission('msproduct_publish')) {
+            return $denied;
+        }
+
         $product = $this->modx->getObject(msProduct::class, $productId);
 
         if (!$product) {
@@ -294,16 +277,7 @@ class CategoryProductsController
             $published = $product->get('published') ? 0 : 1;
         }
 
-        $product->set('published', $published);
-        if ($published) {
-            $product->set('publishedon', time());
-            $product->set('publishedby', $this->modx->user->get('id'));
-        } else {
-            $product->set('publishedon', 0);
-            $product->set('publishedby', 0);
-        }
-
-        if (!$product->save()) {
+        if (!$this->applyPublish($product, (bool) $published)) {
             return Response::error('Failed to update product', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
 
@@ -311,6 +285,60 @@ class CategoryProductsController
             'id' => $productId,
             'published' => $published,
         ], $published ? 'Product published' : 'Product unpublished')->getData();
+    }
+
+    private function denyWithoutPermission(string $permission): ?array
+    {
+        if ($this->modx->hasPermission($permission)) {
+            return null;
+        }
+
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            '[CategoryProductsController] Access denied for permission ' . $permission
+            . ' (user id ' . (int)($this->modx->user?->get('id') ?? 0) . ')'
+        );
+
+        return Response::error(
+            "Access denied. Required permission: {$permission}",
+            HttpStatus::FORBIDDEN
+        )->getData();
+    }
+
+    private function applyPublish(msProduct $product, bool $published): bool
+    {
+        return $this->setAuditedFlag($product, 'published', 'publishedon', 'publishedby', $published);
+    }
+
+    private function applyDelete(msProduct $product, bool $deleted): bool
+    {
+        return $this->setAuditedFlag($product, 'deleted', 'deletedon', 'deletedby', $deleted);
+    }
+
+    private function setAuditedFlag(
+        msProduct $product,
+        string $flag,
+        string $onField,
+        string $byField,
+        bool $enabled
+    ): bool {
+        $product->set($flag, $enabled ? 1 : 0);
+        if ($enabled) {
+            $product->set($onField, time());
+            $product->set($byField, $this->modx->user->get('id'));
+        } else {
+            $product->set($onField, 0);
+            $product->set($byField, 0);
+        }
+
+        return $product->save();
+    }
+
+    private function applyHideMenu(msProduct $product, bool $hidemenu): bool
+    {
+        $product->set('hidemenu', $hidemenu ? 1 : 0);
+
+        return $product->save();
     }
 
     /**
