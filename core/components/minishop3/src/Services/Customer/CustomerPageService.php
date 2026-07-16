@@ -88,7 +88,12 @@ abstract class CustomerPageService
 
         $this->customerId = (int)$_SESSION['ms3']['customer_id'];
 
-        if (!$this->sessionTokenMatchesCustomer($this->customerId)) {
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->has('ms3_token_service')
+            ? $this->modx->services->get('ms3_token_service')
+            : null;
+
+        if (!$tokenService || !$tokenService->sessionTokenBelongsToCustomer($this->customerId)) {
             $this->clearAuthSession();
             $this->modx->log(
                 modX::LOG_LEVEL_WARN,
@@ -130,35 +135,17 @@ abstract class CustomerPageService
         return true;
     }
 
-    private function sessionTokenMatchesCustomer(int $customerId): bool
-    {
-        $token = (string)($_SESSION['ms3']['customer_token'] ?? '');
-        if ($token === '') {
-            $token = CookieHelper::getTokenFromCookie();
-        }
-        if ($token === '') {
-            return false;
-        }
-
-        $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
-            'token' => $token,
-            'type' => \MiniShop3\Model\msCustomerToken::TYPE_API,
-        ]);
-
-        return $tokenObj && (int)$tokenObj->get('customer_id') === $customerId;
-    }
-
     private function clearAuthSession(): void
     {
-        if (!isset($_SESSION['ms3'])) {
-            return;
+        if (isset($_SESSION['ms3'])) {
+            unset(
+                $_SESSION['ms3']['customer_id'],
+                $_SESSION['ms3']['customer_token'],
+                $_SESSION['ms3']['customer_token_expires']
+            );
         }
 
-        unset(
-            $_SESSION['ms3']['customer_id'],
-            $_SESSION['ms3']['customer_token'],
-            $_SESSION['ms3']['customer_token_expires']
-        );
+        CookieHelper::clearTokenCookie($this->modx);
     }
 
     /**

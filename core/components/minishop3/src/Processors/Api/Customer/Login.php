@@ -9,8 +9,8 @@ use MODX\Revolution\Processors\Processor;
 /**
  * Login - customer login processor
  *
- * Authenticates customer and binds existing session token to customer.
- * Token reuses guest cart token when possible; otherwise mints a new API token.
+ * Authenticates customer and establishes a rotated API session token.
+ * Guest cart may transfer from the previous token; the previous token is revoked.
  * Protected from brute-force via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
@@ -24,7 +24,8 @@ class Login extends Processor
     {
         $this->modx->lexicon->load('minishop3:customer');
 
-        $email = AuthManager::normalizeEmail($this->getProperty('email', ''));
+        $emailRaw = trim((string)$this->getProperty('email', ''));
+        $email = AuthManager::normalizeEmail($emailRaw);
         $password = $this->getProperty('password', '');
 
         if ($email === '' || $password === '') {
@@ -52,8 +53,9 @@ class Login extends Processor
         /** @var AuthManager $authManager */
         $authManager = $this->modx->services->get('ms3_auth_manager');
 
+        // Pass raw email so PasswordAuthProvider can resolve legacy mixed-case rows.
         $customer = $authManager->authenticate([
-            'email' => $email,
+            'email' => $emailRaw,
             'password' => $password,
         ]);
 
@@ -62,7 +64,7 @@ class Login extends Processor
             // blocked / inactive keep lastAuthFailure and must not call handleFailedLoginByEmail.
             $failure = $authManager->getLastAuthFailure();
             if ($failure === 'invalid_credentials') {
-                $authManager->handleFailedLoginByEmail($email);
+                $authManager->handleFailedLoginByEmail($emailRaw);
             }
 
             $this->modx->log(

@@ -310,8 +310,11 @@ class TokenService
                 "[TokenService] Customer token expired, clearing session"
             );
 
-            unset($_SESSION['ms3']['customer_token']);
-            unset($_SESSION['ms3']['customer_token_expires']);
+            unset(
+                $_SESSION['ms3']['customer_token'],
+                $_SESSION['ms3']['customer_token_expires'],
+                $_SESSION['ms3']['customer_id']
+            );
 
             return null;
         }
@@ -486,6 +489,41 @@ class TokenService
         $this->restoreSessionFromCookie();
 
         return $this->getCustomerToken();
+    }
+
+    /**
+     * Whether session/cookie API token belongs to customer and is not expired.
+     * Renews TTL in DB when the row is past expires_at.
+     */
+    public function sessionTokenBelongsToCustomer(int $customerId): bool
+    {
+        SessionHelper::ensureActive();
+
+        $token = (string)($_SESSION['ms3']['customer_token'] ?? '');
+        if ($token === '') {
+            $token = CookieHelper::getTokenFromCookie();
+        }
+        if ($token === '' || $customerId <= 0) {
+            return false;
+        }
+
+        $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+            'token' => $token,
+            'type' => msCustomerToken::TYPE_API,
+        ]);
+
+        if (!$tokenObj || (int)$tokenObj->get('customer_id') !== $customerId) {
+            return false;
+        }
+
+        if ($tokenObj->isExpired() && !$this->renewTokenIfExpired($tokenObj)) {
+            return false;
+        }
+
+        $this->applyTokenToSession($tokenObj);
+        CookieHelper::setTokenCookie($this->modx, (string)$tokenObj->get('token'));
+
+        return true;
     }
 
     /**

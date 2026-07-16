@@ -240,15 +240,16 @@ class AuthManager
                     "[AuthManager] transferDraftToToken failed for customer #{$customer->id}"
                 );
             }
-
-            if ($previousTokenObj) {
-                $previousTokenObj->remove();
-            }
         } elseif (!$draftManager->bindDraftToCustomer($tokenString, (int)$customer->id)) {
             $this->modx->log(
                 modX::LOG_LEVEL_WARN,
                 "[AuthManager] bindDraftToCustomer failed for customer #{$customer->id}"
             );
+        }
+
+        // Always drop the previous browser token so a planted/old cookie cannot keep access.
+        if ($previousTokenObj && $previousToken !== $tokenString) {
+            $previousTokenObj->remove();
         }
 
         if (session_status() === PHP_SESSION_ACTIVE) {

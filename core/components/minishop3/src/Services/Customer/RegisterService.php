@@ -100,7 +100,15 @@ class RegisterService
             ];
         }
 
-        $existing = $this->modx->getObject(msCustomer::class, ['email' => $email]);
+        $existing = null;
+        if ($this->modx->services->has('ms3_auth_manager')) {
+            /** @var AuthManager $authManager */
+            $authManager = $this->modx->services->get('ms3_auth_manager');
+            $existing = $authManager->findCustomerByEmail($data['email'] ?? $email);
+        }
+        if (!$existing) {
+            $existing = $this->modx->getObject(msCustomer::class, ['email' => $email]);
+        }
         if ($existing) {
             return [
                 'success' => false,

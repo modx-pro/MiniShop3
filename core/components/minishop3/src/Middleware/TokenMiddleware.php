@@ -123,7 +123,7 @@ class TokenMiddleware implements MiddlewareInterface
             if (
                 $customer
                 && $this->isCustomerSessionAllowed($customer)
-                && $this->sessionTokenMatchesCustomer((int)$customer->id)
+                && $tokenService->sessionTokenBelongsToCustomer($customerId)
             ) {
                 return null;
             }
@@ -209,27 +209,6 @@ class TokenMiddleware implements MiddlewareInterface
         }
 
         return true;
-    }
-
-    /**
-     * Ensure PHP session / cookie API token still maps to this customer in DB.
-     */
-    private function sessionTokenMatchesCustomer(int $customerId): bool
-    {
-        $token = (string)($_SESSION['ms3']['customer_token'] ?? '');
-        if ($token === '') {
-            $token = CookieHelper::getTokenFromCookie();
-        }
-        if ($token === '') {
-            return false;
-        }
-
-        $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
-            'token' => $token,
-            'type' => \MiniShop3\Model\msCustomerToken::TYPE_API,
-        ]);
-
-        return $tokenObj && (int)$tokenObj->get('customer_id') === $customerId;
     }
 
     /**

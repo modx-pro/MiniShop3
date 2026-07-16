@@ -28,7 +28,17 @@ $modx->lexicon->load('minishop3:cart'); // For order details template
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     /** @var \MiniShop3\Services\Customer\AuthManager $authManager */
     $authManager = $modx->services->get('ms3_auth_manager');
-    $authManager->logoutCurrentCustomer();
+    if (!$authManager->logoutCurrentCustomer()) {
+        $modx->log(
+            \MODX\Revolution\modX::LOG_LEVEL_ERROR,
+            '[ms3_customer] logoutCurrentCustomer failed; forcing guest token mint'
+        );
+        if ($modx->services->has('ms3_token_service')) {
+            /** @var \MiniShop3\Services\TokenService $tokenService */
+            $tokenService = $modx->services->get('ms3_token_service');
+            $tokenService->persistApiToken(0);
+        }
+    }
 
     $loginPageId = $modx->getOption('ms3_customer_login_page_id', null, 1);
     $modx->sendRedirect($modx->makeUrl($loginPageId));

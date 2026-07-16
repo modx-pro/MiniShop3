@@ -26,7 +26,8 @@ class Register extends Processor
     {
         $this->modx->lexicon->load('minishop3:customer');
 
-        $email = AuthManager::normalizeEmail($this->getProperty('email', ''));
+        $emailRaw = trim((string)$this->getProperty('email', ''));
+        $email = AuthManager::normalizeEmail($emailRaw);
         $password = $this->getProperty('password', '');
         $firstName = trim($this->getProperty('first_name', ''));
         $lastName = trim($this->getProperty('last_name', ''));
@@ -62,7 +63,7 @@ class Register extends Processor
         $registerService->setEmailVerification($emailVerification);
 
         $result = $registerService->register([
-            'email' => $email,
+            'email' => $emailRaw,
             'password' => $password,
             'first_name' => $firstName,
             'last_name' => $lastName,
