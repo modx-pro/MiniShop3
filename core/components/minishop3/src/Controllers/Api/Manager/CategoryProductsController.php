@@ -168,18 +168,26 @@ class CategoryProductsController
             return Response::error('Method is required', HttpStatus::BAD_REQUEST)->getData();
         }
 
-        $permission = CategoryProductActionPermissions::forMethod($method);
-        if ($permission === null) {
-            $this->modx->log(
-                modX::LOG_LEVEL_WARN,
-                "[CategoryProductsController] Unknown method: {$method}"
-            );
+        $access = CategoryProductActionPermissions::evaluate(
+            $method,
+            fn(string $permission): bool => $this->modx->hasPermission($permission)
+        );
+        if (!$access['allowed']) {
+            if ($access['reason'] === 'unknown_method') {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    "[CategoryProductsController] Unknown method: {$method}"
+                );
+            } else {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    '[CategoryProductsController] Access denied for permission '
+                    . ($access['permission'] ?? '')
+                    . ' (user id ' . (int)($this->modx->user?->get('id') ?? 0) . ')'
+                );
+            }
 
-            return Response::error('Unknown method', HttpStatus::BAD_REQUEST)->getData();
-        }
-
-        if ($denied = $this->denyWithoutPermission($permission)) {
-            return $denied;
+            return Response::error($access['message'], $access['status'])->getData();
         }
 
         if (empty($ids) || !is_array($ids)) {
