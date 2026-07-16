@@ -58,16 +58,25 @@ class Login extends Processor
         ]);
 
         if (!$customer) {
-            if ($authManager->getLastAuthFailure() === 'invalid_credentials') {
+            // Only wrong password / unknown email increment lockout counter.
+            // blocked / inactive keep lastAuthFailure and must not call handleFailedLoginByEmail.
+            $failure = $authManager->getLastAuthFailure();
+            if ($failure === 'invalid_credentials') {
                 $authManager->handleFailedLoginByEmail($email);
             }
 
             $this->modx->log(
                 \MODX\Revolution\modX::LOG_LEVEL_WARN,
-                "[Login] Failed login attempt for email: {$email} from IP: {$ip}"
+                "[Login] Failed login attempt for email: {$email} from IP: {$ip} (reason: {$failure})"
             );
 
-            return $this->failure($this->modx->lexicon('ms3_customer_err_login_invalid'));
+            $messageKey = match ($failure) {
+                'blocked' => 'ms3_customer_err_login_blocked',
+                'inactive' => 'ms3_customer_err_login_inactive',
+                default => 'ms3_customer_err_login_invalid',
+            };
+
+            return $this->failure($this->modx->lexicon($messageKey));
         }
 
         $rateLimiter->reset('login', $ip);

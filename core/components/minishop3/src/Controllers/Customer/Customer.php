@@ -466,12 +466,23 @@ class Customer
      */
     protected function findByEmail(string $email): ?msCustomer
     {
-        $email = AuthManager::normalizeEmail($email);
-        if ($email === '') {
+        $normalized = AuthManager::normalizeEmail($email);
+        if ($normalized === '') {
             return null;
         }
 
-        return $this->modx->getObject(msCustomer::class, ['email' => $email]);
+        /** @var msCustomer|null $customer */
+        $customer = $this->modx->getObject(msCustomer::class, ['email' => $normalized]);
+        if ($customer) {
+            return $customer;
+        }
+
+        $raw = trim($email);
+        if ($raw !== '' && $raw !== $normalized) {
+            return $this->modx->getObject(msCustomer::class, ['email' => $raw]) ?: null;
+        }
+
+        return null;
     }
 
     /**

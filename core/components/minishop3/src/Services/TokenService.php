@@ -528,10 +528,14 @@ class TokenService
         $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
 
         $tokenCustomerId = (int)$tokenObj->get('customer_id');
-        if ($tokenCustomerId > 0) {
-            $_SESSION['ms3']['customer_id'] = $tokenCustomerId;
-        } else {
-            $_SESSION['ms3']['customer_id'] = 0;
-        }
+        $_SESSION['ms3']['customer_id'] = self::sessionCustomerIdFromTokenRow($tokenCustomerId);
+    }
+
+    /**
+     * Session customer_id derived from an API token row (guest clears auth).
+     */
+    public static function sessionCustomerIdFromTokenRow(int $tokenCustomerId): int
+    {
+        return $tokenCustomerId > 0 ? $tokenCustomerId : 0;
     }
 }

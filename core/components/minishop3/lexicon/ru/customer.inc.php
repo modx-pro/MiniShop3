@@ -45,6 +45,8 @@ $_lang['ms3_customer_logout_confirm'] = 'Вы действительно хот�
 // Errors - Authentication
 $_lang['ms3_customer_err_login_required'] = 'Укажите email и пароль';
 $_lang['ms3_customer_err_login_invalid'] = 'Неверный email или пароль';
+$_lang['ms3_customer_err_login_blocked'] = 'Аккаунт временно заблокирован. Попробуйте позже.';
+$_lang['ms3_customer_err_login_inactive'] = 'Аккаунт неактивен. Обратитесь к администратору магазина.';
 $_lang['ms3_customer_err_login_rate_limit'] = 'Превышен лимит попыток входа ({attempts}/{max}). Попробуйте через {minutes} минут.';
 $_lang['ms3_customer_err_email_required'] = 'Email обязателен для заполнения';
 $_lang['ms3_customer_err_email_invalid'] = 'Указан некорректный email';

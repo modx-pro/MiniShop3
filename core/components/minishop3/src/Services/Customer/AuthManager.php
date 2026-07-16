@@ -213,9 +213,10 @@ class AuthManager
         }
 
         // Rebind only guest tokens (preserve cart). Never hijack another customer's token.
-        $canReuse = $tokenObj
-            && ((int)$tokenObj->get('customer_id') === 0
-                || (int)$tokenObj->get('customer_id') === (int)$customer->id);
+        $canReuse = self::canReuseApiToken(
+            $tokenObj ? (int)$tokenObj->get('customer_id') : -1,
+            (int)$customer->id
+        );
 
         $tokenObj = $tokenService->persistApiToken(
             (int)$customer->id,
@@ -312,11 +313,51 @@ class AuthManager
     }
 
     /**
+     * Whether an existing API token row may be rebound to the logging-in customer.
+     *
+     * @param int $tokenCustomerId -1 when no token row exists
+     */
+    public static function canReuseApiToken(int $tokenCustomerId, int $loggingInCustomerId): bool
+    {
+        if ($tokenCustomerId < 0) {
+            return false;
+        }
+
+        return $tokenCustomerId === 0 || $tokenCustomerId === $loggingInCustomerId;
+    }
+
+    /**
      * Canonical email normalization for lookup and storage.
      */
     public static function normalizeEmail(string $email): string
     {
         return strtolower(trim($email));
+    }
+
+    /**
+     * Lookup customer by normalized email, then legacy mixed-case exact match.
+     */
+    public function findCustomerByEmail(string $email): ?msCustomer
+    {
+        $normalized = self::normalizeEmail($email);
+        if ($normalized === '') {
+            return null;
+        }
+
+        /** @var msCustomer|null $customer */
+        $customer = $this->modx->getObject(msCustomer::class, ['email' => $normalized]);
+        if ($customer) {
+            return $customer;
+        }
+
+        $raw = trim($email);
+        if ($raw !== '' && $raw !== $normalized) {
+            /** @var msCustomer|null $legacy */
+            $legacy = $this->modx->getObject(msCustomer::class, ['email' => $raw]);
+            return $legacy ?: null;
+        }
+
+        return null;
     }
 
     /**
@@ -519,17 +560,11 @@ class AuthManager
     }
 
     /**
-     * Record failed login by normalized email when the account exists.
+     * Record failed login by normalized/legacy email when the account exists.
      */
     public function handleFailedLoginByEmail(string $email): void
     {
-        $email = AuthManager::normalizeEmail($email);
-        if ($email === '') {
-            return;
-        }
-
-        /** @var msCustomer|null $customer */
-        $customer = $this->modx->getObject(msCustomer::class, ['email' => $email]);
+        $customer = $this->findCustomerByEmail($email);
         if ($customer) {
             $this->handleFailedLogin($customer);
         }

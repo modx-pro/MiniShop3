@@ -45,6 +45,8 @@ $_lang['ms3_customer_logout_confirm'] = 'Are you sure you want to logout?';
 // Errors - Authentication
 $_lang['ms3_customer_err_login_required'] = 'Please provide email and password';
 $_lang['ms3_customer_err_login_invalid'] = 'Invalid email or password';
+$_lang['ms3_customer_err_login_blocked'] = 'This account is temporarily blocked. Try again later.';
+$_lang['ms3_customer_err_login_inactive'] = 'This account is inactive. Contact the store administrator.';
 $_lang['ms3_customer_err_login_rate_limit'] = 'Too many login attempts ({attempts}/{max}). Try again in {minutes} minutes.';
 $_lang['ms3_customer_err_email_required'] = 'Email is required';
 $_lang['ms3_customer_err_email_invalid'] = 'Invalid email format';
