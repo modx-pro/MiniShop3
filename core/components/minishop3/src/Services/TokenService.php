@@ -224,10 +224,29 @@ class TokenService
             $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
         }
 
-        $expires = time() + $ttl;
+        SessionHelper::ensureActive();
 
-        $_SESSION['ms3']['customer_token'] = $token;
-        $_SESSION['ms3']['customer_token_expires'] = $expires;
+        $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+            'token' => $token,
+            'type' => msCustomerToken::TYPE_API,
+        ]);
+
+        if (!$tokenObj) {
+            return $this->generateCustomerToken($ttl);
+        }
+
+        $expires = time() + $ttl;
+        $tokenObj->set('expires_at', date('Y-m-d H:i:s', $expires));
+        if (!$tokenObj->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[TokenService] Failed to extend token TTL in database'
+            );
+            return ['token' => '', 'expires' => 0, 'lifetime' => 0];
+        }
+
+        $this->applyTokenToSession($tokenObj);
+        CookieHelper::setTokenCookie($this->modx, $token);
 
         $this->modx->log(
             modX::LOG_LEVEL_DEBUG,

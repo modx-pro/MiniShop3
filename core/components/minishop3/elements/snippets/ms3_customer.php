@@ -26,19 +26,9 @@ $modx->lexicon->load('minishop3:default');
 $modx->lexicon->load('minishop3:cart'); // For order details template
 
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
-    if (!empty($_SESSION['ms3']['customer_token'])) {
-        $token = $_SESSION['ms3']['customer_token'];
-        $tokenObj = $modx->getObject(\MiniShop3\Model\msCustomerToken::class, ['token' => $token]);
-        if ($tokenObj) {
-            $tokenObj->remove();
-        }
-    }
-
-    if (isset($_SESSION['ms3'])) {
-        unset($_SESSION['ms3']['customer_id']);
-        unset($_SESSION['ms3']['customer_token']);
-        unset($_SESSION['ms3']['customer_token_expires']);
-    }
+    /** @var \MiniShop3\Services\Customer\AuthManager $authManager */
+    $authManager = $modx->services->get('ms3_auth_manager');
+    $authManager->logoutCurrentCustomer();
 
     $loginPageId = $modx->getOption('ms3_customer_login_page_id', null, 1);
     $modx->sendRedirect($modx->makeUrl($loginPageId));

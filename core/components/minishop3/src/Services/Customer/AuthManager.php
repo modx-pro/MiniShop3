@@ -8,6 +8,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\TokenService;
+use MiniShop3\Utils\CookieHelper;
 use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 
@@ -240,6 +241,70 @@ class AuthManager
             'token' => $tokenString,
             'expires_at' => $tokenObj->get('expires_at'),
         ];
+    }
+
+    /**
+     * End storefront session: revoke API tokens, mint guest token, refresh session id.
+     *
+     * Used by Web API Logout and snippet `?action=logout` so cookie restore cannot re-auth.
+     *
+     * @return bool false when anonymous token could not be persisted
+     */
+    public function logoutCurrentCustomer(): bool
+    {
+        SessionHelper::ensureActive();
+
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $tokenService->restoreSessionFromCookie();
+
+        $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
+        if ($customerId > 0) {
+            /** @var msCustomer|null $customer */
+            $customer = $this->modx->getObject(msCustomer::class, $customerId);
+            if ($customer) {
+                $this->revokeTokens($customer, msCustomerToken::TYPE_API);
+                $this->modx->log(
+                    modX::LOG_LEVEL_INFO,
+                    "[AuthManager] Customer #{$customer->id} logged out"
+                );
+            }
+        } else {
+            $orphanToken = $tokenService->getBindableTokenString();
+            if ($orphanToken !== '') {
+                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token' => $orphanToken,
+                    'type' => msCustomerToken::TYPE_API,
+                ]);
+                if ($tokenObj) {
+                    $tokenObj->remove();
+                }
+            }
+        }
+
+        if (isset($_SESSION['ms3'])) {
+            unset(
+                $_SESSION['ms3']['customer_id'],
+                $_SESSION['ms3']['customer_token'],
+                $_SESSION['ms3']['customer_token_expires']
+            );
+        }
+        CookieHelper::clearTokenCookie($this->modx);
+
+        $guest = $tokenService->generateCustomerToken();
+        if ($guest['token'] === '') {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[AuthManager] logoutCurrentCustomer failed to mint anonymous token'
+            );
+            return false;
+        }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+
+        return true;
     }
 
     /**

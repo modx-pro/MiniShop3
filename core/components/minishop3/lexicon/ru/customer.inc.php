@@ -35,6 +35,7 @@ $_lang['ms3_customer_guest'] = 'Гость';
 $_lang['ms3_customer_password'] = 'Пароль';
 $_lang['ms3_customer_password_confirm'] = 'Подтверждение пароля';
 $_lang['ms3_customer_register_success'] = 'Регистрация прошла успешно';
+$_lang['ms3_customer_register_success_login_required'] = 'Регистрация прошла успешно. Войдите с email и паролем.';
 $_lang['ms3_customer_login_success'] = 'Вы успешно вошли в систему';
 $_lang['ms3_customer_password_recovery_not_available'] = 'Восстановление пароля пока недоступно';
 $_lang['ms3_customer_logout'] = 'Выход';
