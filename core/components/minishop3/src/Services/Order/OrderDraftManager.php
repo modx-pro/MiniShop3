@@ -145,11 +145,14 @@ class OrderDraftManager
     }
 
     /**
-     * Recalculate order costs (cart, delivery, total)
+     * Recalculate and persist draft cart_cost / weight / cost from order products.
+     *
+     * Plugin hooks: $draft->save() fires msOnBeforeSaveOrder / msOnSaveOrder (see msOrder::save).
+     * Display-time cost adjustment uses msOnBeforeGetOrderCost / msOnGetOrderCost via OrderCostCalculator,
+     * not this persist path — do not invent a separate "recalculate" event here.
      */
     public function recalculate(msOrder $draft): void
     {
-        // TODO: event before recalculating order
         $totals = OrderService::aggregateProductsTotals($draft->getMany('Products') ?? []);
         $cart_cost = $totals['cart_cost'];
         $weight = $totals['weight'];
@@ -159,7 +162,6 @@ class OrderDraftManager
         $delivery_cost = (float) $draft->get('delivery_cost');
         $cost = $orderService->clampComputedTotal($draft, (float) $cart_cost, $delivery_cost, 0.0);
 
-        // TODO: event on recalculating order
         $draft->set('updatedon', time());
         $draft->set('cart_cost', $cart_cost);
         $draft->set('cost', $cost);
