@@ -5,11 +5,13 @@ import prefixSelector from 'postcss-prefix-selector'
 import { defineConfig } from 'vite'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
+// outDir is the repo root — never set emptyOutDir:true here.
+// Orphan hashed chunks are removed by `npm run clean:vue-dist` (prebuild).
 const output = {
   dir: '../',
   assetFileNames: 'assets/components/minishop3/css/mgr/vue-dist/[name].min[extname]', // css files
   chunkFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name]-[hash].min.js', // js chunks (hash avoids stale cache)
-  entryFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js', // main js file (entry point)
+  entryFileNames: 'assets/components/minishop3/js/mgr/vue-dist/[name].min.js', // fixed entry names for MODX
 }
 
 const DevInput = {
@@ -130,6 +132,9 @@ export default defineConfig(({ command }) => {
     // command === 'build'
     return {
       build: {
+        // Safe: outDir is '../' (repo root). Full wipe would delete the project.
+        // vue-dist dirs are cleaned by package.json prebuild → clean:vue-dist.
+        emptyOutDir: false,
         rollupOptions: {
           output,
           input: ProdInput,
