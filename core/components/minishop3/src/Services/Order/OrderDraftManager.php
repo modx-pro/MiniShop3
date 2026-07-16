@@ -525,4 +525,64 @@ class OrderDraftManager
 
         return true;
     }
+
+    /**
+     * Move a draft order from one session token to another and bind customer_id.
+     *
+     * Used after login token rotation so the cart survives while the old token is revoked.
+     */
+    public function transferDraftToToken(
+        string $fromToken,
+        string $toToken,
+        int $customerId,
+        string $ctx = 'web'
+    ): bool {
+        if ($fromToken === '' || $toToken === '' || $customerId <= 0) {
+            return false;
+        }
+
+        if ($fromToken === $toToken) {
+            return $this->bindDraftToCustomer($toToken, $customerId, $ctx);
+        }
+
+        $statusDraft = (int)$this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+
+        $draft = $this->modx->getObject(msOrder::class, [
+            'token' => $fromToken,
+            'status_id' => $statusDraft,
+            'context' => $ctx,
+        ]);
+
+        if (!$draft) {
+            return true;
+        }
+
+        $existingCustomerId = (int)$draft->get('customer_id');
+        if ($existingCustomerId > 0 && $existingCustomerId !== $customerId) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                "[OrderDraftManager] Refused draft transfer #{$draft->get('id')} "
+                . "(owned by customer #{$existingCustomerId})"
+            );
+            return false;
+        }
+
+        $draft->set('customer_id', $customerId);
+        $draft->set('token', $toToken);
+        if (!$draft->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[OrderDraftManager] Failed to transfer draft #{$draft->get('id')} "
+                . "to token for customer #{$customerId}"
+            );
+            return false;
+        }
+
+        $this->modx->log(
+            modX::LOG_LEVEL_INFO,
+            "[OrderDraftManager] Transferred draft #{$draft->get('id')} to customer #{$customerId}"
+        );
+
+        return true;
+    }
 }

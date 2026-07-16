@@ -188,9 +188,11 @@ class AuthManager
     }
 
     /**
-     * Bind authenticated customer to API token, session, cookie, and draft order.
+     * Bind authenticated customer to a fresh API token, session, cookie, and draft order.
      *
-     * Reuses guest token from cookie/session when possible so cart is preserved.
+     * Always mints a new token (anti session-fixation). Guest/own previous token may
+     * transfer the draft cart, then the old token row is removed so a planted cookie
+     * cannot keep access after login.
      *
      * @return array{token: string, expires_at: string}|null
      */
@@ -202,27 +204,18 @@ class AuthManager
 
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
-        $currentToken = $tokenService->getBindableTokenString();
+        $previousToken = $tokenService->getBindableTokenString();
 
-        $tokenObj = null;
-        if ($currentToken !== '') {
-            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                'token' => $currentToken,
+        $previousTokenObj = null;
+        if ($previousToken !== '') {
+            $previousTokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $previousToken,
                 'type' => msCustomerToken::TYPE_API,
             ]);
         }
 
-        // Rebind only guest tokens (preserve cart). Never hijack another customer's token.
-        $canReuse = self::canReuseApiToken(
-            $tokenObj ? (int)$tokenObj->get('customer_id') : -1,
-            (int)$customer->id
-        );
-
-        $tokenObj = $tokenService->persistApiToken(
-            (int)$customer->id,
-            $canReuse ? $currentToken : null,
-            $ttl
-        );
+        // Always rotate API token on login/register (do not upgrade a planted guest token).
+        $tokenObj = $tokenService->persistApiToken((int)$customer->id, null, $ttl);
         if (!$tokenObj) {
             return null;
         }
@@ -231,7 +224,27 @@ class AuthManager
 
         /** @var OrderDraftManager $draftManager */
         $draftManager = $this->modx->services->get('ms3_order_draft_manager');
-        if (!$draftManager->bindDraftToCustomer($tokenString, $customer->id)) {
+
+        $previousCustomerId = $previousTokenObj
+            ? (int)$previousTokenObj->get('customer_id')
+            : -1;
+
+        if (
+            $previousToken !== ''
+            && $previousToken !== $tokenString
+            && self::canTransferCartFromToken($previousCustomerId, (int)$customer->id)
+        ) {
+            if (!$draftManager->transferDraftToToken($previousToken, $tokenString, (int)$customer->id)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    "[AuthManager] transferDraftToToken failed for customer #{$customer->id}"
+                );
+            }
+
+            if ($previousTokenObj) {
+                $previousTokenObj->remove();
+            }
+        } elseif (!$draftManager->bindDraftToCustomer($tokenString, (int)$customer->id)) {
             $this->modx->log(
                 modX::LOG_LEVEL_WARN,
                 "[AuthManager] bindDraftToCustomer failed for customer #{$customer->id}"
@@ -313,17 +326,54 @@ class AuthManager
     }
 
     /**
-     * Whether an existing API token row may be rebound to the logging-in customer.
+     * After API tokens were revoked, drop local PHP session/cookie if it belonged to that customer.
+     */
+    public function invalidateLocalSessionForCustomer(msCustomer $customer): void
+    {
+        SessionHelper::ensureActive();
+
+        if ((int)($_SESSION['ms3']['customer_id'] ?? 0) !== (int)$customer->id) {
+            return;
+        }
+
+        if (isset($_SESSION['ms3'])) {
+            unset(
+                $_SESSION['ms3']['customer_id'],
+                $_SESSION['ms3']['customer_token'],
+                $_SESSION['ms3']['customer_token_expires']
+            );
+        }
+        CookieHelper::clearTokenCookie($this->modx);
+
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $tokenService->persistApiToken(0);
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+    }
+
+    /**
+     * Whether cart/draft may be moved from a previous API token onto the new login token.
      *
      * @param int $tokenCustomerId -1 when no token row exists
      */
-    public static function canReuseApiToken(int $tokenCustomerId, int $loggingInCustomerId): bool
+    public static function canTransferCartFromToken(int $tokenCustomerId, int $loggingInCustomerId): bool
     {
         if ($tokenCustomerId < 0) {
             return false;
         }
 
         return $tokenCustomerId === 0 || $tokenCustomerId === $loggingInCustomerId;
+    }
+
+    /**
+     * @deprecated Use canTransferCartFromToken(); kept for call-site compatibility in tests.
+     */
+    public static function canReuseApiToken(int $tokenCustomerId, int $loggingInCustomerId): bool
+    {
+        return self::canTransferCartFromToken($tokenCustomerId, $loggingInCustomerId);
     }
 
     /**

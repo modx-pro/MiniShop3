@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Customer;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Services\TokenService;
+use MiniShop3\Utils\CookieHelper;
 use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 use ModxPro\PdoTools\Fetch;
@@ -87,6 +88,16 @@ abstract class CustomerPageService
 
         $this->customerId = (int)$_SESSION['ms3']['customer_id'];
 
+        if (!$this->sessionTokenMatchesCustomer($this->customerId)) {
+            $this->clearAuthSession();
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                "[CustomerPageService] Session customer #{$this->customerId} does not match API token"
+            );
+            $this->customerId = null;
+            return false;
+        }
+
         $this->customer = $this->modx->getObject(msCustomer::class, $this->customerId);
 
         if (!$this->customer) {
@@ -94,10 +105,60 @@ abstract class CustomerPageService
                 modX::LOG_LEVEL_WARN,
                 "[CustomerPageService] Customer #{$this->customerId} not found in database"
             );
+            $this->clearAuthSession();
+            $this->customerId = null;
             return false;
         }
 
+        if (!$this->customer->get('is_active')) {
+            $this->clearAuthSession();
+            $this->customerId = null;
+            $this->customer = null;
+            return false;
+        }
+
+        if ($this->customer->get('is_blocked')) {
+            $blockedUntil = $this->customer->get('blocked_until');
+            if ($blockedUntil && strtotime((string)$blockedUntil) > time()) {
+                $this->clearAuthSession();
+                $this->customerId = null;
+                $this->customer = null;
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    private function sessionTokenMatchesCustomer(int $customerId): bool
+    {
+        $token = (string)($_SESSION['ms3']['customer_token'] ?? '');
+        if ($token === '') {
+            $token = CookieHelper::getTokenFromCookie();
+        }
+        if ($token === '') {
+            return false;
+        }
+
+        $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
+            'token' => $token,
+            'type' => \MiniShop3\Model\msCustomerToken::TYPE_API,
+        ]);
+
+        return $tokenObj && (int)$tokenObj->get('customer_id') === $customerId;
+    }
+
+    private function clearAuthSession(): void
+    {
+        if (!isset($_SESSION['ms3'])) {
+            return;
+        }
+
+        unset(
+            $_SESSION['ms3']['customer_id'],
+            $_SESSION['ms3']['customer_token'],
+            $_SESSION['ms3']['customer_token_expires']
+        );
     }
 
     /**

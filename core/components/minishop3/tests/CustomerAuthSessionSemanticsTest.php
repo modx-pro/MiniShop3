@@ -3,9 +3,9 @@
 /**
  * Session/token policy smoke checks for #285 (without MODX bootstrap).
  *
- * Covers the sticky-auth contracts that broke storefront login:
- * - guest token must clear session customer_id
- * - login must not rebind another customer's API token
+ * Covers sticky-auth + anti-fixation contracts:
+ * - guest token must clear session customer_id on hydrate
+ * - login rotates token; cart may transfer only from guest/own token
  * - failed-login lockout applies only to invalid_credentials
  *
  * Run: php tests/CustomerAuthSessionSemanticsTest.php
@@ -46,7 +46,6 @@ $assertSame(42, TokenService::sessionCustomerIdFromTokenRow(42), 'auth token set
 $assertSame(0, TokenService::sessionCustomerIdFromTokenRow(0), 'guest token clears customer_id');
 $assertSame(0, TokenService::sessionCustomerIdFromTokenRow(-1), 'invalid token customer_id clears auth');
 
-// Simulate reload: after login session has customer_id; guest hydrate must wipe it.
 $sessionCustomerId = 7;
 $sessionCustomerId = TokenService::sessionCustomerIdFromTokenRow(0);
 $assertSame(0, $sessionCustomerId, 'reload with guest cookie must not keep auth session');
@@ -54,11 +53,14 @@ $assertSame(0, $sessionCustomerId, 'reload with guest cookie must not keep auth 
 $sessionCustomerId = TokenService::sessionCustomerIdFromTokenRow(7);
 $assertSame(7, $sessionCustomerId, 'reload with auth cookie restores customer_id');
 
-// --- establishCustomerSession reuse guard ---
-$assertFalse(AuthManager::canReuseApiToken(-1, 5), 'missing token cannot reuse');
-$assertTrue(AuthManager::canReuseApiToken(0, 5), 'guest token may rebind');
-$assertTrue(AuthManager::canReuseApiToken(5, 5), 'own token may rebind');
-$assertFalse(AuthManager::canReuseApiToken(9, 5), 'other customer token must mint new');
+// --- login token rotation: cart transfer eligibility (old token is never upgraded in place) ---
+$assertFalse(AuthManager::canTransferCartFromToken(-1, 5), 'missing token cannot transfer cart');
+$assertTrue(AuthManager::canTransferCartFromToken(0, 5), 'guest token may transfer cart then be revoked');
+$assertTrue(AuthManager::canTransferCartFromToken(5, 5), 'own token may transfer cart then be revoked');
+$assertFalse(AuthManager::canTransferCartFromToken(9, 5), 'other customer token must not transfer cart');
+
+// Alias kept for older call sites / docs
+$assertTrue(AuthManager::canReuseApiToken(0, 5), 'canReuseApiToken aliases transfer policy');
 
 // --- lockout reasons: only invalid_credentials should trigger handleFailedLoginByEmail ---
 $shouldIncrementLockout = static function (string $lastAuthFailure): bool {
