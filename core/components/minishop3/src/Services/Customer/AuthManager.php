@@ -142,7 +142,12 @@ class AuthManager
                         $customer->set('is_blocked', false);
                         $customer->set('blocked_until', null);
                         $customer->set('failed_login_attempts', 0);
-                        $customer->save();
+                        if (!$customer->save()) {
+                            $this->modx->log(
+                                modX::LOG_LEVEL_ERROR,
+                                "[AuthManager] Failed to clear block flags for customer #{$customer->id}"
+                            );
+                        }
                     }
 
                     if (!$customer->get('is_active')) {
@@ -156,7 +161,12 @@ class AuthManager
 
                     $customer->set('last_login_at', date('Y-m-d H:i:s'));
                     $customer->set('failed_login_attempts', 0);
-                    $customer->save();
+                    if (!$customer->save()) {
+                        $this->modx->log(
+                            modX::LOG_LEVEL_ERROR,
+                            "[AuthManager] Failed to persist last_login for customer #{$customer->id}"
+                        );
+                    }
 
                     $this->lastAuthFailure = 'none';
                     $this->modx->log(
@@ -491,7 +501,12 @@ class AuthManager
             );
         }
 
-        $customer->save();
+        if (!$customer->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[AuthManager] Failed to persist failed_login_attempts for customer #{$customer->id}"
+            );
+        }
     }
 
     /**

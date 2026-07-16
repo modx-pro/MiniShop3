@@ -104,12 +104,17 @@ class PasswordAuthProvider implements AuthProviderInterface
         if (password_needs_rehash($hashedPassword, PASSWORD_BCRYPT)) {
             $newHash = password_hash($password, PASSWORD_BCRYPT);
             $customer->set('password', $newHash);
-            $customer->save();
-
-            $this->modx->log(
-                modX::LOG_LEVEL_INFO,
-                "[PasswordAuthProvider] Password rehashed for customer #{$customer->id}"
-            );
+            if ($customer->save()) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_INFO,
+                    "[PasswordAuthProvider] Password rehashed for customer #{$customer->id}"
+                );
+            } else {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    "[PasswordAuthProvider] Failed to persist rehashed password for customer #{$customer->id}"
+                );
+            }
         }
 
         $this->modx->log(

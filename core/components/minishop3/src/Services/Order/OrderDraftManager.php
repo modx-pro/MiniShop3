@@ -501,18 +501,28 @@ class OrderDraftManager
             'context' => $ctx,
         ]);
 
-        if ($draft && empty($draft->get('customer_id'))) {
-            $draft->set('customer_id', $customerId);
-            $draft->save();
-
-            $this->modx->log(
-                modX::LOG_LEVEL_INFO,
-                "[OrderDraftManager] Bound draft #{$draft->get('id')} to customer #{$customerId}"
-            );
-
+        if (!$draft) {
             return true;
         }
 
-        return false;
+        if (!empty($draft->get('customer_id'))) {
+            return true;
+        }
+
+        $draft->set('customer_id', $customerId);
+        if (!$draft->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[OrderDraftManager] Failed to bind draft #{$draft->get('id')} to customer #{$customerId}"
+            );
+            return false;
+        }
+
+        $this->modx->log(
+            modX::LOG_LEVEL_INFO,
+            "[OrderDraftManager] Bound draft #{$draft->get('id')} to customer #{$customerId}"
+        );
+
+        return true;
     }
 }

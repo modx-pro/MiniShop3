@@ -458,19 +458,33 @@ class TokenService
         return $this->getCustomerToken();
     }
 
-    private function renewTokenIfExpired(msCustomerToken $tokenObj): void
+    /**
+     * @return bool false when the row is expired and TTL could not be persisted
+     */
+    private function renewTokenIfExpired(msCustomerToken $tokenObj): bool
     {
         if (!$tokenObj->isExpired()) {
-            return;
+            return true;
         }
 
         $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+        $previousExpires = $tokenObj->get('expires_at');
         $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
-        $tokenObj->save();
+
+        if (!$tokenObj->save()) {
+            $tokenObj->set('expires_at', $previousExpires);
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[TokenService] Failed to renew expired token TTL in database'
+            );
+            return false;
+        }
+
+        return true;
     }
 
     /**
-     * Write token row into $_SESSION without overwriting an authenticated customer with guest token.
+     * Write token row into $_SESSION. Guest tokens clear authenticated customer_id.
      */
     private function applyTokenToSession(msCustomerToken $tokenObj): void
     {
@@ -486,7 +500,7 @@ class TokenService
         $tokenCustomerId = (int)$tokenObj->get('customer_id');
         if ($tokenCustomerId > 0) {
             $_SESSION['ms3']['customer_id'] = $tokenCustomerId;
-        } elseif (empty($_SESSION['ms3']['customer_id'])) {
+        } else {
             $_SESSION['ms3']['customer_id'] = 0;
         }
     }

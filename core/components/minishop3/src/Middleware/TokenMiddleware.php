@@ -120,9 +120,11 @@ class TokenMiddleware implements MiddlewareInterface
         } elseif (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
             // No token in request: allow existing session customer (browser session).
             $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
-            if ($customer) {
+            if ($customer && $this->isCustomerSessionAllowed($customer)) {
                 return null;
             }
+
+            unset($_SESSION['ms3']['customer_id']);
         }
 
         // No valid token found
@@ -178,6 +180,27 @@ class TokenMiddleware implements MiddlewareInterface
 
         // 3. $_REQUEST (includes cookie via injection + legacy URL param)
         return $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
+    }
+
+    /**
+     * Session shortcut is valid only for active, non-blocked customers.
+     */
+    private function isCustomerSessionAllowed(\MiniShop3\Model\msCustomer $customer): bool
+    {
+        if (!$customer->get('is_active')) {
+            return false;
+        }
+
+        if (!$customer->get('is_blocked')) {
+            return true;
+        }
+
+        $blockedUntil = $customer->get('blocked_until');
+        if ($blockedUntil && strtotime((string)$blockedUntil) > time()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

@@ -86,6 +86,9 @@ class Customer
         $tokenService = $this->modx->services->get('ms3_token_service');
 
         $result = $tokenService->updateCustomerToken($token);
+        if ($result['token'] === '') {
+            return $this->error('ms3_err_token');
+        }
 
         return $this->success('', [
             'token' => $result['token'],

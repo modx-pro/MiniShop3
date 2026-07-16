@@ -88,21 +88,18 @@ class Register extends Processor
             $authManager = $this->modx->services->get('ms3_auth_manager');
             $session = $authManager->establishCustomerSession($customer);
 
-            if ($session) {
-                $tokenString = $session['token'];
-                $expiresAt = $session['expires_at'];
-            } else {
-                $this->modx->log(
-                    \MODX\Revolution\modX::LOG_LEVEL_ERROR,
-                    "[Register] Customer #{$customer->id} created but establishCustomerSession failed"
-                );
+            if (!$session) {
+                return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
             }
+
+            $tokenString = $session['token'];
+            $expiresAt = $session['expires_at'];
         }
 
         $rateLimiter->reset('login', $ip);
 
         $redirectUrl = '';
-        if ($tokenString !== null) {
+        if ($autoLogin && !$requireEmailVerification) {
             $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);
             if (!$redirectPageId) {
                 $redirectPageId = (int)$this->modx->getOption('ms3_customer_redirect_after_login', null, 0);
@@ -111,18 +108,9 @@ class Register extends Processor
             if ($redirectPageId > 0) {
                 $redirectUrl = $this->modx->makeUrl($redirectPageId, '', '', 'full');
             }
-        } elseif ($autoLogin && !$requireEmailVerification) {
-            $loginPageId = (int)$this->modx->getOption('ms3_customer_login_page_id', null, 0);
-            if ($loginPageId > 0) {
-                $redirectUrl = $this->modx->makeUrl($loginPageId, '', '', 'full');
-            }
         }
 
-        $messageKey = ($autoLogin && !$requireEmailVerification && $tokenString === null)
-            ? 'ms3_customer_register_success_login_required'
-            : 'ms3_customer_register_success';
-
-        return $this->success($this->modx->lexicon($messageKey), [
+        return $this->success($this->modx->lexicon('ms3_customer_register_success'), [
             'customer' => [
                 'id' => $customer->id,
                 'email' => $customer->get('email'),
@@ -135,7 +123,6 @@ class Register extends Processor
             'expires_at' => $expiresAt,
             'email_verification_required' => $requireEmailVerification,
             'redirect_url' => $redirectUrl,
-            'auto_login' => $tokenString !== null,
         ]);
     }
 
