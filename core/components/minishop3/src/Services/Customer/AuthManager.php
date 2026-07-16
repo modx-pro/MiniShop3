@@ -217,17 +217,13 @@ class AuthManager
             && ((int)$tokenObj->get('customer_id') === 0
                 || (int)$tokenObj->get('customer_id') === (int)$customer->id);
 
-        if ($canReuse) {
-            $tokenObj->set('customer_id', $customer->id);
-            $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
-            if (!$tokenObj->save()) {
-                return null;
-            }
-        } else {
-            $tokenObj = $this->createToken($customer, msCustomerToken::TYPE_API, $ttl);
-            if (!$tokenObj) {
-                return null;
-            }
+        $tokenObj = $tokenService->persistApiToken(
+            (int)$customer->id,
+            $canReuse ? $currentToken : null,
+            $ttl
+        );
+        if (!$tokenObj) {
+            return null;
         }
 
         $tokenString = (string)$tokenObj->get('token');
@@ -240,8 +236,6 @@ class AuthManager
                 "[AuthManager] bindDraftToCustomer failed for customer #{$customer->id}"
             );
         }
-
-        $tokenService->syncSessionFromToken($tokenObj);
 
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_regenerate_id(true);
@@ -301,8 +295,8 @@ class AuthManager
         }
         CookieHelper::clearTokenCookie($this->modx);
 
-        $guest = $tokenService->generateCustomerToken();
-        if ($guest['token'] === '') {
+        $guest = $tokenService->persistApiToken(0);
+        if (!$guest) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
                 '[AuthManager] logoutCurrentCustomer failed to mint anonymous token'
@@ -318,6 +312,14 @@ class AuthManager
     }
 
     /**
+     * Canonical email normalization for lookup and storage.
+     */
+    public static function normalizeEmail(string $email): string
+    {
+        return strtolower(trim($email));
+    }
+
+    /**
      * Create token for customer
      *
      * @param msCustomer $customer
@@ -327,6 +329,13 @@ class AuthManager
      */
     public function createToken(msCustomer $customer, string $type = 'api', int $ttl = 86400): ?msCustomerToken
     {
+        if ($type === msCustomerToken::TYPE_API) {
+            /** @var TokenService $tokenService */
+            $tokenService = $this->modx->services->get('ms3_token_service');
+
+            return $tokenService->persistApiToken((int)$customer->id, null, $ttl);
+        }
+
         /** @var msCustomerToken $token */
         $token = $this->modx->newObject(msCustomerToken::class);
 
@@ -514,7 +523,7 @@ class AuthManager
      */
     public function handleFailedLoginByEmail(string $email): void
     {
-        $email = PasswordAuthProvider::normalizeEmail($email);
+        $email = AuthManager::normalizeEmail($email);
         if ($email === '') {
             return;
         }

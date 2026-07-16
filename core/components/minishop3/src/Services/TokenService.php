@@ -62,45 +62,75 @@ class TokenService
 
         $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
 
-        $token = bin2hex(random_bytes(32));
+        $tokenObj = $this->persistApiToken($customerId, null, $ttl);
+        if (!$tokenObj) {
+            return ['token' => '', 'expires' => 0, 'lifetime' => 0];
+        }
+
+        $expires = (int)strtotime((string)$tokenObj->get('expires_at'));
+
+        $this->modx->log(
+            modX::LOG_LEVEL_INFO,
+            "[TokenService] Generated customer token for customer_id={$customerId}, expires: "
+            . $tokenObj->get('expires_at')
+        );
+
+        return [
+            'token' => (string)$tokenObj->get('token'),
+            'expires' => $expires,
+            'lifetime' => max(0, $expires - time()) * 1000,
+        ];
+    }
+
+    /**
+     * Persist an API token row and hydrate session/cookie from that DB row.
+     *
+     * Single mint/update path for guest, login bind, and logout anonymous token.
+     *
+     * @param int $customerId 0 = guest
+     * @param string|null $reuseToken update this token when present in DB; otherwise mint
+     */
+    public function persistApiToken(int $customerId, ?string $reuseToken = null, ?int $ttl = null): ?msCustomerToken
+    {
+        SessionHelper::ensureActive();
 
         if ($ttl === null) {
             $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
         }
 
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
+        $tokenObj = null;
 
-        $tokenObj = $this->modx->newObject(\MiniShop3\Model\msCustomerToken::class);
-        $tokenObj->set('customer_id', $customerId);
-        $tokenObj->set('token', $token);
-        $tokenObj->set('type', \MiniShop3\Model\msCustomerToken::TYPE_API);
-        $tokenObj->set('expires_at', $expiresAt);
-        $tokenObj->set('created_at', date('Y-m-d H:i:s'));
+        if ($reuseToken !== null && $reuseToken !== '') {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $reuseToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
+
+        if ($tokenObj) {
+            $tokenObj->set('customer_id', $customerId);
+            $tokenObj->set('expires_at', $expiresAt);
+        } else {
+            $tokenObj = $this->modx->newObject(msCustomerToken::class);
+            $tokenObj->set('customer_id', $customerId);
+            $tokenObj->set('token', bin2hex(random_bytes(32)));
+            $tokenObj->set('type', msCustomerToken::TYPE_API);
+            $tokenObj->set('expires_at', $expiresAt);
+            $tokenObj->set('created_at', date('Y-m-d H:i:s'));
+        }
 
         if (!$tokenObj->save()) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "[TokenService] Failed to save token to database"
+                '[TokenService] Failed to persist API token'
             );
-            return ['token' => '', 'expires' => 0, 'lifetime' => 0];
+            return null;
         }
 
-        $_SESSION['ms3']['customer_token'] = $token;
-        $_SESSION['ms3']['customer_token_expires'] = time() + $ttl;
+        $this->syncSessionFromToken($tokenObj);
 
-        // Set httpOnly cookie
-        CookieHelper::setTokenCookie($this->modx, $token);
-
-        $this->modx->log(
-            modX::LOG_LEVEL_INFO,
-            "[TokenService] Generated customer token for customer_id={$customerId}, expires: " . $expiresAt
-        );
-
-        return [
-            'token' => $token,
-            'expires' => time() + $ttl,
-            'lifetime' => $ttl * 1000,
-        ];
+        return $tokenObj;
     }
 
     /**

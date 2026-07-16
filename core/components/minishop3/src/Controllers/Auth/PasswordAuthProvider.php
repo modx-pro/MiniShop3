@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Auth;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Customer\AuthManager;
 use MODX\Revolution\modX;
 
 /**
@@ -41,11 +42,11 @@ class PasswordAuthProvider implements AuthProviderInterface
     }
 
     /**
-     * Normalize email for lookup and storage.
+     * Normalize email for lookup and storage (delegates to AuthManager).
      */
     public static function normalizeEmail(string $email): string
     {
-        return strtolower(trim($email));
+        return AuthManager::normalizeEmail($email);
     }
 
     /**

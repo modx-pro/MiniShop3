@@ -2,7 +2,6 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
-use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MiniShop3\Services\Customer\RateLimiter;
@@ -27,7 +26,7 @@ class Register extends Processor
     {
         $this->modx->lexicon->load('minishop3:customer');
 
-        $email = PasswordAuthProvider::normalizeEmail($this->getProperty('email', ''));
+        $email = AuthManager::normalizeEmail($this->getProperty('email', ''));
         $password = $this->getProperty('password', '');
         $firstName = trim($this->getProperty('first_name', ''));
         $lastName = trim($this->getProperty('last_name', ''));

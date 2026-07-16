@@ -6,7 +6,6 @@ $autoload = dirname(__FILE__, 4) . '/vendor/autoload.php';
 
 require_once($autoload);
 
-use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Services\Customer\AuthManager;
@@ -467,7 +466,7 @@ class Customer
      */
     protected function findByEmail(string $email): ?msCustomer
     {
-        $email = PasswordAuthProvider::normalizeEmail($email);
+        $email = AuthManager::normalizeEmail($email);
         if ($email === '') {
             return null;
         }

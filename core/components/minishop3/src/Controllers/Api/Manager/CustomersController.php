@@ -6,6 +6,7 @@ use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Customer\AuthManager;
 use MODX\Revolution\modX;
 
 /**
@@ -180,7 +181,7 @@ class CustomersController
             if (isset($data[$field])) {
                 $value = $data[$field];
                 if ($field === 'email' && is_string($value)) {
-                    $value = PasswordAuthProvider::normalizeEmail($value);
+                    $value = AuthManager::normalizeEmail($value);
                 }
                 $customer->set($field, $value);
             }

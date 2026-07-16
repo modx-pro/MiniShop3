@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use MiniShop3\Controllers\Auth\PasswordAuthProvider;
+use MiniShop3\Services\Customer\AuthManager;
 
 $fail = static function (string $message): never {
     fwrite(STDERR, "FAIL: {$message}\n");
@@ -23,9 +23,14 @@ $assertSame = static function ($expected, $actual, string $case) use ($fail): vo
     }
 };
 
-$assertSame('user@example.com', PasswordAuthProvider::normalizeEmail('User@Example.COM'), 'lowercases email');
-$assertSame('user@example.com', PasswordAuthProvider::normalizeEmail('  user@example.com  '), 'trims email');
-$assertSame('', PasswordAuthProvider::normalizeEmail('   '), 'blank becomes empty');
+$assertSame('user@example.com', AuthManager::normalizeEmail('User@Example.COM'), 'lowercases email');
+$assertSame('user@example.com', AuthManager::normalizeEmail('  user@example.com  '), 'trims email');
+$assertSame('', AuthManager::normalizeEmail('   '), 'blank becomes empty');
+$assertSame(
+    'user@example.com',
+    \MiniShop3\Controllers\Auth\PasswordAuthProvider::normalizeEmail('User@Example.COM'),
+    'PasswordAuthProvider delegates to AuthManager'
+);
 
 fwrite(STDOUT, "OK CustomerAuthNormalizeEmailTest\n");
 exit(0);

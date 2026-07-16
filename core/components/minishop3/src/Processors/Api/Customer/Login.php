@@ -2,7 +2,6 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
-use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
@@ -25,7 +24,7 @@ class Login extends Processor
     {
         $this->modx->lexicon->load('minishop3:customer');
 
-        $email = PasswordAuthProvider::normalizeEmail($this->getProperty('email', ''));
+        $email = AuthManager::normalizeEmail($this->getProperty('email', ''));
         $password = $this->getProperty('password', '');
 
         if ($email === '' || $password === '') {
