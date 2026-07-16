@@ -8,22 +8,15 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/support/modx_phinx_stub.php';
+
 $fail = static function (string $message): never {
     fwrite(STDERR, "FAIL: {$message}\n");
     exit(1);
 };
 
 $buildConfig = static function (array $options): array {
-    $modx = new class ($options) {
-        public function __construct(private readonly array $options)
-        {
-        }
-
-        public function getOption(string $key, mixed $options = null, mixed $default = null): mixed
-        {
-            return $this->options[$key] ?? $default;
-        }
-    };
+    $modx = ms3_create_modx_phinx_stub($options);
 
     return require __DIR__ . '/../phinx.php';
 };

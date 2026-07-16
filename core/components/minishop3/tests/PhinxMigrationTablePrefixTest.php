@@ -8,6 +8,8 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/support/modx_phinx_stub.php';
+
 $fail = static function (string $message): never {
     fwrite(STDERR, "FAIL: {$message}\n");
     exit(1);
@@ -55,32 +57,16 @@ $loadPhinxConfig = static function (
     string $tablePrefix,
     ?object $pdo = null,
 ): array {
-    $modx = new class ($tablePrefix, $pdo) {
-        public function __construct(
-            private readonly string $tablePrefix,
-            public readonly ?object $pdo,
-        ) {
-        }
-
-        public function getOption(string $key, mixed $options = null, mixed $default = null): mixed
-        {
-            return match ($key) {
-                'table_prefix' => $this->tablePrefix,
-                'host' => 'localhost',
-                'dbname' => 'modx',
-                'username' => 'user',
-                'password' => 'password',
-                'port' => '3306',
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-                default => $default,
-            };
-        }
-
-        public function log(int $level, string $message): void
-        {
-        }
-    };
+    $modx = ms3_create_modx_phinx_stub([
+        'table_prefix' => $tablePrefix,
+        'host' => 'localhost',
+        'dbname' => 'modx',
+        'username' => 'user',
+        'password' => 'password',
+        'port' => '3306',
+        'charset' => 'utf8mb4',
+        'collation' => 'utf8mb4_unicode_ci',
+    ], $pdo);
 
     return require __DIR__ . '/../phinx.php';
 };
