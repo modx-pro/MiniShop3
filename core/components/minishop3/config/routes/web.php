@@ -155,6 +155,18 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
             return Response::success($response->getObject(), $response->getMessage());
         });
+        $router->post('/logout', function($params) use ($modx) {
+            $response = $modx->runProcessor(
+                'MiniShop3\Processors\Api\Customer\Logout',
+                []
+            );
+
+            if ($response->isError()) {
+                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
+            }
+
+            return Response::success($response->getObject() ?: [], $response->getMessage());
+        }, [$tokenMiddleware]);
         $router->post('/register', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
