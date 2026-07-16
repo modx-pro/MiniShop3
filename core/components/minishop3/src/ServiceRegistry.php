@@ -109,6 +109,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Order\OrderUserResolver::class,
             'interface' => null,
         ],
+        'ms3_order_number_generator' => [
+            'class' => \MiniShop3\Services\Order\OrderNumberGenerator::class,
+            'interface' => null,
+        ],
         'ms3_order_submit_handler' => [
             'class' => \MiniShop3\Services\Order\OrderSubmitHandler::class,
             'interface' => null,
@@ -447,7 +451,6 @@ class ServiceRegistry
             'ms3_order_cost_calculator',
             'ms3_order_user_resolver',
             'ms3_order_log',
-            'ms3_order_finalize',
             'ms3_cart_item_manager',
             'ms3_customer_address_manager',
         ];
@@ -458,6 +461,7 @@ class ServiceRegistry
             'ms3_order_address_manager',
             'ms3_order_submit_handler',
             'ms3_order_status',
+            'ms3_order_finalize',
         ];
 
         if (in_array($serviceKey, $controllersWithMs3Only)) {
@@ -517,8 +521,6 @@ class ServiceRegistry
                 break;
 
             case 'ms3_order_submit_handler':
-                // OrderSubmitHandler(modX, MiniShop3, OrderDraftManager, OrderCostCalculator,
-                //                    OrderFieldManager, OrderAddressManager, OrderUserResolver)
                 $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
                     $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
                     $draftManager = $modx->services->get('ms3_order_draft_manager');
@@ -526,6 +528,7 @@ class ServiceRegistry
                     $fieldManager = $modx->services->get('ms3_order_field_manager');
                     $addressManager = $modx->services->get('ms3_order_address_manager');
                     $userResolver = $modx->services->get('ms3_order_user_resolver');
+                    $numberGenerator = $modx->services->get('ms3_order_number_generator');
                     return new $validatedClass(
                         $modx,
                         $ms3,
@@ -533,8 +536,17 @@ class ServiceRegistry
                         $costCalculator,
                         $fieldManager,
                         $addressManager,
-                        $userResolver
+                        $userResolver,
+                        $numberGenerator
                     );
+                });
+                break;
+
+            case 'ms3_order_finalize':
+                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
+                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
+                    $numberGenerator = $modx->services->get('ms3_order_number_generator');
+                    return new $validatedClass($modx, $ms3, $numberGenerator);
                 });
                 break;
 

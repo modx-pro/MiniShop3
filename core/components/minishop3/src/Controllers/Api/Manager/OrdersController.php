@@ -623,8 +623,8 @@ class OrdersController
         $order->set('payment_id', (int) ($params['payment_id'] ?? 0));
         $order->set('order_comment', $params['order_comment'] ?? '');
 
-        // Order number will be generated on finalization
-        $order->set('num', '');
+        // Order number will be generated on finalization (NULL so UNIQUE allows many drafts)
+        $order->set('num', null);
 
         // Initial costs (will be recalculated after adding products)
         $order->set('cart_cost', 0);
@@ -746,43 +746,6 @@ class OrdersController
         $orderData = $this->mergeAddressIntoOrderData($orderData, $address);
 
         return Response::success($this->formatOrder($orderData), 'ms3_order_finalized')->getData();
-    }
-
-    /**
-     * Generate new order number
-     *
-     * @return string Order number like "2512/1"
-     */
-    protected function generateOrderNum(): string
-    {
-        $format = htmlspecialchars($this->modx->getOption('ms3_order_format_num', null, 'ym'));
-        $separator = trim(
-            preg_replace(
-                "/[^,\/\-]/",
-                '',
-                $this->modx->getOption('ms3_order_format_num_separator', null, '/')
-            )
-        );
-        $separator = $separator ?: '/';
-
-        $cur = $format ? date($format) : date('ym');
-
-        $count = 0;
-
-        $c = $this->modx->newQuery(msOrder::class);
-        $c->where(['num:LIKE' => "{$cur}%"]);
-        $c->select('num');
-        $c->sortby('id', 'DESC');
-        $c->limit(1);
-        if ($c->prepare() && $c->stmt->execute()) {
-            $num = $c->stmt->fetchColumn();
-            if ($num && strpos($num, $separator) !== false) {
-                [, $count] = explode($separator, $num);
-            }
-        }
-        $count = intval($count) + 1;
-
-        return sprintf('%s%s%d', $cur, $separator, $count);
     }
 
     /**
