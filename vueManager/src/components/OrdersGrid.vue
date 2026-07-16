@@ -17,6 +17,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useGridFilterParams } from '../composables/useGridFilterParams.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
+import { formatLocalDateYmd } from '../utils/formatLocalDateYmd.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
@@ -106,18 +107,18 @@ async function loadOrders() {
             addFilterParam(
               params,
               filterConfig.fields?.from || `${key}_from`,
-              formatDateForApi(value[0])
+              formatLocalDateYmd(value[0])
             )
           }
           if (value[1]) {
             addFilterParam(
               params,
               filterConfig.fields?.to || `${key}_to`,
-              formatDateForApi(value[1])
+              formatLocalDateYmd(value[1])
             )
           }
         } else if (filterConfig?.type === 'datepicker' && value) {
-          addFilterParam(params, key, formatDateForApi(value))
+          addFilterParam(params, key, formatLocalDateYmd(value))
         } else {
           addFilterParam(params, key, value)
         }
@@ -167,15 +168,6 @@ function onSort(event) {
   sortOrder.value = event.sortOrder ?? -1
   first.value = 0
   loadOrders()
-}
-
-/**
- * Format date for API (YYYY-MM-DD)
- */
-function formatDateForApi(date) {
-  if (!date) return null
-  const d = new Date(date)
-  return d.toISOString().split('T')[0]
 }
 
 /**
