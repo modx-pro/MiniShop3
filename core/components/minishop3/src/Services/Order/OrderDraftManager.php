@@ -150,16 +150,9 @@ class OrderDraftManager
     public function recalculate(msOrder $draft): void
     {
         // TODO: event before recalculating order
-        $products = $draft->getMany('Products');
-        $cart_cost = 0;
-        $weight = 0;
-
-        if (!empty($products)) {
-            foreach ($products as $product) {
-                $weight += $product->get('weight');
-                $cart_cost += $product->get('cost');
-            }
-        }
+        $totals = OrderService::aggregateProductsTotals($draft->getMany('Products') ?? []);
+        $cart_cost = $totals['cart_cost'];
+        $weight = $totals['weight'];
 
         /** @var OrderService $orderService */
         $orderService = $this->modx->services->get('ms3_order_service');
