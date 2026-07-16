@@ -63,6 +63,7 @@ class ServiceRegistry
         'ms3_order_log',
         'ms3_cart_item_manager',
         'ms3_customer_address_manager',
+        'ms3_customer_field_manager',
     ];
 
     /**
@@ -76,6 +77,8 @@ class ServiceRegistry
         'ms3_order_submit_handler',
         'ms3_order_status',
         'ms3_order_finalize',
+        'ms3_cart_mutation_handler',
+        'ms3_customer_order_resolver',
     ];
 
     /**
@@ -101,6 +104,12 @@ class ServiceRegistry
         ],
         'ms3_order_finalize' => ['ms3_order_number_generator'],
         'ms3_order_status' => ['ms3_order_log'],
+        'ms3_cart_mutation_handler' => [
+            'ms3_order_draft_manager',
+            'ms3_cart_item_manager',
+            'ms3_order_log',
+        ],
+        'ms3_customer_order_resolver' => ['ms3_customer_field_manager'],
     ];
 
     /**
@@ -214,6 +223,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Cart\CartItemManager::class,
             'interface' => null,
         ],
+        'ms3_cart_mutation_handler' => [
+            'class' => \MiniShop3\Services\Cart\CartMutationHandler::class,
+            'interface' => null,
+        ],
         'ms3_token_service' => [
             'class' => \MiniShop3\Services\TokenService::class,
             'interface' => null,
@@ -276,6 +289,14 @@ class ServiceRegistry
         ],
         'ms3_customer_address_manager' => [
             'class' => \MiniShop3\Services\Customer\CustomerAddressManager::class,
+            'interface' => null,
+        ],
+        'ms3_customer_field_manager' => [
+            'class' => \MiniShop3\Services\Customer\CustomerFieldManager::class,
+            'interface' => null,
+        ],
+        'ms3_customer_order_resolver' => [
+            'class' => \MiniShop3\Services\Customer\CustomerOrderResolver::class,
             'interface' => null,
         ],
         'ms3_grid_config' => [
@@ -641,6 +662,26 @@ class ServiceRegistry
                     $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
                     $orderLog = $modx->services->get('ms3_order_log');
                     return new $validatedClass($modx, $ms3, $orderLog);
+                });
+                break;
+
+            case 'ms3_cart_mutation_handler':
+                // CartMutationHandler(modX, MiniShop3, OrderDraftManager, CartItemManager, OrderLogService)
+                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
+                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
+                    $draftManager = $modx->services->get('ms3_order_draft_manager');
+                    $itemManager = $modx->services->get('ms3_cart_item_manager');
+                    $orderLog = $modx->services->get('ms3_order_log');
+                    return new $validatedClass($modx, $ms3, $draftManager, $itemManager, $orderLog);
+                });
+                break;
+
+            case 'ms3_customer_order_resolver':
+                // CustomerOrderResolver(modX, MiniShop3, CustomerFieldManager)
+                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
+                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
+                    $fieldManager = $modx->services->get('ms3_customer_field_manager');
+                    return new $validatedClass($modx, $ms3, $fieldManager);
                 });
                 break;
 

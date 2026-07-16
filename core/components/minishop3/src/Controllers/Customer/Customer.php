@@ -8,11 +8,10 @@ require_once($autoload);
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
-use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\CustomerAddressManager;
+use MiniShop3\Services\Customer\CustomerFieldManager;
+use MiniShop3\Services\Customer\CustomerOrderResolver;
 use MODX\Revolution\modX;
-
-use Rakit\Validation\Validator;
 
 /**
  * Domain facade for the customer profile/session (not an HTTP controller).
@@ -37,6 +36,9 @@ class Customer
     protected $validationRules = [];
     protected $validationMessages = [];
 
+    protected CustomerFieldManager $fieldManager;
+    protected CustomerOrderResolver $orderResolver;
+
     /**
      * @param MiniShop3 $ms3
      * @param array $config
@@ -50,6 +52,36 @@ class Customer
 
         ], $config);
         $this->modx->lexicon->load('minishop3:customer');
+
+        $this->initializeServices();
+    }
+
+    /**
+     * Initialize services from DI container
+     */
+    protected function initializeServices(): void
+    {
+        $this->fieldManager = $this->getServiceFromDI(
+            'ms3_customer_field_manager',
+            fn() => new CustomerFieldManager($this->modx, $this->ms3)
+        );
+
+        $this->orderResolver = $this->getServiceFromDI(
+            'ms3_customer_order_resolver',
+            fn() => new CustomerOrderResolver($this->modx, $this->ms3, $this->fieldManager)
+        );
+    }
+
+    /**
+     * Get service from DI container or use fallback factory
+     */
+    protected function getServiceFromDI(string $serviceKey, callable $fallbackFactory): mixed
+    {
+        if ($this->modx->services->has($serviceKey)) {
+            return $this->modx->services->get($serviceKey);
+        }
+
+        return $fallbackFactory();
     }
 
     public function initialize(string $token = ''): bool
@@ -65,6 +97,10 @@ class Customer
         if (!empty($_SESSION['ms3']['validation']['messages'])) {
             $this->validationMessages = $_SESSION['ms3']['validation']['messages'];
         }
+
+        $this->fieldManager->setValidationRules($this->validationRules);
+        $this->fieldManager->setValidationMessages($this->validationMessages);
+
         return true;
     }
 
@@ -129,6 +165,9 @@ class Customer
 
         $_SESSION['ms3']['validation']['rules'] = $this->validationRules;
         $_SESSION['ms3']['validation']['messages'] = $this->validationMessages;
+
+        $this->fieldManager->setValidationRules($this->validationRules);
+        $this->fieldManager->setValidationMessages($this->validationMessages);
     }
 
     public function getFields(): array
@@ -136,27 +175,17 @@ class Customer
         if (empty($this->token)) {
             return $this->error('ms3_err_token');
         }
-        $msCustomer = $this->modx->getObject(msCustomer::class, [
-            'token' => $this->token,
-        ]);
-        if (!$msCustomer) {
-            return $this->success('', $this->modx->getFields(msCustomer::class));
-        }
-        return $this->success('', $msCustomer->toArray());
+
+        $msCustomer = $this->getObject();
+
+        return $msCustomer
+            ? $this->success('', $msCustomer->toArray())
+            : $this->success('', $this->modx->getFields(msCustomer::class));
     }
 
     public function getObject(): object|null
     {
-        if (empty($this->token)) {
-            return null;
-        }
-        $msCustomer = $this->modx->getObject(msCustomer::class, [
-            'token' => $this->token,
-        ]);
-        if (!$msCustomer) {
-            return null;
-        }
-        return $msCustomer;
+        return $this->getByToken($this->token);
     }
 
     public function getByToken(string $token): ?msCustomer
@@ -164,13 +193,8 @@ class Customer
         if (empty($token)) {
             return null;
         }
-        $msCustomer = $this->modx->getObject(msCustomer::class, [
-            'token' => $token,
-        ]);
-        if (!$msCustomer) {
-            return null;
-        }
-        return $msCustomer;
+
+        return $this->modx->getObject(msCustomer::class, ['token' => $token]) ?: null;
     }
 
     public function set(array $data = []): array
@@ -191,161 +215,17 @@ class Customer
             return $this->error('ms3_err_token');
         }
 
-        if (empty($key)) {
-            return $this->error('ms3_customer_key_empty');
-        }
-
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeAddToCustomer', [
-            'key' => $key,
-            'value' => $value,
-            'customer' => $this,
-        ]);
-        if (!$response['success']) {
-            return $this->error($response['message']);
-        }
-        $value = $response['data']['value'];
-
-        $response = $this->validate($key, $value);
-        if (is_array($response)) {
-            return $this->error($response[$key]);
-        }
-
-        $validated = $response;
-
-        $isNew = false;
-        $msCustomer = $this->modx->getObject(msCustomer::class, [
-            'token' => $this->token
-        ]);
-        if ($msCustomer) {
-            $msCustomer->set($key, $validated);
-        } else {
-            $isNew = true;
-            $userId = 0;
-
-            // TODO how to correctly determine current system user if authenticated?
-            if ($this->modx->user->hasSessionContext($this->ms3->config['ctx'])) {
-                $userId = $this->modx->user->get('id');
-            }
-            $msCustomer = $this->modx->newObject(msCustomer::class, [
-                'token' => $this->token,
-                $key => $validated,
-                'user_id' => $userId
-            ]);
-        }
-        $msCustomer->save();
-
-        $response = $this->ms3->utils->invokeEvent('msOnAddToCustomer', [
-            'key' => $key,
-            'value' => $validated,
-            'customer' => $this,
-            'msCustomer' => $msCustomer,
-            'isNew' => $isNew,
-        ]);
-        if (!$response['success']) {
-            return $this->error($response['message']);
-        }
-
-        return ($validated === false)
-            ? $this->error('', [$key => $value])
-            : $this->success('', [$key => $validated]);
+        return $this->fieldManager->add($this, $this->token, $key, $value);
     }
 
     public function validate(string $key, mixed $value): mixed
     {
-        // Allow plugins to modify value before validation
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeValidateCustomerValue', [
-            'key' => $key,
-            'value' => $value,
-            'customer' => $this,
-        ]);
-        if (!$response['success']) {
-            return [$key => $response['message']];
-        }
-        $value = $response['data']['value'];
-
-        // Standard validation
-        if (!empty($this->validationRules[$key])) {
-            $validator = new Validator();
-
-            $validation = $validator->validate(
-                [$key => $value],
-                [$key => $this->validationRules[$key]],
-                $this->validationMessages
-            );
-
-            $validation->validate();
-
-            if ($validation->fails()) {
-                $errors = $validation->errors();
-
-                // Allow plugins to handle validation errors.
-                // Contract (Utils::invokeEvent merges returnedValues into data):
-                // - success=false → caller gets [$key => message] from the wrapper.
-                // - success=true and data.errors is set (array, may be empty) → return that shape;
-                //   omitted key keeps standard $errors->firstOfAll().
-                $response = $this->ms3->utils->invokeEvent('msOnErrorValidateCustomerValue', [
-                    'key' => $key,
-                    'value' => $value,
-                    'errors' => $errors->firstOfAll(),
-                    'customer' => $this,
-                ]);
-
-                if (!$response['success']) {
-                    return [$key => $response['message']];
-                }
-
-                $data = $response['data'] ?? [];
-                if (array_key_exists('errors', $data) && is_array($data['errors'])) {
-                    return $data['errors'];
-                }
-
-                return $errors->firstOfAll();
-            }
-        }
-
-        // Allow plugins to modify validated value
-        $response = $this->ms3->utils->invokeEvent('msOnValidateCustomerValue', [
-            'key' => $key,
-            'value' => $value,
-            'customer' => $this,
-        ]);
-        if (!$response['success']) {
-            return [$key => $response['message']];
-        }
-
-        return $response['data']['value'];
+        return $this->fieldManager->validate($this, $key, $value);
     }
 
     public function create(array $customerData): msCustomer|null
     {
-        // Allow plugins to modify data before creation
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateCustomer', [
-            'customerData' => $customerData,
-            'customer' => $this,
-        ]);
-        if (!$response['success']) {
-            return null;
-        }
-        $customerData = $response['data']['customerData'];
-
-        $msCustomer = $this->modx->newObject(msCustomer::class, $customerData);
-        $save = $msCustomer->save();
-        if (!$save) {
-            return null;
-        }
-
-        // Allow plugins to act after customer creation
-        $response = $this->ms3->utils->invokeEvent('msOnCreateCustomer', [
-            'customerData' => $customerData,
-            'msCustomer' => $msCustomer,
-            'customer' => $this,
-        ]);
-        if (!$response['success']) {
-            // Customer already created, but plugins can log/handle errors
-            $this->modx->log(modX::LOG_LEVEL_WARN, '[Customer::create] msOnCreateCustomer event failed: ' . $response['message']);
-        }
-
-        return $msCustomer;
+        return $this->fieldManager->create($this, $customerData);
     }
 
     /**
@@ -406,156 +286,7 @@ class Customer
      */
     public function getOrCreate(?array $orderData = null): int
     {
-        $msCustomer = null;
-
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeGetOrderCustomer', [
-            'controller' => $this->ms3->order,
-            'msCustomer' => $msCustomer,
-        ]);
-        if (!$response['success']) {
-            return 0;
-        }
-
-        if (!empty($response['data']['msCustomer']) && $response['data']['msCustomer'] instanceof msCustomer) {
-            $msCustomer = $response['data']['msCustomer'];
-        } else {
-            $msCustomer = $this->getObject();
-        }
-
-        if (empty($msCustomer)) {
-            if ($orderData === null) {
-                $orderResponse = $this->ms3->order->get();
-                $orderData = $orderResponse['data']['order'] ?? [];
-            }
-
-            $email = $orderData['address_email'] ?? '';
-
-            if (!empty($email)) {
-                // Link order to existing account by email only.
-                // Never overwrite msCustomer.token — that hands the guest session the victim's account.
-                $msCustomer = $this->findByEmail($email);
-            }
-
-            if (empty($msCustomer)) {
-                $msCustomer = $this->createFromOrderData($orderData);
-            }
-        }
-
-        $response = $this->ms3->utils->invokeEvent('msOnGetOrderCustomer', [
-            'controller' => $this->ms3->order,
-            'msCustomer' => $msCustomer,
-        ]);
-        if (!$response['success']) {
-            return 0;
-        }
-
-        if (!empty($msCustomer)) {
-            return (int)$msCustomer->get('id');
-        }
-
-        return 0;
-    }
-
-    /**
-     * Find customer by email
-     *
-     * @param string $email Customer email
-     * @return msCustomer|null Customer object or null
-     */
-    protected function findByEmail(string $email): ?msCustomer
-    {
-        $normalized = AuthManager::normalizeEmail($email);
-        if ($normalized === '') {
-            return null;
-        }
-
-        /** @var msCustomer|null $customer */
-        $customer = $this->modx->getObject(msCustomer::class, ['email' => $normalized]);
-        if ($customer) {
-            return $customer;
-        }
-
-        $raw = trim($email);
-        if ($raw !== '' && $raw !== $normalized) {
-            return $this->modx->getObject(msCustomer::class, ['email' => $raw]) ?: null;
-        }
-
-        return null;
-    }
-
-    /**
-     * Create customer from order data
-     *
-     * Logic:
-     * 1. If auto-registration enabled (ms3_customer_auto_register_on_order = true)
-     *    → creates via RegisterService (with password, email verification)
-     * 2. Fallback: creates without password (for backward compatibility)
-     *
-     * @param array $orderData Order data
-     * @return msCustomer|null Created customer or null
-     */
-    protected function createFromOrderData(array $orderData): ?msCustomer
-    {
-        $email = $orderData['address_email'] ?? '';
-
-        if (empty($email)) {
-            return null;
-        }
-
-        $msCustomer = null;
-        $autoRegister = (bool)$this->modx->getOption('ms3_customer_auto_register_on_order', null, true);
-        $autoLogin = (bool)$this->modx->getOption('ms3_customer_auto_login_on_order', null, true);
-
-        if ($autoRegister) {
-            /** @var \MiniShop3\Services\Customer\RegisterService $registerService */
-            $registerService = $this->modx->services->get('ms3_register_service');
-
-            if ($registerService) {
-                $registerData = [
-                    'first_name' => $orderData['address_first_name'] ?? '',
-                    'last_name' => $orderData['address_last_name'] ?? '',
-                    'phone' => $orderData['address_phone'] ?? '',
-                    'email' => $email,
-                    'token' => $this->token,
-                    'privacy_accepted' => true,
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
-                ];
-
-                $registerResult = $registerService->register($registerData);
-
-                if ($registerResult['success']) {
-                    $msCustomer = $registerResult['customer'];
-                } else {
-                    // Email already registered: attach order only — no token/session takeover
-                    $msCustomer = $this->findByEmail($email);
-                }
-            }
-        }
-
-        if (empty($msCustomer)) {
-            $customerData = [
-                'first_name' => $orderData['address_first_name'] ?? '',
-                'last_name' => $orderData['address_last_name'] ?? '',
-                'phone' => $orderData['address_phone'] ?? '',
-                'email' => $email,
-                'token' => $this->token,
-            ];
-
-            $msCustomer = $this->create($customerData);
-        }
-
-        if ($msCustomer && $autoLogin) {
-            /** @var AuthManager $authManager */
-            $authManager = $this->modx->services->get('ms3_auth_manager');
-            if (!$authManager->establishCustomerSession($msCustomer)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[Customer] establishCustomerSession failed for customer #{$msCustomer->id}"
-                );
-            }
-        }
-
-        return $msCustomer;
+        return $this->orderResolver->getOrCreate($this, $this->token, $orderData);
     }
 
     /**
