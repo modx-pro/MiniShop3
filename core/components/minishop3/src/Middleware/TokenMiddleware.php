@@ -76,34 +76,19 @@ class TokenMiddleware implements MiddlewareInterface
             session_start();
         }
 
-        // For non-public routes: check session first
-        if (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
-            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
-            if ($customer) {
-                return null;
-            }
-        }
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
 
         // Resolve token from multiple sources
         $token = $this->resolveToken();
 
+        // If a token is present, always validate it (do not skip via session bypass).
         if (!empty($token)) {
-            // Validate token in DB
-            $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
-                'token' => $token,
-                'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
-            ]);
+            $resolved = $tokenService->resolveApiToken($token);
 
-            if ($tokenObj) {
-                // Auto-renew expired token
-                if ($tokenObj->isExpired()) {
-                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
-                    $newExpiresAt = date('Y-m-d H:i:s', time() + $ttl);
-                    $tokenObj->set('expires_at', $newExpiresAt);
-                    $tokenObj->save();
-                }
+            if ($resolved['reason'] === 'ok') {
+                $tokenObj = $resolved['token'];
 
-                // Save to session
                 if (!isset($_SESSION['ms3'])) {
                     $_SESSION['ms3'] = [];
                 }
@@ -111,30 +96,39 @@ class TokenMiddleware implements MiddlewareInterface
                 $_SESSION['ms3']['customer_id'] = $tokenObj->get('customer_id');
                 $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
 
-                // Refresh cookie
                 CookieHelper::setTokenCookie($this->modx, $token);
-
-                // Ensure $_REQUEST has the token for controllers
                 $_REQUEST['ms3_token'] = $token;
 
                 return null;
             }
 
-            // Token found in request but not in DB — invalid
-            if (!$isPublic) {
+            $this->clearClientTokenState();
+
+            if ($resolved['reason'] === 'expired') {
+                if (!$isPublic) {
+                    $this->modx->log(
+                        modX::LOG_LEVEL_INFO,
+                        '[TokenMiddleware] Rejected expired API token: ' . substr($token, 0, 16) . '...'
+                    );
+                    return Response::error('ms3_err_token_expired', HttpStatus::UNAUTHORIZED);
+                }
+            } elseif (!$isPublic) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "[TokenMiddleware] Token not found in database. Token: " . substr($token, 0, 16) . "..."
+                    '[TokenMiddleware] Token not found in database. Token: ' . substr($token, 0, 16) . '...'
                 );
                 return Response::error('ms3_err_token_invalid', HttpStatus::UNAUTHORIZED);
+            }
+        } elseif (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
+            // No token in request: allow existing session customer (browser session).
+            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
+            if ($customer) {
+                return null;
             }
         }
 
         // No valid token found
         if (!$isPublic) {
-            // Auto-create token for first visit
-            /** @var TokenService $tokenService */
-            $tokenService = $this->modx->services->get('ms3_token_service');
             $result = $tokenService->generateCustomerToken();
 
             if (!empty($result['token'])) {
@@ -146,6 +140,20 @@ class TokenMiddleware implements MiddlewareInterface
         }
 
         return null;
+    }
+
+    /**
+     * Clear cookie, request and session token identity after reject/expiry.
+     */
+    private function clearClientTokenState(): void
+    {
+        CookieHelper::clearTokenCookie($this->modx);
+        unset(
+            $_REQUEST['ms3_token'],
+            $_SESSION['ms3']['customer_token'],
+            $_SESSION['ms3']['customer_token_expires'],
+            $_SESSION['ms3']['customer_id']
+        );
     }
 
     /**
