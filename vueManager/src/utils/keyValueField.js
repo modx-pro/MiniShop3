@@ -2,21 +2,10 @@ export const KEY_VALUE_XTYPE = 'ms3-key-value'
 
 export function defaultKeyValueConfig() {
   return {
-    mode: 'free', // 'free' or 'fixed'
-    keys: [], // Array of { key: string, label: string, valueType: 'string'|'number', required: boolean }
+    mode: 'fixed',
+    keys: [],
   }
 }
-
-/**
- * Example fixed keys config (optional):
- * {
- *   mode: 'fixed',
- *   keys: [
- *     { key: 'width', label: 'Width', valueType: 'number', required: true },
- *     { key: 'color', label: 'Color', valueType: 'string', required: false }
- *   ]
- * }
- */
 
 export function parseKeyValueConfig(raw) {
   if (!raw) {
@@ -41,6 +30,7 @@ export function parseKeyValueConfig(raw) {
   return {
     ...defaults,
     ...parsed,
+    mode: parsed.mode === 'free' ? 'free' : 'fixed',
     keys: Array.isArray(parsed.keys) ? parsed.keys : defaults.keys,
   }
 }
@@ -52,7 +42,7 @@ export function parseKeyValueModelValue(value) {
   if (typeof value === 'string' && value.trim() !== '') {
     try {
       const parsed = JSON.parse(value)
-      return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {}
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
     } catch {
       return {}
     }
@@ -62,29 +52,33 @@ export function parseKeyValueModelValue(value) {
 
 export function normalizeKeyValueMap(map, config) {
   const schema = parseKeyValueConfig(config)
-  const normalized = {}
 
   if (schema.mode === 'fixed') {
+    const normalized = {}
     for (const keyDef of schema.keys) {
-      if (!keyDef.key) continue
+      if (!keyDef.key) {
+        continue
+      }
       const value = map?.[keyDef.key]
-      if (keyDef.valueType === 'number') {
-        normalized[keyDef.key] = (value === '' || value === null || value === undefined)
-          ? null
-          : Number(value)
-      } else {
-        normalized[keyDef.key] = value ?? ''
-      }
+      normalized[keyDef.key] = keyDef.valueType === 'number'
+        ? (value === '' || value == null ? null : Number(value))
+        : (value ?? '')
     }
-  } else {
-    // Free mode: just ensure it's a flat object of scalars
-    if (map && typeof map === 'object' && !Array.isArray(map)) {
-      for (const [k, v] of Object.entries(map)) {
-        normalized[k] = v
-      }
-    }
+    return normalized
   }
 
+  if (!map || typeof map !== 'object' || Array.isArray(map)) {
+    return {}
+  }
+
+  const normalized = {}
+  for (const [rawKey, value] of Object.entries(map)) {
+    const key = rawKey.trim()
+    if (key === '') {
+      continue
+    }
+    normalized[key] = value
+  }
   return normalized
 }
 
@@ -97,6 +91,10 @@ export function serializeKeyValueForPost(value) {
   } catch {
     return '{}'
   }
+}
+
+export function encodeKeyValueConfig(config) {
+  return JSON.stringify(parseKeyValueConfig(config))
 }
 
 export function getKeyValueConfigFromField(fieldConfig) {

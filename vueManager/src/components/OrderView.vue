@@ -23,7 +23,7 @@ import { useOrderFieldHelpers } from '../composables/useOrderFieldHelpers.js'
 import { useOrderFormatters } from '../composables/useOrderFormatters.js'
 import request from '../request.js'
 import { normalizeOrderPluginTab } from '../utils/orderPluginTab.js'
-import { parseRepeaterModelValue, REPEATER_XTYPE } from '../utils/repeaterField.js'
+import { parseStructuredExtraFieldValue } from '../utils/structuredExtraField.js'
 import OrderAddressTab from './order/OrderAddressTab.vue'
 import OrderHistoryTab from './order/OrderHistoryTab.vue'
 import OrderInfoTab from './order/OrderInfoTab.vue'
@@ -248,17 +248,18 @@ function groupFieldsBySection(fields, sections) {
  * Load order data
  */
 /**
- * Parse repeater extra field values from API (string JSON → array).
+ * Parse structured JSON extra fields from API (string JSON → object/array).
  */
-function hydrateRepeaterExtraFields(fields) {
+function hydrateStructuredExtraFields(fields) {
   if (!order.value || !Array.isArray(fields)) {
     return
   }
 
   for (const field of fields) {
-    if (field.xtype === REPEATER_XTYPE && field.key) {
-      order.value[field.key] = parseRepeaterModelValue(order.value[field.key])
+    if (!field.key) {
+      continue
     }
+    order.value[field.key] = parseStructuredExtraFieldValue(field.xtype, order.value[field.key])
   }
 }
 
@@ -292,8 +293,8 @@ async function loadOrder() {
       loadOrderCustomer(),
     ])
 
-    hydrateRepeaterExtraFields(orderExtraFields.value)
-    hydrateRepeaterExtraFields(addressExtraFields.value)
+    hydrateStructuredExtraFields(orderExtraFields.value)
+    hydrateStructuredExtraFields(addressExtraFields.value)
   } catch (error) {
     console.error('[OrderView] Error loading order:', error)
     toast.add({

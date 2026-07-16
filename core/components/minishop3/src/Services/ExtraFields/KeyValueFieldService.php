@@ -12,7 +12,7 @@ class KeyValueFieldService
     private modX $modx;
 
     /** Request-scoped cache of key-value field configs keyed by model class. */
-    private ?array $fieldsByClass = null;
+    private array $fieldsByClass = [];
 
     public function __construct(modX $modx)
     {
@@ -55,9 +55,7 @@ class KeyValueFieldService
             $config = array_merge($config, $json);
         }
 
-        if (($config['mode'] ?? '') !== 'free') {
-            $config['mode'] = 'fixed';
-        }
+        $config['mode'] = $this->resolveMode($config);
 
         if (!is_array($config['keys'])) {
             $config['keys'] = [];
@@ -93,17 +91,13 @@ class KeyValueFieldService
     {
         $config = $this->parseConfig($json);
 
-        if (($config['mode'] ?? 'fixed') === 'fixed' && empty($config['keys'])) {
+        if ($config['mode'] === 'fixed' && $config['keys'] === []) {
             return ['success' => false, 'message' => 'Key-value fixed mode requires at least one key'];
         }
 
         $keys = [];
         foreach ($config['keys'] as $item) {
-            if (!is_array($item)) {
-                return ['success' => false, 'message' => 'Invalid key definition'];
-            }
-
-            $key = trim((string)($item['key'] ?? ''));
+            $key = $item['key'];
             if ($key === '') {
                 return ['success' => false, 'message' => 'Each key definition must include a non-empty key'];
             }
@@ -154,10 +148,9 @@ class KeyValueFieldService
      */
     public function normalizeMap(array $map, array $config): array
     {
-        $mode = ($config['mode'] ?? 'fixed') === 'free' ? 'free' : 'fixed';
         $schemaMap = $this->getSchemaMap($config);
 
-        if ($mode === 'fixed') {
+        if ($this->resolveMode($config) === 'fixed') {
             $normalized = [];
             foreach ($schemaMap as $key => $item) {
                 $normalized[$key] = $this->normalizeCellValue($map[$key] ?? '', $item['valueType'] ?? 'string');
@@ -187,13 +180,12 @@ class KeyValueFieldService
     public function validateMap(array $map, array $config): array
     {
         $errors = [];
-        $mode = ($config['mode'] ?? 'fixed') === 'free' ? 'free' : 'fixed';
+        $mode = $this->resolveMode($config);
         $schemaMap = $this->getSchemaMap($config);
 
         if ($mode === 'fixed') {
             foreach ($schemaMap as $key => $item) {
-                $required = (bool)($item['required'] ?? false);
-                if (!$required) {
+                if (!($item['required'] ?? false)) {
                     continue;
                 }
 
@@ -202,42 +194,21 @@ class KeyValueFieldService
                     $errors[] = "Key {$key} is required";
                 }
             }
+        }
 
-            foreach ($map as $key => $value) {
-                if (!isset($schemaMap[$key])) {
-                    $errors[] = "Key {$key} is not allowed";
-                    continue;
-                }
-
-                if (
-                    ($schemaMap[$key]['valueType'] ?? 'string') === 'number'
-                    && $value !== null
-                    && $value !== ''
-                    && !is_numeric($value)
-                ) {
-                    $errors[] = "Key {$key} must be numeric";
-                }
-            }
-        } else {
-            $seenKeys = [];
-            foreach (array_keys($map) as $key) {
-                if (in_array($key, $seenKeys, true)) {
-                    $errors[] = "Duplicate key: {$key}";
-                    continue;
-                }
-                $seenKeys[] = $key;
+        foreach ($map as $key => $value) {
+            if ($mode === 'fixed' && !isset($schemaMap[$key])) {
+                $errors[] = "Key {$key} is not allowed";
+                continue;
             }
 
-            foreach ($map as $key => $value) {
-                if (isset($schemaMap[$key]) && ($schemaMap[$key]['valueType'] ?? 'string') === 'number') {
-                    if ($value !== null && $value !== '' && !is_numeric($value)) {
-                        $errors[] = "Key {$key} must be numeric";
-                    }
-                }
+            $valueType = $schemaMap[$key]['valueType'] ?? 'string';
+            if ($valueType === 'number' && $this->isInvalidNumericValue($value)) {
+                $errors[] = "Key {$key} must be numeric";
             }
         }
 
-        return empty($errors) ? ['ok' => true] : ['ok' => false, 'errors' => $errors];
+        return $errors === [] ? ['ok' => true] : ['ok' => false, 'errors' => $errors];
     }
 
     /**
@@ -263,10 +234,6 @@ class KeyValueFieldService
      */
     public function getKeyValueFieldsForClass(string $modelClass): array
     {
-        if ($this->fieldsByClass === null) {
-            $this->fieldsByClass = [];
-        }
-
         if (isset($this->fieldsByClass[$modelClass])) {
             return $this->fieldsByClass[$modelClass];
         }
@@ -298,7 +265,7 @@ class KeyValueFieldService
     private function getSchemaMap(array $config): array
     {
         $schema = [];
-        foreach (($config['keys'] ?? []) as $item) {
+        foreach ($config['keys'] ?? [] as $item) {
             if (!is_array($item)) {
                 continue;
             }
@@ -315,6 +282,16 @@ class KeyValueFieldService
         }
 
         return $schema;
+    }
+
+    private function resolveMode(array $config): string
+    {
+        return ($config['mode'] ?? '') === 'free' ? 'free' : 'fixed';
+    }
+
+    private function isInvalidNumericValue(mixed $value): bool
+    {
+        return $value !== null && $value !== '' && !is_numeric($value);
     }
 
     private function normalizeCellValue(mixed $rawValue, string $valueType): mixed
