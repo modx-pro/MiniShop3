@@ -102,6 +102,9 @@ if (!str_contains($traitSrc, 'loadManagerRoutes')) {
 if (!str_contains($traitSrc, 'isStorefrontRoute')) {
     $fail('trait must reject storefront via isStorefrontRoute()');
 }
+if (!str_contains($traitSrc, 'System routes not found:')) {
+    $fail('trait must return user-visible message when manager.php is missing');
+}
 if (str_contains($traitSrc, 'loadWebRoutes') || str_contains($traitSrc, 'ManagerConnectorRouteLoader')) {
     $fail('trait must not load web routes or use deleted ManagerConnectorRouteLoader');
 }
