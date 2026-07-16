@@ -205,6 +205,7 @@ $_lang['ms3_vue_key_value_value_type_string'] = 'String';
 $_lang['ms3_vue_key_value_value_type_number'] = 'Number';
 $_lang['ms3_vue_key_value_required'] = 'Required';
 $_lang['ms3_vue_key_value_no_keys'] = 'No keys defined. Add keys in extra field settings for fixed mode.';
+$_lang['ms3_vue_key_value_duplicate_key'] = 'Duplicate key "[[+key]]". Only the first value is kept.';
 
 $_lang['ms3_vue_order_extra_fields'] = 'Additional order fields';
 $_lang['ms3_vue_order_address_extra_fields'] = 'Additional address fields';
