@@ -20,10 +20,14 @@ trait ProcessesManagerConnectorRouteTrait
             $route = trim((string)$this->getProperty('route', ''));
 
             if ($route === '') {
+                http_response_code(400);
+
                 return $this->failure('Route parameter is required', ['code' => 400]);
             }
 
             if (ApiRouter::isStorefrontRoute($route)) {
+                http_response_code(404);
+
                 return $this->failure(
                     'Storefront API is not available via manager connector. Use api.php.',
                     ['code' => 404]
@@ -34,11 +38,15 @@ trait ProcessesManagerConnectorRouteTrait
             $autoloader = $componentPath . 'vendor/autoload.php';
 
             if (!file_exists($autoloader)) {
+                http_response_code(500);
+
                 return $this->failure('Component not properly installed. Run: composer install', ['code' => 500]);
             }
 
             $managerRoutes = $componentPath . 'config/routes/manager.php';
             if (!file_exists($managerRoutes)) {
+                http_response_code(500);
+
                 return $this->failure('System routes not found: ' . $managerRoutes, ['code' => 500]);
             }
 
@@ -67,6 +75,7 @@ trait ProcessesManagerConnectorRouteTrait
             );
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 API] ' . $e->getMessage());
+            http_response_code(500);
 
             return $this->failure(
                 $this->modx->getOption('ms3_api_debug', null, false)

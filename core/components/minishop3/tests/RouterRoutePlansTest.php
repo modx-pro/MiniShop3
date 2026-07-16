@@ -105,6 +105,10 @@ if (!str_contains($traitSrc, 'isStorefrontRoute')) {
 if (!str_contains($traitSrc, 'System routes not found:')) {
     $fail('trait must return user-visible message when manager.php is missing');
 }
+// Early rejects set HTTP status (storefront 404), not only JSON code
+if (!str_contains($traitSrc, 'http_response_code(404)')) {
+    $fail('trait must call http_response_code(404) when rejecting storefront routes');
+}
 if (str_contains($traitSrc, 'loadWebRoutes') || str_contains($traitSrc, 'ManagerConnectorRouteLoader')) {
     $fail('trait must not load web routes or use deleted ManagerConnectorRouteLoader');
 }
