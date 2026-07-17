@@ -940,22 +940,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
         return \MiniShop3\Router\Response::success(['results' => $results])->getData();
     });
 
-    // Dropdown list of active deliveries (for order forms)
+    // Dropdown list of active deliveries (for order forms; no properties/class secrets)
     $router->get('/deliveries-active', function($params) use ($modx) {
-        $modx->lexicon->load('minishop3:default');
-        $results = [];
-        $collection = $modx->getIterator(\MiniShop3\Model\msDelivery::class, ['active' => 1]);
-        foreach ($collection as $item) {
-            $data = $item->toArray();
-            if (!empty($data['name']) && str_starts_with($data['name'], 'ms3_')) {
-                $translated = $modx->lexicon($data['name']);
-                if ($translated !== $data['name']) {
-                    $data['name'] = $translated;
-                }
-            }
-            $results[] = $data;
-        }
-        return \MiniShop3\Router\Response::success(['results' => $results])->getData();
+        $controller = new \MiniShop3\Controllers\Api\Manager\DeliveriesController($modx);
+        return $controller->getActiveDropdown($params);
     });
 
     $router->group('/grid-config', function($router) use ($modx) {
