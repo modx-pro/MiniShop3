@@ -220,3 +220,6 @@ $_lang['ms3_customer_order_cancel_err_no_order'] = 'Не указан номер
 $_lang['ms3_customer_order_cancel_err_not_found'] = 'Заказ не найден';
 $_lang['ms3_customer_order_cancel_err_status'] = 'Этот заказ нельзя отменить';
 $_lang['ms3_customer_order_cancel_err_failed'] = 'Не удалось отменить заказ';
+$_lang['ms3_customer_order_err_unauthorized'] = 'Требуется авторизация';
+$_lang['ms3_customer_order_err_no_id'] = 'Не указан номер заказа';
+$_lang['ms3_customer_order_err_not_found'] = 'Заказ не найден';
