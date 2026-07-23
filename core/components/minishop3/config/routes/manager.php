@@ -167,7 +167,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
             return $controller->searchCustomers($params);
         });
 
-    });
+    }, [
+        // Same floor as /api/mgr/customers (#378): block PII lookup for mgr-only sessions (#415)
+        new PermissionMiddleware($modx, 'view_document')
+    ]);
 
     $router->group('/extra-fields', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
