@@ -48,94 +48,92 @@ $rateLimitMiddleware = new RateLimitMiddleware(
     $modx->getOption('ms3_rate_limit_decay_seconds', null, 60)
 );
 $serviceCheckMiddleware = new ServiceCheckMiddleware($modx);
-$router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
+$router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
 
-    $router->group('/cart', function($router) use ($modx) {
-        $router->post('/add', function($params) use ($modx) {
+    $router->group('/cart', function ($router) use ($modx) {
+        $router->post('/add', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->add($params);
         });
-        $router->post('/remove', function($params) use ($modx) {
+        $router->post('/remove', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->remove($params);
         });
-        $router->post('/change', function($params) use ($modx) {
+        $router->post('/change', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->change($params);
         });
-        $router->get('/get', function($params) use ($modx) {
+        $router->get('/get', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->get($params);
         });
-        $router->post('/clean', function($params) use ($modx) {
+        $router->post('/clean', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->clean($params);
         });
-
     }, [$tokenMiddleware]);
 
-    $router->group('/order', function($router) use ($modx) {
-        $router->get('/get', function($params) use ($modx) {
+    $router->group('/order', function ($router) use ($modx) {
+        $router->get('/get', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->get($params);
         });
-        $router->post('/add', function($params) use ($modx) {
+        $router->post('/add', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->add($params);
         });
-        $router->post('/set', function($params) use ($modx) {
+        $router->post('/set', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->set($params);
         });
-        $router->post('/remove', function($params) use ($modx) {
+        $router->post('/remove', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->remove($params);
         });
-        $router->post('/submit', function($params) use ($modx) {
+        $router->post('/submit', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->submit($params);
         });
-        $router->post('/clean', function($params) use ($modx) {
+        $router->post('/clean', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->clean($params);
         });
-        $router->get('/cost', function($params) use ($modx) {
+        $router->get('/cost', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->getCost($params);
         });
-        $router->get('/cost/cart', function($params) use ($modx) {
+        $router->get('/cost/cart', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->getCartCost($params);
         });
-        $router->get('/cost/delivery', function($params) use ($modx) {
+        $router->get('/cost/delivery', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->getDeliveryCost($params);
         });
-        $router->get('/cost/payment', function($params) use ($modx) {
+        $router->get('/cost/payment', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->getPaymentCost($params);
         });
-        $router->post('/address/set', function($params) use ($modx) {
+        $router->post('/address/set', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->setCustomerAddress($params);
         });
-        $router->post('/address/clean', function($params) use ($modx) {
+        $router->post('/address/clean', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->cleanCustomerAddress($params);
         });
-        $router->get('/delivery/validation-rules', function($params) use ($modx) {
+        $router->get('/delivery/validation-rules', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->getDeliveryValidationRules($params);
         });
-        $router->get('/delivery/required-fields', function($params) use ($modx) {
+        $router->get('/delivery/required-fields', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->getDeliveryRequiresFields($params);
         });
-
     }, [$tokenMiddleware]);
 
-    $router->group('/customer', function($router) use ($modx, $tokenMiddleware) {
-        $router->post('/login', function($params) use ($modx) {
+    $router->group('/customer', function ($router) use ($modx, $tokenMiddleware) {
+        $router->post('/login', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
@@ -152,7 +150,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
             return Response::fromProcessor($response);
         });
-        $router->post('/logout', function($params) use ($modx) {
+        $router->post('/logout', function ($params) use ($modx) {
             $response = $modx->runProcessor(
                 'MiniShop3\Processors\Api\Customer\Logout',
                 []
@@ -164,7 +162,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
 
             return Response::success($response->getObject() ?: [], $response->getMessage());
         }, [$tokenMiddleware]);
-        $router->post('/register', function($params) use ($modx) {
+        $router->post('/register', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
@@ -190,7 +188,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             return Response::fromProcessor($response);
         });
 
-        $router->post('/add', function($params) use ($modx) {
+        $router->post('/add', function ($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -199,7 +197,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             return $controller->updateField($data);
         }, [$tokenMiddleware]);
 
-        $router->get('/token/get', function($params) use ($modx) {
+        $router->get('/token/get', function ($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $ms3->initialize();
             $response = $ms3->customer->generateToken();
@@ -211,21 +209,21 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             }
         });
 
-        $router->post('/token/refresh', function($params) use ($modx) {
+        $router->post('/token/refresh', function ($params) use ($modx) {
             return Response::success(['message' => 'Customer token/refresh endpoint - not implemented yet']);
         });
 
-        $router->group('/addresses', function($router) use ($modx) {
-            $router->get('', function($params) use ($modx) {
+        $router->group('/addresses', function ($router) use ($modx) {
+            $router->get('', function ($params) use ($modx) {
                 $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
                 return $controller->getList($params);
             });
-            $router->get('/{id}', function($params) use ($modx) {
+            $router->get('/{id}', function ($params) use ($modx) {
                 $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
                 return $controller->get($params);
             });
 
-            $router->post('', function($params) use ($modx) {
+            $router->post('', function ($params) use ($modx) {
                 $input = file_get_contents('php://input');
                 $data = json_decode($input, true) ?: [];
 
@@ -233,7 +231,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
                 return $controller->create($data);
             });
 
-            $router->put('/{id}', function($params) use ($modx) {
+            $router->put('/{id}', function ($params) use ($modx) {
                 $input = file_get_contents('php://input');
                 $data = json_decode($input, true) ?: [];
 
@@ -242,18 +240,17 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
                 $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
                 return $controller->update($data);
             });
-            $router->delete('/{id}', function($params) use ($modx) {
+            $router->delete('/{id}', function ($params) use ($modx) {
                 $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
                 return $controller->delete($params);
             });
-            $router->put('/{id}/set-default', function($params) use ($modx) {
+            $router->put('/{id}/set-default', function ($params) use ($modx) {
                 $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
                 return $controller->setDefault($params);
             });
-
         }, [$tokenMiddleware]);
 
-        $router->put('/profile', function($params) use ($modx) {
+        $router->put('/profile', function ($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -262,41 +259,42 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             return $controller->update($data);
         }, [$tokenMiddleware]);
 
-        $router->post('/changeAddress', function($params) use ($modx) {
+        $router->post('/changeAddress', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->changeCustomerAddress($params);
         }, [$tokenMiddleware]);
 
-        $router->post('/email/resend-verification', function($params) use ($modx) {
+        $router->post('/email/resend-verification', function ($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
             return $controller->resendVerification();
         }, [$tokenMiddleware]);
-        $router->get('/email/verify', function($params) use ($modx) {
+        $router->get('/email/verify', function ($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
             return $controller->verify($params);
         });
 
-        $router->post('/orders/{id}/cancel', function($params) use ($modx) {
+        $router->post('/orders/{id}/cancel', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerOrderController($modx);
             return $controller->cancel($params);
         }, [$tokenMiddleware]);
-
     });
 
-    $router->group('/product', function($router) use ($modx) {
+    $router->group('/product', function ($router) use ($modx) {
 
-        $router->get('/get/{id}', function($params) use ($modx) {
-            return Response::success(['message' => 'Product get endpoint - not implemented yet', 'id' => $params['id'] ?? null]);
+        $router->get('/get/{id}', function ($params) use ($modx) {
+            return Response::success([
+                'message' => 'Product get endpoint - not implemented yet',
+                'id' => $params['id'] ?? null,
+            ]);
         });
 
-        $router->get('/list', function($params) use ($modx) {
+        $router->get('/list', function ($params) use ($modx) {
             return Response::success(['message' => 'Product list endpoint - not implemented yet']);
         });
-
     });
-    $router->get('/health', function() use ($modx) {
+    $router->get('/health', function () use ($modx) {
         return Response::success([
             'status' => 'ok',
             'version' => $modx->getOption('ms3_version', null, '1.0.0'),
@@ -304,5 +302,4 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
             'api' => 'web'
         ]);
     });
-
 }, [$corsMiddleware, $rateLimitMiddleware, $serviceCheckMiddleware]);
