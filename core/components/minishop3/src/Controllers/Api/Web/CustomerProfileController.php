@@ -41,6 +41,7 @@ class CustomerProfileController
         'orders_count',
         'total_spent',
         'last_order_at',
+        'privacy_accepted_at',
         'privacy_ip',
     ];
 
