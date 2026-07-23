@@ -22,7 +22,7 @@ class AnyPermissionMiddleware implements MiddlewareInterface
     public function __construct(modX $modx, array $permissions)
     {
         $this->modx = $modx;
-        $this->permissions = array_values(array_filter($permissions, static fn($p) => is_string($p) && $p !== ''));
+        $this->permissions = array_values(array_filter($permissions, static fn(string $p): bool => $p !== ''));
     }
 
     /**

@@ -183,7 +183,7 @@ class CategoryProductsController
                     modX::LOG_LEVEL_WARN,
                     '[CategoryProductsController] Access denied for permission '
                     . ($access['permission'] ?? '')
-                    . ' (user id ' . (int)($this->modx->user?->get('id') ?? 0) . ')'
+                    . ' (user id ' . (int)($this->modx->user->get('id') ?? 0) . ')'
                 );
             }
 
@@ -214,6 +214,8 @@ class CategoryProductsController
                 continue;
             }
 
+            // $method is already validated by CategoryProductActionPermissions::evaluate()
+            // above (unknown → 400 before this loop); default is defensive/unreachable.
             $result = match ($method) {
                 'publish' => $this->applyPublish($product, true),
                 'unpublish' => $this->applyPublish($product, false),
@@ -221,6 +223,7 @@ class CategoryProductsController
                 'undelete' => $this->applyDelete($product, false),
                 'show' => $this->applyHideMenu($product, false),
                 'hide' => $this->applyHideMenu($product, true),
+                default => false,
             };
 
             if ($result) {
@@ -304,7 +307,7 @@ class CategoryProductsController
         $this->modx->log(
             modX::LOG_LEVEL_WARN,
             '[CategoryProductsController] Access denied for permission ' . $permission
-            . ' (user id ' . (int)($this->modx->user?->get('id') ?? 0) . ')'
+            . ' (user id ' . (int)($this->modx->user->get('id') ?? 0) . ')'
         );
 
         return Response::error(
