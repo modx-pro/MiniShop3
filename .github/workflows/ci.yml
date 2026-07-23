@@ -17,7 +17,8 @@ permissions:
 
 jobs:
   php:
-    name: PHP lint + smoke + PHPUnit
+    # Name must match beta branch protection required check.
+    name: PHP lint + smoke
     runs-on: ubuntu-latest
     defaults:
       run:
