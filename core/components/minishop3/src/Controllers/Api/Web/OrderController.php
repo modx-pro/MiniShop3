@@ -21,6 +21,7 @@ class OrderController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+        $this->modx->lexicon->load('minishop3:customer', 'minishop3:default', 'minishop3:order');
     }
 
     /**
@@ -34,8 +35,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -62,12 +63,15 @@ class OrderController
         $value = $input['value'] ?? null;
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         if (empty($key)) {
-            return Response::error('Field key is required', HttpStatus::BAD_REQUEST)->getData();
+            return Response::error(
+                $this->modx->lexicon('ms3_err_field_key_required'),
+                HttpStatus::BAD_REQUEST
+            )->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -93,12 +97,15 @@ class OrderController
         $fields = $input['fields'] ?? [];
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         if (empty($fields) || !is_array($fields)) {
-            return Response::error('Fields array is required', HttpStatus::BAD_REQUEST)->getData();
+            return Response::error(
+                $this->modx->lexicon('ms3_err_fields_required'),
+                HttpStatus::BAD_REQUEST
+            )->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -124,12 +131,15 @@ class OrderController
         $key = $input['key'] ?? '';
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         if (empty($key)) {
-            return Response::error('Field key is required', HttpStatus::BAD_REQUEST)->getData();
+            return Response::error(
+                $this->modx->lexicon('ms3_err_field_key_required'),
+                HttpStatus::BAD_REQUEST
+            )->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -139,9 +149,15 @@ class OrderController
         $exists = $order->remove($key);
 
         if ($exists) {
-            return Response::success(['removed' => $key], 'Field removed successfully')->getData();
+            return Response::success(
+                ['removed' => $key],
+                $this->modx->lexicon('ms3_order_remove_success')
+            )->getData();
         } else {
-            return Response::error('Field not found', HttpStatus::NOT_FOUND)->getData();
+            return Response::error(
+                $this->modx->lexicon('ms3_err_field_nf'),
+                HttpStatus::NOT_FOUND
+            )->getData();
         }
     }
 
@@ -159,8 +175,8 @@ class OrderController
         $data = $input['data'] ?? [];
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -183,8 +199,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -207,8 +223,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -231,8 +247,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -255,8 +271,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -279,8 +295,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -326,8 +342,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -350,8 +366,8 @@ class OrderController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -377,8 +393,8 @@ class OrderController
         $delivery_id = (int)($input['delivery_id'] ?? 0);
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -404,8 +420,8 @@ class OrderController
         $delivery_id = (int)($input['delivery_id'] ?? 0);
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -415,6 +431,17 @@ class OrderController
         $result = $order->getDeliveryRequiresFields($delivery_id);
 
         return $this->transformResponse($result);
+    }
+
+    /**
+     * @return array{success: bool, message: string, code: int, errors: mixed}
+     */
+    private function tokenRequiredError(): array
+    {
+        return Response::error(
+            $this->modx->lexicon('ms3_customer_err_token_required'),
+            HttpStatus::UNAUTHORIZED
+        )->getData();
     }
 
     /**
@@ -446,7 +473,11 @@ class OrderController
         if ($result['success']) {
             return Response::success($result['data'], $result['message'] ?? '')->getData();
         } else {
-            return Response::error($result['message'] ?? 'Unknown error', HttpStatus::BAD_REQUEST, $result['data'] ?? [])->getData();
+            return Response::error(
+                $result['message'] ?? $this->modx->lexicon('ms3_err_unknown'),
+                HttpStatus::BAD_REQUEST,
+                $result['data'] ?? []
+            )->getData();
         }
     }
 }
