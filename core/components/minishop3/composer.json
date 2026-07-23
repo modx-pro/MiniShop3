@@ -23,6 +23,10 @@
       "MiniShop3\\": "src/"
     }
   },
+  "scripts": {
+    "test:smoke": "php tests/run-smoke.php",
+    "ci:php": "bash scripts/ci-php.sh"
+  },
   "minimum-stability": "stable",
   "prefer-stable": true
 }
