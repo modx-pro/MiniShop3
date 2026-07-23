@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -63,7 +63,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Cache PHPStan dependency trees
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .phpstan-deps
           key: phpstan-deps-v2-${{ runner.os }}-${{ hashFiles('core/components/minishop3/scripts/phpstan-deps.pins') }}
@@ -83,12 +83,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: vueManager/package-lock.json
 
