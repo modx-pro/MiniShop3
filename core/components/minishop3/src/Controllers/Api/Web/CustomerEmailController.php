@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\modX;
@@ -53,7 +54,10 @@ class CustomerEmailController
     public function resendVerification(): array
     {
         if (empty($_SESSION['ms3']['customer_id'])) {
-            return $this->error($this->modx->lexicon('ms3_customer_err_login_required'));
+            return Response::error(
+                $this->modx->lexicon('ms3_customer_err_login_required'),
+                HttpStatus::UNAUTHORIZED
+            )->getData();
         }
 
         $customerId = (int)$_SESSION['ms3']['customer_id'];
@@ -62,7 +66,10 @@ class CustomerEmailController
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
 
         if (!$customer) {
-            return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
+            return Response::error(
+                $this->modx->lexicon('ms3_err_customer_nf'),
+                HttpStatus::UNAUTHORIZED
+            )->getData();
         }
 
         $result = $this->emailVerification->resendVerificationEmail($customer);
@@ -72,9 +79,13 @@ class CustomerEmailController
                 modX::LOG_LEVEL_INFO,
                 "[CustomerEmailController] Verification email resent to customer #{$customerId}"
             );
+            return $result;
         }
 
-        return $result;
+        return Response::error(
+            $result['message'],
+            Response::statusFromProcessorObject($result)
+        )->getData();
     }
 
     /**

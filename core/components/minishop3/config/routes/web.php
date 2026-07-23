@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WEB API Routes for MiniShop3
  *
@@ -149,11 +150,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
                 ]
             );
 
-            if ($response->isError()) {
-                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
-            }
-
-            return Response::success($response->getObject(), $response->getMessage());
+            return Response::fromProcessor($response);
         });
         $router->post('/logout', function($params) use ($modx) {
             $response = $modx->runProcessor(
@@ -190,11 +187,7 @@ $router->group('/api/v1', function($router) use ($modx, $tokenMiddleware) {
                 ]
             );
 
-            if ($response->isError()) {
-                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
-            }
-
-            return Response::success($response->getObject(), $response->getMessage());
+            return Response::fromProcessor($response);
         });
 
         $router->post('/add', function($params) use ($modx) {

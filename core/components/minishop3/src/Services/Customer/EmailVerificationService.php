@@ -4,6 +4,7 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Router\HttpStatus;
 use MODX\Revolution\Mail\modMail;
 use MODX\Revolution\modX;
 
@@ -267,6 +268,7 @@ class EmailVerificationService
             return [
                 'success' => false,
                 'message' => $this->modx->lexicon('ms3_email_already_verified'),
+                'code' => HttpStatus::BAD_REQUEST,
             ];
         }
 
@@ -278,6 +280,7 @@ class EmailVerificationService
             return [
                 'success' => false,
                 'message' => $this->modx->lexicon('ms3_email_verification_cooldown', ['seconds' => $remaining]),
+                'code' => HttpStatus::TOO_MANY_REQUESTS,
             ];
         }
 
@@ -294,6 +297,7 @@ class EmailVerificationService
         return [
             'success' => false,
             'message' => $this->modx->lexicon('ms3_email_verification_send_failed'),
+            'code' => HttpStatus::INTERNAL_SERVER_ERROR,
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
@@ -46,7 +47,8 @@ class Login extends Processor
                     'attempts' => $attempts,
                     'max' => $maxAttempts,
                     'minutes' => round($windowSeconds / 60)
-                ])
+                ]),
+                ['code' => HttpStatus::TOO_MANY_REQUESTS]
             );
         }
 
@@ -78,14 +80,20 @@ class Login extends Processor
                 default => 'ms3_customer_err_login_invalid',
             };
 
-            return $this->failure($this->modx->lexicon($messageKey));
+            return $this->failure(
+                $this->modx->lexicon($messageKey),
+                ['code' => HttpStatus::UNAUTHORIZED]
+            );
         }
 
         $rateLimiter->reset('login', $ip);
 
         $session = $authManager->establishCustomerSession($customer);
         if (!$session) {
-            return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
+            return $this->failure(
+                $this->modx->lexicon('ms3_customer_err_token_create'),
+                ['code' => HttpStatus::INTERNAL_SERVER_ERROR]
+            );
         }
 
         $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);
