@@ -428,12 +428,9 @@ class Customer
             $email = $orderData['address_email'] ?? '';
 
             if (!empty($email)) {
+                // Link order to existing account by email only.
+                // Never overwrite msCustomer.token — that hands the guest session the victim's account.
                 $msCustomer = $this->findByEmail($email);
-
-                if ($msCustomer) {
-                    $msCustomer->set('token', $this->token);
-                    $msCustomer->save();
-                }
             }
 
             if (empty($msCustomer)) {
@@ -555,16 +552,8 @@ class Customer
                         $this->autoLoginCustomer($msCustomer);
                     }
                 } else {
+                    // Email already registered: attach order only — no token/session takeover
                     $msCustomer = $this->findByEmail($email);
-
-                    if ($msCustomer) {
-                        $msCustomer->set('token', $this->token);
-                        $msCustomer->save();
-
-                        if ($autoLogin) {
-                            $this->autoLoginCustomer($msCustomer);
-                        }
-                    }
                 }
             }
         }
