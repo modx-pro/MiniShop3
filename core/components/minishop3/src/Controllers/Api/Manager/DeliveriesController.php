@@ -18,11 +18,54 @@ use MODX\Revolution\modX;
  */
 class DeliveriesController
 {
+    /**
+     * Public fields for GET /api/mgr/deliveries-active (order-form dropdown).
+     *
+     * Must never include integration secrets: properties, class, validation_rules.
+     */
+    public const ACTIVE_DROPDOWN_FIELDS = [
+        'id',
+        'name',
+        'price',
+        'active',
+        'position',
+    ];
+
     protected modX $modx;
 
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+    }
+
+    /**
+     * Active deliveries for order-form dropdowns (no integration secrets).
+     * GET /api/mgr/deliveries-active
+     */
+    public function getActiveDropdown(array $params = []): array
+    {
+        $this->modx->lexicon->load('minishop3:default');
+
+        $q = $this->modx->newQuery(msDelivery::class, ['active' => 1]);
+        $q->sortby('position', 'ASC');
+
+        $results = [];
+        foreach ($this->modx->getIterator(msDelivery::class, $q) as $delivery) {
+            $results[] = $this->formatActiveDropdownItem($delivery);
+        }
+
+        return Response::success(['results' => $results])->getData();
+    }
+
+    /**
+     * Project a delivery row to the dropdown whitelist (no MODX required).
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    public static function projectActiveDropdownFields(array $data): array
+    {
+        return array_intersect_key($data, array_flip(self::ACTIVE_DROPDOWN_FIELDS));
     }
 
     /**
@@ -374,6 +417,32 @@ class DeliveriesController
             'validation_rules' => $delivery->get('validation_rules'),
             'free_delivery_amount' => (float)$delivery->get('free_delivery_amount'),
         ];
+    }
+
+    /**
+     * Dropdown row: whitelist only + translated name.
+     */
+    protected function formatActiveDropdownItem(msDelivery $delivery): array
+    {
+        $data = [];
+        foreach (self::ACTIVE_DROPDOWN_FIELDS as $field) {
+            $raw = $delivery->get($field);
+            $data[$field] = match ($field) {
+                'id', 'position' => (int) $raw,
+                'active' => (int) (bool) $raw,
+                default => $raw,
+            };
+        }
+
+        $name = (string) ($data['name'] ?? '');
+        if ($name !== '' && str_starts_with($name, 'ms3_')) {
+            $translated = $this->modx->lexicon($name);
+            if ($translated !== $name) {
+                $data['name'] = $translated;
+            }
+        }
+
+        return $data;
     }
 
     /**
