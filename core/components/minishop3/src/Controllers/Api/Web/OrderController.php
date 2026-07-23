@@ -102,10 +102,7 @@ class OrderController
         }
 
         if (empty($fields) || !is_array($fields)) {
-            return Response::error(
-                $this->modx->lexicon('ms3_err_fields_required'),
-                HttpStatus::BAD_REQUEST
-            )->getData();
+            return Response::error($this->modx->lexicon('ms3_err_fields_required'), HttpStatus::BAD_REQUEST)->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -149,16 +146,10 @@ class OrderController
         $exists = $order->remove($key);
 
         if ($exists) {
-            return Response::success(
-                ['removed' => $key],
-                $this->modx->lexicon('ms3_order_remove_success')
-            )->getData();
-        } else {
-            return Response::error(
-                $this->modx->lexicon('ms3_err_field_nf'),
-                HttpStatus::NOT_FOUND
-            )->getData();
+            return Response::success(['removed' => $key], $this->modx->lexicon('ms3_order_remove_success'))->getData();
         }
+
+        return Response::error($this->modx->lexicon('ms3_err_field_nf'), HttpStatus::NOT_FOUND)->getData();
     }
 
     /**
