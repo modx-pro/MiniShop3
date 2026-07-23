@@ -961,13 +961,18 @@ $router->group('/api/mgr', function($router) use ($modx) {
         return $controller->getActiveDropdown($params);
     });
 
-    $router->group('/grid-config', function($router) use ($modx) {
-        $router->get('/{grid_key}', function($params) use ($modx) {
+    // Read: any mgr who can open grids (view_document). Write is global msGridField — mssetting_save.
+    $router->group('/grid-config', function ($router) use ($modx) {
+        $router->get('/{grid_key}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
             return $controller->getConfig($params);
         });
+    }, [
+        new PermissionMiddleware($modx, 'view_document')
+    ]);
 
-        $router->put('/{grid_key}', function($params) use ($modx) {
+    $router->group('/grid-config', function ($router) use ($modx) {
+        $router->put('/{grid_key}', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
             $data['grid_key'] = $params['grid_key'] ?? null;
@@ -976,7 +981,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
             return $controller->saveConfig($data);
         });
 
-        $router->post('/{grid_key}/field', function($params) use ($modx) {
+        $router->post('/{grid_key}/field', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
             $data['grid_key'] = $params['grid_key'] ?? null;
@@ -985,7 +990,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
             return $controller->addField($data);
         });
 
-        $router->put('/{grid_key}/field/{field_name}', function($params) use ($modx) {
+        $router->put('/{grid_key}/field/{field_name}', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
             $data['grid_key'] = $params['grid_key'] ?? null;
@@ -994,13 +999,13 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
             return $controller->updateField($data);
         });
-        $router->delete('/{grid_key}/{field_name}', function($params) use ($modx) {
+
+        $router->delete('/{grid_key}/{field_name}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\GridConfigController($modx);
             return $controller->deleteField($params);
         });
-
     }, [
-        new PermissionMiddleware($modx, 'view_document')
+        new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
     $router->group('/notifications', function($router) use ($modx) {
