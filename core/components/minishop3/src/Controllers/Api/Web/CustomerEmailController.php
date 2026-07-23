@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Api\Web;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\modX;
 
@@ -113,8 +114,22 @@ class CustomerEmailController
             return $this->error($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
         }
 
-        $_SESSION['ms3']['customer_id'] = $customer->id;
-        $_SESSION['ms3']['customer_token'] = $customer->get('token');
+        /** @var AuthManager $authManager */
+        $authManager = $this->modx->services->get('ms3_auth_manager');
+        $session = $authManager->establishApiSession($customer);
+
+        if (!$session) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[CustomerEmailController] Email verified for customer #{$customer->id} but API session establish failed"
+            );
+            if ($htmlFlow && !$formatJson) {
+                // Email already verified; do not send user to the verification-failed page
+                return Response::redirect($this->buildEmailVerificationSuccessRedirectUrl(), 302);
+            }
+
+            return $this->error($this->modx->lexicon('ms3_customer_err_token_create'));
+        }
 
         $this->modx->log(
             modX::LOG_LEVEL_INFO,
@@ -127,7 +142,11 @@ class CustomerEmailController
 
         return $this->success(
             $this->modx->lexicon('ms3_customer_email_verify_success'),
-            ['customer_id' => $customer->id]
+            [
+                'customer_id' => $customer->id,
+                'token' => $session['token'],
+                'expires_at' => $session['expires_at'],
+            ]
         );
     }
 

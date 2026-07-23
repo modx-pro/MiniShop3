@@ -515,6 +515,36 @@ class AuthManager
     }
 
     /**
+     * Whether a previous API token row may be migrated/revoked for this customer.
+     *
+     * null = no row (orphan draft by token string); 0 = guest; same id = own session.
+     * Foreign customer_id: no (do not steal or revoke another session).
+     *
+     * @param int|null $previousOwnerId customer_id on the previous token row; null if no row
+     */
+    public static function canMigratePreviousApiToken(?int $previousOwnerId, int $customerId): bool
+    {
+        return $previousOwnerId === null
+            || $previousOwnerId === 0
+            || $previousOwnerId === $customerId;
+    }
+
+    /**
+     * Issue a fresh API token after login/register/verify (token rotation).
+     *
+     * Compatibility alias for establishCustomerSession() (TokenService-backed).
+     * $previousToken is ignored: the presented cookie/session token is resolved
+     * inside establishCustomerSession via TokenService::getBindableTokenString().
+     *
+     * @param string|null $previousToken unused; kept for call-site compatibility
+     * @return array{token: string, expires_at: string}|null
+     */
+    public function establishApiSession(msCustomer $customer, ?string $previousToken = null): ?array
+    {
+        return $this->establishCustomerSession($customer);
+    }
+
+    /**
      * Revoke all customer tokens of specific type
      *
      * @param msCustomer $customer

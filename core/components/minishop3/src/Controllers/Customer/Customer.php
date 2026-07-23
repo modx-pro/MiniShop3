@@ -549,10 +549,10 @@ class Customer
         if ($msCustomer && $autoLogin) {
             /** @var AuthManager $authManager */
             $authManager = $this->modx->services->get('ms3_auth_manager');
-            if (!$authManager->establishCustomerSession($msCustomer)) {
+            if (!$authManager->establishApiSession($msCustomer)) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "[Customer] establishCustomerSession failed for customer #{$msCustomer->id}"
+                    "[Customer] establishApiSession failed for customer #{$msCustomer->id}"
                 );
             }
         }

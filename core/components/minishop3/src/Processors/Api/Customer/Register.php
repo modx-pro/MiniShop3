@@ -12,7 +12,7 @@ use MODX\Revolution\Processors\Processor;
  * Register - processor for registering a new customer
  *
  * Creates a new customer with validation and optional email verification.
- * On auto-login: binds existing session token to new customer (preserves guest cart).
+ * On auto-login: rotates API session token (anti token-fixation); guest cart may transfer.
  * Protected from spam via RateLimiter.
  *
  * @package MiniShop3\Processors\Api\Customer
@@ -82,11 +82,12 @@ class Register extends Processor
 
         $tokenString = null;
         $expiresAt = null;
+        $redirectUrl = '';
 
         if ($autoLogin && !$requireEmailVerification) {
             /** @var AuthManager $authManager */
             $authManager = $this->modx->services->get('ms3_auth_manager');
-            $session = $authManager->establishCustomerSession($customer);
+            $session = $authManager->establishApiSession($customer);
 
             if (!$session) {
                 return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
@@ -94,21 +95,17 @@ class Register extends Processor
 
             $tokenString = $session['token'];
             $expiresAt = $session['expires_at'];
-        }
 
-        $rateLimiter->reset('login', $ip);
-
-        $redirectUrl = '';
-        if ($autoLogin && !$requireEmailVerification) {
             $redirectPageId = (int)$this->getProperty('redirect_page_id', 0);
             if (!$redirectPageId) {
                 $redirectPageId = (int)$this->modx->getOption('ms3_customer_redirect_after_login', null, 0);
             }
-
             if ($redirectPageId > 0) {
                 $redirectUrl = $this->modx->makeUrl($redirectPageId, '', '', 'full');
             }
         }
+
+        $rateLimiter->reset('login', $ip);
 
         return $this->success($this->modx->lexicon('ms3_customer_register_success'), [
             'customer' => [
@@ -125,5 +122,4 @@ class Register extends Processor
             'redirect_url' => $redirectUrl,
         ]);
     }
-
 }

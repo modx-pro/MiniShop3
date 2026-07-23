@@ -83,7 +83,7 @@ class Login extends Processor
 
         $rateLimiter->reset('login', $ip);
 
-        $session = $authManager->establishCustomerSession($customer);
+        $session = $authManager->establishApiSession($customer);
         if (!$session) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
         }
