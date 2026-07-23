@@ -59,3 +59,6 @@ tmpclaude-*
 
 # PHPStan analysis trees (phpstan.neon + baseline are tracked)
 .phpstan-deps/
+
+# PHPUnit
+core/components/minishop3/.phpunit.cache/

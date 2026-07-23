@@ -34,7 +34,7 @@ npm run lint:ci
 PHPStan — отдельный job: `composer stan:prepare && composer stan` (pinned MODX/pdoTools в `.phpstan-deps`).
 
 - [ ] Ручное тестирование
-- [ ] Автоматические тесты (`composer ci:php`, `npm run lint:ci`, `composer stan` / GitHub Actions CI)
+- [ ] Автоматические тесты (`composer ci:php` / `composer test`, `npm run lint:ci`, `composer stan` / GitHub Actions CI)
 - [ ] Тестирование на разных версиях PHP/MODX
 
 **Конфигурация тестирования:**

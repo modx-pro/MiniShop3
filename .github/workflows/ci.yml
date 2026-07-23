@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   php:
-    name: PHP lint + smoke
+    name: PHP lint + smoke + PHPUnit
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,7 +37,7 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: PHP syntax check + smoke tests
+      - name: PHP syntax check + smoke + PHPUnit
         run: composer ci:php
 
   phpstan:

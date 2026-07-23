@@ -23,7 +23,13 @@
       "MiniShop3\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "MiniShop3\\Tests\\": "tests/"
+    }
+  },
   "scripts": {
+    "test": "phpunit",
     "test:smoke": "php tests/run-smoke.php",
     "ci:php": "bash scripts/ci-php.sh",
     "stan:prepare": "bash scripts/phpstan-prepare-deps.sh",
@@ -32,6 +38,7 @@
   "minimum-stability": "stable",
   "prefer-stable": true,
   "require-dev": {
-    "phpstan/phpstan": "^2.1"
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^11.5"
   }
 }
