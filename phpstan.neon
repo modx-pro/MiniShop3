@@ -1,0 +1,21 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+    paths:
+        - core/components/minishop3/src
+        - core/components/minishop3/elements/snippets
+        - core/components/minishop3/elements/tasks
+    excludePaths:
+        analyseAndScan:
+            - core/components/minishop3/src/Model/mysql (?)
+    scanDirectories:
+        - core/components/minishop3/vendor
+        # Filled by composer stan:prepare (or MS3_PHPSTAN_* env overrides).
+        - .phpstan-deps/modx/core/src
+        - .phpstan-deps/modx/core/vendor/xpdo
+        - .phpstan-deps/pdotools/core/components/pdotools/src
+    # Baseline covers historical findings; unmatched baseline entries do not fail CI.
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false

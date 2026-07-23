@@ -1,0 +1,7 @@
+# Shared pins for PHPStan analysis trees (sourced by phpstan-prepare-deps.sh).
+# Bump these + regenerate phpstan-baseline.neon when intentionally refreshing deps.
+# CI cache key uses hashFiles on this path — do not duplicate SHAs in the workflow.
+MODX_REPO="https://github.com/modxcms/revolution.git"
+MODX_REF="57be5f5b41082749e00d75b50ff47720bad75d10"
+PDOTOOLS_REPO="https://github.com/modx-pro/pdoTools.git"
+PDOTOOLS_REF="d19e5f6aecc10fa7d902047bcac407d096beb661"
