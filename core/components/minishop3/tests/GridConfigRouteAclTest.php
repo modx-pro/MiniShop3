@@ -19,12 +19,18 @@ if ($src === false || $src === '') {
     $fail('cannot read manager.php routes');
 }
 
-if (!preg_match_all(
-    "/\\\$router->group\(\s*'\/grid-config'\s*,\s*function\s*\([^)]*\)\s*use\s*\([^)]*\)\s*\{(.*?)\}\s*,\s*\[\s*new\s+PermissionMiddleware\(\s*\\\$modx\s*,\s*'([^']+)'\s*\)/s",
-    $src,
-    $matches,
-    PREG_SET_ORDER
-)) {
+$gridConfigGroupPattern =
+    "/\\\$router->group\(\s*'\/grid-config'\s*,\s*function\s*\([^)]*\)\s*use\s*\([^)]*\)"
+    . "\s*\{(.*?)\}\s*,\s*\[\s*new\s+PermissionMiddleware\(\s*\\\$modx\s*,\s*'([^']+)'\s*\)/s";
+
+if (
+    !preg_match_all(
+        $gridConfigGroupPattern,
+        $src,
+        $matches,
+        PREG_SET_ORDER
+    )
+) {
     $fail('no /grid-config route groups found');
 }
 
@@ -35,12 +41,14 @@ foreach ($matches as $match) {
     $body = $match[1];
     $perm = $match[2];
 
-    if (preg_match_all(
-        "/\\\$router->(get|put|post|delete)\(\s*'([^']+)'/",
-        $body,
-        $routeMatches,
-        PREG_SET_ORDER
-    )) {
+    if (
+        preg_match_all(
+            "/\\\$router->(get|put|post|delete)\(\s*'([^']+)'/",
+            $body,
+            $routeMatches,
+            PREG_SET_ORDER
+        )
+    ) {
         foreach ($routeMatches as $routeMatch) {
             $key = strtoupper($routeMatch[1]) . ' ' . $routeMatch[2];
             if (isset($routePerm[$key]) && $routePerm[$key] !== $perm) {
