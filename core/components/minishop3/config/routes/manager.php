@@ -22,7 +22,9 @@
  */
 
 use MiniShop3\Router\Middleware\AuthMiddleware;
+use MiniShop3\Router\Middleware\AnyPermissionMiddleware;
 use MiniShop3\Router\Middleware\PermissionMiddleware;
+use MiniShop3\Services\Category\CategoryProductActionPermissions;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 
@@ -291,13 +293,16 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Customers: permissions align with legacy Customer* processors (#378)
     $router->group('/customers', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
             $allParams = array_merge($_GET, $params);
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->getList($allParams);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_list')
+        ]);
         // Bulk delete - must be before /{id} route
         $router->delete('/bulk', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -305,11 +310,15 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->bulkDelete($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_remove')
+        ]);
         $router->get('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->get($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_view')
+        ]);
 
         $router->put('/{id}', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -318,15 +327,21 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->update($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save')
+        ]);
         $router->delete('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->delete($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_remove')
+        ]);
         $router->get('/{id}/addresses', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->getList($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_list')
+        ]);
         $router->post('/{id}/addresses', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -334,7 +349,9 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->create($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save')
+        ]);
         $router->put('/{id}/addresses/{address_id}', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -343,19 +360,20 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->update($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save')
+        ]);
         $router->delete('/{id}/addresses/{address_id}', function($params) use ($modx) {
             $params['address_id'] = $params['address_id'] ?? null;
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->delete($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_remove')
+        ]);
+    });
 
-    }, [
-        new PermissionMiddleware($modx, 'view_document')
-    ]);
-
-    // Category products routes
+    // Category products: read vs mutate permissions (#378)
     $router->group('/categories', function($router) use ($modx) {
         // Get products in category
         $router->get('/{id}/products', function($params) use ($modx) {
@@ -363,12 +381,16 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->getList($allParams);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'view_document')
+        ]);
         // Get filters configuration
         $router->get('/{id}/products/filters', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->getFilters($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'view_document')
+        ]);
         // Sort products (drag-drop)
         $router->post('/{id}/products/sort', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -377,7 +399,9 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->sort($allParams);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msproduct_save')
+        ]);
         // Bulk delete products
         $router->delete('/{id}/products/bulk', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -386,8 +410,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->bulkDelete($allParams);
-        });
-        // Multiple product actions
+        }, [
+            new PermissionMiddleware($modx, 'msproduct_delete')
+        ]);
+        // Multiple product actions — gate any product mutation perm; exact check per method in controller
         $router->post('/{id}/products/multiple', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -395,7 +421,12 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->multiple($allParams);
-        });
+        }, [
+            new AnyPermissionMiddleware(
+                $modx,
+                CategoryProductActionPermissions::mutationPermissions()
+            )
+        ]);
         // Toggle product publish status
         $router->post('/{id}/products/{productId}/publish', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -404,11 +435,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->publish($allParams);
-        });
-
-    }, [
-        new PermissionMiddleware($modx, 'view_document')
-    ]);
+        }, [
+            new PermissionMiddleware($modx, 'msproduct_publish')
+        ]);
+    });
 
     $router->group('/deliveries', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
