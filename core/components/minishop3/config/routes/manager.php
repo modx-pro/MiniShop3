@@ -22,7 +22,9 @@
  */
 
 use MiniShop3\Router\Middleware\AuthMiddleware;
+use MiniShop3\Router\Middleware\AnyPermissionMiddleware;
 use MiniShop3\Router\Middleware\PermissionMiddleware;
+use MiniShop3\Services\Category\CategoryProductActionPermissions;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 
@@ -49,6 +51,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
         ]);
     })->middleware(new AuthMiddleware($modx, 'mgr'));
 
+    // Config reads: any authenticated mgr (product forms load page-fields without settings perm)
     $router->group('/config', function($router) use ($modx) {
         $router->get('/page-fields/{page_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
@@ -58,6 +61,14 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->getAllPageFields($params);
         });
+        $router->get('/sections/{page_key}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->getSections($params);
+        });
+    });
+
+    // Config writes: mssetting_save — same gate as model-fields / extra-fields writes (#381)
+    $router->group('/config', function($router) use ($modx) {
         $router->put('/page-fields/{page_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->updatePageFields($params);
@@ -65,10 +76,6 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->delete('/page-fields/{page_key}/{field_name}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->deleteFieldOverride($params);
-        });
-        $router->get('/sections/{page_key}', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
-            return $controller->getSections($params);
         });
         $router->put('/sections/{page_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
@@ -78,8 +85,9 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->deleteSection($params);
         });
-
-    });
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
 
     $router->group('/models', function($router) use ($modx) {
         $router->get('/{alias}/fields', function($params) use ($modx) {
@@ -291,13 +299,16 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Customers: permissions align with legacy Customer* processors (#378)
     $router->group('/customers', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
             $allParams = array_merge($_GET, $params);
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->getList($allParams);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_list')
+        ]);
         // Bulk delete - must be before /{id} route
         $router->delete('/bulk', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -305,11 +316,15 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->bulkDelete($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_remove')
+        ]);
         $router->get('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->get($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_view')
+        ]);
 
         $router->put('/{id}', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -318,15 +333,21 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->update($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save')
+        ]);
         $router->delete('/{id}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomersController($modx);
             return $controller->delete($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_remove')
+        ]);
         $router->get('/{id}/addresses', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->getList($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_list')
+        ]);
         $router->post('/{id}/addresses', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -334,7 +355,9 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->create($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save')
+        ]);
         $router->put('/{id}/addresses/{address_id}', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -343,19 +366,20 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->update($data);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save')
+        ]);
         $router->delete('/{id}/addresses/{address_id}', function($params) use ($modx) {
             $params['address_id'] = $params['address_id'] ?? null;
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CustomerAddressesController($modx);
             return $controller->delete($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msorder_remove')
+        ]);
+    });
 
-    }, [
-        new PermissionMiddleware($modx, 'view_document')
-    ]);
-
-    // Category products routes
+    // Category products: read vs mutate permissions (#378)
     $router->group('/categories', function($router) use ($modx) {
         // Get products in category
         $router->get('/{id}/products', function($params) use ($modx) {
@@ -363,12 +387,16 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->getList($allParams);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'view_document')
+        ]);
         // Get filters configuration
         $router->get('/{id}/products/filters', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->getFilters($params);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'view_document')
+        ]);
         // Sort products (drag-drop)
         $router->post('/{id}/products/sort', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -377,7 +405,9 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->sort($allParams);
-        });
+        }, [
+            new PermissionMiddleware($modx, 'msproduct_save')
+        ]);
         // Bulk delete products
         $router->delete('/{id}/products/bulk', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -386,8 +416,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->bulkDelete($allParams);
-        });
-        // Multiple product actions
+        }, [
+            new PermissionMiddleware($modx, 'msproduct_delete')
+        ]);
+        // Multiple product actions — gate any product mutation perm; exact check per method in controller
         $router->post('/{id}/products/multiple', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -395,7 +427,12 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->multiple($allParams);
-        });
+        }, [
+            new AnyPermissionMiddleware(
+                $modx,
+                CategoryProductActionPermissions::mutationPermissions()
+            )
+        ]);
         // Toggle product publish status
         $router->post('/{id}/products/{productId}/publish', function($params) use ($modx) {
             $input = file_get_contents('php://input');
@@ -404,11 +441,10 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->publish($allParams);
-        });
-
-    }, [
-        new PermissionMiddleware($modx, 'view_document')
-    ]);
+        }, [
+            new PermissionMiddleware($modx, 'msproduct_publish')
+        ]);
+    });
 
     $router->group('/deliveries', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
@@ -830,96 +866,75 @@ $router->group('/api/mgr', function($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Orders reads: list/get and related GET under msorder_list (#377)
     $router->group('/orders', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
-            $allParams = array_merge($_GET, $params);
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->getList($allParams);
-        });
-        // Create new order - must be before /{id} route
-        $router->post('', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->create($data);
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->getList(array_merge($_GET, $params));
         });
         // Filters config - must be before /{id} route
         $router->get('/filters', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->getFilters($params);
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->getFilters($params);
+        });
+        $router->get('/{id}', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->get($params);
+        });
+        $router->get('/{id}/products', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->getProducts($params);
+        });
+        $router->get('/{id}/logs', function($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->getLogs($params);
+        });
+    }, [
+        new PermissionMiddleware($modx, 'msorder_list')
+    ]);
+
+    // Orders writes: mutations require msorder_save (#377)
+    $router->group('/orders', function($router) use ($modx) {
+        // Create new order - must be before /{id} route
+        $router->post('', function($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->create($data);
         });
         // Bulk delete - must be before /{id} route
         $router->delete('/bulk', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->bulkDelete($data);
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->bulkDelete($data);
         });
         // Finalize order (convert draft to final) - must be before /{id} route
         $router->post('/{id}/finalize', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->finalize($allParams);
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->finalize(array_merge($params, $data));
         });
         $router->post('/{id}/recalculate-cost', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->recalculateCost($allParams);
-        });
-        $router->get('/{id}', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->get($params);
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->recalculateCost(array_merge($params, $data));
         });
         $router->put('/{id}', function($params) use ($modx) {
-            $body = json_decode(file_get_contents('php://input'), true) ?: [];
-            $allParams = array_merge($params, $body, $_POST);
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->update($allParams);
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->update(array_merge($params, $data, $_POST));
         });
         $router->delete('/{id}', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->delete($params);
-        });
-        $router->get('/{id}/products', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->getProducts($params);
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->delete($params);
         });
         $router->post('/{id}/products', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->addProduct($allParams);
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->addProduct(array_merge($params, $data));
         });
         $router->put('/{id}/products/{product_id}', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->updateProduct($allParams);
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->updateProduct(array_merge($params, $data));
         });
         $router->delete('/{id}/products/{product_id}', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->deleteProduct($params);
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->deleteProduct($params);
         });
-        $router->get('/{id}/logs', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\OrdersController($modx);
-            return $controller->getLogs($params);
-        });
-
     }, [
-        new PermissionMiddleware($modx, 'msorder_list')
+        new PermissionMiddleware($modx, 'msorder_save')
     ]);
 
     // Statuses dropdown (with translated names for order forms)
