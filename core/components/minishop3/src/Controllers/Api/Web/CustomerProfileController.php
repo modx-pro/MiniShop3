@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MODX\Revolution\modX;
 use Rakit\Validation\Validator;
 
@@ -126,7 +127,7 @@ class CustomerProfileController
 
         return $this->success(
             $this->modx->lexicon('ms3_customer_profile_updated'),
-            ['customer' => $customer->toArray()]
+            ['customer' => CustomerPublicDto::fromCustomer($customer)]
         );
     }
 
@@ -204,7 +205,7 @@ class CustomerProfileController
             $this->modx->lexicon('ms3_customer_profile_updated'),
             [
                 $key => $customer->get($key),
-                'customer' => $customer->toArray(),
+                'customer' => CustomerPublicDto::fromCustomer($customer),
             ]
         );
     }
