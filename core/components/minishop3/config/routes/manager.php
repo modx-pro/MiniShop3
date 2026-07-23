@@ -51,6 +51,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
         ]);
     })->middleware(new AuthMiddleware($modx, 'mgr'));
 
+    // Config reads: any authenticated mgr (product forms load page-fields without settings perm)
     $router->group('/config', function($router) use ($modx) {
         $router->get('/page-fields/{page_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
@@ -60,6 +61,14 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->getAllPageFields($params);
         });
+        $router->get('/sections/{page_key}', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
+            return $controller->getSections($params);
+        });
+    });
+
+    // Config writes: mssetting_save — same gate as model-fields / extra-fields writes (#381)
+    $router->group('/config', function($router) use ($modx) {
         $router->put('/page-fields/{page_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->updatePageFields($params);
@@ -67,10 +76,6 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->delete('/page-fields/{page_key}/{field_name}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->deleteFieldOverride($params);
-        });
-        $router->get('/sections/{page_key}', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
-            return $controller->getSections($params);
         });
         $router->put('/sections/{page_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
@@ -80,8 +85,9 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->deleteSection($params);
         });
-
-    });
+    }, [
+        new PermissionMiddleware($modx, 'mssetting_save')
+    ]);
 
     $router->group('/models', function($router) use ($modx) {
         $router->get('/{alias}/fields', function($params) use ($modx) {
