@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Router\Middleware;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
 
@@ -31,7 +32,7 @@ class PermissionMiddleware implements MiddlewareInterface
         if (!$this->modx->hasPermission($this->permission)) {
             return Response::error(
                 "Access denied. Required permission: {$this->permission}",
-                403
+                HttpStatus::FORBIDDEN
             );
         }
 
