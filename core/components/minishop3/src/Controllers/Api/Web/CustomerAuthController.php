@@ -5,7 +5,6 @@ namespace MiniShop3\Controllers\Api\Web;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
-use MODX\Revolution\Processors\ProcessorResponse;
 
 /**
  * CustomerAuthController — login, register, logout, password recovery (Web API).
@@ -129,13 +128,13 @@ class CustomerAuthController
      */
     private function runProcessor(string $processorClass, array $properties): Response
     {
-        /** @var ProcessorResponse $response */
+        /** @var object{isError(): bool, getMessage(): string, getObject(): mixed} $response */
         $response = $this->modx->runProcessor($processorClass, $properties);
 
         return $this->toResponse($response);
     }
 
-    private function toResponse(ProcessorResponse $response): Response
+    private function toResponse(object $response): Response
     {
         if ($response->isError()) {
             $payload = $response->getObject();
