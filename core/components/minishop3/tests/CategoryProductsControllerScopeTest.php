@@ -30,9 +30,14 @@ $assertSame = static function ($expected, $actual, string $case) use ($fail): vo
 };
 
 $modx = new CategoryProductScopeModxStub();
-$modx->setPermissions(['msproduct_publish', 'msproduct_delete']);
+$modx->setPermissions(['msproduct_publish', 'msproduct_delete', 'msproduct_save']);
 $modx->products = [
     ['id' => 999, 'parent' => 2, 'published' => 0],
+    ['id' => 100, 'parent' => 1, 'published' => 0],
+    ['id' => 101, 'parent' => 2, 'published' => 0],
+];
+$modx->categories = [
+    ['id' => 2, 'parent' => 1],
 ];
 
 $controller = new CategoryProductsController($modx);
@@ -49,6 +54,7 @@ $assertSame(HttpStatus::NOT_FOUND, $foreignPublish['code'] ?? null, 'foreign pub
 $productCalls = array_values(array_filter(
     $modx->getObjectCalls,
     static fn(array $call): bool => ($call['class'] ?? '') === msProduct::class
+        && is_array($call['criteria'] ?? null)
 ));
 $assertSame(['id' => 999, 'parent' => 1], $productCalls[0]['criteria'] ?? null, 'publish scope criteria');
 
@@ -72,5 +78,14 @@ $assertSame(HttpStatus::BAD_REQUEST, $noCatMultiple['code'] ?? null, 'multiple m
 // bulkDelete delegates to multiple with same scope
 $bulkDelete = $controller->bulkDelete(['id' => 1, 'ids' => [999]]);
 $assertSame(false, $bulkDelete['success'] ?? null, 'bulkDelete all foreign');
+
+// sort happy path: in-category product reordered
+$modx->getObjectCalls = [];
+$sort = $controller->sort([
+    'id' => 1,
+    'items' => [['id' => 100, 'menuindex' => 5]],
+]);
+$assertSame(true, $sort['success'] ?? null, 'sort success');
+$assertSame(1, $sort['data']['updated'] ?? null, 'sort updated count');
 
 fwrite(STDOUT, "OK: CategoryProductsControllerScopeTest\n");

@@ -146,8 +146,7 @@ final class CategoryProductsListService
         $c->where(['msProduct.class_key' => msProduct::class]);
 
         if ($nested) {
-            $categoryIds = $this->getChildCategories($categoryId);
-            $categoryIds[] = $categoryId;
+            $categoryIds = $this->treeService()->productParentIds($categoryId, true);
             $c->where(['msProduct.parent:IN' => $categoryIds]);
         } else {
             $c->where(['msProduct.parent' => $categoryId]);
@@ -209,34 +208,21 @@ final class CategoryProductsListService
         return $c;
     }
 
+    private function treeService(): CategoryTreeService
+    {
+        $service = $this->modx->services->get('ms3_category_tree');
+
+        return $service instanceof CategoryTreeService
+            ? $service
+            : new CategoryTreeService($this->modx);
+    }
+
     /**
      * Option keys are validated to [a-z0-9_]; still escape single quotes for SQL string literals.
      */
     private function quoteOptionKeyForJoinCondition(string $key): string
     {
         return str_replace("'", "''", $key);
-    }
-
-    /**
-     * @return list<int>
-     */
-    private function getChildCategories(int $parentId): array
-    {
-        $ids = [];
-
-        $children = $this->modx->getIterator(msCategory::class, [
-            'parent' => $parentId,
-            'deleted' => 0,
-            'class_key' => msCategory::class,
-        ]);
-
-        foreach ($children as $child) {
-            $childId = (int) $child->get('id');
-            $ids[] = $childId;
-            $ids = array_merge($ids, $this->getChildCategories($childId));
-        }
-
-        return $ids;
     }
 
     /**

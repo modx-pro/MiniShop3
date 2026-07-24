@@ -6,7 +6,7 @@ use MiniShop3\Model\msProduct;
 use MODX\Revolution\modX;
 
 /**
- * Resolves msProduct membership in a category (parent = category id).
+ * Resolves msProduct membership in a category grid context (direct or nested children).
  *
  * Used by CategoryProductsController mutations to prevent IDOR across categories.
  */
@@ -17,20 +17,48 @@ class CategoryProductScopeService
     }
 
     /**
-     * Load product only when it belongs to the given category.
+     * @return msProduct|null
      */
-    public function findInCategory(int $categoryId, int $productId): ?msProduct
+    public function findInCategory(int $categoryId, int $productId, bool $nested = false)
     {
         if ($categoryId <= 0 || $productId <= 0) {
             return null;
         }
 
-        /** @var msProduct|null $product */
-        $product = $this->modx->getObject(msProduct::class, [
-            'id' => $productId,
-            'parent' => $categoryId,
-        ]);
+        $allowedParents = $this->treeService()->productParentIds($categoryId, $nested);
 
-        return $product;
+        if ($allowedParents === []) {
+            return null;
+        }
+
+        if (!$nested) {
+            /** @var msProduct|null $product */
+            $product = $this->modx->getObject(msProduct::class, [
+                'id' => $productId,
+                'parent' => $categoryId,
+            ]);
+
+            return $product;
+        }
+
+        /** @var msProduct|null $product */
+        $product = $this->modx->getObject(msProduct::class, $productId);
+
+        if (!$product) {
+            return null;
+        }
+
+        return in_array((int) $product->get('parent'), $allowedParents, true) ? $product : null;
+    }
+
+    private function treeService(): CategoryTreeService
+    {
+        $service = isset($this->modx->services)
+            ? $this->modx->services->get('ms3_category_tree')
+            : null;
+
+        return $service instanceof CategoryTreeService
+            ? $service
+            : new CategoryTreeService($this->modx);
     }
 }

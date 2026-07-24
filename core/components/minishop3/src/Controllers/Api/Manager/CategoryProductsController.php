@@ -116,6 +116,7 @@ class CategoryProductsController
     {
         $categoryId = (int) ($params['id'] ?? 0);
         $items = $params['items'] ?? [];
+        $nested = $this->isNested($params);
 
         if (!$categoryId) {
             return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
@@ -137,7 +138,7 @@ class CategoryProductsController
                 continue;
             }
 
-            $product = $scope->findInCategory($categoryId, $productId);
+            $product = $scope->findInCategory($categoryId, $productId, $nested);
 
             if ($product) {
                 $product->set('menuindex', $menuindex);
@@ -164,6 +165,7 @@ class CategoryProductsController
         $categoryId = (int) ($params['id'] ?? 0);
         $method = $params['method'] ?? '';
         $ids = $params['ids'] ?? [];
+        $nested = $this->isNested($params);
 
         if (!$categoryId) {
             return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
@@ -213,7 +215,7 @@ class CategoryProductsController
         $scope = $this->scopeService();
 
         foreach ($ids as $id) {
-            $product = $scope->findInCategory($categoryId, $id);
+            $product = $scope->findInCategory($categoryId, $id, $nested);
 
             if (!$product) {
                 $failed++;
@@ -275,6 +277,7 @@ class CategoryProductsController
         $categoryId = (int) ($params['id'] ?? 0);
         $productId = (int) ($params['productId'] ?? 0);
         $published = isset($params['published']) ? (int) $params['published'] : null;
+        $nested = $this->isNested($params);
 
         if (!$categoryId) {
             return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
@@ -289,7 +292,7 @@ class CategoryProductsController
         }
 
         $scope = $this->scopeService();
-        $product = $scope->findInCategory($categoryId, $productId);
+        $product = $scope->findInCategory($categoryId, $productId, $nested);
 
         if (!$product) {
             return Response::error('Product not found', HttpStatus::NOT_FOUND)->getData();
@@ -308,6 +311,15 @@ class CategoryProductsController
             'id' => $productId,
             'published' => $published,
         ], $published ? 'Product published' : 'Product unpublished')->getData();
+    }
+
+    private function isNested(array $params): bool
+    {
+        $nested = $params['nested'] ?? false;
+
+        return filter_var($nested, FILTER_VALIDATE_BOOLEAN)
+            || $nested === 1
+            || $nested === '1';
     }
 
     private function scopeService(): CategoryProductScopeService

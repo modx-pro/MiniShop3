@@ -49,6 +49,7 @@ const {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
       ids,
+      ...nestedMutationParams(),
     })
   },
   onSuccess: () => loadProducts(),
@@ -115,6 +116,11 @@ const sortedFilters = computed(() => {
 const canDrag = computed(() => {
   return dragEnabled.value && sortField.value === 'menuindex' && !nested.value
 })
+
+/** Pass nested grid mode to category product mutations (scope must match list). */
+function nestedMutationParams() {
+  return { nested: nested.value ? 1 : 0 }
+}
 
 /**
  * Load products list
@@ -203,7 +209,10 @@ async function onDragEnd() {
       menuindex: first.value + index,
     }))
 
-    await request.post(`/api/mgr/categories/${props.categoryId}/products/sort`, { items })
+    await request.post(`/api/mgr/categories/${props.categoryId}/products/sort`, {
+      items,
+      ...nestedMutationParams(),
+    })
 
     toast.add({
       severity: 'success',
@@ -248,6 +257,7 @@ async function deleteProduct(product) {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
       ids: [product.id],
+      ...nestedMutationParams(),
     })
 
     toast.add({
@@ -298,6 +308,7 @@ async function bulkPublish() {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'publish',
       ids,
+      ...nestedMutationParams(),
     })
     toast.add({
       severity: 'success',
@@ -326,6 +337,7 @@ async function bulkUnpublish() {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'unpublish',
       ids,
+      ...nestedMutationParams(),
     })
     toast.add({
       severity: 'success',
@@ -564,6 +576,7 @@ async function togglePublish(product) {
     const newStatus = product.published ? 0 : 1
     await request.post(`/api/mgr/categories/${props.categoryId}/products/${product.id}/publish`, {
       published: newStatus,
+      ...nestedMutationParams(),
     })
     toast.add({
       severity: 'success',
