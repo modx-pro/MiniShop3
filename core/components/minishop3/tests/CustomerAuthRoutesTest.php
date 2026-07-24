@@ -48,13 +48,36 @@ $hasTokenMiddleware = static function (array $middlewares): bool {
 
 $handlerUsesAuthController = static function (callable $handler, string $methodName) use ($fail): void {
     if (!$handler instanceof Closure) {
-        $fail("auth route handler must be a closure");
+        $fail('auth route handler must be a closure');
     }
 
     $reflection = new ReflectionFunction($handler);
     $staticVariables = $reflection->getStaticVariables();
-    if (!array_key_exists('modx', $staticVariables)) {
-        $fail("auth route closure must capture \$modx");
+    if (!array_key_exists('customerAuth', $staticVariables)) {
+        $fail('auth route closure must capture $customerAuth factory');
+    }
+
+    $factory = $staticVariables['customerAuth'];
+    if (!$factory instanceof Closure) {
+        $fail('$customerAuth must be a closure factory');
+    }
+
+    $factoryReflection = new ReflectionFunction($factory);
+    $factoryFile = $factoryReflection->getFileName();
+    $factoryStart = $factoryReflection->getStartLine();
+    $factoryEnd = $factoryReflection->getEndLine();
+    if ($factoryFile === false || $factoryStart <= 0 || $factoryEnd < $factoryStart) {
+        $fail('unable to inspect $customerAuth factory');
+    }
+
+    $factorySource = implode("\n", array_slice(
+        file($factoryFile, FILE_IGNORE_NEW_LINES) ?: [],
+        $factoryStart - 1,
+        $factoryEnd - $factoryStart + 1
+    ));
+
+    if (!str_contains($factorySource, CustomerAuthController::class)) {
+        $fail('$customerAuth factory must instantiate CustomerAuthController');
     }
 
     $file = $reflection->getFileName();
@@ -64,15 +87,14 @@ $handlerUsesAuthController = static function (callable $handler, string $methodN
         $fail('unable to inspect auth route closure source');
     }
 
-    $lines = array_slice(
+    $source = implode("\n", array_slice(
         file($file, FILE_IGNORE_NEW_LINES) ?: [],
         $startLine - 1,
         $endLine - $startLine + 1
-    );
-    $source = implode("\n", $lines);
+    ));
 
-    if (!str_contains($source, CustomerAuthController::class)) {
-        $fail("auth route handler must delegate to CustomerAuthController");
+    if (!str_contains($source, '$customerAuth()')) {
+        $fail('auth route handler must delegate through $customerAuth()');
     }
 
     if (!str_contains($source, "->{$methodName}(")) {

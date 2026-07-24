@@ -28,7 +28,6 @@
  * @version 1.0.0
  */
 
-use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Middleware\TokenMiddleware;
 use MiniShop3\Middleware\CorsMiddleware;
@@ -133,24 +132,27 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
     }, [$tokenMiddleware]);
 
     $router->group('/customer', function ($router) use ($modx, $tokenMiddleware) {
-        $router->post('/login', function ($params) use ($modx) {
-            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->loginFromRequest();
+        $customerAuth = static fn (): \MiniShop3\Controllers\Api\Web\CustomerAuthController =>
+            new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
+
+        $router->post('/login', function ($params) use ($customerAuth) {
+            return $customerAuth()->loginFromRequest();
         });
 
-        $router->post('/register', function ($params) use ($modx) {
-            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->registerFromRequest();
+        $router->post('/register', function ($params) use ($customerAuth) {
+            return $customerAuth()->registerFromRequest();
         });
 
-        $router->post('/logout', function ($params) use ($modx) {
-            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->logout();
+        $router->post('/logout', function ($params) use ($customerAuth) {
+            return $customerAuth()->logout();
         }, [$tokenMiddleware]);
 
-        $router->post('/forgot-password', function ($params) use ($modx) {
-            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->forgotPasswordFromRequest();
+        $router->post('/forgot-password', function ($params) use ($customerAuth) {
+            return $customerAuth()->forgotPasswordFromRequest();
         });
 
-        $router->post('/reset-password', function ($params) use ($modx) {
-            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->resetPasswordFromRequest();
+        $router->post('/reset-password', function ($params) use ($customerAuth) {
+            return $customerAuth()->resetPasswordFromRequest();
         });
 
         $router->post('/add', function ($params) use ($modx) {
