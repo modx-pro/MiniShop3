@@ -14,13 +14,16 @@ use MiniShop3\Model\msPayment;
 use MODX\Revolution\modX;
 
 /**
- * Explicit manager-side recomputation of order totals from persisted msOrderProducts
- * and configured delivery/payment methods (without mutating unrelated order fields).
+ * Recomputation of order totals from persisted msOrderProducts and configured delivery/payment.
+ *
+ * Used by manager «Пересчитать стоимость» ({@see calculateBreakdown()} / {@see recalculate()})
+ * and draft finalize ({@see OrderFinalizeService}).
  *
  * External delivery/payment provider classes are not invoked in {@see self::MODE_AUTO};
  * callers should use manual delivery cost or {@see self::MODE_FORCE_PROVIDER}.
  *
  * Payment commission is reflected only in aggregated {@see msOrder cost}, not stored in a column.
+ * Default handler math lives in {@see OrderPersistedCostRules}.
  */
 class ManagerOrderCostRecalculator
 {
@@ -349,14 +352,7 @@ class ManagerOrderCostRecalculator
 
     protected function calculateDefaultDeliveryCost(msDelivery $delivery, float $cartCost, float $orderWeight): float
     {
-        $freeDeliveryAmount = (float)$delivery->get('free_delivery_amount');
-
-        if ($freeDeliveryAmount > 0 && $cartCost >= $freeDeliveryAmount) {
-            return 0.0;
-        }
-
-        $deliveryCost = 0.0;
-        $weightPrice = (float)$delivery->get('weight_price');
+        $weightPrice = (float) $delivery->get('weight_price');
         if ($weightPrice < 0) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -364,17 +360,10 @@ class ManagerOrderCostRecalculator
                     'id'
                 ) . ': ' . $weightPrice,
             );
-            $weightPrice = 0;
         }
-
-        $deliveryCost += $weightPrice * $orderWeight;
 
         $addPrice = $delivery->get('price');
-        if (empty($addPrice)) {
-            return round($deliveryCost, 6);
-        }
-
-        if (PriceAdjustment::isPercent($addPrice)) {
+        if (!empty($addPrice) && PriceAdjustment::isPercent($addPrice)) {
             $percent = PriceAdjustment::getPercent($addPrice);
             if (!PriceAdjustment::isAllowedPercent($percent)) {
                 $this->modx->log(
@@ -385,12 +374,16 @@ class ManagerOrderCostRecalculator
                         $percent
                     )
                 );
-
-                return round($deliveryCost, 6);
             }
         }
 
-        return round($deliveryCost + PriceAdjustment::calculate($cartCost, $addPrice), 6);
+        return OrderPersistedCostRules::calculateDefaultDeliveryCost(
+            (float) $delivery->get('free_delivery_amount'),
+            $weightPrice,
+            $addPrice,
+            $cartCost,
+            $orderWeight
+        );
     }
 
     /**
@@ -399,11 +392,7 @@ class ManagerOrderCostRecalculator
     protected function calculateDefaultPaymentCommission(msPayment $payment, float $baseCost): float
     {
         $addPrice = $payment->get('price');
-        if (empty($addPrice)) {
-            return 0.0;
-        }
-
-        if (PriceAdjustment::isPercent($addPrice)) {
+        if (!empty($addPrice) && PriceAdjustment::isPercent($addPrice)) {
             $percent = PriceAdjustment::getPercent($addPrice);
             if (!PriceAdjustment::isAllowedPercent($percent)) {
                 $this->modx->log(
@@ -414,12 +403,10 @@ class ManagerOrderCostRecalculator
                         $percent
                     )
                 );
-
-                return 0.0;
             }
         }
 
-        return round(PriceAdjustment::calculate($baseCost, $addPrice), 6);
+        return OrderPersistedCostRules::calculateDefaultPaymentCommission($addPrice, $baseCost);
     }
 
     protected function isSimpleDelivery(msDelivery $delivery): bool
