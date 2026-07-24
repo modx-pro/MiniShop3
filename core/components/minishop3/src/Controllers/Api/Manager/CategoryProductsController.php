@@ -7,6 +7,7 @@ use MiniShop3\Model\msProduct;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Category\CategoryProductActionPermissions;
+use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Category\CategoryProductsListService;
 use MiniShop3\Services\FilterConfigManager;
 use MODX\Revolution\modX;
@@ -126,6 +127,8 @@ class CategoryProductsController
 
         $updated = 0;
 
+        $scope = $this->scopeService();
+
         foreach ($items as $item) {
             $productId = (int) ($item['id'] ?? 0);
             $menuindex = (int) ($item['menuindex'] ?? 0);
@@ -134,10 +137,7 @@ class CategoryProductsController
                 continue;
             }
 
-            $product = $this->modx->getObject(msProduct::class, [
-                'id' => $productId,
-                'parent' => $categoryId,
-            ]);
+            $product = $scope->findInCategory($categoryId, $productId);
 
             if ($product) {
                 $product->set('menuindex', $menuindex);
@@ -161,8 +161,13 @@ class CategoryProductsController
      */
     public function multiple(array $params = []): array
     {
+        $categoryId = (int) ($params['id'] ?? 0);
         $method = $params['method'] ?? '';
         $ids = $params['ids'] ?? [];
+
+        if (!$categoryId) {
+            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
 
         if (empty($method)) {
             return Response::error('Method is required', HttpStatus::BAD_REQUEST)->getData();
@@ -205,9 +210,10 @@ class CategoryProductsController
 
         $success = 0;
         $failed = 0;
+        $scope = $this->scopeService();
 
         foreach ($ids as $id) {
-            $product = $this->modx->getObject(msProduct::class, $id);
+            $product = $scope->findInCategory($categoryId, $id);
 
             if (!$product) {
                 $failed++;
@@ -266,8 +272,13 @@ class CategoryProductsController
      */
     public function publish(array $params = []): array
     {
+        $categoryId = (int) ($params['id'] ?? 0);
         $productId = (int) ($params['productId'] ?? 0);
         $published = isset($params['published']) ? (int) $params['published'] : null;
+
+        if (!$categoryId) {
+            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
 
         if (!$productId) {
             return Response::error('Product ID is required', HttpStatus::BAD_REQUEST)->getData();
@@ -277,7 +288,8 @@ class CategoryProductsController
             return $denied;
         }
 
-        $product = $this->modx->getObject(msProduct::class, $productId);
+        $scope = $this->scopeService();
+        $product = $scope->findInCategory($categoryId, $productId);
 
         if (!$product) {
             return Response::error('Product not found', HttpStatus::NOT_FOUND)->getData();
@@ -296,6 +308,17 @@ class CategoryProductsController
             'id' => $productId,
             'published' => $published,
         ], $published ? 'Product published' : 'Product unpublished')->getData();
+    }
+
+    private function scopeService(): CategoryProductScopeService
+    {
+        $service = isset($this->modx->services)
+            ? $this->modx->services->get('ms3_category_product_scope')
+            : null;
+
+        return $service instanceof CategoryProductScopeService
+            ? $service
+            : new CategoryProductScopeService($this->modx);
     }
 
     private function denyWithoutPermission(string $permission): ?array
