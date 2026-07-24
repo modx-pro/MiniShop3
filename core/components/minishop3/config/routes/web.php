@@ -137,55 +137,42 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
-            $email = $data['email'] ?? '';
-            $password = $data['password'] ?? '';
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
 
-            $response = $modx->runProcessor(
-                'MiniShop3\Processors\Api\Customer\Login',
-                [
-                    'email' => $email,
-                    'password' => $password
-                ]
-            );
-
-            return Response::fromProcessor($response);
+            return $controller->login($data);
         });
-        $router->post('/logout', function ($params) use ($modx) {
-            $response = $modx->runProcessor(
-                'MiniShop3\Processors\Api\Customer\Logout',
-                []
-            );
 
-            if ($response->isError()) {
-                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
-            }
-
-            return Response::success($response->getObject() ?: [], $response->getMessage());
-        }, [$tokenMiddleware]);
         $router->post('/register', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
-            $email = $data['email'] ?? '';
-            $password = $data['password'] ?? '';
-            $firstName = $data['first_name'] ?? '';
-            $lastName = $data['last_name'] ?? '';
-            $phone = $data['phone'] ?? '';
-            $privacyAccepted = !empty($data['privacy_accepted']);
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
 
-            $response = $modx->runProcessor(
-                'MiniShop3\Processors\Api\Customer\Register',
-                [
-                    'email' => $email,
-                    'password' => $password,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'phone' => $phone,
-                    'privacy_accepted' => $privacyAccepted
-                ]
-            );
+            return $controller->register($data);
+        });
 
-            return Response::fromProcessor($response);
+        $router->post('/logout', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
+
+            return $controller->logout();
+        }, [$tokenMiddleware]);
+
+        $router->post('/forgot-password', function ($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
+
+            return $controller->forgotPassword($data);
+        });
+
+        $router->post('/reset-password', function ($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
+
+            return $controller->resetPassword($data);
         });
 
         $router->post('/add', function ($params) use ($modx) {

@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Api\Customer;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
@@ -33,11 +34,17 @@ class ForgotPassword extends Processor
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         if (!$rateLimiter->check('forgot_password', $ip, 3, 3600)) {
-            return $this->failure($this->modx->lexicon('ms3_customer_err_forgot_password_rate_limit'));
+            return $this->failure(
+                $this->modx->lexicon('ms3_customer_err_forgot_password_rate_limit'),
+                ['code' => HttpStatus::TOO_MANY_REQUESTS]
+            );
         }
 
         if (!$rateLimiter->check('forgot_password_email', $email, 1, 300)) {
-            return $this->failure($this->modx->lexicon('ms3_customer_err_forgot_password_email_cooldown'));
+            return $this->failure(
+                $this->modx->lexicon('ms3_customer_err_forgot_password_email_cooldown'),
+                ['code' => HttpStatus::TOO_MANY_REQUESTS]
+            );
         }
 
         /** @var msCustomer $customer */
