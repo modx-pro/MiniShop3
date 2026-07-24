@@ -108,11 +108,14 @@ class OrderFinalizeService
             return $costResult;
         }
 
+        $costWarnings = $costResult['data']['warnings'] ?? [];
+
         // Persist costs; allocate num under GET_LOCK when still empty (#380)
         $order->set('updatedon', time());
         $order->set('cost', $costResult['data']['total_cost']);
         $order->set('cart_cost', $costResult['data']['cart_cost']);
         $order->set('delivery_cost', $costResult['data']['delivery_cost']);
+        $order->set('weight', $costResult['data']['weight']);
 
         try {
             if (empty($order->get('num'))) {
@@ -191,6 +194,7 @@ class OrderFinalizeService
             'order_id' => $order->get('id'),
             'order_num' => $order->get('num'),
             'status_id' => $order->get('status_id'),
+            'cost_warnings' => $costWarnings,
         ]);
     }
 
@@ -402,50 +406,34 @@ class OrderFinalizeService
      */
     protected function calculateCosts(msOrder $order): array
     {
-        // Calculate cart cost from order products
-        $cartCost = 0;
-        $weight = 0;
+        $recalculator = new ManagerOrderCostRecalculator($this->modx, $this->ms3);
+        $result = $recalculator->calculateBreakdown($order);
 
-        $products = $this->modx->getIterator(msOrderProduct::class, [
-            'order_id' => $order->get('id'),
-        ]);
-
-        foreach ($products as $product) {
-            $cartCost += (float) $product->get('cost');
-            $weight += (float) $product->get('weight') * (int) $product->get('count');
+        if (!$result['success']) {
+            return $result;
         }
 
-        // Calculate delivery cost
-        $deliveryCost = 0;
-        $deliveryId = (int) $order->get('delivery_id');
+        $breakdown = $result['data']['breakdown'];
+        $warnings = $result['data']['warnings'] ?? [];
 
-        if ($deliveryId > 0) {
-            /** @var msDelivery $delivery */
-            $delivery = $this->modx->getObject(msDelivery::class, $deliveryId);
-            if ($delivery) {
-                // Use delivery's getCost method if available, otherwise use fixed price
-                $deliveryCost = (float) $delivery->get('price');
-
-                // Check for weight-based pricing
-                $weightPrice = (float) $delivery->get('weight_price');
-                if ($weightPrice > 0 && $weight > 0) {
-                    $deliveryCost += $weight * $weightPrice;
-                }
-            }
+        if ($warnings !== []) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[OrderFinalizeService] Cost calculation warnings for order #'
+                . $order->get('id')
+                . ': '
+                . implode(', ', $warnings)
+            );
         }
 
-        // Update order weight
-        $order->set('weight', $weight);
-
-        /** @var OrderService $orderService */
-        $orderService = $this->modx->services->get('ms3_order_service');
-        $totalCost = $orderService->clampComputedTotal($order, (float) $cartCost, (float) $deliveryCost, 0.0);
+        $order->set('weight', $breakdown['weight']);
 
         return $this->success('', [
-            'cart_cost' => $cartCost,
-            'delivery_cost' => $deliveryCost,
-            'total_cost' => $totalCost,
-            'weight' => $weight,
+            'cart_cost' => $breakdown['cart_cost'],
+            'delivery_cost' => $breakdown['delivery_cost'],
+            'total_cost' => $breakdown['cost'],
+            'weight' => $breakdown['weight'],
+            'warnings' => $warnings,
         ]);
     }
 

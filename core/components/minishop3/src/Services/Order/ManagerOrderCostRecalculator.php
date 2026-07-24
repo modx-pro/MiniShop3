@@ -67,18 +67,16 @@ class ManagerOrderCostRecalculator
     }
 
     /**
+     * Compute cost breakdown without persisting the order.
+     *
+     * Shared by manager recalculate and draft finalize so both paths use the same rules.
+     *
      * @param array<string, mixed> $options
      * @return array{success: bool, message?: string, data?: array}
      */
-    public function recalculate(msOrder $order, array $options = []): array
+    public function calculateBreakdown(msOrder $order, array $options = []): array
     {
         $mode = (string) ($options['mode'] ?? self::MODE_AUTO);
-
-        $totals = $this->calculateProductTotals($order);
-        $cartCost = $totals['cart_cost'];
-        $orderWeight = $totals['weight'];
-
-        $warnings = [];
 
         if ($mode !== self::MODE_AUTO && $mode !== self::MODE_MANUAL && $mode !== self::MODE_FORCE_PROVIDER) {
             return $this->ms3->utils->error('ms3_mgr_order_recalc_invalid_mode');
@@ -88,6 +86,12 @@ class ManagerOrderCostRecalculator
             return $this->ms3->utils->error('ms3_mgr_order_recalc_manual_delivery_missing');
         }
 
+        $totals = $this->calculateProductTotals($order);
+        $cartCost = $totals['cart_cost'];
+        $orderWeight = $totals['weight'];
+
+        $warnings = [];
+
         $prevDeliveryCost = round((float) $order->get('delivery_cost'), 6);
         $deliveryResult = $this->resolveDeliveryCost($order, $cartCost, $orderWeight, $prevDeliveryCost, $mode, $options);
         if (!$deliveryResult['success']) {
@@ -95,7 +99,6 @@ class ManagerOrderCostRecalculator
         }
 
         $warnings = array_merge($warnings, $deliveryResult['warnings']);
-
         $deliveryCost = $deliveryResult['delivery_cost'];
 
         $paymentBase = round($cartCost + $deliveryCost, 6);
@@ -105,12 +108,42 @@ class ManagerOrderCostRecalculator
         }
 
         $warnings = array_merge($warnings, $paymentResult['warnings']);
-
         $paymentFee = $paymentResult['payment_fee'];
 
         /** @var OrderService $orderService */
         $orderService = $this->modx->services->get('ms3_order_service');
         $cost = round($orderService->clampComputedTotal($order, $cartCost, $deliveryCost, $paymentFee), 6);
+
+        return $this->ms3->utils->success('', [
+            'breakdown' => [
+                'cart_cost' => $cartCost,
+                'weight' => $orderWeight,
+                'delivery_cost' => $deliveryCost,
+                'payment_cost' => $paymentFee,
+                'cost' => $cost,
+            ],
+            'warnings' => $warnings,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     * @return array{success: bool, message?: string, data?: array}
+     */
+    public function recalculate(msOrder $order, array $options = []): array
+    {
+        $result = $this->calculateBreakdown($order, $options);
+        if (!$result['success']) {
+            return $result;
+        }
+
+        $breakdown = $result['data']['breakdown'];
+        $warnings = $result['data']['warnings'];
+        $cartCost = $breakdown['cart_cost'];
+        $orderWeight = $breakdown['weight'];
+        $deliveryCost = $breakdown['delivery_cost'];
+        $paymentFee = $breakdown['payment_cost'];
+        $cost = $breakdown['cost'];
 
         $before = [
             'cart_cost' => (float)$order->get('cart_cost'),
