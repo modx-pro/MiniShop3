@@ -130,6 +130,22 @@ class ManagerOrderCostRecalculator
     }
 
     /**
+     * Persist breakdown totals on the order (shared by recalculate and draft preview paths).
+     *
+     * @param array{cart_cost: float|int, weight: float|int, delivery_cost: float|int, cost: float|int} $breakdown
+     */
+    public function persistBreakdown(msOrder $order, array $breakdown): bool
+    {
+        $order->set('cart_cost', $breakdown['cart_cost']);
+        $order->set('delivery_cost', $breakdown['delivery_cost']);
+        $order->set('weight', $breakdown['weight']);
+        $order->set('cost', $breakdown['cost']);
+        $order->set('updatedon', date('Y-m-d H:i:s'));
+
+        return $order->save();
+    }
+
+    /**
      * @param array<string, mixed> $options
      * @return array{success: bool, message?: string, data?: array}
      */
@@ -140,8 +156,12 @@ class ManagerOrderCostRecalculator
             return $result;
         }
 
-        $breakdown = $result['data']['breakdown'];
-        $warnings = $result['data']['warnings'];
+        $breakdown = $result['data']['breakdown'] ?? null;
+        if (!is_array($breakdown)) {
+            return $this->ms3->utils->error('ms3_err_unknown');
+        }
+
+        $warnings = $result['data']['warnings'] ?? [];
         $cartCost = $breakdown['cart_cost'];
         $orderWeight = $breakdown['weight'];
         $deliveryCost = $breakdown['delivery_cost'];
@@ -155,13 +175,7 @@ class ManagerOrderCostRecalculator
             'weight' => (float)$order->get('weight'),
         ];
 
-        $order->set('cart_cost', $cartCost);
-        $order->set('delivery_cost', $deliveryCost);
-        $order->set('weight', $orderWeight);
-        $order->set('cost', $cost);
-        $order->set('updatedon', date('Y-m-d H:i:s'));
-
-        if (!$order->save()) {
+        if (!$this->persistBreakdown($order, $breakdown)) {
             return $this->ms3->utils->error('ms3_err_unknown');
         }
 

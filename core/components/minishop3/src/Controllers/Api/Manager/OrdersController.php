@@ -1353,34 +1353,57 @@ class OrdersController
     }
 
     /**
-     * Recalculate order totals (cart_cost, weight, cost)
+     * Recalculate order totals from persisted line items and delivery/payment config.
+     *
+     * Uses {@see ManagerOrderCostRecalculator::calculateBreakdown()} (MODE_AUTO) so draft
+     * preview matches recalculate-cost / finalize for default handlers. Warnings are logged
+     * but do not block product mutations (unlike finalize).
      *
      * @param msOrder $order Order object
      */
     protected function recalculateOrderTotals(msOrder $order): void
     {
-        $cartCost = 0;
-        $weight = 0;
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+        $recalculator = new ManagerOrderCostRecalculator($this->modx, $ms3);
+        $result = $recalculator->calculateBreakdown($order);
 
-        $products = $this->modx->getIterator(\MiniShop3\Model\msOrderProduct::class, [
-            'order_id' => $order->get('id'),
-        ]);
+        if (empty($result['success'])) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[OrdersController] recalculateOrderTotals failed for order #' . $order->get('id')
+                . ': ' . ($result['message'] ?? 'unknown')
+            );
 
-        foreach ($products as $product) {
-            $cartCost += (float)$product->get('cost');
-            $weight += (float)$product->get('weight') * (int)$product->get('count');
+            return;
         }
 
-        $order->set('cart_cost', $cartCost);
-        $order->set('weight', $weight);
+        $breakdown = $result['data']['breakdown'] ?? null;
+        if (!is_array($breakdown)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[OrdersController] recalculateOrderTotals missing breakdown for order #' . $order->get('id')
+            );
 
-        // Recalculate total cost (cart + delivery; payment deltas are reflected in cost when persisted elsewhere)
-        /** @var OrderService $orderService */
-        $orderService = $this->modx->services->get('ms3_order_service');
-        $deliveryCost = (float) $order->get('delivery_cost');
-        $order->set('cost', $orderService->clampComputedTotal($order, $cartCost, $deliveryCost, 0.0));
+            return;
+        }
 
-        $order->save();
+        $warnings = $result['data']['warnings'] ?? [];
+
+        if ($warnings !== []) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[OrdersController] recalculateOrderTotals warnings for order #' . $order->get('id')
+                . ': ' . implode(', ', $warnings)
+            );
+        }
+
+        if (!$recalculator->persistBreakdown($order, $breakdown)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OrdersController] Failed to save order #' . $order->get('id') . ' after recalculateOrderTotals'
+            );
+        }
     }
 
     /**
