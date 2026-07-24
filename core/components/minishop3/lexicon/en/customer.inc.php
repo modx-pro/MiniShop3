@@ -88,6 +88,7 @@ Best regards,
 $_lang['ms3_customer_forgot_password_success'] = 'Password reset instructions have been sent to your email';
 $_lang['ms3_customer_err_forgot_password_rate_limit'] = 'Too many requests. Please try again in an hour.';
 $_lang['ms3_customer_err_forgot_password_email_cooldown'] = 'Email already sent. Please try again in 5 minutes.';
+$_lang['ms3_customer_err_reset_password_rate_limit'] = 'Too many password reset attempts ({attempts}/{max}). Try again in {minutes} minutes.';
 $_lang['ms3_password_reset_subject'] = '[[+site]]: Password Reset';
 $_lang['ms3_password_reset_body'] = 'Hello, [[+first_name]]!
 

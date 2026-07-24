@@ -104,4 +104,20 @@ if ($forgotSrc === false || !str_contains($forgotSrc, 'HttpStatus::TOO_MANY_REQU
     $fail('ForgotPassword must attach HttpStatus::TOO_MANY_REQUESTS on rate-limit failures');
 }
 
+$resetSrc = file_get_contents(dirname(__DIR__) . '/src/Processors/Api/Customer/ResetPassword.php');
+if ($resetSrc === false) {
+    $fail('unable to read ResetPassword.php');
+}
+foreach ([
+    'ms3_rate_limiter',
+    'reset_password_ip',
+    'reset_password_token',
+    'HttpStatus::TOO_MANY_REQUESTS',
+    'rateLimiter->reset',
+] as $needle) {
+    if (!str_contains($resetSrc, $needle)) {
+        $fail("ResetPassword must contain: {$needle}");
+    }
+}
+
 echo "OK CustomerAuthRoutesTest\n";

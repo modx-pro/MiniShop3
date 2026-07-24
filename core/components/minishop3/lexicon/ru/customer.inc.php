@@ -88,6 +88,7 @@ $_lang['ms3_email_verification_body'] = 'Здравствуйте, [[+first_name
 $_lang['ms3_customer_forgot_password_success'] = 'Инструкции по восстановлению пароля отправлены на email';
 $_lang['ms3_customer_err_forgot_password_rate_limit'] = 'Превышен лимит запросов. Попробуйте через час.';
 $_lang['ms3_customer_err_forgot_password_email_cooldown'] = 'Письмо уже было отправлено. Попробуйте через 5 минут.';
+$_lang['ms3_customer_err_reset_password_rate_limit'] = 'Превышен лимит попыток сброса пароля ({attempts}/{max}). Попробуйте через {minutes} минут.';
 $_lang['ms3_password_reset_subject'] = '[[+site]]: Восстановление пароля';
 $_lang['ms3_password_reset_body'] = 'Здравствуйте, [[+first_name]]!
 
