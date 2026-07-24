@@ -228,3 +228,5 @@ $_lang['ms3_vuetools_required'] = 'Для работы MiniShop3 требует�
 $_lang['ms3_mgr_order_recalc_invalid_mode'] = 'Недопустимый режим пересчёта стоимости заказа.';
 $_lang['ms3_mgr_order_recalc_manual_delivery_missing'] = 'В режиме manual обязательно укажите manual_delivery_cost (стоимость доставки).';
 $_lang['ms3_order_cost_recalc_success'] = 'Стоимость заказа пересчитана';
+$_lang['ms3_order_finalize_cost_recalc_required'] =
+    'Перед оформлением пересчитайте стоимость заказа: для выбранных доставки или оплаты нужен ручной расчёт или force_provider.';

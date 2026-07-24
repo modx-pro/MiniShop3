@@ -775,6 +775,8 @@ $_lang['ms3_order_finalize_confirm'] = 'Подтверждение оформл�
 $_lang['ms3_order_finalize_confirm_desc'] = 'После оформления заказ получит номер, статус изменится на «Новый», и будут отправлены уведомления.';
 $_lang['ms3_order_finalized'] = 'Заказ успешно оформлен';
 $_lang['ms3_order_finalize_error'] = 'Ошибка при оформлении заказа';
+$_lang['ms3_order_finalize_cost_recalc_required'] =
+    'Перед оформлением пересчитайте стоимость заказа: для выбранных доставки или оплаты нужен ручной расчёт или force_provider.';
 $_lang['ms3_order_is_draft'] = 'Черновик';
 $_lang['ms3_order_err_validation'] = 'Ошибка валидации данных заказа';
 $_lang['ms3_order_err_products'] = 'В заказе нет товаров';

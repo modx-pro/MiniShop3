@@ -1139,6 +1139,14 @@ function confirmFinalizeOrder() {
   })
 }
 
+/** Hint keys for cost recalculation warnings (ManagerOrderCostRecalculator). */
+const COST_RECALC_WARNING_HINTS = Object.freeze({
+  delivery_manual_required: 'order_cost_recalc_delivery_manual_hint',
+  payment_manual_required: 'order_cost_recalc_payment_manual_hint',
+  delivery_provider_error: 'order_cost_recalc_delivery_manual_hint',
+  payment_provider_error: 'order_cost_recalc_payment_manual_hint',
+})
+
 /**
  * Finalize order API call
  */
@@ -1181,6 +1189,26 @@ async function finalizeOrder(forceCreateCustomer = false) {
     await loadLogs()
   } catch (error) {
     console.error('[OrderView] Error finalizing order:', error)
+
+    const apiErrors = error.data?.errors
+    const costWarnings = Array.isArray(apiErrors?.warnings)
+      ? apiErrors.warnings.map(String)
+      : []
+
+    if (costWarnings.length > 0) {
+      costRecalcWarnings.value = costWarnings
+      costWarnings.forEach(code => {
+        const hintKey = COST_RECALC_WARNING_HINTS[code]
+        if (hintKey) {
+          toast.add({
+            severity: 'warn',
+            summary: _('error'),
+            detail: _(hintKey),
+            life: 7000,
+          })
+        }
+      })
+    }
 
     // Show each validation error as separate toast
     // Response structure: error.data.object.errors contains array of field names

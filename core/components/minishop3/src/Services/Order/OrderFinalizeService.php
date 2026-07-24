@@ -108,8 +108,6 @@ class OrderFinalizeService
             return $costResult;
         }
 
-        $costWarnings = $costResult['data']['warnings'] ?? [];
-
         // Persist costs; allocate num under GET_LOCK when still empty (#380)
         $order->set('updatedon', time());
         $order->set('cost', $costResult['data']['total_cost']);
@@ -194,7 +192,6 @@ class OrderFinalizeService
             'order_id' => $order->get('id'),
             'order_num' => $order->get('num'),
             'status_id' => $order->get('status_id'),
-            'cost_warnings' => $costWarnings,
         ]);
     }
 
@@ -424,6 +421,10 @@ class OrderFinalizeService
                 . ': '
                 . implode(', ', $warnings)
             );
+
+            return $this->error('ms3_order_finalize_cost_recalc_required', [
+                'warnings' => $warnings,
+            ]);
         }
 
         $order->set('weight', $breakdown['weight']);
@@ -433,7 +434,6 @@ class OrderFinalizeService
             'delivery_cost' => $breakdown['delivery_cost'],
             'total_cost' => $breakdown['cost'],
             'weight' => $breakdown['weight'],
-            'warnings' => $warnings,
         ]);
     }
 

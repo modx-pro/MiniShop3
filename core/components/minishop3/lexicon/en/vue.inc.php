@@ -775,6 +775,8 @@ $_lang['ms3_order_finalize_confirm'] = 'Confirm Order Finalization';
 $_lang['ms3_order_finalize_confirm_desc'] = 'After finalization, the order will receive a number, status will change to "New", and notifications will be sent.';
 $_lang['ms3_order_finalized'] = 'Order successfully finalized';
 $_lang['ms3_order_finalize_error'] = 'Error finalizing order';
+$_lang['ms3_order_finalize_cost_recalc_required'] =
+    'Recalculate order cost before finalizing: the selected delivery or payment requires manual cost or force_provider mode.';
 $_lang['ms3_order_is_draft'] = 'Draft';
 $_lang['ms3_order_err_validation'] = 'Order data validation error';
 $_lang['ms3_order_err_products'] = 'Order has no products';
