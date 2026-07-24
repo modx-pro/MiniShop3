@@ -20,6 +20,48 @@ class CustomerAuthController
 
     /**
      * POST /api/v1/customer/login
+     */
+    public function loginFromRequest(): Response
+    {
+        return $this->login($this->readJsonBody());
+    }
+
+    /**
+     * POST /api/v1/customer/register
+     */
+    public function registerFromRequest(): Response
+    {
+        return $this->register($this->readJsonBody());
+    }
+
+    /**
+     * POST /api/v1/customer/forgot-password
+     */
+    public function forgotPasswordFromRequest(): Response
+    {
+        return $this->forgotPassword($this->readJsonBody());
+    }
+
+    /**
+     * POST /api/v1/customer/reset-password
+     */
+    public function resetPasswordFromRequest(): Response
+    {
+        return $this->resetPassword($this->readJsonBody());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function readJsonBody(): array
+    {
+        $input = file_get_contents('php://input');
+
+        return json_decode($input, true) ?: [];
+    }
+
+    /**
+     * POST /api/v1/customer/login
      *
      * @param array<string, mixed> $data
      */

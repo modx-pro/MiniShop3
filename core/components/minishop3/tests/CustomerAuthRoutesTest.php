@@ -4,6 +4,8 @@
  * Router-level check: customer auth routes exposed in Web API (#422).
  *
  * Uses ModxStub so web routes load without a full MODX install.
+ * Asserts route registration and middleware stack via Router introspection
+ * (same pattern as OrdersRoutePermissionsTest).
  *
  * Run: php tests/CustomerAuthRoutesTest.php
  */
@@ -13,6 +15,7 @@ declare(strict_types=1);
 require __DIR__ . '/stubs/ModxStub.php';
 require __DIR__ . '/../vendor/autoload.php';
 
+use MiniShop3\Controllers\Api\Web\CustomerAuthController;
 use MiniShop3\Middleware\TokenMiddleware;
 use MiniShop3\Router\Router;
 use MODX\Revolution\modX;
@@ -43,6 +46,40 @@ $hasTokenMiddleware = static function (array $middlewares): bool {
     return false;
 };
 
+$handlerUsesAuthController = static function (callable $handler, string $methodName) use ($fail): void {
+    if (!$handler instanceof Closure) {
+        $fail("auth route handler must be a closure");
+    }
+
+    $reflection = new ReflectionFunction($handler);
+    $staticVariables = $reflection->getStaticVariables();
+    if (!array_key_exists('modx', $staticVariables)) {
+        $fail("auth route closure must capture \$modx");
+    }
+
+    $file = $reflection->getFileName();
+    $startLine = $reflection->getStartLine();
+    $endLine = $reflection->getEndLine();
+    if ($file === false || $startLine <= 0 || $endLine < $startLine) {
+        $fail('unable to inspect auth route closure source');
+    }
+
+    $lines = array_slice(
+        file($file, FILE_IGNORE_NEW_LINES) ?: [],
+        $startLine - 1,
+        $endLine - $startLine + 1
+    );
+    $source = implode("\n", $lines);
+
+    if (!str_contains($source, CustomerAuthController::class)) {
+        $fail("auth route handler must delegate to CustomerAuthController");
+    }
+
+    if (!str_contains($source, "->{$methodName}(")) {
+        $fail("auth route handler must call CustomerAuthController::{$methodName}()");
+    }
+};
+
 $modx = new modX();
 $router = new Router($modx);
 $router->loadRoutes(dirname(__DIR__) . '/config/routes/web.php');
@@ -52,11 +89,26 @@ $routesProperty = new ReflectionProperty(Router::class, 'routes');
 $registered = $routesProperty->getValue($router);
 
 $expectedRoutes = [
-    'POST /api/v1/customer/login' => false,
-    'POST /api/v1/customer/register' => false,
-    'POST /api/v1/customer/logout' => true,
-    'POST /api/v1/customer/forgot-password' => false,
-    'POST /api/v1/customer/reset-password' => false,
+    'POST /api/v1/customer/login' => [
+        'tokenMiddleware' => false,
+        'handlerMethod' => 'loginFromRequest',
+    ],
+    'POST /api/v1/customer/register' => [
+        'tokenMiddleware' => false,
+        'handlerMethod' => 'registerFromRequest',
+    ],
+    'POST /api/v1/customer/logout' => [
+        'tokenMiddleware' => true,
+        'handlerMethod' => 'logout',
+    ],
+    'POST /api/v1/customer/forgot-password' => [
+        'tokenMiddleware' => false,
+        'handlerMethod' => 'forgotPasswordFromRequest',
+    ],
+    'POST /api/v1/customer/reset-password' => [
+        'tokenMiddleware' => false,
+        'handlerMethod' => 'resetPasswordFromRequest',
+    ],
 ];
 
 $actual = [];
@@ -70,54 +122,31 @@ foreach ($registered as $route) {
         ? implode('|', $route['method'])
         : (string) ($route['method'] ?? '');
     $key = strtoupper($method) . ' ' . $pattern;
-    $actual[$key] = $hasTokenMiddleware($route['middlewares'] ?? []);
+
+    $actual[$key] = [
+        'tokenMiddleware' => $hasTokenMiddleware($route['middlewares'] ?? []),
+        'handler' => $route['handler'] ?? null,
+    ];
 }
 
-foreach ($expectedRoutes as $routeKey => $requiresTokenMiddleware) {
+foreach ($expectedRoutes as $routeKey => $expectation) {
     if (!array_key_exists($routeKey, $actual)) {
         $fail("missing route {$routeKey}");
     }
-    $assertSame($requiresTokenMiddleware, $actual[$routeKey], "TokenMiddleware on {$routeKey}");
-}
 
-$authControllerPath = dirname(__DIR__) . '/src/Controllers/Api/Web/CustomerAuthController.php';
-$authControllerSrc = file_get_contents($authControllerPath);
-if ($authControllerSrc === false) {
-    $fail('unable to read CustomerAuthController.php');
-}
+    $route = $actual[$routeKey];
+    $assertSame(
+        $expectation['tokenMiddleware'],
+        $route['tokenMiddleware'],
+        "TokenMiddleware on {$routeKey}"
+    );
 
-foreach ([
-    'function logout',
-    'function forgotPassword',
-    'function resetPassword',
-    'Processors\Api\Customer\Logout',
-    'Processors\Api\Customer\ForgotPassword',
-    'Processors\Api\Customer\ResetPassword',
-] as $needle) {
-    if (!str_contains($authControllerSrc, $needle)) {
-        $fail("CustomerAuthController must contain: {$needle}");
+    $handler = $route['handler'];
+    if (!is_callable($handler)) {
+        $fail("route {$routeKey} must have callable handler");
     }
-}
 
-$forgotSrc = file_get_contents(dirname(__DIR__) . '/src/Processors/Api/Customer/ForgotPassword.php');
-if ($forgotSrc === false || !str_contains($forgotSrc, 'HttpStatus::TOO_MANY_REQUESTS')) {
-    $fail('ForgotPassword must attach HttpStatus::TOO_MANY_REQUESTS on rate-limit failures');
-}
-
-$resetSrc = file_get_contents(dirname(__DIR__) . '/src/Processors/Api/Customer/ResetPassword.php');
-if ($resetSrc === false) {
-    $fail('unable to read ResetPassword.php');
-}
-foreach ([
-    'ms3_rate_limiter',
-    'reset_password_ip',
-    'reset_password_token',
-    'HttpStatus::TOO_MANY_REQUESTS',
-    'rateLimiter->reset',
-] as $needle) {
-    if (!str_contains($resetSrc, $needle)) {
-        $fail("ResetPassword must contain: {$needle}");
-    }
+    $handlerUsesAuthController($handler, $expectation['handlerMethod']);
 }
 
 echo "OK CustomerAuthRoutesTest\n";

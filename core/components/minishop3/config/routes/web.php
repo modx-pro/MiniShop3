@@ -134,45 +134,23 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
 
     $router->group('/customer', function ($router) use ($modx, $tokenMiddleware) {
         $router->post('/login', function ($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
-
-            return $controller->login($data);
+            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->loginFromRequest();
         });
 
         $router->post('/register', function ($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
-
-            return $controller->register($data);
+            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->registerFromRequest();
         });
 
         $router->post('/logout', function ($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
-
-            return $controller->logout();
+            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->logout();
         }, [$tokenMiddleware]);
 
         $router->post('/forgot-password', function ($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
-
-            return $controller->forgotPassword($data);
+            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->forgotPasswordFromRequest();
         });
 
         $router->post('/reset-password', function ($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $controller = new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
-
-            return $controller->resetPassword($data);
+            return (new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx))->resetPasswordFromRequest();
         });
 
         $router->post('/add', function ($params) use ($modx) {
