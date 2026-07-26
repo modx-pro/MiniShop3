@@ -45,7 +45,8 @@ class OrderNumberGenerator
         }
 
         try {
-            $lastError = null;
+            // Seeded so the post-loop throw is always non-null (all attempts exhausted).
+            $lastError = new RuntimeException('ms3_err_order_num_save');
             for ($attempt = 1; $attempt <= self::MAX_PERSIST_ATTEMPTS; $attempt++) {
                 $num = self::buildNumber(
                     $prefix,
@@ -69,7 +70,7 @@ class OrderNumberGenerator
                 }
             }
 
-            throw $lastError ?? new RuntimeException('ms3_err_order_num_save');
+            throw $lastError;
         } finally {
             $this->releaseLock($lockName);
         }
