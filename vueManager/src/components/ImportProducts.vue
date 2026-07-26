@@ -9,11 +9,14 @@ import ProgressBar from 'primevue/progressbar'
 import RadioButton from 'primevue/radiobutton'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
+import Toast from 'primevue/toast'
+import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
 
 const { _ } = useLexicon()
+const toast = useToast()
 
 // State
 const currentStep = ref(1)
@@ -30,6 +33,8 @@ const debugMode = ref(false)
 const fileInputRef = ref(null)
 const uploading = ref(false)
 const uploadError = ref(null)
+const fieldsError = ref(null)
+const previewError = ref(null)
 
 // Data from backend
 const availableFields = ref([])
@@ -73,6 +78,28 @@ const canProceedToStep3 = computed(() => {
   return missingRequiredFields.value.length === 0
 })
 
+const resolveImportErrorMessage = (err, fallbackKey) => err?.message || _(fallbackKey)
+
+const notifyImportError = (detail, consoleLabel, err) => {
+  console.error(consoleLabel, err ?? detail)
+  toast.add({
+    severity: 'error',
+    summary: _('error'),
+    detail,
+    life: 5000,
+  })
+}
+
+const clearPreviewData = () => {
+  csvHeaders.value = []
+  csvPreview.value = []
+  totalRows.value = 0
+  fieldMapping.value = []
+  detectedEncoding.value = ''
+  exceedsLimit.value = false
+  schedulerAvailable.value = false
+}
+
 // Methods
 const loadAvailableFields = async () => {
   try {
@@ -87,12 +114,15 @@ const loadAvailableFields = async () => {
         keyFields.value.find(k => k.value === 'article')?.value || keyFields.value[0].value
     }
   } catch (err) {
-    console.error('Failed to load fields:', err)
+    fieldsError.value = resolveImportErrorMessage(err, 'ms3_import_error_load_fields')
+    notifyImportError(fieldsError.value, 'Failed to load fields:', err)
   }
 }
 
 const previewFile = async () => {
   if (!filePath.value) return
+
+  previewError.value = null
 
   try {
     const response = await request.post('/api/mgr/import/preview', {
@@ -113,7 +143,9 @@ const previewFile = async () => {
     fieldMapping.value = csvHeaders.value.map(() => null)
     autoMapFields()
   } catch (err) {
-    console.error('Failed to preview file:', err)
+    clearPreviewData()
+    previewError.value = resolveImportErrorMessage(err, 'ms3_import_error_load_preview')
+    notifyImportError(previewError.value, 'Failed to preview file:', err)
   }
 }
 
@@ -210,8 +242,9 @@ const startImport = async () => {
       importCompleted.value = true
     }
   } catch (err) {
-    console.error('Import failed:', err)
-    importResult.value = { success: false, message: err.message || _('ms3_import_error') }
+    const message = resolveImportErrorMessage(err, 'ms3_import_error')
+    importResult.value = { success: false, message }
+    notifyImportError(message, 'Import failed:', err)
     importCompleted.value = true
   } finally {
     importRunning.value = false
@@ -222,17 +255,15 @@ const resetImport = () => {
   currentStep.value = 1
   filePath.value = ''
   uploadedFileName.value = ''
-  csvHeaders.value = []
-  csvPreview.value = []
-  fieldMapping.value = []
-  totalRows.value = 0
-  detectedEncoding.value = ''
+  clearPreviewData()
   importId.value = ''
   importProgress.value = null
   importRunning.value = false
   importCompleted.value = false
   importResult.value = null
   uploadError.value = null
+  fieldsError.value = null
+  previewError.value = null
 }
 
 const triggerFileInput = () => {
@@ -250,6 +281,7 @@ const handleFileSelect = async event => {
 
   uploading.value = true
   uploadError.value = null
+  previewError.value = null
 
   try {
     const response = await request.upload('/api/mgr/import/upload', file)
@@ -258,8 +290,8 @@ const handleFileSelect = async event => {
     uploadedFileName.value = data.original_name || file.name
     await previewFile()
   } catch (err) {
-    console.error('Upload failed:', err)
-    uploadError.value = err.message || _('ms3_import_upload_error') || 'Upload failed'
+    uploadError.value = resolveImportErrorMessage(err, 'ms3_import_upload_error')
+    notifyImportError(uploadError.value, 'Upload failed:', err)
   } finally {
     uploading.value = false
     if (fileInputRef.value) fileInputRef.value.value = ''
@@ -283,7 +315,18 @@ onMounted(() => {
 
 <template>
   <div class="import-products">
+    <Toast />
     <p class="tab-description">{{ _('ms3_utilities_import_description') }}</p>
+
+    <Message
+      v-if="fieldsError"
+      severity="error"
+      :closable="true"
+      class="import-global-error"
+      @close="fieldsError = null"
+    >
+      {{ fieldsError }}
+    </Message>
 
     <div class="step-indicators">
       <div
@@ -344,6 +387,14 @@ onMounted(() => {
         <Message v-if="uploadError" severity="error" :closable="true" @close="uploadError = null">{{
           uploadError
         }}</Message>
+        <Message
+          v-if="previewError"
+          severity="error"
+          :closable="true"
+          @close="previewError = null"
+        >
+          {{ previewError }}
+        </Message>
       </div>
 
       <div v-if="filePath" class="selected-file">
@@ -592,6 +643,9 @@ onMounted(() => {
 .import-products {
   padding: 1.25rem;
   max-width: 62.5rem;
+}
+.import-global-error {
+  margin-bottom: 1rem;
 }
 .step-indicators {
   display: flex;
