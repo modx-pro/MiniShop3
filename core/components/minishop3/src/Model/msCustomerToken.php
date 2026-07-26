@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Model;
 
+use MiniShop3\Utils\ApiTokenExpiry;
 use xPDO\Om\xPDOObject;
 use xPDO\Om\xPDOSimpleObject;
 
@@ -37,8 +38,7 @@ class msCustomerToken extends xPDOSimpleObject
      */
     public function isExpired()
     {
-        $expiresAt = strtotime($this->get('expires_at'));
-        return $expiresAt < time();
+        return ApiTokenExpiry::isExpiresAtBefore((string) $this->get('expires_at'), time());
     }
 
     /**
