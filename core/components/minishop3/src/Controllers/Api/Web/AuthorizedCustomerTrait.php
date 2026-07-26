@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\TokenService;
 
 /**
  * Trait for Web API controllers that need to resolve the authorized customer.
@@ -26,19 +27,22 @@ trait AuthorizedCustomerTrait
 
         // Method 1: Try API token
         $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
+        $tokenPresented = $tokenString !== '';
 
-        if (!empty($tokenString)) {
-            $tokenObj = $this->modx->getObject(\MiniShop3\Model\msCustomerToken::class, [
-                'token' => $tokenString,
-                'type' => \MiniShop3\Model\msCustomerToken::TYPE_API
-            ]);
+        if ($tokenPresented) {
+            /** @var TokenService $tokenService */
+            $tokenService = $this->modx->services->get('ms3_token_service');
+            $resolved = $tokenService->resolveApiToken($tokenString);
 
-            if ($tokenObj && !$tokenObj->isExpired()) {
-                $customer = $this->modx->getObject(msCustomer::class, $tokenObj->get('customer_id'));
+            if ($resolved['reason'] === 'ok') {
+                $customer = $this->modx->getObject(msCustomer::class, $resolved['token']->get('customer_id'));
                 if ($customer) {
                     return $customer;
                 }
             }
+
+            // Explicit token was rejected — do not fall back to session customer_id.
+            return null;
         }
 
         // Method 2: Fall back to session customer_id (consistent with TokenMiddleware)

@@ -65,27 +65,9 @@ try {
     $ms3 = $modx->services->get('ms3');
     $ms3->initialize('web');
 
-    // Создаём роутер
+    // Создаём роутер — только Web API (фронтенд); manager connector не грузит эти пути (#384)
     $router = new \MiniShop3\Router\Router($modx);
-
-    // Загружаем ТОЛЬКО Web API роуты (фронтенд, публичные)
-    $webRoutesFile = $componentPath . 'config/routes/web.php';
-
-    if (!file_exists($webRoutesFile)) {
-        throw new \Exception('Web routes not found: ' . $webRoutesFile);
-    }
-
-    $router->loadRoutes($webRoutesFile);
-
-    // Загружаем пользовательские роуты (опционально)
-    $customRoutesFile = MODX_CORE_PATH . 'config/ms3_routes_web.custom.php';
-    if (file_exists($customRoutesFile)) {
-        $router->loadRoutes($customRoutesFile);
-    }
-
-    $router->loadRoutesFromDirectory(\MiniShop3\Router\Router::coreAddonRoutesDirectory('web'));
-
-    // Строим dispatcher
+    $router->loadWebRoutes($componentPath, MODX_CORE_PATH);
     $router->build();
 
     // Обрабатываем запрос

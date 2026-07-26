@@ -51,6 +51,126 @@ class Router
     }
 
     /**
+     * Storefront API routes served by api.php — not via manager connector (#384).
+     */
+    public static function isStorefrontRoute(string $route): bool
+    {
+        return str_starts_with($route, '/api/v1');
+    }
+
+    /**
+     * Planned manager-route sources (connector Index/Router). Never includes web (#384).
+     *
+     * @return list<array{kind: 'file'|'dir', path: string, required: bool}>
+     */
+    public static function managerRoutePlan(string $componentPath, string $corePath): array
+    {
+        $componentPath = rtrim($componentPath, '/\\') . DIRECTORY_SEPARATOR;
+        $corePath = rtrim($corePath, '/\\') . DIRECTORY_SEPARATOR;
+
+        return [
+            [
+                'kind' => 'file',
+                'path' => $componentPath . 'config' . DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'manager.php',
+                'required' => true,
+            ],
+            [
+                'kind' => 'file',
+                'path' => $corePath . 'config' . DIRECTORY_SEPARATOR . 'ms3_routes_manager.custom.php',
+                'required' => false,
+            ],
+            [
+                'kind' => 'dir',
+                'path' => $corePath . 'config' . DIRECTORY_SEPARATOR . 'ms3.routes.d' . DIRECTORY_SEPARATOR . 'manager',
+                'required' => false,
+            ],
+        ];
+    }
+
+    /**
+     * Planned web-route sources (api.php). Never includes manager (#384).
+     *
+     * @return list<array{kind: 'file'|'dir', path: string, required: bool}>
+     */
+    public static function webRoutePlan(string $componentPath, string $corePath): array
+    {
+        $componentPath = rtrim($componentPath, '/\\') . DIRECTORY_SEPARATOR;
+        $corePath = rtrim($corePath, '/\\') . DIRECTORY_SEPARATOR;
+
+        return [
+            [
+                'kind' => 'file',
+                'path' => $componentPath . 'config' . DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'web.php',
+                'required' => true,
+            ],
+            [
+                'kind' => 'file',
+                'path' => $corePath . 'config' . DIRECTORY_SEPARATOR . 'ms3_routes_web.custom.php',
+                'required' => false,
+            ],
+            [
+                'kind' => 'dir',
+                'path' => $corePath . 'config' . DIRECTORY_SEPARATOR . 'ms3.routes.d' . DIRECTORY_SEPARATOR . 'web',
+                'required' => false,
+            ],
+        ];
+    }
+
+    /**
+     * Load manager-only routes for connector.php processors.
+     *
+     * @throws \RuntimeException when required manager.php is missing
+     */
+    public function loadManagerRoutes(
+        ?string $componentPath = null,
+        ?string $corePath = null
+    ): self {
+        $componentPath ??= MODX_CORE_PATH . 'components/minishop3';
+        $corePath ??= MODX_CORE_PATH;
+
+        return $this->loadRoutePlan(self::managerRoutePlan($componentPath, $corePath));
+    }
+
+    /**
+     * Load storefront routes for api.php.
+     *
+     * @throws \RuntimeException when required web.php is missing
+     */
+    public function loadWebRoutes(
+        ?string $componentPath = null,
+        ?string $corePath = null
+    ): self {
+        $componentPath ??= MODX_CORE_PATH . 'components/minishop3';
+        $corePath ??= MODX_CORE_PATH;
+
+        return $this->loadRoutePlan(self::webRoutePlan($componentPath, $corePath));
+    }
+
+    /**
+     * @param list<array{kind: 'file'|'dir', path: string, required: bool}> $plan
+     */
+    protected function loadRoutePlan(array $plan): self
+    {
+        foreach ($plan as $item) {
+            if ($item['kind'] === 'dir') {
+                $this->loadRoutesFromDirectory($item['path']);
+                continue;
+            }
+
+            if (!file_exists($item['path'])) {
+                if (!empty($item['required'])) {
+                    throw new \RuntimeException('System routes not found: ' . $item['path']);
+                }
+                continue;
+            }
+
+            $this->loadRoutes($item['path']);
+        }
+
+        return $this;
+    }
+
+    /**
      * Load routes from configuration file
      *
      * @param string $routesFile
