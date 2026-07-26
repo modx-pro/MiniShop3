@@ -64,39 +64,23 @@ class Utils
     }
 
     /**
-     * Shorthand for original modX::invokeEvent() method with some useful additions.
+     * Shorthand for original modX::invokeEvent() with normalized returnedValues handling.
      *
-     * @param $eventName
-     * @param array $params
-     * @param $glue
+     * @param string $eventName
+     * @param array<string, mixed> $params
+     * @param string $glue
      *
-     * @return array
+     * @return array{success: bool, message: string, data: array<string, mixed>, values: array<string, mixed>}
      */
     public function invokeEvent($eventName, array $params = [], $glue = '<br/>')
     {
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
+        EventGate::clearReturnedValues($this->modx);
 
         $response = $this->modx->invokeEvent($eventName, $params);
-        if (is_array($response) && count($response) > 1) {
-            foreach ($response as $k => $v) {
-                if (empty($v)) {
-                    unset($response[$k]);
-                }
-            }
-        }
+        $message = EventGate::normalizeMessage($response, $glue);
+        $returnedValues = EventGate::getReturnedValues($this->modx);
 
-        $message = is_array($response) ? implode($glue, $response) : trim((string)$response);
-        if (isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)) {
-            $params = array_merge($params, $this->modx->event->returnedValues);
-        }
-
-        return [
-            'success' => empty($message),
-            'message' => $message,
-            'data' => $params,
-        ];
+        return EventGate::buildInvokeResult($params, $returnedValues, $message);
     }
 
     /**
