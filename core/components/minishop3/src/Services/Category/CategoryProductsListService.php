@@ -144,13 +144,7 @@ final class CategoryProductsListService
         }
 
         $c->where(['msProduct.class_key' => msProduct::class]);
-
-        if ($nested) {
-            $categoryIds = $this->treeService()->productParentIds($categoryId, true);
-            $c->where(['msProduct.parent:IN' => $categoryIds]);
-        } else {
-            $c->where(['msProduct.parent' => $categoryId]);
-        }
+        $c->where(['msProduct.parent:IN' => $this->getAllowedProductParentCategoryIds($categoryId, $nested)]);
 
         if ($query !== '') {
             $c->where([
@@ -223,6 +217,41 @@ final class CategoryProductsListService
     private function quoteOptionKeyForJoinCondition(string $key): string
     {
         return str_replace("'", "''", $key);
+    }
+
+    /**
+     * Parent category IDs allowed for products in category grid scope (matches list filter).
+     *
+     * @return list<int>
+     */
+    public function getAllowedProductParentCategoryIds(int $categoryId, bool $nested): array
+    {
+        if (!$nested) {
+            return [$categoryId];
+        }
+
+        $ids = $this->treeService()->getDescendantCategoryIds($categoryId);
+        $ids[] = $categoryId;
+
+        return $ids;
+    }
+
+    /**
+     * Whether a product belongs to the category products grid scope (direct parent or nested tree).
+     */
+    public function isProductInCategoryScope(int $productId, int $categoryId, bool $nested): bool
+    {
+        $product = $this->modx->getObject(msProduct::class, $productId);
+        if (!$product) {
+            return false;
+        }
+
+        return CategoryProductScopePolicy::isParentInScope(
+            (int) $product->get('parent'),
+            $categoryId,
+            $nested,
+            $nested ? $this->treeService()->getDescendantCategoryIds($categoryId) : []
+        );
     }
 
     /**

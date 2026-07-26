@@ -177,6 +177,7 @@ $_lang['ms3_err_order_nf'] = 'Order with this identifier not found.';
 $_lang['ms3_err_order_load'] = 'Error loading order.';
 $_lang['ms3_err_order_num_lock'] = 'Could not acquire a lock to generate the order number. Please try again.';
 $_lang['ms3_err_order_num_save'] = 'Could not save the order number. Please try again.';
+$_lang['ms3_err_product_not_in_category_scope'] = 'Product is not in the scope of this category.';
 $_lang['ms3_err_status_nf'] = 'Status with this identifier not found.';
 $_lang['ms3_err_delivery_nf'] = 'Delivery method with this identifier not found.';
 $_lang['ms3_err_payment_nf'] = 'Payment method with this identifier not found.';

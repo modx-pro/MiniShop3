@@ -89,6 +89,8 @@ const {
 } = useCategoryProductsInlineEdit({
   products,
   referencePathsByKey,
+  categoryId: computed(() => props.categoryId),
+  nested,
   request,
   toast,
   _,
