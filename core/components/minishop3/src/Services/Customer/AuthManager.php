@@ -217,8 +217,7 @@ class AuthManager
             return null;
         }
 
-        $expiresAt = strtotime($token->get('expires_at'));
-        if ($expiresAt < time()) {
+        if ($token->isExpired()) {
             $this->modx->log(
                 modX::LOG_LEVEL_DEBUG,
                 "[AuthManager] Token expired: {$tokenString}"

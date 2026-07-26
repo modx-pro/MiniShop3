@@ -104,6 +104,43 @@ class TokenService
     }
 
     /**
+     * Resolve an API token from the database.
+     *
+     * Expired tokens are removed (same policy as AuthManager::validateToken).
+     * Does not extend TTL and does not keep the same token string alive.
+     *
+     * @return array{token: ?msCustomerToken, reason: 'ok'|'missing'|'expired'}
+     */
+    public function resolveApiToken(string $tokenString): array
+    {
+        if ($tokenString === '') {
+            return ['token' => null, 'reason' => 'missing'];
+        }
+
+        /** @var msCustomerToken|null $tokenObj */
+        $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+            'token' => $tokenString,
+            'type' => msCustomerToken::TYPE_API,
+        ]);
+
+        if (!$tokenObj) {
+            return ['token' => null, 'reason' => 'missing'];
+        }
+
+        if ($tokenObj->isExpired()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                '[TokenService] API token expired, removing. Token: ' . substr($tokenString, 0, 16) . '...'
+            );
+            $tokenObj->remove();
+
+            return ['token' => null, 'reason' => 'expired'];
+        }
+
+        return ['token' => $tokenObj, 'reason' => 'ok'];
+    }
+
+    /**
      * Resolve existing token or create new one
      *
      * Resolution chain:
@@ -111,34 +148,34 @@ class TokenService
      * 2. Cookie token → verify in DB (msCustomerToken type=api), restore session, return
      * 3. Generate new token → set cookie + session, return
      *
+     * Expired cookie tokens are discarded (not auto-renewed) and a new token is created.
+     *
      * @return string Token string
      */
     public function resolveOrCreateToken(): string
     {
-        // 1. Check session
+        // 1. Check session (re-validate against DB — do not trust session TTL alone)
         $sessionToken = $this->getCustomerToken();
         if ($sessionToken) {
-            CookieHelper::setTokenCookie($this->modx, $sessionToken);
-            return $sessionToken;
+            $resolved = $this->resolveApiToken($sessionToken);
+            if ($resolved['reason'] === 'ok') {
+                CookieHelper::setTokenCookie($this->modx, $sessionToken);
+                return $sessionToken;
+            }
+
+            $this->clearCustomerToken();
+            CookieHelper::clearTokenCookie($this->modx);
+            unset($_SESSION['ms3']['customer_id']);
         }
 
         // 2. Check cookie
         $cookieToken = CookieHelper::getTokenFromCookie();
         if (!empty($cookieToken)) {
-            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                'token' => $cookieToken,
-                'type' => msCustomerToken::TYPE_API,
-            ]);
+            $resolved = $this->resolveApiToken($cookieToken);
 
-            if ($tokenObj) {
-                // Auto-renew expired token
-                if ($tokenObj->isExpired()) {
-                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
-                    $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
-                    $tokenObj->save();
-                }
+            if ($resolved['reason'] === 'ok') {
+                $tokenObj = $resolved['token'];
 
-                // Restore session
                 if (!isset($_SESSION['ms3'])) {
                     $_SESSION['ms3'] = [];
                 }
@@ -150,10 +187,13 @@ class TokenService
                     $_SESSION['ms3']['customer_id'] = $customerId;
                 }
 
-                // Refresh cookie TTL
                 CookieHelper::setTokenCookie($this->modx, $cookieToken);
 
                 return $cookieToken;
+            }
+
+            if ($resolved['reason'] === 'expired' || $resolved['reason'] === 'missing') {
+                CookieHelper::clearTokenCookie($this->modx);
             }
         }
 
