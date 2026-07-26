@@ -48,6 +48,20 @@ $assertSame(null, ProductOptionCriteriaPolicy::normalize(['product_id' => 0, 'ke
 $assertSame(null, ProductOptionCriteriaPolicy::normalize(['product_id' => -3, 'key' => 'color']), 'negative product_id');
 $assertSame(null, ProductOptionCriteriaPolicy::normalize(['product_id' => 'abc', 'key' => 'color']), 'non-int product_id');
 $assertSame(null, ProductOptionCriteriaPolicy::normalize(['product_id' => 1, 'key' => '']), 'empty key');
+$assertSame(null, ProductOptionCriteriaPolicy::normalize(['product_id' => 1, 'key' => 'color:LIKE']), 'key with xPDO operator suffix');
+$assertSame(null, ProductOptionCriteriaPolicy::normalize(['product_id' => 1, 'key' => 'bad key']), 'key with space');
+$assertSame(
+    ['product_id' => 1, 'key' => 'Color'],
+    ProductOptionCriteriaPolicy::normalize(['product_id' => 1, 'key' => 'Color']),
+    'key allows letters case-insensitively'
+);
+
+$assertSame(
+    ['product_id' => 5, 'key' => 'Color'],
+    ProductOptionCriteriaPolicy::fromProductAndKey(5, 'Color'),
+    'fromProductAndKey valid'
+);
+$assertSame(null, ProductOptionCriteriaPolicy::fromProductAndKey('x', 'color'), 'fromProductAndKey invalid product_id');
 
 fwrite(STDOUT, "OK ProductOptionCriteriaPolicyTest\n");
 exit(0);
