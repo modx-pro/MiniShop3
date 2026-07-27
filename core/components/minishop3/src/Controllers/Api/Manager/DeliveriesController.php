@@ -6,6 +6,7 @@ use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Utils\PriceAdjustment;
 use MODX\Revolution\modX;
 
@@ -95,13 +96,14 @@ class DeliveriesController
 
         // Filter by active status
         foreach ($params as $key => $value) {
-            if (strpos($key, 'filter_') === 0 && $value !== '' && $value !== null) {
+            if (str_starts_with($key, 'filter_') && $value !== '' && $value !== null) {
                 $fieldName = substr($key, 7);
-                if ($fieldName === 'active') {
-                    $criteria['active'] = (int)$value;
-                } else {
-                    $criteria[$fieldName . ':LIKE'] = "%{$value}%";
-                }
+                ManagerListFilterPolicy::applyCriteriaFilter(
+                    $criteria,
+                    $fieldName,
+                    $value,
+                    ManagerListFilterPolicy::DELIVERY_FILTER_MAP
+                );
             }
         }
 
