@@ -133,7 +133,7 @@ class msProductData extends xPDOSimpleObject
     }
 
     /**
-     * @param null $values
+     * @param mixed $values Array, scalar (wrapped) or null. Empty result normalizes to null.
      *
      * @return array|null
      */
