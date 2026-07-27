@@ -163,6 +163,13 @@
           :value="val"
         />
       </template>
+      <!-- Empty array must still POST so ProductDataPayloadTrait clears the field (#324) -->
+      <input
+        v-else
+        type="hidden"
+        :name="`${fieldConfig.name}[]`"
+        value=""
+      />
     </template>
 
     <!-- Dropdown select (ms3-combo-select) -->
