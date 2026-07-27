@@ -25,11 +25,31 @@ $assertSame = static function ($expected, $actual, string $case) use ($fail): vo
 
 $paidId = 3;
 $newId = 2;
+$eligible = [$newId];
 
-$assertSame(true, PaymentLinkResolver::shouldResolvePaymentLink($newId, false, $paidId, $newId), 'new status allows link');
-$assertSame(false, PaymentLinkResolver::shouldResolvePaymentLink($paidId, false, $paidId, $newId), 'paid status blocks link');
-$assertSame(false, PaymentLinkResolver::shouldResolvePaymentLink(4, true, $paidId, $newId), 'final status blocks link');
-$assertSame(false, PaymentLinkResolver::shouldResolvePaymentLink(5, false, $paidId, $newId), 'other non-final status blocks link');
+$assertSame(true, PaymentLinkResolver::isStatusEligibleForPaymentLink($newId, false, $paidId, $eligible), 'new status allows link');
+$assertSame(false, PaymentLinkResolver::isStatusEligibleForPaymentLink($paidId, false, $paidId, $eligible), 'paid status blocks link');
+$assertSame(false, PaymentLinkResolver::isStatusEligibleForPaymentLink(4, true, $paidId, $eligible), 'final status blocks link');
+$assertSame(false, PaymentLinkResolver::isStatusEligibleForPaymentLink(5, false, $paidId, $eligible), 'other non-final status blocks link');
+
+$assertSame([1, 2], PaymentLinkResolver::parseEligibleStatusIds('1, 2 ,2'), 'parse csv dedupes');
+$assertSame([], PaymentLinkResolver::parseEligibleStatusIds(''), 'empty csv');
+$assertSame([2], PaymentLinkResolver::parseEligibleStatusIds('2, draft'), 'skip non-numeric parts');
+
+$assertSame('https://pay.example/1', PaymentLinkResolver::normalizePaymentLink('https://pay.example/1'), 'normalize link');
+$assertSame(null, PaymentLinkResolver::normalizePaymentLink(''), 'empty link is null');
+$assertSame(null, PaymentLinkResolver::normalizePaymentLink(null), 'null link stays null');
+
+$snippetSrc = file_get_contents(__DIR__ . '/../elements/snippets/ms3_get_order.php');
+if ($snippetSrc === false) {
+    $fail('unable to read ms3_get_order.php');
+}
+if (!str_contains($snippetSrc, 'ms3_payment_link_resolver')) {
+    $fail('ms3_get_order.php must use ms3_payment_link_resolver');
+}
+if (!str_contains($snippetSrc, 'PaymentLinkResolver::parseEligibleStatusIds')) {
+    $fail('ms3_get_order.php must parse payStatus via PaymentLinkResolver');
+}
 
 fwrite(STDOUT, "OK PaymentLinkResolverTest\n");
 exit(0);
