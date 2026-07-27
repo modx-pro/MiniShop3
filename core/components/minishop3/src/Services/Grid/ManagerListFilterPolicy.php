@@ -51,6 +51,26 @@ final class ManagerListFilterPolicy
         'active' => 'active',
     ];
 
+    /**
+     * UI filter key => order filter handler (column or virtual key).
+     *
+     * @var array<string, string>
+     */
+    public const ORDER_FILTER_MAP = [
+        'num' => 'num',
+        'customer' => 'customer',
+        'status' => 'status_id',
+        'status_id' => 'status_id',
+        'status_name' => 'status_id',
+        'delivery' => 'delivery_id',
+        'delivery_id' => 'delivery_id',
+        'payment' => 'payment_id',
+        'payment_id' => 'payment_id',
+        'context' => 'context',
+        'email' => 'email',
+        'phone' => 'phone',
+    ];
+
     public static function isAllowedFilter(string $fieldName, array $allowedMap): bool
     {
         if ($fieldName === '' || in_array($fieldName, self::BLOCKED_FILTER_FIELDS, true)) {
@@ -87,6 +107,46 @@ final class ManagerListFilterPolicy
         }
 
         $query->where([$column . ':LIKE' => "%{$value}%"]);
+    }
+
+    /**
+     * @param \xPDO\Om\xPDOQuery $query
+     */
+    public static function applyOrderFilter($query, string $fieldName, mixed $value): void
+    {
+        if (!self::isAllowedFilter($fieldName, self::ORDER_FILTER_MAP)) {
+            return;
+        }
+
+        switch (self::ORDER_FILTER_MAP[$fieldName]) {
+            case 'status_id':
+                $query->where(['status_id' => (int)$value]);
+                break;
+            case 'delivery_id':
+                $query->where(['delivery_id' => (int)$value]);
+                break;
+            case 'payment_id':
+                $query->where(['payment_id' => (int)$value]);
+                break;
+            case 'context':
+                $query->where(['context' => $value]);
+                break;
+            case 'customer':
+                $query->where([
+                    'Address.first_name:LIKE' => "%{$value}%",
+                    'OR:Address.last_name:LIKE' => "%{$value}%",
+                ]);
+                break;
+            case 'email':
+                $query->where(['Address.email:LIKE' => "%{$value}%"]);
+                break;
+            case 'phone':
+                $query->where(['Address.phone:LIKE' => "%{$value}%"]);
+                break;
+            case 'num':
+                $query->where(['num:LIKE' => "{$value}%"]);
+                break;
+        }
     }
 
     /**

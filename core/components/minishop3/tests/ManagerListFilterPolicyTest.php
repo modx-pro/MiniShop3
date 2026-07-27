@@ -137,5 +137,36 @@ $assertSame(
     'is_active filter accepts zero'
 );
 
+$assertFalse(
+    ManagerListFilterPolicy::isAllowedFilter('token', ManagerListFilterPolicy::ORDER_FILTER_MAP),
+    'order token filter blocked'
+);
+
+$orderQuery = new class {
+    /** @var list<array<string, mixed>> */
+    public array $wheres = [];
+
+    public function where(array $criteria): void
+    {
+        $this->wheres[] = $criteria;
+    }
+};
+
+ManagerListFilterPolicy::applyOrderFilter($orderQuery, 'token', 'abc');
+$assertSame([], $orderQuery->wheres, 'blocked order filter does not mutate query');
+
+ManagerListFilterPolicy::applyOrderFilter($orderQuery, 'status_name', '3');
+$assertSame([['status_id' => 3]], $orderQuery->wheres, 'status_name maps to status_id int');
+
+ManagerListFilterPolicy::applyOrderFilter($orderQuery, 'num', '2026');
+$assertSame(
+    [
+        ['status_id' => 3],
+        ['num:LIKE' => '2026%'],
+    ],
+    $orderQuery->wheres,
+    'num filter uses prefix LIKE'
+);
+
 fwrite(STDOUT, "OK ManagerListFilterPolicyTest\n");
 exit(0);
