@@ -7,6 +7,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msNotificationConfig;
 use MiniShop3\Services\Notification\NotificationConfigService;
+use MiniShop3\Services\Payment\PaymentLinkResolver;
 use MiniShop3\Notifications\Notification;
 use MiniShop3\Notifications\Messages\EmailMessage;
 use MiniShop3\Notifications\Messages\TelegramMessage;
@@ -24,6 +25,8 @@ class StatusChangedNotification extends Notification
     protected ?msOrderStatus $oldStatus;
     protected msOrderStatus $newStatus;
     protected ?NotificationConfigService $configService = null;
+    private ?string $paymentLink = null;
+    private bool $paymentLinkResolved = false;
 
     public function __construct(
         modX $modx,
@@ -267,11 +270,28 @@ class StatusChangedNotification extends Notification
             $pls['old_status_name'] = $this->modx->lexicon($oldStatusKey) ?: $oldStatusKey;
         }
 
+        $paymentLink = $this->resolvePaymentLink();
+        if ($paymentLink !== null) {
+            $pls['payment_link'] = $paymentLink;
+        }
+
         // Site info
         $pls['site_name'] = $this->modx->getOption('site_name');
         $pls['site_url'] = $this->modx->getOption('site_url');
 
         return $pls;
+    }
+
+    private function resolvePaymentLink(): ?string
+    {
+        if (!$this->paymentLinkResolved) {
+            /** @var PaymentLinkResolver $resolver */
+            $resolver = $this->modx->services->get('ms3_payment_link_resolver');
+            $this->paymentLink = $resolver->resolveForOrder($this->order, $this->newStatus);
+            $this->paymentLinkResolved = true;
+        }
+
+        return $this->paymentLink;
     }
 
     /**
