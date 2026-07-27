@@ -22,6 +22,7 @@ class OrderSubmitHandler
     protected OrderFieldManager $fieldManager;
     protected OrderAddressManager $addressManager;
     protected OrderUserResolver $userResolver;
+    protected OrderNumberGenerator $numberGenerator;
 
     public function __construct(
         modX $modx,
@@ -30,7 +31,8 @@ class OrderSubmitHandler
         OrderCostCalculator $costCalculator,
         OrderFieldManager $fieldManager,
         OrderAddressManager $addressManager,
-        OrderUserResolver $userResolver
+        OrderUserResolver $userResolver,
+        ?OrderNumberGenerator $numberGenerator = null
     ) {
         $this->modx = $modx;
         $this->ms3 = $ms3;
@@ -39,6 +41,7 @@ class OrderSubmitHandler
         $this->fieldManager = $fieldManager;
         $this->addressManager = $addressManager;
         $this->userResolver = $userResolver;
+        $this->numberGenerator = $numberGenerator ?? new OrderNumberGenerator($modx);
     }
 
     /**
@@ -174,23 +177,40 @@ class OrderSubmitHandler
         $cartCost = $costData['cart_cost'];
         $totalCost = (float) $costData['cost'];
 
-        // Generate order number
-        $num = $this->getNewOrderNum();
-
-        // Update draft with final data (cost matches calculator: cart + delivery + payment)
-
-        $draft->fromArray([
-            'customer_id' => $customerId,
-            'user_id' => $userId,
-            'updatedon' => time(),
-            'num' => $num,
-            'cart_cost' => $cartCost,
-            'delivery_cost' => $deliveryCost,
-            'cost' => $totalCost,
-        ]);
-
-        $draft->Address->set('updatedon', time());
-        $draft->save();
+        // Allocate order number and persist costs under GET_LOCK (#380)
+        try {
+            $this->numberGenerator->runWithNextNumber(function (string $num) use (
+                $draft,
+                $customerId,
+                $userId,
+                $cartCost,
+                $deliveryCost,
+                $totalCost
+            ): void {
+                $draft->fromArray([
+                    'customer_id' => $customerId,
+                    'user_id' => $userId,
+                    'updatedon' => time(),
+                    'num' => $num,
+                    'cart_cost' => $cartCost,
+                    'delivery_cost' => $deliveryCost,
+                    'cost' => $totalCost,
+                ]);
+                $draft->Address->set('updatedon', time());
+                if (!$draft->save()) {
+                    $this->modx->log(
+                        modX::LOG_LEVEL_ERROR,
+                        '[OrderSubmitHandler] Order save failed while assigning num=' . $num
+                    );
+                    throw new \RuntimeException('ms3_err_order_num_save');
+                }
+            });
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage());
+        } catch (\Throwable $e) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[OrderSubmitHandler] ' . $e->getMessage());
+            return $this->error('ms3_err_order_num_save');
+        }
 
         // Save address to customer's saved addresses if requested
         $properties = $draft->get('properties') ?? [];
@@ -271,46 +291,18 @@ class OrderSubmitHandler
     }
 
     /**
-     * Generate new order number
+     * Peek next order number (legacy / plugin API).
      *
-     * Format: {date_format}{separator}{counter}
-     * Example: 2501/1, 2501/2, etc.
-     *
-     * @return string Generated order number
+     * @deprecated Prefer OrderNumberGenerator::runWithNextNumber() so allocate and save share one lock.
      */
     public function getNewOrderNum(): string
     {
-        $format = htmlspecialchars($this->modx->getOption('ms3_order_format_num', null, 'ym'));
-        $separator = trim(
-            preg_replace(
-                "/[^,\/\-]/",
-                '',
-                $this->modx->getOption('ms3_order_format_num_separator', null, '/')
-            )
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            '[OrderSubmitHandler] getNewOrderNum() is deprecated; use runWithNextNumber() for atomic allocate+save'
         );
-        $separator = $separator ?: '/';
 
-        $prefix = $format ? date($format) : date('ym');
-
-        // Find last order with this prefix
-        $c = $this->modx->newQuery(msOrder::class);
-        $c->where(['num:LIKE' => "{$prefix}%"]);
-        $c->select('num');
-        $c->sortby('id', 'DESC');
-        $c->limit(1);
-
-        $count = 0;
-        if ($c->prepare() && $c->stmt->execute()) {
-            $num = $c->stmt->fetchColumn();
-            if (!empty($num)) {
-                $parts = explode($separator, $num);
-                $count = (int)($parts[1] ?? 0);
-            }
-        }
-
-        $count++;
-
-        return sprintf('%s%s%d', $prefix, $separator, $count);
+        return $this->numberGenerator->generate();
     }
 
     /**

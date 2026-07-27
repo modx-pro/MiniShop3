@@ -23,11 +23,13 @@ class OrderFinalizeService
 {
     protected modX $modx;
     protected MiniShop3 $ms3;
+    protected OrderNumberGenerator $numberGenerator;
 
-    public function __construct(modX $modx, MiniShop3 $ms3)
+    public function __construct(modX $modx, MiniShop3 $ms3, ?OrderNumberGenerator $numberGenerator = null)
     {
         $this->modx = $modx;
         $this->ms3 = $ms3;
+        $this->numberGenerator = $numberGenerator ?? new OrderNumberGenerator($modx);
     }
 
     /**
@@ -106,17 +108,37 @@ class OrderFinalizeService
             return $costResult;
         }
 
-        // Generate order number if not set
-        if (empty($order->get('num'))) {
-            $order->set('num', $this->getNewOrderNum());
-        }
-
-        // Update order
+        // Persist costs; allocate num under GET_LOCK when still empty (#380)
         $order->set('updatedon', time());
         $order->set('cost', $costResult['data']['total_cost']);
         $order->set('cart_cost', $costResult['data']['cart_cost']);
         $order->set('delivery_cost', $costResult['data']['delivery_cost']);
-        $order->save();
+
+        try {
+            if (empty($order->get('num'))) {
+                $this->numberGenerator->runWithNextNumber(function (string $num) use ($order): void {
+                    $order->set('num', $num);
+                    if (!$order->save()) {
+                        $this->modx->log(
+                            modX::LOG_LEVEL_ERROR,
+                            '[OrderFinalizeService] Order save failed while assigning num=' . $num
+                        );
+                        throw new \RuntimeException('ms3_err_order_num_save');
+                    }
+                });
+            } elseif (!$order->save()) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[OrderFinalizeService] Order save failed after cost update'
+                );
+                return $this->error('ms3_err_order_num_save');
+            }
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage());
+        } catch (\Throwable $e) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[OrderFinalizeService] ' . $e->getMessage());
+            return $this->error('ms3_err_order_num_save');
+        }
 
         // Event: before create order (same as frontend)
         $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateOrder', [
@@ -425,46 +447,6 @@ class OrderFinalizeService
             'total_cost' => $totalCost,
             'weight' => $weight,
         ]);
-    }
-
-    /**
-     * Generate new order number
-     *
-     * @return string
-     */
-    protected function getNewOrderNum(): string
-    {
-        $format = htmlspecialchars($this->modx->getOption('ms3_order_format_num', null, 'ym'));
-        $separator = trim(
-            preg_replace(
-                "/[^,\/\-]/",
-                '',
-                $this->modx->getOption('ms3_order_format_num_separator', null, '/')
-            )
-        );
-        $separator = $separator ?: '/';
-
-        $prefix = $format ? date($format) : date('ym');
-
-        // Find last order with this prefix
-        $c = $this->modx->newQuery(msOrder::class);
-        $c->where(['num:LIKE' => "{$prefix}%"]);
-        $c->select('num');
-        $c->sortby('id', 'DESC');
-        $c->limit(1);
-
-        $count = 0;
-        if ($c->prepare() && $c->stmt->execute()) {
-            $num = $c->stmt->fetchColumn();
-            if (!empty($num)) {
-                $parts = explode($separator, $num);
-                $count = (int)($parts[1] ?? 0);
-            }
-        }
-
-        $count++;
-
-        return sprintf('%s%s%d', $prefix, $separator, $count);
     }
 
     /**

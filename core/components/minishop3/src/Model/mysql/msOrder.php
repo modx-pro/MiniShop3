@@ -21,7 +21,7 @@ class msOrder extends \MiniShop3\Model\msOrder
                 'uuid' => '',
                 'createdon' => null,
                 'updatedon' => null,
-                'num' => '',
+                'num' => null,
                 'cost' => 0.0,
                 'cart_cost' => 0.0,
                 'delivery_cost' => 0.0,
@@ -85,7 +85,7 @@ class msOrder extends \MiniShop3\Model\msOrder
                         'precision' => '20',
                         'phptype' => 'string',
                         'null' => true,
-                        'default' => '',
+                        'default' => null,
                     ],
                 'cost' =>
                     [
@@ -230,6 +230,22 @@ class msOrder extends \MiniShop3\Model\msOrder
                                         'length' => '',
                                         'collation' => 'A',
                                         'null' => false,
+                                    ],
+                            ],
+                    ],
+                'num' =>
+                    [
+                        'alias' => 'num',
+                        'primary' => false,
+                        'unique' => true,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'num' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => true,
                                     ],
                             ],
                     ],
