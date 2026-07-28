@@ -104,13 +104,9 @@ class OrderStatusService
         );
 
         if ($oldStatus) {
-            if ($oldStatus->get('final')) {
-                return $this->modx->lexicon('ms3_err_status_final');
-            }
-            if ($oldStatus->get('fixed')) {
-                if ($status->get('position') <= $oldStatus->get('position')) {
-                    return $this->modx->lexicon('ms3_err_status_fixed');
-                }
+            $transitionError = $this->validateStatusTransition($oldStatus, $status);
+            if ($transitionError !== null) {
+                return $transitionError;
             }
         }
 
@@ -143,6 +139,11 @@ class OrderStatusService
             if ($msOrder->get('status_id') == $statusId) {
                 return $this->modx->lexicon('ms3_err_status_same');
             }
+
+            $transitionError = $this->validateStatusTransition($oldStatus, $status);
+            if ($transitionError !== null) {
+                return $transitionError;
+            }
         }
 
         $msOrder->set('status_id', $statusId);
@@ -171,6 +172,28 @@ class OrderStatusService
         }
 
         return true;
+    }
+
+    /**
+     * Validate transition from old status to new (final/fixed rules).
+     */
+    protected function validateStatusTransition(
+        ?msOrderStatusModel $oldStatus,
+        msOrderStatusModel $newStatus
+    ): ?string {
+        if (!$oldStatus) {
+            return null;
+        }
+
+        if ($oldStatus->get('final')) {
+            return $this->modx->lexicon('ms3_err_status_final');
+        }
+
+        if ($oldStatus->get('fixed') && $newStatus->get('position') <= $oldStatus->get('position')) {
+            return $this->modx->lexicon('ms3_err_status_fixed');
+        }
+
+        return null;
     }
 
     /**
