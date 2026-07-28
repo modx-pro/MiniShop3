@@ -38,6 +38,8 @@ final class CategoryProductActionPermissions
      *     permission: ?string,
      *     reason: 'ok'|'unknown_method'|'forbidden'
      * }
+     *
+     * When denied, `message` is a lexicon key (resolved in CategoryProductsController).
      */
     public static function evaluate(string $method, callable $hasPermission): array
     {
@@ -46,7 +48,7 @@ final class CategoryProductActionPermissions
             return [
                 'allowed' => false,
                 'status' => HttpStatus::BAD_REQUEST,
-                'message' => 'Unknown method',
+                'message' => 'ms3_err_unknown_method',
                 'permission' => null,
                 'reason' => 'unknown_method',
             ];
@@ -56,7 +58,7 @@ final class CategoryProductActionPermissions
             return [
                 'allowed' => false,
                 'status' => HttpStatus::FORBIDDEN,
-                'message' => "Access denied. Required permission: {$permission}",
+                'message' => 'ms3_err_access_denied_permission',
                 'permission' => $permission,
                 'reason' => 'forbidden',
             ];

@@ -26,6 +26,27 @@ class CategoryProductsController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+        $this->modx->lexicon->load('minishop3:default');
+    }
+
+    /**
+     * Human-readable lexicon entry, or original key when missing/empty translation.
+     *
+     * @param array<string, scalar|null> $params
+     */
+    protected function lexiconMessageOrKey(string $key, array $params = []): string
+    {
+        $text = $this->modx->lexicon($key, $params);
+
+        return ($text !== $key && $text !== '') ? $text : $key;
+    }
+
+    /**
+     * @param array<string, scalar|null> $params
+     */
+    protected function errorResponse(string $messageKey, int $status, array $params = []): array
+    {
+        return Response::error($this->lexiconMessageOrKey($messageKey, $params), $status)->getData();
     }
 
     /**
@@ -40,12 +61,12 @@ class CategoryProductsController
         $categoryId = (int) ($params['id'] ?? 0);
 
         if (!$categoryId) {
-            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
         }
 
         $category = $this->modx->getObject(msCategory::class, $categoryId);
         if (!$category) {
-            return Response::error('Category not found', HttpStatus::NOT_FOUND)->getData();
+            return $this->errorResponse('ms3_err_category_nf', HttpStatus::NOT_FOUND);
         }
 
         $start = (int) ($params['start'] ?? 0);
@@ -64,7 +85,7 @@ class CategoryProductsController
         /** @var CategoryProductsListService|null $listService */
         $listService = $this->modx->services->get('ms3_category_products_list');
         if (!$listService) {
-            return Response::error('Category products list service is not available', 500)->getData();
+            return $this->errorResponse('ms3_err_category_products_list_service', HttpStatus::INTERNAL_SERVER_ERROR);
         }
 
         $page = $listService->getPage(
@@ -119,11 +140,11 @@ class CategoryProductsController
         $nested = $this->isNested($params);
 
         if (!$categoryId) {
-            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
         }
 
         if (empty($items) || !is_array($items)) {
-            return Response::error('Items array is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_items_required', HttpStatus::BAD_REQUEST);
         }
 
         $updated = 0;
@@ -150,7 +171,7 @@ class CategoryProductsController
 
         return Response::success([
             'updated' => $updated,
-        ], 'Products reordered successfully')->getData();
+        ], $this->lexiconMessageOrKey('ms3_category_products_reordered'))->getData();
     }
 
     /**
@@ -172,7 +193,7 @@ class CategoryProductsController
         }
 
         if (empty($method)) {
-            return Response::error('Method is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_method_required', HttpStatus::BAD_REQUEST);
         }
 
         $access = CategoryProductActionPermissions::evaluate(
@@ -194,11 +215,15 @@ class CategoryProductsController
                 );
             }
 
-            return Response::error($access['message'], $access['status'])->getData();
+            return $this->errorResponse(
+                $access['message'],
+                $access['status'],
+                ['permission' => $access['permission'] ?? '']
+            );
         }
 
         if (empty($ids) || !is_array($ids)) {
-            return Response::error('Product IDs array is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_product_ids_required', HttpStatus::BAD_REQUEST);
         }
 
         // Sanitize IDs
@@ -207,7 +232,7 @@ class CategoryProductsController
         });
 
         if (empty($ids)) {
-            return Response::error('No valid product IDs provided', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_product_ids_invalid', HttpStatus::BAD_REQUEST);
         }
 
         $success = 0;
@@ -242,13 +267,13 @@ class CategoryProductsController
         }
 
         if ($success === 0) {
-            return Response::error('No products were updated', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+            return $this->errorResponse('ms3_err_category_products_no_updates', HttpStatus::INTERNAL_SERVER_ERROR);
         }
 
         return Response::success([
             'success' => $success,
             'failed' => $failed,
-        ], "{$success} products updated")->getData();
+        ], $this->lexiconMessageOrKey('ms3_category_products_updated', ['count' => $success]))->getData();
     }
 
     /**
@@ -284,7 +309,7 @@ class CategoryProductsController
         }
 
         if (!$productId) {
-            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_product_id_required', HttpStatus::BAD_REQUEST);
         }
 
         if ($denied = $this->denyWithoutPermission('msproduct_publish')) {
@@ -295,7 +320,7 @@ class CategoryProductsController
         $product = $scope->findInCategory($categoryId, $productId, $nested);
 
         if (!$product) {
-            return Response::error('Product not found', HttpStatus::NOT_FOUND)->getData();
+            return $this->errorResponse('ms3_err_product_nf', HttpStatus::NOT_FOUND);
         }
 
         // If published param not provided, toggle current state
@@ -304,13 +329,15 @@ class CategoryProductsController
         }
 
         if (!$this->applyPublish($product, (bool) $published)) {
-            return Response::error('Failed to update product', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+            return $this->errorResponse('ms3_err_product_update_failed', HttpStatus::INTERNAL_SERVER_ERROR);
         }
 
         return Response::success([
             'id' => $productId,
             'published' => $published,
-        ], $published ? 'Product published' : 'Product unpublished')->getData();
+        ], $this->lexiconMessageOrKey(
+            $published ? 'ms3_category_product_published' : 'ms3_category_product_unpublished'
+        ))->getData();
     }
 
     private function isNested(array $params): bool
@@ -343,10 +370,11 @@ class CategoryProductsController
             . ' (user id ' . (int)($this->modx->user->get('id') ?? 0) . ')'
         );
 
-        return Response::error(
-            "Access denied. Required permission: {$permission}",
-            HttpStatus::FORBIDDEN
-        )->getData();
+        return $this->errorResponse(
+            'ms3_err_access_denied_permission',
+            HttpStatus::FORBIDDEN,
+            ['permission' => $permission]
+        );
     }
 
     private function applyPublish(msProduct $product, bool $published): bool
