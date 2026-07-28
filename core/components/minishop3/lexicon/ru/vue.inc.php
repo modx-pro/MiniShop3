@@ -774,6 +774,7 @@ $_lang['ms3_order_err_validation'] = 'Ошибка валидации данны
 $_lang['ms3_order_err_products'] = 'В заказе нет товаров';
 $_lang['ms3_order_err_delivery_id'] = 'Не выбран способ доставки';
 $_lang['ms3_order_err_payment_id'] = 'Не выбран способ оплаты';
+$_lang['ms3_order_err_payment_delivery'] = 'Способ оплаты недоступен для выбранной доставки';
 $_lang['ms3_order_err_customer_id'] = 'Не указан покупатель';
 $_lang['ms3_order_err_customer_contact'] = 'Для создания клиента необходимо указать email или телефон';
 $_lang['ms3_order_err_email'] = 'Не указан email';

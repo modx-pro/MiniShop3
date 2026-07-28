@@ -251,6 +251,21 @@ class OrderFieldManager
             $response = $this->ms3->utils->invokeEvent('msOnValidateOrderValue', $eventParams);
         }
 
+        if (in_array($key, ['payment_id', 'delivery_id'], true)) {
+            $deliveryId = (int) ($key === 'delivery_id' ? $response['data']['value'] : ($orderData['delivery_id'] ?? 0));
+            $paymentId = (int) ($key === 'payment_id' ? $response['data']['value'] : ($orderData['payment_id'] ?? 0));
+            /** @var \MiniShop3\Services\Delivery\DeliveryService $deliveryService */
+            $deliveryService = $this->modx->services->get('ms3_delivery_service');
+            $pairError = $deliveryService->getDeliveryPaymentPairError($deliveryId, $paymentId);
+            if ($pairError !== null) {
+                return $this->error('', [
+                    'error' => [
+                        $key => $pairError,
+                    ],
+                ]);
+            }
+        }
+
         return $this->success('', ['value' => $response['data']['value']]);
     }
 

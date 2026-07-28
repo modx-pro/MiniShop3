@@ -113,6 +113,43 @@ class DeliveryService
     }
 
     /**
+     * Check whether payment method is linked to delivery and active.
+     */
+    public function isPaymentAvailableForDelivery(int $deliveryId, int $paymentId): bool
+    {
+        if ($deliveryId <= 0 || $paymentId <= 0) {
+            return false;
+        }
+
+        $payment = $this->modx->getObject(msPayment::class, [
+            'id' => $paymentId,
+            'active' => 1,
+        ]);
+        if (!$payment) {
+            return false;
+        }
+
+        return (bool) $this->modx->getCount(msDeliveryMember::class, [
+            'delivery_id' => $deliveryId,
+            'payment_id' => $paymentId,
+        ]);
+    }
+
+    /**
+     * Lexicon key when payment is not linked to delivery, or null if pair is valid/incomplete.
+     */
+    public function getDeliveryPaymentPairError(int $deliveryId, int $paymentId): ?string
+    {
+        if ($deliveryId <= 0 || $paymentId <= 0) {
+            return null;
+        }
+
+        return $this->isPaymentAvailableForDelivery($deliveryId, $paymentId)
+            ? null
+            : 'ms3_order_err_payment_delivery';
+    }
+
+    /**
      * Get first active payment method for delivery
      *
      * Returns ID of first active payment method

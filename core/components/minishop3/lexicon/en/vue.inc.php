@@ -775,6 +775,7 @@ $_lang['ms3_order_err_validation'] = 'Order data validation error';
 $_lang['ms3_order_err_products'] = 'Order has no products';
 $_lang['ms3_order_err_delivery_id'] = 'Delivery method is not selected';
 $_lang['ms3_order_err_payment_id'] = 'Payment method is not selected';
+$_lang['ms3_order_err_payment_delivery'] = 'Payment method is not available for the selected delivery method';
 $_lang['ms3_order_err_customer_id'] = 'Customer is not specified';
 $_lang['ms3_order_err_customer_contact'] = 'Email or phone is required to create a customer';
 $_lang['ms3_order_err_email'] = 'Email is not specified';
