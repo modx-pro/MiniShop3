@@ -186,13 +186,14 @@ class OrderCostCalculator
             return $this->success('ms3_order_getcost_success', ['cost' => $paymentCost]);
         }
 
-        // Get cart cost for payment calculation
+        // Get cart cost for payment calculation (MS2-compatible base: cart only)
         $cartCostResponse = $this->getCartCost($draft, $token, $ctx);
         $cartCost = $cartCostResponse['success'] ? $cartCostResponse['data']['cost'] : 0;
+        $paymentBase = OrderService::paymentCommissionBase((float) $cartCost);
 
-        // Payment getCost returns total with payment fee, so subtract cart cost
-        $costWithPayment = $msPayment->getCost($draft, $cartCost);
-        $paymentCost = $costWithPayment - $cartCost;
+        // Payment getCost returns total with payment fee, so subtract base
+        $costWithPayment = $msPayment->getCost($draft, $paymentBase);
+        $paymentCost = $costWithPayment - $paymentBase;
 
         $response = $this->ms3->utils->invokeEvent('msOnGetPaymentCost', [
             'calculator' => $this,
