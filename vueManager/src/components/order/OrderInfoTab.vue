@@ -306,6 +306,7 @@ const showOrderInfoActions = computed(
       v-if="showOrderInfoActions"
       :is-create-mode="isCreateMode"
       :saving="saving"
+      :recalculating-cost="recalculatingCost"
       @create="createOrder"
       @save="saveOrder"
       @cancel="goBack"

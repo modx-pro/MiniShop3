@@ -53,6 +53,7 @@ const {
   createOrder,
   saveOrder,
   goBack,
+  recalculatingCost,
 } = orderCtx
 
 const { _ } = useLexicon()
@@ -242,6 +243,7 @@ const showAddressTabActions = computed(
       v-if="showAddressTabActions"
       :is-create-mode="isCreateMode"
       :saving="saving"
+      :recalculating-cost="recalculatingCost"
       @create="createOrder"
       @save="saveOrder"
       @cancel="goBack"
