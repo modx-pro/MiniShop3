@@ -187,33 +187,34 @@ const startImport = async () => {
       debug: debugMode.value,
     })
 
-    importId.value = response.import_id || ''
+    // Processor envelope: { success, message, object: { … } }
+    const data = response.object || response
+    importId.value = data.import_id || ''
 
-    if (response.scheduled) {
+    if (data.scheduled) {
       importResult.value = {
         success: true,
         message: _('ms3_import_scheduled_success'),
         scheduled: true,
       }
       importCompleted.value = true
-      importRunning.value = false
     } else if (!useScheduler.value) {
       importResult.value = {
         success: response.success !== false,
-        total: response.total || 0,
-        created: response.created || 0,
-        updated: response.updated || 0,
-        errors: response.errors || 0,
-        skipped: response.skipped || 0,
+        total: data.total || 0,
+        created: data.created || 0,
+        updated: data.updated || 0,
+        errors: data.errors || 0,
+        skipped: data.skipped || 0,
       }
       importCompleted.value = true
-      importRunning.value = false
     }
   } catch (err) {
     console.error('Import failed:', err)
     importResult.value = { success: false, message: err.message || _('ms3_import_error') }
-    importRunning.value = false
     importCompleted.value = true
+  } finally {
+    importRunning.value = false
   }
 }
 
