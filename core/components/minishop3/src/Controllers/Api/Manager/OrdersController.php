@@ -71,6 +71,16 @@ class OrdersController
         'phone',
     ];
 
+    /**
+     * Internal order fields never exposed in Manager API responses.
+     *
+     * `token` is the secret used to authorize web order actions (see Web OrderController
+     * `ms3_token`); the Vue manager never consumes it, so it must not leak in any order payload.
+     */
+    protected const HIDDEN_ORDER_FIELDS = [
+        'token',
+    ];
+
     protected modX $modx;
     protected ?OrderLogService $orderLog = null;
     protected ?Utils $ms3Utils = null;
@@ -933,9 +943,13 @@ class OrdersController
 
             // Reload order to get updated data
             $order = $this->modx->getObject(msOrder::class, $id);
+            if (!$order instanceof msOrder) {
+                return Response::error('Order not found after update', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+            }
         }
 
-        return Response::success($order->toArray(), 'Order updated successfully')->getData();
+        // Return the same shape as GET (address-merge, formatted cost, no secret fields)
+        return Response::success($this->buildOrderPayloadFromModel($order), 'Order updated successfully')->getData();
     }
 
     /**
@@ -1733,6 +1747,10 @@ class OrdersController
             if (isset($data['weight'])) {
                 $data['weight_formatted'] = $ms3->format->weight($data['weight']);
             }
+        }
+
+        foreach (self::HIDDEN_ORDER_FIELDS as $field) {
+            unset($data[$field]);
         }
 
         return $data;
