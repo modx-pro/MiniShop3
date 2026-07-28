@@ -16,6 +16,7 @@ import draggable from 'vuedraggable'
 
 import { useCategoryProductsInlineEdit } from '../composables/useCategoryProductsInlineEdit.js'
 import { useSelection } from '../composables/useSelection.js'
+import { useStaleRequestGuard } from '../composables/useStaleRequestGuard.js'
 import {
   GridColumnEditorType,
   isSelectLikeEditorType,
@@ -58,6 +59,7 @@ const {
 
 const columns = ref([])
 const filters = ref({})
+const { runGuarded } = useStaleRequestGuard()
 const loading = ref(false)
 const products = ref([])
 const totalRecords = ref(0)
@@ -128,43 +130,51 @@ function nestedMutationParams() {
  * Load products list
  */
 async function loadProducts() {
-  loading.value = true
-
   try {
-    const params = {
-      start: first.value,
-      limit: rows.value,
-      sort: sortField.value,
-      dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
-      nested: nested.value ? 1 : 0,
-    }
+    await runGuarded(loading, async (signal, isCurrent) => {
+      const params = {
+        start: first.value,
+        limit: rows.value,
+        sort: sortField.value,
+        dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
+        nested: nested.value ? 1 : 0,
+      }
 
-    // Apply filter values. Option-type columns are JOIN-ed at runtime — backend
-    // reads their filters as `filter_{fieldName}` (see CategoryProductsListService).
-    // Builtin product/data filters keep the original direct-param contract.
-    Object.keys(filterValues.value).forEach(key => {
-      const value = filterValues.value[key]
-      if (value === null || value === undefined || value === '') {
+      // Apply filter values. Option-type columns are JOIN-ed at runtime — backend
+      // reads their filters as `filter_{fieldName}` (see CategoryProductsListService).
+      // Builtin product/data filters keep the original direct-param contract.
+      Object.keys(filterValues.value).forEach(key => {
+        const value = filterValues.value[key]
+        if (value === null || value === undefined || value === '') {
+          return
+        }
+        const col = columns.value.find(c => c.name === key)
+        if (col && col.type === 'option') {
+          params[`filter_${key}`] = value
+        } else {
+          params[key] = value
+        }
+      })
+
+      const response = await request.get(
+        `/api/mgr/categories/${props.categoryId}/products`,
+        params,
+        { signal }
+      )
+
+      if (!isCurrent()) {
         return
       }
-      const col = columns.value.find(c => c.name === key)
-      if (col && col.type === 'option') {
-        params[`filter_${key}`] = value
+
+      if (response && response.results) {
+        products.value = response.results
+        totalRecords.value = response.total || 0
       } else {
-        params[key] = value
+        console.error('[CategoryProductsGrid] Invalid response:', response)
+        products.value = []
+        totalRecords.value = 0
       }
     })
-
-    const response = await request.get(`/api/mgr/categories/${props.categoryId}/products`, params)
-
-    if (response && response.results) {
-      products.value = response.results
-      totalRecords.value = response.total || 0
-    } else {
-      console.error('[CategoryProductsGrid] Invalid response:', response)
-      products.value = []
-      totalRecords.value = 0
-    }
   } catch (error) {
     console.error('[CategoryProductsGrid] Error loading products:', error)
     toast.add({
@@ -173,8 +183,6 @@ async function loadProducts() {
       detail: error.message || _('error_loading_data'),
       life: 5000,
     })
-  } finally {
-    loading.value = false
   }
 }
 
