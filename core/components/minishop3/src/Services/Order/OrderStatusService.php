@@ -146,25 +146,27 @@ class OrderStatusService
 
         $msOrder->set('status_id', $statusId);
 
-        if ($msOrder->save()) {
-            $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
+        if (!$msOrder->save()) {
+            return $this->modx->lexicon('ms3_err_unknown');
+        }
 
-            $response = $this->ms3->utils->invokeEvent('msOnChangeOrderStatus', [
-                'msOrder' => $msOrder,
-                'old_status' => $oldStatus?->get('id'),
-                'status' => $statusId,
-            ]);
-            if (!$response['success']) {
-                return $response['message'];
-            }
+        $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
 
-            // Send notifications via NotificationManager (unless skipped)
-            // Use output buffering to prevent any stray output from Fenom/pdoTools
-            if (!$skipNotifications) {
-                ob_start();
-                $this->sendNotifications($msOrder, $status, $oldStatus);
-                ob_end_clean();
-            }
+        $response = $this->ms3->utils->invokeEvent('msOnChangeOrderStatus', [
+            'msOrder' => $msOrder,
+            'old_status' => $oldStatus?->get('id'),
+            'status' => $statusId,
+        ]);
+        if (!$response['success']) {
+            return $response['message'];
+        }
+
+        // Send notifications via NotificationManager (unless skipped)
+        // Use output buffering to prevent any stray output from Fenom/pdoTools
+        if (!$skipNotifications) {
+            ob_start();
+            $this->sendNotifications($msOrder, $status, $oldStatus);
+            ob_end_clean();
         }
 
         return true;
