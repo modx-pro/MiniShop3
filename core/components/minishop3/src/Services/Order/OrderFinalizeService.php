@@ -402,18 +402,12 @@ class OrderFinalizeService
      */
     protected function calculateCosts(msOrder $order): array
     {
-        // Calculate cart cost from order products
-        $cartCost = 0;
-        $weight = 0;
-
         $products = $this->modx->getIterator(msOrderProduct::class, [
             'order_id' => $order->get('id'),
         ]);
-
-        foreach ($products as $product) {
-            $cartCost += (float) $product->get('cost');
-            $weight += (float) $product->get('weight') * (int) $product->get('count');
-        }
+        $totals = OrderService::aggregateProductsTotals($products);
+        $cartCost = $totals['cart_cost'];
+        $weight = $totals['weight'];
 
         // Calculate delivery cost
         $deliveryCost = 0;

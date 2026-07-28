@@ -227,6 +227,17 @@ class OrderCostCalculator
         string $ctx = 'web',
         bool $onlyCost = false
     ): array {
+        $before = $this->ms3->utils->invokeEvent('msOnBeforeGetOrderCost', [
+            'calculator' => $this,
+            'cart' => $this->ms3->cart,
+            'draft' => $draft,
+            'with_cart' => true,
+            'only_cost' => $onlyCost,
+        ]);
+        if (!$before['success']) {
+            return $this->error($before['message']);
+        }
+
         $cartCostResponse = $this->getCartCost($draft, $token, $ctx);
         $cartCost = $cartCostResponse['success'] ? $cartCostResponse['data']['cost'] : 0;
 
@@ -244,6 +255,27 @@ class OrderCostCalculator
             (float) $deliveryCost,
             (float) $paymentCost
         );
+
+        $after = $this->ms3->utils->invokeEvent('msOnGetOrderCost', [
+            'calculator' => $this,
+            'cart' => $this->ms3->cart,
+            'draft' => $draft,
+            'with_cart' => true,
+            'only_cost' => $onlyCost,
+            'cost' => $cost,
+            'cart_cost' => $cartCost,
+            'delivery_cost' => $deliveryCost,
+            'payment_cost' => $paymentCost,
+        ]);
+        if (!$after['success']) {
+            return $this->error($after['message']);
+        }
+
+        $cost = (float) ($after['data']['cost'] ?? $cost);
+        $cartCost = (float) ($after['data']['cart_cost'] ?? $cartCost);
+        $deliveryCost = (float) ($after['data']['delivery_cost'] ?? $deliveryCost);
+        $paymentCost = (float) ($after['data']['payment_cost'] ?? $paymentCost);
+        $cost = $orderService->clampComputedTotal($draft, $cartCost, $deliveryCost, $paymentCost);
 
         if ($onlyCost) {
             return $this->success('ms3_order_getcost_success', ['cost' => $cost]);

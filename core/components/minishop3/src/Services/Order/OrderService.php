@@ -64,6 +64,29 @@ class OrderService
     }
 
     /**
+     * Sum cart_cost and total weight from order product lines.
+     * Weight is unit weight × count (cart status / draft / finalize / manager).
+     *
+     * @param iterable<object> $products Objects with get('weight'|'cost'|'count')
+     * @return array{cart_cost: float, weight: float}
+     */
+    public static function aggregateProductsTotals(iterable $products): array
+    {
+        $cartCost = 0.0;
+        $weight = 0.0;
+
+        foreach ($products as $product) {
+            $cartCost += (float) $product->get('cost');
+            $weight += (float) $product->get('weight') * (int) $product->get('count');
+        }
+
+        return [
+            'cart_cost' => round($cartCost, 6),
+            'weight' => round($weight, 6),
+        ];
+    }
+
+    /**
      * Recalculate products in order
      *
      * Recalculates total cart cost, weight and final order cost

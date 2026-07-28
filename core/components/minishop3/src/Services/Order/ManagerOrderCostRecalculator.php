@@ -48,22 +48,11 @@ class ManagerOrderCostRecalculator
      */
     public function calculateProductTotals(msOrder $order): array
     {
-        $cartCost = 0.0;
-        $weight = 0.0;
-
         $products = $this->modx->getIterator(msOrderProduct::class, [
             'order_id' => $order->get('id'),
         ]);
 
-        foreach ($products as $product) {
-            $cartCost += (float)$product->get('cost');
-            $weight += (float)$product->get('weight') * (int)$product->get('count');
-        }
-
-        return [
-            'cart_cost' => round($cartCost, 6),
-            'weight' => round($weight, 6),
-        ];
+        return OrderService::aggregateProductsTotals($products);
     }
 
     /**

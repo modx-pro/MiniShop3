@@ -1359,21 +1359,15 @@ class OrdersController
      */
     protected function recalculateOrderTotals(msOrder $order): void
     {
-        $cartCost = 0;
-        $weight = 0;
-
         $products = $this->modx->getIterator(\MiniShop3\Model\msOrderProduct::class, [
             'order_id' => $order->get('id'),
         ]);
-
-        foreach ($products as $product) {
-            $cartCost += (float)$product->get('cost');
-            $weight += (float)$product->get('weight') * (int)$product->get('count');
-        }
+        $totals = OrderService::aggregateProductsTotals($products);
+        $cartCost = $totals['cart_cost'];
+        $weight = $totals['weight'];
 
         $order->set('cart_cost', $cartCost);
         $order->set('weight', $weight);
-
         // Recalculate total cost (cart + delivery; payment deltas are reflected in cost when persisted elsewhere)
         /** @var OrderService $orderService */
         $orderService = $this->modx->services->get('ms3_order_service');
