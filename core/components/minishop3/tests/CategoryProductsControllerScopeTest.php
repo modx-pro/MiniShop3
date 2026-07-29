@@ -36,6 +36,7 @@ $modx->products = [
     ['id' => 999, 'parent' => 2, 'published' => 0],
     ['id' => 100, 'parent' => 1, 'published' => 0],
     ['id' => 101, 'parent' => 2, 'published' => 0],
+    ['id' => 200, 'parent' => 1, 'published' => 0, 'policies' => ['save' => false]],
 ];
 $modx->categories = [
     ['id' => 2, 'parent' => 1],
@@ -88,5 +89,29 @@ $sort = $controller->sort([
 ]);
 $assertSame(true, $sort['success'] ?? null, 'sort success');
 $assertSame(1, $sort['data']['updated'] ?? null, 'sort updated count');
+
+// updateProductData: in-scope product with document save policy denied → 403 (#473 pattern)
+$modx->getObjectCalls = [];
+$aclDenied = $controller->updateProductData([
+    'id' => 1,
+    'productId' => 200,
+    'pagetitle' => 'updated title',
+]);
+$assertSame(false, $aclDenied['success'] ?? null, 'updateProductData ACL denied success');
+$assertSame(HttpStatus::FORBIDDEN, $aclDenied['code'] ?? null, 'updateProductData ACL denied code');
+$assertSame(
+    'Save permission denied for this document',
+    $aclDenied['message'] ?? null,
+    'updateProductData ACL denied message'
+);
+
+// updateProductData: out-of-scope product → 403 (scope guard still enforced)
+$outOfScope = $controller->updateProductData([
+    'id' => 1,
+    'productId' => 999,
+    'pagetitle' => 'updated title',
+]);
+$assertSame(false, $outOfScope['success'] ?? null, 'updateProductData out-of-scope success');
+$assertSame(HttpStatus::FORBIDDEN, $outOfScope['code'] ?? null, 'updateProductData out-of-scope code');
 
 fwrite(STDOUT, "OK: CategoryProductsControllerScopeTest\n");

@@ -367,20 +367,26 @@ class CategoryProductsController
             return Response::error('Invalid request data', HttpStatus::BAD_REQUEST)->getData();
         }
 
-        /** @var CategoryProductsListService|null $listService */
-        $listService = $this->modx->services->get('ms3_category_products_list');
-        if (!$listService) {
-            return Response::error(
-                'Category products list service is not available',
-                HttpStatus::INTERNAL_SERVER_ERROR
-            )->getData();
-        }
+        // Scope check + product fetch in one round-trip (CategoryProductScopePolicy).
+        // Replaces the separate isProductInCategoryScope() bool-only lookup and yields
+        // the product instance for the document ACL check below (#473 pattern).
+        $product = $this->scopeService()->findInCategory($categoryId, $productId, $nested);
 
-        if (!$listService->isProductInCategoryScope($productId, $categoryId, $nested)) {
+        if (!$product) {
             $this->modx->lexicon->load('minishop3:default');
 
             return Response::error(
                 $this->modx->lexicon('ms3_err_product_not_in_category_scope'),
+                HttpStatus::FORBIDDEN
+            )->getData();
+        }
+
+        $savePolicies = [CategoryProductDocumentPolicy::POLICY_SAVE];
+        if (!CategoryProductDocumentPolicy::isAllowedAll($product, $savePolicies)) {
+            $this->logDocumentPolicyDenied($product, $savePolicies);
+
+            return Response::error(
+                'Save permission denied for this document',
                 HttpStatus::FORBIDDEN
             )->getData();
         }
