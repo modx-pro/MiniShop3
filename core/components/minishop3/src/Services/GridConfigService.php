@@ -25,6 +25,16 @@ class GridConfigService
 
     private GridRelationFieldExtractor $relationExtractor;
 
+    /**
+     * Request-scoped memo for getGridConfig(): gridKey:includeHidden → column config.
+     *
+     * Safe only while GridConfigService is a request-scoped DI singleton (ServiceRegistry):
+     * one instance per request, not shared across requests, not persisted.
+     *
+     * @var array<string, array<int, array<string, mixed>>>
+     */
+    private array $gridConfigCache = [];
+
     /** @var list<string> */
     private const SAVE_CONFIG_KEYS = [
         'template', 'type', 'format', 'actions',
@@ -54,6 +64,22 @@ class GridConfigService
      */
     public function getGridConfig(string $gridKey, bool $includeHidden = false): array
     {
+        $cacheKey = $this->gridConfigCacheKey($gridKey, $includeHidden);
+        if (array_key_exists($cacheKey, $this->gridConfigCache)) {
+            return $this->gridConfigCache[$cacheKey];
+        }
+
+        $fields = $this->loadGridConfig($gridKey, $includeHidden);
+        $this->gridConfigCache[$cacheKey] = $fields;
+
+        return $fields;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function loadGridConfig(string $gridKey, bool $includeHidden): array
+    {
         $fields = [];
 
         foreach ($this->repository->findByGridKey($gridKey, $includeHidden) as $field) {
@@ -81,6 +107,19 @@ class GridConfigService
         return $fields;
     }
 
+    private function gridConfigCacheKey(string $gridKey, bool $includeHidden): string
+    {
+        return $gridKey . ':' . ($includeHidden ? '1' : '0');
+    }
+
+    private function invalidateGridConfigCache(string $gridKey): void
+    {
+        unset(
+            $this->gridConfigCache[$this->gridConfigCacheKey($gridKey, false)],
+            $this->gridConfigCache[$this->gridConfigCacheKey($gridKey, true)]
+        );
+    }
+
     protected function resolveLabel(msGridField $field): string
     {
         $label = $field->get('label');
@@ -105,6 +144,8 @@ class GridConfigService
      */
     public function saveGridConfig(string $gridKey, array $fields): bool
     {
+        $this->invalidateGridConfigCache($gridKey);
+
         try {
             $fieldNamesToKeep = [];
 
@@ -211,6 +252,8 @@ class GridConfigService
      */
     public function deleteField(string $gridKey, string $fieldName): array
     {
+        $this->invalidateGridConfigCache($gridKey);
+
         try {
             $field = $this->repository->findOne($gridKey, $fieldName);
             if (!$field) {
@@ -262,6 +305,8 @@ class GridConfigService
      */
     public function addField(string $gridKey, array $data): array
     {
+        $this->invalidateGridConfigCache($gridKey);
+
         try {
             if (empty($data['field_name'])) {
                 return ['success' => false, 'message' => 'field_name is required'];
@@ -335,6 +380,8 @@ class GridConfigService
      */
     public function updateField(string $gridKey, string $fieldName, array $data): array
     {
+        $this->invalidateGridConfigCache($gridKey);
+
         try {
             $field = $this->repository->findOne($gridKey, $fieldName);
             if (!$field) {
