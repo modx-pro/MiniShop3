@@ -119,7 +119,8 @@ class TokenMiddleware implements MiddlewareInterface
             }
         } elseif (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
             // No token in request: allow existing session customer (browser session).
-            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
+            $customerId = (int)$_SESSION['ms3']['customer_id'];
+            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $customerId);
             if (
                 $customer
                 && $this->isCustomerSessionAllowed($customer)

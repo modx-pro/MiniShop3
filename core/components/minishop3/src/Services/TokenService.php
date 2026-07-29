@@ -498,6 +498,61 @@ class TokenService
     }
 
     /**
+     * Ensure PHP session is active (public facade for callers outside TokenService).
+     */
+    public function ensureSessionActive(): void
+    {
+        SessionHelper::ensureActive();
+    }
+
+    /**
+     * Token currently bound to the browser (session first, then cookie), without minting.
+     */
+    public function getBindableTokenString(): string
+    {
+        SessionHelper::ensureActive();
+
+        $token = $this->getCustomerToken();
+        if ($token !== null && $token !== '') {
+            return $token;
+        }
+
+        return CookieHelper::getTokenFromCookie();
+    }
+
+    /**
+     * Hydrate $_SESSION from httpOnly cookie token when session has no customer token yet.
+     */
+    public function restoreSessionFromCookie(): void
+    {
+        SessionHelper::ensureActive();
+
+        if ($this->getCustomerToken() !== null) {
+            return;
+        }
+
+        $cookieToken = CookieHelper::getTokenFromCookie();
+        if ($cookieToken === '') {
+            return;
+        }
+
+        $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+            'token' => $cookieToken,
+            'type' => msCustomerToken::TYPE_API,
+        ]);
+
+        if (!$tokenObj) {
+            return;
+        }
+
+        if ($tokenObj->isExpired() && !$this->renewTokenIfExpired($tokenObj)) {
+            return;
+        }
+
+        $this->applyTokenToSession($tokenObj);
+    }
+
+    /**
      * Whether session/cookie API token belongs to customer and is not expired.
      * Renews TTL in DB when the row is past expires_at.
      */

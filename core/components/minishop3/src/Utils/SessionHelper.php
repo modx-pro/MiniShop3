@@ -13,10 +13,11 @@ class SessionHelper
             return;
         }
 
-        session_start();
-
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            error_log('[MiniShop3] SessionHelper: session_start() failed to activate PHP session');
+        if (session_status() === PHP_SESSION_DISABLED) {
+            error_log('[MiniShop3] SessionHelper: PHP sessions are disabled');
+            return;
         }
+
+        session_start();
     }
 }
