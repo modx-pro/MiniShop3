@@ -42,6 +42,31 @@ class CategoryProductScopeModxStub extends modX
     {
         $this->getObjectCalls[] = ['class' => $className, 'criteria' => $criteria];
 
+        if ($className === msCategory::class) {
+            $categoryId = is_array($criteria)
+                ? (int) ($criteria['id'] ?? 0)
+                : (int) $criteria;
+
+            if ($categoryId <= 0) {
+                return null;
+            }
+
+            foreach ($this->categories as $row) {
+                if ((int) $row['id'] === $categoryId) {
+                    return new StubMsCategory($row);
+                }
+            }
+
+            // Category ids used as product parents / API path params (direct children grid).
+            foreach ($this->products as $product) {
+                if ((int) ($product['parent'] ?? 0) === $categoryId) {
+                    return new StubMsCategory(['id' => $categoryId]);
+                }
+            }
+
+            return null;
+        }
+
         if ($className !== msProduct::class) {
             return null;
         }

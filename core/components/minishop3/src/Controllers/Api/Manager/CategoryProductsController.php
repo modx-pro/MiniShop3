@@ -61,7 +61,7 @@ class CategoryProductsController
     {
         $categoryId = (int) ($params['id'] ?? 0);
         $resolved = $this->requireCategoryWithView($categoryId);
-        if (!$resolved instanceof msCategory) {
+        if (is_array($resolved)) {
             return $resolved;
         }
 
@@ -114,7 +114,7 @@ class CategoryProductsController
     {
         $categoryId = (int) ($params['id'] ?? 0);
         $resolved = $this->requireCategoryWithView($categoryId);
-        if (!$resolved instanceof msCategory) {
+        if (is_array($resolved)) {
             return $resolved;
         }
 
@@ -148,7 +148,7 @@ class CategoryProductsController
         }
 
         $resolved = $this->requireCategoryWithView($categoryId);
-        if (!$resolved instanceof msCategory) {
+        if (is_array($resolved)) {
             return $resolved;
         }
 
@@ -400,7 +400,7 @@ class CategoryProductsController
     /**
      * @return msCategory|array msCategory on success, error response array on failure
      */
-    private function requireCategoryWithView(int $categoryId): msCategory|array
+    private function requireCategoryWithView(int $categoryId): object|array
     {
         if (!$categoryId) {
             return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
