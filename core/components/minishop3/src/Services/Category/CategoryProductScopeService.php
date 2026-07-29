@@ -206,6 +206,73 @@ class CategoryProductScopeService
     }
 
     /**
+     * xPDO where array for admin category products grid (parent + msCategoryMember).
+     *
+     * @param list<int> $categoryIds
+     * @param list<int> $additionalProductIds
+     *
+     * @return array<string, mixed>
+     */
+    public static function buildProductCategoryScopeWhere(array $categoryIds, array $additionalProductIds): array
+    {
+        $categoryIds = array_values(array_unique(array_filter(array_map('intval', $categoryIds))));
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        $additionalProductIds = array_values(array_unique(array_filter(array_map('intval', $additionalProductIds))));
+        if ($additionalProductIds === []) {
+            return ['msProduct.parent:IN' => $categoryIds];
+        }
+
+        return [
+            'msProduct.parent:IN' => $categoryIds,
+            'OR:msProduct.id:IN' => $additionalProductIds,
+        ];
+    }
+
+    /**
+     * Whether product is listed in category grid scope (primary parent or additional member).
+     */
+    public function isProductInCategory(int $productId, int $categoryId): bool
+    {
+        if ($productId <= 0 || $categoryId <= 0) {
+            return false;
+        }
+
+        $product = $this->modx->getObject(msProduct::class, $productId);
+        if (!$product) {
+            return false;
+        }
+
+        if ((int) $product->get('parent') === $categoryId) {
+            return true;
+        }
+
+        return $this->modx->getCount(msCategoryMember::class, [
+            'product_id' => $productId,
+            'category_id' => $categoryId,
+        ]) > 0;
+    }
+
+    /**
+     * menuindex reorder applies only to direct children (not additional-category-only links).
+     */
+    public function canReorderInCategory(int $productId, int $categoryId): bool
+    {
+        if ($productId <= 0 || $categoryId <= 0) {
+            return false;
+        }
+
+        $product = $this->modx->getObject(msProduct::class, $productId);
+        if (!$product) {
+            return false;
+        }
+
+        return (int) $product->get('parent') === $categoryId;
+    }
+
+    /**
      * Restrict product query to categories (primary parent or msCategoryMember).
      *
      * @param list<int> $categoryIds
@@ -217,18 +284,14 @@ class CategoryProductScopeService
             return;
         }
 
-        $additionalProductIds = $this->getAdditionalProductIds($categoryIds);
+        $where = self::buildProductCategoryScopeWhere(
+            $categoryIds,
+            $this->getAdditionalProductIds($categoryIds)
+        );
 
-        if ($additionalProductIds === []) {
-            $c->where(['msProduct.parent:IN' => $categoryIds]);
-
-            return;
+        if ($where !== []) {
+            $c->where($where);
         }
-
-        $c->where([
-            'msProduct.parent:IN' => $categoryIds,
-            'OR:msProduct.id:IN' => $additionalProductIds,
-        ]);
     }
 
     private function treeService(): CategoryTreeService
