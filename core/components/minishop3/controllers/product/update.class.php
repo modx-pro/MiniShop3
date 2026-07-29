@@ -64,7 +64,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         // Only these vue-dist assets — do not add main.min.css (Vite never emits it; #503).
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/product-tabs.min.css');
-        $this->addCss($assetsUrl . 'css/mgr/vue-dist/ResourceCategoryTree.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/DynamicField.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
 

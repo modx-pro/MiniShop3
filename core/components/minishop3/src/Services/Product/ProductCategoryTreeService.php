@@ -2,8 +2,8 @@
 
 namespace MiniShop3\Services\Product;
 
-use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryMember;
+use MiniShop3\Utils\ResourceCategoryTreeQueryTrait;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 
@@ -15,21 +15,7 @@ use MODX\Revolution\modX;
  */
 class ProductCategoryTreeService
 {
-    /** @var string[] */
-    private const CATEGORY_CLASS_KEYS = [
-        msCategory::class,
-        'msCategory',
-    ];
-
-    /** @var string[] */
-    private const CONTAINER_CLASS_KEYS = [
-        modResource::class,
-        'MODX\\Revolution\\modDocument',
-        'MODX\\Revolution\\modWebLink',
-        'modResource',
-        'modDocument',
-        'modWebLink',
-    ];
+    use ResourceCategoryTreeQueryTrait;
 
     public function __construct(private modX $modx)
     {
@@ -53,7 +39,7 @@ class ProductCategoryTreeService
     {
         $checkedSet = $this->buildCheckedSet($parentCategoryId, $preChecked);
         $treeClassKeysSql = $this->quoteSqlStringList($this->getTreeClassKeys());
-        $categoryClassKeysSql = $this->quoteSqlStringList(self::CATEGORY_CLASS_KEYS);
+        $categoryClassKeysSql = $this->quoteSqlStringList($this->treeCategoryClassKeys());
         $treeNodeWhere = $this->getTreeNodeSqlFilter('modResource', $treeClassKeysSql, $categoryClassKeysSql);
         $childNodeWhere = $this->getTreeNodeSqlFilter('Child', $treeClassKeysSql, $categoryClassKeysSql);
 
@@ -137,35 +123,5 @@ class ProductCategoryTreeService
         }
 
         return $checkedSet;
-    }
-
-    private function getTreeNodeSqlFilter(string $alias, string $treeClassKeysSql, string $categoryClassKeysSql): string
-    {
-        return "(`{$alias}`.`class_key` IN ({$treeClassKeysSql}) "
-            . "AND (`{$alias}`.`class_key` IN ({$categoryClassKeysSql}) OR `{$alias}`.`isfolder` = 1))";
-    }
-
-    /**
-     * @return string[]
-     */
-    private function getTreeClassKeys(): array
-    {
-        return array_values(array_unique(array_merge(
-            self::CATEGORY_CLASS_KEYS,
-            self::CONTAINER_CLASS_KEYS
-        )));
-    }
-
-    private function isCategoryClass(string $classKey): bool
-    {
-        return in_array($classKey, self::CATEGORY_CLASS_KEYS, true);
-    }
-
-    /**
-     * @param string[] $values
-     */
-    private function quoteSqlStringList(array $values): string
-    {
-        return implode(', ', array_map(fn(string $value): string => $this->modx->quote($value), $values));
     }
 }

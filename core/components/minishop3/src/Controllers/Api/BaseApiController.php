@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Api;
 
 use MiniShop3\Router\Response;
+use MiniShop3\Utils\IntArrayDecoder;
 use MODX\Revolution\modX;
 
 /**
@@ -70,34 +71,10 @@ abstract class BaseApiController
 
     /**
      * @param mixed $input JSON array, comma-separated string, or array of ids
-     * @return list<int>
+     * @return list<int> Deduplicated positive ints.
      */
     protected function decodeIntArray($input): array
     {
-        if ($input === null || $input === '') {
-            return [];
-        }
-
-        if (is_string($input)) {
-            $decoded = json_decode($input, true);
-            if (is_array($decoded)) {
-                $input = $decoded;
-            } else {
-                $input = explode(',', $input);
-            }
-        }
-
-        if (!is_array($input)) {
-            return [];
-        }
-
-        $result = [];
-        foreach ($input as $value) {
-            if (is_numeric($value)) {
-                $result[] = (int)$value;
-            }
-        }
-
-        return $result;
+        return IntArrayDecoder::decode($input);
     }
 }

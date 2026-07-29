@@ -2,7 +2,6 @@
 
 namespace MiniShop3\Controllers\Api\Manager;
 
-use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msOption;
 use MiniShop3\Model\msOptionGroup;
@@ -10,6 +9,8 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Option\OptionCategoryService;
 use MiniShop3\Services\Option\OptionService;
+use MiniShop3\Utils\IntArrayDecoder;
+use MiniShop3\Utils\ResourceCategoryTreeQueryTrait;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 
@@ -23,20 +24,7 @@ use MODX\Revolution\modX;
  */
 class OptionsController
 {
-    /** FQCN + short name. */
-    private const OPTION_TREE_CATEGORY_CLASS_KEYS = [
-        msCategory::class,
-        'msCategory',
-    ];
-
-    private const OPTION_TREE_CONTAINER_CLASS_KEYS = [
-        modResource::class,
-        'MODX\\Revolution\\modDocument',
-        'MODX\\Revolution\\modWebLink',
-        'modResource',
-        'modDocument',
-        'modWebLink',
-    ];
+    use ResourceCategoryTreeQueryTrait;
 
     protected modX $modx;
     protected OptionService $optionService;
@@ -360,10 +348,10 @@ class OptionsController
             $checkedSet[$catId] = true;
         }
 
-        $treeClassKeysSql = $this->quoteSqlStringList($this->getOptionTreeClassKeys());
-        $categoryClassKeysSql = $this->quoteSqlStringList(self::OPTION_TREE_CATEGORY_CLASS_KEYS);
-        $treeNodeWhere = $this->getOptionTreeNodeSqlFilter('modResource', $treeClassKeysSql, $categoryClassKeysSql);
-        $childNodeWhere = $this->getOptionTreeNodeSqlFilter('Child', $treeClassKeysSql, $categoryClassKeysSql);
+        $treeClassKeysSql = $this->quoteSqlStringList($this->getTreeClassKeys());
+        $categoryClassKeysSql = $this->quoteSqlStringList($this->treeCategoryClassKeys());
+        $treeNodeWhere = $this->getTreeNodeSqlFilter('modResource', $treeClassKeysSql, $categoryClassKeysSql);
+        $childNodeWhere = $this->getTreeNodeSqlFilter('Child', $treeClassKeysSql, $categoryClassKeysSql);
 
         $q = $this->modx->newQuery(modResource::class);
         $q->leftJoin(
@@ -386,7 +374,7 @@ class OptionsController
         if ($q->prepare() && $q->stmt->execute()) {
             while ($row = $q->stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $id = (int)$row['id'];
-                $selectable = $this->isOptionTreeCategoryClass((string)$row['class_key']);
+                $selectable = $this->isCategoryClass((string)$row['class_key']);
                 $label = (string)($row['menutitle'] ?: $row['pagetitle']);
                 $nodes[] = [
                     'id' => $id,
@@ -626,36 +614,6 @@ class OptionsController
         return [$enabled, $disabled];
     }
 
-    private function getOptionTreeNodeSqlFilter(string $alias, string $treeClassKeysSql, string $categoryClassKeysSql): string
-    {
-        return "(`{$alias}`.`class_key` IN ({$treeClassKeysSql}) "
-            . "AND (`{$alias}`.`class_key` IN ({$categoryClassKeysSql}) OR `{$alias}`.`isfolder` = 1))";
-    }
-
-    /**
-     * @return string[]
-     */
-    private function getOptionTreeClassKeys(): array
-    {
-        return array_values(array_unique(array_merge(
-            self::OPTION_TREE_CATEGORY_CLASS_KEYS,
-            self::OPTION_TREE_CONTAINER_CLASS_KEYS
-        )));
-    }
-
-    private function isOptionTreeCategoryClass(string $classKey): bool
-    {
-        return in_array($classKey, self::OPTION_TREE_CATEGORY_CLASS_KEYS, true);
-    }
-
-    /**
-     * @param string[] $values
-     */
-    private function quoteSqlStringList(array $values): string
-    {
-        return implode(', ', array_map(fn(string $value): string => $this->modx->quote($value), $values));
-    }
-
     /**
      * Decode ids array whether it came as JSON string, comma string, or array.
      *
@@ -663,31 +621,6 @@ class OptionsController
      */
     protected function decodeIntArray($input): array
     {
-        if ($input === null || $input === '') {
-            return [];
-        }
-
-        if (is_string($input)) {
-            $decoded = json_decode($input, true);
-            if (is_array($decoded)) {
-                $input = $decoded;
-            } else {
-                $input = explode(',', $input);
-            }
-        }
-
-        if (!is_array($input)) {
-            return [];
-        }
-
-        $out = [];
-        foreach ($input as $v) {
-            $v = (int)$v;
-            if ($v > 0) {
-                $out[] = $v;
-            }
-        }
-
-        return array_values(array_unique($out));
+        return IntArrayDecoder::decode($input);
     }
 }

@@ -5,7 +5,6 @@ namespace MiniShop3\Controllers\Api;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Category\CategoryProductScopeService;
-use MiniShop3\Services\Product\ProductCategoryTreeService;
 
 /**
  * API controller for working with product data (msProductData)
@@ -125,7 +124,8 @@ class ProductDataController extends BaseApiController
         $preChecked = $this->decodeIntArray($params['categories'] ?? null);
 
         try {
-            $service = new ProductCategoryTreeService($this->modx);
+            /** @var \MiniShop3\Services\Product\ProductCategoryTreeService $service */
+            $service = $this->modx->services->get('ms3_product_category_tree');
             $nodes = $service->getTreeNodes(
                 $parent,
                 $productId,
