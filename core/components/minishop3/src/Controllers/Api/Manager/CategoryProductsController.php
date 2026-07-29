@@ -7,6 +7,7 @@ use MiniShop3\Model\msProduct;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Category\CategoryProductActionPermissions;
+use MiniShop3\Services\Category\CategoryProductDocumentPolicy;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Category\CategoryProductsListService;
 use MiniShop3\Services\FilterConfigManager;
@@ -59,14 +60,9 @@ class CategoryProductsController
     public function getList(array $params = []): array
     {
         $categoryId = (int) ($params['id'] ?? 0);
-
-        if (!$categoryId) {
-            return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
-        }
-
-        $category = $this->modx->getObject(msCategory::class, $categoryId);
-        if (!$category) {
-            return $this->errorResponse('ms3_err_category_nf', HttpStatus::NOT_FOUND);
+        $resolved = $this->requireCategoryWithView($categoryId);
+        if (!$resolved instanceof msCategory) {
+            return $resolved;
         }
 
         $start = (int) ($params['start'] ?? 0);
@@ -99,8 +95,10 @@ class CategoryProductsController
             $sortDir
         );
 
+        $results = $this->filterListResultsByDocumentView($page['results'], $nested);
+
         return Response::success([
-            'results' => $page['results'],
+            'results' => $results,
             'total' => $page['total'],
         ])->getData();
     }
@@ -114,6 +112,12 @@ class CategoryProductsController
      */
     public function getFilters(array $params = []): array
     {
+        $categoryId = (int) ($params['id'] ?? 0);
+        $resolved = $this->requireCategoryWithView($categoryId);
+        if (!$resolved instanceof msCategory) {
+            return $resolved;
+        }
+
         /** @var FilterConfigManager $filterConfigManager */
         $filterConfigManager = $this->modx->services->get('ms3_filter_config');
 
@@ -139,33 +143,51 @@ class CategoryProductsController
         $items = $params['items'] ?? [];
         $nested = $this->isNested($params);
 
-        if (!$categoryId) {
-            return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
-        }
-
         if (empty($items) || !is_array($items)) {
             return $this->errorResponse('ms3_err_items_required', HttpStatus::BAD_REQUEST);
         }
 
+        $resolved = $this->requireCategoryWithView($categoryId);
+        if (!$resolved instanceof msCategory) {
+            return $resolved;
+        }
+
         $updated = 0;
-        $scopeService = $this->scopeService();
+        $policyDenied = 0;
+
+        $scope = $this->scopeService();
 
         foreach ($items as $item) {
             $productId = (int) ($item['id'] ?? 0);
             $menuindex = (int) ($item['menuindex'] ?? 0);
 
-            if (!$productId || !$scopeService->canReorderInCategory($productId, $categoryId)) {
+            if (!$productId) {
                 continue;
             }
 
-            $product = $this->modx->getObject(msProduct::class, $productId);
+            $product = $scope->findInCategory($categoryId, $productId, $nested);
 
-            if ($product) {
-                $product->set('menuindex', $menuindex);
-                if ($product->save()) {
-                    $updated++;
-                }
+            if (!$product) {
+                continue;
             }
+
+            if (!CategoryProductDocumentPolicy::isAllowedAll($product, CategoryProductDocumentPolicy::sortPolicies())) {
+                $policyDenied++;
+                $this->logDocumentPolicyDenied($product, CategoryProductDocumentPolicy::sortPolicies());
+                continue;
+            }
+
+            $product->set('menuindex', $menuindex);
+            if ($product->save()) {
+                $updated++;
+            }
+        }
+
+        if ($updated === 0 && $policyDenied > 0) {
+            return Response::error(
+                'Save permission denied for this document',
+                HttpStatus::FORBIDDEN
+            )->getData();
         }
 
         return Response::success([
@@ -188,7 +210,7 @@ class CategoryProductsController
         $nested = $this->isNested($params);
 
         if (!$categoryId) {
-            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
         }
 
         if (empty($method)) {
@@ -234,6 +256,8 @@ class CategoryProductsController
             return $this->errorResponse('ms3_err_product_ids_invalid', HttpStatus::BAD_REQUEST);
         }
 
+        $documentPolicies = CategoryProductActionPermissions::documentPoliciesForMethod($method);
+
         $success = 0;
         $failed = 0;
         $scope = $this->scopeService();
@@ -242,6 +266,15 @@ class CategoryProductsController
             $product = $scope->findInCategory($categoryId, $id, $nested);
 
             if (!$product) {
+                $failed++;
+                continue;
+            }
+
+            if (
+                $documentPolicies !== null
+                && !CategoryProductDocumentPolicy::isAllowedAll($product, $documentPolicies)
+            ) {
+                $this->logDocumentPolicyDenied($product, $documentPolicies);
                 $failed++;
                 continue;
             }
@@ -304,7 +337,7 @@ class CategoryProductsController
         $nested = $this->isNested($params);
 
         if (!$categoryId) {
-            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+            return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
         }
 
         if (!$productId) {
@@ -325,6 +358,13 @@ class CategoryProductsController
         // If published param not provided, toggle current state
         if ($published === null) {
             $published = $product->get('published') ? 0 : 1;
+        }
+
+        $policies = CategoryProductDocumentPolicy::policiesForPublish((bool) $published);
+        if ($denied = CategoryProductDocumentPolicy::denialResponseAll($product, $policies)) {
+            $this->logDocumentPolicyDenied($product, $policies);
+
+            return $denied;
         }
 
         if (!$this->applyPublish($product, (bool) $published)) {
@@ -355,6 +395,77 @@ class CategoryProductsController
         return $service instanceof CategoryProductScopeService
             ? $service
             : new CategoryProductScopeService($this->modx);
+    }
+
+    /**
+     * @return msCategory|array msCategory on success, error response array on failure
+     */
+    private function requireCategoryWithView(int $categoryId): msCategory|array
+    {
+        if (!$categoryId) {
+            return $this->errorResponse('ms3_err_category_id_required', HttpStatus::BAD_REQUEST);
+        }
+
+        $category = $this->modx->getObject(msCategory::class, $categoryId);
+        if (!$category) {
+            return $this->errorResponse('ms3_err_category_nf', HttpStatus::NOT_FOUND);
+        }
+
+        if ($denied = CategoryProductDocumentPolicy::denialResponse(
+            $category,
+            CategoryProductDocumentPolicy::categoryViewPolicy()
+        )) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[CategoryProductsController] Document view denied for category '
+                . $categoryId
+                . ' (user id ' . (int) ($this->modx->user->get('id') ?? 0) . ')'
+            );
+
+            return $denied;
+        }
+
+        return $category;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $results
+     * @return list<array<string, mixed>>
+     */
+    private function filterListResultsByDocumentView(array $results, bool $nested): array
+    {
+        $filtered = [];
+
+        foreach ($results as $row) {
+            $productId = (int) ($row['id'] ?? 0);
+            if ($productId <= 0) {
+                continue;
+            }
+
+            $product = $this->modx->getObject(msProduct::class, $productId);
+            if (!$product instanceof msProduct) {
+                continue;
+            }
+
+            if (CategoryProductDocumentPolicy::canViewInCategoryGrid($this->modx, $product, $nested)) {
+                $filtered[] = $row;
+            }
+        }
+
+        return $filtered;
+    }
+
+    /** @param list<string> $policies */
+    private function logDocumentPolicyDenied(msProduct $product, array $policies): void
+    {
+        $this->modx->log(
+            modX::LOG_LEVEL_WARN,
+            '[CategoryProductsController] Document policy denied ('
+            . implode(',', $policies)
+            . ') for product '
+            . (int) $product->get('id')
+            . ' (user id ' . (int) ($this->modx->user->get('id') ?? 0) . ')'
+        );
     }
 
     private function denyWithoutPermission(string $permission): ?array

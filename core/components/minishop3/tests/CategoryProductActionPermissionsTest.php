@@ -102,4 +102,19 @@ $assertSame('msproduct_publish', $publishDenied['permission'], 'publish denied p
 
 $assertSame(true, CategoryProductActionPermissions::evaluate('show', $allowAll)['allowed'], 'show allowAll');
 
+foreach ([
+    ['publish', ['publish']],
+    ['unpublish', ['save', 'unpublish']],
+    ['delete', ['delete']],
+    ['undelete', ['save', 'undelete']],
+    ['show', ['save']],
+    ['unknown', null],
+] as [$method, $expected]) {
+    $assertSame(
+        $expected,
+        CategoryProductActionPermissions::documentPoliciesForMethod($method),
+        "documentPoliciesForMethod({$method})"
+    );
+}
+
 fwrite(STDOUT, "OK: CategoryProductActionPermissionsTest\n");
