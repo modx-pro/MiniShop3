@@ -108,4 +108,17 @@ if (!str_contains($regressionSql, '`msProduct`.`parent` IN (42)')) {
     $fail('regression: parent IN clause missing');
 }
 
+$scopeWhere = CategoryProductScopeService::buildProductCategoryScopeWhere([7], []);
+$assertSame(['msProduct.parent:IN' => [7]], $scopeWhere, 'admin scope parent only');
+
+$scopeWhereMembers = CategoryProductScopeService::buildProductCategoryScopeWhere([7, 8], [100, 200]);
+$assertSame(
+    [
+        'msProduct.parent:IN' => [7, 8],
+        'OR:msProduct.id:IN' => [100, 200],
+    ],
+    $scopeWhereMembers,
+    'admin scope parent or member ids'
+);
+
 fwrite(STDOUT, "OK: CategoryProductScopeServiceTest\n");
