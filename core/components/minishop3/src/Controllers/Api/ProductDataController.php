@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Category\CategoryProductScopeService;
 
 /**
  * API controller for working with product data (msProductData)
@@ -70,12 +71,7 @@ class ProductDataController extends BaseApiController
         unset($data['category_id'], $data['nested']);
 
         if ($categoryId > 0) {
-            /** @var \MiniShop3\Services\Category\CategoryProductsListService|null $listService */
-            $listService = $this->modx->services->get('ms3_category_products_list');
-            if (
-                !$listService
-                || !$listService->isProductInCategoryScope($productId, $categoryId, $nested)
-            ) {
+            if (!$this->categoryProductScopeService()->findInCategory($categoryId, $productId, $nested)) {
                 $this->modx->lexicon->load('minishop3:default');
 
                 return Response::error(
@@ -106,5 +102,14 @@ class ProductDataController extends BaseApiController
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
             return Response::error('Failed to save product data: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function categoryProductScopeService(): CategoryProductScopeService
+    {
+        $service = $this->modx->services->get('ms3_category_product_scope');
+
+        return $service instanceof CategoryProductScopeService
+            ? $service
+            : new CategoryProductScopeService($this->modx);
     }
 }
