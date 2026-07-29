@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   php:
+    # Name must match beta branch protection required check.
     name: PHP lint + smoke
     runs-on: ubuntu-latest
     defaults:
@@ -25,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -37,8 +38,41 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: PHP syntax check + smoke tests
+      - name: PHP syntax check + smoke + PHPUnit
         run: composer ci:php
+
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/components/minishop3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Cache PHPStan dependency trees
+        uses: actions/cache@v5
+        with:
+          path: .phpstan-deps
+          key: phpstan-deps-v2-${{ runner.os }}-${{ hashFiles('core/components/minishop3/scripts/phpstan-deps.pins') }}
+
+      - name: Prepare MODX / pdoTools for analysis
+        run: composer stan:prepare
+
+      - name: PHPStan
+        run: composer stan
 
   vue:
     name: vueManager lint
@@ -49,12 +83,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: vueManager/package-lock.json
 

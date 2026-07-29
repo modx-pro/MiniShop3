@@ -121,13 +121,8 @@ class Router
      *
      * @throws \RuntimeException when required manager.php is missing
      */
-    public function loadManagerRoutes(
-        ?string $componentPath = null,
-        ?string $corePath = null
-    ): self {
-        $componentPath ??= MODX_CORE_PATH . 'components/minishop3';
-        $corePath ??= MODX_CORE_PATH;
-
+    public function loadManagerRoutes(string $componentPath, string $corePath): self
+    {
         return $this->loadRoutePlan(self::managerRoutePlan($componentPath, $corePath));
     }
 
@@ -136,13 +131,8 @@ class Router
      *
      * @throws \RuntimeException when required web.php is missing
      */
-    public function loadWebRoutes(
-        ?string $componentPath = null,
-        ?string $corePath = null
-    ): self {
-        $componentPath ??= MODX_CORE_PATH . 'components/minishop3';
-        $corePath ??= MODX_CORE_PATH;
-
+    public function loadWebRoutes(string $componentPath, string $corePath): self
+    {
         return $this->loadRoutePlan(self::webRoutePlan($componentPath, $corePath));
     }
 

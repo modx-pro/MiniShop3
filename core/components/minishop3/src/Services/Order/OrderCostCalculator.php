@@ -37,7 +37,7 @@ class OrderCostCalculator
     {
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetCartCost', [
             'calculator' => $this,
-            'cart' => $this->ms3->cart,
+            'cart' => $this->ms3->getCart(),
             'draft' => $draft,
         ]);
 
@@ -45,8 +45,8 @@ class OrderCostCalculator
             return $this->error($response['message']);
         }
 
-        $this->ms3->cart->initialize($ctx, $token);
-        $response = $this->ms3->cart->status();
+        $this->ms3->getCart()->initialize($ctx, $token);
+        $response = $this->ms3->getCart()->status();
 
         if (!$response['success']) {
             return $this->error($response['message']);
@@ -57,7 +57,7 @@ class OrderCostCalculator
 
         $response = $this->ms3->utils->invokeEvent('msOnGetCartCost', [
             'calculator' => $this,
-            'cart' => $this->ms3->cart,
+            'cart' => $this->ms3->getCart(),
             'draft' => $draft,
             'cost' => $cost,
         ]);
@@ -89,7 +89,7 @@ class OrderCostCalculator
 
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetDeliveryCost', [
             'calculator' => $this,
-            'cartController' => $this->ms3->cart,
+            'cartController' => $this->ms3->getCart(),
             'draft' => $draft,
         ]);
 
@@ -130,7 +130,7 @@ class OrderCostCalculator
 
         $response = $this->ms3->utils->invokeEvent('msOnGetDeliveryCost', [
             'calculator' => $this,
-            'cartController' => $this->ms3->cart,
+            'cartController' => $this->ms3->getCart(),
             'draft' => $draft,
             'cost' => $deliveryCost,
         ]);
@@ -162,7 +162,7 @@ class OrderCostCalculator
 
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetPaymentCost', [
             'calculator' => $this,
-            'cartController' => $this->ms3->cart,
+            'cartController' => $this->ms3->getCart(),
             'draft' => $draft,
         ]);
 
@@ -196,7 +196,7 @@ class OrderCostCalculator
 
         $response = $this->ms3->utils->invokeEvent('msOnGetPaymentCost', [
             'calculator' => $this,
-            'cartController' => $this->ms3->cart,
+            'cartController' => $this->ms3->getCart(),
             'draft' => $draft,
             'cost' => $paymentCost,
         ]);
@@ -229,7 +229,7 @@ class OrderCostCalculator
     ): array {
         $before = $this->ms3->utils->invokeEvent('msOnBeforeGetOrderCost', [
             'calculator' => $this,
-            'cart' => $this->ms3->cart,
+            'cart' => $this->ms3->getCart(),
             'draft' => $draft,
             'with_cart' => true,
             'only_cost' => $onlyCost,
@@ -258,7 +258,7 @@ class OrderCostCalculator
 
         $after = $this->ms3->utils->invokeEvent('msOnGetOrderCost', [
             'calculator' => $this,
-            'cart' => $this->ms3->cart,
+            'cart' => $this->ms3->getCart(),
             'draft' => $draft,
             'with_cart' => true,
             'only_cost' => $onlyCost,
@@ -289,7 +289,7 @@ class OrderCostCalculator
         ];
 
         // Add cart status info
-        $response = $this->ms3->cart->status();
+        $response = $this->ms3->getCart()->status();
         if ($response['success']) {
             $status = $response['data'];
             $data = array_merge($data, $status);

@@ -19,7 +19,7 @@ Closes #(номер issue)
 
 Опишите тесты, которые вы провели для проверки изменений.
 
-Локальный CI-гейт (без MODX/MySQL), тот же набор что в `.github/workflows/ci.yml`:
+Локальный CI-гейт (без полной установки MODX/MySQL), PHP lint + vueManager jobs из `.github/workflows/ci.yml`:
 
 ```bash
 cd core/components/minishop3
@@ -31,10 +31,10 @@ npm ci
 npm run lint:ci
 ```
 
-PHPStan в этот гейт не входит (отдельный follow-up).
+PHPStan — отдельный job: `composer stan:prepare && composer stan` (pinned MODX/pdoTools в `.phpstan-deps`).
 
 - [ ] Ручное тестирование
-- [ ] Автоматические тесты (`composer ci:php`, `npm run lint:ci` / GitHub Actions CI)
+- [ ] Автоматические тесты (`composer ci:php` / `composer test`, `npm run lint:ci`, `composer stan` / GitHub Actions CI)
 - [ ] Тестирование на разных версиях PHP/MODX
 
 **Конфигурация тестирования:**
@@ -54,7 +54,7 @@ PHPStan в этот гейт не входит (отдельный follow-up).
 - [ ] Добавлены/обновлены комментарии в сложных местах
 - [ ] Изменения не ломают существующую функциональность
 - [ ] Лексиконы добавлены на **двух языках** (ru/en)
-- [ ] PHPStan проходит без новых ошибок (локально; в CI пока нет)
+- [ ] PHPStan проходит без новых ошибок (`composer stan` / CI job `PHPStan`)
 - [ ] ESLint проходит без ошибок (`npm run lint:ci` для Vue)
 - [ ] Обновлён CHANGELOG.md (для значимых изменений)
 
