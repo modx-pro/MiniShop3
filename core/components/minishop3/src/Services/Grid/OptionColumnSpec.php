@@ -12,9 +12,6 @@ final readonly class OptionColumnSpec
     /** Same rule as {@see GridColumnRules::SQL_IDENTIFIER_PATTERN} */
     private const OPTION_KEY_PATTERN = GridColumnRules::SQL_IDENTIFIER_PATTERN;
 
-    /** Same rule as OPTION_KEY_PATTERN; fieldName also lands in `SELECT … AS \`{name}\``. */
-    private const FIELD_NAME_PATTERN = GridColumnRules::SQL_IDENTIFIER_PATTERN;
-
     public function __construct(
         public string $fieldName,
         public string $key,
