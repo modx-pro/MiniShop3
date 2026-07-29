@@ -198,6 +198,14 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Category\CategoryProductsListService::class,
             'interface' => null,
         ],
+        'ms3_category_product_scope' => [
+            'class' => \MiniShop3\Services\Category\CategoryProductScopeService::class,
+            'interface' => null,
+        ],
+        'ms3_category_tree' => [
+            'class' => \MiniShop3\Services\Category\CategoryTreeService::class,
+            'interface' => null,
+        ],
         'ms3_filter_config' => [
             'class' => \MiniShop3\Services\FilterConfigManager::class,
             'interface' => null,

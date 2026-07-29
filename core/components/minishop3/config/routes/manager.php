@@ -404,7 +404,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->post('/{id}/products/sort', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
+            $allParams = array_merge($data, $params);
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->sort($allParams);
@@ -415,7 +415,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->delete('/{id}/products/bulk', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
+            $allParams = array_merge($data, $params);
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->bulkDelete($allParams);
@@ -426,7 +426,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->post('/{id}/products/multiple', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
+            $allParams = array_merge($data, $params);
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->multiple($allParams);
@@ -440,7 +440,7 @@ $router->group('/api/mgr', function($router) use ($modx) {
         $router->post('/{id}/products/{productId}/publish', function($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
-            $allParams = array_merge($params, $data);
+            $allParams = array_merge($data, $params);
 
             $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
             return $controller->publish($allParams);
