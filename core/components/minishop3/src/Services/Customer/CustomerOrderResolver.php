@@ -32,7 +32,7 @@ class CustomerOrderResolver
     public function getOrCreate(object $customer, string $token, ?array $orderData = null): int
     {
         $response = $this->ms3->utils->invokeEvent('msOnBeforeGetOrderCustomer', [
-            'controller' => $this->ms3->order,
+            'controller' => $this->ms3->getOrder(),
             'msCustomer' => null,
         ]);
         if (!$response['success']) {
@@ -45,7 +45,7 @@ class CustomerOrderResolver
 
         if (!$msCustomer) {
             if ($orderData === null) {
-                $orderResponse = $this->ms3->order->get();
+                $orderResponse = $this->ms3->getOrder()->get();
                 $orderData = $orderResponse['data']['order'] ?? [];
             }
 
@@ -62,7 +62,7 @@ class CustomerOrderResolver
         }
 
         $response = $this->ms3->utils->invokeEvent('msOnGetOrderCustomer', [
-            'controller' => $this->ms3->order,
+            'controller' => $this->ms3->getOrder(),
             'msCustomer' => $msCustomer,
         ]);
         if (!$response['success']) {

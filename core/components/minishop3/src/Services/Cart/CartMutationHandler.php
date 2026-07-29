@@ -50,7 +50,7 @@ class CartMutationHandler
         int $count = 1,
         array $options = []
     ): array {
-        if (empty($id) || !is_numeric($id)) {
+        if ($id <= 0) {
             return $this->ms3->utils->error('ms3_cart_add_err_id');
         }
 
