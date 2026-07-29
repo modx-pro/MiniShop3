@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Product;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Model\msCategoryMember;
 use MODX\Revolution\modResource;
+use MODX\Revolution\modX;
 
 /**
  * Lazy tree nodes for the product Categories tab (Vue manager).
@@ -30,7 +31,7 @@ class ProductCategoryTreeService
         'modWebLink',
     ];
 
-    public function __construct(private \modX $modx)
+    public function __construct(private modX $modx)
     {
     }
 
@@ -64,7 +65,7 @@ class ProductCategoryTreeService
                     'Member.product_id' => $productId,
                 ]
             );
-            $c->select(['member' => 'Member.category_id']);
+            $c->select('Member.category_id AS member');
         }
         $c->select($this->modx->getSelectColumns(modResource::class, 'modResource', '', [
             'id',
@@ -75,7 +76,7 @@ class ProductCategoryTreeService
             'hidemenu',
             'class_key',
         ]));
-        $c->select(['childrenCount' => 'COUNT(Child.id)']);
+        $c->select('COUNT(Child.id) AS childrenCount');
         $c->where([
             'modResource.parent' => $parent,
             'modResource.deleted' => 0,
