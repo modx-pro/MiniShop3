@@ -13,6 +13,9 @@ use MODX\Revolution\modX;
  */
 class CategoryProductScopeModxStub extends modX
 {
+    /** @var object */
+    public object $services;
+
     /** @var list<array{id: int, parent: int, published?: int, deleted?: int}> */
     public array $products = [];
 
@@ -21,6 +24,22 @@ class CategoryProductScopeModxStub extends modX
 
     /** @var list<array{class: class-string, criteria: mixed}> */
     public array $getObjectCalls = [];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->services = new class {
+            public function get(string $key): null
+            {
+                return null;
+            }
+
+            public function has(string $key): bool
+            {
+                return false;
+            }
+        };
+    }
 
     public function getObject($className = '', $criteria = null, $cacheFlag = true)
     {

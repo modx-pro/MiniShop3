@@ -12,6 +12,9 @@ require __DIR__ . '/support/xpdo_stub.php';
 require __DIR__ . '/support/xpdo_om_stub.php';
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/stubs/ModxStub.php';
+require __DIR__ . '/stubs/StubMsOrder.php';
+require __DIR__ . '/stubs/StubMsPayment.php';
+require __DIR__ . '/stubs/StubPaymentLinkProvider.php';
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Services\Order\OrderLogService;
