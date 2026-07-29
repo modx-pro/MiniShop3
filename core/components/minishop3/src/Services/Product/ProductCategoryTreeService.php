@@ -40,9 +40,16 @@ class ProductCategoryTreeService
      * @param int $productId Product being edited
      * @param int $parentCategoryId Product parent resource (always checked, not removable)
      * @param array<int|string> $preChecked Optional ids from the client hidden field
+     * @param bool $clientSentCategories When true, checked state follows preChecked only (not stale DB membership)
      * @return list<array<string, mixed>>
      */
-    public function getTreeNodes(int $parent, int $productId, int $parentCategoryId, array $preChecked = []): array
+    public function getTreeNodes(
+        int $parent,
+        int $productId,
+        int $parentCategoryId,
+        array $preChecked = [],
+        bool $clientSentCategories = false
+    ): array
     {
         $checkedSet = $this->buildCheckedSet($parentCategoryId, $preChecked);
         $treeClassKeysSql = $this->quoteSqlStringList($this->getTreeClassKeys());
@@ -91,7 +98,11 @@ class ProductCategoryTreeService
             while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $id = (int)$row['id'];
                 $selectable = $this->isCategoryClass((string)$row['class_key']);
-                $checked = $selectable && (!empty($row['member']) || isset($checkedSet[$id]));
+                $checked = $selectable && (
+                    $clientSentCategories
+                        ? isset($checkedSet[$id])
+                        : (!empty($row['member']) || isset($checkedSet[$id]))
+                );
                 $nodes[] = [
                     'id' => $id,
                     'label' => (string)($row['menutitle'] ?: $row['pagetitle'] ?? ''),

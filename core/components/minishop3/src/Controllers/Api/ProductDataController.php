@@ -121,11 +121,18 @@ class ProductDataController extends BaseApiController
 
         $parent = (int)($params['parent'] ?? 0);
         $parentCategoryId = (int)($params['parent_category'] ?? 0);
+        $clientSentCategories = array_key_exists('categories', $params);
         $preChecked = $this->decodeIntArray($params['categories'] ?? null);
 
         try {
             $service = new ProductCategoryTreeService($this->modx);
-            $nodes = $service->getTreeNodes($parent, $productId, $parentCategoryId, $preChecked);
+            $nodes = $service->getTreeNodes(
+                $parent,
+                $productId,
+                $parentCategoryId,
+                $preChecked,
+                $clientSentCategories
+            );
 
             return Response::success(['results' => $nodes, 'total' => count($nodes)]);
         } catch (\Exception $e) {

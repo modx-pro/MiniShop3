@@ -67,9 +67,10 @@ const contextMenuItems = computed(() => [
 ])
 
 async function fetchChildren(parent = 0) {
-  const params = { parent, ...props.apiParams }
-  if (props.modelValue?.length > 0) {
-    params.categories = JSON.stringify(props.modelValue)
+  const params = {
+    parent,
+    ...props.apiParams,
+    categories: JSON.stringify(Array.isArray(props.modelValue) ? props.modelValue : []),
   }
 
   const response = await request.get(props.apiUrl, params)
