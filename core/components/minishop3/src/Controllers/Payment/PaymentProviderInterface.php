@@ -36,6 +36,14 @@ interface PaymentProviderInterface
     public function receive(msOrder $order): array;
 
     /**
+     * Get payment link for order without redirecting the customer
+     *
+     * @param msOrder $order Order for payment
+     * @return string|null Payment link or null if unavailable
+     */
+    public function getPaymentLink(msOrder $order): ?string;
+
+    /**
      * Calculate cost including payment system fee
      *
      * @param msOrder $order Order (can be used for fee calculation)

@@ -324,9 +324,7 @@ class CategoryProductsController
 
     private function scopeService(): CategoryProductScopeService
     {
-        $service = isset($this->modx->services)
-            ? $this->modx->services->get('ms3_category_product_scope')
-            : null;
+        $service = $this->modx->services->get('ms3_category_product_scope');
 
         return $service instanceof CategoryProductScopeService
             ? $service

@@ -43,10 +43,6 @@ class ServiceRegistry
      * @var array
      */
     protected array $defaultServices = [
-        'ms3_config_manager' => [
-            'class' => \MiniShop3\Services\ConfigManager::class,
-            'interface' => null,
-        ],
         'ms3_field_config_manager' => [
             'class' => \MiniShop3\Services\FieldConfigManager::class,
             'interface' => null,

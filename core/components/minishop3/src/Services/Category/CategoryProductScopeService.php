@@ -53,9 +53,7 @@ class CategoryProductScopeService
 
     private function treeService(): CategoryTreeService
     {
-        $service = isset($this->modx->services)
-            ? $this->modx->services->get('ms3_category_tree')
-            : null;
+        $service = $this->modx->services->get('ms3_category_tree');
 
         return $service instanceof CategoryTreeService
             ? $service

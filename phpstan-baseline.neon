@@ -1075,12 +1075,6 @@ parameters:
 			path: core/components/minishop3/src/Router/Router.php
 
 		-
-			message: '#^Class MiniShop3\\Services\\ConfigManager not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: core/components/minishop3/src/ServiceRegistry.php
-
-		-
 			message: '#^Constant MODX_CORE_PATH not found\.$#'
 			identifier: constant.notFound
 			count: 2
@@ -1211,12 +1205,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: core/components/minishop3/src/Services/Order/OrderDraftManager.php
-
-		-
-			message: '#^Call to an undefined method MiniShop3\\MiniShop3\:\:loadCustomClasses\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: core/components/minishop3/src/Services/Order/OrderStatusService.php
 
 		-
 			message: '#^Access to an undefined property MiniShop3\\MiniShop3\:\:\$cart\.$#'

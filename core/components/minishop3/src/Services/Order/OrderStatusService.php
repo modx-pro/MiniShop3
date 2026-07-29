@@ -2,9 +2,10 @@
 
 namespace MiniShop3\Services\Order;
 
-use MiniShop3\Controllers\Payment\Payment;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msPayment;
+use MiniShop3\Services\Payment\PaymentService;
 use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
@@ -402,18 +403,22 @@ class OrderStatusService
      */
     protected function getPaymentLink(mixed $msPayment, msOrder $msOrder): string
     {
-        $class = $msPayment->get('class');
-        if (!empty($class)) {
-            $this->ms3->loadCustomClasses('payment');
-            if (class_exists($class)) {
-                /** @var Payment $controller */
-                $controller = new $class($msOrder);
-                if (method_exists($controller, 'getPaymentLink')) {
-                    return $controller->getPaymentLink($msOrder);
-                }
-            }
+        if (!$msPayment instanceof msPayment) {
+            return '';
         }
 
-        return '';
+        $class = (string) $msPayment->get('class');
+        if ($class === '') {
+            return '';
+        }
+
+        /** @var PaymentService $paymentService */
+        $paymentService = $this->modx->services->get('ms3_payment_service');
+        $controller = $paymentService->loadPaymentHandler($msPayment);
+        if ($controller === null) {
+            return '';
+        }
+
+        return $controller->getPaymentLink($msOrder) ?? '';
     }
 }
