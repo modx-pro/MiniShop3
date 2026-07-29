@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "rimraf ../assets/components/minishop3/js/mgr/vue-dist ../assets/components/minishop3/css/mgr/vue-dist",
+    "clean:vue-dist": "rimraf ../assets/components/minishop3/js/mgr/vue-dist ../assets/components/minishop3/css/mgr/vue-dist",
+    "prebuild": "npm run clean:vue-dist",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix",
