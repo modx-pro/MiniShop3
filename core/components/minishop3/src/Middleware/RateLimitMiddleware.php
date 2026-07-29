@@ -50,23 +50,20 @@ class RateLimitMiddleware implements MiddlewareInterface
         $key = $this->resolveRequestKey();
 
         $state = $this->store->read($key);
-        $attempts = $state['attempts'];
-        $resetTime = $state['reset_at'];
 
-        if (time() >= $resetTime) {
+        if (time() >= $state['reset_at']) {
             $this->store->reset($key);
-            $attempts = 0;
-            $resetTime = time() + $this->decaySeconds;
         }
 
-        if ($attempts >= $this->maxAttempts) {
-            $retryAfter = max(0, $resetTime - time());
+        $state = $this->store->increment($key, $this->decaySeconds);
+
+        if ($state['attempts'] > $this->maxAttempts) {
+            $retryAfter = max(0, $state['reset_at'] - time());
             header("Retry-After: $retryAfter");
 
             return Response::error('ms3_err_rate_limit', HttpStatus::TOO_MANY_REQUESTS);
         }
 
-        $state = $this->store->increment($key, $this->decaySeconds);
         $this->setRateLimitHeaders($state['attempts'], $state['reset_at']);
 
         return null;

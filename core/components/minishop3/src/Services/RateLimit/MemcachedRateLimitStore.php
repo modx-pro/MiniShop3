@@ -37,8 +37,14 @@ class MemcachedRateLimitStore implements RateLimitStoreInterface
 
         $attempts = $this->memcached->increment($attemptsKey, 1);
         if ($attempts === false) {
-            $this->memcached->set($attemptsKey, 1, $windowSeconds);
-            $attempts = 1;
+            if ($this->memcached->add($attemptsKey, 1, $windowSeconds)) {
+                $attempts = 1;
+            } else {
+                $attempts = $this->memcached->increment($attemptsKey, 1);
+                if ($attempts === false) {
+                    $attempts = 1;
+                }
+            }
         }
 
         $resetAt = (int) $this->memcached->get($resetKey);
