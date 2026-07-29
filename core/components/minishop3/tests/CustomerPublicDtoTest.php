@@ -75,6 +75,21 @@ foreach (['password', 'token', 'privacy_ip', 'failed_login_attempts', 'blocked_u
     }
 }
 
+$coreEditable = CustomerPublicDto::CORE_PROFILE_EDITABLE_FIELDS;
+foreach (['first_name', 'last_name', 'email', 'phone'] as $key) {
+    if (!in_array($key, $coreEditable, true)) {
+        $fail("CORE_PROFILE_EDITABLE_FIELDS missing {$key}");
+    }
+}
+
+$withExtra = CustomerPublicDto::fromArray(
+    array_merge($input, ['loyalty_tier' => 'gold']),
+    ['loyalty_tier']
+);
+if (($withExtra['loyalty_tier'] ?? null) !== 'gold') {
+    $fail('registered extra field must be included in public payload');
+}
+
 $controllerSrc = file_get_contents(__DIR__ . '/../src/Controllers/Api/Web/CustomerProfileController.php');
 if ($controllerSrc === false) {
     $fail('unable to read CustomerProfileController.php');
@@ -82,8 +97,8 @@ if ($controllerSrc === false) {
 if (str_contains($controllerSrc, '$customer->toArray()')) {
     $fail('CustomerProfileController still serializes full customer via toArray()');
 }
-if (!str_contains($controllerSrc, 'CustomerPublicDto::fromCustomer')) {
-    $fail('CustomerProfileController missing CustomerPublicDto::fromCustomer');
+if (!str_contains($controllerSrc, 'CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3)')) {
+    $fail('CustomerProfileController missing CustomerPublicDto::fromCustomer with modx/ms3');
 }
 
 fwrite(STDOUT, "OK CustomerPublicDtoTest\n");

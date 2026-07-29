@@ -22,31 +22,6 @@ use Rakit\Validation\Validator;
  */
 class CustomerProfileController
 {
-    /**
-     * Field names never editable via POST /api/v1/customer/add (security & system counters).
-     *
-     * @var list<string>
-     */
-    private const PROFILE_QUICK_UPDATE_FORBIDDEN = [
-        'id',
-        'token',
-        'user_id',
-        'password',
-        'email_verified_at',
-        'is_active',
-        'is_blocked',
-        'failed_login_attempts',
-        'blocked_until',
-        'created_at',
-        'updated_at',
-        'last_login_at',
-        'orders_count',
-        'total_spent',
-        'last_order_at',
-        'privacy_accepted_at',
-        'privacy_ip',
-    ];
-
     /** @var modX */
     protected modX $modx;
 
@@ -92,9 +67,26 @@ class CustomerProfileController
         }
 
         $customerId = (int)$customer->get('id');
-        $validator = new Validator();
-        $validation = $validator->make($data, $this->getProfileFieldRules());
+        $this->ms3->loadMap();
+        $editableKeys = CustomerPublicDto::editableFieldKeys($this->modx, $this->ms3);
+        $data = array_intersect_key($data, array_flip($editableKeys));
 
+        $rules = $this->getProfileFieldRules();
+        foreach (array_keys($rules) as $coreKey) {
+            if (!array_key_exists($coreKey, $data)) {
+                $_SESSION['ms3']['customer_profile_errors'] = [
+                    $coreKey => $this->modx->lexicon('ms3_customer_err_validation'),
+                ];
+
+                return $this->error(
+                    $this->modx->lexicon('ms3_customer_err_validation'),
+                    ['errors' => [$coreKey => $this->modx->lexicon('ms3_customer_err_validation')]]
+                );
+            }
+        }
+
+        $validator = new Validator();
+        $validation = $validator->make($data, $rules);
         $validation->validate();
 
         if ($validation->fails()) {
@@ -107,21 +99,33 @@ class CustomerProfileController
             );
         }
 
-        $newEmail = trim($data['email']);
-
-        if (!$this->isEmailAvailable($customer, $newEmail)) {
-            $_SESSION['ms3']['customer_profile_errors'] = [
-                'email' => $this->modx->lexicon('ms3_customer_err_email_exists')
-            ];
-            return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
+        $fieldMeta = $this->modx->getFieldMeta(msCustomer::class);
+        if (!is_array($fieldMeta) || $fieldMeta === []) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_save'));
         }
 
-        $this->resetEmailVerificationIfChanged($customer, $newEmail);
+        foreach ($data as $key => $rawValue) {
+            if ($key === 'email') {
+                $newEmail = trim((string) $rawValue);
+                if (!$this->isEmailAvailable($customer, $newEmail)) {
+                    $_SESSION['ms3']['customer_profile_errors'] = [
+                        'email' => $this->modx->lexicon('ms3_customer_err_email_exists'),
+                    ];
 
-        $customer->set('first_name', trim($data['first_name']));
-        $customer->set('last_name', trim($data['last_name']));
-        $customer->set('email', $newEmail);
-        $customer->set('phone', trim($data['phone']));
+                    return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
+                }
+                $this->resetEmailVerificationIfChanged($customer, $newEmail);
+                $customer->set('email', $newEmail);
+                continue;
+            }
+
+            if (isset($rules[$key])) {
+                $customer->set($key, trim((string) $rawValue));
+                continue;
+            }
+
+            $customer->set($key, $this->normalizeQuickProfileValue($rawValue, $fieldMeta[$key]));
+        }
 
         if (!$customer->save()) {
             return $this->error($this->modx->lexicon('ms3_customer_err_save'));
@@ -136,7 +140,7 @@ class CustomerProfileController
 
         return $this->success(
             $this->modx->lexicon('ms3_customer_profile_updated'),
-            ['customer' => CustomerPublicDto::fromCustomer($customer)]
+            ['customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3)]
         );
     }
 
@@ -171,16 +175,13 @@ class CustomerProfileController
         }
 
         $this->ms3->loadMap();
+        $editableKeys = CustomerPublicDto::editableFieldKeys($this->modx, $this->ms3);
+        if (!in_array($key, $editableKeys, true)) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
+        }
+
         $fieldMeta = $this->modx->getFieldMeta(msCustomer::class);
-        if (!is_array($fieldMeta) || $fieldMeta === []) {
-            return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
-        }
-
-        if (in_array($key, self::PROFILE_QUICK_UPDATE_FORBIDDEN, true)) {
-            return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
-        }
-
-        if (!isset($fieldMeta[$key])) {
+        if (!is_array($fieldMeta) || !isset($fieldMeta[$key])) {
             return $this->error($this->modx->lexicon('ms3_customer_err_field_not_allowed'));
         }
 
@@ -220,7 +221,7 @@ class CustomerProfileController
             $this->modx->lexicon('ms3_customer_profile_updated'),
             [
                 $key => $customer->get($key),
-                'customer' => CustomerPublicDto::fromCustomer($customer),
+                'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
             ]
         );
     }

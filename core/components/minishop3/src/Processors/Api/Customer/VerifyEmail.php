@@ -2,6 +2,8 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
+use MiniShop3\MiniShop3;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\Processors\Processor;
 
@@ -39,12 +41,11 @@ class VerifyEmail extends Processor
             return $this->failure($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
         }
 
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+
         return $this->success($this->modx->lexicon('ms3_customer_email_verify_success'), [
-            'customer' => [
-                'id' => $customer->id,
-                'email' => $customer->get('email'),
-                'email_verified' => true,
-            ],
+            'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $ms3),
         ]);
     }
 }
