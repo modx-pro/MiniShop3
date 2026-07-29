@@ -82,8 +82,12 @@ class PipeRuleValidator
 
             if (str_contains($part, ':')) {
                 [$name, $paramString] = explode(':', $part, 2);
-                $params = array_map('trim', explode(',', $paramString));
-                $parsed[] = ['name' => $name, 'params' => $params];
+                if ($name === 'regex') {
+                    $parsed[] = ['name' => $name, 'params' => [$paramString]];
+                } else {
+                    $params = array_map('trim', explode(',', $paramString));
+                    $parsed[] = ['name' => $name, 'params' => $params];
+                }
             } else {
                 $parsed[] = ['name' => $part, 'params' => []];
             }
@@ -209,7 +213,7 @@ class PipeRuleValidator
             'min' => $this->checkMin($value, $params[0] ?? '0', $hasNumericRule),
             'max' => $this->checkMax($value, $params[0] ?? '0', $hasNumericRule),
             'between' => $this->checkBetween($value, $params, $hasNumericRule),
-            'digits' => strlen(preg_replace('/\D/', '', (string) $value)) === (int) ($params[0] ?? -1),
+            'digits' => $this->checkDigits($value, (int) ($params[0] ?? -1)),
             'digits_between' => $this->checkDigitsBetween($value, $params),
             'in' => in_array((string) $value, $params, true),
             'not_in' => !in_array((string) $value, $params, true),
@@ -282,17 +286,29 @@ class PipeRuleValidator
         return false;
     }
 
+    private function checkDigits(mixed $value, int $length): bool
+    {
+        $stringValue = (string) $value;
+
+        return !preg_match('/[^0-9]/', $stringValue) && strlen($stringValue) === $length;
+    }
+
     private function checkDigitsBetween(mixed $value, array $params): bool
     {
         if (count($params) < 2) {
             return false;
         }
 
-        $digits = strlen(preg_replace('/\D/', '', (string) $value));
+        $stringValue = (string) $value;
+        if (preg_match('/[^0-9]/', $stringValue)) {
+            return false;
+        }
+
+        $length = strlen($stringValue);
         $min = (int) $params[0];
         $max = (int) $params[1];
 
-        return $digits >= $min && $digits <= $max;
+        return $length >= $min && $length <= $max;
     }
 
     private function checkRegex(mixed $value, string $pattern): bool

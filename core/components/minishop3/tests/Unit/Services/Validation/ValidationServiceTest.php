@@ -194,4 +194,31 @@ final class ValidationServiceTest extends TestCase
         yield 'email ok' => ['email', 'a@b.co', true];
         yield 'email invalid' => ['email', 'nope', false];
     }
+
+    public function testDigitsRuleRequiresNumericOnlyString(): void
+    {
+        $result = $this->validator->validate(
+            ['phone' => '12-345-67890'],
+            ['phone' => 'digits:10']
+        );
+
+        self::assertTrue($result->fails());
+
+        $valid = $this->validator->validate(
+            ['phone' => '1234567890'],
+            ['phone' => 'digits:10']
+        );
+
+        self::assertTrue($valid->passes());
+    }
+
+    public function testRegexRuleKeepsCommaInsidePattern(): void
+    {
+        $result = $this->validator->validate(
+            ['code' => 'foo,bar'],
+            ['code' => 'regex:/^[a-z,]+$/']
+        );
+
+        self::assertTrue($result->passes());
+    }
 }
