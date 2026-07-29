@@ -117,6 +117,35 @@ final class CategoryProductDocumentPolicy
         return self::isAllowed($parent, self::POLICY_VIEW);
     }
 
+    /**
+     * @param array<int, msCategory> $parentsById
+     */
+    public static function canViewInCategoryGridCached(
+        msProduct $product,
+        bool $nested,
+        array $parentsById,
+    ): bool {
+        if (!self::isAllowed($product, self::POLICY_VIEW)) {
+            return false;
+        }
+
+        if (!$nested) {
+            return true;
+        }
+
+        $parentId = (int) $product->get('parent');
+        if ($parentId <= 0) {
+            return false;
+        }
+
+        $parent = $parentsById[$parentId] ?? null;
+        if (!$parent instanceof msCategory) {
+            return false;
+        }
+
+        return self::isAllowed($parent, self::POLICY_VIEW);
+    }
+
     public static function toErrorResponse(?array $evaluation): ?array
     {
         if ($evaluation === null) {
