@@ -97,6 +97,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Order\OrderCostCalculator::class,
             'interface' => null,
         ],
+        'ms3_manager_order_cost_recalculator' => [
+            'class' => \MiniShop3\Services\Order\ManagerOrderCostRecalculator::class,
+            'interface' => null,
+        ],
         'ms3_order_field_manager' => [
             'class' => \MiniShop3\Services\Order\OrderFieldManager::class,
             'interface' => null,
@@ -152,6 +156,14 @@ class ServiceRegistry
         ],
         'ms3_option_service' => [
             'class' => \MiniShop3\Services\Option\OptionService::class,
+            'interface' => null,
+        ],
+        'ms3_option_loader' => [
+            'class' => \MiniShop3\Services\Option\OptionLoaderService::class,
+            'interface' => null,
+        ],
+        'ms3_option_sync' => [
+            'class' => \MiniShop3\Services\Option\OptionSyncService::class,
             'interface' => null,
         ],
         'ms3_cart' => [
@@ -457,6 +469,7 @@ class ServiceRegistry
         $servicesWithModxAndMs3 = [
             'ms3_order_draft_manager',
             'ms3_order_cost_calculator',
+            'ms3_manager_order_cost_recalculator',
             'ms3_order_user_resolver',
             'ms3_order_log',
             'ms3_cart_item_manager',
@@ -465,6 +478,7 @@ class ServiceRegistry
 
         // Services with complex dependencies (resolved via DI)
         $servicesWithDependencies = [
+            'ms3_option_service',
             'ms3_order_field_manager',
             'ms3_order_address_manager',
             'ms3_order_submit_handler',
@@ -509,6 +523,16 @@ class ServiceRegistry
         $modx = $this->modx;
 
         switch ($serviceKey) {
+            case 'ms3_option_service':
+                // OptionService(xPDO, OptionLoaderService, OptionSyncService)
+                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
+                    $loader = $modx->services->get('ms3_option_loader');
+                    $sync = $modx->services->get('ms3_option_sync');
+
+                    return new $validatedClass($modx, $loader, $sync);
+                });
+                break;
+
             case 'ms3_order_field_manager':
                 // OrderFieldManager(modX, MiniShop3, OrderDraftManager)
                 $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {

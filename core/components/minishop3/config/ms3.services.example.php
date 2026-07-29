@@ -193,9 +193,15 @@ return [
      * 'ms3_category_service'        - Category operations
      * 'ms3_category_option_service' - Category options
      *
-     * Product Options:
+     * Product Options (override via ms3.services.php / ms3.services.d/):
      * --------------
-     * 'ms3_option_service'          - EAV options system
+     * 'ms3_option_service'          - EAV options facade
+     * 'ms3_option_loader'           - load option values / admin fields
+     * 'ms3_option_sync'             - save/sync product option values
+     *
+     * Order manager cost:
+     * -------------------
+     * 'ms3_manager_order_cost_recalculator' - manager order totals recalc
      *
      * Utilities:
      * --------

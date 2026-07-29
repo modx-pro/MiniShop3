@@ -332,9 +332,6 @@ class OrdersController
             return Response::error('Order not found', HttpStatus::NOT_FOUND)->getData();
         }
 
-        /** @var MiniShop3 $ms3 */
-        $ms3 = $this->modx->services->get('ms3');
-
         $modeIn = strtolower(trim((string)($params['mode'] ?? ManagerOrderCostRecalculator::MODE_AUTO)));
         $allowedModes = [
             ManagerOrderCostRecalculator::MODE_AUTO,
@@ -350,7 +347,7 @@ class OrdersController
             $options['manual_delivery_cost'] = $params['manual_delivery_cost'];
         }
 
-        $recalculator = new ManagerOrderCostRecalculator($this->modx, $ms3);
+        $recalculator = $this->modx->services->get('ms3_manager_order_cost_recalculator');
         $result = $recalculator->recalculate($order, $options);
 
         if (empty($result['success'])) {

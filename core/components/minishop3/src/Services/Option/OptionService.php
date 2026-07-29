@@ -34,12 +34,14 @@ class OptionService
 
     /**
      * @param xPDO $xpdo
+     * @param OptionLoaderService $loader
+     * @param OptionSyncService $sync
      */
-    public function __construct(xPDO $xpdo)
+    public function __construct(xPDO $xpdo, OptionLoaderService $loader, OptionSyncService $sync)
     {
         $this->xpdo = $xpdo;
-        $this->loader = new OptionLoaderService($xpdo);
-        $this->sync = new OptionSyncService($xpdo);
+        $this->loader = $loader;
+        $this->sync = $sync;
         $this->category = new OptionCategoryService($xpdo);
     }
 
