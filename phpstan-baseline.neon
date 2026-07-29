@@ -1207,12 +1207,6 @@ parameters:
 			path: core/components/minishop3/src/Services/Order/OrderAddressManager.php
 
 		-
-			message: '#^Access to an undefined property MiniShop3\\MiniShop3\:\:\$cart\.$#'
-			identifier: property.notFound
-			count: 9
-			path: core/components/minishop3/src/Services/Order/OrderCostCalculator.php
-
-		-
 			message: '#^Method MiniShop3\\Services\\Order\\OrderDraftManager\:\:ensureAddress\(\) should return MiniShop3\\Model\\msOrderAddress but returns xPDO\\Om\\xPDOObject\|null\.$#'
 			identifier: return.type
 			count: 1
