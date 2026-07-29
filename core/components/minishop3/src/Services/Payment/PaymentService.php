@@ -55,10 +55,6 @@ class PaymentService
             $class = $this->defaultControllerClass;
         }
 
-        if ($this->ms3) {
-            $this->ms3->loadCustomClasses('payment');
-        }
-
         try {
             $controller = new $class($this->ms3, []);
 
