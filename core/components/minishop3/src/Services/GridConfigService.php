@@ -28,8 +28,14 @@ class GridConfigService
     /**
      * Request-scoped memo for getGridConfig(): gridKey:includeHidden → column config.
      *
-     * Safe only while GridConfigService is a request-scoped DI singleton (ServiceRegistry):
-     * one instance per request, not shared across requests, not persisted.
+     * This cache is safe only because GridConfigService is registered in the
+     * MODX DI container as a request-scoped singleton (see ServiceRegistry):
+     * one instance per request, never shared across requests. The memo must
+     * never be persisted to a long-lived process cache or serialized — it
+     * holds no TTL and would leak stale data across requests. Mutation
+     * methods (saveGridConfig, addField, updateField, deleteField) invalidate
+     * the affected gridKey entries via invalidateGridConfigCache() so the next
+     * read re-loads from the database.
      *
      * @var array<string, array<int, array<string, mixed>>>
      */
