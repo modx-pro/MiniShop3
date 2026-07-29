@@ -44,6 +44,6 @@ final class IntArrayDecoder
             }
         }
 
-        return array_values($out);
+        return $out;
     }
 }
