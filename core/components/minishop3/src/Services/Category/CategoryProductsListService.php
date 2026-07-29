@@ -144,7 +144,14 @@ final class CategoryProductsListService
         }
 
         $c->where(['msProduct.class_key' => msProduct::class]);
-        $c->where(['msProduct.parent:IN' => $this->getAllowedProductParentCategoryIds($categoryId, $nested)]);
+
+        $scopeService = $this->getCategoryProductScopeService();
+        if ($nested) {
+            $categoryIds = $this->treeService()->productParentIds($categoryId, true);
+            $scopeService->applyProductCategoryScope($c, $categoryIds);
+        } else {
+            $scopeService->applyProductCategoryScope($c, [$categoryId]);
+        }
 
         if ($query !== '') {
             $c->where([
@@ -220,41 +227,6 @@ final class CategoryProductsListService
     }
 
     /**
-     * Parent category IDs allowed for products in category grid scope (matches list filter).
-     *
-     * @return list<int>
-     */
-    public function getAllowedProductParentCategoryIds(int $categoryId, bool $nested): array
-    {
-        if (!$nested) {
-            return [$categoryId];
-        }
-
-        $ids = $this->treeService()->getDescendantCategoryIds($categoryId);
-        $ids[] = $categoryId;
-
-        return $ids;
-    }
-
-    /**
-     * Whether a product belongs to the category products grid scope (direct parent or nested tree).
-     */
-    public function isProductInCategoryScope(int $productId, int $categoryId, bool $nested): bool
-    {
-        $product = $this->modx->getObject(msProduct::class, $productId);
-        if (!$product) {
-            return false;
-        }
-
-        return CategoryProductScopePolicy::isParentInScope(
-            (int) $product->get('parent'),
-            $categoryId,
-            $nested,
-            $nested ? $this->treeService()->getDescendantCategoryIds($categoryId) : []
-        );
-    }
-
-    /**
      * @param list<string> $optionFieldNames Allowed option field names (whitelist)
      *
      * @return array<string, mixed>
@@ -303,5 +275,17 @@ final class CategoryProductsListService
         }
 
         return $data;
+    }
+
+    private function getCategoryProductScopeService(): CategoryProductScopeService
+    {
+        if ($this->modx->services->has('ms3_category_product_scope')) {
+            $service = $this->modx->services->get('ms3_category_product_scope');
+            if ($service instanceof CategoryProductScopeService) {
+                return $service;
+            }
+        }
+
+        return new CategoryProductScopeService($this->modx);
     }
 }
