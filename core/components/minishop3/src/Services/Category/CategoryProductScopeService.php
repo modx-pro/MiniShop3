@@ -232,30 +232,6 @@ class CategoryProductScopeService
     }
 
     /**
-     * Whether product is listed in category grid scope (primary parent or additional member).
-     */
-    public function isProductInCategory(int $productId, int $categoryId): bool
-    {
-        if ($productId <= 0 || $categoryId <= 0) {
-            return false;
-        }
-
-        $product = $this->modx->getObject(msProduct::class, $productId);
-        if (!$product) {
-            return false;
-        }
-
-        if ((int) $product->get('parent') === $categoryId) {
-            return true;
-        }
-
-        return $this->modx->getCount(msCategoryMember::class, [
-            'product_id' => $productId,
-            'category_id' => $categoryId,
-        ]) > 0;
-    }
-
-    /**
      * menuindex reorder applies only to direct children (not additional-category-only links).
      */
     public function canReorderInCategory(int $productId, int $categoryId): bool
