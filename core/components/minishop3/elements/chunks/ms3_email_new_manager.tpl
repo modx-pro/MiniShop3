@@ -86,7 +86,7 @@
             <td>
                 <table style="width:95%;margin:auto;">
                     <tr>
-                        <td><a href="{$site_url}{'manager_url'|option}?a=mgr/orders&namespace=minishop3&order={$order.id}" target="_blank" style="{$style.a}">{'ms3_email_link_to_order' | lexicon}</a></td>
+                        <td><a href="{$site_url}{'manager_url'|option}?a=mgr/orders&amp;namespace=minishop3&amp;order={$order.id}" target="_blank" style="{$style.a}">{'ms3_email_link_to_order' | lexicon}</a></td>
                     </tr>
                 </table>
             </td>
