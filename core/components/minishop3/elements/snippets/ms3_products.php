@@ -143,12 +143,10 @@ foreach (['where', 'leftJoin', 'innerJoin', 'select', 'groupby'] as $v) {
 $pdoFetch->addTime('Conditions prepared');
 
 // pdoTools parent filter ignores msCategoryMember; scope via CategoryProductScopeService (#481).
-$scopeService = $modx->services->has('ms3_category_product_scope')
-    ? $modx->services->get('ms3_category_product_scope')
-    : new CategoryProductScopeService($modx);
-
 $_ms3Parents = (string)($scriptProperties['parents'] ?? '');
-if ($_ms3Parents !== '' && $_ms3Parents !== '0') {
+if ($_ms3Parents !== '' && $_ms3Parents !== '0' && $modx->services->has('ms3_category_product_scope')) {
+    /** @var CategoryProductScopeService $scopeService */
+    $scopeService = $modx->services->get('ms3_category_product_scope');
     $_ms3Depth = (int)($scriptProperties['depth'] ?? 10);
     $_ms3CategoryIds = $scopeService->resolveCategoryIdsFromParents($_ms3Parents, $_ms3Depth);
 
