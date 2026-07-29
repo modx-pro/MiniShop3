@@ -8,7 +8,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
 use MiniShop3\Services\Order\OrderLogService;
 use MODX\Revolution\modX;
-use Rakit\Validation\Validator;
+use MiniShop3\Services\Validation\ValidationServiceLocator;
 
 /**
  * Order Field Manager
@@ -223,13 +223,11 @@ class OrderFieldManager
         }
 
         // Run validation
-        $validator = new Validator();
-        $validation = $validator->validate(
+        $validation = ValidationServiceLocator::fromModx($this->modx)->validate(
             [$key => $value],
             [$key => $this->validationRules[$key]],
             $this->validationMessages
         );
-        $validation->validate();
 
         if ($validation->fails()) {
             $errors = $validation->errors();

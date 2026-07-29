@@ -84,7 +84,7 @@ const fieldDefinitions = [
 /** Extra definitions from model fields + Object Extension (filled on mount) */
 const extensionFieldDefinitions = ref([])
 
-// Available validation rules from rakit/validation
+// Pipe validation rules (MiniShop3 ValidationService, Rakit-compatible syntax)
 const ruleDefinitions = [
   // Simple rules (no parameters)
   { name: 'required', hasParam: false },

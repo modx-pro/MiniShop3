@@ -8,7 +8,7 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\CustomerPublicDto;
 use MODX\Revolution\modX;
-use Rakit\Validation\Validator;
+use MiniShop3\Services\Validation\ValidationServiceLocator;
 
 /**
  * CustomerProfileController - Customer profile management API controller
@@ -80,8 +80,7 @@ class CustomerProfileController
         // rather than rejected (#424 review).
         $rules = array_intersect_key($this->getProfileFieldRules(), $data);
 
-        $validator = new Validator();
-        $validation = $validator->make($data, $rules);
+        $validation = ValidationServiceLocator::fromModx($this->modx)->make($data, $rules);
         $validation->validate();
 
         if ($validation->fails()) {
@@ -183,7 +182,7 @@ class CustomerProfileController
         $rules = $this->getProfileFieldRules();
         if (isset($rules[$key])) {
             $value = trim((string) ($data['value'] ?? ''));
-            $validation = (new Validator())->make([$key => $value], [$key => $rules[$key]]);
+            $validation = ValidationServiceLocator::fromModx($this->modx)->make([$key => $value], [$key => $rules[$key]]);
             $validation->validate();
 
             if ($validation->fails()) {

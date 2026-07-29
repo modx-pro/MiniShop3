@@ -4,8 +4,8 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Validation\ValidationServiceLocator;
 use MODX\Revolution\modX;
-use Rakit\Validation\Validator;
 
 /**
  * Customer Field Manager
@@ -121,15 +121,11 @@ class CustomerFieldManager
         $value = $response['data']['value'];
 
         if (!empty($this->validationRules[$key])) {
-            $validator = new Validator();
-
-            $validation = $validator->validate(
+            $validation = ValidationServiceLocator::fromModx($this->modx)->validate(
                 [$key => $value],
                 [$key => $this->validationRules[$key]],
                 $this->validationMessages
             );
-
-            $validation->validate();
 
             if ($validation->fails()) {
                 $errors = $validation->errors();
