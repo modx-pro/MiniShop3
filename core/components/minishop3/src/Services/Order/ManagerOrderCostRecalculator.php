@@ -5,7 +5,6 @@ namespace MiniShop3\Services\Order;
 use MiniShop3\Controllers\Delivery\DefaultDelivery;
 use MiniShop3\Controllers\Payment\DefaultPayment;
 use MiniShop3\MiniShop3;
-use MiniShop3\Utils\PriceAdjustment;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
@@ -19,11 +18,13 @@ use MODX\Revolution\modX;
  * Used by manager «Пересчитать стоимость» ({@see calculateBreakdown()} / {@see recalculate()})
  * and draft finalize ({@see OrderFinalizeService}).
  *
+ * Manager adapter: modes (auto/manual/force_provider), warnings, order log — no msOn* cost events.
+ * Default-handler formulas delegate to {@see OrderCostEngine} (shared with web checkout).
+ *
  * External delivery/payment provider classes are not invoked in {@see self::MODE_AUTO};
  * callers should use manual delivery cost or {@see self::MODE_FORCE_PROVIDER}.
  *
  * Payment commission is reflected only in aggregated {@see msOrder cost}, not stored in a column.
- * Default handler math lives in {@see OrderPersistedCostRules}.
  */
 class ManagerOrderCostRecalculator
 {
@@ -93,7 +94,7 @@ class ManagerOrderCostRecalculator
         $warnings = array_merge($warnings, $deliveryResult['warnings']);
         $deliveryCost = $deliveryResult['delivery_cost'];
 
-        $paymentBase = OrderService::paymentCommissionBase($cartCost);
+        $paymentBase = OrderCostEngine::paymentCommissionBase($cartCost);
         $paymentResult = $this->resolvePaymentFee($order, $paymentBase, $mode, $options);
         if (!$paymentResult['success']) {
             return $paymentResult;
@@ -104,7 +105,8 @@ class ManagerOrderCostRecalculator
 
         /** @var OrderService $orderService */
         $orderService = $this->modx->services->get('ms3_order_service');
-        $cost = round($orderService->clampComputedTotal($order, $cartCost, $deliveryCost, $paymentFee), 6);
+        $breakdown = OrderCostEngine::composeBreakdown($order, $orderService, $cartCost, $deliveryCost, $paymentFee);
+        $cost = $breakdown['cost'];
 
         return $this->ms3->utils->success('', [
             'breakdown' => [
@@ -257,7 +259,12 @@ class ManagerOrderCostRecalculator
         if ($this->isSimpleDelivery($msDelivery)) {
             return [
                 'success' => true,
-                'delivery_cost' => $this->calculateDefaultDeliveryCost($msDelivery, $cartCost, $orderWeight),
+                'delivery_cost' => OrderCostEngine::calculateDefaultDeliveryCost(
+                    $this->modx,
+                    $msDelivery,
+                    $cartCost,
+                    $orderWeight
+                ),
                 'warnings' => $warnings,
             ];
         }
@@ -336,7 +343,7 @@ class ManagerOrderCostRecalculator
         if ($this->isSimplePayment($msPayment)) {
             return [
                 'success' => true,
-                'payment_fee' => $this->calculateDefaultPaymentCommission($msPayment, $paymentBase),
+                'payment_fee' => OrderCostEngine::calculatePaymentSurcharge($this->modx, $msPayment, $paymentBase),
                 'warnings' => $warnings,
             ];
         }
@@ -348,65 +355,6 @@ class ManagerOrderCostRecalculator
             'payment_fee' => 0.0,
             'warnings' => $warnings,
         ];
-    }
-
-    protected function calculateDefaultDeliveryCost(msDelivery $delivery, float $cartCost, float $orderWeight): float
-    {
-        $weightPrice = (float) $delivery->get('weight_price');
-        if ($weightPrice < 0) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[ManagerOrderCostRecalculator] Invalid weight_price for delivery #' . $delivery->get(
-                    'id'
-                ) . ': ' . $weightPrice,
-            );
-        }
-
-        $addPrice = $delivery->get('price');
-        if (!empty($addPrice) && PriceAdjustment::isPercent($addPrice)) {
-            $percent = PriceAdjustment::getPercent($addPrice);
-            if (!PriceAdjustment::isAllowedPercent($percent)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    sprintf(
-                        '[ManagerOrderCostRecalculator] Invalid percent for delivery #%s: %s%%. Must be between -100%% and 100%%.',
-                        $delivery->get('id'),
-                        $percent
-                    )
-                );
-            }
-        }
-
-        return OrderPersistedCostRules::calculateDefaultDeliveryCost(
-            (float) $delivery->get('free_delivery_amount'),
-            $weightPrice,
-            $addPrice,
-            $cartCost,
-            $orderWeight
-        );
-    }
-
-    /**
-     * Surcharge only (excluding base), aligned with {@see \MiniShop3\Controllers\Payment\Payment::getCost()}.
-     */
-    protected function calculateDefaultPaymentCommission(msPayment $payment, float $baseCost): float
-    {
-        $addPrice = $payment->get('price');
-        if (!empty($addPrice) && PriceAdjustment::isPercent($addPrice)) {
-            $percent = PriceAdjustment::getPercent($addPrice);
-            if (!PriceAdjustment::isAllowedPercent($percent)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    sprintf(
-                        '[ManagerOrderCostRecalculator] Invalid percent for payment #%s: %s%%. Must be between -100%% and 100%%.',
-                        $payment->get('id'),
-                        $percent
-                    )
-                );
-            }
-        }
-
-        return OrderPersistedCostRules::calculateDefaultPaymentCommission($addPrice, $baseCost);
     }
 
     protected function isSimpleDelivery(msDelivery $delivery): bool

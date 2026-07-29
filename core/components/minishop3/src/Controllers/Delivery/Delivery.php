@@ -5,7 +5,7 @@ namespace MiniShop3\Controllers\Delivery;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
-use MiniShop3\Utils\PriceAdjustment;
+use MiniShop3\Services\Order\OrderCostEngine;
 use MODX\Revolution\modX;
 
 /**
@@ -77,8 +77,6 @@ abstract class Delivery implements DeliveryProviderInterface
      */
     public function getCost(msOrder $order, msDelivery $delivery, float $cost): float
     {
-        $deliveryCost = 0;
-
         // Get cart data for weight calculation
         $cart = [
             'total_weight' => 0,
@@ -98,51 +96,14 @@ abstract class Delivery implements DeliveryProviderInterface
             }
         }
 
-        // Check free delivery threshold first
-        // Use $cost parameter (cart cost passed from calculator) for threshold check
-        $freeDeliveryAmount = (float)$delivery->get('free_delivery_amount');
+        $cartWeight = (float) ($cart['total_weight'] ?? 0);
 
-        if ($freeDeliveryAmount > 0 && $cost >= $freeDeliveryAmount) {
-            return 0;
-        }
-
-        // Cost by weight
-        $weightPrice = (float)$delivery->get('weight_price');
-        $cartWeight = (float)($cart['total_weight'] ?? 0);
-
-        if ($weightPrice < 0) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[Delivery] Invalid weight_price for delivery #{$delivery->get('id')}: {$weightPrice}. Must be >= 0."
-            );
-            $weightPrice = 0;
-        }
-
-        $deliveryCost += $weightPrice * $cartWeight;
-
-        // Base delivery cost
-        $addPrice = $delivery->get('price');
-
-        if (empty($addPrice)) {
-            return $deliveryCost;
-        }
-
-        if (PriceAdjustment::isPercent($addPrice)) {
-            $percent = PriceAdjustment::getPercent($addPrice);
-            if (!PriceAdjustment::isAllowedPercent($percent)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    sprintf(
-                        '[Delivery] Invalid percent value for delivery #%s: %s%%. Must be between -100%% and 100%%.',
-                        $delivery->get('id'),
-                        $percent
-                    )
-                );
-                return $deliveryCost;
-            }
-        }
-
-        return $deliveryCost + PriceAdjustment::calculate($cost, $addPrice);
+        return OrderCostEngine::calculateDefaultDeliveryCost(
+            $this->modx,
+            $delivery,
+            $cost,
+            $cartWeight
+        );
     }
 
     /**

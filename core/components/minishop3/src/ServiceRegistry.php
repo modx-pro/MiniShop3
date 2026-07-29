@@ -530,7 +530,34 @@ class ServiceRegistry
 
         $modx = $this->modx;
 
+<<<<<<< HEAD
         if (in_array($serviceKey, self::CONTROLLERS_WITH_MS3_ONLY, true)) {
+=======
+        // Controllers requiring only MiniShop3 instance: __construct(MiniShop3 $ms3)
+        $controllersWithMs3Only = ['ms3_cart', 'ms3_order', 'ms3_customer'];
+
+        // Services requiring both modX and MiniShop3: __construct(modX $modx, MiniShop3 $ms3)
+        $servicesWithModxAndMs3 = [
+            'ms3_order_draft_manager',
+            'ms3_order_cost_calculator',
+            'ms3_manager_order_cost_recalculator',
+            'ms3_order_user_resolver',
+            'ms3_order_log',
+            'ms3_cart_item_manager',
+            'ms3_customer_address_manager',
+        ];
+
+        // Services with complex dependencies (resolved via DI)
+        $servicesWithDependencies = [
+            'ms3_order_field_manager',
+            'ms3_order_address_manager',
+            'ms3_order_submit_handler',
+            'ms3_order_status',
+            'ms3_order_finalize',
+        ];
+
+        if (in_array($serviceKey, $controllersWithMs3Only)) {
+>>>>>>> 33e55983 (refactor(order): unify checkout and manager cost formulas)
             $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
                 $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
                 return new $validatedClass($ms3);
