@@ -4,6 +4,7 @@ namespace MiniShop3\Model;
 
 use MiniShop3\Controllers\Options\Types\msOptionType;
 use MiniShop3\MiniShop3;
+use MiniShop3\Services\Option\ProductOptionCriteriaPolicy;
 use xPDO\Om\xPDOSimpleObject;
 use xPDO\xPDO;
 
@@ -81,10 +82,11 @@ class msOption extends xPDOSimpleObject
         $type = $this->ms3->options->getOptionType($this);
 
         if ($type) {
-            $criteria = [
-                'product_id' => $product_id,
-                'key' => $this->get('key'),
-            ];
+            $criteria = ProductOptionCriteriaPolicy::fromProductAndKey($product_id, $this->get('key'));
+            if ($criteria === null) {
+                return null;
+            }
+
             return $type->getValue($criteria);
         } else {
             return null;
@@ -102,10 +104,11 @@ class msOption extends xPDOSimpleObject
         $type = $this->ms3->options->getOptionType($this);
 
         if ($type) {
-            $criteria = [
-                'product_id' => $product_id,
-                'key' => $this->get('key'),
-            ];
+            $criteria = ProductOptionCriteriaPolicy::fromProductAndKey($product_id, $this->get('key'));
+            if ($criteria === null) {
+                return null;
+            }
+
             return $type->getRowValue($criteria);
         } else {
             return null;
