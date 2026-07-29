@@ -227,6 +227,12 @@ class TokenService
             }
         }
 
+        // 3. Generate new token
+        $result = $this->generateCustomerToken();
+
+        return $result['token'];
+    }
+
     /**
      * Renew expired API token TTL and hydrate $_SESSION from DB row.
      */
