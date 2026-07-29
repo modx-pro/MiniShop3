@@ -212,6 +212,57 @@ final class ValidationServiceTest extends TestCase
         self::assertTrue($valid->passes());
     }
 
+    public function testDigitsBetweenRuleAcceptsLengthInRange(): void
+    {
+        $tooShort = $this->validator->validate(
+            ['code' => '12'],
+            ['code' => 'digits_between:3,5']
+        );
+
+        self::assertTrue($tooShort->fails());
+
+        $lowerBound = $this->validator->validate(
+            ['code' => '123'],
+            ['code' => 'digits_between:3,5']
+        );
+
+        self::assertTrue($lowerBound->passes());
+
+        $upperBound = $this->validator->validate(
+            ['code' => '12345'],
+            ['code' => 'digits_between:3,5']
+        );
+
+        self::assertTrue($upperBound->passes());
+
+        $tooLong = $this->validator->validate(
+            ['code' => '123456'],
+            ['code' => 'digits_between:3,5']
+        );
+
+        self::assertTrue($tooLong->fails());
+    }
+
+    public function testDigitsBetweenRuleRejectsNonDigitCharacters(): void
+    {
+        $result = $this->validator->validate(
+            ['code' => '12a45'],
+            ['code' => 'digits_between:3,5']
+        );
+
+        self::assertTrue($result->fails());
+    }
+
+    public function testDigitsBetweenRuleFailsWithMissingParams(): void
+    {
+        $result = $this->validator->validate(
+            ['code' => '123'],
+            ['code' => 'digits_between:3']
+        );
+
+        self::assertTrue($result->fails());
+    }
+
     public function testRegexRuleKeepsCommaInsidePattern(): void
     {
         $result = $this->validator->validate(

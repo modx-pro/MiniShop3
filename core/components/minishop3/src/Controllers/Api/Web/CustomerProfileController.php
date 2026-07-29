@@ -7,8 +7,8 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\CustomerPublicDto;
+use MiniShop3\Services\Validation\ValidationService;
 use MODX\Revolution\modX;
-use MiniShop3\Services\Validation\ValidationServiceLocator;
 
 /**
  * CustomerProfileController - Customer profile management API controller
@@ -80,7 +80,7 @@ class CustomerProfileController
         // rather than rejected (#424 review).
         $rules = array_intersect_key($this->getProfileFieldRules(), $data);
 
-        $validation = ValidationServiceLocator::fromModx($this->modx)->make($data, $rules);
+        $validation = $this->getValidationService()->make($data, $rules);
         $validation->validate();
 
         if ($validation->fails()) {
@@ -182,7 +182,7 @@ class CustomerProfileController
         $rules = $this->getProfileFieldRules();
         if (isset($rules[$key])) {
             $value = trim((string) ($data['value'] ?? ''));
-            $validation = ValidationServiceLocator::fromModx($this->modx)->make([$key => $value], [$key => $rules[$key]]);
+            $validation = $this->getValidationService()->make([$key => $value], [$key => $rules[$key]]);
             $validation->validate();
 
             if ($validation->fails()) {
@@ -239,6 +239,16 @@ class CustomerProfileController
             'email' => 'required|email',
             'phone' => 'required|min:10|max:20',
         ];
+    }
+
+    /**
+     * Resolve the canonical validation service from MODX DI.
+     */
+    protected function getValidationService(): ValidationService
+    {
+        $service = $this->modx->services->get('ms3_validation_service');
+
+        return $service instanceof ValidationService ? $service : new ValidationService();
     }
 
     /**
