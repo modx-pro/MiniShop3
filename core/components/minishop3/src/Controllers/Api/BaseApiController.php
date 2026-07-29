@@ -67,4 +67,37 @@ abstract class BaseApiController
     {
         return $this->modx->user && $this->modx->user->isAuthenticated($context);
     }
+
+    /**
+     * @param mixed $input JSON array, comma-separated string, or array of ids
+     * @return list<int>
+     */
+    protected function decodeIntArray($input): array
+    {
+        if ($input === null || $input === '') {
+            return [];
+        }
+
+        if (is_string($input)) {
+            $decoded = json_decode($input, true);
+            if (is_array($decoded)) {
+                $input = $decoded;
+            } else {
+                $input = explode(',', $input);
+            }
+        }
+
+        if (!is_array($input)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($input as $value) {
+            if (is_numeric($value)) {
+                $result[] = (int)$value;
+            }
+        }
+
+        return $result;
+    }
 }

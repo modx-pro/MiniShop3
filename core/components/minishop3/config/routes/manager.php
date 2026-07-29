@@ -128,6 +128,10 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ProductDataController($modx);
             return $controller->update($params);
         });
+        $router->get('/{id}/categories/tree', function($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\ProductDataController($modx);
+            return $controller->getCategoriesTree($params);
+        });
 
     }, [
         new AuthMiddleware($modx, 'mgr'),

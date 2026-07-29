@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Api;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Category\CategoryProductScopeService;
+use MiniShop3\Services\Product\ProductCategoryTreeService;
 
 /**
  * API controller for working with product data (msProductData)
@@ -101,6 +102,35 @@ class ProductDataController extends BaseApiController
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
             return Response::error('Failed to save product data: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/mgr/product-data/{id}/categories/tree
+     *
+     * Lazy msCategory tree for the product Categories tab (Vue).
+     *
+     * @param array $params id (product), parent (default 0), parent_category, categories (JSON precheck)
+     */
+    public function getCategoriesTree(array $params): Response
+    {
+        $productId = (int)($params['id'] ?? 0);
+        if (!$productId) {
+            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
+        }
+
+        $parent = (int)($params['parent'] ?? 0);
+        $parentCategoryId = (int)($params['parent_category'] ?? 0);
+        $preChecked = $this->decodeIntArray($params['categories'] ?? null);
+
+        try {
+            $service = new ProductCategoryTreeService($this->modx);
+            $nodes = $service->getTreeNodes($parent, $productId, $parentCategoryId, $preChecked);
+
+            return Response::success(['results' => $nodes, 'total' => count($nodes)]);
+        } catch (\Exception $e) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
+            return Response::error('Failed to load category tree: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
         }
     }
 

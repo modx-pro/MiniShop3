@@ -55,7 +55,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
-        $this->addLastJavascript($assetsUrl . 'js/mgr/product/category.tree.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/links.grid.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/links.window.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
@@ -65,6 +64,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         // Only these vue-dist assets — do not add main.min.css (Vite never emits it; #503).
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/product-tabs.min.css');
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/ResourceCategoryTree.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/DynamicField.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
 
