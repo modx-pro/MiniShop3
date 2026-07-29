@@ -30,8 +30,11 @@ if (!str_contains($controllerSrc, 'CustomerPublicDto::editableFieldKeys')) {
     $fail('updateField must enforce CustomerPublicDto allowlist via editableFieldKeys');
 }
 
-if (!preg_match('/foreach \\(array_keys\\(\\$rules\\)/', $controllerSrc)) {
-    $fail('update must require all core profile fields before validation');
+if (preg_match('/foreach \\(array_keys\\(\\$rules\\)/', $controllerSrc)) {
+    $fail('update must not require all core profile fields — partial updates only (#424)');
+}
+if (!preg_match('/array_intersect_key\\(\\$this->getProfileFieldRules\\(\\),\\s*\\$data\\)/', $controllerSrc)) {
+    $fail('update must restrict validation to core rules for fields present in $data');
 }
 
 foreach (['privacy_accepted_at', 'privacy_ip', 'password', 'token', 'email_verified_at'] as $key) {

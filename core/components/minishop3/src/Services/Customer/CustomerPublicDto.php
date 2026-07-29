@@ -6,7 +6,6 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
-use MiniShop3\Model\msExtraField;
 use MODX\Revolution\modX;
 
 /**
@@ -87,13 +86,9 @@ final class CustomerPublicDto
     /**
      * @return array<string, mixed>
      */
-    public static function fromCustomer(msCustomer $customer, ?modX $modx = null, ?MiniShop3 $ms3 = null): array
+    public static function fromCustomer(msCustomer $customer, modX $modx, MiniShop3 $ms3): array
     {
-        $extraKeys = ($modx !== null && $ms3 !== null)
-            ? self::activeCustomerExtraFieldKeys($modx)
-            : [];
-
-        return self::fromArray($customer->toArray(), $extraKeys);
+        return self::fromArray($customer->toArray(), CustomerExtraFieldRegistry::activeKeys($modx));
     }
 
     /**
@@ -149,7 +144,7 @@ final class CustomerPublicDto
             return self::CORE_PROFILE_EDITABLE_FIELDS;
         }
 
-        $extraKeys = self::activeCustomerExtraFieldKeys($modx);
+        $extraKeys = CustomerExtraFieldRegistry::activeKeys($modx);
         $merged = self::mergeEditableFieldKeys($extraKeys);
 
         return array_values(array_filter(
@@ -161,23 +156,5 @@ final class CustomerPublicDto
     public static function isEditableField(string $key, modX $modx, MiniShop3 $ms3): bool
     {
         return in_array($key, self::editableFieldKeys($modx, $ms3), true);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private static function activeCustomerExtraFieldKeys(modX $modx): array
-    {
-        $keys = [];
-        $iterator = $modx->getIterator(msExtraField::class, [
-            'class' => msCustomer::class,
-            'active' => 1,
-        ]);
-
-        foreach ($iterator as $field) {
-            $keys[] = (string) $field->get('key');
-        }
-
-        return $keys;
     }
 }

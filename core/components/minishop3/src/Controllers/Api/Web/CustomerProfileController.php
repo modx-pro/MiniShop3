@@ -71,19 +71,14 @@ class CustomerProfileController
         $editableKeys = CustomerPublicDto::editableFieldKeys($this->modx, $this->ms3);
         $data = array_intersect_key($data, array_flip($editableKeys));
 
-        $rules = $this->getProfileFieldRules();
-        foreach (array_keys($rules) as $coreKey) {
-            if (!array_key_exists($coreKey, $data)) {
-                $_SESSION['ms3']['customer_profile_errors'] = [
-                    $coreKey => $this->modx->lexicon('ms3_customer_err_validation'),
-                ];
-
-                return $this->error(
-                    $this->modx->lexicon('ms3_customer_err_validation'),
-                    ['errors' => [$coreKey => $this->modx->lexicon('ms3_customer_err_validation')]]
-                );
-            }
+        if ($data === []) {
+            return $this->error($this->modx->lexicon('ms3_customer_err_validation'));
         }
+
+        // Partial update: validate only the core profile rules for fields
+        // actually present in $data. Missing core fields are left untouched
+        // rather than rejected (#424 review).
+        $rules = array_intersect_key($this->getProfileFieldRules(), $data);
 
         $validator = new Validator();
         $validation = $validator->make($data, $rules);
