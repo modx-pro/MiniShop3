@@ -13,9 +13,6 @@ use MODX\Revolution\modX;
  */
 class CategoryProductScopeModxStub extends modX
 {
-    /** @var object */
-    public object $services;
-
     /** @var list<array{id: int, parent: int, published?: int, deleted?: int}> */
     public array $products = [];
 

@@ -128,7 +128,7 @@ class CustomerAuthController
      */
     private function runProcessor(string $processorClass, array $properties): Response
     {
-        /** @var object{isError(): bool, getMessage(): string, getObject(): mixed} $response */
+        /** @var object $response */
         $response = $this->modx->runProcessor($processorClass, $properties);
 
         return $this->toResponse($response);
