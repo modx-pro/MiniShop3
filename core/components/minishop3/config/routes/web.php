@@ -33,6 +33,7 @@ use MiniShop3\Middleware\TokenMiddleware;
 use MiniShop3\Middleware\CorsMiddleware;
 use MiniShop3\Middleware\RateLimitMiddleware;
 use MiniShop3\Middleware\ServiceCheckMiddleware;
+use MiniShop3\Services\RateLimit\RateLimitStoreFactory;
 
 $tokenMiddleware = new TokenMiddleware($modx);
 $corsMiddleware = new CorsMiddleware([
@@ -44,7 +45,8 @@ $corsMiddleware = new CorsMiddleware([
 ]);
 $rateLimitMiddleware = new RateLimitMiddleware(
     $modx->getOption('ms3_rate_limit_max_attempts', null, 60),
-    $modx->getOption('ms3_rate_limit_decay_seconds', null, 60)
+    $modx->getOption('ms3_rate_limit_decay_seconds', null, 60),
+    RateLimitStoreFactory::fromModx($modx)
 );
 $serviceCheckMiddleware = new ServiceCheckMiddleware($modx);
 $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {

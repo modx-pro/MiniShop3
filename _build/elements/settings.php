@@ -517,6 +517,46 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_api',
     ],
+    'ms3_rate_limit_store' => [
+        'value' => 'file',
+        'xtype' => 'textfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_storage_path' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_redis_dsn' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_redis_host' => [
+        'value' => '127.0.0.1',
+        'xtype' => 'textfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_redis_port' => [
+        'value' => 6379,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_redis_password' => [
+        'value' => '',
+        'xtype' => 'text-password',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_redis_database' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_rate_limit_memcached_servers' => [
+        'value' => '127.0.0.1:11211',
+        'xtype' => 'textfield',
+        'area' => 'ms3_api',
+    ],
 
     // Notifications
     'ms3_telegram_bot_token' => [
