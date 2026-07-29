@@ -329,6 +329,17 @@ $router->group('/api/mgr', function ($router) use ($modx) {
                 CategoryProductActionPermissions::mutationPermissions()
             )
         ]);
+        // Category-scoped inline-edit product data (#455)
+        $router->put('/{id}/products/{productId}/data', function($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+            $allParams = array_merge($data, $_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\CategoryProductsController($modx);
+            return $controller->updateProductData($allParams);
+        }, [
+            new PermissionMiddleware($modx, 'msproduct_save')
+        ]);
         // Toggle product publish status
         $router->post('/{id}/products/{productId}/publish', function ($params) use ($modx) {
             $input = file_get_contents('php://input');

@@ -26,10 +26,11 @@ import {
 export function useCategoryProductsInlineEdit(deps) {
   const { products, referencePathsByKey, categoryId, nested, request, toast, _ } = deps
 
-  const resolveScopeContext = () => ({
-    category_id: typeof categoryId === 'object' && categoryId !== null ? categoryId.value : categoryId,
-    nested: Boolean(typeof nested === 'object' && nested !== null ? nested.value : nested),
-  })
+  const resolveCategoryId = () =>
+    typeof categoryId === 'object' && categoryId !== null ? categoryId.value : categoryId
+
+  const resolveNested = () =>
+    Boolean(typeof nested === 'object' && nested !== null ? nested.value : nested)
 
   const editingCell = ref(null)
   const inlineEditValue = ref('')
@@ -211,10 +212,15 @@ export function useCategoryProductsInlineEdit(deps) {
     }
     inlineEditSaving.value = true
     try {
-      const res = await request.put(`/api/mgr/product-data/${product.id}`, {
-        [column.name]: value,
-        ...resolveScopeContext(),
-      })
+      const scopedCategoryId = resolveCategoryId()
+      const payload = { [column.name]: value }
+      if (resolveNested()) {
+        payload.nested = 1
+      }
+      const res = await request.put(
+        `/api/mgr/categories/${scopedCategoryId}/products/${product.id}/data`,
+        payload
+      )
       const idx = products.value.findIndex(p => p.id === product.id)
       if (idx >= 0) {
         if (res && typeof res === 'object') {

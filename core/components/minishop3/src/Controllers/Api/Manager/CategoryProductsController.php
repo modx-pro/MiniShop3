@@ -340,6 +340,70 @@ class CategoryProductsController
     }
 
     /**
+     * Update product data from category grid inline-edit
+     * PUT /api/mgr/categories/{id}/products/{productId}/data
+     *
+     * @param array $params
+     * @return array Response
+     */
+    public function updateProductData(array $params = []): array
+    {
+        $categoryId = (int) ($params['id'] ?? 0);
+        $productId = (int) ($params['productId'] ?? 0);
+        $nested = filter_var($params['nested'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        if (!$categoryId) {
+            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        if (!$productId) {
+            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        $data = $params;
+        unset($data['id'], $data['productId'], $data['nested']);
+
+        if ($data === []) {
+            return Response::error('Invalid request data', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        /** @var CategoryProductsListService|null $listService */
+        $listService = $this->modx->services->get('ms3_category_products_list');
+        if (!$listService) {
+            return Response::error(
+                'Category products list service is not available',
+                HttpStatus::INTERNAL_SERVER_ERROR
+            )->getData();
+        }
+
+        if (!$listService->isProductInCategoryScope($productId, $categoryId, $nested)) {
+            $this->modx->lexicon->load('minishop3:default');
+
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_not_in_category_scope'),
+                HttpStatus::FORBIDDEN
+            )->getData();
+        }
+
+        /** @var \MiniShop3\Services\Product\ProductDataService|null $productDataService */
+        $productDataService = $this->modx->services->get('ms3_product_data_service');
+        if (!$productDataService) {
+            return Response::error('Product data service is not available', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+        }
+
+        $result = $productDataService->updateProductData($productId, $data);
+
+        if (!empty($result['ok']) && !empty($result['data'])) {
+            return Response::success($result['data'])->getData();
+        }
+
+        $code = $result['code'] ?? HttpStatus::INTERNAL_SERVER_ERROR;
+        $message = $result['message'] ?? 'Failed to save product data';
+
+        return Response::error($message, $code)->getData();
+    }
+
+    /**
      * Toggle product publish status
      * POST /api/mgr/categories/{id}/products/{productId}/publish
      *
