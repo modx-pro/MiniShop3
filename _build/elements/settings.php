@@ -503,7 +503,7 @@ return [
         'area' => 'ms3_api',
     ],
     'ms3_cors_allowed_origins' => [
-        'value' => '*',
+        'value' => '',
         'xtype' => 'textfield',
         'area' => 'ms3_api',
     ],

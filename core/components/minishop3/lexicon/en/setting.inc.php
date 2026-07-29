@@ -252,7 +252,7 @@ $_lang['setting_ms3_import_upload_path_desc'] = 'Relative path from MODX_BASE_PA
 $_lang['setting_ms3_api_debug'] = 'API debug mode';
 $_lang['setting_ms3_api_debug_desc'] = 'Enables extended logging of API requests and responses for debugging. Not recommended in production.';
 $_lang['setting_ms3_cors_allowed_origins'] = 'Allowed CORS origins';
-$_lang['setting_ms3_cors_allowed_origins_desc'] = 'List of domains allowed to make cross-origin requests to API. Use "*" to allow all or specify domains comma-separated.';
+$_lang['setting_ms3_cors_allowed_origins_desc'] = 'Comma-separated origins allowed to call the Web API (e.g. https://shop.example.com). Empty = no cross-origin CORS (same-origin only). Use "*" for any origin without credentials; for headless with cookies list explicit domains.';
 $_lang['setting_ms3_rate_limit_max_attempts'] = 'API rate limit';
 $_lang['setting_ms3_rate_limit_max_attempts_desc'] = 'Maximum number of API requests per time period. Default is 60.';
 $_lang['setting_ms3_rate_limit_decay_seconds'] = 'Rate limit time window (seconds)';
