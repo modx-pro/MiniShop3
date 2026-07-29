@@ -57,6 +57,9 @@ sync-exclude.txt
 copy-dist-exclude.txt
 tmpclaude-*
 
+# Cursor
+.cursor/
+
 # PHPStan analysis trees (phpstan.neon + baseline are tracked)
 .phpstan-deps/
 

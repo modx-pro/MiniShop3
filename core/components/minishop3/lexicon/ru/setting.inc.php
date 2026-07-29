@@ -161,7 +161,6 @@ $_lang['ms3_source_max_upload_size_desc'] = 'Максимальный разме
 $_lang['ms3_source_image_name_type_desc'] = 'Этот параметр указывает, как нужно переименовать файл при загрузке. Hash - это генерация уникального имени, в зависимости от содержимого файла. Friendly - генерация имени по алгоритму дружественных url страниц сайта (они управляются системными настройками).';
 
 // Token Security Settings
-$_lang['area_ms3_security'] = 'Безопасность';
 $_lang['setting_ms3_customer_token_ttl'] = 'Время жизни токена покупателя (TTL)';
 $_lang['setting_ms3_customer_token_ttl_desc'] = 'Время в секундах, в течение которого токен покупателя остается действительным. По умолчанию 86400 (24 часа). После истечения срока пользователь получит новый токен.';
 $_lang['setting_ms3_snippet_token_secret'] = 'Секретный ключ для токенов сниппетов';
@@ -253,7 +252,7 @@ $_lang['setting_ms3_import_upload_path_desc'] = 'Относительный пу
 $_lang['setting_ms3_api_debug'] = 'Режим отладки API';
 $_lang['setting_ms3_api_debug_desc'] = 'Включает расширенное логирование API запросов и ответов для отладки. Не рекомендуется на продакшене.';
 $_lang['setting_ms3_cors_allowed_origins'] = 'Разрешённые CORS origins';
-$_lang['setting_ms3_cors_allowed_origins_desc'] = 'Список доменов, которым разрешены кросс-доменные запросы к API. Используйте "*" для разрешения всех или укажите домены через запятую.';
+$_lang['setting_ms3_cors_allowed_origins_desc'] = 'Origins через запятую для Web API (например https://shop.example.com). Пусто = CORS только same-origin. «*» — любой origin без credentials; для headless с cookies укажите домены явно.';
 $_lang['setting_ms3_rate_limit_max_attempts'] = 'Лимит запросов API';
 $_lang['setting_ms3_rate_limit_max_attempts_desc'] = 'Максимальное количество API запросов за период. По умолчанию 60.';
 $_lang['setting_ms3_rate_limit_decay_seconds'] = 'Период лимита запросов (сек)';

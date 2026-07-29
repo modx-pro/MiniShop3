@@ -24,18 +24,7 @@ class ComboOptions extends msOptionType
      */
     public function getValue($criteria)
     {
-        $result = [];
-
-        $c = $this->xpdo->newQuery(msProductOption::class, $criteria);
-        $c->select('value');
-        $c->where(['value:!=' => '']);
-        if ($c->prepare() && $c->stmt->execute()) {
-            if (!$result = $c->stmt->fetchAll(\PDO::FETCH_ASSOC)) {
-                $result = [];
-            }
-        }
-
-        return $result;
+        return $this->fetchProductOptionValueRows($criteria);
     }
 
     /**

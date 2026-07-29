@@ -17,12 +17,19 @@ import {
  * @param {Object} deps
  * @param {import('vue').Ref} deps.products
  * @param {import('vue').Ref<Record<string, string>>} deps.referencePathsByKey Paths from GET grid-config (editor_references)
+ * @param {import('vue').Ref<number>|number} deps.categoryId Category context for scoped inline edits
+ * @param {import('vue').Ref<boolean>|boolean} deps.nested Include nested subcategories in scope
  * @param {Function} deps.request HTTP client (e.g. project request)
  * @param {{ add: Function }} deps.toast PrimeVue toast
  * @param {Function} deps._ Lexicon helper
  */
 export function useCategoryProductsInlineEdit(deps) {
-  const { products, referencePathsByKey, request, toast, _ } = deps
+  const { products, referencePathsByKey, categoryId, nested, request, toast, _ } = deps
+
+  const resolveScopeContext = () => ({
+    category_id: typeof categoryId === 'object' && categoryId !== null ? categoryId.value : categoryId,
+    nested: Boolean(typeof nested === 'object' && nested !== null ? nested.value : nested),
+  })
 
   const editingCell = ref(null)
   const inlineEditValue = ref('')
@@ -204,7 +211,10 @@ export function useCategoryProductsInlineEdit(deps) {
     }
     inlineEditSaving.value = true
     try {
-      const res = await request.put(`/api/mgr/product-data/${product.id}`, { [column.name]: value })
+      const res = await request.put(`/api/mgr/product-data/${product.id}`, {
+        [column.name]: value,
+        ...resolveScopeContext(),
+      })
       const idx = products.value.findIndex(p => p.id === product.id)
       if (idx >= 0) {
         if (res && typeof res === 'object') {

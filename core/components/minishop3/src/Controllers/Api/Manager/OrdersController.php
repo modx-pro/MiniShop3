@@ -17,6 +17,7 @@ use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
 use MiniShop3\Services\FilterConfigManager;
+use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Services\Order\ManagerOrderCostRecalculator;
 use MiniShop3\Services\Order\OrderLogService;
 use MiniShop3\Services\Order\OrderService;
@@ -223,7 +224,7 @@ class OrdersController
         }
 
         foreach ($params as $key => $value) {
-            if (strpos($key, 'filter_') === 0 && !empty($value)) {
+            if (str_starts_with($key, 'filter_') && $value !== '' && $value !== null) {
                 $fieldName = substr($key, 7);
                 $this->applyFilter($c, $fieldName, $value);
             }
@@ -1519,7 +1520,7 @@ class OrdersController
 
         // Apply filter_ prefixed params
         foreach ($params as $key => $value) {
-            if (strpos($key, 'filter_') === 0 && !empty($value)) {
+            if (str_starts_with($key, 'filter_') && $value !== '' && $value !== null) {
                 $fieldName = substr($key, 7);
                 $this->applyFilter($c, $fieldName, $value);
             }
@@ -1597,40 +1598,7 @@ class OrdersController
      */
     protected function applyFilter($c, string $fieldName, $value): void
     {
-        switch ($fieldName) {
-            case 'status':
-            case 'status_id':
-                $c->where(['status_id' => (int)$value]);
-                break;
-            case 'delivery':
-            case 'delivery_id':
-                $c->where(['delivery_id' => (int)$value]);
-                break;
-            case 'payment':
-            case 'payment_id':
-                $c->where(['payment_id' => (int)$value]);
-                break;
-            case 'context':
-                $c->where(['context' => $value]);
-                break;
-            case 'customer':
-                $c->where([
-                    'Address.first_name:LIKE' => "%{$value}%",
-                    'OR:Address.last_name:LIKE' => "%{$value}%",
-                ]);
-                break;
-            case 'email':
-                $c->where(['Address.email:LIKE' => "%{$value}%"]);
-                break;
-            case 'phone':
-                $c->where(['Address.phone:LIKE' => "%{$value}%"]);
-                break;
-            case 'num':
-                $c->where(['num:LIKE' => "{$value}%"]);
-                break;
-            default:
-                break;
-        }
+        ManagerListFilterPolicy::applyOrderFilter($c, $fieldName, $value);
     }
 
     /**

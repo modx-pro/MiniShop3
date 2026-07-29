@@ -57,9 +57,35 @@ class ProductDataController extends BaseApiController
             return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
         }
 
-        $data = $this->getRequestData();
+        $requestData = $this->getRequestData();
 
-        if (!$data) {
+        if (!$requestData) {
+            return Response::error('Invalid request data', HttpStatus::BAD_REQUEST);
+        }
+
+        $categoryId = (int) ($requestData['category_id'] ?? 0);
+        $nested = filter_var($requestData['nested'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        $data = $requestData;
+        unset($data['category_id'], $data['nested']);
+
+        if ($categoryId > 0) {
+            /** @var \MiniShop3\Services\Category\CategoryProductsListService|null $listService */
+            $listService = $this->modx->services->get('ms3_category_products_list');
+            if (
+                !$listService
+                || !$listService->isProductInCategoryScope($productId, $categoryId, $nested)
+            ) {
+                $this->modx->lexicon->load('minishop3:default');
+
+                return Response::error(
+                    $this->modx->lexicon('ms3_err_product_not_in_category_scope'),
+                    HttpStatus::FORBIDDEN
+                );
+            }
+        }
+
+        if ($data === []) {
             return Response::error('Invalid request data', HttpStatus::BAD_REQUEST);
         }
 

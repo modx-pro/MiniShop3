@@ -4,6 +4,7 @@ namespace MiniShop3\Middleware;
 
 use MiniShop3\Router\Middleware\MiddlewareInterface;
 use MiniShop3\Router\Response;
+use MiniShop3\Utils\CorsConfig;
 
 /**
  * Middleware for handling CORS (Cross-Origin Resource Sharing)
@@ -33,42 +34,12 @@ class CorsMiddleware implements MiddlewareInterface
      */
     public function __construct(array $config = [])
     {
-        $this->allowedOrigins = $this->normalizeToArray($config['allowed_origins'] ?? ['*']);
-        $this->allowedMethods = $this->normalizeToArray($config['allowed_methods'] ?? ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']);
-        $this->allowedHeaders = $this->normalizeToArray($config['allowed_headers'] ?? ['Content-Type', 'Authorization', 'X-Requested-With', 'MS3TOKEN']);
-        $this->allowCredentials = (bool)($config['allow_credentials'] ?? true);
-        $this->maxAge = (int)($config['max_age'] ?? 86400); // 24 hours
-    }
-
-    /**
-     * Normalize value to array (handles string, JSON string, or array)
-     *
-     * @param mixed $value
-     * @return array
-     */
-    private function normalizeToArray(mixed $value): array
-    {
-        if (is_array($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            // Try JSON decode first
-            $decoded = json_decode($value, true);
-            if (is_array($decoded)) {
-                return $decoded;
-            }
-
-            // Comma-separated string
-            if (str_contains($value, ',')) {
-                return array_map('trim', explode(',', $value));
-            }
-
-            // Single value
-            return [$value];
-        }
-
-        return ['*'];
+        $normalized = CorsConfig::normalizeCorsConfig($config);
+        $this->allowedOrigins = $normalized['allowed_origins'];
+        $this->allowedMethods = $normalized['allowed_methods'];
+        $this->allowedHeaders = $normalized['allowed_headers'];
+        $this->allowCredentials = $normalized['allow_credentials'];
+        $this->maxAge = $normalized['max_age'];
     }
 
     /**
@@ -108,13 +79,17 @@ class CorsMiddleware implements MiddlewareInterface
             return false;
         }
 
-        // If all origins are allowed
-        if (in_array('*', $this->allowedOrigins)) {
+        if ($this->allowedOrigins === []) {
+            return false;
+        }
+
+        // If all origins are allowed (credentials must be off — normalized in constructor)
+        if (CorsConfig::hasWildcardOrigin($this->allowedOrigins)) {
             return true;
         }
 
         // Check exact match
-        if (in_array($origin, $this->allowedOrigins)) {
+        if (in_array($origin, $this->allowedOrigins, true)) {
             return true;
         }
 
@@ -139,17 +114,15 @@ class CorsMiddleware implements MiddlewareInterface
      */
     private function setCorsHeaders(string $origin): void
     {
-        // For wildcard origin (*) we cannot use credentials
-        if (in_array('*', $this->allowedOrigins) && !$this->allowCredentials) {
+        if (CorsConfig::hasWildcardOrigin($this->allowedOrigins)) {
             header('Access-Control-Allow-Origin: *');
         } else {
-            // For specific origin we can use credentials
             header('Access-Control-Allow-Origin: ' . $origin);
             header('Vary: Origin');
-        }
 
-        if ($this->allowCredentials) {
-            header('Access-Control-Allow-Credentials: true');
+            if ($this->allowCredentials) {
+                header('Access-Control-Allow-Credentials: true');
+            }
         }
 
         header('Access-Control-Allow-Methods: ' . implode(', ', $this->allowedMethods));

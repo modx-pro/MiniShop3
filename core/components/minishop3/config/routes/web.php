@@ -36,11 +36,11 @@ use MiniShop3\Middleware\ServiceCheckMiddleware;
 
 $tokenMiddleware = new TokenMiddleware($modx);
 $corsMiddleware = new CorsMiddleware([
-    'allowed_origins' => $modx->getOption('ms3_cors_allowed_origins', null, ['*']),
+    'allowed_origins' => $modx->getOption('ms3_cors_allowed_origins', null, ''),
     'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'MS3TOKEN'],
     'allow_credentials' => true,
-    'max_age' => 86400
+    'max_age' => 86400,
 ]);
 $rateLimitMiddleware = new RateLimitMiddleware(
     $modx->getOption('ms3_rate_limit_max_attempts', null, 60),

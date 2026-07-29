@@ -7,6 +7,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MODX\Revolution\modX;
 
 /**
@@ -67,14 +68,9 @@ class CustomersController
         }
 
         foreach ($params as $key => $value) {
-            if (str_starts_with($key, 'filter_') && !empty($value)) {
+            if (str_starts_with($key, 'filter_') && $value !== '' && $value !== null) {
                 $fieldName = substr($key, 7);
-
-                if ($fieldName === 'active') {
-                    $c->where(['is_active' => (int)$value]);
-                } else {
-                    $c->where([$fieldName . ':LIKE' => "%{$value}%"]);
-                }
+                ManagerListFilterPolicy::applyCustomerFilter($c, $fieldName, $value);
             }
         }
 

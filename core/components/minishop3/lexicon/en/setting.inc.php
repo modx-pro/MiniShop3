@@ -161,7 +161,6 @@ $_lang['ms3_source_max_upload_size_desc'] = 'Maximum size of uploaded images (in
 $_lang['ms3_source_image_name_type_desc'] = 'This parameter specifies how to rename file on upload. Hash - generates unique name depending on file content. Friendly - generates name using site friendly URL algorithm (controlled by system settings).';
 
 // Token Security Settings
-$_lang['area_ms3_security'] = 'Security';
 $_lang['setting_ms3_customer_token_ttl'] = 'Customer token Time-To-Live (TTL)';
 $_lang['setting_ms3_customer_token_ttl_desc'] = 'Time in seconds for which the customer token remains valid. Default is 86400 (24 hours). After expiration, the user will receive a new token.';
 $_lang['setting_ms3_snippet_token_secret'] = 'Secret key for snippet tokens';
@@ -253,7 +252,7 @@ $_lang['setting_ms3_import_upload_path_desc'] = 'Relative path from MODX_BASE_PA
 $_lang['setting_ms3_api_debug'] = 'API debug mode';
 $_lang['setting_ms3_api_debug_desc'] = 'Enables extended logging of API requests and responses for debugging. Not recommended in production.';
 $_lang['setting_ms3_cors_allowed_origins'] = 'Allowed CORS origins';
-$_lang['setting_ms3_cors_allowed_origins_desc'] = 'List of domains allowed to make cross-origin requests to API. Use "*" to allow all or specify domains comma-separated.';
+$_lang['setting_ms3_cors_allowed_origins_desc'] = 'Comma-separated origins allowed to call the Web API (e.g. https://shop.example.com). Empty = no cross-origin CORS (same-origin only). Use "*" for any origin without credentials; for headless with cookies list explicit domains.';
 $_lang['setting_ms3_rate_limit_max_attempts'] = 'API rate limit';
 $_lang['setting_ms3_rate_limit_max_attempts_desc'] = 'Maximum number of API requests per time period. Default is 60.';
 $_lang['setting_ms3_rate_limit_decay_seconds'] = 'Rate limit time window (seconds)';
