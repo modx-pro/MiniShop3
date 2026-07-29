@@ -25,6 +25,9 @@ class modX
     /** @var object|null */
     public $services;
 
+    /** @var object|null */
+    public $lexicon;
+
     public function __construct()
     {
         $this->context = new class {
@@ -57,6 +60,12 @@ class modX
                 return null;
             }
         };
+
+        $this->lexicon = new class {
+            public function load(string ...$topics): void
+            {
+            }
+        };
     }
 
     /**
@@ -66,6 +75,14 @@ class modX
     public function getOption(string $key, $options = null, $default = null)
     {
         return $default;
+    }
+
+    /**
+     * @param array<string, scalar|null> $params
+     */
+    public function lexicon(string $key, array $params = []): string
+    {
+        return $key;
     }
 
     /**
