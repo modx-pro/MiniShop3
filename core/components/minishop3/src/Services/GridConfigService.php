@@ -118,6 +118,14 @@ class GridConfigService
         return $gridKey . ':' . ($includeHidden ? '1' : '0');
     }
 
+    /**
+     * Call at the start of any msGridField mutation so request-scoped cache stays consistent.
+     */
+    private function beginGridMutation(string $gridKey): void
+    {
+        $this->invalidateGridConfigCache($gridKey);
+    }
+
     private function invalidateGridConfigCache(string $gridKey): void
     {
         unset(
@@ -150,7 +158,7 @@ class GridConfigService
      */
     public function saveGridConfig(string $gridKey, array $fields): bool
     {
-        $this->invalidateGridConfigCache($gridKey);
+        $this->beginGridMutation($gridKey);
 
         try {
             $fieldNamesToKeep = [];
@@ -258,7 +266,7 @@ class GridConfigService
      */
     public function deleteField(string $gridKey, string $fieldName): array
     {
-        $this->invalidateGridConfigCache($gridKey);
+        $this->beginGridMutation($gridKey);
 
         try {
             $field = $this->repository->findOne($gridKey, $fieldName);
@@ -311,7 +319,7 @@ class GridConfigService
      */
     public function addField(string $gridKey, array $data): array
     {
-        $this->invalidateGridConfigCache($gridKey);
+        $this->beginGridMutation($gridKey);
 
         try {
             if (empty($data['field_name'])) {
@@ -386,7 +394,7 @@ class GridConfigService
      */
     public function updateField(string $gridKey, string $fieldName, array $data): array
     {
-        $this->invalidateGridConfigCache($gridKey);
+        $this->beginGridMutation($gridKey);
 
         try {
             $field = $this->repository->findOne($gridKey, $fieldName);
