@@ -20,7 +20,10 @@ if ($files === []) {
     $fail('No ms3_email*.tpl chunks found');
 }
 
-$hrefPattern = '/href\s*=\s*("|\')([^"\']*)\1/i';
+// Match double- and single-quoted hrefs separately: a Fenom href="…{'mod'|…}…" contains
+// single quotes inside the double-quoted value, so a shared [^"']* char class would stop early
+// and never see the query-string ampersands.
+$hrefPattern = '/href\s*=\s*(?:"([^"]*)"|\'([^\']*)\')/i';
 $bareAmpersand = '/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/';
 
 foreach ($files as $file) {
@@ -34,7 +37,7 @@ foreach ($files as $file) {
     }
 
     foreach ($matches as $match) {
-        $href = $match[2];
+        $href = ($match[1] ?? '') . ($match[2] ?? '');
         if (preg_match($bareAmpersand, $href)) {
             $fail(basename($file) . ': unescaped & in href: ' . $href);
         }
