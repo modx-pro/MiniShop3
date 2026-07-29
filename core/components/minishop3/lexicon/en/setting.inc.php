@@ -161,7 +161,6 @@ $_lang['ms3_source_max_upload_size_desc'] = 'Maximum size of uploaded images (in
 $_lang['ms3_source_image_name_type_desc'] = 'This parameter specifies how to rename file on upload. Hash - generates unique name depending on file content. Friendly - generates name using site friendly URL algorithm (controlled by system settings).';
 
 // Token Security Settings
-$_lang['area_ms3_security'] = 'Security';
 $_lang['setting_ms3_customer_token_ttl'] = 'Customer token Time-To-Live (TTL)';
 $_lang['setting_ms3_customer_token_ttl_desc'] = 'Time in seconds for which the customer token remains valid. Default is 86400 (24 hours). After expiration, the user will receive a new token.';
 $_lang['setting_ms3_snippet_token_secret'] = 'Secret key for snippet tokens';

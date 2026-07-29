@@ -48,7 +48,7 @@ $_lang['ms3_notification_edit'] = 'Редактировать уведомлен
 $_lang['ms3_notification_created'] = 'Уведомление успешно создано';
 $_lang['ms3_notification_updated'] = 'Уведомление успешно обновлено';
 $_lang['ms3_notification_deleted'] = 'Уведомление удалено';
-$_lang['ms3_notification_enabled'] = 'Уведомление включено';
+$_lang['ms3_notification_was_enabled'] = 'Уведомление включено';
 $_lang['ms3_notification_disabled'] = 'Уведомление отключено';
 $_lang['ms3_notification_delete_confirm'] = 'Вы уверены, что хотите удалить это уведомление?';
 

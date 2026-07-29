@@ -328,10 +328,10 @@ $_lang['error_saving_data'] = 'Error saving data';
 $_lang['error_deleting_data'] = 'Error deleting data';
 $_lang['apply_filters'] = 'Apply Filters';
 $_lang['clear_filters'] = 'Clear Filters';
+$_lang['filter_by'] = 'Filter by {field}';
 
 // Grid Fields Config Widget
 $_lang['ms3_grid_fields_config'] = 'Table Fields';
-$_lang['grid_fields_config_title'] = 'Table Fields';
 $_lang['select_grid'] = 'Select Grid';
 $_lang['grid_customers'] = 'Customers';
 $_lang['grid_orders'] = 'Orders';
@@ -417,7 +417,6 @@ $_lang['field_added'] = 'Field added successfully';
 $_lang['error_adding_field'] = 'Error adding field';
 
 // Edit field dialog
-$_lang['edit'] = 'Edit';
 $_lang['edit_field_dialog_title'] = 'Edit Field';
 $_lang['field_name_readonly_hint'] = 'Field name cannot be changed after creation';
 $_lang['field_updated'] = 'Field updated successfully';
@@ -508,7 +507,7 @@ $_lang['ms3_notification_edit'] = 'Edit notification';
 $_lang['ms3_notification_created'] = 'Notification created';
 $_lang['ms3_notification_updated'] = 'Notification updated';
 $_lang['ms3_notification_deleted'] = 'Notification deleted';
-$_lang['ms3_notification_enabled'] = 'Notification enabled';
+$_lang['ms3_notification_was_enabled'] = 'Notification enabled';
 $_lang['ms3_notification_disabled'] = 'Notification disabled';
 $_lang['ms3_notification_delete_confirm'] = 'Delete this notification?';
 $_lang['ms3_notification_subject_placeholder'] = 'Order #{$num} - status change';
@@ -522,7 +521,7 @@ $_lang['ms3_notification_recipient_manager'] = 'Manager';
 $_lang['all'] = 'All';
 $_lang['apply'] = 'Apply';
 $_lang['clear'] = 'Clear';
-$_lang['confirm_delete'] = 'Confirm deletion';
+$_lang['confirm_delete'] = 'Confirm Delete';
 
 // Orders Grid Widget
 $_lang['orders_title'] = 'Orders';
@@ -569,8 +568,6 @@ $_lang['order_search_product'] = 'Search product...';
 $_lang['order_product_added'] = 'Product added to order';
 $_lang['order_product_select'] = 'Select a product';
 $_lang['order_cannot_add_to_finalized'] = 'Cannot add product to finalized order';
-$_lang['confirm_delete'] = 'Confirm Delete';
-$_lang['warning'] = 'Warning';
 
 // Options editing
 $_lang['options_mode_table'] = 'Table';
@@ -725,7 +722,7 @@ $_lang['ms3_model_section_deleted'] = 'Section deleted';
 $_lang['ms3_model_section_delete_confirm'] = 'Delete this section? Fields will be reassigned without section.';
 $_lang['ms3_model_section_cannot_delete_default'] = 'Cannot delete system section';
 $_lang['ms3_model_section_shown'] = 'Section is now visible';
-$_lang['ms3_model_section_hidden'] = 'Section is now hidden';
+$_lang['ms3_model_section_now_hidden'] = 'Section is now hidden';
 $_lang['ms3_model_section_order_updated'] = 'Section order updated';
 $_lang['ms3_model_sections_empty'] = 'No sections found. Add your first section.';
 
@@ -763,10 +760,8 @@ $_lang['ms3_customer_duplicate_found'] = 'Similar customer found';
 $_lang['ms3_customer_duplicate_message'] = 'A customer with these details already exists in the system. Choose an action:';
 $_lang['ms3_customer_use_existing'] = 'Use existing';
 $_lang['ms3_customer_create_new'] = 'Create new';
-$_lang['customer_name'] = 'Name';
 $_lang['ms3_customer_validation_email_or_phone'] = 'Email or phone is required to create a customer';
 $_lang['ms3_customer_validation_invalid_email'] = 'Invalid email address';
-$_lang['warning'] = 'Warning';
 
 // Order finalization (admin)
 $_lang['ms3_order_finalize_btn'] = 'Finalize Order';
@@ -922,12 +917,9 @@ $_lang['ms3_add_validation_rule'] = 'Add validation rule';
 $_lang['ms3_select_rule'] = 'Select rule';
 $_lang['ms3_select_rule_placeholder'] = 'Select rule from the list';
 $_lang['add'] = 'Add';
-$_lang['create'] = 'Create';
 $_lang['total'] = 'Total';
-$_lang['all'] = 'All';
 $_lang['yes'] = 'Yes';
 $_lang['no'] = 'No';
-$_lang['confirm_delete'] = 'Confirm Delete';
 
 // Validation rules
 $_lang['validation_rule_required'] = 'Required';
@@ -1124,8 +1116,6 @@ $_lang['category_create'] = 'Add subcategory';
 $_lang['product_create'] = 'Add product';
 $_lang['product_image'] = 'Image';
 $_lang['product_pagetitle'] = 'Title';
-$_lang['product_article'] = 'Article';
-$_lang['product_price'] = 'Price';
 $_lang['product_weight'] = 'Weight';
 $_lang['publish'] = 'Publish';
 $_lang['unpublish'] = 'Unpublish';

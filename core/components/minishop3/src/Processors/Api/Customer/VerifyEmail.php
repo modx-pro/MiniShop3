@@ -14,11 +14,16 @@ use MODX\Revolution\Processors\Processor;
  */
 class VerifyEmail extends Processor
 {
+    /** @var array<string> */
+    public $languageTopics = ['minishop3:customer'];
+
     /**
      * @return array|string
      */
     public function process()
     {
+        $this->modx->lexicon->load('minishop3:customer');
+
         $token = trim($this->getProperty('token', ''));
 
         if (empty($token)) {
@@ -34,7 +39,7 @@ class VerifyEmail extends Processor
             return $this->failure($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
         }
 
-        return $this->success($this->modx->lexicon('ms3_customer_email_verified'), [
+        return $this->success($this->modx->lexicon('ms3_customer_email_verify_success'), [
             'customer' => [
                 'id' => $customer->id,
                 'email' => $customer->get('email'),

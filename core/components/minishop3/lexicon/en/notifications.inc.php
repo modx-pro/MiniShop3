@@ -48,7 +48,7 @@ $_lang['ms3_notification_edit'] = 'Edit notification';
 $_lang['ms3_notification_created'] = 'Notification created successfully';
 $_lang['ms3_notification_updated'] = 'Notification updated successfully';
 $_lang['ms3_notification_deleted'] = 'Notification deleted';
-$_lang['ms3_notification_enabled'] = 'Notification enabled';
+$_lang['ms3_notification_was_enabled'] = 'Notification enabled';
 $_lang['ms3_notification_disabled'] = 'Notification disabled';
 $_lang['ms3_notification_delete_confirm'] = 'Are you sure you want to delete this notification?';
 

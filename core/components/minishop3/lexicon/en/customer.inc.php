@@ -63,7 +63,7 @@ $_lang['ms3_customer_err_register_rate_limit'] = 'Registration limit exceeded. P
 $_lang['ms3_customer_err_field_not_allowed'] = 'This field cannot be changed through the quick profile endpoint';
 
 // Email Verification
-$_lang['ms3_customer_email_verified'] = 'Email successfully verified';
+$_lang['ms3_customer_email_verify_success'] = 'Email successfully verified';
 $_lang['ms3_customer_err_email_verification_invalid'] = 'Invalid or expired verification token';
 $_lang['ms3_email_verification_sent'] = 'Verification email has been sent';
 $_lang['ms3_email_verification_cooldown'] = 'Please wait [[+seconds]] seconds before requesting another email';
@@ -115,7 +115,6 @@ Best regards,
 // Customer Account Pages
 $_lang['ms3_customer_err_invalid_service'] = 'Unknown service: [[+service]]';
 $_lang['ms3_customer_account_title'] = 'My Account';
-$_lang['ms3_customer_logout'] = 'Logout';
 $_lang['ms3_customer_err_validation'] = 'Validation error';
 
 // Unauthorized Page

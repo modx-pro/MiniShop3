@@ -212,7 +212,7 @@ async function toggleEnabled(notification) {
     toast.add({
       severity: 'success',
       summary: _('success'),
-      detail: notification.enabled ? _('ms3_notification_enabled') : _('ms3_notification_disabled'),
+      detail: notification.enabled ? _('ms3_notification_was_enabled') : _('ms3_notification_disabled'),
       life: 2000,
     })
   } catch (error) {

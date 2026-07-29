@@ -63,7 +63,7 @@ $_lang['ms3_customer_err_register_rate_limit'] = 'Превышен лимит р
 $_lang['ms3_customer_err_field_not_allowed'] = 'Это поле нельзя изменить через быстрый профиль';
 
 // Email Verification
-$_lang['ms3_customer_email_verified'] = 'Email успешно подтвержден';
+$_lang['ms3_customer_email_verify_success'] = 'Email успешно подтвержден';
 $_lang['ms3_customer_err_email_verification_invalid'] = 'Неверный или истекший токен подтверждения';
 $_lang['ms3_email_verification_sent'] = 'Письмо с подтверждением отправлено на ваш email';
 $_lang['ms3_email_verification_cooldown'] = 'Повторная отправка возможна через [[+seconds]] секунд';
@@ -115,7 +115,6 @@ Email: [[+email]]
 // Customer Account Pages
 $_lang['ms3_customer_err_invalid_service'] = 'Неизвестный сервис: [[+service]]';
 $_lang['ms3_customer_account_title'] = 'Личный кабинет';
-$_lang['ms3_customer_logout'] = 'Выход';
 $_lang['ms3_customer_err_validation'] = 'Ошибка валидации данных';
 
 // Unauthorized Page
