@@ -4,10 +4,33 @@ namespace MiniShop3\Services\RateLimit;
 
 /**
  * Redis-backed rate limit store for multi-node deployments (requires ext-redis).
+ *
+ * Uses a single key per rate-limit bucket with a TTL window. Increment and TTL
+ * (re)arm happen atomically via a Lua script, so there is no TOCTOU window
+ * between INCR and EXPIRE and no separate "reset" key that can drift out of
+ * sync with the counter.
  */
 class RedisRateLimitStore implements RateLimitStoreInterface
 {
     private const KEY_PREFIX = 'ms3:rate_limit:';
+
+    /**
+     * Atomically INCR the bucket key and arm its TTL on the first hit.
+     *
+     * Returns `{attempts, ttl}` where ttl is seconds remaining until expiry.
+     */
+    private const INCREMENT_SCRIPT = <<<'LUA'
+local attempts = redis.call('INCR', KEYS[1])
+if attempts == 1 then
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+local ttl = redis.call('TTL', KEYS[1])
+if ttl < 0 then
+  ttl = tonumber(ARGV[1])
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return {attempts, ttl}
+LUA;
 
     public function __construct(
         private \Redis $redis,
@@ -17,51 +40,63 @@ class RedisRateLimitStore implements RateLimitStoreInterface
 
     public function read(string $key): array
     {
-        $attempts = (int) $this->redis->get($this->attemptsKey($key));
-        $resetAt = (int) $this->redis->get($this->resetKey($key));
+        $bucketKey = $this->bucketKey($key);
+        $attempts = (int) $this->redis->get($bucketKey);
+        $ttl = (int) $this->redis->ttl($bucketKey);
 
-        if ($resetAt <= 0) {
-            $resetAt = time() + $this->defaultWindowSeconds;
+        if ($attempts <= 0) {
+            return [
+                'attempts' => 0,
+                'reset_at' => time() + $this->defaultWindowSeconds,
+            ];
+        }
+
+        if ($ttl < 0) {
+            $ttl = $this->defaultWindowSeconds;
         }
 
         return [
             'attempts' => $attempts,
-            'reset_at' => $resetAt,
+            'reset_at' => time() + $ttl,
         ];
     }
 
     public function increment(string $key, int $windowSeconds): array
     {
-        $attemptsKey = $this->attemptsKey($key);
-        $resetKey = $this->resetKey($key);
+        $result = $this->redis->rawCommand(
+            'EVAL',
+            self::INCREMENT_SCRIPT,
+            1,
+            $this->bucketKey($key),
+            $windowSeconds
+        );
 
-        $attempts = (int) $this->redis->incr($attemptsKey);
-        $resetAt = (int) $this->redis->get($resetKey);
+        if (!is_array($result)) {
+            return [
+                'attempts' => 1,
+                'reset_at' => time() + $windowSeconds,
+            ];
+        }
 
-        if ($attempts === 1 || $resetAt <= 0) {
-            $resetAt = time() + $windowSeconds;
-            $this->redis->setex($resetKey, $windowSeconds, (string) $resetAt);
-            $this->redis->expire($attemptsKey, $windowSeconds);
+        $attempts = (int) $result[0];
+        $ttl = (int) $result[1];
+        if ($ttl < 0) {
+            $ttl = $windowSeconds;
         }
 
         return [
             'attempts' => $attempts,
-            'reset_at' => $resetAt,
+            'reset_at' => time() + $ttl,
         ];
     }
 
     public function reset(string $key): void
     {
-        $this->redis->del($this->attemptsKey($key), $this->resetKey($key));
+        $this->redis->del($this->bucketKey($key));
     }
 
-    private function attemptsKey(string $key): string
+    private function bucketKey(string $key): string
     {
-        return self::KEY_PREFIX . hash('sha256', $key) . ':attempts';
-    }
-
-    private function resetKey(string $key): string
-    {
-        return self::KEY_PREFIX . hash('sha256', $key) . ':reset';
+        return self::KEY_PREFIX . hash('sha256', $key);
     }
 }

@@ -49,14 +49,14 @@ final class RateLimitStoreFactory
                 '[RateLimitStoreFactory] ext-redis is not available; falling back to file storage.'
             );
 
-            return self::createFile($modx, $windowSeconds);
+            return self::fallbackToFile($modx, $windowSeconds);
         }
 
         $dsn = self::resolveRedisDsn($modx);
         $redis = new \Redis();
 
         if (!self::connectRedis($redis, $dsn, $modx)) {
-            return self::createFile($modx, $windowSeconds);
+            return self::fallbackToFile($modx, $windowSeconds);
         }
 
         return new RedisRateLimitStore($redis, $windowSeconds);
@@ -70,7 +70,7 @@ final class RateLimitStoreFactory
                 '[RateLimitStoreFactory] ext-memcached is not available; falling back to file storage.'
             );
 
-            return self::createFile($modx, $windowSeconds);
+            return self::fallbackToFile($modx, $windowSeconds);
         }
 
         $memcached = new \Memcached();
@@ -81,7 +81,7 @@ final class RateLimitStoreFactory
                 '[RateLimitStoreFactory] ms3_rate_limit_memcached_servers is empty; falling back to file storage.'
             );
 
-            return self::createFile($modx, $windowSeconds);
+            return self::fallbackToFile($modx, $windowSeconds);
         }
 
         if ($memcached->addServers($servers) === false) {
@@ -90,10 +90,19 @@ final class RateLimitStoreFactory
                 '[RateLimitStoreFactory] Memcached addServers failed; falling back to file storage.'
             );
 
-            return self::createFile($modx, $windowSeconds);
+            return self::fallbackToFile($modx, $windowSeconds);
         }
 
         return new MemcachedRateLimitStore($memcached, $windowSeconds);
+    }
+
+    /**
+     * Build the file-backed store, used as the default and as the fallback when
+     * a shared-store driver is unavailable or misconfigured.
+     */
+    private static function fallbackToFile(modX $modx, int $windowSeconds): FileRateLimitStore
+    {
+        return self::createFile($modx, $windowSeconds);
     }
 
     /**
