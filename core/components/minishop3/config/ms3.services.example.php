@@ -167,7 +167,6 @@ return [
     /*
      * Configuration:
      * -------------
-     * 'ms3_config_manager'          - Configuration manager
      * 'ms3_field_config_manager'    - Field configuration manager
      * 'ms3_config_service'          - Facade over config managers
      *
