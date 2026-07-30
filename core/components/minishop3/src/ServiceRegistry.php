@@ -63,6 +63,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\ExtraFields\RepeaterFieldService::class,
             'interface' => null,
         ],
+        'ms3_extra_fields' => [
+            'class' => \MiniShop3\Services\ExtraFieldsService::class,
+            'interface' => null,
+        ],
         'ms3_product_image' => [
             'class' => \MiniShop3\Services\Product\ProductImageService::class,
             'interface' => null,
