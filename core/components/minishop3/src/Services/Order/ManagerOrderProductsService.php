@@ -42,7 +42,7 @@ class ManagerOrderProductsService
         $c->where(['order_id' => $id]);
         $c->leftJoin(msProduct::class, 'Product', 'msOrderProduct.product_id = Product.id');
         $c->select($this->modx->getSelectColumns(msOrderProduct::class, 'msOrderProduct'));
-        $c->select(['Product.pagetitle']);
+        $c->select('Product.pagetitle');
 
         $products = [];
         $collection = $this->modx->getIterator(msOrderProduct::class, $c);
