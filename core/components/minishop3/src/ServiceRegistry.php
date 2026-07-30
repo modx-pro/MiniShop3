@@ -319,6 +319,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Category\CategoryTreeService::class,
             'interface' => null,
         ],
+        'ms3_settings_combo_list' => [
+            'class' => \MiniShop3\Services\Settings\SettingsComboListService::class,
+            'interface' => null,
+        ],
         'ms3_filter_config' => [
             'class' => \MiniShop3\Services\FilterConfigManager::class,
             'interface' => null,
