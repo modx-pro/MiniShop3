@@ -873,7 +873,7 @@ $router->group('/api/mgr', function ($router) use ($modx) {
     });
 
     // Dropdown list of active payments (optional delivery_id filter via msDeliveryMember)
-    $router->get('/payments-active', function($params) use ($modx) {
+    $router->get('/payments-active', function ($params) use ($modx) {
         $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
         return $controller->getActiveDropdown($params);
     });
