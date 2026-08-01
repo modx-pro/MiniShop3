@@ -2,13 +2,10 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
-use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MiniShop3\Services\Customer\RateLimiter;
 use MiniShop3\Services\Customer\RegisterService;
-use MiniShop3\Services\Order\OrderDraftManager;
-use MiniShop3\Utils\CookieHelper;
 use MODX\Revolution\Processors\Processor;
 
 /**
@@ -29,18 +26,19 @@ class Register extends Processor
     {
         $this->modx->lexicon->load('minishop3:customer');
 
-        $email = trim($this->getProperty('email', ''));
+        $emailRaw = trim((string)$this->getProperty('email', ''));
+        $email = AuthManager::normalizeEmail($emailRaw);
         $password = $this->getProperty('password', '');
         $firstName = trim($this->getProperty('first_name', ''));
         $lastName = trim($this->getProperty('last_name', ''));
         $phone = trim($this->getProperty('phone', ''));
         $privacyAccepted = (bool)$this->getProperty('privacy_accepted', false);
 
-        if (empty($email)) {
+        if ($email === '') {
             return $this->failure($this->modx->lexicon('ms3_customer_err_email_required'));
         }
 
-        if (empty($password)) {
+        if ($password === '') {
             return $this->failure($this->modx->lexicon('ms3_customer_err_password_required'));
         }
 
@@ -65,7 +63,7 @@ class Register extends Processor
         $registerService->setEmailVerification($emailVerification);
 
         $result = $registerService->register([
-            'email' => $email,
+            'email' => $emailRaw,
             'password' => $password,
             'first_name' => $firstName,
             'last_name' => $lastName,
@@ -86,60 +84,16 @@ class Register extends Processor
         $expiresAt = null;
 
         if ($autoLogin && !$requireEmailVerification) {
-            // Use existing token from cookie/session instead of creating new one
-            $currentToken = CookieHelper::getTokenFromCookie();
-            if (empty($currentToken)) {
-                $currentToken = $_SESSION['ms3']['customer_token'] ?? '';
+            /** @var AuthManager $authManager */
+            $authManager = $this->modx->services->get('ms3_auth_manager');
+            $session = $authManager->establishCustomerSession($customer);
+
+            if (!$session) {
+                return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
             }
 
-            $tokenObj = null;
-
-            if (!empty($currentToken)) {
-                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                    'token' => $currentToken,
-                    'type' => msCustomerToken::TYPE_API,
-                ]);
-
-                if ($tokenObj) {
-                    // Bind customer to existing token
-                    $tokenObj->set('customer_id', $customer->id);
-
-                    $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
-                    $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
-                    $tokenObj->save();
-
-                    $tokenString = $tokenObj->get('token');
-                    $expiresAt = $tokenObj->get('expires_at');
-
-                    // Bind draft order to customer
-                    /** @var OrderDraftManager $draftManager */
-                    $draftManager = $this->modx->services->get('ms3_order_draft_manager');
-                    $draftManager->bindDraftToCustomer($tokenString, $customer->id);
-                }
-            }
-
-            // Edge case: no valid existing token
-            if (!$tokenObj) {
-                /** @var AuthManager $authManager */
-                $authManager = $this->modx->services->get('ms3_auth_manager');
-                $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
-                $tokenObj = $authManager->createToken($customer, 'api', $ttl);
-
-                if ($tokenObj) {
-                    $tokenString = $tokenObj->get('token');
-                    $expiresAt = $tokenObj->get('expires_at');
-                    CookieHelper::setTokenCookie($this->modx, $tokenString);
-                }
-            }
-
-            if ($tokenString) {
-                if (!isset($_SESSION['ms3'])) {
-                    $_SESSION['ms3'] = [];
-                }
-                $_SESSION['ms3']['customer_id'] = $customer->id;
-                $_SESSION['ms3']['customer_token'] = $tokenString;
-                $_SESSION['ms3']['customer_token_expires'] = strtotime($expiresAt);
-            }
+            $tokenString = $session['token'];
+            $expiresAt = $session['expires_at'];
         }
 
         $rateLimiter->reset('login', $ip);

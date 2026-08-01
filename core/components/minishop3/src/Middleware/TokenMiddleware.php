@@ -7,6 +7,7 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\TokenService;
 use MiniShop3\Utils\CookieHelper;
+use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 
 /**
@@ -71,10 +72,7 @@ class TokenMiddleware implements MiddlewareInterface
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $isPublic = $this->isPublicRoute($uri);
 
-        // Ensure session is active
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        SessionHelper::ensureActive();
 
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
@@ -121,10 +119,21 @@ class TokenMiddleware implements MiddlewareInterface
             }
         } elseif (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
             // No token in request: allow existing session customer (browser session).
-            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
-            if ($customer) {
+            $customerId = (int)$_SESSION['ms3']['customer_id'];
+            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $customerId);
+            if (
+                $customer
+                && $this->isCustomerSessionAllowed($customer)
+                && $tokenService->sessionTokenBelongsToCustomer($customerId)
+            ) {
                 return null;
             }
+
+            unset(
+                $_SESSION['ms3']['customer_id'],
+                $_SESSION['ms3']['customer_token'],
+                $_SESSION['ms3']['customer_token_expires']
+            );
         }
 
         // No valid token found
@@ -180,6 +189,27 @@ class TokenMiddleware implements MiddlewareInterface
 
         // 3. $_REQUEST (includes cookie via injection + legacy URL param)
         return $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
+    }
+
+    /**
+     * Session shortcut is valid only for active, non-blocked customers.
+     */
+    private function isCustomerSessionAllowed(\MiniShop3\Model\msCustomer $customer): bool
+    {
+        if (!$customer->get('is_active')) {
+            return false;
+        }
+
+        if (!$customer->get('is_blocked')) {
+            return true;
+        }
+
+        $blockedUntil = $customer->get('blocked_until');
+        if ($blockedUntil && strtotime((string)$blockedUntil) > time()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

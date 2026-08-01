@@ -68,6 +68,7 @@ class ResetPassword extends Processor
         }
 
         $authManager->revokeTokens($customer);
+        $authManager->invalidateLocalSessionForCustomer($customer);
 
         $this->modx->log(
             \MODX\Revolution\modX::LOG_LEVEL_INFO,

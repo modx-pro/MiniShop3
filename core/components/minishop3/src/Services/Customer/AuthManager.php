@@ -6,6 +6,10 @@ use MiniShop3\Controllers\Auth\AuthProviderInterface;
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Services\TokenService;
+use MiniShop3\Utils\CookieHelper;
+use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
 
 /**
@@ -43,6 +47,9 @@ class AuthManager
     /** @var AuthProviderInterface[] Registered authentication providers */
     protected array $providers = [];
 
+    /** Last authenticate() failure: invalid_credentials|blocked|inactive|none */
+    protected string $lastAuthFailure = 'none';
+
     /**
      * @param modX $modx
      */
@@ -51,6 +58,14 @@ class AuthManager
         $this->modx = $modx;
 
         $this->registerProvider(new PasswordAuthProvider($modx));
+    }
+
+    /**
+     * Reason of the last failed authenticate() call.
+     */
+    public function getLastAuthFailure(): string
+    {
+        return $this->lastAuthFailure;
     }
 
     /**
@@ -102,6 +117,8 @@ class AuthManager
      */
     public function authenticate(array $credentials): ?msCustomer
     {
+        $this->lastAuthFailure = 'invalid_credentials';
+
         foreach ($this->providers as $provider) {
             if ($provider->supports($credentials)) {
                 $this->modx->log(
@@ -115,6 +132,7 @@ class AuthManager
                     if ($customer->get('is_blocked')) {
                         $blockedUntil = $customer->get('blocked_until');
                         if ($blockedUntil && strtotime($blockedUntil) > time()) {
+                            $this->lastAuthFailure = 'blocked';
                             $this->modx->log(
                                 modX::LOG_LEVEL_WARN,
                                 "[AuthManager] Customer #{$customer->id} is blocked until {$blockedUntil}"
@@ -124,10 +142,16 @@ class AuthManager
                         $customer->set('is_blocked', false);
                         $customer->set('blocked_until', null);
                         $customer->set('failed_login_attempts', 0);
-                        $customer->save();
+                        if (!$customer->save()) {
+                            $this->modx->log(
+                                modX::LOG_LEVEL_ERROR,
+                                "[AuthManager] Failed to clear block flags for customer #{$customer->id}"
+                            );
+                        }
                     }
 
                     if (!$customer->get('is_active')) {
+                        $this->lastAuthFailure = 'inactive';
                         $this->modx->log(
                             modX::LOG_LEVEL_WARN,
                             "[AuthManager] Customer #{$customer->id} is not active"
@@ -137,8 +161,14 @@ class AuthManager
 
                     $customer->set('last_login_at', date('Y-m-d H:i:s'));
                     $customer->set('failed_login_attempts', 0);
-                    $customer->save();
+                    if (!$customer->save()) {
+                        $this->modx->log(
+                            modX::LOG_LEVEL_ERROR,
+                            "[AuthManager] Failed to persist last_login for customer #{$customer->id}"
+                        );
+                    }
 
+                    $this->lastAuthFailure = 'none';
                     $this->modx->log(
                         modX::LOG_LEVEL_INFO,
                         "[AuthManager] Customer #{$customer->id} authenticated via {$provider->getName()}"
@@ -158,6 +188,230 @@ class AuthManager
     }
 
     /**
+     * Bind authenticated customer to a fresh API token, session, cookie, and draft order.
+     *
+     * Always mints a new token (anti session-fixation). Guest/own previous token may
+     * transfer the draft cart, then the old token row is removed so a planted cookie
+     * cannot keep access after login.
+     *
+     * @return array{token: string, expires_at: string}|null
+     */
+    public function establishCustomerSession(msCustomer $customer): ?array
+    {
+        SessionHelper::ensureActive();
+
+        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $previousToken = $tokenService->getBindableTokenString();
+
+        $previousTokenObj = null;
+        if ($previousToken !== '') {
+            $previousTokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $previousToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
+
+        // Always rotate API token on login/register (do not upgrade a planted guest token).
+        $tokenObj = $tokenService->persistApiToken((int)$customer->id, null, $ttl);
+        if (!$tokenObj) {
+            return null;
+        }
+
+        $tokenString = (string)$tokenObj->get('token');
+
+        /** @var OrderDraftManager $draftManager */
+        $draftManager = $this->modx->services->get('ms3_order_draft_manager');
+
+        $previousCustomerId = $previousTokenObj
+            ? (int)$previousTokenObj->get('customer_id')
+            : -1;
+
+        if (
+            $previousToken !== ''
+            && $previousToken !== $tokenString
+            && self::canTransferCartFromToken($previousCustomerId, (int)$customer->id)
+        ) {
+            if (!$draftManager->transferDraftToToken($previousToken, $tokenString, (int)$customer->id)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    "[AuthManager] transferDraftToToken failed for customer #{$customer->id}"
+                );
+            }
+        } elseif (!$draftManager->bindDraftToCustomer($tokenString, (int)$customer->id)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                "[AuthManager] bindDraftToCustomer failed for customer #{$customer->id}"
+            );
+        }
+
+        // Always drop the previous browser token so a planted/old cookie cannot keep access.
+        if ($previousTokenObj && $previousToken !== $tokenString) {
+            $previousTokenObj->remove();
+        }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+
+        return [
+            'token' => $tokenString,
+            'expires_at' => $tokenObj->get('expires_at'),
+        ];
+    }
+
+    /**
+     * End storefront session: revoke API tokens, mint guest token, refresh session id.
+     *
+     * Used by Web API Logout and snippet `?action=logout` so cookie restore cannot re-auth.
+     *
+     * @return bool false when anonymous token could not be persisted
+     */
+    public function logoutCurrentCustomer(): bool
+    {
+        SessionHelper::ensureActive();
+
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $tokenService->restoreSessionFromCookie();
+
+        $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
+        if ($customerId > 0) {
+            /** @var msCustomer|null $customer */
+            $customer = $this->modx->getObject(msCustomer::class, $customerId);
+            if ($customer) {
+                $this->revokeTokens($customer, msCustomerToken::TYPE_API);
+                $this->modx->log(
+                    modX::LOG_LEVEL_INFO,
+                    "[AuthManager] Customer #{$customer->id} logged out"
+                );
+            }
+        } else {
+            $orphanToken = $tokenService->getBindableTokenString();
+            if ($orphanToken !== '') {
+                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token' => $orphanToken,
+                    'type' => msCustomerToken::TYPE_API,
+                ]);
+                if ($tokenObj) {
+                    $tokenObj->remove();
+                }
+            }
+        }
+
+        if (isset($_SESSION['ms3'])) {
+            unset(
+                $_SESSION['ms3']['customer_id'],
+                $_SESSION['ms3']['customer_token'],
+                $_SESSION['ms3']['customer_token_expires']
+            );
+        }
+        CookieHelper::clearTokenCookie($this->modx);
+
+        $guest = $tokenService->persistApiToken(0);
+        if (!$guest) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[AuthManager] logoutCurrentCustomer failed to mint anonymous token'
+            );
+            return false;
+        }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+
+        return true;
+    }
+
+    /**
+     * After API tokens were revoked, drop local PHP session/cookie if it belonged to that customer.
+     */
+    public function invalidateLocalSessionForCustomer(msCustomer $customer): void
+    {
+        SessionHelper::ensureActive();
+
+        if ((int)($_SESSION['ms3']['customer_id'] ?? 0) !== (int)$customer->id) {
+            return;
+        }
+
+        if (isset($_SESSION['ms3'])) {
+            unset(
+                $_SESSION['ms3']['customer_id'],
+                $_SESSION['ms3']['customer_token'],
+                $_SESSION['ms3']['customer_token_expires']
+            );
+        }
+        CookieHelper::clearTokenCookie($this->modx);
+
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $tokenService->persistApiToken(0);
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+    }
+
+    /**
+     * Whether cart/draft may be moved from a previous API token onto the new login token.
+     *
+     * @param int $tokenCustomerId -1 when no token row exists
+     */
+    public static function canTransferCartFromToken(int $tokenCustomerId, int $loggingInCustomerId): bool
+    {
+        if ($tokenCustomerId < 0) {
+            return false;
+        }
+
+        return $tokenCustomerId === 0 || $tokenCustomerId === $loggingInCustomerId;
+    }
+
+    /**
+     * @deprecated Use canTransferCartFromToken(); kept for call-site compatibility in tests.
+     */
+    public static function canReuseApiToken(int $tokenCustomerId, int $loggingInCustomerId): bool
+    {
+        return self::canTransferCartFromToken($tokenCustomerId, $loggingInCustomerId);
+    }
+
+    /**
+     * Canonical email normalization for lookup and storage.
+     */
+    public static function normalizeEmail(string $email): string
+    {
+        return strtolower(trim($email));
+    }
+
+    /**
+     * Lookup customer by normalized email, then legacy mixed-case exact match.
+     */
+    public function findCustomerByEmail(string $email): ?msCustomer
+    {
+        $normalized = self::normalizeEmail($email);
+        if ($normalized === '') {
+            return null;
+        }
+
+        /** @var msCustomer|null $customer */
+        $customer = $this->modx->getObject(msCustomer::class, ['email' => $normalized]);
+        if ($customer) {
+            return $customer;
+        }
+
+        $raw = trim($email);
+        if ($raw !== '' && $raw !== $normalized) {
+            /** @var msCustomer|null $legacy */
+            $legacy = $this->modx->getObject(msCustomer::class, ['email' => $raw]);
+            return $legacy ?: null;
+        }
+
+        return null;
+    }
+
+    /**
      * Create token for customer
      *
      * @param msCustomer $customer
@@ -167,10 +421,17 @@ class AuthManager
      */
     public function createToken(msCustomer $customer, string $type = 'api', int $ttl = 86400): ?msCustomerToken
     {
+        if ($type === msCustomerToken::TYPE_API) {
+            /** @var TokenService $tokenService */
+            $tokenService = $this->modx->services->get('ms3_token_service');
+
+            return $tokenService->persistApiToken((int)$customer->id, null, $ttl);
+        }
+
         /** @var msCustomerToken $token */
         $token = $this->modx->newObject(msCustomerToken::class);
 
-        $tokenString = bin2hex(random_bytes(64));
+        $tokenString = bin2hex(random_bytes(32));
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
 
         $token->set('customer_id', $customer->id);
@@ -341,6 +602,22 @@ class AuthManager
             );
         }
 
-        $customer->save();
+        if (!$customer->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[AuthManager] Failed to persist failed_login_attempts for customer #{$customer->id}"
+            );
+        }
+    }
+
+    /**
+     * Record failed login by normalized/legacy email when the account exists.
+     */
+    public function handleFailedLoginByEmail(string $email): void
+    {
+        $customer = $this->findCustomerByEmail($email);
+        if ($customer) {
+            $this->handleFailedLogin($customer);
+        }
     }
 }

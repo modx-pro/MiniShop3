@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Auth;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Customer\AuthManager;
 use MODX\Revolution\modX;
 
 /**
@@ -41,6 +42,14 @@ class PasswordAuthProvider implements AuthProviderInterface
     }
 
     /**
+     * Normalize email for lookup and storage (delegates to AuthManager).
+     */
+    public static function normalizeEmail(string $email): string
+    {
+        return AuthManager::normalizeEmail($email);
+    }
+
+    /**
      * Authenticate by email and password
      *
      * @param array $credentials Must contain 'email' and 'password'
@@ -48,7 +57,7 @@ class PasswordAuthProvider implements AuthProviderInterface
      */
     public function authenticate(array $credentials): ?msCustomer
     {
-        $email = trim($credentials['email'] ?? '');
+        $email = self::normalizeEmail($credentials['email'] ?? '');
         $password = $credentials['password'] ?? '';
 
         if (empty($email) || empty($password)) {
@@ -59,11 +68,19 @@ class PasswordAuthProvider implements AuthProviderInterface
             return null;
         }
 
-        // Find customer by email
-        /** @var msCustomer $customer */
+        // Normalized lookup, then legacy mixed-case exact match (utf8mb4_bin / old rows).
+        /** @var msCustomer|null $customer */
         $customer = $this->modx->getObject(msCustomer::class, [
             'email' => $email,
         ]);
+        if (!$customer) {
+            $raw = trim((string)($credentials['email'] ?? ''));
+            if ($raw !== '' && $raw !== $email) {
+                $customer = $this->modx->getObject(msCustomer::class, [
+                    'email' => $raw,
+                ]);
+            }
+        }
 
         if (!$customer) {
             $this->modx->log(
@@ -92,16 +109,32 @@ class PasswordAuthProvider implements AuthProviderInterface
             return null;
         }
 
+        // Soft-migrate legacy mixed-case emails to canonical lowercase.
+        if ((string)$customer->get('email') !== $email) {
+            $customer->set('email', $email);
+            if (!$customer->save()) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    "[PasswordAuthProvider] Failed to normalize email for customer #{$customer->id}"
+                );
+            }
+        }
+
         // Check if password hash needs to be updated (if bcrypt settings changed)
         if (password_needs_rehash($hashedPassword, PASSWORD_BCRYPT)) {
             $newHash = password_hash($password, PASSWORD_BCRYPT);
             $customer->set('password', $newHash);
-            $customer->save();
-
-            $this->modx->log(
-                modX::LOG_LEVEL_INFO,
-                "[PasswordAuthProvider] Password rehashed for customer #{$customer->id}"
-            );
+            if ($customer->save()) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_INFO,
+                    "[PasswordAuthProvider] Password rehashed for customer #{$customer->id}"
+                );
+            } else {
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    "[PasswordAuthProvider] Failed to persist rehashed password for customer #{$customer->id}"
+                );
+            }
         }
 
         $this->modx->log(

@@ -8,9 +8,8 @@ require_once($autoload);
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
-use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\CustomerAddressManager;
-use MiniShop3\Utils\CookieHelper;
 use MODX\Revolution\modX;
 
 use Rakit\Validation\Validator;
@@ -66,6 +65,9 @@ class Customer
         $tokenService = $this->modx->services->get('ms3_token_service');
 
         $result = $tokenService->generateCustomerToken();
+        if ($result['token'] === '') {
+            return $this->error('ms3_err_token');
+        }
 
         return $this->success('', [
             'token' => $result['token'],
@@ -83,6 +85,9 @@ class Customer
         $tokenService = $this->modx->services->get('ms3_token_service');
 
         $result = $tokenService->updateCustomerToken($token);
+        if ($result['token'] === '') {
+            return $this->error('ms3_err_token');
+        }
 
         return $this->success('', [
             'token' => $result['token'],
@@ -454,43 +459,6 @@ class Customer
     }
 
     /**
-     * Auto-login customer after order creation
-     *
-     * Binds existing msCustomerToken to customer and sets session + cookie.
-     *
-     * @param msCustomer $msCustomer Customer to login
-     */
-    protected function autoLoginCustomer(msCustomer $msCustomer): void
-    {
-        if (!isset($_SESSION['ms3'])) {
-            $_SESSION['ms3'] = [];
-        }
-        $_SESSION['ms3']['customer_id'] = $msCustomer->id;
-
-        // Resolve current token: cookie → session → controller token
-        // ($this->token comes from $_REQUEST via middleware cookie injection)
-        $currentToken = CookieHelper::getTokenFromCookie();
-        if (empty($currentToken)) {
-            $currentToken = $_SESSION['ms3']['customer_token'] ?? $this->token;
-        }
-
-        if (!empty($currentToken)) {
-            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                'token' => $currentToken,
-                'type' => msCustomerToken::TYPE_API,
-            ]);
-
-            if ($tokenObj) {
-                $tokenObj->set('customer_id', $msCustomer->id);
-                $tokenObj->save();
-            }
-
-            $_SESSION['ms3']['customer_token'] = $currentToken;
-            CookieHelper::setTokenCookie($this->modx, $currentToken);
-        }
-    }
-
-    /**
      * Find customer by email
      *
      * @param string $email Customer email
@@ -498,11 +466,23 @@ class Customer
      */
     protected function findByEmail(string $email): ?msCustomer
     {
-        if (empty($email)) {
+        $normalized = AuthManager::normalizeEmail($email);
+        if ($normalized === '') {
             return null;
         }
 
-        return $this->modx->getObject(msCustomer::class, ['email' => $email]);
+        /** @var msCustomer|null $customer */
+        $customer = $this->modx->getObject(msCustomer::class, ['email' => $normalized]);
+        if ($customer) {
+            return $customer;
+        }
+
+        $raw = trim($email);
+        if ($raw !== '' && $raw !== $normalized) {
+            return $this->modx->getObject(msCustomer::class, ['email' => $raw]) ?: null;
+        }
+
+        return null;
     }
 
     /**
@@ -547,10 +527,6 @@ class Customer
 
                 if ($registerResult['success']) {
                     $msCustomer = $registerResult['customer'];
-
-                    if ($autoLogin) {
-                        $this->autoLoginCustomer($msCustomer);
-                    }
                 } else {
                     // Email already registered: attach order only — no token/session takeover
                     $msCustomer = $this->findByEmail($email);
@@ -568,9 +544,16 @@ class Customer
             ];
 
             $msCustomer = $this->create($customerData);
+        }
 
-            if ($msCustomer && $autoLogin) {
-                $this->autoLoginCustomer($msCustomer);
+        if ($msCustomer && $autoLogin) {
+            /** @var AuthManager $authManager */
+            $authManager = $this->modx->services->get('ms3_auth_manager');
+            if (!$authManager->establishCustomerSession($msCustomer)) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[Customer] establishCustomerSession failed for customer #{$msCustomer->id}"
+                );
             }
         }
 
