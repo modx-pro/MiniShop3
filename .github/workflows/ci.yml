@@ -97,3 +97,6 @@ jobs:
 
       - name: ESLint
         run: npm run lint:ci
+
+      - name: Vitest
+        run: npm test
