@@ -36,6 +36,7 @@ class TokenMiddleware implements MiddlewareInterface
         '/api/v1/product/list',
         '/api/v1/customer/token/get',
         '/api/v1/customer/token/refresh',
+        '/api/v1/customer/logout',
         '/api/v1/health',
     ];
 
@@ -118,22 +119,8 @@ class TokenMiddleware implements MiddlewareInterface
                 return Response::error('ms3_err_token_invalid', HttpStatus::UNAUTHORIZED);
             }
         } elseif (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
-            // No token in request: allow existing session customer (browser session).
-            $customerId = (int)$_SESSION['ms3']['customer_id'];
-            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $customerId);
-            if (
-                $customer
-                && $this->isCustomerSessionAllowed($customer)
-                && $tokenService->sessionTokenBelongsToCustomer($customerId)
-            ) {
-                return null;
-            }
-
-            unset(
-                $_SESSION['ms3']['customer_id'],
-                $_SESSION['ms3']['customer_token'],
-                $_SESSION['ms3']['customer_token_expires']
-            );
+            // Stale session identity without a resolvable token must not bypass revoke.
+            $this->clearClientTokenState();
         }
 
         // No valid token found
@@ -188,29 +175,15 @@ class TokenMiddleware implements MiddlewareInterface
         }
 
         // 3. $_REQUEST (includes cookie via injection + legacy URL param)
-        return $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
+        $token = $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
+        if (!empty($token)) {
+            return $token;
+        }
+
+        // 4. Session cache (must still pass DB validation in handle())
+        return $_SESSION['ms3']['customer_token'] ?? '';
     }
 
-    /**
-     * Session shortcut is valid only for active, non-blocked customers.
-     */
-    private function isCustomerSessionAllowed(\MiniShop3\Model\msCustomer $customer): bool
-    {
-        if (!$customer->get('is_active')) {
-            return false;
-        }
-
-        if (!$customer->get('is_blocked')) {
-            return true;
-        }
-
-        $blockedUntil = $customer->get('blocked_until');
-        if ($blockedUntil && strtotime((string)$blockedUntil) > time()) {
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * Check if route is public
