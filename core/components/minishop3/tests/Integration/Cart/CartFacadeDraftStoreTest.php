@@ -13,7 +13,7 @@ use MiniShop3\Services\Cart\CartItemManager;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\Order\OrderLogService;
 use MiniShop3\Services\Order\OrderService;
-use MiniShop3\Tests\Support\RecordingMsOrder;
+use MiniShop3\Tests\RecordingMsOrder;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +26,6 @@ final class CartFacadeDraftStoreTest extends TestCase
     {
         if (!class_exists(modX::class, false)) {
             require_once dirname(__DIR__, 2) . '/stubs/ModxStub.php';
-        require_once dirname(__DIR__, 2) . '/support/RecordingMsOrder.php';
         }
     }
 

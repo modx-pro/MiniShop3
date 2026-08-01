@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MiniShop3\Tests\Support;
+namespace MiniShop3\Tests;
 
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;

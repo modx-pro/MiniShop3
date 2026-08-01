@@ -12,7 +12,7 @@ use MiniShop3\Model\msPayment;
 use MiniShop3\Services\Order\OrderFinalizeService;
 use MiniShop3\Services\Order\OrderNumberGenerator;
 use MiniShop3\Services\Order\OrderService;
-use MiniShop3\Tests\Support\RecordingMsOrder;
+use MiniShop3\Tests\RecordingMsOrder;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
 use xPDO\Om\xPDOSimpleObject;
@@ -26,7 +26,6 @@ final class OrderFinalizeServiceTest extends TestCase
     {
         if (!class_exists(modX::class, false)) {
             require_once dirname(__DIR__, 2) . '/stubs/ModxStub.php';
-        require_once dirname(__DIR__, 2) . '/support/RecordingMsOrder.php';
         }
     }
 
