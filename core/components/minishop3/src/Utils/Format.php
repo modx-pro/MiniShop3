@@ -15,6 +15,9 @@ use MiniShop3\MiniShop3;
  */
 class Format
 {
+    /** Default ruble sign (U+20BD), ASCII-safe for transport builds. */
+    public const DEFAULT_CURRENCY_SYMBOL = "\u{20BD}";
+
     /** @var \MODX\Revolution\modX */
     private $modx;
 
@@ -74,9 +77,24 @@ class Format
 
         $this->dateFormat = $this->modx->getOption('ms3_date_format', null, 'd.m.Y H:i');
 
-        $this->currencySymbol = $this->modx->getOption('ms3_currency_symbol', null, '₽');
+        $this->currencySymbol = self::normalizeCurrencySymbol(
+            $this->modx->getOption('ms3_currency_symbol', null, self::DEFAULT_CURRENCY_SYMBOL)
+        );
         $this->currencyPosition = $this->modx->getOption('ms3_currency_position', null, 'after');
         $this->weightUnit = $this->modx->getOption('ms3_weight_unit', null, 'kg');
+    }
+
+    /**
+     * Normalize system setting value for currency display.
+     * Non-strings and mojibake "?" become the default ruble; empty string is kept.
+     */
+    public static function normalizeCurrencySymbol(mixed $value): string
+    {
+        if (!is_string($value) || $value === '?') {
+            return self::DEFAULT_CURRENCY_SYMBOL;
+        }
+
+        return $value;
     }
 
     /**

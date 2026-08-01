@@ -156,7 +156,7 @@ class MiniShop3
                     'connectorUrl' => $this->config['connectorUrl'],
                     'ctx' => $ctx,
                     'tokenName' => $tokenName,
-                    'currencySymbol' => $this->modx->getOption('ms3_currency_symbol', null, '₽'),
+                    'currencySymbol' => $this->format->getCurrencySymbol(),
                     'currencyPosition' => $this->modx->getOption('ms3_currency_position', null, 'after'),
                     'render' => [
                         'cart' => []
