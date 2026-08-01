@@ -64,6 +64,17 @@ final class RecordingMsOrder extends msOrder
     public function save($cacheFlag = null)
     {
         $this->saved = true;
+        foreach ($this->products as $product) {
+            if (!is_object($product) || !method_exists($product, 'save')) {
+                continue;
+            }
+            // Persist only new lines. Re-saving attached instances after an out-of-band
+            // DB update would overwrite fresh rows with stale in-memory fields.
+            if (method_exists($product, 'get') && !empty($product->get('id'))) {
+                continue;
+            }
+            $product->save();
+        }
 
         return true;
     }

@@ -7,6 +7,7 @@ namespace MiniShop3\Tests\Integration\Order;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Services\Order\OrderFinalizeService;
@@ -64,6 +65,155 @@ final class OrderFinalizeServiceTest extends TestCase
         self::assertContains('products', $result['data']);
         self::assertContains('delivery_id', $result['data']);
         self::assertContains('payment_id', $result['data']);
+    }
+
+
+    public function testFinalizeFailsOnMissingDeliveryRequiredFields(): void
+    {
+        $order = new RecordingMsOrder([
+            'id' => 5,
+            'status_id' => 1,
+            'delivery_id' => 3,
+            'payment_id' => 4,
+        ]);
+        $products = [
+            new class {
+                public function get(string $field): float|int
+                {
+                    return match ($field) {
+                        'cost' => 10.0,
+                        'weight' => 1.0,
+                        'count' => 1,
+                        default => 0,
+                    };
+                }
+            },
+        ];
+        $delivery = new class extends xPDOSimpleObject {
+            public function get($k)
+            {
+                return match ($k) {
+                    'price' => 0.0,
+                    'weight_price' => 0.0,
+                    'active' => 1,
+                    'validation_rules' => json_encode([
+                        'email' => 'required|email',
+                        'phone' => 'required',
+                        'city' => 'max:100',
+                    ]),
+                    default => null,
+                };
+            }
+        };
+        $address = new class extends xPDOSimpleObject {
+            public function toArray($keyPrefix = '', $rawValues = false, $excludeLazy = false, $includeRelated = false)
+            {
+                return [
+                    'order_id' => 5,
+                    'email' => '',
+                    'phone' => '',
+                    'city' => 'Moscow',
+                ];
+            }
+        };
+
+        $service = $this->makeService(
+            orders: [5 => $order],
+            productCount: 1,
+            products: $products,
+            delivery: $delivery,
+            address: $address,
+        );
+        $result = $service->finalize(5);
+
+        self::assertFalse($result['success']);
+        self::assertSame('ms3_order_err_validation', $result['message']);
+        self::assertContains('email', $result['data']);
+        self::assertContains('phone', $result['data']);
+        self::assertNotContains('city', $result['data']);
+    }
+
+    public function testFinalizeHappyPathWithoutSkipValidation(): void
+    {
+        $order = new RecordingMsOrder([
+            'id' => 5,
+            'status_id' => 1,
+            'delivery_id' => 3,
+            'payment_id' => 4,
+            'num' => '2501/7',
+            'customer_id' => 0,
+            'cost' => 0,
+            'cart_cost' => 0,
+            'delivery_cost' => 0,
+            'weight' => 0,
+        ]);
+        $products = [
+            new class {
+                public function get(string $field): float|int
+                {
+                    return match ($field) {
+                        'cost' => 40.0,
+                        'weight' => 0.5,
+                        'count' => 2,
+                        default => 0,
+                    };
+                }
+            },
+        ];
+        $delivery = new class extends xPDOSimpleObject {
+            public function get($k)
+            {
+                return match ($k) {
+                    'price' => 20.0,
+                    'weight_price' => 0.0,
+                    'active' => 1,
+                    'validation_rules' => json_encode([
+                        'email' => 'required|email',
+                        'receiver' => 'required',
+                    ]),
+                    default => null,
+                };
+            }
+        };
+        $address = new class extends xPDOSimpleObject {
+            public function toArray($keyPrefix = '', $rawValues = false, $excludeLazy = false, $includeRelated = false)
+            {
+                return [
+                    'order_id' => 5,
+                    'email' => 'buyer@example.com',
+                    'receiver' => 'Ivan',
+                ];
+            }
+        };
+
+        $statusCalls = [];
+        $service = $this->makeService(
+            orders: [5 => $order],
+            productCount: 1,
+            products: $products,
+            delivery: $delivery,
+            address: $address,
+            onStatusChange: static function (int $id, int $status, bool $skip) use (&$statusCalls, $order): bool {
+                $statusCalls[] = compact('id', 'status', 'skip');
+                $order->set('status_id', $status);
+
+                return true;
+            }
+        );
+
+        $result = $service->finalize(5, ['skip_notifications' => true]);
+
+        self::assertTrue($result['success'], $result['message'] ?? '');
+        self::assertSame('ms3_order_finalized', $result['message']);
+        self::assertSame(5, $result['data']['order_id']);
+        self::assertSame('2501/7', $result['data']['order_num']);
+        self::assertSame(2, $result['data']['status_id']);
+        self::assertSame(40.0, $order->get('cart_cost'));
+        self::assertSame(20.0, $order->get('delivery_cost'));
+        self::assertSame(60.0, $order->get('cost'));
+        self::assertSame(1.0, $order->get('weight'));
+        self::assertCount(1, $statusCalls);
+        self::assertTrue($statusCalls[0]['skip']);
     }
 
     public function testFinalizeHappyPathWithSkipValidation(): void
@@ -147,6 +297,7 @@ final class OrderFinalizeServiceTest extends TestCase
         int $productCount = 0,
         array $products = [],
         ?object $delivery = null,
+        ?object $address = null,
         ?callable $onStatusChange = null,
     ): OrderFinalizeService {
         $orderService = new OrderService(new modX());
@@ -192,7 +343,7 @@ final class OrderFinalizeServiceTest extends TestCase
             return $k === 'active' ? 1 : null;
         });
 
-        $modx = new class ($orders, $productCount, $products, $delivery, $payment, $orderService, $statusService) extends modX {
+        $modx = new class ($orders, $productCount, $products, $delivery, $payment, $address, $orderService, $statusService) extends modX {
 
             /**
              * @param array<int, RecordingMsOrder> $orders
@@ -204,6 +355,7 @@ final class OrderFinalizeServiceTest extends TestCase
                 private array $products,
                 private ?object $delivery,
                 private object $payment,
+                private ?object $address,
                 OrderService $orderService,
                 object $statusService,
             ) {
@@ -260,6 +412,10 @@ final class OrderFinalizeServiceTest extends TestCase
 
                 if ($className === msPayment::class) {
                     return $this->payment;
+                }
+
+                if ($className === msOrderAddress::class) {
+                    return $this->address;
                 }
 
                 return null;

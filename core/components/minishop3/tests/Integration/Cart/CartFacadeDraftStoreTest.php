@@ -14,11 +14,13 @@ use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\Order\OrderLogService;
 use MiniShop3\Services\Order\OrderService;
 use MiniShop3\Tests\RecordingMsOrder;
+use MiniShop3\Tests\Support\OrderProductSqliteStore;
+use MiniShop3\Tests\Support\SqliteOrderProduct;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Level-2: Cart facade add/change/remove against in-memory draft product store.
+ * Level-2: Cart facade add/change/remove against SQLite-backed draft product store.
  */
 final class CartFacadeDraftStoreTest extends TestCase
 {
@@ -27,11 +29,12 @@ final class CartFacadeDraftStoreTest extends TestCase
         if (!class_exists(modX::class, false)) {
             require_once dirname(__DIR__, 2) . '/stubs/ModxStub.php';
         }
+        require_once dirname(__DIR__, 2) . '/support/OrderProductSqliteStore.php';
     }
 
-    public function testAddChangeRemoveAgainstDraftStore(): void
+    public function testAddChangeRemoveAgainstSqliteDraftStore(): void
     {
-        $store = new DraftProductStore();
+        $store = new OrderProductSqliteStore();
         $draft = new RecordingMsOrder(['id' => 42, 'cart_cost' => 0, 'delivery_cost' => 0, 'cost' => 0, 'weight' => 0]);
         $product = new LightweightCartProduct([
             'id' => 11,
@@ -53,21 +56,29 @@ final class CartFacadeDraftStoreTest extends TestCase
         $key = $added['data']['last_key'];
         self::assertSame(2, $added['data']['cart'][$key]['count']);
         self::assertSame(50.0, $added['data']['cart'][$key]['cost']);
+        self::assertSame(1, $store->countAll());
+        $row = $store->findOne(['order_id' => 42, 'product_key' => $key]);
+        self::assertNotNull($row);
+        self::assertSame(['color' => 'red'], $row['options']);
+        self::assertSame(2, $row['count']);
 
         $changed = $cart->change($key, 3);
         self::assertTrue($changed['success'], $changed['message'] ?? '');
         self::assertSame(3, $changed['data']['cart'][$key]['count']);
         self::assertSame(75.0, $changed['data']['cart'][$key]['cost']);
+        $row = $store->findOne(['order_id' => 42, 'product_key' => $key]);
+        self::assertSame(3, $row['count']);
+        self::assertSame(75.0, $row['cost']);
 
         $removed = $cart->remove($key);
         self::assertTrue($removed['success'], $removed['message'] ?? '');
         self::assertArrayNotHasKey($key, $removed['data']['cart']);
-        self::assertSame([], $store->items);
+        self::assertSame(0, $store->countAll());
     }
 
     public function testAddRejectsInvalidCount(): void
     {
-        $store = new DraftProductStore();
+        $store = new OrderProductSqliteStore();
         $draft = new RecordingMsOrder(['id' => 42]);
         $product = new LightweightCartProduct([
             'id' => 11,
@@ -85,10 +96,14 @@ final class CartFacadeDraftStoreTest extends TestCase
         $result = $cart->add(11, 0);
         self::assertFalse($result['success']);
         self::assertSame('ms3_cart_add_err_count', $result['message']);
+        self::assertSame(0, $store->countAll());
     }
 
-    private function makeCart(DraftProductStore $store, RecordingMsOrder $draft, LightweightCartProduct $product): Cart
-    {
+    private function makeCart(
+        OrderProductSqliteStore $store,
+        RecordingMsOrder $draft,
+        LightweightCartProduct $product
+    ): Cart {
         $utils = new class {
             public function success(string $message = '', array $data = [], array $placeholders = []): array
             {
@@ -110,7 +125,7 @@ final class CartFacadeDraftStoreTest extends TestCase
         $modx = new class ($store, $product, $orderService) extends modX {
 
             public function __construct(
-                private DraftProductStore $store,
+                private OrderProductSqliteStore $store,
                 private LightweightCartProduct $product,
                 OrderService $orderService,
             ) {
@@ -163,9 +178,15 @@ final class CartFacadeDraftStoreTest extends TestCase
                 }
 
                 if ($className === msOrderProduct::class && is_array($criteria)) {
-                    $key = (string) ($criteria['product_key'] ?? '');
+                    $row = $this->store->findOne($criteria);
+                    if ($row === null) {
+                        return null;
+                    }
+                    $item = new SqliteOrderProduct();
+                    $item->bindStore($this->store);
+                    $item->hydrate($row);
 
-                    return $this->store->items[$key] ?? null;
+                    return $item;
                 }
 
                 return null;
@@ -174,11 +195,11 @@ final class CartFacadeDraftStoreTest extends TestCase
             public function newObject($className, $fields = [])
             {
                 if ($className === msOrderProduct::class) {
-                    $item = new RecordingOrderProduct();
+                    $item = new SqliteOrderProduct();
+                    $item->bindStore($this->store);
                     if (is_array($fields) && $fields !== []) {
                         $item->fromArray($fields);
                     }
-                    $this->store->track($item);
 
                     return $item;
                 }
@@ -189,10 +210,28 @@ final class CartFacadeDraftStoreTest extends TestCase
             public function getIterator($className, $criteria = null, $cacheFlag = true): \ArrayIterator
             {
                 if ($className === msOrderProduct::class) {
-                    return new \ArrayIterator(array_values($this->store->items));
+                    $rows = $this->store->findAll(is_array($criteria) ? $criteria : []);
+                    $items = [];
+                    foreach ($rows as $row) {
+                        $item = new SqliteOrderProduct();
+                        $item->bindStore($this->store);
+                        $item->hydrate($row);
+                        $items[] = $item;
+                    }
+
+                    return new \ArrayIterator($items);
                 }
 
                 return new \ArrayIterator([]);
+            }
+
+            public function getCount($className, $criteria = null)
+            {
+                if ($className === msOrderProduct::class) {
+                    return count($this->store->findAll(is_array($criteria) ? $criteria : []));
+                }
+
+                return 0;
             }
         };
 
@@ -204,6 +243,12 @@ final class CartFacadeDraftStoreTest extends TestCase
         $draftManager = $this->createStub(OrderDraftManager::class);
         $draftManager->method('getDraft')->willReturn($draft);
         $draftManager->method('getOrCreateDraft')->willReturn($draft);
+        $draftManager->method('isEmpty')->willReturnCallback(
+            static function (msOrder $order) use ($store): bool {
+                return $store->findAll(['order_id' => (int) $order->get('id')]) === [];
+            }
+        );
+        $draftManager->method('deleteDraft')->willReturn(true);
         $draftManager->method('recalculate')->willReturnCallback(
             static function (msOrder $order) use ($orderService, $itemManager): void {
                 $items = $itemManager->loadItems($order);
@@ -237,90 +282,6 @@ final class CartFacadeDraftStoreTest extends TestCase
         );
 
         return new HarnessCart($ms3, $itemManager, $draftManager);
-    }
-}
-
-final class DraftProductStore
-{
-    /** @var array<string, RecordingOrderProduct> */
-    public array $items = [];
-
-    public function track(RecordingOrderProduct $item): void
-    {
-        $item->bindStore($this);
-    }
-
-    public function sync(RecordingOrderProduct $item): void
-    {
-        $key = (string) $item->get('product_key');
-        if ($key === '' || $item->removed) {
-            foreach ($this->items as $k => $existing) {
-                if ($existing === $item) {
-                    unset($this->items[$k]);
-                }
-            }
-
-            return;
-        }
-        $this->items[$key] = $item;
-    }
-}
-
-final class RecordingOrderProduct extends msOrderProduct
-{
-    /** @var array<string, mixed> */
-    private array $fields = [];
-
-    private ?DraftProductStore $store = null;
-
-    public bool $removed = false;
-
-    public function bindStore(DraftProductStore $store): void
-    {
-        $this->store = $store;
-    }
-
-    public function fromArray($fields, $keyPrefix = '', $setPrimaryKeys = false, $rawValues = false, $adhoc = false)
-    {
-        foreach ($fields as $key => $value) {
-            $this->fields[$key] = $value;
-        }
-        $this->store?->sync($this);
-
-        return true;
-    }
-
-    public function get($k, $format = null, $formatTemplate = null)
-    {
-        return $this->fields[$k] ?? null;
-    }
-
-    public function set($key, $value)
-    {
-        $this->fields[$key] = $value;
-        $this->store?->sync($this);
-
-        return true;
-    }
-
-    public function toArray($keyPrefix = '', $rawValues = false, $excludeLazy = false, $includeRelated = false)
-    {
-        return $this->fields;
-    }
-
-    public function save($cacheFlag = null)
-    {
-        $this->store?->sync($this);
-
-        return true;
-    }
-
-    public function remove(array $ancestors = [])
-    {
-        $this->removed = true;
-        $this->store?->sync($this);
-
-        return true;
     }
 }
 
