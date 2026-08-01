@@ -24,6 +24,25 @@ jobs:
       run:
         working-directory: core/components/minishop3
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ms3_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+
+    env:
+      MS3_TEST_MYSQL_DSN: mysql:host=127.0.0.1;port=3306;dbname=ms3_test;charset=utf8mb4
+      MS3_TEST_MYSQL_USER: root
+      MS3_TEST_MYSQL_PASSWORD: root
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -33,6 +52,7 @@ jobs:
         with:
           php-version: '8.2'
           coverage: none
+          extensions: pdo_mysql
           tools: composer:v2
 
       - name: Install Composer dependencies

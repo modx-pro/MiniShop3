@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# PHP CI gate: syntax check + smoke + PHPUnit (no MODX/MySQL).
+# PHP CI gate: syntax check + smoke + PHPUnit.
+# MySQL Level-2 tests (@group mysql) run when MS3_TEST_MYSQL_DSN is set (CI service).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
