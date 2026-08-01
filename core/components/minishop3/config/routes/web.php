@@ -284,10 +284,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
     $router->group('/product', function ($router) use ($modx) {
 
         $router->get('/get/{id}', function ($params) use ($modx) {
-            return Response::success([
-                'message' => 'Product get endpoint - not implemented yet',
-                'id' => $params['id'] ?? null,
-            ]);
+            return Response::success(['message' => 'Product get endpoint - not implemented yet', 'id' => $params['id'] ?? null]);
         });
 
         $router->get('/list', function ($params) use ($modx) {

@@ -13,10 +13,9 @@ use MiniShop3\Services\TokenService;
 trait AuthorizedCustomerTrait
 {
     /**
-     * Get authorized customer (session or API token)
+     * Get authorized customer via validated API token only.
      *
-     * Method 1: API token (ms3_token in request or session).
-     * Method 2: Session customer_id (set by TokenMiddleware).
+     * Method 1: API token (ms3_token in request or session customer_token cache).
      *
      * @return msCustomer|null
      */
@@ -25,34 +24,24 @@ trait AuthorizedCustomerTrait
         $ms3 = $this->modx->services->get('ms3');
         $ms3->initialize();
 
-        // Method 1: Try API token
         $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
-        $tokenPresented = $tokenString !== '';
-
-        if ($tokenPresented) {
-            /** @var TokenService $tokenService */
-            $tokenService = $this->modx->services->get('ms3_token_service');
-            $resolved = $tokenService->resolveApiToken($tokenString);
-
-            if ($resolved['reason'] === 'ok') {
-                $customer = $this->modx->getObject(msCustomer::class, $resolved['token']->get('customer_id'));
-                if ($customer) {
-                    return $customer;
-                }
-            }
-
-            // Explicit token was rejected — do not fall back to session customer_id.
+        if ($tokenString === '') {
             return null;
         }
 
-        // Method 2: Fall back to session customer_id (consistent with TokenMiddleware)
-        if (!empty($_SESSION['ms3']['customer_id'])) {
-            $customer = $this->modx->getObject(msCustomer::class, (int)$_SESSION['ms3']['customer_id']);
-            if ($customer) {
-                return $customer;
-            }
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $resolved = $tokenService->resolveApiToken($tokenString);
+
+        if ($resolved['reason'] !== 'ok') {
+            return null;
         }
 
-        return null;
+        $customerId = (int) $resolved['token']->get('customer_id');
+        if ($customerId <= 0) {
+            return null;
+        }
+
+        return $this->modx->getObject(msCustomer::class, $customerId) ?: null;
     }
 }
