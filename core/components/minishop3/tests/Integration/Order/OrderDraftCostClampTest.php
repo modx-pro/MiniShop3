@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Integration\Order;
 
 use MiniShop3\MiniShop3;
-use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\Order\OrderService;
+use MiniShop3\Tests\Support\RecordingMsOrder;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
 
@@ -17,12 +17,13 @@ use PHPUnit\Framework\TestCase;
 final class OrderDraftCostClampTest extends TestCase
 {
     private OrderDraftManager $drafts;
-    private RecordingDraftOrder $draft;
+    private RecordingMsOrder $draft;
 
     protected function setUp(): void
     {
         if (!class_exists(modX::class, false)) {
             require_once dirname(__DIR__, 2) . '/stubs/ModxStub.php';
+        require_once dirname(__DIR__, 2) . '/support/RecordingMsOrder.php';
         }
 
         $orderService = new OrderService(new modX());
@@ -47,7 +48,7 @@ final class OrderDraftCostClampTest extends TestCase
         };
 
         $this->drafts = new OrderDraftManager($modx, $this->createStub(MiniShop3::class));
-        $this->draft = new RecordingDraftOrder([
+        $this->draft = new RecordingMsOrder([
             'id' => 7,
             'cart_cost' => 100.0,
             'delivery_cost' => 0.0,
@@ -96,51 +97,5 @@ final class OrderDraftCostClampTest extends TestCase
         self::assertSame(3.0, $this->draft->get('weight'));
         self::assertSame(0.0, $this->draft->get('cost'));
         self::assertTrue($this->draft->saved);
-    }
-}
-
-/**
- * Mutable draft stand-in (avoids loading real msOrder map).
- */
-final class RecordingDraftOrder extends msOrder
-{
-    /** @var array<string, mixed> */
-    private array $fields;
-
-    /** @var list<object> */
-    public array $products = [];
-
-    public bool $saved = false;
-
-    /**
-     * @param array<string, mixed> $fields
-     */
-    public function __construct(array $fields = [])
-    {
-        $this->fields = $fields;
-    }
-
-    public function get($key)
-    {
-        return $this->fields[$key] ?? null;
-    }
-
-    public function set($key, $value)
-    {
-        $this->fields[$key] = $value;
-
-        return true;
-    }
-
-    public function getMany($alias, $criteria = null, $cacheFlag = true)
-    {
-        return $alias === 'Products' ? $this->products : [];
-    }
-
-    public function save($cacheFlag = null)
-    {
-        $this->saved = true;
-
-        return true;
     }
 }
