@@ -12,10 +12,13 @@ declare(strict_types=1);
 
 error_reporting(E_ALL & ~E_DEPRECATED);
 
+require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/support/xpdo_stub.php';
+require __DIR__ . '/support/xpdo_om_stub.php';
 require __DIR__ . '/stubs/ModxStub.php';
+require __DIR__ . '/stubs/FakeMsCustomer.php';
 require __DIR__ . '/stubs/WebApiModxStub.php';
 require __DIR__ . '/stubs/ProcessorResponseStub.php';
-require __DIR__ . '/../vendor/autoload.php';
 
 use MiniShop3\Controllers\Api\Web\CustomerAuthController;
 use MiniShop3\Router\HttpStatus;
@@ -117,7 +120,7 @@ $assertSame(true, $response->getData()['success'] ?? null, 'forgotPassword succe
 // --- Router dispatch: logout with TokenMiddleware + session ---
 
 $modx = new WebApiModxStub();
-$modx->customers[42] = (object) ['id' => 42];
+$modx->putCustomer(42);
 $modx->runProcessorHandler = static function (string $action): ProcessorResponseStub {
     if ($action === 'MiniShop3\\Processors\\Api\\Customer\\Logout') {
         return ProcessorResponseStub::success(null, 'You have been logged out');
@@ -145,10 +148,13 @@ declare(strict_types=1);
 
 error_reporting(E_ALL & ~E_DEPRECATED);
 
+require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/support/xpdo_stub.php';
+require __DIR__ . '/support/xpdo_om_stub.php';
 require __DIR__ . '/stubs/ModxStub.php';
+require __DIR__ . '/stubs/FakeMsCustomer.php';
 require __DIR__ . '/stubs/WebApiModxStub.php';
 require __DIR__ . '/stubs/ProcessorResponseStub.php';
-require __DIR__ . '/../vendor/autoload.php';
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Router;

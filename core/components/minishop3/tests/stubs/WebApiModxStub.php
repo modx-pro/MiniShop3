@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MODX\Revolution;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Tests\Stubs\FakeMsCustomer;
 use MiniShop3\Tests\Stubs\ProcessorResponseStub;
 
 /**
@@ -15,8 +16,11 @@ class WebApiModxStub extends modX
     /** @var callable|null */
     public $runProcessorHandler;
 
-    /** @var array<int, object> */
+    /** @var array<int, msCustomer> */
     public array $customers = [];
+
+    /** @var object|null TokenService-shaped double for TokenMiddleware */
+    public $tokenService;
 
     /** @var object */
     public $lexicon;
@@ -27,6 +31,42 @@ class WebApiModxStub extends modX
     public function __construct()
     {
         parent::__construct();
+
+        $this->tokenService = new class {
+            public function resolveApiToken(string $token): array
+            {
+                return ['token' => null, 'reason' => 'missing'];
+            }
+
+            public function sessionTokenBelongsToCustomer(int $customerId): bool
+            {
+                return $customerId > 0;
+            }
+
+            public function generateCustomerToken(): array
+            {
+                return ['token' => 'anon-test-token'];
+            }
+        };
+
+        $this->services = new class ($this) {
+            public function __construct(private WebApiModxStub $modx)
+            {
+            }
+
+            public function has(string $key): bool
+            {
+                return $key === 'ms3' || $key === 'ms3_token_service';
+            }
+
+            public function get(string $key): mixed
+            {
+                return match ($key) {
+                    'ms3_token_service' => $this->modx->tokenService,
+                    default => null,
+                };
+            }
+        };
 
         $this->lexicon = new class {
             private array $strings = [];
@@ -100,5 +140,21 @@ class WebApiModxStub extends modX
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, mixed> $fields
+     */
+    public function putCustomer(int $id, array $fields = []): FakeMsCustomer
+    {
+        $customer = new FakeMsCustomer(array_merge([
+            'id' => $id,
+            'is_active' => true,
+            'is_blocked' => false,
+            'blocked_until' => null,
+        ], $fields));
+        $this->customers[$id] = $customer;
+
+        return $customer;
     }
 }
