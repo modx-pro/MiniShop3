@@ -38,12 +38,14 @@ final class OptionSyncMysqlTest extends TestCase
             'color' => 'Red',
             'tags' => ['a', 'b'],
         ]));
+        $loaded = $this->sync->getForProduct(10);
+        ksort($loaded);
         self::assertSame(
             [
                 'color' => ['Red'],
                 'tags' => ['a', 'b'],
             ],
-            $this->sync->getForProduct(10)
+            $loaded
         );
 
         $this->sync->saveProductOptions(10, ['color' => 'Blue'], true);
