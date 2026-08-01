@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WEB API Routes for MiniShop3
  *
@@ -70,7 +71,6 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->clean($params);
         });
-
     }, [$tokenMiddleware]);
 
     $router->group('/order', function ($router) use ($modx) {
@@ -130,7 +130,6 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\OrderController($modx);
             return $controller->getDeliveryRequiresFields($params);
         });
-
     }, [$tokenMiddleware]);
 
     $router->group('/customer', function ($router) use ($modx, $tokenMiddleware) {
@@ -149,11 +148,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
                 ]
             );
 
-            if ($response->isError()) {
-                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
-            }
-
-            return Response::success($response->getObject(), $response->getMessage());
+            return Response::fromProcessor($response);
         });
         $router->post('/logout', function ($params) use ($modx) {
             $response = $modx->runProcessor(
@@ -190,11 +185,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
                 ]
             );
 
-            if ($response->isError()) {
-                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
-            }
-
-            return Response::success($response->getObject(), $response->getMessage());
+            return Response::fromProcessor($response);
         });
 
         $router->post('/add', function ($params) use ($modx) {
@@ -257,7 +248,6 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
                 $controller = new \MiniShop3\Controllers\Api\Web\CustomerAddressController($modx);
                 return $controller->setDefault($params);
             });
-
         }, [$tokenMiddleware]);
 
         $router->put('/profile', function ($params) use ($modx) {
@@ -289,7 +279,6 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerOrderController($modx);
             return $controller->cancel($params);
         }, [$tokenMiddleware]);
-
     });
 
     $router->group('/product', function ($router) use ($modx) {
@@ -301,7 +290,6 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
         $router->get('/list', function ($params) use ($modx) {
             return Response::success(['message' => 'Product list endpoint - not implemented yet']);
         });
-
     });
     $router->get('/health', function () use ($modx) {
         return Response::success([
@@ -311,5 +299,4 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             'api' => 'web'
         ]);
     });
-
 }, [$corsMiddleware, $rateLimitMiddleware, $serviceCheckMiddleware]);

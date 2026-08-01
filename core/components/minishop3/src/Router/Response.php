@@ -63,6 +63,65 @@ class Response
     }
 
     /**
+     * Map a MODX processor response to an API Response.
+     *
+     * Error processors may pass ['code' => HttpStatus::…] as the failure object
+     * (Login/Register rate-limit and auth failures).
+     *
+     * @param object $processorResponse modProcessorResponse (isError/getMessage/getObject)
+     */
+    public static function fromProcessor(object $processorResponse): self
+    {
+        if (!$processorResponse->isError()) {
+            return self::success($processorResponse->getObject(), $processorResponse->getMessage());
+        }
+
+        return self::error(
+            (string) $processorResponse->getMessage(),
+            self::statusFromProcessorObject($processorResponse->getObject())
+        );
+    }
+
+    /**
+     * Resolve HTTP status from a processor failure object.
+     *
+     * @param mixed $object Value from modProcessorResponse::getObject()
+     */
+    public static function statusFromProcessorObject(
+        mixed $object,
+        int $default = HttpStatus::BAD_REQUEST
+    ): int {
+        if (is_string($object) && $object !== '') {
+            $decoded = json_decode($object, true);
+            if (is_array($decoded)) {
+                $object = $decoded;
+            }
+        }
+
+        if (!is_array($object) || !isset($object['code']) || !is_numeric($object['code'])) {
+            return $default;
+        }
+
+        $code = (int) $object['code'];
+
+        return self::isAllowedErrorStatus($code) ? $code : $default;
+    }
+
+    private static function isAllowedErrorStatus(int $code): bool
+    {
+        return in_array($code, [
+            HttpStatus::BAD_REQUEST,
+            HttpStatus::UNAUTHORIZED,
+            HttpStatus::NOT_FOUND,
+            HttpStatus::CONFLICT,
+            HttpStatus::UNPROCESSABLE_ENTITY,
+            HttpStatus::TOO_MANY_REQUESTS,
+            HttpStatus::INTERNAL_SERVER_ERROR,
+            HttpStatus::SERVICE_UNAVAILABLE,
+        ], true);
+    }
+
+    /**
      * Set header
      */
     public function header(string $name, string $value): self

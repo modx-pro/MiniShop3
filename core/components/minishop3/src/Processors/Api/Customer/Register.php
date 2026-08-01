@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MiniShop3\Services\Customer\RateLimiter;
@@ -52,7 +53,10 @@ class Register extends Processor
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         if (!$rateLimiter->check('register', $ip, 3, 3600)) {
-            return $this->failure($this->modx->lexicon('ms3_customer_err_register_rate_limit'));
+            return $this->failure(
+                $this->modx->lexicon('ms3_customer_err_register_rate_limit'),
+                ['code' => HttpStatus::TOO_MANY_REQUESTS]
+            );
         }
 
         /** @var RegisterService $registerService */
@@ -89,7 +93,10 @@ class Register extends Processor
             $session = $authManager->establishCustomerSession($customer);
 
             if (!$session) {
-                return $this->failure($this->modx->lexicon('ms3_customer_err_token_create'));
+                return $this->failure(
+                    $this->modx->lexicon('ms3_customer_err_token_create'),
+                    ['code' => HttpStatus::INTERNAL_SERVER_ERROR]
+                );
             }
 
             $tokenString = $session['token'];

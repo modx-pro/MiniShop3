@@ -4,6 +4,8 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\HttpStatus;
+use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\CustomerPublicDto;
 use MODX\Revolution\modX;
 use Rakit\Validation\Validator;
@@ -73,14 +75,20 @@ class CustomerProfileController
     public function update(array $data): array
     {
         if (empty($_SESSION['ms3']['customer_id'])) {
-            return $this->error($this->modx->lexicon('ms3_customer_err_login_required'));
+            return Response::error(
+                $this->modx->lexicon('ms3_customer_err_login_required'),
+                HttpStatus::UNAUTHORIZED
+            )->getData();
         }
 
         /** @var msCustomer $customer */
         $customer = $this->getCurrentCustomer();
 
         if (!$customer) {
-            return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
+            return Response::error(
+                $this->modx->lexicon('ms3_err_customer_nf'),
+                HttpStatus::UNAUTHORIZED
+            )->getData();
         }
 
         $customerId = (int)$customer->get('id');
@@ -143,12 +151,18 @@ class CustomerProfileController
     public function updateField(array $data): array
     {
         if (empty($_SESSION['ms3']['customer_id'])) {
-            return $this->error($this->modx->lexicon('ms3_customer_err_login_required'));
+            return Response::error(
+                $this->modx->lexicon('ms3_customer_err_login_required'),
+                HttpStatus::UNAUTHORIZED
+            )->getData();
         }
 
         $customer = $this->getCurrentCustomer();
         if (!$customer) {
-            return $this->error($this->modx->lexicon('ms3_err_customer_nf'));
+            return Response::error(
+                $this->modx->lexicon('ms3_err_customer_nf'),
+                HttpStatus::UNAUTHORIZED
+            )->getData();
         }
 
         $key = trim((string) ($data['key'] ?? ''));
