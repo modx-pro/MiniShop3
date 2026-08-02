@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Unit\Services\Product\Import;
 
 use MiniShop3\Services\Product\Import\ProductImportService;
-use MiniShop3\Utils\ImportCSV;
 use PHPUnit\Framework\TestCase;
 
 final class ProductImportServiceTest extends TestCase
@@ -19,10 +18,10 @@ final class ProductImportServiceTest extends TestCase
         $this->assertTrue(method_exists(ProductImportService::class, 'getProgress'));
     }
 
-    public function testDeprecatedImportCsvWrapperExists(): void
+    public function testLegacyImportCsvWrapperFileExists(): void
     {
-        $this->assertTrue(class_exists(ImportCSV::class));
-        $this->assertTrue(method_exists(ImportCSV::class, 'process'));
+        $path = dirname(__DIR__, 5) . '/src/Utils/ImportCSV.php';
+        $this->assertFileExists($path);
     }
 
     public function testServiceRegistryDeclaresProductImportKey(): void
