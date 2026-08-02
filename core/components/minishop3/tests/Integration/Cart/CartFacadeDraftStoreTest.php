@@ -108,8 +108,6 @@ final class CartFacadeDraftStoreTest extends TestCase
 
         $orderService = new OrderService(new modX());
         $modx = new class ($store, $product, $orderService) extends modX {
-            public object $services;
-            public object $lexicon;
 
             public function __construct(
                 private DraftProductStore $store,
