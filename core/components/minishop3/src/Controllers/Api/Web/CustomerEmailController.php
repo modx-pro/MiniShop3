@@ -127,7 +127,7 @@ class CustomerEmailController
 
         /** @var AuthManager $authManager */
         $authManager = $this->modx->services->get('ms3_auth_manager');
-        $session = $authManager->establishCustomerSession($customer);
+        $session = $authManager->establishApiSession($customer);
 
         if (!$session) {
             $this->modx->log(
