@@ -2,7 +2,7 @@
 
 namespace MiniShop3\Processors\Utilities\Import;
 
-use MiniShop3\Utils\ImportCSV;
+use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\Processors\Processor;
 
 /**
@@ -57,13 +57,13 @@ class Preview extends Processor
             }
 
             // Get headers (first row)
-            $headers = ImportCSV::detectHeaders($realPath, $delimiter);
+            $headers = ProductImportService::detectHeaders($realPath, $delimiter);
 
             // Count total rows
-            $totalRows = ImportCSV::countRows($realPath, $delimiter);
+            $totalRows = ProductImportService::countRows($realPath, $delimiter);
 
             // Get preview data with encoding info
-            $previewData = ImportCSV::getPreview($realPath, $delimiter, $previewRows, false);
+            $previewData = ProductImportService::getPreview($realPath, $delimiter, $previewRows, false);
             $preview = $previewData['rows'] ?? [];
             $encoding = $previewData['encoding'] ?? 'UTF-8';
 

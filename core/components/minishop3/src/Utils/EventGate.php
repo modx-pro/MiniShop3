@@ -11,7 +11,7 @@ use MODX\Revolution\modX;
  * - Plugins may mutate by-ref event properties in $scriptProperties (legacy MS2 path).
  * - Plugins may set $modx->event->returnedValues as an associative array; callers merge
  *   shallow keys into their working params via mergeReturnedValues().
- * - For named payload channels (ImportCSV: params, data, tvData, …) use applyReturnedArray():
+ * - For named payload channels (ProductImport: params, data, tvData, …) use applyReturnedArray():
  *   list arrays replace the channel; associative arrays patch via array_replace().
  * - Cancellation: plugin returns false or the string "cancel" in invokeEvent response.
  * - success in buildInvokeResult() follows Utils::invokeEvent: empty aggregated message.

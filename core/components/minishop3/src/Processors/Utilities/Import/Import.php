@@ -2,7 +2,7 @@
 
 namespace MiniShop3\Processors\Utilities\Import;
 
-use MiniShop3\Utils\ImportCSV;
+use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\Processors\Processor;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
@@ -93,7 +93,7 @@ class Import extends Processor
         $realPath = realpath($filePath);
 
         if ($realPath && !$useScheduler) {
-            $rowCount = ImportCSV::countRows($realPath, $importParams['delimiter']);
+            $rowCount = ProductImportService::countRows($realPath, $importParams['delimiter']);
             if ($rowCount > $syncLimit) {
                 // Return warning but allow to proceed
                 // Frontend will show confirmation dialog
@@ -102,8 +102,9 @@ class Import extends Processor
 
         if (empty($useScheduler)) {
             // Synchronous import
-            $importCSV = new ImportCSV($this->modx);
-            $result = $importCSV->process($importParams);
+            /** @var ProductImportService $importService */
+            $importService = $this->modx->services->get('ms3_product_import');
+            $result = $importService->process($importParams);
 
             // Convert utils response format to processor format
             $data = $result['data'] ?? [];

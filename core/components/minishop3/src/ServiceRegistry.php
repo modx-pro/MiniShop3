@@ -59,6 +59,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductDataService::class,
             'interface' => null,
         ],
+        'ms3_product_import' => [
+            'class' => \MiniShop3\Services\Product\Import\ProductImportService::class,
+            'interface' => null,
+        ],
         'ms3_repeater_field' => [
             'class' => \MiniShop3\Services\ExtraFields\RepeaterFieldService::class,
             'interface' => null,
