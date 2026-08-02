@@ -190,7 +190,6 @@ final class OrderFinalizeServiceTest extends TestCase
         };
 
         $modx = new class ($orders, $productCount, $products, $delivery, $orderService, $statusService) extends modX {
-            public object $services;
 
             /**
              * @param array<int, RecordingMsOrder> $orders
