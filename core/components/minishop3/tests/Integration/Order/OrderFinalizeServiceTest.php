@@ -285,7 +285,7 @@ final class OrderFinalizeServiceTest extends TestCase
                 return new \ArrayIterator([]);
             }
 
-            public function lexicon($key, $params = [])
+            public function lexicon(string $key, array $params = []): string
             {
                 return (string) $key;
             }

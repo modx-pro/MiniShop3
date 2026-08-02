@@ -149,7 +149,7 @@ final class CartFacadeDraftStoreTest extends TestCase
                 };
             }
 
-            public function lexicon($key, $params = [])
+            public function lexicon(string $key, array $params = []): string
             {
                 return (string) $key;
             }
