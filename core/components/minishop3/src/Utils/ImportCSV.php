@@ -57,17 +57,16 @@ class ImportCSV
             return $fileValidation;
         }
 
-        EventGate::clearReturnedValues($this->modx);
-        $eventResult = $this->modx->invokeEvent('msOnBeforeImport', [
+        $event = EventGate::invokeRaw($this->modx, 'msOnBeforeImport', [
             'file' => $this->ctx->params['file'],
             'params' => &$this->ctx->params,
         ]);
         $this->ctx->params = EventGate::applyReturnedArray(
             $this->ctx->params,
-            EventGate::getReturnedValues($this->modx),
+            $event['returnedValues'],
             'params'
         );
-        if (EventGate::isCancelled($eventResult)) {
+        if ($event['cancelled']) {
             return $this->ms3->utils->error($this->modx->lexicon('ms3_utilities_import_cancelled'));
         }
 

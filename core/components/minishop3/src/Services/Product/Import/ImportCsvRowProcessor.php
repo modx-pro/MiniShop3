@@ -50,8 +50,7 @@ final class ImportCsvRowProcessor
         $tvData = $mapped['tvData'];
         $optionData = $mapped['optionData'];
 
-        EventGate::clearReturnedValues($this->ctx->modx);
-        $eventResult = $this->ctx->modx->invokeEvent('msOnImportRow', [
+        $event = EventGate::invokeRaw($this->ctx->modx, 'msOnImportRow', [
             'row' => $this->ctx->rows,
             'csv' => $csv,
             'data' => &$data,
@@ -59,12 +58,12 @@ final class ImportCsvRowProcessor
             'optionData' => &$optionData,
             'gallery' => &$gallery,
         ]);
-        $returnedValues = EventGate::getReturnedValues($this->ctx->modx);
+        $returnedValues = $event['returnedValues'];
         $data = EventGate::applyReturnedArray($data, $returnedValues, 'data');
         $tvData = EventGate::applyReturnedArray($tvData, $returnedValues, 'tvData');
         $optionData = EventGate::applyReturnedArray($optionData, $returnedValues, 'optionData');
         $gallery = EventGate::applyReturnedArray($gallery, $returnedValues, 'gallery');
-        if (EventGate::isCancelled($eventResult)) {
+        if ($event['cancelled']) {
             $this->ctx->skipped++;
 
             return true;

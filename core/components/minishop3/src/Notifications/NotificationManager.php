@@ -78,21 +78,20 @@ class NotificationManager
         //   2) $modx->event->returnedValues['recipient']/['channels'] —
         //      explicit channel introduced in #219/#245 for plugins that prefer
         //      the returned-values contract.
-        EventGate::clearReturnedValues($this->modx);
-        $eventResult = $this->modx->invokeEvent('msOnBeforeSendNotification', [
+        $event = EventGate::invokeRaw($this->modx, 'msOnBeforeSendNotification', [
             'notification' => $notification,
             'recipient' => &$recipient,
             'recipientType' => $recipientType,
             'channels' => &$channels,
         ]);
-        $returnedValues = EventGate::getReturnedValues($this->modx);
+        $returnedValues = $event['returnedValues'];
         $recipient = EventGate::applyReturnedArray($recipient, $returnedValues, 'recipient');
         if (isset($returnedValues['channels']) && is_array($returnedValues['channels'])) {
             $channels = $returnedValues['channels'];
         }
 
         // Check if notification was cancelled by plugin
-        $cancelled = EventGate::isCancelled($eventResult);
+        $cancelled = $event['cancelled'];
         if (!$cancelled && isset($this->modx->event->output) && $this->modx->event->output === false) {
             $cancelled = true;
         }

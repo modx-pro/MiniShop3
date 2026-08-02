@@ -91,6 +91,27 @@ final class EventGate
     }
 
     /**
+     * Invoke a MODX event and return normalized returnedValues + cancellation flag.
+     *
+     * Use for direct modX::invokeEvent() call sites that apply named channels via applyReturnedArray().
+     *
+     * @param array<string, mixed> $properties
+     *
+     * @return array{result: mixed, returnedValues: array<string, mixed>, cancelled: bool}
+     */
+    public static function invokeRaw(modX $modx, string $eventName, array $properties): array
+    {
+        self::clearReturnedValues($modx);
+        $result = $modx->invokeEvent($eventName, $properties);
+
+        return [
+            'result' => $result,
+            'returnedValues' => self::getReturnedValues($modx),
+            'cancelled' => self::isCancelled($result),
+        ];
+    }
+
+    /**
      * @param mixed $response modX::invokeEvent() return value
      */
     public static function normalizeMessage(mixed $response, string $glue = '<br/>'): string

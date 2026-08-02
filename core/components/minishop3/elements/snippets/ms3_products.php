@@ -275,19 +275,14 @@ if (!empty($scriptProperties['usePackages'])) {
 // Event: msOnProductsLoad - bulk loading of additional data from external packages
 if (!empty($rows) && is_array($rows)) {
     $productIds = array_column($rows, 'id');
-    EventGate::clearReturnedValues($modx);
-    // Two propagation paths supported:
-    //   1) by-ref mutation of $rows in the plugin scope — preserved for plugins
-    //      (ms3Variants and others) that mutate $scriptProperties['rows'] directly.
-    //   2) $modx->event->returnedValues['rows'] — the explicit channel introduced
-    //      in #219/#245 for plugins that prefer the returned-values contract.
-    $modx->invokeEvent('msOnProductsLoad', [
+    // by-ref + returnedValues['rows'] — see EventGate contract (#219/#245).
+    $event = EventGate::invokeRaw($modx, 'msOnProductsLoad', [
         'rows' => &$rows,
         'productIds' => $productIds,
         'usePackages' => $usePackages,
         'scriptProperties' => $scriptProperties,
     ]);
-    $rows = EventGate::applyReturnedArray($rows, EventGate::getReturnedValues($modx), 'rows');
+    $rows = EventGate::applyReturnedArray($rows, $event['returnedValues'], 'rows');
     $pdoFetch->addTime('Invoked msOnProductsLoad event');
 }
 
@@ -342,14 +337,12 @@ if (!empty($rows) && is_array($rows)) {
         $opt_time += microtime(true) - $opt_time_start;
 
         // Event: msOnProductPrepare - enrich single product data from external packages
-        EventGate::clearReturnedValues($modx);
-        // by-ref + returnedValues — see msOnProductsLoad comment above.
-        $modx->invokeEvent('msOnProductPrepare', [
+        $event = EventGate::invokeRaw($modx, 'msOnProductPrepare', [
             'row' => &$rows[$k],
             'productId' => $row['id'],
             'idx' => $row['idx'],
         ]);
-        $rows[$k] = EventGate::applyReturnedArray($rows[$k], EventGate::getReturnedValues($modx), 'row');
+        $rows[$k] = EventGate::applyReturnedArray($rows[$k], $event['returnedValues'], 'row');
         $row = $rows[$k];
 
         $rawPrice = (float)($row['price'] ?? 0);
