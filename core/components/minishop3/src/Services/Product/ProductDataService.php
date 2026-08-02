@@ -9,6 +9,7 @@ use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
+use MiniShop3\Utils\EventGate;
 use MODX\Revolution\modX;
 
 /**
@@ -343,10 +344,7 @@ class ProductDataService
             'data' => $data,
         ];
 
-        // Clear previous returnedValues
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
+        EventGate::clearReturnedValues($this->modx);
 
         $this->modx->invokeEvent($eventName, [
             'price' => $price,
@@ -359,8 +357,9 @@ class ProductDataService
         }
 
         // Priority 2: Check returnedValues for backward compatibility
-        if (isset($this->modx->event->returnedValues['price'])) {
-            $price = $this->modx->event->returnedValues['price'];
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+        if (isset($returnedValues['price'])) {
+            $price = $returnedValues['price'];
         }
 
         // Cleanup
@@ -407,10 +406,7 @@ class ProductDataService
             'data' => $data,
         ];
 
-        // Clear previous returnedValues
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
+        EventGate::clearReturnedValues($this->modx);
 
         $this->modx->invokeEvent($eventName, [
             'weight' => $weight,
@@ -423,8 +419,9 @@ class ProductDataService
         }
 
         // Priority 2: Check returnedValues for backward compatibility
-        if (isset($this->modx->event->returnedValues['weight'])) {
-            $weight = $this->modx->event->returnedValues['weight'];
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+        if (isset($returnedValues['weight'])) {
+            $weight = $returnedValues['weight'];
         }
 
         // Cleanup
@@ -467,10 +464,7 @@ class ProductDataService
             'data' => $data,
         ];
 
-        // Clear previous returnedValues
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
+        EventGate::clearReturnedValues($this->modx);
 
         $this->modx->invokeEvent($eventName, ['data' => $data]);
 
@@ -480,8 +474,9 @@ class ProductDataService
         }
 
         // Priority 2: Check returnedValues for backward compatibility
-        if (isset($this->modx->event->returnedValues['data']) && is_array($this->modx->event->returnedValues['data'])) {
-            $data = $this->modx->event->returnedValues['data'];
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+        if (isset($returnedValues['data']) && is_array($returnedValues['data'])) {
+            $data = $returnedValues['data'];
         }
 
         // Cleanup

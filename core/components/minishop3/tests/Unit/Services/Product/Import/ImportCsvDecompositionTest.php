@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Unit\Services\Product\Import;
 
-use MiniShop3\Services\Product\Import\ImportCsvEventBridge;
 use MiniShop3\Services\Product\Import\ImportCsvParamsNormalizer;
 use MiniShop3\Services\Product\Import\ImportCsvPathGuard;
 use MiniShop3\Services\Product\Import\ImportCsvReader;
@@ -24,34 +23,6 @@ final class ImportCsvDecompositionTest extends TestCase
     protected function tearDown(): void
     {
         $this->removeDir($this->tempBase);
-    }
-
-    public function testApplyReturnedArrayMergesAssociativeKeys(): void
-    {
-        $current = ['a' => 1, 'b' => 2];
-        $returned = ['data' => ['b' => 9, 'c' => 3]];
-
-        $result = ImportCsvEventBridge::applyReturnedArray($current, $returned, 'data');
-
-        $this->assertSame(['a' => 1, 'b' => 9, 'c' => 3], $result);
-    }
-
-    public function testApplyReturnedArrayReplacesList(): void
-    {
-        $current = ['old'];
-        $returned = ['gallery' => ['img1.jpg', 'img2.jpg']];
-
-        $result = ImportCsvEventBridge::applyReturnedArray($current, $returned, 'gallery');
-
-        $this->assertSame(['img1.jpg', 'img2.jpg'], $result);
-    }
-
-    public function testIsCancelledDetectsFalseAndCancel(): void
-    {
-        $this->assertTrue(ImportCsvEventBridge::isCancelled([true, 'cancel']));
-        $this->assertTrue(ImportCsvEventBridge::isCancelled([false]));
-        $this->assertFalse(ImportCsvEventBridge::isCancelled([true, 'ok']));
-        $this->assertFalse(ImportCsvEventBridge::isCancelled(null));
     }
 
     public function testRemoveBomStripsUtf8Marker(): void

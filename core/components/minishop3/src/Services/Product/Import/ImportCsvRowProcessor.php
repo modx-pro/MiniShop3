@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MiniShop3\Services\Product\Import;
 
 use MiniShop3\Model\msProduct;
+use MiniShop3\Utils\EventGate;
 use MODX\Revolution\modResource;
 use MODX\Revolution\modX;
 
@@ -49,7 +50,7 @@ final class ImportCsvRowProcessor
         $tvData = $mapped['tvData'];
         $optionData = $mapped['optionData'];
 
-        ImportCsvEventBridge::clearReturnedValues($this->ctx->modx);
+        EventGate::clearReturnedValues($this->ctx->modx);
         $eventResult = $this->ctx->modx->invokeEvent('msOnImportRow', [
             'row' => $this->ctx->rows,
             'csv' => $csv,
@@ -58,12 +59,12 @@ final class ImportCsvRowProcessor
             'optionData' => &$optionData,
             'gallery' => &$gallery,
         ]);
-        $returnedValues = ImportCsvEventBridge::getReturnedValues($this->ctx->modx);
-        $data = ImportCsvEventBridge::applyReturnedArray($data, $returnedValues, 'data');
-        $tvData = ImportCsvEventBridge::applyReturnedArray($tvData, $returnedValues, 'tvData');
-        $optionData = ImportCsvEventBridge::applyReturnedArray($optionData, $returnedValues, 'optionData');
-        $gallery = ImportCsvEventBridge::applyReturnedArray($gallery, $returnedValues, 'gallery');
-        if (ImportCsvEventBridge::isCancelled($eventResult)) {
+        $returnedValues = EventGate::getReturnedValues($this->ctx->modx);
+        $data = EventGate::applyReturnedArray($data, $returnedValues, 'data');
+        $tvData = EventGate::applyReturnedArray($tvData, $returnedValues, 'tvData');
+        $optionData = EventGate::applyReturnedArray($optionData, $returnedValues, 'optionData');
+        $gallery = EventGate::applyReturnedArray($gallery, $returnedValues, 'gallery');
+        if (EventGate::isCancelled($eventResult)) {
             $this->ctx->skipped++;
 
             return true;

@@ -4,7 +4,6 @@ namespace MiniShop3\Utils;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Services\Product\Import\ImportCsvContext;
-use MiniShop3\Services\Product\Import\ImportCsvEventBridge;
 use MiniShop3\Services\Product\Import\ImportCsvGalleryHandler;
 use MiniShop3\Services\Product\Import\ImportCsvOptionHandler;
 use MiniShop3\Services\Product\Import\ImportCsvParamsNormalizer;
@@ -58,17 +57,17 @@ class ImportCSV
             return $fileValidation;
         }
 
-        ImportCsvEventBridge::clearReturnedValues($this->modx);
+        EventGate::clearReturnedValues($this->modx);
         $eventResult = $this->modx->invokeEvent('msOnBeforeImport', [
             'file' => $this->ctx->params['file'],
             'params' => &$this->ctx->params,
         ]);
-        $this->ctx->params = ImportCsvEventBridge::applyReturnedArray(
+        $this->ctx->params = EventGate::applyReturnedArray(
             $this->ctx->params,
-            ImportCsvEventBridge::getReturnedValues($this->modx),
+            EventGate::getReturnedValues($this->modx),
             'params'
         );
-        if (ImportCsvEventBridge::isCancelled($eventResult)) {
+        if (EventGate::isCancelled($eventResult)) {
             return $this->ms3->utils->error($this->modx->lexicon('ms3_utilities_import_cancelled'));
         }
 

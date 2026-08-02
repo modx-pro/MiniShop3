@@ -8,12 +8,13 @@ use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Model\msVendor;
 use MiniShop3\Services\Category\CategoryProductScopeService;
+use MiniShop3\Utils\EventGate;
 use MiniShop3\Utils\ProductThumbnailJoin;
 use MODX\Revolution\modPlugin;
 use MODX\Revolution\modPluginEvent;
 use ModxPro\PdoTools\Fetch;
 
-/** @var modX $modx */
+/** @var \MODX\Revolution\modX $modx */
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 
@@ -271,31 +272,10 @@ if (!empty($scriptProperties['usePackages'])) {
     $usePackages = array_map('trim', explode(',', $scriptProperties['usePackages']));
 }
 
-$clearEventReturnedValues = static function () use ($modx): void {
-    if (isset($modx->event->returnedValues)) {
-        $modx->event->returnedValues = null;
-    }
-};
-$getEventReturnedValues = static function () use ($modx): array {
-    return isset($modx->event->returnedValues) && is_array($modx->event->returnedValues)
-        ? $modx->event->returnedValues
-        : [];
-};
-$applyReturnedArray = static function (array $current, array $returnedValues, string $key): array {
-    if (!isset($returnedValues[$key]) || !is_array($returnedValues[$key])) {
-        return $current;
-    }
-
-    // Lists are complete replacements; associative arrays may patch existing keys.
-    return array_is_list($returnedValues[$key])
-        ? $returnedValues[$key]
-        : array_replace($current, $returnedValues[$key]);
-};
-
 // Event: msOnProductsLoad - bulk loading of additional data from external packages
 if (!empty($rows) && is_array($rows)) {
     $productIds = array_column($rows, 'id');
-    $clearEventReturnedValues();
+    EventGate::clearReturnedValues($modx);
     // Two propagation paths supported:
     //   1) by-ref mutation of $rows in the plugin scope — preserved for plugins
     //      (ms3Variants and others) that mutate $scriptProperties['rows'] directly.
@@ -307,7 +287,7 @@ if (!empty($rows) && is_array($rows)) {
         'usePackages' => $usePackages,
         'scriptProperties' => $scriptProperties,
     ]);
-    $rows = $applyReturnedArray($rows, $getEventReturnedValues(), 'rows');
+    $rows = EventGate::applyReturnedArray($rows, EventGate::getReturnedValues($modx), 'rows');
     $pdoFetch->addTime('Invoked msOnProductsLoad event');
 }
 
@@ -362,14 +342,14 @@ if (!empty($rows) && is_array($rows)) {
         $opt_time += microtime(true) - $opt_time_start;
 
         // Event: msOnProductPrepare - enrich single product data from external packages
-        $clearEventReturnedValues();
+        EventGate::clearReturnedValues($modx);
         // by-ref + returnedValues — see msOnProductsLoad comment above.
         $modx->invokeEvent('msOnProductPrepare', [
             'row' => &$rows[$k],
             'productId' => $row['id'],
             'idx' => $row['idx'],
         ]);
-        $rows[$k] = $applyReturnedArray($rows[$k], $getEventReturnedValues(), 'row');
+        $rows[$k] = EventGate::applyReturnedArray($rows[$k], EventGate::getReturnedValues($modx), 'row');
         $row = $rows[$k];
 
         $rawPrice = (float)($row['price'] ?? 0);
