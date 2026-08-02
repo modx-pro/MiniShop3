@@ -187,7 +187,12 @@ final class OrderFinalizeServiceTest extends TestCase
             }
         };
 
-        $modx = new class ($orders, $productCount, $products, $delivery, $orderService, $statusService) extends modX {
+        $payment = $this->createStub(msPayment::class);
+        $payment->method('get')->willReturnCallback(static function (string $k) {
+            return $k === 'active' ? 1 : null;
+        });
+
+        $modx = new class ($orders, $productCount, $products, $delivery, $payment, $orderService, $statusService) extends modX {
 
             /**
              * @param array<int, RecordingMsOrder> $orders
@@ -198,6 +203,7 @@ final class OrderFinalizeServiceTest extends TestCase
                 private int $productCount,
                 private array $products,
                 private ?object $delivery,
+                private object $payment,
                 OrderService $orderService,
                 object $statusService,
             ) {
@@ -253,12 +259,7 @@ final class OrderFinalizeServiceTest extends TestCase
                 }
 
                 if ($className === msPayment::class) {
-                    return new class extends msDelivery {
-                        public function get($k)
-                        {
-                            return $k === 'active' ? 1 : null;
-                        }
-                    };
+                    return $this->payment;
                 }
 
                 return null;
