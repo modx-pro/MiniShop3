@@ -86,7 +86,6 @@ final class UpdateProductDataPermissionsTest extends TestCase
     private function makeService(bool $hasSaveDocument = true, ?UpdatableProduct $product = null): TestableProductDataService
     {
         $modx = new class ($hasSaveDocument, $product) extends modX {
-            public object $services;
 
             public function __construct(
                 private bool $hasSaveDocument,
@@ -130,7 +129,6 @@ final class UpdateProductDataPermissionsTest extends TestCase
     private function xpdo(): xPDO
     {
         return new class extends xPDO {
-            public object $services;
 
             public function __construct()
             {
