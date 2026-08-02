@@ -71,12 +71,13 @@ final class ImportCsvRunValidator
             return $this->ms3->utils->error($error);
         }
 
-        $realPath = ImportCsvPathGuard::resolveCsvFileUnderBase($file, MODX_BASE_PATH);
+        $basePath = (string) $this->modx->getOption('base_path', null, '');
+        $realPath = ImportCsvPathGuard::resolveCsvFileUnderBase($file, $basePath);
 
         if ($realPath === null) {
             $fullPath = ImportCsvPathGuard::isAbsolutePath($file)
                 ? $file
-                : str_replace('//', '/', MODX_BASE_PATH . $file);
+                : str_replace('//', '/', $basePath . $file);
 
             if (!file_exists($fullPath) && !file_exists($file)) {
                 $error = $this->modx->lexicon('ms3_utilities_import_file_nf', ['path' => $fullPath]);

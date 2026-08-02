@@ -54,7 +54,7 @@ final class ImportCsvOptionHandler
     private function loadOptionTypesByKey(array $keys): array
     {
         $query = $this->modx->newQuery(msOption::class);
-        $query->select(['key', 'type']);
+        $query->select('`key`, `type`');
         $query->where(['key:IN' => $keys]);
 
         if (!$query->prepare() || !$query->stmt->execute()) {

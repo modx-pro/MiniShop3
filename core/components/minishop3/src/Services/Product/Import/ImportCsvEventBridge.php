@@ -30,10 +30,10 @@ final class ImportCsvEventBridge
     }
 
     /**
-     * @param array<string, mixed> $current
-     * @param array<string, mixed> $returnedValues
+     * @param array<int|string, mixed> $current
+     * @param array<string, mixed>     $returnedValues
      *
-     * @return array<string, mixed>
+     * @return array<int|string, mixed>
      */
     public static function applyReturnedArray(array $current, array $returnedValues, string $key): array
     {

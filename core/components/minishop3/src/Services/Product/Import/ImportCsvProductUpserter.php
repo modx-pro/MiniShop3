@@ -56,7 +56,10 @@ final class ImportCsvProductUpserter
         $q->prepare();
         $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "SQL query for check for duplicate: \n" . $q->toSql());
 
-        return $this->ctx->modx->getObject($data['class_key'], $q);
+        /** @var modResource|null $existing */
+        $existing = $this->ctx->modx->getObject($data['class_key'], $q);
+
+        return $existing;
     }
 
     public function resolveVendor(string $vendorName): int
@@ -125,7 +128,7 @@ final class ImportCsvProductUpserter
         if ($response->isError()) {
             $this->ctx->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "Error on $action: \n" . print_r($response->getAllErrors(), 1)
+                "Error on $action: \n" . print_r($response->getAllErrors(), true)
             );
             $this->ctx->errors++;
 
@@ -139,7 +142,7 @@ final class ImportCsvProductUpserter
         }
 
         $resource = $response->getObject();
-        $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Successful $action: \n" . print_r($resource, 1));
+        $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Successful $action: \n" . print_r($resource, true));
 
         $productId = $resource['id'] ?? null;
         if (!$productId) {

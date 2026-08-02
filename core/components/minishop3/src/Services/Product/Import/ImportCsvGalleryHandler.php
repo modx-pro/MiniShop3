@@ -23,14 +23,18 @@ final class ImportCsvGalleryHandler
             return;
         }
 
-        $this->modx->log(modX::LOG_LEVEL_INFO, "Importing images: \n" . print_r($gallery, 1));
+        $this->modx->log(modX::LOG_LEVEL_INFO, "Importing images: \n" . print_r($gallery, true));
+
+        $basePath = (string) $this->modx->getOption('base_path', null, '');
+        $processorsPath = (string) $this->modx->getOption('core_path', null, '')
+            . 'components/minishop3/src/Processors/';
 
         foreach ($gallery as $v) {
             if (!is_string($v) || $v === '') {
                 continue;
             }
 
-            $image = ImportCsvPathGuard::resolveAssetUnderBase($v, MODX_BASE_PATH);
+            $image = ImportCsvPathGuard::resolveAssetUnderBase($v, $basePath);
             if ($image === null) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
@@ -42,18 +46,18 @@ final class ImportCsvGalleryHandler
             $response = $this->modx->runProcessor(
                 'MiniShop3\\Processors\\Gallery\\Upload',
                 ['id' => $resource['id'], 'name' => $v, 'file' => $image],
-                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
+                ['processors_path' => $processorsPath]
             );
 
             if ($response->isError()) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "Error on upload \"$v\": \n" . print_r($response->getAllErrors(), 1)
+                    "Error on upload \"$v\": \n" . print_r($response->getAllErrors(), true)
                 );
             } else {
                 $this->modx->log(
                     modX::LOG_LEVEL_INFO,
-                    "Successful upload  \"$v\": \n" . print_r($response->getObject(), 1)
+                    "Successful upload  \"$v\": \n" . print_r($response->getObject(), true)
                 );
             }
         }

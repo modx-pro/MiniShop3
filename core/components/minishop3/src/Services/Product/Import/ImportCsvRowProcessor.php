@@ -25,7 +25,7 @@ final class ImportCsvRowProcessor
      */
     public function process(array $csv): bool
     {
-        $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Raw data for import: \n" . print_r($csv, 1));
+        $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Raw data for import: \n" . print_r($csv, true));
 
         $mapped = $this->fieldMapper->map(
             $this->ctx->params['keys'],
@@ -122,7 +122,7 @@ final class ImportCsvRowProcessor
             }
         }
 
-        $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Array with importing data: \n" . print_r($data, 1));
+        $this->ctx->modx->log(modX::LOG_LEVEL_INFO, "Array with importing data: \n" . print_r($data, true));
 
         $exists = $this->upserter->findExistingProduct($data);
 
