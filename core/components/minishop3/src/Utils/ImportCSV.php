@@ -72,6 +72,11 @@ class ImportCSV
             return $this->ms3->utils->error($this->modx->lexicon('ms3_utilities_import_cancelled'));
         }
 
+        $fileValidation = $this->validator->validateFilePath($this->ctx, $this->ctx->params['file']);
+        if ($fileValidation !== true) {
+            return $fileValidation;
+        }
+
         $this->importRows();
         $this->detectedEncoding = $this->ctx->detectedEncoding;
 
@@ -174,20 +179,5 @@ class ImportCSV
     public static function detectHeaders(string $filePath, string $delimiter = ';'): array
     {
         return ImportCsvReader::detectHeaders($filePath, $delimiter);
-    }
-
-    public static function detectEncoding(string $content): string
-    {
-        return ImportCsvReader::detectEncoding($content);
-    }
-
-    public static function removeBom(string $content): string
-    {
-        return ImportCsvReader::removeBom($content);
-    }
-
-    public static function convertToUtf8(string $content, ?string $fromEncoding = null): string
-    {
-        return ImportCsvReader::convertToUtf8($content, $fromEncoding);
     }
 }

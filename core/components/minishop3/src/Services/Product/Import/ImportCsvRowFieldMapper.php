@@ -42,7 +42,7 @@ final class ImportCsvRowFieldMapper
             $value = trim($csv[$k]);
 
             if ($v === 'gallery') {
-                if ($value !== '') {
+                if (!empty($value)) {
                     $gallery[] = $value;
                 }
                 continue;

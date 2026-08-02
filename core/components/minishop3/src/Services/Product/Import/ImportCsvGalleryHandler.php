@@ -26,15 +26,15 @@ final class ImportCsvGalleryHandler
         $this->modx->log(modX::LOG_LEVEL_INFO, "Importing images: \n" . print_r($gallery, 1));
 
         foreach ($gallery as $v) {
-            if ($v === '') {
+            if (!is_string($v) || $v === '') {
                 continue;
             }
 
-            $image = str_replace('//', '/', MODX_BASE_PATH . $v);
-            if (!file_exists($image)) {
+            $image = ImportCsvPathGuard::resolveAssetUnderBase($v, MODX_BASE_PATH);
+            if ($image === null) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "Could not import image \"$v\" to gallery. File \"$image\" not found on server."
+                    "[Import Security] Could not import gallery image \"$v\": path outside base or not found."
                 );
                 continue;
             }

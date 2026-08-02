@@ -71,18 +71,20 @@ final class ImportCsvRunValidator
             return $this->ms3->utils->error($error);
         }
 
-        $fullPath = str_replace('//', '/', MODX_BASE_PATH . $file);
-        $realPath = realpath($fullPath);
-        $realBasePath = realpath(MODX_BASE_PATH);
+        $realPath = ImportCsvPathGuard::resolveCsvFileUnderBase($file, MODX_BASE_PATH);
 
-        if ($realPath === false) {
-            $error = $this->modx->lexicon('ms3_utilities_import_file_nf', ['path' => $fullPath]);
-            $this->modx->log(modX::LOG_LEVEL_ERROR, $error);
+        if ($realPath === null) {
+            $fullPath = ImportCsvPathGuard::isAbsolutePath($file)
+                ? $file
+                : str_replace('//', '/', MODX_BASE_PATH . $file);
 
-            return $this->ms3->utils->error($error);
-        }
+            if (!file_exists($fullPath) && !file_exists($file)) {
+                $error = $this->modx->lexicon('ms3_utilities_import_file_nf', ['path' => $fullPath]);
+                $this->modx->log(modX::LOG_LEVEL_ERROR, $error);
 
-        if (!str_starts_with($realPath, $realBasePath)) {
+                return $this->ms3->utils->error($error);
+            }
+
             $error = $this->modx->lexicon('ms3_utilities_import_file_outside');
             $this->modx->log(modX::LOG_LEVEL_ERROR, '[Import Security] Path traversal attempt: ' . $file);
 
