@@ -95,7 +95,7 @@ final class OrderFinalizeServiceTest extends TestCase
             },
         ];
 
-        $delivery = new class extends xPDOSimpleObject {
+        $delivery = new class extends msDelivery {
             public function get($k)
             {
                 return match ($k) {
@@ -255,7 +255,7 @@ final class OrderFinalizeServiceTest extends TestCase
                 }
 
                 if ($className === msPayment::class) {
-                    return new class extends xPDOSimpleObject {
+                    return new class extends msDelivery {
                         public function get($k)
                         {
                             return $k === 'active' ? 1 : null;
