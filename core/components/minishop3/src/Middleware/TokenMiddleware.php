@@ -76,15 +76,13 @@ class TokenMiddleware implements MiddlewareInterface
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
 
-        // Hydrate request token from session for logged-in customers (still validated below).
-        if (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
-            $customer = $this->modx->getObject(\MiniShop3\Model\msCustomer::class, $_SESSION['ms3']['customer_id']);
-            if ($customer) {
-                $sessionToken = $_SESSION['ms3']['customer_token'] ?? '';
-                if ($sessionToken !== '' && empty($_REQUEST['ms3_token'])) {
-                    $_REQUEST['ms3_token'] = $sessionToken;
-                }
-            }
+        // Hydrate request token from session cache (still validated below).
+        if (
+            !$isPublic
+            && !empty($_SESSION['ms3']['customer_token'])
+            && empty($_REQUEST['ms3_token'])
+        ) {
+            $_REQUEST['ms3_token'] = (string) $_SESSION['ms3']['customer_token'];
         }
 
         // Resolve token from multiple sources
