@@ -95,17 +95,15 @@ final class OrderFinalizeServiceTest extends TestCase
             },
         ];
 
-        $delivery = new class extends msDelivery {
-            public function get($k)
-            {
-                return match ($k) {
-                    'price' => 50.0,
-                    'weight_price' => 10.0,
-                    'active' => 1,
-                    default => null,
-                };
-            }
-        };
+        $delivery = $this->createStub(msDelivery::class);
+        $delivery->method('get')->willReturnCallback(static function (string $k) {
+            return match ($k) {
+                'price' => 50.0,
+                'weight_price' => 10.0,
+                'active' => 1,
+                default => null,
+            };
+        });
 
         $statusCalls = [];
         $service = $this->makeService(
