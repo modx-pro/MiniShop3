@@ -1,11 +1,10 @@
-import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { describe, expect, it } from 'vitest'
 
 import { parsePageResponse } from './resourceListResponse.js'
 
 describe('parsePageResponse', () => {
   it('parses array responses', () => {
-    assert.deepEqual(parsePageResponse([1, 2]), {
+    expect(parsePageResponse([1, 2])).toEqual({
       items: [1, 2],
       total: 2,
       malformed: false,
@@ -13,7 +12,7 @@ describe('parsePageResponse', () => {
   })
 
   it('parses results + total', () => {
-    assert.deepEqual(parsePageResponse({ results: [{ id: 1 }], total: 9 }), {
+    expect(parsePageResponse({ results: [{ id: 1 }], total: 9 })).toEqual({
       items: [{ id: 1 }],
       total: 9,
       malformed: false,
@@ -21,7 +20,7 @@ describe('parsePageResponse', () => {
   })
 
   it('marks invalid payloads as malformed', () => {
-    assert.deepEqual(parsePageResponse(null), { items: [], total: 0, malformed: true })
-    assert.deepEqual(parsePageResponse({}), { items: [], total: 0, malformed: true })
+    expect(parsePageResponse(null)).toEqual({ items: [], total: 0, malformed: true })
+    expect(parsePageResponse({})).toEqual({ items: [], total: 0, malformed: true })
   })
 })

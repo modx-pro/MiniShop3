@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { describe, expect, it } from 'vitest'
 
 import {
   formatDate,
@@ -14,18 +13,18 @@ import {
 
 describe('displayFormatters', () => {
   it('formatDate returns dash for empty', () => {
-    assert.equal(formatDate(null), '-')
-    assert.equal(formatDate(''), '-')
+    expect(formatDate(null)).toBe('-')
+    expect(formatDate('')).toBe('-')
   })
 
   it('formatDatePattern applies tokens', () => {
     const value = formatDatePattern('2026-07-16T10:05:00', 'dd.MM.yyyy HH:mm')
-    assert.match(value, /^16\.07\.2026 \d{2}:\d{2}$/)
+    expect(value).toMatch(/^16\.07\.2026 \d{2}:\d{2}$/)
   })
 
   it('formatPrice formats numbers', () => {
-    assert.equal(formatPrice(null), '-')
-    assert.equal(formatPrice(1234.5), '1\u00a0234,5')
+    expect(formatPrice(null)).toBe('-')
+    expect(formatPrice(1234.5)).toBe('1\u00a0234,5')
   })
 
   it('formatPriceConfigured applies currency and separators', () => {
@@ -36,34 +35,34 @@ describe('displayFormatters', () => {
       currency: '₽',
       currency_position: 'after',
     })
-    assert.equal(formatted, '1 200,00 ₽')
+    expect(formatted).toBe('1 200,00 ₽')
   })
 
   it('renderField supports templates and plain fields', () => {
-    assert.equal(renderField({ a: 1, b: 2 }, { template: '{a}-{b}' }), '1-2')
-    assert.equal(renderField({ name: 'x' }, { name: 'name' }), 'x')
-    assert.equal(renderField({}, null), '')
+    expect(renderField({ a: 1, b: 2 }, { template: '{a}-{b}' })).toBe('1-2')
+    expect(renderField({ name: 'x' }, { name: 'name' })).toBe('x')
+    expect(renderField({}, null)).toBe('')
   })
 
   it('getDisplayName resolves lexicon keys', () => {
     const translate = key => (key === 'ms3_foo' ? 'Foo' : key)
-    assert.equal(getDisplayName('ms3_foo', translate), 'Foo')
-    assert.equal(getDisplayName('plain', translate), 'plain')
-    assert.equal(getDisplayName('', translate), '')
+    expect(getDisplayName('ms3_foo', translate)).toBe('Foo')
+    expect(getDisplayName('plain', translate)).toBe('plain')
+    expect(getDisplayName('', translate)).toBe('')
   })
 
   it('formatValue handles boolean and number columns', () => {
     const translate = key => (key === 'yes' ? 'Да' : 'Нет')
-    assert.equal(formatValue(true, { type: 'boolean' }, translate), 'Да')
-    assert.equal(formatValue(false, { type: 'boolean' }, translate), 'Нет')
-    assert.equal(formatValue(1000, { format: 'number' }, translate), Number(1000).toLocaleString())
-    assert.equal(formatValue(null, {}, translate), '')
+    expect(formatValue(true, { type: 'boolean' }, translate)).toBe('Да')
+    expect(formatValue(false, { type: 'boolean' }, translate)).toBe('Нет')
+    expect(formatValue(1000, { format: 'number' }, translate)).toBe(Number(1000).toLocaleString())
+    expect(formatValue(null, {}, translate)).toBe('')
   })
 
   it('normalizeImagePath keeps absolute URLs and adds leading slash', () => {
-    assert.equal(normalizeImagePath(''), '')
-    assert.equal(normalizeImagePath('/assets/a.png'), '/assets/a.png')
-    assert.equal(normalizeImagePath('https://x/a.png'), 'https://x/a.png')
-    assert.equal(normalizeImagePath('assets/a.png'), '/assets/a.png')
+    expect(normalizeImagePath('')).toBe('')
+    expect(normalizeImagePath('/assets/a.png')).toBe('/assets/a.png')
+    expect(normalizeImagePath('https://x/a.png')).toBe('https://x/a.png')
+    expect(normalizeImagePath('assets/a.png')).toBe('/assets/a.png')
   })
 })

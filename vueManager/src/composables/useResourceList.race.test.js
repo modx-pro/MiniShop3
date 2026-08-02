@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { describe, expect, it } from 'vitest'
 
 import { createResourceList } from './resourceListCore.js'
 
@@ -35,9 +34,9 @@ describe('createResourceList race (#385)', () => {
     first.resolve({ results: [{ id: 1 }], total: 1 })
     await loadA
 
-    assert.deepEqual(list.items.value, [{ id: 2 }])
-    assert.equal(list.total.value, 1)
-    assert.equal(list.loading.value, false)
+    expect(list.items.value).toEqual([{ id: 2 }])
+    expect(list.total.value).toBe(1)
+    expect(list.loading.value).toBe(false)
   })
 
   it('aborts the previous in-flight request when load is called again', async () => {
@@ -55,10 +54,10 @@ describe('createResourceList race (#385)', () => {
     })
 
     const loadA = list.load()
-    assert.equal(signals[0]?.aborted, false)
+    expect(signals[0]?.aborted).toBe(false)
 
     const loadB = list.load()
-    assert.equal(signals[0]?.aborted, true)
+    expect(signals[0]?.aborted).toBe(true)
 
     second.resolve({ results: [{ id: 9 }], total: 1 })
     await loadB
@@ -66,8 +65,8 @@ describe('createResourceList race (#385)', () => {
     first.reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
     await loadA
 
-    assert.deepEqual(list.items.value, [{ id: 9 }])
-    assert.equal(list.loading.value, false)
+    expect(list.items.value).toEqual([{ id: 9 }])
+    expect(list.loading.value).toBe(false)
   })
 
   it('does not call onLoadError on AbortError for a stale load', async () => {
@@ -95,8 +94,8 @@ describe('createResourceList race (#385)', () => {
     first.reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))
     await loadA
 
-    assert.equal(errors.length, 0)
-    assert.deepEqual(list.items.value, [{ id: 3 }])
+    expect(errors).toHaveLength(0)
+    expect(list.items.value).toEqual([{ id: 3 }])
   })
 
   it('logs malformed responses and clears the list', async () => {
@@ -111,9 +110,9 @@ describe('createResourceList race (#385)', () => {
         fetchPage: async () => ({ ok: true }),
       })
       await list.load()
-      assert.deepEqual(list.items.value, [])
-      assert.equal(list.total.value, 0)
-      assert.match(logs.join('\n'), /Unexpected response shape/)
+      expect(list.items.value).toEqual([])
+      expect(list.total.value).toBe(0)
+      expect(logs.join('\n')).toMatch(/Unexpected response shape/)
     } finally {
       console.error = originalError
     }
