@@ -28,7 +28,6 @@ final class OrderDraftCostClampTest extends TestCase
         $orderService = new OrderService(new modX());
 
         $modx = new class ($orderService) extends modX {
-            public object $services;
 
             public function __construct(OrderService $orderService)
             {
