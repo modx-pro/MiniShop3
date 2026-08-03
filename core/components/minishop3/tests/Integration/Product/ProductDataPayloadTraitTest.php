@@ -64,7 +64,6 @@ final class ProductDataPayloadTraitTest extends TestCase
     private function xpdoWithoutMs3(): xPDO
     {
         return new class extends xPDO {
-            public object $services;
 
             public function __construct()
             {
@@ -126,7 +125,6 @@ final class PayloadHarness
         $this->properties = $properties;
         $this->object = $object ?? new LightweightProduct(
             new RecordingProductData(new class extends xPDO {
-                public object $services;
 
                 public function __construct()
                 {
@@ -141,7 +139,6 @@ final class PayloadHarness
         );
 
         $this->modx = new class extends modX {
-            public object $services;
 
             public function __construct()
             {

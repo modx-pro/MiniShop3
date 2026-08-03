@@ -190,7 +190,6 @@ final class OrderFinalizeServiceTest extends TestCase
         };
 
         $modx = new class ($orders, $productCount, $products, $delivery, $orderService, $statusService) extends modX {
-            public object $services;
 
             /**
              * @param array<int, RecordingMsOrder> $orders
@@ -285,7 +284,7 @@ final class OrderFinalizeServiceTest extends TestCase
                 return new \ArrayIterator([]);
             }
 
-            public function lexicon($key, $params = [])
+            public function lexicon(string $key, array $params = []): string
             {
                 return (string) $key;
             }
