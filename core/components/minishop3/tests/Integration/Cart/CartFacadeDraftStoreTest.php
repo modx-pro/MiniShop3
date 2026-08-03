@@ -108,8 +108,6 @@ final class CartFacadeDraftStoreTest extends TestCase
 
         $orderService = new OrderService(new modX());
         $modx = new class ($store, $product, $orderService) extends modX {
-            public object $services;
-            public object $lexicon;
 
             public function __construct(
                 private DraftProductStore $store,
@@ -149,7 +147,7 @@ final class CartFacadeDraftStoreTest extends TestCase
                 };
             }
 
-            public function lexicon($key, $params = [])
+            public function lexicon(string $key, array $params = []): string
             {
                 return (string) $key;
             }

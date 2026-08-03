@@ -21,18 +21,16 @@ use MODX\Revolution\modX;
  * Cookie injection at start of handle() copies $_COOKIE['ms3_token'] → $_REQUEST['ms3_token']
  * for backward compatibility with controllers reading $_REQUEST.
  *
- * For public endpoints (cart/get, product/get) token is optional.
- * For non-public endpoints without token — auto-creates anonymous token.
+ * Public endpoints (catalog, health, token/get): token is optional.
+ * Non-public endpoints (including cart/get) without a token auto-mint an anonymous API token.
  */
 class TokenMiddleware implements MiddlewareInterface
 {
-    /** @var modX */
     private modX $modx;
 
-    /** @var array Routes that don't require token */
+    /** @var list<string> Prefixes matched with str_starts_with; missing token skips auto-mint */
     private array $publicRoutes = [
-        '/api/v1/cart/get',
-        '/api/v1/product/get',
+        '/api/v1/product/get/',
         '/api/v1/product/list',
         '/api/v1/customer/token/get',
         '/api/v1/customer/logout',
@@ -77,6 +75,15 @@ class TokenMiddleware implements MiddlewareInterface
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');
 
+        // Hydrate request token from session cache (still validated below).
+        if (
+            !$isPublic
+            && !empty($_SESSION['ms3']['customer_token'])
+            && empty($_REQUEST['ms3_token'])
+        ) {
+            $_REQUEST['ms3_token'] = (string) $_SESSION['ms3']['customer_token'];
+        }
+
         // Resolve token from multiple sources
         $token = $this->resolveToken();
 
@@ -115,6 +122,7 @@ class TokenMiddleware implements MiddlewareInterface
                     modX::LOG_LEVEL_ERROR,
                     '[TokenMiddleware] Token not found in database. Token: ' . substr($token, 0, 16) . '...'
                 );
+                // Keep machine-stable keys in message — ApiClient.isTokenError() matches them
                 return Response::error('ms3_err_token_invalid', HttpStatus::UNAUTHORIZED);
             }
         } elseif (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
@@ -131,7 +139,7 @@ class TokenMiddleware implements MiddlewareInterface
                 return null;
             }
 
-            return Response::error('ms3_err_token', HttpStatus::UNAUTHORIZED);
+            return Response::error('ms3_customer_err_token_create', HttpStatus::UNAUTHORIZED);
         }
 
         return null;

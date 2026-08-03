@@ -21,6 +21,7 @@ class CartController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
+        $this->modx->lexicon->load('minishop3:customer', 'minishop3:default');
     }
 
     /**
@@ -39,8 +40,8 @@ class CartController
         $options = $input['options'] ?? [];
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -67,12 +68,15 @@ class CartController
         $count = (int)($input['count'] ?? 0);
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
-        if (empty($product_key)) {
-            return Response::error('Product key is required', HttpStatus::BAD_REQUEST)->getData();
+        if ($product_key === '') {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_key_required'),
+                HttpStatus::BAD_REQUEST
+            )->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -98,12 +102,15 @@ class CartController
         $product_key = $input['product_key'] ?? '';
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
-        if (empty($product_key)) {
-            return Response::error('Product key is required', HttpStatus::BAD_REQUEST)->getData();
+        if ($product_key === '') {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_key_required'),
+                HttpStatus::BAD_REQUEST
+            )->getData();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -126,8 +133,8 @@ class CartController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -150,8 +157,8 @@ class CartController
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
-        if (empty($token)) {
-            return Response::error('Token is required', HttpStatus::UNAUTHORIZED)->getData();
+        if ($token === '') {
+            return $this->tokenRequiredError();
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -161,6 +168,17 @@ class CartController
         $result = $cart->clean();
 
         return $this->transformResponse($result);
+    }
+
+    /**
+     * @return array{success: bool, message: string, code: int, errors: mixed}
+     */
+    private function tokenRequiredError(): array
+    {
+        return Response::error(
+            $this->modx->lexicon('ms3_customer_err_token_required'),
+            HttpStatus::UNAUTHORIZED
+        )->getData();
     }
 
     /**
@@ -204,7 +222,11 @@ class CartController
         if ($result['success']) {
             return Response::success($result['data'], $result['message'] ?? '')->getData();
         } else {
-            return Response::error($result['message'] ?? 'Unknown error', HttpStatus::BAD_REQUEST, $result['data'] ?? [])->getData();
+            return Response::error(
+                $result['message'] ?? $this->modx->lexicon('ms3_err_unknown'),
+                HttpStatus::BAD_REQUEST,
+                $result['data'] ?? []
+            )->getData();
         }
     }
 
@@ -239,7 +261,8 @@ class CartController
             $snippetParams = $tokenService->getSnippetData($token);
 
             if (empty($snippetParams)) {
-                $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_WARN,
+                $this->modx->log(
+                    \MODX\Revolution\modX::LOG_LEVEL_WARN,
                     "[MiniShop3] Snippet parameters not found for token: {$token}"
                 );
                 continue;
