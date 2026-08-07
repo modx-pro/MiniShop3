@@ -53,7 +53,6 @@ $invokeGetPaymentLink = static function (
 };
 
 $modx = new class extends modX {
-    public object $services;
     public object $lexicon;
 
     public function __construct()

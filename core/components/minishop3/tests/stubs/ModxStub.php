@@ -22,6 +22,9 @@ class modX
     /** @var array<string, bool> */
     private array $permissions = [];
 
+    /** @var object|null */
+    public $services;
+
     public function __construct()
     {
         $this->context = new class {
@@ -42,6 +45,27 @@ class modX
                 return 'test-modauth-token';
             }
         };
+
+        $this->services = new class {
+            public function has(string $key): bool
+            {
+                return $key === 'ms3';
+            }
+
+            public function get(string $key): mixed
+            {
+                return null;
+            }
+        };
+    }
+
+    /**
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getOption(string $key, $options = null, $default = null)
+    {
+        return $default;
     }
 
     /**

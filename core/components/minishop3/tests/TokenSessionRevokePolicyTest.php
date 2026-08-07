@@ -17,9 +17,10 @@ $repoRoot = dirname(__DIR__, 4);
 $middleware = $repoRoot . '/core/components/minishop3/src/Middleware/TokenMiddleware.php';
 $trait = $repoRoot . '/core/components/minishop3/src/Controllers/Api/Web/AuthorizedCustomerTrait.php';
 $webRoutes = $repoRoot . '/core/components/minishop3/config/routes/web.php';
+$authController = $repoRoot . '/core/components/minishop3/src/Controllers/Api/Web/CustomerAuthController.php';
 $logout = $repoRoot . '/core/components/minishop3/src/Processors/Api/Customer/Logout.php';
 
-foreach ([$middleware, $trait, $webRoutes, $logout] as $path) {
+foreach ([$middleware, $trait, $webRoutes, $authController, $logout] as $path) {
     if (!is_readable($path)) {
         $fail('cannot read ' . basename($path));
     }
@@ -28,9 +29,11 @@ foreach ([$middleware, $trait, $webRoutes, $logout] as $path) {
 $middlewareSource = file_get_contents($middleware);
 $traitSource = file_get_contents($trait);
 $webRoutesSource = file_get_contents($webRoutes);
+$authControllerSource = file_get_contents($authController);
 $logoutSource = file_get_contents($logout);
 
-if ($middlewareSource === false || $traitSource === false || $webRoutesSource === false || $logoutSource === false) {
+if ($middlewareSource === false || $traitSource === false || $webRoutesSource === false
+    || $authControllerSource === false || $logoutSource === false) {
     $fail('cannot read sources');
 }
 
@@ -58,8 +61,12 @@ if (!preg_match('#post\s*\(\s*[\'"]/logout[\'"]#', $webRoutesSource)) {
     $fail('web routes must register POST /customer/logout');
 }
 
-if (!str_contains($webRoutesSource, 'MiniShop3\\Processors\\Api\\Customer\\Logout')) {
-    $fail('logout route must invoke Logout processor');
+if (!preg_match('#post\s*\(\s*[\'"]/logout[\'"][\s\S]*?->logout\s*\(\s*\)#', $webRoutesSource)) {
+    $fail('logout route must delegate to CustomerAuthController::logout');
+}
+
+if (!str_contains($authControllerSource, 'MiniShop3\\Processors\\Api\\Customer\\Logout')) {
+    $fail('CustomerAuthController::logout must invoke Logout processor');
 }
 
 if (!str_contains($logoutSource, 'session_regenerate_id')) {

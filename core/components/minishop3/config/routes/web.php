@@ -28,7 +28,6 @@
  * @version 1.0.0
  */
 
-use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Middleware\TokenMiddleware;
 use MiniShop3\Middleware\CorsMiddleware;
@@ -133,59 +132,27 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
     }, [$tokenMiddleware]);
 
     $router->group('/customer', function ($router) use ($modx, $tokenMiddleware) {
-        $router->post('/login', function ($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
+        $customerAuth = static fn (): \MiniShop3\Controllers\Api\Web\CustomerAuthController =>
+            new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
 
-            $email = $data['email'] ?? '';
-            $password = $data['password'] ?? '';
-
-            $response = $modx->runProcessor(
-                'MiniShop3\Processors\Api\Customer\Login',
-                [
-                    'email' => $email,
-                    'password' => $password
-                ]
-            );
-
-            return Response::fromProcessor($response);
+        $router->post('/login', function ($params) use ($customerAuth) {
+            return $customerAuth()->loginFromRequest();
         });
-        $router->post('/logout', function ($params) use ($modx) {
-            $response = $modx->runProcessor(
-                'MiniShop3\Processors\Api\Customer\Logout',
-                []
-            );
 
-            if ($response->isError()) {
-                return Response::error($response->getMessage(), HttpStatus::BAD_REQUEST);
-            }
+        $router->post('/register', function ($params) use ($customerAuth) {
+            return $customerAuth()->registerFromRequest();
+        });
 
-            return Response::success($response->getObject() ?: [], $response->getMessage());
+        $router->post('/logout', function ($params) use ($customerAuth) {
+            return $customerAuth()->logout();
         }, [$tokenMiddleware]);
-        $router->post('/register', function ($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
 
-            $email = $data['email'] ?? '';
-            $password = $data['password'] ?? '';
-            $firstName = $data['first_name'] ?? '';
-            $lastName = $data['last_name'] ?? '';
-            $phone = $data['phone'] ?? '';
-            $privacyAccepted = !empty($data['privacy_accepted']);
+        $router->post('/forgot-password', function ($params) use ($customerAuth) {
+            return $customerAuth()->forgotPasswordFromRequest();
+        });
 
-            $response = $modx->runProcessor(
-                'MiniShop3\Processors\Api\Customer\Register',
-                [
-                    'email' => $email,
-                    'password' => $password,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'phone' => $phone,
-                    'privacy_accepted' => $privacyAccepted
-                ]
-            );
-
-            return Response::fromProcessor($response);
+        $router->post('/reset-password', function ($params) use ($customerAuth) {
+            return $customerAuth()->resetPasswordFromRequest();
         });
 
         $router->post('/add', function ($params) use ($modx) {
