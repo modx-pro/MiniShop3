@@ -263,6 +263,16 @@ class AuthManager
     }
 
     /**
+     * Bind API token after verified identity (email verify, etc.).
+     *
+     * @return array{token: string, expires_at: string|null}|null
+     */
+    public function establishApiSession(msCustomer $customer): ?array
+    {
+        return $this->establishCustomerSession($customer);
+    }
+
+    /**
      * End storefront session: revoke API tokens, mint guest token, refresh session id.
      *
      * Used by Web API Logout and snippet `?action=logout` so cookie restore cannot re-auth.

@@ -6,6 +6,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\modX;
 
@@ -124,8 +125,30 @@ class CustomerEmailController
             return $this->error($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
         }
 
-        $_SESSION['ms3']['customer_id'] = $customer->id;
-        $_SESSION['ms3']['customer_token'] = $customer->get('token');
+        /** @var AuthManager $authManager */
+        $authManager = $this->modx->services->get('ms3_auth_manager');
+        $session = $authManager->establishApiSession($customer);
+
+        if (!$session) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[CustomerEmailController] Email verified for customer #{$customer->id} but API session bind failed"
+            );
+
+            if ($htmlFlow && !$formatJson) {
+                return Response::redirect($this->buildEmailVerificationSuccessRedirectUrl(), 302);
+            }
+
+            // Email is verified; auto-login failed (same UX as html=1 redirect without session)
+            return $this->success(
+                $this->modx->lexicon('ms3_customer_email_verified'),
+                [
+                    'customer_id' => $customer->id,
+                    'token' => null,
+                    'expires_at' => null,
+                ]
+            );
+        }
 
         $this->modx->log(
             modX::LOG_LEVEL_INFO,
@@ -137,8 +160,12 @@ class CustomerEmailController
         }
 
         return $this->success(
-            $this->modx->lexicon('ms3_customer_email_verify_success'),
-            ['customer_id' => $customer->id]
+            $this->modx->lexicon('ms3_customer_email_verified'),
+            [
+                'customer_id' => $customer->id,
+                'token' => $session['token'],
+                'expires_at' => $session['expires_at'],
+            ]
         );
     }
 
