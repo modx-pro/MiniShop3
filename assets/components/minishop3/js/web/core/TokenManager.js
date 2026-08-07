@@ -117,28 +117,6 @@ class TokenManager {
   }
 
   /**
-   * Refresh existing token (extend lifetime)
-   *
-   * @returns {Promise<void>}
-   */
-  async refreshToken () {
-    if (!this.apiClient) {
-      console.error('TokenManager: ApiClient not set')
-      return
-    }
-
-    try {
-      const response = await this.apiClient.post('/customer/token/update')
-
-      if (response.success) {
-        this.tokenInitialized = true
-      }
-    } catch (error) {
-      console.error('TokenManager: Error refreshing token', error)
-    }
-  }
-
-  /**
    * Remove legacy localStorage data
    */
   cleanupLegacyStorage () {
