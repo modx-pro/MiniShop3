@@ -2,8 +2,10 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
+use MiniShop3\MiniShop3;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
 
@@ -106,15 +108,11 @@ class Login extends Processor
             $redirectUrl = $this->modx->makeUrl($redirectPageId, '', '', 'full');
         }
 
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+
         return $this->success('', [
-            'customer' => [
-                'id' => $customer->id,
-                'email' => $customer->get('email'),
-                'first_name' => $customer->get('first_name'),
-                'last_name' => $customer->get('last_name'),
-                'phone' => $customer->get('phone'),
-                'email_verified' => !empty($customer->get('email_verified_at')),
-            ],
+            'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $ms3),
             'token' => $session['token'],
             'expires_at' => $session['expires_at'],
             'redirect_url' => $redirectUrl,

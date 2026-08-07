@@ -2,8 +2,10 @@
 
 namespace MiniShop3\Processors\Api\Customer;
 
+use MiniShop3\MiniShop3;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MiniShop3\Services\Customer\RateLimiter;
 use MiniShop3\Services\Customer\RegisterService;
@@ -117,15 +119,11 @@ class Register extends Processor
             }
         }
 
+        /** @var MiniShop3 $ms3 */
+        $ms3 = $this->modx->services->get('ms3');
+
         return $this->success($this->modx->lexicon('ms3_customer_register_success'), [
-            'customer' => [
-                'id' => $customer->id,
-                'email' => $customer->get('email'),
-                'first_name' => $customer->get('first_name'),
-                'last_name' => $customer->get('last_name'),
-                'phone' => $customer->get('phone'),
-                'email_verified' => !empty($customer->get('email_verified_at')),
-            ],
+            'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $ms3),
             'token' => $tokenString,
             'expires_at' => $expiresAt,
             'email_verification_required' => $requireEmailVerification,

@@ -1,47 +1,74 @@
 <?php
 
 /**
- * Regression #413: customer/add must not write GDPR consent timestamp.
+ * Regression #413/#424: customer/add allowlist must block GDPR/system fields.
  *
  * Run: php tests/ProfileQuickUpdateForbiddenTest.php
  */
 
 declare(strict_types=1);
 
+require __DIR__ . '/../vendor/autoload.php';
+
+use MiniShop3\Services\Customer\CustomerPublicDto;
+
 $fail = static function (string $message): never {
     fwrite(STDERR, "FAIL: {$message}\n");
     exit(1);
 };
 
-$src = file_get_contents(__DIR__ . '/../src/Controllers/Api/Web/CustomerProfileController.php');
-if ($src === false || $src === '') {
+$controllerSrc = file_get_contents(__DIR__ . '/../src/Controllers/Api/Web/CustomerProfileController.php');
+if ($controllerSrc === false || $controllerSrc === '') {
     $fail('unable to read CustomerProfileController.php');
 }
 
-if (
-    !preg_match(
-        '/private const PROFILE_QUICK_UPDATE_FORBIDDEN\s*=\s*\[(.*?)\];/s',
-        $src,
-        $match
-    )
-) {
-    $fail('PROFILE_QUICK_UPDATE_FORBIDDEN constant not found');
+if (str_contains($controllerSrc, 'PROFILE_QUICK_UPDATE_FORBIDDEN')) {
+    $fail('blacklist PROFILE_QUICK_UPDATE_FORBIDDEN must be removed in favor of allowlist');
 }
 
-$forbiddenBlock = $match[1];
-if (!preg_match_all("/'([^']+)'/", $forbiddenBlock, $keys)) {
-    $fail('no forbidden field keys parsed');
+if (!str_contains($controllerSrc, 'CustomerPublicDto::editableFieldKeys')) {
+    $fail('updateField must enforce CustomerPublicDto allowlist via editableFieldKeys');
 }
 
-$forbidden = $keys[1];
+if (preg_match('/foreach \\(array_keys\\(\\$rules\\)/', $controllerSrc)) {
+    $fail('update must not require all core profile fields — partial updates only (#424)');
+}
+if (!preg_match('/array_intersect_key\\(\\$this->getProfileFieldRules\\(\\),\\s*\\$data\\)/', $controllerSrc)) {
+    $fail('update must restrict validation to core rules for fields present in $data');
+}
+
 foreach (['privacy_accepted_at', 'privacy_ip', 'password', 'token', 'email_verified_at'] as $key) {
-    if (!in_array($key, $forbidden, true)) {
-        $fail("PROFILE_QUICK_UPDATE_FORBIDDEN must include {$key}");
+    if (!in_array($key, CustomerPublicDto::SYSTEM_NON_EDITABLE_FIELDS, true)) {
+        $fail("SYSTEM_NON_EDITABLE_FIELDS must include {$key}");
     }
 }
 
-if (!str_contains($src, 'in_array($key, self::PROFILE_QUICK_UPDATE_FORBIDDEN, true)')) {
-    $fail('updateField must enforce PROFILE_QUICK_UPDATE_FORBIDDEN');
+$coreEditable = CustomerPublicDto::CORE_PROFILE_EDITABLE_FIELDS;
+foreach (['first_name', 'last_name', 'email', 'phone'] as $key) {
+    if (!in_array($key, $coreEditable, true)) {
+        $fail("CORE_PROFILE_EDITABLE_FIELDS must include {$key}");
+    }
+}
+
+$merged = CustomerPublicDto::mergeEditableFieldKeys(['company', 'password', 'privacy_accepted_at']);
+if (!in_array('company', $merged, true)) {
+    $fail('active extra field key must merge into editable allowlist');
+}
+foreach (['password', 'privacy_accepted_at'] as $blocked) {
+    if (in_array($blocked, $merged, true)) {
+        $fail("non-editable key must not merge: {$blocked}");
+    }
+}
+
+$publicWithExtra = CustomerPublicDto::fromArray(
+    ['id' => 1, 'company' => 'ACME', 'password' => 'secret'],
+    ['company']
+);
+if (($publicWithExtra['company'] ?? null) !== 'ACME') {
+    $fail('extra public field must appear when registered in msExtraField keys');
+}
+if (array_key_exists('password', $publicWithExtra)) {
+    $fail('password must never appear in public DTO');
 }
 
 fwrite(STDOUT, "OK ProfileQuickUpdateForbiddenTest\n");

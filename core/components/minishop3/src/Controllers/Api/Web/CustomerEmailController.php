@@ -7,6 +7,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Customer\EmailVerificationService;
 use MODX\Revolution\modX;
 
@@ -144,6 +145,7 @@ class CustomerEmailController
                 $this->modx->lexicon('ms3_customer_email_verified'),
                 [
                     'customer_id' => $customer->id,
+                    'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
                     'token' => null,
                     'expires_at' => null,
                 ]
@@ -163,6 +165,7 @@ class CustomerEmailController
             $this->modx->lexicon('ms3_customer_email_verified'),
             [
                 'customer_id' => $customer->id,
+                'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
                 'token' => $session['token'],
                 'expires_at' => $session['expires_at'],
             ]
