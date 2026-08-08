@@ -265,8 +265,6 @@ class AuthManagerLifecycleTest extends TestCase
         );
 
         $modx = new class ($store, $options, $orderDraftManager) extends modX {
-            public object $services;
-
             /**
              * @param array<string, mixed> $options
              */
