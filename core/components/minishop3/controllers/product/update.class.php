@@ -61,7 +61,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/update.js');
 
-        // Product Tabs Vue module (contains Properties, Gallery, Categories, Links, Options tabs)
+        // Product Tabs Vue (Properties, Gallery, Categories, Links, Options).
+        // Only these vue-dist assets — do not add main.min.css (Vite never emits it; #503).
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/product-tabs.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/DynamicField.min.css');
@@ -155,10 +156,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
             'up_page' => $this->resource->parent,
             'mode' => 'update',
         ];
-
-        $this->addCss($assetsUrl . 'css/mgr/vue-dist/main.min.css');
-        // Vue module with VueTools dependency check
-        $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/main.min.js');
 
         $this->addHtml('
         <script>
