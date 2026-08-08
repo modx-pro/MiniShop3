@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [Unreleased]
+
+### Fixed
+- Storefront cart option change: wired `cart/changeOption` end-to-end (`POST /api/v1/cart/change-option`, CartAPI/CartUI/ms3.js). Empty select values are ignored. `renderCart` fallback applies only when a single cart root exists. Lexicon keys `ms3_cart_change_options_success` / `ms3_cart_change_options_error`.
+
 ## [1.12.0-beta1]
 
 ### Added

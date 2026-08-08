@@ -367,10 +367,26 @@ class Cart
             if ($product) {
                 $newProductKey = $this->itemManager->generateProductKey($product->toArray(), $currentOptions);
 
-                // If new key exists, merge items
+                // If new key exists, merge quantities into the existing line.
                 if ($newProductKey !== $productKey && isset($this->cart[$newProductKey])) {
+                    $mergedCount = (int) $this->cart[$newProductKey]['count'] + (int) $count;
                     $item->remove();
-                    return $this->change($newProductKey, $this->cart[$newProductKey]['count'] + $count);
+                    $result = $this->change($newProductKey, $mergedCount);
+                    if (!empty($result['success'])) {
+                        $this->invokeEvent('msOnChangeOptionInCart', [
+                            'old_product_key' => $productKey,
+                            'product_key' => $newProductKey,
+                            'options' => $options,
+                        ]);
+                        // Prefer options lexicon over quantity-change wording.
+                        $result = $this->success('ms3_cart_change_options_success', [
+                            'last_key' => $newProductKey,
+                            'cart' => $result['data']['cart'] ?? $this->cart,
+                            'status' => $result['data']['status'] ?? $this->getStatus(),
+                        ], ['count' => $mergedCount]);
+                    }
+
+                    return $result;
                 }
             }
         }
@@ -390,7 +406,7 @@ class Cart
             'options' => $options,
         ]);
 
-        return $this->success('ms3_cart_change_success', [
+        return $this->success('ms3_cart_change_options_success', [
             'last_key' => $newProductKey,
             'cart' => $this->cart,
             'status' => $this->getStatus(),

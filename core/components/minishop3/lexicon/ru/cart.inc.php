@@ -27,6 +27,8 @@ $_lang['ms3_cart_remove_success'] = 'Товар успешно удалён из
 
 $_lang['ms3_cart_change_success'] = 'Количество товара в корзине успешно изменено: [[+count]]';
 $_lang['ms3_cart_change_error'] = 'Ошибка при изменении количества товара в корзине';
+$_lang['ms3_cart_change_options_success'] = 'Опции товара в корзине успешно изменены';
+$_lang['ms3_cart_change_options_error'] = 'Ошибка при изменении опций товара в корзине';
 
 $_lang['ms3_cart_clean_success'] = 'Корзина успешно очищена';
 $_lang['ms3_cart_is_empty'] = 'Ваша корзина пуста';

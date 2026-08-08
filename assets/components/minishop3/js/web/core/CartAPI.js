@@ -109,6 +109,32 @@ class CartAPI {
   }
 
   /**
+   * Change product options in cart
+   *
+   * POST /api/v1/cart/change-option
+   *
+   * @param {string} productKey - Unique product key in cart
+   * @param {Object} options - Option map, e.g. { color: 'Синий' }
+   * @param {Object} render - Render configuration
+   * @returns {Promise<Object>}
+   *
+   * @example
+   * await cart.changeOption('ms5d41d8cd98f00b204e9800998ecf8427e', { color: 'Розовый' })
+   */
+  async changeOption (productKey, options = {}, render = null) {
+    const data = {
+      product_key: productKey,
+      options
+    }
+
+    if (render) {
+      data.render = JSON.stringify(render)
+    }
+
+    return this.api.post('/api/v1/cart/change-option', data)
+  }
+
+  /**
    * Remove product from cart
    *
    * POST /api/v1/cart/remove

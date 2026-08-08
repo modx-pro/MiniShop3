@@ -4,14 +4,32 @@
 
 ## Навигация
 
-- **Текущий месяц:** [Июнь 2026](#июнь-2026) (ниже)
-- **Предыдущий месяц:** [Май 2026](#май-2026) (ниже)
+- **Текущий месяц:** [Август 2026](#август-2026) (ниже)
+- **Предыдущий месяц:** [Июнь 2026](#июнь-2026) (ниже)
 - **Ещё раньше:** [Апрель 2026](#апрель-2026), [Март 2026](#март-2026), [Февраль 2026](#февраль-2026), [Январь 2026](#январь-2026) (ниже)
 - **Архив по месяцам:**
   - [Декабрь 2025](changelogs/2025-12.md)
   - [Ноябрь 2025](changelogs/2025-11.md)
   - [Октябрь 2025](changelogs/2025-10.md)
   - [Архив (2024 и ранее)](changelogs/archive.md)
+
+---
+
+## Август 2026
+
+### [2026-08-08] Cart option change on the storefront
+
+#### 🐛 Исправлено
+
+**Смена опций в корзине (`cart/changeOption`) не вызывала API.** В `CartUI.initOptionSelects` оставался только `console.log`. Добавлена полная цепочка:
+
+- REST `POST /api/v1/cart/change-option` → `CartController::changeOption()` → `Cart::changeOption()`
+- `CartAPI.changeOption()`, handler `changeOption` в `ms3.js`, делегированный `change` на `[data-ms3-cart-options]` → `form.requestSubmit()`
+- `renderCart`: если у токена нет `selector`, fallback только при единственном cart-root на странице (иначе несколько `msCart` перетирали друг друга)
+- merge двух позиций с одинаковым новым `product_key` шлёт `msOnChangeOptionInCart` и lexicon `ms3_cart_change_options_success`
+- lexicon keys `ms3_cart_change_options_success` / `ms3_cart_change_options_error` (ru/en)
+
+Формы в `tpl.msCart` с `ms3_action=cart/changeOption` и `name="options[…]"` теперь обновляют строку и SSR-блок при заданном `selector` у `msCart`.
 
 ---
 
