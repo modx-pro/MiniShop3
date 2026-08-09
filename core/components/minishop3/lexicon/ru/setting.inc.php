@@ -257,6 +257,22 @@ $_lang['setting_ms3_rate_limit_max_attempts'] = 'Лимит запросов API
 $_lang['setting_ms3_rate_limit_max_attempts_desc'] = 'Максимальное количество API запросов за период. По умолчанию 60.';
 $_lang['setting_ms3_rate_limit_decay_seconds'] = 'Период лимита запросов (сек)';
 $_lang['setting_ms3_rate_limit_decay_seconds_desc'] = 'Временное окно в секундах для подсчёта лимита запросов. По умолчанию 60 секунд.';
+$_lang['setting_ms3_rate_limit_store'] = 'Хранилище rate limit';
+$_lang['setting_ms3_rate_limit_store_desc'] = 'Драйвер счётчиков: file (по умолчанию, один PHP-узел), redis или memcached для multi-node. Переменная окружения MS3_RATE_LIMIT_STORE имеет приоритет.';
+$_lang['setting_ms3_rate_limit_storage_path'] = 'Каталог file-хранилища rate limit';
+$_lang['setting_ms3_rate_limit_storage_path_desc'] = 'Путь для file-драйвера. Пусто — sys_get_temp_dir().';
+$_lang['setting_ms3_rate_limit_redis_dsn'] = 'Redis DSN для rate limit';
+$_lang['setting_ms3_rate_limit_redis_dsn_desc'] = 'Полный DSN вида redis://:password@127.0.0.1:6379/0. Если задан, host/port/password/database ниже не используются. Env: MS3_RATE_LIMIT_REDIS_DSN. Требует ext-redis.';
+$_lang['setting_ms3_rate_limit_redis_host'] = 'Redis host (rate limit)';
+$_lang['setting_ms3_rate_limit_redis_host_desc'] = 'Хост Redis, если DSN не задан.';
+$_lang['setting_ms3_rate_limit_redis_port'] = 'Redis port (rate limit)';
+$_lang['setting_ms3_rate_limit_redis_port_desc'] = 'Порт Redis, если DSN не задан.';
+$_lang['setting_ms3_rate_limit_redis_password'] = 'Redis password (rate limit)';
+$_lang['setting_ms3_rate_limit_redis_password_desc'] = 'Пароль Redis, если DSN не задан.';
+$_lang['setting_ms3_rate_limit_redis_database'] = 'Redis database (rate limit)';
+$_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Номер БД Redis (0 по умолчанию), если DSN не задан.';
+$_lang['setting_ms3_rate_limit_memcached_servers'] = 'Memcached servers (rate limit)';
+$_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Список серверов host:port через запятую для memcached-драйвера. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Требует ext-memcached.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Токен Telegram бота';

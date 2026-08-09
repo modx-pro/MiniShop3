@@ -257,6 +257,22 @@ $_lang['setting_ms3_rate_limit_max_attempts'] = 'API rate limit';
 $_lang['setting_ms3_rate_limit_max_attempts_desc'] = 'Maximum number of API requests per time period. Default is 60.';
 $_lang['setting_ms3_rate_limit_decay_seconds'] = 'Rate limit time window (seconds)';
 $_lang['setting_ms3_rate_limit_decay_seconds_desc'] = 'Time window in seconds for counting rate limit. Default is 60 seconds.';
+$_lang['setting_ms3_rate_limit_store'] = 'Rate limit storage driver';
+$_lang['setting_ms3_rate_limit_store_desc'] = 'Counter backend: file (default, single PHP node), redis or memcached for multi-node. MS3_RATE_LIMIT_STORE env overrides this setting.';
+$_lang['setting_ms3_rate_limit_storage_path'] = 'Rate limit file storage path';
+$_lang['setting_ms3_rate_limit_storage_path_desc'] = 'Directory for the file driver. Empty uses sys_get_temp_dir().';
+$_lang['setting_ms3_rate_limit_redis_dsn'] = 'Rate limit Redis DSN';
+$_lang['setting_ms3_rate_limit_redis_dsn_desc'] = 'Full DSN such as redis://:password@127.0.0.1:6379/0. When set, host/port/password/database below are ignored. Env: MS3_RATE_LIMIT_REDIS_DSN. Requires ext-redis.';
+$_lang['setting_ms3_rate_limit_redis_host'] = 'Rate limit Redis host';
+$_lang['setting_ms3_rate_limit_redis_host_desc'] = 'Redis host when DSN is not set.';
+$_lang['setting_ms3_rate_limit_redis_port'] = 'Rate limit Redis port';
+$_lang['setting_ms3_rate_limit_redis_port_desc'] = 'Redis port when DSN is not set.';
+$_lang['setting_ms3_rate_limit_redis_password'] = 'Rate limit Redis password';
+$_lang['setting_ms3_rate_limit_redis_password_desc'] = 'Redis password when DSN is not set.';
+$_lang['setting_ms3_rate_limit_redis_database'] = 'Rate limit Redis database';
+$_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Redis database index (default 0) when DSN is not set.';
+$_lang['setting_ms3_rate_limit_memcached_servers'] = 'Rate limit Memcached servers';
+$_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Comma-separated host:port list for the memcached driver. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Requires ext-memcached.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Telegram bot token';

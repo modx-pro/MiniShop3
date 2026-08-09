@@ -37,6 +37,10 @@
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
+  "suggest": {
+    "ext-redis": "Shared rate-limit counters for multi-node Web API (ms3_rate_limit_store=redis)",
+    "ext-memcached": "Alternative shared rate-limit storage (ms3_rate_limit_store=memcached)"
+  },
   "require-dev": {
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^11.5"
