@@ -2,6 +2,7 @@
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Services\Payment\PaymentLinkResolver;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
@@ -282,25 +283,17 @@ try {
     return $modx->lexicon('ms3_err_order_load');
 }
 
-if ($payment && $class = $payment->get('class')) {
-    $payStatuses = $modx->getOption('payStatus', $scriptProperties, '1');
-    $payStatuses = array_map('trim', explode(',', $payStatuses));
+if ($payment) {
+    $payStatusCsv = (string) $modx->getOption('payStatus', $scriptProperties, '1');
+    $eligibleStatusIds = PaymentLinkResolver::parseEligibleStatusIds($payStatusCsv);
 
-    if (in_array($msOrder->get('status_id'), $payStatuses)) {
-        try {
-            if (class_exists($class)) {
-                /** @var \MiniShop3\Controllers\Payment\Payment $paymentHandler */
-                $paymentHandler = new $class($ms3, []);
+    /** @var PaymentLinkResolver $paymentLinkResolver */
+    $paymentLinkResolver = $modx->services->get('ms3_payment_link_resolver');
+    $orderStatus = $msOrder->getOne('Status');
+    $link = $paymentLinkResolver->resolveForOrder($msOrder, $orderStatus, $eligibleStatusIds);
 
-                $link = $paymentHandler->getPaymentLink($msOrder);
-
-                if ($link) {
-                    $pls['payment_link'] = $link;
-                }
-            }
-        } catch (\Exception $e) {
-            $modx->log(modX::LOG_LEVEL_WARN, '[msGetOrder] Error getting payment link: ' . $e->getMessage());
-        }
+    if ($link) {
+        $pls['payment_link'] = $link;
     }
 }
 

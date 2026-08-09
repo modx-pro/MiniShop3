@@ -79,6 +79,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Payment\PaymentService::class,
             'interface' => null,
         ],
+        'ms3_payment_link_resolver' => [
+            'class' => \MiniShop3\Services\Payment\PaymentLinkResolver::class,
+            'interface' => null,
+        ],
         'ms3_order_service' => [
             'class' => \MiniShop3\Services\Order\OrderService::class,
             'interface' => null,
