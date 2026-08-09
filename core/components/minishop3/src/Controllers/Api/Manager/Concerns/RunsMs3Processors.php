@@ -21,7 +21,8 @@ trait RunsMs3Processors
             $action,
             $scriptProperties,
             [
-                'processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/',
+                // …/src/Controllers/Api/Manager/Concerns → …/src/Processors
+                'processors_path' => dirname(__DIR__, 4) . '/Processors/',
             ]
         );
 
