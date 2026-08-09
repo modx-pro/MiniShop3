@@ -26,6 +26,12 @@ class Router
     /** @var array */
     protected $middlewares = [];
 
+    /** @var string */
+    protected $currentPrefix = '';
+
+    /** @var array */
+    protected $currentMiddlewares = [];
+
     /**
      * @param modX $modx
      */

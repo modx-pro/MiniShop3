@@ -317,7 +317,7 @@ final class ProgrammaticOrderServiceTest extends TestCase
                 return 0;
             }
 
-            public function lexicon(string $key, array $params = []): string
+            public function lexicon($key, $params = [], $language = '')
             {
                 return (string) $key;
             }
