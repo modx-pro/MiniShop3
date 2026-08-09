@@ -280,6 +280,11 @@ const ms3 = {
             const count = parseInt(formData.get('count')) || 0
             return this.cartUI.handleChange(productKey, count)
           },
+          changeOption: () => {
+            const productKey = formData.get('product_key')
+            const options = this.collectOptions(formData)
+            return this.cartUI.handleChangeOption(productKey, options)
+          },
           remove: () => {
             const productKey = formData.get('product_key')
             return this.cartUI.handleRemove(productKey)

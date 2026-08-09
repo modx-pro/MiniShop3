@@ -64,6 +64,10 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->change($params);
         });
+        $router->post('/change-option', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
+            return $controller->changeOption($params);
+        });
         $router->get('/get', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CartController($modx);
             return $controller->get($params);

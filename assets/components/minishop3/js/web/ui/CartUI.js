@@ -44,19 +44,89 @@ class CartUI {
   }
 
   /**
-   * Product option selects: uses sel.cartOptions from config
+   * Product option selects: uses sel.cartOptions from config.
+   * Delegated so SSR re-renders keep working without re-bind.
    */
   initOptionSelects () {
+    if (this._optionSelectsBound) {
+      return
+    }
+    this._optionSelectsBound = true
+
     const { cartOptions: cartOptionsSelector, form: formSelector } = this.selectors
 
-    document.querySelectorAll(cartOptionsSelector).forEach(select => {
-      select.addEventListener('change', async (e) => {
-        const form = e.target.closest(formSelector)
-        if (!form) return
+    document.addEventListener('change', (e) => {
+      const target = e.target
+      if (!(target instanceof Element) || !cartOptionsSelector || !target.matches(cartOptionsSelector)) {
+        return
+      }
 
-        console.log('Option changed:', e.target.name, e.target.value)
-      })
+      const form = formSelector ? target.closest(formSelector) : null
+      if (!form) {
+        return
+      }
+
+      if (target instanceof HTMLSelectElement && String(target.value || '').trim() === '') {
+        return
+      }
+
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit()
+        return
+      }
+
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     })
+  }
+
+  /**
+   * Handle product option change in cart
+   *
+   * @param {string} productKey - Product key
+   * @param {Object} options - Option map
+   */
+  async handleChangeOption (productKey, options = {}) {
+    const key = productKey != null ? String(productKey).trim() : ''
+    const optionMap = options && typeof options === 'object' && !Array.isArray(options)
+      ? options
+      : {}
+
+    if (key === '' || Object.keys(optionMap).length === 0) {
+      return
+    }
+
+    const hookData = { productKey: key, options: optionMap }
+    await this.hooks.runHooks('beforeChangeOptionCart', hookData)
+
+    if (hookData.cancel) {
+      return
+    }
+
+    try {
+      const renderTokens = this.getRenderTokens()
+      const response = await this.cart.changeOption(key, optionMap, renderTokens)
+
+      await this.hooks.runHooks('afterChangeOptionCart', { productKey: key, options: optionMap, response })
+
+      if (response.success) {
+        if (response.data && response.data.render) {
+          this.renderCart(response.data.render)
+        }
+
+        this.dispatchCartUpdated(response.data)
+
+        if (response.message) {
+          this.message.success(response.message)
+        }
+      } else if (response.message) {
+        this.message.error(response.message)
+      }
+
+      return response
+    } catch (error) {
+      console.error('[CartUI] handleChangeOption error:', error)
+      this.message.error('Cart option update error')
+    }
   }
 
   /**
@@ -278,12 +348,33 @@ class CartUI {
     for (const token in renderData) {
       const html = renderData[token]
       const config = cartRenderConfig.find(item => item.token === token)
+      const configuredSelector = config && config.selector ? String(config.selector) : ''
+      const fallbackSelectors = [
+        '#ms3oc-cart-live',
+        '#msb-test-cart',
+        '#msCart',
+        '[data-ms-cart]',
+        '.msCart'
+      ]
 
-      if (!config || !config.selector) {
-        continue
+      let element = null
+      if (configuredSelector !== '') {
+        element = document.querySelector(configuredSelector)
       }
-
-      const element = document.querySelector(config.selector)
+      if (!element) {
+        const found = []
+        fallbackSelectors.forEach((selector) => {
+          document.querySelectorAll(selector).forEach((node) => {
+            if (!found.includes(node)) {
+              found.push(node)
+            }
+          })
+        })
+        // Avoid writing one cart HTML into another when several roots exist.
+        if (found.length === 1) {
+          element = found[0]
+        }
+      }
 
       if (element) {
         element.innerHTML = html

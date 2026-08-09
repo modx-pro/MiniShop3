@@ -27,6 +27,8 @@ $_lang['ms3_cart_remove_success'] = 'Product successfully removed from cart';
 
 $_lang['ms3_cart_change_success'] = 'Product count in cart successfully changed: [[+count]]';
 $_lang['ms3_cart_change_error'] = 'Error changing product count in cart';
+$_lang['ms3_cart_change_options_success'] = 'Product options in cart successfully changed';
+$_lang['ms3_cart_change_options_error'] = 'Error changing product options in cart';
 
 $_lang['ms3_cart_clean_success'] = 'Cart successfully cleared';
 $_lang['ms3_cart_is_empty'] = 'Your cart is empty';

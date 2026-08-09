@@ -89,6 +89,48 @@ class CartController
     }
 
     /**
+     * Change product options in cart
+     * POST /api/v1/cart/change-option
+     *
+     * @param array $params URL parameters
+     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     */
+    public function changeOption(array $params = []): array
+    {
+        $input = $this->getRequestData();
+
+        $product_key = $input['product_key'] ?? '';
+        $options = $input['options'] ?? [];
+        $token = $_REQUEST['ms3_token'] ?? '';
+
+        if ($token === '') {
+            return $this->tokenRequiredError();
+        }
+
+        if ($product_key === '') {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_key_required'),
+                HttpStatus::BAD_REQUEST
+            )->getData();
+        }
+
+        if (!is_array($options) || $options === []) {
+            return Response::error(
+                $this->modx->lexicon('ms3_cart_change_options_error'),
+                HttpStatus::BAD_REQUEST
+            )->getData();
+        }
+
+        $ms3 = $this->modx->services->get('ms3');
+        $cart = $ms3->cart;
+        $cart->initialize($this->modx->context->key, $token);
+
+        $result = $cart->changeOption($product_key, $options);
+
+        return $this->transformResponse($result);
+    }
+
+    /**
      * Remove product from cart
      * POST /api/v1/cart/remove
      *
