@@ -1024,6 +1024,9 @@ async function recalculateOrderCost(opts = {}) {
   if (isCreateMode.value || !orderId.value || orderId.value === 'new') {
     return
   }
+  if (saving.value || recalculatingCost.value) {
+    return
+  }
 
   recalculatingCost.value = true
   costRecalcWarnings.value = []
@@ -1065,6 +1068,10 @@ async function recalculateOrderCost(opts = {}) {
  * Save order
  */
 async function saveOrder() {
+  if (recalculatingCost.value || saving.value) {
+    return
+  }
+
   saving.value = true
 
   try {
