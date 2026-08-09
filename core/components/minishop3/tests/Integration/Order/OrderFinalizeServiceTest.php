@@ -10,6 +10,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msPayment;
+use MiniShop3\Services\Delivery\DeliveryService;
 use MiniShop3\Services\Order\OrderFinalizeService;
 use MiniShop3\Services\Order\OrderNumberGenerator;
 use MiniShop3\Services\Order\OrderService;
@@ -89,22 +90,18 @@ final class OrderFinalizeServiceTest extends TestCase
                 }
             },
         ];
-        $delivery = new class extends xPDOSimpleObject {
-            public function get($k)
-            {
-                return match ($k) {
-                    'price' => 0.0,
-                    'weight_price' => 0.0,
-                    'active' => 1,
-                    'validation_rules' => json_encode([
-                        'email' => 'required|email',
-                        'phone' => 'required',
-                        'city' => 'max:100',
-                    ]),
-                    default => null,
-                };
-            }
-        };
+        $delivery = $this->makeDeliveryStub([
+            'price' => 0.0,
+            'weight_price' => 0.0,
+            'active' => 1,
+            'class' => '',
+            'free_delivery_amount' => 0,
+            'validation_rules' => json_encode([
+                'email' => 'required|email',
+                'phone' => 'required',
+                'city' => 'max:100',
+            ]),
+        ]);
         $address = new class extends xPDOSimpleObject {
             public function toArray($keyPrefix = '', $rawValues = false, $excludeLazy = false, $includeRelated = false)
             {
@@ -160,21 +157,17 @@ final class OrderFinalizeServiceTest extends TestCase
                 }
             },
         ];
-        $delivery = new class extends xPDOSimpleObject {
-            public function get($k)
-            {
-                return match ($k) {
-                    'price' => 20.0,
-                    'weight_price' => 0.0,
-                    'active' => 1,
-                    'validation_rules' => json_encode([
-                        'email' => 'required|email',
-                        'receiver' => 'required',
-                    ]),
-                    default => null,
-                };
-            }
-        };
+        $delivery = $this->makeDeliveryStub([
+            'price' => 20.0,
+            'weight_price' => 0.0,
+            'active' => 1,
+            'class' => '',
+            'free_delivery_amount' => 0,
+            'validation_rules' => json_encode([
+                'email' => 'required|email',
+                'receiver' => 'required',
+            ]),
+        ]);
         $address = new class extends xPDOSimpleObject {
             public function toArray($keyPrefix = '', $rawValues = false, $excludeLazy = false, $includeRelated = false)
             {
@@ -245,15 +238,13 @@ final class OrderFinalizeServiceTest extends TestCase
             },
         ];
 
-        $delivery = $this->createStub(msDelivery::class);
-        $delivery->method('get')->willReturnCallback(static function (string $k) {
-            return match ($k) {
-                'price' => 50.0,
-                'weight_price' => 10.0,
-                'active' => 1,
-                default => null,
-            };
-        });
+        $delivery = $this->makeDeliveryStub([
+            'price' => 50.0,
+            'weight_price' => 10.0,
+            'active' => 1,
+            'class' => '',
+            'free_delivery_amount' => 0,
+        ]);
 
         $statusCalls = [];
         $service = $this->makeService(
@@ -286,6 +277,19 @@ final class OrderFinalizeServiceTest extends TestCase
         self::assertCount(1, $statusCalls);
         self::assertSame(2, $statusCalls[0]['status']);
         self::assertTrue($statusCalls[0]['skip']);
+    }
+
+    /**
+     * @param array<string, mixed> $fields
+     */
+    private function makeDeliveryStub(array $fields): msDelivery
+    {
+        $delivery = $this->createStub(msDelivery::class);
+        $delivery->method('get')->willReturnCallback(static function (string $k) use ($fields) {
+            return $fields[$k] ?? null;
+        });
+
+        return $delivery;
     }
 
     /**
@@ -340,10 +344,28 @@ final class OrderFinalizeServiceTest extends TestCase
 
         $payment = $this->createStub(msPayment::class);
         $payment->method('get')->willReturnCallback(static function (string $k) {
-            return $k === 'active' ? 1 : null;
+            return match ($k) {
+                'active' => 1,
+                'class' => '',
+                'price' => 0,
+                default => null,
+            };
         });
 
-        $modx = new class ($orders, $productCount, $products, $delivery, $payment, $address, $orderService, $statusService) extends modX {
+        $deliveryService = $this->createStub(DeliveryService::class);
+        $deliveryService->method('getDeliveryPaymentPairError')->willReturn(null);
+
+        $modx = new class (
+            $orders,
+            $productCount,
+            $products,
+            $delivery,
+            $payment,
+            $address,
+            $orderService,
+            $statusService,
+            $deliveryService,
+        ) extends modX {
 
             /**
              * @param array<int, RecordingMsOrder> $orders
@@ -358,18 +380,24 @@ final class OrderFinalizeServiceTest extends TestCase
                 private ?object $address,
                 OrderService $orderService,
                 object $statusService,
+                DeliveryService $deliveryService,
             ) {
                 parent::__construct();
-                $this->services = new class ($orderService, $statusService) {
+                $this->services = new class ($orderService, $statusService, $deliveryService) {
                     public function __construct(
                         private OrderService $orderService,
                         private object $statusService,
+                        private DeliveryService $deliveryService,
                     ) {
                     }
 
                     public function has(string $key): bool
                     {
-                        return in_array($key, ['ms3_order_service', 'ms3_order_status'], true);
+                        return in_array($key, [
+                            'ms3_order_service',
+                            'ms3_order_status',
+                            'ms3_delivery_service',
+                        ], true);
                     }
 
                     public function get(string $key): mixed
@@ -377,6 +405,7 @@ final class OrderFinalizeServiceTest extends TestCase
                         return match ($key) {
                             'ms3_order_service' => $this->orderService,
                             'ms3_order_status' => $this->statusService,
+                            'ms3_delivery_service' => $this->deliveryService,
                             default => null,
                         };
                     }
