@@ -21,6 +21,13 @@ use MODX\Revolution\modX;
  */
 class OrderFinalizeService
 {
+    /** @deprecated Use OrderOrigin::MANAGER */
+    public const ORIGIN_MANAGER = OrderOrigin::MANAGER;
+    /** @deprecated Use OrderOrigin::STOREFRONT */
+    public const ORIGIN_STOREFRONT = OrderOrigin::STOREFRONT;
+    /** @deprecated Use OrderOrigin::INTEGRATION */
+    public const ORIGIN_INTEGRATION = OrderOrigin::INTEGRATION;
+
     protected modX $modx;
     protected MiniShop3 $ms3;
     protected OrderNumberGenerator $numberGenerator;
@@ -42,6 +49,7 @@ class OrderFinalizeService
      *   - skip_payment: bool - Skip payment gateway call
      *   - create_customer: bool - Create customer from order address data
      *   - force_create_customer: bool - Create customer even if duplicate found
+     *   - origin: string - Event context origin (`manager` default, `integration`, `storefront`)
      * @return array Response with success/error
      */
     public function finalize(int $orderId, array $options = []): array
@@ -50,6 +58,8 @@ class OrderFinalizeService
         $skipNotifications = $options['skip_notifications'] ?? false;
         $createCustomer = $options['create_customer'] ?? false;
         $forceCreateCustomer = $options['force_create_customer'] ?? false;
+        $origin = OrderOrigin::normalize($options['origin'] ?? OrderOrigin::MANAGER);
+        $fromManager = OrderOrigin::isManager($origin);
 
         // Get order
         /** @var msOrder $order */
@@ -72,16 +82,18 @@ class OrderFinalizeService
             }
         }
 
-        // Event: before manager-side order creation (finalize = draft → real order).
-        // Sibling of msOnSubmitOrder but fires in the manager finalize flow.
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeMgrCreateOrder', [
-            'service' => $this,
-            'msOrder' => $order,
-            'from_manager' => true,
-        ]);
+        // Manager-only sibling of msOnSubmitOrder (draft → real order in mgr UI).
+        if ($fromManager) {
+            $response = $this->ms3->utils->invokeEvent('msOnBeforeMgrCreateOrder', [
+                'service' => $this,
+                'msOrder' => $order,
+                'origin' => $origin,
+                'from_manager' => true,
+            ]);
 
-        if (!$response['success']) {
-            return $this->error($response['message']);
+            if (!$response['success']) {
+                return $this->error($response['message']);
+            }
         }
 
         // Create customer if requested and no customer linked yet
@@ -103,7 +115,7 @@ class OrderFinalizeService
         }
 
         // Calculate costs
-        $costResult = $this->calculateCosts($order);
+        $costResult = $this->calculateCosts($order, $options);
         if (!$costResult['success']) {
             return $costResult;
         }
@@ -141,24 +153,19 @@ class OrderFinalizeService
             return $this->error('ms3_err_order_num_save');
         }
 
-        // Event: before create order (same as frontend)
-        $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateOrder', [
+        $createEventParams = [
             'service' => $this,
             'msOrder' => $order,
-            'from_manager' => true,
-        ]);
+            'origin' => $origin,
+            'from_manager' => $fromManager,
+        ];
 
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateOrder', $createEventParams);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
 
-        // Event: on create order (same as frontend)
-        $response = $this->ms3->utils->invokeEvent('msOnCreateOrder', [
-            'service' => $this,
-            'msOrder' => $order,
-            'from_manager' => true,
-        ]);
-
+        $response = $this->ms3->utils->invokeEvent('msOnCreateOrder', $createEventParams);
         if (!$response['success']) {
             return $this->error($response['message']);
         }
@@ -181,17 +188,21 @@ class OrderFinalizeService
         // Reload order after status change
         $order = $this->modx->getObject(msOrder::class, $orderId);
 
-        // Event: manager-side order creation finished (draft finalized).
-        $this->ms3->utils->invokeEvent('msOnMgrCreateOrder', [
-            'service' => $this,
-            'msOrder' => $order,
-            'from_manager' => true,
-        ]);
+        if ($fromManager) {
+            $this->ms3->utils->invokeEvent('msOnMgrCreateOrder', [
+                'service' => $this,
+                'msOrder' => $order,
+                'origin' => $origin,
+                'from_manager' => true,
+            ]);
+        }
 
         return $this->success('ms3_order_finalized', [
             'order_id' => $order->get('id'),
             'order_num' => $order->get('num'),
             'status_id' => $order->get('status_id'),
+            'uuid' => $order->get('uuid'),
+            'num' => $order->get('num'),
         ]);
     }
 
@@ -407,12 +418,20 @@ class OrderFinalizeService
      * Calculate order costs
      *
      * @param msOrder $order
+     * @param array<string, mixed> $options Forward cost_mode / manual_delivery_cost to recalculator
      * @return array
      */
-    protected function calculateCosts(msOrder $order): array
+    protected function calculateCosts(msOrder $order, array $options = []): array
     {
         $recalculator = new ManagerOrderCostRecalculator($this->modx, $this->ms3);
-        $result = $recalculator->calculateBreakdown($order);
+        $costOptions = [];
+        if (isset($options['cost_mode'])) {
+            $costOptions['mode'] = $options['cost_mode'];
+        }
+        if (array_key_exists('manual_delivery_cost', $options)) {
+            $costOptions['manual_delivery_cost'] = $options['manual_delivery_cost'];
+        }
+        $result = $recalculator->calculateBreakdown($order, $costOptions);
 
         if (!$result['success']) {
             return $result;

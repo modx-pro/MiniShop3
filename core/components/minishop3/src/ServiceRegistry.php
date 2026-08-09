@@ -82,6 +82,7 @@ class ServiceRegistry
         'ms3_cart_mutation_handler',
         'ms3_customer_order_resolver',
         'ms3_model_field_service',
+        'ms3_programmatic_order',
     ];
 
     /**
@@ -114,6 +115,7 @@ class ServiceRegistry
         ],
         'ms3_customer_order_resolver' => ['ms3_customer_field_manager'],
         'ms3_model_field_service' => ['ms3_model_field_section_service'],
+        'ms3_programmatic_order' => ['ms3_order_finalize', 'ms3_order_draft_manager'],
     ];
 
     /**
@@ -232,6 +234,10 @@ class ServiceRegistry
         ],
         'ms3_order_finalize' => [
             'class' => \MiniShop3\Services\Order\OrderFinalizeService::class,
+            'interface' => null,
+        ],
+        'ms3_programmatic_order' => [
+            'class' => \MiniShop3\Services\Order\ProgrammaticOrderService::class,
             'interface' => null,
         ],
         // Cart services
@@ -669,6 +675,16 @@ class ServiceRegistry
                     $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
                     $numberGenerator = $modx->services->get('ms3_order_number_generator');
                     return new $validatedClass($modx, $ms3, $numberGenerator);
+                });
+                break;
+
+            case 'ms3_programmatic_order':
+                // ProgrammaticOrderService(modX, MiniShop3, OrderFinalizeService, OrderDraftManager)
+                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
+                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
+                    $finalize = $modx->services->get('ms3_order_finalize');
+                    $draftManager = $modx->services->get('ms3_order_draft_manager');
+                    return new $validatedClass($modx, $ms3, $finalize, $draftManager);
                 });
                 break;
 
