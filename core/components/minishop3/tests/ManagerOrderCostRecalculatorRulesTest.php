@@ -58,9 +58,9 @@ $assertSame(
 );
 
 $assertSame(
-    33.0,
-    OrderPersistedCostRules::calculateDefaultPaymentCommission('3%', 1100),
-    'rules: default payment commission is percent of the provided base'
+    30.0,
+    OrderPersistedCostRules::calculateDefaultPaymentCommission('3%', 1000),
+    'rules: payment commission on cart-only base (#460)'
 );
 
 // --- ManagerOrderCostRecalculator::calculateBreakdown() ---
