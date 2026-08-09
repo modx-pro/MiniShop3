@@ -231,3 +231,5 @@ $_lang['ms3_vuetools_required'] = 'VueTools package is required for MiniShop3. P
 $_lang['ms3_mgr_order_recalc_invalid_mode'] = 'Invalid order cost recalculation mode.';
 $_lang['ms3_mgr_order_recalc_manual_delivery_missing'] = 'Manual delivery cost (manual_delivery_cost) is required in manual mode.';
 $_lang['ms3_order_cost_recalc_success'] = 'Order cost recalculated';
+$_lang['ms3_order_finalize_cost_recalc_required'] =
+    'Recalculate order cost before finalizing: the selected delivery or payment requires manual cost or force_provider mode.';
