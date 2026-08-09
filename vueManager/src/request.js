@@ -121,6 +121,10 @@ class Request {
         credentials: 'same-origin',
       }
 
+      if (options.signal) {
+        fetchOptions.signal = options.signal
+      }
+
       let url
 
       if (method === 'GET' && data) {
@@ -156,6 +160,10 @@ class Request {
       return unwrapResponsePayload(responseData)
     } catch (error) {
       if (error instanceof RequestError) {
+        throw error
+      }
+
+      if (error?.name === 'AbortError') {
         throw error
       }
 

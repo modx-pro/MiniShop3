@@ -16,6 +16,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { useGridFilterParams } from '../composables/useGridFilterParams.js'
 import { useSelection } from '../composables/useSelection.js'
+import { useStaleRequestGuard } from '../composables/useStaleRequestGuard.js'
 import request from '../request.js'
 import { formatLocalDateYmd } from '../utils/formatLocalDateYmd.js'
 import ActionsColumn from './ActionsColumn.vue'
@@ -60,6 +61,7 @@ const {
 const columns = ref([])
 const filters = ref({})
 const { setDirectFilterKeys, addFilterParam } = useGridFilterParams()
+const { runGuarded } = useStaleRequestGuard()
 const loading = ref(false)
 const orders = ref([])
 const totalRecords = ref(0)
@@ -86,58 +88,62 @@ const sortedFilters = computed(() => {
  * Load orders list
  */
 async function loadOrders() {
-  loading.value = true
-
   try {
-    const params = {
-      start: first.value,
-      limit: rows.value,
-      sort: sortField.value,
-      dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
-      show_drafts: showDrafts.value ? 1 : 0,
-    }
+    await runGuarded(loading, async (signal, isCurrent) => {
+      const params = {
+        start: first.value,
+        limit: rows.value,
+        sort: sortField.value,
+        dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
+        show_drafts: showDrafts.value ? 1 : 0,
+      }
 
-    // Apply filter values
-    Object.keys(filterValues.value).forEach(key => {
-      const value = filterValues.value[key]
-      if (value !== null && value !== undefined && value !== '') {
-        const filterConfig = filters.value[key]
-        if (filterConfig?.type === 'daterange' && Array.isArray(value)) {
-          if (value[0]) {
-            addFilterParam(
-              params,
-              filterConfig.fields?.from || `${key}_from`,
-              formatLocalDateYmd(value[0])
-            )
+      // Apply filter values
+      Object.keys(filterValues.value).forEach(key => {
+        const value = filterValues.value[key]
+        if (value !== null && value !== undefined && value !== '') {
+          const filterConfig = filters.value[key]
+          if (filterConfig?.type === 'daterange' && Array.isArray(value)) {
+            if (value[0]) {
+              addFilterParam(
+                params,
+                filterConfig.fields?.from || `${key}_from`,
+                formatLocalDateYmd(value[0])
+              )
+            }
+            if (value[1]) {
+              addFilterParam(
+                params,
+                filterConfig.fields?.to || `${key}_to`,
+                formatLocalDateYmd(value[1])
+              )
+            }
+          } else if (filterConfig?.type === 'datepicker' && value) {
+            addFilterParam(params, key, formatLocalDateYmd(value))
+          } else {
+            addFilterParam(params, key, value)
           }
-          if (value[1]) {
-            addFilterParam(
-              params,
-              filterConfig.fields?.to || `${key}_to`,
-              formatLocalDateYmd(value[1])
-            )
-          }
-        } else if (filterConfig?.type === 'datepicker' && value) {
-          addFilterParam(params, key, formatLocalDateYmd(value))
-        } else {
-          addFilterParam(params, key, value)
         }
+      })
+
+      const response = await request.get('/api/mgr/orders', params, { signal })
+
+      if (!isCurrent()) {
+        return
+      }
+
+      if (response && response.results) {
+        orders.value = response.results
+        totalRecords.value = response.total || 0
+        if (response.stats) {
+          stats.value = response.stats
+        }
+      } else {
+        console.error('[OrdersGrid] Invalid response:', response)
+        orders.value = []
+        totalRecords.value = 0
       }
     })
-
-    const response = await request.get('/api/mgr/orders', params)
-
-    if (response && response.results) {
-      orders.value = response.results
-      totalRecords.value = response.total || 0
-      if (response.stats) {
-        stats.value = response.stats
-      }
-    } else {
-      console.error('[OrdersGrid] Invalid response:', response)
-      orders.value = []
-      totalRecords.value = 0
-    }
   } catch (error) {
     console.error('[OrdersGrid] Error loading orders:', error)
     toast.add({
@@ -146,8 +152,6 @@ async function loadOrders() {
       detail: error.message || _('error_loading_data'),
       life: 5000,
     })
-  } finally {
-    loading.value = false
   }
 }
 
