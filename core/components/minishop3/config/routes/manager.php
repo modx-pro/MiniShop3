@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Manager API Routes for MiniShop3
  *
@@ -1038,81 +1039,40 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
     // Utilities Gallery routes
     $router->group('/utilities/gallery', function($router) use ($modx) {
-        // Regenerate thumbnails
         $router->post('/update', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $response = $modx->runProcessor(
-                'MiniShop3\\Processors\\Utilities\\Gallery\\Update',
-                $data,
-                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
-            );
-            return $response->getResponse();
+            $controller = new \MiniShop3\Controllers\Api\Manager\UtilitiesGalleryController($modx);
+            return $controller->update($params);
         });
-
     }, [
         new PermissionMiddleware($modx, 'msproductfile_generate')
     ]);
 
     // Import routes
     $router->group('/import', function($router) use ($modx) {
-        // Get available fields for mapping
         $router->get('/fields', function($params) use ($modx) {
-            $response = $modx->runProcessor(
-                'MiniShop3\\Processors\\Utilities\\Import\\Fields',
-                [],
-                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
-            );
-            return $response->getResponse();
+            $controller = new \MiniShop3\Controllers\Api\Manager\ImportController($modx);
+            return $controller->fields($params);
         });
 
-        // Upload CSV file
         $router->post('/upload', function($params) use ($modx) {
-            $response = $modx->runProcessor(
-                'MiniShop3\\Processors\\Utilities\\Import\\Upload',
-                $_POST,
-                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
-            );
-            return $response->getResponse();
+            $controller = new \MiniShop3\Controllers\Api\Manager\ImportController($modx);
+            return $controller->upload($params);
         });
 
-        // Preview CSV file
         $router->post('/preview', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $response = $modx->runProcessor(
-                'MiniShop3\\Processors\\Utilities\\Import\\Preview',
-                $data,
-                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
-            );
-            return $response->getResponse();
+            $controller = new \MiniShop3\Controllers\Api\Manager\ImportController($modx);
+            return $controller->preview($params);
         });
 
-        // Start import
         $router->post('/start', function($params) use ($modx) {
-            $input = file_get_contents('php://input');
-            $data = json_decode($input, true) ?: [];
-
-            $response = $modx->runProcessor(
-                'MiniShop3\\Processors\\Utilities\\Import\\Import',
-                $data,
-                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
-            );
-            return $response->getResponse();
+            $controller = new \MiniShop3\Controllers\Api\Manager\ImportController($modx);
+            return $controller->start($params);
         });
 
-        // Get import progress
         $router->get('/progress/{import_id}', function($params) use ($modx) {
-            $response = $modx->runProcessor(
-                'MiniShop3\\Processors\\Utilities\\Import\\Progress',
-                ['import_id' => $params['import_id'] ?? ''],
-                ['processors_path' => MODX_CORE_PATH . 'components/minishop3/src/Processors/']
-            );
-            return $response->getResponse();
+            $controller = new \MiniShop3\Controllers\Api\Manager\ImportController($modx);
+            return $controller->progress($params);
         });
-
     }, [
         new PermissionMiddleware($modx, 'msproduct_save')
     ]);
