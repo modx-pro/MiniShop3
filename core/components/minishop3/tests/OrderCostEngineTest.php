@@ -34,13 +34,18 @@ $assertFloat = static function (float $expected, float $actual, string $case) us
 
 $modx = new modX();
 
-$assertFloat(150.0, OrderCostEngine::paymentCommissionBase(100.0, 50.0), 'payment base cart+delivery');
-$assertFloat(154.5, OrderCostEngine::calculatePaymentTotal(150.0, 4.5), 'payment total');
+$engineSource = file_get_contents(__DIR__ . '/../src/Services/Order/OrderCostEngine.php');
+if ($engineSource === false || !str_contains($engineSource, 'OrderService::paymentCommissionBase')) {
+    $fail('OrderCostEngine must delegate paymentCommissionBase to OrderService');
+}
 
-// #372: payment % base = cart + delivery (1000 + 500 → 3% fee = 45, not 30 on cart-only)
-$issue372Base = OrderCostEngine::paymentCommissionBase(1000.0, 500.0);
-$assertFloat(1500.0, $issue372Base, '#372 commission base');
-$assertFloat(45.0, PriceAdjustment::calculate($issue372Base, '3%'), '#372 payment surcharge on cart+delivery');
+$assertFloat(100.0, OrderCostEngine::paymentCommissionBase(100.0), 'payment base cart-only');
+$assertFloat(104.5, OrderCostEngine::calculatePaymentTotal(100.0, 4.5), 'payment total');
+
+// #460: payment % base = cart only (1000 → 3% fee = 30, delivery excluded)
+$cartOnlyBase = OrderCostEngine::paymentCommissionBase(1000.0);
+$assertFloat(1000.0, $cartOnlyBase, '#460 commission base cart-only');
+$assertFloat(30.0, PriceAdjustment::calculate($cartOnlyBase, '3%'), '#460 payment surcharge on cart-only');
 
 // Delivery free-threshold edge cases (#366 review).
 // free_delivery_amount = 1000: cart at or above threshold → delivery is free.
@@ -80,20 +85,20 @@ $noFreeThreshold = new StubMsDelivery([
 ]);
 $assertFloat(75.0, OrderCostEngine::calculateDefaultDeliveryCost($modx, $noFreeThreshold, 100000.0, 0.0), 'fixed delivery with no free threshold');
 
-// Payment percent surcharge base = cart + delivery (#372): 3% of (1000 + 500) = 45.
+// Payment percent surcharge base = cart only (#460): 3% of 1000 = 30.
 $percentPayment = new StubMsPayment(['id' => 10, 'price' => '3%']);
-$percentBase = OrderCostEngine::paymentCommissionBase(1000.0, 500.0);
+$percentBase = OrderCostEngine::paymentCommissionBase(1000.0);
 $percentSurcharge = OrderCostEngine::calculatePaymentSurcharge($modx, $percentPayment, $percentBase);
-$assertFloat(45.0, $percentSurcharge, 'payment 3% surcharge on cart+delivery base');
-$assertFloat(1545.0, OrderCostEngine::calculatePaymentTotal($percentBase, $percentSurcharge), 'payment total with percent on cart+delivery');
+$assertFloat(30.0, $percentSurcharge, 'payment 3% surcharge on cart-only base');
+$assertFloat(1030.0, OrderCostEngine::calculatePaymentTotal($percentBase, $percentSurcharge), 'payment total with percent on cart-only');
 
 // Fixed payment surcharge is independent of the base.
 $fixedPayment = new StubMsPayment(['id' => 11, 'price' => 30]);
-$assertFloat(30.0, OrderCostEngine::calculatePaymentSurcharge($modx, $fixedPayment, 1500.0), 'fixed payment surcharge');
+$assertFloat(30.0, OrderCostEngine::calculatePaymentSurcharge($modx, $fixedPayment, 1000.0), 'fixed payment surcharge');
 
 // Empty payment price → zero surcharge regardless of base.
 $noPricePayment = new StubMsPayment(['id' => 12, 'price' => 0]);
-$assertFloat(0.0, OrderCostEngine::calculatePaymentSurcharge($modx, $noPricePayment, 1500.0), 'zero payment surcharge when price empty');
+$assertFloat(0.0, OrderCostEngine::calculatePaymentSurcharge($modx, $noPricePayment, 1000.0), 'zero payment surcharge when price empty');
 
 $paths = [
     'ManagerOrderCostRecalculator.php' => [
@@ -141,6 +146,10 @@ if ($ordersCtrl === false || !str_contains($ordersCtrl, "services->get('ms3_mana
 $calcSrc = file_get_contents(__DIR__ . '/../src/Services/Order/OrderCostCalculator.php');
 if ($calcSrc === false || !preg_match('/getPaymentCost\([^)]+\$cartCost,\s*\$deliveryCost/', $calcSrc)) {
     $fail('getTotalCost must pass precomputed cart/delivery into getPaymentCost (single pipeline pass)');
+}
+
+if ($calcSrc !== false && preg_match('/paymentCommissionBase\s*\([^)]*,/', $calcSrc) === 1) {
+    $fail('OrderCostCalculator must not pass delivery into paymentCommissionBase');
 }
 
 fwrite(STDOUT, "OK OrderCostEngineTest\n");
