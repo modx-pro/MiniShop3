@@ -31,7 +31,7 @@ $files = [
     'OrderSubmitHandler.php' => $root . '/src/Services/Order/OrderSubmitHandler.php',
     'OrderFinalizeService.php' => $root . '/src/Services/Order/OrderFinalizeService.php',
     'OrderFieldManager.php' => $root . '/src/Services/Order/OrderFieldManager.php',
-    'OrdersController.php' => $root . '/src/Controllers/Api/Manager/OrdersController.php',
+    'ManagerOrderMutationService.php' => $root . '/src/Services/Order/ManagerOrderMutationService.php',
 ];
 
 foreach ($files as $label => $path) {
