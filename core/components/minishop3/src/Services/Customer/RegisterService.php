@@ -67,7 +67,7 @@ class RegisterService
      *
      * Used in:
      * - Register API processor (explicit user registration)
-     * - Customer::getId() (automatic registration during checkout)
+     * - Customer::getOrCreate() (automatic registration during checkout)
      *
      * @param array $data Customer data:
      *   - email (required)

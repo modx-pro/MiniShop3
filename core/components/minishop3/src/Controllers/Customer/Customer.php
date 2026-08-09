@@ -307,17 +307,6 @@ class Customer
         return $response['data']['value'];
     }
 
-    /**
-     * Get customer ID for order (legacy method)
-     *
-     * @deprecated Use getOrCreate() instead
-     * @return int Customer ID or 0 if not found/created
-     */
-    public function getId(): int
-    {
-        return $this->getOrCreate();
-    }
-
     public function create(array $customerData): msCustomer|null
     {
         // Allow plugins to modify data before creation

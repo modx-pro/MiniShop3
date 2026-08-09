@@ -127,38 +127,6 @@ class OrderService
     }
 
     /**
-     * Handle order save with events
-     *
-     * @deprecated Logic moved to msOrder::save(), this method kept for backward compatibility
-     *
-     * @param msOrder $order
-     * @param bool|null $cacheFlag
-     * @return bool
-     */
-    public function handleOrderSave(msOrder $order, ?bool $cacheFlag = null): bool
-    {
-        // Simply delegate call to msOrder::save()
-        // It already contains all event logic
-        return $order->save($cacheFlag);
-    }
-
-    /**
-     * Delete order with events
-     *
-     * @deprecated Logic moved to msOrder::remove(), this method kept for backward compatibility
-     *
-     * @param msOrder $order
-     * @param array $ancestors
-     * @return bool Deletion result
-     */
-    public function removeOrder(msOrder $order, array $ancestors = []): bool
-    {
-        // Simply delegate call to msOrder::remove()
-        // It already contains all event logic
-        return $order->remove($ancestors);
-    }
-
-    /**
      * Get order statistics
      *
      * Returns product count and total weight
