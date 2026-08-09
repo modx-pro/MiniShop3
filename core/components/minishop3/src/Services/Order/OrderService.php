@@ -27,6 +27,14 @@ class OrderService
     }
 
     /**
+     * Base amount for payment commission (MS2-compatible: cart cost only, delivery excluded).
+     */
+    public static function paymentCommissionBase(float $cartCost): float
+    {
+        return round($cartCost, 6);
+    }
+
+    /**
      * Clamp computed order total so it never goes negative (defence-in-depth vs misconfigured discounts).
      *
      * @param msOrder|null $order Optional persisted order — used only for log context; null allowed for drafts without ID.

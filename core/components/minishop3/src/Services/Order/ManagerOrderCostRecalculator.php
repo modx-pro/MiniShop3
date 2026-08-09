@@ -87,7 +87,7 @@ class ManagerOrderCostRecalculator
 
         $deliveryCost = $deliveryResult['delivery_cost'];
 
-        $paymentBase = round($cartCost + $deliveryCost, 6);
+        $paymentBase = OrderService::paymentCommissionBase($cartCost);
         $paymentResult = $this->resolvePaymentFee($order, $paymentBase, $mode, $options);
         if (!$paymentResult['success']) {
             return $paymentResult;
