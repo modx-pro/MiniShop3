@@ -124,6 +124,16 @@ class OrderSubmitHandler
             return $this->error('ms3_order_err_payment_not_found', ['payment_id' => $orderData['payment_id']]);
         }
 
+        /** @var \MiniShop3\Services\Delivery\DeliveryService $deliveryService */
+        $deliveryService = $this->modx->services->get('ms3_delivery_service');
+        $pairError = $deliveryService->getDeliveryPaymentPairError(
+            (int) $orderData['delivery_id'],
+            (int) $orderData['payment_id']
+        );
+        if ($pairError !== null) {
+            return $this->error($pairError, ['payment_id', 'delivery_id']);
+        }
+
         // Check required fields for delivery
         $requiredResponse = $this->fieldManager->getDeliveryRequiredFields($orderData['delivery_id']);
         if (!$requiredResponse['success']) {

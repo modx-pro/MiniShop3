@@ -230,6 +230,7 @@ class OrderFinalizeService
 
         // Check payment is selected
         $paymentId = (int) $order->get('payment_id');
+        $payment = null;
         if ($paymentId > 0) {
             $payment = $this->modx->getObject(msPayment::class, [
                 'id' => $paymentId,
@@ -242,16 +243,23 @@ class OrderFinalizeService
             $errors[] = 'payment_id';
         }
 
+        // Return early if basic errors found
+        if (!empty($errors)) {
+            return $this->error('ms3_order_err_validation', $errors);
+        }
+
+        /** @var \MiniShop3\Services\Delivery\DeliveryService $deliveryService */
+        $deliveryService = $this->modx->services->get('ms3_delivery_service');
+        $pairError = $deliveryService->getDeliveryPaymentPairError($deliveryId, $paymentId);
+        if ($pairError !== null) {
+            return $this->error($pairError, ['payment_id', 'delivery_id']);
+        }
+
         // Check customer is linked (optional - manager can create orders without customer)
         // $customerId = (int) $order->get('customer_id');
         // if ($customerId === 0) {
         //     $errors[] = 'customer_id';
         // }
-
-        // Return early if basic errors found
-        if (!empty($errors)) {
-            return $this->error('ms3_order_err_validation', $errors);
-        }
 
         // Check required fields for delivery
         $requiredFieldsErrors = $this->validateDeliveryRequiredFields($order);

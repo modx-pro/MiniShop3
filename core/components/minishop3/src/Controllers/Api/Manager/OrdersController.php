@@ -16,6 +16,7 @@ use MiniShop3\Router\Response;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
+use MiniShop3\Services\Delivery\DeliveryService;
 use MiniShop3\Services\FilterConfigManager;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Services\Order\ManagerOrderCostRecalculator;
@@ -646,6 +647,14 @@ class OrdersController
         $order->set('cost', $orderService->clampComputedTotal(null, 0.0, $deliveryCost, 0.0));
         $order->set('weight', 0);
 
+        $pairError = $this->validateDeliveryPaymentPair(
+            (int) $order->get('delivery_id'),
+            (int) $order->get('payment_id')
+        );
+        if ($pairError !== null) {
+            return $pairError;
+        }
+
         if (!$order->save()) {
             return Response::error('Failed to create order', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
         }
@@ -848,6 +857,14 @@ class OrdersController
                 $changedOrderFields[$extraFieldKey] = ['old' => $oldValue, 'new' => $newValue];
             }
             $order->set($extraFieldKey, $newValue);
+        }
+
+        $pairError = $this->validateDeliveryPaymentPair(
+            (int) $order->get('delivery_id'),
+            (int) $order->get('payment_id')
+        );
+        if ($pairError !== null) {
+            return $pairError;
         }
 
         $order->set('updatedon', date('Y-m-d H:i:s'));
@@ -1800,5 +1817,26 @@ class OrdersController
         }
 
         return $names;
+    }
+
+    /**
+     * Reject incompatible delivery/payment pairs (msDeliveryMember link required).
+     *
+     * @return array|null Response error payload or null when valid / incomplete pair
+     */
+    protected function validateDeliveryPaymentPair(int $deliveryId, int $paymentId): ?array
+    {
+        if ($deliveryId <= 0 || $paymentId <= 0) {
+            return null;
+        }
+
+        /** @var DeliveryService $deliveryService */
+        $deliveryService = $this->modx->services->get('ms3_delivery_service');
+        $pairError = $deliveryService->getDeliveryPaymentPairError($deliveryId, $paymentId);
+        if ($pairError === null) {
+            return null;
+        }
+
+        return Response::error($pairError, HttpStatus::UNPROCESSABLE_ENTITY)->getData();
     }
 }

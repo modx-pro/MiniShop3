@@ -3,10 +3,8 @@
 namespace MiniShop3\Controllers\Order;
 
 use MiniShop3\MiniShop3;
-use MiniShop3\Model\msDeliveryMember;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
-use MiniShop3\Model\msPayment;
 use MiniShop3\Services\Order\OrderAddressManager;
 use MiniShop3\Services\Order\OrderCostCalculator;
 use MiniShop3\Services\Order\OrderDraftManager;
@@ -489,14 +487,10 @@ class Order
      */
     public function hasPayment(int $delivery, int $payment): bool
     {
-        $q = $this->modx->newQuery(msPayment::class, ['id' => $payment, 'active' => 1]);
-        $q->innerJoin(
-            msDeliveryMember::class,
-            'Member',
-            'Member.payment_id = msPayment.id AND Member.delivery_id = ' . $delivery
-        );
+        /** @var \MiniShop3\Services\Delivery\DeliveryService $deliveryService */
+        $deliveryService = $this->modx->services->get('ms3_delivery_service');
 
-        return (bool)$this->modx->getCount(msPayment::class, $q);
+        return $deliveryService->isPaymentAvailableForDelivery($delivery, $payment);
     }
 
     /**
