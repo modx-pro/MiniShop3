@@ -1,4 +1,31 @@
 /**
+ * Extract payload from MODX connector JSON envelope.
+ *
+ * Connector responses use `{ success, message, object?, data? }`. Callers expect
+ * the inner payload (e.g. `{ results, total }`), not the envelope with `success`.
+ *
+ * @param {unknown} responseData - Parsed JSON body from connector.php
+ * @returns {unknown} Unwrapped payload, or the original value when not an envelope
+ *
+ * Uses `!= null` so falsy scalars in `object`/`data` (0, false, "") are valid payloads.
+ */
+export function unwrapResponsePayload(responseData) {
+  if (responseData === null || typeof responseData !== 'object' || Array.isArray(responseData)) {
+    return responseData
+  }
+
+  if ('object' in responseData && responseData.object != null) {
+    return responseData.object
+  }
+
+  if ('data' in responseData && responseData.data != null) {
+    return responseData.data
+  }
+
+  return responseData
+}
+
+/**
  * API Request class for working with MiniShop3 API through MODX connector
  *
  * Features:
@@ -126,19 +153,7 @@ class Request {
         )
       }
 
-      if (responseData.object && Object.keys(responseData.object).length > 0) {
-        return responseData.object
-      } else if (
-        responseData.data &&
-        Array.isArray(responseData.data) &&
-        responseData.data.length > 0
-      ) {
-        return responseData.data
-      } else if (responseData.data && !Array.isArray(responseData.data)) {
-        return responseData.data
-      }
-
-      return responseData
+      return unwrapResponsePayload(responseData)
     } catch (error) {
       if (error instanceof RequestError) {
         throw error
@@ -236,13 +251,7 @@ class Request {
         )
       }
 
-      if (responseData.object && Object.keys(responseData.object).length > 0) {
-        return responseData.object
-      } else if (responseData.data) {
-        return responseData.data
-      }
-
-      return responseData
+      return unwrapResponsePayload(responseData)
     } catch (error) {
       if (error instanceof RequestError) {
         throw error

@@ -100,3 +100,6 @@ jobs:
 
       - name: Vitest
         run: npm test
+
+      - name: Smoke tests
+        run: npm run test:smoke
