@@ -60,7 +60,7 @@ $assertSame(
 $assertSame(
     33.0,
     OrderPersistedCostRules::calculateDefaultPaymentCommission('3%', 1100),
-    'rules: payment commission on cart plus delivery base'
+    'rules: default payment commission is percent of the provided base'
 );
 
 // --- ManagerOrderCostRecalculator::calculateBreakdown() ---
@@ -196,8 +196,8 @@ $fullBreakdown = $recalculator2->calculateBreakdown($orderFull);
 $assertTrue($fullBreakdown['success'] === true, 'breakdown: percent delivery and payment success');
 $assertSame([], $fullBreakdown['data']['warnings'], 'breakdown: default handlers no warnings');
 $assertSame(70.0, $fullBreakdown['data']['breakdown']['delivery_cost'], 'breakdown: percent delivery cost');
-$assertSame(32.1, $fullBreakdown['data']['breakdown']['payment_cost'], 'breakdown: payment fee on cart plus delivery');
-$assertSame(1102.1, $fullBreakdown['data']['breakdown']['cost'], 'breakdown: integrated total');
+$assertSame(30.0, $fullBreakdown['data']['breakdown']['payment_cost'], 'breakdown: payment fee on cart-only base');
+$assertSame(1100.0, $fullBreakdown['data']['breakdown']['cost'], 'breakdown: integrated total');
 
 $modx3 = new OrderCostRecalculatorModxStub();
 $recalculator3 = new ManagerOrderCostRecalculator($modx3, $createMs3($modx3));
