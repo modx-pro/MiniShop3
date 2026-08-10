@@ -205,6 +205,17 @@
       />
     </template>
 
+    <!-- Key-Value (ms3-key-value) -->
+    <template v-else-if="fieldConfig.xtype === 'ms3-key-value'">
+      <KeyValueField v-model="localValue" :config="keyValueConfig" :disabled="disabled" />
+      <!-- Hidden input bridges Vue state to legacy MODX Resource form POST (#298). -->
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="serializeKeyValueForPost(localValue)"
+      />
+    </template>
+
     <!-- Other ExtJS combo fields (ms3-combo-category, etc) -->
     <!-- For now, we display them as simple text info since editing happens in ExtJS form -->
     <div v-else-if="isExtJSComboField" class="extjs-combo-info">
@@ -245,9 +256,12 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
-import { getRepeaterConfigFromField, parseRepeaterModelValue } from '../utils/repeaterField.js'
+import { getKeyValueConfigFromField, serializeKeyValueForPost } from '../utils/keyValueField.js'
+import { getRepeaterConfigFromField } from '../utils/repeaterField.js'
+import { parseStructuredExtraFieldValue } from '../utils/structuredExtraField.js'
 import AutocompleteCombo from './AutocompleteCombo.vue'
 import FileBrowser from './FileBrowser.vue'
+import KeyValueField from './KeyValueField.vue'
 import OptionsChips from './OptionsChips.vue'
 import RepeaterField from './RepeaterField.vue'
 import VendorCombo from './VendorCombo.vue'
@@ -318,7 +332,7 @@ const isFileBrowserXtype = computed(() => {
  * Determine if field is complex type (requires hidden field with JSON)
  */
 const isComplexField = computed(() => {
-  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect', 'ms3-repeater']
+  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect']
   return complexTypes.includes(props.fieldConfig.xtype)
 })
 
@@ -353,12 +367,10 @@ const selectOptions = computed(() => {
 })
 
 const repeaterConfig = computed(() => getRepeaterConfigFromField(props.fieldConfig))
+const keyValueConfig = computed(() => getKeyValueConfigFromField(props.fieldConfig))
 
 function normalizeIncomingValue(value) {
-  if (props.fieldConfig.xtype === 'ms3-repeater') {
-    return parseRepeaterModelValue(value)
-  }
-  return value
+  return parseStructuredExtraFieldValue(props.fieldConfig.xtype, value)
 }
 
 /**

@@ -4,7 +4,7 @@ import Fieldset from 'primevue/fieldset'
 import { computed, inject } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
-import { REPEATER_XTYPE } from '../../utils/repeaterField.js'
+import { isFullWidthExtraFieldXtype } from '../../utils/structuredExtraField.js'
 import DynamicField from '../DynamicField.vue'
 
 const props = defineProps({
@@ -31,13 +31,15 @@ function getFieldConfig(field) {
     description: field.description || '',
     config: {
       repeater_config: field.repeater_config,
+      key_value_config: field.key_value_config,
     },
     repeater_config: field.repeater_config,
+    key_value_config: field.key_value_config,
   }
 }
 
 function getWidthClass(field) {
-  return field.xtype === REPEATER_XTYPE ? 'col-12' : 'col-6'
+  return isFullWidthExtraFieldXtype(field.xtype) ? 'col-12' : 'col-6'
 }
 </script>
 

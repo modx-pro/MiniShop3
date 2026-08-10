@@ -122,6 +122,7 @@ final class UpdateProductDataPermissionsTest extends TestCase
 
         $service = new TestableProductDataService($modx);
         $service->repeaterFields = [];
+        $service->keyValueFields = [];
 
         return $service;
     }
@@ -148,9 +149,17 @@ final class TestableProductDataService extends ProductDataService
     /** @var array<string, array> */
     public array $repeaterFields = [];
 
+    /** @var array<string, array> */
+    public array $keyValueFields = [];
+
     protected function getProductRepeaterFields(): array
     {
         return $this->repeaterFields;
+    }
+
+    protected function getProductKeyValueFields(): array
+    {
+        return $this->keyValueFields;
     }
 }
 

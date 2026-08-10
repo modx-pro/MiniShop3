@@ -13,6 +13,7 @@ use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\ExtraFields\KeyValueFieldService;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
 use MiniShop3\Services\CustomerDuplicateChecker;
 use MiniShop3\Services\CustomerFactory;
@@ -1763,27 +1764,51 @@ class OrdersController
             'active' => true,
         ]);
 
-        if (!$definition || $definition->get('xtype') !== RepeaterFieldService::XTYPE) {
+        if (!$definition) {
             return ['ok' => true, 'value' => $value];
         }
 
-        /** @var RepeaterFieldService $repeaterService */
-        $repeaterService = $this->modx->services->get('ms3_repeater_field');
-        $config = $repeaterService->parseConfig($definition->get('repeater_config'));
+        if ($definition->get('xtype') === RepeaterFieldService::XTYPE) {
+            /** @var RepeaterFieldService $repeaterService */
+            $repeaterService = $this->modx->services->get('ms3_repeater_field');
+            $config = $repeaterService->parseConfig($definition->get('repeater_config'));
 
-        try {
-            return ['ok' => true, 'value' => $repeaterService->processValue($value, $config)];
-        } catch (\InvalidArgumentException $e) {
-            $this->modx->lexicon->load('minishop3:default');
+            try {
+                return ['ok' => true, 'value' => $repeaterService->processValue($value, $config)];
+            } catch (\InvalidArgumentException $e) {
+                $this->modx->lexicon->load('minishop3:default');
 
-            return [
-                'ok' => false,
-                'message' => $this->modx->lexicon('ms3_repeater_validation_error', [
-                    'field' => $fieldKey,
-                    'error' => $e->getMessage(),
-                ]),
-            ];
+                return [
+                    'ok' => false,
+                    'message' => $this->modx->lexicon('ms3_repeater_validation_error', [
+                        'field' => $fieldKey,
+                        'error' => $e->getMessage(),
+                    ]),
+                ];
+            }
         }
+
+        if ($definition->get('xtype') === KeyValueFieldService::XTYPE) {
+            /** @var KeyValueFieldService $keyValueService */
+            $keyValueService = $this->modx->services->get('ms3_key_value_field');
+            $config = $keyValueService->parseConfig($definition->get('key_value_config'));
+
+            try {
+                return ['ok' => true, 'value' => $keyValueService->processValue($value, $config)];
+            } catch (\InvalidArgumentException $e) {
+                $this->modx->lexicon->load('minishop3:default');
+
+                return [
+                    'ok' => false,
+                    'message' => $this->modx->lexicon('ms3_key_value_validation_error', [
+                        'field' => $fieldKey,
+                        'error' => $e->getMessage(),
+                    ]),
+                ];
+            }
+        }
+
+        return ['ok' => true, 'value' => $value];
     }
 
     /**

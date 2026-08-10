@@ -19,10 +19,17 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
 import {
+  defaultKeyValueConfig,
+  encodeKeyValueConfig,
+  KEY_VALUE_XTYPE,
+  parseKeyValueConfig,
+} from '../utils/keyValueField.js'
+import {
   defaultRepeaterConfig,
   parseRepeaterConfig,
   REPEATER_XTYPE,
 } from '../utils/repeaterField.js'
+import KeyValueSchemaEditor from './KeyValueSchemaEditor.vue'
 import RepeaterSchemaEditor from './RepeaterSchemaEditor.vue'
 
 const toast = useToast()
@@ -58,6 +65,7 @@ const fieldForm = ref({
   active: true,
   select_options: '',
   repeater_config: defaultRepeaterConfig(),
+  key_value_config: defaultKeyValueConfig(),
 })
 
 /**
@@ -94,6 +102,7 @@ const xtypeOptions = computed(() => [
   { label: _('ms3_vue_xtype_xcheckbox'), value: 'xcheckbox' },
   { label: _('ms3_vue_xtype_combo_select'), value: 'ms3-combo-select' },
   { label: _('ms3_vue_xtype_repeater'), value: REPEATER_XTYPE },
+  { label: _('ms3_vue_xtype_key_value'), value: KEY_VALUE_XTYPE },
   { label: _('ms3_vue_xtype_combo_vendor'), value: 'ms3-combo-vendor' },
   { label: _('ms3_vue_xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
   { label: _('ms3_vue_xtype_combo_options'), value: 'ms3-combo-options' },
@@ -147,11 +156,12 @@ const indexTypeOptions = computed(() => [
 ])
 
 const isRepeaterField = computed(() => fieldForm.value.xtype === REPEATER_XTYPE)
+const isKeyValueField = computed(() => fieldForm.value.xtype === KEY_VALUE_XTYPE)
 
 watch(
   () => fieldForm.value.xtype,
   xtype => {
-    if (xtype !== REPEATER_XTYPE) {
+    if (xtype !== REPEATER_XTYPE && xtype !== KEY_VALUE_XTYPE) {
       return
     }
 
@@ -159,8 +169,12 @@ watch(
     fieldForm.value.phptype = 'json'
     fieldForm.value.precision = ''
     fieldForm.value.null = true
-    if (!fieldForm.value.repeater_config?.columns?.length) {
+
+    if (xtype === REPEATER_XTYPE && !fieldForm.value.repeater_config?.columns?.length) {
       fieldForm.value.repeater_config = defaultRepeaterConfig()
+    }
+    if (xtype === KEY_VALUE_XTYPE && !fieldForm.value.key_value_config?.mode) {
+      fieldForm.value.key_value_config = defaultKeyValueConfig()
     }
   }
 )
@@ -223,6 +237,7 @@ function openCreateDialog() {
     active: true,
     select_options: '',
     repeater_config: defaultRepeaterConfig(),
+    key_value_config: defaultKeyValueConfig(),
   }
 
   dialogVisible.value = true
@@ -254,6 +269,7 @@ function openEditDialog(field) {
     active: field.active,
     select_options: field.select_options || '',
     repeater_config: parseRepeaterConfig(field.repeater_config),
+    key_value_config: parseKeyValueConfig(field.key_value_config),
   }
 
   dialogVisible.value = true
@@ -316,6 +332,7 @@ async function createField() {
         fieldForm.value.active === 'true' ||
         fieldForm.value.active === 1,
       repeater_config: isRepeaterField.value ? buildRepeaterConfigPayload() : '',
+      key_value_config: isKeyValueField.value ? encodeKeyValueConfig(fieldForm.value.key_value_config) : '',
     }
 
     delete payload.id
@@ -367,6 +384,7 @@ async function updateField() {
       select_options:
         fieldForm.value.xtype === 'ms3-combo-select' ? fieldForm.value.select_options : '',
       repeater_config: isRepeaterField.value ? buildRepeaterConfigPayload() : '',
+      key_value_config: isKeyValueField.value ? encodeKeyValueConfig(fieldForm.value.key_value_config) : '',
     }
 
     const response = await request.put(`/api/mgr/extra-fields/${fieldForm.value.id}`, payload)
@@ -720,6 +738,13 @@ onMounted(() => {
               <RepeaterSchemaEditor v-model="fieldForm.repeater_config" />
               <small class="text-500">{{ _('ms3_vue_repeater_schema_help') }}</small>
             </div>
+
+            <!-- Key-Value schema -->
+            <div v-if="isKeyValueField" class="field col-12">
+              <label>{{ _('ms3_vue_key_value_schema_label') }}</label>
+              <KeyValueSchemaEditor v-model="fieldForm.key_value_config" />
+              <small class="text-500">{{ _('ms3_vue_key_value_schema_help') }}</small>
+            </div>
           </div>
         </Fieldset>
 
@@ -737,7 +762,7 @@ onMounted(() => {
                 option-value="value"
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
-                :disabled="isEditMode || isRepeaterField"
+                :disabled="isEditMode || isRepeaterField || isKeyValueField"
               />
             </div>
 
@@ -749,7 +774,7 @@ onMounted(() => {
                 v-model="fieldForm.precision"
                 :placeholder="_('ms3_vue_dialog_precision_placeholder')"
                 class="w-full"
-                :disabled="isEditMode || isRepeaterField"
+                :disabled="isEditMode || isRepeaterField || isKeyValueField"
               />
             </div>
 
@@ -764,7 +789,7 @@ onMounted(() => {
                 option-value="value"
                 :placeholder="_('ms3_vue_dialog_xtype_select')"
                 class="w-full"
-                :disabled="isEditMode || isRepeaterField"
+                :disabled="isEditMode || isRepeaterField || isKeyValueField"
               />
             </div>
 

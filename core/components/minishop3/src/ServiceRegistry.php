@@ -139,6 +139,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\ExtraFieldsService::class,
             'interface' => null,
         ],
+        'ms3_key_value_field' => [
+            'class' => \MiniShop3\Services\ExtraFields\KeyValueFieldService::class,
+            'interface' => null,
+        ],
         'ms3_product_image' => [
             'class' => \MiniShop3\Services\Product\ProductImageService::class,
             'interface' => null,

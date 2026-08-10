@@ -23,7 +23,7 @@ class ProductOptionsWriter
     }
 
     /**
-     * @param list<string> $repeaterKeys Repeater JSON field keys to exclude from option sync
+     * @param list<string> $repeaterKeys Repeater/key-value JSON field keys to exclude from option sync
      */
     public function saveOptions(
         msProductData $productData,
@@ -46,7 +46,7 @@ class ProductOptionsWriter
     }
 
     /**
-     * @param list<string> $repeaterKeys
+     * @param list<string> $repeaterKeys JSON keys excluded from option sync (repeaters, key-value)
      * @return array<string, mixed>
      */
     private function collectJsonFieldOptions(msProductData $productData, array $repeaterKeys): array
