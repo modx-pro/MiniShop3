@@ -102,7 +102,8 @@ class OrderDraftManager
         ];
         $msOrder->fromArray($data);
 
-        // TODO: Event before creating draft
+        // No draft-specific events in MS3 registry: msOrder::save() already fires
+        // msOnBeforeSaveOrder / msOnSaveOrder with MODE_NEW.
         $saved = $msOrder->save();
 
         if ($saved) {
@@ -113,7 +114,6 @@ class OrderDraftManager
                 'order_id' => $msOrder->get('id')
             ]);
             $msOrderAddress->save();
-            // TODO: Event after creating draft
         }
 
         return $msOrder;
@@ -200,10 +200,17 @@ class OrderDraftManager
 
     /**
      * Clean order data (reset all fields to null)
+     *
+     * @return true|string True on success, plugin error message otherwise
      */
-    public function clean(msOrder $draft): bool
+    public function clean(msOrder $draft): bool|string
     {
-        // TODO: Event before clean
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeEmptyOrder', [
+            'draft' => $draft,
+        ]);
+        if (!$response['success']) {
+            return $response['message'];
+        }
 
         // Clean address fields
         if ($draft->Address) {
@@ -227,7 +234,12 @@ class OrderDraftManager
         $draft->set('updatedon', time());
         $draft->save();
 
-        // TODO: event on clean
+        $response = $this->ms3->utils->invokeEvent('msOnEmptyOrder', [
+            'draft' => $draft,
+        ]);
+        if (!$response['success']) {
+            return $response['message'];
+        }
 
         return true;
     }

@@ -345,20 +345,32 @@ class Order
 
     /**
      * Set multiple order fields at once
+     *
+     * No batch msOn*SetOrder events in MS2/MS3: each field goes through add() and
+     * msOnBeforeAddToOrder / msOnAddToOrder (with returnedValues). This method only
+     * aggregates per-field failures for the API response.
      */
     public function set(array $order): array
     {
         $this->initDraft();
         $this->ensureOrderLoaded();
 
-        // TODO: Event before set
-        // TODO: Collect array of possible validation errors
+        $errors = [];
         foreach ($order as $key => $value) {
-            $this->add($key, $value);
+            $response = $this->add($key, $value);
+            if (!$response['success']) {
+                $errors[$key] = $response['message'];
+            }
         }
-        // TODO: Event on set
 
         $this->order = $this->draftManager->toArray($this->draft);
+
+        if (!empty($errors)) {
+            return $this->error('ms3_order_err_validation', [
+                'order' => $this->order,
+                'errors' => $errors,
+            ]);
+        }
 
         return $this->success('ms3_order_set_success', ['order' => $this->order]);
     }
@@ -399,7 +411,10 @@ class Order
             return $this->success('ms3_order_clean_success');
         }
 
-        $this->draftManager->clean($this->draft);
+        $result = $this->draftManager->clean($this->draft);
+        if ($result !== true) {
+            return $this->error($result !== '' ? $result : 'ms3_err_unknown');
+        }
 
         return $this->success('ms3_order_clean_success');
     }
