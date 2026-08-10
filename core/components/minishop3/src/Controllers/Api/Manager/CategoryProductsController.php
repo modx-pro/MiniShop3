@@ -681,8 +681,11 @@ class CategoryProductsController
         return $visible;
     }
 
-    /** @param list<string> $policies */
-    private function logDocumentPolicyDenied(msProduct $product, array $policies): void
+    /**
+     * @param object{get(string): mixed} $product msProduct or test stub with get('id')
+     * @param list<string> $policies
+     */
+    private function logDocumentPolicyDenied(object $product, array $policies): void
     {
         $this->modx->log(
             modX::LOG_LEVEL_WARN,
