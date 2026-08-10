@@ -2,6 +2,8 @@
 
 namespace MiniShop3;
 
+use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\modX;
 
 /**
@@ -79,6 +81,7 @@ class ServiceRegistry
         'ms3_order_finalize',
         'ms3_cart_mutation_handler',
         'ms3_customer_order_resolver',
+        'ms3_model_field_service',
     ];
 
     /**
@@ -110,6 +113,7 @@ class ServiceRegistry
             'ms3_order_log',
         ],
         'ms3_customer_order_resolver' => ['ms3_customer_field_manager'],
+        'ms3_model_field_service' => ['ms3_model_field_section_service'],
     ];
 
     /**
@@ -137,7 +141,7 @@ class ServiceRegistry
             'interface' => null,
         ],
         'ms3_product_import' => [
-            'class' => \MiniShop3\Services\Product\Import\ProductImportService::class,
+            'class' => ProductImportService::class,
             'interface' => null,
         ],
         'ms3_repeater_field' => [
@@ -150,6 +154,14 @@ class ServiceRegistry
         ],
         'ms3_key_value_field' => [
             'class' => \MiniShop3\Services\ExtraFields\KeyValueFieldService::class,
+            'interface' => null,
+        ],
+        'ms3_model_field_section_service' => [
+            'class' => \MiniShop3\Services\ModelField\ModelFieldSectionService::class,
+            'interface' => null,
+        ],
+        'ms3_model_field_service' => [
+            'class' => \MiniShop3\Services\ModelField\ModelFieldService::class,
             'interface' => null,
         ],
         'ms3_product_image' => [
@@ -179,7 +191,7 @@ class ServiceRegistry
         // Order workflow services (used by Order controller)
         // All services can be overridden via ms3.services.php config
         'ms3_order_draft_manager' => [
-            'class' => \MiniShop3\Services\Order\OrderDraftManager::class,
+            'class' => OrderDraftManager::class,
             'interface' => null,
         ],
         'ms3_order_cost_calculator' => [
@@ -686,6 +698,14 @@ class ServiceRegistry
                     $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
                     $fieldManager = $modx->services->get('ms3_customer_field_manager');
                     return new $validatedClass($modx, $ms3, $fieldManager);
+                });
+                break;
+
+            case 'ms3_model_field_service':
+                // ModelFieldService(modX, ModelFieldSectionService)
+                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
+                    $sectionService = $modx->services->get('ms3_model_field_section_service');
+                    return new $validatedClass($modx, $sectionService);
                 });
                 break;
 
