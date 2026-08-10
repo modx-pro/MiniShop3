@@ -1,7 +1,11 @@
 <?php
 
 /**
- * Guards email verify auto-login uses API token bind (issue #411).
+ * Guards auth call sites bind a rotated API session (#411 / #412).
+ *
+ * - email verify / Login / Register → AuthManager::establishApiSession
+ * - no in-place token rebind via set('customer_id')
+ * - checkout auto-login → establishCustomerSession / establishApiSession
  *
  * Run: php tests/EmailVerifyApiSessionTest.php
  */
@@ -51,7 +55,36 @@ if (!str_contains($registerSrc, 'establishApiSession')) {
     $fail('Register processor must reuse AuthManager::establishApiSession()');
 }
 
-if (!str_contains(file_get_contents(__DIR__ . '/../src/Services/Customer/AuthManager.php') ?: '', 'session_status()')) {
+foreach (
+    [
+        'Login' => $loginSrc,
+        'Register' => $registerSrc,
+        'CustomerEmailController' => $verifySrc,
+    ] as $label => $src
+) {
+    if (preg_match('/\$\w*[Tt]oken\w*->set\(\s*[\'"]customer_id[\'"]/', $src)) {
+        $fail("{$label} must not rebind API token via set(customer_id)");
+    }
+}
+
+$customerSrc = file_get_contents(__DIR__ . '/../src/Controllers/Customer/Customer.php');
+if ($customerSrc === false) {
+    $fail('unable to read Customer.php');
+}
+if (
+    preg_match(
+        '/function\s+createFromOrderData[\s\S]*?\$autoLogin[\s\S]*?establish(?:Api|Customer)Session/',
+        $customerSrc
+    ) !== 1
+) {
+    $fail('createFromOrderData auto-login must call establishApiSession/establishCustomerSession');
+}
+if (preg_match('/\$\w*[Tt]oken\w*->set\(\s*[\'"]customer_id[\'"]/', $customerSrc)) {
+    $fail('Customer controller must not rebind API token via set(customer_id)');
+}
+
+$authSrc = file_get_contents(__DIR__ . '/../src/Services/Customer/AuthManager.php') ?: '';
+if (!str_contains($authSrc, 'session_status()')) {
     $fail('AuthManager::establishApiSession() must ensure PHP session is active');
 }
 
