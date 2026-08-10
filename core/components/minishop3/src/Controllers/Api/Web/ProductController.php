@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MiniShop3\Controllers\Api\Web;
+
+use MiniShop3\Router\HttpStatus;
+use MiniShop3\Router\Response;
+use MiniShop3\Services\Product\ProductCatalogService;
+use MODX\Revolution\modX;
+
+/**
+ * Public catalog endpoints for Web API.
+ *
+ * No customer token required — same public surface as storefront SSR.
+ */
+class ProductController
+{
+    protected modX $modx;
+
+    public function __construct(modX $modx)
+    {
+        $this->modx = $modx;
+        $this->modx->lexicon->load('minishop3:default');
+    }
+
+    /**
+     * GET /api/v1/product/get/{id}
+     *
+     * @param array<string, mixed> $params
+     */
+    public function get(array $params = []): Response
+    {
+        $productId = (int) ($params['id'] ?? 0);
+
+        if ($productId <= 0) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_id_ns'),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $product = $this->catalog()->getById($productId, $params);
+
+        if ($product === null) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_nf'),
+                HttpStatus::NOT_FOUND
+            );
+        }
+
+        return Response::success($product);
+    }
+
+    /**
+     * GET /api/v1/product/list
+     *
+     * Query: parent|category, limit, offset|page, sort, dir, query,
+     *        context, include_options, include_content
+     *
+     * @param array<string, mixed> $params Route + query params (Router merges $_GET)
+     */
+    public function getList(array $params = []): Response
+    {
+        $result = $this->catalog()->getList($params);
+
+        return Response::success($result);
+    }
+
+    private function catalog(): ProductCatalogService
+    {
+        /** @var ProductCatalogService $service */
+        $service = $this->modx->services->get('ms3_product_catalog');
+
+        return $service;
+    }
+}

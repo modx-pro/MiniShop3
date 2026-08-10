@@ -250,14 +250,16 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
         }, [$tokenMiddleware]);
     });
 
+    // Public catalog — no TokenMiddleware (headless storefront without customer session)
     $router->group('/product', function ($router) use ($modx) {
-
         $router->get('/get/{id}', function ($params) use ($modx) {
-            return Response::success(['message' => 'Product get endpoint - not implemented yet', 'id' => $params['id'] ?? null]);
+            $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
+            return $controller->get($params);
         });
 
         $router->get('/list', function ($params) use ($modx) {
-            return Response::success(['message' => 'Product list endpoint - not implemented yet']);
+            $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
+            return $controller->getList($params);
         });
     });
     $router->get('/health', function () use ($modx) {
