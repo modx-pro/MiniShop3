@@ -185,9 +185,9 @@ class ProductImageService
     }
 
     /**
-     * @param bool|null $stalePreview set true when preview_file_id pointed at a missing file
+     * @param bool $stalePreview set true when preview_file_id pointed at a missing file
      */
-    private function findMainImageFile(msProductData $productData, ?bool &$stalePreview = null): ?msProductFile
+    private function findMainImageFile(msProductData $productData, bool &$stalePreview = false): ?msProductFile
     {
         $stalePreview = false;
         $productId = (int) $productData->get('id');

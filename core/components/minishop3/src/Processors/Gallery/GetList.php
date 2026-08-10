@@ -4,6 +4,7 @@ namespace MiniShop3\Processors\Gallery;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Services\Product\ProductImageService;
 use MODX\Revolution\modX;
@@ -36,7 +37,7 @@ class GetList extends GetListProcessor
         $product = $this->modx->getObject(msProduct::class, (int)$this->getProperty('product_id'));
         if ($product) {
             $data = $product->getOne('Data');
-            if ($data) {
+            if ($data instanceof msProductData) {
                 /** @var ProductImageService|null $imageService */
                 $imageService = $this->modx->services->get('ms3_product_image');
                 if ($imageService instanceof ProductImageService) {

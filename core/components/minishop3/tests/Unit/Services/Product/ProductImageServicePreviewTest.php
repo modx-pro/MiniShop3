@@ -151,7 +151,7 @@ final class ProductImageServicePreviewTest extends TestCase
     private function invokeFind(
         ProductImageService $service,
         msProductData $data,
-        ?bool &$stale = null
+        bool &$stale = false
     ): ?msProductFile {
         $method = new ReflectionMethod(ProductImageService::class, 'findMainImageFile');
         $method->setAccessible(true);
