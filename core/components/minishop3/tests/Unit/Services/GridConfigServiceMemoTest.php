@@ -47,7 +47,8 @@ final class GridConfigServiceMemoTest extends TestCase
         $service->saveGridConfig('orders', []);
         $service->getGridConfig('orders', true);
 
-        // 1st read + saveGridConfig delete scan + 2nd read after cache invalidation
-        self::assertSame(3, $modx->getCollectionCalls);
+        // 1st read + 2nd read after cache invalidation.
+        // Empty save keep-list short-circuits findNonSystemNotIn (no getCollection).
+        self::assertSame(2, $modx->getCollectionCalls);
     }
 }

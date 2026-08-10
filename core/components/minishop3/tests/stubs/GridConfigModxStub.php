@@ -17,7 +17,7 @@ final class GridConfigModxStub extends modX
     public array $gridFields = [];
 
     /** @var object */
-    public object $lexicon;
+    public $lexicon;
 
     public function __construct()
     {
