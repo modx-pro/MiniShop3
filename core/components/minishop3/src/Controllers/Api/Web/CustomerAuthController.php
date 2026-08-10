@@ -128,24 +128,15 @@ class CustomerAuthController
      */
     private function runProcessor(string $processorClass, array $properties): Response
     {
-        /** @var object $response */
         $response = $this->modx->runProcessor($processorClass, $properties);
 
-        return $this->toResponse($response);
-    }
-
-    private function toResponse(object $response): Response
-    {
-        if ($response->isError()) {
-            $payload = $response->getObject();
-            $status = HttpStatus::BAD_REQUEST;
-            if (is_array($payload) && isset($payload['code']) && is_numeric($payload['code'])) {
-                $status = (int) $payload['code'];
-            }
-
-            return Response::error($response->getMessage(), $status);
+        if (!is_object($response)) {
+            return Response::error(
+                'Processor failed',
+                HttpStatus::INTERNAL_SERVER_ERROR
+            );
         }
 
-        return Response::success($response->getObject(), $response->getMessage());
+        return Response::fromProcessor($response);
     }
 }

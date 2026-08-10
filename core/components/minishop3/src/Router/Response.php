@@ -3,7 +3,17 @@
 namespace MiniShop3\Router;
 
 /**
- * JSON Response class
+ * JSON Response class — HTTP boundary envelope for Manager/Web API.
+ *
+ * | Layer | Contract | Notes |
+ * |-------|----------|-------|
+ * | HTTP boundary (Api controllers, route handlers, middleware) | `Response::success` / `error` / `fromProcessor` | Always this shape on the wire via Router |
+ * | Domain facades (Cart / Order / Customer) | MS2-array `{success,message,data}` | Snippet/plugin compatibility; do not re-wrap into Response inside domain |
+ * | Legacy `modProcessor` | `failure` / `success` | Bridge at HTTP edge with `Response::fromProcessor` — never return raw `getResponse()` from mgr/web routes |
+ *
+ * Do not nest `Response` inside `$ms3->utils->success` (or the reverse) without a concrete need.
+ *
+ * @see https://github.com/modx-pro/MiniShop3/issues/341
  */
 class Response
 {
@@ -65,8 +75,15 @@ class Response
     /**
      * Map a MODX processor response to an API Response.
      *
-     * Error processors may pass ['code' => HttpStatus::…] as the failure object
-     * (Login/Register rate-limit and auth failures).
+     * Do not return processor `getResponse()` from routes: connector Index unwraps
+     * `Response` as `$responseData['data'] ?? $responseData`, so a raw processor
+     * payload nests as `object.object.*`.
+     *
+     * Error shape:
+     * - `errors` — MODX field/validation map from `addFieldError` (when present)
+     * - `data` — processor object minus transport-only `code` (import stats, etc.)
+     * - HTTP/`code` — from object `code` when it is an allowed HttpStatus
+     *   (Login/Register rate-limit and auth failures)
      *
      * @param object $processorResponse modProcessorResponse (isError/getMessage/getObject)
      */
@@ -76,10 +93,85 @@ class Response
             return self::success($processorResponse->getObject(), $processorResponse->getMessage());
         }
 
-        return self::error(
-            (string) $processorResponse->getMessage(),
-            self::statusFromProcessorObject($processorResponse->getObject())
-        );
+        $object = $processorResponse->getObject();
+        $status = self::statusFromProcessorObject($object);
+        $fieldErrors = self::fieldErrorsFromProcessor($processorResponse);
+        $message = (string) $processorResponse->getMessage();
+        if ($message === '' && $fieldErrors !== null) {
+            $message = self::messageFromFieldErrors($fieldErrors);
+        }
+
+        $data = null;
+        if (is_array($object)) {
+            $data = $object;
+            unset($data['code']);
+            if ($data === []) {
+                $data = null;
+            }
+        }
+
+        $body = [
+            'success' => false,
+            'message' => $message,
+            'code' => $status,
+            'errors' => $fieldErrors,
+        ];
+        if ($data !== null) {
+            $body['data'] = $data;
+        }
+
+        return new self($body, $status);
+    }
+
+    /**
+     * Field errors from modProcessorResponse (addFieldError → getResponse()['errors']).
+     *
+     * @return array<int|string, mixed>|null
+     */
+    public static function fieldErrorsFromProcessor(object $processorResponse): ?array
+    {
+        if (method_exists($processorResponse, 'getResponse')) {
+            $raw = $processorResponse->getResponse();
+            if (is_string($raw) && $raw !== '') {
+                $decoded = json_decode($raw, true);
+                $raw = is_array($decoded) ? $decoded : null;
+            }
+            if (is_array($raw) && !empty($raw['errors']) && is_array($raw['errors'])) {
+                return $raw['errors'];
+            }
+        }
+
+        if (
+            method_exists($processorResponse, 'hasFieldErrors')
+            && method_exists($processorResponse, 'getFieldErrors')
+            && $processorResponse->hasFieldErrors()
+        ) {
+            $fieldErrors = $processorResponse->getFieldErrors();
+            if (is_array($fieldErrors) && $fieldErrors !== []) {
+                return $fieldErrors;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, mixed> $fieldErrors
+     */
+    private static function messageFromFieldErrors(array $fieldErrors): string
+    {
+        $first = reset($fieldErrors);
+        if (is_array($first) && isset($first['msg'])) {
+            return (string) $first['msg'];
+        }
+        if (is_object($first) && isset($first->msg)) {
+            return (string) $first->msg;
+        }
+        if (is_string($first) && $first !== '') {
+            return $first;
+        }
+
+        return '';
     }
 
     /**
