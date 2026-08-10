@@ -5,7 +5,7 @@
  *
  * - email verify / Login / Register → AuthManager::establishApiSession
  * - no in-place token rebind via set('customer_id')
- * - checkout auto-login → establishCustomerSession / establishApiSession
+ * - checkout auto-login → CustomerOrderResolver + establishCustomerSession / establishApiSession
  *
  * Run: php tests/EmailVerifyApiSessionTest.php
  */
@@ -71,16 +71,25 @@ $customerSrc = file_get_contents(__DIR__ . '/../src/Controllers/Customer/Custome
 if ($customerSrc === false) {
     $fail('unable to read Customer.php');
 }
+if (preg_match('/\$\w*[Tt]oken\w*->set\(\s*[\'"]customer_id[\'"]/', $customerSrc)) {
+    $fail('Customer controller must not rebind API token via set(customer_id)');
+}
+
+// Checkout auto-login lives on CustomerOrderResolver (Customer facade delegates).
+$orderResolverSrc = file_get_contents(__DIR__ . '/../src/Services/Customer/CustomerOrderResolver.php');
+if ($orderResolverSrc === false) {
+    $fail('unable to read CustomerOrderResolver.php');
+}
 if (
     preg_match(
         '/function\s+createFromOrderData[\s\S]*?\$autoLogin[\s\S]*?establish(?:Api|Customer)Session/',
-        $customerSrc
+        $orderResolverSrc
     ) !== 1
 ) {
     $fail('createFromOrderData auto-login must call establishApiSession/establishCustomerSession');
 }
-if (preg_match('/\$\w*[Tt]oken\w*->set\(\s*[\'"]customer_id[\'"]/', $customerSrc)) {
-    $fail('Customer controller must not rebind API token via set(customer_id)');
+if (preg_match('/\$\w*[Tt]oken\w*->set\(\s*[\'"]customer_id[\'"]/', $orderResolverSrc)) {
+    $fail('CustomerOrderResolver must not rebind API token via set(customer_id)');
 }
 
 $authSrc = file_get_contents(__DIR__ . '/../src/Services/Customer/AuthManager.php') ?: '';
