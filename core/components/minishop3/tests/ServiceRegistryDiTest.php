@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DI registry smoke — OptionService wiring (#363, #531/#532).
+ * DI registry smoke — OptionService wiring (#363, #531/#532) + ServiceRegistryFactories (#345).
  *
  * Run: php tests/ServiceRegistryDiTest.php
  */
@@ -47,19 +47,21 @@ if (!str_contains($registrySrc, 'SERVICES_WITH_DEPENDENCIES')) {
     $fail('ServiceRegistry must declare SERVICES_WITH_DEPENDENCIES factory map');
 }
 
-if (!str_contains($registrySrc, "case 'ms3_option_service':")) {
-    $fail('registerServiceWithDependencies must wire ms3_option_service');
+$factoriesSrc = file_get_contents(__DIR__ . '/../src/ServiceRegistryFactories.php');
+if ($factoriesSrc === false || $factoriesSrc === '') {
+    $fail('unable to read ServiceRegistryFactories.php');
 }
 
-if (!str_contains($registrySrc, "services->get('ms3_option_category_service')")) {
-    $fail('ms3_option_service factory must resolve ms3_option_category_service (#531/#532)');
+if (!str_contains($factoriesSrc, "'ms3_option_service'")) {
+    $fail('ServiceRegistryFactories must wire ms3_option_service');
 }
 
-if (preg_match(
-    "/case 'ms3_option_service':.*?services->get\\('ms3_category_option_service'\\)/s",
-    $registrySrc
-) === 1) {
-    $fail('ms3_option_service must not inject ms3_category_option_service (wrong class) (#531/#532)');
+if (!str_contains($factoriesSrc, "services->get('ms3_option_category_service')")) {
+    $fail('ServiceRegistryFactories must resolve ms3_option_category_service for OptionService (#531/#532)');
+}
+
+if (str_contains($factoriesSrc, "services->get('ms3_category_option_service')")) {
+    $fail('ms3_option_service factory must not inject ms3_category_option_service (wrong class) (#531/#532)');
 }
 
 if (!str_contains($registrySrc, 'SERVICES_WITH_MODX_AND_MS3')) {
@@ -186,7 +188,6 @@ if (!$categoryType instanceof ReflectionNamedType || $categoryType->getName() !=
     $fail('OptionService 4th ctor param must be typed OptionCategoryService');
 }
 
-// Class map for 4th DI dep must match ctor type (catches CategoryOptionService mix-up).
 $categoryDepClass = $defaults['ms3_option_category_service']['class'] ?? null;
 if ($categoryDepClass !== $categoryType->getName()) {
     $fail('ms3_option_category_service class must match OptionService 4th ctor type');
