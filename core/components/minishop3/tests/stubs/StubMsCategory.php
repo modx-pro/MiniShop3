@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Stubs;
 
 /**
- * Minimal msProduct stand-in for scope / controller smoke tests.
+ * Minimal msCategory stand-in for document ACL smoke tests (#445).
  */
-class StubMsProduct
+class StubMsCategory
 {
     /** @var array<string, mixed> */
     private array $data;
@@ -28,16 +28,6 @@ class StubMsProduct
     public function get(string $key): mixed
     {
         return $this->data[$key] ?? null;
-    }
-
-    public function set(string $key, mixed $value): void
-    {
-        $this->data[$key] = $value;
-    }
-
-    public function save(): bool
-    {
-        return true;
     }
 
     public function checkPolicy(string $policy): bool
