@@ -10,6 +10,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Services\Cart\CartItemManager;
+use MiniShop3\Services\Cart\CartMutationHandler;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\Order\OrderLogService;
 use MiniShop3\Services\Order\OrderService;
@@ -332,6 +333,13 @@ final class HarnessCart extends Cart
         $this->modx = $ms3->modx;
         $this->itemManager = $itemManager;
         $this->draftManager = $draftManager;
+        $this->mutationHandler = new CartMutationHandler(
+            $this->modx,
+            $this->ms3,
+            $this->draftManager,
+            $this->itemManager,
+            $this->getOrderLog()
+        );
     }
 
     protected function getOrderLog(): OrderLogService

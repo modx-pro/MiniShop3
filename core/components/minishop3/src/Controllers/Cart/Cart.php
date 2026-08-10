@@ -4,8 +4,8 @@ namespace MiniShop3\Controllers\Cart;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
-use MiniShop3\Model\msOrderLog;
 use MiniShop3\Services\Cart\CartItemManager;
+use MiniShop3\Services\Cart\CartMutationHandler;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\Order\OrderLogService;
 use MODX\Revolution\modX;
@@ -49,6 +49,7 @@ class Cart
     // Services
     protected OrderDraftManager $draftManager;
     protected CartItemManager $itemManager;
+    protected CartMutationHandler $mutationHandler;
     protected ?OrderLogService $orderLog = null;
 
     public function __construct(MiniShop3 $ms3, array $config = [])
@@ -75,6 +76,17 @@ class Cart
         $this->itemManager = $this->getServiceFromDI(
             'ms3_cart_item_manager',
             fn() => new CartItemManager($this->modx, $this->ms3)
+        );
+
+        $this->mutationHandler = $this->getServiceFromDI(
+            'ms3_cart_mutation_handler',
+            fn() => new CartMutationHandler(
+                $this->modx,
+                $this->ms3,
+                $this->draftManager,
+                $this->itemManager,
+                $this->getOrderLog()
+            )
         );
     }
 
@@ -171,75 +183,9 @@ class Cart
         $this->ensureDraft();
         $this->loadCart();
 
-        if (empty($id) || !is_numeric($id)) {
-            return $this->error('ms3_cart_add_err_id');
-        }
+        $response = $this->mutationHandler->add($this, $this->draft, $this->cart, $id, $count, $options);
 
-        $count = (int)$count;
-        $options = $this->itemManager->normalizeOptions($options);
-
-        if (!$this->itemManager->validateCount($count)) {
-            return $this->error('ms3_cart_add_err_count', $this->getStatus(), ['count' => $count]);
-        }
-
-        $product = $this->itemManager->validateProduct($id);
-        if (!$product) {
-            return $this->error('ms3_cart_add_err_nf', $this->getStatus());
-        }
-
-        $response = $this->invokeEvent('msOnBeforeAddToCart', [
-            'msProduct' => $product,
-            'count' => $count,
-            'options' => $options,
-        ]);
-        if (!$response['success']) {
-            return $this->error($response['message']);
-        }
-
-        $count = $response['data']['count'];
-        $options = $response['data']['options'];
-
-        $productKey = $this->itemManager->generateProductKey($product->toArray(), $options);
-
-        // If product already in cart - increase count
-        if (isset($this->cart[$productKey])) {
-            return $this->change($productKey, $this->cart[$productKey]['count'] + $count);
-        }
-
-        $cartItem = $this->itemManager->addItem($this->draft, $product, $count, $options, $productKey);
-
-        // Log product addition
-        $this->getOrderLog()->addEntry(
-            $this->draft->get('id'),
-            msOrderLog::ACTION_PRODUCTS,
-            [
-                'operation' => 'add',
-                'product_id' => $id,
-                'product_name' => $product->get('pagetitle'),
-                'count' => $count,
-                'price' => $cartItem->get('price'),
-                'cost' => $cartItem->get('cost'),
-            ]
-        );
-
-        $this->draftManager->recalculate($this->draft);
-        $this->loadCart();
-
-        $response = $this->invokeEvent('msOnAddToCart', [
-            'msProduct' => $product,
-            'count' => $count,
-            'options' => $options,
-            'product_key' => $productKey,
-        ]);
-        if (!$response['success']) {
-            return $this->error($response['message']);
-        }
-
-        return $this->success('ms3_cart_add_success', [
-            'last_key' => $productKey,
-            'cart' => $this->cart,
-            'status' => $this->getStatus(),
-        ], ['count' => $count]);
+        return $this->applyMutationResponse($response);
     }
 
     /**
@@ -247,77 +193,15 @@ class Cart
      */
     public function change(string $productKey, int $count): array
     {
-        if (empty($this->token)) {
-            return $this->error('ms3_err_token');
-        }
-
-        $this->initDraft();
-
-        if (!$this->draft) {
-            return $this->error('ms3_cart_change_error', $this->getStatus());
-        }
-
-        $this->loadCart();
-
-        if (!isset($this->cart[$productKey])) {
-            return $this->error('ms3_cart_change_error', $this->getStatus());
-        }
-
-        $count = (int)$count;
-
-        if ($count <= 0) {
-            return $this->remove($productKey);
-        }
-
-        if (!$this->itemManager->validateCount($count)) {
-            return $this->error('ms3_cart_add_err_count', $this->getStatus(), ['count' => $count]);
-        }
-
-        $response = $this->invokeEvent('msOnBeforeChangeInCart', [
-            'product_key' => $productKey,
-            'count' => $count,
-        ]);
-        if (!$response['success']) {
-            return $this->error($response['message']);
-        }
-        $count = $response['data']['count'];
-
-        // Store old values for logging
-        $oldCount = $this->cart[$productKey]['count'];
-        $productId = $this->cart[$productKey]['product_id'];
-        $productName = $this->cart[$productKey]['name'] ?? '';
-
-        $this->itemManager->updateItemCount($this->draft, $productKey, $count);
-
-        // Log quantity change
-        if ($oldCount != $count) {
-            $this->getOrderLog()->addEntry(
-                $this->draft->get('id'),
-                msOrderLog::ACTION_PRODUCTS,
-                [
-                    'operation' => 'update',
-                    'product_id' => $productId,
-                    'product_name' => $productName,
-                    'changes' => [
-                        'count' => ['old' => $oldCount, 'new' => $count],
-                    ],
-                ]
-            );
-        }
-
-        $this->draftManager->recalculate($this->draft);
-        $this->loadCart();
-
-        $this->invokeEvent('msOnChangeInCart', [
-            'product_key' => $productKey,
-            'count' => $count,
-        ]);
-
-        return $this->success('ms3_cart_change_success', [
-            'last_key' => $productKey,
-            'cart' => $this->cart,
-            'status' => $this->getStatus(),
-        ], ['count' => $count]);
+        return $this->mutateExistingDraft(
+            fn(msOrder $draft, array $cart) => $this->mutationHandler->change(
+                $this,
+                $draft,
+                $cart,
+                $productKey,
+                $count
+            )
+        );
     }
 
     /**
@@ -325,99 +209,15 @@ class Cart
      */
     public function changeOption(string $productKey, array $options): array
     {
-        if (empty($this->token)) {
-            return $this->error('ms3_err_token');
-        }
-
-        $this->initDraft();
-
-        if (!$this->draft) {
-            return $this->error('ms3_cart_change_error', $this->getStatus());
-        }
-
-        $this->loadCart();
-
-        if (!isset($this->cart[$productKey])) {
-            return $this->error('ms3_cart_change_error', $this->getStatus());
-        }
-
-        if (empty($options)) {
-            return $this->error('ms3_cart_change_options_error', $this->getStatus());
-        }
-
-        $response = $this->invokeEvent('msOnBeforeChangeOptionsInCart', [
-            'product_key' => $productKey,
-            'options' => $options,
-        ]);
-        if (!$response['success']) {
-            return $this->error($response['message']);
-        }
-        if (isset($response['data']['options']) && is_array($response['data']['options'])) {
-            $options = $response['data']['options'];
-        }
-
-        $count = $this->cart[$productKey]['count'];
-
-        // Check if new key already exists
-        $item = $this->itemManager->getItemByKey($this->draft, $productKey);
-        if ($item) {
-            $currentOptions = $item->get('options') ?? [];
-            foreach ($options as $key => $value) {
-                if (!empty($value)) {
-                    $currentOptions[$key] = $value;
-                } else {
-                    unset($currentOptions[$key]);
-                }
-            }
-
-            $product = $item->getOne('Product');
-            if ($product) {
-                $newProductKey = $this->itemManager->generateProductKey($product->toArray(), $currentOptions);
-
-                // If new key exists, merge quantities into the existing line.
-                if ($newProductKey !== $productKey && isset($this->cart[$newProductKey])) {
-                    $mergedCount = (int) $this->cart[$newProductKey]['count'] + (int) $count;
-                    $item->remove();
-                    $result = $this->change($newProductKey, $mergedCount);
-                    if (!empty($result['success'])) {
-                        $this->invokeEvent('msOnChangeOptionInCart', [
-                            'old_product_key' => $productKey,
-                            'product_key' => $newProductKey,
-                            'options' => $options,
-                        ]);
-                        // Prefer options lexicon over quantity-change wording.
-                        $result = $this->success('ms3_cart_change_options_success', [
-                            'last_key' => $newProductKey,
-                            'cart' => $result['data']['cart'] ?? $this->cart,
-                            'status' => $result['data']['status'] ?? $this->getStatus(),
-                        ], ['count' => $mergedCount]);
-                    }
-
-                    return $result;
-                }
-            }
-        }
-
-        $newProductKey = $this->itemManager->updateItemOptions($this->draft, $productKey, $options);
-
-        if (!$newProductKey) {
-            return $this->error('ms3_cart_change_error', $this->getStatus());
-        }
-
-        $this->draftManager->recalculate($this->draft);
-        $this->loadCart();
-
-        $this->invokeEvent('msOnChangeOptionInCart', [
-            'old_product_key' => $productKey,
-            'product_key' => $newProductKey,
-            'options' => $options,
-        ]);
-
-        return $this->success('ms3_cart_change_options_success', [
-            'last_key' => $newProductKey,
-            'cart' => $this->cart,
-            'status' => $this->getStatus(),
-        ], ['count' => $count]);
+        return $this->mutateExistingDraft(
+            fn(msOrder $draft, array $cart) => $this->mutationHandler->changeOption(
+                $this,
+                $draft,
+                $cart,
+                $productKey,
+                $options
+            )
+        );
     }
 
     /**
@@ -425,66 +225,9 @@ class Cart
      */
     public function remove(string $productKey): array
     {
-        if (empty($this->token)) {
-            return $this->error('ms3_err_token');
-        }
-
-        $this->initDraft();
-
-        if (!$this->draft) {
-            return $this->error('ms3_cart_change_error', $this->getStatus());
-        }
-
-        $this->loadCart();
-
-        if (!isset($this->cart[$productKey])) {
-            return $this->error('ms3_cart_change_error', $this->getStatus());
-        }
-
-        $response = $this->invokeEvent('msOnBeforeRemoveFromCart', [
-            'product_key' => $productKey,
-        ]);
-        if (!$response['success']) {
-            return $this->error($response['message']);
-        }
-
-        // Store data for logging
-        $itemData = $this->itemManager->getItemDataForLog($this->draft, $productKey);
-        $orderId = $this->draft->get('id');
-
-        $this->itemManager->removeItem($this->draft, $productKey);
-
-        // Log product removal
-        $this->getOrderLog()->addEntry(
-            $orderId,
-            msOrderLog::ACTION_PRODUCTS,
-            [
-                'operation' => 'remove',
-                'product_id' => $itemData['product_id'] ?? 0,
-                'product_name' => $itemData['product_name'] ?? '',
-                'count' => $itemData['count'] ?? 0,
-                'price' => $itemData['price'] ?? 0,
-            ]
+        return $this->mutateExistingDraft(
+            fn(msOrder $draft, array $cart) => $this->mutationHandler->remove($this, $draft, $cart, $productKey)
         );
-
-        if ($this->draftManager->isEmpty($this->draft)) {
-            $this->draftManager->deleteDraft($this->draft);
-            $this->draft = null;
-            $this->cart = [];
-        } else {
-            $this->draftManager->recalculate($this->draft);
-            $this->loadCart();
-        }
-
-        $this->invokeEvent('msOnRemoveFromCart', [
-            'product_key' => $productKey,
-        ]);
-
-        return $this->success('ms3_cart_remove_success', [
-            'last_key' => $productKey,
-            'cart' => $this->cart,
-            'status' => $this->getStatus(),
-        ]);
     }
 
     /**
@@ -626,6 +369,46 @@ class Cart
         }
 
         $this->cart = $this->itemManager->loadItems($this->draft);
+    }
+
+    /**
+     * Run mutation against an existing draft cart
+     */
+    protected function mutateExistingDraft(callable $handler): array
+    {
+        if (empty($this->token)) {
+            return $this->error('ms3_err_token');
+        }
+
+        $this->initDraft();
+
+        if (!$this->draft) {
+            return $this->error('ms3_cart_change_error', $this->getStatus());
+        }
+
+        $this->loadCart();
+
+        return $this->applyMutationResponse($handler($this->draft, $this->cart));
+    }
+
+    /**
+     * Sync facade draft/cart from handler payload (status already owned by handler).
+     */
+    protected function applyMutationResponse(array $response): array
+    {
+        $data = $response['data'] ?? [];
+
+        if (array_key_exists('draft', $data)) {
+            $this->draft = $data['draft'];
+            unset($data['draft']);
+        }
+        if (array_key_exists('cart', $data)) {
+            $this->cart = $data['cart'];
+        }
+
+        $response['data'] = $data;
+
+        return $response;
     }
 
     /**
