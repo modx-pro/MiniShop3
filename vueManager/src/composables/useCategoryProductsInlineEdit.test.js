@@ -122,10 +122,8 @@ describe('useCategoryProductsInlineEdit', () => {
     api.inlineEditValue.value = '25'
     await api.saveInlineEdit(product, column)
 
-    expect(request.put).toHaveBeenCalledWith('/api/mgr/product-data/11', {
+    expect(request.put).toHaveBeenCalledWith('/api/mgr/categories/5/products/11/data', {
       price: 25,
-      category_id: 5,
-      nested: false,
     })
     expect(products.value[0].price).toBe(25)
     expect(toast.add).toHaveBeenCalledWith(

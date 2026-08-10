@@ -340,6 +340,76 @@ class CategoryProductsController
     }
 
     /**
+     * Update product data from category grid inline-edit
+     * PUT /api/mgr/categories/{id}/products/{productId}/data
+     *
+     * @param array $params
+     * @return array Response
+     */
+    public function updateProductData(array $params = []): array
+    {
+        $categoryId = (int) ($params['id'] ?? 0);
+        $productId = (int) ($params['productId'] ?? 0);
+        $nested = filter_var($params['nested'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        if (!$categoryId) {
+            return Response::error('Category ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        if (!$productId) {
+            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        $data = $params;
+        unset($data['id'], $data['productId'], $data['nested']);
+
+        if ($data === []) {
+            return Response::error('Invalid request data', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        // Scope check + product fetch in one round-trip (CategoryProductScopePolicy).
+        // Replaces the separate isProductInCategoryScope() bool-only lookup and yields
+        // the product instance for the document ACL check below (#473 pattern).
+        $product = $this->scopeService()->findInCategory($categoryId, $productId, $nested);
+
+        if (!$product) {
+            $this->modx->lexicon->load('minishop3:default');
+
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_not_in_category_scope'),
+                HttpStatus::FORBIDDEN
+            )->getData();
+        }
+
+        $savePolicies = [CategoryProductDocumentPolicy::POLICY_SAVE];
+        if (!CategoryProductDocumentPolicy::isAllowedAll($product, $savePolicies)) {
+            $this->logDocumentPolicyDenied($product, $savePolicies);
+
+            return Response::error(
+                'Save permission denied for this document',
+                HttpStatus::FORBIDDEN
+            )->getData();
+        }
+
+        /** @var \MiniShop3\Services\Product\ProductDataService|null $productDataService */
+        $productDataService = $this->modx->services->get('ms3_product_data_service');
+        if (!$productDataService) {
+            return Response::error('Product data service is not available', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+        }
+
+        $result = $productDataService->updateProductData($productId, $data);
+
+        if (!empty($result['ok']) && !empty($result['data'])) {
+            return Response::success($result['data'])->getData();
+        }
+
+        $code = $result['code'] ?? HttpStatus::INTERNAL_SERVER_ERROR;
+        $message = $result['message'] ?? 'Failed to save product data';
+
+        return Response::error($message, $code)->getData();
+    }
+
+    /**
      * Toggle product publish status
      * POST /api/mgr/categories/{id}/products/{productId}/publish
      *
@@ -611,8 +681,11 @@ class CategoryProductsController
         return $visible;
     }
 
-    /** @param list<string> $policies */
-    private function logDocumentPolicyDenied(msProduct $product, array $policies): void
+    /**
+     * @param object $product msProduct or smoke-test stub exposing get('id')
+     * @param list<string> $policies
+     */
+    private function logDocumentPolicyDenied(object $product, array $policies): void
     {
         $this->modx->log(
             modX::LOG_LEVEL_WARN,

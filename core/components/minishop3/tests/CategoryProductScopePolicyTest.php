@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Regression tests for category product scope policy (issue #444).
+ * Regression tests for category product scope policy (#444, #455).
  *
  * Run: php tests/CategoryProductScopePolicyTest.php
  */
@@ -42,6 +42,17 @@ $assertSame(
 );
 $assertSame(false, CategoryProductScopePolicy::isParentInScope(0, 10, false, []), 'invalid product parent');
 $assertSame(false, CategoryProductScopePolicy::isParentInScope(10, 0, false, []), 'invalid category id');
+
+$assertSame(
+    [10],
+    CategoryProductScopePolicy::allowedParentCategoryIds(10, false, [11, 12]),
+    'allowedParentCategoryIds direct'
+);
+$assertSame(
+    [11, 12, 10],
+    CategoryProductScopePolicy::allowedParentCategoryIds(10, true, [11, 12]),
+    'allowedParentCategoryIds nested'
+);
 
 fwrite(STDOUT, "OK CategoryProductScopePolicyTest\n");
 exit(0);

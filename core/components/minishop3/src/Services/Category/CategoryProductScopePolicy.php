@@ -22,13 +22,30 @@ final class CategoryProductScopePolicy
             return false;
         }
 
+        return in_array(
+            $productParentId,
+            self::allowedParentCategoryIds($categoryId, $nested, $descendantCategoryIds),
+            true
+        );
+    }
+
+    /**
+     * @param list<int> $descendantCategoryIds Child category IDs (recursive, excluding root)
+     *
+     * @return list<int>
+     */
+    public static function allowedParentCategoryIds(
+        int $categoryId,
+        bool $nested,
+        array $descendantCategoryIds
+    ): array {
         if (!$nested) {
-            return $productParentId === $categoryId;
+            return [$categoryId];
         }
 
         $allowed = $descendantCategoryIds;
         $allowed[] = $categoryId;
 
-        return in_array($productParentId, $allowed, true);
+        return $allowed;
     }
 }

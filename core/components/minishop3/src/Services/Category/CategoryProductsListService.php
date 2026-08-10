@@ -227,6 +227,38 @@ final class CategoryProductsListService
     }
 
     /**
+     * Parent category IDs allowed for products in category grid scope (matches list filter).
+     *
+     * @return list<int>
+     */
+    public function getAllowedProductParentCategoryIds(int $categoryId, bool $nested): array
+    {
+        return CategoryProductScopePolicy::allowedParentCategoryIds(
+            $categoryId,
+            $nested,
+            $nested ? $this->treeService()->getDescendantCategoryIds($categoryId) : []
+        );
+    }
+
+    /**
+     * Whether a product belongs to the category products grid scope (direct parent or nested tree).
+     */
+    public function isProductInCategoryScope(int $productId, int $categoryId, bool $nested): bool
+    {
+        $product = $this->modx->getObject(msProduct::class, $productId);
+        if (!$product) {
+            return false;
+        }
+
+        return CategoryProductScopePolicy::isParentInScope(
+            (int) $product->get('parent'),
+            $categoryId,
+            $nested,
+            $nested ? $this->treeService()->getDescendantCategoryIds($categoryId) : []
+        );
+    }
+
+    /**
      * @param list<string> $optionFieldNames Allowed option field names (whitelist)
      *
      * @return array<string, mixed>
