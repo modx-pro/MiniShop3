@@ -220,3 +220,6 @@ $_lang['ms3_customer_order_cancel_err_no_order'] = 'Order ID is required';
 $_lang['ms3_customer_order_cancel_err_not_found'] = 'Order not found';
 $_lang['ms3_customer_order_cancel_err_status'] = 'This order cannot be cancelled';
 $_lang['ms3_customer_order_cancel_err_failed'] = 'Failed to cancel order';
+$_lang['ms3_customer_order_err_unauthorized'] = 'Authorization required';
+$_lang['ms3_customer_order_err_no_id'] = 'Order ID is required';
+$_lang['ms3_customer_order_err_not_found'] = 'Order not found';

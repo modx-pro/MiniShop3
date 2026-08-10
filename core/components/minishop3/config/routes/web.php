@@ -244,6 +244,16 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             return $controller->verify($params);
         });
 
+        $router->get('/orders', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerOrderController($modx);
+            return $controller->getList($params);
+        }, [$tokenMiddleware]);
+
+        $router->get('/orders/{id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CustomerOrderController($modx);
+            return $controller->get($params);
+        }, [$tokenMiddleware]);
+
         $router->post('/orders/{id}/cancel', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerOrderController($modx);
             return $controller->cancel($params);

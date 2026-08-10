@@ -196,6 +196,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Order\OrderService::class,
             'interface' => null,
         ],
+        'ms3_customer_order' => [
+            'class' => \MiniShop3\Services\Customer\CustomerOrderService::class,
+            'interface' => null,
+        ],
         // Order workflow services (used by Order controller)
         // All services can be overridden via ms3.services.php config
         'ms3_order_draft_manager' => [

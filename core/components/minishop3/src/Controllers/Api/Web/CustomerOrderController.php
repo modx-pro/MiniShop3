@@ -2,17 +2,15 @@
 
 namespace MiniShop3\Controllers\Api\Web;
 
-use MiniShop3\Model\msCustomer;
-use MiniShop3\Model\msOrder;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
-use MiniShop3\Services\Order\OrderStatusService;
+use MiniShop3\Services\Customer\CustomerOrderService;
 use MODX\Revolution\modX;
 
 /**
  * API controller for customer orders (Web API)
  *
- * Handles customer-initiated order actions, e.g. cancel order.
+ * List / get / cancel for the authorized customer only.
  *
  * @package MiniShop3\Controllers\Api\Web
  */
@@ -26,6 +24,65 @@ class CustomerOrderController
     {
         $this->modx = $modx;
         $this->modx->lexicon->load('minishop3:customer', 'minishop3:default');
+    }
+
+    /**
+     * List current customer orders
+     * GET /api/v1/customer/orders?limit=&offset=&status=
+     *
+     * @param array $params URL parameters
+     * @return array
+     */
+    public function getList(array $params = []): array
+    {
+        $customer = $this->getAuthorizedCustomer();
+
+        if (!$customer) {
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_unauthorized'), HttpStatus::UNAUTHORIZED)->getData();
+        }
+
+        /** @var CustomerOrderService $service */
+        $service = $this->modx->services->get('ms3_customer_order');
+        $query = CustomerOrderService::normalizeListParams($_GET, $service->getDraftStatusId());
+
+        return Response::success($service->listForCustomer(
+            (int)$customer->get('id'),
+            $query['limit'],
+            $query['offset'],
+            $query['status_id']
+        ))->getData();
+    }
+
+    /**
+     * Get one order owned by the current customer
+     * GET /api/v1/customer/orders/{id}
+     *
+     * @param array $params URL parameters (id = order ID)
+     * @return array
+     */
+    public function get(array $params = []): array
+    {
+        $customer = $this->getAuthorizedCustomer();
+
+        if (!$customer) {
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_unauthorized'), HttpStatus::UNAUTHORIZED)->getData();
+        }
+
+        $orderId = (int)($params['id'] ?? 0);
+
+        if ($orderId < 1) {
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_no_id'), HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        /** @var CustomerOrderService $service */
+        $service = $this->modx->services->get('ms3_customer_order');
+        $detail = $service->getForCustomer((int)$customer->get('id'), $orderId);
+
+        if ($detail === null) {
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_not_found'), HttpStatus::NOT_FOUND)->getData();
+        }
+
+        return Response::success($detail)->getData();
     }
 
     /**
@@ -45,40 +102,33 @@ class CustomerOrderController
 
         $orderId = (int)($params['id'] ?? 0);
 
-        if (!$orderId) {
+        if ($orderId < 1) {
             return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_no_order'), HttpStatus::BAD_REQUEST)->getData();
         }
 
-        /** @var msOrder|null $order */
-        $order = $this->modx->getObject(msOrder::class, [
-            'id' => $orderId,
-            'customer_id' => $customer->get('id'),
-        ]);
+        /** @var CustomerOrderService $service */
+        $service = $this->modx->services->get('ms3_customer_order');
+        $result = $service->cancelForCustomer((int)$customer->get('id'), $orderId);
 
-        if (!$order) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_not_found'), HttpStatus::NOT_FOUND)->getData();
-        }
-
-        /** @var OrderStatusService $orderStatusService */
-        $orderStatusService = $this->modx->services->get('ms3_order_status');
-        $allowedStatusIds = $orderStatusService->getAllowedCancelStatusIds();
-        $currentStatusId = (int) $order->get('status_id');
-
-        if (!in_array($currentStatusId, $allowedStatusIds, true)) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_status'), HttpStatus::BAD_REQUEST)->getData();
-        }
-
-        $cancelledStatusId = (int) $this->modx->getOption('ms3_status_canceled', null, 5);
-
-        $result = $orderStatusService->change($orderId, $cancelledStatusId);
-
-        if ($result !== true) {
-            $message = is_string($result) ? $result : $this->modx->lexicon('ms3_customer_order_cancel_err_failed');
-            return Response::error($message, HttpStatus::BAD_REQUEST)->getData();
+        if (!$result['ok']) {
+            return match ($result['error']) {
+                'not_found' => Response::error(
+                    $this->modx->lexicon('ms3_customer_order_cancel_err_not_found'),
+                    HttpStatus::NOT_FOUND
+                )->getData(),
+                'status' => Response::error(
+                    $this->modx->lexicon('ms3_customer_order_cancel_err_status'),
+                    HttpStatus::BAD_REQUEST
+                )->getData(),
+                default => Response::error(
+                    $result['message'] ?? $this->modx->lexicon('ms3_customer_order_cancel_err_failed'),
+                    HttpStatus::BAD_REQUEST
+                )->getData(),
+            };
         }
 
         return Response::success(
-            ['order_id' => $orderId, 'status_id' => $cancelledStatusId],
+            ['order_id' => $result['order_id'], 'status_id' => $result['status_id']],
             $this->modx->lexicon('ms3_customer_order_cancelled')
         )->getData();
     }

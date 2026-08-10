@@ -149,6 +149,40 @@ class CustomerAPI {
   }
 
   /**
+   * List current customer orders
+   *
+   * GET /api/v1/customer/orders?limit=&offset=&status=
+   *
+   * @param {Object} [params]
+   * @param {number} [params.limit]
+   * @param {number} [params.offset]
+   * @param {number} [params.status]
+   * @returns {Promise<Object>}
+   */
+  async getOrders (params = {}) {
+    const query = new URLSearchParams()
+    for (const key of ['limit', 'offset', 'status']) {
+      if (params[key] != null) {
+        query.set(key, String(params[key]))
+      }
+    }
+    const qs = query.toString()
+    return this.api.get(`/api/v1/customer/orders${qs ? `?${qs}` : ''}`)
+  }
+
+  /**
+   * Get one order owned by the current customer
+   *
+   * GET /api/v1/customer/orders/{orderId}
+   *
+   * @param {number} orderId - Order ID
+   * @returns {Promise<Object>}
+   */
+  async getOrder (orderId) {
+    return this.api.get(`/api/v1/customer/orders/${orderId}`)
+  }
+
+  /**
    * Cancel order
    *
    * POST /api/v1/customer/orders/{orderId}/cancel
