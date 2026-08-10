@@ -100,11 +100,13 @@ final class GridConfigRepository
         }
 
         /** @var list<msGridField> $fields */
-        return array_values($this->modx->getCollection(msGridField::class, [
+        $fields = array_values($this->modx->getCollection(msGridField::class, [
             'grid_key' => $gridKey,
             'is_system' => false,
             'field_name:NOT IN' => $fieldNamesToKeep,
         ]) ?: []);
+
+        return $fields;
     }
 
     /**
@@ -140,6 +142,8 @@ final class GridConfigRepository
         $query->sortby('sort_order', 'ASC');
 
         /** @var list<msGridField> $fields */
-        return array_values($this->modx->getCollection(msGridField::class, $query) ?: []);
+        $fields = array_values($this->modx->getCollection(msGridField::class, $query) ?: []);
+
+        return $fields;
     }
 }
