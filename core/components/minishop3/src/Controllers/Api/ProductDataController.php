@@ -104,6 +104,43 @@ class ProductDataController extends BaseApiController
         }
     }
 
+    /**
+     * GET /api/mgr/product-data/{id}/categories/tree
+     *
+     * Lazy msCategory tree for the product Categories tab (Vue).
+     *
+     * @param array $params id (product), parent (default 0), parent_category, categories (JSON precheck)
+     */
+    public function getCategoriesTree(array $params): Response
+    {
+        $productId = (int)($params['id'] ?? 0);
+        if (!$productId) {
+            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
+        }
+
+        $parent = (int)($params['parent'] ?? 0);
+        $parentCategoryId = (int)($params['parent_category'] ?? 0);
+        $clientSentCategories = array_key_exists('categories', $params);
+        $preChecked = $this->decodeIntArray($params['categories'] ?? null);
+
+        try {
+            /** @var \MiniShop3\Services\Product\ProductCategoryTreeService $service */
+            $service = $this->modx->services->get('ms3_product_category_tree');
+            $nodes = $service->getTreeNodes(
+                $parent,
+                $productId,
+                $parentCategoryId,
+                $preChecked,
+                $clientSentCategories
+            );
+
+            return Response::success(['results' => $nodes, 'total' => count($nodes)]);
+        } catch (\Exception $e) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ProductDataController] ' . $e->getMessage());
+            return Response::error('Failed to load category tree: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+        }
+    }
+
     private function categoryProductScopeService(): CategoryProductScopeService
     {
         $service = $this->modx->services->get('ms3_category_product_scope');

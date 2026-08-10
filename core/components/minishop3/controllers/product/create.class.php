@@ -78,7 +78,6 @@ class msProductCreateManagerController extends msResourceCreateController
         $this->addJavascript($assetsUrl . 'js/mgr/misc/sortable/sortable.min.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
-        $this->addLastJavascript($assetsUrl . 'js/mgr/product/category.tree.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/create.js');
 

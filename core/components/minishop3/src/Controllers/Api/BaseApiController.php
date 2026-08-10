@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Api;
 
 use MiniShop3\Router\Response;
+use MiniShop3\Utils\IntArrayDecoder;
 use MODX\Revolution\modX;
 
 /**
@@ -66,5 +67,14 @@ abstract class BaseApiController
     protected function isAuthenticated(string $context = 'web'): bool
     {
         return $this->modx->user && $this->modx->user->isAuthenticated($context);
+    }
+
+    /**
+     * @param mixed $input JSON array, comma-separated string, or array of ids
+     * @return list<int> Deduplicated positive ints.
+     */
+    protected function decodeIntArray($input): array
+    {
+        return IntArrayDecoder::decode($input);
     }
 }

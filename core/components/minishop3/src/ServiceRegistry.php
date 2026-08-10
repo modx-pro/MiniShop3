@@ -144,6 +144,10 @@ class ServiceRegistry
             'class' => ProductImportService::class,
             'interface' => null,
         ],
+        'ms3_product_category_tree' => [
+            'class' => \MiniShop3\Services\Product\ProductCategoryTreeService::class,
+            'interface' => null,
+        ],
         'ms3_repeater_field' => [
             'class' => \MiniShop3\Services\ExtraFields\RepeaterFieldService::class,
             'interface' => null,

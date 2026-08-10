@@ -11,6 +11,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import ProductGallery from '../gallery/ProductGallery.vue'
 import ProductDataFields from '../ProductDataFields.vue'
+import ProductCategoriesTab from './ProductCategoriesTab.vue'
 import ProductOptionsTab from './ProductOptionsTab.vue'
 
 const props = defineProps({
@@ -80,13 +81,8 @@ const tabConfig = computed(() => {
     tabs.push({
       key: 'categories',
       title: _('ms3_tab_product_categories'),
-      type: 'extjs',
-      xtype: 'ms3-tree-categories',
-      extConfig: {
-        parent: props.record.parent || 0,
-        resource: props.record.id || 0,
-        categories: props.record.categories || [],
-      },
+      type: 'vue',
+      component: 'ProductCategoriesTab',
       position: 2,
     })
   }
@@ -317,6 +313,15 @@ onBeforeUnmount(() => {
             <ProductGallery :product-id="productId" :record="record" :config="config" />
           </template>
 
+          <!-- Vue component: ProductCategoriesTab -->
+          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductCategoriesTab'">
+            <ProductCategoriesTab
+              :product-id="productId"
+              :parent-id="record.parent || 0"
+              :initial-categories="record.categories || []"
+            />
+          </template>
+
           <!-- Vue component: ProductOptionsTab -->
           <template v-else-if="tab.type === 'vue' && tab.component === 'ProductOptionsTab'">
             <ProductOptionsTab :option-fields="config.option_fields || []" />
@@ -366,11 +371,6 @@ onBeforeUnmount(() => {
 /* Fix padding for ExtJS panels inside Vue tabs */
 .extjs-container :deep(.x-panel-body) {
   padding: 0.625rem;
-}
-
-/* Categories tree styles */
-#ms3-product-tab-categories :deep(.x-tree-view) {
-  min-height: 18.75rem;
 }
 
 /* Links grid styles */

@@ -55,7 +55,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
-        $this->addLastJavascript($assetsUrl . 'js/mgr/product/category.tree.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/links.grid.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/links.window.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
