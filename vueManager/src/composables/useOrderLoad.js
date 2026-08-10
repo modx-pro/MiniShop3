@@ -13,7 +13,7 @@
 import { computed, ref } from 'vue'
 
 import request from '../request.js'
-import { parseRepeaterModelValue, REPEATER_XTYPE } from '../utils/repeaterField.js'
+import { parseStructuredExtraFieldValue } from '../utils/structuredExtraField.js'
 
 export function useOrderLoad(deps) {
   const {
@@ -88,16 +88,17 @@ export function useOrderLoad(deps) {
     return groupFieldsBySection(addressFields.value, addressSections.value)
   })
 
-  /** Parse repeater extra field values from API (string JSON → array). */
-  function hydrateRepeaterExtraFields(fields) {
+  /** Parse structured JSON extra fields from API (string JSON → object/array). */
+  function hydrateStructuredExtraFields(fields) {
     if (!order.value || !Array.isArray(fields)) {
       return
     }
 
     for (const field of fields) {
-      if (field.xtype === REPEATER_XTYPE && field.key) {
-        order.value[field.key] = parseRepeaterModelValue(order.value[field.key])
+      if (!field.key) {
+        continue
       }
+      order.value[field.key] = parseStructuredExtraFieldValue(field.xtype, order.value[field.key])
     }
   }
 
@@ -134,8 +135,8 @@ export function useOrderLoad(deps) {
         loadOrderCustomer(),
       ])
 
-      hydrateRepeaterExtraFields(orderExtraFields.value)
-      hydrateRepeaterExtraFields(addressExtraFields.value)
+      hydrateStructuredExtraFields(orderExtraFields.value)
+      hydrateStructuredExtraFields(addressExtraFields.value)
     } catch (error) {
       console.error('[OrderView] Error loading order:', error)
       toast.add({
