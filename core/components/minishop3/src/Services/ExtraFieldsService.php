@@ -145,17 +145,42 @@ class ExtraFieldsService
 
         $result = [];
         foreach ($fields as $field) {
-            $data = $field->toArray();
-
-            $data['column_exists'] = $this->extraFieldsUtil->columnExists(
-                $field->get('class'),
-                $field->get('key')
-            );
-
-            $result[] = $data;
+            $result[] = $this->formatField($field);
         }
 
         return $result;
+    }
+
+    /**
+     * Get single extra field by ID (with column_exists flag).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getField(int $id): ?array
+    {
+        /** @var msExtraField|null $field */
+        $field = $this->modx->getObject(msExtraField::class, $id);
+
+        if (!$field) {
+            return null;
+        }
+
+        return $this->formatField($field);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatField(msExtraField $field): array
+    {
+        $data = $field->toArray();
+
+        $data['column_exists'] = $this->extraFieldsUtil->columnExists(
+            $field->get('class'),
+            $field->get('key')
+        );
+
+        return $data;
     }
 
     /**

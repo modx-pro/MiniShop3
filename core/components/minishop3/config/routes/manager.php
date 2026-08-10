@@ -170,128 +170,24 @@ $router->group('/api/mgr', function($router) use ($modx) {
 
     $router->group('/extra-fields', function($router) use ($modx) {
         $router->get('', function($params) use ($modx) {
-            try {
-                /** @var \MiniShop3\Services\ExtraFieldsService $service */
-                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
-
-                $class = $_GET['class'] ?? null;
-                $criteria = $class ? ['class' => $class] : [];
-
-                $fields = $service->getFields($criteria);
-
-                return Response::success([
-                    'fields' => $fields,
-                    'total' => count($fields)
-                ]);
-            } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to load extra fields: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
-            }
+            $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
+            return $controller->getList(array_merge($_GET, $params));
         });
         $router->get('/{id}', function($params) use ($modx) {
-            $id = (int)($params['id'] ?? 0);
-
-            if (!$id) {
-                return Response::error('Field ID is required', HttpStatus::BAD_REQUEST);
-            }
-
-            $field = $modx->getObject(\MiniShop3\Model\msExtraField::class, $id);
-
-            if (!$field) {
-                return Response::error('Field not found', HttpStatus::NOT_FOUND);
-            }
-
-            $data = $field->toArray();
-
-            $extraFieldsUtil = new \MiniShop3\Utils\ExtraFields($modx);
-            $data['column_exists'] = $extraFieldsUtil->columnExists($field->get('class'), $field->get('key'));
-
-            return Response::success(['field' => $data]);
+            $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
+            return $controller->get($params);
         });
         $router->post('', function($params) use ($modx) {
-            try {
-                $data = json_decode(file_get_contents('php://input'), true);
-
-                if (empty($data)) {
-                    return Response::error('Request body is empty', HttpStatus::BAD_REQUEST);
-                }
-
-                /** @var \MiniShop3\Services\ExtraFieldsService $service */
-                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
-
-                $result = $service->createField($data);
-
-                if (!$result['success']) {
-                    return Response::error($result['message'], HttpStatus::BAD_REQUEST);
-                }
-
-                return Response::success([
-                    'message' => $result['message'],
-                    'field' => $result['data'],
-                    'migration' => $result['migration']
-                ]);
-            } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to create field: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
-            }
+            $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
+            return $controller->create();
         });
         $router->put('/{id}', function($params) use ($modx) {
-            $id = (int)($params['id'] ?? 0);
-
-            if (!$id) {
-                return Response::error('Field ID is required', HttpStatus::BAD_REQUEST);
-            }
-
-            try {
-                $data = json_decode(file_get_contents('php://input'), true);
-
-                if (empty($data)) {
-                    return Response::error('Request body is empty', HttpStatus::BAD_REQUEST);
-                }
-
-                /** @var \MiniShop3\Services\ExtraFieldsService $service */
-                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
-
-                $result = $service->updateField($id, $data);
-
-                if (!$result['success']) {
-                    return Response::error($result['message'], HttpStatus::BAD_REQUEST);
-                }
-
-                return Response::success([
-                    'message' => $result['message'],
-                    'field' => $result['data']
-                ]);
-            } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to update field: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
-            }
+            $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
+            return $controller->update($params);
         });
         $router->delete('/{id}', function($params) use ($modx) {
-            $id = (int)($params['id'] ?? 0);
-
-            if (!$id) {
-                return Response::error('Field ID is required', HttpStatus::BAD_REQUEST);
-            }
-
-            try {
-                /** @var \MiniShop3\Services\ExtraFieldsService $service */
-                $service = new \MiniShop3\Services\ExtraFieldsService($modx);
-
-                $result = $service->deleteField($id);
-
-                if (!$result['success']) {
-                    return Response::error($result['message'], HttpStatus::BAD_REQUEST);
-                }
-
-                return Response::success([
-                    'message' => $result['message'],
-                    'migration' => $result['migration']
-                ]);
-            } catch (\Exception $e) {
-                $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ExtraFields API] ' . $e->getMessage());
-                return Response::error('Failed to delete field: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
-            }
+            $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
+            return $controller->delete($params);
         });
 
     }, [
