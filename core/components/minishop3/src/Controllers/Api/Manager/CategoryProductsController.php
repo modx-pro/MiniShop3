@@ -148,18 +148,17 @@ class CategoryProductsController
         }
 
         $updated = 0;
-
-        $scope = $this->scopeService();
+        $scopeService = $this->scopeService();
 
         foreach ($items as $item) {
             $productId = (int) ($item['id'] ?? 0);
             $menuindex = (int) ($item['menuindex'] ?? 0);
 
-            if (!$productId) {
+            if (!$productId || !$scopeService->canReorderInCategory($productId, $categoryId)) {
                 continue;
             }
 
-            $product = $scope->findInCategory($categoryId, $productId, $nested);
+            $product = $this->modx->getObject(msProduct::class, $productId);
 
             if ($product) {
                 $product->set('menuindex', $menuindex);
