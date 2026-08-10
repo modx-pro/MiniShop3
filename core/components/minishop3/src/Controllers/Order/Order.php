@@ -15,13 +15,21 @@ use MiniShop3\Services\Order\OrderUserResolver;
 use MODX\Revolution\modX;
 
 /**
- * Order Controller (Facade)
+ * Domain facade for the order workflow (not an HTTP controller).
+ *
+ * Lives under Controllers\ for MS2-style compatibility, but does not handle
+ * FastRoute requests. HTTP entry points live under Controllers\Api\Web\*
+ * (and Manager API where applicable). Registered as DI key `ms3_order`;
+ * typically reached via `$ms3->order`.
  *
  * Manages order workflow: draft creation, field updates, cost calculation,
  * and order submission. Delegates business logic to specialized services.
  *
  * This class maintains backward compatibility while internally using
  * the new service-based architecture.
+ *
+ * @see \MiniShop3\Controllers\Api\Web\OrderController
+ * @see \MiniShop3\ServiceRegistry
  */
 class Order
 {

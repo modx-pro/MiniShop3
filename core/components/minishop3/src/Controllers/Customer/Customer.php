@@ -14,6 +14,17 @@ use MODX\Revolution\modX;
 
 use Rakit\Validation\Validator;
 
+/**
+ * Domain facade for the customer profile/session (not an HTTP controller).
+ *
+ * Lives under Controllers\ for MS2-style compatibility, but does not handle
+ * FastRoute requests. HTTP entry points live under Controllers\Api\Web\*
+ * (auth, profile, etc.). Registered as DI key `ms3_customer`; typically
+ * reached via `$ms3->customer`.
+ *
+ * @see \MiniShop3\Controllers\Api\Web\CustomerProfileController
+ * @see \MiniShop3\ServiceRegistry
+ */
 class Customer
 {
     /** @var modX $modx */
@@ -27,8 +38,6 @@ class Customer
     protected $validationMessages = [];
 
     /**
-     * Cart constructor.
-     *
      * @param MiniShop3 $ms3
      * @param array $config
      */

@@ -11,7 +11,11 @@ use MiniShop3\Services\Order\OrderLogService;
 use MODX\Revolution\modX;
 
 /**
- * Shopping Cart Controller (Facade)
+ * Domain facade for the shopping cart (not an HTTP controller).
+ *
+ * Lives under Controllers\ for MS2-style compatibility, but does not handle
+ * FastRoute requests. HTTP entry points are Controllers\Api\Web\CartController
+ * (and similar). Registered as DI key `ms3_cart`; typically reached via `$ms3->cart`.
  *
  * Manages customer cart: adding, changing, removing products.
  * Cart is stored in DB as draft order (msOrder with draft status).
@@ -24,9 +28,12 @@ use MODX\Revolution\modX;
  * To override logic:
  * 1. Create your class extending Cart
  * 2. Override required methods (add, remove, change, etc.)
- * 3. Set your class in system setting: ms3_cart_class = Your\Namespace\MyCart
+ * 3. Register it for DI key `ms3_cart` via `core/config/ms3.services.php`
+ *    or `core/config/ms3.services.d/*.php` (see ms3.services.example.php)
  *
  * @package MiniShop3\Controllers\Cart
+ * @see \MiniShop3\Controllers\Api\Web\CartController
+ * @see \MiniShop3\ServiceRegistry
  */
 class Cart
 {
