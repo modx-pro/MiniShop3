@@ -203,6 +203,24 @@ $_lang['ms3_err_gallery_is_not_msproduct'] = '[msGallery] Ресурс с id = [
 $_lang['ms3_err_options_is_not_msproduct'] = '[msOptions] Ресурс с id = [[+id]] не является товаром.';
 $_lang['ms3_err_processor_combo_required'] = 'Этот процессор требует combo: true.';
 
+$_lang['ms3_err_category_id_required'] = 'Не указан ID категории';
+$_lang['ms3_err_category_nf'] = 'Категория не найдена';
+$_lang['ms3_err_category_products_list_service'] = 'Сервис списка товаров категории недоступен';
+$_lang['ms3_err_items_required'] = 'Не передан массив элементов';
+$_lang['ms3_err_method_required'] = 'Не указан метод';
+$_lang['ms3_err_unknown_method'] = 'Неизвестный метод';
+$_lang['ms3_err_access_denied_permission'] = 'Доступ запрещён. Требуется право: [[+permission]]';
+$_lang['ms3_err_product_ids_required'] = 'Не передан массив ID товаров';
+$_lang['ms3_err_product_ids_invalid'] = 'Не указаны корректные ID товаров';
+$_lang['ms3_err_category_products_no_updates'] = 'Ни один товар не был обновлён';
+$_lang['ms3_err_product_id_required'] = 'Не указан ID товара';
+$_lang['ms3_err_product_nf'] = 'Товар не найден';
+$_lang['ms3_err_product_update_failed'] = 'Не удалось обновить товар';
+$_lang['ms3_category_products_reordered'] = 'Порядок товаров успешно изменён';
+$_lang['ms3_category_product_published'] = 'Товар опубликован';
+$_lang['ms3_category_product_unpublished'] = 'Товар снят с публикации';
+$_lang['ms3_category_products_updated'] = 'Обновлено товаров: [[+count]]';
+
 $_lang['ms3_email_subject_new_user'] = 'Вы сделали заказ #[[+num]] на сайте [[++site_name]]';
 $_lang['ms3_email_subject_new_manager'] = 'У вас новый заказ #[[+num]]';
 $_lang['ms3_email_subject_paid_user'] = 'Вы оплатили заказ #[[+num]]';

@@ -203,6 +203,24 @@ $_lang['ms3_err_gallery_is_not_msproduct'] = '[msGallery] Resource with id = [[+
 $_lang['ms3_err_options_is_not_msproduct'] = '[msOptions] Resource with id = [[+id]] is not a product.';
 $_lang['ms3_err_processor_combo_required'] = 'This processor requires combo: true.';
 
+$_lang['ms3_err_category_id_required'] = 'Category ID is required';
+$_lang['ms3_err_category_nf'] = 'Category not found';
+$_lang['ms3_err_category_products_list_service'] = 'Category products list service is not available';
+$_lang['ms3_err_items_required'] = 'Items array is required';
+$_lang['ms3_err_method_required'] = 'Method is required';
+$_lang['ms3_err_unknown_method'] = 'Unknown method';
+$_lang['ms3_err_access_denied_permission'] = 'Access denied. Required permission: [[+permission]]';
+$_lang['ms3_err_product_ids_required'] = 'Product IDs array is required';
+$_lang['ms3_err_product_ids_invalid'] = 'No valid product IDs provided';
+$_lang['ms3_err_category_products_no_updates'] = 'No products were updated';
+$_lang['ms3_err_product_id_required'] = 'Product ID is required';
+$_lang['ms3_err_product_nf'] = 'Product not found';
+$_lang['ms3_err_product_update_failed'] = 'Failed to update product';
+$_lang['ms3_category_products_reordered'] = 'Products reordered successfully';
+$_lang['ms3_category_product_published'] = 'Product published';
+$_lang['ms3_category_product_unpublished'] = 'Product unpublished';
+$_lang['ms3_category_products_updated'] = '[[+count]] products updated';
+
 $_lang['ms3_email_subject_new_user'] = 'You placed order #[[+num]] on site [[++site_name]]';
 $_lang['ms3_email_subject_new_manager'] = 'You have new order #[[+num]]';
 $_lang['ms3_email_subject_paid_user'] = 'You paid for order #[[+num]]';
