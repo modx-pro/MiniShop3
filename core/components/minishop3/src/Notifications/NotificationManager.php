@@ -5,6 +5,7 @@ namespace MiniShop3\Notifications;
 use MODX\Revolution\modX;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Utils\EventGate;
 
 /**
  * Central notification service
@@ -77,29 +78,20 @@ class NotificationManager
         //   2) $modx->event->returnedValues['recipient']/['channels'] —
         //      explicit channel introduced in #219/#245 for plugins that prefer
         //      the returned-values contract.
-        $this->clearEventReturnedValues();
-        $eventResult = $this->modx->invokeEvent('msOnBeforeSendNotification', [
+        $event = EventGate::invokeRaw($this->modx, 'msOnBeforeSendNotification', [
             'notification' => $notification,
             'recipient' => &$recipient,
             'recipientType' => $recipientType,
             'channels' => &$channels,
         ]);
-        $returnedValues = $this->getEventReturnedValues();
-        $recipient = $this->applyReturnedArray($recipient, $returnedValues, 'recipient');
+        $returnedValues = $event['returnedValues'];
+        $recipient = EventGate::applyReturnedArray($recipient, $returnedValues, 'recipient');
         if (isset($returnedValues['channels']) && is_array($returnedValues['channels'])) {
             $channels = $returnedValues['channels'];
         }
 
         // Check if notification was cancelled by plugin
-        $cancelled = false;
-        if (is_array($eventResult) && !empty($eventResult)) {
-            foreach ($eventResult as $pluginResult) {
-                if ($pluginResult === false || $pluginResult === 'cancel') {
-                    $cancelled = true;
-                    break;
-                }
-            }
-        }
+        $cancelled = $event['cancelled'];
         if (!$cancelled && isset($this->modx->event->output) && $this->modx->event->output === false) {
             $cancelled = true;
         }
@@ -276,31 +268,5 @@ class NotificationManager
     protected function isSchedulerAvailable(): bool
     {
         return $this->modx->services->has('scheduler');
-    }
-
-    protected function clearEventReturnedValues(): void
-    {
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
-    }
-
-    protected function getEventReturnedValues(): array
-    {
-        return isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)
-            ? $this->modx->event->returnedValues
-            : [];
-    }
-
-    protected function applyReturnedArray(array $current, array $returnedValues, string $key): array
-    {
-        if (!isset($returnedValues[$key]) || !is_array($returnedValues[$key])) {
-            return $current;
-        }
-
-        // Lists are complete replacements; associative arrays may patch existing keys.
-        return array_is_list($returnedValues[$key])
-            ? $returnedValues[$key]
-            : array_replace($current, $returnedValues[$key]);
     }
 }

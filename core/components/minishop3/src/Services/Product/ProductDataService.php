@@ -9,6 +9,7 @@ use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
+use MiniShop3\Utils\EventGate;
 use MODX\Revolution\modX;
 
 /**
@@ -332,41 +333,13 @@ class ProductDataService
             ? $data['price']
             : $productData->get('price');
 
-        // Early return if no plugins registered for this event
-        if (empty($this->modx->eventMap[$eventName])) {
-            return $price;
-        }
-
-        // Initialize eventData for plugin chaining
-        $this->modx->eventData[$eventName] = [
-            'price' => $price,
-            'data' => $data,
-        ];
-
-        // Clear previous returnedValues
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
-
-        $this->modx->invokeEvent($eventName, [
-            'price' => $price,
-            'data' => $data,
-        ]);
-
-        // Priority 1: Read from eventData (plugin chain result)
-        if (isset($this->modx->eventData[$eventName]['price'])) {
-            $price = $this->modx->eventData[$eventName]['price'];
-        }
-
-        // Priority 2: Check returnedValues for backward compatibility
-        if (isset($this->modx->event->returnedValues['price'])) {
-            $price = $this->modx->event->returnedValues['price'];
-        }
-
-        // Cleanup
-        unset($this->modx->eventData[$eventName]);
-
-        return $price;
+        return $this->invokeProductModifier(
+            $eventName,
+            ['price' => $price, 'data' => $data],
+            ['price' => $price, 'data' => $data],
+            'price',
+            $price,
+        );
     }
 
     /**
@@ -396,41 +369,13 @@ class ProductDataService
             ? $data['weight']
             : $productData->get('weight');
 
-        // Early return if no plugins registered for this event
-        if (empty($this->modx->eventMap[$eventName])) {
-            return $weight;
-        }
-
-        // Initialize eventData for plugin chaining
-        $this->modx->eventData[$eventName] = [
-            'weight' => $weight,
-            'data' => $data,
-        ];
-
-        // Clear previous returnedValues
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
-
-        $this->modx->invokeEvent($eventName, [
-            'weight' => $weight,
-            'data' => $data,
-        ]);
-
-        // Priority 1: Read from eventData (plugin chain result)
-        if (isset($this->modx->eventData[$eventName]['weight'])) {
-            $weight = $this->modx->eventData[$eventName]['weight'];
-        }
-
-        // Priority 2: Check returnedValues for backward compatibility
-        if (isset($this->modx->event->returnedValues['weight'])) {
-            $weight = $this->modx->event->returnedValues['weight'];
-        }
-
-        // Cleanup
-        unset($this->modx->eventData[$eventName]);
-
-        return $weight;
+        return $this->invokeProductModifier(
+            $eventName,
+            ['weight' => $weight, 'data' => $data],
+            ['weight' => $weight, 'data' => $data],
+            'weight',
+            $weight,
+        );
     }
 
     /**
@@ -457,37 +402,15 @@ class ProductDataService
     {
         $eventName = 'msOnGetProductFields';
 
-        // Early return if no plugins registered for this event
-        if (empty($this->modx->eventMap[$eventName])) {
-            return $data;
-        }
-
-        // Initialize eventData for plugin chaining
-        $this->modx->eventData[$eventName] = [
-            'data' => $data,
-        ];
-
-        // Clear previous returnedValues
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
-
-        $this->modx->invokeEvent($eventName, ['data' => $data]);
-
-        // Priority 1: Read from eventData (plugin chain result)
-        if (isset($this->modx->eventData[$eventName]['data']) && is_array($this->modx->eventData[$eventName]['data'])) {
-            $data = $this->modx->eventData[$eventName]['data'];
-        }
-
-        // Priority 2: Check returnedValues for backward compatibility
-        if (isset($this->modx->event->returnedValues['data']) && is_array($this->modx->event->returnedValues['data'])) {
-            $data = $this->modx->event->returnedValues['data'];
-        }
-
-        // Cleanup
-        unset($this->modx->eventData[$eventName]);
-
-        return $data;
+        /** @var array<string, mixed> */
+        return $this->invokeProductModifier(
+            $eventName,
+            ['data' => $data],
+            ['data' => $data],
+            'data',
+            $data,
+            true,
+        );
     }
 
     /**
@@ -742,5 +665,51 @@ class ProductDataService
         }
 
         return null;
+    }
+
+    /**
+     * Invoke product modifier event with eventData chaining and returnedValues fallback.
+     *
+     * @param array<string, mixed> $eventData
+     * @param array<string, mixed> $properties
+     */
+    private function invokeProductModifier(
+        string $eventName,
+        array $eventData,
+        array $properties,
+        string $valueKey,
+        mixed $default,
+        bool $patchViaApplyReturnedArray = false,
+    ): mixed {
+        if (empty($this->modx->eventMap[$eventName])) {
+            return $default;
+        }
+
+        $this->modx->eventData[$eventName] = $eventData;
+        EventGate::clearReturnedValues($this->modx);
+        $this->modx->invokeEvent($eventName, $properties);
+
+        $value = $default;
+        if (isset($this->modx->eventData[$eventName][$valueKey])) {
+            $fromEventData = $this->modx->eventData[$eventName][$valueKey];
+            if ($patchViaApplyReturnedArray) {
+                if (is_array($fromEventData)) {
+                    $value = $fromEventData;
+                }
+            } else {
+                $value = $fromEventData;
+            }
+        }
+
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+        if ($patchViaApplyReturnedArray && is_array($default)) {
+            $value = EventGate::applyReturnedArray(is_array($value) ? $value : $default, $returnedValues, $valueKey);
+        } elseif (array_key_exists($valueKey, $returnedValues)) {
+            $value = $returnedValues[$valueKey];
+        }
+
+        unset($this->modx->eventData[$eventName]);
+
+        return $value;
     }
 }

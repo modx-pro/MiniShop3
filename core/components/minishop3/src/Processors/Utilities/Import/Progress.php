@@ -2,7 +2,7 @@
 
 namespace MiniShop3\Processors\Utilities\Import;
 
-use MiniShop3\Utils\ImportCSV;
+use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\Processors\Processor;
 
 /**
@@ -31,7 +31,7 @@ class Progress extends Processor
             return $this->failure('Import ID is required');
         }
 
-        $progress = ImportCSV::getProgress($this->modx, $importId);
+        $progress = ProductImportService::getProgress($this->modx, $importId);
 
         if ($progress === null) {
             return $this->failure('Import not found or expired');

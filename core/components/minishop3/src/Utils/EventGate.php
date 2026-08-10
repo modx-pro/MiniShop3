@@ -11,7 +11,7 @@ use MODX\Revolution\modX;
  * - Plugins may mutate by-ref event properties in $scriptProperties (legacy MS2 path).
  * - Plugins may set $modx->event->returnedValues as an associative array; callers merge
  *   shallow keys into their working params via mergeReturnedValues().
- * - For named payload channels (ImportCSV: params, data, tvData, …) use applyReturnedArray():
+ * - For named payload channels (ProductImport: params, data, tvData, …) use applyReturnedArray():
  *   list arrays replace the channel; associative arrays patch via array_replace().
  * - Cancellation: plugin returns false or the string "cancel" in invokeEvent response.
  * - success in buildInvokeResult() follows Utils::invokeEvent: empty aggregated message.
@@ -88,6 +88,27 @@ final class EventGate
         }
 
         return false;
+    }
+
+    /**
+     * Invoke a MODX event and return normalized returnedValues + cancellation flag.
+     *
+     * Use for direct modX::invokeEvent() call sites that apply named channels via applyReturnedArray().
+     *
+     * @param array<string, mixed> $properties
+     *
+     * @return array{result: mixed, returnedValues: array<string, mixed>, cancelled: bool}
+     */
+    public static function invokeRaw(modX $modx, string $eventName, array $properties): array
+    {
+        self::clearReturnedValues($modx);
+        $result = $modx->invokeEvent($eventName, $properties);
+
+        return [
+            'result' => $result,
+            'returnedValues' => self::getReturnedValues($modx),
+            'cancelled' => self::isCancelled($result),
+        ];
     }
 
     /**
