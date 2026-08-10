@@ -2,6 +2,8 @@
 
 namespace MiniShop3;
 
+use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\modX;
 
 /**
@@ -139,7 +141,7 @@ class ServiceRegistry
             'interface' => null,
         ],
         'ms3_product_import' => [
-            'class' => \MiniShop3\Services\Product\Import\ProductImportService::class,
+            'class' => ProductImportService::class,
             'interface' => null,
         ],
         'ms3_repeater_field' => [
@@ -189,7 +191,7 @@ class ServiceRegistry
         // Order workflow services (used by Order controller)
         // All services can be overridden via ms3.services.php config
         'ms3_order_draft_manager' => [
-            'class' => \MiniShop3\Services\Order\OrderDraftManager::class,
+            'class' => OrderDraftManager::class,
             'interface' => null,
         ],
         'ms3_order_cost_calculator' => [
