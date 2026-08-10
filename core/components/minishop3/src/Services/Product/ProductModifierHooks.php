@@ -89,13 +89,16 @@ class ProductModifierHooks
             return $default;
         }
 
-        $this->modx->eventData[$eventName] = $eventData;
+        // MODX runtime bag for plugin chaining (#219); not declared on modX stubs.
+        // @phpstan-ignore property.notFound
+        $eventDataBag = &$this->modx->eventData;
+        $eventDataBag[$eventName] = $eventData;
         EventGate::clearReturnedValues($this->modx);
         $this->modx->invokeEvent($eventName, $properties);
 
         $value = $default;
-        if (isset($this->modx->eventData[$eventName][$valueKey])) {
-            $fromEventData = $this->modx->eventData[$eventName][$valueKey];
+        if (isset($eventDataBag[$eventName][$valueKey])) {
+            $fromEventData = $eventDataBag[$eventName][$valueKey];
             if ($patchViaApplyReturnedArray) {
                 if (is_array($fromEventData)) {
                     $value = $fromEventData;
@@ -112,7 +115,7 @@ class ProductModifierHooks
             $value = $returnedValues[$valueKey];
         }
 
-        unset($this->modx->eventData[$eventName]);
+        unset($eventDataBag[$eventName]);
 
         return $value;
     }

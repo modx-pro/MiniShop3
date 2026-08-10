@@ -28,7 +28,7 @@ class ProductRemovalHelper
      */
     public function removeProduct(msProductData $productData, array $ancestors = []): bool
     {
-        $productId = $productData->get('id');
+        $productId = (int) $productData->get('id');
 
         $this->modx->removeCollection(msProductOption::class, ['product_id' => $productId]);
         $this->modx->removeCollection(msCategoryMember::class, ['product_id' => $productId]);
@@ -48,13 +48,18 @@ class ProductRemovalHelper
         return true;
     }
 
-    private function removeProductFiles(msProductData $productData, int|string $productId): void
+    private function removeProductFiles(msProductData $productData, int $productId): void
     {
         if ($productData->xpdo->getCount(msProductFile::class, ['product_id' => $productId]) < 1) {
             return;
         }
 
-        $source = $productData->initializeMediaSource($productData->Product->get('context_key'));
+        $product = $productData->getOne('Product');
+        if (!$product) {
+            return;
+        }
+
+        $source = $productData->initializeMediaSource($product->get('context_key'));
         if (!$source) {
             return;
         }

@@ -42,7 +42,7 @@ class ProductOptionsWriter
 
         /** @var msProductOption $optionInstance */
         $optionInstance = $this->modx->newObject(msProductOption::class);
-        $optionInstance->saveProductOptions($productData->get('id'), $options, $removeOther);
+        $optionInstance->saveProductOptions((int) $productData->get('id'), $options, $removeOther);
     }
 
     /**
