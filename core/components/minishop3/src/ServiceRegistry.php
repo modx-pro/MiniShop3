@@ -36,6 +36,66 @@ class ServiceRegistry
     protected modX $modx;
 
     /**
+     * Controllers requiring only a MiniShop3 instance: __construct(MiniShop3 $ms3).
+     */
+    public const CONTROLLERS_WITH_MS3_ONLY = [
+        'ms3_cart',
+        'ms3_order',
+        'ms3_customer',
+    ];
+
+    /**
+     * Services requiring both modX and MiniShop3: __construct(modX $modx, MiniShop3 $ms3).
+     */
+    public const SERVICES_WITH_MODX_AND_MS3 = [
+        'ms3_order_draft_manager',
+        'ms3_order_cost_calculator',
+        'ms3_manager_order_cost_recalculator',
+        'ms3_order_user_resolver',
+        'ms3_order_log',
+        'ms3_cart_item_manager',
+        'ms3_customer_address_manager',
+    ];
+
+    /**
+     * Services with complex dependencies resolved via DI
+     * (see {@see registerServiceWithDependencies()}).
+     */
+    public const SERVICES_WITH_DEPENDENCIES = [
+        'ms3_option_service',
+        'ms3_order_field_manager',
+        'ms3_order_address_manager',
+        'ms3_order_submit_handler',
+        'ms3_order_status',
+        'ms3_order_finalize',
+    ];
+
+    /**
+     * DI keys that {@see registerServiceWithDependencies()} resolves for each
+     * service. Exposed so tests can assert every referenced dependency is a
+     * registered service key (#363).
+     */
+    public const SERVICE_DEPENDENCIES = [
+        'ms3_option_service' => [
+            'ms3_option_loader',
+            'ms3_option_sync',
+            'ms3_category_option_service',
+        ],
+        'ms3_order_field_manager' => ['ms3_order_draft_manager'],
+        'ms3_order_address_manager' => ['ms3_order_draft_manager', 'ms3_order_field_manager'],
+        'ms3_order_submit_handler' => [
+            'ms3_order_draft_manager',
+            'ms3_order_cost_calculator',
+            'ms3_order_field_manager',
+            'ms3_order_address_manager',
+            'ms3_order_user_resolver',
+            'ms3_order_number_generator',
+        ],
+        'ms3_order_finalize' => ['ms3_order_number_generator'],
+        'ms3_order_status' => ['ms3_order_log'],
+    ];
+
+    /**
      * Default services (built into component)
      *
      * Format: [service_key => [class, interface]]
@@ -105,6 +165,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Order\OrderCostCalculator::class,
             'interface' => null,
         ],
+        'ms3_manager_order_cost_recalculator' => [
+            'class' => \MiniShop3\Services\Order\ManagerOrderCostRecalculator::class,
+            'interface' => null,
+        ],
         'ms3_order_field_manager' => [
             'class' => \MiniShop3\Services\Order\OrderFieldManager::class,
             'interface' => null,
@@ -160,6 +224,14 @@ class ServiceRegistry
         ],
         'ms3_option_service' => [
             'class' => \MiniShop3\Services\Option\OptionService::class,
+            'interface' => null,
+        ],
+        'ms3_option_loader' => [
+            'class' => \MiniShop3\Services\Option\OptionLoaderService::class,
+            'interface' => null,
+        ],
+        'ms3_option_sync' => [
+            'class' => \MiniShop3\Services\Option\OptionSyncService::class,
             'interface' => null,
         ],
         'ms3_cart' => [
@@ -458,39 +530,17 @@ class ServiceRegistry
 
         $modx = $this->modx;
 
-        // Controllers requiring only MiniShop3 instance: __construct(MiniShop3 $ms3)
-        $controllersWithMs3Only = ['ms3_cart', 'ms3_order', 'ms3_customer'];
-
-        // Services requiring both modX and MiniShop3: __construct(modX $modx, MiniShop3 $ms3)
-        $servicesWithModxAndMs3 = [
-            'ms3_order_draft_manager',
-            'ms3_order_cost_calculator',
-            'ms3_order_user_resolver',
-            'ms3_order_log',
-            'ms3_cart_item_manager',
-            'ms3_customer_address_manager',
-        ];
-
-        // Services with complex dependencies (resolved via DI)
-        $servicesWithDependencies = [
-            'ms3_order_field_manager',
-            'ms3_order_address_manager',
-            'ms3_order_submit_handler',
-            'ms3_order_status',
-            'ms3_order_finalize',
-        ];
-
-        if (in_array($serviceKey, $controllersWithMs3Only)) {
+        if (in_array($serviceKey, self::CONTROLLERS_WITH_MS3_ONLY, true)) {
             $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
                 $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
                 return new $validatedClass($ms3);
             });
-        } elseif (in_array($serviceKey, $servicesWithModxAndMs3)) {
+        } elseif (in_array($serviceKey, self::SERVICES_WITH_MODX_AND_MS3, true)) {
             $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
                 $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
                 return new $validatedClass($modx, $ms3);
             });
-        } elseif (in_array($serviceKey, $servicesWithDependencies)) {
+        } elseif (in_array($serviceKey, self::SERVICES_WITH_DEPENDENCIES, true)) {
             // Services with dependencies - resolve them from DI
             $this->registerServiceWithDependencies($serviceKey, $validatedClass);
         } else {
@@ -517,6 +567,17 @@ class ServiceRegistry
         $modx = $this->modx;
 
         switch ($serviceKey) {
+            case 'ms3_option_service':
+                // OptionService(xPDO, OptionLoaderService, OptionSyncService, OptionCategoryService)
+                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
+                    $loader = $modx->services->get('ms3_option_loader');
+                    $sync = $modx->services->get('ms3_option_sync');
+                    $category = $modx->services->get('ms3_category_option_service');
+
+                    return new $validatedClass($modx, $loader, $sync, $category);
+                });
+                break;
+
             case 'ms3_order_field_manager':
                 // OrderFieldManager(modX, MiniShop3, OrderDraftManager)
                 $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
