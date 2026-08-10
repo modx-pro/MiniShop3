@@ -35,6 +35,7 @@ const emit = defineEmits([
   'page-change',
   'edit',
   'show',
+  'set-preview',
   'generate-thumbs',
   'delete',
 ])
@@ -43,35 +44,49 @@ const searchQuery = ref('')
 const currentPage = ref(0)
 
 // Context menu
-const contextMenuRef = ref(null)
+const contextMenuRef = ref()
 const contextMenuTarget = ref(null)
 
-const contextMenuItems = computed(() => [
-  {
-    label: _('ms3_gallery_file_update'),
-    icon: 'pi pi-pencil',
-    command: () => contextMenuTarget.value && emit('edit', contextMenuTarget.value),
-  },
-  {
-    label: _('ms3_gallery_file_show'),
-    icon: 'pi pi-external-link',
-    command: () => contextMenuTarget.value && emit('show', contextMenuTarget.value),
-  },
-  {
-    label: _('ms3_gallery_file_generate_thumbs'),
-    icon: 'pi pi-refresh',
-    command: () => contextMenuTarget.value && emit('generate-thumbs', [contextMenuTarget.value.id]),
-  },
-  {
-    separator: true,
-  },
-  {
-    label: _('ms3_gallery_file_delete'),
-    icon: 'pi pi-trash',
-    class: 'p-menuitem-danger',
-    command: () => contextMenuTarget.value && emit('delete', [contextMenuTarget.value.id]),
-  },
-])
+const contextMenuItems = computed(() => {
+  const items = [
+    {
+      label: _('ms3_gallery_file_update'),
+      icon: 'pi pi-pencil',
+      command: () => contextMenuTarget.value && emit('edit', contextMenuTarget.value),
+    },
+    {
+      label: _('ms3_gallery_file_show'),
+      icon: 'pi pi-external-link',
+      command: () => contextMenuTarget.value && emit('show', contextMenuTarget.value),
+    },
+  ]
+
+  if (contextMenuTarget.value && !contextMenuTarget.value.is_preview) {
+    items.push({
+      label: _('ms3_gallery_file_set_preview'),
+      icon: 'pi pi-star',
+      command: () => contextMenuTarget.value && emit('set-preview', contextMenuTarget.value),
+    })
+  }
+
+  items.push(
+    {
+      label: _('ms3_gallery_file_generate_thumbs'),
+      icon: 'pi pi-refresh',
+      command: () =>
+        contextMenuTarget.value && emit('generate-thumbs', [contextMenuTarget.value.id]),
+    },
+    { separator: true },
+    {
+      label: _('ms3_gallery_file_delete'),
+      icon: 'pi pi-trash',
+      class: 'p-menuitem-danger',
+      command: () => contextMenuTarget.value && emit('delete', [contextMenuTarget.value.id]),
+    }
+  )
+
+  return items
+})
 
 // Local copy for draggable — allows instant visual reorder
 const localImages = ref([])
@@ -164,11 +179,15 @@ function onContextMenu(event, image) {
       <template #item="{ element }">
         <div
           class="gallery-item"
+          :class="{ 'gallery-item--preview': element.is_preview }"
           :title="_('ms3_gallery_drag_hint')"
           @dblclick="onDblClick(element)"
           @contextmenu.prevent="onContextMenu($event, element)"
         >
           <div class="gallery-item-thumb">
+            <span v-if="element.is_preview" class="gallery-item-badge">
+              {{ _('ms3_gallery_file_preview_badge') }}
+            </span>
             <img
               v-if="element.thumbnail"
               :src="element.thumbnail"
@@ -276,6 +295,10 @@ function onContextMenu(event, image) {
   border-color: var(--p-primary-color);
 }
 
+.gallery-images :deep(.gallery-item--preview) {
+  border-color: var(--p-primary-color);
+}
+
 .gallery-images :deep(.gallery-item-thumb) {
   width: 7.5rem;
   height: 5.625rem;
@@ -284,6 +307,21 @@ function onContextMenu(event, image) {
   justify-content: center;
   overflow: hidden;
   background: var(--p-surface-50);
+  position: relative;
+}
+
+.gallery-images :deep(.gallery-item-badge) {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  z-index: 1;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--p-primary-contrast-color, #fff);
+  background: var(--p-primary-color);
 }
 
 .gallery-images :deep(.gallery-item-thumb img) {

@@ -39,6 +39,7 @@ const {
   regenerateThumbs,
   regenerateAll,
   updateFile,
+  setPreview,
   updateProductSource,
 } = useGalleryApi()
 
@@ -168,6 +169,27 @@ async function onEditSave(data) {
       name: data.name,
       description: data.description,
     })
+    await loadImages()
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: _('ms3_gallery_errors'),
+      detail: error.message,
+      life: 5000,
+    })
+  }
+}
+
+/**
+ * Handle set as main product preview (#130)
+ */
+async function onSetPreview(image) {
+  if (!image?.id) return
+  try {
+    const result = await setPreview(props.productId, image.id)
+    if (result.thumb) {
+      updateProductThumb(result.thumb)
+    }
     await loadImages()
   } catch (error) {
     toast.add({
@@ -361,6 +383,7 @@ onMounted(() => {
       @page-change="onPageChange"
       @edit="onEdit"
       @show="onShow"
+      @set-preview="onSetPreview"
       @generate-thumbs="onGenerateThumbs"
       @delete="onDeleteFiles"
     />

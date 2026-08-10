@@ -4,7 +4,9 @@ namespace MiniShop3\Processors\Gallery;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
+use MiniShop3\Services\Product\ProductImageService;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use MODX\Revolution\Sources\modMediaSource;
@@ -22,6 +24,7 @@ class GetList extends GetListProcessor
     /** @var MiniShop3 $ms3 */
     protected $ms3;
     protected $thumb;
+    protected int $previewFileId = 0;
 
     /**
      * @return bool|null|string
@@ -34,7 +37,12 @@ class GetList extends GetListProcessor
         $product = $this->modx->getObject(msProduct::class, (int)$this->getProperty('product_id'));
         if ($product) {
             $data = $product->getOne('Data');
-            if ($data) {
+            if ($data instanceof msProductData) {
+                /** @var ProductImageService|null $imageService */
+                $imageService = $this->modx->services->get('ms3_product_image');
+                if ($imageService instanceof ProductImageService) {
+                    $this->previewFileId = $imageService->resolvePreviewFileId($data);
+                }
                 $sourceId = (int)$data->get('source_id');
                 $source = null;
                 if ($sourceId > 0) {
@@ -194,6 +202,9 @@ class GetList extends GetListProcessor
             ? json_decode($row['properties'], true)
             : [];
 
+        $row['is_preview'] = $this->previewFileId > 0
+            && (int) ($row['id'] ?? 0) === $this->previewFileId;
+
         $row['actions'] = [];
 
         $row['actions'][] = [
@@ -215,6 +226,17 @@ class GetList extends GetListProcessor
         ];
 
         if ($row['type'] == 'image') {
+            if (!$row['is_preview']) {
+                $row['actions'][] = [
+                    'cls' => '',
+                    'icon' => 'icon icon-star',
+                    'title' => $this->modx->lexicon('ms3_gallery_file_set_preview'),
+                    'action' => 'setPreview',
+                    'button' => false,
+                    'menu' => true,
+                ];
+            }
+
             $row['actions'][] = [
                 'cls' => '',
                 'icon' => 'icon icon-refresh',

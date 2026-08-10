@@ -120,33 +120,51 @@ class ProductImageService
     }
 
     /**
-     * Update product main image
+     * Set which gallery file is the product preview without changing sort order (#130).
      *
-     * Finds the first product image (with lowest rank) and sets it
-     * as main (image and thumb fields in msProductData)
+     * @return bool|mixed save result from updateProductImage()
+     */
+    public function setProductPreview(msProductData $productData, int $fileId): mixed
+    {
+        $productId = (int) $productData->get('id');
+        if (!$this->getMainGalleryFile($productId, $fileId)) {
+            return false;
+        }
+
+        $productData->set('preview_file_id', $fileId);
+
+        return $this->updateProductImage($productData);
+    }
+
+    /**
+     * Effective preview gallery file id (explicit preview or first image by position).
+     * Read-only: does not mutate product data (#130).
+     */
+    public function resolvePreviewFileId(msProductData $productData): int
+    {
+        $file = $this->findMainImageFile($productData);
+
+        return $file ? (int) $file->get('id') : 0;
+    }
+
+    /**
+     * Update product main image / thumb URLs from gallery.
+     *
+     * Uses preview_file_id when set and valid; otherwise the first image by position (#130).
      *
      * @param msProductData $productData
      * @return bool|mixed
      */
     public function updateProductImage(msProductData $productData)
     {
-        $productId = $productData->get('id');
-
-        // Получаем первое изображение (с минимальной позицией)
-        $c = $this->modx->newQuery(msProductFile::class);
-        $c->where([
-            'product_id' => $productId,
-            'parent_id' => 0,
-            'type' => 'image'
-        ]);
-        $c->sortby('position', 'ASC');
-
-        /** @var msProductFile $file */
-        $file = $this->modx->getObject(msProductFile::class, $c);
+        $stalePreview = false;
+        $file = $this->findMainImageFile($productData, $stalePreview);
+        if ($stalePreview) {
+            $productData->set('preview_file_id', null);
+        }
 
         if ($file) {
-            // Get thumbnail from child record (generated thumbnail)
-            /** @var msProductFile $thumbnailFile */
+            /** @var msProductFile|null $thumbnailFile */
             $thumbnailFile = $this->modx->getObject(msProductFile::class, [
                 'parent_id' => $file->get('id'),
                 'type' => 'image',
@@ -157,12 +175,62 @@ class ProductImageService
             $productData->set('thumb', $thumb);
 
             return $productData->save();
-        } else {
-            $productData->set('image', '');
-            $productData->set('thumb', '');
-
-            return $productData->save();
         }
+
+        $productData->set('preview_file_id', null);
+        $productData->set('image', '');
+        $productData->set('thumb', '');
+
+        return $productData->save();
+    }
+
+    /**
+     * @param bool $stalePreview set true when preview_file_id pointed at a missing file
+     */
+    private function findMainImageFile(msProductData $productData, bool &$stalePreview = false): ?msProductFile
+    {
+        $stalePreview = false;
+        $productId = (int) $productData->get('id');
+        $previewId = (int) $productData->get('preview_file_id');
+
+        if ($previewId > 0) {
+            $preview = $this->getMainGalleryFile($productId, $previewId);
+            if ($preview) {
+                return $preview;
+            }
+            $stalePreview = true;
+        }
+
+        return $this->getMainGalleryFile($productId);
+    }
+
+    private function getMainGalleryFile(int $productId, ?int $fileId = null): ?msProductFile
+    {
+        if ($fileId !== null && $fileId > 0) {
+            /** @var msProductFile|null $file */
+            $file = $this->modx->getObject(msProductFile::class, [
+                'id' => $fileId,
+                'product_id' => $productId,
+                'parent_id' => 0,
+                'type' => 'image',
+            ]);
+
+            return $file ?: null;
+        }
+
+        $c = $this->modx->newQuery(msProductFile::class);
+        $c->where([
+            'product_id' => $productId,
+            'parent_id' => 0,
+            'type' => 'image',
+        ]);
+        $c->sortby('position', 'ASC');
+        $c->sortby('id', 'ASC');
+
+        /** @var msProductFile|null $file */
+        $file = $this->modx->getObject(msProductFile::class, $c);
+
+        return $file ?: null;
     }
 
     /**

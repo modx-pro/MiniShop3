@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Utils;
 
+use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MODX\Revolution\modX;
 
@@ -11,8 +12,10 @@ use MODX\Revolution\modX;
 final class ProductThumbnailJoin
 {
     /**
-     * LEFT JOIN ON: one thumbnail per product — child of the main gallery image
-     * (parent_id = 0, lowest position), path contains the given size folder.
+     * LEFT JOIN ON: one thumbnail per product — child of the main gallery image.
+     *
+     * Main image is preview_file_id when set, otherwise lowest position (#130).
+     * Path must contain the given size folder.
      */
     public static function buildLeftJoinOn(
         modX $modx,
@@ -29,10 +32,9 @@ final class ProductThumbnailJoin
         }
 
         // xPDO::getTableName() already returns the name escaped with backticks
-        // (e.g. "`modx_ms3_product_files`"). DO NOT wrap %4$s in extra backticks
-        // — that produced triple backticks at runtime and an SQL syntax error
-        // on `includeThumbs=...` (regression introduced in #282 / 1.11.0-beta1).
+        // (e.g. "`modx_ms3_product_files`"). DO NOT wrap %4$s / %5$s in extra backticks.
         $filesTable = $modx->getTableName(msProductFile::class);
+        $productsTable = $modx->getTableName(msProductData::class);
 
         return sprintf(
             '`%1$s`.product_id = `%2$s`.id'
@@ -43,13 +45,19 @@ final class ProductThumbnailJoin
             . ' WHERE `main`.`product_id` = `%2$s`.`id`'
             . ' AND `main`.`parent_id` = 0'
             . ' AND `main`.`type` = \'image\''
-            . ' ORDER BY `main`.`position` ASC, `main`.`id` ASC'
+            . ' ORDER BY'
+            . ' CASE WHEN `main`.`id` = ('
+            . 'SELECT `pdata`.`preview_file_id` FROM %5$s `pdata`'
+            . ' WHERE `pdata`.`id` = `%2$s`.`id`'
+            . ') THEN 0 ELSE 1 END,'
+            . ' `main`.`position` ASC, `main`.`id` ASC'
             . ' LIMIT 1'
             . ')',
             $thumbAlias,
             $productAlias,
             $thumbSize,
-            $filesTable
+            $filesTable,
+            $productsTable
         );
     }
 

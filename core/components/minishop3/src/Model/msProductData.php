@@ -18,6 +18,7 @@ use xPDO\xPDO;
  * @property float $weight
  * @property string $image
  * @property string $thumb
+ * @property integer|null $preview_file_id
  * @property integer $vendor_id
  * @property string $made_in
  * @property boolean $new
