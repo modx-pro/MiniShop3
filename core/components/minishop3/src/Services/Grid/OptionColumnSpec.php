@@ -9,7 +9,7 @@ namespace MiniShop3\Services\Grid;
  */
 final readonly class OptionColumnSpec
 {
-    /** Same rule as {@see \MiniShop3\Services\GridConfigService::validateOptionConfig()} */
+    /** Same rule as {@see \MiniShop3\Services\Grid\GridColumnTypeValidator::validateOptionConfig()} */
     private const OPTION_KEY_PATTERN = '/^[a-z0-9_]+$/i';
 
     /** Same rule as OPTION_KEY_PATTERN; fieldName also lands in `SELECT … AS \`{name}\``. */
