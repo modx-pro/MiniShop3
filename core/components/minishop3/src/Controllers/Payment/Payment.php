@@ -5,7 +5,7 @@ namespace MiniShop3\Controllers\Payment;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
-use MiniShop3\Utils\PriceAdjustment;
+use MiniShop3\Services\Order\OrderCostEngine;
 use MODX\Revolution\modX;
 
 /**
@@ -137,33 +137,14 @@ abstract class Payment implements PaymentProviderInterface
      *
      * @param msOrder $order Order (can be used for fee calculation)
      * @param msPayment $payment Payment method with fee settings
-     * @param float $cost Current order cost
+     * @param float $cost Commission base before surcharge: cart lines only (MS2 parity, #460)
      * @return float Cost including fee
      */
     public function getCost(msOrder $order, msPayment $payment, float $cost): float
     {
-        $addPrice = $payment->get('price');
+        $surcharge = OrderCostEngine::calculatePaymentSurcharge($this->modx, $payment, $cost);
 
-        if (empty($addPrice)) {
-            return $cost;
-        }
-
-        if (PriceAdjustment::isPercent($addPrice)) {
-            $percent = PriceAdjustment::getPercent($addPrice);
-            if (!PriceAdjustment::isAllowedPercent($percent)) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    sprintf(
-                        '[Payment] Invalid percent value for payment #%s: %s%%. Must be between -100%% and 100%%.',
-                        $payment->get('id'),
-                        $percent
-                    )
-                );
-                return $cost;
-            }
-        }
-
-        return $cost + PriceAdjustment::calculate($cost, $addPrice);
+        return OrderCostEngine::calculatePaymentTotal($cost, $surcharge);
     }
 
     /**

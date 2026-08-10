@@ -11,8 +11,12 @@ use MODX\Revolution\modX;
 /**
  * Order Cost Calculator
  *
- * Calculates order costs: cart, delivery, payment, and total.
- * Supports events for cost modification by plugins.
+ * Web/checkout adapter: cart status, delivery/payment providers, MODX cost events.
+ * Core formulas live in {@see OrderCostEngine}; manager path uses {@see ManagerOrderCostRecalculator}.
+ *
+ * Events (web-only): msOnBeforeGetCartCost, msOnGetCartCost, msOnBeforeGetDeliveryCost,
+ * msOnGetDeliveryCost, msOnBeforeGetPaymentCost, msOnGetPaymentCost,
+ * msOnBeforeGetOrderCost, msOnGetOrderCost.
  */
 class OrderCostCalculator
 {
@@ -151,10 +155,18 @@ class OrderCostCalculator
      * @param array $orderData Order data array (with payment_id)
      * @param string $token Session token
      * @param string $ctx Context
+     * @param float|null $knownCartCost Skip cart pipeline when already computed (e.g. from {@see getTotalCost})
+     * @param float|null $knownDeliveryCost Skip delivery pipeline when already computed
      * @return array Response with 'cost' key
      */
-    public function getPaymentCost(?msOrder $draft, array $orderData, string $token, string $ctx = 'web'): array
-    {
+    public function getPaymentCost(
+        ?msOrder $draft,
+        array $orderData,
+        string $token,
+        string $ctx = 'web',
+        ?float $knownCartCost = null,
+        ?float $knownDeliveryCost = null
+    ): array {
         // No draft = no order = zero payment cost
         if (!$draft) {
             return $this->success('ms3_order_getcost_success', ['cost' => 0]);
@@ -186,12 +198,15 @@ class OrderCostCalculator
             return $this->success('ms3_order_getcost_success', ['cost' => $paymentCost]);
         }
 
-        // Get cart cost for payment calculation (MS2-compatible base: cart only)
-        $cartCostResponse = $this->getCartCost($draft, $token, $ctx);
-        $cartCost = $cartCostResponse['success'] ? $cartCostResponse['data']['cost'] : 0;
-        $paymentBase = OrderService::paymentCommissionBase((float) $cartCost);
+        // Payment commission base: cart-only (MS2 parity, #460)
+        if ($knownCartCost === null) {
+            $cartCostResponse = $this->getCartCost($draft, $token, $ctx);
+            $knownCartCost = $cartCostResponse['success'] ? (float) $cartCostResponse['data']['cost'] : 0.0;
+        }
 
-        // Payment getCost returns total with payment fee, so subtract base
+        $paymentBase = OrderCostEngine::paymentCommissionBase($knownCartCost);
+
+        // Payment getCost returns total with payment fee, so subtract commission base
         $costWithPayment = $msPayment->getCost($draft, $paymentBase);
         $paymentCost = $costWithPayment - $paymentBase;
 
@@ -240,22 +255,25 @@ class OrderCostCalculator
         }
 
         $cartCostResponse = $this->getCartCost($draft, $token, $ctx);
-        $cartCost = $cartCostResponse['success'] ? $cartCostResponse['data']['cost'] : 0;
+        $cartCost = $cartCostResponse['success'] ? (float) $cartCostResponse['data']['cost'] : 0.0;
 
         $deliveryCostResponse = $this->getDeliveryCost($draft, $orderData, $token, $ctx);
-        $deliveryCost = $deliveryCostResponse['success'] ? $deliveryCostResponse['data']['cost'] : 0;
+        $deliveryCost = $deliveryCostResponse['success'] ? (float) $deliveryCostResponse['data']['cost'] : 0.0;
 
-        $paymentCostResponse = $this->getPaymentCost($draft, $orderData, $token, $ctx);
-        $paymentCost = $paymentCostResponse['success'] ? $paymentCostResponse['data']['cost'] : 0;
+        $paymentCostResponse = $this->getPaymentCost(
+            $draft,
+            $orderData,
+            $token,
+            $ctx,
+            $cartCost,
+            $deliveryCost
+        );
+        $paymentCost = $paymentCostResponse['success'] ? (float) $paymentCostResponse['data']['cost'] : 0.0;
 
         /** @var OrderService $orderService */
         $orderService = $this->modx->services->get('ms3_order_service');
-        $cost = $orderService->clampComputedTotal(
-            $draft,
-            (float) $cartCost,
-            (float) $deliveryCost,
-            (float) $paymentCost
-        );
+        $breakdown = OrderCostEngine::composeBreakdown($draft, $orderService, $cartCost, $deliveryCost, $paymentCost);
+        $cost = $breakdown['cost'];
 
         $after = $this->ms3->utils->invokeEvent('msOnGetOrderCost', [
             'calculator' => $this,
@@ -276,7 +294,8 @@ class OrderCostCalculator
         $cartCost = (float) ($after['data']['cart_cost'] ?? $cartCost);
         $deliveryCost = (float) ($after['data']['delivery_cost'] ?? $deliveryCost);
         $paymentCost = (float) ($after['data']['payment_cost'] ?? $paymentCost);
-        $cost = $orderService->clampComputedTotal($draft, $cartCost, $deliveryCost, $paymentCost);
+        $breakdown = OrderCostEngine::composeBreakdown($draft, $orderService, $cartCost, $deliveryCost, $paymentCost);
+        $cost = $breakdown['cost'];
 
         if ($onlyCost) {
             return $this->success('ms3_order_getcost_success', ['cost' => $cost]);
