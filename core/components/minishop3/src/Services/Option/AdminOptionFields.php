@@ -51,17 +51,15 @@ class AdminOptionFields
         // Exclude msCategoryOption.caption/description from the select — after PR #203 these
         // columns shadow msOption.caption/description during xPDO hydration and leave the option
         // labels empty. The per-category override is layered on top via the overlay below.
-        $c->select([
-            $this->xpdo->getSelectColumns(msOption::class, '`msOption`'),
-            $this->xpdo->getSelectColumns(
-                msCategoryOption::class,
-                '`msCategoryOption`',
-                '',
-                ['id', 'option_id', 'category_id', 'caption', 'description'],
-                true
-            ),
-            '`OptionGroup`.name AS `group_name`',
-        ]);
+        $c->select($this->xpdo->getSelectColumns(msOption::class, '`msOption`'));
+        $c->select($this->xpdo->getSelectColumns(
+            msCategoryOption::class,
+            '`msCategoryOption`',
+            '',
+            ['id', 'option_id', 'category_id', 'caption', 'description'],
+            true
+        ));
+        $c->select('`OptionGroup`.name AS `group_name`');
 
         $preloadedValues = $this->getValuesForProduct($productId);
 

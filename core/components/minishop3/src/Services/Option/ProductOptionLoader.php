@@ -42,6 +42,7 @@ class ProductOptionLoader
     {
         $c = $this->buildProductOptionsQuery($productId, $includeMetadata);
 
+        /** @var array<string, mixed> $data */
         $data = [];
         $lastRowByOptionKey = [];
         if ($c->prepare() && $c->stmt->execute()) {
@@ -77,6 +78,7 @@ class ProductOptionLoader
 
         $c = $this->buildProductOptionsQuery($productIds, $includeMetadata);
 
+        /** @var array<int, array<string, mixed>> $result */
         $result = [];
         $lastRowByProductAndKey = [];
         if ($c->prepare() && $c->stmt->execute()) {
@@ -246,7 +248,7 @@ class ProductOptionLoader
      */
     protected function appendOptionRow(array &$data, array $option): void
     {
-        $optionKey = $option['key'];
+        $optionKey = (string) $option['key'];
         if (isset($data[$optionKey])) {
             $data[$optionKey][] = $option['value'];
         } else {
@@ -254,7 +256,7 @@ class ProductOptionLoader
         }
 
         foreach ($option as $key => $value) {
-            $data[$optionKey . '.' . $key] = $value;
+            $data[$optionKey . '.' . (string) $key] = $value;
         }
     }
 
