@@ -129,13 +129,14 @@ class ImportCSV
         //      for plugins that mutate $scriptProperties['params'] directly.
         //   2) $modx->event->returnedValues['params'] — explicit channel from
         //      #219/#245 for plugins that prefer the returned-values contract.
-        $this->clearEventReturnedValues();
+        EventGate::clearReturnedValues($this->modx);
         $eventResult = $this->modx->invokeEvent('msOnBeforeImport', [
             'file' => $this->params['file'],
             'params' => &$this->params,
         ]);
-        $this->params = $this->applyReturnedArray($this->params, $this->getEventReturnedValues(), 'params');
-        if ($this->isEventCancelled($eventResult)) {
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+        $this->params = EventGate::applyReturnedArray($this->params, $returnedValues, 'params');
+        if (EventGate::isCancelled($eventResult)) {
             $error = $this->modx->lexicon('ms3_utilities_import_cancelled');
             return $this->ms3->utils->error($error);
         }
@@ -368,7 +369,7 @@ class ImportCSV
         //   2) $modx->event->returnedValues['data'|'tvData'|'optionData'|'gallery']
         //      — explicit channel from #219/#245 for plugins that prefer the
         //      returned-values contract.
-        $this->clearEventReturnedValues();
+        EventGate::clearReturnedValues($this->modx);
         $eventResult = $this->modx->invokeEvent('msOnImportRow', [
             'row' => $this->rows,
             'csv' => $csv,
@@ -377,12 +378,12 @@ class ImportCSV
             'optionData' => &$optionData,
             'gallery' => &$gallery,
         ]);
-        $returnedValues = $this->getEventReturnedValues();
-        $data = $this->applyReturnedArray($data, $returnedValues, 'data');
-        $tvData = $this->applyReturnedArray($tvData, $returnedValues, 'tvData');
-        $optionData = $this->applyReturnedArray($optionData, $returnedValues, 'optionData');
-        $gallery = $this->applyReturnedArray($gallery, $returnedValues, 'gallery');
-        if ($this->isEventCancelled($eventResult)) {
+        $returnedValues = EventGate::getReturnedValues($this->modx);
+        $data = EventGate::applyReturnedArray($data, $returnedValues, 'data');
+        $tvData = EventGate::applyReturnedArray($tvData, $returnedValues, 'tvData');
+        $optionData = EventGate::applyReturnedArray($optionData, $returnedValues, 'optionData');
+        $gallery = EventGate::applyReturnedArray($gallery, $returnedValues, 'gallery');
+        if (EventGate::isCancelled($eventResult)) {
             $this->skipped++;
             return true;
         }
@@ -692,47 +693,6 @@ class ImportCSV
                 );
             }
         }
-    }
-
-    /**
-     * Check if event returned cancel signal
-     */
-    private function isEventCancelled($eventResult): bool
-    {
-        if (is_array($eventResult)) {
-            foreach ($eventResult as $result) {
-                if ($result === false || $result === 'cancel') {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private function clearEventReturnedValues(): void
-    {
-        if (isset($this->modx->event->returnedValues)) {
-            $this->modx->event->returnedValues = null;
-        }
-    }
-
-    private function getEventReturnedValues(): array
-    {
-        return isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)
-            ? $this->modx->event->returnedValues
-            : [];
-    }
-
-    private function applyReturnedArray(array $current, array $returnedValues, string $key): array
-    {
-        if (!isset($returnedValues[$key]) || !is_array($returnedValues[$key])) {
-            return $current;
-        }
-
-        // Lists are complete replacements; associative arrays may patch existing keys.
-        return array_is_list($returnedValues[$key])
-            ? $returnedValues[$key]
-            : array_replace($current, $returnedValues[$key]);
     }
 
     /**
