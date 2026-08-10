@@ -23,7 +23,6 @@ class Remove extends RemoveProcessor
         /** @var msProduct $product */
         $product = $this->object->getOne('Product');
         $thumb = '';
-
         if ($product) {
             $productData = $product->getOne('Data');
 

@@ -194,6 +194,20 @@ export function useGalleryApi() {
   }
 
   /**
+   * Mark gallery file as product preview without changing sort order (#130).
+   * @param {number} productId
+   * @param {number} fileId
+   * @returns {Promise<{thumb: string}>}
+   */
+  async function setPreview(productId, fileId) {
+    const data = await connectorRequest('MiniShop3\\Processors\\Gallery\\SetPreview', {
+      product_id: productId,
+      id: fileId,
+    })
+    return { thumb: data.object?.thumb || '' }
+  }
+
+  /**
    * Change product media source
    * @param {number} productId
    * @param {number} sourceId
@@ -217,6 +231,7 @@ export function useGalleryApi() {
     regenerateThumbs,
     regenerateAll,
     updateFile,
+    setPreview,
     updateProductSource,
   }
 }

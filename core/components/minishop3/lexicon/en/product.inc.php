@@ -148,6 +148,8 @@ $_lang['ms3_gallery_button_upload'] = 'Select Files';
 
 $_lang['ms3_gallery_file_show'] = 'Open in New Window';
 $_lang['ms3_gallery_file_update'] = 'Edit Properties';
+$_lang['ms3_gallery_file_set_preview'] = 'Use as main preview';
+$_lang['ms3_gallery_file_preview_badge'] = 'Main';
 $_lang['ms3_gallery_file_generate_all'] = 'Regenerate All';
 $_lang['ms3_gallery_file_generate_thumbs'] = 'Regenerate Thumbnails';
 $_lang['ms3_gallery_file_generate_thumbs_confirm'] = 'Are you sure you want to regenerate thumbnails for all files?';

@@ -22,6 +22,7 @@ class msProductData extends \MiniShop3\Model\msProductData
                 'weight' => 0.0,
                 'image' => null,
                 'thumb' => null,
+                'preview_file_id' => null,
                 'vendor_id' => 0,
                 'made_in' => '',
                 'new' => 0,
@@ -85,6 +86,14 @@ class msProductData extends \MiniShop3\Model\msProductData
                         'dbtype' => 'varchar',
                         'precision' => '255',
                         'phptype' => 'string',
+                        'null' => true,
+                    ],
+                'preview_file_id' =>
+                    [
+                        'dbtype' => 'int',
+                        'precision' => '10',
+                        'attributes' => 'unsigned',
+                        'phptype' => 'integer',
                         'null' => true,
                     ],
                 'vendor_id' =>

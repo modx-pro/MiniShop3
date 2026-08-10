@@ -395,9 +395,10 @@ class msProduct extends modResource
         parent::set('options', $data->get('options'));
         parent::set('links', $data->get('links'));
 
-        // Clear image/thumb - gallery should NOT be copied
+        // Clear image/thumb/preview - gallery should NOT be copied (#130)
         parent::set('image', '');
         parent::set('thumb', '');
+        parent::set('preview_file_id', null);
 
         $sourceId = (int)$this->get('id');
 

@@ -148,6 +148,8 @@ $_lang['ms3_gallery_button_upload'] = 'Выбрать файлы';
 
 $_lang['ms3_gallery_file_show'] = 'Открыть в новом окне';
 $_lang['ms3_gallery_file_update'] = 'Изменить свойства';
+$_lang['ms3_gallery_file_set_preview'] = 'Сделать главным превью';
+$_lang['ms3_gallery_file_preview_badge'] = 'Главное';
 $_lang['ms3_gallery_file_generate_all'] = 'Обновить все';
 $_lang['ms3_gallery_file_generate_thumbs'] = 'Обновить превьюшки';
 $_lang['ms3_gallery_file_generate_thumbs_confirm'] = 'Вы действительно хотите обновить превью всех файлов?';
