@@ -88,6 +88,7 @@ $registered = $routesProperty->getValue($router);
 $expected = [
     'GET /api/mgr/orders' => 'msorder_list',
     'GET /api/mgr/orders/filters' => 'msorder_list',
+    'GET /api/mgr/orders/stats' => 'msorder_list',
     'GET /api/mgr/orders/{id}' => 'msorder_list',
     'GET /api/mgr/orders/{id}/products' => 'msorder_list',
     'GET /api/mgr/orders/{id}/logs' => 'msorder_list',

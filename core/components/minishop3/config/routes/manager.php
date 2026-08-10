@@ -772,6 +772,10 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         $router->get('/filters', function ($params) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->getFilters($params);
         });
+        $router->get('/stats', function ($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->getStats(array_merge($_GET, $params));
+        });
         $router->get('/{id}', function ($params) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->get($params);
         });

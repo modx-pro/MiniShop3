@@ -54,7 +54,7 @@ const {
   deleteBulk: async ids => {
     await request.delete('/api/mgr/orders/bulk', { ids })
   },
-  onSuccess: () => loadOrders(),
+  onSuccess: () => refreshGrid(),
   getItemName: item => `#${item.num || item.id}`,
 })
 
@@ -85,48 +85,59 @@ const sortedFilters = computed(() => {
 })
 
 /**
- * Load orders list
+ * Build GET params shared by list and stats endpoints.
+ *
+ * @param {{ includePagination?: boolean }} options
+ */
+function buildOrderListParams({ includePagination = true } = {}) {
+  const params = {
+    show_drafts: showDrafts.value ? 1 : 0,
+  }
+
+  if (includePagination) {
+    params.start = first.value
+    params.limit = rows.value
+    params.sort = sortField.value
+    params.dir = sortOrder.value === 1 ? 'ASC' : 'DESC'
+  }
+
+  Object.keys(filterValues.value).forEach(key => {
+    const value = filterValues.value[key]
+    if (value !== null && value !== undefined && value !== '') {
+      const filterConfig = filters.value[key]
+      if (filterConfig?.type === 'daterange' && Array.isArray(value)) {
+        if (value[0]) {
+          addFilterParam(
+            params,
+            filterConfig.fields?.from || `${key}_from`,
+            formatLocalDateYmd(value[0])
+          )
+        }
+        if (value[1]) {
+          addFilterParam(
+            params,
+            filterConfig.fields?.to || `${key}_to`,
+            formatLocalDateYmd(value[1])
+          )
+        }
+      } else if (filterConfig?.type === 'datepicker' && value) {
+        addFilterParam(params, key, formatLocalDateYmd(value))
+      } else {
+        addFilterParam(params, key, value)
+      }
+    }
+  })
+
+  return params
+}
+
+/**
+ * Load orders list (stats via GET /orders/stats — #353).
  */
 async function loadOrders() {
   try {
     await runGuarded(loading, async (signal, isCurrent) => {
-      const params = {
-        start: first.value,
-        limit: rows.value,
-        sort: sortField.value,
-        dir: sortOrder.value === 1 ? 'ASC' : 'DESC',
-        show_drafts: showDrafts.value ? 1 : 0,
-      }
-
-      // Apply filter values
-      Object.keys(filterValues.value).forEach(key => {
-        const value = filterValues.value[key]
-        if (value !== null && value !== undefined && value !== '') {
-          const filterConfig = filters.value[key]
-          if (filterConfig?.type === 'daterange' && Array.isArray(value)) {
-            if (value[0]) {
-              addFilterParam(
-                params,
-                filterConfig.fields?.from || `${key}_from`,
-                formatLocalDateYmd(value[0])
-              )
-            }
-            if (value[1]) {
-              addFilterParam(
-                params,
-                filterConfig.fields?.to || `${key}_to`,
-                formatLocalDateYmd(value[1])
-              )
-            }
-          } else if (filterConfig?.type === 'datepicker' && value) {
-            addFilterParam(params, key, formatLocalDateYmd(value))
-          } else {
-            addFilterParam(params, key, value)
-          }
-        }
-      })
-
-      const response = await request.get('/api/mgr/orders', params, { signal })
+      const response = await request.get('/api/mgr/orders', buildOrderListParams(), { signal })
 
       if (!isCurrent()) {
         return
@@ -135,9 +146,6 @@ async function loadOrders() {
       if (response && response.results) {
         orders.value = response.results
         totalRecords.value = response.total || 0
-        if (response.stats) {
-          stats.value = response.stats
-        }
       } else {
         console.error('[OrdersGrid] Invalid response:', response)
         orders.value = []
@@ -153,6 +161,24 @@ async function loadOrders() {
       life: 5000,
     })
   }
+}
+
+/**
+ * Load header stats for current filters (parallel to list, no pagination).
+ */
+async function loadOrderStats() {
+  try {
+    const response = await request.get('/api/mgr/orders/stats', buildOrderListParams({ includePagination: false }))
+    if (response && (response.month_total !== undefined || response.month_sum !== undefined)) {
+      stats.value = response
+    }
+  } catch (error) {
+    console.error('[OrdersGrid] Error loading order stats:', error)
+  }
+}
+
+async function refreshGrid() {
+  await Promise.all([loadOrders(), loadOrderStats()])
 }
 
 /**
@@ -203,7 +229,7 @@ async function deleteOrder(order) {
       life: 3000,
     })
 
-    await loadOrders()
+    await refreshGrid()
   } catch (error) {
     console.error('[OrdersGrid] Error deleting order:', error)
     toast.add({
@@ -378,7 +404,7 @@ function initFilterValues() {
  */
 function applyFilters() {
   first.value = 0
-  loadOrders()
+  refreshGrid()
 }
 
 /**
@@ -387,7 +413,7 @@ function applyFilters() {
 function clearFilters() {
   initFilterValues()
   first.value = 0
-  loadOrders()
+  refreshGrid()
 }
 
 /**
@@ -404,7 +430,7 @@ function toggleShowDrafts() {
     /* localStorage unavailable */
   }
   first.value = 0
-  loadOrders()
+  refreshGrid()
 }
 
 /**
@@ -561,7 +587,7 @@ function getCustomerLink(data) {
 
 onMounted(async () => {
   await Promise.all([loadGridConfig(), loadFiltersConfig()])
-  await loadOrders()
+  await refreshGrid()
 })
 </script>
 
@@ -775,7 +801,7 @@ onMounted(async () => {
                   grid-id="orders"
                   @edit="editOrder"
                   @delete="deleteOrder"
-                  @refresh="loadOrders"
+                  @refresh="refreshGrid"
                 />
               </template>
             </Column>

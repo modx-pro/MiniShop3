@@ -20,6 +20,7 @@ use MiniShop3\Services\Delivery\DeliveryService;
 use MiniShop3\Services\FilterConfigManager;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Services\Order\ManagerOrderCostRecalculator;
+use MiniShop3\Services\Order\ManagerOrderListQueryService;
 use MiniShop3\Services\Order\OrderLogService;
 use MiniShop3\Services\Order\OrderService;
 use MiniShop3\Services\Order\OrderStatusService;
@@ -192,8 +193,10 @@ class OrdersController
 
         $c = $this->modx->newQuery(msOrder::class);
 
-        // Address JOIN is always needed for search and customer info
-        $c->leftJoin(msOrderAddress::class, 'Address', '`Address`.order_id = msOrder.id');
+        $needsAddressJoin = ManagerOrderListQueryService::needsAddressJoin($params, $query, $gridFields, $sort);
+        if ($needsAddressJoin) {
+            $c->leftJoin(msOrderAddress::class, 'Address', '`Address`.order_id = msOrder.id');
+        }
 
         // Dynamic JOINs from relation fields in grid config
         $relationGroups = $gridConfig ? $gridConfig->extractRelationFields($gridFields) : [];
@@ -247,11 +250,13 @@ class OrdersController
         $countQuery->stmt->execute();
         $total = (int)$countQuery->stmt->fetchColumn();
 
-        // Build SELECT: base model fields + address fields + dynamic relation fields
+        // Build SELECT: base model fields + optional address + dynamic relation fields
         $selectParts = [
             $this->modx->getSelectColumns(msOrder::class, 'msOrder'),
-            '`Address`.first_name', '`Address`.last_name', '`Address`.phone', '`Address`.email',
         ];
+        if ($needsAddressJoin) {
+            $selectParts[] = '`Address`.first_name, `Address`.last_name, `Address`.phone, `Address`.email';
+        }
 
         // Add SELECT for relation fields
         foreach ($relationGroups as $group) {
@@ -277,13 +282,28 @@ class OrdersController
             $results[] = $this->formatOrder($row);
         }
 
-        $stats = $this->getOrdersStats($params);
-
-        return Response::success([
+        $payload = [
             'results' => $results,
             'total' => $total,
-            'stats' => $stats
-        ])->getData();
+        ];
+
+        if (ManagerOrderListQueryService::shouldIncludeStats($params)) {
+            $payload['stats'] = $this->getOrdersStats($params);
+        }
+
+        return Response::success($payload)->getData();
+    }
+
+    /**
+     * Aggregated order stats for the manager grid (same filters as getList, no pagination).
+     * GET /api/mgr/orders/stats
+     *
+     * @param array $params Filter parameters (filter_*, show_drafts, …)
+     * @return array Response envelope data
+     */
+    public function getStats(array $params = []): array
+    {
+        return Response::success($this->getOrdersStats($params))->getData();
     }
 
     /**
@@ -1518,7 +1538,7 @@ class OrdersController
     {
         $c = $this->modx->newQuery(msOrder::class);
 
-        if ($this->hasAddressFilter($params)) {
+        if (ManagerOrderListQueryService::hasAddressFilter($params)) {
             $c->leftJoin(msOrderAddress::class, 'Address', '`Address`.order_id = msOrder.id');
         }
 
@@ -1556,14 +1576,7 @@ class OrdersController
 
     protected function hasAddressFilter(array $params): bool
     {
-        foreach (self::ADDRESS_FILTER_KEYS as $fieldName) {
-            $value = $params['filter_' . $fieldName] ?? null;
-            if ($value !== null && $value !== '') {
-                return true;
-            }
-        }
-
-        return false;
+        return ManagerOrderListQueryService::hasAddressFilter($params);
     }
 
     /**
