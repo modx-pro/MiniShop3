@@ -12,6 +12,7 @@ class modX
     public const LOG_LEVEL_ERROR = 1;
     public const LOG_LEVEL_WARN = 2;
     public const LOG_LEVEL_INFO = 3;
+    public const LOG_LEVEL_DEBUG = 4;
 
     /** @var object|null */
     public $user;
