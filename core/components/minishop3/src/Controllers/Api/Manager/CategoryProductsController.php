@@ -682,7 +682,7 @@ class CategoryProductsController
     }
 
     /**
-     * @param object{get(string): mixed} $product msProduct or test stub with get('id')
+     * @param object $product msProduct or smoke-test stub exposing get('id')
      * @param list<string> $policies
      */
     private function logDocumentPolicyDenied(object $product, array $policies): void
