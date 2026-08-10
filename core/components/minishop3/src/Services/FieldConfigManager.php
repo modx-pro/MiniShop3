@@ -308,24 +308,6 @@ class FieldConfigManager
     }
 
     /**
-     * Save field configuration to database
-     *
-     * @deprecated Table ms3_field_config_overrides removed. Use ConfigService::saveFieldsConfig() for ms3_product_fields
-     * @param string $pageKey
-     * @param array $fields
-     * @param string $contextKey
-     * @return bool
-     */
-    public function saveFieldsConfig(string $pageKey, array $fields, string $contextKey = 'web'): bool
-    {
-        $this->modx->log(
-            modX::LOG_LEVEL_WARN,
-            'FieldConfigManager::saveFieldsConfig() is deprecated'
-        );
-        return true;
-    }
-
-    /**
      * Get lexicon value with fallback logic
      *
      * Logic:

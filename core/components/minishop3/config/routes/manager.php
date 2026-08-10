@@ -73,10 +73,6 @@ $router->group('/api/mgr', function($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->updatePageFields($params);
         });
-        $router->delete('/page-fields/{page_key}/{field_name}', function($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
-            return $controller->deleteFieldOverride($params);
-        });
         $router->put('/sections/{page_key}', function($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ConfigController($modx);
             return $controller->updateSections($params);

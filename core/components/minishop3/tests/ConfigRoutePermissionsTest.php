@@ -60,7 +60,6 @@ $expected = [
     'GET /api/mgr/config/page-fields/{page_key}/all' => null,
     'GET /api/mgr/config/sections/{page_key}' => null,
     'PUT /api/mgr/config/page-fields/{page_key}' => 'mssetting_save',
-    'DELETE /api/mgr/config/page-fields/{page_key}/{field_name}' => 'mssetting_save',
     'PUT /api/mgr/config/sections/{page_key}' => 'mssetting_save',
     'DELETE /api/mgr/config/sections/{page_key}/{section_key}' => 'mssetting_save',
 ];
@@ -80,6 +79,11 @@ foreach ($registered as $route) {
 
 foreach ($expected as $routeKey => $permission) {
     $assertSame($permission, $actual[$routeKey] ?? null, "route {$routeKey}");
+}
+
+$removedFieldOverride = 'DELETE /api/mgr/config/page-fields/{page_key}/{field_name}';
+if (array_key_exists($removedFieldOverride, $actual)) {
+    $fail("route {$removedFieldOverride} should be absent after #347");
 }
 
 $unknown = array_diff(array_keys($actual), array_keys($expected));
@@ -107,7 +111,6 @@ $modx->setPermissions([]);
 $assertDenied($router, 'PUT', '/api/mgr/config/page-fields/order', 'PUT page-fields');
 $assertDenied($router, 'DELETE', '/api/mgr/config/sections/order/main', 'DELETE section');
 $assertDenied($router, 'PUT', '/api/mgr/config/sections/order', 'PUT sections');
-$assertDenied($router, 'DELETE', '/api/mgr/config/page-fields/order/title', 'DELETE field override');
 
 fwrite(STDOUT, "OK ConfigRoutePermissionsTest\n");
 exit(0);

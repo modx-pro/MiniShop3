@@ -23,7 +23,7 @@ class ConfigService
     }
 
     /**
-     * Get page field configuration with applied overrides
+     * Get page field configuration from ms3_product_fields
      * Returns only VISIBLE fields and sections for display in form
      *
      * @param string $pageKey Page key (product_data, product_gallery, etc.)
@@ -129,12 +129,10 @@ class ConfigService
     /**
      * Save bulk field changes to ms3_product_fields table
      *
-     * @param string $pageKey Page key
      * @param array $fields Array of fields with settings
-     * @param string $contextKey Context key (default: web)
      * @return bool
      */
-    public function saveFieldsConfig(string $pageKey, array $fields, string $contextKey = 'web'): bool
+    public function saveFieldsConfig(array $fields): bool
     {
         try {
             foreach ($fields as $fieldData) {
@@ -215,24 +213,6 @@ class ConfigService
                 "[ConfigService] Error saving fields: " . $e->getMessage());
             return false;
         }
-    }
-
-    /**
-     * Remove field override
-     *
-     * @deprecated Table ms3_field_config_overrides removed. Use ms3_product_fields for field management
-     * @param string $pageKey Page key
-     * @param string $fieldName Field name
-     * @param string $contextKey Context key (default: web)
-     * @return bool
-     */
-    public function removeFieldOverride(string $pageKey, string $fieldName, string $contextKey = 'web'): bool
-    {
-        $this->modx->log(
-            modX::LOG_LEVEL_WARN,
-            'ConfigService::removeFieldOverride() is deprecated. Table ms3_field_config_overrides has been removed. Use ms3_product_fields instead.'
-        );
-        return true;
     }
 
     /**
@@ -355,20 +335,20 @@ class ConfigService
                 $hidden = isset($section['hidden']) ? (bool)$section['hidden'] : false;
                 $sortOrder = $index;
 
-                $override = $this->modx->getObject('MiniShop3\\Model\\msPageSection', [
+                $pageSection = $this->modx->getObject('MiniShop3\\Model\\msPageSection', [
                     'page_key' => $pageKey,
                     'section_key' => $sectionKey,
                 ]);
 
-                if (!$override) {
-                    $override = $this->modx->newObject('MiniShop3\\Model\\msPageSection');
-                    $override->set('page_key', $pageKey);
-                    $override->set('section_key', $sectionKey);
-                    $override->set('is_default', $isDefault);
+                if (!$pageSection) {
+                    $pageSection = $this->modx->newObject('MiniShop3\\Model\\msPageSection');
+                    $pageSection->set('page_key', $pageKey);
+                    $pageSection->set('section_key', $sectionKey);
+                    $pageSection->set('is_default', $isDefault);
                 }
 
-                $override->set('hidden', $hidden);
-                $override->set('sort_order', $sortOrder);
+                $pageSection->set('hidden', $hidden);
+                $pageSection->set('sort_order', $sortOrder);
 
                 // Build config from passed data
                 // Use array_key_exists() instead of isset() to handle null values correctly
@@ -381,11 +361,11 @@ class ConfigService
                 }
 
                 // Always update config field (even if empty, to clear old values)
-                $override->set('config', !empty($config) ? json_encode($config, JSON_UNESCAPED_UNICODE) : null);
+                $pageSection->set('config', !empty($config) ? json_encode($config, JSON_UNESCAPED_UNICODE) : null);
 
-                if (!$override->save()) {
+                if (!$pageSection->save()) {
                     $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR,
-                        "[ConfigService] Failed to save section override: {$sectionKey}");
+                        "[ConfigService] Failed to save section: {$sectionKey}");
                     return false;
                 }
             }
