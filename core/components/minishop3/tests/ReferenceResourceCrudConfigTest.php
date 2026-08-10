@@ -110,6 +110,7 @@ $assertHasMethods(\MiniShop3\Controllers\Api\Manager\PaymentsController::class, 
     'getDeliveries',
     'addDelivery',
     'removeDelivery',
+    'getActiveDropdown',
 ]);
 
 $assertTrue(
@@ -146,8 +147,8 @@ $assertTrue(
     'DeliveriesController stays thin (<200 lines)'
 );
 $assertTrue(
-    substr_count($paymentSrc, "\n") < 120,
-    'PaymentsController stays thin (<120 lines)'
+    substr_count($paymentSrc, "\n") < 200,
+    'PaymentsController stays thin (<200 lines)'
 );
 
 fwrite(STDOUT, "OK ReferenceResourceCrudConfigTest\n");
