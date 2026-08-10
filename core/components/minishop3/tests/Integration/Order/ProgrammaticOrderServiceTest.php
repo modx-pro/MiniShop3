@@ -317,7 +317,7 @@ final class ProgrammaticOrderServiceTest extends TestCase
                 return 0;
             }
 
-            public function lexicon($key, $params = [], $language = '')
+            public function lexicon(string $key, array $params = []): string
             {
                 return (string) $key;
             }
@@ -410,10 +410,17 @@ final class ProgrammaticOrderServiceTest extends TestCase
                             if (!empty($this->world['fail_product_save'])) {
                                 return false;
                             }
-                            $this->world['products'][] = $this->fields;
-                            $orderId = (int) ($this->fields['order_id'] ?? 0);
-                            if (isset($this->world['orders'][$orderId])) {
-                                $this->world['orders'][$orderId]->products[] = $this;
+                            // Assign id on first persist so RecordingMsOrder::save() skips re-saves.
+                            if (empty($this->fields['id'])) {
+                                $this->fields['id'] = $this->world['next_product_id']++;
+                                $this->world['products'][] = $this->fields;
+                                $orderId = (int) ($this->fields['order_id'] ?? 0);
+                                if (isset($this->world['orders'][$orderId])) {
+                                    $attached = $this->world['orders'][$orderId]->products;
+                                    if (!in_array($this, $attached, true)) {
+                                        $this->world['orders'][$orderId]->products[] = $this;
+                                    }
+                                }
                             }
 
                             return true;
@@ -595,6 +602,7 @@ final class ProgrammaticOrderServiceTest extends TestCase
     {
         return [
             'next_order_id' => 1,
+            'next_product_id' => 1,
             'orders' => [],
             'products' => [],
             'addresses' => [],
