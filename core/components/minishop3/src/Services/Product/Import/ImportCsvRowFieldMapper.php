@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace MiniShop3\Services\Product\Import;
 
+use MiniShop3\Services\Import\ImportExtraFieldCatalog;
+
 /**
  * Maps raw CSV cells to product, TV, option and gallery buckets.
  */
 final class ImportCsvRowFieldMapper
 {
+    public function __construct(
+        private readonly ?ImportExtraFieldCatalog $extraFieldCatalog = null,
+    ) {
+    }
+
     /**
      * @param list<string|null> $keys Column mapping from import params
      * @param list<string>      $csv  Raw CSV row
@@ -21,7 +28,7 @@ final class ImportCsvRowFieldMapper
      *     missingField: string|null
      * }
      */
-    public function map(array $keys, array $csv, callable $resolveVendor): array
+    public function map(array $keys, array $csv, callable $resolveVendor, bool $isUpdate = false): array
     {
         $data = [];
         $gallery = [];
@@ -66,6 +73,14 @@ final class ImportCsvRowFieldMapper
             if ($v === 'remains') {
                 $data['stock'] = $value;
                 continue;
+            }
+
+            if ($this->extraFieldCatalog !== null) {
+                $normalized = $this->extraFieldCatalog->normalizeCell((string) $v, $value, $isUpdate);
+                if ($normalized === null) {
+                    continue;
+                }
+                $value = $normalized;
             }
 
             if (isset($data[$v]) && !is_array($data[$v])) {

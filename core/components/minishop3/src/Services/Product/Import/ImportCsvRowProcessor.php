@@ -32,6 +32,7 @@ final class ImportCsvRowProcessor
             $this->ctx->params['keys'],
             $csv,
             fn (string $vendorName): int => $this->upserter->resolveVendor($vendorName),
+            (bool) $this->ctx->params['update'],
         );
 
         if ($mapped['missingField'] !== null) {

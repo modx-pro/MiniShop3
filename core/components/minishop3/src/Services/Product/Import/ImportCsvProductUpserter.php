@@ -123,7 +123,7 @@ final class ImportCsvProductUpserter
     public function runAction(string $action, array $data, array $gallery = [], array $optionData = []): void
     {
         $this->ctx->modx->error->reset();
-        $response = $this->ctx->modx->runProcessor('MODX\\Revolution\\Processors\\Resource\\' . $action, $data);
+        $response = $this->ctx->modx->runProcessor('MiniShop3\\Processors\\Product\\' . $action, $data);
 
         if ($response->isError()) {
             $this->ctx->modx->log(
