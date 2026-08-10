@@ -155,21 +155,29 @@ class ModelFieldsController
     /**
      * Map a domain result array to the HTTP Response envelope.
      *
-     * @param array{success: bool, data?: mixed, message?: string, httpStatus?: int} $result
+     * @param array{success: bool, data?: mixed, message?: string, error?: string, created?: bool} $result
      */
     private function mapResult(array $result): array
     {
         if (empty($result['success'])) {
+            $status = match ((string)($result['error'] ?? 'bad_request')) {
+                'not_found' => HttpStatus::NOT_FOUND,
+                'server_error' => HttpStatus::INTERNAL_SERVER_ERROR,
+                default => HttpStatus::BAD_REQUEST,
+            };
+
             return Response::error(
                 (string)($result['message'] ?? 'Request failed'),
-                (int)($result['httpStatus'] ?? HttpStatus::BAD_REQUEST)
+                $status
             )->getData();
         }
+
+        $status = !empty($result['created']) ? HttpStatus::CREATED : HttpStatus::OK;
 
         return Response::success(
             $result['data'] ?? null,
             $result['message'] ?? null,
-            (int)($result['httpStatus'] ?? HttpStatus::OK)
+            $status
         )->getData();
     }
 }

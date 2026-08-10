@@ -4,7 +4,6 @@ namespace MiniShop3\Services\ModelField;
 
 use MiniShop3\Model\msModelField;
 use MiniShop3\Model\msModelFieldSection;
-use MiniShop3\Router\HttpStatus;
 use MODX\Revolution\modX;
 
 /**
@@ -39,7 +38,7 @@ class ModelFieldSectionService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function getSections(array $params = []): array
     {
@@ -64,7 +63,7 @@ class ModelFieldSectionService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function createSection(array $params = []): array
     {
@@ -100,20 +99,16 @@ class ModelFieldSectionService
         ]);
 
         if (!$section->save()) {
-            return $this->fail('Failed to create section', HttpStatus::INTERNAL_SERVER_ERROR);
+            return $this->fail('Failed to create section', 'server_error');
         }
 
         $this->modx->lexicon->load('minishop3:vue');
 
-        return $this->ok(
-            $this->formatSection($section),
-            'Section created successfully',
-            HttpStatus::CREATED
-        );
+        return $this->ok($this->formatSection($section), 'Section created successfully', true);
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function updateSection(array $params = []): array
     {
@@ -136,7 +131,7 @@ class ModelFieldSectionService
         }
 
         if (!$section->save()) {
-            return $this->fail('Failed to update section', HttpStatus::INTERNAL_SERVER_ERROR);
+            return $this->fail('Failed to update section', 'server_error');
         }
 
         $this->modx->lexicon->load('minishop3:vue');
@@ -145,7 +140,7 @@ class ModelFieldSectionService
     }
 
     /**
-     * @return array{success: bool, data?: mixed, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: mixed, message?: string, created?: true}
      */
     public function deleteSection(array $params = []): array
     {
@@ -167,14 +162,14 @@ class ModelFieldSectionService
         }
 
         if (!$section->remove()) {
-            return $this->fail('Failed to delete section', HttpStatus::INTERNAL_SERVER_ERROR);
+            return $this->fail('Failed to delete section', 'server_error');
         }
 
         return $this->ok(null, 'Section deleted successfully');
     }
 
     /**
-     * @return array{success: bool, data?: mixed, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: mixed, message?: string, created?: true}
      */
     public function updateSectionRanks(array $params = []): array
     {
@@ -220,7 +215,7 @@ class ModelFieldSectionService
     }
 
     /**
-     * @return msModelFieldSection|array{success: false, message: string, httpStatus: int}
+     * @return msModelFieldSection|array{success: false, message: string, error: string}
      */
     private function requireSection(int $id): msModelFieldSection|array
     {
@@ -230,14 +225,14 @@ class ModelFieldSectionService
 
         $section = $this->modx->getObject(msModelFieldSection::class, $id);
         if (!$section instanceof msModelFieldSection) {
-            return $this->fail('Section not found', HttpStatus::NOT_FOUND);
+            return $this->fail('Section not found', 'not_found');
         }
 
         return $section;
     }
 
     /**
-     * @return array{success: false, message: string, httpStatus: int}|null
+     * @return array{success: false, message: string, error: string}|null
      */
     private function rejectInvalidModel(string $model): ?array
     {
@@ -249,9 +244,9 @@ class ModelFieldSectionService
     }
 
     /**
-     * @return array{success: true, data: mixed, message?: string, httpStatus?: int}
+     * @return array{success: true, data: mixed, message?: string, created?: true}
      */
-    private function ok(mixed $data = null, ?string $message = null, ?int $httpStatus = null): array
+    private function ok(mixed $data = null, ?string $message = null, bool $created = false): array
     {
         $result = [
             'success' => true,
@@ -260,22 +255,23 @@ class ModelFieldSectionService
         if ($message !== null) {
             $result['message'] = $message;
         }
-        if ($httpStatus !== null) {
-            $result['httpStatus'] = $httpStatus;
+        if ($created) {
+            $result['created'] = true;
         }
 
         return $result;
     }
 
     /**
-     * @return array{success: false, message: string, httpStatus: int}
+     * @param 'bad_request'|'not_found'|'server_error' $error
+     * @return array{success: false, message: string, error: string}
      */
-    private function fail(string $message, int $httpStatus = HttpStatus::BAD_REQUEST): array
+    private function fail(string $message, string $error = 'bad_request'): array
     {
         return [
             'success' => false,
             'message' => $message,
-            'httpStatus' => $httpStatus,
+            'error' => $error,
         ];
     }
 }

@@ -79,5 +79,39 @@ if (!str_contains($controllerSrc, "services->get('ms3_model_field_section_servic
     $fail('ModelFieldsController must resolve ms3_model_field_section_service from DI');
 }
 
+if (str_contains($fieldServiceSrc, 'HttpStatus') || str_contains($sectionServiceSrc, 'HttpStatus')) {
+    $fail('ModelField services must not import Router\\HttpStatus (HTTP stays in controller)');
+}
+
+// Envelope mapping: domain error codes → HTTP status (no MODX bootstrap).
+require_once $root . '/vendor/autoload.php';
+
+use MiniShop3\Controllers\Api\Manager\ModelFieldsController;
+use MiniShop3\Router\HttpStatus;
+
+$controllerReflection = new \ReflectionClass(ModelFieldsController::class);
+$mapResult = $controllerReflection->getMethod('mapResult');
+$mapResult->setAccessible(true);
+$controller = $controllerReflection->newInstanceWithoutConstructor();
+
+$notFound = $mapResult->invoke($controller, [
+    'success' => false,
+    'message' => 'Field not found',
+    'error' => 'not_found',
+]);
+if (($notFound['success'] ?? true) !== false || (int)($notFound['code'] ?? 0) !== HttpStatus::NOT_FOUND) {
+    $fail('mapResult must map error=not_found to HTTP 404');
+}
+
+$created = $mapResult->invoke($controller, [
+    'success' => true,
+    'data' => ['id' => 1],
+    'message' => 'Field created successfully',
+    'created' => true,
+]);
+if (($created['success'] ?? false) !== true || !isset($created['data']['id'])) {
+    $fail('mapResult must unwrap successful create data');
+}
+
 fwrite(STDOUT, "OK ModelFieldsServiceStructureTest (controller LOC={$controllerLines})\n");
 exit(0);

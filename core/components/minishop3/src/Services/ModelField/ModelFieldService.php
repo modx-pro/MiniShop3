@@ -3,7 +3,6 @@
 namespace MiniShop3\Services\ModelField;
 
 use MiniShop3\Model\msModelField;
-use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\ComboConfigManager;
 use MODX\Revolution\modX;
 
@@ -39,7 +38,7 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function getList(array $params = []): array
     {
@@ -80,7 +79,7 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function get(array $params = []): array
     {
@@ -93,7 +92,7 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function create(array $params = []): array
     {
@@ -134,18 +133,14 @@ class ModelFieldService
         ]);
 
         if (!$field->save()) {
-            return $this->fail('Failed to create field', HttpStatus::INTERNAL_SERVER_ERROR);
+            return $this->fail('Failed to create field', 'server_error');
         }
 
-        return $this->ok(
-            $this->formatField($field),
-            'Field created successfully',
-            HttpStatus::CREATED
-        );
+        return $this->ok($this->formatField($field), 'Field created successfully', true);
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function update(array $params = []): array
     {
@@ -186,14 +181,14 @@ class ModelFieldService
         }
 
         if (!$field->save()) {
-            return $this->fail('Failed to update field', HttpStatus::INTERNAL_SERVER_ERROR);
+            return $this->fail('Failed to update field', 'server_error');
         }
 
         return $this->ok($this->formatField($field), 'Field updated successfully');
     }
 
     /**
-     * @return array{success: bool, data?: mixed, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: mixed, message?: string, created?: true}
      */
     public function delete(array $params = []): array
     {
@@ -203,7 +198,7 @@ class ModelFieldService
         }
 
         if (!$field->remove()) {
-            return $this->fail('Failed to delete field', HttpStatus::INTERNAL_SERVER_ERROR);
+            return $this->fail('Failed to delete field', 'server_error');
         }
 
         return $this->ok(null, 'Field deleted successfully');
@@ -226,7 +221,7 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function getVisibleFields(array $params = []): array
     {
@@ -296,7 +291,7 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: bool, data?: mixed, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: mixed, message?: string, created?: true}
      */
     public function updateRanks(array $params = []): array
     {
@@ -321,7 +316,7 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function getComboOptions(array $params = []): array
     {
@@ -359,7 +354,7 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: bool, data?: array<string, mixed>, message?: string, httpStatus?: int}
+     * @return array{success: bool, data?: array<string, mixed>, message?: string, created?: true}
      */
     public function getFieldComboOptions(array $params = []): array
     {
@@ -431,7 +426,7 @@ class ModelFieldService
     }
 
     /**
-     * @return msModelField|array{success: false, message: string, httpStatus: int}
+     * @return msModelField|array{success: false, message: string, error: string}
      */
     private function requireField(int $id): msModelField|array
     {
@@ -441,14 +436,14 @@ class ModelFieldService
 
         $field = $this->modx->getObject(msModelField::class, $id);
         if (!$field instanceof msModelField) {
-            return $this->fail('Field not found', HttpStatus::NOT_FOUND);
+            return $this->fail('Field not found', 'not_found');
         }
 
         return $field;
     }
 
     /**
-     * @return array{success: false, message: string, httpStatus: int}|null
+     * @return array{success: false, message: string, error: string}|null
      */
     private function rejectInvalidModel(string $model): ?array
     {
@@ -497,9 +492,9 @@ class ModelFieldService
     }
 
     /**
-     * @return array{success: true, data: mixed, message?: string, httpStatus?: int}
+     * @return array{success: true, data: mixed, message?: string, created?: true}
      */
-    private function ok(mixed $data = null, ?string $message = null, ?int $httpStatus = null): array
+    private function ok(mixed $data = null, ?string $message = null, bool $created = false): array
     {
         $result = [
             'success' => true,
@@ -508,22 +503,23 @@ class ModelFieldService
         if ($message !== null) {
             $result['message'] = $message;
         }
-        if ($httpStatus !== null) {
-            $result['httpStatus'] = $httpStatus;
+        if ($created) {
+            $result['created'] = true;
         }
 
         return $result;
     }
 
     /**
-     * @return array{success: false, message: string, httpStatus: int}
+     * @param 'bad_request'|'not_found'|'server_error' $error
+     * @return array{success: false, message: string, error: string}
      */
-    private function fail(string $message, int $httpStatus = HttpStatus::BAD_REQUEST): array
+    private function fail(string $message, string $error = 'bad_request'): array
     {
         return [
             'success' => false,
             'message' => $message,
-            'httpStatus' => $httpStatus,
+            'error' => $error,
         ];
     }
 }
