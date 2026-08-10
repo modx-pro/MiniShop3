@@ -17,6 +17,14 @@ use MODX\Revolution\modX;
  *
  * Each next level overrides the previous one.
  *
+ * Layer boundary (naming under Controllers\):
+ * - Controllers\Api\* — HTTP (FastRoute): Manager/*, Web/*, plus other Api\* on manager routes.
+ * - Controllers\Cart|Order|Customer — domain facades (MS2-style), not HTTP controllers.
+ *   DI keys: ms3_cart, ms3_order, ms3_customer.
+ * - Controllers\Delivery|Payment — provider plugin bases (not ms3_* DI facades).
+ * - Services\* — canonical business logic used by facades and API controllers.
+ * See repository readme.md section «Слои под src/Controllers/».
+ *
  * Architecture for addons:
  * - Each addon creates its file in ms3.services.d/
  * - Files are loaded in alphabetical order
