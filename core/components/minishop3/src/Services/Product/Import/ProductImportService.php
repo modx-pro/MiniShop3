@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MiniShop3\Services\Product\Import;
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Services\Import\ImportExtraFieldCatalog;
 use MiniShop3\Utils\EventGate;
 use MODX\Revolution\modX;
 
@@ -74,6 +75,9 @@ class ProductImportService
             return $fileValidation;
         }
 
+        // Ensure msExtraField / Object Extension columns are in xPDO maps before save.
+        $this->ms3->loadMap();
+
         $this->importRows();
         $this->detectedEncoding = $this->ctx->detectedEncoding;
 
@@ -110,7 +114,8 @@ class ProductImportService
         $optionHandler = new ImportCsvOptionHandler($this->modx);
         $galleryHandler = new ImportCsvGalleryHandler($this->modx);
         $upserter = new ImportCsvProductUpserter($this->ctx, $optionHandler, $galleryHandler);
-        $this->rowProcessor = new ImportCsvRowProcessor($this->ctx, $upserter);
+        $fieldMapper = new ImportCsvRowFieldMapper(new ImportExtraFieldCatalog($this->modx));
+        $this->rowProcessor = new ImportCsvRowProcessor($this->ctx, $upserter, $fieldMapper);
     }
 
     private function importRows(): void

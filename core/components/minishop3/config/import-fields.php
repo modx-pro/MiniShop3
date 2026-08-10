@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Конфигурация полей для импорта товаров
  *
@@ -7,6 +8,9 @@
  * - product_data: поля msProductData
  * - special: специальные поля (gallery)
  * - prefixes: динамические префиксы (tv.*, option.*)
+ *
+ * msExtraField / Object Extension columns are merged dynamically in
+ * Processors\Utilities\Import\Fields via ImportExtraFieldCatalog (#291).
  */
 
 return [

@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Processors\Utilities\Import;
 
+use MiniShop3\Services\Import\ImportExtraFieldCatalog;
 use MODX\Revolution\modTemplateVar;
 use MODX\Revolution\Processors\Processor;
 
@@ -43,12 +44,18 @@ class Fields extends Processor
             'group' => '',
         ];
 
+        $groupResource = $this->modx->lexicon('ms3_import_field_group_resource');
+        $groupProduct = $this->modx->lexicon('ms3_import_field_group_product');
+        $groupTv = $this->modx->lexicon('ms3_import_field_group_tv');
+        $groupOptions = $this->modx->lexicon('ms3_import_field_group_options');
+        $groupSpecial = $this->modx->lexicon('ms3_import_field_group_special');
+
         // Resource fields
         foreach ($config['resource'] as $field => $fieldConfig) {
             $fields[] = [
                 'value' => $field,
                 'label' => $this->modx->lexicon($fieldConfig['label'] ?? $field),
-                'group' => $this->modx->lexicon('ms3_import_group_resource'),
+                'group' => $groupResource,
                 'required' => $fieldConfig['required'] ?? false,
                 'type' => $fieldConfig['type'] ?? 'string',
             ];
@@ -59,9 +66,21 @@ class Fields extends Processor
             $fields[] = [
                 'value' => $field,
                 'label' => $this->modx->lexicon($fieldConfig['label'] ?? $field),
-                'group' => $this->modx->lexicon('ms3_import_group_product'),
+                'group' => $groupProduct,
                 'required' => $fieldConfig['required'] ?? false,
                 'type' => $fieldConfig['type'] ?? 'string',
+            ];
+        }
+
+        // msExtraField / Object Extension columns (dynamic)
+        $extraCatalog = new ImportExtraFieldCatalog($this->modx);
+        foreach ($extraCatalog->listImportFields($config) as $extraField) {
+            $fields[] = [
+                'value' => $extraField['value'],
+                'label' => $extraField['label'],
+                'group' => $extraField['group'] === 'resource' ? $groupResource : $groupProduct,
+                'required' => $extraField['required'],
+                'type' => $extraField['type'],
             ];
         }
 
@@ -70,7 +89,7 @@ class Fields extends Processor
             $fields[] = [
                 'value' => $field,
                 'label' => $this->modx->lexicon($fieldConfig['label'] ?? $field),
-                'group' => $this->modx->lexicon('ms3_import_group_special'),
+                'group' => $groupSpecial,
                 'required' => $fieldConfig['required'] ?? false,
                 'type' => $fieldConfig['type'] ?? 'string',
                 'multiple' => $fieldConfig['multiple'] ?? false,
@@ -83,7 +102,7 @@ class Fields extends Processor
             $fields[] = [
                 'value' => 'tv.' . $tv['name'],
                 'label' => $tv['caption'] ?: $tv['name'],
-                'group' => $this->modx->lexicon('ms3_import_group_tv'),
+                'group' => $groupTv,
                 'type' => 'string',
             ];
         }
@@ -94,7 +113,7 @@ class Fields extends Processor
             $fields[] = [
                 'value' => 'option.' . $option['key'],
                 'label' => $option['key'],
-                'group' => $this->modx->lexicon('ms3_import_group_options'),
+                'group' => $groupOptions,
                 'type' => 'string',
             ];
         }
