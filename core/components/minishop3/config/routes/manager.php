@@ -876,6 +876,12 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         return $controller->getActiveDropdown($params);
     });
 
+    // Dropdown list of active payments (optional delivery_id filter via msDeliveryMember)
+    $router->get('/payments-active', function ($params) use ($modx) {
+        $controller = new \MiniShop3\Controllers\Api\Manager\PaymentsController($modx);
+        return $controller->getActiveDropdown($params);
+    });
+
     // Read: any mgr who can open grids (view_document). Write is global msGridField — mssetting_save.
     $router->group('/grid-config', function ($router) use ($modx) {
         $router->get('/{grid_key}', function ($params) use ($modx) {

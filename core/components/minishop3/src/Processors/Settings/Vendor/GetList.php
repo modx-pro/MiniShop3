@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Settings\Vendor;
 
 use MiniShop3\Model\msVendor;
+use MiniShop3\Services\Settings\SettingsComboListService;
 use MODX\Revolution\modResource;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use xPDO\Om\xPDOObject;
@@ -15,19 +16,30 @@ class GetList extends GetListProcessor
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'asc';
     public $permission = 'mssetting_list';
-    protected $item_id = 0;
-
 
     /**
-     * @return bool|null|string
+     * Combo mode delegates to SettingsComboListService (same source as REST /references/vendors).
+     *
+     * @return array|string
      */
-    public function initialize()
+    public function process()
     {
-        if ($this->getProperty('combo') && !$this->getProperty('limit') && $id = (int)$this->getProperty('id')) {
-            $this->item_id = $id;
+        if ($this->getProperty('combo')) {
+            $includeId = SettingsComboListService::resolvePinnedIncludeId(
+                (int) $this->getProperty('id'),
+                $this->getProperty('limit')
+            );
+            /** @var SettingsComboListService $comboList */
+            $comboList = $this->modx->services->get('ms3_settings_combo_list');
+            $rows = $comboList->listVendorsForCombo(
+                $includeId,
+                trim((string) $this->getProperty('query', ''))
+            );
+
+            return $this->outputArray($rows, count($rows));
         }
 
-        return parent::initialize();
+        return parent::process();
     }
 
     /**
@@ -37,18 +49,9 @@ class GetList extends GetListProcessor
      */
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
-        if ($this->getProperty('combo')) {
-            $c->select('id,name');
-        } else {
-            $c->leftJoin(modResource::class, 'Resource');
-            $c->select($this->modx->getSelectColumns($this->classKey, 'msVendor'));
-            $c->select('Resource.pagetitle');
-        }
-
-        if (!empty($this->item_id)) {
-            $c->where(['id' => $this->item_id]);
-            return $c;
-        }
+        $c->leftJoin(modResource::class, 'Resource');
+        $c->select($this->modx->getSelectColumns($this->classKey, 'msVendor'));
+        $c->select('Resource.pagetitle');
 
         $query = trim($this->getProperty('query'));
         if (!empty($query)) {
@@ -64,7 +67,6 @@ class GetList extends GetListProcessor
         return $c;
     }
 
-
     /**
      * @param xPDOObject $object
      *
@@ -72,40 +74,33 @@ class GetList extends GetListProcessor
      */
     public function prepareRow(xPDOObject $object)
     {
-        if ($this->getProperty('combo')) {
-            $data = [
-                'id' => $object->get('id'),
-                'name' => $object->get('name'),
-            ];
-        } else {
-            $data = $object->toArray();
-            if (!$data['resource_id']) {
-                $data['resource_id'] = null;
-            }
-            $data['actions'] = [];
-
-            $data['actions'][] = [
-                'cls' => '',
-                'icon' => 'icon icon-edit',
-                'title' => $this->modx->lexicon('ms3_menu_update'),
-                'action' => 'updateVendor',
-                'button' => true,
-                'menu' => true,
-            ];
-
-            $data['actions'][] = [
-                'cls' => [
-                    'menu' => 'red',
-                    'button' => 'red',
-                ],
-                'icon' => 'icon icon-trash-o',
-                'title' => $this->modx->lexicon('ms3_menu_remove'),
-                'multiple' => $this->modx->lexicon('ms3_menu_remove_multiple'),
-                'action' => 'removeVendor',
-                'button' => true,
-                'menu' => true,
-            ];
+        $data = $object->toArray();
+        if (!$data['resource_id']) {
+            $data['resource_id'] = null;
         }
+        $data['actions'] = [];
+
+        $data['actions'][] = [
+            'cls' => '',
+            'icon' => 'icon icon-edit',
+            'title' => $this->modx->lexicon('ms3_menu_update'),
+            'action' => 'updateVendor',
+            'button' => true,
+            'menu' => true,
+        ];
+
+        $data['actions'][] = [
+            'cls' => [
+                'menu' => 'red',
+                'button' => 'red',
+            ],
+            'icon' => 'icon icon-trash-o',
+            'title' => $this->modx->lexicon('ms3_menu_remove'),
+            'multiple' => $this->modx->lexicon('ms3_menu_remove_multiple'),
+            'action' => 'removeVendor',
+            'button' => true,
+            'menu' => true,
+        ];
 
         return $data;
     }

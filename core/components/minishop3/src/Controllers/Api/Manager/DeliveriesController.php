@@ -6,6 +6,7 @@ use MiniShop3\Model\msDelivery;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Reference\Ms3ReferenceCrudService;
 use MiniShop3\Services\Reference\ReferenceResourceConfig;
+use MiniShop3\Services\Settings\SettingsComboListService;
 use MODX\Revolution\modX;
 
 /**
@@ -43,11 +44,13 @@ class DeliveriesController
     {
         $this->modx->lexicon->load('minishop3:default');
 
-        $q = $this->modx->newQuery(msDelivery::class, ['active' => 1]);
-        $q->sortby('position', 'ASC');
-
+        /** @var SettingsComboListService $comboList */
+        $comboList = $this->modx->services->get('ms3_settings_combo_list');
         $results = [];
-        foreach ($this->modx->getIterator(msDelivery::class, $q) as $delivery) {
+        foreach ($comboList->iterateActiveDeliveries(
+            (int) ($params['id'] ?? 0),
+            trim((string) ($params['query'] ?? ''))
+        ) as $delivery) {
             $results[] = $this->formatActiveDropdownItem($delivery);
         }
 
