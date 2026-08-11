@@ -26,6 +26,12 @@ class Router
     /** @var array */
     protected $middlewares = [];
 
+    /** @var string */
+    protected $currentPrefix = '';
+
+    /** @var array */
+    protected $currentMiddlewares = [];
+
     /**
      * @param modX $modx
      */
@@ -271,9 +277,9 @@ class Router
      */
     public function addRoute($method, string $pattern, $handler, array $middlewares = []): Route
     {
-        $fullPattern = ($this->currentPrefix ?? '') . $pattern;
+        $fullPattern = $this->currentPrefix . $pattern;
 
-        $allMiddlewares = array_merge($this->currentMiddlewares ?? [], $middlewares);
+        $allMiddlewares = array_merge($this->currentMiddlewares, $middlewares);
 
         $route = new Route($method, $fullPattern, $handler, $allMiddlewares);
 
@@ -339,8 +345,8 @@ class Router
      */
     public function group(string $prefix, callable $callback, array $middlewares = []): void
     {
-        $previousPrefix = $this->currentPrefix ?? '';
-        $previousMiddlewares = $this->currentMiddlewares ?? [];
+        $previousPrefix = $this->currentPrefix;
+        $previousMiddlewares = $this->currentMiddlewares;
 
         $this->currentPrefix = $previousPrefix . $prefix;
         $this->currentMiddlewares = array_merge($previousMiddlewares, $middlewares);

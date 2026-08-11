@@ -19,6 +19,7 @@ class msOrder extends \MiniShop3\Model\msOrder
                 'customer_id' => 0,
                 'token' => '',
                 'uuid' => '',
+                'idempotency_key' => null,
                 'createdon' => null,
                 'updatedon' => null,
                 'num' => null,
@@ -66,6 +67,14 @@ class msOrder extends \MiniShop3\Model\msOrder
                         'precision' => '36',
                         'phptype' => 'string',
                         'null' => false,
+                    ],
+                'idempotency_key' =>
+                    [
+                        'dbtype' => 'varchar',
+                        'precision' => '128',
+                        'phptype' => 'string',
+                        'null' => true,
+                        'default' => null,
                     ],
                 'createdon' =>
                     [
@@ -230,6 +239,22 @@ class msOrder extends \MiniShop3\Model\msOrder
                                         'length' => '',
                                         'collation' => 'A',
                                         'null' => false,
+                                    ],
+                            ],
+                    ],
+                'idempotency_key' =>
+                    [
+                        'alias' => 'idempotency_key',
+                        'primary' => false,
+                        'unique' => true,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'idempotency_key' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => true,
                                     ],
                             ],
                     ],

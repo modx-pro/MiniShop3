@@ -49,3 +49,10 @@ $_lang['ms3_order_err_products'] = 'В заказе нет товаров';
 $_lang['ms3_order_err_delivery_id'] = 'Не выбран способ доставки';
 $_lang['ms3_order_err_payment_id'] = 'Не выбран способ оплаты';
 $_lang['ms3_order_err_customer_id'] = 'Не указан покупатель';
+
+// Программное / sessionless API заказа (#507)
+$_lang['ms3_order_err_idempotency_key_required'] = 'Требуется ключ идемпотентности';
+$_lang['ms3_order_err_products_required'] = 'Нужен хотя бы один снимок товара';
+$_lang['ms3_order_err_programmatic_create'] = 'Не удалось создать заказ программно';
+$_lang['ms3_order_programmatic_created'] = 'Заказ создан программно';
+$_lang['ms3_order_programmatic_idempotent'] = 'Возвращён существующий заказ по ключу идемпотентности';

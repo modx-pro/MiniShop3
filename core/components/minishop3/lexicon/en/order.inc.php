@@ -49,3 +49,10 @@ $_lang['ms3_order_err_products'] = 'Order has no products';
 $_lang['ms3_order_err_delivery_id'] = 'Delivery method is not selected';
 $_lang['ms3_order_err_payment_id'] = 'Payment method is not selected';
 $_lang['ms3_order_err_customer_id'] = 'Customer is not specified';
+
+// Programmatic / sessionless order API (#507)
+$_lang['ms3_order_err_idempotency_key_required'] = 'Idempotency key is required';
+$_lang['ms3_order_err_products_required'] = 'At least one product snapshot is required';
+$_lang['ms3_order_err_programmatic_create'] = 'Failed to create programmatic order';
+$_lang['ms3_order_programmatic_created'] = 'Order created programmatically';
+$_lang['ms3_order_programmatic_idempotent'] = 'Existing order returned for idempotency key';

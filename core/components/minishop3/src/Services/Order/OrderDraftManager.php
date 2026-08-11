@@ -5,7 +5,12 @@ namespace MiniShop3\Services\Order;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
+use MiniShop3\Model\msOrderProduct;
+use MiniShop3\Model\msProduct;
+use MiniShop3\Model\msProductData;
+use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
+use Ramsey\Uuid\Uuid;
 
 /**
  * Order Draft Manager
@@ -596,5 +601,174 @@ class OrderDraftManager
         );
 
         return true;
+    }
+
+    /**
+     * Create a sessionless draft for programmatic / integration callers (#507).
+     *
+     * Does not read PHP session or cart tokens.
+     *
+     * @param array{
+     *     context?: string,
+     *     customer_id?: int,
+     *     delivery_id?: int,
+     *     payment_id?: int,
+     *     delivery_cost?: float|int,
+     *     order_comment?: string,
+     *     idempotency_key?: string,
+     *     origin?: string,
+     *     properties?: array<string, mixed>
+     * } $data
+     */
+    public function createSessionlessDraft(array $data): msOrder
+    {
+        $ctx = trim((string) ($data['context'] ?? 'web')) ?: 'web';
+        $deliveryCost = (float) ($data['delivery_cost'] ?? 0);
+        $origin = OrderOrigin::normalize(
+            $data['origin'] ?? OrderOrigin::INTEGRATION,
+            OrderOrigin::INTEGRATION
+        );
+        $idempotencyKey = trim((string) ($data['idempotency_key'] ?? ''));
+
+        /** @var msOrder $order */
+        $order = $this->modx->newObject(msOrder::class);
+        $order->set('uuid', Uuid::uuid4()->toString());
+        $order->set('token', md5(uniqid('ms3_int_', true)));
+        $order->set('status_id', (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1);
+        $order->set('context', $ctx);
+        $order->set('createdon', time());
+        $order->set('updatedon', time());
+        $order->set('user_id', 0);
+        $order->set('customer_id', (int) ($data['customer_id'] ?? 0));
+        $order->set('delivery_id', (int) ($data['delivery_id'] ?? 0));
+        $order->set('payment_id', (int) ($data['payment_id'] ?? 0));
+        $order->set('order_comment', (string) ($data['order_comment'] ?? ''));
+        $order->set('num', null);
+        $order->set('cart_cost', 0);
+        $order->set('delivery_cost', $deliveryCost);
+        $order->set('weight', 0);
+        $order->set('idempotency_key', $idempotencyKey !== '' ? $idempotencyKey : null);
+
+        /** @var OrderService $orderService */
+        $orderService = $this->modx->services->get('ms3_order_service');
+        $order->set('cost', $orderService->clampComputedTotal(null, 0.0, $deliveryCost, 0.0));
+
+        $properties = is_array($data['properties'] ?? null) ? $data['properties'] : [];
+        if ($idempotencyKey !== '') {
+            $properties[OrderOrigin::PROPERTY_IDEMPOTENCY_KEY] = $idempotencyKey;
+        }
+        $properties[OrderOrigin::PROPERTY_ORIGIN] = $origin;
+        $order->set('properties', $properties);
+
+        if (!$order->save()) {
+            throw new \RuntimeException('ms3_order_err_save');
+        }
+
+        return $order;
+    }
+
+    /**
+     * @param array<string, mixed> $addressData
+     */
+    public function fillAddressFromArray(msOrder $order, array $addressData): void
+    {
+        /** @var msOrderAddress $address */
+        $address = $this->modx->newObject(msOrderAddress::class);
+        $address->set('order_id', $order->get('id'));
+        $address->set('createdon', time());
+
+        foreach ([
+            'first_name', 'last_name', 'phone', 'email',
+            'country', 'index', 'region', 'city', 'metro',
+            'street', 'building', 'entrance', 'floor', 'room',
+            'comment', 'text_address',
+        ] as $field) {
+            if (array_key_exists($field, $addressData)) {
+                $address->set($field, $addressData[$field]);
+            }
+        }
+
+        if (!$address->save()) {
+            throw new \RuntimeException('ms3_order_err_address_save');
+        }
+    }
+
+    /**
+     * Persist an order product from a caller-supplied snapshot (catalog id and/or price).
+     *
+     * @param array<string, mixed> $snapshot
+     */
+    public function addProductFromSnapshot(msOrder $order, array $snapshot, string $origin = OrderOrigin::INTEGRATION): void
+    {
+        $productId = (int) ($snapshot['product_id'] ?? 0);
+        $count = max(1, (int) ($snapshot['count'] ?? 1));
+        $name = isset($snapshot['name']) ? (string) $snapshot['name'] : '';
+        $price = array_key_exists('price', $snapshot) ? (float) $snapshot['price'] : null;
+        $weight = array_key_exists('weight', $snapshot) ? (float) $snapshot['weight'] : null;
+        $options = $snapshot['options'] ?? null;
+        if (is_string($options) && $options !== '') {
+            $decoded = json_decode($options, true);
+            $options = is_array($decoded) ? $decoded : [];
+        }
+        if (!is_array($options)) {
+            $options = [];
+        }
+
+        if ($productId > 0) {
+            $product = $this->modx->getObject(msProduct::class, $productId);
+            if (!$product) {
+                throw new \InvalidArgumentException('ms3_order_err_product_nf');
+            }
+            if ($name === '') {
+                $name = (string) $product->get('pagetitle');
+            }
+            /** @var msProductData|null $productData */
+            $productData = $this->modx->getObject(msProductData::class, $productId);
+            if ($price === null) {
+                $price = $productData ? (float) $productData->get('price') : 0.0;
+            }
+            if ($weight === null) {
+                $weight = $productData ? (float) $productData->get('weight') : 0.0;
+            }
+        } elseif ($name === '' || $price === null) {
+            throw new \InvalidArgumentException('ms3_order_err_product_snapshot');
+        } else {
+            $weight = $weight ?? 0.0;
+        }
+
+        /** @var msOrderProduct $orderProduct */
+        $orderProduct = $this->modx->newObject(msOrderProduct::class);
+        $orderProduct->set('order_id', $order->get('id'));
+        $orderProduct->set('product_id', $productId > 0 ? $productId : null);
+        $orderProduct->set('product_key', md5($productId . json_encode($options)));
+        $orderProduct->set('name', $name);
+        $orderProduct->set('count', $count);
+        $orderProduct->set('price', $price);
+        $orderProduct->set('weight', $weight);
+        $orderProduct->set('cost', $count * $price);
+        $orderProduct->set('options', $options !== [] ? json_encode($options) : null);
+
+        $modeNew = defined(modSystemEvent::class . '::MODE_NEW')
+            ? modSystemEvent::MODE_NEW
+            : 'new';
+
+        $eventContext = [
+            'mode' => $modeNew,
+            'object' => $orderProduct,
+            'msOrderProduct' => $orderProduct,
+            'msOrder' => $order,
+            'origin' => OrderOrigin::normalize($origin, OrderOrigin::INTEGRATION),
+        ];
+
+        $response = $this->ms3->utils->invokeEvent('msOnBeforeCreateOrderProduct', $eventContext);
+        if (!$response['success']) {
+            throw new \RuntimeException((string) $response['message']);
+        }
+
+        if (!$orderProduct->save()) {
+            throw new \RuntimeException('ms3_order_err_product_save');
+        }
+
+        $this->ms3->utils->invokeEvent('msOnCreateOrderProduct', $eventContext);
     }
 }

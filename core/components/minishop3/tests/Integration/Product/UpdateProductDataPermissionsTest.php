@@ -130,6 +130,8 @@ final class UpdateProductDataPermissionsTest extends TestCase
     private function xpdo(): xPDO
     {
         return new class extends xPDO {
+            /** @var object|null */
+            public $services;
 
             public function __construct()
             {
