@@ -1,7 +1,5 @@
 /**
- * Entry point for Orders Manager widget (ES Module)
- *
- * Exports initialization function for mounting Vue application
+ * Entry point for Orders Manager page
  */
 
 import '../scss/primevue.scss'
@@ -23,7 +21,6 @@ import { injectFormStylesOverride } from '../utils/formStyles.js'
  */
 function createVueApp() {
   const app = createApp(OrdersGrid)
-
   const pinia = createPinia()
   app.use(pinia)
 
@@ -44,17 +41,12 @@ function createVueApp() {
 }
 
 /**
- * Widget initialization
- * Called when orders management page loads
+ * Mount OrdersGrid into the tpl node
  */
 export function init(selector = '#ms3-orders-vue-wrapper') {
   const $el = document.querySelector(selector)
 
-  if (!$el) {
-    return null
-  }
-
-  if ($el.dataset.vApp === 'true') {
+  if (!$el || $el.dataset.vApp === 'true') {
     return null
   }
 
@@ -67,38 +59,10 @@ export function init(selector = '#ms3-orders-vue-wrapper') {
 }
 
 /**
- * Wait for ExtJS to create DOM element
- * Uses MutationObserver to track element appearance
- */
-function waitForElement(selector, callback) {
-  const element = document.querySelector(selector)
-
-  if (element) {
-    callback(element)
-    return
-  }
-
-  const observer = new MutationObserver(() => {
-    const element = document.querySelector(selector)
-    if (element) {
-      observer.disconnect()
-      callback(element)
-    }
-  })
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  })
-}
-
-/**
- * Automatic initialization on DOM load
+ * Automatic initialization on DOM ready
  */
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    waitForElement('#ms3-orders-vue-wrapper', () => init())
-  })
+  document.addEventListener('DOMContentLoaded', () => init())
 } else {
-  waitForElement('#ms3-orders-vue-wrapper', () => init())
+  init()
 }

@@ -11,7 +11,8 @@ class MiniShop3MgrOrderManagerController extends msManagerController
      */
     public function getPageTitle()
     {
-        $id = (int)($_GET['id'] ?? 0);
+        $id = (int) ($_GET['id'] ?? 0);
+
         return $this->modx->lexicon('ms3_order') . ' #' . $id . ' | MiniShop3';
     }
 
@@ -28,34 +29,38 @@ class MiniShop3MgrOrderManagerController extends msManagerController
      */
     public function loadCustomCssJs()
     {
-        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
-        $this->addCss($this->ms3->config['cssUrl'] . 'mgr/main.css');
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/minishop3.js');
-
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/orders/order.wrapper.js');
-
-        $orderId = (int)($_GET['id'] ?? 0);
-
         $config = $this->ms3->config;
-        $config['order_id'] = $orderId;
+        $config['order_id'] = (int) ($_GET['id'] ?? 0);
 
-        $this->addHtml('<script>Object.assign(ms3.config, ' . json_encode($config) . ');</script>');
+        // Config before Vue modules so mount sees ms3.config (#526).
+        $this->addHtml(
+            '<script>var ms3 = { config: ' . json_encode($config) . ' };</script>'
+        );
 
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/order.min.css');
-        // Vue module with VueTools dependency check
         $this->addVueModule($this->ms3->config['assetsUrl'] . 'js/mgr/vue-dist/order.min.js');
-
-        $this->addHtml('
-        <script>
-            Ext.onReady(function() {
-                MODx.add({xtype: "ms3-order-vue-wrapper"});
-            });
-        </script>');
 
         $this->modx->invokeEvent('msOnManagerCustomCssJs', [
             'controller' => $this,
             'page' => 'order',
         ]);
+    }
+
+    /**
+     * @param array $scriptProperties
+     * @return mixed
+     */
+    public function process(array $scriptProperties = [])
+    {
+        return [];
+    }
+
+    /**
+     * @return string
+     */
+    public function getTemplateFile()
+    {
+        return dirname(__FILE__, 3) . '/templates/default/order.tpl';
     }
 }
