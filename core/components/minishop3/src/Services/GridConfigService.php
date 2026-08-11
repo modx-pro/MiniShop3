@@ -25,6 +25,22 @@ class GridConfigService
 
     private GridRelationFieldExtractor $relationExtractor;
 
+    /**
+     * Request-scoped memo for getGridConfig(): gridKey:includeHidden → column config.
+     *
+     * This cache is safe only because GridConfigService is registered in the
+     * MODX DI container as a request-scoped singleton (see ServiceRegistry):
+     * one instance per request, never shared across requests. The memo must
+     * never be persisted to a long-lived process cache or serialized — it
+     * holds no TTL and would leak stale data across requests. Mutation
+     * methods (saveGridConfig, addField, updateField, deleteField) invalidate
+     * the affected gridKey entries via invalidateGridConfigCache() so the next
+     * read re-loads from the database.
+     *
+     * @var array<string, array<int, array<string, mixed>>>
+     */
+    private array $gridConfigCache = [];
+
     /** @var list<string> */
     private const SAVE_CONFIG_KEYS = [
         'template', 'type', 'format', 'actions',
@@ -54,6 +70,22 @@ class GridConfigService
      */
     public function getGridConfig(string $gridKey, bool $includeHidden = false): array
     {
+        $cacheKey = $this->gridConfigCacheKey($gridKey, $includeHidden);
+        if (array_key_exists($cacheKey, $this->gridConfigCache)) {
+            return $this->gridConfigCache[$cacheKey];
+        }
+
+        $fields = $this->loadGridConfig($gridKey, $includeHidden);
+        $this->gridConfigCache[$cacheKey] = $fields;
+
+        return $fields;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function loadGridConfig(string $gridKey, bool $includeHidden): array
+    {
         $fields = [];
 
         foreach ($this->repository->findByGridKey($gridKey, $includeHidden) as $field) {
@@ -81,6 +113,27 @@ class GridConfigService
         return $fields;
     }
 
+    private function gridConfigCacheKey(string $gridKey, bool $includeHidden): string
+    {
+        return $gridKey . ':' . ($includeHidden ? '1' : '0');
+    }
+
+    /**
+     * Call at the start of any msGridField mutation so request-scoped cache stays consistent.
+     */
+    private function beginGridMutation(string $gridKey): void
+    {
+        $this->invalidateGridConfigCache($gridKey);
+    }
+
+    private function invalidateGridConfigCache(string $gridKey): void
+    {
+        unset(
+            $this->gridConfigCache[$this->gridConfigCacheKey($gridKey, false)],
+            $this->gridConfigCache[$this->gridConfigCacheKey($gridKey, true)]
+        );
+    }
+
     protected function resolveLabel(msGridField $field): string
     {
         $label = $field->get('label');
@@ -105,6 +158,8 @@ class GridConfigService
      */
     public function saveGridConfig(string $gridKey, array $fields): bool
     {
+        $this->beginGridMutation($gridKey);
+
         try {
             $fieldNamesToKeep = [];
 
@@ -211,6 +266,8 @@ class GridConfigService
      */
     public function deleteField(string $gridKey, string $fieldName): array
     {
+        $this->beginGridMutation($gridKey);
+
         try {
             $field = $this->repository->findOne($gridKey, $fieldName);
             if (!$field) {
@@ -262,6 +319,8 @@ class GridConfigService
      */
     public function addField(string $gridKey, array $data): array
     {
+        $this->beginGridMutation($gridKey);
+
         try {
             if (empty($data['field_name'])) {
                 return ['success' => false, 'message' => 'field_name is required'];
@@ -336,6 +395,8 @@ class GridConfigService
      */
     public function updateField(string $gridKey, string $fieldName, array $data): array
     {
+        $this->beginGridMutation($gridKey);
+
         try {
             $field = $this->repository->findOne($gridKey, $fieldName);
             if (!$field) {
