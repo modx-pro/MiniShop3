@@ -195,11 +195,25 @@ class ProductDataController extends BaseApiController
         }
 
         $data = $this->getRequestData() ?? [];
+        if (isset($data['ids'])) {
+            $this->modx->lexicon->load('minishop3:default');
+
+            return Response::error(
+                $this->modx->lexicon('ms3_err_link_batch_not_supported'),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
         $master = (int) ($data['master'] ?? $productId);
         $slave = (int) ($data['slave'] ?? 0);
 
         if (!ProductLinkService::belongsToProduct($productId, $master, $slave)) {
-            return Response::error('Link does not belong to this product', HttpStatus::FORBIDDEN);
+            $this->modx->lexicon->load('minishop3:default');
+
+            return Response::error(
+                $this->modx->lexicon('ms3_err_link_not_in_product_scope'),
+                HttpStatus::FORBIDDEN
+            );
         }
 
         return $this->linkActionResponse($this->productLinkService()->remove(

@@ -91,6 +91,32 @@ class ProductLinkService
     }
 
     /**
+     * Known msLink.type values handled by create/remove.
+     */
+    public static function supportsLinkType(string $type): bool
+    {
+        return in_array($type, ['one_to_many', 'many_to_one', 'one_to_one', 'many_to_many'], true);
+    }
+
+    /**
+     * Master/slave rows to insert when creating a link (before many_to_many mesh expansion).
+     *
+     * @return list<array{master: int, slave: int}>|null null when type is unknown
+     */
+    public static function initialPairsForType(string $type, int $master, int $slave): ?array
+    {
+        return match ($type) {
+            'one_to_many' => [['master' => $master, 'slave' => $slave]],
+            'many_to_one' => [['master' => $slave, 'slave' => $master]],
+            'one_to_one', 'many_to_many' => [
+                ['master' => $master, 'slave' => $slave],
+                ['master' => $slave, 'slave' => $master],
+            ],
+            default => null,
+        };
+    }
+
+    /**
      * @return array{ok: bool, message?: string}
      */
     public function create(int $master, int $slave, int $linkId): array
@@ -165,21 +191,22 @@ class ProductLinkService
 
     private function applyLinkType(string $type, int $linkId, int $master, int $slave): bool
     {
-        switch ($type) {
-            case 'many_to_many':
-                return $this->addLink($linkId, $master, $slave)
-                    && $this->addLink($linkId, $slave, $master)
-                    && $this->meshManyToMany($linkId, $master, $slave);
-            case 'one_to_many':
-                return $this->addLink($linkId, $master, $slave);
-            case 'many_to_one':
-                return $this->addLink($linkId, $slave, $master);
-            case 'one_to_one':
-                return $this->addLink($linkId, $master, $slave)
-                    && $this->addLink($linkId, $slave, $master);
-            default:
-                return false;
+        $pairs = self::initialPairsForType($type, $master, $slave);
+        if ($pairs === null) {
+            return false;
         }
+
+        foreach ($pairs as $pair) {
+            if (!$this->addLink($linkId, $pair['master'], $pair['slave'])) {
+                return false;
+            }
+        }
+
+        if ($type === 'many_to_many') {
+            return $this->meshManyToMany($linkId, $master, $slave);
+        }
+
+        return true;
     }
 
     private function applyRemoveFilter(
@@ -188,6 +215,10 @@ class ProductLinkService
         int $master,
         int $slave
     ): bool {
+        if (!self::supportsLinkType($type)) {
+            return false;
+        }
+
         switch ($type) {
             case 'many_to_many':
                 $query->where(['master' => $slave, 'OR:slave:=' => $slave]);

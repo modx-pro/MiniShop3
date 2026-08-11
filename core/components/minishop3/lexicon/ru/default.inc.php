@@ -193,6 +193,9 @@ $_lang['ms3_err_status_wrong'] = 'Неверный статус заказа.';
 $_lang['ms3_err_status_same'] = 'Этот статус уже установлен.';
 $_lang['ms3_err_register_globals'] = 'Ошибка: php параметр <b>register_globals</b> должен быть выключен.';
 $_lang['ms3_err_link_equal'] = 'Вы пытаетесь добавить товару ссылку на самого себя';
+$_lang['ms3_err_no_link'] = 'Тип связи не найден';
+$_lang['ms3_err_link_not_in_product_scope'] = 'Эта связь не относится к текущему товару';
+$_lang['ms3_err_link_batch_not_supported'] = 'Пакетное удаление связей не поддерживается';
 $_lang['ms3_err_value_duplicate'] = 'Вы не ввели значение или ввели повтор.';
 
 $_lang['ms3_err_gallery_save'] = 'Не могу сохранить файл не был сохранён (см. системный журнал).';

@@ -30,6 +30,36 @@ const props = defineProps({
   },
 })
 
+/** Built-in Vue tabs: single map instead of per-tab v-else-if branches (#350). */
+const builtInVueComponents = {
+  ProductDataFields,
+  ProductGallery,
+  ProductCategoriesTab,
+  ProductLinksTab,
+  ProductOptionsTab,
+}
+
+function builtInVueTabProps(tab) {
+  switch (tab.component) {
+    case 'ProductDataFields':
+      return { productId: props.productId, productData: props.record }
+    case 'ProductGallery':
+      return { productId: props.productId, record: props.record, config: props.config }
+    case 'ProductCategoriesTab':
+      return {
+        productId: props.productId,
+        parentId: props.record.parent || 0,
+        initialCategories: props.record.categories || [],
+      }
+    case 'ProductLinksTab':
+      return { productId: props.productId }
+    case 'ProductOptionsTab':
+      return { optionFields: props.config.option_fields || [] }
+    default:
+      return {}
+  }
+}
+
 const { _ } = useLexicon()
 useToast() // Required for Toast component to work
 
@@ -301,34 +331,12 @@ onBeforeUnmount(() => {
       </TabList>
       <TabPanels>
         <TabPanel v-for="(tab, idx) in tabConfig" :key="tab.key" :value="String(idx)">
-          <!-- Vue component: ProductDataFields -->
-          <template v-if="tab.type === 'vue' && tab.component === 'ProductDataFields'">
-            <ProductDataFields :product-id="productId" :product-data="record" />
-          </template>
-
-          <!-- Vue component: ProductGallery -->
-          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductGallery'">
-            <ProductGallery :product-id="productId" :record="record" :config="config" />
-          </template>
-
-          <!-- Vue component: ProductCategoriesTab -->
-          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductCategoriesTab'">
-            <ProductCategoriesTab
-              :product-id="productId"
-              :parent-id="record.parent || 0"
-              :initial-categories="record.categories || []"
-            />
-          </template>
-
-          <!-- Vue component: ProductLinksTab -->
-          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductLinksTab'">
-            <ProductLinksTab :product-id="productId" />
-          </template>
-
-          <!-- Vue component: ProductOptionsTab -->
-          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductOptionsTab'">
-            <ProductOptionsTab :option-fields="config.option_fields || []" />
-          </template>
+          <!-- Built-in Vue tabs -->
+          <component
+            :is="builtInVueComponents[tab.component]"
+            v-if="tab.type === 'vue' && builtInVueComponents[tab.component]"
+            v-bind="builtInVueTabProps(tab)"
+          />
 
           <!-- ExtJS component container -->
           <template v-else-if="tab.type === 'extjs'">

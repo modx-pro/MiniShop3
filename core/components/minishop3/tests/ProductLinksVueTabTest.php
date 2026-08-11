@@ -58,8 +58,12 @@ foreach (['getLinks', 'createLink', 'removeLinks'] as $method) {
     $assertTrue(str_contains($controller, "function {$method}"), "ProductDataController::{$method}");
 }
 $assertTrue(
-    str_contains($controller, 'belongsToProduct'),
-    'removeLinks must scope deletes to path product id'
+    str_contains($controller, 'ms3_err_link_not_in_product_scope'),
+    'removeLinks must use lexicon for scope errors'
+);
+$assertTrue(
+    str_contains($controller, 'ms3_err_link_batch_not_supported'),
+    'removeLinks must reject batch ids[]'
 );
 $assertTrue(
     !str_contains($controller, 'function getLinkTypes'),
@@ -71,7 +75,12 @@ $assertTrue(str_contains($refs, 'function getLinkTypes'), 'ReferencesController:
 
 $tabs = (string) file_get_contents($vue . '/components/product/ProductTabs.vue');
 $assertTrue(str_contains($tabs, 'ProductLinksTab'), 'ProductTabs must mount ProductLinksTab');
+$assertTrue(str_contains($tabs, 'builtInVueComponents'), 'ProductTabs must use built-in component map');
 $assertTrue(!str_contains($tabs, "xtype: 'ms3-product-links'"), 'ProductTabs must not use Ext links xtype');
+$assertTrue(
+    !str_contains($tabs, "tab.component === 'ProductLinksTab'"),
+    'ProductTabs must not use per-tab v-else-if for built-in Vue tabs'
+);
 
 $linksTab = (string) file_get_contents($vue . '/components/product/ProductLinksTab.vue');
 $assertTrue(is_file($vue . '/components/product/ProductLinksTab.vue'), 'ProductLinksTab.vue missing');
