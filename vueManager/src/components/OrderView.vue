@@ -542,6 +542,8 @@ async function initOptionsFromProduct(options) {
 
   // Convert to table format with type detection
   const tableData = []
+  const fieldRowsToLoad = []
+
   for (const [key, value] of Object.entries(parsed)) {
     const isProductField = productOptionFields.value.some(f => f.name === key)
     const row = {
@@ -553,13 +555,14 @@ async function initOptionsFromProduct(options) {
       loadingValues: false,
     }
 
-    // If it's a product field, load its values
     if (isProductField) {
-      await loadFieldValuesForRow(row)
+      fieldRowsToLoad.push(row)
     }
 
     tableData.push(row)
   }
+
+  await Promise.all(fieldRowsToLoad.map(row => loadFieldValuesForRow(row)))
 
   optionsTableData.value = tableData
 
