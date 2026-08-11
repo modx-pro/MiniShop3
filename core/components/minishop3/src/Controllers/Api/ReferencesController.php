@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Product\ProductLinkService;
 use MiniShop3\Services\Settings\SettingsComboListService;
 
 /**
@@ -359,6 +360,33 @@ class ReferencesController extends BaseApiController
         } catch (\Exception $e) {
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
             return Response::error('Failed to load field values: ' . $e->getMessage(), HttpStatus::INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/mgr/references/link-types
+     * msLink definitions for product-form / combo selects.
+     */
+    public function getLinkTypes(array $params): Response
+    {
+        try {
+            $service = $this->modx->services->get('ms3_product_link_service');
+            $linkService = $service instanceof ProductLinkService
+                ? $service
+                : new ProductLinkService($this->modx);
+            $results = $linkService->listLinkTypes();
+
+            return Response::success([
+                'results' => $results,
+                'total' => count($results),
+            ]);
+        } catch (\Exception $e) {
+            $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[ReferencesController] ' . $e->getMessage());
+
+            return Response::error(
+                'Failed to load link types: ' . $e->getMessage(),
+                HttpStatus::INTERNAL_SERVER_ERROR
+            );
         }
     }
 

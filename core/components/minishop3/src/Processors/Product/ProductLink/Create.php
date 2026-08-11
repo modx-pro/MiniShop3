@@ -2,8 +2,8 @@
 
 namespace MiniShop3\Processors\Product\ProductLink;
 
-use MiniShop3\Model\msLink;
 use MiniShop3\Model\msProductLink;
+use MiniShop3\Services\Product\ProductLinkService;
 use MODX\Revolution\Processors\Model\CreateProcessor;
 
 class Create extends CreateProcessor
@@ -17,96 +17,20 @@ class Create extends CreateProcessor
      */
     public function process()
     {
-        if (!$master = $this->getProperty('master')) {
-            $this->addFieldError('master', $this->modx->lexicon('ms3_err_ns'));
-        }
-        if (!$slave = $this->getProperty('slave')) {
-            $this->addFieldError('slave', $this->modx->lexicon('ms3_err_ns'));
-        }
-        if (!$link = $this->getProperty('link')) {
-            $this->addFieldError('link', $this->modx->lexicon('ms3_err_ns'));
-        }
+        $service = $this->modx->services->has('ms3_product_link_service')
+            ? $this->modx->services->get('ms3_product_link_service')
+            : new ProductLinkService($this->modx);
 
-        if ($this->hasErrors()) {
-            return $this->failure();
-        } else {
-            if ($master == $slave) {
-                return $this->failure($this->modx->lexicon('ms3_err_link_equal'));
-            }
-        }
+        $result = $service->create(
+            (int) $this->getProperty('master'),
+            (int) $this->getProperty('slave'),
+            (int) $this->getProperty('link')
+        );
 
-        /** @var msLink $msLink */
-        $msLink = $this->modx->getObject(msLink::class, ['id' => $link]);
-        if (!$msLink) {
-            return $this->failure($this->modx->lexicon('ms3_err_no_link'));
-        }
-        $type = $msLink->get('type');
-
-        switch ($type) {
-            case 'many_to_many':
-                $this->addLink($link, $master, $slave);
-                $this->addLink($link, $slave, $master);
-
-                $q = $this->modx->newQuery(msProductLink::class, ['link' => $link]);
-                $q->andCondition(['master:IN' => [$master, $slave]]);
-                $q->select('slave');
-
-                if ($q->prepare() && $q->stmt->execute()) {
-                    $slaves = $q->stmt->fetchAll(\PDO::FETCH_COLUMN);
-                    $slaves = array_unique($slaves);
-                    $rows = [];
-                    foreach ($slaves as $v) {
-                        foreach ($slaves as $v2) {
-                            if ($v != $v2) {
-                                $rows[] = "('$link','$v','$v2')";
-                            }
-                        }
-                    }
-                    $table = $this->modx->getTableName(msProductLink::class);
-                    $sql = "INSERT INTO {$table} (link,master,slave) VALUES ";
-                    $sql .= implode(',', $rows);
-                    $sql .= " ON DUPLICATE KEY UPDATE link = '$link';";
-                    $this->modx->exec($sql);
-                }
-                break;
-
-            case 'one_to_many':
-                $this->addLink($link, $master, $slave);
-                break;
-
-            case 'many_to_one':
-                $this->addLink($link, $slave, $master);
-                break;
-
-            case 'one_to_one':
-                $this->addLink($link, $master, $slave);
-                $this->addLink($link, $slave, $master);
-                break;
+        if (empty($result['ok'])) {
+            return $this->failure($result['message'] ?? '');
         }
 
         return $this->success('');
-    }
-
-
-    /**
-     * @param int $link
-     * @param int $master
-     * @param int $slave
-     *
-     * @return bool
-     */
-    public function addLink($link = 0, $master = 0, $slave = 0)
-    {
-        if ($link && $master && $slave) {
-            $table = $this->modx->getTableName(msProductLink::class);
-            $sql = "
-                INSERT INTO {$table} (link, master, slave)
-                VALUES ('$link', '$master', '$slave')
-                ON DUPLICATE KEY UPDATE link = '$link';
-            ";
-            $this->modx->exec($sql);
-        }
-
-        return false;
     }
 }

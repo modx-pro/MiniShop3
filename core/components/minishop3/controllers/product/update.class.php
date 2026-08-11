@@ -55,8 +55,7 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
         $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
-        $this->addLastJavascript($assetsUrl . 'js/mgr/product/links.grid.js');
-        $this->addLastJavascript($assetsUrl . 'js/mgr/product/links.window.js');
+        // Product links tab is Vue (ProductLinksTab); Ext links.grid/window no longer loaded (#114/#350).
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/update.js');
 
