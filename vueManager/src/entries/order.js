@@ -1,7 +1,5 @@
 /**
- * Entry point for Order View/Edit page (ES Module)
- *
- * Exports initialization function for mounting Vue application
+ * Entry point for Order View/Edit page
  */
 
 import '../scss/primevue.scss'
@@ -154,18 +152,14 @@ function createVueApp() {
 }
 
 /**
- * Widget initialization
+ * Mount OrderView into the tpl node
  *
- * @returns {import('vue').App | null} Vue application
+ * @returns {import('vue').App | null}
  */
 export function init(selector = '#ms3-order-vue-wrapper') {
   const $el = document.querySelector(selector)
 
-  if (!$el) {
-    return null
-  }
-
-  if ($el.dataset.vApp === 'true') {
+  if (!$el || $el.dataset.vApp === 'true') {
     return null
   }
 
@@ -174,44 +168,17 @@ export function init(selector = '#ms3-order-vue-wrapper') {
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'
 
-  // Links registry to OrderView (defineExpose registerPluginTab) for queued + late plugin tabs
+  // Flush queued plugin tabs into OrderView (defineExpose registerPluginTab)
   window.MS3OrderTabsRegistry._onMounted(instance)
 
   return app
 }
 
 /**
- * Wait for ExtJS to create DOM element
- */
-function waitForElement(selector, callback) {
-  const element = document.querySelector(selector)
-
-  if (element) {
-    callback(element)
-    return
-  }
-
-  const observer = new MutationObserver(() => {
-    const element = document.querySelector(selector)
-    if (element) {
-      observer.disconnect()
-      callback(element)
-    }
-  })
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  })
-}
-
-/**
- * Automatic initialization on DOM load
+ * Automatic initialization on DOM ready
  */
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    waitForElement('#ms3-order-vue-wrapper', () => init())
-  })
+  document.addEventListener('DOMContentLoaded', () => init())
 } else {
-  waitForElement('#ms3-order-vue-wrapper', () => init())
+  init()
 }
