@@ -93,7 +93,7 @@ class ServiceRegistry
         'ms3_option_service' => [
             'ms3_option_loader',
             'ms3_option_sync',
-            'ms3_category_option_service',
+            'ms3_option_category_service',
         ],
         'ms3_order_field_manager' => ['ms3_order_draft_manager'],
         'ms3_order_address_manager' => ['ms3_order_draft_manager', 'ms3_order_field_manager'],
@@ -265,6 +265,10 @@ class ServiceRegistry
         ],
         'ms3_category_option_service' => [
             'class' => \MiniShop3\Services\Category\CategoryOptionService::class,
+            'interface' => null,
+        ],
+        'ms3_option_category_service' => [
+            'class' => \MiniShop3\Services\Option\OptionCategoryService::class,
             'interface' => null,
         ],
         'ms3_image' => [
@@ -634,10 +638,11 @@ class ServiceRegistry
         switch ($serviceKey) {
             case 'ms3_option_service':
                 // OptionService(xPDO, OptionLoaderService, OptionSyncService, OptionCategoryService)
+                // Not ms3_category_option_service (Category\CategoryOptionService) — #531/#532.
                 $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
                     $loader = $modx->services->get('ms3_option_loader');
                     $sync = $modx->services->get('ms3_option_sync');
-                    $category = $modx->services->get('ms3_category_option_service');
+                    $category = $modx->services->get('ms3_option_category_service');
 
                     return new $validatedClass($modx, $loader, $sync, $category);
                 });

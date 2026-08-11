@@ -73,7 +73,8 @@ trait ProcessesManagerConnectorRouteTrait
                 $responseData['message'] ?? 'API request failed',
                 $responseData
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // TypeError/Error must stay JSON — display_errors HTML breaks Vue request.json() (#531/#532).
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 API] ' . $e->getMessage());
             http_response_code(500);
 
