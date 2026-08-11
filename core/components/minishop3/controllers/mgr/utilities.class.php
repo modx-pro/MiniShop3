@@ -43,8 +43,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
 
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/utilities.js');
         $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/utilities.panel.js');
-        // Gallery panel now uses Vue component (utilities-gallery.min.js)
-        $this->addJavascript($this->ms3->config['jsUrl'] . 'mgr/utilities/import/panel.js');
+        // Import tab uses Vue (import.min.js); Ext import/panel.js removed (#522).
 
         $config = $this->ms3->config;
 
