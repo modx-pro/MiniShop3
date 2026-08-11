@@ -148,6 +148,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductCategoryTreeService::class,
             'interface' => null,
         ],
+        'ms3_product_link_service' => [
+            'class' => \MiniShop3\Services\Product\ProductLinkService::class,
+            'interface' => null,
+        ],
         'ms3_product_catalog' => [
             'class' => \MiniShop3\Services\Product\ProductCatalogService::class,
             'interface' => null,

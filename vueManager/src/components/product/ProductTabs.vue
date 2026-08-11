@@ -12,6 +12,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ProductGallery from '../gallery/ProductGallery.vue'
 import ProductDataFields from '../ProductDataFields.vue'
 import ProductCategoriesTab from './ProductCategoriesTab.vue'
+import ProductLinksTab from './ProductLinksTab.vue'
 import ProductOptionsTab from './ProductOptionsTab.vue'
 
 const props = defineProps({
@@ -91,11 +92,8 @@ const tabConfig = computed(() => {
     tabs.push({
       key: 'links',
       title: _('ms3_tab_product_links'),
-      type: 'extjs',
-      xtype: 'ms3-product-links',
-      extConfig: {
-        record: props.record,
-      },
+      type: 'vue',
+      component: 'ProductLinksTab',
       position: 3,
     })
   }
@@ -322,6 +320,11 @@ onBeforeUnmount(() => {
             />
           </template>
 
+          <!-- Vue component: ProductLinksTab -->
+          <template v-else-if="tab.type === 'vue' && tab.component === 'ProductLinksTab'">
+            <ProductLinksTab :product-id="productId" />
+          </template>
+
           <!-- Vue component: ProductOptionsTab -->
           <template v-else-if="tab.type === 'vue' && tab.component === 'ProductOptionsTab'">
             <ProductOptionsTab :option-fields="config.option_fields || []" />
@@ -373,8 +376,4 @@ onBeforeUnmount(() => {
   padding: 0.625rem;
 }
 
-/* Links grid styles */
-#ms3-product-tab-links :deep(.x-grid-view) {
-  min-height: 12.5rem;
-}
 </style>
