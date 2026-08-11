@@ -13,8 +13,7 @@ import OptionsGrid from './OptionsGrid.vue'
 /**
  * Wrapper for the product options admin page: tabs "Options" and "Groups" (#10).
  *
- * Replaces direct mounting of OptionsGrid in entries/options.js — groups now need
- * their own admin UI (CRUD + drag-n-drop sort), placed alongside options.
+ * Groups admin UI (CRUD + drag-n-drop sort) alongside options on the Settings page.
  */
 
 const { _ } = useLexicon()
