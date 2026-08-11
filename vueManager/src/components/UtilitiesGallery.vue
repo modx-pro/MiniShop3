@@ -9,6 +9,7 @@ import ProgressBar from 'primevue/progressbar'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../request.js'
+import { getMs3Config } from '../utils/modx.js'
 
 const { _ } = useLexicon()
 
@@ -21,23 +22,19 @@ const formatString = (str, ...args) => {
   })
 }
 
-// Get configuration directly from ms3.config (reactive refs)
 const sourceId = ref(1)
 const sourceName = ref('')
 const totalProducts = ref(0)
 const totalFiles = ref(0)
 const thumbnailsInfo = ref('')
 
-// Load config from data-attributes of mount element
-const loadConfig = () => {
-  const el = document.getElementById('ms3-vue-utilities-gallery')
-  if (el) {
-    sourceId.value = parseInt(el.dataset.sourceId) || 1
-    sourceName.value = el.dataset.sourceName || ''
-    totalProducts.value = parseInt(el.dataset.totalProducts) || 0
-    totalFiles.value = parseInt(el.dataset.totalFiles) || 0
-    thumbnailsInfo.value = decodeURIComponent(el.dataset.thumbnails || '')
-  }
+function loadConfig() {
+  const cfg = getMs3Config() || {}
+  sourceId.value = parseInt(cfg.utility_gallery_source_id, 10) || 1
+  sourceName.value = cfg.utility_gallery_source_name || ''
+  totalProducts.value = parseInt(cfg.utility_gallery_total_products, 10) || 0
+  totalFiles.value = parseInt(cfg.utility_gallery_total_products_files, 10) || 0
+  thumbnailsInfo.value = cfg.utility_gallery_thumbnails || ''
 }
 
 // State

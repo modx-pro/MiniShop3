@@ -37,8 +37,13 @@ if (preg_match('/utilities\/import\/panel\.js/', $utilitiesController) === 1) {
     $fail('utilities controller must not load utilities/import/panel.js (#522)');
 }
 
-if (preg_match('/addVueModule\([^;]*import\.min\.js/', $utilitiesController) !== 1) {
-    $fail('utilities controller must still register import.min.js Vue entry');
+// Import lives inside utilities.min.js after Phase 1c (#524 / #537), not a separate entry.
+if (preg_match('/addVueModule\([^;]*utilities\.min\.js/', $utilitiesController) !== 1) {
+    $fail('utilities controller must register utilities.min.js Vue entry (#524)');
+}
+
+if (preg_match('/addVueModule\([^;]*import\.min\.js/', $utilitiesController) === 1) {
+    $fail('utilities controller must not register separate import.min.js after utilities consolidation (#524)');
 }
 
 $scanRoots = [
