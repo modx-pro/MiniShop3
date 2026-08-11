@@ -172,7 +172,7 @@ class ProductDataController extends BaseApiController
             return $productId;
         }
 
-        $data = $this->getRequestData() ?? [];
+        $data = $this->getRequestData();
         $result = $this->productLinkService()->create(
             $productId,
             (int) ($data['slave'] ?? 0),
@@ -194,7 +194,7 @@ class ProductDataController extends BaseApiController
             return $productId;
         }
 
-        $data = $this->getRequestData() ?? [];
+        $data = $this->getRequestData();
         if (isset($data['ids'])) {
             $this->modx->lexicon->load('minishop3:default');
 
