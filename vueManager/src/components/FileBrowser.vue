@@ -3,6 +3,8 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import { computed, ref, watch } from 'vue'
 
+import { normalizeImagePath } from '../utils/displayFormatters.js'
+
 const props = defineProps({
   modelValue: {
     type: String,
@@ -135,9 +137,7 @@ function isImage(path) {
  * Get full image URL with leading slash
  */
 function getImageUrl(path) {
-  if (!path) return ''
-  // Ensure path starts with /
-  return path.startsWith('/') ? path : '/' + path
+  return normalizeImagePath(path)
 }
 </script>
 

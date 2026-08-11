@@ -19,8 +19,12 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
+import { useGridConfig } from '../composables/useGridConfig.js'
+import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
+import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
+import { formatValue, normalizeImagePath } from '../utils/displayFormatters.js'
 import ActionsColumn from './ActionsColumn.vue'
 import DynamicField from './DynamicField.vue'
 import FileBrowser from './FileBrowser.vue'
@@ -46,20 +50,55 @@ const {
   getItemName: item => item.name,
 })
 
-const columns = ref([])
-const loading = ref(false)
-const vendors = ref([])
-const totalRecords = ref(0)
-const first = ref(0)
-const rows = ref(20)
 const filterValues = ref({})
-const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
 const editDialogVisible = ref(false)
 const editingVendor = ref(null)
 const isNewVendor = ref(false)
 const saving = ref(false)
 const activeTab = ref('0')
 const selectAll = ref(false)
+
+const { columns, loadGridConfig } = useGridConfig({
+  gridId: 'vendors',
+  responseKey: 'columns',
+  getFallbackColumns: getDefaultColumns,
+})
+
+const {
+  loading,
+  items: vendors,
+  total: totalRecords,
+  first,
+  rows,
+  load: loadVendors,
+  onPage,
+  resetPageAndLoad,
+} = useResourceList({
+  fetchPage: ({ first: start, rows: limit, signal }) => {
+    const params = {
+      start,
+      limit,
+    }
+
+    Object.keys(filterValues.value).forEach(key => {
+      const value = filterValues.value[key]
+      if (value !== null && value !== undefined && value !== '') {
+        params[`filter_${key}`] = value
+      }
+    })
+
+    return request.get('/api/mgr/vendors', params, { signal })
+  },
+})
+
+const { onDragEnd } = useSortableList({
+  items: vendors,
+  sortUrl: '/api/mgr/vendors/sort',
+  successMessage: _('vendor_order_saved'),
+  reload: loadVendors,
+})
+
+const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
 
 // Model fields configuration
 const fieldsConfig = ref([])
@@ -153,57 +192,6 @@ async function loadFieldsConfig() {
   } finally {
     loadingConfig.value = false
   }
-}
-
-/**
- * Load vendors list
- */
-async function loadVendors() {
-  loading.value = true
-
-  try {
-    const params = {
-      start: first.value,
-      limit: rows.value,
-    }
-
-    Object.keys(filterValues.value).forEach(key => {
-      const value = filterValues.value[key]
-      if (value !== null && value !== undefined && value !== '') {
-        params[`filter_${key}`] = value
-      }
-    })
-
-    const response = await request.get('/api/mgr/vendors', params)
-
-    if (response && response.results) {
-      vendors.value = response.results
-      totalRecords.value = response.total || 0
-    } else {
-      console.error('[VendorsGrid] Invalid response:', response)
-      vendors.value = []
-      totalRecords.value = 0
-    }
-  } catch (error) {
-    console.error('[VendorsGrid] Error loading vendors:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_data'),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-/**
- * Handle pagination
- */
-function onPage(event) {
-  first.value = event.first
-  rows.value = event.rows
-  loadVendors()
 }
 
 /**
@@ -355,8 +343,7 @@ function deleteVendor(vendor) {
  * Apply filters
  */
 function applyFilters() {
-  first.value = 0
-  loadVendors()
+  resetPageAndLoad()
 }
 
 /**
@@ -364,36 +351,7 @@ function applyFilters() {
  */
 function clearFilters() {
   filterValues.value = {}
-  first.value = 0
-  loadVendors()
-}
-
-/**
- * Handle drag end (vuedraggable)
- */
-async function onDragEnd() {
-  // Extract IDs in new order
-  const ids = vendors.value.map(v => v.id)
-
-  try {
-    await request.post('/api/mgr/vendors/sort', { ids })
-    toast.add({
-      severity: 'success',
-      summary: _('success'),
-      detail: _('vendor_order_saved'),
-      life: 2000,
-    })
-  } catch (error) {
-    console.error('[VendorsGrid] Error saving order:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-    // Reload to restore original order
-    loadVendors()
-  }
+  resetPageAndLoad()
 }
 
 /**
@@ -431,19 +389,6 @@ function getActionsConfig(column) {
     ...action,
     label: _(action.label) || action.label,
   }))
-}
-
-/**
- * Load grid configuration
- */
-async function loadGridConfig() {
-  try {
-    const response = await request.get('/api/mgr/grid-config/vendors')
-    columns.value = response.columns || []
-  } catch (error) {
-    console.error('[VendorsGrid] Failed to load grid config:', error)
-    columns.value = getDefaultColumns()
-  }
 }
 
 /**
@@ -509,33 +454,8 @@ function getDefaultColumns() {
   ]
 }
 
-/**
- * Format value for display
- */
-function formatValue(value, column) {
-  if (value === null || value === undefined) return ''
-
-  if (column.type === 'boolean') {
-    return value ? _('yes') : _('no')
-  }
-
-  if (column.format === 'number') {
-    return Number(value).toLocaleString()
-  }
-
-  return value
-}
-
-/**
- * Normalize image path to start with /
- */
-function normalizeImagePath(path) {
-  if (!path) return ''
-  // If path is already absolute URL or starts with /, return as is
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
-    return path
-  }
-  return '/' + path
+function formatCellValue(value, column) {
+  return formatValue(value, column, _)
 }
 
 /**
@@ -715,7 +635,7 @@ onMounted(async () => {
 
                       <!-- Regular columns -->
                       <td v-else :style="{ width: column.width, minWidth: column.minWidth }">
-                        {{ formatValue(vendor[column.name], column) }}
+                        {{ formatCellValue(vendor[column.name], column) }}
                       </td>
                     </template>
                   </tr>

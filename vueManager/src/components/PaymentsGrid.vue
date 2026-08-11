@@ -22,9 +22,14 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
+import { useCrudDialog } from '../composables/useCrudDialog.js'
+import { useGridConfig } from '../composables/useGridConfig.js'
+import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
+import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { resolveAddCostPriceBadgeKind } from '../utils/addCostPriceBadgeKind.js'
+import { formatValue, getDisplayName, normalizeImagePath } from '../utils/displayFormatters.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 
@@ -49,45 +54,28 @@ const {
   getItemName: item => item.name,
 })
 
-const columns = ref([])
-const loading = ref(false)
-const payments = ref([])
-const totalRecords = ref(0)
-const first = ref(0)
-const rows = ref(20)
+const { columns, loadGridConfig } = useGridConfig({
+  gridId: 'payments',
+  responseKey: 'fields',
+  getFallbackColumns,
+})
+
 const filterValues = ref({})
 const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
-const searchQuery = ref('')
-const editDialogVisible = ref(false)
-const editingPayment = ref(null)
-const isNewPayment = ref(false)
-const saving = ref(false)
 const activeTab = ref('0')
 const selectAll = ref(false)
 
-// Deliveries tab
-const deliveries = ref([])
-const paymentDeliveries = ref([])
-const loadingDeliveries = ref(false)
-
-const paymentAddCostBadgeKind = computed(() =>
-  editingPayment.value ? resolveAddCostPriceBadgeKind(editingPayment.value.price) : null,
-)
-
-/**
- * Load payments list
- */
-async function loadPayments() {
-  loading.value = true
-
-  try {
+const {
+  loading,
+  items: payments,
+  total: totalRecords,
+  load: loadPayments,
+  resetPageAndLoad,
+} = useResourceList({
+  fetchPage: ({ first: start, rows: limit, signal }) => {
     const params = {
-      start: first.value,
-      limit: rows.value,
-    }
-
-    if (searchQuery.value) {
-      params.query = searchQuery.value
+      start,
+      limit,
     }
 
     Object.keys(filterValues.value).forEach(key => {
@@ -97,47 +85,48 @@ async function loadPayments() {
       }
     })
 
-    const response = await request.get('/api/mgr/payments', params)
+    return request.get('/api/mgr/payments', params, { signal })
+  },
+})
 
-    if (response && response.results) {
-      payments.value = response.results
-      totalRecords.value = response.total || 0
-    } else {
-      console.error('[PaymentsGrid] Invalid response:', response)
-      payments.value = []
-      totalRecords.value = 0
-    }
-  } catch (error) {
-    console.error('[PaymentsGrid] Error loading payments:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_loading_data'),
-      life: 5000,
-    })
-  } finally {
-    loading.value = false
-  }
-}
+const {
+  visible: editDialogVisible,
+  isNew: isNewPayment,
+  saving,
+  item: editingPayment,
+  openCreate,
+  openEdit,
+  close,
+  runSave,
+  toastSuccess,
+  toastWarn,
+} = useCrudDialog({
+  createDefaults: () => ({
+    name: '',
+    description: '',
+    price: '0',
+    position: 0,
+    active: true,
+    class: '',
+    logo: '',
+  }),
+})
 
-/**
- * Handle pagination
- */
-// eslint-disable-next-line no-unused-vars
-function onPage(event) {
-  first.value = event.first
-  rows.value = event.rows
-  loadPayments()
-}
+// Deliveries tab
+const deliveries = ref([])
+const paymentDeliveries = ref([])
+const loadingDeliveries = ref(false)
 
-/**
- * Handle search
- */
-// eslint-disable-next-line no-unused-vars
-function onSearch() {
-  first.value = 0
-  loadPayments()
-}
+const paymentAddCostBadgeKind = computed(() =>
+  editingPayment.value ? resolveAddCostPriceBadgeKind(editingPayment.value.price) : null
+)
+
+const { onDragEnd } = useSortableList({
+  items: payments,
+  sortUrl: '/api/mgr/payments/sort',
+  successMessage: _('payment_order_saved'),
+  reload: loadPayments,
+})
 
 /**
  * Handle select all checkbox
@@ -152,70 +141,65 @@ function onSelectAllChange(checked) {
 }
 
 /**
- * Handle drag-drop reorder
+ * Get fallback grid columns
  */
-async function onDragEnd() {
-  const ids = payments.value.map(p => p.id)
-  try {
-    await request.post('/api/mgr/payments/sort', { ids })
-    toast.add({
-      severity: 'success',
-      summary: _('success'),
-      detail: _('payment_order_saved'),
-      life: 2000,
-    })
-  } catch (error) {
-    console.error('[PaymentsGrid] Error saving order:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-    loadPayments()
-  }
-}
-
-/**
- * Normalize image path to always start with /
- */
-function normalizeImagePath(path) {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
-    return path
-  }
-  return '/' + path
+function getFallbackColumns() {
+  return [
+    { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
+    { name: 'name', label: _('payment_name'), visible: true, sortable: true, filterable: true },
+    { name: 'price', label: _('ms3_add_cost'), visible: true, sortable: true, width: '7.5rem' },
+    {
+      name: 'active',
+      label: _('payment_active'),
+      visible: true,
+      sortable: true,
+      type: 'boolean',
+      width: '6.25rem',
+    },
+    {
+      name: 'position',
+      label: _('payment_position'),
+      visible: true,
+      sortable: true,
+      width: '6.25rem',
+    },
+    {
+      name: 'actions',
+      label: _('actions'),
+      visible: true,
+      frozen: true,
+      type: 'actions',
+      width: '7.5rem',
+      actions: [
+        { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+        {
+          name: 'delete',
+          handler: 'delete',
+          icon: 'pi-trash',
+          label: 'delete',
+          severity: 'danger',
+          confirm: false,
+        },
+      ],
+    },
+  ]
 }
 
 /**
  * Open create modal
  */
 function createPayment() {
-  editingPayment.value = {
-    name: '',
-    description: '',
-    price: '0',
-    position: 0,
-    active: true,
-    class: '',
-    logo: '',
-  }
-  isNewPayment.value = true
+  openCreate()
   activeTab.value = '0'
   paymentDeliveries.value = []
-  editDialogVisible.value = true
 }
 
 /**
  * Open edit modal
  */
 async function editPayment(payment) {
-  editingPayment.value = { ...payment }
-  isNewPayment.value = false
+  openEdit(payment)
   activeTab.value = '0'
-  editDialogVisible.value = true
-
-  // Load deliveries for this payment
   await loadPaymentDeliveries(payment.id)
 }
 
@@ -305,49 +289,21 @@ async function toggleDelivery(deliveryId, newValue) {
  */
 async function savePayment() {
   if (!editingPayment.value.name) {
-    toast.add({
-      severity: 'warn',
-      summary: _('warning'),
-      detail: _('payment_name_required'),
-      life: 3000,
-    })
+    toastWarn(_('payment_name_required'))
     return
   }
 
-  saving.value = true
-
-  try {
-    let response
-    if (isNewPayment.value) {
-      response = await request.post('/api/mgr/payments', editingPayment.value)
+  const created = isNewPayment.value
+  await runSave(async () => {
+    if (created) {
+      await request.post('/api/mgr/payments', editingPayment.value)
+      toastSuccess(_('payment_created'))
     } else {
-      response = await request.put(
-        `/api/mgr/payments/${editingPayment.value.id}`,
-        editingPayment.value
-      )
+      await request.put(`/api/mgr/payments/${editingPayment.value.id}`, editingPayment.value)
+      toastSuccess(_('payment_updated'))
     }
-
-    if (response) {
-      toast.add({
-        severity: 'success',
-        summary: _('success'),
-        detail: isNewPayment.value ? _('payment_created') : _('payment_updated'),
-        life: 3000,
-      })
-      editDialogVisible.value = false
-      loadPayments()
-    }
-  } catch (error) {
-    console.error('[PaymentsGrid] Error saving payment:', error)
-    toast.add({
-      severity: 'error',
-      summary: _('error'),
-      detail: error.message || _('error_saving_data'),
-      life: 5000,
-    })
-  } finally {
-    saving.value = false
-  }
+    await loadPayments()
+  })
 }
 
 /**
@@ -388,8 +344,7 @@ function deletePayment(payment) {
  * Apply filters
  */
 function applyFilters() {
-  first.value = 0
-  loadPayments()
+  resetPageAndLoad()
 }
 
 /**
@@ -397,8 +352,7 @@ function applyFilters() {
  */
 function clearFilters() {
   filterValues.value = {}
-  first.value = 0
-  loadPayments()
+  resetPageAndLoad()
 }
 
 /**
@@ -413,86 +367,17 @@ function getActionsConfig(column) {
 }
 
 /**
- * Load grid configuration
- */
-async function loadGridConfig() {
-  try {
-    const response = await request.get('/api/mgr/grid-config/payments')
-
-    if (response && response.fields) {
-      columns.value = response.fields
-    } else {
-      // Fallback default columns
-      columns.value = [
-        { name: 'id', label: 'ID', visible: true, sortable: true, frozen: true, width: '5rem' },
-        { name: 'name', label: _('payment_name'), visible: true, sortable: true, filterable: true },
-        { name: 'price', label: _('ms3_add_cost'), visible: true, sortable: true, width: '7.5rem' },
-        {
-          name: 'active',
-          label: _('payment_active'),
-          visible: true,
-          sortable: true,
-          type: 'boolean',
-          width: '6.25rem',
-        },
-        {
-          name: 'position',
-          label: _('payment_position'),
-          visible: true,
-          sortable: true,
-          width: '6.25rem',
-        },
-        {
-          name: 'actions',
-          label: _('actions'),
-          visible: true,
-          frozen: true,
-          type: 'actions',
-          width: '7.5rem',
-          actions: [
-            { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-            {
-              name: 'delete',
-              handler: 'delete',
-              icon: 'pi-trash',
-              label: 'delete',
-              severity: 'danger',
-              confirm: false,
-            },
-          ],
-        },
-      ]
-    }
-  } catch (error) {
-    console.error('[PaymentsGrid] Error loading grid config:', error)
-  }
-}
-
-/**
  * Format value for display
  */
-function formatValue(value, column) {
-  if (value === null || value === undefined) return ''
-
-  if (column.type === 'boolean') {
-    return value ? _('yes') : _('no')
-  }
-
-  if (column.format === 'number') {
-    return Number(value).toLocaleString()
-  }
-
-  return value
+function formatCellValue(value, column) {
+  return formatValue(value, column, _)
 }
 
 /**
  * Get display name - check if value is a lexicon key
- * If translation exists, return it; otherwise return original value
  */
-function getDisplayName(name) {
-  if (!name) return ''
-  const translated = _(name)
-  return translated !== name ? translated : name
+function resolveDisplayName(name) {
+  return getDisplayName(name, _)
 }
 
 onMounted(async () => {
@@ -650,7 +535,7 @@ onMounted(async () => {
                   </td>
                   <!-- Name column with lexicon support -->
                   <td v-else-if="column.name === 'name'">
-                    {{ getDisplayName(payment.name) }}
+                    {{ resolveDisplayName(payment.name) }}
                   </td>
                   <!-- Image column -->
                   <td v-else-if="column.type === 'image'">
@@ -673,7 +558,7 @@ onMounted(async () => {
                   </td>
                   <!-- Regular column -->
                   <td v-else>
-                    {{ formatValue(payment[column.name], column) }}
+                    {{ formatCellValue(payment[column.name], column) }}
                   </td>
                 </template>
               </tr>
@@ -797,7 +682,7 @@ onMounted(async () => {
                           :alt="data.name"
                           class="delivery-logo-small"
                         />
-                        <span>{{ getDisplayName(data.name) }}</span>
+                        <span>{{ resolveDisplayName(data.name) }}</span>
                       </div>
                     </template>
                   </Column>
@@ -823,12 +708,7 @@ onMounted(async () => {
       </div>
 
       <template #footer>
-        <Button
-          :label="_('cancel')"
-          icon="pi pi-times"
-          severity="secondary"
-          @click="editDialogVisible = false"
-        />
+        <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
         <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="savePayment" />
       </template>
     </Dialog>
