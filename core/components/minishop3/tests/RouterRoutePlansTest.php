@@ -109,6 +109,9 @@ if (!str_contains($traitSrc, 'System routes not found:')) {
 if (!str_contains($traitSrc, 'http_response_code(404)')) {
     $fail('trait must call http_response_code(404) when rejecting storefront routes');
 }
+if (!str_contains($traitSrc, 'catch (\\Throwable')) {
+    $fail('trait must catch \\Throwable so TypeError stays JSON (#531/#532)');
+}
 if (str_contains($traitSrc, 'loadWebRoutes') || str_contains($traitSrc, 'ManagerConnectorRouteLoader')) {
     $fail('trait must not load web routes or use deleted ManagerConnectorRouteLoader');
 }

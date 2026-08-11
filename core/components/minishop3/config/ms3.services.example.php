@@ -190,14 +190,15 @@ return [
      *
      * Categories:
      * ----------
-     * 'ms3_category_service'        - Category operations
-     * 'ms3_category_option_service' - Category options
+     * 'ms3_category_service'         - Category operations
+     * 'ms3_category_option_service'  - Category → option fields (Category\CategoryOptionService)
      *
      * Product Options (override via ms3.services.php / ms3.services.d/):
      * --------------
-     * 'ms3_option_service'          - EAV options facade
-     * 'ms3_option_loader'           - load option values / admin fields
-     * 'ms3_option_sync'             - save/sync product option values
+     * 'ms3_option_service'           - EAV options facade
+     * 'ms3_option_loader'            - load option values / admin fields
+     * 'ms3_option_sync'              - save/sync product option values
+     * 'ms3_option_category_service'  - option ↔ category links (Option\OptionCategoryService)
      *
      * Order manager cost:
      * -------------------
