@@ -45,7 +45,6 @@ function createVueApp() {
 
 /**
  * Widget initialization
- * Called when customer management page loads
  */
 export function init(selector = '#ms3-customers-vue-wrapper') {
   const $el = document.querySelector(selector)
@@ -67,38 +66,10 @@ export function init(selector = '#ms3-customers-vue-wrapper') {
 }
 
 /**
- * Wait for ExtJS to create DOM element
- * Uses MutationObserver to track element appearance
- */
-function waitForElement(selector, callback) {
-  const element = document.querySelector(selector)
-
-  if (element) {
-    callback(element)
-    return
-  }
-
-  const observer = new MutationObserver(() => {
-    const element = document.querySelector(selector)
-    if (element) {
-      observer.disconnect()
-      callback(element)
-    }
-  })
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  })
-}
-
-/**
- * Automatic initialization on DOM load
+ * Automatic initialization on DOM ready
  */
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    waitForElement('#ms3-customers-vue-wrapper', () => init())
-  })
+  document.addEventListener('DOMContentLoaded', () => init())
 } else {
-  waitForElement('#ms3-customers-vue-wrapper', () => init())
+  init()
 }
