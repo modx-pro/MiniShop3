@@ -4,8 +4,8 @@ namespace MiniShop3\Services\Customer;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Validation\ValidationService;
 use MODX\Revolution\modX;
-use Rakit\Validation\Validator;
 
 /**
  * Customer Field Manager
@@ -121,15 +121,11 @@ class CustomerFieldManager
         $value = $response['data']['value'];
 
         if (!empty($this->validationRules[$key])) {
-            $validator = new Validator();
-
-            $validation = $validator->validate(
+            $validation = $this->getValidationService()->validate(
                 [$key => $value],
                 [$key => $this->validationRules[$key]],
                 $this->validationMessages
             );
-
-            $validation->validate();
 
             if ($validation->fails()) {
                 $errors = $validation->errors();
@@ -202,5 +198,15 @@ class CustomerFieldManager
         }
 
         return $msCustomer;
+    }
+
+    /**
+     * Resolve the canonical validation service from MODX DI.
+     */
+    protected function getValidationService(): ValidationService
+    {
+        $service = $this->modx->services->get('ms3_validation_service');
+
+        return $service instanceof ValidationService ? $service : new ValidationService();
     }
 }

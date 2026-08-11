@@ -365,6 +365,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\CustomerFactory::class,
             'interface' => null,
         ],
+        'ms3_validation_service' => [
+            'class' => \MiniShop3\Services\Validation\ValidationService::class,
+            'interface' => null,
+        ],
     ];
 
     /**
