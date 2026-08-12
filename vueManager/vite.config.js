@@ -19,21 +19,16 @@ const DevInput = {
 }
 
 const ProdInput = {
-  'fields-management': 'src/entries/fields-management.js',
-  'extra-fields': 'src/entries/extra-fields.js',
   'product-tabs': 'src/entries/product-tabs.js',
   'customers': 'src/entries/customers.js',
   'orders': 'src/entries/orders.js',
   'order': 'src/entries/order.js',
   'notifications': 'src/entries/notifications.js',
-  'model-fields': 'src/entries/model-fields.js',
-  'grid-fields-config': 'src/entries/grid-fields-config.js',
-  'import': 'src/entries/import.js',
-  'utilities-gallery': 'src/entries/utilities-gallery.js',
   'category-options': 'src/entries/category-options.js',
   'category-products': 'src/entries/category-products.js',
   'help': 'src/entries/help.js',
   'settings': 'src/entries/settings.js',
+  'utilities': 'src/entries/utilities.js',
   'main': 'src/main.js'
 }
 // https://vite.dev/config/
