@@ -67,9 +67,16 @@ const props = defineProps({
   },
 
   /**
-   * ConfirmDialog group to target. Set it (matching a <ConfirmDialog group="...">)
-   * to isolate the confirm on pages where several Vue apps share one PrimeVue
-   * ConfirmationEventBus. Omit to stay ungrouped (default).
+   * ConfirmDialog/Toast group. Matches `<ConfirmDialog :group>` / `<Toast :group>`.
+   * Prefer this over `confirmGroup`.
+   */
+  uiGroup: {
+    type: String,
+    default: null,
+  },
+
+  /**
+   * @deprecated Use `uiGroup`. Kept as alias for existing call sites.
    */
   confirmGroup: {
     type: String,
@@ -108,7 +115,7 @@ const { _ } = useLexicon()
 
 const { executeAction } = useActions({
   gridId: props.gridId,
-  confirmGroup: props.confirmGroup,
+  uiGroup: props.uiGroup || props.confirmGroup,
   onRefresh: () => emit('refresh'),
   onEdit: data => emit('edit', data),
   onDelete: data => emit('delete', data),

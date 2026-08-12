@@ -30,24 +30,48 @@ function mustContain(rel, snippets) {
   }
 }
 
+/**
+ * In files with a grouped ConfirmDialog, every local confirm.require must
+ * pass group:. If confirms go through useSelection/useActions, require uiGroup wiring.
+ */
+function assertGroupedConfirmWiring(rel) {
+  const text = read(rel)
+  if (!/<ConfirmDialog[^>]*:group=/.test(text) && !/<ConfirmDialog[^>]*\sgroup=/.test(text)) {
+    return
+  }
+
+  const requireCalls = [...text.matchAll(/confirm\.require\s*\(\s*\{([\s\S]*?)\}\s*\)/g)]
+  if (requireCalls.length === 0) {
+    if (!/\buiGroup\s*:/.test(text) && !/:ui-group=/.test(text) && !/:confirm-group=/.test(text)) {
+      fail(`${rel}: grouped ConfirmDialog without confirm.require group or uiGroup wiring`)
+    }
+    return
+  }
+
+  for (const [, body] of requireCalls) {
+    if (!/\bgroup\s*:/.test(body)) {
+      fail(`${rel}: confirm.require must pass group: when ConfirmDialog is grouped`)
+    }
+  }
+}
+
 mustContain('composables/uiGroup.js', [
   'MS3_UI_GROUP',
   'provideUiGroup',
   'useGroupedToast',
   'toUiGroup',
   'withToastGroup',
+  '...toast',
 ])
 
-mustContain('composables/useActions.js', ['useGroupedToast', 'toUiGroup'])
-mustContain('composables/useSelection.js', ['useGroupedToast', 'toUiGroup'])
+mustContain('composables/useActions.js', ['useGroupedToast', 'toUiGroup', 'uiGroup'])
+mustContain('composables/useSelection.js', ['useGroupedToast', 'toUiGroup', 'uiGroup'])
 
 mustContain('components/gallery/ProductGallery.vue', [
-  "UI_GROUP = 'product-gallery'",
   'group: UI_GROUP',
   ':group="UI_GROUP"',
 ])
 mustContain('components/product/ProductLinksTab.vue', [
-  "UI_GROUP = 'product-links'",
   'group: UI_GROUP',
   ':group="UI_GROUP"',
 ])
@@ -57,6 +81,7 @@ mustContain('components/CategoryProductsGrid.vue', [
   'useGroupedToast',
   '<Toast :group="UI_GROUP"',
   '<ConfirmDialog :group="UI_GROUP"',
+  'uiGroup:',
 ])
 mustContain('components/CategoryOptionsTab.vue', [
   'useUiGroup()',
@@ -67,5 +92,14 @@ mustContain('components/CategoryOptionsTab.vue', [
 
 mustContain('entries/category-products.js', ["provideUiGroup(app, 'category-products')"])
 mustContain('entries/category-options.js', ["provideUiGroup(app, 'category-options')"])
+
+for (const rel of [
+  'components/gallery/ProductGallery.vue',
+  'components/product/ProductLinksTab.vue',
+  'components/CategoryProductsGrid.vue',
+  'components/CategoryOptionsTab.vue',
+]) {
+  assertGroupedConfirmWiring(rel)
+}
 
 console.warn('OK: check-ui-group-smoke')

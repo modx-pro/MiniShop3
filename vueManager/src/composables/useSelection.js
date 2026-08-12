@@ -20,7 +20,8 @@ import { resolveUiGroup, toUiGroup, useGroupedToast } from './uiGroup.js'
  * @param {Function} options.onSuccess Callback after successful bulk action
  * @param {Function} options.getItemId Function to get item ID, default: (item) => item.id
  * @param {Function} options.getItemName Function to get item display name for messages
- * @param {string} options.confirmGroup ConfirmDialog/Toast group (or app provide MS3_UI_GROUP)
+ * @param {string} [options.uiGroup] ConfirmDialog/Toast group (or app provide MS3_UI_GROUP)
+ * @param {string} [options.confirmGroup] Deprecated alias of `uiGroup`
  * @returns {Object} Selection state and methods
  */
 export function useSelection(options = {}) {
@@ -29,13 +30,14 @@ export function useSelection(options = {}) {
     deleteBulk = null,
     onSuccess = null,
     getItemId = item => item.id,
+    uiGroup: uiGroupOption = null,
     confirmGroup = null,
   } = options
 
   const confirm = useConfirm()
-  const toast = useGroupedToast(confirmGroup)
+  const uiGroup = resolveUiGroup(uiGroupOption || confirmGroup)
+  const toast = useGroupedToast(uiGroup)
   const { _ } = useLexicon()
-  const uiGroup = resolveUiGroup(confirmGroup)
 
   // Selected items (array of full objects for PrimeVue DataTable)
   const selectedItems = ref([])

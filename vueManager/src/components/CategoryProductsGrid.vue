@@ -48,7 +48,7 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'product',
-  confirmGroup: UI_GROUP,
+  uiGroup: UI_GROUP,
   deleteBulk: async ids => {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
@@ -977,7 +977,7 @@ onMounted(async () => {
                           :data="product"
                           :actions="getActionsConfig(column)"
                           grid-id="category-products"
-                          :confirm-group="UI_GROUP"
+                          :ui-group="UI_GROUP"
                           @view="viewProduct"
                           @edit="editProduct"
                           @delete="deleteProduct"

@@ -22,8 +22,9 @@ import { resolveUiGroup, toUiGroup, useGroupedToast } from './uiGroup.js'
  * @param {Function} options.onPublish - Callback for publishing/unpublishing
  * @param {Function} options.onDuplicate - Callback for duplicating
  * @param {Function} options.onCustomAction - Callback for custom actions (event, data)
- * @param {string} options.confirmGroup - ConfirmDialog/Toast group (or app provide MS3_UI_GROUP).
+ * @param {string} [options.uiGroup] ConfirmDialog/Toast group (or app provide MS3_UI_GROUP).
  *   Omit to stay ungrouped (backward compatible).
+ * @param {string} [options.confirmGroup] Deprecated alias of `uiGroup`.
  */
 export function useActions(options = {}) {
   const confirm = useConfirm()
@@ -31,6 +32,7 @@ export function useActions(options = {}) {
 
   const {
     gridId = 'unknown',
+    uiGroup: uiGroupOption = null,
     confirmGroup = null,
     onRefresh = () => {},
     onEdit = () => {},
@@ -42,8 +44,8 @@ export function useActions(options = {}) {
     onCustomAction = () => {},
   } = options
 
-  const uiGroup = resolveUiGroup(confirmGroup)
-  const toast = useGroupedToast(confirmGroup)
+  const uiGroup = resolveUiGroup(uiGroupOption || confirmGroup)
+  const toast = useGroupedToast(uiGroup)
 
   /**
    * Create context for action execution
