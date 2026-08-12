@@ -9,7 +9,6 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { computed, defineProps, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
@@ -33,8 +32,12 @@ const props = defineProps({
 })
 
 const toast = useToast()
-useConfirm()
 const { _ } = useLexicon()
+
+// Confirm group for this grid's PrimeVue ConfirmDialog. Shared by <ConfirmDialog>,
+// useSelection and <ActionsColumn> — a typo in any one silently kills the confirm
+// (the require() then matches no dialog), so keep it a single source of truth.
+const CONFIRM_GROUP = 'category-products'
 
 // Bulk selection
 const {
@@ -46,6 +49,7 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'product',
+  confirmGroup: CONFIRM_GROUP,
   deleteBulk: async ids => {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
@@ -772,7 +776,7 @@ onMounted(async () => {
 <template>
   <div class="category-products-grid">
     <Toast />
-    <ConfirmDialog append-to="self" />
+    <ConfirmDialog :group="CONFIRM_GROUP" append-to="self" />
 
     <Card>
       <template #title>
@@ -974,6 +978,7 @@ onMounted(async () => {
                           :data="product"
                           :actions="getActionsConfig(column)"
                           grid-id="category-products"
+                          :confirm-group="CONFIRM_GROUP"
                           @view="viewProduct"
                           @edit="editProduct"
                           @delete="deleteProduct"

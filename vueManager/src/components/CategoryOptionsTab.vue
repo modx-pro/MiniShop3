@@ -25,6 +25,11 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
+// Confirm group for this tab's PrimeVue ConfirmDialog. Shared by <ConfirmDialog> and
+// both confirm.require() calls — a typo silently kills the confirm (matches no dialog),
+// so keep it a single source of truth.
+const CONFIRM_GROUP = 'category-options'
+
 const links = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
@@ -182,6 +187,7 @@ async function performBulkAction(action) {
 function confirmBulkRemove() {
   if (selectedRows.value.length === 0) return
   confirm.require({
+    group: CONFIRM_GROUP,
     message:
       _('ms3_options_remove_confirm') ||
       'Удалить выбранные опции из категории? Значения опций у товаров будут удалены.',
@@ -255,6 +261,7 @@ async function performCopy() {
 
 function confirmSingleRemove(row) {
   confirm.require({
+    group: CONFIRM_GROUP,
     message:
       _('ms3_option_remove_confirm') || `Удалить опцию «${row.caption || row.key}» из категории?`,
     header: _('confirm') || 'Подтверждение',
@@ -296,7 +303,7 @@ onMounted(() => {
 <template>
   <div class="category-options-tab">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog :group="CONFIRM_GROUP" />
 
     <div class="toolbar">
       <Button

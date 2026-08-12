@@ -19,6 +19,8 @@ import { computed, ref } from 'vue'
  * @param {Function} options.onSuccess Callback after successful bulk action
  * @param {Function} options.getItemId Function to get item ID, default: (item) => item.id
  * @param {Function} options.getItemName Function to get item display name for messages
+ * @param {string} options.confirmGroup ConfirmDialog group to target, isolates the bulk
+ *   confirm when several Vue apps share one PrimeVue ConfirmationEventBus (default: ungrouped)
  * @returns {Object} Selection state and methods
  */
 export function useSelection(options = {}) {
@@ -27,6 +29,7 @@ export function useSelection(options = {}) {
     deleteBulk = null,
     onSuccess = null,
     getItemId = item => item.id,
+    confirmGroup = null,
   } = options
 
   const confirm = useConfirm()
@@ -107,6 +110,11 @@ export function useSelection(options = {}) {
     const count = selectionCount.value
 
     confirm.require({
+      // `|| undefined` is load-bearing: PrimeVue ConfirmDialog matches with strict
+      // `options.group === this.group` (ungrouped dialog => this.group === undefined).
+      // confirmGroup defaults to null, and `null === undefined` is false, so passing null
+      // would silently break ungrouped grids. Do NOT reduce to `group: confirmGroup`.
+      group: confirmGroup || undefined,
       message: _('bulk_delete_confirm_message').replace('{count}', count),
       header: _('bulk_delete_confirm_title'),
       icon: 'pi pi-exclamation-triangle',
