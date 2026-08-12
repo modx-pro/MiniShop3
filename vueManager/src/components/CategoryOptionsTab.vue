@@ -182,6 +182,7 @@ async function performBulkAction(action) {
 function confirmBulkRemove() {
   if (selectedRows.value.length === 0) return
   confirm.require({
+    group: 'category-options',
     message:
       _('ms3_options_remove_confirm') ||
       'Удалить выбранные опции из категории? Значения опций у товаров будут удалены.',
@@ -255,6 +256,7 @@ async function performCopy() {
 
 function confirmSingleRemove(row) {
   confirm.require({
+    group: 'category-options',
     message:
       _('ms3_option_remove_confirm') || `Удалить опцию «${row.caption || row.key}» из категории?`,
     header: _('confirm') || 'Подтверждение',
@@ -296,7 +298,7 @@ onMounted(() => {
 <template>
   <div class="category-options-tab">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog group="category-options" />
 
     <div class="toolbar">
       <Button

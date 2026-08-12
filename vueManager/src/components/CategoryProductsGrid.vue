@@ -9,7 +9,6 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { computed, defineProps, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
@@ -33,7 +32,6 @@ const props = defineProps({
 })
 
 const toast = useToast()
-useConfirm()
 const { _ } = useLexicon()
 
 // Bulk selection
@@ -46,6 +44,7 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'product',
+  confirmGroup: 'category-products',
   deleteBulk: async ids => {
     await request.post(`/api/mgr/categories/${props.categoryId}/products/multiple`, {
       method: 'delete',
@@ -772,7 +771,7 @@ onMounted(async () => {
 <template>
   <div class="category-products-grid">
     <Toast />
-    <ConfirmDialog append-to="self" />
+    <ConfirmDialog group="category-products" append-to="self" />
 
     <Card>
       <template #title>
@@ -974,6 +973,7 @@ onMounted(async () => {
                           :data="product"
                           :actions="getActionsConfig(column)"
                           grid-id="category-products"
+                          confirm-group="category-products"
                           @view="viewProduct"
                           @edit="editProduct"
                           @delete="deleteProduct"

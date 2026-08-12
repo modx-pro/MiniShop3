@@ -22,6 +22,9 @@ import actionRegistry from '../actionRegistry.js'
  * @param {Function} options.onPublish - Callback for publishing/unpublishing
  * @param {Function} options.onDuplicate - Callback for duplicating
  * @param {Function} options.onCustomAction - Callback for custom actions (event, data)
+ * @param {string} options.confirmGroup - ConfirmDialog group to target (isolates the
+ *   confirm on pages where several Vue apps share one PrimeVue ConfirmationEventBus).
+ *   Omit to stay ungrouped (default, backward compatible).
  */
 export function useActions(options = {}) {
   const toast = useToast()
@@ -30,6 +33,7 @@ export function useActions(options = {}) {
 
   const {
     gridId = 'unknown',
+    confirmGroup = null,
     onRefresh = () => {},
     onEdit = () => {},
     onDelete = () => {},
@@ -105,6 +109,7 @@ export function useActions(options = {}) {
           : _('action_confirm_title')
 
         confirm.require({
+          group: confirmGroup || undefined,
           message,
           header,
           icon: 'pi pi-exclamation-triangle',

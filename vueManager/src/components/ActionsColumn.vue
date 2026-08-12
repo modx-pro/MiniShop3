@@ -67,6 +67,16 @@ const props = defineProps({
   },
 
   /**
+   * ConfirmDialog group to target. Set it (matching a <ConfirmDialog group="...">)
+   * to isolate the confirm on pages where several Vue apps share one PrimeVue
+   * ConfirmationEventBus. Omit to stay ungrouped (default).
+   */
+  confirmGroup: {
+    type: String,
+    default: null,
+  },
+
+  /**
    * Show icons only (without text)
    */
   iconOnly: {
@@ -98,6 +108,7 @@ const { _ } = useLexicon()
 
 const { executeAction } = useActions({
   gridId: props.gridId,
+  confirmGroup: props.confirmGroup,
   onRefresh: () => emit('refresh'),
   onEdit: data => emit('edit', data),
   onDelete: data => emit('delete', data),
