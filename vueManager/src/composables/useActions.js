@@ -109,6 +109,12 @@ export function useActions(options = {}) {
           : _('action_confirm_title')
 
         confirm.require({
+          // `|| undefined` is load-bearing, NOT cosmetic. PrimeVue ConfirmDialog matches
+          // with strict `options.group === this.group`, and an ungrouped dialog has
+          // `this.group === undefined`. `confirmGroup` defaults to null, and
+          // `null === undefined` is false — passing null would make every ungrouped grid's
+          // confirm silently match no dialog (dead delete button). Do NOT "simplify" to
+          // `group: confirmGroup`. (Note: Toast uses loose `==`, so this trap is confirm-only.)
           group: confirmGroup || undefined,
           message,
           header,

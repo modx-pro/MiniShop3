@@ -110,6 +110,10 @@ export function useSelection(options = {}) {
     const count = selectionCount.value
 
     confirm.require({
+      // `|| undefined` is load-bearing: PrimeVue ConfirmDialog matches with strict
+      // `options.group === this.group` (ungrouped dialog => this.group === undefined).
+      // confirmGroup defaults to null, and `null === undefined` is false, so passing null
+      // would silently break ungrouped grids. Do NOT reduce to `group: confirmGroup`.
       group: confirmGroup || undefined,
       message: _('bulk_delete_confirm_message').replace('{count}', count),
       header: _('bulk_delete_confirm_title'),
