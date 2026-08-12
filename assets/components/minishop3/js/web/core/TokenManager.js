@@ -92,8 +92,7 @@ class TokenManager {
     }
 
     try {
-      const url = new URL(this.apiClient.baseUrl, window.location.origin)
-      url.searchParams.set('route', '/api/v1/customer/token/get')
+      const url = this.apiClient.buildUrl('/api/v1/customer/token/get')
 
       const response = await fetch(url.toString(), {
         method: 'GET',

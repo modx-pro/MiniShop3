@@ -22,7 +22,8 @@ trait AuthorizedCustomerTrait
     protected function getAuthorizedCustomer(): ?msCustomer
     {
         $ms3 = $this->modx->services->get('ms3');
-        $ms3->initialize();
+        $ctx = $this->modx->context->key ?? 'web';
+        $ms3->initialize($ctx);
 
         $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
         if ($tokenString === '') {

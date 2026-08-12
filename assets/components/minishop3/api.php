@@ -42,6 +42,7 @@ try {
     $modx = new \MODX\Revolution\modX();
     $modx->initialize('web');
 
+
     // Загружаем autoloader компонента для классов роутера
     $componentPath = MODX_CORE_PATH . 'components/minishop3/';
     $autoloader = $componentPath . 'vendor/autoload.php';
@@ -64,8 +65,16 @@ try {
         exit;
     }
 
+    // Page culture for lexicon: ?ctx= from ms3Config.ctx (#541)
+    $rawCtx = $_GET['ctx'] ?? null;
+    $ctx = \MiniShop3\Services\Api\WebApiContextResolver::apply(
+        $modx,
+        is_string($rawCtx) ? $rawCtx : null
+    );
+
+
     $ms3 = $modx->services->get('ms3');
-    $ms3->initialize('web');
+    $ms3->initialize($ctx);
 
     // Создаём роутер — только Web API (фронтенд); manager connector не грузит эти пути (#384)
     $router = new \MiniShop3\Router\Router($modx);

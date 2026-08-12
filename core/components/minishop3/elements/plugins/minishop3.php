@@ -56,8 +56,9 @@ switch ($modx->event->name) {
         }
         /** @var \MiniShop3\MiniShop3 $ms3 */
         $ms3 = $modx->services->get('ms3');
-        $ms3->initialize();
-        $ms3->registerFrontend();
+        $ctx = $modx->context->key ?? 'web'; // ms3Config.ctx → Web API lexicon (#541)
+        $ms3->initialize($ctx);
+        $ms3->registerFrontend($ctx);
 
         // Set product fields as [[*resource]] tags
         if ($modx->resource->get('class_key') == MiniShop3\Model\msProduct::class) {

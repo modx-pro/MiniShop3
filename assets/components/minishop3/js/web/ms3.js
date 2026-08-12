@@ -93,7 +93,8 @@ const ms3 = {
 
     this.apiClient = new ApiClient({
       baseUrl: this.config.actionUrl || '/assets/components/minishop3/api.php',
-      tokenManager: this.tokenManager
+      tokenManager: this.tokenManager,
+      ctx: this.config.ctx
     })
 
     this.tokenManager.setApiClient(this.apiClient)
