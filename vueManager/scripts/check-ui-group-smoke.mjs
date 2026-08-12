@@ -6,6 +6,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -67,4 +68,4 @@ mustContain('components/CategoryOptionsTab.vue', [
 mustContain('entries/category-products.js', ["provideUiGroup(app, 'category-products')"])
 mustContain('entries/category-options.js', ["provideUiGroup(app, 'category-options')"])
 
-console.log('OK: check-ui-group-smoke')
+console.warn('OK: check-ui-group-smoke')
