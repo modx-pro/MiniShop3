@@ -250,8 +250,18 @@ function onNodeContextMenu(event, node) {
 watch(
   () => props.modelValue,
   newIds => {
-    checkedSet.value = new Set(newIds || [])
-    ensureLockedChecked()
+    // Sync internal check state from the parent and enforce locked IDs. Emit back ONLY
+    // when locked enforcement actually added something the parent doesn't already have.
+    // Calling emitSelection() unconditionally here echoes the value we just received,
+    // which reassigns props.modelValue and retriggers this watch — an infinite recursive
+    // loop that freezes the page (#546).
+    const incoming = new Set(newIds || [])
+    const next = new Set(incoming)
+    lockedSet.value.forEach(id => next.add(id))
+    checkedSet.value = next
+    if (next.size !== incoming.size) {
+      emitSelection()
+    }
   },
   { deep: true }
 )
