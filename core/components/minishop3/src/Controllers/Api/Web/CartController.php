@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Api\WebApiContextResolver;
 use MODX\Revolution\modX;
 
 /**
@@ -46,7 +47,7 @@ class CartController
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
-        $cart->initialize($this->modx->context->key, $token);
+        $cart->initialize($this->pageContextKey(), $token);
 
         $result = $cart->add($id, $count, $options);
 
@@ -81,7 +82,7 @@ class CartController
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
-        $cart->initialize($this->modx->context->key, $token);
+        $cart->initialize($this->pageContextKey(), $token);
 
         $result = $cart->change($product_key, $count);
 
@@ -123,7 +124,7 @@ class CartController
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
-        $cart->initialize($this->modx->context->key, $token);
+        $cart->initialize($this->pageContextKey(), $token);
 
         $result = $cart->changeOption($product_key, $options);
 
@@ -157,7 +158,7 @@ class CartController
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
-        $cart->initialize($this->modx->context->key, $token);
+        $cart->initialize($this->pageContextKey(), $token);
 
         $result = $cart->remove($product_key);
 
@@ -181,7 +182,7 @@ class CartController
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
-        $cart->initialize($this->modx->context->key, $token);
+        $cart->initialize($this->pageContextKey(), $token);
 
         $result = $cart->get();
 
@@ -205,7 +206,7 @@ class CartController
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
-        $cart->initialize($this->modx->context->key, $token);
+        $cart->initialize($this->pageContextKey(), $token);
 
         $result = $cart->clean();
 
@@ -221,6 +222,14 @@ class CartController
             $this->modx->lexicon('ms3_customer_err_token_required'),
             HttpStatus::UNAUTHORIZED
         )->getData();
+    }
+
+    /**
+     * Page/API lexicon context (never dereference null $modx->context).
+     */
+    private function pageContextKey(): string
+    {
+        return WebApiContextResolver::liveContextKey($this->modx);
     }
 
     /**

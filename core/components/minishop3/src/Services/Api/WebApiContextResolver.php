@@ -7,9 +7,11 @@ namespace MiniShop3\Services\Api;
 /**
  * Resolve a safe front-end context key for Web API bootstrap (api.php).
  *
- * Client-supplied ctx is sanitized (charset, length, no mgr*), then applied via
+ * Client-supplied ctx is sanitized, checked with getContext(), then applied via
  * switchContext so lexicon cultureKey matches the page that issued the request.
- * Existence is whatever switchContext accepts after initialize('web').
+ *
+ * Never call switchContext for an unknown key: MODX _initContext() nulls
+ * $modx->context on failed prepare, which TypeErrors CartController (#542 review).
  */
 final class WebApiContextResolver
 {
@@ -33,18 +35,55 @@ final class WebApiContextResolver
      */
     public static function apply(object $modx, ?string $requested): string
     {
-        $current = $modx->context->key ?? self::DEFAULT_CONTEXT;
+        $current = self::liveContextKey($modx);
         $ctx = self::resolve($requested);
 
         if ($ctx === $current) {
             return $current;
         }
 
-        if (!$modx->switchContext($ctx)) {
+        if (!self::contextExists($modx, $ctx)) {
             return $current;
         }
 
+        if (!$modx->switchContext($ctx)) {
+            self::ensureLiveContext($modx, $current);
+
+            return self::liveContextKey($modx);
+        }
+
+        return self::liveContextKey($modx);
+    }
+
+    /**
+     * Safe page context key for controllers (never null-safe-access crash).
+     *
+     * @param object $modx
+     */
+    public static function liveContextKey(object $modx): string
+    {
         return $modx->context->key ?? self::DEFAULT_CONTEXT;
+    }
+
+    private static function contextExists(object $modx, string $ctx): bool
+    {
+        if ($ctx === self::DEFAULT_CONTEXT) {
+            return true;
+        }
+
+        return $modx->getContext($ctx) !== null;
+    }
+
+    /**
+     * MODX may null $modx->context after a failed switchContext — restore fallback.
+     */
+    private static function ensureLiveContext(object $modx, string $fallback): void
+    {
+        if ($modx->context !== null && isset($modx->context->key) && $modx->context->key !== '') {
+            return;
+        }
+
+        $modx->switchContext($fallback !== '' ? $fallback : self::DEFAULT_CONTEXT);
     }
 
     private static function sanitize(?string $requested): ?string

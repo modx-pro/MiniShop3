@@ -39,7 +39,6 @@ class ApiClient {
     return url
   }
 
-
   /**
    * Base method for executing HTTP requests
    *

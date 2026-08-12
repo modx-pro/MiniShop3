@@ -3,6 +3,7 @@
 namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Api\WebApiContextResolver;
 use MiniShop3\Services\TokenService;
 
 /**
@@ -22,7 +23,7 @@ trait AuthorizedCustomerTrait
     protected function getAuthorizedCustomer(): ?msCustomer
     {
         $ms3 = $this->modx->services->get('ms3');
-        $ctx = $this->modx->context->key ?? 'web';
+        $ctx = WebApiContextResolver::liveContextKey($this->modx);
         $ms3->initialize($ctx);
 
         $tokenString = $_REQUEST['ms3_token'] ?? $_SESSION['ms3']['customer_token'] ?? '';
