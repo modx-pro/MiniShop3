@@ -5,9 +5,9 @@
  */
 import { useLexicon } from '@vuetools/useLexicon'
 import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
 
 import actionRegistry from '../actionRegistry.js'
+import { resolveUiGroup, toUiGroup, useGroupedToast } from './uiGroup.js'
 
 /**
  * Composable for working with grid actions
@@ -22,12 +22,10 @@ import actionRegistry from '../actionRegistry.js'
  * @param {Function} options.onPublish - Callback for publishing/unpublishing
  * @param {Function} options.onDuplicate - Callback for duplicating
  * @param {Function} options.onCustomAction - Callback for custom actions (event, data)
- * @param {string} options.confirmGroup - ConfirmDialog group to target (isolates the
- *   confirm on pages where several Vue apps share one PrimeVue ConfirmationEventBus).
- *   Omit to stay ungrouped (default, backward compatible).
+ * @param {string} options.confirmGroup - ConfirmDialog/Toast group (or app provide MS3_UI_GROUP).
+ *   Omit to stay ungrouped (backward compatible).
  */
 export function useActions(options = {}) {
-  const toast = useToast()
   const confirm = useConfirm()
   const { _ } = useLexicon()
 
@@ -43,6 +41,9 @@ export function useActions(options = {}) {
     onDuplicate = () => {},
     onCustomAction = () => {},
   } = options
+
+  const uiGroup = resolveUiGroup(confirmGroup)
+  const toast = useGroupedToast(confirmGroup)
 
   /**
    * Create context for action execution
@@ -109,13 +110,7 @@ export function useActions(options = {}) {
           : _('action_confirm_title')
 
         confirm.require({
-          // `|| undefined` is load-bearing, NOT cosmetic. PrimeVue ConfirmDialog matches
-          // with strict `options.group === this.group`, and an ungrouped dialog has
-          // `this.group === undefined`. `confirmGroup` defaults to null, and
-          // `null === undefined` is false — passing null would make every ungrouped grid's
-          // confirm silently match no dialog (dead delete button). Do NOT "simplify" to
-          // `group: confirmGroup`. (Note: Toast uses loose `==`, so this trap is confirm-only.)
-          group: confirmGroup || undefined,
+          group: toUiGroup(uiGroup),
           message,
           header,
           icon: 'pi pi-exclamation-triangle',

@@ -17,6 +17,7 @@ import ToastService from 'primevue/toastservice'
 import { createApp } from 'vue'
 
 import CategoryProductsGrid from '../components/CategoryProductsGrid.vue'
+import { provideUiGroup } from '../composables/uiGroup.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 let appInstance = null
@@ -45,6 +46,7 @@ function createVueApp(categoryId) {
 
   app.use(ConfirmationService)
   app.use(ToastService)
+  provideUiGroup(app, 'category-products')
 
   return app
 }

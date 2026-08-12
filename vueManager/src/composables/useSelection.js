@@ -1,7 +1,8 @@
 import { useLexicon } from '@vuetools/useLexicon'
 import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
 import { computed, ref } from 'vue'
+
+import { resolveUiGroup, toUiGroup, useGroupedToast } from './uiGroup.js'
 
 /**
  * Universal composable for managing row selection in DataTables
@@ -19,8 +20,7 @@ import { computed, ref } from 'vue'
  * @param {Function} options.onSuccess Callback after successful bulk action
  * @param {Function} options.getItemId Function to get item ID, default: (item) => item.id
  * @param {Function} options.getItemName Function to get item display name for messages
- * @param {string} options.confirmGroup ConfirmDialog group to target, isolates the bulk
- *   confirm when several Vue apps share one PrimeVue ConfirmationEventBus (default: ungrouped)
+ * @param {string} options.confirmGroup ConfirmDialog/Toast group (or app provide MS3_UI_GROUP)
  * @returns {Object} Selection state and methods
  */
 export function useSelection(options = {}) {
@@ -33,8 +33,9 @@ export function useSelection(options = {}) {
   } = options
 
   const confirm = useConfirm()
-  const toast = useToast()
+  const toast = useGroupedToast(confirmGroup)
   const { _ } = useLexicon()
+  const uiGroup = resolveUiGroup(confirmGroup)
 
   // Selected items (array of full objects for PrimeVue DataTable)
   const selectedItems = ref([])
@@ -110,11 +111,7 @@ export function useSelection(options = {}) {
     const count = selectionCount.value
 
     confirm.require({
-      // `|| undefined` is load-bearing: PrimeVue ConfirmDialog matches with strict
-      // `options.group === this.group` (ungrouped dialog => this.group === undefined).
-      // confirmGroup defaults to null, and `null === undefined` is false, so passing null
-      // would silently break ungrouped grids. Do NOT reduce to `group: confirmGroup`.
-      group: confirmGroup || undefined,
+      group: toUiGroup(uiGroup),
       message: _('bulk_delete_confirm_message').replace('{count}', count),
       header: _('bulk_delete_confirm_title'),
       icon: 'pi pi-exclamation-triangle',

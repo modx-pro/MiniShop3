@@ -13,6 +13,7 @@ import ToastService from 'primevue/toastservice'
 import { createApp } from 'vue'
 
 import CategoryOptionsTab from '../components/CategoryOptionsTab.vue'
+import { provideUiGroup } from '../composables/uiGroup.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 const MOUNT_ID = 'ms3-vue-category-options'
@@ -44,6 +45,7 @@ function mountApp() {
   })
   app.use(ToastService)
   app.use(ConfirmationService)
+  provideUiGroup(app, 'category-options')
 
   app.mount(container)
   injectFormStylesOverride()
