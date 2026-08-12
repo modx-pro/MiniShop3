@@ -31,9 +31,7 @@ class MiniShop3MgrOrdersManagerController extends msManagerController
         $config['order_show_drafts'] = (bool) $this->modx->getOption('ms3_order_show_drafts', null, false);
 
         // Config before Vue modules so mount sees ms3.config (#526).
-        $this->addHtml(
-            '<script>var ms3 = { config: ' . json_encode($config) . ' };</script>'
-        );
+        $this->addVueConfig($config);
 
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/orders.min.css');

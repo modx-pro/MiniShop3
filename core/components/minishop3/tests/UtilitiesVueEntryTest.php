@@ -69,7 +69,7 @@ foreach ([
 foreach ([
     'utilities\.min\.js',
     'utilities\.tpl',
-    'var ms3',
+    'addVueConfig',
     'getTemplateFile',
     'mssetting_list',
     'utility_gallery_source_id',

@@ -28,9 +28,7 @@ class MiniShop3MgrNotificationsManagerController extends msManagerController
     public function loadCustomCssJs()
     {
         // Config before Vue modules so mount sees ms3.config (#525).
-        $this->addHtml(
-            '<script>var ms3 = { config: ' . json_encode($this->ms3->config) . ' };</script>'
-        );
+        $this->addVueConfig($this->ms3->config);
 
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/notifications.min.css');

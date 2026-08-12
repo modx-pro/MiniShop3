@@ -51,6 +51,31 @@ class msManagerController extends \MODX\Revolution\modExtraManagerController
     }
 
     /**
+     * Emit the inline `var ms3 = { config }` block for a Vue page and inject the manager
+     * auth token synchronously.
+     *
+     * Ext-less Vue pages fire their first API requests on DOMContentLoaded, before the
+     * manager JS has populated the `MODx.siteId` global that request.js uses as
+     * HTTP_MODAUTH. Without the token the connector rejects those early requests with
+     * "Access denied" (code 401), even though the session is valid (#544). Shipping the
+     * token inside ms3.config — available before the Vue module runs — removes that race.
+     *
+     * @param array $config
+     * @return void
+     */
+    public function addVueConfig(array $config)
+    {
+        $contextKey = $this->modx->context ? (string) $this->modx->context->get('key') : 'mgr';
+        $config['token'] = $this->modx->user
+            ? (string) $this->modx->user->getUserToken($contextKey)
+            : '';
+
+        $this->addHtml(
+            '<script>var ms3 = { config: ' . json_encode($config) . ' };</script>'
+        );
+    }
+
+    /**
      * Register Vue ES module with VueTools dependency check
      *
      * @param string $src Module script URL

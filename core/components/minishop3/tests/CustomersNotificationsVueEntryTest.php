@@ -57,7 +57,7 @@ foreach ($pages as $name => $mountId) {
         }
     }
 
-    foreach (["{$name}\\.min\\.js", "{$name}\\.tpl", 'var ms3'] as $pattern) {
+    foreach (["{$name}\\.min\\.js", "{$name}\\.tpl", 'addVueConfig'] as $pattern) {
         if (preg_match('#' . $pattern . '#', $contents) !== 1) {
             $fail("{$name} controller must contain /{$pattern}/");
         }
@@ -75,6 +75,19 @@ foreach ($pages as $name => $mountId) {
     }
     if (str_contains($entryContents, 'waitForElement')) {
         $fail("{$entryRelative} must not use waitForElement after tpl mount (#525)");
+    }
+}
+
+// Base controller must ship ms3.config via addVueConfig() and inject the manager auth
+// token synchronously — guards the HTTP_MODAUTH cold-start race fix (#544).
+$base = "{$componentRoot}/controllers/manager.class.php";
+$baseContents = file_get_contents($base);
+if ($baseContents === false) {
+    $fail('cannot read base controllers/manager.class.php');
+}
+foreach (['function addVueConfig', 'var ms3', 'getUserToken'] as $pattern) {
+    if (!str_contains($baseContents, $pattern)) {
+        $fail("base manager controller must contain {$pattern} (#544 token injection)");
     }
 }
 

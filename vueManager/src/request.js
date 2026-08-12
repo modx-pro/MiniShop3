@@ -61,6 +61,13 @@ class Request {
    * Get MODAUTH token (dynamically)
    */
   getModAuthToken() {
+    // Prefer the token injected server-side into ms3.config: it is present in the initial
+    // inline <script>, before the Vue module runs, so early requests never race an unready
+    // MODx.siteId global on Ext-less pages (#544). Fall back to MODx.siteId for any page
+    // that does not ship ms3.config.token.
+    if (typeof ms3 !== 'undefined' && ms3?.config?.token) {
+      return ms3.config.token
+    }
     if (typeof MODx !== 'undefined' && MODx?.siteId) {
       return MODx.siteId
     }
