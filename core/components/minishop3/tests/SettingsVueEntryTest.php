@@ -69,7 +69,7 @@ foreach ([
 foreach ([
     'settings\.min\.js',
     'settings\.tpl',
-    'var ms3',
+    'addVueConfig',
     'getTemplateFile',
     'msorder_list',
     '\.min\.css',

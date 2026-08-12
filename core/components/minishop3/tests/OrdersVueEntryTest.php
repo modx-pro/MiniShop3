@@ -54,7 +54,7 @@ $controllers = [
             'orders\.min\.js',
             'orders\.tpl',
             'order_show_drafts',
-            'var ms3',
+            'addVueConfig',
         ],
     ],
     'order' => [
@@ -70,7 +70,7 @@ $controllers = [
             'order\.min\.js',
             'order\.tpl',
             'order_id',
-            'var ms3',
+            'addVueConfig',
         ],
     ],
 ];
