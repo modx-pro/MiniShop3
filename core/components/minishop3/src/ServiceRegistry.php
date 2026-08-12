@@ -256,6 +256,22 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Order\ProgrammaticOrderService::class,
             'interface' => null,
         ],
+        'ms3_manager_order_presenter' => [
+            'class' => \MiniShop3\Services\Order\ManagerOrderPresenter::class,
+            'interface' => null,
+        ],
+        'ms3_manager_order_list' => [
+            'class' => \MiniShop3\Services\Order\ManagerOrderListService::class,
+            'interface' => null,
+        ],
+        'ms3_manager_order_mutation' => [
+            'class' => \MiniShop3\Services\Order\ManagerOrderMutationService::class,
+            'interface' => null,
+        ],
+        'ms3_manager_order_products' => [
+            'class' => \MiniShop3\Services\Order\ManagerOrderProductsService::class,
+            'interface' => null,
+        ],
         // Cart services
         'ms3_cart_item_manager' => [
             'class' => \MiniShop3\Services\Cart\CartItemManager::class,
@@ -357,10 +373,6 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Category\CategoryTreeService::class,
             'interface' => null,
         ],
-        'ms3_settings_combo_list' => [
-            'class' => \MiniShop3\Services\Settings\SettingsComboListService::class,
-            'interface' => null,
-        ],
         'ms3_filter_config' => [
             'class' => \MiniShop3\Services\FilterConfigManager::class,
             'interface' => null,
@@ -381,6 +393,10 @@ class ServiceRegistry
         ],
         'ms3_customer_factory' => [
             'class' => \MiniShop3\Services\CustomerFactory::class,
+            'interface' => null,
+        ],
+        'ms3_settings_combo_list' => [
+            'class' => \MiniShop3\Services\Settings\SettingsComboListService::class,
             'interface' => null,
         ],
         'ms3_validation_service' => [
@@ -607,159 +623,25 @@ class ServiceRegistry
 
         $validatedClass = $this->validateClass($className, $fallbackClass, $requiredInterface);
 
-        $modx = $this->modx;
+        $factories = ServiceRegistryFactories::map();
+        if (!isset($factories[$serviceKey])) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[MiniShop3 ServiceRegistry] No factory registered for service '{$serviceKey}'"
+            );
 
-        if (in_array($serviceKey, self::CONTROLLERS_WITH_MS3_ONLY, true)) {
-            $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                return new $validatedClass($ms3);
-            });
-        } elseif (in_array($serviceKey, self::SERVICES_WITH_MODX_AND_MS3, true)) {
-            $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                return new $validatedClass($modx, $ms3);
-            });
-        } elseif (in_array($serviceKey, self::SERVICES_WITH_DEPENDENCIES, true)) {
-            // Services with dependencies - resolve them from DI
-            $this->registerServiceWithDependencies($serviceKey, $validatedClass);
-        } else {
-            $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                return new $validatedClass($modx);
-            });
+            return false;
         }
+
+        $factory = $factories[$serviceKey];
+        $modx = $this->modx;
+        $services = $this->modx->services;
+
+        $this->modx->services->add($serviceKey, function () use ($factory, $validatedClass, $modx, $services) {
+            return $factory($modx, $services, $validatedClass);
+        });
 
         return true;
-    }
-
-    /**
-     * Register service with complex dependencies
-     *
-     * Dependencies are resolved from DI container (lazy loading).
-     * This allows overriding any dependency via config.
-     *
-     * @param string $serviceKey Service key
-     * @param string $validatedClass Validated class name
-     * @return void
-     */
-    protected function registerServiceWithDependencies(string $serviceKey, string $validatedClass): void
-    {
-        $modx = $this->modx;
-
-        switch ($serviceKey) {
-            case 'ms3_option_service':
-                // OptionService(xPDO, OptionLoaderService, OptionSyncService, OptionCategoryService)
-                // Not ms3_category_option_service (Category\CategoryOptionService) — #531/#532.
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $loader = $modx->services->get('ms3_option_loader');
-                    $sync = $modx->services->get('ms3_option_sync');
-                    $category = $modx->services->get('ms3_option_category_service');
-
-                    return new $validatedClass($modx, $loader, $sync, $category);
-                });
-                break;
-
-            case 'ms3_order_field_manager':
-                // OrderFieldManager(modX, MiniShop3, OrderDraftManager)
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $draftManager = $modx->services->get('ms3_order_draft_manager');
-                    return new $validatedClass($modx, $ms3, $draftManager);
-                });
-                break;
-
-            case 'ms3_order_address_manager':
-                // OrderAddressManager(modX, MiniShop3, OrderDraftManager, OrderFieldManager)
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $draftManager = $modx->services->get('ms3_order_draft_manager');
-                    $fieldManager = $modx->services->get('ms3_order_field_manager');
-                    return new $validatedClass($modx, $ms3, $draftManager, $fieldManager);
-                });
-                break;
-
-            case 'ms3_order_submit_handler':
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $draftManager = $modx->services->get('ms3_order_draft_manager');
-                    $costCalculator = $modx->services->get('ms3_order_cost_calculator');
-                    $fieldManager = $modx->services->get('ms3_order_field_manager');
-                    $addressManager = $modx->services->get('ms3_order_address_manager');
-                    $userResolver = $modx->services->get('ms3_order_user_resolver');
-                    $numberGenerator = $modx->services->get('ms3_order_number_generator');
-                    return new $validatedClass(
-                        $modx,
-                        $ms3,
-                        $draftManager,
-                        $costCalculator,
-                        $fieldManager,
-                        $addressManager,
-                        $userResolver,
-                        $numberGenerator
-                    );
-                });
-                break;
-
-            case 'ms3_order_finalize':
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $numberGenerator = $modx->services->get('ms3_order_number_generator');
-                    return new $validatedClass($modx, $ms3, $numberGenerator);
-                });
-                break;
-
-            case 'ms3_programmatic_order':
-                // ProgrammaticOrderService(modX, MiniShop3, OrderFinalizeService, OrderDraftManager)
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $finalize = $modx->services->get('ms3_order_finalize');
-                    $draftManager = $modx->services->get('ms3_order_draft_manager');
-                    return new $validatedClass($modx, $ms3, $finalize, $draftManager);
-                });
-                break;
-
-            case 'ms3_order_status':
-                // OrderStatusService(modX, MiniShop3, OrderLogService)
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $orderLog = $modx->services->get('ms3_order_log');
-                    return new $validatedClass($modx, $ms3, $orderLog);
-                });
-                break;
-
-            case 'ms3_cart_mutation_handler':
-                // CartMutationHandler(modX, MiniShop3, OrderDraftManager, CartItemManager, OrderLogService)
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $draftManager = $modx->services->get('ms3_order_draft_manager');
-                    $itemManager = $modx->services->get('ms3_cart_item_manager');
-                    $orderLog = $modx->services->get('ms3_order_log');
-                    return new $validatedClass($modx, $ms3, $draftManager, $itemManager, $orderLog);
-                });
-                break;
-
-            case 'ms3_customer_order_resolver':
-                // CustomerOrderResolver(modX, MiniShop3, CustomerFieldManager)
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $ms3 = $modx->getService('MiniShop3', \MiniShop3\MiniShop3::class);
-                    $fieldManager = $modx->services->get('ms3_customer_field_manager');
-                    return new $validatedClass($modx, $ms3, $fieldManager);
-                });
-                break;
-
-            case 'ms3_model_field_service':
-                // ModelFieldService(modX, ModelFieldSectionService)
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    $sectionService = $modx->services->get('ms3_model_field_section_service');
-                    return new $validatedClass($modx, $sectionService);
-                });
-                break;
-
-            default:
-                // Fallback: create with modX only
-                $this->modx->services->add($serviceKey, function () use ($validatedClass, $modx) {
-                    return new $validatedClass($modx);
-                });
-        }
     }
 
     /**
@@ -799,7 +681,8 @@ class ServiceRegistry
             if (!in_array($requiredInterface, $interfaces ?: [])) {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    "[MiniShop3 ServiceRegistry] Class '{$className}' must implement {$requiredInterface}, using fallback"
+                    "[MiniShop3 ServiceRegistry] Class '{$className}' must implement {$requiredInterface}, "
+                    . 'using fallback'
                 );
                 return $fallbackClass;
             }
