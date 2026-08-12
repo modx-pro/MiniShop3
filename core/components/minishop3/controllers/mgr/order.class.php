@@ -33,9 +33,7 @@ class MiniShop3MgrOrderManagerController extends msManagerController
         $config['order_id'] = (int) ($_GET['id'] ?? 0);
 
         // Config before Vue modules so mount sees ms3.config (#526).
-        $this->addHtml(
-            '<script>var ms3 = { config: ' . json_encode($config) . ' };</script>'
-        );
+        $this->addVueConfig($config);
 
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/order.min.css');

@@ -62,9 +62,7 @@ class MiniShop3MgrUtilitiesManagerController extends msManagerController
         );
 
         // Config must precede Vue modules (#524).
-        $this->addHtml(
-            '<script>var ms3 = { config: ' . json_encode($config) . ' };</script>'
-        );
+        $this->addVueConfig($config);
 
         $cssBase = $this->ms3->config['assetsUrl'] . 'css/mgr/vue-dist/';
         foreach (['primeicons', 'utilities'] as $asset) {

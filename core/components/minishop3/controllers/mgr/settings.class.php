@@ -29,9 +29,7 @@ class MiniShop3MgrSettingsManagerController extends msManagerController
         $config['msorder_list'] = $this->modx->hasPermission('msorder_list');
 
         // Config must precede Vue modules (#523).
-        $this->addHtml(
-            '<script>var ms3 = { config: ' . json_encode($config) . ' };</script>'
-        );
+        $this->addVueConfig($config);
 
         $assetsUrl = $this->ms3->config['assetsUrl'];
         $cssBase = $assetsUrl . 'css/mgr/vue-dist/';
