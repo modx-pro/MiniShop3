@@ -4,14 +4,93 @@
 
 ## Навигация
 
-- **Текущий месяц:** [Июнь 2026](#июнь-2026) (ниже)
-- **Предыдущий месяц:** [Май 2026](#май-2026) (ниже)
-- **Ещё раньше:** [Апрель 2026](#апрель-2026), [Март 2026](#март-2026), [Февраль 2026](#февраль-2026), [Январь 2026](#январь-2026) (ниже)
+- **Текущий месяц:** [Август 2026](#август-2026) (ниже)
+- **Предыдущий месяц:** [Июнь 2026](#июнь-2026) (ниже)
+- **Ещё раньше:** [Май 2026](#май-2026), [Апрель 2026](#апрель-2026), [Март 2026](#март-2026), [Февраль 2026](#февраль-2026), [Январь 2026](#январь-2026) (ниже)
 - **Архив по месяцам:**
   - [Декабрь 2025](changelogs/2025-12.md)
   - [Ноябрь 2025](changelogs/2025-11.md)
   - [Октябрь 2025](changelogs/2025-10.md)
   - [Архив (2024 и ранее)](changelogs/archive.md)
+
+---
+
+## Август 2026
+
+### [2026-08-13] 🚀 Версия 1.13.0-beta1
+
+**Тип релиза:** MINOR (beta) — публичный Web API для headless-витрины и кабинета клиента, миграция менеджера на Ext-less Vue, масштабная security-закалка API и декомпозиция сервисов.
+
+#### ✨ Добавлено
+
+**Публичный Web API каталога товаров (#333):** headless-эндпойнты `GET /api/v1/product/list` и `GET /api/v1/product/get/{id}` работают **без авторизации** (без `TokenMiddleware`) — витрина на любом фронте может тянуть каталог напрямую. Новый `ProductCatalogService` + `Web\ProductController`, покрыт `ProductCatalogServiceTest`.
+
+**Кабинет клиента через Web API — история заказов, logout и восстановление пароля (#425, #442, #475):**
+
+- **Заказы клиента.** `GET /api/v1/customer/orders`, `GET /api/v1/customer/orders/{id}` и `POST /api/v1/customer/orders/{id}/cancel` — список и карточка заказа, отфильтрованные по `customer_id`; из публичных DTO вырезаны `token`/`properties`.
+- **Аутентификация.** Новый `CustomerAuthController` (login / register / logout / forgotPassword / resetPassword) с отдельными роутами. `logout` проходит через `TokenMiddleware` (гидрация сессии из `MS3TOKEN`/cookie перед отзывом токенов). `forgotPassword` — rate-limit по IP и email, enumeration-safe (одинаковый ответ независимо от существования email), выпускает `password_reset`-токен с TTL. `resetPassword` — обязательный токен, rate-limit по IP и токену, `HTTP 429` при превышении.
+- **Единый публичный контракт клиента.** `CustomerPublicDto` — allowlist полей ответа (`PUBLIC_FIELDS` + активные `msExtraField`), никогда не отдаёт `token`/`password`; `editableFieldKeys()` = базовые редактируемые поля + динамические extra-колонки. `POST /customer/add` и `PUT /customer/profile` принимают только allowlist (fail-closed `field_not_allowed`). **Breaking:** ответы Web API по клиенту теперь в форме DTO, add/update профиля закрыты allowlist'ом.
+
+**Программное создание заказов без сессии (#508):** сервис `ProgrammaticOrderService` (`ms3_programmatic_order`) позволяет дополнениям и cron создавать финализированный `msOrder` **без корзины и сессии** — через тот же pipeline расчёта стоимости / номера / статуса, с уникальным `idempotency_key` и событиями с `origin=integration`.
+
+**Миграция менеджера на Ext-less Vue (#533, #534, #536, #537):** страницы «Заказы»/«Заказ» (#533), «Клиенты»/«Уведомления» (#534), «Настройки» (#536) и «Утилиты» (#537) переведены на Help-style tpl + чистый `ms3.config` — убраны Ext-обёртки и `waitForElement`, каждая страница монтируется одним Vite-entry. Deep-link'и сохранены (`order_id` через GET, `#tab-*` хэши, localStorage-состояние вкладок).
+
+**Vue-вкладки в карточке товара — «Категории» и «Связи» (#479/#113, #518):**
+
+- **Категории (#113).** Замена ExtJS `ms3-tree-categories` на Vue-вкладку поверх переиспользуемого виджета `ResourceCategoryTree` и REST tree-эндпойнта. Новый `ProductCategoryTreeService` (`ms3_product_category_tree`), общие утилиты `IntArrayDecoder` и `ResourceCategoryTreeQueryTrait`. Чекбоксы следуют выбору клиента, а не устаревшим `msCategoryMember`-строкам.
+- **Связи (#518).** CRUD связей товара перенесён в `ProductLinkService` + Manager REST, ExtJS-грид/окно связей удалены. `ProductTabs` перешёл с `v-else-if`-цепочки на map компонентов.
+
+**Тип extra field «ключ-значение» — `ms3-key-value` (#323):** настраиваемые key-value поля с режимами fixed и free, бэкенд-валидация через `KeyValueFieldService`, Vue-редакторы для форм товара/заказа и для определения extra field. Гидрация и обработка выровнены с паттерном repeater (#301).
+
+**Галерея — выбор главного превью без смены порядка (#512):** новое поле `preview_file_id` на `msProductData` позволяет назначить любое фото галереи главным превью, сохранив порядок сортировки самой галереи.
+
+**Импорт CSV — колонки `msExtraField` (#510):** активные extra fields подмешиваются в список полей импорта и сохраняются через `Product\Create|Update` после `loadMap()` — Object Extension-колонки больше не теряются при маппинге и сохранении.
+
+**События EmptyOrder / GetOrderCost и агрегация ошибок `Order::set` (#393):** на очистке черновика вызываются зарегистрированные `msOnBeforeEmptyOrder`/`msOnEmptyOrder`, на `getTotalCost` — `msOnBeforeGetOrderCost`/`msOnGetOrderCost`. `Order::set()` агрегирует пофайловые ошибки `add()`.
+
+**Rate limiting — подключаемые хранилища счётчиков (#487):** `RateLimitMiddleware` больше не пишет напрямую в `sys_get_temp_dir()`. Хранилище за `RateLimitStoreInterface`: файловый драйвер по умолчанию (поведение одного узла не меняется), опциональные Redis/Memcached через настройку/env (нужно только PHP-расширение, без обязательной composer-зависимости). Graceful fallback на файловый store при отсутствии расширения или сбое подключения (лог WARN).
+
+**Document-level ACL для грида товаров категории (#473):** `checkPolicy` view/save/publish/delete на эндпойнтах `CategoryProductsController` в дополнение к глобальным `msproduct_*` правам; корректный подсчёт ACL-видимого total для пагинации и `403` при запрете bulk-действий политикой документа.
+
+**Инфраструктура тестов и CI-гейты (#394, #433, #495, #496):** PHP lint/smoke + ESLint-гейт на PR (#394), PHPStan-гейт + PHPUnit-скаффолд для чистых хелперов (#433), интеграционные тесты (MySQL CI + жизненный цикл `AuthManager` #496, finalize required fields + cart SQLite draft #495). Лексикон для сообщений `CategoryProductsController` (#467); паритет EN/RU и удаление дублей ключей (#360).
+
+#### 🔄 Изменено
+
+**Декомпозиция `OrdersController` + фабричная карта `ServiceRegistry` (#492):** list/mutation/products/presenter вынесены в отдельные сервисы (контроллер < 1k строк), менеджерские order-сервисы зарегистрированы в DI. Switch/`in_array`-разводка `ServiceRegistry` заменена явной картой `ServiceRegistryFactories`. Проверки пары доставка/оплата (#459) перенесены в `ManagerOrderMutationService`.
+
+**Разрез крупных сервисов — фаза #365 (#513, #514, #515):** `GridConfigService` (Phase A), `OptionLoaderService` (Phase B) и `ProductDataService` (Phase C) разбиты на узкие сервисы. Дополнительно вынесены `ExtraFieldsController` из CRUD extra fields (#491) и `ModelField`-сервисы из `ModelFieldsController` (#517).
+
+**Единый расчёт стоимости заказа checkout ↔ manager (#476):** общий `OrderCostEngine` для математики доставки/оплаты, база процентной комиссии оплаты выровнена по cart-only для паритета с MS2 (#460).
+
+**Единый Response envelope на HTTP-границе (#505):** унифицированная обёртка ответа API. Декомпозиция `ImportCSV` на `EventGate` + `ProductImportService` (#499); `EventGate` как контракт `returnedValues` (#456).
+
+**Тонкие фасады и Vue-композаблы:** фасады `Cart`/`Customer` поверх Services-менеджеров (#406), разрез `OrderView.vue` на композаблы и диалоги (#478), вынос тонких list/config/crud/sort-композаблов (#397).
+
+**Общий reference CRUD и консолидация combo-списков (#509, #490):** shared reference CRUD для доставок и оплат (#509); `SettingsComboListService` шарится между ExtJS combo GetList и Manager REST, удалены дублирующие Delivery↔Payment membership-процессоры (#490).
+
+**Замена заброшенного `rakit/validation` (#486)** и удаление мёртвого кода: deprecated pass-through `OrderService`/`Customer` (#489), мёртвые field-config override-эндпойнты (#383), `ms3_config_manager` (#485).
+
+**Производительность:** раздельный stats-эндпойнт с условным Address JOIN (#469), параллельная загрузка values опций в `OrderView` (#447), request-scoped мемоизация `getGridConfig` (#488).
+
+#### 🐛 Исправлено
+
+**Security/ACL-закалка Web API — сессии и токены:** ротация API-токена против token fixation (#516); закрытие обхода сессии после отзыва токена + харденинг web-logout (#462); безопасный CORS — без wildcard-with-credentials, same-origin по умолчанию (#463); корректные `HTTP 401/429` для auth и rate-limit (#434); авто-выпуск гостевого токена для `cart/get` + синхронизация `publicRoutes` (#440); привязка API-сессии на верификации email (#441); удаление false-success token/refresh-заглушки (#351); отказ по истёкшим API-токенам вместо тихого продления (#396); закрытие захвата чужого checkout-токена через email (#369/#391); восстановление storefront-логина и сессионной авторизации (#321).
+
+**Security/ACL-закалка Manager API:** права `msorder_save` на write-роуты заказов (#402), `mssetting_save` на запись config/grid-config (#404, #436), ужесточение ACL клиентов и товаров категории (#400), `view_document` на `/references` (PII клиента, #438); скоупинг inline-edit/мутаций товаров категории по категории — IDOR (#443, #454); whitelist `filter_*` на list-эндпойнтах (#457), полей deliveries-active dropdown (#427), критериев `msProductOption` (#452); запрет `privacy_accepted_at` в quick-update (#439); прекращение утечки секретного токена в ответах заказа (#426) и секретов клиента в ответах profile/add (#428); экранирование амперсандов в href ссылки на заказ в письме (#465); прекращение загрузки storefront-роутов через менеджерский коннектор (#401).
+
+**Расчёт и оформление заказа:** отклонение несовместимых пар доставка/оплата на submit/checkout/manager/finalize (#459); блокировка сохранения во время пересчёта стоимости (#461); ревалидация фиксированного статуса после мутации плагином (#464); выравнивание finalize-стоимости с `ManagerOrderCostRecalculator` (#448); cart-only база процентной комиссии оплаты (#460); `payment_link` в письмах о заказе/смене статуса (#458); возврат ошибки при неудачном сохранении статуса (#392); вес черновика = вес единицы × количество (#403); защита от дублей номеров при конкурентном submit (#399); локальный календарный день в фильтрах по дате (#405).
+
+**Товары, каталог, корзина:** учёт дополнительных категорий (`msCategoryMember`) в `msProducts` и гриде категории (#482); резолв relation-полей в гриде товаров категории (#330); сохранение очистки color/size/tags при сохранении (#325); смена опций в корзине через Web API и storefront (#502); конверсия типа ресурса Документ → Товар (#331).
+
+**Vue-регрессии позднего цикла:** двойной confirm в гриде товаров категории (#538/#540); гонка `HTTP_MODAUTH` на Ext-less Vue-страницах — токен в `ms3.config` (#544/#545); бесконечный рекурсивный цикл в `ResourceCategoryTree`, замораживавший Настройки→Опции (#546/#547); дублирующиеся confirm-диалоги на общей шине PrimeVue между вкладками Настроек (#548/#549) и лишний confirm удаления в `VendorsGrid` (#551/#552); устаревшие ответы грида при быстрой смене фильтра/страницы (#468); распаковка пустого object/data в коннекторе `request.js` (#466); прекращение загрузки отсутствующего `vue-dist/main.min.css` на обновлении товара (#504).
+
+**Валюта, установка, импорт:** ремонт mojibake-дефолта «?» для `ms3_currency_symbol` (#498) и inline-символ рубля в repair-миграции (#520); тосты и пошаговые ошибки при сбоях полей/превью импорта (#453); чтение start-ответа из object-envelope (#390).
+
+**DI:** подключение `OptionCategoryService` в `ms3_option_service` (#535); резолв платёжной ссылки через `PaymentService` (#485).
+
+#### 📦 Зависимости
+
+Security-бампы транзитивных пакетов `vueManager` (js-yaml, fast-uri, happy-dom, vite 6.4.3) — #483, #506.
 
 ---
 

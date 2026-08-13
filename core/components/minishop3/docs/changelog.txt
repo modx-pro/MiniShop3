@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0-beta1]
+
+### Added
+- Public product catalog Web API (#333): `GET /api/v1/product/list` and `GET /api/v1/product/get/{id}`, no authentication (headless storefront). New `ProductCatalogService` + `Web\ProductController`.
+- Customer cabinet Web API: order history `GET /api/v1/customer/orders`, `GET /api/v1/customer/orders/{id}`, `POST /api/v1/customer/orders/{id}/cancel`, scoped by `customer_id` with `token`/`properties` stripped from public DTOs (#425). New `CustomerAuthController` with logout, forgot-password and reset-password routes — enumeration-safe, rate-limited per IP/email/token, HTTP 429 on limit (#442).
+- Unified public customer contract `CustomerPublicDto` with an editable-field allowlist (never exposes `token`/`password`); `POST /customer/add` and `PUT /customer/profile` are fail-closed (`field_not_allowed`). Breaking: Web API customer responses now use the DTO shape (#475).
+- Sessionless programmatic order creation: `ProgrammaticOrderService` (`ms3_programmatic_order`) lets add-ons and cron create a finalized `msOrder` without cart/session, with `idempotency_key` and `origin=integration` events through the existing finalize pipeline (#508).
+- Ext-less Vue manager pages: Orders/Order (#533), Customers/Notifications (#534), Settings (#536), Utilities (#537) now mount from a single Vite entry via a Help-style controller — no Ext wrappers or `waitForElement`; deep-links and tab state preserved.
+- Product Vue tabs: Categories tab replaces the ExtJS category tree with a reusable `ResourceCategoryTree` widget + REST tree endpoint (#479, closes #113); Links tab moves link CRUD to `ProductLinkService` + Manager REST (#518).
+- New extra field type `ms3-key-value` with fixed and free modes, `KeyValueFieldService` validation and Vue editors for manager forms and field definitions (#323).
+- Gallery: choose any image as the main preview without reordering the gallery — `preview_file_id` on `msProductData` (#512).
+- CSV import now maps and persists `msExtraField` (Object Extension) columns via `Product\Create|Update` after `loadMap()` (#510).
+- Order events `msOnBeforeEmptyOrder` / `msOnEmptyOrder` and `msOnBeforeGetOrderCost` / `msOnGetOrderCost`; `Order::set()` aggregates per-field validation errors (#393).
+- Rate limiting: pluggable storage behind `RateLimitStoreInterface` — file driver by default, optional Redis/Memcached via setting/env, graceful fallback to file on missing extension or connection failure (#487).
+- Document-level ACL (view/save/publish/delete `checkPolicy`) on category-products endpoints, plus ACL-visible pagination totals and 403 on denied bulk actions (#473).
+- Test infrastructure and CI gates: PHP lint/smoke + ESLint gate on PR (#394), PHPStan gate + PHPUnit scaffold (#433), MySQL integration CI and `AuthManager` lifecycle / finalize / cart draft tests (#495, #496). Lexicon for `CategoryProductsController` messages (#467); EN/RU parity and duplicate-key cleanup (#360).
+
+### Changed
+- Decomposed manager `OrdersController` into list/mutation/products/presenter services (controller < 1k LOC) and replaced the `ServiceRegistry` switch/`in_array` wiring with an explicit `ServiceRegistryFactories` map (#492).
+- Split large services (issue #365): `GridConfigService` (Phase A #513), `OptionLoaderService` (Phase B #514), `ProductDataService` (Phase C #515). Extra-fields CRUD extracted into `ExtraFieldsController` (#491); `ModelFieldsController` split into `ModelField` services (#517).
+- Unified checkout ↔ manager order-cost math in a shared `OrderCostEngine`; payment percent-commission base aligned to cart-only for MS2 parity (#476, #460).
+- Unified Response envelope on the HTTP boundary (#505). `ImportCSV` decomposed into `EventGate` + `ProductImportService` (#499); `EventGate` formalizes the `returnedValues` contract (#456).
+- Thin `Cart`/`Customer` facades over Services managers (#406); `OrderView.vue` split into composables and dialogs (#478); thin list/config/crud/sort Vue composables extracted (#397).
+- Shared reference CRUD for deliveries and payments (#509); `SettingsComboListService` shared between ExtJS combo GetList and Manager REST, duplicate membership processors removed (#490).
+- Replaced abandoned `rakit/validation` (#486); removed dead code — deprecated pass-through `OrderService`/`Customer` (#489), field-config override endpoints (#383), `ms3_config_manager` (#485).
+- Performance: separate order stats endpoint with a conditional Address JOIN (#469); parallel loading of option field values in `OrderView` (#447); request-scoped memoization of `getGridConfig` (#488).
+
+### Fixed
+- Web API session/token hardening: API-token rotation against token fixation (#516); session-bypass closed after token revoke + web-logout hardening (#462); safe CORS — no wildcard-with-credentials, same-origin by default (#463); correct HTTP 401/429 for auth and rate limit (#434); guest token auto-minted for `cart/get` (#440); API session bound on email verify (#441); false-success token/refresh stub removed (#351); expired API tokens rejected instead of silently renewed (#396); checkout token takeover via email closed (#369/#391); storefront login and session auth restored (#321).
+- Manager API ACL hardening: `msorder_save` on order writes (#402), `mssetting_save` on config/grid-config writes (#404, #436), tightened customer/category-product ACL (#400), `view_document` on `/references` PII (#438); category-product inline-edit/mutations scoped to the category (IDOR #443, #454); `filter_*` and dropdown/criteria whitelists (#457, #427, #452); `privacy_accepted_at` rejected in quick-update (#439); secret token no longer leaked in order responses (#426) nor customer secrets in profile/add responses (#428); ampersands escaped in the manager order-link email href (#465); storefront routes no longer loaded via the manager connector (#401).
+- Order cost and submit: incompatible delivery/payment pairs rejected on submit/checkout/manager/finalize (#459); save blocked while cost recalculation is in flight (#461); fixed status revalidated after plugin mutation (#464); finalize cost aligned with `ManagerOrderCostRecalculator` (#448); `payment_link` filled in order/status emails (#458); error returned on failed status save (#392); draft weight = unit weight × count (#403); duplicate order numbers prevented under concurrent submit (#399); local calendar day used for date filters (#405).
+- Products / catalog / cart: additional (`msCategoryMember`) categories included in `msProducts` and the category grid (#482); relation-type grid columns resolved via JOIN (#330); clearing color/size/tags now persists on save (#325); cart option change wired end-to-end via Web API and storefront (#502); Document → Product resource-type conversion fixed (#331).
+- Late-cycle Vue regressions: double confirm on the category-products grid (#538/#540); `HTTP_MODAUTH` token race on Ext-less pages — token now in `ms3.config` (#544/#545); infinite recursive loop in `ResourceCategoryTree` that froze Settings→Options (#546/#547); duplicate confirm dialogs across Settings tab grids (#548/#549) and a redundant `VendorsGrid` delete confirm (#551/#552); stale grid responses on fast filter/page changes (#468); empty object/data unwrapped in the `request.js` connector (#466); missing `vue-dist/main.min.css` no longer requested on product update (#504).
+- Currency/install/import: mojibake `?` default repaired for `ms3_currency_symbol` (#498) with an inline ruble symbol in the repair migration (#520); import shows toasts and per-step errors on field/preview failures (#453) and reads the start response from the object envelope (#390).
+- DI: `OptionCategoryService` wired into `ms3_option_service` (#535); payment link resolved via `PaymentService` (#485).
+
+### Dependencies
+- vueManager transitive security bumps: js-yaml, fast-uri, happy-dom, vite 6.4.3 (#483, #506).
+
 ## [1.12.0-beta1]
 
 ### Added
