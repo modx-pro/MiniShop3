@@ -383,7 +383,7 @@ function getActionsConfig(column) {
         icon: 'pi-trash',
         label: _('delete'),
         severity: 'danger',
-        confirm: true,
+        confirm: false,
         confirmMessage: 'vendor_delete_confirm_message',
       },
     ]
@@ -450,7 +450,7 @@ function getDefaultColumns() {
           icon: 'pi-trash',
           label: 'delete',
           severity: 'danger',
-          confirm: true,
+          confirm: false,
           confirmMessage: 'vendor_delete_confirm_message',
         },
       ],
