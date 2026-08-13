@@ -33,6 +33,8 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
+const CONFIRM_GROUP = 'settings-vendors'
+
 // Bulk selection
 const {
   selectedItems,
@@ -43,6 +45,7 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'vendor',
+  confirmGroup: CONFIRM_GROUP,
   deleteBulk: async ids => {
     await request.delete('/api/mgr/vendors/bulk', { ids })
   },
@@ -310,6 +313,7 @@ async function saveVendor() {
  */
 function deleteVendor(vendor) {
   confirm.require({
+    group: CONFIRM_GROUP,
     message: _('vendor_delete_confirm_message').replace('{name}', vendor.name),
     header: _('confirm_delete'),
     icon: 'pi pi-exclamation-triangle',
@@ -481,7 +485,7 @@ onMounted(async () => {
 <template>
   <div class="vendors-grid">
     <Toast />
-    <ConfirmDialog append-to="self" />
+    <ConfirmDialog :group="CONFIRM_GROUP" append-to="self" />
 
     <Card>
       <template #title>
@@ -604,6 +608,7 @@ onMounted(async () => {
                         <ActionsColumn
                           :data="vendor"
                           :actions="getActionsConfig(column)"
+                          :confirm-group="CONFIRM_GROUP"
                           grid-id="vendors"
                           @edit="editVendor"
                           @delete="deleteVendor"

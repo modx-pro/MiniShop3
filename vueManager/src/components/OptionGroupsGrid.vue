@@ -35,6 +35,8 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
+const CONFIRM_GROUP = 'settings-option-groups'
+
 const searchQuery = ref('')
 
 const {
@@ -134,6 +136,7 @@ function confirmDelete(group) {
       : _('ms3_option_group_delete_confirm')
 
   confirm.require({
+    group: CONFIRM_GROUP,
     message: detail,
     header: _('ms3_option_group_delete_header'),
     icon: 'pi pi-exclamation-triangle',
@@ -171,6 +174,7 @@ function confirmBulkDelete() {
   const ids = [...selectedIds.value]
   if (!ids.length) return
   confirm.require({
+    group: CONFIRM_GROUP,
     message: _('ms3_option_group_bulk_delete_confirm').replace('{count}', String(ids.length)),
     header: _('ms3_option_group_delete_header'),
     icon: 'pi pi-exclamation-triangle',
@@ -212,7 +216,7 @@ onMounted(() => {
 <template>
   <div class="ms3-option-groups">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog :group="CONFIRM_GROUP" />
 
     <Card>
       <template #content>

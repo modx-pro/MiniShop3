@@ -25,6 +25,8 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
+const CONFIRM_GROUP = 'settings-statuses'
+
 // Bulk selection
 const {
   selectedItems,
@@ -35,6 +37,7 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'status',
+  confirmGroup: CONFIRM_GROUP,
   deleteBulk: async ids => {
     await request.delete('/api/mgr/statuses/bulk', { ids })
   },
@@ -153,6 +156,7 @@ async function saveStatus() {
  */
 function deleteStatus(status) {
   confirm.require({
+    group: CONFIRM_GROUP,
     message: _('status_delete_confirm_message').replace('{name}', status.name),
     header: _('confirm_delete'),
     icon: 'pi pi-exclamation-triangle',
@@ -249,7 +253,7 @@ onMounted(() => {
 <template>
   <div class="statuses-grid">
     <Toast />
-    <ConfirmDialog append-to="self" />
+    <ConfirmDialog :group="CONFIRM_GROUP" append-to="self" />
 
     <Card>
       <template #title>
@@ -371,6 +375,7 @@ onMounted(() => {
                       <ActionsColumn
                         :data="status"
                         :actions="getActionsConfig()"
+                        :confirm-group="CONFIRM_GROUP"
                         grid-id="statuses"
                         @edit="openEdit"
                         @delete="deleteStatus"
