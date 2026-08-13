@@ -339,12 +339,21 @@ defineExpose({
 .vueApp .resource-category-tree .tree-node-row {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+}
+
+.vueApp .resource-category-tree .tree-node-check {
+  flex-shrink: 0;
 }
 
 .vueApp .resource-category-tree .tree-node-label {
   cursor: pointer;
   user-select: none;
+}
+
+/* PrimeVue Checkbox box can overflow the flex item, so gap alone is not enough (#555). */
+.vueApp .resource-category-tree .tree-node-check + .tree-node-label {
+  margin-inline-start: 0.5rem;
 }
 
 .vueApp .resource-category-tree .tree-node-label-locked {
