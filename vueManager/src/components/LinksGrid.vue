@@ -25,6 +25,8 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
+const CONFIRM_GROUP = 'settings-links'
+
 // Bulk selection
 const {
   selectedItems,
@@ -35,6 +37,7 @@ const {
   confirmBulkDelete,
 } = useSelection({
   entityName: 'link',
+  confirmGroup: CONFIRM_GROUP,
   deleteBulk: async ids => {
     await request.delete('/api/mgr/links/bulk', { ids })
   },
@@ -147,6 +150,7 @@ async function saveLink() {
  */
 function deleteLink(link) {
   confirm.require({
+    group: CONFIRM_GROUP,
     message: _('link_delete_confirm_message').replace('{name}', link.name),
     header: _('confirm_delete'),
     icon: 'pi pi-exclamation-triangle',
@@ -211,7 +215,7 @@ onMounted(() => {
 <template>
   <div class="links-grid">
     <Toast />
-    <ConfirmDialog append-to="self" />
+    <ConfirmDialog :group="CONFIRM_GROUP" append-to="self" />
 
     <Card>
       <template #title>
@@ -300,6 +304,7 @@ onMounted(() => {
               <ActionsColumn
                 :data="data"
                 :actions="getActionsConfig()"
+                :confirm-group="CONFIRM_GROUP"
                 grid-id="links"
                 @edit="openEdit"
                 @delete="deleteLink"

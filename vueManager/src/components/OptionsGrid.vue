@@ -22,6 +22,8 @@ const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
 
+const CONFIRM_GROUP = 'settings-options'
+
 // Grid state
 const options = ref([])
 const totalRecords = ref(0)
@@ -237,6 +239,7 @@ function buildProperties() {
 
 function confirmDelete(row) {
   confirm.require({
+    group: CONFIRM_GROUP,
     message:
       _('ms3_option_remove_confirm') ||
       `Удалить опцию «${row.caption || row.key}»? Значения у товаров будут удалены.`,
@@ -264,6 +267,7 @@ function confirmBulkDelete() {
   if (selectedRows.value.length === 0) return
   const ids = selectedRows.value.map(r => r.id)
   confirm.require({
+    group: CONFIRM_GROUP,
     message:
       _('ms3_options_remove_confirm') ||
       `Удалить выбранные опции (${ids.length})? Значения у товаров будут удалены.`,
@@ -342,7 +346,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="options-grid-app">
     <Toast />
-    <ConfirmDialog />
+    <ConfirmDialog :group="CONFIRM_GROUP" />
 
     <div class="options-grid-layout">
       <!-- Category filter tree (left pane) -->
