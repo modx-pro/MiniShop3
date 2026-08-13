@@ -135,8 +135,20 @@ class ProductLinkService
             return $this->fail('ms3_err_no_link');
         }
 
-        if (!$this->applyLinkType((string) $msLink->get('type'), $linkId, $master, $slave)) {
-            return $this->fail('ms3_err_unknown');
+        $type = (string) $msLink->get('type');
+        $pairs = self::initialPairsForType($type, $master, $slave);
+        if ($pairs === null) {
+            return $this->fail('ms3_err_no_link');
+        }
+
+        foreach ($pairs as $pair) {
+            if (!$this->addLink($linkId, $pair['master'], $pair['slave'])) {
+                return $this->fail('ms3_err_link_save');
+            }
+        }
+
+        if ($type === 'many_to_many' && !$this->meshManyToMany($linkId, $master, $slave)) {
+            return $this->fail('ms3_err_link_save');
         }
 
         return ['ok' => true];
@@ -189,26 +201,6 @@ class ProductLinkService
         return $msLink;
     }
 
-    private function applyLinkType(string $type, int $linkId, int $master, int $slave): bool
-    {
-        $pairs = self::initialPairsForType($type, $master, $slave);
-        if ($pairs === null) {
-            return false;
-        }
-
-        foreach ($pairs as $pair) {
-            if (!$this->addLink($linkId, $pair['master'], $pair['slave'])) {
-                return false;
-            }
-        }
-
-        if ($type === 'many_to_many') {
-            return $this->meshManyToMany($linkId, $master, $slave);
-        }
-
-        return true;
-    }
-
     private function applyRemoveFilter(
         xPDOQuery $query,
         string $type,
@@ -254,13 +246,21 @@ class ProductLinkService
         }
 
         $object = $this->modx->newObject(msProductLink::class);
-        $object->fromArray([
-            'link' => $linkId,
-            'master' => $master,
-            'slave' => $slave,
-        ]);
+        // Composite PK: xPDO fromArray() skips PK fields unless setPrimaryKeys is true.
+        $object->set('link', $linkId);
+        $object->set('master', $master);
+        $object->set('slave', $slave);
 
-        return (bool) $object->save();
+        if (!$object->save()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ProductLinkService] failed to save msProductLink link={$linkId} master={$master} slave={$slave}"
+            );
+
+            return false;
+        }
+
+        return true;
     }
 
     private function meshManyToMany(int $linkId, int $master, int $slave): bool
@@ -270,6 +270,11 @@ class ProductLinkService
         $q->select('slave');
 
         if (!$q->prepare() || !$q->stmt || !$q->stmt->execute()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ProductLinkService] failed to mesh many_to_many msProductLink link={$linkId} master={$master} slave={$slave}"
+            );
+
             return false;
         }
 
