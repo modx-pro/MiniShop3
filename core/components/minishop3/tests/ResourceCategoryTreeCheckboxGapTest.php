@@ -31,5 +31,14 @@ if (preg_match('/\.tree-node-check\s*\{[^}]*flex-shrink:\s*0/', $src) !== 1) {
     $fail('tree-node-check must set flex-shrink: 0 so the box keeps its width');
 }
 
+$update = dirname(__DIR__) . '/controllers/product/update.class.php';
+$updateSrc = is_file($update) ? file_get_contents($update) : false;
+if ($updateSrc === false) {
+    $fail('cannot read controllers/product/update.class.php');
+}
+if (preg_match('/addCss\([^;]*ResourceCategoryTree\.min\.css/', $updateSrc) !== 1) {
+    $fail('product/update must load ResourceCategoryTree.min.css (Vite shared chunk, #555)');
+}
+
 fwrite(STDOUT, "OK ResourceCategoryTreeCheckboxGapTest\n");
 exit(0);
