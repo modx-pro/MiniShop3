@@ -240,6 +240,7 @@
         <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"/>
         <field key="token" dbtype="varchar" precision="128" phptype="string" null="false" default=""/>
         <field key="uuid" dbtype="char" precision="36" phptype="string" null="false" default=""/>
+        <field key="idempotency_key" dbtype="varchar" precision="128" phptype="string" null="true"/>
         <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="updatedon" dbtype="datetime" phptype="datetime" null="true" />
         <field key="num" dbtype="varchar" precision="20" phptype="string" null="true"/>
@@ -268,6 +269,9 @@
         </index>
         <index alias="uuid" name="uuid" primary="false" unique="true" type="BTREE">
             <column key="uuid" length="" collation="A" null="false"/>
+        </index>
+        <index alias="idempotency_key" name="idempotency_key" primary="false" unique="true" type="BTREE">
+            <column key="idempotency_key" length="" collation="A" null="true"/>
         </index>
         <index alias="num" name="num" primary="false" unique="true" type="BTREE">
             <column key="num" length="" collation="A" null="true"/>
