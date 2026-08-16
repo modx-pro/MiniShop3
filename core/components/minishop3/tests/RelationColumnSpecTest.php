@@ -63,6 +63,11 @@ $assertSame(
     $spec->selectExpression(),
     'vendor select expression'
 );
+$assertSame(
+    '`rel_msVendor_vendor_id`.address',
+    $spec->sortExpression(),
+    'vendor sort/filter expression'
+);
 
 $assertNull(
     RelationColumnSpec::fromGroupField($group, [

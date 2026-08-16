@@ -226,6 +226,13 @@ final class CategoryProductsListService
             }
         }
 
+        foreach ($relationSpecs as $spec) {
+            $paramKey = 'filter_' . $spec->fieldName;
+            if (isset($params[$paramKey]) && $params[$paramKey] !== '') {
+                $c->where([$spec->sortExpression() . ':LIKE' => "%{$params[$paramKey]}%"]);
+            }
+        }
+
         if (!isset($params['deleted']) || $params['deleted'] === '') {
             $c->where(['msProduct.deleted' => 0]);
         }

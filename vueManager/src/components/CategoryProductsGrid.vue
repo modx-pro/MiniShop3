@@ -143,7 +143,7 @@ async function loadProducts() {
         nested: nested.value ? 1 : 0,
       }
 
-      // Apply filter values. Option-type columns are JOIN-ed at runtime — backend
+      // Apply filter values. Option/relation columns are JOIN-ed at runtime — backend
       // reads their filters as `filter_{fieldName}` (see CategoryProductsListService).
       // Builtin product/data filters keep the original direct-param contract.
       Object.keys(filterValues.value).forEach(key => {
@@ -152,7 +152,7 @@ async function loadProducts() {
           return
         }
         const col = columns.value.find(c => c.name === key)
-        if (col && col.type === 'option') {
+        if (col && (col.type === 'option' || col.type === 'relation')) {
           params[`filter_${key}`] = value
         } else {
           params[key] = value
