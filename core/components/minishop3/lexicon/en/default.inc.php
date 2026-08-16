@@ -194,6 +194,7 @@ $_lang['ms3_err_status_same'] = 'This status is already set.';
 $_lang['ms3_err_register_globals'] = 'Error: php parameter <b>register_globals</b> must be disabled.';
 $_lang['ms3_err_link_equal'] = 'You are trying to add product link to itself';
 $_lang['ms3_err_no_link'] = 'Link type not found';
+$_lang['ms3_err_link_save'] = 'Could not save product link (see system log).';
 $_lang['ms3_err_link_not_in_product_scope'] = 'This link does not belong to the current product';
 $_lang['ms3_err_link_batch_not_supported'] = 'Batch link removal is not supported';
 $_lang['ms3_err_value_duplicate'] = 'You did not enter value or entered duplicate.';
