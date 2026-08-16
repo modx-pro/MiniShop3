@@ -41,10 +41,7 @@ final class CheckoutMemberMap
     {
         $c = $this->modx->newQuery(msPayment::class);
         $c->setClassAlias('msPayment');
-        $c->select([
-            'msPayment.id AS payment_id',
-            'Member.delivery_id AS delivery_id',
-        ]);
+        $c->select('msPayment.id AS payment_id, Member.delivery_id AS delivery_id');
         $c->innerJoin(
             msDeliveryMember::class,
             'Member',
@@ -69,10 +66,7 @@ final class CheckoutMemberMap
     {
         $c = $this->modx->newQuery(msDelivery::class);
         $c->setClassAlias('msDelivery');
-        $c->select([
-            'msDelivery.id AS delivery_id',
-            'Member.payment_id AS payment_id',
-        ]);
+        $c->select('msDelivery.id AS delivery_id, Member.payment_id AS payment_id');
         $c->innerJoin(
             msDeliveryMember::class,
             'Member',
