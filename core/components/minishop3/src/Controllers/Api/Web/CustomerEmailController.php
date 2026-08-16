@@ -154,14 +154,14 @@ class CustomerEmailController
             }
 
             // Email is verified; auto-login failed (same UX as html=1 redirect without session)
-            return $this->success(
-                $this->modx->lexicon('ms3_customer_email_verified'),
+            return Response::success(
                 [
                     'customer_id' => $customer->id,
                     'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
                     'token' => null,
                     'expires_at' => null,
-                ]
+                ],
+                $this->modx->lexicon('ms3_customer_email_verified')
             );
         }
 
@@ -174,14 +174,14 @@ class CustomerEmailController
             return Response::redirect($this->buildEmailVerificationSuccessRedirectUrl(), 302);
         }
 
-        return $this->success(
-            $this->modx->lexicon('ms3_customer_email_verified'),
+        return Response::success(
             [
                 'customer_id' => $customer->id,
                 'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
                 'token' => $session['token'],
                 'expires_at' => $session['expires_at'],
-            ]
+            ],
+            $this->modx->lexicon('ms3_customer_email_verified')
         );
     }
 
@@ -207,27 +207,5 @@ class CustomerEmailController
         $base = rtrim((string) $this->modx->getOption('site_url', null, '/'), '/');
 
         return $base . '?ms3_email_verified=0';
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    protected function success(string $message = '', array $data = []): Response
-    {
-        return Response::success($data, $message);
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    protected function error(string $message, array $data = []): Response
-    {
-        return Response::error(
-            $message,
-            HttpStatus::BAD_REQUEST,
-            null,
-            null,
-            $data !== [] ? $data : null,
-        );
     }
 }
