@@ -275,7 +275,7 @@ class ProductCatalogService
      */
     private function countList(array $params, ProductCatalogFilterSpec $filters): int
     {
-        $countQuery = $this->buildListQuery($params, $filters);
+        $countQuery = $this->buildListQuery($params, $filters, false);
         // DISTINCT: option filters may join multi-value rows (#564).
         $countQuery->select('COUNT(DISTINCT msProduct.id)');
         if (!$countQuery->prepare() || !$countQuery->stmt->execute()) {
@@ -287,9 +287,13 @@ class ProductCatalogService
 
     /**
      * @param array<string, mixed> $params
+     * @param bool $dedupeRows GROUP BY for list pages; false for COUNT(DISTINCT) queries
      */
-    private function buildListQuery(array $params, ProductCatalogFilterSpec $filters): xPDOQuery
-    {
+    private function buildListQuery(
+        array $params,
+        ProductCatalogFilterSpec $filters,
+        bool $dedupeRows = true,
+    ): xPDOQuery {
         $c = $this->modx->newQuery(msProduct::class);
         $c->innerJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
         $c->where($this->publicCriteria());
@@ -314,7 +318,7 @@ class ProductCatalogService
             ]);
         }
 
-        $this->filterApplier()->apply($c, $filters);
+        $this->filterApplier()->apply($c, $filters, $dedupeRows);
 
         return $c;
     }

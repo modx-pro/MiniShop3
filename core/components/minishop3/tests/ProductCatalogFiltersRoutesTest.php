@@ -28,6 +28,7 @@ foreach (
         'ProductCatalogFilterParser::parse',
         'filterApplier()',
         'hasParents()',
+        'buildListQuery($params, $filters, false)',
     ] as $needle
 ) {
     if (!str_contains($serviceSrc, $needle)) {
@@ -51,6 +52,7 @@ foreach (
         'Data.price',
         'Data.stock',
         "groupby('msProduct.id')",
+        '$dedupeRows',
     ] as $needle
 ) {
     if (!str_contains($applierSrc, $needle)) {

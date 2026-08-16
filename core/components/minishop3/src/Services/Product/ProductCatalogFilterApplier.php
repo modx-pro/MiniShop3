@@ -24,11 +24,15 @@ final class ProductCatalogFilterApplier
     ) {
     }
 
-    public function apply(xPDOQuery $query, ProductCatalogFilterSpec $filters): void
+    /**
+     * @param bool $dedupeRows When true, GROUP BY product id after option JOINs (list pages).
+     *                         Count queries must pass false and use COUNT(DISTINCT) instead.
+     */
+    public function apply(xPDOQuery $query, ProductCatalogFilterSpec $filters, bool $dedupeRows = true): void
     {
         $this->applyCategoryScope($query, $filters);
         $this->applyDataFilters($query, $filters);
-        $this->applyOptionFilters($query, $filters);
+        $this->applyOptionFilters($query, $filters, $dedupeRows);
     }
 
     private function applyCategoryScope(xPDOQuery $query, ProductCatalogFilterSpec $filters): void
@@ -82,8 +86,11 @@ final class ProductCatalogFilterApplier
         }
     }
 
-    private function applyOptionFilters(xPDOQuery $query, ProductCatalogFilterSpec $filters): void
-    {
+    private function applyOptionFilters(
+        xPDOQuery $query,
+        ProductCatalogFilterSpec $filters,
+        bool $dedupeRows,
+    ): void {
         if ($filters->options === []) {
             return;
         }
@@ -103,8 +110,11 @@ final class ProductCatalogFilterApplier
             $query->where(["{$alias}.value:IN" => $values]);
         }
 
-        // Multi-value option rows duplicate product rows; keep pagination aligned with COUNT(DISTINCT).
-        $query->groupby('msProduct.id');
+        // Multi-value option rows duplicate product rows on list pages.
+        // Count uses COUNT(DISTINCT) without GROUP BY (GROUP BY would break fetchColumn total).
+        if ($dedupeRows) {
+            $query->groupby('msProduct.id');
+        }
     }
 
     /**
