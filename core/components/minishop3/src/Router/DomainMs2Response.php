@@ -24,6 +24,9 @@ final class DomainMs2Response
         );
     }
 
+    /**
+     * @return Response
+     */
     public static function failure(string $message, mixed $data = null): Response
     {
         $fieldErrors = null;

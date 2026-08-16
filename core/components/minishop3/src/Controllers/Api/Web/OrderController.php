@@ -47,7 +47,10 @@ class OrderController
 
         $result = $order->get();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -82,7 +85,10 @@ class OrderController
 
         $result = $order->add($key, $value);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -113,7 +119,10 @@ class OrderController
 
         $result = $order->set($fields);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -178,7 +187,10 @@ class OrderController
 
         $result = $order->submit($data);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -202,7 +214,10 @@ class OrderController
 
         $result = $order->clean();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -226,7 +241,10 @@ class OrderController
 
         $result = $order->getCost(false);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -250,7 +268,10 @@ class OrderController
 
         $result = $order->getCartCost();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -274,7 +295,10 @@ class OrderController
 
         $result = $order->getDeliveryCost();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -298,7 +322,10 @@ class OrderController
 
         $result = $order->getPaymentCost();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -345,7 +372,10 @@ class OrderController
 
         $result = $order->setCustomerAddress($addressHash);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -369,7 +399,10 @@ class OrderController
 
         $result = $order->cleanCustomerAddress();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -396,7 +429,10 @@ class OrderController
 
         $result = $order->getDeliveryValidationRules($delivery_id);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -423,7 +459,10 @@ class OrderController
 
         $result = $order->getDeliveryRequiresFields($delivery_id);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -456,20 +495,4 @@ class OrderController
         return array_merge($_GET, $_POST);
     }
 
-    /**
-     * Transform Order domain MS2-array to Web API Response (#572).
-     *
-     * @param array<string, mixed> $result
-     */
-    protected function transformResponse(array $result): Response
-    {
-        if (!empty($result['success'])) {
-            return Response::success($result['data'] ?? null, $result['message'] ?? '');
-        }
-
-        return DomainMs2Response::failure(
-            (string) ($result['message'] ?? $this->modx->lexicon('ms3_err_unknown')),
-            $result['data'] ?? null,
-        );
-    }
 }

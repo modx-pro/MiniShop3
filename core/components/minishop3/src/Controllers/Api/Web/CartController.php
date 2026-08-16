@@ -257,6 +257,7 @@ class CartController
      * Transform Cart domain MS2-array to Web API Response (#572).
      *
      * @param array<string, mixed> $result
+     * @return Response
      */
     protected function transformResponse(array $result): Response
     {
@@ -267,18 +268,14 @@ class CartController
             $customerToken = $_REQUEST['ms3_token'] ?? '';
 
             $renderedHtml = $this->renderSnippets($renderTokens, $customerToken);
-            if (!empty($renderedHtml)) {
+            if (!empty($renderedHtml) && is_array($result['data'] ?? null)) {
                 $result['data']['render'] = $renderedHtml;
             }
         }
 
-        if (!empty($result['success'])) {
-            return Response::success($result['data'] ?? null, $result['message'] ?? '');
-        }
-
-        return DomainMs2Response::failure(
-            (string) ($result['message'] ?? $this->modx->lexicon('ms3_err_unknown')),
-            $result['data'] ?? null,
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
         );
     }
 
