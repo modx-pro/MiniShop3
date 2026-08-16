@@ -52,7 +52,7 @@ class CustomerEmailController
      *
      * POST /api/v1/customer/email/resend-verification
      *
-     * @return Response ['success' => bool, 'message' => string]
+     * @return Response
      */
     public function resendVerification(): Response
     {

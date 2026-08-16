@@ -46,7 +46,7 @@ class CustomerProfileController
      * PUT /api/v1/customer/profile
      *
      * @param array $data Form data
-     * @return Response ['success' => bool, 'message' => string, 'data' => array]
+     * @return Response
      */
     public function update(array $data): Response
     {
@@ -146,7 +146,7 @@ class CustomerProfileController
      * POST /api/v1/customer/add
      *
      * @param array $data Request data with key and value
-     * @return Response ['success' => bool, 'message' => string, 'data' => array]
+     * @return Response
      */
     public function updateField(array $data): Response
     {
