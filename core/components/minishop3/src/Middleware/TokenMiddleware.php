@@ -32,6 +32,9 @@ class TokenMiddleware implements MiddlewareInterface
     private array $publicRoutes = [
         '/api/v1/product/get/',
         '/api/v1/product/list',
+        '/api/v1/category/get/',
+        '/api/v1/category/list',
+        '/api/v1/category/tree',
         '/api/v1/customer/token/get',
         '/api/v1/customer/logout',
         '/api/v1/health',

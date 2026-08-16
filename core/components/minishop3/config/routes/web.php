@@ -272,6 +272,25 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             return $controller->getList($params);
         });
     });
+
+    // Public category catalog — no TokenMiddleware (headless nav / PLP)
+    $router->group('/category', function ($router) use ($modx) {
+        $router->get('/get/{id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CategoryController($modx);
+            return $controller->get($params);
+        });
+
+        $router->get('/list', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CategoryController($modx);
+            return $controller->getList($params);
+        });
+
+        $router->get('/tree', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CategoryController($modx);
+            return $controller->getTree($params);
+        });
+    });
+
     $router->get('/health', function () use ($modx) {
         return Response::success([
             'status' => 'ok',
