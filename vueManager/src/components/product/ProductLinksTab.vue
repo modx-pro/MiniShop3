@@ -185,7 +185,7 @@ async function saveLink(close = true) {
 function removeLink(row) {
   confirm.require({
     message: _('ms3_menu_remove_confirm'),
-    header: _('ms3_menu_remove_title'),
+    header: _('ms3_menu_remove'),
     icon: 'pi pi-exclamation-triangle',
     acceptLabel: _('delete'),
     rejectLabel: _('cancel'),

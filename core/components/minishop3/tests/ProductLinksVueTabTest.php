@@ -86,6 +86,14 @@ $linksTab = (string) file_get_contents($vue . '/components/product/ProductLinksT
 $assertTrue(is_file($vue . '/components/product/ProductLinksTab.vue'), 'ProductLinksTab.vue missing');
 $assertTrue(str_contains($linksTab, 'ConfirmDialog'), 'ConfirmDialog belongs in ProductLinksTab');
 $assertTrue(str_contains($linksTab, '/api/mgr/references/link-types'), 'link-types via references');
+$assertTrue(
+    !str_contains($linksTab, 'ms3_menu_remove_title'),
+    'confirm header must not use missing ms3_menu_remove_title (#556)'
+);
+$assertTrue(
+    str_contains($linksTab, "header: _('ms3_menu_remove')"),
+    'confirm header must reuse existing ms3_menu_remove (#556)'
+);
 
 $updateCtrl = (string) file_get_contents($root . '/controllers/product/update.class.php');
 $assertTrue(
