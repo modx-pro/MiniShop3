@@ -86,24 +86,15 @@ class TokenMiddleware implements MiddlewareInterface
             $_REQUEST['ms3_token'] = (string) $_SESSION['ms3']['customer_token'];
         }
 
-        // Resolve token from multiple sources
-        $token = $this->resolveToken();
+        // Resolve token (middleware order; login bind uses getBindableTokenString)
+        $token = TokenService::resolveTokenFromRequest();
 
         // If a token is present, always validate it (do not skip via session bypass).
         if (!empty($token)) {
             $resolved = $tokenService->resolveApiToken($token);
 
             if ($resolved['reason'] === 'ok') {
-                $tokenObj = $resolved['token'];
-
-                if (!isset($_SESSION['ms3'])) {
-                    $_SESSION['ms3'] = [];
-                }
-                $_SESSION['ms3']['customer_token'] = $token;
-                $_SESSION['ms3']['customer_id'] = $tokenObj->get('customer_id');
-                $_SESSION['ms3']['customer_token_expires'] = strtotime($tokenObj->get('expires_at'));
-
-                CookieHelper::setTokenCookie($this->modx, $token);
+                $tokenService->syncSessionFromToken($resolved['token']);
                 $_REQUEST['ms3_token'] = $token;
 
                 return null;
@@ -184,34 +175,6 @@ class TokenMiddleware implements MiddlewareInterface
         }
 
         unset($_GET['ms3_token'], $_REQUEST['ms3_token']);
-    }
-
-    /**
-     * Resolve token from trusted sources only (Bearer, MS3TOKEN header, cookie, session).
-     *
-     * @return string Token or empty string
-     */
-    private function resolveToken(): string
-    {
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        if (str_starts_with($authHeader, 'Bearer ')) {
-            $token = substr($authHeader, 7);
-            if ($token !== '') {
-                return $token;
-            }
-        }
-
-        $headerToken = $_SERVER['HTTP_MS3TOKEN'] ?? '';
-        if ($headerToken !== '') {
-            return $headerToken;
-        }
-
-        $cookieToken = CookieHelper::getTokenFromCookie();
-        if ($cookieToken !== '') {
-            return $cookieToken;
-        }
-
-        return (string) ($_SESSION['ms3']['customer_token'] ?? '');
     }
 
     /**

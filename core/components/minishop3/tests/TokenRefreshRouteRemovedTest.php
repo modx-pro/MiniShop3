@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Контракт #334: POST /customer/token/refresh не зарегистрирован
- * и не отдаёт ложный success-stub.
+ * #571 / #334: POST /customer/token/refresh is a real rotate endpoint (not a success stub).
+ * GET /customer/me is registered and not public.
  *
- * Запуск: php tests/TokenRefreshRouteRemovedTest.php
+ * Run: php tests/TokenRefreshRouteRemovedTest.php
  */
 
 declare(strict_types=1);
@@ -25,16 +25,54 @@ if ($tokenMiddleware === false) {
     $fail('cannot read src/Middleware/TokenMiddleware.php');
 }
 
-if (str_contains($webRoutes, 'token/refresh')) {
-    $fail('config/routes/web.php must not register token/refresh');
+$authController = file_get_contents($base . '/src/Controllers/Api/Web/CustomerAuthController.php');
+if ($authController === false) {
+    $fail('cannot read CustomerAuthController.php');
 }
 
-if (str_contains($tokenMiddleware, 'token/refresh')) {
-    $fail('TokenMiddleware publicRoutes must not include token/refresh');
+$tokenService = file_get_contents($base . '/src/Services/TokenService.php');
+if ($tokenService === false) {
+    $fail('cannot read TokenService.php');
+}
+
+if (!str_contains($webRoutes, "post('/token/refresh'")) {
+    $fail('config/routes/web.php must register POST /customer/token/refresh');
+}
+
+if (!str_contains($webRoutes, "get('/me'")) {
+    $fail('config/routes/web.php must register GET /customer/me');
 }
 
 if (str_contains($webRoutes, 'Customer token/refresh endpoint - not implemented yet')) {
-    $fail('web.php must not contain the customer token/refresh success stub');
+    $fail('web.php must not contain the customer token/refresh success stub (#334)');
+}
+
+if (str_contains($webRoutes, "success([], 'Token refresh not implemented yet')")) {
+    $fail('web.php must not return false success stub for token/refresh (#334)');
+}
+
+if (str_contains($tokenMiddleware, '/api/v1/customer/token/refresh')) {
+    $fail('TokenMiddleware publicRoutes must not include token/refresh');
+}
+
+if (str_contains($tokenMiddleware, '/api/v1/customer/me')) {
+    $fail('TokenMiddleware publicRoutes must not include /customer/me');
+}
+
+if (!str_contains($authController, 'function refreshToken')) {
+    $fail('CustomerAuthController must implement refreshToken()');
+}
+
+if (!str_contains($authController, 'function me(')) {
+    $fail('CustomerAuthController must implement me()');
+}
+
+if (!str_contains($tokenService, 'function rotateApiToken')) {
+    $fail('TokenService must implement rotateApiToken()');
+}
+
+if (!str_contains($tokenService, 'function resolveTokenFromRequest')) {
+    $fail('TokenService must implement resolveTokenFromRequest() for Bearer bind');
 }
 
 fwrite(STDOUT, "OK TokenRefreshRouteRemovedTest\n");

@@ -119,6 +119,10 @@ $expectedRoutes = [
         'tokenMiddleware' => false,
         'handlerMethod' => 'registerFromRequest',
     ],
+    'GET /api/v1/customer/me' => [
+        'tokenMiddleware' => true,
+        'handlerMethod' => 'me',
+    ],
     'POST /api/v1/customer/logout' => [
         'tokenMiddleware' => true,
         'handlerMethod' => 'logout',
@@ -130,6 +134,10 @@ $expectedRoutes = [
     'POST /api/v1/customer/reset-password' => [
         'tokenMiddleware' => false,
         'handlerMethod' => 'resetPasswordFromRequest',
+    ],
+    'POST /api/v1/customer/token/refresh' => [
+        'tokenMiddleware' => true,
+        'handlerMethod' => 'refreshToken',
     ],
 ];
 

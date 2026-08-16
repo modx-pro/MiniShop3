@@ -506,18 +506,169 @@ class TokenService
     }
 
     /**
-     * Token currently bound to the browser (session first, then cookie), without minting.
+     * Resolve opaque API token from trusted sources (same order as TokenMiddleware).
+     *
+     * 1. Authorization: Bearer
+     * 2. HTTP_MS3TOKEN (legacy)
+     * 3. httpOnly cookie `ms3_token`
+     * 4. $_REQUEST['ms3_token'] after middleware cookie inject (#576: query stripped)
+     * 5. PHP session cache
+     *
+     * Query-string `token` / `ms3_token` are not accepted here.
+     */
+    public static function resolveTokenFromRequest(): string
+    {
+        $fromHeader = self::resolveBearerOrLegacyHeader();
+        if ($fromHeader !== '') {
+            return $fromHeader;
+        }
+
+        $cookieToken = CookieHelper::getTokenFromCookie();
+        if ($cookieToken !== '') {
+            return $cookieToken;
+        }
+
+        $fromRequest = $_REQUEST['ms3_token'] ?? '';
+        if ($fromRequest !== '') {
+            return (string) $fromRequest;
+        }
+
+        return (string) ($_SESSION['ms3']['customer_token'] ?? '');
+    }
+
+    /**
+     * Token to bind cart on login/register (no mint).
+     *
+     * Order: valid Bearer/MS3TOKEN → session → cookie.
+     * Header only when resolveApiToken is ok (junk Bearer must not hide cookie cart).
      */
     public function getBindableTokenString(): string
     {
         SessionHelper::ensureActive();
 
-        $token = $this->getCustomerToken();
-        if ($token !== null && $token !== '') {
-            return $token;
+        $fromHeader = self::resolveBearerOrLegacyHeader();
+        if ($fromHeader !== '' && $this->resolveApiToken($fromHeader)['reason'] === 'ok') {
+            return $fromHeader;
+        }
+
+        $sessionToken = $this->getCustomerToken();
+        if ($sessionToken !== null) {
+            return $sessionToken;
         }
 
         return CookieHelper::getTokenFromCookie();
+    }
+
+    /**
+     * Bearer or legacy MS3TOKEN header value, empty when absent.
+     */
+    private static function resolveBearerOrLegacyHeader(): string
+    {
+        foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION'] as $serverKey) {
+            $authHeader = $_SERVER[$serverKey] ?? '';
+            if (str_starts_with($authHeader, 'Bearer ')) {
+                $token = substr($authHeader, 7);
+                if ($token !== '') {
+                    return $token;
+                }
+            }
+        }
+
+        return (string) ($_SERVER['HTTP_MS3TOKEN'] ?? '');
+    }
+
+    /**
+     * Rotate a valid API token: mint new row, move draft, revoke old (headless TTL refresh).
+     *
+     * @return array{token: string, expires_at: string, customer_id: int}|null
+     */
+    public function rotateApiToken(string $currentToken): ?array
+    {
+        $resolved = $this->resolveApiToken($currentToken);
+        if ($resolved['reason'] !== 'ok' || $resolved['token'] === null) {
+            return null;
+        }
+
+        /** @var msCustomerToken $oldToken */
+        $oldToken = $resolved['token'];
+        $customerId = (int) $oldToken->get('customer_id');
+
+        $newToken = $this->persistApiToken($customerId, null, null);
+        if (!$newToken) {
+            return null;
+        }
+
+        $newTokenString = (string) $newToken->get('token');
+        if ($newTokenString === '' || $newTokenString === $currentToken) {
+            return null;
+        }
+
+        if (!$this->moveOrderDraftOnTokenRotation($currentToken, $newTokenString, $customerId)) {
+            $newToken->remove();
+            $this->syncSessionFromToken($oldToken);
+
+            return null;
+        }
+
+        if (!$oldToken->remove()) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[TokenService] rotateApiToken: failed to revoke previous API token after mint'
+            );
+            $newToken->remove();
+            $this->syncSessionFromToken($oldToken);
+
+            return null;
+        }
+
+        return [
+            'token' => $newTokenString,
+            'expires_at' => (string) $newToken->get('expires_at'),
+            'customer_id' => $customerId,
+        ];
+    }
+
+    /**
+     * Re-link order draft after API token rotation (guest or authenticated).
+     *
+     * @return bool false when an existing draft could not be moved (caller must abort rotate)
+     */
+    private function moveOrderDraftOnTokenRotation(string $oldToken, string $newToken, int $customerId): bool
+    {
+        if (!$this->modx->services->has('ms3_order_draft_manager')) {
+            return true;
+        }
+
+        /** @var \MiniShop3\Services\Order\OrderDraftManager $draftManager */
+        $draftManager = $this->modx->services->get('ms3_order_draft_manager');
+
+        if ($customerId > 0) {
+            if ($draftManager->transferDraftToToken($oldToken, $newToken, $customerId)) {
+                return true;
+            }
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '[TokenService] rotateApiToken: transferDraftToToken failed'
+            );
+
+            return false;
+        }
+
+        $draft = $draftManager->getDraft($oldToken);
+        if (!$draft) {
+            return true;
+        }
+
+        if ($draftManager->syncToken($draft, $newToken)) {
+            return true;
+        }
+
+        $this->modx->log(
+            modX::LOG_LEVEL_ERROR,
+            '[TokenService] rotateApiToken: guest draft syncToken failed'
+        );
+
+        return false;
     }
 
     /**

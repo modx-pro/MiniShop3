@@ -149,6 +149,10 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             return $customerAuth()->registerFromRequest();
         });
 
+        $router->get('/me', function ($params) use ($customerAuth) {
+            return $customerAuth()->me();
+        }, [$tokenMiddleware]);
+
         $router->post('/logout', function ($params) use ($customerAuth) {
             return $customerAuth()->logout();
         }, [$tokenMiddleware]);
@@ -181,6 +185,10 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
                 return Response::error($response['message'] ?? 'Token generation failed', $response['code'] ?? 500);
             }
         });
+
+        $router->post('/token/refresh', function ($params) use ($customerAuth) {
+            return $customerAuth()->refreshToken();
+        }, [$tokenMiddleware]);
 
         $router->group('/addresses', function ($router) use ($modx) {
             $router->get('', function ($params) use ($modx) {
