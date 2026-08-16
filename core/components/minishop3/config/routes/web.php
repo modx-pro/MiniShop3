@@ -141,31 +141,31 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
         $customerAuth = static fn (): \MiniShop3\Controllers\Api\Web\CustomerAuthController =>
             new \MiniShop3\Controllers\Api\Web\CustomerAuthController($modx);
 
-        $router->post('/login', function ($params) use ($customerAuth) {
+        $router->post('/login', function () use ($customerAuth) {
             return $customerAuth()->loginFromRequest();
         });
 
-        $router->post('/register', function ($params) use ($customerAuth) {
+        $router->post('/register', function () use ($customerAuth) {
             return $customerAuth()->registerFromRequest();
         });
 
-        $router->get('/me', function ($params) use ($customerAuth) {
+        $router->get('/me', function () use ($customerAuth) {
             return $customerAuth()->me();
         }, [$tokenMiddleware]);
 
-        $router->post('/logout', function ($params) use ($customerAuth) {
+        $router->post('/logout', function () use ($customerAuth) {
             return $customerAuth()->logout();
         }, [$tokenMiddleware]);
 
-        $router->post('/forgot-password', function ($params) use ($customerAuth) {
+        $router->post('/forgot-password', function () use ($customerAuth) {
             return $customerAuth()->forgotPasswordFromRequest();
         });
 
-        $router->post('/reset-password', function ($params) use ($customerAuth) {
+        $router->post('/reset-password', function () use ($customerAuth) {
             return $customerAuth()->resetPasswordFromRequest();
         });
 
-        $router->post('/add', function ($params) use ($modx) {
+        $router->post('/add', function () use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -174,7 +174,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             return $controller->updateField($data);
         }, [$tokenMiddleware]);
 
-        $router->get('/token/get', function ($params) use ($modx) {
+        $router->get('/token/get', function () use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $ms3->initialize($modx->context->key ?? 'web');
             $response = $ms3->customer->generateToken();
@@ -186,7 +186,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             }
         });
 
-        $router->post('/token/refresh', function ($params) use ($customerAuth) {
+        $router->post('/token/refresh', function () use ($customerAuth) {
             return $customerAuth()->refreshToken();
         }, [$tokenMiddleware]);
 
@@ -200,7 +200,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
                 return $controller->get($params);
             });
 
-            $router->post('', function ($params) use ($modx) {
+            $router->post('', function () use ($modx) {
                 $input = file_get_contents('php://input');
                 $data = json_decode($input, true) ?: [];
 
@@ -227,7 +227,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             });
         }, [$tokenMiddleware]);
 
-        $router->put('/profile', function ($params) use ($modx) {
+        $router->put('/profile', function () use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -241,7 +241,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             return $controller->changeCustomerAddress($params);
         }, [$tokenMiddleware]);
 
-        $router->post('/email/resend-verification', function ($params) use ($modx) {
+        $router->post('/email/resend-verification', function () use ($modx) {
             $ms3 = $modx->services->get('ms3');
             $controller = new \MiniShop3\Controllers\Api\Web\CustomerEmailController($modx, $ms3);
             return $controller->resendVerification();
