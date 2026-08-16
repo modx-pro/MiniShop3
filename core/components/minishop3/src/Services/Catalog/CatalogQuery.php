@@ -36,10 +36,7 @@ final class CatalogQuery
             return max(0, (int) $params['offset']);
         }
 
-        $page = (int) ($params['page'] ?? 1);
-        if ($page < 1) {
-            $page = 1;
-        }
+        $page = max(1, (int) ($params['page'] ?? 1));
 
         return ($page - 1) * $limit;
     }
@@ -52,7 +49,7 @@ final class CatalogQuery
     public static function resolveSort(array $params, array $sortMap, string $defaultKey = 'menuindex'): array
     {
         $sortKey = strtolower(trim((string) ($params['sort'] ?? $defaultKey)));
-        $sortField = $sortMap[$sortKey] ?? ($sortMap[$defaultKey] ?? reset($sortMap));
+        $sortField = $sortMap[$sortKey] ?? $sortMap[$defaultKey] ?? reset($sortMap);
         if (!is_string($sortField) || $sortField === '') {
             $sortField = $defaultKey;
         }
@@ -79,11 +76,20 @@ final class CatalogQuery
     }
 
     /**
+     * Empty / whitespace context falls back (avoids unscoped cross-context reads).
+     *
      * @param array<string, mixed> $params
      */
     public static function resolveContext(array $params, string $fallback = 'web'): string
     {
-        return trim((string) ($params['context'] ?? $fallback));
+        $context = trim((string) ($params['context'] ?? ''));
+        if ($context !== '') {
+            return $context;
+        }
+
+        $fallback = trim($fallback);
+
+        return $fallback !== '' ? $fallback : 'web';
     }
 
     public static function toBool(mixed $value): bool

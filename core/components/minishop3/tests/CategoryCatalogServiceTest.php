@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use MiniShop3\Services\Catalog\CatalogQuery;
 use MiniShop3\Services\Category\CategoryCatalogService;
 
 $fail = static function (string $message): never {
@@ -23,10 +24,10 @@ $assertSame = static function ($expected, $actual, string $case) use ($fail): vo
     }
 };
 
-$assertSame(5, CategoryCatalogService::resolveDepth([]), 'default depth');
-$assertSame(5, CategoryCatalogService::resolveDepth(['depth' => 0]), 'invalid depth falls back');
-$assertSame(3, CategoryCatalogService::resolveDepth(['depth' => 3]), 'custom depth');
-$assertSame(10, CategoryCatalogService::resolveDepth(['depth' => 50]), 'depth capped at 10');
+$assertSame(5, CatalogQuery::resolveDepth([]), 'default depth');
+$assertSame(5, CatalogQuery::resolveDepth(['depth' => 0]), 'invalid depth falls back');
+$assertSame(3, CatalogQuery::resolveDepth(['depth' => 3]), 'custom depth');
+$assertSame(10, CatalogQuery::resolveDepth(['depth' => 50]), 'depth capped at 10');
 
 [$field, $dir] = CategoryCatalogService::resolveSort([]);
 $assertSame('msCategory.menuindex', $field, 'default sort field');

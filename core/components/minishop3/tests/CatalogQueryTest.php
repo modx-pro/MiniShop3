@@ -30,6 +30,9 @@ $assertSame(5, CatalogQuery::resolveDepth([]), 'default depth');
 $assertSame(10, CatalogQuery::resolveDepth(['depth' => 99]), 'depth cap');
 $assertSame('web', CatalogQuery::resolveContext([], 'web'), 'context fallback');
 $assertSame('shop', CatalogQuery::resolveContext(['context' => ' shop '], 'web'), 'context trim');
+$assertSame('web', CatalogQuery::resolveContext(['context' => ''], 'web'), 'empty context → fallback');
+$assertSame('web', CatalogQuery::resolveContext(['context' => '   '], 'web'), 'whitespace context → fallback');
+$assertSame('web', CatalogQuery::resolveContext([], ''), 'empty fallback → web');
 
 $map = [
     'id' => 't.id',

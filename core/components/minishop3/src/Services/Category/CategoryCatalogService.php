@@ -56,17 +56,12 @@ class CategoryCatalogService
         'menuindex' => 'msCategory.menuindex',
     ];
 
+    /** Hard cap for nodes loaded into a tree response (depth window still applied). */
+    private const MAX_TREE_NODES = 500;
+
     public function __construct(
         private modX $modx,
     ) {
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     */
-    public static function resolveDepth(array $params): int
-    {
-        return CatalogQuery::resolveDepth($params);
     }
 
     /**
@@ -155,7 +150,12 @@ class CategoryCatalogService
         }
 
         if (CatalogQuery::toBool($params['include_children'] ?? false)) {
-            $payload['children'] = $this->listDirectChildrenPayloads($categoryId, $params, $includeHidden, false);
+            $payload['children'] = $this->listDirectChildrenPayloads(
+                $categoryId,
+                $params,
+                $includeHidden,
+                CatalogQuery::resolveLimit($params),
+            );
         }
 
         return $payload;
@@ -185,8 +185,7 @@ class CategoryCatalogService
         $total = $this->countList($params, $parent, $includeHidden);
 
         $listQuery = $this->buildListQuery($params, $parent, $includeHidden);
-        [$sortField, $dir] = self::resolveSort($params);
-        $listQuery->sortby($sortField, $dir);
+        $this->applySort($listQuery, $params);
         $listQuery->limit($limit, $offset);
 
         return [
@@ -204,14 +203,14 @@ class CategoryCatalogService
     public function getTree(array $params): array
     {
         $parent = (int) ($params['parent'] ?? 0);
-        $depth = self::resolveDepth($params);
+        $depth = CatalogQuery::resolveDepth($params);
         $includeHidden = CatalogQuery::toBool($params['include_hidden'] ?? false);
 
         if ($parent > 0 && $this->findVisibleCategory($parent, $params, $includeHidden) === null) {
             return ['items' => []];
         }
 
-        $rows = $this->loadVisibleCategoryRows($params, $includeHidden);
+        $rows = $this->loadTreeWindowRows($params, $includeHidden, $parent, $depth);
         [$byId, $childrenByParent] = $this->indexCategoryRows($rows);
 
         return [
@@ -282,16 +281,67 @@ class CategoryCatalogService
     }
 
     /**
+     * Load only categories inside the parent + depth window (BFS), capped at MAX_TREE_NODES.
+     *
      * @param array<string, mixed> $params
      * @return list<array<string, mixed>>
      */
-    private function loadVisibleCategoryRows(array $params, bool $includeHidden): array
-    {
-        $c = $this->createVisibleCategoriesQuery($params, $includeHidden);
+    private function loadTreeWindowRows(
+        array $params,
+        bool $includeHidden,
+        int $rootParent,
+        int $depth,
+    ): array {
+        if ($depth < 1) {
+            return [];
+        }
 
-        [$sortField, $dir] = self::resolveSort($params);
-        $c->sortby($sortField, $dir);
+        $rows = [];
+        $parentIds = [$rootParent];
+        $remaining = self::MAX_TREE_NODES;
+
+        for ($level = 0; $level < $depth && $parentIds !== [] && $remaining > 0; $level++) {
+            $levelRows = $this->loadChildrenRowsForParents($params, $includeHidden, $parentIds, $remaining);
+            if ($levelRows === []) {
+                break;
+            }
+
+            $nextParents = [];
+            foreach ($levelRows as $row) {
+                $rows[] = $row;
+                $remaining--;
+                $id = (int) ($row['id'] ?? 0);
+                if ($id > 0) {
+                    $nextParents[] = $id;
+                }
+            }
+            $parentIds = $nextParents;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @param list<int> $parentIds
+     * @return list<array<string, mixed>>
+     */
+    private function loadChildrenRowsForParents(
+        array $params,
+        bool $includeHidden,
+        array $parentIds,
+        int $limit,
+    ): array {
+        if ($parentIds === [] || $limit < 1) {
+            return [];
+        }
+
+        $c = $this->createVisibleCategoriesQuery($params, $includeHidden, [
+            'parent:IN' => $parentIds,
+        ]);
+        $this->applySort($c, $params);
         $c->select($this->modx->getSelectColumns(msCategory::class, 'msCategory', '', self::RESOURCE_FIELDS));
+        $c->limit($limit);
 
         if (!$c->prepare() || !$c->stmt->execute()) {
             return [];
@@ -316,7 +366,7 @@ class CategoryCatalogService
             if ($id <= 0) {
                 continue;
             }
-            $payload = $this->normalizeRowPayload($row, false);
+            $payload = $this->normalizeRowPayload($row);
             $byId[$id] = $payload;
             $parentId = (int) ($payload['parent'] ?? 0);
             $childrenByParent[$parentId][] = $id;
@@ -333,13 +383,22 @@ class CategoryCatalogService
         int $parentId,
         array $params,
         bool $includeHidden,
-        bool $includeContent,
+        int $limit,
     ): array {
         $listQuery = $this->buildListQuery($params, $parentId, $includeHidden);
-        [$sortField, $dir] = self::resolveSort($params);
-        $listQuery->sortby($sortField, $dir);
+        $this->applySort($listQuery, $params);
+        $listQuery->limit(max(1, $limit));
 
-        return $this->fetchFormattedCategories($listQuery, $includeContent);
+        return $this->fetchFormattedCategories($listQuery, false);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function applySort(xPDOQuery $query, array $params): void
+    {
+        [$sortField, $dir] = self::resolveSort($params);
+        $query->sortby($sortField, $dir);
     }
 
     /**
@@ -350,7 +409,7 @@ class CategoryCatalogService
     {
         $context = $this->resolveContext($params);
         $ids = $this->modx->getParentIds((int) $category->get('id'), 10, [
-            'context' => $context !== '' ? $context : (string) $category->get('context_key'),
+            'context' => $context,
         ]);
 
         if (!is_array($ids)) {
@@ -375,7 +434,7 @@ class CategoryCatalogService
             while ($row = $query->stmt->fetch(\PDO::FETCH_ASSOC)) {
                 $id = (int) ($row['id'] ?? 0);
                 if ($id > 0) {
-                    $byId[$id] = $this->formatBreadcrumbPayload($this->normalizeRowPayload($row, false));
+                    $byId[$id] = $this->formatBreadcrumbPayload($this->normalizeRowPayload($row));
                 }
             }
         }
@@ -489,7 +548,7 @@ class CategoryCatalogService
      * @param array<string, mixed> $row
      * @return array<string, mixed>
      */
-    private function normalizeRowPayload(array $row, bool $includeContent): array
+    private function normalizeRowPayload(array $row): array
     {
         $payload = [];
         foreach (self::RESOURCE_FIELDS as $field) {
@@ -499,11 +558,7 @@ class CategoryCatalogService
             $payload[$field] = $this->castResourceField($field, $row[$field]);
         }
 
-        if ($includeContent && array_key_exists('content', $row)) {
-            $payload['content'] = $row['content'];
-        }
-
-        return self::whitelistPublicPayload($payload, $includeContent);
+        return self::whitelistPublicPayload($payload, false);
     }
 
     /**

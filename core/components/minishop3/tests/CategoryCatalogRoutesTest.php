@@ -65,6 +65,14 @@ if (!preg_match('/function getTree.*?findVisibleCategory\s*\(/s', $serviceSrc)) 
     $fail('getTree must refuse invisible parent');
 }
 
+if (!preg_match('/function getTree.*?loadTreeWindowRows\s*\(/s', $serviceSrc)) {
+    $fail('getTree must load a parent+depth window, not the full context');
+}
+
+if (!str_contains($serviceSrc, 'MAX_TREE_NODES') || !str_contains($serviceSrc, 'parent:IN')) {
+    $fail('tree loader must cap nodes and filter by parent:IN levels');
+}
+
 foreach (
     [
         "'published' => 1",
