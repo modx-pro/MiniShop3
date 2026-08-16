@@ -64,6 +64,8 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/product-tabs.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/DynamicField.min.css');
+        // Shared Vite chunk: tree styles are not inlined into product-tabs.min.css (#555).
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/ResourceCategoryTree.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/product-tabs.min.js');
 
         $show_gallery = $this->getOption('ms3_product_tab_gallery', null, true);

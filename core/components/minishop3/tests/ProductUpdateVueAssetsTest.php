@@ -35,5 +35,9 @@ if (preg_match('/addCss\([^;]*primeicons\.min\.css/', $controller) !== 1) {
     $fail('product/update must still register primeicons.min.css');
 }
 
+if (preg_match('/addCss\([^;]*ResourceCategoryTree\.min\.css/', $controller) !== 1) {
+    $fail('product/update must load ResourceCategoryTree.min.css (shared Vite chunk, #555)');
+}
+
 fwrite(STDOUT, "OK ProductUpdateVueAssetsTest\n");
 exit(0);
