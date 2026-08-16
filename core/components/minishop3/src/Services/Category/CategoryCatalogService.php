@@ -374,10 +374,6 @@ class CategoryCatalogService
         $ids = array_reverse($ids);
         $ids[] = (int) $category->get('id');
 
-        if ($ids === []) {
-            return [$this->formatBreadcrumbPayload($this->formatCategory($category, false))];
-        }
-
         $criteria = $this->publicCriteria(array_merge(
             ['id:IN' => $ids],
             $this->visibilityCriteria($params, $includeHidden),
