@@ -158,6 +158,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductCatalogService::class,
             'interface' => null,
         ],
+        'ms3_category_catalog' => [
+            'class' => \MiniShop3\Services\Category\CategoryCatalogService::class,
+            'interface' => null,
+        ],
         'ms3_repeater_field' => [
             'class' => \MiniShop3\Services\ExtraFields\RepeaterFieldService::class,
             'interface' => null,
