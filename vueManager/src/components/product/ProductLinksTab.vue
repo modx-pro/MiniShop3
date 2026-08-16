@@ -24,6 +24,9 @@ const { _ } = useLexicon()
 const toast = useToast()
 const confirm = useConfirm()
 
+// Isolate from ProductGallery ConfirmDialog on product/update (#539)
+const UI_GROUP = 'product-links'
+
 const loading = ref(false)
 const saving = ref(false)
 const rows = ref([])
@@ -184,6 +187,7 @@ async function saveLink(close = true) {
 
 function removeLink(row) {
   confirm.require({
+    group: UI_GROUP,
     message: _('ms3_menu_remove_confirm'),
     header: _('ms3_menu_remove'),
     icon: 'pi pi-exclamation-triangle',
@@ -214,7 +218,7 @@ onMounted(async () => {
 
 <template>
   <div class="product-links-tab">
-    <ConfirmDialog append-to="self" />
+    <ConfirmDialog :group="UI_GROUP" append-to="self" />
 
     <div class="product-links-tab__toolbar">
       <Button

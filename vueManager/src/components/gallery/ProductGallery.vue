@@ -15,6 +15,9 @@ const { _ } = useLexicon()
 const confirm = useConfirm()
 const toast = useToast()
 
+// Isolate from ProductLinksTab ConfirmDialog on product/update (#539)
+const UI_GROUP = 'product-gallery'
+
 const props = defineProps({
   productId: {
     type: Number,
@@ -220,6 +223,7 @@ function onDeleteFiles(ids) {
       : _('ms3_gallery_file_delete_multiple_confirm')
 
   confirm.require({
+    group: UI_GROUP,
     message,
     header: ids.length === 1 ? _('ms3_gallery_file_delete') : _('ms3_gallery_file_delete_multiple'),
     icon: 'pi pi-exclamation-triangle',
@@ -265,6 +269,7 @@ async function onGenerateThumbs(ids) {
  */
 function onRegenerateAll() {
   confirm.require({
+    group: UI_GROUP,
     message: _('ms3_gallery_file_generate_thumbs_confirm'),
     header: _('ms3_gallery_file_generate_all'),
     icon: 'pi pi-refresh',
@@ -292,6 +297,7 @@ function onRegenerateAll() {
  */
 function onDeleteAll() {
   confirm.require({
+    group: UI_GROUP,
     message: _('ms3_gallery_file_delete_multiple_confirm'),
     header: _('ms3_gallery_file_delete_all'),
     icon: 'pi pi-exclamation-triangle',
@@ -320,6 +326,7 @@ function onDeleteAll() {
  */
 function onChangeSource(sourceId) {
   confirm.require({
+    group: UI_GROUP,
     message: _('ms3_product_change_source_confirm'),
     header: _('ms3_product_source'),
     icon: 'pi pi-exclamation-triangle',
@@ -352,7 +359,7 @@ onMounted(() => {
 
 <template>
   <div class="product-gallery">
-    <ConfirmDialog append-to="self" />
+    <ConfirmDialog :group="UI_GROUP" append-to="self" />
 
     <ProductGalleryToolbar
       :sources="sources"
