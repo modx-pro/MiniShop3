@@ -100,4 +100,16 @@ final class CatalogQuery
 
         return in_array(strtolower((string) $value), ['1', 'true', 'yes', 'on'], true);
     }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    public static function resolveBool(array $params, string $key, bool $default): bool
+    {
+        if (!array_key_exists($key, $params)) {
+            return $default;
+        }
+
+        return self::toBool($params[$key]);
+    }
 }

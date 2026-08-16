@@ -291,6 +291,31 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
         });
     });
 
+    // Public checkout discovery — active deliveries / payments (no cart token)
+    $router->group('/delivery', function ($router) use ($modx) {
+        $router->get('/get/{id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\DeliveryController($modx);
+            return $controller->get($params);
+        });
+
+        $router->get('/list', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\DeliveryController($modx);
+            return $controller->getList($params);
+        });
+    });
+
+    $router->group('/payment', function ($router) use ($modx) {
+        $router->get('/get/{id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\PaymentController($modx);
+            return $controller->get($params);
+        });
+
+        $router->get('/list', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\PaymentController($modx);
+            return $controller->getList($params);
+        });
+    });
+
     $router->get('/health', function () use ($modx) {
         return Response::success([
             'status' => 'ok',

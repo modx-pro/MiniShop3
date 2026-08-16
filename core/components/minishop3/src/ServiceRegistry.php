@@ -162,6 +162,14 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Category\CategoryCatalogService::class,
             'interface' => null,
         ],
+        'ms3_delivery_catalog' => [
+            'class' => \MiniShop3\Services\Delivery\DeliveryCatalogService::class,
+            'interface' => null,
+        ],
+        'ms3_payment_catalog' => [
+            'class' => \MiniShop3\Services\Payment\PaymentCatalogService::class,
+            'interface' => null,
+        ],
         'ms3_repeater_field' => [
             'class' => \MiniShop3\Services\ExtraFields\RepeaterFieldService::class,
             'interface' => null,
