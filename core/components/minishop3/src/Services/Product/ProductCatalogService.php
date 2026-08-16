@@ -211,20 +211,21 @@ class ProductCatalogService
         $total = $this->countList($params);
 
         $listQuery = $this->buildListQuery($params);
+        $this->applyListSelect($listQuery, $includeContent);
         $this->applySort($listQuery, $params);
         $listQuery->limit($limit, $offset);
 
-        /** @var list<msProduct> $products */
+        /** @var array<int|string, msProduct> $products */
         $products = $this->modx->getCollection(msProduct::class, $listQuery) ?: [];
+        $productList = array_values($products);
+        $ids = $this->prefetchAndAttachProductData($productList);
 
-        $optionsByProduct = [];
-        if ($includeOptions && $products !== []) {
-            $ids = array_map(static fn (msProduct $p) => (int) $p->get('id'), array_values($products));
-            $optionsByProduct = $this->loadOptionsForProducts($ids);
-        }
+        $optionsByProduct = ($includeOptions && $ids !== [])
+            ? $this->loadOptionsForProducts($ids)
+            : [];
 
         $items = [];
-        foreach ($products as $product) {
+        foreach ($productList as $product) {
             $productId = (int) $product->get('id');
             $options = $includeOptions ? ($optionsByProduct[$productId] ?? []) : null;
             $items[] = $this->formatProduct($product, $includeContent, $options);
@@ -269,7 +270,8 @@ class ProductCatalogService
     private function countList(array $params): int
     {
         $countQuery = $this->buildListQuery($params);
-        $countQuery->select('COUNT(DISTINCT msProduct.id)');
+        // 1:1 join on Data — DISTINCT is unnecessary until many-joins are added.
+        $countQuery->select('COUNT(msProduct.id)');
         if (!$countQuery->prepare() || !$countQuery->stmt->execute()) {
             return 0;
         }
@@ -305,6 +307,60 @@ class ProductCatalogService
         }
 
         return $c;
+    }
+
+    /**
+     * Limit selected resource columns; skip content blob on PLP when not requested.
+     * Same pattern as ms3_products snippet.
+     */
+    private function applyListSelect(xPDOQuery $query, bool $includeContent): void
+    {
+        $query->select(
+            $includeContent
+                ? $this->modx->getSelectColumns(msProduct::class, 'msProduct')
+                : $this->modx->getSelectColumns(msProduct::class, 'msProduct', '', ['content'], true)
+        );
+    }
+
+    /**
+     * Batch-load msProductData and attach via addOne so loadData() skips getOne N+1.
+     *
+     * List query already JOINs Data for WHERE/ORDER only (no related hydrate from that JOIN).
+     * One IN-query here is O(1) vs L× getOne; total SQL ≈ count + list + data (+ options).
+     *
+     * @param list<msProduct> $products
+     * @return list<int>
+     */
+    private function prefetchAndAttachProductData(array $products): array
+    {
+        $byId = [];
+        foreach ($products as $product) {
+            $id = (int) $product->get('id');
+            if ($id > 0) {
+                $byId[$id] = $product;
+            }
+        }
+
+        if ($byId === []) {
+            return [];
+        }
+
+        $ids = array_keys($byId);
+        $c = $this->modx->newQuery(msProductData::class);
+        $c->where(['id:IN' => $ids]);
+
+        /** @var msProductData $data */
+        foreach ($this->modx->getCollection(msProductData::class, $c) ?: [] as $data) {
+            $id = (int) $data->get('id');
+            if (!isset($byId[$id])) {
+                continue;
+            }
+            // addOne requires a by-ref argument (xPDO signature).
+            $attached = $data;
+            $byId[$id]->addOne($attached, 'Data');
+        }
+
+        return $ids;
     }
 
     /**
