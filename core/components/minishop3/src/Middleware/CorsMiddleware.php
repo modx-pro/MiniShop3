@@ -52,8 +52,7 @@ class CorsMiddleware implements MiddlewareInterface
     {
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-        // Check if origin is allowed
-        if ($this->isOriginAllowed($origin)) {
+        if (CorsConfig::isOriginAllowed($origin, $this->allowedOrigins)) {
             $this->setCorsHeaders($origin);
         }
 
@@ -65,45 +64,6 @@ class CorsMiddleware implements MiddlewareInterface
         }
 
         return null; // Continue execution
-    }
-
-    /**
-     * Check if origin is allowed
-     *
-     * @param string $origin Origin from header
-     * @return bool
-     */
-    private function isOriginAllowed(string $origin): bool
-    {
-        if (empty($origin)) {
-            return false;
-        }
-
-        if ($this->allowedOrigins === []) {
-            return false;
-        }
-
-        // If all origins are allowed (credentials must be off — normalized in constructor)
-        if (CorsConfig::hasWildcardOrigin($this->allowedOrigins)) {
-            return true;
-        }
-
-        // Check exact match
-        if (in_array($origin, $this->allowedOrigins, true)) {
-            return true;
-        }
-
-        // Check wildcard patterns (e.g.: *.example.com)
-        foreach ($this->allowedOrigins as $allowedOrigin) {
-            if (str_contains($allowedOrigin, '*')) {
-                $pattern = str_replace('*', '.*', $allowedOrigin);
-                if (preg_match('#^' . $pattern . '$#', $origin)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**

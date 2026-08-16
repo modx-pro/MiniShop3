@@ -70,14 +70,14 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Get key for client identification
+     * Client bucket key: IP only (#576).
+     * Do not include client-controlled headers (e.g. MS3TOKEN) — that bypasses the limit.
      */
     private function resolveRequestKey(): string
     {
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $token = $_SERVER['HTTP_MS3TOKEN'] ?? '';
 
-        return 'rate_limit:' . md5($ip . ':' . $token);
+        return 'rate_limit:' . md5($ip);
     }
 
     /**
