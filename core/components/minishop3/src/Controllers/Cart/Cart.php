@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Cart;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Services\Cart\CartDraftContext;
 use MiniShop3\Services\Cart\CartItemManager;
 use MiniShop3\Services\Cart\CartMutationHandler;
 use MiniShop3\Services\Order\OrderDraftManager;
@@ -124,8 +125,7 @@ class Cart
             return false;
         }
 
-        $ms3CartContext = (bool)$this->modx->getOption('ms3_cart_context', null, '0', true);
-        $this->ctx = $ms3CartContext ? 'web' : $ctx;
+        $this->ctx = CartDraftContext::resolve($this->modx, $ctx);
         $this->token = $token;
 
         return true;

@@ -172,7 +172,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
 
         $router->get('/token/get', function ($params) use ($modx) {
             $ms3 = $modx->services->get('ms3');
-            $ms3->initialize();
+            $ms3->initialize($modx->context->key ?? 'web');
             $response = $ms3->customer->generateToken();
 
             if ($response['success']) {

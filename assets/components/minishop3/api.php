@@ -64,8 +64,15 @@ try {
         exit;
     }
 
+    // Page culture for lexicon: ctx from ms3Config (same source as route — $_REQUEST) (#541)
+    $rawCtx = $_REQUEST['ctx'] ?? null;
+    $ctx = \MiniShop3\Services\Api\WebApiContextResolver::apply(
+        $modx,
+        is_string($rawCtx) ? $rawCtx : null
+    );
+
     $ms3 = $modx->services->get('ms3');
-    $ms3->initialize('web');
+    $ms3->initialize($ctx);
 
     // Создаём роутер — только Web API (фронтенд); manager connector не грузит эти пути (#384)
     $router = new \MiniShop3\Router\Router($modx);
@@ -90,9 +97,8 @@ try {
 
     echo json_encode($responseData, JSON_UNESCAPED_UNICODE);
 
-} catch (\Exception $e) {
-
-    // Возвращаем ошибку
+} catch (\Throwable $e) {
+    // Возвращаем ошибку (Throwable: TypeError from null context must not escape as bare 500)
     http_response_code(500);
     $response = [
         'success' => false,
@@ -117,5 +123,6 @@ try {
         }
     }
 
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 }

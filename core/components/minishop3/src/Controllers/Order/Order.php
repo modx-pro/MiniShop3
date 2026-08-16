@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Order;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
+use MiniShop3\Services\Cart\CartDraftContext;
 use MiniShop3\Services\Order\OrderAddressManager;
 use MiniShop3\Services\Order\OrderCostCalculator;
 use MiniShop3\Services\Order\OrderDraftManager;
@@ -56,7 +57,8 @@ class Order
     {
         $this->ms3 = $ms3;
         $this->modx = $ms3->modx;
-        $this->ctx = $ms3->config['ctx'] ?? 'web';
+        $pageCtx = $ms3->config['ctx'] ?? CartDraftContext::DEFAULT_CONTEXT;
+        $this->ctx = CartDraftContext::resolve($this->modx, $pageCtx);
         $this->config = array_merge([], $config);
 
         $this->modx->lexicon->load('minishop3:cart');
@@ -145,6 +147,8 @@ class Order
             return false;
         }
         $this->token = $token;
+        $pageCtx = $this->ms3->config['ctx'] ?? CartDraftContext::DEFAULT_CONTEXT;
+        $this->ctx = CartDraftContext::resolve($this->modx, $pageCtx);
         $this->config = array_merge($this->config, $config);
 
         // Load validation rules from a session

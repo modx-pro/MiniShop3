@@ -22,6 +22,21 @@ class ApiClient {
   constructor (config) {
     this.baseUrl = config.baseUrl || '/assets/components/minishop3/api.php'
     this.tokenManager = config.tokenManager
+    // Page MODX context for API lexicon (#541)
+    this.ctx = config.ctx || 'web'
+  }
+
+  /**
+   * Build API URL with route and page context (`ctx`).
+   *
+   * @param {string} endpoint - API endpoint (e.g., '/cart/get')
+   * @returns {URL}
+   */
+  buildUrl (endpoint) {
+    const url = new URL(this.baseUrl, window.location.origin)
+    url.searchParams.set('route', endpoint)
+    url.searchParams.set('ctx', this.ctx)
+    return url
   }
 
   /**
@@ -34,9 +49,7 @@ class ApiClient {
    * @returns {Promise<Object>} - Server response
    */
   async request (method, endpoint, data = null, isRetry = false) {
-    const url = new URL(this.baseUrl, window.location.origin)
-
-    url.searchParams.set('route', endpoint)
+    const url = this.buildUrl(endpoint)
 
     const headers = {
       Accept: 'application/json',
@@ -58,21 +71,17 @@ class ApiClient {
       }
     }
 
-    try {
-      const response = await fetch(url.toString(), options)
-      const result = await response.json()
+    const response = await fetch(url.toString(), options)
+    const result = await response.json()
 
-      // Handle token errors: request new token from server and retry
-      if (!isRetry && response.status === 401 && this.isTokenError(result)) {
-        console.log('[ApiClient] Token invalid, refreshing and retrying request')
-        await this.tokenManager.fetchNewToken()
-        return this.request(method, endpoint, data, true)
-      }
-
-      return result
-    } catch (error) {
-      throw error
+    // Handle token errors: request new token from server and retry
+    if (!isRetry && response.status === 401 && this.isTokenError(result)) {
+      console.log('[ApiClient] Token invalid, refreshing and retrying request')
+      await this.tokenManager.fetchNewToken()
+      return this.request(method, endpoint, data, true)
     }
+
+    return result
   }
 
   /**
