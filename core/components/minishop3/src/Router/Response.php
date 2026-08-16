@@ -60,16 +60,48 @@ class Response
     }
 
     /**
-     * Create error response
+     * Create error response.
+     *
+     * Envelope (#341 + #572):
+     * `{ success:false, message, code, errors, error_code?, data? }`
+     *
+     * - `code` — HTTP status (int), same as response status
+     * - `error_code` — optional stable snake_case machine key (additive)
+     * - `errors` — field-level map only (string|string[]|MODX {msg}); not arbitrary payload
+     * - `data` — optional non-field context (e.g. conflict existing_id, cart status)
      */
-    public static function error(string $message, int $statusCode = HttpStatus::BAD_REQUEST, mixed $errors = null): self
-    {
-        return new self([
+    public static function error(
+        string $message,
+        int $statusCode = HttpStatus::BAD_REQUEST,
+        mixed $errors = null,
+        ?string $errorCode = null,
+        mixed $data = null,
+    ): self {
+        $body = [
             'success' => false,
             'message' => $message,
             'code' => $statusCode,
-            'errors' => $errors
-        ], $statusCode);
+            'errors' => $errors,
+            'error_code' => self::resolveErrorCode($errorCode, $statusCode, $errors),
+        ];
+        if ($data !== null) {
+            $body['data'] = $data;
+        }
+
+        return new self($body, $statusCode);
+    }
+
+    /**
+     * Error with required machine `error_code` (Web API / Nuxt).
+     */
+    public static function errorWithCode(
+        string $errorCode,
+        string $message,
+        int $statusCode = HttpStatus::BAD_REQUEST,
+        mixed $errors = null,
+        mixed $data = null,
+    ): self {
+        return self::error($message, $statusCode, $errors, $errorCode, $data);
     }
 
     /**
@@ -101,26 +133,40 @@ class Response
             $message = self::messageFromFieldErrors($fieldErrors);
         }
 
-        $data = null;
-        if (is_array($object)) {
-            $data = $object;
-            unset($data['code']);
-            if ($data === []) {
-                $data = null;
-            }
+        return self::error(
+            $message,
+            $status,
+            $fieldErrors,
+            $fieldErrors !== null ? ApiErrorCode::VALIDATION_FAILED : null,
+            self::dataFromProcessorObject($object),
+        );
+    }
+
+    /**
+     * Processor failure object minus transport-only `code`.
+     */
+    private static function dataFromProcessorObject(mixed $object): mixed
+    {
+        if (!is_array($object)) {
+            return null;
         }
 
-        $body = [
-            'success' => false,
-            'message' => $message,
-            'code' => $status,
-            'errors' => $fieldErrors,
-        ];
-        if ($data !== null) {
-            $body['data'] = $data;
+        $data = $object;
+        unset($data['code']);
+
+        return $data !== [] ? $data : null;
+    }
+
+    private static function resolveErrorCode(?string $errorCode, int $statusCode, mixed $errors = null): string
+    {
+        if ($errorCode !== null && $errorCode !== '') {
+            return $errorCode;
+        }
+        if (is_array($errors) && $errors !== []) {
+            return ApiErrorCode::VALIDATION_FAILED;
         }
 
-        return new self($body, $status);
+        return ApiErrorCode::fromHttpStatus($statusCode);
     }
 
     /**
@@ -204,6 +250,7 @@ class Response
         return in_array($code, [
             HttpStatus::BAD_REQUEST,
             HttpStatus::UNAUTHORIZED,
+            HttpStatus::FORBIDDEN,
             HttpStatus::NOT_FOUND,
             HttpStatus::CONFLICT,
             HttpStatus::UNPROCESSABLE_ENTITY,

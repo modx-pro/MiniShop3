@@ -3,6 +3,7 @@
 namespace MiniShop3\Middleware;
 
 use MiniShop3\Router\Middleware\MiddlewareInterface;
+use MiniShop3\Router\ApiErrorCode;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\TokenService;
@@ -118,7 +119,7 @@ class TokenMiddleware implements MiddlewareInterface
                         modX::LOG_LEVEL_INFO,
                         '[TokenMiddleware] Rejected expired API token: ' . substr($token, 0, 16) . '...'
                     );
-                    return Response::error('ms3_err_token_expired', HttpStatus::UNAUTHORIZED);
+                    return $this->unauthorizedError(ApiErrorCode::TOKEN_EXPIRED, 'ms3_err_token_expired');
                 }
             } elseif (!$isPublic) {
                 $this->modx->log(
@@ -126,7 +127,7 @@ class TokenMiddleware implements MiddlewareInterface
                     '[TokenMiddleware] Token not found in database. Token: ' . substr($token, 0, 16) . '...'
                 );
                 // Keep machine-stable keys in message — ApiClient.isTokenError() matches them
-                return Response::error('ms3_err_token_invalid', HttpStatus::UNAUTHORIZED);
+                return $this->unauthorizedError(ApiErrorCode::TOKEN_INVALID, 'ms3_err_token_invalid');
             }
         } elseif (!$isPublic && !empty($_SESSION['ms3']['customer_id'])) {
             // Stale session identity without a resolvable token must not bypass revoke.
@@ -142,10 +143,22 @@ class TokenMiddleware implements MiddlewareInterface
                 return null;
             }
 
-            return Response::error('ms3_customer_err_token_create', HttpStatus::UNAUTHORIZED);
+            return Response::errorWithCode(
+                ApiErrorCode::INTERNAL_ERROR,
+                'ms3_customer_err_token_create',
+                HttpStatus::INTERNAL_SERVER_ERROR
+            );
         }
 
         return null;
+    }
+
+    /**
+     * Token reject / mint failure (401 + machine error_code).
+     */
+    private function unauthorizedError(string $errorCode, string $message): Response
+    {
+        return Response::errorWithCode($errorCode, $message, HttpStatus::UNAUTHORIZED);
     }
 
     /**

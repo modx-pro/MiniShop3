@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\ApiErrorCode;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
@@ -51,15 +52,15 @@ class CustomerEmailController
      *
      * POST /api/v1/customer/email/resend-verification
      *
-     * @return array ['success' => bool, 'message' => string]
+     * @return Response ['success' => bool, 'message' => string]
      */
-    public function resendVerification(): array
+    public function resendVerification(): Response
     {
         if (empty($_SESSION['ms3']['customer_id'])) {
             return Response::error(
                 $this->modx->lexicon('ms3_customer_err_login_required'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
         $customerId = (int)$_SESSION['ms3']['customer_id'];
@@ -71,23 +72,27 @@ class CustomerEmailController
             return Response::error(
                 $this->modx->lexicon('ms3_err_customer_nf'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
         $result = $this->emailVerification->resendVerificationEmail($customer);
 
-        if ($result['success']) {
+        if (!empty($result['success'])) {
             $this->modx->log(
                 modX::LOG_LEVEL_INFO,
                 "[CustomerEmailController] Verification email resent to customer #{$customerId}"
             );
-            return $result;
+
+            return Response::success(
+                $result['data'] ?? null,
+                $result['message'] ?? ''
+            );
         }
 
         return Response::error(
-            $result['message'],
+            (string) ($result['message'] ?? $this->modx->lexicon('ms3_err_unknown')),
             Response::statusFromProcessorObject($result)
-        )->getData();
+        );
     }
 
     /**
@@ -99,9 +104,9 @@ class CustomerEmailController
      * - `html=1` (как в ссылке из письма) — после успеха/ошибки HTTP 302 на сайт (см. GH-226).
      *
      * @param array $params Request parameters
-     * @return array|Response
+     * @return Response
      */
-    public function verify(array $params): array|Response
+    public function verify(array $params): Response
     {
         $formatJson = ($params['format'] ?? '') === 'json';
         $htmlFlow = ($params['html'] ?? '') === '1';
@@ -113,7 +118,11 @@ class CustomerEmailController
                 return Response::redirect($this->buildEmailVerificationFailedRedirectUrl(), 302);
             }
 
-            return $this->error($this->modx->lexicon('ms3_customer_err_token_required'));
+            return Response::errorWithCode(
+                ApiErrorCode::BAD_REQUEST,
+                $this->modx->lexicon('ms3_customer_err_token_required'),
+                HttpStatus::BAD_REQUEST
+            );
         }
 
         $customer = $this->emailVerification->verifyToken($token);
@@ -123,7 +132,11 @@ class CustomerEmailController
                 return Response::redirect($this->buildEmailVerificationFailedRedirectUrl(), 302);
             }
 
-            return $this->error($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
+            return Response::errorWithCode(
+                ApiErrorCode::BAD_REQUEST,
+                $this->modx->lexicon('ms3_customer_err_email_verification_invalid'),
+                HttpStatus::BAD_REQUEST
+            );
         }
 
         /** @var AuthManager $authManager */
@@ -197,34 +210,24 @@ class CustomerEmailController
     }
 
     /**
-     * Success response
-     *
-     * @param string $message
-     * @param array $data
-     * @return array
+     * @param array<string, mixed> $data
      */
-    protected function success(string $message = '', array $data = []): array
+    protected function success(string $message = '', array $data = []): Response
     {
-        return [
-            'success' => true,
-            'message' => $message,
-            'data' => $data,
-        ];
+        return Response::success($data, $message);
     }
 
     /**
-     * Error response
-     *
-     * @param string $message
-     * @param array $data
-     * @return array
+     * @param array<string, mixed> $data
      */
-    protected function error(string $message, array $data = []): array
+    protected function error(string $message, array $data = []): Response
     {
-        return [
-            'success' => false,
-            'message' => $message,
-            'data' => $data,
-        ];
+        return Response::error(
+            $message,
+            HttpStatus::BAD_REQUEST,
+            null,
+            null,
+            $data !== [] ? $data : null,
+        );
     }
 }

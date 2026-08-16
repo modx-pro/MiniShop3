@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\ApiErrorCode;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\CustomerPublicDto;
@@ -45,15 +46,15 @@ class CustomerProfileController
      * PUT /api/v1/customer/profile
      *
      * @param array $data Form data
-     * @return array ['success' => bool, 'message' => string, 'data' => array]
+     * @return Response ['success' => bool, 'message' => string, 'data' => array]
      */
-    public function update(array $data): array
+    public function update(array $data): Response
     {
         if (empty($_SESSION['ms3']['customer_id'])) {
             return Response::error(
                 $this->modx->lexicon('ms3_customer_err_login_required'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
         /** @var msCustomer $customer */
@@ -63,7 +64,7 @@ class CustomerProfileController
             return Response::error(
                 $this->modx->lexicon('ms3_err_customer_nf'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
         $customerId = (int)$customer->get('id');
@@ -102,11 +103,12 @@ class CustomerProfileController
             if ($key === 'email') {
                 $newEmail = trim((string) $rawValue);
                 if (!$this->isEmailAvailable($customer, $newEmail)) {
+                    $emailError = $this->modx->lexicon('ms3_customer_err_email_exists');
                     $_SESSION['ms3']['customer_profile_errors'] = [
-                        'email' => $this->modx->lexicon('ms3_customer_err_email_exists'),
+                        'email' => $emailError,
                     ];
 
-                    return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
+                    return $this->error($emailError, ['errors' => ['email' => $emailError]]);
                 }
                 $this->resetEmailVerificationIfChanged($customer, $newEmail);
                 $customer->set('email', $newEmail);
@@ -144,15 +146,15 @@ class CustomerProfileController
      * POST /api/v1/customer/add
      *
      * @param array $data Request data with key and value
-     * @return array ['success' => bool, 'message' => string, 'data' => array]
+     * @return Response ['success' => bool, 'message' => string, 'data' => array]
      */
-    public function updateField(array $data): array
+    public function updateField(array $data): Response
     {
         if (empty($_SESSION['ms3']['customer_id'])) {
             return Response::error(
                 $this->modx->lexicon('ms3_customer_err_login_required'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
         $customer = $this->getCurrentCustomer();
@@ -160,7 +162,7 @@ class CustomerProfileController
             return Response::error(
                 $this->modx->lexicon('ms3_err_customer_nf'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
         $key = trim((string) ($data['key'] ?? ''));
@@ -198,7 +200,9 @@ class CustomerProfileController
         }
 
         if ($key === 'email' && !$this->isEmailAvailable($customer, (string) $value)) {
-            return $this->error($this->modx->lexicon('ms3_customer_err_email_exists'));
+            $emailError = $this->modx->lexicon('ms3_customer_err_email_exists');
+
+            return $this->error($emailError, ['errors' => ['email' => $emailError]]);
         }
 
         if ($key === 'email') {
@@ -308,34 +312,30 @@ class CustomerProfileController
     }
 
     /**
-     * Success response
-     *
-     * @param string $message
-     * @param array $data
-     * @return array
+     * @param array<string, mixed> $data
      */
-    protected function success(string $message = '', array $data = []): array
+    protected function success(string $message = '', array $data = []): Response
     {
-        return [
-            'success' => true,
-            'message' => $message,
-            'data' => $data,
-        ];
+        return Response::success($data, $message);
     }
 
     /**
-     * Error response
+     * Profile validation / business errors.
+     * Field map goes to top-level `errors`; also mirrored in `data.errors` for one-release BC (#572).
      *
-     * @param string $message
-     * @param array $data
-     * @return array
+     * @param array<string, mixed> $data
      */
-    protected function error(string $message, array $data = []): array
+    protected function error(string $message, array $data = []): Response
     {
-        return [
-            'success' => false,
-            'message' => $message,
-            'data' => $data,
-        ];
+        $fieldErrors = (isset($data['errors']) && is_array($data['errors'])) ? $data['errors'] : null;
+        $isValidation = $fieldErrors !== null;
+
+        return Response::errorWithCode(
+            $isValidation ? ApiErrorCode::VALIDATION_FAILED : ApiErrorCode::BUSINESS_RULE,
+            $message,
+            $isValidation ? HttpStatus::UNPROCESSABLE_ENTITY : HttpStatus::BAD_REQUEST,
+            $fieldErrors,
+            $data !== [] ? $data : null,
+        );
     }
 }

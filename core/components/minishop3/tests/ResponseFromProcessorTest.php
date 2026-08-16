@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use MiniShop3\Router\ApiErrorCode;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 
@@ -149,6 +150,15 @@ if ($unauth->getStatusCode() !== HttpStatus::UNAUTHORIZED) {
 }
 if (($unauth->getData()['code'] ?? null) !== HttpStatus::UNAUTHORIZED) {
     $fail('Response::error body must include code 401');
+}
+if (($unauth->getData()['error_code'] ?? null) !== ApiErrorCode::UNAUTHORIZED) {
+    $fail('Response::error must include additive error_code');
+}
+if (($fieldError->getData()['error_code'] ?? null) !== ApiErrorCode::VALIDATION_FAILED) {
+    $fail('fromProcessor field errors must set error_code=validation_failed');
+}
+if (($throttle->getData()['error_code'] ?? null) !== ApiErrorCode::RATE_LIMITED) {
+    $fail('fromProcessor 429 must set error_code=rate_limited');
 }
 
 fwrite(STDOUT, "OK ResponseFromProcessorTest\n");
