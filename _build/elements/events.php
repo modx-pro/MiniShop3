@@ -68,6 +68,8 @@ return [
     'msOnErrorValidateCustomerValue',
     'msOnBeforeCreateCustomer',
     'msOnCreateCustomer',
+    'msOnBeforeUpdateCustomer',
+    'msOnUpdateCustomer',
     'msOnBeforeAddCustomerAddress',
     'msOnAddCustomerAddress',
 
