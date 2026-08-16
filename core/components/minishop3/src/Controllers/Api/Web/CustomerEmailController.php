@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
@@ -15,29 +17,20 @@ use MODX\Revolution\modX;
 /**
  * CustomerEmailController - Email verification API controller
  *
- * Handles sending and verification of email confirmation.
- *
  * Endpoints:
- * - POST /api/v1/customer/email/resend-verification - resend verification email
- * - GET /api/v1/customer/email/verify - verify token from email
+ * - POST /api/v1/customer/email/resend-verification
+ * - GET /api/v1/customer/email/verify
  *
  * @package MiniShop3\Controllers\Api\Web
  */
 class CustomerEmailController
 {
-    /** @var modX */
     protected modX $modx;
 
-    /** @var MiniShop3 */
     protected MiniShop3 $ms3;
 
-    /** @var EmailVerificationService */
     protected EmailVerificationService $emailVerification;
 
-    /**
-     * @param modX $modx
-     * @param MiniShop3 $ms3
-     */
     public function __construct(modX $modx, MiniShop3 $ms3)
     {
         $this->modx = $modx;
@@ -48,11 +41,7 @@ class CustomerEmailController
     }
 
     /**
-     * Resend verification email
-     *
      * POST /api/v1/customer/email/resend-verification
-     *
-     * @return Response
      */
     public function resendVerification(): Response
     {
@@ -63,12 +52,12 @@ class CustomerEmailController
             );
         }
 
-        $customerId = (int)$_SESSION['ms3']['customer_id'];
+        $customerId = (int) $_SESSION['ms3']['customer_id'];
 
-        /** @var msCustomer $customer */
+        /** @var msCustomer|null $customer */
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
 
-        if (!$customer) {
+        if (!$customer instanceof msCustomer) {
             return Response::error(
                 $this->modx->lexicon('ms3_err_customer_nf'),
                 HttpStatus::UNAUTHORIZED
@@ -85,7 +74,7 @@ class CustomerEmailController
 
             return Response::success(
                 $result['data'] ?? null,
-                $result['message'] ?? ''
+                isset($result['message']) ? (string) $result['message'] : ''
             );
         }
 
@@ -96,15 +85,12 @@ class CustomerEmailController
     }
 
     /**
-     * Verify confirmation token from email
-     *
      * GET /api/v1/customer/email/verify?token={token}
      *
      * - `format=json` — всегда JSON (интеграции, отладка).
      * - `html=1` (как в ссылке из письма) — после успеха/ошибки HTTP 302 на сайт (см. GH-226).
      *
-     * @param array $params Request parameters
-     * @return Response
+     * @param array<string, mixed> $params
      */
     public function verify(array $params): Response
     {
@@ -113,7 +99,7 @@ class CustomerEmailController
 
         $token = $params['token'] ?? '';
 
-        if (empty($token)) {
+        if ($token === '') {
             if ($htmlFlow && !$formatJson) {
                 return Response::redirect($this->buildEmailVerificationFailedRedirectUrl(), 302);
             }
@@ -125,7 +111,7 @@ class CustomerEmailController
             );
         }
 
-        $customer = $this->emailVerification->verifyToken($token);
+        $customer = $this->emailVerification->verifyToken((string) $token);
 
         if (!$customer) {
             if ($htmlFlow && !$formatJson) {

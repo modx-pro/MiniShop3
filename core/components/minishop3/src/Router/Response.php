@@ -34,7 +34,7 @@ class Response
     /**
      * Redirect response (e.g. email verification in browser; api.php sends Location)
      */
-    public static function redirect(string $url, int $statusCode = 302): self
+    public static function redirect(string $url, int $statusCode = 302): Response
     {
         $r = new self(null, $statusCode);
         $r->redirectUrl = $url;
@@ -50,7 +50,7 @@ class Response
     /**
      * Create success response
      */
-    public static function success(mixed $data = null, ?string $message = null, int $statusCode = HttpStatus::OK): self
+    public static function success(mixed $data = null, ?string $message = null, int $statusCode = HttpStatus::OK): Response
     {
         return new self([
             'success' => true,
@@ -76,7 +76,7 @@ class Response
         mixed $errors = null,
         ?string $errorCode = null,
         mixed $data = null,
-    ): self {
+    ): Response {
         $body = [
             'success' => false,
             'message' => $message,
@@ -100,7 +100,7 @@ class Response
         int $statusCode = HttpStatus::BAD_REQUEST,
         mixed $errors = null,
         mixed $data = null,
-    ): self {
+    ): Response {
         return self::error($message, $statusCode, $errors, $errorCode, $data);
     }
 
@@ -119,7 +119,7 @@ class Response
      *
      * @param object $processorResponse modProcessorResponse (isError/getMessage/getObject)
      */
-    public static function fromProcessor(object $processorResponse): self
+    public static function fromProcessor(object $processorResponse): Response
     {
         if (!$processorResponse->isError()) {
             return self::success($processorResponse->getObject(), $processorResponse->getMessage());
