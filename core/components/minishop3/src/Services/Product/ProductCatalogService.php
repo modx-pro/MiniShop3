@@ -6,6 +6,7 @@ namespace MiniShop3\Services\Product;
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Services\Catalog\CatalogQuery;
 use MiniShop3\Services\Option\OptionService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
@@ -19,9 +20,6 @@ use xPDO\Om\xPDOQuery;
  */
 class ProductCatalogService
 {
-    private const DEFAULT_LIMIT = 20;
-    private const MAX_LIMIT = 100;
-
     /** @var list<string> */
     private const RESOURCE_FIELDS = [
         'id',
@@ -78,12 +76,7 @@ class ProductCatalogService
      */
     public static function resolveLimit(array $params): int
     {
-        $limit = (int) ($params['limit'] ?? self::DEFAULT_LIMIT);
-        if ($limit < 1) {
-            return self::DEFAULT_LIMIT;
-        }
-
-        return min($limit, self::MAX_LIMIT);
+        return CatalogQuery::resolveLimit($params);
     }
 
     /**
@@ -93,16 +86,7 @@ class ProductCatalogService
      */
     public static function resolveOffset(array $params, int $limit): int
     {
-        if (isset($params['offset']) && $params['offset'] !== '') {
-            return max(0, (int) $params['offset']);
-        }
-
-        $page = (int) ($params['page'] ?? 1);
-        if ($page < 1) {
-            $page = 1;
-        }
-
-        return ($page - 1) * $limit;
+        return CatalogQuery::resolveOffset($params, $limit);
     }
 
     /**
@@ -113,15 +97,7 @@ class ProductCatalogService
      */
     public static function resolveSort(array $params): array
     {
-        $sortKey = strtolower(trim((string) ($params['sort'] ?? 'menuindex')));
-        $sortField = self::SORT_MAP[$sortKey] ?? self::SORT_MAP['menuindex'];
-
-        $dir = strtoupper(trim((string) ($params['dir'] ?? $params['sortdir'] ?? 'ASC')));
-        if ($dir !== 'DESC') {
-            $dir = 'ASC';
-        }
-
-        return [$sortField, $dir];
+        return CatalogQuery::resolveSort($params, self::SORT_MAP);
     }
 
     /**
@@ -175,11 +151,7 @@ class ProductCatalogService
 
     public static function toBool(mixed $value): bool
     {
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        return in_array(strtolower((string) $value), ['1', 'true', 'yes', 'on'], true);
+        return CatalogQuery::toBool($value);
     }
 
     /**
@@ -285,7 +257,10 @@ class ProductCatalogService
      */
     private function resolveContext(array $params): string
     {
-        return trim((string) ($params['context'] ?? $this->modx->context->key ?? 'web'));
+        return CatalogQuery::resolveContext(
+            $params,
+            (string) ($this->modx->context->key ?? 'web'),
+        );
     }
 
     /**

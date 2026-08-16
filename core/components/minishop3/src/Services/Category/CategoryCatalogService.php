@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MiniShop3\Services\Category;
 
 use MiniShop3\Model\msCategory;
-use MiniShop3\Services\Product\ProductCatalogService;
+use MiniShop3\Services\Catalog\CatalogQuery;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
@@ -17,9 +17,6 @@ use xPDO\Om\xPDOQuery;
  */
 class CategoryCatalogService
 {
-    private const DEFAULT_DEPTH = 5;
-    private const MAX_DEPTH = 10;
-
     /** @var list<string> */
     private const RESOURCE_FIELDS = [
         'id',
@@ -69,12 +66,7 @@ class CategoryCatalogService
      */
     public static function resolveDepth(array $params): int
     {
-        $depth = (int) ($params['depth'] ?? self::DEFAULT_DEPTH);
-        if ($depth < 1) {
-            return self::DEFAULT_DEPTH;
-        }
-
-        return min($depth, self::MAX_DEPTH);
+        return CatalogQuery::resolveDepth($params);
     }
 
     /**
@@ -83,15 +75,7 @@ class CategoryCatalogService
      */
     public static function resolveSort(array $params): array
     {
-        $sortKey = strtolower(trim((string) ($params['sort'] ?? 'menuindex')));
-        $sortField = self::SORT_MAP[$sortKey] ?? self::SORT_MAP['menuindex'];
-
-        $dir = strtoupper(trim((string) ($params['dir'] ?? $params['sortdir'] ?? 'ASC')));
-        if ($dir !== 'DESC') {
-            $dir = 'ASC';
-        }
-
-        return [$sortField, $dir];
+        return CatalogQuery::resolveSort($params, self::SORT_MAP);
     }
 
     /**
@@ -155,22 +139,22 @@ class CategoryCatalogService
             return null;
         }
 
-        $includeHidden = ProductCatalogService::toBool($params['include_hidden'] ?? false);
+        $includeHidden = CatalogQuery::toBool($params['include_hidden'] ?? false);
         $category = $this->findVisibleCategory($categoryId, $params, $includeHidden);
         if ($category === null) {
             return null;
         }
 
-        $includeContent = ProductCatalogService::toBool($params['include_content'] ?? false);
+        $includeContent = CatalogQuery::toBool($params['include_content'] ?? false);
         $payload = $this->formatCategory($category, $includeContent);
 
         $includeBreadcrumbs = !isset($params['include_breadcrumbs'])
-            || ProductCatalogService::toBool($params['include_breadcrumbs']);
+            || CatalogQuery::toBool($params['include_breadcrumbs']);
         if ($includeBreadcrumbs) {
             $payload['breadcrumbs'] = $this->buildBreadcrumbs($category, $params, $includeHidden);
         }
 
-        if (ProductCatalogService::toBool($params['include_children'] ?? false)) {
+        if (CatalogQuery::toBool($params['include_children'] ?? false)) {
             $payload['children'] = $this->listDirectChildrenPayloads($categoryId, $params, $includeHidden, false);
         }
 
@@ -183,10 +167,10 @@ class CategoryCatalogService
      */
     public function getList(array $params): array
     {
-        $limit = ProductCatalogService::resolveLimit($params);
-        $offset = ProductCatalogService::resolveOffset($params, $limit);
-        $includeHidden = ProductCatalogService::toBool($params['include_hidden'] ?? false);
-        $includeContent = ProductCatalogService::toBool($params['include_content'] ?? false);
+        $limit = CatalogQuery::resolveLimit($params);
+        $offset = CatalogQuery::resolveOffset($params, $limit);
+        $includeHidden = CatalogQuery::toBool($params['include_hidden'] ?? false);
+        $includeContent = CatalogQuery::toBool($params['include_content'] ?? false);
         $parent = (int) ($params['parent'] ?? 0);
 
         if ($parent > 0 && $this->findVisibleCategory($parent, $params, $includeHidden) === null) {
@@ -221,7 +205,7 @@ class CategoryCatalogService
     {
         $parent = (int) ($params['parent'] ?? 0);
         $depth = self::resolveDepth($params);
-        $includeHidden = ProductCatalogService::toBool($params['include_hidden'] ?? false);
+        $includeHidden = CatalogQuery::toBool($params['include_hidden'] ?? false);
 
         if ($parent > 0 && $this->findVisibleCategory($parent, $params, $includeHidden) === null) {
             return ['items' => []];
@@ -253,7 +237,10 @@ class CategoryCatalogService
      */
     private function resolveContext(array $params): string
     {
-        return trim((string) ($params['context'] ?? $this->modx->context->key ?? 'web'));
+        return CatalogQuery::resolveContext(
+            $params,
+            (string) ($this->modx->context->key ?? 'web'),
+        );
     }
 
     /**
