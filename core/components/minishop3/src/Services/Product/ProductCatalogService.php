@@ -276,8 +276,12 @@ class ProductCatalogService
     private function countList(array $params, ProductCatalogFilterSpec $filters): int
     {
         $countQuery = $this->buildListQuery($params, $filters, false);
-        // DISTINCT: option filters may join multi-value rows (#564).
-        $countQuery->select('COUNT(DISTINCT msProduct.id)');
+        // Option JOINs can duplicate product rows; 1:1 Data join does not.
+        $countQuery->select(
+            $filters->options !== []
+                ? 'COUNT(DISTINCT msProduct.id)'
+                : 'COUNT(msProduct.id)'
+        );
         if (!$countQuery->prepare() || !$countQuery->stmt->execute()) {
             return 0;
         }

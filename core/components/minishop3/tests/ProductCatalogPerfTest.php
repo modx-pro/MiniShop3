@@ -31,12 +31,12 @@ if (!str_contains($src, "where(['id:IN'")) {
     $fail('Data prefetch must use id:IN batch query');
 }
 
-if (str_contains($src, 'COUNT(DISTINCT msProduct.id)')) {
-    $fail('countList must not use COUNT(DISTINCT) for 1:1 Data join');
+if (!str_contains($src, "select('COUNT(msProduct.id)')") && !str_contains($src, 'COUNT(msProduct.id)')) {
+    $fail('countList must COUNT(msProduct.id) for the 1:1 Data path');
 }
 
-if (!str_contains($src, "select('COUNT(msProduct.id)')")) {
-    $fail('countList must COUNT(msProduct.id)');
+if (str_contains($src, 'COUNT(DISTINCT msProduct.id)') && !str_contains($src, "options !== []")) {
+    $fail('COUNT(DISTINCT) must be gated to option-filter joins only');
 }
 
 if (!preg_match(
