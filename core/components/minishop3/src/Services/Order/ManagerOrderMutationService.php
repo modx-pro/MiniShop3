@@ -201,12 +201,19 @@ class ManagerOrderMutationService
 
         // Store old values for logging
         $oldStatusId = (int)$order->get('status_id');
+        $pendingStatusId = array_key_exists('status_id', $params)
+            ? (int) $params['status_id']
+            : null;
 
         // Get editable order fields from msModelField configuration
         $orderFields = $this->presenter->getModelFieldNames('msOrder');
         $changedOrderFields = [];
 
         foreach ($orderFields as $field) {
+            // Non-draft status changes go only through OrderStatusService (#592).
+            if ($field === 'status_id') {
+                continue;
+            }
             if (array_key_exists($field, $params)) {
                 $oldValue = $order->get($field);
                 $newValue = $params[$field];
@@ -257,8 +264,7 @@ class ManagerOrderMutationService
             return $this->error('Failed to update order', HttpStatus::INTERNAL_SERVER_ERROR);
         }
 
-        // Log order field changes (excluding status_id which is logged separately)
-        unset($changedOrderFields['status_id']);
+        // Log order field changes (status_id is logged by OrderStatusService)
         if (!empty($changedOrderFields)) {
             $this->getOrderLog()->addEntry(
                 $id,
@@ -325,15 +331,10 @@ class ManagerOrderMutationService
         }
 
         // Handle status change via OrderStatusService (sends notifications)
-        $newStatusId = (int)$order->get('status_id');
-        if ($oldStatusId !== $newStatusId) {
-            // Revert status to old value - OrderStatusService will change it properly
-            $order->set('status_id', $oldStatusId);
-            $order->save();
-
+        if ($pendingStatusId !== null && $pendingStatusId !== $oldStatusId) {
             /** @var OrderStatusService $orderStatusService */
             $orderStatusService = $this->modx->services->get('ms3_order_status');
-            $result = $orderStatusService->change((int)$order->get('id'), $newStatusId);
+            $result = $orderStatusService->change((int)$order->get('id'), $pendingStatusId);
 
             if ($result !== true) {
                 return $this->error(
