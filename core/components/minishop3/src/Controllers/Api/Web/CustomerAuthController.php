@@ -4,10 +4,12 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Customer\CustomerSessionService;
+use MiniShop3\Services\TokenService;
 use MODX\Revolution\modX;
 
 /**
- * CustomerAuthController — login, register, logout, password recovery (Web API).
+ * CustomerAuthController — login, register, logout, password recovery, session (Web API).
  *
  * Delegates to Processors\Api\Customer\* and maps processor failures to HTTP responses.
  */
@@ -47,6 +49,34 @@ class CustomerAuthController
     public function resetPasswordFromRequest(): Response
     {
         return $this->resetPassword($this->readJsonBody());
+    }
+
+    /**
+     * GET /api/v1/customer/me
+     */
+    public function me(): Response
+    {
+        $payload = $this->sessionService()->buildMePayload($this->requestToken());
+        if ($payload === null) {
+            return Response::error('ms3_err_token_invalid', HttpStatus::UNAUTHORIZED);
+        }
+
+        return Response::success($payload);
+    }
+
+    /**
+     * POST /api/v1/customer/token/refresh
+     */
+    public function refreshToken(): Response
+    {
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $rotated = $tokenService->rotateApiToken($this->requestToken());
+        if ($rotated === null) {
+            return Response::error('ms3_err_token_invalid', HttpStatus::UNAUTHORIZED);
+        }
+
+        return Response::success($rotated);
     }
 
     /**
@@ -121,6 +151,20 @@ class CustomerAuthController
             'password' => $data['password'] ?? '',
             'password_confirm' => $data['password_confirm'] ?? '',
         ]);
+    }
+
+    private function requestToken(): string
+    {
+        return TokenService::resolveTokenFromRequest();
+    }
+
+    private function sessionService(): CustomerSessionService
+    {
+        /** @var TokenService $tokenService */
+        $tokenService = $this->modx->services->get('ms3_token_service');
+        $ms3 = $this->modx->services->get('ms3');
+
+        return new CustomerSessionService($this->modx, $tokenService, $ms3);
     }
 
     /**

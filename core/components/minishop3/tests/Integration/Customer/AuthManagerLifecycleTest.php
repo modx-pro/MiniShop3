@@ -39,6 +39,12 @@ class AuthManagerLifecycleTest extends TestCase
         }
         $_SESSION = [];
         $_COOKIE = [];
+        unset(
+            $_REQUEST['ms3_token'],
+            $_REQUEST['token'],
+            $_SERVER['HTTP_AUTHORIZATION'],
+            $_SERVER['HTTP_MS3TOKEN']
+        );
 
         $this->store = $this->createStore();
         $this->store->reset();
@@ -49,6 +55,12 @@ class AuthManagerLifecycleTest extends TestCase
     {
         $_SESSION = [];
         $_COOKIE = [];
+        unset(
+            $_REQUEST['ms3_token'],
+            $_REQUEST['token'],
+            $_SERVER['HTTP_AUTHORIZATION'],
+            $_SERVER['HTTP_MS3TOKEN']
+        );
     }
 
     protected function createStore(): CustomerAuthPdoStore
@@ -167,6 +179,66 @@ class AuthManagerLifecycleTest extends TestCase
                 static fn(string $call): bool => str_starts_with($call, 'transfer:')
             )
         );
+    }
+
+    public function testRotateApiTokenRevokesOldAndKeepsCustomer(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'buyer@example.com',
+            'is_active' => 1,
+            'is_blocked' => 0,
+        ]);
+
+        $modx = $this->makeModx();
+        $tokenService = new TokenService($modx);
+        $current = $tokenService->persistApiToken((int) $customer->id, null, 3600);
+        self::assertNotNull($current);
+        $oldToken = (string) $current->get('token');
+
+        $rotated = $tokenService->rotateApiToken($oldToken);
+        self::assertNotNull($rotated);
+        self::assertNotSame($oldToken, $rotated['token']);
+        self::assertSame((int) $customer->id, $rotated['customer_id']);
+        self::assertNull($this->store->findToken(['token' => $oldToken, 'type' => msCustomerToken::TYPE_API]));
+        self::assertNotNull($this->store->findToken(['token' => $rotated['token'], 'type' => msCustomerToken::TYPE_API]));
+        self::assertContains('transfer:' . $oldToken . '=>' . $rotated['token'], $this->draftCalls);
+
+        self::assertNull($tokenService->rotateApiToken($oldToken));
+    }
+
+    public function testGetBindableTokenStringPrefersBearerOverSession(): void
+    {
+        $modx = $this->makeModx();
+        $tokenService = new TokenService($modx);
+        $bearer = $tokenService->persistApiToken(0, null, 3600);
+        self::assertNotNull($bearer);
+        $bearerToken = (string) $bearer->get('token');
+
+        $_SESSION['ms3']['customer_token'] = 'session-only-token';
+        $_SESSION['ms3']['customer_token_expires'] = time() + 3600;
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $bearerToken;
+        unset($_REQUEST['ms3_token'], $_REQUEST['token'], $_COOKIE['ms3_token']);
+
+        self::assertSame($bearerToken, $tokenService->getBindableTokenString());
+
+        unset($_SERVER['HTTP_AUTHORIZATION']);
+    }
+
+    public function testGetBindableTokenStringIgnoresInvalidBearerAndUsesSession(): void
+    {
+        $modx = $this->makeModx();
+        $tokenService = new TokenService($modx);
+        $guest = $tokenService->persistApiToken(0, null, 3600);
+        self::assertNotNull($guest);
+        $guestToken = (string) $guest->get('token');
+
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer dead-or-revoked-token';
+        unset($_REQUEST['ms3_token'], $_REQUEST['token'], $_COOKIE['ms3_token']);
+
+        self::assertSame($guestToken, $tokenService->getBindableTokenString());
+        self::assertSame($guestToken, $_SESSION['ms3']['customer_token'] ?? null);
+
+        unset($_SERVER['HTTP_AUTHORIZATION']);
     }
 
     public function testValidateTokenAndRevokeTokens(): void
