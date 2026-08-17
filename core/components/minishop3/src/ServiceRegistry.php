@@ -107,7 +107,7 @@ class ServiceRegistry
             'ms3_order_number_generator',
         ],
         'ms3_order_finalize' => ['ms3_order_number_generator'],
-        'ms3_order_status' => ['ms3_order_log'],
+        'ms3_order_status' => ['ms3_order_log', 'ms3_order_lifecycle_ports'],
         'ms3_cart_mutation_handler' => [
             'ms3_order_draft_manager',
             'ms3_cart_item_manager',
@@ -263,6 +263,10 @@ class ServiceRegistry
         'ms3_order_log' => [
             'class' => \MiniShop3\Services\Order\OrderLogService::class,
             'interface' => null,
+        ],
+        'ms3_order_lifecycle_ports' => [
+            'class' => \MiniShop3\Services\Order\NullOrderLifecyclePorts::class,
+            'interface' => \MiniShop3\Services\Order\OrderLifecyclePortsInterface::class,
         ],
         'ms3_order_status' => [
             'class' => \MiniShop3\Services\Order\OrderStatusService::class,
@@ -696,19 +700,16 @@ class ServiceRegistry
             return $fallbackClass;
         }
 
-        if ($requiredInterface) {
-            $interfaces = class_implements($className);
-            if (!in_array($requiredInterface, $interfaces ?: [])) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[MiniShop3 ServiceRegistry] Class '{$className}' must implement {$requiredInterface}, "
-                    . 'using fallback'
-                );
-                return $fallbackClass;
-            }
+        if ($requiredInterface && !is_a($className, $requiredInterface, true)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[MiniShop3 ServiceRegistry] Class '{$className}' must implement {$requiredInterface}, "
+                . 'using fallback'
+            );
+            return $fallbackClass;
         }
 
-        if (!is_subclass_of($className, $fallbackClass)) {
+        if (!$requiredInterface && !is_subclass_of($className, $fallbackClass)) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
                 "[MiniShop3 ServiceRegistry] Class '{$className}' must extend {$fallbackClass}, using fallback"
