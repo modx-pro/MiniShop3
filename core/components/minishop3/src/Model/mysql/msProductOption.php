@@ -46,9 +46,31 @@ class msProductOption extends \MiniShop3\Model\msProductOption
             ],
         'indexes' =>
             [
-                'product_id' =>
+                'key_product_id' =>
                     [
-                        'alias' => 'product_id',
+                        'alias' => 'key_product_id',
+                        'primary' => false,
+                        'unique' => false,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'key' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                                'product_id' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                            ],
+                    ],
+                'product_id_key' =>
+                    [
+                        'alias' => 'product_id_key',
                         'primary' => false,
                         'unique' => false,
                         'type' => 'BTREE',
@@ -60,16 +82,6 @@ class msProductOption extends \MiniShop3\Model\msProductOption
                                         'collation' => 'A',
                                         'null' => false,
                                     ],
-                            ],
-                    ],
-                'key' =>
-                    [
-                        'alias' => 'key',
-                        'primary' => false,
-                        'unique' => false,
-                        'type' => 'BTREE',
-                        'columns' =>
-                            [
                                 'key' =>
                                     [
                                         'length' => '',

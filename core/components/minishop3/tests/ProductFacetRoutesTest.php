@@ -84,6 +84,19 @@ if (str_contains($facet, 'collectProductIds') || str_contains($facet, 'queryFail
     $fail('ProductFacetService must not materialize product IDs or use queryFailed flag');
 }
 
+$migration = file_get_contents(
+    __DIR__ . '/../migrations/20260817130105_add_product_options_composite_indexes.php'
+);
+$metaMap = file_get_contents(__DIR__ . '/../src/Model/mysql/msProductOption.php');
+if ($migration === false || $metaMap === false) {
+    $fail('unable to read product_options index migration/metaMap');
+}
+foreach (['key_product_id', 'product_id_key'] as $indexName) {
+    if (!str_contains($migration, $indexName) || !str_contains($metaMap, "'{$indexName}'")) {
+        $fail("composite index {$indexName} missing in migration or msProductOption metaMap");
+    }
+}
+
 if (!str_contains($catalog, 'function buildScopedListQuery(')) {
     $fail('ProductCatalogService must expose buildScopedListQuery');
 }
