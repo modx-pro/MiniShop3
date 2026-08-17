@@ -7,6 +7,7 @@ namespace MiniShop3\Services\Product;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Services\Catalog\CatalogQuery;
+use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Option\OptionService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
@@ -190,27 +191,32 @@ class ProductCatalogService
      * Paginated product list.
      *
      * Supported filters in $params:
-     * - parent|category: primary parent resource id (not msCategoryMember)
-     * - limit, offset | page
-     * - sort, dir (ASC|DESC)
-     * - query: pagetitle / article search
-     * - context: MODX context key (default: current)
-     * - include_options: 0|1 (default 0 for list)
-     * - include_content: 0|1 (default 0 for list)
+     * - parent|category: primary parent resource id (BC; ignored when `parents` set)
+     * - parents: CSV/array of category IDs (OR; + msCategoryMember via scope)
+     * - nested: 0|1 expand category tree when using parents
+     * - price_min / price_max: filter on stored Data.price (not plugin getPrice())
+     * - in_stock, stock_min, vendor_id, new, popular, favorite
+     * - options: JSON object or bracket map (AND between keys, OR within key)
+     * - limit, offset | page, sort, dir, query, context
+     * - include_options, include_content
      *
      * @param array<string, mixed> $params
      * @return array{items: list<array<string, mixed>>, total: int, limit: int, offset: int}
+     *
+     * @throws ProductCatalogFilterException
      */
     public function getList(array $params): array
     {
+        $filters = ProductCatalogFilterParser::parse($params);
+
         $limit = self::resolveLimit($params);
         $offset = self::resolveOffset($params, $limit);
         $includeOptions = self::toBool($params['include_options'] ?? false);
         $includeContent = self::toBool($params['include_content'] ?? false);
 
-        $total = $this->countList($params);
+        $total = $this->countList($params, $filters);
 
-        $listQuery = $this->buildListQuery($params);
+        $listQuery = $this->buildListQuery($params, $filters);
         $this->applyListSelect($listQuery, $includeContent);
         $this->applySort($listQuery, $params);
         $listQuery->limit($limit, $offset);
@@ -267,11 +273,15 @@ class ProductCatalogService
     /**
      * @param array<string, mixed> $params
      */
-    private function countList(array $params): int
+    private function countList(array $params, ProductCatalogFilterSpec $filters): int
     {
-        $countQuery = $this->buildListQuery($params);
-        // 1:1 join on Data — DISTINCT is unnecessary until many-joins are added.
-        $countQuery->select('COUNT(msProduct.id)');
+        $countQuery = $this->buildListQuery($params, $filters, false);
+        // Option JOINs can duplicate product rows; 1:1 Data join does not.
+        $countQuery->select(
+            $filters->options !== []
+                ? 'COUNT(DISTINCT msProduct.id)'
+                : 'COUNT(msProduct.id)'
+        );
         if (!$countQuery->prepare() || !$countQuery->stmt->execute()) {
             return 0;
         }
@@ -281,9 +291,13 @@ class ProductCatalogService
 
     /**
      * @param array<string, mixed> $params
+     * @param bool $dedupeRows GROUP BY for list pages; false for COUNT(DISTINCT) queries
      */
-    private function buildListQuery(array $params): xPDOQuery
-    {
+    private function buildListQuery(
+        array $params,
+        ProductCatalogFilterSpec $filters,
+        bool $dedupeRows = true,
+    ): xPDOQuery {
         $c = $this->modx->newQuery(msProduct::class);
         $c->innerJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
         $c->where($this->publicCriteria());
@@ -293,9 +307,11 @@ class ProductCatalogService
             $c->where(['msProduct.context_key' => $context]);
         }
 
-        $parent = (int) ($params['parent'] ?? $params['category'] ?? 0);
-        if ($parent > 0) {
-            $c->where(['msProduct.parent' => $parent]);
+        if (!$filters->hasParents()) {
+            $parent = (int) ($params['parent'] ?? $params['category'] ?? 0);
+            if ($parent > 0) {
+                $c->where(['msProduct.parent' => $parent]);
+            }
         }
 
         $query = trim((string) ($params['query'] ?? ''));
@@ -306,7 +322,17 @@ class ProductCatalogService
             ]);
         }
 
+        $this->filterApplier()->apply($c, $filters, $dedupeRows);
+
         return $c;
+    }
+
+    private function filterApplier(): ProductCatalogFilterApplier
+    {
+        /** @var CategoryProductScopeService $scope */
+        $scope = $this->modx->services->get('ms3_category_product_scope');
+
+        return new ProductCatalogFilterApplier($this->modx, $scope);
     }
 
     /**

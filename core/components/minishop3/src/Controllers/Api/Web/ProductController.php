@@ -6,6 +6,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Product\ProductCatalogFilterException;
 use MiniShop3\Services\Product\ProductCatalogService;
 use MODX\Revolution\modX;
 
@@ -55,14 +56,22 @@ class ProductController
     /**
      * GET /api/v1/product/list
      *
-     * Query: parent|category, limit, offset|page, sort, dir, query,
-     *        context, include_options, include_content
+     * Query: parent|category, parents, nested, price_min, price_max, in_stock, stock_min,
+     *        vendor_id, new, popular, favorite, options (JSON),
+     *        limit, offset|page, sort, dir, query, context, include_options, include_content
      *
      * @param array<string, mixed> $params Route + query params (Router merges $_GET)
      */
     public function getList(array $params = []): Response
     {
-        $result = $this->catalog()->getList($params);
+        try {
+            $result = $this->catalog()->getList($params);
+        } catch (ProductCatalogFilterException $e) {
+            return Response::error(
+                $this->modx->lexicon($e->getLexiconKey()),
+                HttpStatus::BAD_REQUEST
+            );
+        }
 
         return Response::success($result);
     }
