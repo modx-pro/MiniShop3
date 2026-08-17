@@ -55,6 +55,54 @@ final class CorsConfig
     }
 
     /**
+     * Whether $origin is allowed by an exact entry or a single-label host wildcard (#576).
+     *
+     * Pattern `https://*.example.com` matches `https://shop.example.com` and rejects
+     * `https://shop.exampleXcom` (dots are literal after preg_quote).
+     */
+    public static function isOriginAllowed(string $origin, array $allowedOrigins): bool
+    {
+        if ($origin === '' || $allowedOrigins === []) {
+            return false;
+        }
+
+        if (self::hasWildcardOrigin($allowedOrigins)) {
+            return true;
+        }
+
+        if (in_array($origin, $allowedOrigins, true)) {
+            return true;
+        }
+
+        foreach ($allowedOrigins as $allowedOrigin) {
+            if (
+                is_string($allowedOrigin)
+                && str_contains($allowedOrigin, '*')
+                && self::originMatchesWildcardPattern($origin, $allowedOrigin)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Match origin against a pattern where `*` is one DNS label (`[^.]+`), not `.*`.
+     */
+    public static function originMatchesWildcardPattern(string $origin, string $pattern): bool
+    {
+        if ($origin === '' || $pattern === '' || !str_contains($pattern, '*')) {
+            return false;
+        }
+
+        $quoted = preg_quote($pattern, '#');
+        $regex = str_replace('\*', '[^.]+', $quoted);
+
+        return preg_match('#^' . $regex . '$#', $origin) === 1;
+    }
+
+    /**
      * @return string[]
      */
     public static function normalizeStringList(mixed $value): array

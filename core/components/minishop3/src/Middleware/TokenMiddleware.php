@@ -16,8 +16,10 @@ use MODX\Revolution\modX;
  * Token resolution order:
  * 1. Authorization: Bearer header (mobile apps)
  * 2. HTTP_MS3TOKEN header (legacy)
- * 3. $_REQUEST['ms3_token'] (includes httpOnly cookie via injection)
+ * 3. httpOnly cookie `ms3_token` (injected into $_REQUEST for controllers)
+ * 4. Session cache (still DB-validated)
  *
+ * Query-string `ms3_token` is stripped and never accepted as API credentials (#576).
  * Cookie injection at start of handle() copies $_COOKIE['ms3_token'] → $_REQUEST['ms3_token']
  * for backward compatibility with controllers reading $_REQUEST.
  *
@@ -49,21 +51,13 @@ class TokenMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Handle request
-     *
-     * Token resolution order:
-     * 1. Authorization: Bearer header (for mobile apps)
-     * 2. HTTP_MS3TOKEN header (legacy)
-     * 3. $_REQUEST['ms3_token'] (includes httpOnly cookie via injection + legacy URL param)
-     *
-     * Cookie injection: copies $_COOKIE['ms3_token'] → $_REQUEST['ms3_token']
-     * so all controllers (CartController, OrderController, etc.) work without changes.
-     *
      * @param array $params URL parameters from router
      * @return Response|null Return Response to stop execution, or null to continue
      */
     public function handle(array $params)
     {
+        $this->stripQueryStringApiTokens();
+
         // Cookie injection: make cookie token available via $_REQUEST for backward compat
         $cookieToken = CookieHelper::getTokenFromCookie();
         if (!empty($cookieToken) && empty($_REQUEST['ms3_token'])) {
@@ -163,37 +157,45 @@ class TokenMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Resolve token from request sources
+     * Remove API session token from the query string so controllers cannot pick it up (#576).
+     * Email verification uses `?token=` on a route without this middleware.
+     */
+    private function stripQueryStringApiTokens(): void
+    {
+        if (!array_key_exists('ms3_token', $_GET)) {
+            return;
+        }
+
+        unset($_GET['ms3_token'], $_REQUEST['ms3_token']);
+    }
+
+    /**
+     * Resolve token from trusted sources only (Bearer, MS3TOKEN header, cookie, session).
      *
      * @return string Token or empty string
      */
     private function resolveToken(): string
     {
-        // 1. Authorization: Bearer header (for mobile apps)
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         if (str_starts_with($authHeader, 'Bearer ')) {
             $token = substr($authHeader, 7);
-            if (!empty($token)) {
+            if ($token !== '') {
                 return $token;
             }
         }
 
-        // 2. HTTP_MS3TOKEN header (legacy)
-        $token = $_SERVER['HTTP_MS3TOKEN'] ?? '';
-        if (!empty($token)) {
-            return $token;
+        $headerToken = $_SERVER['HTTP_MS3TOKEN'] ?? '';
+        if ($headerToken !== '') {
+            return $headerToken;
         }
 
-        // 3. $_REQUEST (includes cookie via injection + legacy URL param)
-        $token = $_REQUEST['ms3_token'] ?? $_REQUEST['token'] ?? '';
-        if (!empty($token)) {
-            return $token;
+        $cookieToken = CookieHelper::getTokenFromCookie();
+        if ($cookieToken !== '') {
+            return $cookieToken;
         }
 
-        // 4. Session cache (must still pass DB validation in handle())
-        return $_SESSION['ms3']['customer_token'] ?? '';
+        return (string) ($_SESSION['ms3']['customer_token'] ?? '');
     }
-
 
     /**
      * Check if route is public

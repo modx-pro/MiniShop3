@@ -80,5 +80,36 @@ if (str_contains($webRoutes, "getOption('ms3_cors_allowed_origins', null, ['*']"
     $fail('web.php must not default ms3_cors_allowed_origins to *');
 }
 
+// #576: wildcard host patterns must not treat dots as "any char"
+$pattern = 'https://*.example.com';
+if (!CorsConfig::originMatchesWildcardPattern('https://shop.example.com', $pattern)) {
+    $fail('https://*.example.com must allow https://shop.example.com');
+}
+if (CorsConfig::originMatchesWildcardPattern('https://shop.exampleXcom', $pattern)) {
+    $fail('https://*.example.com must reject https://shop.exampleXcom');
+}
+if (CorsConfig::originMatchesWildcardPattern('https://evil.example.com.attacker.tld', $pattern)) {
+    $fail('https://*.example.com must reject nested attacker tld');
+}
+if (CorsConfig::originMatchesWildcardPattern('https://foo.bar.example.com', $pattern)) {
+    $fail('single-label * must reject multi-label subdomain');
+}
+if (!CorsConfig::isOriginAllowed('https://shop.example.com', [$pattern])) {
+    $fail('isOriginAllowed must accept matching wildcard origin');
+}
+if (CorsConfig::isOriginAllowed('https://shop.exampleXcom', [$pattern])) {
+    $fail('isOriginAllowed must reject spoofed wildcard origin');
+}
+if (!CorsConfig::isOriginAllowed('https://exact.example.com', ['https://exact.example.com'])) {
+    $fail('exact origin allowlist must still work');
+}
+
+if (!str_contains($middleware, 'CorsConfig::isOriginAllowed')) {
+    $fail('CorsMiddleware must delegate origin match to CorsConfig::isOriginAllowed');
+}
+if (str_contains($middleware, "str_replace('*', '.*'")) {
+    $fail('CorsMiddleware must not use unquoted .* wildcard replacement');
+}
+
 fwrite(STDOUT, "OK CorsConfigNormalizeTest\n");
 exit(0);
