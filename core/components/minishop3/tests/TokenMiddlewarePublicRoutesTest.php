@@ -42,6 +42,10 @@ foreach (
         '/api/v1/category/get/',
         '/api/v1/category/list',
         '/api/v1/category/tree',
+        '/api/v1/delivery/get/',
+        '/api/v1/delivery/list',
+        '/api/v1/payment/get/',
+        '/api/v1/payment/list',
         '/api/v1/customer/token/get',
         '/api/v1/health',
     ] as $prefix
