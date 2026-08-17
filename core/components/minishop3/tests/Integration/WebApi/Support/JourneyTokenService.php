@@ -25,7 +25,26 @@ final class JourneyTokenService
             return ['token' => null, 'reason' => 'expired'];
         }
 
-        return ['token' => $this->tokenRow($row['customer_id'], $row['expires_at']), 'reason' => 'ok'];
+        return [
+            'token' => $this->tokenRow($token, $row['customer_id'], $row['expires_at']),
+            'reason' => 'ok',
+        ];
+    }
+
+    /**
+     * Mirror TokenService::syncSessionFromToken for middleware after #588.
+     */
+    public function syncSessionFromToken(object $tokenObj): void
+    {
+        if (!isset($_SESSION['ms3'])) {
+            $_SESSION['ms3'] = [];
+        }
+
+        $token = (string) $tokenObj->get('token');
+        $customerId = (int) $tokenObj->get('customer_id');
+        $_SESSION['ms3']['customer_token'] = $token;
+        $_SESSION['ms3']['customer_token_expires'] = strtotime((string) $tokenObj->get('expires_at'));
+        $_SESSION['ms3']['customer_id'] = $customerId > 0 ? $customerId : 0;
     }
 
     public function sessionTokenBelongsToCustomer(int $customerId): bool
@@ -63,10 +82,11 @@ final class JourneyTokenService
         unset($this->tokens[$token]);
     }
 
-    private function tokenRow(int $customerId, string $expiresAt): object
+    private function tokenRow(string $token, int $customerId, string $expiresAt): object
     {
-        return new class ($customerId, $expiresAt) {
+        return new class ($token, $customerId, $expiresAt) {
             public function __construct(
+                private string $token,
                 private int $customerId,
                 private string $expiresAt,
             ) {
@@ -75,6 +95,7 @@ final class JourneyTokenService
             public function get(string $field): mixed
             {
                 return match ($field) {
+                    'token' => $this->token,
                     'customer_id' => $this->customerId,
                     'expires_at' => $this->expiresAt,
                     default => null,

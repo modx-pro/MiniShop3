@@ -16,6 +16,11 @@ final class JourneyBrokenTokenMint
         return ['token' => null, 'reason' => 'missing'];
     }
 
+    public function syncSessionFromToken(object $tokenObj): void
+    {
+        unset($tokenObj);
+    }
+
     /**
      * @return array{token: string}
      */
