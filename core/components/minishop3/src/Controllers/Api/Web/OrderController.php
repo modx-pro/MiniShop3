@@ -2,6 +2,8 @@
 
 namespace MiniShop3\Controllers\Api\Web;
 
+use MiniShop3\Router\ApiErrorCode;
+use MiniShop3\Router\DomainMs2Response;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modX;
@@ -29,9 +31,9 @@ class OrderController
      * GET /api/v1/order/get
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function get(array $params = []): array
+    public function get(array $params = []): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -45,7 +47,10 @@ class OrderController
 
         $result = $order->get();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -53,9 +58,9 @@ class OrderController
      * POST /api/v1/order/add
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function add(array $params = []): array
+    public function add(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -71,7 +76,7 @@ class OrderController
             return Response::error(
                 $this->modx->lexicon('ms3_err_field_key_required'),
                 HttpStatus::BAD_REQUEST
-            )->getData();
+            );
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -80,7 +85,10 @@ class OrderController
 
         $result = $order->add($key, $value);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -88,9 +96,9 @@ class OrderController
      * POST /api/v1/order/set
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function set(array $params = []): array
+    public function set(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -102,7 +110,7 @@ class OrderController
         }
 
         if (empty($fields) || !is_array($fields)) {
-            return Response::error($this->modx->lexicon('ms3_err_fields_required'), HttpStatus::BAD_REQUEST)->getData();
+            return Response::error($this->modx->lexicon('ms3_err_fields_required'), HttpStatus::BAD_REQUEST);
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -111,7 +119,10 @@ class OrderController
 
         $result = $order->set($fields);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -119,9 +130,9 @@ class OrderController
      * POST /api/v1/order/remove
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function remove(array $params = []): array
+    public function remove(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -136,7 +147,7 @@ class OrderController
             return Response::error(
                 $this->modx->lexicon('ms3_err_field_key_required'),
                 HttpStatus::BAD_REQUEST
-            )->getData();
+            );
         }
 
         $ms3 = $this->modx->services->get('ms3');
@@ -146,10 +157,10 @@ class OrderController
         $exists = $order->remove($key);
 
         if ($exists) {
-            return Response::success(['removed' => $key], $this->modx->lexicon('ms3_order_remove_success'))->getData();
+            return Response::success(['removed' => $key], $this->modx->lexicon('ms3_order_remove_success'));
         }
 
-        return Response::error($this->modx->lexicon('ms3_err_field_nf'), HttpStatus::NOT_FOUND)->getData();
+        return Response::error($this->modx->lexicon('ms3_err_field_nf'), HttpStatus::NOT_FOUND);
     }
 
     /**
@@ -157,9 +168,9 @@ class OrderController
      * POST /api/v1/order/submit
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function submit(array $params = []): array
+    public function submit(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -176,7 +187,10 @@ class OrderController
 
         $result = $order->submit($data);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -184,9 +198,9 @@ class OrderController
      * POST /api/v1/order/clean
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function clean(array $params = []): array
+    public function clean(array $params = []): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -200,7 +214,10 @@ class OrderController
 
         $result = $order->clean();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -208,9 +225,9 @@ class OrderController
      * GET /api/v1/order/cost
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function getCost(array $params = []): array
+    public function getCost(array $params = []): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -224,7 +241,10 @@ class OrderController
 
         $result = $order->getCost(false);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -232,9 +252,9 @@ class OrderController
      * GET /api/v1/order/cost/cart
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function getCartCost(array $params = []): array
+    public function getCartCost(array $params = []): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -248,7 +268,10 @@ class OrderController
 
         $result = $order->getCartCost();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -256,9 +279,9 @@ class OrderController
      * GET /api/v1/order/cost/delivery
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function getDeliveryCost(array $params = []): array
+    public function getDeliveryCost(array $params = []): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -272,7 +295,10 @@ class OrderController
 
         $result = $order->getDeliveryCost();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -280,9 +306,9 @@ class OrderController
      * GET /api/v1/order/cost/payment
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function getPaymentCost(array $params = []): array
+    public function getPaymentCost(array $params = []): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -296,7 +322,10 @@ class OrderController
 
         $result = $order->getPaymentCost();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -304,9 +333,9 @@ class OrderController
      * POST /api/v1/order/address/set
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function setCustomerAddress(array $params = []): array
+    public function setCustomerAddress(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -319,9 +348,9 @@ class OrderController
      * POST /api/v1/customer/changeAddress
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function changeCustomerAddress(array $params = []): array
+    public function changeCustomerAddress(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -329,7 +358,7 @@ class OrderController
         return $this->setCustomerAddressByHash($addressHash);
     }
 
-    protected function setCustomerAddressByHash(?string $addressHash = null): array
+    protected function setCustomerAddressByHash(?string $addressHash = null): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -343,7 +372,10 @@ class OrderController
 
         $result = $order->setCustomerAddress($addressHash);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -351,9 +383,9 @@ class OrderController
      * POST /api/v1/order/address/clean
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function cleanCustomerAddress(array $params = []): array
+    public function cleanCustomerAddress(array $params = []): Response
     {
         $token = $_REQUEST['ms3_token'] ?? '';
 
@@ -367,7 +399,10 @@ class OrderController
 
         $result = $order->cleanCustomerAddress();
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -375,9 +410,9 @@ class OrderController
      * GET /api/v1/order/delivery/validation-rules
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function getDeliveryValidationRules(array $params = []): array
+    public function getDeliveryValidationRules(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -394,7 +429,10 @@ class OrderController
 
         $result = $order->getDeliveryValidationRules($delivery_id);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
@@ -402,9 +440,9 @@ class OrderController
      * GET /api/v1/order/delivery/required-fields
      *
      * @param array $params URL parameters
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function getDeliveryRequiresFields(array $params = []): array
+    public function getDeliveryRequiresFields(array $params = []): Response
     {
         $input = $this->getRequestData();
 
@@ -421,18 +459,22 @@ class OrderController
 
         $result = $order->getDeliveryRequiresFields($delivery_id);
 
-        return $this->transformResponse($result);
+        return DomainMs2Response::fromDomain(
+            $result,
+            $this->modx->lexicon('ms3_err_unknown')
+        );
     }
 
     /**
-     * @return array{success: bool, message: string, code: int, errors: mixed}
+     * @return Response
      */
-    private function tokenRequiredError(): array
+    private function tokenRequiredError(): Response
     {
-        return Response::error(
+        return Response::errorWithCode(
+            ApiErrorCode::TOKEN_REQUIRED,
             $this->modx->lexicon('ms3_customer_err_token_required'),
             HttpStatus::UNAUTHORIZED
-        )->getData();
+        );
     }
 
     /**
@@ -453,22 +495,4 @@ class OrderController
         return array_merge($_GET, $_POST);
     }
 
-    /**
-     * Transform Order response to API format
-     *
-     * @param array $result Response from Order controller
-     * @return array Response in API format ['success' => bool, 'message' => '', 'data' => [...]]
-     */
-    protected function transformResponse(array $result): array
-    {
-        if ($result['success']) {
-            return Response::success($result['data'], $result['message'] ?? '')->getData();
-        } else {
-            return Response::error(
-                $result['message'] ?? $this->modx->lexicon('ms3_err_unknown'),
-                HttpStatus::BAD_REQUEST,
-                $result['data'] ?? []
-            )->getData();
-        }
-    }
 }

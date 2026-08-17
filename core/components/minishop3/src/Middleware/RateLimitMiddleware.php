@@ -3,6 +3,7 @@
 namespace MiniShop3\Middleware;
 
 use MiniShop3\Router\Middleware\MiddlewareInterface;
+use MiniShop3\Router\ApiErrorCode;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\RateLimit\FileRateLimitStore;
@@ -61,7 +62,11 @@ class RateLimitMiddleware implements MiddlewareInterface
             $retryAfter = max(0, $state['reset_at'] - time());
             header("Retry-After: $retryAfter");
 
-            return Response::error('ms3_err_rate_limit', HttpStatus::TOO_MANY_REQUESTS);
+            return Response::errorWithCode(
+                ApiErrorCode::RATE_LIMITED,
+                'ms3_err_rate_limit',
+                HttpStatus::TOO_MANY_REQUESTS
+            );
         }
 
         $this->setRateLimitHeaders($state['attempts'], $state['reset_at']);

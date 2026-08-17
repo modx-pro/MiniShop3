@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Router\ApiErrorCode;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
@@ -14,29 +17,20 @@ use MODX\Revolution\modX;
 /**
  * CustomerEmailController - Email verification API controller
  *
- * Handles sending and verification of email confirmation.
- *
  * Endpoints:
- * - POST /api/v1/customer/email/resend-verification - resend verification email
- * - GET /api/v1/customer/email/verify - verify token from email
+ * - POST /api/v1/customer/email/resend-verification
+ * - GET /api/v1/customer/email/verify
  *
  * @package MiniShop3\Controllers\Api\Web
  */
 class CustomerEmailController
 {
-    /** @var modX */
     protected modX $modx;
 
-    /** @var MiniShop3 */
     protected MiniShop3 $ms3;
 
-    /** @var EmailVerificationService */
     protected EmailVerificationService $emailVerification;
 
-    /**
-     * @param modX $modx
-     * @param MiniShop3 $ms3
-     */
     public function __construct(modX $modx, MiniShop3 $ms3)
     {
         $this->modx = $modx;
@@ -47,83 +41,88 @@ class CustomerEmailController
     }
 
     /**
-     * Resend verification email
-     *
      * POST /api/v1/customer/email/resend-verification
-     *
-     * @return array ['success' => bool, 'message' => string]
      */
-    public function resendVerification(): array
+    public function resendVerification(): Response
     {
         if (empty($_SESSION['ms3']['customer_id'])) {
             return Response::error(
                 $this->modx->lexicon('ms3_customer_err_login_required'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
-        $customerId = (int)$_SESSION['ms3']['customer_id'];
+        $customerId = (int) $_SESSION['ms3']['customer_id'];
 
-        /** @var msCustomer $customer */
+        /** @var msCustomer|null $customer */
         $customer = $this->modx->getObject(msCustomer::class, $customerId);
 
-        if (!$customer) {
+        if (!$customer instanceof msCustomer) {
             return Response::error(
                 $this->modx->lexicon('ms3_err_customer_nf'),
                 HttpStatus::UNAUTHORIZED
-            )->getData();
+            );
         }
 
         $result = $this->emailVerification->resendVerificationEmail($customer);
 
-        if ($result['success']) {
+        if (!empty($result['success'])) {
             $this->modx->log(
                 modX::LOG_LEVEL_INFO,
                 "[CustomerEmailController] Verification email resent to customer #{$customerId}"
             );
-            return $result;
+
+            return Response::success(
+                $result['data'] ?? null,
+                isset($result['message']) ? (string) $result['message'] : ''
+            );
         }
 
         return Response::error(
-            $result['message'],
+            (string) ($result['message'] ?? $this->modx->lexicon('ms3_err_unknown')),
             Response::statusFromProcessorObject($result)
-        )->getData();
+        );
     }
 
     /**
-     * Verify confirmation token from email
-     *
      * GET /api/v1/customer/email/verify?token={token}
      *
      * - `format=json` — всегда JSON (интеграции, отладка).
      * - `html=1` (как в ссылке из письма) — после успеха/ошибки HTTP 302 на сайт (см. GH-226).
      *
-     * @param array $params Request parameters
-     * @return array|Response
+     * @param array<string, mixed> $params
      */
-    public function verify(array $params): array|Response
+    public function verify(array $params): Response
     {
         $formatJson = ($params['format'] ?? '') === 'json';
         $htmlFlow = ($params['html'] ?? '') === '1';
 
         $token = $params['token'] ?? '';
 
-        if (empty($token)) {
+        if ($token === '') {
             if ($htmlFlow && !$formatJson) {
                 return Response::redirect($this->buildEmailVerificationFailedRedirectUrl(), 302);
             }
 
-            return $this->error($this->modx->lexicon('ms3_customer_err_token_required'));
+            return Response::errorWithCode(
+                ApiErrorCode::BAD_REQUEST,
+                $this->modx->lexicon('ms3_customer_err_token_required'),
+                HttpStatus::BAD_REQUEST
+            );
         }
 
-        $customer = $this->emailVerification->verifyToken($token);
+        $customer = $this->emailVerification->verifyToken((string) $token);
 
         if (!$customer) {
             if ($htmlFlow && !$formatJson) {
                 return Response::redirect($this->buildEmailVerificationFailedRedirectUrl(), 302);
             }
 
-            return $this->error($this->modx->lexicon('ms3_customer_err_email_verification_invalid'));
+            return Response::errorWithCode(
+                ApiErrorCode::BAD_REQUEST,
+                $this->modx->lexicon('ms3_customer_err_email_verification_invalid'),
+                HttpStatus::BAD_REQUEST
+            );
         }
 
         /** @var AuthManager $authManager */
@@ -141,14 +140,14 @@ class CustomerEmailController
             }
 
             // Email is verified; auto-login failed (same UX as html=1 redirect without session)
-            return $this->success(
-                $this->modx->lexicon('ms3_customer_email_verified'),
+            return Response::success(
                 [
                     'customer_id' => $customer->id,
                     'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
                     'token' => null,
                     'expires_at' => null,
-                ]
+                ],
+                $this->modx->lexicon('ms3_customer_email_verified')
             );
         }
 
@@ -161,14 +160,14 @@ class CustomerEmailController
             return Response::redirect($this->buildEmailVerificationSuccessRedirectUrl(), 302);
         }
 
-        return $this->success(
-            $this->modx->lexicon('ms3_customer_email_verified'),
+        return Response::success(
             [
                 'customer_id' => $customer->id,
                 'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
                 'token' => $session['token'],
                 'expires_at' => $session['expires_at'],
-            ]
+            ],
+            $this->modx->lexicon('ms3_customer_email_verified')
         );
     }
 
@@ -194,37 +193,5 @@ class CustomerEmailController
         $base = rtrim((string) $this->modx->getOption('site_url', null, '/'), '/');
 
         return $base . '?ms3_email_verified=0';
-    }
-
-    /**
-     * Success response
-     *
-     * @param string $message
-     * @param array $data
-     * @return array
-     */
-    protected function success(string $message = '', array $data = []): array
-    {
-        return [
-            'success' => true,
-            'message' => $message,
-            'data' => $data,
-        ];
-    }
-
-    /**
-     * Error response
-     *
-     * @param string $message
-     * @param array $data
-     * @return array
-     */
-    protected function error(string $message, array $data = []): array
-    {
-        return [
-            'success' => false,
-            'message' => $message,
-            'data' => $data,
-        ];
     }
 }

@@ -31,26 +31,30 @@ class CustomerOrderController
      * GET /api/v1/customer/orders?limit=&offset=&status=
      *
      * @param array $params URL parameters
-     * @return array
+     * @return Response
      */
-    public function getList(array $params = []): array
+    public function getList(array $params = []): Response
     {
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_err_unauthorized'), HttpStatus::UNAUTHORIZED)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_unauthorized'), HttpStatus::UNAUTHORIZED);
         }
 
         /** @var CustomerOrderService $service */
         $service = $this->modx->services->get('ms3_customer_order');
         $query = CustomerOrderService::normalizeListParams($_GET, $service->getDraftStatusId());
 
-        return Response::success($service->listForCustomer(
+        $payload = $service->listForCustomer(
             (int)$customer->get('id'),
             $query['limit'],
             $query['offset'],
             $query['status_id']
-        ))->getData();
+        );
+        // Additive alias for pagination convention (#572); keep `orders` for BC.
+        $payload['items'] = $payload['orders'] ?? [];
+
+        return Response::success($payload);
     }
 
     /**
@@ -58,20 +62,20 @@ class CustomerOrderController
      * GET /api/v1/customer/orders/{id}
      *
      * @param array $params URL parameters (id = order ID)
-     * @return array
+     * @return Response
      */
-    public function get(array $params = []): array
+    public function get(array $params = []): Response
     {
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_err_unauthorized'), HttpStatus::UNAUTHORIZED)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_unauthorized'), HttpStatus::UNAUTHORIZED);
         }
 
         $orderId = (int)($params['id'] ?? 0);
 
         if ($orderId < 1) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_err_no_id'), HttpStatus::BAD_REQUEST)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_no_id'), HttpStatus::BAD_REQUEST);
         }
 
         /** @var CustomerOrderService $service */
@@ -79,10 +83,10 @@ class CustomerOrderController
         $detail = $service->getForCustomer((int)$customer->get('id'), $orderId);
 
         if ($detail === null) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_err_not_found'), HttpStatus::NOT_FOUND)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_err_not_found'), HttpStatus::NOT_FOUND);
         }
 
-        return Response::success($detail)->getData();
+        return Response::success($detail);
     }
 
     /**
@@ -90,20 +94,20 @@ class CustomerOrderController
      * POST /api/v1/customer/orders/{id}/cancel
      *
      * @param array $params URL parameters (id = order ID)
-     * @return array Response ['success' => bool, 'message' => '', 'data' => [...]]
+     * @return Response
      */
-    public function cancel(array $params = []): array
+    public function cancel(array $params = []): Response
     {
         $customer = $this->getAuthorizedCustomer();
 
         if (!$customer) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_unauthorized'), HttpStatus::UNAUTHORIZED)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_unauthorized'), HttpStatus::UNAUTHORIZED);
         }
 
         $orderId = (int)($params['id'] ?? 0);
 
         if ($orderId < 1) {
-            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_no_order'), HttpStatus::BAD_REQUEST)->getData();
+            return Response::error($this->modx->lexicon('ms3_customer_order_cancel_err_no_order'), HttpStatus::BAD_REQUEST);
         }
 
         /** @var CustomerOrderService $service */
@@ -115,21 +119,21 @@ class CustomerOrderController
                 'not_found' => Response::error(
                     $this->modx->lexicon('ms3_customer_order_cancel_err_not_found'),
                     HttpStatus::NOT_FOUND
-                )->getData(),
+                ),
                 'status' => Response::error(
                     $this->modx->lexicon('ms3_customer_order_cancel_err_status'),
                     HttpStatus::BAD_REQUEST
-                )->getData(),
+                ),
                 default => Response::error(
                     $result['message'] ?? $this->modx->lexicon('ms3_customer_order_cancel_err_failed'),
                     HttpStatus::BAD_REQUEST
-                )->getData(),
+                ),
             };
         }
 
         return Response::success(
             ['order_id' => $result['order_id'], 'status_id' => $result['status_id']],
             $this->modx->lexicon('ms3_customer_order_cancelled')
-        )->getData();
+        );
     }
 }
