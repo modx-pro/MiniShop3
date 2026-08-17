@@ -30,6 +30,7 @@
   "scripts": {
     "test": "phpunit",
     "test:smoke": "php tests/run-smoke.php",
+    "test:web-api": "phpunit --testsuite WebApi",
     "ci:php": "bash scripts/ci-php.sh",
     "stan:prepare": "bash scripts/phpstan-prepare-deps.sh",
     "stan": "vendor/bin/phpstan analyse -c ../../../phpstan.neon --memory-limit=1G"

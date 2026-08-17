@@ -14,4 +14,5 @@ find "${paths[@]}" -type f -name '*.php' -print0 \
 echo "OK php -l (${count} files)"
 
 composer test:smoke
+# Unit + Integration + WebApi (WebApi excluded from Integration directory to avoid suite overlap)
 composer test

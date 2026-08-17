@@ -13,6 +13,10 @@
         </testsuite>
         <testsuite name="Integration">
             <directory>tests/Integration</directory>
+            <exclude>tests/Integration/WebApi</exclude>
+        </testsuite>
+        <testsuite name="WebApi">
+            <directory>tests/Integration/WebApi</directory>
         </testsuite>
     </testsuites>
     <source>

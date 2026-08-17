@@ -1,0 +1,28 @@
+Web API Integration Suite (#574)
+================================
+
+Headless Nuxt customer journey against Router + config/routes/web.php
+(middleware, controllers, JSON envelope).
+
+Run (from core/components/minishop3):
+
+  composer test:web-api
+  # or
+  vendor/bin/phpunit --testsuite WebApi
+
+Included in `composer test` / `composer ci:php` as the WebApi PHPUnit suite
+(excluded from the Integration directory suite to avoid duplicate registration).
+
+Layout:
+  WebApiTestCase.php                 — Router bootstrap, Bearer/cookie dispatch
+  HeadlessStorefrontJourneyTest.php  — happy path (fixture delivery/payment IDs)
+  HeadlessStorefrontErrorsTest.php   — 401/404/validation/business errors
+  HeadlessStorefrontCorsTest.php     — CORS normalize + OPTIONS preflight
+  HeadlessCartSqliteHttpTest.php     — Phase B cart HTTP + SQLite
+  Support/                           — journey MODX / cart / order doubles
+
+MySQL (@group mysql) is not required. Journey uses in-memory stubs + SQLite
+for cart Phase B. Skip policy matches other Integration Mysql tests.
+
+Out of scope: public delivery/list, payment/list discovery; Phase C built-in
+server → api.php (optional nightly).
