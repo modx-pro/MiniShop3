@@ -31,8 +31,6 @@ final class ProductFacetService
     public const MAX_VENDOR_BUCKETS = 50;
     public const CACHE_TTL_SECONDS = 120;
 
-    private bool $queryFailed = false;
-
     public function __construct(
         private modX $modx,
     ) {
@@ -50,12 +48,10 @@ final class ProductFacetService
      */
     public function getFilters(array $params): array
     {
-        $this->queryFailed = false;
-
         $filters = ProductCatalogFilterParser::parse($params);
         $includePrice = ProductCatalogService::toBool($params['include_price'] ?? true);
         $includeVendors = ProductCatalogService::toBool($params['include_vendors'] ?? false);
-        $keys = $this->resolveFacetKeys($params, $filters);
+        [$keys, $keysOk] = $this->resolveFacetKeys($params, $filters);
 
         $cacheKey = $this->buildCacheKey($params, $filters, $keys, $includePrice, $includeVendors);
         $cached = $this->cacheGet($cacheKey);
@@ -66,21 +62,25 @@ final class ProductFacetService
         $result = [
             'options' => [],
         ];
+        $cacheable = $keysOk;
 
         if ($includePrice) {
-            $result['price'] = $this->aggregatePriceBounds($params, $filters);
+            [$result['price'], $priceOk] = $this->aggregatePriceBounds($params, $filters);
+            $cacheable = $cacheable && $priceOk;
         }
 
         foreach ($keys as $key) {
-            $result['options'][$key] = $this->aggregateOptionBuckets($params, $filters, $key);
+            [$result['options'][$key], $optionOk] = $this->aggregateOptionBuckets($params, $filters, $key);
+            $cacheable = $cacheable && $optionOk;
         }
 
         if ($includeVendors) {
-            $result['vendors'] = $this->aggregateVendorBuckets($params, $filters);
+            [$result['vendors'], $vendorOk] = $this->aggregateVendorBuckets($params, $filters);
+            $cacheable = $cacheable && $vendorOk;
         }
 
         // Do not cache empty/partial payloads produced by SQL failures.
-        if (!$this->queryFailed) {
+        if ($cacheable) {
             $this->cacheSet($cacheKey, $result);
         }
 
@@ -89,7 +89,7 @@ final class ProductFacetService
 
     /**
      * @param array<string, mixed> $params
-     * @return list<string>
+     * @return array{0: list<string>, 1: bool} keys, SQL ok
      */
     private function resolveFacetKeys(array $params, ProductCatalogFilterSpec $filters): array
     {
@@ -98,12 +98,12 @@ final class ProductFacetService
             $keys = $this->parseRequestedKeys($params['keys']);
             $this->filterApplier()->assertKnownOptionKeys($keys);
 
-            return $keys;
+            return [$keys, true];
         }
 
-        $fromCategory = $this->keysFromCategoryOptions($params, $filters);
+        [$fromCategory, $categoryOk] = $this->keysFromCategoryOptions($params, $filters);
         if ($fromCategory !== []) {
-            return $fromCategory;
+            return [$fromCategory, $categoryOk];
         }
 
         return $this->keysFromAllOptions();
@@ -143,13 +143,13 @@ final class ProductFacetService
 
     /**
      * @param array<string, mixed> $params
-     * @return list<string>
+     * @return array{0: list<string>, 1: bool}
      */
     private function keysFromCategoryOptions(array $params, ProductCatalogFilterSpec $filters): array
     {
         $categoryIds = $this->resolveScopeCategoryIds($params, $filters);
         if ($categoryIds === []) {
-            return [];
+            return [[], true];
         }
 
         $c = $this->modx->newQuery(msCategoryOption::class);
@@ -167,7 +167,7 @@ final class ProductFacetService
     }
 
     /**
-     * @return list<string>
+     * @return array{0: list<string>, 1: bool}
      */
     private function keysFromAllOptions(): array
     {
@@ -180,20 +180,20 @@ final class ProductFacetService
     }
 
     /**
-     * @return list<string>
+     * @return array{0: list<string>, 1: bool}
      */
     private function fetchQueryKeys(xPDOQuery $query): array
     {
         if (!$query->prepare() || !$query->stmt->execute()) {
-            $this->queryFailed = true;
-
-            return [];
+            return [[], false];
         }
 
-        return array_values(array_filter(
+        $keys = array_values(array_filter(
             array_map('strval', $query->stmt->fetchAll(\PDO::FETCH_COLUMN) ?: []),
             static fn (string $key): bool => $key !== ''
         ));
+
+        return [$keys, true];
     }
 
     /**
@@ -226,7 +226,7 @@ final class ProductFacetService
 
     /**
      * @param array<string, mixed> $params
-     * @return array{min: float|null, max: float|null}
+     * @return array{0: array{min: float|null, max: float|null}, 1: bool}
      */
     private function aggregatePriceBounds(array $params, ProductCatalogFilterSpec $filters): array
     {
@@ -238,16 +238,17 @@ final class ProductFacetService
         $query->select('MIN(Data.price) AS price_min, MAX(Data.price) AS price_max');
 
         if (!$query->prepare() || !$query->stmt->execute()) {
-            $this->queryFailed = true;
-
-            return ['min' => null, 'max' => null];
+            return [['min' => null, 'max' => null], false];
         }
 
         $row = $query->stmt->fetch(\PDO::FETCH_ASSOC) ?: [];
 
         return [
-            'min' => $this->nullableFloat($row['price_min'] ?? null),
-            'max' => $this->nullableFloat($row['price_max'] ?? null),
+            [
+                'min' => $this->nullableFloat($row['price_min'] ?? null),
+                'max' => $this->nullableFloat($row['price_max'] ?? null),
+            ],
+            true,
         ];
     }
 
@@ -255,7 +256,7 @@ final class ProductFacetService
      * Soft option facet via scoped product query + JOIN (no PHP ID materialization).
      *
      * @param array<string, mixed> $params
-     * @return list<array{value: string, count: int}>
+     * @return array{0: list<array{value: string, count: int}>, 1: bool}
      */
     private function aggregateOptionBuckets(
         array $params,
@@ -278,9 +279,7 @@ final class ProductFacetService
         $query->limit(self::MAX_VALUES_PER_KEY);
 
         if (!$query->prepare() || !$query->stmt->execute()) {
-            $this->queryFailed = true;
-
-            return [];
+            return [[], false];
         }
 
         $buckets = [];
@@ -295,12 +294,12 @@ final class ProductFacetService
             ];
         }
 
-        return $buckets;
+        return [$buckets, true];
     }
 
     /**
      * @param array<string, mixed> $params
-     * @return list<array{id: int, name: string, count: int}>
+     * @return array{0: list<array{id: int, name: string, count: int}>, 1: bool}
      */
     private function aggregateVendorBuckets(array $params, ProductCatalogFilterSpec $filters): array
     {
@@ -316,14 +315,12 @@ final class ProductFacetService
         $query->limit(self::MAX_VENDOR_BUCKETS);
 
         if (!$query->prepare() || !$query->stmt->execute()) {
-            $this->queryFailed = true;
-
-            return [];
+            return [[], false];
         }
 
         $rows = $query->stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
         if ($rows === []) {
-            return [];
+            return [[], true];
         }
 
         $ids = [];
@@ -338,10 +335,10 @@ final class ProductFacetService
         }
 
         if ($ids === []) {
-            return [];
+            return [[], true];
         }
 
-        $names = $this->loadVendorNames($ids);
+        [$names, $namesOk] = $this->loadVendorNames($ids);
         $buckets = [];
         foreach ($ids as $id) {
             $buckets[] = [
@@ -351,12 +348,12 @@ final class ProductFacetService
             ];
         }
 
-        return $buckets;
+        return [$buckets, $namesOk];
     }
 
     /**
      * @param list<int> $ids
-     * @return array<int, string>
+     * @return array{0: array<int, string>, 1: bool}
      */
     private function loadVendorNames(array $ids): array
     {
@@ -365,9 +362,7 @@ final class ProductFacetService
         $c->select('id, name');
 
         if (!$c->prepare() || !$c->stmt->execute()) {
-            $this->queryFailed = true;
-
-            return [];
+            return [[], false];
         }
 
         $names = [];
@@ -375,7 +370,7 @@ final class ProductFacetService
             $names[(int) $row['id']] = (string) ($row['name'] ?? '');
         }
 
-        return $names;
+        return [$names, true];
     }
 
     private function nullableFloat(mixed $value): ?float
@@ -422,11 +417,12 @@ final class ProductFacetService
      */
     private function cacheGet(string $key): ?array
     {
-        if (!$this->hasCacheManager()) {
+        $cacheManager = $this->modx->cacheManager;
+        if (!is_object($cacheManager)) {
             return null;
         }
 
-        $value = $this->modx->cacheManager->get($key, $this->cacheOptions());
+        $value = $cacheManager->get($key, $this->cacheOptions());
 
         return is_array($value) ? $value : null;
     }
@@ -436,16 +432,12 @@ final class ProductFacetService
      */
     private function cacheSet(string $key, array $value): void
     {
-        if (!$this->hasCacheManager()) {
+        $cacheManager = $this->modx->cacheManager;
+        if (!is_object($cacheManager)) {
             return;
         }
 
-        $this->modx->cacheManager->set($key, $value, self::CACHE_TTL_SECONDS, $this->cacheOptions());
-    }
-
-    private function hasCacheManager(): bool
-    {
-        return isset($this->modx->cacheManager) && is_object($this->modx->cacheManager);
+        $cacheManager->set($key, $value, self::CACHE_TTL_SECONDS, $this->cacheOptions());
     }
 
     /**

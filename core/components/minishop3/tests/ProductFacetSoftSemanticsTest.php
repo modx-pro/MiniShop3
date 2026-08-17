@@ -101,8 +101,8 @@ if (!str_contains($facetSrc, 'innerJoin(') || !str_contains($facetSrc, 'FacetOpt
 if (str_contains($facetSrc, 'collectProductIds')) {
     $fail('collectProductIds must be removed');
 }
-if (!str_contains($facetSrc, '!$this->queryFailed')) {
-    $fail('must skip cache when queryFailed');
+if (!str_contains($facetSrc, '$cacheable')) {
+    $fail('must track cacheable flag for SQL failures');
 }
 $assertThrows(
     'ms3_err_catalog_facet_keys_limit',

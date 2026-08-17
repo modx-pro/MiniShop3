@@ -69,7 +69,7 @@ foreach (
         'buildScopedListQuery(',
         'assertKnownOptionKeys(',
         'FacetOpt',
-        'queryFailed',
+        '$cacheable',
         'CACHE_TTL_SECONDS',
         'MAX_FACET_KEYS',
         'MAX_VALUES_PER_KEY',
@@ -80,8 +80,8 @@ foreach (
     }
 }
 
-if (str_contains($facet, 'collectProductIds')) {
-    $fail('ProductFacetService must not materialize product IDs');
+if (str_contains($facet, 'collectProductIds') || str_contains($facet, 'queryFailed')) {
+    $fail('ProductFacetService must not materialize product IDs or use queryFailed flag');
 }
 
 if (!str_contains($catalog, 'function buildScopedListQuery(')) {
