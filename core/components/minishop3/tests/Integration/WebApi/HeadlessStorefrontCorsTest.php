@@ -34,6 +34,7 @@ declare(strict_types=1);
 error_reporting(E_ALL & ~E_DEPRECATED);
 require $argv[1];
 use MiniShop3\Middleware\CorsMiddleware;
+use MiniShop3\Utils\CorsConfig;
 
 $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
 $_SERVER['HTTP_ORIGIN'] = 'https://shop.example';
@@ -42,10 +43,7 @@ $mw = new CorsMiddleware([
     'allowed_origins' => 'https://shop.example',
     'allow_credentials' => true,
 ]);
-$ref = new ReflectionClass($mw);
-$allowed = $ref->getMethod('isOriginAllowed');
-$allowed->setAccessible(true);
-$originOk = $allowed->invoke($mw, 'https://shop.example') ? '1' : '0';
+$originOk = CorsConfig::isOriginAllowed('https://shop.example', ['https://shop.example']) ? '1' : '0';
 
 register_shutdown_function(static function () use ($originOk): void {
     echo 'HTTP_CODE=' . (string) http_response_code() . "\n";

@@ -118,12 +118,13 @@ final class HeadlessStorefrontErrorsTest extends WebApiTestCase
         $this->assertApiError($res, HttpStatus::UNAUTHORIZED, 'ms3_customer_order_err_unauthorized');
     }
 
-    public function testCartWithoutTokenAndFailedAutoMintReturns401(): void
+    public function testCartWithoutTokenAndFailedAutoMintReturns500(): void
     {
         $this->modx->setTokenService(new JourneyBrokenTokenMint());
         $this->router = $this->buildRouter($this->modx);
 
         $res = $this->dispatch('GET', '/api/v1/cart/get');
-        $this->assertApiError($res, HttpStatus::UNAUTHORIZED, 'ms3_customer_err_token_create');
+        // #583: mint failure is an internal fault (cannot issue guest session), not auth rejection.
+        $this->assertApiError($res, HttpStatus::INTERNAL_SERVER_ERROR, 'ms3_customer_err_token_create');
     }
 }
