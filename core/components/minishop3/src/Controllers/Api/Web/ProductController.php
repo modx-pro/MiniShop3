@@ -8,6 +8,7 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Product\ProductCatalogFilterException;
 use MiniShop3\Services\Product\ProductCatalogService;
+use MiniShop3\Services\Product\ProductFacetService;
 use MODX\Revolution\modX;
 
 /**
@@ -76,10 +77,40 @@ class ProductController
         return Response::success($result);
     }
 
+    /**
+     * GET /api/v1/product/filters
+     *
+     * Soft facets for headless PLP (#565). Same filter query params as product/list,
+     * plus keys, include_price (default 1), include_vendors (default 0).
+     *
+     * @param array<string, mixed> $params
+     */
+    public function filters(array $params = []): Response
+    {
+        try {
+            $result = $this->facets()->getFilters($params);
+        } catch (ProductCatalogFilterException $e) {
+            return Response::error(
+                $this->modx->lexicon($e->getLexiconKey()),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        return Response::success($result);
+    }
+
     private function catalog(): ProductCatalogService
     {
         /** @var ProductCatalogService $service */
         $service = $this->modx->services->get('ms3_product_catalog');
+
+        return $service;
+    }
+
+    private function facets(): ProductFacetService
+    {
+        /** @var ProductFacetService $service */
+        $service = $this->modx->services->get('ms3_product_facets');
 
         return $service;
     }

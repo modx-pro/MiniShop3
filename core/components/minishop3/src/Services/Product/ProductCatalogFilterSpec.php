@@ -46,4 +46,68 @@ final class ProductCatalogFilterSpec
             || $this->flagFavorite
             || $this->options !== [];
     }
+
+    /**
+     * Soft price facet: bounds ignore selected price_min/price_max so the slider does not collapse.
+     */
+    public function withoutPriceBounds(): self
+    {
+        if ($this->priceMin === null && $this->priceMax === null) {
+            return $this;
+        }
+
+        return $this->with(['priceMin' => null, 'priceMax' => null]);
+    }
+
+    /**
+     * Soft option facet: buckets for $key ignore selected values of that key only.
+     */
+    public function withoutOptionKey(string $key): self
+    {
+        if (!array_key_exists($key, $this->options)) {
+            return $this;
+        }
+
+        $options = $this->options;
+        unset($options[$key]);
+
+        return $this->with(['options' => $options]);
+    }
+
+    /**
+     * Soft vendor facet: buckets ignore selected vendor_id filter.
+     */
+    public function withoutVendors(): self
+    {
+        if ($this->vendorIds === []) {
+            return $this;
+        }
+
+        return $this->with(['vendorIds' => []]);
+    }
+
+    /**
+     * @param array{
+     *     priceMin?: float|null,
+     *     priceMax?: float|null,
+     *     vendorIds?: list<int>,
+     *     options?: array<string, list<string>>
+     * } $overrides
+     */
+    private function with(array $overrides): self
+    {
+        return new self(
+            parentIds: $this->parentIds,
+            nested: $this->nested,
+            priceMin: array_key_exists('priceMin', $overrides) ? $overrides['priceMin'] : $this->priceMin,
+            priceMax: array_key_exists('priceMax', $overrides) ? $overrides['priceMax'] : $this->priceMax,
+            inStock: $this->inStock,
+            stockMin: $this->stockMin,
+            vendorIds: array_key_exists('vendorIds', $overrides) ? $overrides['vendorIds'] : $this->vendorIds,
+            flagNew: $this->flagNew,
+            flagPopular: $this->flagPopular,
+            flagFavorite: $this->flagFavorite,
+            options: array_key_exists('options', $overrides) ? $overrides['options'] : $this->options,
+        );
+    }
 }

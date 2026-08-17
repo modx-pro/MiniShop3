@@ -16,7 +16,7 @@ use xPDO\Om\xPDOQuery;
 final class ProductCatalogFilterApplier
 {
     /** Depth when nested=1 (matches ms3_products default depth window). */
-    private const NESTED_DEPTH = 10;
+    public const NESTED_DEPTH = 10;
 
     public function __construct(
         private modX $modx,
@@ -95,7 +95,7 @@ final class ProductCatalogFilterApplier
             return;
         }
 
-        $this->assertOptionKeysExist(array_keys($filters->options));
+        $this->assertKnownOptionKeys(array_keys($filters->options));
 
         $index = 0;
         foreach ($filters->options as $key => $values) {
@@ -120,8 +120,12 @@ final class ProductCatalogFilterApplier
     /**
      * @param list<string> $keys
      */
-    private function assertOptionKeysExist(array $keys): void
+    public function assertKnownOptionKeys(array $keys): void
     {
+        if ($keys === []) {
+            return;
+        }
+
         $c = $this->modx->newQuery(msOption::class);
         $c->where(['key:IN' => $keys]);
         $c->select('key');

@@ -39,6 +39,7 @@ foreach (
     [
         '/api/v1/product/get/',
         '/api/v1/product/list',
+        '/api/v1/product/filters',
         '/api/v1/category/get/',
         '/api/v1/category/list',
         '/api/v1/category/tree',
