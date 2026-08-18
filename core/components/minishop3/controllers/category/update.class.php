@@ -55,11 +55,6 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.js');
         $this->addJavascript($mgrUrl . 'assets/modext/sections/resource/update.js');
         $this->addJavascript($assetsUrl . 'js/mgr/minishop3.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/strftime-min-1.3.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/category.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/update.js');
 
