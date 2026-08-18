@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Smoke: product/get include_images wiring + allowlist (#566).
+ * Smoke: product gallery include_images + /product/{id}/images (#566).
  *
  * Run: php tests/ProductCatalogImagesRoutesTest.php
  */
@@ -17,8 +17,17 @@ $catalog = file_get_contents(__DIR__ . '/../src/Services/Product/ProductCatalogS
 $controller = file_get_contents(__DIR__ . '/../src/Controllers/Api/Web/ProductController.php');
 $service = file_get_contents(__DIR__ . '/../src/Services/Product/ProductGalleryPublicService.php');
 $serializer = file_get_contents(__DIR__ . '/../src/Services/Product/ProductGalleryPublicSerializer.php');
+$webRoutes = file_get_contents(__DIR__ . '/../config/routes/web.php');
 
-foreach (['catalog' => $catalog, 'controller' => $controller, 'service' => $service, 'serializer' => $serializer] as $label => $src) {
+foreach (
+    [
+        'catalog' => $catalog,
+        'controller' => $controller,
+        'service' => $service,
+        'serializer' => $serializer,
+        'webRoutes' => $webRoutes,
+    ] as $label => $src
+) {
     if ($src === false || $src === '') {
         $fail("unable to read {$label}");
     }
@@ -36,12 +45,21 @@ if (!str_contains($catalog, 'resolvePreviewFileId')) {
 if (!str_contains($catalog, "ms3_product_gallery_public")) {
     $fail('gallery service must come from ServiceRegistry');
 }
-if (!preg_match('/function getById\([\s\S]*?gallery\(\)->loadForProduct/', $catalog)) {
+if (!preg_match('/function getById\([\s\S]*?loadImagesForProduct/', $catalog)) {
     $fail('gallery load must run inside getById after product is found');
 }
-if (preg_match('/public function getList\(array \$params\): array\s*\{([\s\S]*?)\n    public function /', $catalog, $m)
-    && str_contains($m[1], 'loadForProduct')) {
-    $fail('product/list must not load gallery in MVP');
+if (!preg_match('/function getList\([\s\S]*?loadImagesForProducts/', $catalog)) {
+    $fail('product/list must batch-load gallery when include_images is on');
+}
+if (!str_contains($catalog, 'function getPublicImages')) {
+    $fail('catalog must expose getPublicImages for /product/{id}/images');
+}
+
+if (!str_contains($controller, 'function getImages')) {
+    $fail('ProductController must expose getImages');
+}
+if (!str_contains($webRoutes, "'/{id}/images'") && !str_contains($webRoutes, '"/{id}/images"')) {
+    $fail('web.php must register GET /product/{id}/images');
 }
 
 $registry = file_get_contents(__DIR__ . '/../src/ServiceRegistry.php');
@@ -58,9 +76,15 @@ if (!str_contains($service, "'parent_id' => 0") || !str_contains($service, "'act
 if (!str_contains($service, 'parent_id:IN')) {
     $fail('thumbs must batch-load via parent_id IN');
 }
+if (!str_contains($service, 'ms3_product_thumbnail_size')) {
+    $fail('thumb must prefer ms3_product_thumbnail_size');
+}
 
 if (!str_contains($serializer, 'no DB `alt`')) {
     $fail('serializer must document name → alt mapping');
+}
+if (!str_contains($serializer, "'thumbs'")) {
+    $fail('serializer must expose multi-size thumbs map');
 }
 
 fwrite(STDOUT, "OK ProductCatalogImagesRoutesTest\n");

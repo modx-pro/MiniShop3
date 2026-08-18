@@ -61,7 +61,8 @@ class ProductController
      *
      * Query: parent|category, parents, nested, price_min, price_max, in_stock, stock_min,
      *        vendor_id, new, popular, favorite, options (JSON),
-     *        limit, offset|page, sort, dir, query, context, include_options, include_content
+     *        limit, offset|page, sort, dir, query, context, include_options, include_content,
+     *        include_images (0|1, default 0, cap 10 files per item)
      *
      * @param array<string, mixed> $params Route + query params (Router merges $_GET)
      */
@@ -95,6 +96,36 @@ class ProductController
             return Response::error(
                 $this->modx->lexicon($e->getLexiconKey()),
                 HttpStatus::BAD_REQUEST
+            );
+        }
+
+        return Response::success($result);
+    }
+
+    /**
+     * GET /api/v1/product/{id}/images
+     *
+     * Same gallery serializer as include_images=1 on get. 404 if the product is not storefront-visible.
+     *
+     * @param array<string, mixed> $params
+     */
+    public function getImages(array $params = []): Response
+    {
+        $productId = (int) ($params['id'] ?? 0);
+
+        if ($productId <= 0) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_id_ns'),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $result = $this->catalog()->getPublicImages($productId, $params);
+
+        if ($result === null) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_nf'),
+                HttpStatus::NOT_FOUND
             );
         }
 
