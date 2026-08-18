@@ -48,7 +48,7 @@ foreach (
     [
         'applyProductCategoryScope',
         'msProductOption',
-        'assertOptionKeysExist',
+        'assertKnownOptionKeys',
         'Data.price',
         'Data.stock',
         "groupby('msProduct.id')",

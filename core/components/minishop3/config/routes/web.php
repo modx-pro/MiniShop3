@@ -279,6 +279,11 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
             return $controller->getList($params);
         });
+
+        $router->get('/filters', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
+            return $controller->filters($params);
+        });
     });
 
     // Public category catalog — no TokenMiddleware (headless nav / PLP)

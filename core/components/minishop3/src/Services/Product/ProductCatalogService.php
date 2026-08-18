@@ -290,6 +290,21 @@ class ProductCatalogService
     }
 
     /**
+     * Storefront-scoped product query (visibility + context + list filters).
+     * Shared with product/filters facets (#565).
+     *
+     * @param array<string, mixed> $params
+     * @param bool $dedupeRows GROUP BY for list pages; false for COUNT(DISTINCT) / aggregates
+     */
+    public function buildScopedListQuery(
+        array $params,
+        ProductCatalogFilterSpec $filters,
+        bool $dedupeRows = true,
+    ): xPDOQuery {
+        return $this->buildListQuery($params, $filters, $dedupeRows);
+    }
+
+    /**
      * @param array<string, mixed> $params
      * @param bool $dedupeRows GROUP BY for list pages; false for COUNT(DISTINCT) queries
      */
