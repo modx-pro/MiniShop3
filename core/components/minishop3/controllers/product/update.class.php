@@ -49,12 +49,6 @@ class msProductUpdateManagerController extends msResourceUpdateController
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.js');
         $this->addJavascript($mgrUrl . 'assets/modext/sections/resource/update.js');
         $this->addJavascript($assetsUrl . 'js/mgr/minishop3.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/sortable/sortable.min.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/strftime-min-1.3.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/default.grid.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/default.window.js');
         // Product links tab is Vue (ProductLinksTab); Ext links.grid/window no longer loaded (#114/#350).
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/product.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/product/update.js');

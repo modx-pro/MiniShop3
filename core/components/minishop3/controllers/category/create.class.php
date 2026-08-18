@@ -55,8 +55,6 @@ class msCategoryCreateManagerController extends msResourceCreateController
         $this->addJavascript($mgrUrl . 'assets/modext/widgets/resource/modx.panel.resource.js');
         $this->addJavascript($mgrUrl . 'assets/modext/sections/resource/create.js');
         $this->addJavascript($assetsUrl . 'js/mgr/minishop3.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.combo.js');
-        $this->addJavascript($assetsUrl . 'js/mgr/misc/ms3.utils.js');
         $this->addJavascript($assetsUrl . 'js/mgr/category/category.common.js');
         $this->addLastJavascript($assetsUrl . 'js/mgr/category/create.js');
 

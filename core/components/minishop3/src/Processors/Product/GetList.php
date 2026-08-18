@@ -11,8 +11,10 @@ use xPDO\Om\xPDOQuery;
 use xPDO\Om\xPDOQueryCondition;
 
 /**
- * Combo processor for product search/selection.
- * Used by ms3.combo.Product (always called with combo: true).
+ * Combo processor for product search/selection (always called with combo: true).
+ *
+ * The ExtJS consumer (ms3.combo.Product) is gone; kept for third-party callers
+ * that still invoke this processor by action name through the connector.
  */
 class GetList extends GetListProcessor
 {
