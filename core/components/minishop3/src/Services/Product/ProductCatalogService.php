@@ -130,6 +130,7 @@ class ProductCatalogService
         array $payload,
         bool $includeContent,
         bool $includeOptions,
+        bool $includeImages = false,
     ): array {
         $allowed = array_merge(self::RESOURCE_FIELDS, self::DATA_FIELDS);
         if ($includeContent) {
@@ -145,6 +146,10 @@ class ProductCatalogService
 
         if ($includeOptions && isset($payload['options']) && is_array($payload['options'])) {
             $result['options'] = self::stripOptionMetadata($payload['options']);
+        }
+
+        if ($includeImages && is_array($payload['images'] ?? null)) {
+            $result['images'] = ProductGalleryPublicSerializer::whitelistItems($payload['images']);
         }
 
         return $result;
@@ -184,7 +189,21 @@ class ProductCatalogService
             $this->optionService()->loadOptionsForProduct($productId, false)
         );
 
-        return $this->formatProduct($product, true, $options);
+        $includeImages = self::toBool($params['include_images'] ?? false);
+        $images = null;
+        if ($includeImages) {
+            $data = $product->loadData();
+            $previewFileId = $data
+                ? $this->imageService()->resolvePreviewFileId($data)
+                : 0;
+            $images = $this->gallery()->loadForProduct(
+                $productId,
+                (string) $product->get('pagetitle'),
+                $previewFileId,
+            );
+        }
+
+        return $this->formatProduct($product, true, $options, $images);
     }
 
     /**
@@ -199,6 +218,7 @@ class ProductCatalogService
      * - options: JSON object or bracket map (AND between keys, OR within key)
      * - limit, offset | page, sort, dir, query, context
      * - include_options, include_content
+     * - include_images (get only; default 0)
      *
      * @param array<string, mixed> $params
      * @return array{items: list<array<string, mixed>>, total: int, limit: int, offset: int}
@@ -439,12 +459,14 @@ class ProductCatalogService
 
     /**
      * @param array<string, mixed>|null $options null = omit options key; array = include
+     * @param list<array<string, mixed>>|null $images null = omit images key; array = include
      * @return array<string, mixed>
      */
     private function formatProduct(
         msProduct $product,
         bool $includeContent,
         ?array $options = null,
+        ?array $images = null,
     ): array {
         $data = $product->loadData();
         $payload = [];
@@ -482,11 +504,36 @@ class ProductCatalogService
             $payload['options'] = $options;
         }
 
+        if ($images !== null) {
+            $payload['images'] = $images;
+        }
+
         $modified = $product->modifyFields($payload);
         if (is_array($modified)) {
             $payload = $modified;
         }
 
-        return self::whitelistPublicPayload($payload, $includeContent, $options !== null);
+        return self::whitelistPublicPayload(
+            $payload,
+            $includeContent,
+            $options !== null,
+            $images !== null,
+        );
+    }
+
+    private function gallery(): ProductGalleryPublicService
+    {
+        /** @var ProductGalleryPublicService $service */
+        $service = $this->modx->services->get('ms3_product_gallery_public');
+
+        return $service;
+    }
+
+    private function imageService(): ProductImageService
+    {
+        /** @var ProductImageService $service */
+        $service = $this->modx->services->get('ms3_product_image');
+
+        return $service;
     }
 }
