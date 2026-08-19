@@ -35,6 +35,14 @@ if (in_array('/api/v1/cart/get', $publicRoutes, true)) {
     $fail('cart/get must not be public — otherwise guest GET never auto-mints a token (#408)');
 }
 
+if (in_array('/api/v1/product/', $publicRoutes, true)) {
+    $fail('wide /api/v1/product/ prefix would publish the whole product group (#584)');
+}
+
+if (!str_contains($middlewareSrc, "'/api/v1/product/*/images'")) {
+    $fail('publicRoutePatterns must include /api/v1/product/*/images');
+}
+
 foreach (
     [
         '/api/v1/product/get/',
