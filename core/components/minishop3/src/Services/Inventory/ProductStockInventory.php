@@ -62,13 +62,15 @@ class ProductStockInventory implements InventoryServiceInterface
 
         $held = (float) $existing['qty'];
         $this->fire('msOnBeforeInventoryRelease', $key, $held, $ctx);
-        $this->store->increment($key->productId, $held);
-        $this->store->saveReservation(
-            $ctx->orderId,
-            $key->productId,
-            $held,
-            InventoryReservationState::RELEASED
-        );
+        $this->store->runInTransaction(function () use ($key, $held, $ctx): void {
+            $this->store->increment($key->productId, $held);
+            $this->store->saveReservation(
+                $ctx->orderId,
+                $key->productId,
+                $held,
+                InventoryReservationState::RELEASED
+            );
+        });
         $this->fire('msOnInventoryRelease', $key, $held, $ctx);
     }
 
@@ -132,11 +134,10 @@ class ProductStockInventory implements InventoryServiceInterface
         if (!empty($response['success'])) {
             return;
         }
-        $message = is_string($response['message'] ?? null) ? $response['message'] : '';
         throw new InventoryException(
             'ms3_err_inventory_cancelled',
             ['event' => $event],
-            $message
+            $response['message']
         );
     }
 }

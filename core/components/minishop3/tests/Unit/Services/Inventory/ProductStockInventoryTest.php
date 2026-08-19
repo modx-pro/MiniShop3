@@ -7,7 +7,7 @@ namespace MiniShop3\Tests\Unit\Services\Inventory;
 use MiniShop3\Services\Inventory\InventoryContext;
 use MiniShop3\Services\Inventory\InventoryException;
 use MiniShop3\Services\Inventory\InventoryKey;
-use MiniShop3\Services\Inventory\InMemoryInventoryStockStore;
+use MiniShop3\Tests\Support\InMemoryInventoryStockStore;
 use MiniShop3\Services\Inventory\ProductStockInventory;
 use PHPUnit\Framework\TestCase;
 

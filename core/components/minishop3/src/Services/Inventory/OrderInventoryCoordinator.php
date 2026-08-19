@@ -18,24 +18,6 @@ class OrderInventoryCoordinator
     ) {
     }
 
-    /**
-     * @throws InventoryException when enforcement is on but ms3_inventory is missing
-     */
-    public static function fromModx(modX $modx): ?self
-    {
-        if (!self::isInventoryEnabled($modx)) {
-            return null;
-        }
-        $inventory = $modx->services->has('ms3_inventory')
-            ? $modx->services->get('ms3_inventory')
-            : null;
-        if (!$inventory instanceof InventoryServiceInterface) {
-            throw new InventoryException('ms3_err_inventory_unavailable');
-        }
-
-        return new self($modx, $inventory);
-    }
-
     public static function isInventoryEnabled(modX $modx): bool
     {
         return filter_var(
@@ -51,7 +33,7 @@ class OrderInventoryCoordinator
      */
     public function assertOrderAvailable(msOrder $order): void
     {
-        if (!self::isInventoryEnabled($this->modx)) {
+        if (!$this->enabled()) {
             return;
         }
         foreach ($this->qtyByProduct($order) as $productId => $qty) {
@@ -64,7 +46,7 @@ class OrderInventoryCoordinator
      */
     public function applyStatusChange(msOrder $order, int $newStatusId): void
     {
-        if (!self::isInventoryEnabled($this->modx)) {
+        if (!$this->enabled()) {
             return;
         }
         $ctx = new InventoryContext((int) $order->get('id'));
@@ -83,7 +65,7 @@ class OrderInventoryCoordinator
      */
     public function releaseOrder(msOrder $order): void
     {
-        if (!self::isInventoryEnabled($this->modx)) {
+        if (!$this->enabled()) {
             return;
         }
         $this->releaseAll($order, new InventoryContext((int) $order->get('id')));
@@ -147,5 +129,10 @@ class OrderInventoryCoordinator
         }
 
         return $qtyByProduct;
+    }
+
+    private function enabled(): bool
+    {
+        return self::isInventoryEnabled($this->modx);
     }
 }

@@ -109,6 +109,46 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         ]);
     }
 
+    public function runInTransaction(callable $work): void
+    {
+        $alreadyOpen = method_exists($this->db, 'inTransaction') && $this->db->inTransaction();
+        $started = false;
+        if (!$alreadyOpen && method_exists($this->db, 'beginTransaction')) {
+            $this->db->beginTransaction();
+            $started = true;
+        }
+        try {
+            $work();
+            if ($started) {
+                $this->commit();
+            }
+        } catch (\Throwable $exception) {
+            if ($started) {
+                $this->rollback();
+            }
+            throw $exception;
+        }
+    }
+
+    private function commit(): void
+    {
+        if (method_exists($this->db, 'commit')) {
+            $this->db->commit();
+        }
+    }
+
+    private function rollback(): void
+    {
+        if (method_exists($this->db, 'rollBack')) {
+            $this->db->rollBack();
+
+            return;
+        }
+        if (method_exists($this->db, 'rollback')) {
+            $this->db->rollback();
+        }
+    }
+
     private function prepare(string $sql): PDOStatement
     {
         if (!method_exists($this->db, 'prepare')) {
