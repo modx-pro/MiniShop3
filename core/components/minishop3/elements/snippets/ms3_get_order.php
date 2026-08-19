@@ -263,6 +263,7 @@ try {
         'payment' => ($payment = $msOrder->getOne('Payment'))
             ? $payment->toArray()
             : [],
+        'shipments' => $ms3->shipmentPublicForOrder((int) $id),
         'total' => [
             'cost' => (float)$msOrder->get('cost'),
             'cost_formatted' => $ms3->format->price($msOrder->get('cost'), true),

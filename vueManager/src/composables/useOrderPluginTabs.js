@@ -20,7 +20,7 @@ export function useOrderPluginTabs(deps) {
   /** ExtJS plugin panels mounted lazily per tab key; destroyed in onBeforeUnmount */
   const mountedExtPluginComponents = ref({})
 
-  /** Fixed positions 0–3; must stay in sync with RESERVED_ORDER_TAB_KEYS in orderPluginTab.js */
+  /** Fixed positions 0–4; must stay in sync with RESERVED_ORDER_TAB_KEYS in orderPluginTab.js */
   const builtInOrderTabs = computed(() => [
     { key: 'info', title: _('order_info'), position: 0, hideOnCreate: false, kind: 'builtin' },
     {
@@ -37,7 +37,14 @@ export function useOrderPluginTabs(deps) {
       hideOnCreate: false,
       kind: 'builtin',
     },
-    { key: 'history', title: _('order_history'), position: 3, hideOnCreate: true, kind: 'builtin' },
+    {
+      key: 'tracking',
+      title: _('order_tracking'),
+      position: 3,
+      hideOnCreate: true,
+      kind: 'builtin',
+    },
+    { key: 'history', title: _('order_history'), position: 4, hideOnCreate: true, kind: 'builtin' },
   ])
 
   /** Built-in + plugin tabs, sorted by `position`; respects hideOnCreate per tab */

@@ -58,4 +58,8 @@ interface ShipmentStoreInterface
      * @return ShipmentRow|null
      */
     public function findByExternalId(string $provider, string $externalId, ?int $deliveryId = null): ?array;
+
+    public function hasEvent(int $shipmentId, string $providerEventId): bool;
+
+    public function recordEvent(int $shipmentId, string $providerEventId): void;
 }

@@ -57,7 +57,11 @@ class ServiceRegistryFactories
                     throw new \RuntimeException('ms3_shipment_lifecycle requires MODX PDO');
                 }
                 $prefix = (string) $modx->getOption('table_prefix', null, '');
-                $store = new PdoShipmentStore($modx->pdo, $prefix . 'ms3_shipments');
+                $store = new PdoShipmentStore(
+                    $modx->pdo,
+                    $prefix . 'ms3_shipments',
+                    $prefix . 'ms3_shipment_events'
+                );
 
                 return new $class($store, $modx, $services->get('ms3_order_status'));
             },

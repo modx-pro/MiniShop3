@@ -118,6 +118,19 @@ class ShipmentLifecycleService
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function publicListForOrder(int $orderId): array
+    {
+        $row = $this->findByOrderId($orderId);
+        if ($row === null) {
+            return [];
+        }
+
+        return [ShipmentPublicDto::fromRow($row)];
+    }
+
+    /**
      * @return ShipmentRow
      */
     public function setTracking(int $shipmentId, string $trackingNumber, ?string $eventId = null): array
@@ -141,6 +154,7 @@ class ShipmentLifecycleService
             $fields['last_event_id'] = $eventId;
         }
         $updated = $this->store->update($shipmentId, $fields);
+        $this->rememberEvent($shipmentId, $eventId);
         $this->fire('msOnUpdateShipmentTracking', ['shipment' => $updated]);
 
         return $updated;
@@ -167,6 +181,7 @@ class ShipmentLifecycleService
             $fields['last_event_id'] = $eventId;
         }
         $updated = $this->store->update($shipmentId, $fields);
+        $this->rememberEvent($shipmentId, $eventId);
         $this->syncOrderStatus($updated['order_id'], $target);
         $this->fire('msOnChangeShipmentStatus', ['shipment' => $updated]);
 
@@ -214,6 +229,7 @@ class ShipmentLifecycleService
         }
 
         $updated = $this->store->update($shipment['id'], $fields);
+        $this->rememberEvent((int) $updated['id'], $event->providerEventId);
         $this->syncOrderStatus($updated['order_id'], $event->eventType);
         if ($trackingChanged) {
             $this->fire('msOnUpdateShipmentTracking', ['shipment' => $updated]);
@@ -425,7 +441,26 @@ class ShipmentLifecycleService
      */
     private function isReplay(array $shipment, ?string $eventId): bool
     {
-        return $this->isNonEmpty($eventId) && $shipment['last_event_id'] === $eventId;
+        if (!$this->isNonEmpty($eventId)) {
+            return false;
+        }
+        if ($this->store->hasEvent((int) $shipment['id'], $eventId)) {
+            return true;
+        }
+        if ($shipment['last_event_id'] === $eventId) {
+            $this->store->recordEvent((int) $shipment['id'], $eventId);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function rememberEvent(int $shipmentId, ?string $eventId): void
+    {
+        if ($this->isNonEmpty($eventId)) {
+            $this->store->recordEvent($shipmentId, $eventId);
+        }
     }
 
     private function isNonEmpty(?string $value): bool

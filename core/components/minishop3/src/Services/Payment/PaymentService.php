@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MiniShop3\Services\Payment;
 
 use MiniShop3\Controllers\Payment\PaymentProviderInterface;
@@ -18,24 +20,19 @@ use MODX\Revolution\modX;
  */
 class PaymentService
 {
-    /** @var modX */
-    protected $modx;
+    protected modX $modx;
 
-    /** @var MiniShop3|null */
-    protected $ms3;
+    protected ?MiniShop3 $ms3 = null;
 
-    /** @var string */
-    protected $defaultControllerClass = 'MiniShop3\\Controllers\\Payment\\DefaultPayment';
+    protected string $defaultControllerClass = 'MiniShop3\\Controllers\\Payment\\DefaultPayment';
 
-    /**
-     * @param modX $modx
-     */
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
 
         if ($modx->services->has('ms3')) {
-            $this->ms3 = $modx->services->get('ms3');
+            $ms3 = $modx->services->get('ms3');
+            $this->ms3 = $ms3 instanceof MiniShop3 ? $ms3 : null;
         }
     }
 
@@ -62,7 +59,8 @@ class PaymentService
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
                     sprintf(
-                        'PaymentService: Class "%s" does not implement PaymentProviderInterface for payment method ID=%d',
+                        'PaymentService: Class "%s" does not implement'
+                        . ' PaymentProviderInterface for payment method ID=%d',
                         $class,
                         $payment->get('id')
                     )
