@@ -194,18 +194,6 @@ class PaymentLifecycleService
         return $this->commit($attempt, $target, $eventKey, $fields);
     }
 
-    /**
-     * @return PaymentAttemptRow
-     */
-    public function partialRefund(
-        int $attemptId,
-        float $amount,
-        ?string $refundExternalId = null,
-        ?string $providerEventId = null,
-    ): array {
-        return $this->refund($attemptId, $amount, $refundExternalId, $providerEventId);
-    }
-
     public function storedPaymentLink(int $orderId, ?int $paymentMethodId = null): ?string
     {
         $attempt = $this->store->findLatestForOrder($orderId, $paymentMethodId);
@@ -222,13 +210,22 @@ class PaymentLifecycleService
      */
     public function applyWebhook(PaymentWebhookEvent $event, int $paymentMethodId, string $provider): array
     {
+        $this->assertFinancialExternalId($event);
         $attempt = $this->resolveAttempt($event, $paymentMethodId, $provider);
+        $this->assertWebhookCurrency($attempt, $event);
         $payloadFields = [];
         if ($event->payload !== []) {
             $payloadFields['payload'] = array_merge(
                 $attempt['payload'],
                 $this->sanitizePayload($event->payload)
             );
+        }
+        if (
+            $event->externalId !== null
+            && $event->externalId !== ''
+            && ($attempt['external_id'] === null || $attempt['external_id'] === '')
+        ) {
+            $payloadFields['external_id'] = $event->externalId;
         }
         $eventId = $event->providerEventId;
 
@@ -309,7 +306,7 @@ class PaymentLifecycleService
     }
 
     /**
-     * Update attempt, sync order, then record the idempotency event.
+     * Persist fields+event atomically, then heal the order status.
      *
      * @param PaymentAttemptRow $attempt
      * @param array<string, mixed> $fields
@@ -317,26 +314,14 @@ class PaymentLifecycleService
      */
     private function commit(array $attempt, string $target, string $eventKey, array $fields = []): array
     {
-        $attemptId = $attempt['id'];
-        if ($this->store->hasEvent($attemptId, $target, $eventKey)) {
-            $this->syncOrderStatus($attempt['order_id'], $target);
-
-            return $this->store->findById($attemptId) ?? $attempt;
-        }
         if ($attempt['status'] !== $target) {
             $this->assertTransition($attempt['status'], $target);
             $fields['status'] = $target;
-        } elseif ($fields === []) {
-            $this->syncOrderStatus($attempt['order_id'], $target);
-            $this->store->recordEvent($attemptId, $target, $eventKey);
-
-            return $this->store->findById($attemptId) ?? $attempt;
         }
-        $updated = $this->store->update($attemptId, $fields);
+        $updated = $this->store->writeWithEvent($attempt['id'], $target, $eventKey, $fields);
         $this->syncOrderStatus($updated['order_id'], $target);
-        $this->store->recordEvent($attemptId, $target, $eventKey);
 
-        return $this->store->findById($attemptId) ?? $updated;
+        return $updated;
     }
 
     /**
@@ -370,7 +355,7 @@ class PaymentLifecycleService
                     $existing !== null
                     && ($existing['external_id'] === null || $existing['external_id'] === '')
                 ) {
-                    return $this->store->update($existing['id'], ['external_id' => $event->externalId]);
+                    return $existing;
                 }
             }
 
@@ -470,12 +455,18 @@ class PaymentLifecycleService
             );
         }
         $this->assertOrderPaymentMethod($order, $attempt['payment_method_id']);
+        $orderCost = (float) $order->get('cost');
+        if (abs($attempt['amount'] - $orderCost) > 0.001) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_event_conflict',
+                ['amount' => $attempt['amount'], 'cost' => $orderCost],
+                PaymentLifecycleException::KIND_CONFLICT
+            );
+        }
         if ($paidAmount === null) {
             return;
         }
-        $deltaAttempt = abs($paidAmount - $attempt['amount']);
-        $deltaCost = abs($paidAmount - (float) $order->get('cost'));
-        if ($deltaAttempt > 0.001 && $deltaCost > 0.001) {
+        if (abs($paidAmount - $attempt['amount']) > 0.001) {
             throw new PaymentLifecycleException(
                 'ms3_err_payment_event_conflict',
                 ['amount' => $paidAmount],
@@ -544,14 +535,11 @@ class PaymentLifecycleService
         if ($statusId <= 0) {
             return;
         }
-        $result = $this->orderStatus->change($orderId, $statusId);
+        $result = $this->orderStatus->ensure($orderId, $statusId);
         if ($result === true) {
             return;
         }
         $message = is_string($result) ? $result : 'ms3_err_unknown';
-        if ($this->isAlreadySameStatus($message)) {
-            return;
-        }
         throw new PaymentLifecycleException(
             'ms3_err_payment_event_conflict',
             ['status' => $message],
@@ -572,12 +560,6 @@ class PaymentLifecycleService
             PaymentAttemptStatus::REFUNDED => (int) $this->modx->getOption('ms3_payment_on_refunded_status', null, 5),
             default => 0,
         };
-    }
-
-    private function isAlreadySameStatus(string $message): bool
-    {
-        return str_contains($message, 'ms3_err_status_same')
-            || $message === $this->modx->lexicon('ms3_err_status_same');
     }
 
     private function isOpen(string $status): bool
@@ -602,6 +584,45 @@ class PaymentLifecycleService
         }
 
         return $current === $externalId;
+    }
+
+    private function assertFinancialExternalId(PaymentWebhookEvent $event): void
+    {
+        if (!in_array($event->eventType, [
+            PaymentAttemptStatus::PAID,
+            PaymentAttemptStatus::REFUNDED,
+            PaymentAttemptStatus::PARTIALLY_REFUNDED,
+        ], true)) {
+            return;
+        }
+        if ($event->externalId !== null && $event->externalId !== '') {
+            return;
+        }
+
+        throw new PaymentLifecycleException(
+            'ms3_err_payment_webhook_invalid',
+            ['external_id' => 'required'],
+            PaymentLifecycleException::KIND_INVALID
+        );
+    }
+
+    /**
+     * @param PaymentAttemptRow $attempt
+     */
+    private function assertWebhookCurrency(array $attempt, PaymentWebhookEvent $event): void
+    {
+        if ($event->currency === null || $event->currency === '') {
+            return;
+        }
+        if (strcasecmp($event->currency, $attempt['currency']) === 0) {
+            return;
+        }
+
+        throw new PaymentLifecycleException(
+            'ms3_err_payment_event_conflict',
+            ['from' => $attempt['currency'], 'to' => $event->currency],
+            PaymentLifecycleException::KIND_CONFLICT
+        );
     }
 
     private function requirePaidAmount(PaymentWebhookEvent $event): float

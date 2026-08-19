@@ -19,4 +19,9 @@ final class CallbackOrderStatusChanger implements OrderStatusChanger
     {
         return ($this->callback)($orderId, $statusId);
     }
+
+    public function ensure(int $orderId, int $statusId, bool $skipNotifications = false): bool|string
+    {
+        return $this->change($orderId, $statusId, $skipNotifications);
+    }
 }

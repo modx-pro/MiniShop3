@@ -70,4 +70,13 @@ interface PaymentAttemptStoreInterface
     public function recordEvent(int $attemptId, string $eventType, string $providerEventId): bool;
 
     public function hasEvent(int $attemptId, string $eventType, string $providerEventId): bool;
+
+    /**
+     * Persist attempt fields and the idempotency event together.
+     * If the event already exists, fields are not applied.
+     *
+     * @param array<string, mixed> $fields
+     * @return PaymentAttemptRow
+     */
+    public function writeWithEvent(int $id, string $eventType, string $providerEventId, array $fields): array;
 }

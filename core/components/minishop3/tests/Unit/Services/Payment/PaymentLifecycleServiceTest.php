@@ -9,7 +9,9 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Payment\PaymentAttemptStatus;
 use MiniShop3\Services\Payment\PaymentLifecycleException;
 use MiniShop3\Services\Payment\PaymentLifecycleService;
+use MiniShop3\Services\Order\OrderStatusChanger;
 use MiniShop3\Tests\Support\CallbackOrderStatusChanger;
+use MiniShop3\Tests\Support\FixedReplayOrderStatusChanger;
 use MiniShop3\Tests\Support\InMemoryPaymentAttemptStore;
 use MiniShop3\Tests\Stubs\StubMsOrder;
 use MODX\Revolution\modX;
@@ -71,7 +73,7 @@ final class PaymentLifecycleServiceTest extends TestCase
         $service->markPaid($attempt['id'], 'paid');
         $this->statusChanges = [];
 
-        $partial = $service->partialRefund($attempt['id'], 30.0, 'ref-1', 'evt-r1');
+        $partial = $service->refund($attempt['id'], 30.0, 'ref-1', 'evt-r1');
         self::assertSame(PaymentAttemptStatus::PARTIALLY_REFUNDED, $partial['status']);
         self::assertSame(30.0, $partial['refunded_amount']);
         self::assertSame([], $this->statusChanges);
@@ -110,7 +112,7 @@ final class PaymentLifecycleServiceTest extends TestCase
         $service = $this->service();
         $attempt = $service->initiate(10, 2, 'TestPay', 100.0);
         $service->markPaid($attempt['id'], 'paid');
-        $service->partialRefund($attempt['id'], 80.0, 'ref-1', 'evt-r1');
+        $service->refund($attempt['id'], 80.0, 'ref-1', 'evt-r1');
         $this->expectException(PaymentLifecycleException::class);
         $service->refund($attempt['id'], 30.0, 'ref-2', 'evt-r2');
     }
@@ -306,7 +308,7 @@ final class PaymentLifecycleServiceTest extends TestCase
         $service = $this->service();
         $attempt = $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-ref');
         $service->markPaid($attempt['id'], 'paid');
-        $service->partialRefund($attempt['id'], 30.0, 'ref-1', 'evt-r1');
+        $service->refund($attempt['id'], 30.0, 'ref-1', 'evt-r1');
         $this->statusChanges = [];
         $full = $service->applyWebhook(
             new PaymentWebhookEvent(
@@ -323,10 +325,152 @@ final class PaymentLifecycleServiceTest extends TestCase
         self::assertSame([[10, 5]], $this->statusChanges);
     }
 
+    public function testReplayPaidOnFixedOrderStatusSucceeds(): void
+    {
+        $order = new StubMsOrder(['id' => 10, 'status_id' => 2, 'cost' => 100]);
+        $changer = new FixedReplayOrderStatusChanger($order);
+        $service = $this->service($order, changer: $changer);
+        $attempt = $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-fixed');
+        $paid = $service->applyWebhook(
+            new PaymentWebhookEvent(
+                eventType: PaymentAttemptStatus::PAID,
+                externalId: 'ext-fixed',
+                amount: 100.0,
+                providerEventId: 'evt-paid',
+            ),
+            2,
+            'TestPay'
+        );
+        self::assertSame(PaymentAttemptStatus::PAID, $paid['status']);
+        self::assertSame(3, (int) $order->get('status_id'));
+        self::assertSame([[10, 3]], $changer->changes);
+
+        $again = $service->applyWebhook(
+            new PaymentWebhookEvent(
+                eventType: PaymentAttemptStatus::PAID,
+                externalId: 'ext-fixed',
+                amount: 100.0,
+                providerEventId: 'evt-paid',
+            ),
+            2,
+            'TestPay'
+        );
+        self::assertSame(PaymentAttemptStatus::PAID, $again['status']);
+        self::assertSame([[10, 3]], $changer->changes);
+    }
+
+    public function testWebhookCurrencyMismatchConflicts(): void
+    {
+        $service = $this->service();
+        $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-cur');
+        try {
+            $service->applyWebhook(
+                new PaymentWebhookEvent(
+                    eventType: PaymentAttemptStatus::PAID,
+                    externalId: 'ext-cur',
+                    amount: 100.0,
+                    currency: 'USD',
+                    providerEventId: 'evt-usd',
+                ),
+                2,
+                'TestPay'
+            );
+            self::fail('currency mismatch must conflict');
+        } catch (PaymentLifecycleException $exception) {
+            self::assertSame(PaymentLifecycleException::KIND_CONFLICT, $exception->getKind());
+        }
+    }
+
+    public function testPaidAfterOrderCostChangeConflicts(): void
+    {
+        $order = new StubMsOrder(['id' => 10, 'status_id' => 2, 'cost' => 100]);
+        $service = $this->service($order);
+        $attempt = $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-cost');
+        $order->set('cost', 200);
+        try {
+            $service->applyWebhook(
+                new PaymentWebhookEvent(
+                    eventType: PaymentAttemptStatus::PAID,
+                    externalId: 'ext-cost',
+                    amount: 100.0,
+                    providerEventId: 'evt-stale',
+                ),
+                2,
+                'TestPay'
+            );
+            self::fail('stale attempt amount must conflict after cost change');
+        } catch (PaymentLifecycleException $exception) {
+            self::assertSame(PaymentLifecycleException::KIND_CONFLICT, $exception->getKind());
+        }
+        self::assertSame(PaymentAttemptStatus::PENDING, $attempt['status']);
+    }
+
+    public function testPaidWebhookWithoutExternalIdIsInvalid(): void
+    {
+        $service = $this->service();
+        $service->initiate(10, 2, 'TestPay', 100.0, 'RUB');
+        try {
+            $service->applyWebhook(
+                new PaymentWebhookEvent(
+                    eventType: PaymentAttemptStatus::PAID,
+                    orderId: 10,
+                    amount: 100.0,
+                    providerEventId: 'evt-no-ext',
+                ),
+                2,
+                'TestPay'
+            );
+            self::fail('paid webhook must include externalId');
+        } catch (PaymentLifecycleException $exception) {
+            self::assertSame(PaymentLifecycleException::KIND_INVALID, $exception->getKind());
+        }
+    }
+
+    public function testWebhookBindsExternalIdOnCommit(): void
+    {
+        $order = new StubMsOrder(['id' => 14, 'status_id' => 2, 'cost' => 20, 'payment_id' => 7]);
+        $service = $this->service($order);
+        $open = $service->initiate(14, 7, 'TestPay', 20.0, 'RUB');
+        self::assertNull($open['external_id']);
+        $paid = $service->applyWebhook(
+            new PaymentWebhookEvent(
+                eventType: PaymentAttemptStatus::PAID,
+                externalId: 'gw-14',
+                orderId: 14,
+                amount: 20.0,
+                providerEventId: 'cb-bind',
+            ),
+            7,
+            'TestPay'
+        );
+        self::assertSame('gw-14', $paid['external_id']);
+        self::assertSame(PaymentAttemptStatus::PAID, $paid['status']);
+    }
+
+    public function testWriteWithEventReplayDoesNotApplyNewFields(): void
+    {
+        $store = new InMemoryPaymentAttemptStore();
+        $row = $store->create(10, 2, 'TestPay', 'ext-w', PaymentAttemptStatus::PENDING, 100.0, 'RUB', []);
+        $first = $store->writeWithEvent($row['id'], PaymentAttemptStatus::PAID, 'evt-1', [
+            'status' => PaymentAttemptStatus::PAID,
+        ]);
+        self::assertSame(PaymentAttemptStatus::PAID, $first['status']);
+        $second = $store->writeWithEvent($row['id'], PaymentAttemptStatus::PAID, 'evt-1', [
+            'status' => PaymentAttemptStatus::FAILED,
+            'amount' => 1.0,
+        ]);
+        self::assertSame(PaymentAttemptStatus::PAID, $second['status']);
+        self::assertSame(100.0, $second['amount']);
+    }
+
     /**
      * @param \Closure(int, int): (bool|string)|null $changeStatus
      */
-    private function service(?msOrder $order = null, ?\Closure $changeStatus = null): PaymentLifecycleService
+    private function service(
+        ?msOrder $order = null,
+        ?\Closure $changeStatus = null,
+        ?OrderStatusChanger $changer = null,
+    ): PaymentLifecycleService
     {
         $order ??= new StubMsOrder(['id' => 10, 'status_id' => 2, 'cost' => 100]);
         $store = new InMemoryPaymentAttemptStore();
@@ -371,7 +515,7 @@ final class PaymentLifecycleServiceTest extends TestCase
         return new PaymentLifecycleService(
             $store,
             $modx,
-            new CallbackOrderStatusChanger(
+            $changer ?? new CallbackOrderStatusChanger(
                 $changeStatus ?? function (int $orderId, int $statusId): bool|string {
                     $this->statusChanges[] = [$orderId, $statusId];
 

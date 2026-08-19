@@ -13,4 +13,11 @@ interface OrderStatusChanger
      * @return bool|string True on success, lexicon/error message on failure
      */
     public function change(int $orderId, int $statusId, bool $skipNotifications = false): bool|string;
+
+    /**
+     * Idempotent status apply: already-at-target is success (does not call change()).
+     *
+     * @return bool|string True on success, lexicon/error message on failure
+     */
+    public function ensure(int $orderId, int $statusId, bool $skipNotifications = false): bool|string;
 }
