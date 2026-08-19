@@ -19,6 +19,7 @@ import OrderEditProductDialog from './order/OrderEditProductDialog.vue'
 import OrderHistoryTab from './order/OrderHistoryTab.vue'
 import OrderInfoTab from './order/OrderInfoTab.vue'
 import OrderProductsTab from './order/OrderProductsTab.vue'
+import OrderShipmentTab from './order/OrderShipmentTab.vue'
 
 const { _ } = useLexicon()
 
@@ -175,6 +176,7 @@ defineExpose({ registerPluginTab })
               :address-fields-by-section="addressFieldsBySection"
               :address-extra-fields="addressExtraFields"
             />
+            <OrderShipmentTab v-else-if="tab.key === 'tracking'" />
             <OrderHistoryTab v-else-if="tab.key === 'history'" :logs="logs" />
             <template v-else-if="tab.kind === 'plugin' && tab.type === 'vue' && tab.component">
               <component

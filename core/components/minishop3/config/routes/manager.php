@@ -821,6 +821,9 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         $router->get('/{id}/logs', function ($params) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->getLogs($params);
         });
+        $router->get('/{id}/shipment', function ($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OrderShipmentController($modx))->get($params);
+        });
     }, [
         new PermissionMiddleware($modx, 'msorder_list')
     ]);
@@ -868,6 +871,11 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         });
         $router->delete('/{id}/products/{product_id}', function ($params) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->deleteProduct($params);
+        });
+        $router->put('/{id}/shipment', function ($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrderShipmentController($modx))
+                ->save(array_merge($params, is_array($data) ? $data : []));
         });
     }, [
         new PermissionMiddleware($modx, 'msorder_save')

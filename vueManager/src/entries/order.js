@@ -26,7 +26,7 @@ import {
  * pre-mount entries are queued (snapshotted) and flushed in `_onMounted(instance)`.
  *
  * Tab config fields:
- * - `key` (string, required) — unique id; must not be info|products|address|history
+ * - `key` (string, required) — unique id; must not be info|products|address|tracking|history
  * - `title` (string, required) — header label
  * - `type` — `'vue'` (default) or `'extjs'`
  * - `component` — Vue: options object (imported SFC) or registered component name string
@@ -46,8 +46,8 @@ import {
  *
  * @example Vue tab (prefer a component definition from your bundle; string names need app.component())
  * window.MS3OrderTabsRegistry.register({
- *   key: 'tracking',
- *   title: 'Tracking',
+ *   key: 'fulfillment',
+ *   title: 'Fulfillment',
  *   type: 'vue',
  *   component: MyTrackingTab,
  *   position: 10,

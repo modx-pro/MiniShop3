@@ -17,11 +17,15 @@ final class PdoShipmentStore implements ShipmentStoreInterface
 {
     private string $table;
 
+    private string $eventsTable;
+
     public function __construct(
         private readonly PDO $db,
         string $table,
+        string $eventsTable,
     ) {
         $this->table = $this->quoteTable($table);
+        $this->eventsTable = $this->quoteTable($eventsTable);
     }
 
     public function create(
@@ -118,6 +122,39 @@ final class PdoShipmentStore implements ShipmentStoreInterface
         }
 
         return $this->fetchOne($sql, $params);
+    }
+
+    public function hasEvent(int $shipmentId, string $providerEventId): bool
+    {
+        $sql = "SELECT 1 FROM {$this->eventsTable}
+            WHERE shipment_id = :shipment_id AND provider_event_id = :provider_event_id
+            LIMIT 1";
+        $stmt = $this->prepare($sql);
+        $stmt->execute([
+            'shipment_id' => $shipmentId,
+            'provider_event_id' => $providerEventId,
+        ]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
+    public function recordEvent(int $shipmentId, string $providerEventId): void
+    {
+        $sql = "INSERT INTO {$this->eventsTable}
+            (shipment_id, provider_event_id, createdon)
+            VALUES (:shipment_id, :provider_event_id, :createdon)";
+        try {
+            $this->prepare($sql)->execute([
+                'shipment_id' => $shipmentId,
+                'provider_event_id' => $providerEventId,
+                'createdon' => time(),
+            ]);
+        } catch (PDOException $exception) {
+            if ($this->isDuplicate($exception)) {
+                return;
+            }
+            throw $exception;
+        }
     }
 
     /**

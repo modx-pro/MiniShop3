@@ -93,6 +93,22 @@ if (!str_contains($cabinet, "'shipments'")) {
     $fail('CustomerOrderService must expose shipments[]');
 }
 
+$snippet = $read('elements/snippets/ms3_get_order.php');
+if (!str_contains($snippet, 'shipmentPublicForOrder')) {
+    $fail('ms3_get_order must inject shipments via MiniShop3::shipmentPublicForOrder');
+}
+if (substr_count($snippet, '$modx->services') !== 5) {
+    $fail('ms3_get_order must keep exactly 5 $modx->services hits for phpstan baseline');
+}
+
+$managerRoutes = $read('config/routes/manager.php');
+if (!str_contains($managerRoutes, "get('/{id}/shipment'")) {
+    $fail('manager.php missing GET /orders/{id}/shipment');
+}
+if (!str_contains($managerRoutes, "put('/{id}/shipment'")) {
+    $fail('manager.php missing PUT /orders/{id}/shipment');
+}
+
 $settings = $read('../../../_build/elements/settings.php');
 if (!str_contains($settings, "'ms3_shipment_enabled'")) {
     $fail('settings.php missing ms3_shipment_enabled');
@@ -104,6 +120,16 @@ if (!str_contains($settings, "'ms3_status_sent'")) {
 $migration = $read('migrations/20260819150000_create_shipments.php');
 if (!str_contains($migration, 'uniq_shipment_order')) {
     $fail('migration must unique-index order_id');
+}
+
+$eventsMigration = $read('migrations/20260819160000_create_shipment_events.php');
+if (!str_contains($eventsMigration, 'uniq_shipment_provider_event')) {
+    $fail('events migration must unique-index shipment_id + provider_event_id');
+}
+
+$store = $read('src/Services/Shipment/PdoShipmentStore.php');
+if (!str_contains($store, 'function hasEvent') || !str_contains($store, 'function recordEvent')) {
+    $fail('PdoShipmentStore must persist webhook event ids');
 }
 
 fwrite(STDOUT, "OK ShipmentLifecycleWiringTest\n");

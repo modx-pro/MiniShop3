@@ -202,6 +202,36 @@ final class ShipmentLifecycleServiceTest extends TestCase
         self::assertSame([[10, 4]], $this->statusChanges);
         self::assertSame($first['id'], $second['id']);
         self::assertSame([[10, 4]], $this->statusChanges);
+        self::assertTrue($store->hasEvent((int) $first['id'], 'hook-1'));
+    }
+
+    public function testOlderWebhookEventIdIsIgnoredAfterNewerEvent(): void
+    {
+        $store = new InMemoryShipmentStore();
+        $service = $this->service($store, enabled: true);
+        $service->create(10);
+        $service->applyProviderEvent(new ShipmentWebhookEvent(
+            eventType: ShipmentStatus::SHIPPED,
+            orderId: 10,
+            providerEventId: 'evt-a',
+        ), 7, 'Cdek');
+        $service->applyProviderEvent(new ShipmentWebhookEvent(
+            eventType: ShipmentStatus::IN_TRANSIT,
+            orderId: 10,
+            providerEventId: 'evt-b',
+        ), 7, 'Cdek');
+        self::assertSame([[10, 4]], $this->statusChanges);
+
+        $replay = $service->applyProviderEvent(new ShipmentWebhookEvent(
+            eventType: ShipmentStatus::SHIPPED,
+            orderId: 10,
+            trackingNumber: 'SHOULD-NOT-APPLY',
+            providerEventId: 'evt-a',
+        ), 7, 'Cdek');
+
+        self::assertSame(ShipmentStatus::IN_TRANSIT, $replay['status']);
+        self::assertNull($replay['tracking_number']);
+        self::assertSame([[10, 4]], $this->statusChanges);
     }
 
     public function testIllegalProviderEventDoesNotPersistTracking(): void
@@ -227,6 +257,7 @@ final class ShipmentLifecycleServiceTest extends TestCase
         self::assertNull($row['tracking_number']);
         self::assertSame([], $row['meta']);
         self::assertSame([], $this->statusChanges);
+        self::assertFalse($store->hasEvent((int) $row['id'], 'hook-bad'));
     }
 
     public function testIllegalFirstWebhookDoesNotCreateShipment(): void

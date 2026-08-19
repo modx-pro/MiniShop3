@@ -14,6 +14,9 @@ final class InMemoryShipmentStore implements ShipmentStoreInterface
     /** @var array<int, ShipmentRow> */
     private array $rows = [];
 
+    /** @var array<string, true> */
+    private array $events = [];
+
     private int $nextId = 1;
 
     public function create(
@@ -97,5 +100,20 @@ final class InMemoryShipmentStore implements ShipmentStoreInterface
         }
 
         return null;
+    }
+
+    public function hasEvent(int $shipmentId, string $providerEventId): bool
+    {
+        return isset($this->events[$this->eventKey($shipmentId, $providerEventId)]);
+    }
+
+    public function recordEvent(int $shipmentId, string $providerEventId): void
+    {
+        $this->events[$this->eventKey($shipmentId, $providerEventId)] = true;
+    }
+
+    private function eventKey(int $shipmentId, string $providerEventId): string
+    {
+        return $shipmentId . "\0" . $providerEventId;
     }
 }

@@ -8,7 +8,6 @@ use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Services\Order\OrderStatusService;
 use MiniShop3\Services\Shipment\ShipmentLifecycleService;
-use MiniShop3\Services\Shipment\ShipmentPublicDto;
 use MODX\Revolution\modX;
 
 /**
@@ -334,12 +333,7 @@ class CustomerOrderService
         if (!$lifecycle instanceof ShipmentLifecycleService) {
             return [];
         }
-        $row = $lifecycle->findByOrderId($orderId);
-        if ($row === null) {
-            return [];
-        }
-
-        return [ShipmentPublicDto::fromRow($row)];
+        return $lifecycle->publicListForOrder($orderId);
     }
 
     protected function formatAddress(msOrderAddress $address): array
