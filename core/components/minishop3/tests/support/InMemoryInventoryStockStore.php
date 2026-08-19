@@ -1,9 +1,13 @@
 <?php
 
-namespace MiniShop3\Services\Inventory;
+declare(strict_types=1);
+
+namespace MiniShop3\Tests\Support;
+
+use MiniShop3\Services\Inventory\InventoryStockStoreInterface;
 
 /**
- * In-process store for unit tests and contract fakes. Not for production checkouts.
+ * In-process store for unit tests and contract fakes.
  */
 final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
 {
@@ -54,6 +58,11 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
             'qty' => round($qty, 3),
             'state' => $state,
         ];
+    }
+
+    public function runInTransaction(callable $work): void
+    {
+        $work();
     }
 
     private function reservationKey(int $orderId, int $productId): string
