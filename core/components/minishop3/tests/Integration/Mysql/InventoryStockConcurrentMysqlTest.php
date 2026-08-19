@@ -80,4 +80,37 @@ final class InventoryStockConcurrentMysqlTest extends TestCase
             self::assertSame(0.0, $inventory->getAvailable($key));
         }
     }
+
+    public function testSecondConnectionCannotTakeLockedLastUnit(): void
+    {
+        $pdoA = $this->pdo;
+        $pdoB = MysqlTestConnection::connect();
+        $pdoB->query('SET SESSION innodb_lock_wait_timeout = 1');
+
+        $sql = "UPDATE `{$this->productsTable}` SET stock = stock - 1 WHERE id = 15 AND stock >= 1";
+
+        $pdoA->beginTransaction();
+        $affectedA = $pdoA->query($sql);
+        self::assertNotFalse($affectedA);
+        self::assertSame(1, $affectedA->rowCount());
+
+        $pdoB->beginTransaction();
+        $blockedOrEmpty = false;
+        try {
+            $affectedB = $pdoB->query($sql);
+            $blockedOrEmpty = $affectedB === false || $affectedB->rowCount() === 0;
+        } catch (\PDOException) {
+            $blockedOrEmpty = true;
+        }
+        self::assertTrue($blockedOrEmpty, 'second connection must not decrement the locked last unit');
+
+        $pdoA->commit();
+        if ($pdoB->inTransaction()) {
+            $pdoB->rollBack();
+        }
+
+        $stock = $pdoA->query("SELECT stock FROM `{$this->productsTable}` WHERE id = 15");
+        self::assertNotFalse($stock);
+        self::assertSame(0.0, (float) $stock->fetchColumn());
+    }
 }
