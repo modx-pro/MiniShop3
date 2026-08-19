@@ -174,6 +174,53 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
         return $stmt->fetchColumn() !== false;
     }
 
+    public function writeWithEvent(int $id, string $eventType, string $providerEventId, array $fields): array
+    {
+        $started = false;
+        if (!$this->db->inTransaction()) {
+            $this->db->beginTransaction();
+            $started = true;
+        }
+        try {
+            $locked = $this->fetchOne(
+                "SELECT * FROM {$this->attemptsTable} WHERE id = :id FOR UPDATE",
+                ['id' => $id]
+            );
+            if ($locked === null) {
+                throw new RuntimeException('Payment attempt not found');
+            }
+            if ($this->hasEvent($id, $eventType, $providerEventId)) {
+                if ($started) {
+                    $this->db->commit();
+                }
+
+                return $locked;
+            }
+            $row = $fields === [] ? $locked : $this->update($id, $fields);
+            if (!$this->recordEvent($id, $eventType, $providerEventId)) {
+                if ($started) {
+                    $this->db->rollBack();
+                }
+                $existing = $this->findById($id);
+                if ($existing === null) {
+                    throw new RuntimeException('Payment attempt not found after event conflict');
+                }
+
+                return $existing;
+            }
+            if ($started) {
+                $this->db->commit();
+            }
+
+            return $row;
+        } catch (\Throwable $exception) {
+            if ($started && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $exception;
+        }
+    }
+
     /**
      * @param array<string, mixed> $params
      * @return PaymentAttemptRow|null

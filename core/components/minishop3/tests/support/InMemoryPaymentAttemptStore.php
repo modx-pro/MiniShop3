@@ -128,4 +128,23 @@ final class InMemoryPaymentAttemptStore implements PaymentAttemptStoreInterface
     {
         return isset($this->events[$attemptId . ':' . $eventType . ':' . $providerEventId]);
     }
+
+    public function writeWithEvent(int $id, string $eventType, string $providerEventId, array $fields): array
+    {
+        if ($this->hasEvent($id, $eventType, $providerEventId)) {
+            $row = $this->findById($id);
+            if ($row === null) {
+                throw new \RuntimeException('attempt not found');
+            }
+
+            return $row;
+        }
+        $row = $fields === [] ? $this->findById($id) : $this->update($id, $fields);
+        if ($row === null) {
+            throw new \RuntimeException('attempt not found');
+        }
+        $this->recordEvent($id, $eventType, $providerEventId);
+
+        return $row;
+    }
 }

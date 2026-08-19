@@ -70,6 +70,26 @@ class OrderStatusService implements OrderStatusChanger
     }
 
     /**
+     * Apply status if the order is not already there. Same-status is success,
+     * including when the current status is fixed/final (change() would fail first).
+     *
+     * @return bool|string True on success, lexicon/error message on failure
+     */
+    public function ensure(int $orderId, int $statusId, bool $skipNotifications = false): bool|string
+    {
+        /** @var msOrder|null $msOrder */
+        $msOrder = $this->modx->getObject(msOrder::class, ['id' => $orderId]);
+        if (!$msOrder) {
+            return $this->modx->lexicon('ms3_err_order_nf');
+        }
+        if ((int) $msOrder->get('status_id') === $statusId) {
+            return true;
+        }
+
+        return $this->change($orderId, $statusId, $skipNotifications);
+    }
+
+    /**
      * Switch order status
      *
      * @param int $orderId The id of msOrder

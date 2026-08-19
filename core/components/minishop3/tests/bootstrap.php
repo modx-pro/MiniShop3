@@ -17,3 +17,4 @@ require __DIR__ . '/support/SqliteDraftCartHarnessTrait.php';
 require __DIR__ . '/support/InMemoryShipmentStore.php';
 require __DIR__ . '/support/InMemoryPaymentAttemptStore.php';
 require __DIR__ . '/support/CallbackOrderStatusChanger.php';
+require __DIR__ . '/support/FixedReplayOrderStatusChanger.php';
