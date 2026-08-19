@@ -1,0 +1,607 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MiniShop3\Services\Payment;
+
+use MiniShop3\Controllers\Payment\PaymentWebhookEvent;
+use MiniShop3\Model\msOrder;
+use MODX\Revolution\modX;
+
+/**
+ * Coordinates payment attempt state and order status. Providers must not write status_id.
+ *
+ * @phpstan-import-type PaymentAttemptRow from PaymentAttemptStoreInterface
+ */
+class PaymentLifecycleService
+{
+    private const ALLOWED_TRANSITIONS = [
+        PaymentAttemptStatus::PENDING => [
+            PaymentAttemptStatus::PENDING,
+            PaymentAttemptStatus::AUTHORIZED,
+            PaymentAttemptStatus::PAID,
+            PaymentAttemptStatus::FAILED,
+            PaymentAttemptStatus::CANCELLED,
+        ],
+        PaymentAttemptStatus::AUTHORIZED => [
+            PaymentAttemptStatus::AUTHORIZED,
+            PaymentAttemptStatus::PAID,
+            PaymentAttemptStatus::FAILED,
+            PaymentAttemptStatus::CANCELLED,
+        ],
+        PaymentAttemptStatus::PAID => [
+            PaymentAttemptStatus::PAID,
+            PaymentAttemptStatus::REFUNDED,
+            PaymentAttemptStatus::PARTIALLY_REFUNDED,
+        ],
+        PaymentAttemptStatus::PARTIALLY_REFUNDED => [
+            PaymentAttemptStatus::PARTIALLY_REFUNDED,
+            PaymentAttemptStatus::REFUNDED,
+        ],
+        PaymentAttemptStatus::FAILED => [PaymentAttemptStatus::FAILED],
+        PaymentAttemptStatus::CANCELLED => [PaymentAttemptStatus::CANCELLED],
+        PaymentAttemptStatus::REFUNDED => [PaymentAttemptStatus::REFUNDED],
+    ];
+
+    private const BLOCKED_PAYLOAD_KEYS = [
+        'password',
+        'secret',
+        'token',
+        'api_key',
+        'secret_key',
+        'properties',
+        'class',
+        'authorization',
+    ];
+
+    /**
+     * @param \Closure(int, int): (bool|string) $changeStatus
+     */
+    public function __construct(
+        private readonly PaymentAttemptStoreInterface $store,
+        private readonly modX $modx,
+        private readonly \Closure $changeStatus,
+    ) {
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return PaymentAttemptRow
+     */
+    public function initiate(
+        int $orderId,
+        int $paymentMethodId,
+        string $provider,
+        float $amount,
+        string $currency = 'RUB',
+        ?string $externalId = null,
+        array $payload = [],
+    ): array {
+        $payload = $this->sanitizePayload($payload);
+        if ($externalId !== null && $externalId !== '') {
+            $existing = $this->store->findByExternalId($provider, $externalId, $paymentMethodId);
+            if ($existing !== null) {
+                return $this->store->update($existing['id'], [
+                    'payload' => array_merge($existing['payload'], $payload),
+                ]);
+            }
+        }
+        $open = $this->store->findLatestForOrder($orderId, $paymentMethodId);
+        if ($open !== null && $this->isOpen($open['status']) && $this->canRebindOpenAttempt($open, $externalId)) {
+            return $this->store->update($open['id'], [
+                'external_id' => $externalId ?? $open['external_id'],
+                'amount' => $amount,
+                'currency' => $currency,
+                'payload' => array_merge($open['payload'], $payload),
+            ]);
+        }
+
+        return $this->store->create(
+            $orderId,
+            $paymentMethodId,
+            $provider,
+            $externalId,
+            PaymentAttemptStatus::PENDING,
+            $amount,
+            $currency,
+            $payload
+        );
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function markPending(int $attemptId, ?string $providerEventId = null): array
+    {
+        return $this->apply($attemptId, PaymentAttemptStatus::PENDING, $providerEventId);
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function markAuthorized(int $attemptId, ?string $providerEventId = null): array
+    {
+        return $this->apply($attemptId, PaymentAttemptStatus::AUTHORIZED, $providerEventId);
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function markPaid(int $attemptId, ?string $providerEventId = null, ?float $paidAmount = null): array
+    {
+        return $this->apply($attemptId, PaymentAttemptStatus::PAID, $providerEventId, $paidAmount);
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function markFailed(int $attemptId, ?string $providerEventId = null): array
+    {
+        return $this->apply($attemptId, PaymentAttemptStatus::FAILED, $providerEventId);
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function markCancelled(int $attemptId, ?string $providerEventId = null): array
+    {
+        return $this->apply($attemptId, PaymentAttemptStatus::CANCELLED, $providerEventId);
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function refund(
+        int $attemptId,
+        float $amount,
+        ?string $refundExternalId = null,
+        ?string $providerEventId = null,
+    ): array {
+        $attempt = $this->requireAttempt($attemptId);
+        $amount = round($amount, 3);
+        if ($amount <= 0) {
+            throw new PaymentLifecycleException('ms3_err_payment_webhook_invalid', ['qty' => $amount]);
+        }
+        $eventKey = $this->refundEventKey($providerEventId, $refundExternalId);
+        foreach ([PaymentAttemptStatus::PARTIALLY_REFUNDED, PaymentAttemptStatus::REFUNDED] as $recordedType) {
+            if ($this->store->hasEvent($attemptId, $recordedType, $eventKey)) {
+                $this->syncOrderStatus($attempt['order_id'], $attempt['status']);
+
+                return $attempt;
+            }
+        }
+        $refundedAmount = round($attempt['refunded_amount'] + $amount, 3);
+        if ($refundedAmount > $attempt['amount'] + 0.0005) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_webhook_invalid',
+                ['qty' => $refundedAmount, 'amount' => $attempt['amount']]
+            );
+        }
+        $target = $refundedAmount < $attempt['amount']
+            ? PaymentAttemptStatus::PARTIALLY_REFUNDED
+            : PaymentAttemptStatus::REFUNDED;
+        $this->assertTransition($attempt['status'], $target);
+        if (!$this->store->recordEvent($attemptId, $target, $eventKey)) {
+            $this->syncOrderStatus($attempt['order_id'], $attempt['status']);
+
+            return $attempt;
+        }
+        $updated = $this->store->update($attemptId, [
+            'status' => $target,
+            'refunded_amount' => $refundedAmount,
+            'refund_external_id' => $refundExternalId,
+            'refundedon' => time(),
+        ]);
+        $this->syncOrderStatus($updated['order_id'], $target);
+
+        return $updated;
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function partialRefund(
+        int $attemptId,
+        float $amount,
+        ?string $refundExternalId = null,
+        ?string $providerEventId = null,
+    ): array {
+        return $this->refund($attemptId, $amount, $refundExternalId, $providerEventId);
+    }
+
+    public function storedPaymentLink(int $orderId, ?int $paymentMethodId = null): ?string
+    {
+        $attempt = $this->store->findLatestForOrder($orderId, $paymentMethodId);
+        if ($attempt === null || !$this->isOpen($attempt['status'])) {
+            return null;
+        }
+        $link = $attempt['payload']['payment_link'] ?? null;
+
+        return PaymentLinkResolver::normalizePaymentLink(is_string($link) ? $link : null);
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    public function applyWebhook(PaymentWebhookEvent $event, int $paymentMethodId, string $provider): array
+    {
+        $attempt = $this->resolveAttempt($event, $paymentMethodId, $provider);
+        if ($event->payload !== []) {
+            $attempt = $this->store->update($attempt['id'], [
+                'payload' => array_merge($attempt['payload'], $this->sanitizePayload($event->payload)),
+            ]);
+        }
+        $eventId = $event->providerEventId;
+
+        return match ($event->eventType) {
+            PaymentAttemptStatus::PENDING,
+            PaymentAttemptStatus::AUTHORIZED,
+            PaymentAttemptStatus::FAILED,
+            PaymentAttemptStatus::CANCELLED => $this->apply($attempt['id'], $event->eventType, $eventId),
+            PaymentAttemptStatus::PAID => $this->apply(
+                $attempt['id'],
+                $event->eventType,
+                $eventId,
+                $this->requirePaidAmount($event)
+            ),
+            PaymentAttemptStatus::REFUNDED => $this->refundWebhook($attempt, $event, $eventId),
+            PaymentAttemptStatus::PARTIALLY_REFUNDED => $this->refund(
+                $attempt['id'],
+                $event->refundAmount ?? 0.0,
+                $event->refundExternalId,
+                $eventId
+            ),
+            default => throw new PaymentLifecycleException(
+                'ms3_err_payment_webhook_invalid',
+                ['event' => $event->eventType]
+            ),
+        };
+    }
+
+    /**
+     * @param PaymentAttemptRow $attempt
+     * @return PaymentAttemptRow
+     */
+    private function refundWebhook(array $attempt, PaymentWebhookEvent $event, ?string $eventId): array
+    {
+        $qty = $event->refundAmount ?? $this->remainingRefundable($attempt);
+        if ($qty <= 0) {
+            if ($attempt['status'] === PaymentAttemptStatus::REFUNDED) {
+                $this->syncOrderStatus($attempt['order_id'], $attempt['status']);
+
+                return $attempt;
+            }
+            throw new PaymentLifecycleException('ms3_err_payment_webhook_invalid', ['qty' => $qty]);
+        }
+
+        return $this->refund($attempt['id'], $qty, $event->refundExternalId, $eventId);
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    private function apply(int $attemptId, string $target, ?string $providerEventId, ?float $paidAmount = null): array
+    {
+        $attempt = $this->requireAttempt($attemptId);
+        $eventKey = $this->applyEventKey($target, $providerEventId);
+        if ($target === PaymentAttemptStatus::PAID) {
+            $this->assertPaidPreconditions($attempt, $paidAmount);
+        }
+        if ($attempt['status'] !== $target) {
+            $this->assertTransition($attempt['status'], $target);
+            $attempt = $this->store->update($attemptId, ['status' => $target]);
+        }
+        $this->syncOrderStatus($attempt['order_id'], $target);
+        $this->store->recordEvent($attemptId, $target, $eventKey);
+
+        return $this->store->findById($attemptId) ?? $attempt;
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    private function resolveAttempt(
+        PaymentWebhookEvent $event,
+        int $paymentMethodId,
+        string $provider,
+    ): array {
+        if ($event->externalId !== null && $event->externalId !== '') {
+            $byExternal = $this->store->findByExternalId($provider, $event->externalId, $paymentMethodId);
+            if ($byExternal !== null) {
+                $this->assertAttemptMatchesWebhook($byExternal, $paymentMethodId);
+
+                return $byExternal;
+            }
+            $otherMethod = $this->store->findByExternalId($provider, $event->externalId);
+            if ($otherMethod !== null) {
+                throw new PaymentLifecycleException(
+                    'ms3_err_payment_event_conflict',
+                    ['from' => 'payment_method', 'to' => (string) $paymentMethodId],
+                    PaymentLifecycleException::KIND_CONFLICT
+                );
+            }
+            $order = $this->resolveOrder($event);
+            if ($order !== null) {
+                $this->assertOrderPaymentMethod($order, $paymentMethodId);
+                $existing = $this->store->findLatestForOrder((int) $order->get('id'), $paymentMethodId);
+                if (
+                    $existing !== null
+                    && ($existing['external_id'] === null || $existing['external_id'] === '')
+                ) {
+                    return $this->store->update($existing['id'], ['external_id' => $event->externalId]);
+                }
+            }
+
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_attempt_nf',
+                ['external_id' => $event->externalId],
+                PaymentLifecycleException::KIND_NOT_FOUND
+            );
+        }
+        $order = $this->resolveOrder($event);
+        if ($order === null) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_attempt_nf',
+                [],
+                PaymentLifecycleException::KIND_NOT_FOUND
+            );
+        }
+        $this->assertOrderPaymentMethod($order, $paymentMethodId);
+        $existing = $this->store->findLatestForOrder((int) $order->get('id'), $paymentMethodId);
+        if ($existing === null) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_attempt_nf',
+                ['order_id' => (int) $order->get('id')],
+                PaymentLifecycleException::KIND_NOT_FOUND
+            );
+        }
+
+        return $existing;
+    }
+
+    private function resolveOrder(PaymentWebhookEvent $event): ?msOrder
+    {
+        if ($event->orderId !== null && $event->orderId > 0) {
+            $order = $this->modx->getObject(msOrder::class, ['id' => $event->orderId]);
+            if ($order instanceof msOrder) {
+                return $order;
+            }
+        }
+        if ($event->orderUuid !== null && $event->orderUuid !== '') {
+            $order = $this->modx->getObject(msOrder::class, ['uuid' => $event->orderUuid]);
+            if ($order instanceof msOrder) {
+                return $order;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return PaymentAttemptRow
+     */
+    private function requireAttempt(int $attemptId): array
+    {
+        $attempt = $this->store->findById($attemptId);
+        if ($attempt === null) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_attempt_nf',
+                ['id' => $attemptId],
+                PaymentLifecycleException::KIND_NOT_FOUND
+            );
+        }
+
+        return $attempt;
+    }
+
+    private function assertTransition(string $from, string $to): void
+    {
+        $allowed = self::ALLOWED_TRANSITIONS[$from] ?? [];
+        if (!in_array($to, $allowed, true)) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_event_conflict',
+                ['from' => $from, 'to' => $to],
+                PaymentLifecycleException::KIND_CONFLICT
+            );
+        }
+    }
+
+    /**
+     * @param PaymentAttemptRow $attempt
+     */
+    private function assertPaidPreconditions(array $attempt, ?float $paidAmount): void
+    {
+        $order = $this->modx->getObject(msOrder::class, ['id' => $attempt['order_id']]);
+        if (!$order instanceof msOrder) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_attempt_nf',
+                ['order_id' => $attempt['order_id']],
+                PaymentLifecycleException::KIND_NOT_FOUND
+            );
+        }
+        $canceledId = (int) $this->modx->getOption('ms3_status_canceled', null, 5) ?: 5;
+        if ((int) $order->get('status_id') === $canceledId) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_event_conflict',
+                ['from' => 'canceled', 'to' => PaymentAttemptStatus::PAID],
+                PaymentLifecycleException::KIND_CONFLICT
+            );
+        }
+        $this->assertOrderPaymentMethod($order, $attempt['payment_method_id']);
+        if ($paidAmount === null) {
+            return;
+        }
+        $deltaAttempt = abs($paidAmount - $attempt['amount']);
+        $deltaCost = abs($paidAmount - (float) $order->get('cost'));
+        if ($deltaAttempt > 0.001 && $deltaCost > 0.001) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_event_conflict',
+                ['amount' => $paidAmount],
+                PaymentLifecycleException::KIND_CONFLICT
+            );
+        }
+    }
+
+    /**
+     * @param PaymentAttemptRow $attempt
+     */
+    private function assertAttemptMatchesWebhook(array $attempt, int $paymentMethodId): void
+    {
+        if ($attempt['payment_method_id'] !== $paymentMethodId) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_event_conflict',
+                ['from' => 'payment_method', 'to' => (string) $paymentMethodId],
+                PaymentLifecycleException::KIND_CONFLICT
+            );
+        }
+        $order = $this->modx->getObject(msOrder::class, ['id' => $attempt['order_id']]);
+        if (!$order instanceof msOrder) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_attempt_nf',
+                ['order_id' => $attempt['order_id']],
+                PaymentLifecycleException::KIND_NOT_FOUND
+            );
+        }
+        $this->assertOrderPaymentMethod($order, $paymentMethodId);
+    }
+
+    private function assertOrderPaymentMethod(msOrder $order, int $paymentMethodId): void
+    {
+        $orderPaymentId = (int) $order->get('payment_id');
+        if ($orderPaymentId > 0 && $orderPaymentId !== $paymentMethodId) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_event_conflict',
+                ['from' => (string) $orderPaymentId, 'to' => (string) $paymentMethodId],
+                PaymentLifecycleException::KIND_CONFLICT
+            );
+        }
+    }
+
+    private function applyEventKey(string $target, ?string $providerEventId): string
+    {
+        if ($providerEventId !== null && $providerEventId !== '') {
+            return $providerEventId;
+        }
+
+        return $target;
+    }
+
+    private function refundEventKey(?string $providerEventId, ?string $refundExternalId): string
+    {
+        $key = $providerEventId ?? $refundExternalId ?? '';
+        if ($key === '') {
+            throw new PaymentLifecycleException('ms3_err_payment_webhook_invalid', ['event' => 'refund']);
+        }
+
+        return $key;
+    }
+
+    private function syncOrderStatus(int $orderId, string $attemptStatus): void
+    {
+        $statusId = $this->orderStatusFor($attemptStatus);
+        if ($statusId <= 0) {
+            return;
+        }
+        $result = ($this->changeStatus)($orderId, $statusId);
+        if ($result === true) {
+            return;
+        }
+        $message = is_string($result) ? $result : 'ms3_err_unknown';
+        if ($this->isAlreadySameStatus($message)) {
+            return;
+        }
+        throw new PaymentLifecycleException(
+            'ms3_err_payment_event_conflict',
+            ['status' => $message],
+            PaymentLifecycleException::KIND_CONFLICT,
+            $message
+        );
+    }
+
+    private function orderStatusFor(string $attemptStatus): int
+    {
+        return match ($attemptStatus) {
+            PaymentAttemptStatus::PAID => (int) $this->modx->getOption('ms3_status_paid', null, 3) ?: 3,
+            PaymentAttemptStatus::FAILED, PaymentAttemptStatus::CANCELLED => (int) $this->modx->getOption(
+                'ms3_payment_on_failed_status',
+                null,
+                5
+            ),
+            PaymentAttemptStatus::REFUNDED => (int) $this->modx->getOption('ms3_payment_on_refunded_status', null, 5),
+            default => 0,
+        };
+    }
+
+    private function isAlreadySameStatus(string $message): bool
+    {
+        return str_contains($message, 'ms3_err_status_same')
+            || $message === $this->modx->lexicon('ms3_err_status_same');
+    }
+
+    private function isOpen(string $status): bool
+    {
+        return in_array($status, [
+            PaymentAttemptStatus::PENDING,
+            PaymentAttemptStatus::AUTHORIZED,
+        ], true);
+    }
+
+    /**
+     * @param PaymentAttemptRow $open
+     */
+    private function canRebindOpenAttempt(array $open, ?string $externalId): bool
+    {
+        $current = $open['external_id'] ?? '';
+        if ($current === '') {
+            return true;
+        }
+        if ($externalId === null || $externalId === '') {
+            return true;
+        }
+
+        return $current === $externalId;
+    }
+
+    private function requirePaidAmount(PaymentWebhookEvent $event): float
+    {
+        if ($event->amount === null) {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_webhook_invalid',
+                ['amount' => 'required']
+            );
+        }
+
+        return $event->amount;
+    }
+
+    /**
+     * @param PaymentAttemptRow $attempt
+     */
+    private function remainingRefundable(array $attempt): float
+    {
+        return round(max(0.0, $attempt['amount'] - $attempt['refunded_amount']), 3);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function sanitizePayload(array $payload): array
+    {
+        $clean = [];
+        foreach ($payload as $key => $value) {
+            if (!is_string($key) || in_array(strtolower($key), self::BLOCKED_PAYLOAD_KEYS, true)) {
+                continue;
+            }
+            if (is_array($value)) {
+                $clean[$key] = $this->sanitizePayload($value);
+                continue;
+            }
+            if (is_scalar($value) || $value === null) {
+                $clean[$key] = $value;
+            }
+        }
+
+        return $clean;
+    }
+}

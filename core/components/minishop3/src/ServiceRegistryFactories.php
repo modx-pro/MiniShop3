@@ -2,6 +2,8 @@
 
 namespace MiniShop3;
 
+use MiniShop3\Services\Order\OrderStatusService;
+use MiniShop3\Services\Payment\PdoPaymentAttemptStore;
 use MODX\Revolution\modX;
 
 /**
@@ -53,6 +55,18 @@ class ServiceRegistryFactories
             'ms3_delivery_service' => $modxOnly(),
             'ms3_payment_service' => $modxOnly(),
             'ms3_payment_link_resolver' => $modxOnly(),
+            'ms3_payment_lifecycle' => static function (modX $modx, object $services, string $class): object {
+                $prefix = (string) $modx->getOption('table_prefix', null, '');
+                $store = new PdoPaymentAttemptStore(
+                    $modx->pdo,
+                    $prefix . 'ms3_payment_attempts',
+                    $prefix . 'ms3_payment_attempt_events'
+                );
+                /** @var OrderStatusService $orderStatus */
+                $orderStatus = $services->get('ms3_order_status');
+
+                return new $class($store, $modx, $orderStatus->change(...));
+            },
             'ms3_order_service' => $modxOnly(),
             'ms3_customer_order' => $modxOnly(),
             'ms3_order_number_generator' => $modxOnly(),

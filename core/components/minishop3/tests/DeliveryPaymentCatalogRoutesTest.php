@@ -35,6 +35,7 @@ foreach (
         "group('/payment'",
         'DeliveryController',
         'PaymentController',
+        'PaymentWebhookController',
     ] as $needle
 ) {
     if (!str_contains($webRoutes, $needle)) {

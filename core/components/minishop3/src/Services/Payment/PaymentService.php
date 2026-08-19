@@ -56,7 +56,7 @@ class PaymentService
         }
 
         try {
-            $controller = new $class($this->ms3, []);
+            $controller = new $class($this->ms3, ['payment' => $payment]);
 
             if (!$controller instanceof PaymentProviderInterface) {
                 $this->modx->log(
@@ -107,7 +107,12 @@ class PaymentService
             }
         }
 
-        return $controller->send($order);
+        $response = $controller->send($order);
+        if (!empty($response['success'])) {
+            $this->recordAttemptFromSend($payment, $order, $response);
+        }
+
+        return $response;
     }
 
     /**
@@ -193,5 +198,58 @@ class PaymentService
         );
 
         return true;
+    }
+
+    /**
+     * Persist a payment attempt after a successful send() when the provider
+     * returned an external id. DefaultPayment has neither payment_id nor
+     * external_id and is left unchanged.
+     *
+     * @param array<string, mixed> $response
+     */
+    private function recordAttemptFromSend(msPayment $payment, msOrder $order, array $response): void
+    {
+        $data = is_array($response['data'] ?? null) ? $response['data'] : [];
+        $externalId = $data['external_id'] ?? $data['payment_id'] ?? null;
+        if (is_int($externalId) || is_float($externalId)) {
+            $externalId = (string) $externalId;
+        }
+        if (!is_string($externalId) || $externalId === '') {
+            return;
+        }
+        if (!$this->modx->services->has('ms3_payment_lifecycle')) {
+            return;
+        }
+        $lifecycle = $this->modx->services->get('ms3_payment_lifecycle');
+        if (!$lifecycle instanceof PaymentLifecycleService) {
+            return;
+        }
+        $class = $payment->get('class');
+        $provider = is_string($class) && $class !== '' ? $class : $this->defaultControllerClass;
+        $payload = [];
+        $link = $data['payment_link'] ?? null;
+        if (is_string($link) && $link !== '') {
+            $payload['payment_link'] = $link;
+        }
+        try {
+            $lifecycle->initiate(
+                (int) $order->get('id'),
+                (int) $payment->get('id'),
+                $provider,
+                (float) $order->get('cost'),
+                is_string($data['currency'] ?? null) ? $data['currency'] : 'RUB',
+                $externalId,
+                $payload
+            );
+        } catch (\Throwable $exception) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                sprintf(
+                    'PaymentService: failed to record payment attempt for order #%s: %s',
+                    (string) $order->get('id'),
+                    $exception->getMessage()
+                )
+            );
+        }
     }
 }
