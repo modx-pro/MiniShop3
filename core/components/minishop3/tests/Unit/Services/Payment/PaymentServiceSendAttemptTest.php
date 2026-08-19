@@ -11,6 +11,7 @@ use MiniShop3\Services\Payment\PaymentLifecycleService;
 use MiniShop3\Services\Payment\PaymentService;
 use MiniShop3\Tests\Stubs\StubMsOrder;
 use MiniShop3\Tests\Stubs\StubMsPayment;
+use MiniShop3\Tests\Support\CallbackOrderStatusChanger;
 use MiniShop3\Tests\Support\InMemoryPaymentAttemptStore;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
@@ -29,7 +30,7 @@ final class PaymentServiceSendAttemptTest extends TestCase
     public function testSuccessfulSendWithExternalIdInitiatesAttempt(): void
     {
         $store = new InMemoryPaymentAttemptStore();
-        $lifecycle = new PaymentLifecycleService($store, new modX(), static fn (): bool => true);
+        $lifecycle = new PaymentLifecycleService($store, new modX(), new CallbackOrderStatusChanger(static fn (int $orderId, int $statusId): bool => true));
         $service = new PaymentService($this->modxWithLifecycle($lifecycle));
         $order = new StubMsOrder(['id' => 31, 'cost' => 12.5, 'payment_id' => 9]);
         $payment = new StubMsPayment(['id' => 9, 'class' => 'AsyncPay']);
@@ -51,7 +52,7 @@ final class PaymentServiceSendAttemptTest extends TestCase
     public function testSendWithoutExternalIdDoesNotInitiate(): void
     {
         $store = new InMemoryPaymentAttemptStore();
-        $lifecycle = new PaymentLifecycleService($store, new modX(), static fn (): bool => true);
+        $lifecycle = new PaymentLifecycleService($store, new modX(), new CallbackOrderStatusChanger(static fn (int $orderId, int $statusId): bool => true));
         $service = new PaymentService($this->modxWithLifecycle($lifecycle));
         $order = new StubMsOrder(['id' => 32, 'cost' => 10, 'payment_id' => 1]);
         $payment = new StubMsPayment(['id' => 1, 'class' => 'MiniShop3\\Controllers\\Payment\\DefaultPayment']);
@@ -67,12 +68,68 @@ final class PaymentServiceSendAttemptTest extends TestCase
         self::assertNull($store->findLatestForOrder(32, 1));
     }
 
+    public function testSendFailsWhenInitiateThrows(): void
+    {
+        $lifecycle = $this->createMock(PaymentLifecycleService::class);
+        $lifecycle->expects(self::once())
+            ->method('initiate')
+            ->willThrowException(new \RuntimeException('db down'));
+        $service = new PaymentService($this->modxWithLifecycle($lifecycle));
+        $order = new StubMsOrder(['id' => 33, 'cost' => 12.5, 'payment_id' => 9]);
+        $payment = new StubMsPayment(['id' => 9, 'class' => 'AsyncPay']);
+
+        $response = $service->sendToPaymentGateway($payment, $this->sender([
+            'success' => true,
+            'data' => [
+                'external_id' => 'gw-fail',
+                'payment_link' => 'https://pay.example/fail',
+            ],
+        ]), $order);
+
+        self::assertIsArray($response);
+        self::assertFalse($response['success']);
+        self::assertSame('ms3_err_payment_attempt_record', $response['message']);
+        self::assertSame('gw-fail', $response['data']['external_id']);
+        self::assertSame('https://pay.example/fail', $response['data']['payment_link']);
+    }
+
+    public function testResolvePaymentLinkUsesStoredOpenAttemptWithoutSend(): void
+    {
+        $store = new InMemoryPaymentAttemptStore();
+        $lifecycle = new PaymentLifecycleService(
+            $store,
+            new modX(),
+            new CallbackOrderStatusChanger(static fn (int $orderId, int $statusId): bool => true)
+        );
+        $lifecycle->initiate(40, 7, 'AsyncPay', 10.0, 'RUB', 'gw-40', [
+            'payment_link' => 'https://pay.example/stored',
+        ]);
+        $service = new PaymentService($this->modxWithLifecycle($lifecycle));
+        $order = new StubMsOrder(['id' => 40, 'cost' => 10, 'payment_id' => 7]);
+        $payment = new StubMsPayment(['id' => 7, 'class' => 'AsyncPay']);
+        $sender = $this->sender([
+            'success' => true,
+            'data' => [
+                'external_id' => 'should-not-create',
+                'payment_link' => 'https://pay.example/new',
+            ],
+        ]);
+
+        $link = $service->resolvePaymentLink($payment, $sender, $order);
+
+        self::assertSame('https://pay.example/stored', $link);
+        self::assertSame(0, $sender->sends);
+        self::assertNull($store->findByExternalId('AsyncPay', 'should-not-create', 7));
+    }
+
     /**
      * @param array<string, mixed> $response
      */
     private function sender(array $response): PaymentProviderInterface
     {
         return new class ($response) implements PaymentProviderInterface {
+            public int $sends = 0;
+
             /**
              * @param array<string, mixed> $response
              */
@@ -82,6 +139,8 @@ final class PaymentServiceSendAttemptTest extends TestCase
 
             public function send(msOrder $order): array
             {
+                $this->sends++;
+
                 return $this->response;
             }
 

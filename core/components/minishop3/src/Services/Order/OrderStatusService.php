@@ -20,7 +20,7 @@ use MODX\Revolution\modX;
  * Handles order status transitions: validation, change, logging, notifications.
  * Can be overridden via DI to customize status change behavior.
  */
-class OrderStatusService
+class OrderStatusService implements OrderStatusChanger
 {
     protected modX $modx;
     protected MiniShop3 $ms3;

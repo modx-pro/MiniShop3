@@ -13,8 +13,6 @@ use RuntimeException;
 /**
  * SQL store for payment attempts and idempotent webhook events.
  *
- * $db is PDO or xPDO (prepare + execute).
- *
  * @phpstan-import-type PaymentAttemptRow from PaymentAttemptStoreInterface
  */
 final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
@@ -24,7 +22,7 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
     private string $eventsTable;
 
     public function __construct(
-        private readonly object $db,
+        private readonly PDO $db,
         string $attemptsTable,
         string $eventsTable,
     ) {
@@ -232,18 +230,11 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
 
     private function lastInsertId(): string
     {
-        if (method_exists($this->db, 'lastInsertId')) {
-            return (string) $this->db->lastInsertId();
-        }
-
-        throw new RuntimeException('Payment attempt store requires lastInsertId()');
+        return (string) $this->db->lastInsertId();
     }
 
     private function prepare(string $sql): PDOStatement
     {
-        if (!method_exists($this->db, 'prepare')) {
-            throw new RuntimeException('Payment attempt store requires prepare() on the DB connection');
-        }
         $stmt = $this->db->prepare($sql);
         if (!$stmt instanceof PDOStatement) {
             throw new RuntimeException('Payment attempt store failed to prepare SQL');

@@ -17,6 +17,7 @@ use MiniShop3\Services\Payment\PaymentAttemptStatus;
 use MiniShop3\Services\Payment\PaymentLifecycleService;
 use MiniShop3\Tests\Stubs\StubMsOrder;
 use MiniShop3\Tests\Stubs\StubMsPayment;
+use MiniShop3\Tests\Support\CallbackOrderStatusChanger;
 use MiniShop3\Tests\Support\InMemoryPaymentAttemptStore;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
@@ -207,7 +208,7 @@ final class PaymentWebhookControllerTest extends TestCase
             }
         };
 
-        return new PaymentLifecycleService($store, $modx, static fn (): bool => true);
+        return new PaymentLifecycleService($store, $modx, new CallbackOrderStatusChanger(static fn (int $orderId, int $statusId): bool => true));
     }
 
     private function modxWithHandler(object $handler, ?object $lifecycle = null): modX

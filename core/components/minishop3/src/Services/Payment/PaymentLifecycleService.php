@@ -6,6 +6,7 @@ namespace MiniShop3\Services\Payment;
 
 use MiniShop3\Controllers\Payment\PaymentWebhookEvent;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Services\Order\OrderStatusChanger;
 use MODX\Revolution\modX;
 
 /**
@@ -55,12 +56,12 @@ class PaymentLifecycleService
     ];
 
     /**
-     * @param \Closure(int, int): (bool|string) $changeStatus
+     * @param OrderStatusChanger $orderStatus
      */
     public function __construct(
         private readonly PaymentAttemptStoreInterface $store,
         private readonly modX $modx,
-        private readonly \Closure $changeStatus,
+        private readonly OrderStatusChanger $orderStatus,
     ) {
     }
 
@@ -149,6 +150,7 @@ class PaymentLifecycleService
     }
 
     /**
+     * @param array<string, mixed> $extraFields
      * @return PaymentAttemptRow
      */
     public function refund(
@@ -156,6 +158,7 @@ class PaymentLifecycleService
         float $amount,
         ?string $refundExternalId = null,
         ?string $providerEventId = null,
+        array $extraFields = [],
     ): array {
         $attempt = $this->requireAttempt($attemptId);
         $amount = round($amount, 3);
@@ -181,20 +184,14 @@ class PaymentLifecycleService
             ? PaymentAttemptStatus::PARTIALLY_REFUNDED
             : PaymentAttemptStatus::REFUNDED;
         $this->assertTransition($attempt['status'], $target);
-        if (!$this->store->recordEvent($attemptId, $target, $eventKey)) {
-            $this->syncOrderStatus($attempt['order_id'], $attempt['status']);
-
-            return $attempt;
-        }
-        $updated = $this->store->update($attemptId, [
+        $fields = array_merge($extraFields, [
             'status' => $target,
             'refunded_amount' => $refundedAmount,
             'refund_external_id' => $refundExternalId,
             'refundedon' => time(),
         ]);
-        $this->syncOrderStatus($updated['order_id'], $target);
 
-        return $updated;
+        return $this->commit($attempt, $target, $eventKey, $fields);
     }
 
     /**
@@ -226,10 +223,12 @@ class PaymentLifecycleService
     public function applyWebhook(PaymentWebhookEvent $event, int $paymentMethodId, string $provider): array
     {
         $attempt = $this->resolveAttempt($event, $paymentMethodId, $provider);
+        $payloadFields = [];
         if ($event->payload !== []) {
-            $attempt = $this->store->update($attempt['id'], [
-                'payload' => array_merge($attempt['payload'], $this->sanitizePayload($event->payload)),
-            ]);
+            $payloadFields['payload'] = array_merge(
+                $attempt['payload'],
+                $this->sanitizePayload($event->payload)
+            );
         }
         $eventId = $event->providerEventId;
 
@@ -237,19 +236,27 @@ class PaymentLifecycleService
             PaymentAttemptStatus::PENDING,
             PaymentAttemptStatus::AUTHORIZED,
             PaymentAttemptStatus::FAILED,
-            PaymentAttemptStatus::CANCELLED => $this->apply($attempt['id'], $event->eventType, $eventId),
+            PaymentAttemptStatus::CANCELLED => $this->apply(
+                $attempt['id'],
+                $event->eventType,
+                $eventId,
+                null,
+                $payloadFields
+            ),
             PaymentAttemptStatus::PAID => $this->apply(
                 $attempt['id'],
                 $event->eventType,
                 $eventId,
-                $this->requirePaidAmount($event)
+                $this->requirePaidAmount($event),
+                $payloadFields
             ),
-            PaymentAttemptStatus::REFUNDED => $this->refundWebhook($attempt, $event, $eventId),
+            PaymentAttemptStatus::REFUNDED => $this->refundWebhook($attempt, $event, $eventId, $payloadFields),
             PaymentAttemptStatus::PARTIALLY_REFUNDED => $this->refund(
                 $attempt['id'],
                 $event->refundAmount ?? 0.0,
                 $event->refundExternalId,
-                $eventId
+                $eventId,
+                $payloadFields
             ),
             default => throw new PaymentLifecycleException(
                 'ms3_err_payment_webhook_invalid',
@@ -259,11 +266,15 @@ class PaymentLifecycleService
     }
 
     /**
-     * @param PaymentAttemptRow $attempt
+     * @param array<string, mixed> $fields
      * @return PaymentAttemptRow
      */
-    private function refundWebhook(array $attempt, PaymentWebhookEvent $event, ?string $eventId): array
-    {
+    private function refundWebhook(
+        array $attempt,
+        PaymentWebhookEvent $event,
+        ?string $eventId,
+        array $fields = [],
+    ): array {
         $qty = $event->refundAmount ?? $this->remainingRefundable($attempt);
         if ($qty <= 0) {
             if ($attempt['status'] === PaymentAttemptStatus::REFUNDED) {
@@ -274,27 +285,58 @@ class PaymentLifecycleService
             throw new PaymentLifecycleException('ms3_err_payment_webhook_invalid', ['qty' => $qty]);
         }
 
-        return $this->refund($attempt['id'], $qty, $event->refundExternalId, $eventId);
+        return $this->refund($attempt['id'], $qty, $event->refundExternalId, $eventId, $fields);
     }
 
     /**
+     * @param array<string, mixed> $fields
      * @return PaymentAttemptRow
      */
-    private function apply(int $attemptId, string $target, ?string $providerEventId, ?float $paidAmount = null): array
-    {
+    private function apply(
+        int $attemptId,
+        string $target,
+        ?string $providerEventId,
+        ?float $paidAmount = null,
+        array $fields = [],
+    ): array {
         $attempt = $this->requireAttempt($attemptId);
         $eventKey = $this->applyEventKey($target, $providerEventId);
         if ($target === PaymentAttemptStatus::PAID) {
             $this->assertPaidPreconditions($attempt, $paidAmount);
         }
+
+        return $this->commit($attempt, $target, $eventKey, $fields);
+    }
+
+    /**
+     * Update attempt, sync order, then record the idempotency event.
+     *
+     * @param PaymentAttemptRow $attempt
+     * @param array<string, mixed> $fields
+     * @return PaymentAttemptRow
+     */
+    private function commit(array $attempt, string $target, string $eventKey, array $fields = []): array
+    {
+        $attemptId = $attempt['id'];
+        if ($this->store->hasEvent($attemptId, $target, $eventKey)) {
+            $this->syncOrderStatus($attempt['order_id'], $target);
+
+            return $this->store->findById($attemptId) ?? $attempt;
+        }
         if ($attempt['status'] !== $target) {
             $this->assertTransition($attempt['status'], $target);
-            $attempt = $this->store->update($attemptId, ['status' => $target]);
+            $fields['status'] = $target;
+        } elseif ($fields === []) {
+            $this->syncOrderStatus($attempt['order_id'], $target);
+            $this->store->recordEvent($attemptId, $target, $eventKey);
+
+            return $this->store->findById($attemptId) ?? $attempt;
         }
-        $this->syncOrderStatus($attempt['order_id'], $target);
+        $updated = $this->store->update($attemptId, $fields);
+        $this->syncOrderStatus($updated['order_id'], $target);
         $this->store->recordEvent($attemptId, $target, $eventKey);
 
-        return $this->store->findById($attemptId) ?? $attempt;
+        return $this->store->findById($attemptId) ?? $updated;
     }
 
     /**
@@ -502,7 +544,7 @@ class PaymentLifecycleService
         if ($statusId <= 0) {
             return;
         }
-        $result = ($this->changeStatus)($orderId, $statusId);
+        $result = $this->orderStatus->change($orderId, $statusId);
         if ($result === true) {
             return;
         }

@@ -9,6 +9,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Payment\PaymentAttemptStatus;
 use MiniShop3\Services\Payment\PaymentLifecycleException;
 use MiniShop3\Services\Payment\PaymentLifecycleService;
+use MiniShop3\Tests\Support\CallbackOrderStatusChanger;
 use MiniShop3\Tests\Support\InMemoryPaymentAttemptStore;
 use MiniShop3\Tests\Stubs\StubMsOrder;
 use MODX\Revolution\modX;
@@ -370,11 +371,13 @@ final class PaymentLifecycleServiceTest extends TestCase
         return new PaymentLifecycleService(
             $store,
             $modx,
-            $changeStatus ?? function (int $orderId, int $statusId): bool|string {
-                $this->statusChanges[] = [$orderId, $statusId];
+            new CallbackOrderStatusChanger(
+                $changeStatus ?? function (int $orderId, int $statusId): bool|string {
+                    $this->statusChanges[] = [$orderId, $statusId];
 
-                return true;
-            }
+                    return true;
+                }
+            )
         );
     }
 }

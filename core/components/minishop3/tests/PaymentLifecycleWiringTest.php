@@ -47,8 +47,11 @@ if (!str_contains($factories, "'ms3_payment_lifecycle'")) {
 if (str_contains($payment, "set('status_id'")) {
     $fail('Payment docblock must not write status_id directly');
 }
-if (!str_contains($payment, 'PaymentLifecycleService')) {
-    $fail('Payment examples must use PaymentLifecycleService');
+if (!str_contains($payment, 'ms3_payment_lifecycle')) {
+    $fail('Payment examples must use ms3_payment_lifecycle');
+}
+if (!str_contains($payment, 'resolvePaymentLink')) {
+    $fail('Payment::getPaymentLink must go through PaymentService::resolvePaymentLink');
 }
 if (str_contains($ordersPage, '$payment->toArray()')) {
     $fail('OrdersPageService must not expose payment toArray()');
@@ -61,8 +64,8 @@ $notification = file_get_contents($srcRoot . '/Notifications/Notification.php');
 if ($paymentService === false || $notification === false) {
     $fail('cannot read payment service / notification');
 }
-if (!str_contains($paymentService, 'recordAttemptFromSend')) {
-    $fail('PaymentService must record an attempt after a successful send()');
+if (!str_contains($paymentService, 'resolvePaymentLink')) {
+    $fail('PaymentService must resolve payment links through send()+initiate');
 }
 if (str_contains($notification, '$payment->toArray()')) {
     $fail('Notification must not expose payment toArray()');
