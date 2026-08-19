@@ -2,6 +2,7 @@
 
 namespace MiniShop3;
 
+use MiniShop3\Services\Shipment\PdoShipmentStore;
 use MODX\Revolution\modX;
 
 /**
@@ -51,6 +52,15 @@ class ServiceRegistryFactories
             'ms3_product_image' => $modxOnly(),
             'ms3_vendor_service' => $modxOnly(),
             'ms3_delivery_service' => $modxOnly(),
+            'ms3_shipment_lifecycle' => static function (modX $modx, object $services, string $class): object {
+                if (!$modx->pdo instanceof \PDO) {
+                    throw new \RuntimeException('ms3_shipment_lifecycle requires MODX PDO');
+                }
+                $prefix = (string) $modx->getOption('table_prefix', null, '');
+                $store = new PdoShipmentStore($modx->pdo, $prefix . 'ms3_shipments');
+
+                return new $class($store, $modx, $services->get('ms3_order_status'));
+            },
             'ms3_payment_service' => $modxOnly(),
             'ms3_payment_link_resolver' => $modxOnly(),
             'ms3_order_service' => $modxOnly(),

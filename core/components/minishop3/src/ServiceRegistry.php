@@ -210,6 +210,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Delivery\DeliveryService::class,
             'interface' => null,
         ],
+        'ms3_shipment_lifecycle' => [
+            'class' => \MiniShop3\Services\Shipment\ShipmentLifecycleService::class,
+            'interface' => null,
+        ],
         'ms3_payment_service' => [
             'class' => \MiniShop3\Services\Payment\PaymentService::class,
             'interface' => null,

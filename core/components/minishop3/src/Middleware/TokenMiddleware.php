@@ -41,6 +41,7 @@ class TokenMiddleware implements MiddlewareInterface
         '/api/v1/category/tree',
         '/api/v1/delivery/get/',
         '/api/v1/delivery/list',
+        '/api/v1/delivery/webhook/',
         '/api/v1/payment/get/',
         '/api/v1/payment/list',
         '/api/v1/customer/token/get',
