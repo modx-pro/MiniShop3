@@ -165,6 +165,8 @@ class OrderStatusService
             'status' => $statusId,
         ]);
         if (!$response['success']) {
+            $this->undoUncommittedNewStatus($msOrder, $oldStatus?->get('id'), $statusId);
+
             return $response['message'];
         }
 
@@ -251,7 +253,36 @@ class OrderStatusService
 
     protected function inventory(): ?OrderInventoryCoordinator
     {
-        return $this->inventoryCoordinator ?? OrderInventoryCoordinator::fromModx($this->modx);
+        return $this->inventoryCoordinator;
+    }
+
+    /**
+     * After-event failure must not leave New + a live reserve.
+     * Paid/canceled persists stay: those inventory operations already finished.
+     */
+    protected function undoUncommittedNewStatus(msOrder $msOrder, mixed $oldStatusId, int $newStatusId): void
+    {
+        $inventory = $this->inventory();
+        if ($inventory === null || !OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return;
+        }
+        $newId = (int) $this->modx->getOption('ms3_status_new', null, 2);
+        if ($newStatusId !== $newId) {
+            return;
+        }
+        try {
+            $inventory->releaseOrder($msOrder);
+        } catch (InventoryException $exception) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OrderStatusService] release after msOnChangeOrderStatus failure: ' . $exception->getMessage()
+            );
+        }
+        $previousId = is_numeric($oldStatusId)
+            ? (int) $oldStatusId
+            : ((int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1);
+        $msOrder->set('status_id', $previousId);
+        $msOrder->save();
     }
 
     /**

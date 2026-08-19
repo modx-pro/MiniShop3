@@ -6,6 +6,8 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderLog;
 use MiniShop3\Services\Cart\CartDraftContext;
+use MiniShop3\Services\Inventory\InventoryServiceInterface;
+use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MiniShop3\Services\Order\OrderAddressManager;
 use MiniShop3\Services\Order\OrderCostCalculator;
 use MiniShop3\Services\Order\OrderDraftManager;
@@ -110,15 +112,26 @@ class Order
 
         $this->submitHandler = $this->getServiceFromDI(
             'ms3_order_submit_handler',
-            fn() => new OrderSubmitHandler(
-                $this->modx,
-                $this->ms3,
-                $this->draftManager,
-                $this->costCalculator,
-                $this->fieldManager,
-                $this->addressManager,
-                $this->userResolver
-            )
+            function () {
+                $inventory = $this->modx->services->has('ms3_inventory')
+                    ? $this->modx->services->get('ms3_inventory')
+                    : null;
+                $coordinator = $inventory instanceof InventoryServiceInterface
+                    ? new OrderInventoryCoordinator($this->modx, $inventory)
+                    : null;
+
+                return new OrderSubmitHandler(
+                    $this->modx,
+                    $this->ms3,
+                    $this->draftManager,
+                    $this->costCalculator,
+                    $this->fieldManager,
+                    $this->addressManager,
+                    $this->userResolver,
+                    null,
+                    $coordinator
+                );
+            }
         );
     }
 

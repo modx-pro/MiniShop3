@@ -42,6 +42,12 @@ if (!preg_match(
 if (!str_contains($submit, 'abortInventoryHold')) {
     $fail('OrderSubmitHandler must abort inventory hold when payment send() fails');
 }
+if (!str_contains($submit, 'failAfterNumberAllocated')) {
+    $fail('OrderSubmitHandler must revert the allocated number when submit fails after reserve check');
+}
+if (!str_contains($status, 'undoUncommittedNewStatus')) {
+    $fail('OrderStatusService must undo New + reserve when msOnChangeOrderStatus fails');
+}
 
 $registry = file_get_contents($srcRoot . '/ServiceRegistry.php');
 if ($registry === false || !str_contains($registry, "'ms3_inventory'")) {

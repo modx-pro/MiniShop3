@@ -234,6 +234,10 @@ class OrderSubmitHandler
             return $this->error('ms3_err_order_num_save');
         }
 
+        $failAfterNumber = function (?string $message, array $data = [], array $placeholders = []) use ($draft): array {
+            return $this->failAfterNumberAllocated($draft, $message, $data, $placeholders);
+        };
+
         // Save address to customer's saved addresses if requested
         $properties = $draft->get('properties') ?? [];
         if (!empty($properties['save_address']) && !empty($customerId)) {
@@ -251,7 +255,7 @@ class OrderSubmitHandler
         ]);
 
         if (!$response['success']) {
-            return $this->error($response['message']);
+            return $failAfterNumber($response['message']);
         }
 
         // Event: on create order
@@ -262,7 +266,7 @@ class OrderSubmitHandler
         ]);
 
         if (!$response['success']) {
-            return $this->error($response['message']);
+            return $failAfterNumber($response['message']);
         }
 
         // Clean up _validated from properties
@@ -282,7 +286,11 @@ class OrderSubmitHandler
         try {
             $this->inventory()?->assertOrderAvailable($draft);
         } catch (InventoryException $exception) {
-            return $this->error($exception->getLexiconKey(), [], $exception->getPlaceholders());
+            return $failAfterNumber(
+                $exception->getLexiconKey(),
+                [],
+                $exception->getPlaceholders()
+            );
         }
 
         $statusNew = (int) $this->modx->getOption('ms3_status_new', null, 2) ?: 2;
@@ -291,7 +299,10 @@ class OrderSubmitHandler
         $statusResponse = $orderStatus->change($draft->get('id'), $statusNew);
 
         if ($statusResponse !== true) {
-            return $this->error($statusResponse, ['msorder' => $draft->get('uuid')]);
+            return $failAfterNumber(
+                is_string($statusResponse) ? $statusResponse : 'ms3_err_unknown',
+                ['msorder' => $draft->get('uuid')]
+            );
         }
 
         $msOrder = $this->modx->getObject(msOrder::class, ['id' => $draft->get('id')]);
@@ -357,13 +368,39 @@ class OrderSubmitHandler
     }
 
     /**
-     * Drop an uncommitted hold after payment send() failure.
-     * When enforcement is on, cancel the order so it is not left as New without a reserve.
+     * After a number is assigned, any failure before New must drop the number
+     * so the draft is not a holding order without a reserve.
      */
-    protected function abortInventoryHold(msOrder $msOrder): void
+    protected function failAfterNumberAllocated(
+        msOrder $draft,
+        ?string $message,
+        array $data = [],
+        array $placeholders = []
+    ): array {
+        $this->revertAllocatedNumber($draft);
+
+        return $this->error($message, $data, $placeholders);
+    }
+
+    protected function revertAllocatedNumber(msOrder $draft): void
     {
         if (!OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
             return;
+        }
+        $draft->set('num', null);
+        $draft->save();
+    }
+
+    /**
+     * Drop an uncommitted hold after payment send() failure.
+     * When enforcement is on, cancel the order so it is not left as New without a reserve.
+     *
+     * @return bool false when stock may still be held
+     */
+    protected function abortInventoryHold(msOrder $msOrder): bool
+    {
+        if (!OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return true;
         }
         try {
             $canceledId = (int) $this->modx->getOption('ms3_status_canceled', null, 5) ?: 5;
@@ -371,7 +408,7 @@ class OrderSubmitHandler
             $orderStatus = $this->modx->services->get('ms3_order_status');
             $result = $orderStatus->change((int) $msOrder->get('id'), $canceledId);
             if ($result === true) {
-                return;
+                return true;
             }
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -383,18 +420,26 @@ class OrderSubmitHandler
                 '[OrderSubmitHandler] cancel after payment failure: ' . $exception->getMessage()
             );
         }
-        try {
-            $this->inventory()?->releaseOrder($msOrder);
-        } catch (\Throwable $exception) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[OrderSubmitHandler] inventory release after payment failure: ' . $exception->getMessage()
-            );
+
+        $released = false;
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            try {
+                $this->inventory()?->releaseOrder($msOrder);
+                $released = true;
+                break;
+            } catch (\Throwable $exception) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[OrderSubmitHandler] inventory release after payment failure: ' . $exception->getMessage()
+                );
+            }
         }
+
+        return $released;
     }
 
     protected function inventory(): ?OrderInventoryCoordinator
     {
-        return $this->inventoryCoordinator ?? OrderInventoryCoordinator::fromModx($this->modx);
+        return $this->inventoryCoordinator;
     }
 }

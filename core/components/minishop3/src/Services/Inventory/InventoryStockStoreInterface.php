@@ -24,4 +24,11 @@ interface InventoryStockStoreInterface
     public function findReservation(int $orderId, int $productId): ?array;
 
     public function saveReservation(int $orderId, int $productId, float $qty, string $state): void;
+
+    /**
+     * Run $work in a DB transaction. Nested calls join an already open transaction.
+     *
+     * @param callable(): void $work
+     */
+    public function runInTransaction(callable $work): void;
 }

@@ -9,7 +9,7 @@ use MiniShop3\Services\Inventory\InventoryContext;
 use MiniShop3\Services\Inventory\InventoryException;
 use MiniShop3\Services\Inventory\InventoryKey;
 use MiniShop3\Services\Inventory\InventoryServiceInterface;
-use MiniShop3\Services\Inventory\InMemoryInventoryStockStore;
+use MiniShop3\Tests\Support\InMemoryInventoryStockStore;
 use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MiniShop3\Services\Inventory\ProductStockInventory;
 use MiniShop3\Tests\RecordingMsOrder;
