@@ -200,6 +200,7 @@ $_lang['ms3_err_payment_webhook_invalid'] = 'Некорректное тело �
 $_lang['ms3_err_payment_webhook_unauthorized'] = 'Подпись платёжного callback недействительна.';
 $_lang['ms3_err_payment_webhook_conflict'] = 'Callback конфликтует с текущим состоянием попытки оплаты.';
 $_lang['ms3_err_payment_attempt_nf'] = 'Попытка оплаты не найдена.';
+$_lang['ms3_err_payment_attempt_record'] = 'Не удалось записать попытку оплаты после отправки заказа в платёжный шлюз.';
 $_lang['ms3_err_payment_event_conflict'] = 'Это платёжное событие нельзя применить к текущей попытке.';
 $_lang['ms3_err_status_final'] = 'Установлен финальный статус. Его нельзя менять.';
 $_lang['ms3_err_status_fixed'] = 'Установлен фиксирующий статус. Вы не можете сменить его на более ранний.';

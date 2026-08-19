@@ -109,10 +109,63 @@ class PaymentService
 
         $response = $controller->send($order);
         if (!empty($response['success'])) {
-            $this->recordAttemptFromSend($payment, $order, $response);
+            try {
+                $this->recordAttemptFromSend($payment, $order, $response);
+            } catch (\Throwable $exception) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    sprintf(
+                        'PaymentService: failed to record payment attempt for order #%s: %s',
+                        (string) $order->get('id'),
+                        $exception->getMessage()
+                    )
+                );
+                $this->modx->lexicon->load('minishop3:default');
+
+                return [
+                    'success' => false,
+                    'message' => $this->modx->lexicon('ms3_err_payment_attempt_record'),
+                    'data' => is_array($response['data'] ?? null) ? $response['data'] : [],
+                ];
+            }
         }
 
         return $response;
+    }
+
+    /**
+     * Stored open-attempt link, otherwise send() + initiate via sendToPaymentGateway.
+     */
+    public function resolvePaymentLink(
+        msPayment $payment,
+        ?PaymentProviderInterface $controller,
+        msOrder $order,
+    ): ?string {
+        $methodId = (int) $payment->get('id') ?: null;
+        $stored = $this->storedOpenPaymentLink((int) $order->get('id'), $methodId);
+        if ($stored !== null) {
+            return $stored;
+        }
+        $response = $this->sendToPaymentGateway($payment, $controller, $order);
+        if (!is_array($response) || empty($response['success'])) {
+            return null;
+        }
+        $link = $response['data']['payment_link'] ?? null;
+
+        return is_string($link) && $link !== '' ? $link : null;
+    }
+
+    public function storedOpenPaymentLink(int $orderId, ?int $paymentMethodId = null): ?string
+    {
+        if ($orderId <= 0 || !$this->modx->services->has('ms3_payment_lifecycle')) {
+            return null;
+        }
+        $lifecycle = $this->modx->services->get('ms3_payment_lifecycle');
+        if (!$lifecycle instanceof PaymentLifecycleService) {
+            return null;
+        }
+
+        return $lifecycle->storedPaymentLink($orderId, $paymentMethodId);
     }
 
     /**
@@ -218,11 +271,11 @@ class PaymentService
             return;
         }
         if (!$this->modx->services->has('ms3_payment_lifecycle')) {
-            return;
+            throw new \RuntimeException('ms3_payment_lifecycle is not registered');
         }
         $lifecycle = $this->modx->services->get('ms3_payment_lifecycle');
         if (!$lifecycle instanceof PaymentLifecycleService) {
-            return;
+            throw new \RuntimeException('ms3_payment_lifecycle is not a PaymentLifecycleService');
         }
         $class = $payment->get('class');
         $provider = is_string($class) && $class !== '' ? $class : $this->defaultControllerClass;
@@ -231,25 +284,14 @@ class PaymentService
         if (is_string($link) && $link !== '') {
             $payload['payment_link'] = $link;
         }
-        try {
-            $lifecycle->initiate(
-                (int) $order->get('id'),
-                (int) $payment->get('id'),
-                $provider,
-                (float) $order->get('cost'),
-                is_string($data['currency'] ?? null) ? $data['currency'] : 'RUB',
-                $externalId,
-                $payload
-            );
-        } catch (\Throwable $exception) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                sprintf(
-                    'PaymentService: failed to record payment attempt for order #%s: %s',
-                    (string) $order->get('id'),
-                    $exception->getMessage()
-                )
-            );
-        }
+        $lifecycle->initiate(
+            (int) $order->get('id'),
+            (int) $payment->get('id'),
+            $provider,
+            (float) $order->get('cost'),
+            is_string($data['currency'] ?? null) ? $data['currency'] : 'RUB',
+            $externalId,
+            $payload
+        );
     }
 }

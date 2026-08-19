@@ -200,6 +200,7 @@ $_lang['ms3_err_payment_webhook_invalid'] = 'Payment callback payload is invalid
 $_lang['ms3_err_payment_webhook_unauthorized'] = 'Payment callback signature is invalid.';
 $_lang['ms3_err_payment_webhook_conflict'] = 'Payment callback conflicts with the current attempt state.';
 $_lang['ms3_err_payment_attempt_nf'] = 'Payment attempt not found.';
+$_lang['ms3_err_payment_attempt_record'] = 'Could not record the payment attempt after sending the order to the gateway.';
 $_lang['ms3_err_payment_event_conflict'] = 'This payment event cannot be applied to the current attempt.';
 $_lang['ms3_err_status_final'] = 'Final status is set. It cannot be changed.';
 $_lang['ms3_err_status_fixed'] = 'Fixed status is set. You cannot change it to earlier one.';

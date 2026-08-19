@@ -56,6 +56,9 @@ class ServiceRegistryFactories
             'ms3_payment_service' => $modxOnly(),
             'ms3_payment_link_resolver' => $modxOnly(),
             'ms3_payment_lifecycle' => static function (modX $modx, object $services, string $class): object {
+                if (!$modx->pdo instanceof \PDO) {
+                    throw new \RuntimeException('ms3_payment_lifecycle requires MODX PDO');
+                }
                 $prefix = (string) $modx->getOption('table_prefix', null, '');
                 $store = new PdoPaymentAttemptStore(
                     $modx->pdo,
@@ -65,7 +68,7 @@ class ServiceRegistryFactories
                 /** @var OrderStatusService $orderStatus */
                 $orderStatus = $services->get('ms3_order_status');
 
-                return new $class($store, $modx, $orderStatus->change(...));
+                return new $class($store, $modx, $orderStatus);
             },
             'ms3_order_service' => $modxOnly(),
             'ms3_customer_order' => $modxOnly(),
