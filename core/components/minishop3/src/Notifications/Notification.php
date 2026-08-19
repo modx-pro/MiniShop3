@@ -6,6 +6,7 @@ use MODX\Revolution\modX;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Services\Payment\PaymentPublicFields;
 use MiniShop3\Notifications\Messages\EmailMessage;
 use MiniShop3\Notifications\Messages\TelegramMessage;
 use MiniShop3\Notifications\Messages\SmsMessage;
@@ -172,7 +173,7 @@ abstract class Notification
 
         // Add payment data
         if ($payment = $this->order->getOne('Payment')) {
-            $pls['payment'] = $payment->toArray();
+            $pls['payment'] = PaymentPublicFields::fromEntityOrEmpty($payment);
         }
 
         // Add products from order

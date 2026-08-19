@@ -6,6 +6,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Services\Order\OrderCostEngine;
+use MiniShop3\Services\Payment\PaymentLifecycleService;
 use MODX\Revolution\modX;
 
 /**
@@ -61,15 +62,14 @@ use MODX\Revolution\modX;
  *             return $this->error('Invalid order hash');
  *         }
  *
+ *         $lifecycle = $this->modx->services->get('ms3_payment_lifecycle');
  *         if ($data['status'] === 'succeeded') {
- *             $order->set('status_id', $this->getPaidStatusId());
- *             $order->save();
+ *             $lifecycle->markPaid($attemptId, $data['event_id'] ?? null);
  *             return $this->success('Payment confirmed');
  *         }
  *
  *         if ($data['status'] === 'canceled') {
- *             $order->set('status_id', $this->getCanceledStatusId());
- *             $order->save();
+ *             $lifecycle->markCancelled($attemptId, $data['event_id'] ?? null);
  *             return $this->error('Payment canceled');
  *         }
  *
@@ -153,14 +153,19 @@ abstract class Payment implements PaymentProviderInterface
      * Calls send() method and extracts payment_link from response.
      * Used to display "Pay" button on order page.
      *
-     * Note: Method calls send() each time without caching.
-     * For payment systems with API limits caching is recommended.
+     * Reuses a stored attempt link when present so send() is not called again
+     * (async providers must not create a second payment).
      *
      * @param msOrder $order Order for payment
      * @return string|null Payment link or null if failed
      */
     public function getPaymentLink(msOrder $order): ?string
     {
+        $paymentMethodId = (int) $order->get('payment_id') ?: null;
+        $stored = $this->storedPaymentLink((int) $order->get('id'), $paymentMethodId);
+        if ($stored !== null) {
+            return $stored;
+        }
         try {
             $response = $this->send($order);
             return $response['data']['payment_link'] ?? null;
@@ -234,6 +239,19 @@ abstract class Payment implements PaymentProviderInterface
     protected function success(string $message = '', array $data = [], array $placeholders = []): array
     {
         return $this->ms3->utils->success($message, $data, $placeholders);
+    }
+
+    private function storedPaymentLink(int $orderId, ?int $paymentMethodId = null): ?string
+    {
+        if ($orderId <= 0 || !$this->modx->services->has('ms3_payment_lifecycle')) {
+            return null;
+        }
+        $lifecycle = $this->modx->services->get('ms3_payment_lifecycle');
+        if (!$lifecycle instanceof PaymentLifecycleService) {
+            return null;
+        }
+
+        return $lifecycle->storedPaymentLink($orderId, $paymentMethodId);
     }
 
     /**
