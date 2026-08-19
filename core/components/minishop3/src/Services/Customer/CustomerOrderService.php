@@ -7,6 +7,8 @@ use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Services\Order\OrderStatusService;
+use MiniShop3\Services\Shipment\ShipmentLifecycleService;
+use MiniShop3\Services\Shipment\ShipmentPublicDto;
 use MODX\Revolution\modX;
 
 /**
@@ -168,6 +170,7 @@ class CustomerOrderService
             'products' => $this->formatOrderProducts((int)$order->get('id')),
             'delivery' => $this->formatDeliveryOrPayment($order->getOne('Delivery') ?: null),
             'payment' => $this->formatDeliveryOrPayment($order->getOne('Payment') ?: null),
+            'shipments' => $this->publicShipments((int) $order->get('id')),
             'address' => $address instanceof msOrderAddress ? $this->formatAddress($address) : null,
         ];
     }
@@ -317,6 +320,26 @@ class CustomerOrderService
             'price' => $entity->get('price'),
             'logo' => (string)$entity->get('logo'),
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function publicShipments(int $orderId): array
+    {
+        if (!$this->modx->services->has('ms3_shipment_lifecycle')) {
+            return [];
+        }
+        $lifecycle = $this->modx->services->get('ms3_shipment_lifecycle');
+        if (!$lifecycle instanceof ShipmentLifecycleService) {
+            return [];
+        }
+        $row = $lifecycle->findByOrderId($orderId);
+        if ($row === null) {
+            return [];
+        }
+
+        return [ShipmentPublicDto::fromRow($row)];
     }
 
     protected function formatAddress(msOrderAddress $address): array

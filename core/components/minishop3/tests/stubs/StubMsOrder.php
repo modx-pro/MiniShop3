@@ -23,4 +23,9 @@ final class StubMsOrder extends msOrder
     {
         return $this->fields[$key] ?? null;
     }
+
+    public function getOne($alias)
+    {
+        return $this->fields['_related'][$alias] ?? null;
+    }
 }
