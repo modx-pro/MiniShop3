@@ -106,9 +106,10 @@ class ServiceRegistry
             'ms3_order_address_manager',
             'ms3_order_user_resolver',
             'ms3_order_number_generator',
+            'ms3_inventory',
         ],
         'ms3_order_finalize' => ['ms3_order_number_generator'],
-        'ms3_order_status' => ['ms3_order_log'],
+        'ms3_order_status' => ['ms3_order_log', 'ms3_inventory'],
         'ms3_payment_lifecycle' => ['ms3_order_status'],
         'ms3_cart_mutation_handler' => [
             'ms3_order_draft_manager',
@@ -289,6 +290,10 @@ class ServiceRegistry
         'ms3_order_status' => [
             'class' => \MiniShop3\Services\Order\OrderStatusService::class,
             'interface' => null,
+        ],
+        'ms3_inventory' => [
+            'class' => \MiniShop3\Services\Inventory\ProductStockInventory::class,
+            'interface' => \MiniShop3\Services\Inventory\InventoryServiceInterface::class,
         ],
         'ms3_order_finalize' => [
             'class' => \MiniShop3\Services\Order\OrderFinalizeService::class,
