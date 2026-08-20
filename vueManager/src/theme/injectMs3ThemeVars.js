@@ -4,8 +4,7 @@
  * PrimeVue is loaded from VueTools (Vite external). A preset built with the
  * bundled `@primeuix/themes` definePreset can fail to rewrite --p-emerald-* /
  * --p-primary-* in the Theme service that VueTools ships, leaving Aura's
- * #10b981 on :root. Writing the scale into a late <style> tag matches AC #1/#13
- * regardless of that cross-bundle merge.
+ * #10b981 on :root. Late <style> forces MODX `#6cb24a` regardless.
  */
 import { PRIMARY_500, PRIMARY_SCALE } from './ms3Preset.js'
 
