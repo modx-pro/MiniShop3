@@ -261,12 +261,4 @@ function getButtonClasses() {
   align-items: center;
   flex-wrap: nowrap;
 }
-
-.actions-column :deep(.p-button) {
-  padding: 0.25rem 0.5rem;
-}
-
-.actions-column :deep(.p-button-sm) {
-  font-size: 0.875rem;
-}
 </style>

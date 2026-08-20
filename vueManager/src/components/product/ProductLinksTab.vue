@@ -6,6 +6,7 @@ import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
+import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
@@ -224,22 +225,22 @@ onMounted(async () => {
       <Button
         :label="_('ms3_btn_create')"
         icon="pi pi-plus"
-        size="small"
         :disabled="!linkTypes.length"
         @click="openCreate"
       />
-      <input
+      <InputText
         v-model="query"
         type="search"
         class="product-links-tab__search"
         :placeholder="_('search')"
+        :aria-label="_('search')"
         @keyup.enter="searchLinks"
       />
       <Button
         icon="pi pi-search"
         severity="secondary"
-        size="small"
-        text
+        outlined
+        :aria-label="_('search')"
         @click="searchLinks"
       />
     </div>
@@ -300,36 +301,47 @@ onMounted(async () => {
     <Dialog
       v-model:visible="createVisible"
       modal
+      append-to="self"
       :header="_('ms3_link')"
       :style="{ width: '32rem' }"
     >
       <div class="product-links-tab__form">
-        <label class="product-links-tab__label">{{ _('ms3_link') }}</label>
-        <Select
-          v-model="selectedLinkId"
-          :options="linkTypes"
-          option-label="name"
-          option-value="id"
-          class="w-full"
-        >
-          <template #option="{ option }">
-            {{ translateLexicon(option.name, option.name) }}
-          </template>
-          <template #value>
-            {{ selectedLinkTypeName }}
-          </template>
-        </Select>
+        <div class="product-links-tab__field">
+          <label class="product-links-tab__label" for="ms3-product-link-type">{{
+            _('ms3_link')
+          }}</label>
+          <Select
+            id="ms3-product-link-type"
+            v-model="selectedLinkId"
+            :options="linkTypes"
+            option-label="name"
+            option-value="id"
+            class="w-full"
+          >
+            <template #option="{ option }">
+              {{ translateLexicon(option.name, option.name) }}
+            </template>
+            <template #value>
+              {{ selectedLinkTypeName }}
+            </template>
+          </Select>
+        </div>
 
-        <label class="product-links-tab__label">{{ _('ms3_product') }}</label>
-        <AutoComplete
-          v-model="selectedSlave"
-          :suggestions="productSuggestions"
-          option-label="label"
-          dropdown
-          force-selection
-          class="w-full"
-          @complete="searchProducts"
-        />
+        <div class="product-links-tab__field">
+          <label class="product-links-tab__label" for="ms3-product-link-slave">{{
+            _('ms3_product')
+          }}</label>
+          <AutoComplete
+            v-model="selectedSlave"
+            input-id="ms3-product-link-slave"
+            :suggestions="productSuggestions"
+            option-label="label"
+            dropdown
+            force-selection
+            class="w-full product-links-tab__autocomplete"
+            @complete="searchProducts"
+          />
+        </div>
       </div>
 
       <template #footer>
@@ -353,6 +365,8 @@ onMounted(async () => {
   gap: 0.75rem;
   width: 100%;
   min-height: 18rem;
+  /* Dialog append-to=self needs a positioning context */
+  position: relative;
 }
 
 .product-links-tab__toolbar {
@@ -364,20 +378,32 @@ onMounted(async () => {
 .product-links-tab__search {
   flex: 1;
   min-width: 0;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--p-content-border-color, #ced4da);
-  border-radius: 0.375rem;
 }
 
 .product-links-tab__form {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+}
+
+.product-links-tab__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 .product-links-tab__label {
+  display: block;
+  margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
+  line-height: 1.25;
+  color: var(--p-text-muted-color, #6c757d);
+}
+
+.product-links-tab__autocomplete :deep(.p-autocomplete-dropdown) {
+  width: 2.25rem;
+  height: 2.25rem;
 }
 
 .w-full {

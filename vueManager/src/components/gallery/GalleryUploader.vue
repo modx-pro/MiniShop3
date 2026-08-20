@@ -338,19 +338,40 @@ watch(
 .gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles) {
   margin: 0 !important;
   border: none !important;
-  height: 100% !important;
+  height: auto !important;
+    min-height: 0 !important;
   display: flex !important;
+  flex-direction: column !important;
+    align-items: stretch;
+    justify-content: center;
+    padding: 0.75rem 1.25rem !important;
+  }
+  
+  .gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles::before) {
+    content: none;
+  }
+  
+  .gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-title) {
+    position: static !important;
+    inset: auto !important;
+    display: inline-flex !important;
   flex-direction: row !important;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.75rem 1rem;
-  padding: 0.75rem 1.25rem !important;
+  gap: 0.75rem;
+    width: auto !important;
+    max-width: none;
+    margin: 0 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    line-height: 1.35 !important;
+    color: var(--p-text-color, #212529);
 }
 
 .gallery-uploader:not(.gallery-uploader--has-files)
   .uppy-container
-  :deep(.uppy-Dashboard-AddFiles::before) {
+    :deep(.uppy-Dashboard-AddFiles-title::before) {
   content: '\e944';
   font-family: 'primeicons';
   font-size: 1.5rem;
@@ -373,23 +394,34 @@ watch(
   color: var(--p-text-color, #212529);
 }
 
+.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-list:empty) {
+  display: none !important;
+}
+
+.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-info) {
+  margin: 0.25rem 0 0 !important;
+  padding: 0 !important;
+}
 .uppy-container :deep(.uppy-Dashboard-browse) {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
   margin: 0 !important;
-  padding: 0.375rem 0.875rem !important;
+  height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    padding: 0 0.875rem !important;
   border: 1px solid var(--p-primary-color, #6cb24a) !important;
   border-radius: var(--ms3-radius-md, 0.375rem) !important;
   background: var(--p-primary-color, #6cb24a) !important;
   color: var(--p-primary-contrast-color, #fff) !important;
-  font-size: 0.8125rem !important;
+  font-size: 0.875rem !important;
   font-weight: 600 !important;
   line-height: 1.25 !important;
   text-decoration: none !important;
   box-shadow: none !important;
   cursor: pointer;
   vertical-align: middle;
+  box-sizing: border-box !important;
 }
 
 .uppy-container :deep(.uppy-Dashboard-browse:hover),
