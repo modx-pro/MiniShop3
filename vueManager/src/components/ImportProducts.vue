@@ -641,7 +641,7 @@ onMounted(() => {
 
 <style scoped>
 .import-products {
-  padding: 1.25rem;
+  padding: 0;
   max-width: 62.5rem;
 }
 .import-global-error {

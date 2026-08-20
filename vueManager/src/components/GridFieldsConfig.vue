@@ -1738,7 +1738,7 @@ onMounted(() => {
 
 <style scoped>
 .grid-fields-config {
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .drag-handle-cell {

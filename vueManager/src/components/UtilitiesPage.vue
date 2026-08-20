@@ -102,7 +102,7 @@ function goTo(path) {
 <template>
   <div class="ms3-utilities-page">
     <div class="ms3-utilities-page__header">
-      <h2 class="ms3-utilities-page__title">
+      <h2 class="ms3-utilities-page__title" :title="`${_('ms3_header')} :: ${_('ms3_utilities')}`">
         {{ _('ms3_header') }} :: {{ _('ms3_utilities') }}
       </h2>
       <div v-if="canListSettings" class="ms3-utilities-page__actions">
@@ -150,10 +150,15 @@ function goTo(path) {
 }
 
 .ms3-utilities-page__title {
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
   color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ms3-utilities-page__actions {

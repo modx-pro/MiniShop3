@@ -1195,3 +1195,9 @@ $_lang['ms3_utilities_import_description'] = 'Импорт товаров из C
 $_lang['ms3_utilities_extra_fields_description'] = 'Создание дополнительных полей для моделей MiniShop3. Поля автоматически добавляются в таблицы БД.';
 $_lang['ms3_utilities_grid_fields_description'] = 'Настройка колонок таблиц в админке: видимость, сортировка, фильтрация, порядок. Добавление вычисляемых и связанных полей.';
 $_lang['ms3_utilities_model_fields_description'] = 'Конфигурация полей форм редактирования заказов, производителей и других сущностей. Группировка по секциям, настройка видимости и порядка.';
+
+// Category options tab toasts (#615 / #7)
+$_lang['ms3_options_order_saved'] = 'Порядок сохранён';
+$_lang['ms3_options_added'] = 'Добавлено';
+$_lang['ms3_options_removed'] = 'Удалено';
+$_lang['ms3_options_copied'] = 'Скопировано: {copied}, пропущено: {skipped}';

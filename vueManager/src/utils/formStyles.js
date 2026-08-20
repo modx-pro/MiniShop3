@@ -5,9 +5,14 @@
  * после загрузки бандла, поэтому стили из SCSS (даже с !important) загружаются раньше
  * и перезаписываются. Runtime injection обеспечивает применение наших правил последними.
  */
+import { scheduleMs3ThemeVars } from '../theme/injectMs3ThemeVars.js'
+
 const STYLE_ID = 'ms3-form-styles-override'
 
 export function injectFormStylesOverride() {
+  // Re-apply primary tokens after mount (PrimeVue theme styles land around here).
+  scheduleMs3ThemeVars()
+
   if (document.getElementById(STYLE_ID)) return
 
   const css = `
