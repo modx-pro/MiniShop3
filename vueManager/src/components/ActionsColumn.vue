@@ -133,7 +133,8 @@ const defaultActionConfigs = {
   edit: {
     icon: 'pi-pencil',
     label: 'edit',
-    severity: null,
+    // Muted vs primary CTA (Refactoring UI: one solid primary per view)
+    severity: 'secondary',
     confirm: false,
   },
   delete: {
@@ -184,6 +185,8 @@ const processedActions = computed(() => {
         iconClass: `pi ${icon}`,
         displayLabel: _(label),
         isDisabled: checkDisabled(action),
+        // null/undefined severity → defaults (edit = secondary, not primary green)
+        severity: action.severity ?? defaults.severity ?? null,
       }
     })
 })

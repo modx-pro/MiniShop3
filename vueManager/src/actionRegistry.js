@@ -208,7 +208,7 @@ class ActionRegistry {
     if (!this.handlers.has(name)) return null
 
     const builtinMeta = {
-      edit: { icon: 'pi-pencil', labelKey: 'edit', severity: null },
+      edit: { icon: 'pi-pencil', labelKey: 'edit', severity: 'secondary' },
       delete: { icon: 'pi-trash', labelKey: 'delete', severity: 'danger' },
       view: { icon: 'pi-eye', labelKey: 'view', severity: 'secondary' },
       addresses: { icon: 'pi-map-marker', labelKey: 'addresses', severity: 'secondary' },
