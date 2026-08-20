@@ -149,7 +149,7 @@ function onTabKeydown(event, index) {
 /* Non-scoped with .vueApp prefix — avoids Vite scoped-hash mismatch between chunks */
 .vueApp .product-options-tab {
   width: 100%;
-  padding: 0.5rem 0;
+  padding: 0;
 }
 
 .vueApp .product-options-tab .empty {

@@ -313,12 +313,14 @@ onMounted(() => {
         icon="pi pi-plus"
         :label="_('ms3_btn_addoption') || 'Добавить опцию'"
         severity="primary"
+        size="small"
         @click="openAddDialog"
       />
       <Button
         icon="pi pi-copy"
         :label="_('ms3_btn_copy') || 'Копировать из категории'"
         severity="secondary"
+        size="small"
         @click="openCopyDialog"
       />
 
@@ -336,30 +338,35 @@ onMounted(() => {
           icon="pi pi-check"
           :label="`${_('ms3_ft_selected_activate') || 'Включить'} (${selectedRows.length})`"
           severity="success"
+          size="small"
           @click="performBulkAction('activate')"
         />
         <Button
           icon="pi pi-ban"
           :label="`${_('ms3_ft_selected_deactivate') || 'Выключить'} (${selectedRows.length})`"
           severity="secondary"
+          size="small"
           @click="performBulkAction('deactivate')"
         />
         <Button
           icon="pi pi-asterisk"
           :label="`${_('ms3_ft_selected_require') || 'Обязательная'} (${selectedRows.length})`"
           severity="warn"
+          size="small"
           @click="performBulkAction('require')"
         />
         <Button
           icon="pi pi-times"
           :label="`${_('ms3_ft_selected_unrequire') || 'Необязательная'} (${selectedRows.length})`"
           severity="secondary"
+          size="small"
           @click="performBulkAction('unrequire')"
         />
         <Button
           icon="pi pi-trash"
           :label="`${_('delete') || 'Удалить'} (${selectedRows.length})`"
           severity="danger"
+          size="small"
           @click="confirmBulkRemove"
         />
       </template>

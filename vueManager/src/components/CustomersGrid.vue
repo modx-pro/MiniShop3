@@ -53,6 +53,9 @@ const sortField = ref('id')
 const sortOrder = ref(-1)
 const filterValues = ref({})
 const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
+const hasActiveFilters = computed(() =>
+  Object.values(filterValues.value).some(v => v !== null && v !== undefined && String(v).trim() !== '')
+)
 const searchQuery = ref('')
 const editDialogVisible = ref(false)
 const editingCustomer = ref(null)
@@ -658,52 +661,61 @@ onMounted(async () => {
       </template>
 
       <template #content>
-        <!-- Search -->
-        <div class="p-inputgroup mb-3">
-          <InputText
-            v-model="searchQuery"
-            name="ms3-customers-grid-search"
-            autocomplete="off"
-            :placeholder="_('search_placeholder')"
-            @keyup.enter="onSearch"
-          />
-          <Button icon="pi pi-search" :label="_('search')" @click="onSearch" />
+        <!-- Search: sole solid primary CTA on this screen -->
+        <div class="customers-search mb-3">
+          <div class="p-inputgroup">
+            <InputText
+              v-model="searchQuery"
+              name="ms3-customers-grid-search"
+              autocomplete="off"
+              :placeholder="_('search_placeholder')"
+              @keyup.enter="onSearch"
+            />
+            <Button
+              icon="pi pi-search"
+              :label="_('search')"
+              severity="primary"
+              size="small"
+              @click="onSearch"
+            />
+          </div>
         </div>
 
         <!-- Filters form -->
         <div
           v-if="filterableColumns.length > 0"
           class="filters-form mb-3 p-3 surface-ground"
-          style="border-radius: 0.375rem"
         >
-          <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem">
+          <div class="filters-row">
             <div
               v-for="column in filterableColumns"
               :key="column.name"
-              style="flex: 1 1 18.75rem; min-width: 15.625rem"
+              class="filter-item"
             >
-              <div class="field">
-                <label
-                  :for="`filter-${column.name}`"
-                  style="display: block; margin-bottom: 0.5rem; font-weight: 500"
-                  >{{ column.label }}</label
-                >
-                <InputText
-                  :id="`filter-${column.name}`"
-                  v-model="filterValues[column.name]"
-                  :placeholder="_('filter_by').replace('{field}', column.label)"
-                  style="width: 100%"
-                  @keyup.enter="applyFilters"
-                />
-              </div>
+              <label :for="`filter-${column.name}`">{{ column.label }}</label>
+              <InputText
+                :id="`filter-${column.name}`"
+                v-model="filterValues[column.name]"
+                class="w-full"
+                :placeholder="_('filter_by').replace('{field}', column.label)"
+                @keyup.enter="applyFilters"
+              />
             </div>
           </div>
-          <div style="display: flex; gap: 0.5rem">
-            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
+          <div class="filter-buttons">
             <Button
+              :label="_('apply_filters')"
+              icon="pi pi-filter"
+              severity="secondary"
+              size="small"
+              @click="applyFilters"
+            />
+            <Button
+              v-if="hasActiveFilters"
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
               severity="secondary"
+              size="small"
               @click="clearFilters"
             />
           </div>
@@ -820,7 +832,7 @@ onMounted(async () => {
       :header="_('edit_customer')"
       :modal="true"
       :closable="true"
-      :style="{ width: '34.375rem' }"
+      :style="{ width: '36rem' }"
       :append-to="'self'"
     >
       <form
@@ -878,7 +890,7 @@ onMounted(async () => {
         <div class="form-row">
           <div class="form-col-full">
             <label for="ms3-customer-new_password">{{ _('customer_new_password') }}</label>
-            <InputGroup>
+            <InputGroup class="customer-password-group">
               <InputText
                 id="ms3-customer-new_password"
                 v-model="newPassword"
@@ -887,20 +899,22 @@ onMounted(async () => {
                 :placeholder="_('customer_password_placeholder')"
                 class="w-full"
               />
-              <InputGroupAddon>
+              <InputGroupAddon class="customer-password-addons">
                 <Button
                   type="button"
                   :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"
                   text
+                  severity="secondary"
+                  :aria-label="showPassword ? _('hide_password') : _('show_password')"
                   :title="showPassword ? _('hide_password') : _('show_password')"
                   @click="showPassword = !showPassword"
                 />
-              </InputGroupAddon>
-              <InputGroupAddon>
                 <Button
                   type="button"
                   icon="pi pi-refresh"
                   text
+                  severity="secondary"
+                  :aria-label="_('generate_password')"
                   :title="_('generate_password')"
                   @click="generatePassword"
                 />
@@ -939,13 +953,17 @@ onMounted(async () => {
           type="button"
           :label="_('cancel')"
           icon="pi pi-times"
-          class="p-button-text"
+          severity="secondary"
+          text
+          size="small"
           @click="editDialogVisible = false"
         />
         <Button
           type="button"
           :label="_('save')"
           icon="pi pi-check"
+          severity="primary"
+          size="small"
           :loading="saving"
           @click="saveCustomer"
         />
@@ -1133,6 +1151,44 @@ onMounted(async () => {
   padding: 1.25rem;
 }
 
+.customers-search {
+  max-width: 36rem;
+}
+
+.filters-form {
+  border-radius: var(--ms3-radius-md, 0.375rem);
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 12.5rem;
+  min-width: 11.25rem;
+  max-width: 18.75rem;
+}
+
+.filter-item label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--ms3-text-muted);
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Bulk actions toolbar */
 .bulk-actions-bar {
   display: flex;
@@ -1192,6 +1248,7 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
+  color: var(--ms3-text-muted);
 }
 
 .form-col-full {
@@ -1205,25 +1262,65 @@ onMounted(async () => {
   font-size: 0.75rem;
 }
 
-/* Checkboxes row */
+/* Password InputGroup: lock input + addon to one control height */
+.customer-password-group {
+  --pw-control-h: 2.25rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+.customer-password-group :deep(.p-inputtext) {
+  width: 100%;
+  height: var(--pw-control-h);
+  min-height: var(--pw-control-h);
+  box-sizing: border-box;
+}
+
+.customer-password-group :deep(.p-inputgroupaddon.customer-password-addons) {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  height: var(--pw-control-h);
+  min-height: var(--pw-control-h);
+  box-sizing: border-box;
+}
+
+.customer-password-addons :deep(.p-button.p-button) {
+  width: var(--pw-control-h);
+  height: 100%;
+  min-width: var(--pw-control-h);
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-sizing: border-box;
+  align-self: stretch;
+}
+
+/* Checkboxes: content-sized, no forced 25% columns (stops label wrap) */
 .checkboxes-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  padding: 0.5rem 0;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  padding: 0.25rem 0;
 }
 
 .checkbox-col {
-  flex: 0 0 calc(25% - 0.75rem);
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
 }
 
 .checkbox-col label {
-  margin-left: 0.5rem;
-  margin-bottom: 0;
+  margin: 0;
   cursor: pointer;
   font-size: 0.875rem;
+  line-height: 1.25;
+  white-space: nowrap;
   user-select: none;
 }
 

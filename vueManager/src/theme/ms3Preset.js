@@ -1,29 +1,36 @@
 /**
- * MiniShop3 PrimeVue preset — Aura with MODX-aligned primary/success green (#4e8136 @ 500).
+ * MiniShop3 PrimeVue preset — Aura with MODX manager green (#6cb24a @ 500).
  *
  * Aura maps `semantic.primary` → `{emerald.*}`. Remap `emerald` (and `green` for
- * severity="success") so --p-primary-* and success chrome share one AA-safe scale.
+ * severity="success") so Vue chrome matches ExtJS `.primary-button` (#6CB24A).
+ * White-on-fill contrast matches MODX core (not WCAG AA); personality > darkening.
  */
 import { definePreset } from '@primeuix/themes'
 import Aura from '@primeuix/themes/aura'
 
-/** Primary scale 50–950; 500 matches MODX manager green (WCAG AA with white text). */
+/**
+ * Primary scale 50–950.
+ * 500 = MODX manager `#6CB24A`; 600 = MODX hover `#528738` (login / primary-button).
+ */
 export const PRIMARY_SCALE = {
-  50: '#f1f6ee',
-  100: '#dce8d3',
-  200: '#bdd1ad',
-  300: '#98b681',
-  400: '#6f974f',
-  500: '#4e8136',
-  600: '#3d6b2b',
-  700: '#325324',
-  800: '#284221',
-  900: '#1f331c',
-  950: '#0f1c0d',
+  50: '#f4faf0',
+  100: '#e4f3db',
+  200: '#c9e7b8',
+  300: '#a5d68c',
+  400: '#84c466',
+  500: '#6cb24a',
+  600: '#528738',
+  700: '#426c2d',
+  800: '#365625',
+  900: '#2d4720',
+  950: '#172612',
 }
 
 /** Anchor color, exported for tests and CSS-fallback consumers. */
 export const PRIMARY_500 = PRIMARY_SCALE[500]
+
+/** MODX ExtJS `.primary-button` fill — keep in sync with manager index.css. */
+export const MODX_PRIMARY_BUTTON = '#6cb24a'
 
 export const ms3Preset = definePreset(Aura, {
   primitive: {

@@ -289,7 +289,7 @@ onMounted(() => {
 
 <style scoped>
 .product-data-fields {
-  padding: var(--ms3-spacing-4, 1rem);
+  padding: 0;
 }
 
 .fields-grid {
