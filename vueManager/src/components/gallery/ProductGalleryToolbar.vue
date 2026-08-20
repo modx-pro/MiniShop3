@@ -137,7 +137,6 @@ function toggleMenu(event) {
         :label="_('ms3_actions')"
         severity="secondary"
         outlined
-        class="gallery-actions-btn"
         @click="toggleMenu"
       />
       <Menu ref="bulkMenu" :model="menuItems" :popup="true" />
@@ -160,7 +159,7 @@ function toggleMenu(event) {
   gap: 0.5rem;
   flex-shrink: 0;
   }
-  
+
   .gallery-toolbar-search {
     flex: 1 1 12rem;
     min-width: 10rem;
@@ -171,12 +170,6 @@ function toggleMenu(event) {
   display: flex;
   align-items: center;
   margin-inline-start: auto;
-  }
-  
-  .gallery-actions-btn {
-    /* Match Select / InputText control height in this toolbar */
-    height: 2.25rem;
-    padding-block: 0;
 }
 
 .gallery-source-select {
@@ -189,14 +182,14 @@ function toggleMenu(event) {
     color: var(--p-text-muted-color);
     line-height: 1.25;
   }
-  
+
   .gallery-search-wrap {
     position: relative;
     display: flex;
     align-items: center;
     width: 100%;
   }
-  
+
   .gallery-search-wrap>.pi-search {
     position: absolute;
     left: 0.75rem;
@@ -204,13 +197,13 @@ function toggleMenu(event) {
     z-index: 1;
     pointer-events: none;
   }
-  
+
   .gallery-search-input {
     width: 100%;
     padding-left: 2.25rem;
     padding-right: 2.25rem;
   }
-  
+
   .gallery-search-clear {
     position: absolute;
     right: 0.25rem;
@@ -226,11 +219,11 @@ function toggleMenu(event) {
   color: var(--p-text-muted-color);
   cursor: pointer;
   }
-  
+
   .gallery-search-clear:hover {
     color: var(--p-text-color);
   }
-  
+
   .gallery-search-clear:focus-visible {
     outline: 2px solid var(--p-primary-color);
     outline-offset: 1px;
