@@ -254,6 +254,7 @@
 import { Checkbox, ColorPicker, DatePicker, InputNumber, InputText, Message, Select, Textarea, ToggleSwitch } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
+import { fieldHtmlId as buildFieldHtmlId } from '../utils/fieldHtmlId.js'
 import { formatLocalDateYmd } from '../utils/formatLocalDateYmd.js'
 import { getKeyValueConfigFromField, serializeKeyValueForPost } from '../utils/keyValueField.js'
 import { getRepeaterConfigFromField } from '../utils/repeaterField.js'
@@ -316,7 +317,7 @@ const props = defineProps({
  * Prefer explicit fieldConfig.htmlId, otherwise generate from prefix + name.
  */
 const fieldHtmlId = computed(() => {
-  return props.fieldConfig.htmlId || `${props.idPrefix}-field-${props.fieldConfig.name}`
+  return props.fieldConfig.htmlId || buildFieldHtmlId(props.fieldConfig.name, props.idPrefix)
 })
 
 /**

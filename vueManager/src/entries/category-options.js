@@ -5,13 +5,10 @@
  * ms3-grid-category-option + ms3-window-option-add + ms3-window-copy-category.
  */
 
-import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
-import { createApp } from 'vue'
-
 import CategoryOptionsTab from '../components/CategoryOptionsTab.vue'
 import { provideUiGroup } from '../composables/uiGroup.js'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
 
 const MOUNT_ID = 'ms3-vue-category-options'
 
@@ -28,11 +25,7 @@ function mountApp() {
     return false
   }
 
-  app = createApp(CategoryOptionsTab, { categoryId })
-
-  app.use(PrimeVue, getManagerPrimeVueConfig())
-  app.use(ToastService)
-  app.use(ConfirmationService)
+  app = createMs3VueApp(CategoryOptionsTab, { categoryId })
   provideUiGroup(app, 'category-options')
 
   app.mount(container)
