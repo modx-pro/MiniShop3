@@ -152,7 +152,7 @@ async function onRowReorder(event) {
     toast.add({
       severity: 'success',
       summary: _('success') || 'OK',
-      detail: 'Order saved',
+      detail: _('ms3_options_order_saved') || 'Order saved',
       life: 2000,
     })
   } catch (e) {
@@ -219,7 +219,7 @@ async function addOption() {
       caption: addCaptionOverride.value,
       description: addDescriptionOverride.value,
     })
-    toast.add({ severity: 'success', summary: _('success') || 'OK', detail: 'Added', life: 3000 })
+    toast.add({ severity: 'success', summary: _('success') || 'OK', detail: _('ms3_options_added') || 'Added', life: 3000 })
     addDialogVisible.value = false
     loadLinks()
   } catch (e) {
@@ -242,10 +242,15 @@ async function performCopy() {
     const r = await request.post(`/api/mgr/categories/${props.categoryId}/options/duplicate`, {
       category_from: copyFromCategoryId.value,
     })
+    const copied = r?.copied ?? 0
+    const skipped = r?.skipped ?? 0
+    const detail = (_('ms3_options_copied') || 'Copied: {copied}, skipped: {skipped}')
+      .replace('{copied}', String(copied))
+      .replace('{skipped}', String(skipped))
     toast.add({
       severity: 'success',
       summary: _('success') || 'OK',
-      detail: `Copied: ${r?.copied ?? 0}, skipped: ${r?.skipped ?? 0}`,
+      detail,
       life: 4000,
     })
     copyDialogVisible.value = false
@@ -271,7 +276,7 @@ function confirmSingleRemove(row) {
         toast.add({
           severity: 'success',
           summary: _('success') || 'OK',
-          detail: 'Removed',
+          detail: _('ms3_options_removed') || 'Removed',
           life: 3000,
         })
         loadLinks()
@@ -331,35 +336,30 @@ onMounted(() => {
           icon="pi pi-check"
           :label="`${_('ms3_ft_selected_activate') || 'Включить'} (${selectedRows.length})`"
           severity="success"
-          size="small"
           @click="performBulkAction('activate')"
         />
         <Button
           icon="pi pi-ban"
           :label="`${_('ms3_ft_selected_deactivate') || 'Выключить'} (${selectedRows.length})`"
           severity="secondary"
-          size="small"
           @click="performBulkAction('deactivate')"
         />
         <Button
           icon="pi pi-asterisk"
           :label="`${_('ms3_ft_selected_require') || 'Обязательная'} (${selectedRows.length})`"
           severity="warn"
-          size="small"
           @click="performBulkAction('require')"
         />
         <Button
           icon="pi pi-times"
           :label="`${_('ms3_ft_selected_unrequire') || 'Необязательная'} (${selectedRows.length})`"
           severity="secondary"
-          size="small"
           @click="performBulkAction('unrequire')"
         />
         <Button
           icon="pi pi-trash"
           :label="`${_('delete') || 'Удалить'} (${selectedRows.length})`"
           severity="danger"
-          size="small"
           @click="confirmBulkRemove"
         />
       </template>
@@ -414,7 +414,7 @@ onMounted(() => {
       </Column>
       <Column :header="_('ms3_ft_active') || 'Активна'" style="width: 5rem">
         <template #body="{ data }">
-          <i v-if="data.active" class="pi pi-check" style="color: #10b981" />
+          <i v-if="data.active" class="pi pi-check" style="color: var(--p-primary-color)" />
           <i v-else class="pi pi-times" style="color: #9ca3af" />
         </template>
       </Column>

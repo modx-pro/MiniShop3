@@ -147,7 +147,6 @@ const showOrderInfoActions = computed(
             <Button
               :label="_('order_cost_recalculate')"
               icon="pi pi-sync"
-              size="small"
               class="cost-recalc-btn"
               :disabled="recalculateBlocked"
               :loading="recalculatingCost"

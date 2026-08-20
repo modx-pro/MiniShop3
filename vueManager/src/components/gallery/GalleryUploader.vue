@@ -138,7 +138,7 @@ const initUppy = () => {
     target: '#uppy-dashboard',
     inline: true,
     width: '100%',
-    height: 400,
+    height: 148,
     proudlyDisplayPoweredByUppy: false,
     showProgressDetails: true,
     hideUploadButton: false,

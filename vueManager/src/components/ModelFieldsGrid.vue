@@ -1073,7 +1073,7 @@ onMounted(async () => {
 
 <style scoped>
 .model-fields-grid {
-  padding: 1rem;
+  padding: 0;
   width: 100%;
   box-sizing: border-box;
 }

@@ -227,7 +227,7 @@ onMounted(() => {
 
 <style scoped>
 .utilities-gallery {
-  padding: 1.25rem;
+  padding: 0;
   max-width: 50rem;
 }
 

@@ -968,7 +968,13 @@ onMounted(async () => {
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
                     <td>
-                      <Checkbox v-model="selectedItems" :value="product" :binary="false" />
+                      <Checkbox
+                        v-model="selectedItems"
+                        :value="product"
+                        :binary="false"
+                        :input-id="`cat-prod-${product.id}`"
+                        :aria-label="product.pagetitle || String(product.id)"
+                      />
                     </td>
                     <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
                       <!-- Actions column -->
