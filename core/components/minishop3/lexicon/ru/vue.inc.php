@@ -165,6 +165,7 @@ $_lang['ms3_vue_xtype_key_value'] = 'Ключ-Значение (карта)';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Производитель (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Автодополнение (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Опции товара (chips)';
+$_lang['ms3_vue_xtype_datefield'] = 'Дата';
 
 // Настройки выпадающего списка
 $_lang['ms3_vue_select_options_label'] = 'Варианты списка';
@@ -215,6 +216,7 @@ $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (строка)';
 $_lang['ms3_vue_dbtype_text'] = 'TEXT (текст)';
 $_lang['ms3_vue_dbtype_int'] = 'INT (целое число)';
 $_lang['ms3_vue_dbtype_decimal'] = 'DECIMAL (число с точностью)';
+$_lang['ms3_vue_dbtype_date'] = 'DATE (только дата)';
 $_lang['ms3_vue_dbtype_datetime'] = 'DATETIME (дата и время)';
 $_lang['ms3_vue_dbtype_timestamp'] = 'TIMESTAMP';
 $_lang['ms3_vue_dbtype_tinyint'] = 'TINYINT (0/1)';

@@ -165,6 +165,7 @@ $_lang['ms3_vue_xtype_key_value'] = 'Key-Value (map)';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Vendor (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Autocomplete (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Product Options (chips)';
+$_lang['ms3_vue_xtype_datefield'] = 'Date';
 
 // Dropdown list settings
 $_lang['ms3_vue_select_options_label'] = 'List Options';
@@ -215,6 +216,7 @@ $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (string)';
 $_lang['ms3_vue_dbtype_text'] = 'TEXT (text)';
 $_lang['ms3_vue_dbtype_int'] = 'INT (integer)';
 $_lang['ms3_vue_dbtype_decimal'] = 'DECIMAL (decimal)';
+$_lang['ms3_vue_dbtype_date'] = 'DATE (date only)';
 $_lang['ms3_vue_dbtype_datetime'] = 'DATETIME (date and time)';
 $_lang['ms3_vue_dbtype_timestamp'] = 'TIMESTAMP';
 $_lang['ms3_vue_dbtype_tinyint'] = 'TINYINT (0/1)';
