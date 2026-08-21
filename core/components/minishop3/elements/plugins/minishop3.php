@@ -43,6 +43,35 @@ switch ($modx->event->name) {
         $modx->controller->addLexiconTopic('minishop3:default');
         $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms3.manager.js');
 
+        // Inline compare: plugincode lives in DB and must work when
+        // core/components/minishop3/src was not updated after a failed file copy (#622).
+        $diskVersion = (string)$ms3->version;
+        $packageVersion = (string)$modx->getOption('ms3_version', null, '');
+        if ($packageVersion !== '' && $diskVersion !== $packageVersion) {
+            $message = $modx->lexicon('ms3_version_mismatch_warning', [
+                'disk' => $diskVersion,
+                'package' => $packageVersion,
+            ]);
+            if ($message === 'ms3_version_mismatch_warning' || $message === '') {
+                $message = 'MiniShop3 version mismatch: disk ' . $diskVersion
+                    . ', package ' . $packageVersion
+                    . '. Check write permissions for core/components/minishop3/ and assets/components/minishop3/.';
+            }
+            $messageHtml = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+            $modx->regClientStartupHTMLBlock(
+                '<div id="ms3-version-mismatch-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;'
+                . 'padding:12px 20px;background:#fff3cd;border-bottom:3px solid #dc3545;color:#664d03;'
+                . 'font:14px/1.45 -apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;'
+                . 'box-shadow:0 2px 8px rgba(0,0,0,.15);">'
+                . '<strong>MiniShop3</strong>: ' . $messageHtml
+                . '</div>'
+            );
+            $modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[MiniShop3] Version mismatch: disk=' . $diskVersion . ', package=' . $packageVersion
+            );
+        }
+
         $syncEnabled = (bool)$modx->getOption('ms3_customer_sync_enabled', null, false);
         if ($syncEnabled && $modx->user && $modx->user->hasSessionContext('mgr')) {
             $modx->lexicon->load('minishop3:customer');

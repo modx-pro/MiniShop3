@@ -28,6 +28,7 @@ $_lang['ms3_settings_intro'] = 'Shop settings management panel. Here you can spe
 $_lang['ms3_settings_desc'] = 'Order statuses, payment and delivery parameters';
 $_lang['ms3_system_settings'] = 'System settings';
 $_lang['ms3_system_settings_desc'] = 'MiniShop3 system settings';
+$_lang['ms3_version_mismatch_warning'] = 'MiniShop3 version mismatch: files on disk ([[+disk]]) do not match the installed package version ([[+package]]). The database was updated but component files may not have been copied. Check write permissions for core/components/minishop3/ and assets/components/minishop3/.';
 $_lang['ms3_utilities'] = 'Utilities';
 $_lang['ms3_utilities_desc'] = 'Developer tools';
 $_lang['ms3_grid_fields_config_desc'] = 'Table Fields';

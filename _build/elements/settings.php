@@ -19,6 +19,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_main',
     ],
+    'ms3_version' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_main',
+    ],
 
     'ms3_category_show_nested_products' => [
         'value' => true,
