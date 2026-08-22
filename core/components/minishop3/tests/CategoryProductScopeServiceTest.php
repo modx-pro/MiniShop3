@@ -11,6 +11,7 @@ declare(strict_types=1);
 require __DIR__ . '/stubs/ModxStub.php';
 require __DIR__ . '/stubs/StubMsProduct.php';
 require __DIR__ . '/stubs/CategoryProductScopeModxStub.php';
+require __DIR__ . '/stubs/StubMsCategoryMember.php';
 require __DIR__ . '/../vendor/autoload.php';
 
 use MiniShop3\Model\msProduct;
