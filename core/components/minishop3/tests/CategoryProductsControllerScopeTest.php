@@ -90,6 +90,39 @@ $sort = $controller->sort([
 $assertSame(true, $sort['success'] ?? null, 'sort success');
 $assertSame(1, $sort['data']['updated'] ?? null, 'sort updated count');
 
+// sort member product: updates link menuindex only, not resource menuindex (#625)
+$modx->products = [
+    ['id' => 999, 'parent' => 2, 'published' => 0],
+    ['id' => 100, 'parent' => 1, 'published' => 0, 'menuindex' => 5],
+    ['id' => 101, 'parent' => 2, 'published' => 0],
+    ['id' => 150, 'parent' => 2, 'published' => 0, 'menuindex' => 1],
+    ['id' => 200, 'parent' => 1, 'published' => 0, 'policies' => ['save' => false]],
+];
+$modx->members = [
+    ['product_id' => 150, 'category_id' => 1, 'menuindex' => 2],
+];
+$memberSort = $controller->sort([
+    'id' => 1,
+    'items' => [['id' => 150, 'menuindex' => 9]],
+]);
+$assertSame(true, $memberSort['success'] ?? null, 'member sort success');
+$assertSame(1, $memberSort['data']['updated'] ?? null, 'member sort updated');
+$product150Menuindex = null;
+foreach ($modx->products as $row) {
+    if ((int) $row['id'] === 150) {
+        $product150Menuindex = (int) ($row['menuindex'] ?? 0);
+        break;
+    }
+}
+$assertSame(1, $product150Menuindex, 'native resource menuindex unchanged');
+$memberMenuindex = null;
+foreach ($modx->members as $row) {
+    if ((int) $row['product_id'] === 150 && (int) $row['category_id'] === 1) {
+        $memberMenuindex = (int) ($row['menuindex'] ?? 0);
+    }
+}
+$assertSame(9, $memberMenuindex, 'member menuindex updated in category B');
+
 // updateProductData: in-scope product with document save policy denied → 403 (#473 pattern)
 $modx->getObjectCalls = [];
 $aclDenied = $controller->updateProductData([

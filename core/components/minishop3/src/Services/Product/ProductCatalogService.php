@@ -6,7 +6,9 @@ namespace MiniShop3\Services\Product;
 
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Services\Catalog\CatalogQuery;
+use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Option\OptionService;
 use MODX\Revolution\modX;
@@ -218,7 +220,7 @@ class ProductCatalogService
 
         $listQuery = $this->buildListQuery($params, $filters);
         $this->applyListSelect($listQuery, $includeContent);
-        $this->applySort($listQuery, $params);
+        $this->applySort($listQuery, $params, $filters);
         $listQuery->limit($limit, $offset);
 
         /** @var array<int|string, msProduct> $products */
@@ -407,10 +409,71 @@ class ProductCatalogService
     /**
      * @param array<string, mixed> $params
      */
-    private function applySort(xPDOQuery $query, array $params): void
+    private function applySort(xPDOQuery $query, array $params, ProductCatalogFilterSpec $filters): void
     {
+        $sortKey = strtolower(trim((string) ($params['sort'] ?? 'menuindex')));
+        if ($sortKey === 'menuindex') {
+            $categoryIds = $this->resolveMenuindexCategoryIds($params, $filters);
+            if ($categoryIds !== []) {
+                $this->applyEffectiveMenuindexSort($query, $categoryIds, $params, $filters);
+
+                return;
+            }
+        }
+
         [$sortField, $dir] = self::resolveSort($params);
         $query->sortby($sortField, $dir);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return list<int>
+     */
+    public function resolveMenuindexCategoryIds(array $params, ProductCatalogFilterSpec $filters): array
+    {
+        if ($filters->hasParents()) {
+            $depth = $filters->nested ? ProductCatalogFilterApplier::NESTED_DEPTH : 0;
+            $parentsCsv = implode(',', $filters->parentIds);
+
+            return $this->categoryScopeService()->resolveCategoryIdsFromParents($parentsCsv, $depth);
+        }
+
+        $parent = (int) ($params['parent'] ?? $params['category'] ?? 0);
+        if ($parent > 0) {
+            return [$parent];
+        }
+
+        return [];
+    }
+
+    /**
+     * @param list<int> $categoryIds
+     * @param array<string, mixed> $params
+     */
+    private function applyEffectiveMenuindexSort(
+        xPDOQuery $query,
+        array $categoryIds,
+        array $params,
+        ProductCatalogFilterSpec $filters,
+    ): void {
+        $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
+        $sortSql = CategoryProductMenuindexService::applyMemberJoin($query, $categoryIds);
+
+        [, $dir] = self::resolveSort($params);
+
+        if (count($categoryIds) > 1 || $filters->options !== []) {
+            $query->groupby('msProduct.id');
+        }
+
+        $query->sortby($sortSql, $dir);
+    }
+
+    private function categoryScopeService(): CategoryProductScopeService
+    {
+        /** @var CategoryProductScopeService $scope */
+        $scope = $this->modx->services->get('ms3_category_product_scope');
+
+        return $scope;
     }
 
     /**

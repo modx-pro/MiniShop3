@@ -121,4 +121,18 @@ $assertSame(
     'admin scope parent or member ids'
 );
 
+$modx->products = [
+    ['id' => 30, 'parent' => 2],
+];
+$modx->members = [
+    ['product_id' => 30, 'category_id' => 1, 'menuindex' => 4],
+];
+$scopeWithMember = new CategoryProductScopeService($modx);
+$memberProduct = $scopeWithMember->findInCategory(1, 30, false);
+if (!$memberProduct instanceof StubMsProduct) {
+    $fail('member link should resolve product in category scope');
+}
+$assertSame(true, $scopeWithMember->canReorderInCategory(30, 1), 'member can reorder in category');
+$assertSame(false, $scopeWithMember->canReorderInCategory(30, 99), 'member cannot reorder outside category');
+
 fwrite(STDOUT, "OK: CategoryProductScopeServiceTest\n");
