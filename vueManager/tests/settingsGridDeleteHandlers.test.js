@@ -29,6 +29,10 @@ test('settings grids row delete: single confirm via ActionsColumn, not handler (
       !match[0].includes('confirm.require'),
       `${file} ${fnName} must not open a second ConfirmDialog`
     )
-    assert.match(text, /confirm:\s*true/, `${file} delete action must use confirm: true in grid config`)
+    assert.match(
+      text,
+      /gridDeleteAction\s*\(/,
+      `${file} must use gridDeleteAction() for row delete confirm (not handler confirm.require)`
+    )
   }
 })
