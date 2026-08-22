@@ -11,7 +11,6 @@ import Paginator from 'primevue/paginator'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 
@@ -19,13 +18,17 @@ import { useCrudDialog } from '../composables/useCrudDialog.js'
 import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
+import { gridDeleteAction } from '../utils/gridDeleteAction.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
-const confirm = useConfirm()
 const { _ } = useLexicon()
 
 const CONFIRM_GROUP = 'settings-links'
+
+const LINK_GRID_DELETE_ACTION = gridDeleteAction({
+  confirmMessage: 'link_delete_confirm_message',
+})
 
 // Bulk selection
 const {
@@ -146,38 +149,27 @@ async function saveLink() {
 }
 
 /**
- * Delete link with confirmation
+ * Delete link (called after confirmation in ActionsColumn / useActions)
  */
-function deleteLink(link) {
-  confirm.require({
-    group: CONFIRM_GROUP,
-    message: _('link_delete_confirm_message').replace('{name}', link.name),
-    header: _('confirm_delete'),
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: _('delete'),
-    rejectLabel: _('cancel'),
-    acceptClass: 'p-button-danger',
-    accept: async () => {
-      try {
-        await request.delete(`/api/mgr/links/${link.id}`)
-        toast.add({
-          severity: 'success',
-          summary: _('success'),
-          detail: _('link_deleted'),
-          life: 3000,
-        })
-        loadLinks()
-      } catch (error) {
-        console.error('[LinksGrid] Error deleting link:', error)
-        toast.add({
-          severity: 'error',
-          summary: _('error'),
-          detail: error.message || _('error_deleting_data'),
-          life: 5000,
-        })
-      }
-    },
-  })
+async function deleteLink(link) {
+  try {
+    await request.delete(`/api/mgr/links/${link.id}`)
+    toast.add({
+      severity: 'success',
+      summary: _('success'),
+      detail: _('link_deleted'),
+      life: 3000,
+    })
+    await loadLinks()
+  } catch (error) {
+    console.error('[LinksGrid] Error deleting link:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_deleting_data'),
+      life: 5000,
+    })
+  }
 }
 
 /**
@@ -186,14 +178,7 @@ function deleteLink(link) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    {
-      name: 'delete',
-      handler: 'delete',
-      icon: 'pi-trash',
-      label: _('delete'),
-      severity: 'danger',
-      confirm: false,
-    },
+    { ...LINK_GRID_DELETE_ACTION, label: _('delete') },
   ]
 }
 

@@ -16,6 +16,15 @@ const GRIDS = [
   ['LinksGrid.vue', 'settings-links'],
 ]
 
+/** Grids that confirm row delete only via ActionsColumn / useActions (#630). */
+const ROW_DELETE_VIA_ACTIONS = new Set([
+  'DeliveriesGrid.vue',
+  'PaymentsGrid.vue',
+  'StatusesGrid.vue',
+  'VendorsGrid.vue',
+  'LinksGrid.vue',
+])
+
 function read(name) {
   return fs.readFileSync(path.join(srcRoot, name), 'utf8')
 }
@@ -34,11 +43,13 @@ test('settings tab grids isolate ConfirmDialog with unique groups (#548)', () =>
 
     assert.match(text, /<ConfirmDialog[^>]*:group="CONFIRM_GROUP"/, `${file} ConfirmDialog must bind :group`)
 
-    const requireAt = [...text.matchAll(/confirm\.require\s*\(/g)]
-    assert.ok(requireAt.length > 0, `${file} must have confirm.require`)
-    for (const match of requireAt) {
-      const snippet = text.slice(match.index, match.index + 400)
-      assert.match(snippet, /\bgroup:\s*CONFIRM_GROUP/, `${file} confirm.require must pass group: CONFIRM_GROUP`)
+    if (!ROW_DELETE_VIA_ACTIONS.has(file)) {
+      const requireAt = [...text.matchAll(/confirm\.require\s*\(/g)]
+      assert.ok(requireAt.length > 0, `${file} must have confirm.require`)
+      for (const match of requireAt) {
+        const snippet = text.slice(match.index, match.index + 400)
+        assert.match(snippet, /\bgroup:\s*CONFIRM_GROUP/, `${file} confirm.require must pass group: CONFIRM_GROUP`)
+      }
     }
 
     if (text.includes('<ActionsColumn')) {
