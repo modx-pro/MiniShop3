@@ -67,7 +67,7 @@ final class HeadlessStorefrontErrorsTest extends WebApiTestCase
         $this->assertApiError($res, HttpStatus::BAD_REQUEST, 'ms3_cart_change_options_error');
     }
 
-    #[DataProvider('cartAddOptionsJsonStringCases')]
+#[DataProvider('cartAddOptionsJsonStringCases')]
     public function testCartAddOptionsJsonString(string $options, array $expectedOptions): void
     {
         $res = $this->dispatch('POST', '/api/v1/cart/add', [], [
@@ -111,6 +111,52 @@ final class HeadlessStorefrontErrorsTest extends WebApiTestCase
                 'count' => 1,
                 'options' => 1,
             ],
+            [],
+            $token
+        );
+        $this->assertApiError($res, HttpStatus::BAD_REQUEST, 'ms3_err_cart_options');
+    }
+
+    public function testChangeOptionJsonStringOptionsReturns200(): void
+    {
+        $add = $this->dispatch('POST', '/api/v1/cart/add', [], [
+            'id' => JourneyProductCatalog::FIXTURE_PRODUCT_ID,
+            'count' => 1,
+            'options' => ['size' => 'M'],
+        ]);
+        $token = $this->lastMs3Token();
+        $key = (string) ($add['data']['last_key'] ?? '');
+
+        $res = $this->dispatch(
+            'POST',
+            '/api/v1/cart/change-option',
+            [],
+            ['product_key' => $key, 'options' => '{"size":"L"}'],
+            [],
+            $token
+        );
+
+        self::assertSame(HttpStatus::OK, $res['status']);
+        self::assertTrue($res['success']);
+        $newKey = (string) ($res['data']['last_key'] ?? $key);
+        self::assertSame('L', $res['data']['cart'][$newKey]['options']['size'] ?? null);
+    }
+
+    public function testChangeOptionInvalidOptionsTypeReturns400(): void
+    {
+        $add = $this->dispatch('POST', '/api/v1/cart/add', [], [
+            'id' => JourneyProductCatalog::FIXTURE_PRODUCT_ID,
+            'count' => 1,
+            'options' => ['size' => 'M'],
+        ]);
+        $token = $this->lastMs3Token();
+        $key = (string) ($add['data']['last_key'] ?? '');
+
+        $res = $this->dispatch(
+            'POST',
+            '/api/v1/cart/change-option',
+            [],
+            ['product_key' => $key, 'options' => 42],
             [],
             $token
         );

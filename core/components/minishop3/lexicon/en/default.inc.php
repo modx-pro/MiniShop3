@@ -168,6 +168,7 @@ $_lang['ms3_message_close_all'] = 'close all';
 $_lang['ms3_err_unknown'] = 'Unknown error';
 $_lang['ms3_err_ns'] = 'This field is required';
 $_lang['ms3_err_product_key_required'] = 'Product key is required';
+$_lang['ms3_err_cart_options'] = 'options must be an object or a JSON string';
 $_lang['ms3_err_field_key_required'] = 'Field key is required';
 $_lang['ms3_err_extra_field_class_unsupported'] = 'This model class cannot host extra fields. Use a model with its own database table (e.g. msProductData).';
 $_lang['ms3_err_extra_field_key_invalid'] = 'Field key must contain only Latin letters, digits, and underscores.';
@@ -175,7 +176,6 @@ $_lang['ms3_err_fields_required'] = 'Fields array is required';
 $_lang['ms3_err_field_nf'] = 'Field not found';
 $_lang['ms3_err_ae'] = 'This field must be unique';
 $_lang['ms3_err_json'] = 'This field requires JSON string';
-$_lang['ms3_err_cart_options'] = 'options must be an object or a JSON string';
 $_lang['ms3_repeater_validation_error'] = 'Repeater field "[[+field]]": [[+error]]';
 $_lang['ms3_key_value_validation_error'] = 'Key-value field "[[+field]]": [[+error]]';
 

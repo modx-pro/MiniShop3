@@ -168,6 +168,7 @@ $_lang['ms3_message_close_all'] = 'закрыть все';
 $_lang['ms3_err_unknown'] = 'Неизвестная ошибка';
 $_lang['ms3_err_ns'] = 'Это поле обязательно';
 $_lang['ms3_err_product_key_required'] = 'Не указан ключ товара';
+$_lang['ms3_err_cart_options'] = 'options должен быть объектом или JSON-строкой';
 $_lang['ms3_err_field_key_required'] = 'Не указан ключ поля';
 $_lang['ms3_err_extra_field_class_unsupported'] = 'Этот класс модели не может содержать дополнительные поля. Используйте модель с собственной таблицей БД (например, msProductData).';
 $_lang['ms3_err_extra_field_key_invalid'] = 'Ключ поля может содержать только латинские буквы, цифры и подчёркивание.';
@@ -175,7 +176,6 @@ $_lang['ms3_err_fields_required'] = 'Требуется массив полей'
 $_lang['ms3_err_field_nf'] = 'Поле не найдено';
 $_lang['ms3_err_ae'] = 'Это поле должно быть уникально';
 $_lang['ms3_err_json'] = 'Это поле требует JSON строку';
-$_lang['ms3_err_cart_options'] = 'options должен быть объектом или JSON-строкой';
 $_lang['ms3_repeater_validation_error'] = 'Поле повторителя «[[+field]]»: [[+error]]';
 $_lang['ms3_key_value_validation_error'] = 'Поле key-value «[[+field]]»: [[+error]]';
 

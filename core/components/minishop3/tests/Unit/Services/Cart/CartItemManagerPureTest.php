@@ -58,7 +58,7 @@ final class CartItemManagerPureTest extends TestCase
 
     public function testNormalizeOptions(): void
     {
-        self::assertSame([], CartItemManager::normalizeOptions('[]'));
+self::assertSame([], CartItemManager::normalizeOptions('[]'));
         self::assertSame([], CartItemManager::normalizeOptions('{}'));
         self::assertSame(['color' => 'red'], CartItemManager::normalizeOptions('{"color":"red"}'));
         self::assertSame(['a' => 1], CartItemManager::normalizeOptions(['a' => 1]));
