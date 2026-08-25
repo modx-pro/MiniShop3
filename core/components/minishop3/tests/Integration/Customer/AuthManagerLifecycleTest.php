@@ -6,7 +6,9 @@ namespace MiniShop3\Tests\Integration\Customer;
 
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Order\OrderAddressManager;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\TokenService;
 use MiniShop3\Tests\Support\CustomerAuthPdoStore;
@@ -26,6 +28,8 @@ class AuthManagerLifecycleTest extends TestCase
 
     /** @var list<string> */
     private array $draftCalls = [];
+
+    private int $prefillCalls = 0;
 
     protected function setUp(): void
     {
@@ -49,6 +53,7 @@ class AuthManagerLifecycleTest extends TestCase
         $this->store = $this->createStore();
         $this->store->reset();
         $this->draftCalls = [];
+        $this->prefillCalls = 0;
     }
 
     protected function tearDown(): void
@@ -128,6 +133,7 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertNull($this->store->findToken(['token' => $guestToken, 'type' => msCustomerToken::TYPE_API]));
         self::assertSame(1, $this->store->countTokens((int) $customer->id, msCustomerToken::TYPE_API));
         self::assertContains('transfer:' . $guestToken . '=>' . $loginToken, $this->draftCalls);
+        self::assertSame(1, $this->prefillCalls);
 
         self::assertTrue($auth->logoutCurrentCustomer());
         self::assertSame(0, (int) ($_SESSION['ms3']['customer_id'] ?? 0));
@@ -319,6 +325,12 @@ class AuthManagerLifecycleTest extends TestCase
     {
         $store = $this->store;
         $draftCalls = &$this->draftCalls;
+        $prefillCalls = &$this->prefillCalls;
+
+        $draft = $this->createStub(msOrder::class);
+        $draft->method('get')->willReturnMap([
+            ['customer_id', 1],
+        ]);
 
         $orderDraftManager = $this->createStub(OrderDraftManager::class);
         $orderDraftManager->method('transferDraftToToken')->willReturnCallback(
@@ -335,8 +347,17 @@ class AuthManagerLifecycleTest extends TestCase
                 return true;
             }
         );
+        $orderDraftManager->method('getDraft')->willReturn($draft);
+        $orderDraftManager->method('findDraftByToken')->willReturn($draft);
 
-        $modx = new class ($store, $options, $orderDraftManager) extends modX {
+        $addressManager = $this->createStub(OrderAddressManager::class);
+        $addressManager->method('prefillProfileFieldsFromCustomer')->willReturnCallback(
+            static function () use (&$prefillCalls): void {
+                $prefillCalls++;
+            }
+        );
+
+        $modx = new class ($store, $options, $orderDraftManager, $addressManager) extends modX {
             /**
              * @param array<string, mixed> $options
              */
@@ -344,19 +365,25 @@ class AuthManagerLifecycleTest extends TestCase
                 private CustomerAuthPdoStore $store,
                 private array $options,
                 OrderDraftManager $orderDraftManager,
+                OrderAddressManager $addressManager,
             ) {
                 parent::__construct();
                 $tokenService = new TokenService($this);
-                $this->services = new class ($tokenService, $orderDraftManager) {
+                $this->services = new class ($tokenService, $orderDraftManager, $addressManager) {
                     public function __construct(
                         private TokenService $tokenService,
                         private OrderDraftManager $orderDraftManager,
+                        private OrderAddressManager $addressManager,
                     ) {
                     }
 
                     public function has(string $key): bool
                     {
-                        return in_array($key, ['ms3_token_service', 'ms3_order_draft_manager'], true);
+                        return in_array($key, [
+                            'ms3_token_service',
+                            'ms3_order_draft_manager',
+                            'ms3_order_address_manager',
+                        ], true);
                     }
 
                     public function get(string $key): mixed
@@ -364,6 +391,7 @@ class AuthManagerLifecycleTest extends TestCase
                         return match ($key) {
                             'ms3_token_service' => $this->tokenService,
                             'ms3_order_draft_manager' => $this->orderDraftManager,
+                            'ms3_order_address_manager' => $this->addressManager,
                             default => null,
                         };
                     }
