@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Middleware;
 
+use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Middleware\MiddlewareInterface;
 use MiniShop3\Router\Response;
 use MiniShop3\Utils\CorsConfig;
@@ -56,11 +57,10 @@ class CorsMiddleware implements MiddlewareInterface
             $this->setCorsHeaders($origin);
         }
 
-        // For preflight requests (OPTIONS) immediately return 200
+        // Preflight: stop middleware chain with 200 (Router/api.php sends the envelope).
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         if ($method === 'OPTIONS') {
-            http_response_code(200);
-            exit;
+            return Response::success(null, null, HttpStatus::OK);
         }
 
         return null; // Continue execution
