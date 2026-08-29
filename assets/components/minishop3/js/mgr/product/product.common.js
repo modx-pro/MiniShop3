@@ -91,6 +91,38 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
   },
 
   /**
+   * Force HTML content type for products (same idea as categories).
+   * CSS/JS types append ".css"/".js" to friendly URIs and break preview.
+   */
+  getSettingFields: function (config) {
+    const originals = MODx.panel.Resource.prototype.getSettingFields.call(this, config)
+    const htmlType = MODx.config['default_content_type'] || 1
+    const walk = function (items) {
+      if (!Ext.isArray(items)) {
+        return
+      }
+      Ext.each(items, function (field) {
+        if (!field) {
+          return
+        }
+        if (field.name === 'content_type' || field.id === 'modx-resource-content-type') {
+          field.xtype = 'hidden'
+          field.value = htmlType
+        }
+        if (field.items) {
+          walk(field.items)
+        }
+      })
+    }
+    Ext.each(originals, function (block) {
+      if (block && block.items) {
+        walk(block.items)
+      }
+    })
+    return originals
+  },
+
+  /**
    * Get Product tab with nested Vue TabView
    * Contains: Properties, Gallery, Categories, Links, Options
    */
