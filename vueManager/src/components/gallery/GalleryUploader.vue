@@ -84,6 +84,7 @@ const buildUppyLocale = () => {
       browseFolders: _('ms3_gallery_uppy_browse_folders'),
       back: _('ms3_gallery_uppy_back'),
       addMoreFiles: _('ms3_gallery_uppy_add_more_files'),
+      addingMoreFiles: _('ms3_gallery_uppy_adding_more_files'),
       dropHint: _('ms3_gallery_uppy_drop_hint'),
       uploadComplete: _('ms3_gallery_uppy_upload_complete'),
       uploadFailed: _('ms3_gallery_uppy_upload_failed'),

@@ -185,6 +185,7 @@ $_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Загрузить %{smart_count}
 $_lang['ms3_gallery_uppy_note_max_size'] = 'Макс. размер: %{maxSize}';
 $_lang['ms3_gallery_uppy_back'] = 'Назад';
 $_lang['ms3_gallery_uppy_add_more_files'] = 'Добавить ещё файлы';
+$_lang['ms3_gallery_uppy_adding_more_files'] = 'Добавление файлов';
 $_lang['ms3_gallery_uppy_drop_hint'] = 'Перетащите файлы сюда';
 $_lang['ms3_gallery_uppy_error'] = 'Ошибка';
 $_lang['ms3_gallery_uppy_failed_to_upload'] = 'Не удалось загрузить %{file}';

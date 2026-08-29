@@ -185,6 +185,7 @@ $_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Upload %{smart_count} files';
 $_lang['ms3_gallery_uppy_note_max_size'] = 'Maximum size: %{maxSize}';
 $_lang['ms3_gallery_uppy_back'] = 'Back';
 $_lang['ms3_gallery_uppy_add_more_files'] = 'Add more files';
+$_lang['ms3_gallery_uppy_adding_more_files'] = 'Adding more files';
 $_lang['ms3_gallery_uppy_drop_hint'] = 'Drop your files here';
 $_lang['ms3_gallery_uppy_error'] = 'Error';
 $_lang['ms3_gallery_uppy_failed_to_upload'] = 'Failed to upload %{file}';
