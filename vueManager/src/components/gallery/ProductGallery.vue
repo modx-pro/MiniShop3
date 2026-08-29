@@ -403,6 +403,9 @@ onMounted(() => {
 
 <style scoped>
 .product-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-modx-space-panel, 15px);
   width: 100%;
   padding: 0;
 }

@@ -223,7 +223,8 @@ function onContextMenu(event, image) {
 }
 
 .gallery-search {
-  padding: 0.5rem 0;
+  padding: 0;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .gallery-search-wrap {
@@ -266,8 +267,9 @@ function onContextMenu(event, image) {
 }
 
 .gallery-empty {
-  padding: 2rem;
-  text-align: center;
+  padding: var(--p-modx-space-panel, 15px) 0;
+  text-align: start;
+  font-size: 0.875rem;
   color: var(--p-text-muted-color);
 }
 

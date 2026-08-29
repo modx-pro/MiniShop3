@@ -101,8 +101,8 @@ function toggleMenu(event) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0;
-  gap: 0.5rem;
+  padding: 0;
+  gap: var(--p-modx-space-panel, 15px);
 }
 
 .gallery-toolbar-left {
