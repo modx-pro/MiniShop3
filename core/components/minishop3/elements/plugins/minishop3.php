@@ -34,46 +34,103 @@ switch ($modx->event->name) {
         break;
 
     case 'OnManagerPageBeforeRender':
-        if (!$modx->services->has('ms3')) {
-            $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+        // Editors cannot fix a copy failure; limit noise to mgr sessions (#622 review).
+        if (!$modx->user || !$modx->user->hasSessionContext('mgr')) {
             break;
         }
-        /** @var \MiniShop3\MiniShop3 $ms3 */
-        $ms3 = $modx->services->get('ms3');
+
+        // Version check runs before the ms3 service guard so a total copy failure
+        // (no core/components/minishop3 on disk) still surfaces a banner (#622).
+        $packageVersion = (string)$modx->getOption('ms3_version', null, '');
+        $diskVersion = '';
+        /** @var \MiniShop3\MiniShop3|null $ms3 */
+        $ms3 = null;
+        if ($modx->services->has('ms3')) {
+            $ms3 = $modx->services->get('ms3');
+            $diskVersion = (string)$ms3->version;
+        }
+
+        // Warn when disk is missing or lags the installed package — newer disk (git/rsync) is OK.
+        $versionMismatch = $packageVersion !== ''
+            && ($diskVersion === '' || version_compare($diskVersion, $packageVersion, '<'));
+
+        if ($versionMismatch) {
+            if (isset($modx->controller)) {
+                $modx->controller->addLexiconTopic('minishop3:default');
+            } else {
+                $modx->lexicon->load('minishop3:default');
+            }
+
+            $filesMissing = $diskVersion === '';
+            $lexiconKey = $filesMissing ? 'ms3_version_files_missing' : 'ms3_version_mismatch_warning';
+            $message = $modx->lexicon($lexiconKey, $filesMissing
+                ? ['package' => $packageVersion]
+                : ['disk' => $diskVersion, 'package' => $packageVersion]);
+            $message = is_string($message) ? $message : '';
+            if ($message === $lexiconKey || $message === '') {
+                $message = $filesMissing
+                    ? 'MiniShop3 component files were not found on disk'
+                        . ' (installed package ' . $packageVersion . ').'
+                        . ' Check write permissions for core/components/minishop3/'
+                        . ' and assets/components/minishop3/, then reinstall the package.'
+                    : 'MiniShop3 version mismatch: files on disk (' . $diskVersion
+                        . ') are older than the installed package (' . $packageVersion
+                        . '). The database was updated but component files may not have been copied.'
+                        . ' Check write permissions for core/components/minishop3/'
+                        . ' and assets/components/minishop3/.';
+            }
+
+            $messageHtml = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+            $versionKey = md5($diskVersion . '|' . $packageVersion);
+            $modx->regClientHTMLBlock(
+                '<div id="ms3-version-mismatch-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;'
+                . 'padding:12px 48px 12px 20px;background:#fff3cd;border-bottom:3px solid #dc3545;color:#664d03;'
+                . 'font:14px/1.45 -apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;'
+                . 'box-shadow:0 2px 8px rgba(0,0,0,.15);box-sizing:border-box;">'
+                . '<strong>MiniShop3</strong>: ' . $messageHtml
+                . '<button type="button" id="ms3-version-mismatch-dismiss" aria-label="Close" '
+                . 'style="position:absolute;top:8px;right:12px;border:0;background:transparent;'
+                . 'color:#664d03;font-size:22px;line-height:1;cursor:pointer;padding:4px 8px;">&times;</button>'
+                . '</div>'
+                . '<style id="ms3-version-mismatch-pad"></style>'
+                . '<script>(function(){var b=document.getElementById("ms3-version-mismatch-banner");'
+                . 'var p=document.getElementById("ms3-version-mismatch-pad");'
+                . 'var k=' . json_encode('ms3_ver_' . $versionKey) . ';'
+                . 'if(!b)return;if(sessionStorage.getItem(k)){b.remove();if(p)p.remove();return;}'
+                . 'function syncPad(){if(p)p.textContent="body{padding-top:"+b.offsetHeight+"px !important;}";}'
+                . 'syncPad();'
+                . 'if(window.ResizeObserver){new ResizeObserver(syncPad).observe(b);}'
+                . 'else{window.addEventListener("resize",syncPad);}'
+                . 'var d=document.getElementById("ms3-version-mismatch-dismiss");'
+                . 'if(d)d.onclick=function(){sessionStorage.setItem(k,"1");b.remove();if(p)p.remove();};'
+                . '})();</script>'
+            );
+
+            // Once per mgr session — avoid filling error.log on every page render (#622).
+            $logKey = 'ms3_version_mismatch_logged_' . $versionKey;
+            if (empty($_SESSION[$logKey])) {
+                $_SESSION[$logKey] = true;
+                $modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    '[MiniShop3] Version mismatch: disk=' . ($diskVersion !== '' ? $diskVersion : '(missing)')
+                    . ', package=' . $packageVersion
+                );
+            }
+        }
+
+        if ($ms3 === null) {
+            if (empty($_SESSION['ms3_service_not_registered_logged'])) {
+                $_SESSION['ms3_service_not_registered_logged'] = true;
+                $modx->log(modX::LOG_LEVEL_WARN, '[MiniShop3] Service not registered');
+            }
+            break;
+        }
+
         $modx->controller->addLexiconTopic('minishop3:default');
         $modx->regClientStartupScript($ms3->config['jsUrl'] . 'mgr/misc/ms3.manager.js');
 
-        // Inline compare: plugincode lives in DB and must work when
-        // core/components/minishop3/src was not updated after a failed file copy (#622).
-        $diskVersion = (string)$ms3->version;
-        $packageVersion = (string)$modx->getOption('ms3_version', null, '');
-        if ($packageVersion !== '' && $diskVersion !== $packageVersion) {
-            $message = $modx->lexicon('ms3_version_mismatch_warning', [
-                'disk' => $diskVersion,
-                'package' => $packageVersion,
-            ]);
-            if ($message === 'ms3_version_mismatch_warning' || $message === '') {
-                $message = 'MiniShop3 version mismatch: disk ' . $diskVersion
-                    . ', package ' . $packageVersion
-                    . '. Check write permissions for core/components/minishop3/ and assets/components/minishop3/.';
-            }
-            $messageHtml = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
-            $modx->regClientStartupHTMLBlock(
-                '<div id="ms3-version-mismatch-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;'
-                . 'padding:12px 20px;background:#fff3cd;border-bottom:3px solid #dc3545;color:#664d03;'
-                . 'font:14px/1.45 -apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;'
-                . 'box-shadow:0 2px 8px rgba(0,0,0,.15);">'
-                . '<strong>MiniShop3</strong>: ' . $messageHtml
-                . '</div>'
-            );
-            $modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[MiniShop3] Version mismatch: disk=' . $diskVersion . ', package=' . $packageVersion
-            );
-        }
-
         $syncEnabled = (bool)$modx->getOption('ms3_customer_sync_enabled', null, false);
-        if ($syncEnabled && $modx->user && $modx->user->hasSessionContext('mgr')) {
+        if ($syncEnabled) {
             $modx->lexicon->load('minishop3:customer');
         }
         break;

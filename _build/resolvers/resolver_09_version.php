@@ -4,8 +4,8 @@
  * Resolver: persist installed transport package version in ms3_version system setting.
  *
  * Used to detect when DB/settings were updated but component files on disk were not copied.
- * Signature parsing stays inline: this resolver must run even when component files
- * failed to copy onto disk (#622).
+ * Uses xPDOTransport::parseSignature (MODX vendor, always available) — no MiniShop3 src
+ * autoload, so this still runs after a failed file copy (#622).
  */
 
 use MODX\Revolution\modSystemSetting;
@@ -28,13 +28,10 @@ if (!in_array($options[xPDOTransport::PACKAGE_ACTION], [
     return true;
 }
 
-// Transport signature looks like "minishop3-1.13.0-beta1" → "1.13.0-beta1"
 $packageVersion = '';
 if (!empty($transport->signature)) {
-    $parts = explode('-', (string)$transport->signature, 2);
-    if (isset($parts[1])) {
-        $packageVersion = $parts[1];
-    }
+    [, $packageVersion] = xPDOTransport::parseSignature((string)$transport->signature);
+    $packageVersion = (string)$packageVersion;
 }
 
 if ($packageVersion === '') {
@@ -56,7 +53,14 @@ if (!$setting) {
 }
 
 $setting->set('value', $packageVersion);
-$setting->save();
+if (!$setting->save()) {
+    $modx->log(
+        modX::LOG_LEVEL_ERROR,
+        '[MiniShop3] Failed to save ms3_version system setting to ' . $packageVersion
+    );
+
+    return true;
+}
 
 $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Set ms3_version system setting to ' . $packageVersion);
 

@@ -12,12 +12,14 @@ use PHPUnit\Framework\TestCase;
  * - _build/resolvers/resolver_09_version.php
  * - elements/plugins/minishop3.php
  *
- * Those call sites must stay disk-independent (no autoload of new src helpers).
+ * Those call sites must stay disk-independent (no autoload of new MiniShop3 src helpers).
  */
 final class VersionSyncContractTest extends TestCase
 {
     /**
-     * Mirrors resolver_09_version.php signature parsing.
+     * Mirrors xPDOTransport::parseSignature() version half (MODX vendor, used by resolver).
+     *
+     * @see \xPDO\Transport\xPDOTransport::parseSignature
      */
     private static function extractFromTransportSignature(string $signature): string
     {
@@ -25,17 +27,28 @@ final class VersionSyncContractTest extends TestCase
             return '';
         }
 
-        $parts = explode('-', $signature, 2);
+        $sig = explode('-', $signature);
+        $count = count($sig);
+        if ($count >= 3) {
+            $release = array_pop($sig);
+            $version = array_pop($sig);
 
-        return $parts[1] ?? '';
+            return "{$version}-{$release}";
+        }
+        if ($count === 2) {
+            return $sig[1];
+        }
+
+        return '';
     }
 
     /**
-     * Mirrors the plugin mismatch predicate.
+     * Mirrors the plugin mismatch predicate: warn only when disk is missing or behind.
      */
     private static function isMismatch(string $diskVersion, string $packageVersion): bool
     {
-        return $packageVersion !== '' && $diskVersion !== $packageVersion;
+        return $packageVersion !== ''
+            && ($diskVersion === '' || version_compare($diskVersion, $packageVersion, '<'));
     }
 
     #[DataProvider('extractFromTransportSignatureCases')]
@@ -51,6 +64,7 @@ final class VersionSyncContractTest extends TestCase
     {
         yield 'standard beta signature' => ['minishop3-1.13.0-beta1', '1.13.0-beta1'];
         yield 'release without suffix' => ['minishop3-1.0.0', '1.0.0'];
+        yield 'hyphenated package name' => ['my-extra-1.2.3-pl', '1.2.3-pl'];
         yield 'empty signature' => ['', ''];
         yield 'no dash separator' => ['minishop3', ''];
         yield 'unknown prefix only' => ['unknown', ''];
@@ -69,8 +83,9 @@ final class VersionSyncContractTest extends TestCase
     {
         yield 'empty package version' => ['1.13.0-beta1', '', false];
         yield 'equal versions' => ['1.13.0-beta1', '1.13.0-beta1', false];
-        yield 'different versions' => ['1.12.0', '1.13.0-beta1', true];
+        yield 'disk older than package' => ['1.12.0', '1.13.0-beta1', true];
         yield 'disk empty package set' => ['', '1.13.0-beta1', true];
+        yield 'disk newer than package (git/rsync)' => ['1.14.0-dev', '1.13.0-beta1', false];
     }
 
     public function testPluginAndResolverStayDiskIndependent(): void
@@ -96,18 +111,61 @@ final class VersionSyncContractTest extends TestCase
 
         self::assertStringContainsString("getOption('ms3_version'", $plugin);
         self::assertStringContainsString('ms3-version-mismatch-banner', $plugin);
+        self::assertMatchesRegularExpression(
+            "/version_compare\\(\\\$diskVersion, \\\$packageVersion, '<'\\)/",
+            $plugin,
+            'Plugin must warn only when disk lags package (not strict inequality).'
+        );
+        self::assertStringContainsString('regClientHTMLBlock', $plugin);
         self::assertStringContainsString("'key' => 'ms3_version'", $resolver);
-        self::assertStringContainsString("explode('-'", $resolver);
+        self::assertStringContainsString('parseSignature', $resolver);
+        self::assertStringNotContainsString("explode('-'", $resolver);
     }
 
-    public function testHealthRoutesReferenceMs3Version(): void
+    public function testHealthRoutesReferenceMs3VersionWithSkipEmpty(): void
     {
         $ms3Root = dirname(__DIR__, 3);
 
         foreach (['config/routes/manager.php', 'config/routes/web.php'] as $routeFile) {
             $contents = file_get_contents($ms3Root . '/' . $routeFile);
             self::assertIsString($contents);
-            self::assertStringContainsString('ms3_version', $contents);
+            self::assertStringContainsString(
+                "getOption('ms3_version', null, '1.0.0', true)",
+                $contents
+            );
         }
+    }
+
+    public function testDiskVersionMatchesBuildConfig(): void
+    {
+        $ms3Root = dirname(__DIR__, 3);
+        $repoRoot = dirname($ms3Root, 3);
+
+        $miniShop3Php = file_get_contents($ms3Root . '/src/MiniShop3.php');
+        $buildConfig = file_get_contents($repoRoot . '/_build/config.inc.php');
+        self::assertIsString($miniShop3Php);
+        self::assertIsString($buildConfig);
+
+        self::assertSame(
+            1,
+            preg_match("/public\\s+\\\$version\\s*=\\s*'([^']+)'/", $miniShop3Php, $diskMatch),
+            'MiniShop3::$version must be a public string property.'
+        );
+        self::assertSame(
+            1,
+            preg_match("/'version'\\s*=>\\s*'([^']+)'/", $buildConfig, $versionMatch),
+            '_build/config.inc.php must define version.'
+        );
+        self::assertSame(
+            1,
+            preg_match("/'release'\\s*=>\\s*'([^']+)'/", $buildConfig, $releaseMatch),
+            '_build/config.inc.php must define release.'
+        );
+
+        self::assertSame(
+            $versionMatch[1] . '-' . $releaseMatch[1],
+            $diskMatch[1],
+            'MiniShop3::$version must equal config version-release or the mgr banner will false-positive.'
+        );
     }
 }
