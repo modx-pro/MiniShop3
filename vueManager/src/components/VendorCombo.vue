@@ -28,8 +28,8 @@
 </template>
 
 <script setup>
-import { Select } from 'primevue'
 import { useLexicon } from '@vuetools/useLexicon'
+import { Select } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
