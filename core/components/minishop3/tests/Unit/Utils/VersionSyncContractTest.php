@@ -27,19 +27,24 @@ final class VersionSyncContractTest extends TestCase
             return '';
         }
 
-        $sig = explode('-', $signature);
-        $count = count($sig);
-        if ($count >= 3) {
-            $release = array_pop($sig);
-            $version = array_pop($sig);
-
-            return "{$version}-{$release}";
+        $exploded = explode('-', $signature);
+        $name = current($exploded);
+        $version = '';
+        $part = next($exploded);
+        while ($part !== false) {
+            $dotPos = strpos($part, '.');
+            if ($dotPos > 0 && is_numeric(substr($part, 0, $dotPos))) {
+                $version = $part;
+                while (($part = next($exploded)) !== false) {
+                    $version .= '-' . $part;
+                }
+                break;
+            }
+            $name .= '-' . $part;
+            $part = next($exploded);
         }
-        if ($count === 2) {
-            return $sig[1];
-        }
 
-        return '';
+        return $version;
     }
 
     /**
