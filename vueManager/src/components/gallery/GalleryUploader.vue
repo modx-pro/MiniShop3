@@ -95,6 +95,11 @@ const buildUppyLocale = () => {
       edit: _('ms3_gallery_uppy_edit'),
       retry: _('ms3_gallery_uppy_retry'),
       addMore: _('ms3_gallery_uppy_add_more'),
+      // Image editor chrome (Dashboard panel)
+      editing: _('ms3_gallery_uppy_editing'),
+      save: _('ms3_gallery_uppy_save'),
+      finishEditingFile: _('ms3_gallery_uppy_finish_editing'),
+      saveChanges: _('ms3_gallery_uppy_save_changes'),
       error: _('ms3_gallery_uppy_error'),
       failedToUpload: _('ms3_gallery_uppy_failed_to_upload'),
       noDuplicates: _('ms3_gallery_uppy_no_duplicates'),
@@ -195,6 +200,18 @@ const initUppy = () => {
   uppy.use(ImageEditor, {
     target: Dashboard,
     quality: 0.8,
+    locale: {
+      strings: {
+        revert: _('ms3_gallery_uppy_revert'),
+        rotate: _('ms3_gallery_uppy_rotate'),
+        zoomIn: _('ms3_gallery_uppy_zoom_in'),
+        zoomOut: _('ms3_gallery_uppy_zoom_out'),
+        flipHorizontal: _('ms3_gallery_uppy_flip_horizontal'),
+        aspectRatioSquare: _('ms3_gallery_uppy_crop_square'),
+        aspectRatioLandscape: _('ms3_gallery_uppy_crop_landscape'),
+        aspectRatioPortrait: _('ms3_gallery_uppy_crop_portrait'),
+      },
+    },
   })
 
   uppy.use(XHRUpload, {
@@ -339,12 +356,51 @@ watch(
 
 .uppy-container :deep(.uppy-Dashboard-browse),
 .uppy-container :deep(.uppy-DashboardContent-back),
-.uppy-container :deep(.uppy-DashboardContent-save),
 .uppy-container :deep(.uppy-DashboardContent-addMore),
 .uppy-container :deep(.uppy-StatusBar-actionBtn:not(.uppy-StatusBar-actionBtn--upload)) {
   color: var(--p-primary-color, #234368);
 }
 
+.uppy-container :deep(.uppy-DashboardContent-bar) {
+  min-height: var(--p-modx-control-height, 2.25rem);
+  height: auto;
+  padding-block: 0.25rem;
+  padding-inline: var(--p-modx-space-panel, 15px);
+  background: var(--p-surface-50, #fafafa);
+  border-bottom-color: var(--p-content-border-color, #e4e4e4);
+}
+
+.uppy-container :deep(.uppy-DashboardContent-title) {
+  color: var(--p-text-color, #333);
+  font-size: var(--p-modx-font-size-lg, 0.875rem);
+  font-weight: 500;
+  line-height: var(--p-modx-control-height, 2.25rem);
+  max-width: min(60%, 20rem);
+}
+
+/* Save = mgr success CTA (same role as StatusBar upload). */
+.uppy-container :deep(.uppy-DashboardContent-save) {
+  color: #fff;
+  background-color: var(--p-button-success-background, #6cb24a);
+  min-height: var(--p-modx-control-height, 2.25rem);
+  padding: 0.375rem 0.875rem;
+  margin-inline-start: 0;
+  border-radius: var(--p-button-border-radius, 3px);
+  font-size: var(--p-modx-font-size-lg, 0.875rem);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.uppy-container :deep(.uppy-DashboardContent-save:hover) {
+  color: #fff;
+  background-color: var(--p-button-success-hover-background, #5a9a3c);
+}
+
+.uppy-container :deep(.uppy-DashboardContent-save:focus) {
+  color: #fff;
+  background-color: var(--p-button-success-background, #6cb24a);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--p-button-success-background, #6cb24a) 40%, transparent);
+}
 .uppy-container :deep(.uppy-Dashboard-browse:focus),
 .uppy-container :deep(.uppy-Dashboard-browse:hover) {
   border-bottom-color: var(--p-primary-color, #234368);

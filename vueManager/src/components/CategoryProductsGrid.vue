@@ -1,6 +1,17 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import { Button, Card, Checkbox, ConfirmDialog, InputNumber, InputText, Select, Tag, Toast } from 'primevue'
+import {
+  Button,
+  Card,
+  Checkbox,
+  ConfirmDialog,
+  InputNumber,
+  InputText,
+  Paginator,
+  Select,
+  Tag,
+  Toast,
+} from 'primevue'
 import { computed, defineProps, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -110,6 +121,37 @@ const sortedFilters = computed(() => {
 })
 
 /**
+ * Translate filter option labels (yes/no or legacy Да/Нет).
+ */
+function translateFilterOptionLabel(label) {
+  if (label === 'Да' || label === 'yes') {
+    return _('yes')
+  }
+  if (label === 'Нет' || label === 'no') {
+    return _('no')
+  }
+  const translated = _(label)
+  return translated || label
+}
+
+function selectFilterOptions(filter) {
+  const fromConfig = (filter.options || []).map(option => ({
+    label: translateFilterOptionLabel(option.label),
+    value: option.value,
+  }))
+  if (fromConfig.length > 0) {
+    return fromConfig
+  }
+  if (filter.type === 'boolean' || filter.key === 'published') {
+    return [
+      { label: _('yes'), value: 1 },
+      { label: _('no'), value: 0 },
+    ]
+  }
+  return []
+}
+
+/**
  * Check if drag-drop is available (only when sorted by menuindex and not nested)
  */
 const canDrag = computed(() => {
@@ -204,13 +246,20 @@ async function loadProducts() {
   }
 }
 
+const pageReportTemplate = computed(
+  () => `${_('showing')} {first}-{last} ${_('of')} {totalRecords}`
+)
+
 /**
- * Handle pagination (for DataTable lazy loading)
+ * Handle pagination (PrimeVue Paginator)
  */
-// eslint-disable-next-line no-unused-vars
 function onPage(event) {
+  const rowsChanged = event.rows !== rows.value
   first.value = event.first
   rows.value = event.rows
+  if (rowsChanged) {
+    saveRowsPreference(event.rows)
+  }
   loadProducts()
 }
 
@@ -709,47 +758,6 @@ function onHeaderClick(column) {
 }
 
 /**
- * Handle previous page
- */
-function onPagePrev() {
-  if (first.value > 0) {
-    first.value = Math.max(0, first.value - rows.value)
-    loadProducts()
-  }
-}
-
-/**
- * Handle next page
- */
-function onPageNext() {
-  if (first.value + rows.value < totalRecords.value) {
-    first.value = first.value + rows.value
-    loadProducts()
-  }
-}
-
-/**
- * Jump to first page
- */
-function onPageFirst() {
-  if (first.value > 0) {
-    first.value = 0
-    loadProducts()
-  }
-}
-
-/**
- * Jump to last page
- */
-function onPageLast() {
-  const lastStart = Math.max(0, Math.ceil(totalRecords.value / rows.value) - 1) * rows.value
-  if (first.value !== lastStart) {
-    first.value = lastStart
-    loadProducts()
-  }
-}
-
-/**
  * Save rows per page to localStorage
  */
 function saveRowsPreference(value) {
@@ -758,15 +766,6 @@ function saveRowsPreference(value) {
   } catch {
     // ignore
   }
-}
-
-/**
- * Handle rows per page change: reset to first page, save preference, reload
- */
-function onRowsChange() {
-  first.value = 0
-  saveRowsPreference(rows.value)
-  loadProducts()
 }
 
 // Watch for category ID changes
@@ -873,9 +872,9 @@ onMounted(async () => {
                 />
               </div>
 
-              <!-- Select filter -->
+              <!-- Select / boolean filter -->
               <div
-                v-else-if="filter.type === 'select'"
+                v-else-if="filter.type === 'select' || filter.type === 'boolean'"
                 class="filter-item"
                 :style="{ width: filter.width || '9.375rem' }"
               >
@@ -883,7 +882,7 @@ onMounted(async () => {
                 <Select
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
-                  :options="filter.options || []"
+                  :options="selectFilterOptions(filter)"
                   option-label="label"
                   option-value="value"
                   :placeholder="_(filter.placeholder || 'all')"
@@ -893,23 +892,22 @@ onMounted(async () => {
                 />
               </div>
             </template>
-          </div>
 
-          <!-- Filter buttons -->
-          <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              severity="success"
-              @click="applyFilters"
-            />
-            <Button
-              v-if="hasActiveFilters"
-              :label="_('clear_filters')"
-              icon="pi pi-filter-slash"
-              severity="secondary"
-              @click="clearFilters"
-            />
+            <div class="filter-buttons">
+              <Button
+                :label="_('apply_filters')"
+                icon="pi pi-filter"
+                severity="success"
+                @click="applyFilters"
+              />
+              <Button
+                v-if="hasActiveFilters"
+                :label="_('clear_filters')"
+                icon="pi pi-filter-slash"
+                severity="secondary"
+                @click="clearFilters"
+              />
+            </div>
           </div>
         </div>
 
@@ -1192,42 +1190,15 @@ onMounted(async () => {
               </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="p-paginator p-component">
-              <span class="p-paginator-current">
-                {{ _('showing') }} {{ first + 1 }}-{{ Math.min(first + rows, totalRecords) }}
-                {{ _('of') }} {{ totalRecords }}
-              </span>
-              <Button
-                icon="pi pi-angle-double-left"
-                :disabled="first === 0"
-                text
-                :title="_('first_page')"
-                @click="onPageFirst"
-              />
-              <Button icon="pi pi-angle-left" :disabled="first === 0" text @click="onPagePrev" />
-              <Button
-                icon="pi pi-angle-right"
-                :disabled="first + rows >= totalRecords"
-                text
-                @click="onPageNext"
-              />
-              <Button
-                icon="pi pi-angle-double-right"
-                :disabled="first + rows >= totalRecords || totalRecords === 0"
-                text
-                :title="_('last_page')"
-                @click="onPageLast"
-              />
-              <label class="rows-per-page-label">{{ _('rows_per_page') }}</label>
-              <Select
-                v-model="rows"
-                :options="rowsPerPageOptions"
-                class="rows-per-page-select"
-                style="min-width: 5rem"
-                @change="onRowsChange"
-              />
-            </div>
+            <Paginator
+              :first="first"
+              :rows="rows"
+              :total-records="totalRecords"
+              :rows-per-page-options="rowsPerPageOptions"
+              template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+              :current-page-report-template="pageReportTemplate"
+              @page="onPage"
+            />
           </div>
         </div>
       </template>
@@ -1300,27 +1271,32 @@ onMounted(async () => {
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  align-items: flex-end;
+    gap: var(--p-modx-space-panel, 15px);
 }
 
 .filter-item {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
   min-width: 7.5rem;
 }
 
 .filter-item label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin: 0;
   font-weight: 500;
   font-size: 0.875rem;
   color: var(--ms3-text-muted);
+  line-height: 1.3;
 }
 
 .filter-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
+    padding-bottom: 0;
 }
 
 /* Bulk actions toolbar */
@@ -1521,52 +1497,21 @@ onMounted(async () => {
     white-space: nowrap;
     border: 0;
   }
-  
+
   @keyframes ms3-skeleton-shimmer {
     0% {
       background-position: 100% 0;
     }
-  
+
     100% {
       background-position: -100% 0;
     }
   }
-  
+
   @media (prefers-reduced-motion: reduce) {
     .skeleton-block {
       animation: none;
     }
-}
-
-/* Pagination */
-.p-paginator {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0.75rem 1rem;
-  border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt);
-  gap: 0.5rem;
-}
-
-.p-paginator-current {
-  color: var(--ms3-text-muted);
-  font-size: 0.9rem;
-  margin-right: auto;
-}
-
-.rows-per-page-label {
-  font-size: 0.9rem;
-  color: var(--ms3-text-muted);
-  margin-right: 0.5rem;
-  flex: 0 0 auto;
-    white-space: nowrap;
-  }
-  
-  .rows-per-page-select {
-    width: auto !important;
-    min-width: 5rem !important;
-    max-width: 6.5rem !important;
-    flex: 0 0 auto;
 }
 
 /* Product thumbnail */

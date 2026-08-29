@@ -1,6 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputGroup, InputGroupAddon, InputText, Textarea, Toast, useConfirm, useToast } from 'primevue'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputGroup, InputGroupAddon, InputText, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
 import { useGridFilterParams } from '../composables/useGridFilterParams.js'
@@ -435,11 +435,18 @@ function initFilters() {
 
   columns.value.forEach(column => {
     if (column.filterable) {
-      newFilters[column.name] = ''
+      newFilters[column.name] = null
     }
   })
 
   filterValues.value = newFilters
+}
+
+function booleanFilterOptions() {
+  return [
+    { label: _('yes'), value: 1 },
+    { label: _('no'), value: 0 },
+  ]
 }
 
 /**
@@ -675,7 +682,20 @@ onMounted(async () => {
             >
               <div class="field">
                 <label :for="`filter-${column.name}`">{{ column.label }}</label>
+                <Select
+                  v-if="column.type === 'boolean'"
+                  :id="`filter-${column.name}`"
+                  v-model="filterValues[column.name]"
+                  :options="booleanFilterOptions()"
+                  option-label="label"
+                  option-value="value"
+                  :placeholder="_('all')"
+                  :show-clear="true"
+                  class="w-full"
+                  @change="applyFilters"
+                />
                 <InputText
+                  v-else
                   :id="`filter-${column.name}`"
                   v-model="filterValues[column.name]"
                   :placeholder="_('filter_by').replace('{field}', column.label)"
@@ -1124,30 +1144,30 @@ onMounted(async () => {
 .customers-grid {
   height: 100%;
   }
-  
+
   .filters-form {
     padding: 15px 0;
     border-radius: 3px;
   }
-  
+
   .filters-form-fields {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     margin-bottom: 15px;
   }
-  
+
   .filters-form-field {
     flex: 1 1 18.75rem;
     min-width: 15.625rem;
   }
-  
+
   .filters-form-field label {
     display: block;
     margin-bottom: 4px;
     font-weight: 500;
   }
-  
+
   .filters-form-actions {
     display: flex;
     gap: 0.5rem;

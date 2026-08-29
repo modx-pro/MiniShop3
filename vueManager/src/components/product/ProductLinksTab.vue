@@ -38,12 +38,17 @@ const rows = ref([])
 const totalRecords = ref(0)
 const first = ref(0)
 const pageRows = ref(20)
+const rowsPerPageOptions = [10, 20, 50, 100]
 const query = ref('')
 const linkTypes = ref([])
 const createVisible = ref(false)
 const selectedLinkId = ref(null)
 const productSuggestions = ref([])
 const selectedSlave = ref(null)
+
+const pageReportTemplate = computed(
+  () => `${_('showing')} {first} - {last} ${_('of')} {totalRecords}`
+)
 
 const resourceUpdateUrl = computed(() => {
   if (typeof MODx !== 'undefined' && MODx?.config?.manager_url) {
@@ -250,8 +255,11 @@ onMounted(async () => {
       :lazy="true"
       :paginator="true"
       :rows="pageRows"
+      :rows-per-page-options="rowsPerPageOptions"
       :total-records="totalRecords"
       :first="first"
+      paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+      :current-page-report-template="pageReportTemplate"
       data-key="_rowKey"
       size="small"
       striped-rows
@@ -405,15 +413,10 @@ onMounted(async () => {
 }
 
 .vueApp .product-links-tab .edit-form .field,
-.p-dialog .edit-form .field {
+.p-dialog .product-links-tab .edit-form .field {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-}
-
-.vueApp .product-links-tab .edit-form .field + .field,
-.p-dialog .edit-form .field + .field {
-  margin-top: var(--p-modx-space-panel, 15px);
 }
 
 .vueApp .product-links-tab__label,

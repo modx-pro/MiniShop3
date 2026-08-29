@@ -316,12 +316,12 @@ function onContextMenu(event, image) {
   left: 0.25rem;
   z-index: 1;
   padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
+  border-radius: var(--p-border-radius-sm, 3px);
   font-size: 0.625rem;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--p-primary-contrast-color, #fff);
-  background: var(--p-primary-color);
+  color: var(--p-button-success-contrast-color, #fff);
+  background: var(--p-button-success-background, #6cb24a);
 }
 
 .gallery-images :deep(.gallery-item-thumb img) {

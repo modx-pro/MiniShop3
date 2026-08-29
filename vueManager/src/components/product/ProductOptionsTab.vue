@@ -167,8 +167,9 @@ function onOptionChange(payload) {
 }
 
 .vueApp .product-options-tab .vtabs-nav-item.is-active {
-  color: var(--p-tabs-tab-active-color, var(--p-primary-color, #10b981));
-  border-right-color: var(--p-tabs-tab-active-border-color, var(--p-primary-color, #10b981));
+  /* Do not use tabs activeBorderColor — theme keeps it transparent for horizontal strip. */
+  color: var(--p-tabs-tab-active-color, var(--p-primary-color, #234368));
+  border-right-color: var(--p-primary-color, #234368);
   font-weight: 600;
 }
 

@@ -406,7 +406,7 @@ onMounted(() => {
       </Column>
       <Column :header="_('ms3_ft_active') || 'Активна'" style="width: 5rem">
         <template #body="{ data }">
-          <i v-if="data.active" class="pi pi-check" style="color: #10b981" />
+          <i v-if="data.active" class="pi pi-check" style="color: var(--p-primary-color, #234368)" />
           <i v-else class="pi pi-times" style="color: #9ca3af" />
         </template>
       </Column>

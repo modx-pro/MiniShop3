@@ -727,11 +727,98 @@
   height: auto;
 }
 
-/* PageBuilder forces width:100% on all .vueApp .p-select — keep paginator RPP compact. */
+/* PageBuilder forces width:100% on all .vueApp .p-select — keep paginator RPP compact.
+ * Height is set with the Modx paginator block below (match nav buttons). */
 .vueApp[id^='ms3-'] .p-paginator .p-select,
 .vueApp[id^='ms3-'] .rows-per-page-select {
   width: auto !important;
-  min-width: 5rem !important;
+  min-width: 4.5rem !important;
   max-width: 6.5rem !important;
   flex: 0 0 auto;
+}
+
+/*
+ * Active tab label: splash color like Ext .x-tab-strip-text.
+ * No top accent bar — top-level MODX tabs are white fill only.
+ * Canonical token: VueTools ModxManagerTheme tabs.activeColor.
+ */
+.vueApp[id^='ms3-'] .p-tab-active {
+  color: var(--p-primary-color, #234368);
+}
+
+/* Kill accent strip if an older ModxManagerTheme still injects ::before. */
+.vueApp[id^='ms3-'] .p-tab-active::before {
+  content: none;
+  display: none;
+}
+
+/*
+ * Paginator: re-assert ModxManagerTheme tokens inside MS3 apps.
+ * Product/update hosts plugin Vue apps that still install Aura and overwrite
+ * :root --p-paginator-* (circles 2.5rem / 50%). Scope wins for our trees.
+ */
+.vueApp[id^='ms3-'] {
+  --p-paginator-padding: 0.375rem 0.5rem;
+  --p-paginator-gap: 0.375rem;
+  --p-paginator-nav-button-width: 1.75rem;
+  --p-paginator-nav-button-height: 1.75rem;
+  --p-paginator-nav-button-border-radius: var(--p-border-radius-sm, 3px);
+  --p-paginator-nav-button-background: var(--p-content-background, #fff);
+  --p-paginator-nav-button-selected-background: var(--p-content-background, #fff);
+  --p-paginator-nav-button-selected-color: var(--p-primary-color, #234368);
+  --p-paginator-jump-to-page-input-max-width: 2.25rem;
+}
+
+.vueApp[id^='ms3-'] .p-paginator {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 1px solid var(--p-content-border-color, #e4e4e4);
+}
+
+.vueApp[id^='ms3-'] .p-paginator-content {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--p-paginator-gap);
+}
+
+.vueApp[id^='ms3-'] .p-paginator-first,
+.vueApp[id^='ms3-'] .p-paginator-prev,
+.vueApp[id^='ms3-'] .p-paginator-next,
+.vueApp[id^='ms3-'] .p-paginator-last,
+.vueApp[id^='ms3-'] .p-paginator-page {
+  box-shadow: 0 0 0 1px var(--p-content-border-color, #e4e4e4);
+  background: var(--p-paginator-nav-button-background, #fff);
+}
+
+.vueApp[id^='ms3-'] .p-paginator-page-selected {
+  background: var(--p-content-background, #fff) !important;
+  color: var(--p-primary-color, #234368) !important;
+  box-shadow: 0 0 0 1px var(--p-primary-color, #234368);
+}
+
+/* Match RPP Select height to nav buttons (override global modx.control 36px). */
+.vueApp[id^='ms3-'] .p-paginator .p-select,
+.vueApp[id^='ms3-'] .p-paginator .rows-per-page-select {
+  width: auto !important;
+  min-width: 4.5rem !important;
+  max-width: 6.5rem !important;
+  height: var(--p-paginator-nav-button-height, 1.75rem) !important;
+  min-height: var(--p-paginator-nav-button-height, 1.75rem) !important;
+  flex: 0 0 auto;
+  box-sizing: border-box !important;
+}
+
+.vueApp[id^='ms3-'] .p-paginator .p-select .p-select-label {
+  padding-block: 0;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.vueApp[id^='ms3-'] .p-paginator-current {
+  margin-inline-start: auto;
+  font-size: var(--p-modx-font-size-base, 0.8125rem);
 }
