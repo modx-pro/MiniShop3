@@ -1,5 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
+<<<<<<< HEAD
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
@@ -10,6 +11,9 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
+=======
+import { Button, Card, Checkbox, ColorPicker, ConfirmDialog, Dialog, InputText, Textarea, Toast, useConfirm, useToast } from 'primevue'
+>>>>>>> 253d099d (fix(vue): align manager grids and forms with Modx theme)
 import { onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -272,7 +276,6 @@ onMounted(() => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -280,7 +283,6 @@ onMounted(() => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -453,7 +455,13 @@ onMounted(() => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveStatus" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveStatus"
+        />
       </template>
     </Dialog>
   </div>
@@ -539,8 +547,12 @@ onMounted(() => {
 }
 
 .ms3-status-form .checkbox-item label {
+  margin: 0;
+  line-height: 1;
   cursor: pointer;
-  font-weight: normal;
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
 }
 
 .ms3-status-form .help-texts {
@@ -568,7 +580,7 @@ onMounted(() => {
 
 <style scoped>
 .statuses-grid {
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .grid-header {

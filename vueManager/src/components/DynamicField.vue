@@ -245,15 +245,7 @@
 </template>
 
 <script setup>
-import Checkbox from 'primevue/checkbox'
-import ColorPicker from 'primevue/colorpicker'
-import DatePicker from 'primevue/datepicker'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import ToggleSwitch from 'primevue/toggleswitch'
+import { Checkbox, ColorPicker, DatePicker, InputNumber, InputText, Message, Select, Textarea, ToggleSwitch } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import { getKeyValueConfigFromField, serializeKeyValueForPost } from '../utils/keyValueField.js'

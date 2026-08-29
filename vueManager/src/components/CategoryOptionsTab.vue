@@ -1,17 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
+import { Button, Checkbox, Column, ConfirmDialog, DataTable, Dialog, IconField, InputIcon, InputText, Select, Toast, useConfirm } from 'primevue'
 import { onMounted, ref, watch } from 'vue'
 
 import { useGroupedToast, useUiGroup } from '../composables/uiGroup.js'
@@ -236,7 +225,15 @@ function openCopyDialog() {
 }
 
 async function performCopy() {
-  if (!copyFromCategoryId.value) return
+  if (!copyFromCategoryId.value) {
+    toast.add({
+      severity: 'warn',
+      summary: _('error') || 'Error',
+      detail: _('ms3_copy_from_category') || 'Исходная категория',
+      life: 3000,
+    })
+    return
+  }
   copying.value = true
   try {
     const r = await request.post(`/api/mgr/categories/${props.categoryId}/options/duplicate`, {
@@ -307,7 +304,7 @@ onMounted(() => {
       <Button
         icon="pi pi-plus"
         :label="_('ms3_btn_addoption') || 'Добавить опцию'"
-        severity="primary"
+        severity="success"
         @click="openAddDialog"
       />
       <Button
@@ -331,35 +328,30 @@ onMounted(() => {
           icon="pi pi-check"
           :label="`${_('ms3_ft_selected_activate') || 'Включить'} (${selectedRows.length})`"
           severity="success"
-          size="small"
           @click="performBulkAction('activate')"
         />
         <Button
           icon="pi pi-ban"
           :label="`${_('ms3_ft_selected_deactivate') || 'Выключить'} (${selectedRows.length})`"
           severity="secondary"
-          size="small"
           @click="performBulkAction('deactivate')"
         />
         <Button
           icon="pi pi-asterisk"
           :label="`${_('ms3_ft_selected_require') || 'Обязательная'} (${selectedRows.length})`"
           severity="warn"
-          size="small"
           @click="performBulkAction('require')"
         />
         <Button
           icon="pi pi-times"
           :label="`${_('ms3_ft_selected_unrequire') || 'Необязательная'} (${selectedRows.length})`"
           severity="secondary"
-          size="small"
           @click="performBulkAction('unrequire')"
         />
         <Button
           icon="pi pi-trash"
           :label="`${_('delete') || 'Удалить'} (${selectedRows.length})`"
           severity="danger"
-          size="small"
           @click="confirmBulkRemove"
         />
       </template>
@@ -431,7 +423,6 @@ onMounted(() => {
             severity="danger"
             text
             rounded
-            size="small"
             :title="_('delete') || 'Удалить'"
             @click="confirmSingleRemove(data)"
           />
@@ -444,72 +435,77 @@ onMounted(() => {
       </template>
     </DataTable>
 
-    <!-- Add option dialog -->
+    <!-- Add option dialog — edit-form/field use .p-dialog theme rhythm (15px / 4px) -->
     <Dialog
       v-model:visible="addDialogVisible"
       :header="_('ms3_btn_addoption') || 'Добавить опцию'"
       modal
+      append-to="self"
       :style="{ width: '32rem' }"
       :closable="!addSaving"
     >
-      <div class="form-row">
-        <label for="add-opt">{{ _('ms3_ft_name') || 'Опция' }} <span class="req">*</span></label>
-        <Select
-          id="add-opt"
-          v-model="addOptionId"
-          :options="availableOptions"
-          option-label="caption"
-          option-value="id"
-          :placeholder="_('select') || 'Выберите'"
-          :filter="true"
-          class="w-full"
-        >
-          <template #option="{ option }">
-            <div>
-              <b>{{ option.caption || option.key }}</b>
-              <span style="opacity: 0.6">— {{ option.key }}</span>
-            </div>
-            <small style="opacity: 0.6">{{ typeCaption(option.type) }}</small>
-          </template>
-        </Select>
-      </div>
-      <div class="form-row">
-        <label for="add-value">{{ _('ms3_default_value') || 'Значение по умолчанию' }}</label>
-        <InputText id="add-value" v-model="addValue" class="w-full" />
-      </div>
-      <div class="form-row">
-        <label for="add-caption-override">
-          {{ _('ms3_category_option_caption_override') || 'Название (для категории)' }}
-        </label>
-        <InputText
-          id="add-caption-override"
-          v-model="addCaptionOverride"
-          class="w-full"
-          :placeholder="
-            _('ms3_category_option_caption_override_desc') || 'Пусто — берётся глобальное'
-          "
-        />
-      </div>
-      <div class="form-row">
-        <label for="add-description-override">
-          {{ _('ms3_category_option_description_override') || 'Описание (для категории)' }}
-        </label>
-        <InputText
-          id="add-description-override"
-          v-model="addDescriptionOverride"
-          class="w-full"
-          :placeholder="
-            _('ms3_category_option_description_override_desc') || 'Пусто — берётся глобальное'
-          "
-        />
-      </div>
-      <div class="form-row form-row-inline">
-        <Checkbox v-model="addActive" input-id="add-active" binary />
-        <label for="add-active">{{ _('ms3_ft_active') || 'Активна' }}</label>
-      </div>
-      <div class="form-row form-row-inline">
-        <Checkbox v-model="addRequired" input-id="add-required" binary />
-        <label for="add-required">{{ _('ms3_ft_required') || 'Обязательная' }}</label>
+      <div class="edit-form">
+        <div class="field">
+          <label for="add-opt"
+            >{{ _('ms3_ft_name') || 'Опция' }} <span class="req">*</span></label
+          >
+          <Select
+            id="add-opt"
+            v-model="addOptionId"
+            :options="availableOptions"
+            option-label="caption"
+            option-value="id"
+            :placeholder="_('select') || 'Выберите'"
+            :filter="true"
+            class="w-full"
+          >
+            <template #option="{ option }">
+              <div>
+                <b>{{ option.caption || option.key }}</b>
+                <span style="opacity: 0.6">— {{ option.key }}</span>
+              </div>
+              <small style="opacity: 0.6">{{ typeCaption(option.type) }}</small>
+            </template>
+          </Select>
+        </div>
+        <div class="field">
+          <label for="add-value">{{ _('ms3_default_value') || 'Значение по умолчанию' }}</label>
+          <InputText id="add-value" v-model="addValue" class="w-full" />
+        </div>
+        <div class="field">
+          <label for="add-caption-override">
+            {{ _('ms3_category_option_caption_override') || 'Название (для категории)' }}
+          </label>
+          <InputText
+            id="add-caption-override"
+            v-model="addCaptionOverride"
+            class="w-full"
+            :placeholder="
+              _('ms3_category_option_caption_override_desc') || 'Пусто — берётся глобальное'
+            "
+          />
+        </div>
+        <div class="field">
+          <label for="add-description-override">
+            {{ _('ms3_category_option_description_override') || 'Описание (для категории)' }}
+          </label>
+          <InputText
+            id="add-description-override"
+            v-model="addDescriptionOverride"
+            class="w-full"
+            :placeholder="
+              _('ms3_category_option_description_override_desc') || 'Пусто — берётся глобальное'
+            "
+          />
+        </div>
+        <div class="field field-inline">
+          <Checkbox v-model="addActive" input-id="add-active" binary />
+          <label for="add-active">{{ _('ms3_ft_active') || 'Активна' }}</label>
+        </div>
+        <div class="field field-inline">
+          <Checkbox v-model="addRequired" input-id="add-required" binary />
+          <label for="add-required">{{ _('ms3_ft_required') || 'Обязательная' }}</label>
+        </div>
       </div>
 
       <template #footer>
@@ -521,6 +517,7 @@ onMounted(() => {
         />
         <Button
           :label="_('save') || 'Сохранить'"
+          severity="success"
           :loading="addSaving"
           :disabled="!addOptionId"
           @click="addOption"
@@ -533,31 +530,34 @@ onMounted(() => {
       v-model:visible="copyDialogVisible"
       :header="_('ms3_btn_copy') || 'Копировать опции из категории'"
       modal
+      append-to="self"
       :style="{ width: '32rem' }"
       :closable="!copying"
     >
-      <div class="form-row">
-        <label for="copy-from"
-          >{{ _('ms3_copy_from_category') || 'Исходная категория' }}
-          <span class="req">*</span></label
-        >
-        <Select
-          id="copy-from"
-          v-model="copyFromCategoryId"
-          :options="availableCategories"
-          option-label="label"
-          option-value="id"
-          :placeholder="_('select') || 'Выберите'"
-          :filter="true"
-          class="w-full"
-        />
+      <div class="edit-form">
+        <div class="field">
+          <label for="copy-from"
+            >{{ _('ms3_copy_from_category') || 'Исходная категория' }}
+            <span class="req">*</span></label
+          >
+          <Select
+            id="copy-from"
+            v-model="copyFromCategoryId"
+            :options="availableCategories"
+            option-label="label"
+            option-value="id"
+            :placeholder="_('select') || 'Выберите'"
+            :filter="true"
+            class="w-full"
+          />
+        </div>
+        <small class="hint">
+          {{
+            _('ms3_copy_category_hint') ||
+            'Опции, которые уже есть в текущей категории, будут пропущены. Значения опций у товаров будут обновлены автоматически.'
+          }}
+        </small>
       </div>
-      <small class="hint">
-        {{
-          _('ms3_copy_category_hint') ||
-          'Опции, которые уже есть в текущей категории, будут пропущены. Значения опций у товаров будут обновлены автоматически.'
-        }}
-      </small>
 
       <template #footer>
         <Button
@@ -568,8 +568,8 @@ onMounted(() => {
         />
         <Button
           :label="_('ms3_btn_copy') || 'Копировать'"
+          severity="success"
           :loading="copying"
-          :disabled="!copyFromCategoryId"
           @click="performCopy"
         />
       </template>
@@ -583,11 +583,20 @@ onMounted(() => {
   width: 100%;
 }
 
+/* Ext h3 sits above #ms3-vue-category-options; keep title→toolbar on theme 8px step */
+.ms3-category-options-heading {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--p-text-color, inherit);
+}
+
 .vueApp .category-options-tab .toolbar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--p-modx-space-panel, 0.9375rem);
   flex-wrap: wrap;
 }
 
@@ -601,32 +610,29 @@ onMounted(() => {
   color: var(--p-text-muted-color, #9ca3af);
 }
 
-.vueApp .category-options-tab .form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.85rem;
-}
-
-.vueApp .category-options-tab .form-row-inline {
+/* Dialog teleports; keep checkbox rows + required mark on theme form rhythm */
+.p-dialog .edit-form .field.field-inline {
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
 }
 
-.vueApp .category-options-tab .form-row label {
-  font-size: 0.85rem;
-  font-weight: 600;
+.p-dialog .edit-form .field.field-inline label {
+  margin: 0;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
 }
 
-.vueApp .category-options-tab .form-row .req {
+.p-dialog .edit-form .req {
   color: var(--p-red-500, #ef4444);
 }
 
-.vueApp .category-options-tab .hint {
+.p-dialog .edit-form .hint {
   color: var(--p-text-muted-color, #9ca3af);
   font-size: 0.85rem;
   display: block;
-  margin-top: -0.5rem;
+  margin-top: 0;
+  line-height: 1.35;
 }
 </style>

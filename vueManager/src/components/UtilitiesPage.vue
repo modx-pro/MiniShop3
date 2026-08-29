@@ -1,11 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
+import { Button, Tab, TabList, TabPanel, TabPanels, Tabs } from 'primevue'
 import { ref, watch } from 'vue'
 
 import { getMs3Config } from '../utils/modx.js'
@@ -108,13 +103,12 @@ function goTo(path) {
       <div v-if="canListSettings" class="ms3-utilities-page__actions">
         <Button
           :label="_('ms3_orders')"
-          class="p-button-sm"
-          severity="contrast"
+          severity="secondary"
           @click="goTo('?a=mgr/orders&namespace=minishop3')"
         />
         <Button
           :label="_('ms3_settings')"
-          class="p-button-sm p-button-secondary"
+          severity="secondary"
           @click="goTo('?a=mgr/settings&namespace=minishop3')"
         />
       </div>
@@ -136,8 +130,14 @@ function goTo(path) {
 </template>
 
 <style scoped>
+/*
+ * Page chrome inset + Modx tabpanel padding (15px / 0.9375rem all sides).
+ * Do not zero horizontal/bottom on .p-tabpanels — content must not sit flush
+ * against the white panel edges (theme default tabs.tabpanel.padding).
+ */
 .ms3-utilities-page {
-  padding: 1.25rem;
+  padding: var(--p-modx-space-panel, 15px);
+    box-sizing: border-box;
 }
 
 .ms3-utilities-page__header {
@@ -146,7 +146,8 @@ function goTo(path) {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  padding: 0;
+    margin-bottom: 0.75rem;
 }
 
 .ms3-utilities-page__title {
@@ -160,5 +161,22 @@ function goTo(path) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+.ms3-utilities-page__tabs :deep(.p-tabpanels) {
+  padding: var(--p-tabs-tabpanel-padding, var(--p-modx-space-panel, 15px));
+}
+
+.ms3-utilities-page__tabs :deep(.p-tabpanel) {
+  padding: 0;
+}
+
+/* Shared vertical rhythm for every utilities tab body. */
+.ms3-utilities-page__tabs :deep(.tab-description) {
+  margin: 0 0 var(--p-modx-space-panel, 15px);
+}
+
+.ms3-utilities-page__tabs :deep(.ms3-config-panel + .ms3-config-panel),
+.ms3-utilities-page__tabs :deep(.p-card + .p-card) {
+  margin-top: 0;
 }
 </style>

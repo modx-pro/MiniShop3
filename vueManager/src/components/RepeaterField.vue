@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
+import { Button, InputNumber, InputText } from 'primevue'
 import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -172,9 +170,7 @@ function onDragEnd() {
               icon="pi pi-times"
               severity="danger"
               text
-              rounded
-              size="small"
-              class="ms3-repeater-actions-col"
+              rounded class="ms3-repeater-actions-col"
               :disabled="disabled || !canRemoveRow"
               @click="removeRow(index)"
             />
@@ -185,9 +181,7 @@ function onDragEnd() {
       <Button
         icon="pi pi-plus"
         :label="_('ms3_vue_repeater_add_row')"
-        severity="secondary"
-        size="small"
-        class="ms3-repeater-add"
+        severity="secondary" class="ms3-repeater-add"
         :disabled="disabled || !canAddRow"
         @click="addRow"
       />

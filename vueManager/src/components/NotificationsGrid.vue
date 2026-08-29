@@ -1,19 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputNumber, InputText, Select, Tag, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import { useCrudDialog } from '../composables/useCrudDialog.js'
@@ -252,63 +239,76 @@ onMounted(async () => {
       <template #content>
         <!-- Toolbar -->
         <div class="toolbar mb-3">
-          <Button :label="_('ms3_notification_add')" icon="pi pi-plus" @click="openCreate" />
+          <Button
+            :label="_('ms3_notification_add')"
+            icon="pi pi-plus"
+            severity="success"
+            @click="openCreate"
+          />
         </div>
 
         <!-- Filters -->
-        <div class="filters-form mb-3 p-3 surface-ground" style="border-radius: 0.375rem">
-          <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end">
-            <div style="flex: 1; min-width: 12.5rem">
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
-                _('ms3_notification_status')
-              }}</label>
-              <Select
-                v-model="filterStatusId"
-                :options="statusOptions"
-                option-label="name"
-                option-value="id"
-                :placeholder="_('all')"
-                style="width: 100%"
-                show-clear
-              />
+        <div class="filters-form mb-4 surface-ground">
+          <div class="filters-form-fields">
+            <div class="filters-form-field">
+              <div class="field">
+                <label for="filter-status">{{ _('ms3_notification_status') }}</label>
+                <Select
+                  id="filter-status"
+                  v-model="filterStatusId"
+                  :options="statusOptions"
+                  option-label="name"
+                  option-value="id"
+                  :placeholder="_('all')"
+                  class="w-full"
+                  show-clear
+                />
+              </div>
             </div>
-            <div style="flex: 1; min-width: 9.375rem">
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
-                _('ms3_notification_channel')
-              }}</label>
-              <Select
-                v-model="filterChannel"
-                :options="references.channels"
-                option-label="name"
-                option-value="id"
-                :placeholder="_('all')"
-                style="width: 100%"
-                show-clear
-              />
+            <div class="filters-form-field">
+              <div class="field">
+                <label for="filter-channel">{{ _('ms3_notification_channel') }}</label>
+                <Select
+                  id="filter-channel"
+                  v-model="filterChannel"
+                  :options="references.channels"
+                  option-label="name"
+                  option-value="id"
+                  :placeholder="_('all')"
+                  class="w-full"
+                  show-clear
+                />
+              </div>
             </div>
-            <div style="flex: 1; min-width: 9.375rem">
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500">{{
-                _('ms3_notification_recipient')
-              }}</label>
-              <Select
-                v-model="filterRecipientType"
-                :options="references.recipient_types"
-                option-label="name"
-                option-value="id"
-                :placeholder="_('all')"
-                style="width: 100%"
-                show-clear
-              />
+            <div class="filters-form-field">
+              <div class="field">
+                <label for="filter-recipient">{{ _('ms3_notification_recipient') }}</label>
+                <Select
+                  id="filter-recipient"
+                  v-model="filterRecipientType"
+                  :options="references.recipient_types"
+                  option-label="name"
+                  option-value="id"
+                  :placeholder="_('all')"
+                  class="w-full"
+                  show-clear
+                />
+              </div>
             </div>
-            <div style="display: flex; gap: 0.5rem">
-              <Button :label="_('apply')" icon="pi pi-filter" @click="resetPageAndLoad" />
-              <Button
-                :label="_('clear')"
-                icon="pi pi-filter-slash"
-                severity="secondary"
-                @click="clearFilters"
-              />
-            </div>
+          </div>
+          <div class="filters-form-actions">
+            <Button
+              :label="_('apply')"
+              icon="pi pi-filter"
+              severity="success"
+              @click="resetPageAndLoad"
+            />
+            <Button
+              :label="_('clear')"
+              icon="pi pi-filter-slash"
+              severity="secondary"
+              @click="clearFilters"
+            />
           </div>
         </div>
 
@@ -321,7 +321,13 @@ onMounted(async () => {
         >
           <Column field="enabled" :header="_('ms3_notification_enabled')" style="width: 5rem">
             <template #body="{ data }">
-              <Checkbox :model-value="data.enabled" :binary="true" @click="toggleEnabled(data)" />
+              <div class="enabled-cell">
+                <Checkbox
+                  :model-value="data.enabled"
+                  :binary="true"
+                  @click="toggleEnabled(data)"
+                />
+              </div>
             </template>
           </Column>
 
@@ -517,8 +523,19 @@ onMounted(async () => {
       </div>
 
       <template #footer>
-        <Button :label="_('cancel')" icon="pi pi-times" class="p-button-text" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveNotification" />
+        <Button
+          :label="_('cancel')"
+          icon="pi pi-times"
+          severity="secondary"
+          @click="close"
+        />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveNotification"
+        />
       </template>
     </Dialog>
   </div>
@@ -526,13 +543,40 @@ onMounted(async () => {
 
 <style scoped>
 .notifications-grid {
-  padding: 1.25rem;
+  height: 100%;
 }
 
 .toolbar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 1rem;
+}
+
+.filters-form {
+  padding: 15px 0;
+  border-radius: 3px;
+}
+
+.filters-form-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.filters-form-field {
+  flex: 1 1 12.5rem;
+  min-width: 9.375rem;
+}
+
+.filters-form-field label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.filters-form-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .notification-form {
@@ -574,11 +618,24 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .checkbox-col label {
-  margin-bottom: 0;
+  margin: 0;
+    line-height: 1;
   cursor: pointer;
+  font-size: 0.875rem;
+    font-weight: 500;
+    user-select: none;
+    white-space: nowrap;
+  }
+  
+  .enabled-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.25rem;
 }
 
 .w-full {

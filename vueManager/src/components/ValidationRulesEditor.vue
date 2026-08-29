@@ -1,12 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Chip from 'primevue/chip'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import ToggleSwitch from 'primevue/toggleswitch'
+import { Button, Chip, Dialog, InputText, Select, Textarea, ToggleSwitch } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
@@ -593,7 +587,7 @@ const editingFieldName = computed(() => {
       <div class="json-actions">
         <Button
           :label="_('apply')"
-          size="small"
+          severity="success"
           :disabled="!!jsonError"
           @click="applyJsonChanges"
         />
@@ -611,7 +605,6 @@ const editingFieldName = computed(() => {
             severity="danger"
             text
             rounded
-            size="small"
             @click="removeField(fieldIndex)"
           />
         </div>
@@ -627,7 +620,6 @@ const editingFieldName = computed(() => {
           <Button
             v-tooltip="_('ms3_add_rule')"
             icon="pi pi-plus"
-            size="small"
             severity="secondary"
             text
             rounded
@@ -640,9 +632,7 @@ const editingFieldName = computed(() => {
       <Button
         icon="pi pi-plus"
         :label="_('ms3_add_field')"
-        size="small"
-        severity="secondary"
-        outlined
+        severity="success"
         class="add-field-btn"
         :disabled="availableFieldsForAdd.length === 0"
         @click="openAddFieldDialog"
@@ -676,7 +666,12 @@ const editingFieldName = computed(() => {
 
       <template #footer>
         <Button :label="_('cancel')" severity="secondary" @click="showAddFieldDialog = false" />
-        <Button :label="_('add')" :disabled="!selectedField" @click="addField" />
+        <Button
+          :label="_('add')"
+          severity="success"
+          :disabled="!selectedField"
+          @click="addField"
+        />
       </template>
     </Dialog>
 
@@ -726,6 +721,7 @@ const editingFieldName = computed(() => {
         <Button :label="_('cancel')" severity="secondary" @click="closeRuleDialog" />
         <Button
           :label="_('add')"
+          severity="success"
           :disabled="!selectedRule || (selectedRuleDef?.hasParam && !ruleParam.trim())"
           @click="addRule"
         />

@@ -1,11 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Fieldset from 'primevue/fieldset'
-import InputNumber from 'primevue/inputnumber'
-import Message from 'primevue/message'
-import ProgressBar from 'primevue/progressbar'
+import { Button, Card, Fieldset, InputNumber, Message, ProgressBar } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../request.js'
@@ -161,6 +156,7 @@ onMounted(() => {
         <InputNumber
           v-model="limit"
           input-id="limit-input"
+          class="limit-input"
           :min="1"
           :max="100"
           :disabled="isRunning"
@@ -182,15 +178,14 @@ onMounted(() => {
         icon="pi pi-refresh"
         :loading="isRunning"
         :disabled="!canStart"
-        severity="primary"
+        severity="success"
         @click="startRegeneration"
       />
       <Button
         v-if="isCompleted"
         :label="_('ms3_utilities_gallery_reset', 'Reset')"
         icon="pi pi-times"
-        severity="secondary"
-        class="reset-btn"
+        severity="secondary" class="reset-btn"
         @click="resetState"
       />
     </div>
@@ -227,12 +222,13 @@ onMounted(() => {
 
 <style scoped>
 .utilities-gallery {
-  padding: 1.25rem;
-  max-width: 50rem;
+  padding: 0;
+  max-width: none;
+  width: 100%;
 }
 
 .info-card {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .info-content {
@@ -244,7 +240,7 @@ onMounted(() => {
 }
 
 .params-fieldset {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .thumbnails-info {
@@ -262,9 +258,9 @@ onMounted(() => {
 
 .settings-section {
   background: var(--ms3-bg-muted);
-  padding: 0.9375rem 1.25rem;
-  border-radius: 0.375rem;
-  margin-bottom: 1.25rem;
+  padding: var(--p-modx-space-panel, 15px);
+  border-radius: 0.25rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .setting-row {
@@ -278,10 +274,22 @@ onMounted(() => {
   min-width: 9.375rem;
 }
 
+/* Compact stepper for 1–100; ± buttons are 1.875rem each. */
+.limit-input {
+  width: 7.5rem;
+  flex: 0 0 auto;
+}
+
+.limit-input :deep(.p-inputnumber-input) {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
 .action-section {
   display: flex;
-  gap: 0.625rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .reset-btn {
@@ -291,9 +299,9 @@ onMounted(() => {
 .progress-section {
   background: var(--ms3-bg-surface);
   border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
-  border-radius: 0.375rem;
-  padding: 0.9375rem;
-  margin-bottom: 1.25rem;
+  border-radius: 0.25rem;
+  padding: var(--p-modx-space-panel, 15px);
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .progress-labels {

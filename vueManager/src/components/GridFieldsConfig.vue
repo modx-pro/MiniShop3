@@ -1,16 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, ConfirmDialog, Dialog, InputText, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -996,7 +986,7 @@ onMounted(() => {
 
     <p class="tab-description">{{ _('ms3_utilities_grid_fields_description') }}</p>
 
-    <div class="flex justify-content-between align-items-center mb-3">
+    <div class="ms3-utilities-toolbar">
       <div class="flex align-items-center gap-2">
         <label for="grid-select">{{ _('select_grid') }}</label>
         <Select
@@ -1009,7 +999,12 @@ onMounted(() => {
           @change="onGridChange"
         />
       </div>
-      <Button :label="_('add_field')" icon="pi pi-plus" @click="openAddDialog" />
+      <Button
+        :label="_('add_field')"
+        icon="pi pi-plus"
+        severity="success"
+        @click="openAddDialog"
+      />
     </div>
 
     <p v-if="isCategoryProductsGrid" class="inline-edit-hint">
@@ -1035,7 +1030,7 @@ onMounted(() => {
                     {{ _('field_editable') }}
                   </th>
                   <th style="width: 7.5rem">{{ _('width') }}</th>
-                  <th style="width: 6.25rem">{{ _('actions') }}</th>
+                  <th style="width: 7.5rem">{{ _('actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -1075,24 +1070,23 @@ onMounted(() => {
                     <td>
                       <InputText v-model="field.width" placeholder="9.375rem" class="w-full" />
                     </td>
-                    <td>
-                      <Button
-                        icon="pi pi-pencil"
-                        size="small"
-                        text
-                        :title="_('edit')"
-                        class="mr-2"
-                        @click="openEditDialog(field, index)"
-                      />
-                      <Button
-                        icon="pi pi-trash"
-                        size="small"
-                        severity="danger"
-                        text
-                        :title="_('delete')"
-                        :disabled="field.isSystem"
-                        @click="deleteField(field, index)"
-                      />
+                    <td class="row-actions-cell">
+                      <div class="row-actions">
+                        <Button
+                          icon="pi pi-pencil"
+                          text
+                          :title="_('edit')"
+                          @click="openEditDialog(field, index)"
+                        />
+                        <Button
+                          icon="pi pi-trash"
+                          severity="danger"
+                          text
+                          :title="_('delete')"
+                          :disabled="field.isSystem"
+                          @click="deleteField(field, index)"
+                        />
+                      </div>
                     </td>
                   </tr>
                 </template>
@@ -1108,7 +1102,13 @@ onMounted(() => {
 
         <!-- Save button -->
         <div class="flex justify-content-end">
-          <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveConfig" />
+          <Button
+            :label="_('save')"
+            icon="pi pi-check"
+            severity="success"
+            :loading="saving"
+            @click="saveConfig"
+          />
         </div>
       </template>
     </Card>
@@ -1408,12 +1408,12 @@ onMounted(() => {
           :label="_('cancel')"
           icon="pi pi-times"
           severity="secondary"
-          text
           @click="closeAddDialog"
         />
         <Button
           :label="_('create')"
           icon="pi pi-check"
+          severity="success"
           :disabled="!newField.field_name"
           @click="addField"
         />
@@ -1722,12 +1722,12 @@ onMounted(() => {
           :label="_('cancel')"
           icon="pi pi-times"
           severity="secondary"
-          text
           @click="closeEditDialog"
         />
         <Button
           :label="_('save')"
           icon="pi pi-check"
+          severity="success"
           :disabled="!editingField || !editingField.field_name"
           @click="saveEdit"
         />
@@ -1738,13 +1738,36 @@ onMounted(() => {
 
 <style scoped>
 .grid-fields-config {
-  padding: 1.25rem;
+  padding: 0;
+  width: 100%;
+}
+
+.ms3-utilities-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .drag-handle-cell {
   text-align: center;
   vertical-align: middle;
   padding: 0.5rem;
+}
+
+.row-actions-cell {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.row-actions {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .drag-handle {
@@ -1817,10 +1840,10 @@ label.opacity-50 {
 }
 
 .inline-edit-hint {
-  margin: -0.5rem 0 1rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--ms3-bg-muted, #f0f4f8);
-  border-radius: 0.375rem;
+  margin: 0 0 var(--p-modx-space-panel, 15px);
+  padding: 0;
+  background: none;
+  border-radius: 0;
   font-size: 0.875rem;
   color: var(--ms3-text-muted, #64748b);
   max-width: 100%;

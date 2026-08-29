@@ -129,6 +129,8 @@ export function useOrderSave(deps) {
       icon: 'pi pi-check-circle',
       acceptLabel: _('ms3_order_finalize_btn'),
       rejectLabel: _('cancel'),
+      acceptProps: { severity: 'success' },
+      rejectProps: { severity: 'secondary' },
       accept: () => {
         finalizeOrder()
       },

@@ -1,5 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
+<<<<<<< HEAD
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Column from 'primevue/column'
@@ -12,6 +13,9 @@ import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
 import { useToast } from 'primevue/usetoast'
+=======
+import { Button, Card, Column, ConfirmDialog, DataTable, Dialog, InputText, Paginator, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
+>>>>>>> 253d099d (fix(vue): align manager grids and forms with Modx theme)
 import { computed, onMounted, ref } from 'vue'
 
 import { useCrudDialog } from '../composables/useCrudDialog.js'
@@ -234,7 +238,6 @@ onMounted(() => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -242,7 +245,6 @@ onMounted(() => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -355,7 +357,13 @@ onMounted(() => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveLink" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveLink"
+        />
       </template>
     </Dialog>
   </div>
@@ -366,32 +374,34 @@ onMounted(() => {
 .ms3-link-form {
   display: flex;
   flex-direction: column;
+  gap: 15px;
 }
 
 .ms3-link-form .form-row {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 4px;
+  margin-bottom: 0;
 }
 
 .ms3-link-form .form-row label {
   font-weight: 500;
+  font-size: 0.875rem;
   color: var(--ms3-text-primary);
 }
 
-.ms3-link-form .type-description {
-  color: var(--ms3-text-muted);
-  font-style: italic;
-  padding: 0.5rem;
-  background: var(--ms3-bg-gray-100);
-  border-radius: 0.25rem;
-  margin-top: 0.25rem;
-}
-
+/* Field help like MODX resource form hints — no boxed callout */
+.ms3-link-form .type-description,
 .ms3-link-form .type-hint {
-  color: var(--ms3-text-muted-light);
-  font-size: 0.8rem;
+  display: block;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  font-style: normal;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ms3-text-muted);
 }
 
 .ms3-link-form .w-full {
@@ -401,7 +411,7 @@ onMounted(() => {
 
 <style scoped>
 .links-grid {
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .grid-header {

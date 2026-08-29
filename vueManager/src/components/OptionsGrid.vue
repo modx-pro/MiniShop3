@@ -1,16 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Column, ConfirmDialog, DataTable, Dialog, InputText, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
@@ -361,7 +351,7 @@ onBeforeUnmount(() => {
           <Button
             icon="pi pi-plus"
             :label="_('ms3_option_create') || 'Создать опцию'"
-            severity="primary"
+            severity="success"
             @click="openCreateDialog"
           />
 
@@ -422,7 +412,6 @@ onBeforeUnmount(() => {
                 severity="secondary"
                 text
                 rounded
-                size="small"
                 :title="_('edit') || 'Редактировать'"
                 @click="openEditDialog(data)"
               />
@@ -431,7 +420,6 @@ onBeforeUnmount(() => {
                 severity="danger"
                 text
                 rounded
-                size="small"
                 :title="_('delete') || 'Удалить'"
                 @click="confirmDelete(data)"
               />
@@ -560,7 +548,12 @@ onBeforeUnmount(() => {
           :disabled="dialogSaving"
           @click="dialogVisible = false"
         />
-        <Button :label="_('save') || 'Сохранить'" :loading="dialogSaving" @click="saveOption" />
+        <Button
+          :label="_('save') || 'Сохранить'"
+          severity="success"
+          :loading="dialogSaving"
+          @click="saveOption"
+        />
       </template>
     </Dialog>
 
@@ -589,6 +582,7 @@ onBeforeUnmount(() => {
         />
         <Button
           :label="`${_('ms3_options_assign') || 'Назначить'} (${selectedRows.length} × ${assignCategories.length})`"
+          severity="success"
           :loading="assigning"
           :disabled="assignCategories.length === 0"
           @click="performAssign"

@@ -1,20 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import Fieldset from 'primevue/fieldset'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, Fieldset, InputText, Select, Tag, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
@@ -532,7 +518,7 @@ onMounted(() => {
 
     <p class="tab-description">{{ _('ms3_utilities_extra_fields_description') }}</p>
 
-    <div class="flex justify-content-between align-items-center mb-3">
+    <div class="ms3-utilities-toolbar">
       <div class="flex align-items-center gap-2">
         <label for="class-filter">{{ _('ms3_vue_extra_fields_class_filter') }}</label>
         <Select
@@ -549,6 +535,7 @@ onMounted(() => {
       <Button
         :label="_('ms3_vue_extra_fields_create')"
         icon="pi pi-plus"
+        severity="success"
         :disabled="loading"
         @click="openCreateDialog"
       />
@@ -581,7 +568,7 @@ onMounted(() => {
 
           <Column field="dbtype" :header="_('ms3_vue_table_dbtype')" sortable style="width: 7.5rem">
             <template #body="{ data }">
-              <Tag :value="data.dbtype.toUpperCase()" severity="info" />
+              <Tag :value="data.dbtype.toUpperCase()" severity="secondary" />
             </template>
           </Column>
 
@@ -631,8 +618,7 @@ onMounted(() => {
                 icon="pi pi-pencil"
                 severity="secondary"
                 text
-                rounded
-                class="mr-1"
+                rounded class="mr-1"
                 @click.stop="openEditDialog(data)"
               />
               <Button
@@ -896,13 +882,14 @@ onMounted(() => {
         <Button
           :label="_('ms3_vue_dialog_cancel')"
           icon="pi pi-times"
-          text
+          severity="secondary"
           :disabled="saving"
           @click="dialogVisible = false"
         />
         <Button
           :label="isEditMode ? _('ms3_vue_dialog_save') : _('ms3_vue_dialog_create')"
           icon="pi pi-check"
+          severity="success"
           :loading="saving"
           @click="saveField"
         />
@@ -913,78 +900,16 @@ onMounted(() => {
 
 <style scoped>
 .extra-fields-manager {
-  padding: 1rem;
-}
-</style>
-
-<style>
-/* Modal window styles - work in both .vueApp and .p-dialog */
-.vueApp .edit-field-form,
-.p-dialog .edit-field-form {
-  padding: 0.625rem 0;
-}
-
-.vueApp .form-grid,
-.p-dialog .form-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin: -0.5rem;
-}
-
-.vueApp .edit-field-form .field,
-.p-dialog .edit-field-form .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
-}
-
-.vueApp .edit-field-form .field label,
-.p-dialog .edit-field-form .field label {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--ms3-text-primary);
-}
-
-.vueApp .edit-field-form .field small,
-.p-dialog .edit-field-form .field small {
-  color: var(--ms3-text-muted);
-  font-size: 0.75rem;
-  margin-top: -0.125rem;
-}
-
-.vueApp .edit-field-form .w-full,
-.p-dialog .edit-field-form .w-full {
+  padding: 0;
   width: 100%;
 }
 
-/* Grid for modal window */
-.vueApp .col-6,
-.p-dialog .col-6 {
-  flex: 0 0 calc(50% - 1rem);
-  max-width: calc(50% - 1rem);
-}
-
-.vueApp .col-12,
-.p-dialog .col-12 {
-  flex: 0 0 calc(100% - 1rem);
-  max-width: calc(100% - 1rem);
-}
-
-/* Checkbox in modal window */
-.vueApp .edit-field-form .checkbox-wrapper,
-.p-dialog .edit-field-form .checkbox-wrapper {
+.ms3-utilities-toolbar {
   display: flex;
-  gap: 0.625rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-}
-
-.vueApp .edit-field-form .checkbox-label,
-.p-dialog .edit-field-form .checkbox-label {
-  margin: 0;
-  cursor: pointer;
-  user-select: none;
+  gap: 0.75rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 </style>
