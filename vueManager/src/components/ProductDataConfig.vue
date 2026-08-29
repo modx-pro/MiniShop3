@@ -1,17 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Checkbox, ConfirmDialog, Dialog, InputNumber, InputText, Panel, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -538,181 +527,179 @@ onMounted(() => {
     <p class="tab-description">{{ _('ms3_vue_product_fields_description') }}</p>
 
     <!-- Sections table -->
-    <Card style="margin-top: 1.25rem">
-      <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>{{ _('ms3_vue_sections') }}</span>
-          <div style="display: flex; gap: 0.625rem">
-            <Button
-              :label="_('ms3_vue_save_changes')"
-              icon="pi pi-save"
-              size="small"
-              :loading="saving"
-              :disabled="loadingSections"
-              @click="saveSections"
-            />
-            <Button
-              :label="_('ms3_vue_section_add')"
-              icon="pi pi-plus"
-              size="small"
-              @click="openAddSectionDialog"
-            />
-          </div>
-        </div>
+    <Panel
+      :header="_('ms3_vue_sections')"
+      class="ms3-utilities-section ms3-config-panel"
+    >
+      <template #icons>
+        <Button
+          :label="_('ms3_vue_save_changes')"
+          icon="pi pi-save"
+          severity="success"
+          :loading="saving"
+          :disabled="loadingSections"
+          @click.stop="saveSections"
+        />
+        <Button
+          :label="_('ms3_vue_section_add')"
+          icon="pi pi-plus"
+          severity="success"
+          @click.stop="openAddSectionDialog"
+        />
       </template>
 
-      <template #content>
-        <!-- Sections table with VueDraggable -->
-        <div v-if="!loadingSections" class="p-datatable p-component p-datatable-striped">
-          <div class="p-datatable-wrapper">
-            <table class="p-datatable-table" style="min-width: 50rem">
-              <thead class="p-datatable-thead">
+      <!-- Sections table with VueDraggable -->
+      <div v-if="!loadingSections" class="p-datatable p-component p-datatable-striped">
+        <div class="p-datatable-wrapper">
+          <table class="p-datatable-table" style="min-width: 50rem">
+            <thead class="p-datatable-thead">
+              <tr>
+                <th style="width: 3rem"></th>
+                <th style="width: 6.25rem">{{ _('ms3_vue_visible') }}</th>
+                <th style="width: 12.5rem">{{ _('ms3_vue_section_key') }}</th>
+                <th style="width: 15.625rem">{{ _('ms3_vue_section_label') }}</th>
+                <th style="width: 7.5rem">{{ _('ms3_vue_actions') }}</th>
+              </tr>
+            </thead>
+            <draggable
+              v-model="sections"
+              tag="tbody"
+              class="p-datatable-tbody"
+              handle=".drag-handle"
+              item-key="key"
+              :animation="200"
+              ghost-class="ghost-row"
+              @end="onSectionDragEnd"
+            >
+              <template #item="{ element: section, index }">
                 <tr>
-                  <th style="width: 3rem"></th>
-                  <th style="width: 6.25rem">{{ _('ms3_vue_visible') }}</th>
-                  <th style="width: 12.5rem">{{ _('ms3_vue_section_key') }}</th>
-                  <th style="width: 15.625rem">{{ _('ms3_vue_section_label') }}</th>
-                  <th style="width: 6.25rem">{{ _('ms3_vue_actions') }}</th>
-                </tr>
-              </thead>
-              <draggable
-                v-model="sections"
-                tag="tbody"
-                class="p-datatable-tbody"
-                handle=".drag-handle"
-                item-key="key"
-                :animation="200"
-                ghost-class="ghost-row"
-                @end="onSectionDragEnd"
-              >
-                <template #item="{ element: section, index }">
-                  <tr>
-                    <td class="drag-handle-cell">
-                      <i class="pi pi-bars drag-handle"></i>
-                    </td>
-                    <td>
-                      <Checkbox
-                        v-model="section.hidden"
-                        :binary="true"
-                        :true-value="false"
-                        :false-value="true"
-                      />
-                    </td>
-                    <td>{{ section.key }}</td>
-                    <td>{{ section.label }}</td>
-                    <td>
+                  <td class="drag-handle-cell">
+                    <i class="pi pi-bars drag-handle"></i>
+                  </td>
+                  <td>
+                    <Checkbox
+                      v-model="section.hidden"
+                      :binary="true"
+                      :true-value="false"
+                      :false-value="true"
+                    />
+                  </td>
+                  <td>{{ section.key }}</td>
+                  <td>{{ section.label }}</td>
+                  <td class="row-actions-cell">
+                    <div class="row-actions">
                       <Button
                         icon="pi pi-pencil"
-                        size="small"
                         text
+                        severity="secondary"
                         :title="_('ms3_vue_section_edit')"
                         @click="openEditSectionDialog(section, index)"
                       />
                       <Button
                         icon="pi pi-trash"
-                        size="small"
                         severity="danger"
                         text
                         :title="_('ms3_vue_section_delete')"
                         @click="deleteSection(section.key)"
                       />
-                    </td>
-                  </tr>
-                </template>
-              </draggable>
-            </table>
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </draggable>
+          </table>
         </div>
+      </div>
 
-        <!-- Loading indicator -->
-        <div v-if="loadingSections" class="loading-indicator">
-          <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
-        </div>
-      </template>
-    </Card>
+      <!-- Loading indicator -->
+      <div v-if="loadingSections" class="loading-indicator">
+        <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+      </div>
+    </Panel>
 
     <!-- Fields table -->
-    <Card style="margin-top: 1.25rem">
-      <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>{{ _('ms3_vue_product_properties') }}</span>
-          <Button
-            :label="_('ms3_vue_save_changes')"
-            icon="pi pi-save"
-            :loading="saving"
-            :disabled="loading"
-            @click="saveConfig"
-          />
-        </div>
+    <Panel
+      :header="_('ms3_vue_product_properties')"
+      class="ms3-utilities-section ms3-config-panel"
+    >
+      <template #icons>
+        <Button
+          :label="_('ms3_vue_save_changes')"
+          icon="pi pi-save"
+          severity="success"
+          :loading="saving"
+          :disabled="loading"
+          @click.stop="saveConfig"
+        />
       </template>
 
-      <template #content>
-        <!-- Fields table with VueDraggable -->
-        <div v-if="!loading" class="p-datatable p-component p-datatable-striped">
-          <div class="p-datatable-wrapper">
-            <table class="p-datatable-table" style="min-width: 50rem">
-              <thead class="p-datatable-thead">
+      <!-- Fields table with VueDraggable -->
+      <div v-if="!loading" class="p-datatable p-component p-datatable-striped">
+        <div class="p-datatable-wrapper">
+          <table class="p-datatable-table" style="min-width: 50rem">
+            <thead class="p-datatable-thead">
+              <tr>
+                <th style="width: 3rem"></th>
+                <th style="width: 6.25rem">{{ _('ms3_vue_visible_column') }}</th>
+                <th style="width: 12.5rem">{{ _('ms3_vue_field_column') }}</th>
+                <th style="width: 12.5rem">{{ _('ms3_vue_label_column') }}</th>
+                <th style="width: 9.375rem">{{ _('ms3_vue_type_column') }}</th>
+                <th style="width: 9.375rem">{{ _('ms3_vue_section_column') }}</th>
+                <th>{{ _('ms3_vue_description_column') }}</th>
+                <th style="width: 7.5rem">{{ _('ms3_vue_actions_column') }}</th>
+              </tr>
+            </thead>
+            <draggable
+              v-model="fields"
+              tag="tbody"
+              class="p-datatable-tbody"
+              handle=".drag-handle"
+              item-key="name"
+              :animation="200"
+              ghost-class="ghost-row"
+              @end="onFieldsDragEnd"
+            >
+              <template #item="{ element: field, index }">
                 <tr>
-                  <th style="width: 3rem"></th>
-                  <th style="width: 6.25rem">{{ _('ms3_vue_visible_column') }}</th>
-                  <th style="width: 12.5rem">{{ _('ms3_vue_field_column') }}</th>
-                  <th style="width: 12.5rem">{{ _('ms3_vue_label_column') }}</th>
-                  <th style="width: 9.375rem">{{ _('ms3_vue_type_column') }}</th>
-                  <th style="width: 9.375rem">{{ _('ms3_vue_section_column') }}</th>
-                  <th>{{ _('ms3_vue_description_column') }}</th>
-                  <th style="width: 7.5rem">{{ _('ms3_vue_actions_column') }}</th>
-                </tr>
-              </thead>
-              <draggable
-                v-model="fields"
-                tag="tbody"
-                class="p-datatable-tbody"
-                handle=".drag-handle"
-                item-key="name"
-                :animation="200"
-                ghost-class="ghost-row"
-                @end="onFieldsDragEnd"
-              >
-                <template #item="{ element: field, index }">
-                  <tr>
-                    <td class="drag-handle-cell">
-                      <i class="pi pi-bars drag-handle"></i>
-                    </td>
-                    <td>
-                      <Checkbox
-                        v-model="field.visible"
-                        :binary="true"
-                        :true-value="true"
-                        :false-value="false"
-                      />
-                    </td>
-                    <td>{{ field.name }}</td>
-                    <td>{{ field.label }}</td>
-                    <td>{{ field.xtype }}</td>
-                    <td>{{ getSectionLabel(field.section) }}</td>
-                    <td>{{ field.description }}</td>
-                    <td>
+                  <td class="drag-handle-cell">
+                    <i class="pi pi-bars drag-handle"></i>
+                  </td>
+                  <td>
+                    <Checkbox
+                      v-model="field.visible"
+                      :binary="true"
+                      :true-value="true"
+                      :false-value="false"
+                    />
+                  </td>
+                  <td>{{ field.name }}</td>
+                  <td>{{ field.label }}</td>
+                  <td>{{ field.xtype }}</td>
+                  <td>{{ getSectionLabel(field.section) }}</td>
+                  <td>{{ field.description }}</td>
+                  <td class="row-actions-cell">
+                    <div class="row-actions">
                       <Button
                         icon="pi pi-pencil"
-                        size="small"
-                        outlined
+                        text
+                        severity="secondary"
                         :title="_('ms3_vue_edit_field_button')"
                         @click="openEditDialog(field, index)"
                       />
-                    </td>
-                  </tr>
-                </template>
-              </draggable>
-            </table>
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </draggable>
+          </table>
         </div>
+      </div>
 
-        <!-- Loading indicator -->
-        <div v-if="loading" class="loading-indicator">
-          <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
-        </div>
-      </template>
-    </Card>
+      <!-- Loading indicator -->
+      <div v-if="loading" class="loading-indicator">
+        <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+      </div>
+    </Panel>
 
     <!-- Add section dialog -->
     <Dialog
@@ -789,7 +776,7 @@ onMounted(() => {
           severity="secondary"
           @click="closeAddSectionDialog"
         />
-        <Button :label="_('ms3_vue_add_button')" icon="pi pi-check" @click="addSection" />
+        <Button :label="_('ms3_vue_add_button')" icon="pi pi-check" severity="success" @click="addSection" />
       </template>
     </Dialog>
 
@@ -869,7 +856,12 @@ onMounted(() => {
           severity="secondary"
           @click="closeEditSectionDialog"
         />
-        <Button :label="_('ms3_vue_save_button')" icon="pi pi-save" @click="saveEditedSection" />
+        <Button
+          :label="_('ms3_vue_save_button')"
+          icon="pi pi-save"
+          severity="success"
+          @click="saveEditedSection"
+        />
       </template>
     </Dialog>
 
@@ -993,6 +985,7 @@ onMounted(() => {
         <Button
           :label="_('ms3_vue_field_save')"
           icon="pi pi-save"
+          severity="success"
           :loading="saving"
           @click="saveFieldChanges"
         />
@@ -1006,17 +999,21 @@ onMounted(() => {
 
 <style scoped>
 .product-data-config {
-  padding: 1.25rem;
+  padding: 0;
+  width: 100%;
+}
+
+.product-data-config > .tab-description {
+  margin: 0 0 var(--p-modx-space-panel, 15px);
+}
+
+.product-data-config > .ms3-config-panel + .ms3-config-panel {
+  margin-top: 0;
 }
 
 h2 {
   margin: 0 0 0.625rem 0;
   font-size: 1.5rem;
-}
-
-p {
-  margin: 0 0 1.25rem 0;
-  color: var(--ms3-text-muted);
 }
 
 .drag-handle-cell {
@@ -1066,77 +1063,5 @@ p {
 
 :deep(.p-datatable-tbody tr:hover) {
   background: var(--ms3-bg-neutral);
-}
-</style>
-
-<style>
-/* Modal window styles - work in both .vueApp and .p-dialog */
-.vueApp .edit-field-form,
-.p-dialog .edit-field-form {
-  padding: 0.625rem 0;
-}
-
-.vueApp .form-grid,
-.p-dialog .form-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin: -0.5rem;
-}
-
-.vueApp .edit-field-form .field,
-.p-dialog .edit-field-form .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  padding: 0.5rem;
-  box-sizing: border-box;
-}
-
-.vueApp .edit-field-form .field label,
-.p-dialog .edit-field-form .field label {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--ms3-text-primary);
-}
-
-.vueApp .edit-field-form .field small,
-.p-dialog .edit-field-form .field small {
-  color: var(--ms3-text-muted);
-  font-size: 0.75rem;
-  margin-top: -0.125rem;
-}
-
-.vueApp .edit-field-form .w-full,
-.p-dialog .edit-field-form .w-full {
-  width: 100%;
-}
-
-/* Grid for modal window */
-.vueApp .col-6,
-.p-dialog .col-6 {
-  flex: 0 0 calc(50% - 1rem);
-  max-width: calc(50% - 1rem);
-}
-
-.vueApp .col-12,
-.p-dialog .col-12 {
-  flex: 0 0 calc(100% - 1rem);
-  max-width: calc(100% - 1rem);
-}
-
-/* Checkbox in modal window */
-.vueApp .edit-field-form .checkbox-wrapper,
-.p-dialog .edit-field-form .checkbox-wrapper {
-  display: flex;
-  gap: 0.625rem;
-  align-items: center;
-}
-
-.vueApp .edit-field-form .checkbox-label,
-.p-dialog .edit-field-form .checkbox-label {
-  margin: 0;
-  cursor: pointer;
-  user-select: none;
 }
 </style>

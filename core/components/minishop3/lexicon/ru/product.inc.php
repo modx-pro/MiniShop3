@@ -145,6 +145,7 @@ $_lang['ms3_gallery_file_url'] = 'Ссылка';
 $_lang['ms3_gallery_file_source'] = 'Источник файла';
 
 $_lang['ms3_gallery_button_upload'] = 'Выбрать файлы';
+$_lang['ms3_gallery_actions'] = 'Действия галереи';
 
 $_lang['ms3_gallery_file_show'] = 'Открыть в новом окне';
 $_lang['ms3_gallery_file_update'] = 'Изменить свойства';

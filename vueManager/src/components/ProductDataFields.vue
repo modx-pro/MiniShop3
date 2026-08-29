@@ -1,10 +1,7 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Card from 'primevue/card'
-import Fieldset from 'primevue/fieldset'
-import Message from 'primevue/message'
-import { useToast } from 'primevue/usetoast'
-import { computed, onMounted, ref } from 'vue'
+import { Message, Panel, useToast } from 'primevue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 import request from '../request.js'
 import { groupProductDataSections } from '../utils/groupProductDataSections.js'
@@ -209,6 +206,65 @@ const fieldsBySections = computed(() => {
   return groupProductDataSections(visibleFields.value, fieldsConfig.value.sections || {})
 })
 
+/** Ordered section list for stable Panel rendering (#611 sort_order). */
+const sectionEntries = computed(() =>
+  fieldsBySections.value.map(section => ({
+    key: section.key ?? section.id,
+    section,
+  }))
+)
+
+function isCheckboxField(field) {
+  return field?.xtype === 'xcheckbox' || field?.xtype === 'checkbox'
+}
+
+/**
+ * Keep field order; consecutive checkboxes share one full-width flex row
+ * so PageBuilder col-% utilities cannot spread them across the grid.
+ */
+function groupSectionFields(fields) {
+  const rows = []
+  let checkboxRun = []
+
+  const flushCheckboxes = () => {
+    if (!checkboxRun.length) {
+      return
+    }
+    rows.push({
+      type: 'checkboxes',
+      key: `cb-${checkboxRun.map(f => f.name).join('-')}`,
+      fields: checkboxRun,
+    })
+    checkboxRun = []
+  }
+
+  for (const field of fields || []) {
+    if (isCheckboxField(field)) {
+      checkboxRun.push(field)
+      continue
+    }
+    flushCheckboxes()
+    rows.push({ type: 'field', key: field.name, field })
+  }
+  flushCheckboxes()
+  return rows
+}
+
+/** Per-section collapse state (seeded from config.collapsed). */
+const sectionCollapsed = reactive({})
+
+watch(
+  sectionEntries,
+  entries => {
+    entries.forEach(({ key, section }) => {
+      if (sectionCollapsed[key] === undefined) {
+        sectionCollapsed[key] = !!section.collapsed
+      }
+    })
+  },
+  { immediate: true }
+)
+
 // Load configuration on mount
 onMounted(() => {
   loadConfig()
@@ -217,197 +273,256 @@ onMounted(() => {
 
 <template>
   <div class="product-data-fields">
-    <Card>
-      <template #title>
-        <span>{{ _('ms3_vue_product_data_title') }}</span>
-      </template>
+    <div v-if="loading" class="loading-indicator" aria-busy="true" aria-live="polite">
+      <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
+      <span class="sr-only">{{ _('ms3_vue_loading_config') }}</span>
+    </div>
 
-      <template #content>
-        <Message v-if="loading" severity="info">
-          {{ _('ms3_vue_loading_config') }}
-        </Message>
+    <Message v-else-if="visibleFields.length === 0" severity="warn">
+      {{ _('ms3_vue_no_visible_fields') }}
+    </Message>
 
-        <Message v-else-if="visibleFields.length === 0" severity="warn">
-          {{ _('ms3_vue_no_visible_fields') }}
-        </Message>
-
-        <div v-else class="sections-container">
-          <Fieldset
-            v-for="section in fieldsBySections"
-            :key="section.id ?? section.key"
-            :legend="section.label || section.key"
-            :toggleable="true"
-            :collapsed="section.collapsed"
-            class="section-fieldset"
-          >
-            <div class="fields-grid">
-              <div
-                v-for="field in section.fields"
-                :key="field.name"
-                :class="[
-                  'field-item',
-                  isFullWidthExtraFieldXtype(field.xtype)
-                    ? 'col-12'
-                    : `col-${field.width || 4}`,
-                  { 'field-checkbox': field.xtype === 'xcheckbox' || field.xtype === 'checkbox' },
-                ]"
-              >
-                <!-- Checkbox layout: checkbox + label in one line -->
-                <template v-if="field.xtype === 'xcheckbox' || field.xtype === 'checkbox'">
-                  <div class="checkbox-wrapper">
-                    <DynamicField
-                      v-model="fieldValues[field.name]"
-                      :field-config="field"
-                      :disabled="loading || saving"
-                      @blur="handleFieldChange(field.name, $event.value)"
-                    />
-                    <label
-                      :for="field.name"
-                      class="field-label checkbox-label"
-                      :title="'[[+' + field.name + ']]'"
-                    >
-                      {{ field.label }}
-                      <span v-if="field.required" class="required">*</span>
-                    </label>
-                  </div>
-                  <small v-if="field.description" class="field-description">
-                    {{ field.description }}
-                  </small>
-                </template>
-
-                <!-- Regular field: label on top, field below -->
-                <template v-else>
-                  <label :for="field.name" class="field-label" :title="'[[+' + field.name + ']]'">
-                    {{ field.label }}
-                    <span v-if="field.required" class="required">*</span>
-                  </label>
-
+    <div v-else class="sections-container">
+      <Panel
+        v-for="{ key: sectionKey, section } in sectionEntries"
+        :key="sectionKey"
+        v-model:collapsed="sectionCollapsed[sectionKey]"
+        :header="section.label || sectionKey"
+        toggleable
+        class="ms3-utilities-section ms3-config-panel product-data-section"
+      >
+        <div class="fields-grid">
+          <template v-for="row in groupSectionFields(section.fields)" :key="row.key">
+            <!-- Packed checkbox row (theme 15px gap, no col-% spread) -->
+            <div v-if="row.type === 'checkboxes'" class="field-item field-checkbox-row col-12">
+              <div v-for="field in row.fields" :key="field.name" class="checkbox-field">
+                <div class="checkbox-wrapper">
                   <DynamicField
                     v-model="fieldValues[field.name]"
                     :field-config="field"
                     :disabled="loading || saving"
                     @blur="handleFieldChange(field.name, $event.value)"
                   />
-
-                  <small v-if="field.description" class="field-description">
-                    {{ field.description }}
-                  </small>
-                </template>
+                  <label
+                    :for="field.name"
+                    class="field-label checkbox-label"
+                    :title="'[[+' + field.name + ']]'"
+                  >
+                    {{ field.label }}
+                    <span v-if="field.required" class="required">*</span>
+                  </label>
+                </div>
+                <small v-if="field.description" class="field-description">
+                  {{ field.description }}
+                </small>
               </div>
             </div>
-          </Fieldset>
+
+            <!-- Regular field: label on top, control below -->
+            <div
+              v-else
+              class="field-item"
+              :class="
+                isFullWidthExtraFieldXtype(row.field.xtype)
+                  ? 'col-12'
+                  : `col-${row.field.width || 4}`
+              "
+            >
+              <label
+                :for="row.field.name"
+                class="field-label"
+                :title="'[[+' + row.field.name + ']]'"
+              >
+                {{ row.field.label }}
+                <span v-if="row.field.required" class="required">*</span>
+              </label>
+
+              <DynamicField
+                v-model="fieldValues[row.field.name]"
+                :field-config="row.field"
+                :disabled="loading || saving"
+                @blur="handleFieldChange(row.field.name, $event.value)"
+              />
+
+              <small v-if="row.field.description" class="field-description">
+                {{ row.field.description }}
+              </small>
+            </div>
+          </template>
         </div>
-      </template>
-    </Card>
+      </Panel>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .product-data-fields {
-  padding: 1.25rem;
+  padding: 0;
+    width: 100%;
 }
 
-.fields-grid {
+.loading-indicator {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  margin: -0.625rem; /* Compensate field padding */
+  justify-content: center;
+    align-items: center;
+    min-height: 8rem;
+    color: var(--ms3-text-muted, #64748b);
+    font-size: 1.75rem;
+  }
+  
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  
+  .sections-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--p-modx-space-panel, 15px);
+  margin: 0;
+}
+
+/*
+ * PageBuilder ships `.vueApp .col-4 { width: 33.333%; flex: 0 0 auto }` for its
+ * flex grid. That shrinks MS3 CSS-grid cells and leaves huge empty gutters.
+ */
+.fields-grid > .field-item[class*='col-'] {
+  width: 100%;
+  max-width: none;
+  flex: none;
+  padding: 0;
+  min-width: 0;
 }
 
 .field-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.625rem;
+  gap: 0.25rem;
+  padding: 0;
   box-sizing: border-box;
+  grid-column: span 4;
+}
+
+/* Checkboxes pack left with theme gap — not one third of the row each. */
+.field-item.field-checkbox-row {
+  grid-column: span 12;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--p-modx-space-panel, 15px);
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+.field-item.field-checkbox-row .checkbox-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: max-content;
+  max-width: 100%;
 }
 
 .field-item :deep(input),
 .field-item :deep(textarea),
 .field-item :deep(.p-inputtext),
 .field-item :deep(.p-inputnumber),
-.field-item :deep(.p-dropdown) {
+.field-item :deep(.p-select),
+.field-item :deep(.p-dropdown),
+.field-item :deep(.p-inputchips),
+.field-item :deep(.p-multiselect) {
   width: 100%;
 }
 
-/* 12-column grid system */
 .col-1 {
-  flex: 0 0 calc(8.333% - 1.25rem);
-  max-width: calc(8.333% - 1.25rem);
+  grid-column: span 1;
 }
 .col-2 {
-  flex: 0 0 calc(16.666% - 1.25rem);
-  max-width: calc(16.666% - 1.25rem);
+  grid-column: span 2;
 }
 .col-3 {
-  flex: 0 0 calc(25% - 1.25rem);
-  max-width: calc(25% - 1.25rem);
+  grid-column: span 3;
 }
 .col-4 {
-  flex: 0 0 calc(33.333% - 1.25rem);
-  max-width: calc(33.333% - 1.25rem);
+  grid-column: span 4;
 }
 .col-5 {
-  flex: 0 0 calc(41.666% - 1.25rem);
-  max-width: calc(41.666% - 1.25rem);
+  grid-column: span 5;
 }
 .col-6 {
-  flex: 0 0 calc(50% - 1.25rem);
-  max-width: calc(50% - 1.25rem);
+  grid-column: span 6;
 }
 .col-7 {
-  flex: 0 0 calc(58.333% - 1.25rem);
-  max-width: calc(58.333% - 1.25rem);
+  grid-column: span 7;
 }
 .col-8 {
-  flex: 0 0 calc(66.666% - 1.25rem);
-  max-width: calc(66.666% - 1.25rem);
+  grid-column: span 8;
 }
 .col-9 {
-  flex: 0 0 calc(75% - 1.25rem);
-  max-width: calc(75% - 1.25rem);
+  grid-column: span 9;
 }
 .col-10 {
-  flex: 0 0 calc(83.333% - 1.25rem);
-  max-width: calc(83.333% - 1.25rem);
+  grid-column: span 10;
 }
 .col-11 {
-  flex: 0 0 calc(91.666% - 1.25rem);
-  max-width: calc(91.666% - 1.25rem);
+  grid-column: span 11;
 }
 .col-12 {
-  flex: 0 0 calc(100% - 1.25rem);
-  max-width: calc(100% - 1.25rem);
+  grid-column: span 12;
 }
 
-/* Responsive: on tablets col-4 becomes col-6 */
 @media (max-width: 64rem) {
-  .col-4 {
-    flex: 0 0 calc(50% - 1.25rem);
-    max-width: calc(50% - 1.25rem);
+  .col-4,
+    .col-5 {
+      grid-column: span 6;
   }
 }
 
-/* Responsive: on mobile all fields full width */
 @media (max-width: 48rem) {
-  .field-item {
-    flex: 0 0 calc(100% - 1.25rem) !important;
-    max-width: calc(100% - 1.25rem) !important;
+  .field-item:not(.field-checkbox-row),
+  .col-1,
+  .col-2,
+  .col-3,
+  .col-4,
+  .col-5,
+  .col-6,
+  .col-7,
+  .col-8,
+  .col-9,
+  .col-10,
+  .col-11,
+  .col-12 {
+    grid-column: span 12;
   }
 }
 
 .field-label {
-  font-weight: 600;
+  display: block;
+    margin: 0;
+    font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-primary);
+  color: var(--ms3-text-primary, #333);
 }
 
 .field-label .required {
-  color: var(--ms3-text-danger-alt);
-  margin-left: 0.125rem;
+  color: var(--ms3-text-danger-alt, #ef4444);
+    margin-inline-start: 0.125rem;
 }
 
-/* Checkbox: horizontal layout */
 .checkbox-wrapper {
   display: flex;
   align-items: center;
@@ -425,18 +540,9 @@ onMounted(() => {
 }
 
 .field-description {
-  color: var(--ms3-text-muted);
+  color: var(--ms3-text-muted, #64748b);
   font-size: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.sections-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.section-fieldset {
-  margin-bottom: 0;
+  margin-top: 0;
+    line-height: 1.35;
 }
 </style>

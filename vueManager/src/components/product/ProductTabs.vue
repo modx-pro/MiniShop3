@@ -1,12 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Tab, TabList, TabPanel, TabPanels, Tabs, Toast, useToast } from 'primevue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import ProductGallery from '../gallery/ProductGallery.vue'
@@ -369,6 +363,18 @@ onBeforeUnmount(() => {
   min-height: 25rem;
 }
 
+/*
+ * Same inset as Utilities/Settings: theme tabpanel padding (15px).
+ * Tab bodies must not add a second horizontal pad on top of this.
+ */
+.product-tabs :deep(.p-tabpanels) {
+  padding: var(--p-tabs-tabpanel-padding, var(--p-modx-space-panel, 15px));
+}
+
+.product-tabs :deep(.p-tabpanel) {
+  padding: 0;
+}
+
 .extjs-container {
   min-height: 18.75rem;
   width: 100%;
@@ -379,9 +385,8 @@ onBeforeUnmount(() => {
   width: 100% !important;
 }
 
-/* Fix padding for ExtJS panels inside Vue tabs */
+/* Ext body sits inside themed tabpanel pad — avoid double inset */
 .extjs-container :deep(.x-panel-body) {
-  padding: 0.625rem;
+  padding: 0;
 }
-
 </style>

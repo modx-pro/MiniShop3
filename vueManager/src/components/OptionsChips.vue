@@ -260,31 +260,34 @@ onMounted(() => {
 }
 
 .vueApp .chips-container:focus-within {
-  border-color: var(--ms3-accent-primary);
+  border-color: var(--p-form-field-focus-border-color, var(--p-primary-color, #234368));
   outline: none;
-  box-shadow: 0 0 0 0.2rem var(--ms3-accent-focus);
+  box-shadow: none;
 }
 
 .vueApp .chip-item {
   display: inline-flex;
   align-items: center;
-  background: var(--ms3-accent-primary);
-  color: var(--ms3-text-on-primary);
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.1875rem;
+  gap: 0.25rem;
+  background: var(--p-highlight-background, #d6e7f8);
+  color: var(--p-highlight-color, #1b3451);
+  border: var(--ms3-border-width) solid var(--p-primary-200, #b9d3ee);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--p-autocomplete-chip-border-radius, 2px);
   font-size: 0.875rem;
+  line-height: 1.25rem;
   white-space: nowrap;
 }
 
 .vueApp .chip-text {
-  margin-right: 0.25rem;
+  margin-right: 0;
 }
 
 .vueApp .chip-remove {
   cursor: pointer;
-  margin-left: 0.375rem;
-  opacity: 0.9;
-  transition: all 0.2s;
+  margin-left: 0;
+  opacity: 0.75;
+  transition: opacity 0.15s, background-color 0.15s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -293,7 +296,8 @@ onMounted(() => {
   min-width: 1.125rem;
   min-height: 1.125rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: inherit;
   user-select: none;
   font-size: 0.65rem;
 }
@@ -304,8 +308,8 @@ onMounted(() => {
 
 .vueApp .chip-remove:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(1.15);
+  background: color-mix(in srgb, var(--p-highlight-color, #1b3451) 12%, transparent);
+  transform: none;
 }
 
 .vueApp .chip-input {

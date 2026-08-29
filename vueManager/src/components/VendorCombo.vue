@@ -6,14 +6,15 @@
       :options="vendors"
       option-label="name"
       option-value="id"
-      :placeholder="placeholder"
+      :placeholder="resolvedPlaceholder"
       :disabled="disabled"
       :loading="loading"
       :show-clear="showClear"
       :filter="enableFilter"
-      filter-placeholder="Search vendor..."
+      :filter-placeholder="filterPlaceholder"
       :empty-message="emptyMessage"
       :empty-filter-message="emptyFilterMessage"
+      :pt="selectPt"
       class="w-full"
       @change="handleChange"
     >
@@ -27,7 +28,8 @@
 </template>
 
 <script setup>
-import Select from 'primevue/select'
+import { Select } from 'primevue'
+import { useLexicon } from '@vuetools/useLexicon'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
@@ -54,7 +56,7 @@ const props = defineProps({
    */
   placeholder: {
     type: String,
-    default: 'Select vendor',
+    default: '',
   },
 
   /**
@@ -83,6 +85,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
+const { _ } = useLexicon()
 
 // State
 const loading = ref(false)
@@ -90,16 +93,36 @@ const vendors = ref([])
 const localValue = ref(props.modelValue)
 const wrapperRef = ref(null)
 
+function lex(key, fallback) {
+  const value = _(key)
+  return value && value !== key ? value : fallback
+}
+
+const resolvedPlaceholder = computed(
+  () => props.placeholder || lex('ms3_vendor_select', 'Select vendor')
+)
+
+const filterPlaceholder = computed(() => lex('ms3_vendor_search', 'Search vendor…'))
+
+const selectPt = computed(() => ({
+  clearIcon: {
+    'aria-label': lex('clear', 'Clear'),
+    role: 'button',
+    tabindex: '0',
+  },
+}))
+
 // Computed
 const emptyMessage = computed(() => {
   return vendors.value.length === 0
-    ? 'No vendors found. Add a vendor in component settings.'
-    : 'No results'
+    ? lex(
+        'ms3_vendor_empty',
+        'No vendors found. Add a vendor in component settings.'
+      )
+    : lex('ms3_vendor_not_found', 'Vendor not found')
 })
 
-const emptyFilterMessage = computed(() => {
-  return 'Vendor not found'
-})
+const emptyFilterMessage = computed(() => lex('ms3_vendor_not_found', 'Vendor not found'))
 
 /**
  * Load vendors from API
