@@ -146,7 +146,7 @@ class ProductImageService
         });
 
         $ranks = [];
-        foreach (array_values($rows) as $position => $row) {
+        foreach ($rows as $position => $row) {
             $ranks[(int) $row['id']] = $position;
         }
 
