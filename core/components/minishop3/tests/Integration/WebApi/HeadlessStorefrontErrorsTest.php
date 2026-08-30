@@ -21,6 +21,12 @@ final class HeadlessStorefrontErrorsTest extends WebApiTestCase
         $this->assertApiError($res, HttpStatus::NOT_FOUND, 'ms3_err_product_nf');
     }
 
+    public function testProductGetWithoutLookupParamsReturns400(): void
+    {
+        $res = $this->dispatch('GET', '/api/v1/product/get');
+        $this->assertApiError($res, HttpStatus::BAD_REQUEST, 'ms3_err_catalog_lookup_required');
+    }
+
     public function testInvalidBearerReturns401(): void
     {
         $res = $this->dispatch(
