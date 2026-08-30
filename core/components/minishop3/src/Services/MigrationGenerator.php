@@ -13,8 +13,10 @@ class MigrationGenerator
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
-        $corePath = defined('MODX_CORE_PATH') ? \MODX_CORE_PATH : (dirname(__DIR__, 2) . '/');
-        $this->migrationsPath = $corePath . 'components/minishop3/migrations/';
+        // MODX_CORE_PATH is the site core/; fallback is this package root (…/components/minishop3).
+        $this->migrationsPath = defined('MODX_CORE_PATH')
+            ? rtrim((string) \MODX_CORE_PATH, '/\\') . '/components/minishop3/migrations/'
+            : dirname(__DIR__, 2) . '/migrations/';
     }
 
     /**
