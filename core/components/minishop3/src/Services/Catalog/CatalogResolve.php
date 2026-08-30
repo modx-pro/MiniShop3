@@ -23,7 +23,8 @@ final class CatalogResolve
     public static function findUniqueId(modX $modx, string $class, array $criteria): ?int
     {
         $query = $modx->newQuery($class, $criteria);
-        $query->select($modx->getSelectColumns($class, $class, '', ['id']));
+        // Table alias for namespaced models is the short class name; FQCN breaks SELECT.
+        $query->select('id');
         $query->limit(2);
 
         if (!$query->prepare() || !$query->stmt->execute()) {

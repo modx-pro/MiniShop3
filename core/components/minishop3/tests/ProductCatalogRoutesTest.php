@@ -57,5 +57,16 @@ if (!str_contains($serviceSrc, "'hidemenu' => 0")) {
     $fail('ProductCatalogService publicCriteria must enforce hidemenu=0');
 }
 
+$resolveSrc = file_get_contents(__DIR__ . '/../src/Services/Catalog/CatalogResolve.php');
+if ($resolveSrc === false) {
+    $fail('unable to read CatalogResolve.php');
+}
+if (!str_contains($resolveSrc, "->select('id')")) {
+    $fail('CatalogResolve::findUniqueId must select id without FQCN SQL alias');
+}
+if (preg_match('/getSelectColumns\s*\(\s*\$class\s*,\s*\$class\b/', $resolveSrc)) {
+    $fail('CatalogResolve must not pass FQCN as getSelectColumns table alias');
+}
+
 fwrite(STDOUT, "OK ProductCatalogRoutesTest\n");
 exit(0);
