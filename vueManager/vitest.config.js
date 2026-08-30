@@ -8,6 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@vuetools/useLexicon': fileURLToPath(
+        new URL('./src/test/stubs/useLexicon.js', import.meta.url)
+      ),
     },
   },
   test: {

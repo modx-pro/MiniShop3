@@ -34,7 +34,15 @@ const contextMenu = ref(null)
 const contextNode = ref(null)
 const checkedSet = ref(new Set())
 
-const lockedSet = computed(() => new Set(props.lockedIds.map(id => Number(id))))
+/** @returns {number|null} Positive category id, or null if invalid. */
+function toCategoryId(value) {
+  const id = Number(value)
+  return Number.isFinite(id) && id > 0 ? id : null
+}
+
+const lockedSet = computed(
+  () => new Set(props.lockedIds.map(toCategoryId).filter(id => id !== null))
+)
 
 const contextMenuItems = computed(() => [
   {
@@ -88,25 +96,46 @@ function toTreeNode(row) {
     data: {
       class_key: row.class_key,
       selectable: row.selectable !== false,
-      locked: isApiRowLocked(row),
+      locked: isLockedId(row.id, row.locked),
       published: row.published,
       hidemenu: row.hidemenu,
     },
   }
 }
 
+function normalizeIdList(ids) {
+  if (!Array.isArray(ids)) {
+    return []
+  }
+  return ids.map(toCategoryId).filter(id => id !== null)
+}
+
+function nodeId(node) {
+  return toCategoryId(node?.id)
+}
+
+function isLockedId(id, flaggedLocked = false) {
+  const normalized = toCategoryId(id)
+  return Boolean(flaggedLocked) || (normalized !== null && lockedSet.value.has(normalized))
+}
+
+function applyLockedIds(base) {
+  const next = new Set(base)
+  for (const id of lockedSet.value) {
+    next.add(id)
+  }
+  return next
+}
+
 function mergeCheckedFromApi(rows) {
   const next = new Set(checkedSet.value)
   for (const row of rows) {
-    if (row.checked || lockedSet.value.has(Number(row.id))) {
-      next.add(row.id)
+    const id = toCategoryId(row.id)
+    if (id !== null && (row.checked || isLockedId(id, row.locked))) {
+      next.add(id)
     }
   }
   checkedSet.value = next
-}
-
-function isApiRowLocked(row) {
-  return Boolean(row.locked) || lockedSet.value.has(Number(row.id))
 }
 
 function isSelectableNode(node) {
@@ -114,22 +143,26 @@ function isSelectableNode(node) {
 }
 
 function isLockedNode(node) {
-  return !!node?.data?.locked || lockedSet.value.has(Number(node?.id))
+  return isLockedId(node?.id, node?.data?.locked)
 }
 
 function isChecked(node) {
-  return checkedSet.value.has(node.id)
+  return checkedSet.value.has(nodeId(node))
 }
 
 function toggleNode(node, checked) {
   if (!isSelectableNode(node) || (isLockedNode(node) && !checked)) {
     return
   }
+  const id = nodeId(node)
+  if (id === null) {
+    return
+  }
   const next = new Set(checkedSet.value)
   if (checked) {
-    next.add(node.id)
+    next.add(id)
   } else {
-    next.delete(node.id)
+    next.delete(id)
   }
   checkedSet.value = next
   emitSelection()
@@ -146,8 +179,10 @@ async function loadRoot() {
 }
 
 function ensureLockedChecked() {
-  const next = new Set(checkedSet.value)
-  lockedSet.value.forEach(id => next.add(id))
+  const next = applyLockedIds(checkedSet.value)
+  if (next.size === checkedSet.value.size) {
+    return
+  }
   checkedSet.value = next
   emitSelection()
 }
@@ -211,10 +246,14 @@ async function bulkToggleChecks(node, checked) {
   const next = new Set(checkedSet.value)
   function walk(n) {
     if (isSelectableNode(n)) {
+      const id = nodeId(n)
+      if (id === null) {
+        return
+      }
       if (checked || isLockedNode(n)) {
-        next.add(n.id)
+        next.add(id)
       } else {
-        next.delete(n.id)
+        next.delete(id)
       }
     }
     if (Array.isArray(n.children)) {
@@ -255,15 +294,14 @@ watch(
     // Calling emitSelection() unconditionally here echoes the value we just received,
     // which reassigns props.modelValue and retriggers this watch — an infinite recursive
     // loop that freezes the page (#546).
-    const incoming = new Set(newIds || [])
-    const next = new Set(incoming)
-    lockedSet.value.forEach(id => next.add(id))
+    const incoming = new Set(normalizeIdList(newIds))
+    const next = applyLockedIds(incoming)
     checkedSet.value = next
     if (next.size !== incoming.size) {
       emitSelection()
     }
   },
-  { deep: true }
+  { deep: true, immediate: true }
 )
 
 watch(lockedSet, () => ensureLockedChecked())
