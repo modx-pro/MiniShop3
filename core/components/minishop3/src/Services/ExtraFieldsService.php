@@ -6,6 +6,7 @@ use MiniShop3\Model\msExtraField;
 use MiniShop3\Model\msProductField;
 use MiniShop3\Services\ExtraFields\KeyValueFieldService;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
+use MiniShop3\Services\Grid\GridColumnRules;
 use MiniShop3\Utils\ExtraFields;
 use MODX\Revolution\modX;
 use Phinx\Config\Config;
@@ -103,27 +104,41 @@ class ExtraFieldsService
             return ['success' => false, 'message' => 'Field not found'];
         }
 
-        try {
-            $migrationFile = $this->migrationGenerator->generateDropColumnMigration($field);
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Migration generation error: ' . $e->getMessage()];
-        }
+        $class = (string) $field->get('class');
+        $migrationName = null;
+        $migrationOutput = '';
 
-        $migrationResult = $this->runMigrations();
+        // STI / unsupported hosts (e.g. legacy msProduct): metadata only — never ALTER site_content.
+        if ($this->migrationGenerator->canHostExtraField($class)) {
+            try {
+                $migrationFile = $this->migrationGenerator->generateDropColumnMigration($field);
+            } catch (\Exception $e) {
+                return ['success' => false, 'message' => 'Migration generation error: ' . $e->getMessage()];
+            }
 
-        if (!$migrationResult['success']) {
+            $migrationResult = $this->runMigrations();
+
+            if (!$migrationResult['success']) {
+                @unlink($migrationFile);
+                return $migrationResult;
+            }
+
+            $migrationName = basename($migrationFile);
+            $migrationOutput = $migrationResult['output'] ?? '';
             @unlink($migrationFile);
-            return $migrationResult;
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                "[ExtraFieldsService] Migration file deleted: {$migrationName}"
+            );
+        } else {
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                "[ExtraFieldsService] Skipping drop migration for unsupported class {$class}; removing metadata only"
+            );
         }
-
-        @unlink($migrationFile);
-        $this->modx->log(
-            modX::LOG_LEVEL_INFO,
-            "[ExtraFieldsService] Migration file deleted: " . basename($migrationFile)
-        );
 
         // Only delete msProductField for product-related models
-        if ($field->get('class') === 'MiniShop3\\Model\\msProductData') {
+        if ($class === 'MiniShop3\\Model\\msProductData') {
             $this->deleteProductFieldsByName($field->get('key'));
         }
 
@@ -134,8 +149,8 @@ class ExtraFieldsService
         return [
             'success' => true,
             'message' => 'Field deleted successfully',
-            'migration' => basename($migrationFile),
-            'output' => $migrationResult['output'] ?? ''
+            'migration' => $migrationName,
+            'output' => $migrationOutput,
         ];
     }
 
@@ -199,16 +214,34 @@ class ExtraFieldsService
      */
     private function validateFieldData(array $data): array
     {
+        $this->modx->lexicon->load('minishop3:default');
+
         $required = ['class', 'key', 'dbtype', 'phptype'];
 
         foreach ($required as $fieldName) {
             if (empty($data[$fieldName])) {
                 return [
                     'success' => false,
-                    'message' => "Field '{$fieldName}' is required",
+                    'message' => $this->modx->lexicon('ms3_err_ns'),
                     'field' => $fieldName
                 ];
             }
+        }
+
+        if (!$this->migrationGenerator->canHostExtraField((string) $data['class'])) {
+            return [
+                'success' => false,
+                'message' => $this->modx->lexicon('ms3_err_extra_field_class_unsupported'),
+                'field' => 'class',
+            ];
+        }
+
+        if (!GridColumnRules::isValidSqlIdentifier((string) $data['key'])) {
+            return [
+                'success' => false,
+                'message' => $this->modx->lexicon('ms3_err_extra_field_key_invalid'),
+                'field' => 'key',
+            ];
         }
 
         $exists = $this->modx->getObject(msExtraField::class, [

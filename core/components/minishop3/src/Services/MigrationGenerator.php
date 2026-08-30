@@ -13,7 +13,8 @@ class MigrationGenerator
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
-        $this->migrationsPath = MODX_CORE_PATH . 'components/minishop3/migrations/';
+        $corePath = defined('MODX_CORE_PATH') ? \MODX_CORE_PATH : (dirname(__DIR__, 2) . '/');
+        $this->migrationsPath = $corePath . 'components/minishop3/migrations/';
     }
 
     /**
@@ -59,7 +60,7 @@ class MigrationGenerator
      */
     private function renderAddColumnTemplate(string $className, msExtraField $field): string
     {
-        $tableName = $this->getTableName($field->get('class'));
+        $tableName = $this->resolveTableName($field->get('class'));
         $columnName = $field->get('key');
         $dbtype = $this->mapDbTypeToPhinx($field->get('dbtype'));
         $precision = $this->parsePrecision($field);
@@ -118,7 +119,7 @@ PHP;
      */
     private function renderDropColumnTemplate(string $className, msExtraField $field): string
     {
-        $tableName = $this->getTableName($field->get('class'));
+        $tableName = $this->resolveTableName($field->get('class'));
         $columnName = $field->get('key');
         $indexName = $field->hasIndex() ? $field->getIndexName() : '';
 
@@ -270,31 +271,52 @@ PHP;
     }
 
     /**
-     * Get table name from model class
+     * Whether the model class has its own DB table (not STI / modResource inheritance).
      */
-    private function getTableName(string $class): string
+    public function canHostExtraField(string $class): bool
     {
-        // MiniShop3\Model\msProductData → ms3_products
-        $tableMap = [
-            'MiniShop3\\Model\\msProductData' => 'ms3_products',
-            'MiniShop3\\Model\\msVendor' => 'ms3_vendors',
-            'MiniShop3\\Model\\msOrder' => 'ms3_orders',
-            'MiniShop3\\Model\\msCategory' => 'ms3_categories',
-            'MiniShop3\\Model\\msOrderProduct' => 'ms3_order_products',
-            'MiniShop3\\Model\\msOrderAddress' => 'ms3_order_addresses',
-        ];
+        return $this->ownTableName($class) !== null;
+    }
 
-        if (isset($tableMap[$class])) {
-            return $tableMap[$class];
+    /**
+     * Unprefixed, unquoted table name for Phinx (table_prefix is applied in phinx.php).
+     */
+    public function resolveTableName(string $class): string
+    {
+        $table = $this->ownTableName($class);
+        if ($table === null) {
+            throw new \InvalidArgumentException("Model class cannot host extra fields: {$class}");
         }
 
-        // If class not in map, try to get from xPDO
-        $object = $this->modx->newObject($class);
-        if ($object) {
-            return $this->modx->getTableName($class);
+        return $table;
+    }
+
+    /**
+     * Own logical table from mysql metaMap, or null when the class inherits another table.
+     */
+    private function ownTableName(string $class): ?string
+    {
+        $mysqlClass = str_replace('\\Model\\', '\\Model\\mysql\\', $class);
+        if (!str_starts_with($mysqlClass, 'MiniShop3\\Model\\mysql\\') || !class_exists($mysqlClass)) {
+            return null;
         }
 
-        throw new \Exception("Cannot determine table name for class: {$class}");
+        $table = $mysqlClass::$metaMap['table'] ?? null;
+        if (!is_string($table) || $table === '') {
+            return null;
+        }
+
+        $table = trim($table, '`');
+        if (str_contains($table, '.')) {
+            $parts = explode('.', $table);
+            $table = (string) end($parts);
+        }
+
+        if ($table === '' || str_contains($table, '`')) {
+            return null;
+        }
+
+        return $table;
     }
 
     /**
@@ -302,17 +324,10 @@ PHP;
      */
     private function getTableShortName(string $class): string
     {
-        // MiniShop3\Model\msProductData → Products
-        $map = [
-            'MiniShop3\\Model\\msProductData' => 'Products',
-            'MiniShop3\\Model\\msVendor' => 'Vendors',
-            'MiniShop3\\Model\\msOrder' => 'Orders',
-            'MiniShop3\\Model\\msCategory' => 'Categories',
-            'MiniShop3\\Model\\msOrderProduct' => 'OrderProducts',
-            'MiniShop3\\Model\\msOrderAddress' => 'OrderAddresses',
-        ];
+        $table = $this->resolveTableName($class);
+        $base = preg_replace('/^ms3_/', '', $table) ?? $table;
 
-        return $map[$class] ?? 'Table';
+        return $this->toCamelCase($base);
     }
 
     private function toCamelCase(string $str): string

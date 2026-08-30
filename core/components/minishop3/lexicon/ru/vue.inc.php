@@ -297,6 +297,7 @@ $_lang['ms3_vue_error_loading'] = 'Ошибка загрузки';
 $_lang['ms3_vue_error_loading_fields'] = 'Не удалось загрузить список полей';
 $_lang['ms3_vue_validation'] = 'Валидация';
 $_lang['ms3_vue_validation_key_required'] = 'Укажите имя поля (key)';
+$_lang['ms3_vue_validation_key_invalid'] = 'Ключ поля может содержать только латинские буквы, цифры и подчёркивание';
 $_lang['ms3_vue_validation_dbtype_required'] = 'Укажите тип данных БД (dbtype)';
 $_lang['ms3_vue_field_created'] = 'создано';
 $_lang['ms3_vue_error_creating'] = 'Ошибка создания';
