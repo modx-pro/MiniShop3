@@ -381,6 +381,10 @@ class Router
                 return Response::error('Route not found', HttpStatus::NOT_FOUND);
 
             case Dispatcher::METHOD_NOT_ALLOWED:
+                if ($httpMethod === 'OPTIONS') {
+                    return $this->dispatchOptionsPreflight($uri, $routeInfo[1] ?? []);
+                }
+
                 return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
 
             case Dispatcher::FOUND:
@@ -391,6 +395,40 @@ class Router
         }
 
         return Response::error('Unknown error', HttpStatus::INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Run middleware for a valid storefront path when FastRoute has no OPTIONS handler.
+     *
+     * Never invokes the route handler: preflight must not trigger POST/GET side effects (#634).
+     * CorsMiddleware (first on stock /api/v1 routes) returns 200 and stops the chain.
+     *
+     * @param list<string> $allowedMethods
+     */
+    protected function dispatchOptionsPreflight(string $uri, array $allowedMethods): Response
+    {
+        if (!self::isStorefrontRoute($uri) || $allowedMethods === []) {
+            return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
+        }
+
+        $probeMethod = $allowedMethods[0];
+        $probeInfo = $this->dispatcher->dispatch($probeMethod, $uri);
+
+        if ($probeInfo[0] !== Dispatcher::FOUND) {
+            return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
+        }
+
+        $vars = array_merge($_GET, $probeInfo[2] ?? []);
+
+        foreach ($probeInfo[1]['middlewares'] ?? [] as $middleware) {
+            $result = $this->resolveMiddleware($middleware)->handle($vars);
+
+            if ($result instanceof Response) {
+                return $result;
+            }
+        }
+
+        return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
     }
 
     /**
