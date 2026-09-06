@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import ContextMenu from 'primevue/contextmenu'
-import InputText from 'primevue/inputtext'
-import Paginator from 'primevue/paginator'
+import { ContextMenu, InputText, Paginator } from 'primevue'
 import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -225,7 +223,8 @@ function onContextMenu(event, image) {
 }
 
 .gallery-search {
-  padding: 0.5rem 0;
+  padding: 0;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .gallery-search-wrap {
@@ -268,8 +267,9 @@ function onContextMenu(event, image) {
 }
 
 .gallery-empty {
-  padding: 2rem;
-  text-align: center;
+  padding: var(--p-modx-space-panel, 15px) 0;
+  text-align: start;
+  font-size: 0.875rem;
   color: var(--p-text-muted-color);
 }
 
@@ -316,12 +316,12 @@ function onContextMenu(event, image) {
   left: 0.25rem;
   z-index: 1;
   padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
+  border-radius: var(--p-border-radius-sm, 3px);
   font-size: 0.625rem;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--p-primary-contrast-color, #fff);
-  background: var(--p-primary-color);
+  color: var(--p-button-success-contrast-color, #fff);
+  background: var(--p-button-success-background, #6cb24a);
 }
 
 .gallery-images :deep(.gallery-item-thumb img) {

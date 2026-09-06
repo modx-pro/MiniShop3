@@ -1,16 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ColorPicker from 'primevue/colorpicker'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, ColorPicker, ConfirmDialog, Dialog, InputText, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -19,13 +9,17 @@ import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
 import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
+import { gridDeleteAction } from '../utils/gridDeleteAction.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
-const confirm = useConfirm()
 const { _ } = useLexicon()
 
 const CONFIRM_GROUP = 'settings-statuses'
+
+const STATUS_GRID_DELETE_ACTION = gridDeleteAction({
+  confirmMessage: 'status_delete_confirm_message',
+})
 
 // Bulk selection
 const {
@@ -152,38 +146,27 @@ async function saveStatus() {
 }
 
 /**
- * Delete status with confirmation
+ * Delete status (called after confirmation in ActionsColumn / useActions)
  */
-function deleteStatus(status) {
-  confirm.require({
-    group: CONFIRM_GROUP,
-    message: _('status_delete_confirm_message').replace('{name}', status.name),
-    header: _('confirm_delete'),
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: _('delete'),
-    rejectLabel: _('cancel'),
-    acceptClass: 'p-button-danger',
-    accept: async () => {
-      try {
-        await request.delete(`/api/mgr/statuses/${status.id}`)
-        toast.add({
-          severity: 'success',
-          summary: _('success'),
-          detail: _('status_deleted'),
-          life: 3000,
-        })
-        loadStatuses()
-      } catch (error) {
-        console.error('[StatusesGrid] Error deleting status:', error)
-        toast.add({
-          severity: 'error',
-          summary: _('error'),
-          detail: error.message || _('error_deleting_data'),
-          life: 5000,
-        })
-      }
-    },
-  })
+async function deleteStatus(status) {
+  try {
+    await request.delete(`/api/mgr/statuses/${status.id}`)
+    toast.add({
+      severity: 'success',
+      summary: _('success'),
+      detail: _('status_deleted'),
+      life: 3000,
+    })
+    await loadStatuses()
+  } catch (error) {
+    console.error('[StatusesGrid] Error deleting status:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_deleting_data'),
+      life: 5000,
+    })
+  }
 }
 
 /**
@@ -210,14 +193,7 @@ function selectColor(color) {
 function getActionsConfig() {
   return [
     { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: _('edit') },
-    {
-      name: 'delete',
-      handler: 'delete',
-      icon: 'pi-trash',
-      label: _('delete'),
-      severity: 'danger',
-      confirm: false,
-    },
+    { ...STATUS_GRID_DELETE_ACTION, label: _('delete') },
   ]
 }
 
@@ -270,7 +246,13 @@ onMounted(() => {
             </div>
           </div>
           <div class="grid-header-right">
-            <Button :label="_('create')" icon="pi pi-plus" severity="success" @click="openCreate" />
+            <Button
+              :label="_('create')"
+              icon="pi pi-plus"
+              severity="primary"
+              size="small"
+              @click="openCreate"
+            />
           </div>
         </div>
       </template>
@@ -287,7 +269,6 @@ onMounted(() => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -295,7 +276,6 @@ onMounted(() => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -468,7 +448,13 @@ onMounted(() => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveStatus" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveStatus"
+        />
       </template>
     </Dialog>
   </div>
@@ -554,8 +540,12 @@ onMounted(() => {
 }
 
 .ms3-status-form .checkbox-item label {
+  margin: 0;
+  line-height: 1;
   cursor: pointer;
-  font-weight: normal;
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
 }
 
 .ms3-status-form .help-texts {
@@ -583,7 +573,7 @@ onMounted(() => {
 
 <style scoped>
 .statuses-grid {
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .grid-header {

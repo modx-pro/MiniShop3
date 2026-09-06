@@ -4,7 +4,7 @@
  * Provides convenient interface for working with grid actions
  */
 import { useLexicon } from '@vuetools/useLexicon'
-import { useConfirm } from 'primevue/useconfirm'
+import { useConfirm } from 'primevue'
 
 import actionRegistry from '../actionRegistry.js'
 import { resolveUiGroup, toUiGroup, useGroupedToast } from './uiGroup.js'

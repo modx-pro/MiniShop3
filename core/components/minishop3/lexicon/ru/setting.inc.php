@@ -24,6 +24,8 @@ $_lang['area_ms3_notifications'] = 'Уведомления';
 
 $_lang['setting_ms3_chunks_categories'] = 'Категории для списка чанков';
 $_lang['setting_ms3_chunks_categories_desc'] = 'Список ID категорий через запятую  для списка чанков.';
+$_lang['setting_ms3_version'] = 'Версия установленного пакета';
+$_lang['setting_ms3_version_desc'] = 'Версия последнего успешно установленного транспортного пакета MiniShop3. Используется для health-check и обнаружения сбоев копирования файлов.';
 $_lang['setting_ms3_tmp_storage'] = 'Хранилище корзины и временных полей заказа';
 $_lang['setting_ms3_tmp_storage_desc'] = "
 Для хранения корзины и временных полей заказа в сессии укажите <strong>session</strong><br>
@@ -139,6 +141,18 @@ $_lang['setting_ms3_status_paid'] = 'ID статуса оплаченного з
 $_lang['setting_ms3_status_paid_desc'] = 'Какой статус нужно устанавливать после оплаты заказа';
 $_lang['setting_ms3_status_canceled'] = 'ID статуса отмены заказа';
 $_lang['setting_ms3_status_canceled_desc'] = 'Какой статус нужно устанавливать при отмене заказа';
+$_lang['setting_ms3_status_sent'] = 'ID статуса «Отправлен»';
+$_lang['setting_ms3_status_sent_desc'] = 'Статус, при котором срабатывает порт отгрузки в lifecycle (по умолчанию seed id 4).';
+$_lang['setting_ms3_order_status_transitions'] = 'Разрешённые переходы статусов заказа';
+$_lang['setting_ms3_order_status_transitions_desc'] = 'Опциональный allow-list рёбер поверх правил final/fixed. Пусто — только final/fixed. Формат: CSV пары from:to (например 2:3,3:4,2:5) или JSON [[2,3],[3,4]].';
+$_lang['setting_ms3_inventory_enabled'] = 'Учитывать остаток товара';
+$_lang['setting_ms3_inventory_enabled_desc'] = 'По умолчанию выключено: корзина, оформление и оплата работают как раньше и не трогают остаток. Если включить, MiniShop3 проверяет доступность до выдачи номера заказа, резервирует остаток на статусе «Новый» (ms3_status_new), фиксирует на «Оплачен» (ms3_status_paid) и освобождает на «Отменён» (ms3_status_canceled), если заказ ещё не был оплачен. Неуспешный send() оплаты переводит заказ в отмену, чтобы резерв не остался висеть. Внешний склад подключается заменой сервиса ms3_inventory. Мультисклад, партии и синхронизация с ERP в эту настройку не входят.';
+$_lang['setting_ms3_shipment_enabled'] = 'Включить lifecycle отгрузки';
+$_lang['setting_ms3_shipment_enabled_desc'] = 'Выкл. (по умолчанию): оформление и статусы заказа как сейчас. Вкл.: shipped ставит ms3_status_sent через OrderStatusService, cancelled/failed — ms3_status_canceled. create/setTracking работают и при выкл. Webhook при выкл. отвечает 404. Внешний WMS подменяется через ms3_shipment_lifecycle.';
+$_lang['setting_ms3_shipment_on_delivered_status'] = 'ID статуса заказа при delivered';
+$_lang['setting_ms3_shipment_on_delivered_status_desc'] = 'Необязательно. 0 (по умолчанию) не меняет статус заказа, когда отгрузка становится delivered. Сид sent финальный, поэтому оставьте 0, если не используете нефинальный sent.';
+$_lang['setting_ms3_shipment_on_in_transit_status'] = 'ID статуса заказа при in_transit';
+$_lang['setting_ms3_shipment_on_in_transit_status_desc'] = 'Необязательно. 0 (по умолчанию) не меняет статус заказа, когда отгрузка становится in_transit.';
 $_lang['setting_ms3_customer_cancel_allowed_statuses'] = 'Статусы, из которых покупатель может отменить заказ';
 $_lang['setting_ms3_customer_cancel_allowed_statuses_desc'] = 'ID статусов через запятую. По умолчанию: «Новый» и «Оплачен» (2,3). Пусто — использовать ms3_status_new и ms3_status_paid.';
 $_lang['setting_ms3_status_for_stat'] = 'ID статусов для статистики';
@@ -178,7 +192,11 @@ $_lang['setting_ms3_email_verification_url_desc'] = 'Если пусто, в п�
 $_lang['setting_ms3_email_verification_success_url'] = 'URL редиректа после успешной верификации email (необязательно)';
 $_lang['setting_ms3_email_verification_success_url_desc'] = 'Используется при переходе по ссылке из письма (параметр html=1). Если пусто — берётся site_url; к URL добавляется параметр ms3_email_verified=1.';
 $_lang['setting_ms3_payment_secret'] = 'Секретный ключ для платежей';
-$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платежных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
+$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платёжных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
+$_lang['setting_ms3_payment_on_failed_status'] = 'Статус заказа после неуспешной оплаты';
+$_lang['setting_ms3_payment_on_failed_status_desc'] = 'ID статуса заказа, который ставится при failed/cancelled попытки до оплаты. 0 — не менять заказ. По умолчанию статус отмены (5).';
+$_lang['setting_ms3_payment_on_refunded_status'] = 'Статус заказа после полного возврата';
+$_lang['setting_ms3_payment_on_refunded_status_desc'] = 'ID статуса заказа после полного refund. 0 — не менять заказ. Частичный возврат статус заказа не меняет. По умолчанию статус отмены (5).';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Символ валюты';

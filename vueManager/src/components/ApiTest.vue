@@ -2,21 +2,7 @@
 import { useApi } from '@vuetools/useApi'
 import { useModx } from '@vuetools/useModx'
 import { usePermission } from '@vuetools/usePermission'
-import Badge from 'primevue/badge'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Chip from 'primevue/chip'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Divider from 'primevue/divider'
-import Message from 'primevue/message'
-import Panel from 'primevue/panel'
-import ProgressSpinner from 'primevue/progressspinner'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
+import { Badge, Button, Card, Chip, Column, DataTable, Divider, Message, Panel, ProgressSpinner, Tab, TabList, TabPanel, TabPanels, Tabs } from 'primevue'
 import { computed, ref } from 'vue'
 
 const { get, loading, error, clearError } = useApi()
@@ -196,8 +182,7 @@ const testPostRequest = async () => {
                   <Button
                     label="Execute Health Check"
                     icon="pi pi-heart"
-                    :loading="loading"
-                    class="mt-3"
+                    :loading="loading" class="mt-3"
                     @click="testHealthCheck"
                   />
 
@@ -222,8 +207,7 @@ const testPostRequest = async () => {
                   <Button
                     label="Execute Authorized Request"
                     icon="pi pi-lock"
-                    :loading="loading"
-                    class="mt-3"
+                    :loading="loading" class="mt-3"
                     @click="testAuthRequest"
                   />
 
@@ -248,8 +232,7 @@ const testPostRequest = async () => {
                   <Button
                     label="Execute Echo Request"
                     icon="pi pi-send"
-                    :loading="loading"
-                    class="mt-3"
+                    :loading="loading" class="mt-3"
                     @click="testPostRequest"
                   />
 

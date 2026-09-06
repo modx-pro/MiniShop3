@@ -34,7 +34,7 @@ $router->group('/api/mgr', function ($router) use ($modx) {
     $router->get('/health', function () use ($modx) {
         return Response::success([
             'status' => 'ok',
-            'version' => $modx->getOption('ms3_version', null, '1.0.0'),
+            'version' => $modx->getOption('ms3_version', null, '1.0.0', true),
             'timestamp' => time(),
             'api' => 'manager'
         ]);
@@ -189,6 +189,7 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         new PermissionMiddleware($modx, 'view_document')
     ]);
 
+    // Extra fields reads: order/product forms load schema without settings perm (#613)
     $router->group('/extra-fields', function ($router) use ($modx) {
         $router->get('', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
@@ -198,6 +199,10 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
             return $controller->get($params);
         });
+    });
+
+    // Extra fields writes: schema mutations require mssetting_save (#381)
+    $router->group('/extra-fields', function ($router) use ($modx) {
         $router->post('', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
             return $controller->create();
@@ -816,6 +821,9 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         $router->get('/{id}/logs', function ($params) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->getLogs($params);
         });
+        $router->get('/{id}/shipment', function ($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\OrderShipmentController($modx))->get($params);
+        });
     }, [
         new PermissionMiddleware($modx, 'msorder_list')
     ]);
@@ -863,6 +871,11 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         });
         $router->delete('/{id}/products/{product_id}', function ($params) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->deleteProduct($params);
+        });
+        $router->put('/{id}/shipment', function ($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrderShipmentController($modx))
+                ->save(array_merge($params, is_array($data) ? $data : []));
         });
     }, [
         new PermissionMiddleware($modx, 'msorder_save')
@@ -984,6 +997,7 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Model fields reads: order/product forms load schema without settings perm (#613)
     $router->group('/model-fields', function ($router) use ($modx) {
         $router->get('/models', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
@@ -1009,6 +1023,22 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
             return $controller->getSections($params);
         });
+
+        // Field routes
+        $router->get('', function ($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->get('/{id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->get($params);
+        });
+    });
+
+    // Model fields writes: schema mutations require mssetting_save (#381)
+    $router->group('/model-fields', function ($router) use ($modx) {
         $router->post('/sections', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -1036,17 +1066,6 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             return $controller->deleteSection($params);
         });
 
-        // Field routes
-        $router->get('', function ($params) use ($modx) {
-            $allParams = array_merge($_GET, $params);
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
-            return $controller->getList($allParams);
-        });
-        $router->get('/{id}', function ($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
-            return $controller->get($params);
-        });
         $router->post('', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];

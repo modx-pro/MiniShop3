@@ -270,6 +270,11 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
 
     // Public catalog — no TokenMiddleware (headless storefront without customer session)
     $router->group('/product', function ($router) use ($modx) {
+        $router->get('/get', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
+            return $controller->resolve($params);
+        });
+
         $router->get('/get/{id}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
             return $controller->get($params);
@@ -284,10 +289,20 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
             return $controller->filters($params);
         });
+
+        $router->get('/{id}/images', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
+            return $controller->getImages($params);
+        });
     });
 
     // Public category catalog — no TokenMiddleware (headless nav / PLP)
     $router->group('/category', function ($router) use ($modx) {
+        $router->get('/get', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CategoryController($modx);
+            return $controller->resolve($params);
+        });
+
         $router->get('/get/{id}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CategoryController($modx);
             return $controller->get($params);
@@ -315,6 +330,11 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\DeliveryController($modx);
             return $controller->getList($params);
         });
+
+        $router->post('/webhook/{delivery_id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\DeliveryWebhookController($modx);
+            return $controller->handle($params);
+        });
     });
 
     $router->group('/payment', function ($router) use ($modx) {
@@ -327,12 +347,17 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\PaymentController($modx);
             return $controller->getList($params);
         });
+
+        $router->post('/webhook/{payment_method_id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\PaymentWebhookController($modx);
+            return $controller->handle($params);
+        });
     });
 
     $router->get('/health', function () use ($modx) {
         return Response::success([
             'status' => 'ok',
-            'version' => $modx->getOption('ms3_version', null, '1.0.0'),
+            'version' => $modx->getOption('ms3_version', null, '1.0.0', true),
             'timestamp' => time(),
             'api' => 'web'
         ]);

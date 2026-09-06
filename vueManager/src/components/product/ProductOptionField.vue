@@ -1,13 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Checkbox from 'primevue/checkbox'
-import DatePicker from 'primevue/datepicker'
-import InputChips from 'primevue/inputchips'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import MultiSelect from 'primevue/multiselect'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { Checkbox, DatePicker, InputChips, InputNumber, InputText, MultiSelect, Select, Textarea } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import request from '../../request.js'
@@ -450,8 +443,8 @@ function addSuggestion(s) {
 }
 
 .combo-options-suggestion:hover {
-  background: var(--p-primary-color, #10b981);
-  border-color: var(--p-primary-color, #10b981);
+  background: var(--p-primary-color, #234368);
+  border-color: var(--p-primary-color, #234368);
   color: #fff;
 }
 </style>

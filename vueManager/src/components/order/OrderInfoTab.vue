@@ -1,14 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import DatePicker from 'primevue/datepicker'
-import Fieldset from 'primevue/fieldset'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { Button, Checkbox, DatePicker, Fieldset, InputNumber, InputText, Message, Select, Textarea } from 'primevue'
 import { computed, inject, watch } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
@@ -142,12 +134,11 @@ const showOrderInfoActions = computed(
           <span class="summary-value">{{ formatDate(order.createdon) }}</span>
         </div>
         <div class="summary-item summary-row-actions summary-item-wide">
-          <span class="summary-label">{{ _('order_cost_recalculate') }}</span>
           <div class="cost-recalc-controls">
             <Button
               :label="_('order_cost_recalculate')"
               icon="pi pi-sync"
-              size="small"
+              severity="success"
               class="cost-recalc-btn"
               :disabled="recalculateBlocked"
               :loading="recalculatingCost"
@@ -171,9 +162,9 @@ const showOrderInfoActions = computed(
         <Message severity="warn" :closable="false" class="mb-2">
           {{ _('order_cost_recalc_delivery_manual_hint') }}
         </Message>
-        <div class="manual-delivery-row flex gap-2 align-items-end flex-wrap">
-          <div class="manual-delivery-input">
-            <label class="block mb-1" for="manual-delivery-cost">{{ _('ms3_order_delivery_cost') }}</label>
+        <div class="manual-delivery-row">
+          <div class="manual-delivery-input field">
+            <label for="manual-delivery-cost">{{ _('ms3_order_delivery_cost') }}</label>
             <InputNumber
               v-model="manualDeliveryCost"
               input-id="manual-delivery-cost"
@@ -185,6 +176,8 @@ const showOrderInfoActions = computed(
           <Button
             :label="_('order_cost_recalc_apply_manual')"
             icon="pi pi-check"
+            severity="success"
+            class="manual-delivery-apply"
             :loading="recalculatingCost"
             type="button"
             @click="applyManualDeliveryCost()"
@@ -295,8 +288,7 @@ const showOrderInfoActions = computed(
           :label="_('ms3_order_finalize_btn')"
           icon="pi pi-check-circle"
           severity="success"
-          :loading="finalizing"
-          class="finalize-button"
+          :loading="finalizing" class="finalize-button"
           @click="confirmFinalizeOrder"
         />
       </div>
@@ -364,11 +356,13 @@ const showOrderInfoActions = computed(
 }
 
 .summary-label {
-  font-size: 0.75rem;
-  color: var(--ms3-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  display: block;
   margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ms3-text-muted);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .summary-value {
@@ -394,10 +388,34 @@ const showOrderInfoActions = computed(
   margin-top: 0.35rem;
 }
 
+.manual-delivery-panel {
+  margin-top: 0.5rem;
+}
+
+.manual-delivery-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
 .manual-delivery-input {
   flex: 1;
   min-width: 12rem;
   max-width: 20rem;
+}
+
+.manual-delivery-row :deep(.p-inputnumber),
+.manual-delivery-row :deep(.p-inputnumber-input) {
+  width: 100%;
+  height: var(--p-modx-control-height, 2.25rem);
+  min-height: var(--p-modx-control-height, 2.25rem);
+  box-sizing: border-box;
+}
+
+.manual-delivery-apply {
+  height: var(--p-modx-control-height, 2.25rem);
+  min-height: var(--p-modx-control-height, 2.25rem);
 }
 
 .finalize-info-panel {

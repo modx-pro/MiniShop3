@@ -5,15 +5,13 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
+import { ConfirmationService, ModxManagerTheme, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import OrderView from '../components/OrderView.vue'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 import {
   snapshotOrderTabConfigForQueue,
@@ -26,7 +24,7 @@ import {
  * pre-mount entries are queued (snapshotted) and flushed in `_onMounted(instance)`.
  *
  * Tab config fields:
- * - `key` (string, required) — unique id; must not be info|products|address|history
+ * - `key` (string, required) — unique id; must not be info|products|address|tracking|history
  * - `title` (string, required) — header label
  * - `type` — `'vue'` (default) or `'extjs'`
  * - `component` — Vue: options object (imported SFC) or registered component name string
@@ -46,8 +44,8 @@ import {
  *
  * @example Vue tab (prefer a component definition from your bundle; string names need app.component())
  * window.MS3OrderTabsRegistry.register({
- *   key: 'tracking',
- *   title: 'Tracking',
+ *   key: 'fulfillment',
+ *   title: 'Fulfillment',
  *   type: 'vue',
  *   component: MyTrackingTab,
  *   position: 10,
@@ -136,12 +134,7 @@ function createVueApp() {
   app.use(pinia)
 
   app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
+    theme: ModxManagerTheme,
     locale: getPrimeVueLocale(),
   })
 
@@ -163,7 +156,7 @@ export function init(selector = '#ms3-order-vue-wrapper') {
     return null
   }
 
-  const app = createVueApp()
+  const app = createMs3VueApp(OrderView)
   const instance = app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'

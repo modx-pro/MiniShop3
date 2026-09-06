@@ -35,18 +35,28 @@ if (in_array('/api/v1/cart/get', $publicRoutes, true)) {
     $fail('cart/get must not be public — otherwise guest GET never auto-mints a token (#408)');
 }
 
+if (in_array('/api/v1/product/', $publicRoutes, true)) {
+    $fail('wide /api/v1/product/ prefix would publish the whole product group (#584)');
+}
+
+if (!str_contains($middlewareSrc, "'/api/v1/product/*/images'")) {
+    $fail('publicRoutePatterns must include /api/v1/product/*/images');
+}
+
 foreach (
     [
-        '/api/v1/product/get/',
+        '/api/v1/product/get',
         '/api/v1/product/list',
         '/api/v1/product/filters',
-        '/api/v1/category/get/',
+        '/api/v1/category/get',
         '/api/v1/category/list',
         '/api/v1/category/tree',
         '/api/v1/delivery/get/',
         '/api/v1/delivery/list',
+        '/api/v1/delivery/webhook/',
         '/api/v1/payment/get/',
         '/api/v1/payment/list',
+        '/api/v1/payment/webhook/',
         '/api/v1/customer/token/get',
         '/api/v1/health',
     ] as $prefix
@@ -95,6 +105,13 @@ if (
 
 if (!str_contains($middlewareSrc, 'ApiErrorCode::INTERNAL_ERROR')) {
     $fail('TokenMiddleware mint failure must use internal_error (not token_required)');
+}
+
+if (
+    !str_contains($middlewareSrc, '$route === $publicRoute')
+    || !str_contains($middlewareSrc, "str_starts_with(\$route, \$publicRoute . '/')")
+) {
+    $fail('isPublicRoute must match exact path or segment prefix, not blind str_starts_with');
 }
 
 if (

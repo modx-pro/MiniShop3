@@ -8,6 +8,7 @@
 $_lang['ms3_vue_product_fields_title'] = 'Product Fields (Admin)';
 $_lang['ms3_vue_product_fields_description'] = 'Here you can configure which fields are displayed on the "Product Data" tab when editing a product';
 $_lang['ms3_vue_product_properties'] = 'Product Properties';
+$_lang['ms3_product_links_empty'] = 'No links yet. Create the first one.';
 
 // Grid Fields Config Widget
 $_lang['grid_fields_config_title'] = 'Grid Configuration';
@@ -165,6 +166,7 @@ $_lang['ms3_vue_xtype_key_value'] = 'Key-Value (map)';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Vendor (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Autocomplete (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Product Options (chips)';
+$_lang['ms3_vue_xtype_datefield'] = 'Date';
 
 // Dropdown list settings
 $_lang['ms3_vue_select_options_label'] = 'List Options';
@@ -215,6 +217,7 @@ $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (string)';
 $_lang['ms3_vue_dbtype_text'] = 'TEXT (text)';
 $_lang['ms3_vue_dbtype_int'] = 'INT (integer)';
 $_lang['ms3_vue_dbtype_decimal'] = 'DECIMAL (decimal)';
+$_lang['ms3_vue_dbtype_date'] = 'DATE (date only)';
 $_lang['ms3_vue_dbtype_datetime'] = 'DATETIME (date and time)';
 $_lang['ms3_vue_dbtype_timestamp'] = 'TIMESTAMP';
 $_lang['ms3_vue_dbtype_tinyint'] = 'TINYINT (0/1)';
@@ -297,6 +300,7 @@ $_lang['ms3_vue_error_loading'] = 'Loading Error';
 $_lang['ms3_vue_error_loading_fields'] = 'Failed to load fields list';
 $_lang['ms3_vue_validation'] = 'Validation';
 $_lang['ms3_vue_validation_key_required'] = 'Please specify field name (key)';
+$_lang['ms3_vue_validation_key_invalid'] = 'Field key must contain only Latin letters, digits, and underscores';
 $_lang['ms3_vue_validation_dbtype_required'] = 'Please specify database type (dbtype)';
 $_lang['ms3_vue_field_created'] = 'created';
 $_lang['ms3_vue_error_creating'] = 'Creation Error';
@@ -613,7 +617,23 @@ $_lang['order_costs'] = 'Costs';
 $_lang['order_dates'] = 'Dates';
 $_lang['order_products'] = 'Products';
 $_lang['order_address'] = 'Address';
+$_lang['order_tracking'] = 'Tracking';
 $_lang['order_history'] = 'History';
+$_lang['shipment_empty'] = 'No shipment yet';
+$_lang['shipment_create'] = 'Create shipment';
+$_lang['shipment_saved'] = 'Shipment saved';
+$_lang['shipment_status'] = 'Shipment status';
+$_lang['shipment_tracking_number'] = 'Tracking number';
+$_lang['shipment_carrier'] = 'Carrier';
+$_lang['shipment_shipped_at'] = 'Shipped';
+$_lang['shipment_delivered_at'] = 'Delivered';
+$_lang['shipment_status_preparing'] = 'Preparing';
+$_lang['shipment_status_shipped'] = 'Shipped';
+$_lang['shipment_status_in_transit'] = 'In transit';
+$_lang['shipment_status_delivered'] = 'Delivered';
+$_lang['shipment_status_cancelled'] = 'Cancelled';
+$_lang['shipment_status_returned'] = 'Returned';
+$_lang['shipment_status_failed'] = 'Failed';
 $_lang['order_comment'] = 'Comment';
 $_lang['select_status'] = 'Select status';
 $_lang['select_delivery'] = 'Select delivery';
@@ -639,6 +659,19 @@ $_lang['log_date'] = 'Date';
 $_lang['log_action'] = 'Action';
 $_lang['log_user'] = 'User';
 $_lang['log_entry'] = 'Entry';
+$_lang['log_empty'] = 'No order history yet';
+$_lang['log_action_status'] = 'Status';
+$_lang['log_action_field'] = 'Field';
+$_lang['log_action_address'] = 'Address';
+$_lang['log_action_products'] = 'Products';
+$_lang['log_action_payment'] = 'Payment';
+$_lang['log_entry_status_id'] = 'Status ID: {id}';
+$_lang['log_entry_fields'] = 'Fields: {fields}';
+$_lang['log_entry_address'] = 'Address: {fields}';
+$_lang['log_entry_product_op_add'] = 'Added';
+$_lang['log_entry_product_op_remove'] = 'Removed';
+$_lang['log_entry_product_op_update'] = 'Updated';
+$_lang['log_entry_product_op_unknown'] = 'Change';
 $_lang['address_first_name'] = 'First Name';
 $_lang['address_last_name'] = 'Last Name';
 $_lang['address_phone'] = 'Phone';
@@ -1127,6 +1160,10 @@ $_lang['ms3_vendor_phone'] = 'Phone';
 $_lang['ms3_vendor_email'] = 'Email';
 $_lang['ms3_vendor_description'] = 'Description';
 $_lang['ms3_vendor_properties'] = 'Properties';
+$_lang['ms3_vendor_select'] = 'Select vendor';
+$_lang['ms3_vendor_search'] = 'Search vendor…';
+$_lang['ms3_vendor_empty'] = 'No vendors found. Add a vendor in component settings.';
+$_lang['ms3_vendor_not_found'] = 'Vendor not found';
 
 // Vendor sections
 $_lang['ms3_section_vendor_info'] = 'Information';
@@ -1192,3 +1229,9 @@ $_lang['ms3_utilities_import_description'] = 'Import products from CSV file. Upl
 $_lang['ms3_utilities_extra_fields_description'] = 'Create additional fields for MiniShop3 models. Fields are automatically added to database tables.';
 $_lang['ms3_utilities_grid_fields_description'] = 'Configure admin grid columns: visibility, sorting, filtering, order. Add computed and related fields.';
 $_lang['ms3_utilities_model_fields_description'] = 'Configure form fields for editing orders, vendors, and other entities. Group by sections, set visibility and order.';
+
+// Category options tab toasts (#615 / #7)
+$_lang['ms3_options_order_saved'] = 'Order saved';
+$_lang['ms3_options_added'] = 'Added';
+$_lang['ms3_options_removed'] = 'Removed';
+$_lang['ms3_options_copied'] = 'Copied: {copied}, skipped: {skipped}';

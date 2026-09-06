@@ -6,6 +6,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Catalog\CatalogResolve;
 use MiniShop3\Services\Category\CategoryCatalogService;
 use MODX\Revolution\modX;
 
@@ -27,6 +28,9 @@ class CategoryController
     /**
      * GET /api/v1/category/get/{id}
      *
+     * Query: context, include_hidden, include_content, include_breadcrumbs,
+     *        include_children, include_seo (default 1).
+     *
      * @param array<string, mixed> $params
      */
     public function get(array $params = []): Response
@@ -41,6 +45,48 @@ class CategoryController
         }
 
         $category = $this->catalog()->getById($categoryId, $params);
+
+        if ($category === null) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_category_nf'),
+                HttpStatus::NOT_FOUND
+            );
+        }
+
+        return Response::success($category);
+    }
+
+    /**
+     * GET /api/v1/category/get?alias=…|uri=…&context=…
+     *
+     * @param array<string, mixed> $params
+     */
+    public function resolve(array $params = []): Response
+    {
+        $parsed = CatalogResolve::parseLookup(
+            $params,
+            (string) ($this->modx->context->key ?? 'web'),
+        );
+
+        if (!$parsed['ok']) {
+            $lexiconKey = match ($parsed['error']) {
+                'required' => 'ms3_err_catalog_lookup_required',
+                'conflict' => 'ms3_err_catalog_lookup_conflict',
+                'invalid' => 'ms3_err_catalog_lookup_invalid',
+            };
+
+            return Response::error(
+                $this->modx->lexicon($lexiconKey),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $category = $this->catalog()->resolveByLookup(
+            $params,
+            $parsed['field'],
+            $parsed['value'],
+            $parsed['context'],
+        );
 
         if ($category === null) {
             return Response::error(

@@ -1,6 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
+import { Button } from 'primevue'
 
 defineProps({
   isCreateMode: { type: Boolean, required: true },
@@ -27,6 +27,7 @@ const { _ } = useLexicon()
       v-else
       :label="_('save')"
       icon="pi pi-check"
+      severity="success"
       :loading="saving"
       :disabled="recalculatingCost"
       @click="emit('save')"

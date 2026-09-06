@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { ConfirmDialog, useConfirm, useToast } from 'primevue'
 import { onMounted, ref } from 'vue'
 
 import { useGalleryApi } from '../../composables/useGalleryApi.js'
@@ -37,6 +35,7 @@ const {
   isLoading,
   fetchGalleryList,
   sortFiles,
+  sortFilesByName,
   deleteFiles,
   deleteAll,
   regenerateThumbs,
@@ -346,10 +345,40 @@ function onChangeSource(sourceId) {
 }
 
 /**
- * Handle upload events
+ * Serialize overlapping Uppy `complete` handlers (allowMultipleUploadBatches)
+ * so SortByName does not race on the same product in one tab (#616).
  */
-function onUploadComplete() {
-  loadImages()
+let uploadCompleteQueue = Promise.resolve()
+
+/**
+ * After batch upload: natural-sort positions by filename (#616), then reload grid.
+ */
+function onUploadComplete(result) {
+  uploadCompleteQueue = uploadCompleteQueue
+    .then(() => runUploadComplete(result))
+    .catch(() => {})
+}
+
+async function runUploadComplete(result) {
+  const hasUploads = (result?.successful?.length ?? 0) > 0
+
+  try {
+    if (hasUploads) {
+      const { thumb } = await sortFilesByName(props.productId)
+      if (thumb) {
+        updateProductThumb(thumb)
+      }
+    }
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: _('ms3_gallery_errors'),
+      detail: error.message,
+      life: 5000,
+    })
+  } finally {
+    await loadImages()
+  }
 }
 
 onMounted(() => {
@@ -364,9 +393,11 @@ onMounted(() => {
     <ProductGalleryToolbar
       :sources="sources"
       :current-source-id="currentSourceId"
+      :search-query="searchQuery"
       @change-source="onChangeSource"
       @regenerate-all="onRegenerateAll"
       @delete-all="onDeleteAll"
+      @search="onSearch"
     />
 
     <GalleryUploader
@@ -385,8 +416,8 @@ onMounted(() => {
       :total="total"
       :loading="isLoading"
       :page-size="pageSize"
+      :search-query="searchQuery"
       @sort="onSort"
-      @search="onSearch"
       @page-change="onPageChange"
       @edit="onEdit"
       @show="onShow"
@@ -405,7 +436,10 @@ onMounted(() => {
 
 <style scoped>
 .product-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-modx-space-panel, 15px);
   width: 100%;
-  padding: 0.5rem;
+  padding: 0;
 }
 </style>

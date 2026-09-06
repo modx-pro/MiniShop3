@@ -150,7 +150,6 @@
                 <form method="post" class="ms3_form ms3-add-to-cart position-relative" data-cart-state="add" data-ms3-form>
                     <input type="hidden" name="id" value="{$id}">
                     <input type="hidden" name="count" value="1">
-                    <input type="hidden" name="options" value="[]">
                     <input type="hidden" name="ms3_action" value="cart/add">
 
                     <div class="d-grid gap-2">

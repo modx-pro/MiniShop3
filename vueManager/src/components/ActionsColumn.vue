@@ -36,7 +36,7 @@
  * }
  */
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
+import { Button } from 'primevue'
 import { computed } from 'vue'
 
 import { useActions } from '../composables/useActions.js'
@@ -96,7 +96,7 @@ const props = defineProps({
    */
   size: {
     type: String,
-    default: 'small',
+    default: 'normal',
   },
 })
 
@@ -235,7 +235,7 @@ function getButtonClasses() {
 </script>
 
 <template>
-  <div class="actions-column">
+  <div class="actions-column row-actions">
     <Button
       v-for="action in processedActions"
       :key="action.name"
@@ -253,17 +253,16 @@ function getButtonClasses() {
 
 <style scoped>
 .actions-column {
-  display: flex;
+  display: inline-flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
   gap: 0.25rem;
   align-items: center;
-  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .actions-column :deep(.p-button) {
+  flex-shrink: 0;
   padding: 0.25rem 0.5rem;
-}
-
-.actions-column :deep(.p-button-sm) {
-  font-size: 0.875rem;
 }
 </style>

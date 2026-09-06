@@ -1,10 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { Button, Checkbox, InputNumber, InputText, Select } from 'primevue'
 import { computed } from 'vue'
 
 import { defaultRepeaterConfig } from '../utils/repeaterField.js'
@@ -106,7 +102,6 @@ function updateColumn(index, patch) {
       <Button
         icon="pi pi-plus"
         :label="_('ms3_vue_repeater_add_column')"
-        size="small"
         severity="secondary"
         @click="addColumn"
       />
@@ -147,7 +142,6 @@ function updateColumn(index, patch) {
         severity="danger"
         text
         rounded
-        size="small"
         :disabled="config.columns.length <= 1"
         @click="removeColumn(index)"
       />

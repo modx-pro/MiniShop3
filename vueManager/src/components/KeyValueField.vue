@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
+import { Button, InputNumber, InputText, Message } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import {
@@ -218,9 +215,7 @@ function removeFreePair(index) {
             icon="pi pi-times"
             severity="danger"
             text
-            rounded
-            size="small"
-            class="ms3-key-value-actions-col"
+            rounded class="ms3-key-value-actions-col"
             :disabled="disabled"
             @click="removeFreePair(index)"
           />
@@ -230,9 +225,7 @@ function removeFreePair(index) {
       <Button
         icon="pi pi-plus"
         :label="_('ms3_vue_key_value_add_pair')"
-        severity="secondary"
-        size="small"
-        class="ms3-key-value-add"
+        severity="secondary" class="ms3-key-value-add"
         :disabled="disabled"
         @click="addFreePair"
       />

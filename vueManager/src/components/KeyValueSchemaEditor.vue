@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { Button, Checkbox, InputText, Select } from 'primevue'
 import { computed } from 'vue'
 
 import { defaultKeyValueConfig } from '../utils/keyValueField.js'
@@ -84,7 +81,6 @@ function updateKey(index, patch) {
         <Button
           icon="pi pi-plus"
           :label="_('ms3_vue_key_value_add_key')"
-          size="small"
           severity="secondary"
           @click="addKey"
         />
@@ -125,7 +121,6 @@ function updateKey(index, patch) {
           severity="danger"
           text
           rounded
-          size="small"
           @click="removeKey(index)"
         />
       </div>

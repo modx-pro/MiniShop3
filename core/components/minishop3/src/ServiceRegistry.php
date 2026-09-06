@@ -3,6 +3,7 @@
 namespace MiniShop3;
 
 use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Services\Payment\PaymentService;
 use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\modX;
 
@@ -105,9 +106,11 @@ class ServiceRegistry
             'ms3_order_address_manager',
             'ms3_order_user_resolver',
             'ms3_order_number_generator',
+            'ms3_inventory',
         ],
         'ms3_order_finalize' => ['ms3_order_number_generator'],
-        'ms3_order_status' => ['ms3_order_log'],
+        'ms3_order_status' => ['ms3_order_log', 'ms3_order_lifecycle_ports', 'ms3_inventory'],
+        'ms3_payment_lifecycle' => ['ms3_order_status'],
         'ms3_cart_mutation_handler' => [
             'ms3_order_draft_manager',
             'ms3_cart_item_manager',
@@ -162,6 +165,14 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductFacetService::class,
             'interface' => null,
         ],
+        'ms3_product_gallery_public' => [
+            'class' => \MiniShop3\Services\Product\ProductGalleryPublicService::class,
+            'interface' => null,
+        ],
+        'ms3_public_seo' => [
+            'class' => \MiniShop3\Services\Seo\PublicSeoService::class,
+            'interface' => null,
+        ],
         'ms3_category_catalog' => [
             'class' => \MiniShop3\Services\Category\CategoryCatalogService::class,
             'interface' => null,
@@ -206,12 +217,20 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Delivery\DeliveryService::class,
             'interface' => null,
         ],
+        'ms3_shipment_lifecycle' => [
+            'class' => \MiniShop3\Services\Shipment\ShipmentLifecycleService::class,
+            'interface' => null,
+        ],
         'ms3_payment_service' => [
-            'class' => \MiniShop3\Services\Payment\PaymentService::class,
+            'class' => PaymentService::class,
             'interface' => null,
         ],
         'ms3_payment_link_resolver' => [
             'class' => \MiniShop3\Services\Payment\PaymentLinkResolver::class,
+            'interface' => null,
+        ],
+        'ms3_payment_lifecycle' => [
+            'class' => \MiniShop3\Services\Payment\PaymentLifecycleService::class,
             'interface' => null,
         ],
         'ms3_order_service' => [
@@ -260,9 +279,17 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Order\OrderLogService::class,
             'interface' => null,
         ],
+        'ms3_order_lifecycle_ports' => [
+            'class' => \MiniShop3\Services\Order\NullOrderLifecyclePorts::class,
+            'interface' => \MiniShop3\Services\Order\OrderLifecyclePortsInterface::class,
+        ],
         'ms3_order_status' => [
             'class' => \MiniShop3\Services\Order\OrderStatusService::class,
             'interface' => null,
+        ],
+        'ms3_inventory' => [
+            'class' => \MiniShop3\Services\Inventory\ProductStockInventory::class,
+            'interface' => \MiniShop3\Services\Inventory\InventoryServiceInterface::class,
         ],
         'ms3_order_finalize' => [
             'class' => \MiniShop3\Services\Order\OrderFinalizeService::class,
@@ -291,6 +318,10 @@ class ServiceRegistry
         // Cart services
         'ms3_cart_item_manager' => [
             'class' => \MiniShop3\Services\Cart\CartItemManager::class,
+            'interface' => null,
+        ],
+        'ms3_cart_response_normalizer' => [
+            'class' => \MiniShop3\Services\Cart\CartResponseNormalizer::class,
             'interface' => null,
         ],
         'ms3_cart_mutation_handler' => [
@@ -692,19 +723,16 @@ class ServiceRegistry
             return $fallbackClass;
         }
 
-        if ($requiredInterface) {
-            $interfaces = class_implements($className);
-            if (!in_array($requiredInterface, $interfaces ?: [])) {
-                $this->modx->log(
-                    modX::LOG_LEVEL_ERROR,
-                    "[MiniShop3 ServiceRegistry] Class '{$className}' must implement {$requiredInterface}, "
-                    . 'using fallback'
-                );
-                return $fallbackClass;
-            }
+        if ($requiredInterface && !is_a($className, $requiredInterface, true)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[MiniShop3 ServiceRegistry] Class '{$className}' must implement {$requiredInterface}, "
+                . 'using fallback'
+            );
+            return $fallbackClass;
         }
 
-        if (!is_subclass_of($className, $fallbackClass)) {
+        if (!$requiredInterface && !is_subclass_of($className, $fallbackClass)) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
                 "[MiniShop3 ServiceRegistry] Class '{$className}' must extend {$fallbackClass}, using fallback"

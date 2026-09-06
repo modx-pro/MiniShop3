@@ -73,7 +73,7 @@
 
 .vueApp .mt-3,
 .p-dialog .mt-3 {
-  margin-top: 0.75rem;
+  margin-top: var(--p-modx-space-panel, 15px);
 }
 
 .vueApp .mt-4,
@@ -108,12 +108,12 @@
 
 .vueApp .mb-2,
 .p-dialog .mb-2 {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem; /* 4px — label→control (MODX form rhythm) */
 }
 
 .vueApp .mb-3,
 .p-dialog .mb-3 {
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .vueApp .mb-4,
@@ -334,21 +334,92 @@
   color: var(--ms3-text-muted);
 }
 
-/* Form fields in dialogs (for ModelFieldsGrid and similar) */
+/* Form fields in dialogs — MODX: 15px between fields, 4px label→control.
+ * Do not stack per-field padding on top of grid gap (was ~32px visually). */
+.p-dialog .edit-field-form,
+.p-dialog .edit-form {
+  padding: 0;
+}
+
+.p-dialog .form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-modx-space-panel, 15px);
+  margin: 0;
+}
+
 .p-dialog .field {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+.p-dialog .edit-form > .field:not(:last-child),
+.p-dialog .edit-form > .field.mb-3:not(:last-child) {
+  margin-bottom: var(--p-modx-space-panel, 15px);
+}
+
+.p-dialog .edit-field-form .field,
+.p-dialog .edit-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .p-dialog .field label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   font-weight: 500;
+  font-size: 0.875rem;
 }
 
-.p-dialog .edit-form .field label {
+.p-dialog .edit-form .field label,
+.p-dialog .edit-field-form .field label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
   font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--ms3-text-primary, #333);
+}
+
+.p-dialog .edit-field-form .field small,
+.p-dialog .edit-form .field small {
+  color: var(--ms3-text-muted, #64748b);
+  font-size: 0.75rem;
+  margin-top: 0;
+  line-height: 1.35;
+}
+
+.p-dialog .edit-field-form .w-full {
+  width: 100%;
+}
+
+.p-dialog .col-6 {
+  flex: 0 0 calc(50% - (var(--p-modx-space-panel, 15px) / 2));
+  max-width: calc(50% - (var(--p-modx-space-panel, 15px) / 2));
+}
+
+.p-dialog .col-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+.p-dialog .edit-field-form .checkbox-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.p-dialog .edit-field-form .checkbox-label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.p-dialog .edit-form .ms3-dialog-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--p-modx-space-panel, 15px);
 }
 
 .p-dialog .grid {
@@ -365,16 +436,389 @@
 
 /* ============================================ */
 
+/* Also under .vueApp — dialogs with append-to="self" stay inside the SPA root. */
+.vueApp .edit-field-form,
+.vueApp .edit-form {
+  padding: 0;
+}
+
+.vueApp .form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-modx-space-panel, 15px);
+  margin: 0;
+}
+
+.vueApp .edit-field-form .field,
+.vueApp .edit-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0;
+  margin-bottom: 0;
+  box-sizing: border-box;
+}
+
+.vueApp .edit-form > .field:not(:last-child) {
+  margin-bottom: var(--p-modx-space-panel, 15px);
+}
+
+.vueApp .edit-field-form .field label,
+.vueApp .edit-form .field label {
+  display: block;
+  margin-bottom: 0;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--ms3-text-primary, #333);
+}
+
+.vueApp .edit-field-form .field small,
+.vueApp .edit-form .field small {
+  color: var(--ms3-text-muted, #64748b);
+  font-size: 0.75rem;
+  margin-top: 0;
+  line-height: 1.35;
+}
+
+.vueApp .col-6 {
+  flex: 0 0 calc(50% - (var(--p-modx-space-panel, 15px) / 2));
+  max-width: calc(50% - (var(--p-modx-space-panel, 15px) / 2));
+}
+
+.vueApp .col-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+.vueApp .edit-form .ms3-dialog-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--p-modx-space-panel, 15px);
+}
+
+/*
+ * PageBuilder (resource/update) defines Bootstrap-like `.vueApp .col-N { width:% }`.
+ * MS3 product/settings grids use the same class names for 12-col CSS Grid spans —
+ * reset width/flex so cells fill their tracks (15px gap only).
+ */
+.vueApp[id^='ms3-'] .fields-grid > .field-item[class*='col-'],
+.vueApp[id^='ms3-'] .fields-grid > [class*='col-'] {
+  width: 100% !important;
+  max-width: none !important;
+  flex: none !important;
+  padding: 0 !important;
+  min-width: 0;
+}
+
+.vueApp[id^='ms3-'] .fields-grid > .field-item.field-checkbox-row {
+  width: 100% !important;
+  max-width: none !important;
+  flex: none !important;
+  padding: 0 !important;
+  grid-column: span 12;
+}
+
+.vueApp[id^='ms3-'] .fields-grid > .field-item.field-checkbox {
+  width: max-content !important;
+  max-width: none !important;
+  flex: none !important;
+  padding: 0 !important;
+  grid-column: auto;
+  justify-self: start;
+}
+
+/* Config panels (sections / fields) — same chrome as Modx Panel */
+.vueApp .ms3-config-panel.p-panel {
+  margin-bottom: var(--p-modx-space-panel, 15px);
+}
+
+.vueApp .ms3-config-panel .p-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: calc(
+    var(--p-modx-control-height, 2.25rem) + (2 * var(--p-modx-space-panel, 15px))
+  );
+  padding: var(--p-modx-space-panel, 15px);
+  background: transparent;
+}
+
+/*
+ * Section titles must outrank field labels (14px). Default inherits mgr 13px body
+ * and reads smaller than labels — “маловат” vs Modx hierarchy.
+ */
+.vueApp .ms3-config-panel .p-panel-title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: var(--p-panel-title-font-weight, 700);
+  line-height: var(--p-modx-control-height, 2.25rem);
+  color: var(--p-panel-header-color, #2a2a2a);
+}
+
+.vueApp .ms3-config-panel .p-panel-content {
+  padding: var(--p-modx-space-panel, 15px);
+}
+
+.vueApp .ms3-config-panel .p-panel-icons,
+.vueApp .ms3-config-panel .p-panel-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.vueApp .row-actions-cell {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.vueApp .row-actions {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Shared grid action strip (ActionsColumn CSS chunk may not be linked on every page). */
+.vueApp .actions-column.row-actions,
+.vueApp .actions-column {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.vueApp .actions-column .p-button {
+  flex-shrink: 0;
+}
+
 /* Tab Description                             */
 
 /* ============================================ */
+/* Plain muted lead — no boxed callout (matches MODX field hints). */
 .vueApp .tab-description {
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  background-color: var(--ms3-bg-muted);
-  border-left: var(--ms3-border-width-accent) solid var(--ms3-accent-primary);
-  color: var(--ms3-text-info);
+  margin: 0 0 var(--p-modx-space-panel, 15px);
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--ms3-text-muted, #64748b);
   font-size: 0.875rem;
   line-height: 1.5;
-  border-radius: 0 var(--ms3-radius-sm) var(--ms3-radius-sm) 0;
+}
+
+/*
+ * PageBuilder paints focus borders green on every `.vueApp .p-select` and
+ * restyles `.p-select-dropdown`. Its CSS loads after MS3 on resource/update.
+ * Use `.vueApp[id^=ms3-]` (same node) so postcss-prefix leave it unprefixed
+ * and the mount root matches.
+ */
+.vueApp[id^='ms3-'] .p-select:not(.p-disabled).p-focus,
+.vueApp[id^='ms3-'] .p-multiselect:not(.p-disabled).p-focus,
+.vueApp[id^='ms3-'] .p-autocomplete.p-focus .p-autocomplete-input {
+  border-color: var(--p-form-field-focus-border-color, var(--p-primary-color, #234368)) !important;
+}
+
+.vueApp[id^='ms3-'] .p-select-dropdown {
+  width: var(--p-select-dropdown-width, 1.875rem) !important;
+  min-width: var(--p-select-dropdown-width, 1.875rem) !important;
+  color: var(--p-select-dropdown-color, var(--p-form-field-icon-color, #686868));
+  background: transparent;
+  border-inline-start: 1px solid var(--p-select-border-color, #e4e4e4);
+}
+
+.vueApp[id^='ms3-'] .p-select {
+  border-color: var(--p-select-border-color, #e4e4e4);
+}
+
+/*
+ * InputChips / MultiSelect chips: Modx highlight tokens (not default/Tailwind blue).
+ * OptionsChips uses the same highlight pair in component CSS.
+ */
+.vueApp[id^='ms3-'] .p-inputchips-chip,
+.vueApp[id^='ms3-'] .p-multiselect-chip,
+.vueApp[id^='ms3-'] .p-autocomplete-chip,
+.p-dialog .p-inputchips-chip,
+.p-dialog .p-multiselect-chip,
+.p-dialog .p-autocomplete-chip {
+  background: var(--p-highlight-background, #d6e7f8);
+  color: var(--p-highlight-color, #1b3451);
+  border-radius: var(--p-autocomplete-chip-border-radius, 2px);
+}
+
+.vueApp[id^='ms3-'] .p-inputchips-chip-icon,
+.vueApp[id^='ms3-'] .p-multiselect-chip-icon,
+.vueApp[id^='ms3-'] .p-autocomplete-chip-icon,
+.p-dialog .p-inputchips-chip-icon,
+.p-dialog .p-multiselect-chip-icon,
+.p-dialog .p-autocomplete-chip-icon {
+  color: inherit;
+}
+
+/*
+ * MODX manager (`index.css`): `.ext-webkit *:focus-visible { outline: auto !important }`.
+ * Ext fields are exempt via `.x-form-focus`; Vue controls are not, so the UA dark ring
+ * sits on top of ModxManagerTheme focus (border + ring tokens).
+ * Selectors must start with `.vueApp[id^=ms3-]` or `.p-` so postcss-prefix leaves them intact.
+ */
+.vueApp[id^='ms3-'] .p-inputtext:focus-visible,
+.vueApp[id^='ms3-'] .p-textarea:focus-visible,
+.vueApp[id^='ms3-'] .p-select:focus-visible,
+.vueApp[id^='ms3-'] .p-multiselect:focus-visible,
+.vueApp[id^='ms3-'] .p-autocomplete-input:focus-visible,
+.vueApp[id^='ms3-'] .p-inputchips:focus-visible,
+.vueApp[id^='ms3-'] .p-datepicker-input:focus-visible,
+.p-select-overlay .p-inputtext:focus-visible,
+.p-multiselect-overlay .p-inputtext:focus-visible,
+.p-datepicker-panel .p-inputtext:focus-visible,
+.p-dialog .p-inputtext:focus-visible,
+.p-dialog .p-textarea:focus-visible,
+.p-dialog .p-select:focus-visible,
+.p-dialog .p-multiselect:focus-visible,
+.p-dialog .p-autocomplete-input:focus-visible {
+  outline: var(--p-form-field-focus-ring-width, 2px)
+    var(--p-form-field-focus-ring-style, solid)
+    var(
+      --p-form-field-focus-ring-color,
+      var(--p-primary-color, #234368)
+    ) !important;
+  outline-offset: var(--p-form-field-focus-ring-offset, -1px) !important;
+}
+
+/* Clear sits before the chevron; keep label clear of both icons. */
+.vueApp[id^='ms3-'] .p-select.p-inputwrapper-filled .p-select-label {
+  padding-inline-end: calc(
+    var(--p-select-dropdown-width, 1.875rem) + var(--p-icon-size, 0.875rem) + 0.75rem
+  );
+}
+
+.vueApp[id^='ms3-'] .p-select-clear-icon {
+  inset-inline-end: var(--p-select-dropdown-width, 1.875rem);
+  margin-inline-end: 0.25rem;
+}
+
+/*
+ * Overlay filter (Select/MultiSelect): Modx control height + full-width IconField.
+ * main.css used to force 90% width; overlays teleport outside .vueApp.
+ */
+.p-select-overlay .p-select-header .p-iconfield,
+.p-multiselect-overlay .p-multiselect-header .p-iconfield {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.p-select-overlay .p-select-filter,
+.p-multiselect-overlay .p-multiselect-filter {
+  width: 100% !important;
+  height: var(--p-modx-control-height, 2.25rem) !important;
+  min-height: var(--p-modx-control-height, 2.25rem) !important;
+  /* Overlays teleport outside .vueApp; theme/PageBuilder may leave content-box. */
+  box-sizing: border-box !important;
+}
+
+.p-select-overlay .p-select-header .p-iconfield,
+.p-multiselect-overlay .p-multiselect-header .p-iconfield {
+  min-height: var(--p-modx-control-height, 2.25rem);
+  height: auto;
+}
+
+/* PageBuilder forces width:100% on all .vueApp .p-select — keep paginator RPP compact.
+ * Height is set with the Modx paginator block below (match nav buttons). */
+.vueApp[id^='ms3-'] .p-paginator .p-select,
+.vueApp[id^='ms3-'] .rows-per-page-select {
+  width: auto !important;
+  min-width: 4.5rem !important;
+  max-width: 6.5rem !important;
+  flex: 0 0 auto;
+}
+
+/*
+ * Active tab label: splash color like Ext .x-tab-strip-text.
+ * No top accent bar — top-level MODX tabs are white fill only.
+ * Canonical token: VueTools ModxManagerTheme tabs.activeColor.
+ */
+.vueApp[id^='ms3-'] .p-tab-active {
+  color: var(--p-primary-color, #234368);
+}
+
+/* Kill accent strip if an older ModxManagerTheme still injects ::before. */
+.vueApp[id^='ms3-'] .p-tab-active::before {
+  content: none;
+  display: none;
+}
+
+/*
+ * Paginator: re-assert ModxManagerTheme tokens inside MS3 apps.
+ * Product/update hosts plugin Vue apps that still install Aura and overwrite
+ * :root --p-paginator-* (circles 2.5rem / 50%). Scope wins for our trees.
+ */
+.vueApp[id^='ms3-'] {
+  --p-paginator-padding: 0.375rem 0.5rem;
+  --p-paginator-gap: 0.375rem;
+  --p-paginator-nav-button-width: 1.75rem;
+  --p-paginator-nav-button-height: 1.75rem;
+  --p-paginator-nav-button-border-radius: var(--p-border-radius-sm, 3px);
+  --p-paginator-nav-button-background: var(--p-content-background, #fff);
+  --p-paginator-nav-button-selected-background: var(--p-content-background, #fff);
+  --p-paginator-nav-button-selected-color: var(--p-primary-color, #234368);
+  --p-paginator-jump-to-page-input-max-width: 2.25rem;
+}
+
+.vueApp[id^='ms3-'] .p-paginator {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 1px solid var(--p-content-border-color, #e4e4e4);
+}
+
+.vueApp[id^='ms3-'] .p-paginator-content {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--p-paginator-gap);
+}
+
+.vueApp[id^='ms3-'] .p-paginator-first,
+.vueApp[id^='ms3-'] .p-paginator-prev,
+.vueApp[id^='ms3-'] .p-paginator-next,
+.vueApp[id^='ms3-'] .p-paginator-last,
+.vueApp[id^='ms3-'] .p-paginator-page {
+  box-shadow: 0 0 0 1px var(--p-content-border-color, #e4e4e4);
+  background: var(--p-paginator-nav-button-background, #fff);
+}
+
+.vueApp[id^='ms3-'] .p-paginator-page-selected {
+  background: var(--p-content-background, #fff) !important;
+  color: var(--p-primary-color, #234368) !important;
+  box-shadow: 0 0 0 1px var(--p-primary-color, #234368);
+}
+
+/* Match RPP Select height to nav buttons (override global modx.control 36px). */
+.vueApp[id^='ms3-'] .p-paginator .p-select,
+.vueApp[id^='ms3-'] .p-paginator .rows-per-page-select {
+  width: auto !important;
+  min-width: 4.5rem !important;
+  max-width: 6.5rem !important;
+  height: var(--p-paginator-nav-button-height, 1.75rem) !important;
+  min-height: var(--p-paginator-nav-button-height, 1.75rem) !important;
+  flex: 0 0 auto;
+  box-sizing: border-box !important;
+}
+
+.vueApp[id^='ms3-'] .p-paginator .p-select .p-select-label {
+  padding-block: 0;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.vueApp[id^='ms3-'] .p-paginator-current {
+  margin-inline-start: auto;
+  font-size: var(--p-modx-font-size-base, 0.8125rem);
 }

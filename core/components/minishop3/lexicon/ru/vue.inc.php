@@ -8,6 +8,7 @@
 $_lang['ms3_vue_product_fields_title'] = 'Поля товара (админка)';
 $_lang['ms3_vue_product_fields_description'] = 'Здесь вы можете настроить, какие поля отображаются на вкладке "Данные товара" при редактировании товара';
 $_lang['ms3_vue_product_properties'] = 'Свойства товара';
+$_lang['ms3_product_links_empty'] = 'Связей пока нет. Создайте первую.';
 
 // Grid Fields Config Widget
 $_lang['grid_fields_config_title'] = 'Конфигурация гридов';
@@ -165,6 +166,7 @@ $_lang['ms3_vue_xtype_key_value'] = 'Ключ-Значение (карта)';
 $_lang['ms3_vue_xtype_combo_vendor'] = 'Производитель (combo)';
 $_lang['ms3_vue_xtype_combo_autocomplete'] = 'Автодополнение (combo)';
 $_lang['ms3_vue_xtype_combo_options'] = 'Опции товара (chips)';
+$_lang['ms3_vue_xtype_datefield'] = 'Дата';
 
 // Настройки выпадающего списка
 $_lang['ms3_vue_select_options_label'] = 'Варианты списка';
@@ -215,6 +217,7 @@ $_lang['ms3_vue_dbtype_varchar'] = 'VARCHAR (строка)';
 $_lang['ms3_vue_dbtype_text'] = 'TEXT (текст)';
 $_lang['ms3_vue_dbtype_int'] = 'INT (целое число)';
 $_lang['ms3_vue_dbtype_decimal'] = 'DECIMAL (число с точностью)';
+$_lang['ms3_vue_dbtype_date'] = 'DATE (только дата)';
 $_lang['ms3_vue_dbtype_datetime'] = 'DATETIME (дата и время)';
 $_lang['ms3_vue_dbtype_timestamp'] = 'TIMESTAMP';
 $_lang['ms3_vue_dbtype_tinyint'] = 'TINYINT (0/1)';
@@ -297,6 +300,7 @@ $_lang['ms3_vue_error_loading'] = 'Ошибка загрузки';
 $_lang['ms3_vue_error_loading_fields'] = 'Не удалось загрузить список полей';
 $_lang['ms3_vue_validation'] = 'Валидация';
 $_lang['ms3_vue_validation_key_required'] = 'Укажите имя поля (key)';
+$_lang['ms3_vue_validation_key_invalid'] = 'Ключ поля может содержать только латинские буквы, цифры и подчёркивание';
 $_lang['ms3_vue_validation_dbtype_required'] = 'Укажите тип данных БД (dbtype)';
 $_lang['ms3_vue_field_created'] = 'создано';
 $_lang['ms3_vue_error_creating'] = 'Ошибка создания';
@@ -612,7 +616,23 @@ $_lang['order_costs'] = 'Стоимость';
 $_lang['order_dates'] = 'Даты';
 $_lang['order_products'] = 'Товары';
 $_lang['order_address'] = 'Адрес';
+$_lang['order_tracking'] = 'Отслеживание';
 $_lang['order_history'] = 'История';
+$_lang['shipment_empty'] = 'Отгрузка ещё не создана';
+$_lang['shipment_create'] = 'Создать отгрузку';
+$_lang['shipment_saved'] = 'Отгрузка сохранена';
+$_lang['shipment_status'] = 'Статус отгрузки';
+$_lang['shipment_tracking_number'] = 'Трек-номер';
+$_lang['shipment_carrier'] = 'Перевозчик';
+$_lang['shipment_shipped_at'] = 'Отправлено';
+$_lang['shipment_delivered_at'] = 'Доставлено';
+$_lang['shipment_status_preparing'] = 'Подготовка';
+$_lang['shipment_status_shipped'] = 'Отправлено';
+$_lang['shipment_status_in_transit'] = 'В пути';
+$_lang['shipment_status_delivered'] = 'Доставлено';
+$_lang['shipment_status_cancelled'] = 'Отменено';
+$_lang['shipment_status_returned'] = 'Возврат';
+$_lang['shipment_status_failed'] = 'Ошибка';
 $_lang['order_comment'] = 'Комментарий';
 $_lang['select_status'] = 'Выберите статус';
 $_lang['select_delivery'] = 'Выберите способ доставки';
@@ -638,6 +658,19 @@ $_lang['log_date'] = 'Дата';
 $_lang['log_action'] = 'Действие';
 $_lang['log_user'] = 'Пользователь';
 $_lang['log_entry'] = 'Запись';
+$_lang['log_empty'] = 'История заказа пуста';
+$_lang['log_action_status'] = 'Статус';
+$_lang['log_action_field'] = 'Поле';
+$_lang['log_action_address'] = 'Адрес';
+$_lang['log_action_products'] = 'Товары';
+$_lang['log_action_payment'] = 'Оплата';
+$_lang['log_entry_status_id'] = 'Статус ID: {id}';
+$_lang['log_entry_fields'] = 'Поля: {fields}';
+$_lang['log_entry_address'] = 'Адрес: {fields}';
+$_lang['log_entry_product_op_add'] = 'Добавлен';
+$_lang['log_entry_product_op_remove'] = 'Удалён';
+$_lang['log_entry_product_op_update'] = 'Изменён';
+$_lang['log_entry_product_op_unknown'] = 'Изменение';
 $_lang['address_first_name'] = 'Имя';
 $_lang['address_last_name'] = 'Фамилия';
 $_lang['address_phone'] = 'Телефон';
@@ -1129,6 +1162,10 @@ $_lang['ms3_vendor_phone'] = 'Телефон';
 $_lang['ms3_vendor_email'] = 'Email';
 $_lang['ms3_vendor_description'] = 'Описание';
 $_lang['ms3_vendor_properties'] = 'Свойства';
+$_lang['ms3_vendor_select'] = 'Выберите производителя';
+$_lang['ms3_vendor_search'] = 'Поиск производителя…';
+$_lang['ms3_vendor_empty'] = 'Производители не найдены. Добавьте производителя в настройках компонента.';
+$_lang['ms3_vendor_not_found'] = 'Производитель не найден';
 
 // Vendor sections
 $_lang['ms3_section_vendor_info'] = 'Информация';
@@ -1194,3 +1231,9 @@ $_lang['ms3_utilities_import_description'] = 'Импорт товаров из C
 $_lang['ms3_utilities_extra_fields_description'] = 'Создание дополнительных полей для моделей MiniShop3. Поля автоматически добавляются в таблицы БД.';
 $_lang['ms3_utilities_grid_fields_description'] = 'Настройка колонок таблиц в админке: видимость, сортировка, фильтрация, порядок. Добавление вычисляемых и связанных полей.';
 $_lang['ms3_utilities_model_fields_description'] = 'Конфигурация полей форм редактирования заказов, производителей и других сущностей. Группировка по секциям, настройка видимости и порядка.';
+
+// Category options tab toasts (#615 / #7)
+$_lang['ms3_options_order_saved'] = 'Порядок сохранён';
+$_lang['ms3_options_added'] = 'Добавлено';
+$_lang['ms3_options_removed'] = 'Удалено';
+$_lang['ms3_options_copied'] = 'Скопировано: {copied}, пропущено: {skipped}';

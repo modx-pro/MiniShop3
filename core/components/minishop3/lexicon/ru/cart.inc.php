@@ -22,6 +22,7 @@ $_lang['ms3_cart_add_success'] = 'Товар успешно добавлен в 
 $_lang['ms3_cart_add_err_id'] = 'Ошибка добавления в корзину: не указан идентификатор товара';
 $_lang['ms3_cart_add_err_nf'] = 'Ошибка добавления в корзину: товар не найден';
 $_lang['ms3_cart_add_err_count'] = 'Ошибка добавления в корзину: неверное количество "[[+count]]"';
+$_lang['ms3_err_cart_options'] = 'options должен быть объектом или JSON-строкой';
 
 $_lang['ms3_cart_remove_success'] = 'Товар успешно удалён из корзины';
 
@@ -29,6 +30,7 @@ $_lang['ms3_cart_change_success'] = 'Количество товара в кор
 $_lang['ms3_cart_change_error'] = 'Ошибка при изменении количества товара в корзине';
 $_lang['ms3_cart_change_options_success'] = 'Опции товара в корзине успешно изменены';
 $_lang['ms3_cart_change_options_error'] = 'Ошибка при изменении опций товара в корзине';
+$_lang['ms3_err_cart_options'] = 'options должен быть объектом или JSON-строкой';
 
 $_lang['ms3_cart_clean_success'] = 'Корзина успешно очищена';
 $_lang['ms3_cart_is_empty'] = 'Ваша корзина пуста';

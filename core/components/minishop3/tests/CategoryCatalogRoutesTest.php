@@ -24,10 +24,12 @@ if ($webRoutes === false || $controllerSrc === false || $serviceSrc === false) {
 foreach (
     [
         "group('/category'",
+        "get('/get',",
         "get('/get/{id}'",
         "get('/list'",
         "get('/tree'",
         'CategoryController',
+        '->resolve($params)',
     ] as $needle
 ) {
     if (!str_contains($webRoutes, $needle)) {
@@ -35,7 +37,7 @@ foreach (
     }
 }
 
-foreach (['function get(', 'function getList(', 'function getTree('] as $method) {
+foreach (['function get(', 'function resolve(', 'function getList(', 'function getTree('] as $method) {
     if (!str_contains($controllerSrc, $method)) {
         $fail("CategoryController missing {$method}");
     }
@@ -47,6 +49,18 @@ if (!str_contains($controllerSrc, 'ms3_category_catalog')) {
 
 if (!str_contains($serviceSrc, 'class_key') || !str_contains($serviceSrc, 'published')) {
     $fail('CategoryCatalogService must scope published msCategory');
+}
+
+if (!str_contains($serviceSrc, 'resolveByLookup')) {
+    $fail('CategoryCatalogService must implement resolveByLookup');
+}
+
+if (!str_contains($serviceSrc, 'CatalogResolve::findUniqueId')) {
+    $fail('CategoryCatalogService must resolve alias/uri via CatalogResolve::findUniqueId');
+}
+
+if (!str_contains($controllerSrc, 'CatalogResolve::parseLookup')) {
+    $fail('CategoryController must parse catalog lookup via CatalogResolve');
 }
 
 if (!str_contains($serviceSrc, 'hidemenu')) {

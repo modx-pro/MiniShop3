@@ -139,7 +139,6 @@
                             {* Форма добавления (когда товара НЕТ в корзине) *}
                             <form method="post" class="ms3_form" data-cart-state="add" data-ms3-form>
                                 <input type="hidden" name="id" value="{$_modx->resource.id}">
-                                <input type="hidden" name="options" value="[]">
                                 <input type="hidden" name="ms3_action" value="cart/add">
 
                                 <div class="row g-3 align-items-end">

@@ -60,6 +60,7 @@ class msCategoryUpdateManagerController extends msResourceUpdateController
 
         // Vue modules with VueTools dependency check
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/primeicons.min.css');
+        $this->addCss($assetsUrl . 'css/mgr/vue-dist/ActionsColumn.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-products.min.css');
         $this->addCss($assetsUrl . 'css/mgr/vue-dist/category-options.min.css');
         $this->addVueModule($assetsUrl . 'js/mgr/vue-dist/category-products.min.js');

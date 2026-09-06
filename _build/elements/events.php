@@ -35,6 +35,18 @@ return [
     'msOnChangeOrderStatus',
     'msOnBeforeCreateOrder',
     'msOnCreateOrder',
+    'msOnBeforeInventoryReserve',
+    'msOnInventoryReserve',
+    'msOnBeforeInventoryCommit',
+    'msOnInventoryCommit',
+    'msOnBeforeInventoryRelease',
+    'msOnInventoryRelease',
+    'msOnBeforeCreateShipment',
+    'msOnCreateShipment',
+    'msOnBeforeChangeShipmentStatus',
+    'msOnChangeShipmentStatus',
+    'msOnBeforeUpdateShipmentTracking',
+    'msOnUpdateShipmentTracking',
     'msOnBeforeMgrCreateOrder',
     'msOnMgrCreateOrder',
     'msOnBeforeUpdateOrder',
@@ -83,6 +95,7 @@ return [
     'msOnGetProductPrice',
     'msOnGetProductWeight',
     'msOnGetProductFields',
+    'msOnGetPublicSeo',
 
     // msProducts snippet events (for extending with external packages)
     'msOnProductsLoad',    // After loading products, for bulk data loading

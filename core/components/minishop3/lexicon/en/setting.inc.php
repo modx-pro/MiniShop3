@@ -24,6 +24,8 @@ $_lang['area_ms3_notifications'] = 'Notifications';
 
 $_lang['setting_ms3_chunks_categories'] = 'Categories for chunks list';
 $_lang['setting_ms3_chunks_categories_desc'] = 'Comma-separated list of category IDs for chunks list.';
+$_lang['setting_ms3_version'] = 'Installed package version';
+$_lang['setting_ms3_version_desc'] = 'Version of the last successfully installed MiniShop3 transport package. Used for health checks and detecting file copy failures.';
 $_lang['setting_ms3_tmp_storage'] = 'Cart and temporary order fields storage';
 $_lang['setting_ms3_tmp_storage_desc'] = "
 To store cart and temporary order fields in session specify <strong>session</strong><br>
@@ -139,6 +141,18 @@ $_lang['setting_ms3_status_paid'] = 'Paid order status ID';
 $_lang['setting_ms3_status_paid_desc'] = 'What status to set after order payment';
 $_lang['setting_ms3_status_canceled'] = 'Canceled order status ID';
 $_lang['setting_ms3_status_canceled_desc'] = 'What status to set when canceling order';
+$_lang['setting_ms3_status_sent'] = 'Shipped / sent order status ID';
+$_lang['setting_ms3_status_sent_desc'] = 'Status ID treated as shipped for order lifecycle ports (default seed: 4).';
+$_lang['setting_ms3_order_status_transitions'] = 'Allowed order status transitions';
+$_lang['setting_ms3_order_status_transitions_desc'] = 'Optional allow-list of status edges in addition to final/fixed rules. Empty = no matrix (default final/fixed only). Format: CSV pairs from:to (e.g. 2:3,3:4,2:5) or JSON [[2,3],[3,4]].';
+$_lang['setting_ms3_inventory_enabled'] = 'Enforce product stock';
+$_lang['setting_ms3_inventory_enabled_desc'] = 'Off by default: cart, checkout and payment behave as before and ignore stock. When on, MiniShop3 checks availability before allocating an order number, reserves stock on the New status (ms3_status_new), commits on Paid (ms3_status_paid), and releases on Canceled (ms3_status_canceled) if the order was not yet paid. A failed payment send() cancels the order so the reserve is not left hanging. Replace the ms3_inventory service to use an external warehouse. Multi-warehouse, lots and ERP sync are out of scope.';
+$_lang['setting_ms3_shipment_enabled'] = 'Enable shipment lifecycle';
+$_lang['setting_ms3_shipment_enabled_desc'] = 'Off (default): checkout and order statuses are unchanged. On: shipment shipped maps to ms3_status_sent via OrderStatusService, cancelled/failed maps to ms3_status_canceled. Create/setTracking still work when off. Webhook is 404 when off. Replace ms3_shipment_lifecycle to use an external WMS.';
+$_lang['setting_ms3_shipment_on_delivered_status'] = 'Order status ID on delivered shipment';
+$_lang['setting_ms3_shipment_on_delivered_status_desc'] = 'Optional. 0 (default) keeps order status unchanged when the shipment becomes delivered. Seed sent is final, so leave 0 unless you use a non-final sent status.';
+$_lang['setting_ms3_shipment_on_in_transit_status'] = 'Order status ID on in-transit shipment';
+$_lang['setting_ms3_shipment_on_in_transit_status_desc'] = 'Optional. 0 (default) keeps order status unchanged when the shipment becomes in_transit.';
 $_lang['setting_ms3_customer_cancel_allowed_statuses'] = 'Statuses from which customer can cancel order';
 $_lang['setting_ms3_customer_cancel_allowed_statuses_desc'] = 'Comma-separated status IDs. Default: New and Paid (2,3). Empty = use ms3_status_new and ms3_status_paid.';
 $_lang['setting_ms3_status_for_stat'] = 'Status IDs for statistics';
@@ -179,6 +193,10 @@ $_lang['setting_ms3_email_verification_success_url'] = 'Redirect URL after succe
 $_lang['setting_ms3_email_verification_success_url_desc'] = 'Used when the user opens the verification link from email (html=1). If empty, site_url is used; the query parameter ms3_email_verified=1 is appended.';
 $_lang['setting_ms3_payment_secret'] = 'Payment secret key';
 $_lang['setting_ms3_payment_secret_desc'] = 'Secret key for generating payment notification signatures. Recommended to set a unique value for improved security.';
+$_lang['setting_ms3_payment_on_failed_status'] = 'Order status after failed/cancelled payment';
+$_lang['setting_ms3_payment_on_failed_status_desc'] = 'Order status ID applied when a payment attempt fails or is cancelled before paid. 0 leaves the order unchanged. Default is the canceled status (5).';
+$_lang['setting_ms3_payment_on_refunded_status'] = 'Order status after full refund';
+$_lang['setting_ms3_payment_on_refunded_status_desc'] = 'Order status ID applied after a full refund. 0 leaves the order unchanged. Partial refunds never change order status. Default is the canceled status (5).';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Currency symbol';

@@ -1,25 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Badge from 'primevue/badge'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import ToggleSwitch from 'primevue/toggleswitch'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Badge, Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputNumber, InputText, Tab, TabList, TabPanel, TabPanels, Tabs, Textarea, Toast, ToggleSwitch, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -31,15 +12,19 @@ import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { resolveAddCostPriceBadgeKind } from '../utils/addCostPriceBadgeKind.js'
 import { formatValue, getDisplayName, normalizeImagePath } from '../utils/displayFormatters.js'
+import { applyDeleteConfirmDefaults, gridDeleteAction } from '../utils/gridDeleteAction.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 import ValidationRulesEditor from './ValidationRulesEditor.vue'
 
 const toast = useToast()
-const confirm = useConfirm()
 const { _ } = useLexicon()
 
 const CONFIRM_GROUP = 'settings-deliveries'
+
+const DELIVERY_GRID_DELETE_ACTION = gridDeleteAction({
+  confirmMessage: 'delivery_delete_confirm_message',
+})
 
 // Bulk selection
 const {
@@ -200,14 +185,7 @@ function getFallbackColumns() {
       width: '7.5rem',
       actions: [
         { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
-        {
-          name: 'delete',
-          handler: 'delete',
-          icon: 'pi-trash',
-          label: 'delete',
-          severity: 'danger',
-          confirm: false,
-        },
+        { ...DELIVERY_GRID_DELETE_ACTION },
       ],
     },
   ]
@@ -342,38 +320,27 @@ async function saveDelivery() {
 }
 
 /**
- * Delete delivery with confirmation
+ * Delete delivery (called after confirmation in ActionsColumn / useActions)
  */
-function deleteDelivery(delivery) {
-  confirm.require({
-    group: CONFIRM_GROUP,
-    message: _('delivery_delete_confirm_message').replace('{name}', delivery.name),
-    header: _('confirm_delete'),
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: _('delete'),
-    rejectLabel: _('cancel'),
-    acceptClass: 'p-button-danger',
-    accept: async () => {
-      try {
-        await request.delete(`/api/mgr/deliveries/${delivery.id}`)
-        toast.add({
-          severity: 'success',
-          summary: _('success'),
-          detail: _('delivery_deleted'),
-          life: 3000,
-        })
-        loadDeliveries()
-      } catch (error) {
-        console.error('[DeliveriesGrid] Error deleting delivery:', error)
-        toast.add({
-          severity: 'error',
-          summary: _('error'),
-          detail: error.message || _('error_deleting_data'),
-          life: 5000,
-        })
-      }
-    },
-  })
+async function deleteDelivery(delivery) {
+  try {
+    await request.delete(`/api/mgr/deliveries/${delivery.id}`)
+    toast.add({
+      severity: 'success',
+      summary: _('success'),
+      detail: _('delivery_deleted'),
+      life: 3000,
+    })
+    await loadDeliveries()
+  } catch (error) {
+    console.error('[DeliveriesGrid] Error deleting delivery:', error)
+    toast.add({
+      severity: 'error',
+      summary: _('error'),
+      detail: error.message || _('error_deleting_data'),
+      life: 5000,
+    })
+  }
 }
 
 /**
@@ -391,15 +358,15 @@ function clearFilters() {
   resetPageAndLoad()
 }
 
-/**
- * Get actions config for ActionsColumn
- */
 function getActionsConfig(column) {
   const config = column.actions || []
-  return config.map(action => ({
-    ...action,
-    label: _(action.label) || action.label,
-  }))
+  return applyDeleteConfirmDefaults(
+    config.map(action => ({
+      ...action,
+      label: _(action.label) || action.label,
+    })),
+    { confirmMessage: 'delivery_delete_confirm_message' }
+  )
 }
 
 /**
@@ -446,7 +413,8 @@ onMounted(async () => {
             <Button
               :label="_('create')"
               icon="pi pi-plus"
-              severity="success"
+              severity="primary"
+              size="small"
               @click="createDelivery"
             />
           </div>
@@ -470,7 +438,12 @@ onMounted(async () => {
             </template>
           </div>
           <div class="filter-buttons">
-            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
+            <Button
+              :label="_('apply_filters')"
+              icon="pi pi-filter"
+              severity="success"
+              @click="applyFilters"
+            />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -491,7 +464,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -499,7 +471,6 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -788,7 +759,13 @@ onMounted(async () => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveDelivery" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveDelivery"
+        />
       </template>
     </Dialog>
   </div>
@@ -796,7 +773,7 @@ onMounted(async () => {
 
 <style scoped>
 .deliveries-grid {
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .grid-header {
@@ -837,11 +814,11 @@ onMounted(async () => {
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 15px;
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 15px 0;
   background: var(--ms3-bg-slate);
-  border-radius: 0.375rem;
+  border-radius: 3px;
 }
 
 .filter-item {
@@ -852,10 +829,9 @@ onMounted(async () => {
 
 .filter-item label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 4px;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -1034,11 +1010,16 @@ onMounted(async () => {
 .checkbox-field {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .checkbox-field label {
-  margin-left: 0.5rem;
+  margin: 0;
+  line-height: 1;
   cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
 }
 
 /* Grid thumbnail */

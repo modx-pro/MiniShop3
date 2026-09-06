@@ -1,19 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputGroup, InputGroupAddon, InputText, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
 import { useGridFilterParams } from '../composables/useGridFilterParams.js'
@@ -448,11 +435,18 @@ function initFilters() {
 
   columns.value.forEach(column => {
     if (column.filterable) {
-      newFilters[column.name] = ''
+      newFilters[column.name] = null
     }
   })
 
   filterValues.value = newFilters
+}
+
+function booleanFilterOptions() {
+  return [
+    { label: _('yes'), value: 1 },
+    { label: _('no'), value: 0 },
+  ]
 }
 
 /**
@@ -659,7 +653,7 @@ onMounted(async () => {
 
       <template #content>
         <!-- Search -->
-        <div class="p-inputgroup mb-3">
+        <InputGroup class="mb-4">
           <InputText
             v-model="searchQuery"
             name="ms3-customers-grid-search"
@@ -667,39 +661,57 @@ onMounted(async () => {
             :placeholder="_('search_placeholder')"
             @keyup.enter="onSearch"
           />
-          <Button icon="pi pi-search" :label="_('search')" @click="onSearch" />
-        </div>
+          <Button
+            icon="pi pi-search"
+            :label="_('search')"
+            severity="success"
+            @click="onSearch"
+          />
+        </InputGroup>
 
         <!-- Filters form -->
         <div
           v-if="filterableColumns.length > 0"
-          class="filters-form mb-3 p-3 surface-ground"
-          style="border-radius: 0.375rem"
+          class="filters-form mb-4 surface-ground"
         >
-          <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem">
+          <div class="filters-form-fields">
             <div
               v-for="column in filterableColumns"
               :key="column.name"
-              style="flex: 1 1 18.75rem; min-width: 15.625rem"
+              class="filters-form-field"
             >
               <div class="field">
-                <label
-                  :for="`filter-${column.name}`"
-                  style="display: block; margin-bottom: 0.5rem; font-weight: 500"
-                  >{{ column.label }}</label
-                >
+                <label :for="`filter-${column.name}`">{{ column.label }}</label>
+                <Select
+                  v-if="column.type === 'boolean'"
+                  :id="`filter-${column.name}`"
+                  v-model="filterValues[column.name]"
+                  :options="booleanFilterOptions()"
+                  option-label="label"
+                  option-value="value"
+                  :placeholder="_('all')"
+                  :show-clear="true"
+                  class="w-full"
+                  @change="applyFilters"
+                />
                 <InputText
+                  v-else
                   :id="`filter-${column.name}`"
                   v-model="filterValues[column.name]"
                   :placeholder="_('filter_by').replace('{field}', column.label)"
-                  style="width: 100%"
+                  class="w-full"
                   @keyup.enter="applyFilters"
                 />
               </div>
             </div>
           </div>
-          <div style="display: flex; gap: 0.5rem">
-            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
+          <div class="filters-form-actions">
+            <Button
+              :label="_('apply_filters')"
+              icon="pi pi-filter"
+              severity="success"
+              @click="applyFilters"
+            />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -710,7 +722,7 @@ onMounted(async () => {
         </div>
 
         <!-- Bulk actions toolbar -->
-        <div v-if="hasSelection" class="bulk-actions-bar mb-3">
+        <div v-if="hasSelection" class="bulk-actions-bar mb-4">
           <div class="bulk-info">
             <i class="pi pi-check-square"></i>
             <span>{{ _('selected_count').replace('{count}', selectionCount) }}</span>
@@ -720,7 +732,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -728,7 +739,6 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -939,13 +949,14 @@ onMounted(async () => {
           type="button"
           :label="_('cancel')"
           icon="pi pi-times"
-          class="p-button-text"
+          severity="secondary"
           @click="editDialogVisible = false"
         />
         <Button
           type="button"
           :label="_('save')"
           icon="pi pi-check"
+          severity="success"
           :loading="saving"
           @click="saveCustomer"
         />
@@ -1112,12 +1123,13 @@ onMounted(async () => {
             <Button
               :label="_('cancel')"
               icon="pi pi-times"
-              class="p-button-text"
+              severity="secondary"
               @click="cancelAddressEdit"
             />
             <Button
               :label="_('save')"
               icon="pi pi-check"
+              severity="success"
               :loading="savingAddress"
               @click="saveAddress"
             />
@@ -1130,7 +1142,35 @@ onMounted(async () => {
 
 <style scoped>
 .customers-grid {
-  padding: 1.25rem;
+  height: 100%;
+  }
+
+  .filters-form {
+    padding: 15px 0;
+    border-radius: 3px;
+  }
+
+  .filters-form-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  .filters-form-field {
+    flex: 1 1 18.75rem;
+    min-width: 15.625rem;
+  }
+
+  .filters-form-field label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .filters-form-actions {
+    display: flex;
+    gap: 0.5rem;
 }
 
 /* Bulk actions toolbar */
@@ -1138,10 +1178,10 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 15px;
   background: var(--ms3-bg-warning);
   border: var(--ms3-border-width) solid var(--ms3-border-warning);
-  border-radius: 0.375rem;
+  border-radius: 3px;
 }
 
 .bulk-info {
@@ -1209,22 +1249,26 @@ onMounted(async () => {
 .checkboxes-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1rem 1.5rem;
   padding: 0.5rem 0;
 }
 
 .checkbox-col {
-  flex: 0 0 calc(25% - 0.75rem);
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .checkbox-col label {
-  margin-left: 0.5rem;
-  margin-bottom: 0;
+  margin: 0;
+  line-height: 1;
   cursor: pointer;
   font-size: 0.875rem;
+  font-weight: 500;
   user-select: none;
+  white-space: nowrap;
 }
 
 .w-full {
@@ -1343,11 +1387,19 @@ onMounted(async () => {
   flex: 1 1 100%;
 }
 
-.address-form label {
+.address-form .form-col label,
+.address-form .form-col-sm label,
+.address-form .form-col-full label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
+}
+
+.address-form .checkbox-col label {
+  display: inline;
+  margin: 0;
+  line-height: 1;
 }
 
 .form-actions {

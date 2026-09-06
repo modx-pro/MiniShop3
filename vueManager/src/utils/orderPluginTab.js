@@ -4,7 +4,13 @@
  */
 
 /** Keys used by built-in tabs; plugin tabs must use different keys */
-export const RESERVED_ORDER_TAB_KEYS = new Set(['info', 'products', 'address', 'history'])
+export const RESERVED_ORDER_TAB_KEYS = new Set([
+  'info',
+  'products',
+  'address',
+  'tracking',
+  'history',
+])
 
 /**
  * Shallow snapshot for the pre-mount queue: top-level fields and nested `extConfig` / `props` are

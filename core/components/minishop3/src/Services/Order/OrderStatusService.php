@@ -9,29 +9,48 @@ use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
 use MiniShop3\Notifications\Order\StatusChangedNotification;
+use MiniShop3\Services\Inventory\InventoryException;
+use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MODX\Revolution\modContextSetting;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
 use MODX\Revolution\modX;
 
 /**
- * Order Status Service
+ * Single gate for non-draft order status changes (issue #592).
  *
- * Handles order status transitions: validation, change, logging, notifications.
- * Can be overridden via DI to customize status change behavior.
+ * Do not write `status_id` directly for paid / cancel / sent — call {@see change()}.
+ * Draft creation may still set draft status_id without going through this service.
+ *
+ * After a successful gate: lifecycle ports (#589–#591) → msOnChangeOrderStatus → log → notify.
+ * If after-event or a port fails, status is rolled back (no log / notify).
+ * msOrderLog is written only after a successful after-event (plugins must not rely on a fresh
+ * log row inside msOnChangeOrderStatus).
+ *
+ * Options for {@see change()}:
+ * - idempotent=true: already-in-status returns true without events/notify (integrations).
  */
-class OrderStatusService
+class OrderStatusService implements OrderStatusChanger
 {
     protected modX $modx;
     protected MiniShop3 $ms3;
     protected OrderLogService $orderLog;
+    protected OrderLifecyclePortsInterface $lifecyclePorts;
+    protected ?OrderInventoryCoordinator $inventoryCoordinator = null;
     protected ?NotificationManager $notifications = null;
 
-    public function __construct(modX $modx, MiniShop3 $ms3, OrderLogService $orderLog)
-    {
+    public function __construct(
+        modX $modx,
+        MiniShop3 $ms3,
+        OrderLogService $orderLog,
+        ?OrderLifecyclePortsInterface $lifecyclePorts = null,
+        ?OrderInventoryCoordinator $inventoryCoordinator = null
+    ) {
         $this->modx = $modx;
         $this->ms3 = $ms3;
         $this->orderLog = $orderLog;
+        $this->lifecyclePorts = $lifecyclePorts ?? new NullOrderLifecyclePorts();
+        $this->inventoryCoordinator = $inventoryCoordinator;
 
         $this->modx->lexicon->load('minishop3:default');
     }
@@ -70,15 +89,42 @@ class OrderStatusService
     }
 
     /**
-     * Switch order status
+     * Apply status if the order is not already there. Same-status is success,
+     * including when the current status is fixed/final (change() would fail first).
+     *
+     * @return bool|string True on success, lexicon/error message on failure
+     */
+    public function ensure(int $orderId, int $statusId, bool $skipNotifications = false): bool|string
+    {
+        /** @var msOrder|null $msOrder */
+        $msOrder = $this->modx->getObject(msOrder::class, ['id' => $orderId]);
+        if (!$msOrder) {
+            return $this->modx->lexicon('ms3_err_order_nf');
+        }
+        if ((int) $msOrder->get('status_id') === $statusId) {
+            return true;
+        }
+
+        return $this->change($orderId, $statusId, $skipNotifications);
+    }
+
+    /**
+     * Switch order status (single gate for non-draft transitions).
      *
      * @param int $orderId The id of msOrder
      * @param int $statusId The id of msOrderStatus
      * @param bool $skipNotifications Skip sending notifications (for admin finalization)
+     * @param array{idempotent?: bool} $options idempotent=true → same status is success no-op
      * @return bool|string True on success, error message on failure
      */
-    public function change(int $orderId, int $statusId, bool $skipNotifications = false): bool|string
-    {
+    public function change(
+        int $orderId,
+        int $statusId,
+        bool $skipNotifications = false,
+        array $options = []
+    ): bool|string {
+        $idempotent = !empty($options['idempotent']);
+
         /** @var msOrder|null $msOrder */
         $msOrder = $this->modx->getObject(msOrder::class, ['id' => $orderId]);
         if (!$msOrder) {
@@ -95,26 +141,26 @@ class OrderStatusService
             return $this->modx->lexicon('ms3_err_status_nf');
         }
 
-        /** @var msOrderStatusModel|null $oldStatus */
-        $oldStatus = $this->modx->getObject(
-            msOrderStatusModel::class,
-            ['id' => $msOrder->get('status_id'), 'active' => 1]
-        );
+        $storedStatusId = $msOrder->get('status_id');
+        $previousStatusId = $storedStatusId !== null ? (int) $storedStatusId : null;
 
-        if ($oldStatus) {
-            $transitionError = $this->validateStatusTransition($oldStatus, $status);
-            if ($transitionError !== null) {
-                return $transitionError;
-            }
+        /** @var msOrderStatusModel|null $oldStatus */
+        $oldStatus = $previousStatusId !== null
+            ? $this->modx->getObject(msOrderStatusModel::class, ['id' => $previousStatusId])
+            : null;
+
+        if ($previousStatusId === $statusId) {
+            return $idempotent ? true : $this->modx->lexicon('ms3_err_status_same');
         }
 
-        if ($msOrder->get('status_id') == $statusId) {
-            return $this->modx->lexicon('ms3_err_status_same');
+        $transitionError = $this->validateStatusTransition($oldStatus, $status);
+        if ($transitionError !== null) {
+            return $transitionError;
         }
 
         $eventParams = [
             'msOrder' => $msOrder,
-            'old_status' => $oldStatus?->get('id'),
+            'old_status' => $previousStatusId,
             'status' => $statusId,
         ];
         $response = $this->ms3->utils->invokeEvent('msOnBeforeChangeOrderStatus', $eventParams);
@@ -134,8 +180,8 @@ class OrderStatusService
             if (!$status) {
                 return $this->modx->lexicon('ms3_err_status_nf');
             }
-            if ($msOrder->get('status_id') == $statusId) {
-                return $this->modx->lexicon('ms3_err_status_same');
+            if ($previousStatusId === $statusId) {
+                return $idempotent ? true : $this->modx->lexicon('ms3_err_status_same');
             }
 
             $transitionError = $this->validateStatusTransition($oldStatus, $status);
@@ -144,22 +190,28 @@ class OrderStatusService
             }
         }
 
-        $msOrder->set('status_id', $statusId);
-
-        if (!$msOrder->save()) {
-            return $this->modx->lexicon('ms3_err_unknown');
+        $persistError = $this->persistStatusWithInventory($msOrder, $statusId);
+        if ($persistError !== null) {
+            return $persistError;
         }
 
-        $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
+        $portError = $this->runLifecyclePorts($msOrder, $statusId, $previousStatusId);
+        if ($portError !== null) {
+            return $this->rollbackStatus($msOrder, $previousStatusId) ?? $portError;
+        }
 
         $response = $this->ms3->utils->invokeEvent('msOnChangeOrderStatus', [
             'msOrder' => $msOrder,
-            'old_status' => $oldStatus?->get('id'),
+            'old_status' => $previousStatusId,
             'status' => $statusId,
         ]);
         if (!$response['success']) {
-            return $response['message'];
+            $this->undoUncommittedNewStatus($msOrder, $previousStatusId, $statusId);
+
+            return $this->rollbackStatus($msOrder, $previousStatusId) ?? $response['message'];
         }
+
+        $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
 
         // Send notifications via NotificationManager (unless skipped)
         // Use output buffering to prevent any stray output from Fenom/pdoTools
@@ -173,7 +225,7 @@ class OrderStatusService
     }
 
     /**
-     * Validate transition from old status to new (final/fixed rules).
+     * Validate transition: final/fixed defaults + optional allow-list (ms3_order_status_transitions).
      */
     protected function validateStatusTransition(
         ?msOrderStatusModel $oldStatus,
@@ -191,7 +243,148 @@ class OrderStatusService
             return $this->modx->lexicon('ms3_err_status_fixed');
         }
 
+        $edges = OrderStatusTransitionPolicy::resolve(
+            $this->modx->getOption('ms3_order_status_transitions', null, '')
+        );
+        if ($edges['mode'] === OrderStatusTransitionPolicy::MODE_INVALID) {
+            return $this->modx->lexicon('ms3_err_status_transitions_invalid');
+        }
+        if (
+            $edges['mode'] === OrderStatusTransitionPolicy::MODE_ON
+            && !isset($edges['edges'][(int) $oldStatus->get('id')][(int) $newStatus->get('id')])
+        ) {
+            return $this->modx->lexicon('ms3_err_status_transition');
+        }
+
         return null;
+    }
+
+    /**
+     * Invoke semantic lifecycle ports when the target matches configured status ids.
+     */
+    protected function runLifecyclePorts(msOrder $order, int $statusId, ?int $previousStatusId): ?string
+    {
+        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
+        $canceledId = (int) $this->modx->getOption('ms3_status_canceled', null, 5);
+        $sentId = (int) $this->modx->getOption('ms3_status_sent', null, 4);
+
+        if ($statusId === $paidId) {
+            return $this->lifecyclePorts->onOrderBecamePaid($order, $previousStatusId);
+        }
+        if ($statusId === $canceledId) {
+            return $this->lifecyclePorts->onOrderCancelled($order, $previousStatusId);
+        }
+        if ($statusId === $sentId) {
+            return $this->lifecyclePorts->onOrderShipped($order, $previousStatusId);
+        }
+
+        return null;
+    }
+
+    /**
+     * Apply inventory for the new status, then persist status_id.
+     * When inventory is on, both steps share one DB transaction so a failed save cannot leave a hanging reserve.
+     */
+    protected function persistStatusWithInventory(msOrder $msOrder, int $statusId): ?string
+    {
+        $inventory = $this->inventory();
+        $useTx = $inventory !== null
+            && OrderInventoryCoordinator::isInventoryEnabled($this->modx)
+            && is_callable([$this->modx, 'beginTransaction']);
+        if ($useTx) {
+            $this->modx->beginTransaction();
+        }
+
+        try {
+            $inventory?->applyStatusChange($msOrder, $statusId);
+            $msOrder->set('status_id', $statusId);
+            if (!$msOrder->save()) {
+                if ($useTx) {
+                    $this->modx->rollback();
+                } else {
+                    $inventory?->releaseOrder($msOrder);
+                }
+
+                return $this->modx->lexicon('ms3_err_unknown');
+            }
+            if ($useTx) {
+                $this->modx->commit();
+            }
+        } catch (InventoryException $exception) {
+            if ($useTx) {
+                $this->modx->rollback();
+            }
+
+            return $this->modx->lexicon($exception->getLexiconKey(), $exception->getPlaceholders());
+        } catch (\Throwable $exception) {
+            if (!$useTx) {
+                throw $exception;
+            }
+            $this->modx->rollback();
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[OrderStatusService] ' . $exception->getMessage());
+
+            return $this->modx->lexicon('ms3_err_unknown');
+        }
+
+        return null;
+    }
+
+    /**
+     * Restore previous status_id after failed after-event or lifecycle port.
+     *
+     * @return string|null Lexicon/error when rollback persist fails
+     */
+    protected function rollbackStatus(msOrder $order, ?int $previousStatusId): ?string
+    {
+        $order->set('status_id', $previousStatusId);
+        if ($order->save()) {
+            return null;
+        }
+
+        $this->modx->log(
+            modX::LOG_LEVEL_ERROR,
+            sprintf(
+                '[MiniShop3] Failed to rollback order #%s status to %s',
+                (string) $order->get('id'),
+                $previousStatusId === null ? 'null' : (string) $previousStatusId
+            )
+        );
+
+        return $this->modx->lexicon('ms3_err_status_rollback');
+    }
+
+    protected function inventory(): ?OrderInventoryCoordinator
+    {
+        return $this->inventoryCoordinator;
+    }
+
+    /**
+     * After-event failure must not leave New + a live reserve.
+     * Paid/canceled persists stay: those inventory operations already finished.
+     */
+    protected function undoUncommittedNewStatus(msOrder $msOrder, mixed $oldStatusId, int $newStatusId): void
+    {
+        $inventory = $this->inventory();
+        if ($inventory === null || !OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return;
+        }
+        $newId = (int) $this->modx->getOption('ms3_status_new', null, 2);
+        if ($newStatusId !== $newId) {
+            return;
+        }
+        try {
+            $inventory->releaseOrder($msOrder);
+        } catch (InventoryException $exception) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OrderStatusService] release after msOnChangeOrderStatus failure: ' . $exception->getMessage()
+            );
+        }
+        $previousId = is_numeric($oldStatusId)
+            ? (int) $oldStatusId
+            : ((int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1);
+        $msOrder->set('status_id', $previousId);
+        $msOrder->save();
     }
 
     /**

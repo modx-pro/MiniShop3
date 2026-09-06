@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
+import { Button, Column, DataTable } from 'primevue'
 import { inject } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
@@ -35,8 +33,7 @@ const { _ } = useLexicon()
       <Button
         :label="_('order_add_product')"
         icon="pi pi-plus"
-        severity="primary"
-        size="small"
+        severity="success"
         @click="openAddProductDialog"
       />
     </div>
@@ -151,7 +148,6 @@ const { _ } = useLexicon()
                 :severity="action.severity || 'secondary'"
                 text
                 rounded
-                size="small"
                 @click="handleProductAction(action, data)"
               />
             </div>

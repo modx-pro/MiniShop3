@@ -5,8 +5,7 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import PrimeVue from 'primevue/config'
+import { ModxManagerTheme, PrimeVue } from 'primevue'
 import { createApp } from 'vue'
 
 import HelpPage from '../components/HelpPage.vue'
@@ -19,12 +18,7 @@ function createVueApp() {
   const app = createApp(HelpPage)
 
   app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
+    theme: ModxManagerTheme,
   })
 
   return app

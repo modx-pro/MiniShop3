@@ -58,10 +58,12 @@ final class CartItemManagerPureTest extends TestCase
 
     public function testNormalizeOptions(): void
     {
-        self::assertSame(['color' => 'red'], $this->manager->normalizeOptions('{"color":"red"}'));
-        self::assertSame(['a' => 1], $this->manager->normalizeOptions(['a' => 1]));
-        self::assertSame([], $this->manager->normalizeOptions('{bad'));
-        self::assertSame([], $this->manager->normalizeOptions(null));
+        self::assertSame([], CartItemManager::normalizeOptions('[]'));
+        self::assertSame([], CartItemManager::normalizeOptions('{}'));
+        self::assertSame(['color' => 'red'], CartItemManager::normalizeOptions('{"color":"red"}'));
+        self::assertSame(['a' => 1], CartItemManager::normalizeOptions(['a' => 1]));
+        self::assertSame([], CartItemManager::normalizeOptions('{bad'));
+        self::assertSame([], CartItemManager::normalizeOptions(null));
     }
 
     public function testGenerateProductKeyDiffersByOptions(): void

@@ -328,14 +328,15 @@ class CartItemManager
      * @param mixed $options Options (array or JSON string)
      * @return array Normalized options
      */
-    public function normalizeOptions(mixed $options): array
+    public static function normalizeOptions(mixed $options): array
     {
-        if (is_string($options)) {
-            $decoded = json_decode($options, true);
-            return is_array($decoded) ? $decoded : [];
+        if (!is_string($options)) {
+            return is_array($options) ? $options : [];
         }
 
-        return is_array($options) ? $options : [];
+        $decoded = json_decode($options, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**

@@ -22,6 +22,7 @@ $_lang['ms3_cart_add_success'] = 'Product successfully added to cart: [[+count]]
 $_lang['ms3_cart_add_err_id'] = 'Error adding to cart: product identifier not specified';
 $_lang['ms3_cart_add_err_nf'] = 'Error adding to cart: product not found';
 $_lang['ms3_cart_add_err_count'] = 'Error adding to cart: invalid count "[[+count]]"';
+$_lang['ms3_err_cart_options'] = 'options must be an object or a JSON string';
 
 $_lang['ms3_cart_remove_success'] = 'Product successfully removed from cart';
 
@@ -29,6 +30,7 @@ $_lang['ms3_cart_change_success'] = 'Product count in cart successfully changed:
 $_lang['ms3_cart_change_error'] = 'Error changing product count in cart';
 $_lang['ms3_cart_change_options_success'] = 'Product options in cart successfully changed';
 $_lang['ms3_cart_change_options_error'] = 'Error changing product options in cart';
+$_lang['ms3_err_cart_options'] = 'options must be an object or a JSON string';
 
 $_lang['ms3_cart_clean_success'] = 'Cart successfully cleared';
 $_lang['ms3_cart_is_empty'] = 'Your cart is empty';

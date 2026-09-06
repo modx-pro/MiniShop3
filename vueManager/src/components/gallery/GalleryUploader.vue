@@ -1,6 +1,6 @@
 <template>
   <div class="gallery-uploader">
-    <div id="uppy-dashboard" class="uppy-container"></div>
+    <div ref="dashboardEl" class="uppy-container" />
   </div>
 </template>
 
@@ -10,9 +10,14 @@ import Dashboard from '@uppy/dashboard'
 import ImageEditor from '@uppy/image-editor'
 import XHRUpload from '@uppy/xhr-upload'
 import { useLexicon } from '@vuetools/useLexicon'
-import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const { _ } = useLexicon()
+
+/** Compact drop target while idle; expands when files are queued or uploading. */
+const HEIGHT_IDLE = 168
+const HEIGHT_WITH_FILES = 300
+const HEIGHT_BUSY = 380
 
 const props = defineProps({
   productId: {
@@ -54,15 +59,18 @@ const props = defineProps({
 
 const emit = defineEmits(['upload-success', 'upload-error', 'upload-complete'])
 
+const dashboardEl = ref(null)
 let uppy = null
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
   initUppy()
 })
 
 onBeforeUnmount(() => {
   if (uppy) {
     uppy.close()
+    uppy = null
   }
 })
 
@@ -76,6 +84,7 @@ const buildUppyLocale = () => {
       browseFolders: _('ms3_gallery_uppy_browse_folders'),
       back: _('ms3_gallery_uppy_back'),
       addMoreFiles: _('ms3_gallery_uppy_add_more_files'),
+      addingMoreFiles: _('ms3_gallery_uppy_adding_more_files'),
       dropHint: _('ms3_gallery_uppy_drop_hint'),
       uploadComplete: _('ms3_gallery_uppy_upload_complete'),
       uploadFailed: _('ms3_gallery_uppy_upload_failed'),
@@ -86,6 +95,11 @@ const buildUppyLocale = () => {
       edit: _('ms3_gallery_uppy_edit'),
       retry: _('ms3_gallery_uppy_retry'),
       addMore: _('ms3_gallery_uppy_add_more'),
+      // Image editor chrome (Dashboard panel)
+      editing: _('ms3_gallery_uppy_editing'),
+      save: _('ms3_gallery_uppy_save'),
+      finishEditingFile: _('ms3_gallery_uppy_finish_editing'),
+      saveChanges: _('ms3_gallery_uppy_save_changes'),
       error: _('ms3_gallery_uppy_error'),
       failedToUpload: _('ms3_gallery_uppy_failed_to_upload'),
       noDuplicates: _('ms3_gallery_uppy_no_duplicates'),
@@ -114,7 +128,37 @@ const buildUppyLocale = () => {
   }
 }
 
+function dashboardHeightForState() {
+  if (!uppy) {
+    return HEIGHT_IDLE
+  }
+  const files = uppy.getFiles()
+  const count = files.length
+  if (count === 0) {
+    return HEIGHT_IDLE
+  }
+  const uploading = files.some(
+    f => f.progress?.uploadStarted && !f.progress?.uploadComplete && !f.error
+  )
+  if (uploading || count > 6) {
+    return HEIGHT_BUSY
+  }
+  return HEIGHT_WITH_FILES
+}
+
+function syncDashboardHeight() {
+  const plugin = uppy?.getPlugin('Dashboard')
+  if (!plugin) {
+    return
+  }
+  plugin.setOptions({ height: dashboardHeightForState() })
+}
+
 const initUppy = () => {
+  if (!dashboardEl.value) {
+    return
+  }
+
   const locale = buildUppyLocale()
   uppy = new Uppy({
     id: 'gallery-uploader',
@@ -135,20 +179,39 @@ const initUppy = () => {
   )
 
   uppy.use(Dashboard, {
-    target: '#uppy-dashboard',
+    target: dashboardEl.value,
     inline: true,
     width: '100%',
-    height: 400,
+    height: HEIGHT_IDLE,
     proudlyDisplayPoweredByUppy: false,
     showProgressDetails: true,
     hideUploadButton: false,
+    hideProgressAfterFinish: true,
+    // Gallery is multi-file; one file should not monopolize the panel.
+    singleFileFullScreen: false,
     note: noteText,
     theme: 'light',
+    doneButtonHandler: () => {
+      uppy.cancelAll()
+      syncDashboardHeight()
+    },
   })
 
   uppy.use(ImageEditor, {
     target: Dashboard,
     quality: 0.8,
+    locale: {
+      strings: {
+        revert: _('ms3_gallery_uppy_revert'),
+        rotate: _('ms3_gallery_uppy_rotate'),
+        zoomIn: _('ms3_gallery_uppy_zoom_in'),
+        zoomOut: _('ms3_gallery_uppy_zoom_out'),
+        flipHorizontal: _('ms3_gallery_uppy_flip_horizontal'),
+        aspectRatioSquare: _('ms3_gallery_uppy_crop_square'),
+        aspectRatioLandscape: _('ms3_gallery_uppy_crop_landscape'),
+        aspectRatioPortrait: _('ms3_gallery_uppy_crop_portrait'),
+      },
+    },
   })
 
   uppy.use(XHRUpload, {
@@ -156,14 +219,23 @@ const initUppy = () => {
     method: 'POST',
     formData: true,
     fieldName: 'file',
-    timeout: 60000, // 60 seconds
+    timeout: 60000,
     headers: {
       Accept: 'application/json',
     },
   })
 
+  uppy.on('file-added', () => {
+    syncDashboardHeight()
+  })
+  uppy.on('file-removed', () => {
+    syncDashboardHeight()
+  })
+  uppy.on('upload', () => {
+    syncDashboardHeight()
+  })
+
   uppy.on('upload-success', (file, response) => {
-    // File uploaded successfully
     emit('upload-success', { file, response })
   })
 
@@ -173,14 +245,18 @@ const initUppy = () => {
   })
 
   uppy.on('complete', result => {
-    // Upload complete
     emit('upload-complete', result)
+    syncDashboardHeight()
 
     setTimeout(() => {
+      if (!uppy) {
+        return
+      }
       result.successful.forEach(file => {
         uppy.removeFile(file.id)
       })
-    }, 2000)
+      syncDashboardHeight()
+    }, 1500)
   })
 
   uppy.on('restriction-failed', (file, error) => {
@@ -209,7 +285,6 @@ const formatBytes = (bytes, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-// Watch sourceId to rebuild upload URL
 watch(
   () => props.sourceId,
   () => {
@@ -232,13 +307,137 @@ watch(
   width: 100%;
 }
 
+/* Theme surface: no second dashed frame outside Uppy’s AddFiles. */
 .uppy-container {
-  border: var(--ms3-border-width-focus) dashed var(--ms3-border-upload);
-  border-radius: 0.5rem;
+  border-radius: var(--p-content-border-radius, 3px);
   overflow: hidden;
 }
 
-.uppy-container :deep(.uppy-Dashboard--isDraggingOver) {
-  border-color: var(--ms3-accent-green);
+.uppy-container :deep(.uppy-Dashboard-inner) {
+  background-color: var(--p-surface-ground, #f4f4f4);
+  border: 1px solid var(--p-content-border-color, #ccc);
+  border-radius: var(--p-content-border-radius, 3px);
+  width: 100% !important;
+  max-width: 100%;
+  transition: height 0.2s ease;
+}
+
+.uppy-container :deep(.uppy-Dashboard-AddFiles) {
+  border-color: var(--p-content-border-color, #ccc);
+  border-radius: var(--p-content-border-radius, 3px);
+}
+
+.uppy-container :deep(.uppy-Dashboard--isDraggingOver) .uppy-Dashboard-AddFiles,
+.uppy-container :deep(.uppy-Dashboard-dropFilesHereHint) {
+  border-color: var(--p-primary-color, #234368);
+}
+
+.uppy-container :deep(.uppy-Dashboard-AddFiles-title) {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--p-text-color, #333);
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Uppy hides .AddFiles-info below height-md; keep the size note in the compact idle zone. */
+.uppy-container :deep(.uppy-Dashboard-AddFiles-info) {
+  display: block !important;
+  position: static !important;
+  padding-top: 0.25rem;
+  padding-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+.uppy-container :deep(.uppy-Dashboard-note) {
+  color: var(--p-text-muted-color, #757575);
+  font-size: 0.8125rem;
+}
+
+.uppy-container :deep(.uppy-Dashboard-browse),
+.uppy-container :deep(.uppy-DashboardContent-back),
+.uppy-container :deep(.uppy-DashboardContent-addMore),
+.uppy-container :deep(.uppy-StatusBar-actionBtn:not(.uppy-StatusBar-actionBtn--upload)) {
+  color: var(--p-primary-color, #234368);
+}
+
+.uppy-container :deep(.uppy-DashboardContent-bar) {
+  min-height: var(--p-modx-control-height, 2.25rem);
+  height: auto;
+  padding-block: 0.25rem;
+  padding-inline: var(--p-modx-space-panel, 15px);
+  background: var(--p-surface-50, #fafafa);
+  border-bottom-color: var(--p-content-border-color, #e4e4e4);
+}
+
+.uppy-container :deep(.uppy-DashboardContent-title) {
+  color: var(--p-text-color, #333);
+  font-size: var(--p-modx-font-size-lg, 0.875rem);
+  font-weight: 500;
+  line-height: var(--p-modx-control-height, 2.25rem);
+  max-width: min(60%, 20rem);
+}
+
+/* Save = mgr success CTA (same role as StatusBar upload). */
+.uppy-container :deep(.uppy-DashboardContent-save) {
+  color: #fff;
+  background-color: var(--p-button-success-background, #6cb24a);
+  min-height: var(--p-modx-control-height, 2.25rem);
+  padding: 0.375rem 0.875rem;
+  margin-inline-start: 0;
+  border-radius: var(--p-button-border-radius, 3px);
+  font-size: var(--p-modx-font-size-lg, 0.875rem);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.uppy-container :deep(.uppy-DashboardContent-save:hover) {
+  color: #fff;
+  background-color: var(--p-button-success-hover-background, #5a9a3c);
+}
+
+.uppy-container :deep(.uppy-DashboardContent-save:focus) {
+  color: #fff;
+  background-color: var(--p-button-success-background, #6cb24a);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--p-button-success-background, #6cb24a) 40%, transparent);
+}
+.uppy-container :deep(.uppy-Dashboard-browse:focus),
+.uppy-container :deep(.uppy-Dashboard-browse:hover) {
+  border-bottom-color: var(--p-primary-color, #234368);
+}
+
+/* Primary CTA = theme success (same as mgr success buttons). */
+.uppy-container :deep(.uppy-StatusBar.is-waiting .uppy-StatusBar-actionBtn--upload) {
+  background-color: var(--p-button-success-background, #6cb24a);
+  min-height: var(--p-modx-control-height, 2.25rem);
+  padding-block: 0.5rem;
+  border-radius: var(--p-button-border-radius, 3px);
+}
+
+.uppy-container :deep(.uppy-StatusBar.is-waiting .uppy-StatusBar-actionBtn--upload:hover) {
+  background-color: var(--p-button-success-hover-background, #5a9a3c);
+}
+
+.uppy-container :deep(.uppy-StatusBar-progress) {
+  background-color: var(--p-primary-color, #234368);
+}
+
+.uppy-container :deep(.uppy-StatusBar.is-complete .uppy-StatusBar-progress),
+.uppy-container :deep(.uppy-StatusBar.is-complete .uppy-StatusBar-statusIndicator) {
+  background-color: var(--p-button-success-background, #6cb24a);
+  color: var(--p-button-success-background, #6cb24a);
+}
+
+.uppy-container :deep(.uppy-DashboardTab-iconMyDevice),
+.uppy-container :deep(.uppy-StatusBar-spinner) {
+  color: var(--p-primary-color, #234368);
+  fill: var(--p-primary-color, #234368);
+}
+
+.uppy-container :deep(.uppy-Dashboard-Item-action:focus),
+.uppy-container :deep(.uppy-StatusBar-actionCircleBtn:focus),
+.uppy-container :deep(.uppy-DashboardContent-back:focus),
+.uppy-container :deep(.uppy-DashboardContent-addMore:focus) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--p-primary-color, #234368) 35%, transparent);
 }
 </style>

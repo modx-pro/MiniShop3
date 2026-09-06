@@ -172,12 +172,17 @@ Ext.extend(ms3.panel.UpdateCategory, ms3.panel.Category, {
         return [{
             layout: 'form',
             items: [items, {
-                html: String.format('<h3>{0}</h3>', _('ms3_product_options')),
-                style: 'margin-top: 20px',
+                html: String.format(
+                    '<h3 class="ms3-category-options-heading">{0}</h3>',
+                    _('ms3_product_options')
+                ),
+                // Theme panel step (15px) above the section; heading→toolbar gap via CSS.
+                style: 'margin-top: 15px',
                 border: false,
             }, {
                 xtype: 'container',
-                cls: 'main-wrapper',
+                // Avoid .main-wrapper (15px pad) stacking on h3 margin — doubles title→toolbar gap.
+                style: 'padding: 0',
                 html: '<div id="ms3-vue-category-options" class="vueApp" data-category-id="' + categoryId + '"></div>',
             }]
         }];

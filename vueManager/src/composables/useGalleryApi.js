@@ -132,6 +132,18 @@ export function useGalleryApi() {
   }
 
   /**
+   * Sort gallery files by natural filename order (#616).
+   * @param {number} productId
+   * @returns {Promise<{thumb: string}>}
+   */
+  async function sortFilesByName(productId) {
+    const data = await connectorRequest('MiniShop3\\Processors\\Gallery\\SortByName', {
+      product_id: productId,
+    })
+    return { thumb: data.object?.thumb || '' }
+  }
+
+  /**
    * Delete files by IDs
    * @param {number[]} ids
    * @returns {Promise<{thumb: string}>}
@@ -226,6 +238,7 @@ export function useGalleryApi() {
     isLoading,
     fetchGalleryList,
     sortFiles,
+    sortFilesByName,
     deleteFiles,
     deleteAll,
     regenerateThumbs,

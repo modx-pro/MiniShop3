@@ -17,6 +17,7 @@ class msCategoryMember extends \MiniShop3\Model\msCategoryMember
             [
                 'product_id' => null,
                 'category_id' => null,
+                'menuindex' => 0,
             ],
         'fieldMeta' =>
             [
@@ -38,6 +39,15 @@ class msCategoryMember extends \MiniShop3\Model\msCategoryMember
                         'null' => false,
                         'index' => 'pk',
                     ],
+                'menuindex' =>
+                    [
+                        'dbtype' => 'int',
+                        'precision' => '10',
+                        'attributes' => 'unsigned',
+                        'phptype' => 'integer',
+                        'null' => false,
+                        'default' => 0,
+                    ],
             ],
         'indexes' =>
             [
@@ -56,6 +66,28 @@ class msCategoryMember extends \MiniShop3\Model\msCategoryMember
                                         'null' => false,
                                     ],
                                 'category_id' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                            ],
+                    ],
+                'category_menuindex' =>
+                    [
+                        'alias' => 'category_menuindex',
+                        'primary' => false,
+                        'unique' => false,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'category_id' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => false,
+                                    ],
+                                'menuindex' =>
                                     [
                                         'length' => '',
                                         'collation' => 'A',

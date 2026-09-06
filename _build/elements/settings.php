@@ -19,6 +19,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_main',
     ],
+    'ms3_version' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_main',
+    ],
 
     'ms3_category_show_nested_products' => [
         'value' => true,
@@ -296,6 +301,36 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
+    'ms3_status_sent' => [
+        'value' => 4,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_order_status_transitions' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_inventory_enabled' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_enabled' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_on_delivered_status' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_on_in_transit_status' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
     'ms3_customer_cancel_allowed_statuses' => [
         'value' => '2,3',
         'xtype' => 'textfield',
@@ -433,6 +468,16 @@ return [
         'value' => '',
         'xtype' => 'textfield',
         'area' => 'ms3_security',
+    ],
+    'ms3_payment_on_failed_status' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
+    'ms3_payment_on_refunded_status' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
     ],
     'ms3_snippet_token_secret' => [
         'value' => '', // Генерируется автоматически при первом запуске

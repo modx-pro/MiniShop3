@@ -9,6 +9,7 @@ use xPDO\Om\xPDOObject;
  *
  * @property integer $product_id
  * @property integer $category_id
+ * @property integer $menuindex
  *
  * @package MiniShop3\Model
  */

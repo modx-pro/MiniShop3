@@ -1,14 +1,17 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ConfirmDialog from 'primevue/confirmdialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Toast from 'primevue/toast'
+import {
+  Button,
+  Card,
+  Checkbox,
+  ConfirmDialog,
+  InputNumber,
+  InputText,
+  Paginator,
+  Select,
+  Tag,
+  Toast,
+} from 'primevue'
 import { computed, defineProps, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -63,7 +66,7 @@ const {
 const columns = ref([])
 const filters = ref({})
 const { runGuarded } = useStaleRequestGuard()
-const loading = ref(false)
+const loading = ref(true)
 const products = ref([])
 const totalRecords = ref(0)
 const ROWS_STORAGE_KEY = 'ms3_category_products_rows'
@@ -118,10 +121,64 @@ const sortedFilters = computed(() => {
 })
 
 /**
+ * Translate filter option labels (yes/no or legacy Да/Нет).
+ */
+function translateFilterOptionLabel(label) {
+  if (label === 'Да' || label === 'yes') {
+    return _('yes')
+  }
+  if (label === 'Нет' || label === 'no') {
+    return _('no')
+  }
+  const translated = _(label)
+  return translated || label
+}
+
+function selectFilterOptions(filter) {
+  const fromConfig = (filter.options || []).map(option => ({
+    label: translateFilterOptionLabel(option.label),
+    value: option.value,
+  }))
+  if (fromConfig.length > 0) {
+    return fromConfig
+  }
+  if (filter.type === 'boolean' || filter.key === 'published') {
+    return [
+      { label: _('yes'), value: 1 },
+      { label: _('no'), value: 0 },
+    ]
+  }
+  return []
+}
+
+/**
  * Check if drag-drop is available (only when sorted by menuindex and not nested)
  */
 const canDrag = computed(() => {
   return dragEnabled.value && sortField.value === 'menuindex' && !nested.value
+})
+
+const visibleColumns = computed(() => columns.value.filter(c => c.visible))
+
+/** Any list reload (first paint, pagination, filters): same-height skeleton rows. */
+const showSkeleton = computed(() => loading.value)
+
+/** Match expected page size — last page uses remaining rows when total is known. */
+const skeletonRowCount = computed(() => {
+  const pageSize = Math.min(Math.max(rows.value, 1), 25)
+  if (totalRecords.value > 0) {
+    const remaining = Math.max(1, totalRecords.value - first.value)
+    return Math.min(pageSize, remaining)
+  }
+  return Math.min(Math.max(rows.value, 5), 25)
+})
+
+const tableShellMinHeight = computed(() => {
+  if (!showSkeleton.value) {
+    return null
+  }
+  // thead ~2.75rem, body rows ~5rem (thumb + padding), paginator ~3.5rem
+  return `calc(2.75rem + ${skeletonRowCount.value} * 5rem + 3.5rem)`
 })
 
 /** Pass nested grid mode to category product mutations (scope must match list). */
@@ -189,13 +246,20 @@ async function loadProducts() {
   }
 }
 
+const pageReportTemplate = computed(
+  () => `${_('showing')} {first}-{last} ${_('of')} {totalRecords}`
+)
+
 /**
- * Handle pagination (for DataTable lazy loading)
+ * Handle pagination (PrimeVue Paginator)
  */
-// eslint-disable-next-line no-unused-vars
 function onPage(event) {
+  const rowsChanged = event.rows !== rows.value
   first.value = event.first
   rows.value = event.rows
+  if (rowsChanged) {
+    saveRowsPreference(event.rows)
+  }
   loadProducts()
 }
 
@@ -459,7 +523,7 @@ const hasActiveFilters = computed(() => {
 async function loadGridConfig() {
   try {
     const response = await request.get('/api/mgr/grid-config/category-products')
-    columns.value = response.columns || []
+    columns.value = ensureActionsColumnWidth(response.columns || [])
     if (Array.isArray(response.editor_references)) {
       referencePathsByKey.value = Object.fromEntries(
         response.editor_references.map(r => [r.key, r.path])
@@ -472,6 +536,25 @@ async function loadGridConfig() {
     columns.value = getDefaultColumns()
     referencePathsByKey.value = {}
   }
+}
+
+/** Five 36px icon buttons need ≥14rem; saved configs often ship 140px and wrap. */
+const ACTIONS_COLUMN_MIN_WIDTH = '14rem'
+
+function ensureActionsColumnWidth(cols) {
+  if (!Array.isArray(cols)) {
+    return []
+  }
+  return cols.map(col => {
+    if (col?.type !== 'actions' && col?.name !== 'actions') {
+      return col
+    }
+    return {
+      ...col,
+      width: ACTIONS_COLUMN_MIN_WIDTH,
+      minWidth: ACTIONS_COLUMN_MIN_WIDTH,
+    }
+  })
 }
 
 /**
@@ -530,7 +613,7 @@ function getDefaultColumns() {
       visible: true,
       isSystem: true,
       frozen: true,
-      width: '8.75rem',
+      width: '14rem',
       type: 'actions',
       actions: [
         { name: 'view', handler: 'view', icon: 'pi-eye', label: 'view' },
@@ -675,47 +758,6 @@ function onHeaderClick(column) {
 }
 
 /**
- * Handle previous page
- */
-function onPagePrev() {
-  if (first.value > 0) {
-    first.value = Math.max(0, first.value - rows.value)
-    loadProducts()
-  }
-}
-
-/**
- * Handle next page
- */
-function onPageNext() {
-  if (first.value + rows.value < totalRecords.value) {
-    first.value = first.value + rows.value
-    loadProducts()
-  }
-}
-
-/**
- * Jump to first page
- */
-function onPageFirst() {
-  if (first.value > 0) {
-    first.value = 0
-    loadProducts()
-  }
-}
-
-/**
- * Jump to last page
- */
-function onPageLast() {
-  const lastStart = Math.max(0, Math.ceil(totalRecords.value / rows.value) - 1) * rows.value
-  if (first.value !== lastStart) {
-    first.value = lastStart
-    loadProducts()
-  }
-}
-
-/**
  * Save rows per page to localStorage
  */
 function saveRowsPreference(value) {
@@ -724,15 +766,6 @@ function saveRowsPreference(value) {
   } catch {
     // ignore
   }
-}
-
-/**
- * Handle rows per page change: reset to first page, save preference, reload
- */
-function onRowsChange() {
-  first.value = 0
-  saveRowsPreference(rows.value)
-  loadProducts()
 }
 
 // Watch for category ID changes
@@ -745,6 +778,8 @@ watch(
 )
 
 onMounted(async () => {
+  loading.value = true
+
   // Initialize nested from system setting
   // Note: ms3 is a global variable (not window.ms3) because it's declared with 'let' in minishop3.js
 
@@ -767,6 +802,9 @@ onMounted(async () => {
     rows.value = 20
   }
 
+  // Paint header immediately so the shell does not collapse while config loads.
+  columns.value = getDefaultColumns()
+
   await Promise.all([loadGridConfig(), loadFiltersConfig()])
   await loadProducts()
 })
@@ -786,14 +824,12 @@ onMounted(async () => {
               :label="_('product_create')"
               icon="pi pi-plus"
               severity="success"
-              size="small"
               @click="createProduct"
             />
             <Button
               :label="_('category_create')"
               icon="pi pi-folder-plus"
               severity="secondary"
-              size="small"
               @click="createCategory"
             />
           </div>
@@ -836,9 +872,9 @@ onMounted(async () => {
                 />
               </div>
 
-              <!-- Select filter -->
+              <!-- Select / boolean filter -->
               <div
-                v-else-if="filter.type === 'select'"
+                v-else-if="filter.type === 'select' || filter.type === 'boolean'"
                 class="filter-item"
                 :style="{ width: filter.width || '9.375rem' }"
               >
@@ -846,7 +882,7 @@ onMounted(async () => {
                 <Select
                   :id="`filter-${filter.key}`"
                   v-model="filterValues[filter.key]"
-                  :options="filter.options || []"
+                  :options="selectFilterOptions(filter)"
                   option-label="label"
                   option-value="value"
                   :placeholder="_(filter.placeholder || 'all')"
@@ -856,24 +892,22 @@ onMounted(async () => {
                 />
               </div>
             </template>
-          </div>
 
-          <!-- Filter buttons -->
-          <div class="filter-buttons">
-            <Button
-              :label="_('apply_filters')"
-              icon="pi pi-filter"
-              size="small"
-              @click="applyFilters"
-            />
-            <Button
-              v-if="hasActiveFilters"
-              :label="_('clear_filters')"
-              icon="pi pi-filter-slash"
-              severity="secondary"
-              size="small"
-              @click="clearFilters"
-            />
+            <div class="filter-buttons">
+              <Button
+                :label="_('apply_filters')"
+                icon="pi pi-filter"
+                severity="success"
+                @click="applyFilters"
+              />
+              <Button
+                v-if="hasActiveFilters"
+                :label="_('clear_filters')"
+                icon="pi pi-filter-slash"
+                severity="secondary"
+                @click="clearFilters"
+              />
+            </div>
           </div>
         </div>
 
@@ -888,7 +922,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -896,21 +929,18 @@ onMounted(async () => {
               :label="_('publish')"
               icon="pi pi-check"
               severity="success"
-              size="small"
               @click="bulkPublish"
             />
             <Button
               :label="_('unpublish')"
               icon="pi pi-times-circle"
               severity="secondary"
-              size="small"
               @click="bulkUnpublish"
             />
             <Button
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -923,242 +953,251 @@ onMounted(async () => {
           <span>{{ _('drag_to_reorder') }}</span>
         </div>
 
-        <!-- Table with drag-drop -->
-        <div class="p-datatable p-component p-datatable-striped">
-          <div class="p-datatable-wrapper">
-            <table class="p-datatable-table">
-              <thead class="p-datatable-thead">
-                <tr>
-                  <th v-if="canDrag" style="width: 3rem"></th>
-                  <th style="width: 3rem">
-                    <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
-                  </th>
-                  <th
-                    v-for="column in columns.filter(c => c.visible)"
-                    :key="column.name"
-                    :style="{ width: column.width, minWidth: column.minWidth }"
-                    :class="{ 'sortable-header': column.sortable }"
-                    @click="column.sortable && onHeaderClick(column)"
-                  >
-                    {{ column.label }}
-                    <i
-                      v-if="column.sortable && sortField === column.name"
-                      :class="
-                        sortOrder === 1 ? 'pi pi-sort-amount-up-alt' : 'pi pi-sort-amount-down'
-                      "
-                      class="sort-icon"
-                    ></i>
-                  </th>
-                </tr>
-              </thead>
-              <draggable
-                v-model="products"
-                tag="tbody"
-                class="p-datatable-tbody"
-                :handle="canDrag ? '.drag-handle' : null"
-                :disabled="!canDrag"
-                item-key="id"
-                :animation="200"
-                ghost-class="ghost-row"
-                @end="onDragEnd"
-              >
-                <template #item="{ element: product, index }">
-                  <tr :class="{ 'p-row-odd': index % 2 === 1 }">
+        <!-- Table with drag-drop (shell keeps height while loading) -->
+        <div
+          class="products-table-shell"
+          :style="tableShellMinHeight ? { minHeight: tableShellMinHeight } : undefined"
+        >
+          <div class="p-datatable p-component p-datatable-striped">
+            <div class="p-datatable-wrapper">
+              <table class="p-datatable-table">
+                <thead class="p-datatable-thead">
+                  <tr>
+                    <th v-if="canDrag" style="width: 3rem"></th>
+                    <th style="width: 3rem">
+                      <Checkbox v-model="selectAll" :binary="true" @change="onSelectAllChange" />
+                    </th>
+                    <th
+                      v-for="column in visibleColumns"
+                      :key="column.name"
+                      :style="{
+                        width: column.width,
+                        minWidth: column.minWidth || column.width,
+                      }"
+                      :class="{ 'sortable-header': column.sortable }"
+                      @click="column.sortable && onHeaderClick(column)"
+                    >
+                      {{ column.label }}
+                      <i
+                        v-if="column.sortable && sortField === column.name"
+                        :class="sortOrder === 1 ? 'pi pi-sort-amount-up-alt' : 'pi pi-sort-amount-down'
+                          "
+                        class="sort-icon"
+                      ></i>
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody
+                  v-if="showSkeleton"
+                  class="p-datatable-tbody products-skeleton"
+                  aria-busy="true"
+                  aria-live="polite"
+                >
+                  <tr v-for="n in skeletonRowCount" :key="`skeleton-${n}`">
                     <td v-if="canDrag" class="drag-handle-cell">
-                      <i class="pi pi-bars drag-handle"></i>
+                      <span class="skeleton-block skeleton-block--icon" />
                     </td>
                     <td>
-                      <Checkbox v-model="selectedItems" :value="product" :binary="false" />
+                      <span class="skeleton-block skeleton-block--check" />
                     </td>
-                    <template v-for="column in columns.filter(c => c.visible)" :key="column.name">
-                      <!-- Actions column -->
-                      <td v-if="column.type === 'actions'" :style="{ width: column.width }">
-                        <ActionsColumn
-                          :data="product"
-                          :actions="getActionsConfig(column)"
-                          grid-id="category-products"
-                          :ui-group="UI_GROUP"
-                          @view="viewProduct"
-                          @edit="editProduct"
-                          @delete="deleteProduct"
-                          @publish="togglePublish"
-                          @duplicate="duplicateProduct"
-                          @refresh="loadProducts"
-                        />
-                      </td>
+                    <td v-for="column in visibleColumns" :key="`skeleton-${n}-${column.name}`">
+                      <span
+                        class="skeleton-block"
+                        :class="{
+                          'skeleton-block--thumb': column.type === 'image',
+                          'skeleton-block--short': column.width && Number.parseFloat(column.width) <= 6,
+                        }"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
 
-                      <!-- Editable column: inline edit mode -->
-                      <td
-                        v-else-if="column.editable && isEditingCell(product, column)"
-                        :style="{ width: column.width, minWidth: column.minWidth }"
-                        :class="['inline-edit-cell', { 'inline-edit-saving': inlineEditSaving }]"
-                      >
-                        <Checkbox
-                          v-if="isBooleanColumn(column)"
-                          ref="inlineEditInputRef"
-                          :model-value="!!inlineEditValue"
-                          :binary="true"
-                          :disabled="inlineEditSaving"
-                          @update:model-value="inlineEditValue = $event ? 1 : 0"
-                          @change="saveInlineEdit(product, column)"
-                        />
-                        <InputText
-                          v-else-if="normalizeGridColumnEditorType(column.editor_type) === GridColumnEditorType.TEXT"
-                          ref="inlineEditInputRef"
-                          v-model="inlineEditValue"
-                          class="w-full"
-                          :disabled="inlineEditSaving"
-                          @blur="saveInlineEdit(product, column)"
-                          @keydown.enter.prevent="$event.target.blur()"
-                          @keydown.escape="cancelInlineEdit"
-                        />
-                        <div
-                          v-else-if="isSelectLikeEditorType(column.editor_type)"
-                          class="inline-edit-input-wrapper w-full"
-                          @keydown.enter.capture.prevent="$event.target?.blur?.()"
-                          @keydown.escape.capture.prevent="cancelInlineEdit"
+                <draggable
+                  v-else
+                  v-model="products"
+                  tag="tbody"
+                  class="p-datatable-tbody"
+                  :handle="canDrag ? '.drag-handle' : null"
+                  :disabled="!canDrag"
+                  item-key="id"
+                  :animation="200"
+                  ghost-class="ghost-row"
+                  @end="onDragEnd"
+                >
+                  <template #item="{ element: product, index }">
+                    <tr :class="{ 'p-row-odd': index % 2 === 1 }">
+                      <td v-if="canDrag" class="drag-handle-cell">
+                        <i class="pi pi-bars drag-handle"></i>
+                      </td>
+                      <td>
+                        <Checkbox v-model="selectedItems" :value="product" :binary="false" />
+                      </td>
+                      <template v-for="column in visibleColumns" :key="column.name">
+                        <!-- Actions column -->
+                        <td
+                          v-if="column.type === 'actions'"
+                          class="row-actions-cell"
+                          :style="{
+                            width: column.width || ACTIONS_COLUMN_MIN_WIDTH,
+                            minWidth: column.minWidth || column.width || ACTIONS_COLUMN_MIN_WIDTH,
+                          }"
                         >
-                          <Select
+                          <ActionsColumn
+                            :data="product"
+                            :actions="getActionsConfig(column)"
+                            grid-id="category-products"
+                            :ui-group="UI_GROUP"
+                            @view="viewProduct"
+                            @edit="editProduct"
+                            @delete="deleteProduct"
+                            @publish="togglePublish"
+                            @duplicate="duplicateProduct"
+                            @refresh="loadProducts"
+                          />
+                        </td>
+
+                        <!-- Editable column: inline edit mode -->
+                        <td
+                          v-else-if="column.editable && isEditingCell(product, column)"
+                          :style="{ width: column.width, minWidth: column.minWidth }"
+                          :class="['inline-edit-cell', { 'inline-edit-saving': inlineEditSaving }]"
+                        >
+                          <Checkbox
+                            v-if="isBooleanColumn(column)"
                             ref="inlineEditInputRef"
-                            v-model="inlineEditValue"
-                            :options="selectOptionsForColumn(column)"
-                            option-label="label"
-                            option-value="value"
-                            class="w-full"
-                            :show-clear="selectUsesClear(column)"
+                            :model-value="!!inlineEditValue"
+                            :binary="true"
                             :disabled="inlineEditSaving"
+                            @update:model-value="inlineEditValue = $event ? 1 : 0"
                             @change="saveInlineEdit(product, column)"
                           />
-                        </div>
-                        <div
-                          v-else
-                          class="inline-edit-input-wrapper w-full"
-                          @keydown.enter.capture.prevent="$event.target?.blur?.()"
-                          @keydown.escape.capture.prevent="cancelInlineEdit"
-                        >
-                          <InputNumber
+                          <InputText
+                            v-else-if="normalizeGridColumnEditorType(column.editor_type) === GridColumnEditorType.TEXT"
                             ref="inlineEditInputRef"
                             v-model="inlineEditValue"
                             class="w-full"
-                            :min-fraction-digits="0"
-                            :max-fraction-digits="4"
                             :disabled="inlineEditSaving"
                             @blur="saveInlineEdit(product, column)"
+                            @keydown.enter.prevent="$event.target.blur()"
+                            @keydown.escape="cancelInlineEdit"
                           />
-                        </div>
-                      </td>
+                          <div
+                            v-else-if="isSelectLikeEditorType(column.editor_type)"
+                            class="inline-edit-input-wrapper w-full"
+                            @keydown.enter.capture.prevent="$event.target?.blur?.()"
+                            @keydown.escape.capture.prevent="cancelInlineEdit"
+                          >
+                            <Select
+                              ref="inlineEditInputRef"
+                              v-model="inlineEditValue"
+                              :options="selectOptionsForColumn(column)"
+                              option-label="label"
+                              option-value="value"
+                              class="w-full"
+                              :show-clear="selectUsesClear(column)"
+                              :disabled="inlineEditSaving"
+                              @change="saveInlineEdit(product, column)"
+                            />
+                          </div>
+                          <div
+                            v-else
+                            class="inline-edit-input-wrapper w-full"
+                            @keydown.enter.capture.prevent="$event.target?.blur?.()"
+                            @keydown.escape.capture.prevent="cancelInlineEdit"
+                          >
+                            <InputNumber
+                              ref="inlineEditInputRef"
+                              v-model="inlineEditValue"
+                              class="w-full"
+                              :min-fraction-digits="0"
+                              :max-fraction-digits="4"
+                              :disabled="inlineEditSaving"
+                              @blur="saveInlineEdit(product, column)"
+                            />
+                          </div>
+                        </td>
 
-                      <!-- Image column -->
-                      <td v-else-if="column.type === 'image'" :style="{ width: column.width }">
-                        <img
-                          :src="product[column.name] || defaultThumb"
-                          :alt="product.pagetitle"
-                          class="product-thumb"
-                        />
-                      </td>
+                        <!-- Image column -->
+                        <td v-else-if="column.type === 'image'" :style="{ width: column.width }">
+                          <img
+                            :src="product[column.name] || defaultThumb"
+                            :alt="product.pagetitle"
+                            class="product-thumb"
+                          />
+                        </td>
 
-                      <!-- Boolean column -->
-                      <td
-                        v-else-if="column.type === 'boolean'"
-                        :style="{ width: column.width }"
-                        :class="{ 'editable-cell': column.editable }"
-                        @dblclick="column.editable && startInlineEdit(product, column)"
-                      >
-                        <Tag
-                          :value="product[column.name] ? _('yes') : _('no')"
-                          :severity="product[column.name] ? 'success' : 'secondary'"
-                        />
-                      </td>
+                        <!-- Boolean column -->
+                        <td
+                          v-else-if="column.type === 'boolean'"
+                          :style="{ width: column.width }"
+                          :class="{ 'editable-cell': column.editable }"
+                          @dblclick="column.editable && startInlineEdit(product, column)"
+                        >
+                          <Tag
+                            :value="product[column.name] ? _('yes') : _('no')"
+                            :severity="product[column.name] ? 'success' : 'secondary'"
+                          />
+                        </td>
 
-                      <!-- Price column -->
-                      <td
-                        v-else-if="column.type === 'price'"
-                        :style="{ width: column.width }"
-                        :class="{ 'editable-cell': column.editable }"
-                        @dblclick="column.editable && startInlineEdit(product, column)"
-                      >
-                        {{ formatPrice(product[column.name]) }}
-                      </td>
+                        <!-- Price column -->
+                        <td
+                          v-else-if="column.type === 'price'"
+                          :style="{ width: column.width }"
+                          :class="{ 'editable-cell': column.editable }"
+                          @dblclick="column.editable && startInlineEdit(product, column)"
+                        >
+                          {{ formatPrice(product[column.name]) }}
+                        </td>
 
-                      <!-- Weight column -->
-                      <td
-                        v-else-if="column.type === 'weight'"
-                        :style="{ width: column.width }"
-                        :class="{ 'editable-cell': column.editable }"
-                        @dblclick="column.editable && startInlineEdit(product, column)"
-                      >
-                        {{ formatWeight(product[column.name]) }}
-                      </td>
+                        <!-- Weight column -->
+                        <td
+                          v-else-if="column.type === 'weight'"
+                          :style="{ width: column.width }"
+                          :class="{ 'editable-cell': column.editable }"
+                          @dblclick="column.editable && startInlineEdit(product, column)"
+                        >
+                          {{ formatWeight(product[column.name]) }}
+                        </td>
 
-                      <!-- Template column (renders HTML) -->
-                      <td
-                        v-else-if="column.type === 'template'"
-                        :style="{ width: column.width, minWidth: column.minWidth }"
-                        :class="{ 'editable-cell': column.editable }"
-                        @dblclick="column.editable && startInlineEdit(product, column)"
-                      >
-                        <div v-if="nested && product.category_name" class="nested-product">
-                          <span v-html="renderField(product, column)"></span>
-                          <div class="product-category">{{ product.category_name }}</div>
-                        </div>
-                        <span v-else v-html="renderField(product, column)"></span>
-                      </td>
+                        <!-- Template column (renders HTML) -->
+                        <td
+                          v-else-if="column.type === 'template'"
+                          :style="{ width: column.width, minWidth: column.minWidth }"
+                          :class="{ 'editable-cell': column.editable }"
+                          @dblclick="column.editable && startInlineEdit(product, column)"
+                        >
+                          <div v-if="nested && product.category_name" class="nested-product">
+                            <span v-html="renderField(product, column)"></span>
+                            <div class="product-category">{{ product.category_name }}</div>
+                          </div>
+                          <span v-else v-html="renderField(product, column)"></span>
+                        </td>
 
-                      <!-- Regular columns -->
-                      <td
-                        v-else
-                        :style="{ width: column.width, minWidth: column.minWidth }"
-                        :class="{ 'editable-cell': column.editable }"
-                        @dblclick="column.editable && startInlineEdit(product, column)"
-                      >
-                        {{ product[column.name] }}
-                      </td>
-                    </template>
-                  </tr>
-                </template>
-              </draggable>
-            </table>
-          </div>
+                        <!-- Regular columns -->
+                        <td
+                          v-else
+                          :style="{ width: column.width, minWidth: column.minWidth }"
+                          :class="{ 'editable-cell': column.editable }"
+                          @dblclick="column.editable && startInlineEdit(product, column)"
+                        >
+                          {{ product[column.name] }}
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                </draggable>
+              </table>
+            </div>
 
-          <!-- Loading overlay -->
-          <div v-if="loading" class="loading-overlay">
-            <i class="pi pi-spinner pi-spin"></i>
-          </div>
-
-          <!-- Pagination -->
-          <div class="p-paginator p-component">
-            <span class="p-paginator-current">
-              {{ _('showing') }} {{ first + 1 }}-{{ Math.min(first + rows, totalRecords) }}
-              {{ _('of') }} {{ totalRecords }}
-            </span>
-            <Button
-              icon="pi pi-angle-double-left"
-              :disabled="first === 0"
-              text
-              :title="_('first_page')"
-              @click="onPageFirst"
-            />
-            <Button icon="pi pi-angle-left" :disabled="first === 0" text @click="onPagePrev" />
-            <Button
-              icon="pi pi-angle-right"
-              :disabled="first + rows >= totalRecords"
-              text
-              @click="onPageNext"
-            />
-            <Button
-              icon="pi pi-angle-double-right"
-              :disabled="first + rows >= totalRecords || totalRecords === 0"
-              text
-              :title="_('last_page')"
-              @click="onPageLast"
-            />
-            <label class="rows-per-page-label">{{ _('rows_per_page') }}</label>
-            <Select
-              v-model="rows"
-              :options="rowsPerPageOptions"
-              class="rows-per-page-select"
-              style="min-width: 5rem"
-              @change="onRowsChange"
+            <Paginator
+              :first="first"
+              :rows="rows"
+              :total-records="totalRecords"
+              :rows-per-page-options="rowsPerPageOptions"
+              template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+              :current-page-report-template="pageReportTemplate"
+              @page="onPage"
             />
           </div>
         </div>
@@ -1232,27 +1271,32 @@ onMounted(async () => {
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  align-items: flex-end;
+    gap: var(--p-modx-space-panel, 15px);
 }
 
 .filter-item {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
   min-width: 7.5rem;
 }
 
 .filter-item label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin: 0;
   font-weight: 500;
   font-size: 0.875rem;
   color: var(--ms3-text-muted);
+  line-height: 1.3;
 }
 
 .filter-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
+    padding-bottom: 0;
 }
 
 /* Bulk actions toolbar */
@@ -1343,6 +1387,25 @@ onMounted(async () => {
   border-collapse: collapse;
 }
 
+/* Keep action icons on one row (saved grid width is often too narrow). */
+.row-actions-cell {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.row-actions-cell :deep(.actions-column),
+.row-actions-cell :deep(.row-actions) {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.row-actions-cell :deep(.p-button) {
+  flex-shrink: 0;
+}
 .p-datatable-thead th {
   text-align: left;
   padding: 0.75rem 1rem;
@@ -1379,39 +1442,76 @@ onMounted(async () => {
   background: var(--ms3-bg-slate);
 }
 
-.loading-overlay {
+.products-table-shell {
+  position: relative;
+  min-height: 20rem;
+}
+
+.products-table-shell .p-datatable {
+  position: relative;
+  min-height: inherit;
+}
+
+.products-skeleton td {
+  height: 5rem;
+  vertical-align: middle;
+}
+
+.skeleton-block {
+  display: block;
+  height: 0.75rem;
+  width: 75%;
+  max-width: 12rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(90deg,
+      var(--ms3-border-color-alt, #e4e4e4) 0%,
+      var(--ms3-bg-muted, #f4f4f4) 50%,
+      var(--ms3-border-color-alt, #e4e4e4) 100%);
+  background-size: 200% 100%;
+  animation: ms3-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-block--short {
+  width: 3.5rem;
+}
+
+.skeleton-block--thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.skeleton-block--check,
+.skeleton-block--icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.sr-only {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--ms3-bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-}
+  width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 
-/* Pagination */
-.p-paginator {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0.75rem 1rem;
-  border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt);
-  gap: 0.5rem;
-}
+  @keyframes ms3-skeleton-shimmer {
+    0% {
+      background-position: 100% 0;
+    }
 
-.p-paginator-current {
-  color: var(--ms3-text-muted);
-  font-size: 0.9rem;
-  margin-right: auto;
-}
+    100% {
+      background-position: -100% 0;
+    }
+  }
 
-.rows-per-page-label {
-  font-size: 0.9rem;
-  color: var(--ms3-text-muted);
-  margin-right: 0.5rem;
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-block {
+      animation: none;
+    }
 }
 
 /* Product thumbnail */

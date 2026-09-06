@@ -1,5 +1,5 @@
 import { useLexicon } from '@vuetools/useLexicon'
-import { useToast } from 'primevue/usetoast'
+import { useToast } from 'primevue'
 import { ref } from 'vue'
 
 import request from '../request.js'

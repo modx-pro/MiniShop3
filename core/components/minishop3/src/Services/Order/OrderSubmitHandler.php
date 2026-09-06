@@ -5,6 +5,8 @@ namespace MiniShop3\Services\Order;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
+use MiniShop3\Services\Inventory\InventoryException;
+use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MODX\Revolution\modX;
 
 /**
@@ -23,6 +25,7 @@ class OrderSubmitHandler
     protected OrderAddressManager $addressManager;
     protected OrderUserResolver $userResolver;
     protected OrderNumberGenerator $numberGenerator;
+    protected ?OrderInventoryCoordinator $inventoryCoordinator = null;
 
     public function __construct(
         modX $modx,
@@ -32,7 +35,8 @@ class OrderSubmitHandler
         OrderFieldManager $fieldManager,
         OrderAddressManager $addressManager,
         OrderUserResolver $userResolver,
-        ?OrderNumberGenerator $numberGenerator = null
+        ?OrderNumberGenerator $numberGenerator = null,
+        ?OrderInventoryCoordinator $inventoryCoordinator = null
     ) {
         $this->modx = $modx;
         $this->ms3 = $ms3;
@@ -42,6 +46,7 @@ class OrderSubmitHandler
         $this->addressManager = $addressManager;
         $this->userResolver = $userResolver;
         $this->numberGenerator = $numberGenerator ?? new OrderNumberGenerator($modx);
+        $this->inventoryCoordinator = $inventoryCoordinator;
     }
 
     /**
@@ -187,6 +192,13 @@ class OrderSubmitHandler
         $cartCost = $costData['cart_cost'];
         $totalCost = (float) $costData['cost'];
 
+        // Check available stock before allocating a number (no holding order on reject)
+        try {
+            $this->inventory()?->assertOrderAvailable($draft);
+        } catch (InventoryException $exception) {
+            return $this->error($exception->getLexiconKey(), [], $exception->getPlaceholders());
+        }
+
         // Allocate order number and persist costs under GET_LOCK (#380)
         try {
             $this->numberGenerator->runWithNextNumber(function (string $num) use (
@@ -222,6 +234,10 @@ class OrderSubmitHandler
             return $this->error('ms3_err_order_num_save');
         }
 
+        $failAfterNumber = function (?string $message, array $data = [], array $placeholders = []) use ($draft): array {
+            return $this->failAfterNumberAllocated($draft, $message, $data, $placeholders);
+        };
+
         // Save address to customer's saved addresses if requested
         $properties = $draft->get('properties') ?? [];
         if (!empty($properties['save_address']) && !empty($customerId)) {
@@ -239,7 +255,7 @@ class OrderSubmitHandler
         ]);
 
         if (!$response['success']) {
-            return $this->error($response['message']);
+            return $failAfterNumber($response['message']);
         }
 
         // Event: on create order
@@ -250,7 +266,7 @@ class OrderSubmitHandler
         ]);
 
         if (!$response['success']) {
-            return $this->error($response['message']);
+            return $failAfterNumber($response['message']);
         }
 
         // Clean up _validated from properties
@@ -267,25 +283,42 @@ class OrderSubmitHandler
         }
         $_SESSION['ms3']['orders'][] = $draft->get('id');
 
-        // Change status to "new"
+        try {
+            $this->inventory()?->assertOrderAvailable($draft);
+        } catch (InventoryException $exception) {
+            return $failAfterNumber(
+                $exception->getLexiconKey(),
+                [],
+                $exception->getPlaceholders()
+            );
+        }
+
         $statusNew = (int) $this->modx->getOption('ms3_status_new', null, 2) ?: 2;
         /** @var OrderStatusService $orderStatus */
         $orderStatus = $this->modx->services->get('ms3_order_status');
         $statusResponse = $orderStatus->change($draft->get('id'), $statusNew);
 
         if ($statusResponse !== true) {
-            return $this->error($statusResponse, ['msorder' => $draft->get('uuid')]);
+            return $failAfterNumber(
+                is_string($statusResponse) ? $statusResponse : 'ms3_err_unknown',
+                ['msorder' => $draft->get('uuid')]
+            );
         }
 
-        // Reload order after status change
-        /** @var msOrder $msOrder */
         $msOrder = $this->modx->getObject(msOrder::class, ['id' => $draft->get('id')]);
+        if (!$msOrder instanceof msOrder) {
+            $this->abortInventoryHold($draft);
 
-        // Send to payment gateway (payment was validated earlier)
+            return $this->error('ms3_err_order_load');
+        }
+
         $paymentResponse = $msPayment->send($msOrder);
+        if (!is_array($paymentResponse) || empty($paymentResponse['success'])) {
+            $this->abortInventoryHold($msOrder);
 
-        if (!$paymentResponse['success']) {
-            return $this->error($paymentResponse['message'] ?? null);
+            return $this->error(
+                is_array($paymentResponse) ? ($paymentResponse['message'] ?? null) : null
+            );
         }
 
         // Return redirect from payment or default thanks page
@@ -326,11 +359,87 @@ class OrderSubmitHandler
     /**
      * Shorthand for error response
      */
-    protected function error(?string $message = '', array $data = []): array
+    protected function error(?string $message = '', array $data = [], array $placeholders = []): array
     {
         if ($message === null || $message === '') {
             $message = 'ms3_err_unknown';
         }
-        return $this->ms3->utils->error($message, $data);
+        return $this->ms3->utils->error($message, $data, $placeholders);
+    }
+
+    /**
+     * After a number is assigned, any failure before New must drop the number
+     * so the draft is not a holding order without a reserve.
+     */
+    protected function failAfterNumberAllocated(
+        msOrder $draft,
+        ?string $message,
+        array $data = [],
+        array $placeholders = []
+    ): array {
+        $this->revertAllocatedNumber($draft);
+
+        return $this->error($message, $data, $placeholders);
+    }
+
+    protected function revertAllocatedNumber(msOrder $draft): void
+    {
+        if (!OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return;
+        }
+        $draft->set('num', null);
+        $draft->save();
+    }
+
+    /**
+     * Drop an uncommitted hold after payment send() failure.
+     * When enforcement is on, cancel the order so it is not left as New without a reserve.
+     *
+     * @return bool false when stock may still be held
+     */
+    protected function abortInventoryHold(msOrder $msOrder): bool
+    {
+        if (!OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return true;
+        }
+        try {
+            $canceledId = (int) $this->modx->getOption('ms3_status_canceled', null, 5) ?: 5;
+            /** @var OrderStatusService $orderStatus */
+            $orderStatus = $this->modx->services->get('ms3_order_status');
+            $result = $orderStatus->change((int) $msOrder->get('id'), $canceledId);
+            if ($result === true) {
+                return true;
+            }
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OrderSubmitHandler] cancel after payment failure: ' . $result
+            );
+        } catch (\Throwable $exception) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OrderSubmitHandler] cancel after payment failure: ' . $exception->getMessage()
+            );
+        }
+
+        $released = false;
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            try {
+                $this->inventory()?->releaseOrder($msOrder);
+                $released = true;
+                break;
+            } catch (\Throwable $exception) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[OrderSubmitHandler] inventory release after payment failure: ' . $exception->getMessage()
+                );
+            }
+        }
+
+        return $released;
+    }
+
+    protected function inventory(): ?OrderInventoryCoordinator
+    {
+        return $this->inventoryCoordinator;
     }
 }

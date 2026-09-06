@@ -1,11 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
+import { Button, Tab, TabList, TabPanel, TabPanels, Tabs } from 'primevue'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import DeliveriesGrid from './DeliveriesGrid.vue'
@@ -108,13 +103,12 @@ function navigateTo(path) {
       <div v-if="canListOrders" class="ms3-settings-page__actions">
         <Button
           :label="_('ms3_orders')"
-          class="p-button-sm"
-          severity="contrast"
+          severity="secondary"
           @click="navigateTo('?a=mgr/orders&namespace=minishop3')"
         />
         <Button
           :label="_('ms3_utilities')"
-          class="p-button-sm p-button-secondary"
+          severity="secondary"
           @click="navigateTo('?a=mgr/utilities&namespace=minishop3')"
         />
       </div>
@@ -139,7 +133,8 @@ function navigateTo(path) {
 
 <style scoped>
 .ms3-settings-page {
-  padding: 1.25rem;
+  padding: var(--p-modx-space-panel, 15px);
+    box-sizing: border-box;
 }
 
 .ms3-settings-page__header {
@@ -148,7 +143,8 @@ function navigateTo(path) {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  padding: 0;
+    margin-bottom: 0.75rem;
 }
 
 .ms3-settings-page__title {
@@ -164,13 +160,20 @@ function navigateTo(path) {
   gap: 0.5rem;
 }
 
+.ms3-settings-page__tabs :deep(.p-tabpanels) {
+  padding: var(--p-tabs-tabpanel-padding, var(--p-modx-space-panel, 15px));
+}
+
+.ms3-settings-page__tabs :deep(.p-tabpanel) {
+  padding: 0;
+}
 .ms3-settings-page__intro {
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  color: #555;
+  margin: 0 0 var(--p-modx-space-panel, 15px);
+    padding: 0;
+    color: var(--ms3-text-muted, #64748b);
   font-size: 0.875rem;
   line-height: 1.45;
-  background: #f6f6f6;
-  border-left: 3px solid #ccc;
+  background: none;
+    border: none;
 }
 </style>

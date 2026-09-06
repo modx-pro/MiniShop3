@@ -1,20 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import Fieldset from 'primevue/fieldset'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, Fieldset, InputText, Select, Tag, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
@@ -29,6 +15,7 @@ import {
   parseRepeaterConfig,
   REPEATER_XTYPE,
 } from '../utils/repeaterField.js'
+import { DATEFIELD_XTYPE } from '../utils/structuredExtraField.js'
 import KeyValueSchemaEditor from './KeyValueSchemaEditor.vue'
 import RepeaterSchemaEditor from './RepeaterSchemaEditor.vue'
 
@@ -69,13 +56,10 @@ const fieldForm = ref({
 })
 
 /**
- * Available model classes
+ * Available model classes (only models with their own ms3_* table; no modResource STI).
  */
 const classOptions = computed(() => [
-  // Товары
-  { label: _('ms3_vue_class_product'), value: 'MiniShop3\\Model\\msProduct' },
   { label: _('ms3_vue_class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
-  { label: _('ms3_vue_class_category'), value: 'MiniShop3\\Model\\msCategory' },
   { label: _('ms3_vue_class_vendor'), value: 'MiniShop3\\Model\\msVendor' },
   { label: _('ms3_vue_class_option'), value: 'MiniShop3\\Model\\msOption' },
   { label: _('ms3_vue_class_link'), value: 'MiniShop3\\Model\\msLink' },
@@ -106,6 +90,7 @@ const xtypeOptions = computed(() => [
   { label: _('ms3_vue_xtype_combo_vendor'), value: 'ms3-combo-vendor' },
   { label: _('ms3_vue_xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
   { label: _('ms3_vue_xtype_combo_options'), value: 'ms3-combo-options' },
+  { label: _('ms3_vue_xtype_datefield'), value: DATEFIELD_XTYPE },
 ])
 
 /**
@@ -116,6 +101,7 @@ const dbtypeOptions = computed(() => [
   { label: _('ms3_vue_dbtype_text'), value: 'text' },
   { label: _('ms3_vue_dbtype_int'), value: 'int' },
   { label: _('ms3_vue_dbtype_decimal'), value: 'decimal' },
+  { label: _('ms3_vue_dbtype_date'), value: 'date' },
   { label: _('ms3_vue_dbtype_datetime'), value: 'datetime' },
   { label: _('ms3_vue_dbtype_timestamp'), value: 'timestamp' },
   { label: _('ms3_vue_dbtype_tinyint'), value: 'tinyint' },
@@ -158,17 +144,26 @@ const indexTypeOptions = computed(() => [
 const isRepeaterField = computed(() => fieldForm.value.xtype === REPEATER_XTYPE)
 const isKeyValueField = computed(() => fieldForm.value.xtype === KEY_VALUE_XTYPE)
 
+const XTYPE_DB_DEFAULTS = {
+  [REPEATER_XTYPE]: { dbtype: 'json', phptype: 'json', precision: '', null: true },
+  [KEY_VALUE_XTYPE]: { dbtype: 'json', phptype: 'json', precision: '', null: true },
+  [DATEFIELD_XTYPE]: { dbtype: 'date', phptype: 'datetime', precision: '', null: true },
+}
+
+/** Same rule as GridColumnRules::SQL_IDENTIFIER_PATTERN on the server. */
+const SQL_IDENTIFIER_PATTERN = /^[a-z0-9_]+$/i
+
+function isValidFieldKey(key) {
+  return typeof key === 'string' && key !== '' && SQL_IDENTIFIER_PATTERN.test(key)
+}
+
 watch(
   () => fieldForm.value.xtype,
   xtype => {
-    if (xtype !== REPEATER_XTYPE && xtype !== KEY_VALUE_XTYPE) {
-      return
+    const defaults = XTYPE_DB_DEFAULTS[xtype]
+    if (defaults) {
+      Object.assign(fieldForm.value, defaults)
     }
-
-    fieldForm.value.dbtype = 'json'
-    fieldForm.value.phptype = 'json'
-    fieldForm.value.precision = ''
-    fieldForm.value.null = true
 
     if (xtype === REPEATER_XTYPE && !fieldForm.value.repeater_config?.columns?.length) {
       fieldForm.value.repeater_config = defaultRepeaterConfig()
@@ -305,6 +300,16 @@ async function createField() {
         severity: 'warn',
         summary: _('ms3_vue_validation'),
         detail: _('ms3_vue_validation_key_required'),
+        life: 3000,
+      })
+      return
+    }
+
+    if (!isValidFieldKey(fieldForm.value.key)) {
+      toast.add({
+        severity: 'warn',
+        summary: _('ms3_vue_validation'),
+        detail: _('ms3_vue_validation_key_invalid'),
         life: 3000,
       })
       return
@@ -518,7 +523,7 @@ onMounted(() => {
 
     <p class="tab-description">{{ _('ms3_utilities_extra_fields_description') }}</p>
 
-    <div class="flex justify-content-between align-items-center mb-3">
+    <div class="ms3-utilities-toolbar">
       <div class="flex align-items-center gap-2">
         <label for="class-filter">{{ _('ms3_vue_extra_fields_class_filter') }}</label>
         <Select
@@ -535,6 +540,7 @@ onMounted(() => {
       <Button
         :label="_('ms3_vue_extra_fields_create')"
         icon="pi pi-plus"
+        severity="success"
         :disabled="loading"
         @click="openCreateDialog"
       />
@@ -567,7 +573,7 @@ onMounted(() => {
 
           <Column field="dbtype" :header="_('ms3_vue_table_dbtype')" sortable style="width: 7.5rem">
             <template #body="{ data }">
-              <Tag :value="data.dbtype.toUpperCase()" severity="info" />
+              <Tag :value="data.dbtype.toUpperCase()" severity="secondary" />
             </template>
           </Column>
 
@@ -617,8 +623,7 @@ onMounted(() => {
                 icon="pi pi-pencil"
                 severity="secondary"
                 text
-                rounded
-                class="mr-1"
+                rounded class="mr-1"
                 @click.stop="openEditDialog(data)"
               />
               <Button
@@ -882,13 +887,14 @@ onMounted(() => {
         <Button
           :label="_('ms3_vue_dialog_cancel')"
           icon="pi pi-times"
-          text
+          severity="secondary"
           :disabled="saving"
           @click="dialogVisible = false"
         />
         <Button
           :label="isEditMode ? _('ms3_vue_dialog_save') : _('ms3_vue_dialog_create')"
           icon="pi pi-check"
+          severity="success"
           :loading="saving"
           @click="saveField"
         />
@@ -899,7 +905,8 @@ onMounted(() => {
 
 <style scoped>
 .extra-fields-manager {
-  padding: 1rem;
+  padding: 0;
+  width: 100%;
 }
 </style>
 
@@ -946,31 +953,13 @@ onMounted(() => {
   width: 100%;
 }
 
-/* Grid for modal window */
-.vueApp .col-6,
-.p-dialog .col-6 {
-  flex: 0 0 calc(50% - 1rem);
-  max-width: calc(50% - 1rem);
-}
 
-.vueApp .col-12,
-.p-dialog .col-12 {
-  flex: 0 0 calc(100% - 1rem);
-  max-width: calc(100% - 1rem);
-}
-
-/* Checkbox in modal window */
-.vueApp .edit-field-form .checkbox-wrapper,
-.p-dialog .edit-field-form .checkbox-wrapper {
+.ms3-utilities-toolbar {
   display: flex;
-  gap: 0.625rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-}
-
-.vueApp .edit-field-form .checkbox-label,
-.p-dialog .edit-field-form .checkbox-label {
-  margin: 0;
-  cursor: pointer;
-  user-select: none;
+  gap: 0.75rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 </style>

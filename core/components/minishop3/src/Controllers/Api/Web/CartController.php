@@ -7,6 +7,9 @@ use MiniShop3\Router\DomainMs2Response;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Api\WebApiContextResolver;
+use MiniShop3\Services\Cart\CartItemManager;
+use MiniShop3\Services\Cart\CartResponseNormalizer;
+use MiniShop3\Services\Catalog\CatalogQuery;
 use MODX\Revolution\modX;
 
 /**
@@ -24,7 +27,7 @@ class CartController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
-        $this->modx->lexicon->load('minishop3:customer', 'minishop3:default');
+        $this->modx->lexicon->load('minishop3:customer', 'minishop3:default', 'minishop3:cart');
     }
 
     /**
@@ -46,6 +49,15 @@ class CartController
         if ($token === '') {
             return $this->tokenRequiredError();
         }
+
+        if (!is_array($options) && !is_string($options)) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_cart_options'),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $options = CartItemManager::normalizeOptions($options);
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
@@ -117,14 +129,23 @@ class CartController
             );
         }
 
-        if (!is_array($options) || $options === []) {
+        if (!is_array($options) && !is_string($options)) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_cart_options'),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $ms3 = $this->modx->services->get('ms3');
+        $options = CartItemManager::normalizeOptions($options);
+
+        if ($options === []) {
             return Response::error(
                 $this->modx->lexicon('ms3_cart_change_options_error'),
                 HttpStatus::BAD_REQUEST
             );
         }
 
-        $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
         $cart->initialize($this->pageContextKey(), $token);
 
@@ -170,6 +191,10 @@ class CartController
     /**
      * Get cart
      * GET /api/v1/cart/get
+     *
+     * Query: include_thumbs (0|1, default 0).
+     * Response data: items (always array), cart (legacy map, empty object), status totals.
+     * Cart status is merchandise only. Delivery/payment/final: GET /api/v1/order/cost.
      *
      * @param array $params URL parameters
      * @return Response
@@ -263,6 +288,15 @@ class CartController
     {
         $input = $this->getRequestData();
         $renderTokens = $input['render'] ?? null;
+
+        if (!empty($result['success']) && is_array($result['data'] ?? null)) {
+            /** @var CartResponseNormalizer $normalizer */
+            $normalizer = $this->modx->services->get('ms3_cart_response_normalizer');
+            $result['data'] = $normalizer->normalize(
+                $result['data'],
+                CatalogQuery::toBool($input['include_thumbs'] ?? false)
+            );
+        }
 
         if (!empty($renderTokens) && !empty($result['success'])) {
             $customerToken = $_REQUEST['ms3_token'] ?? '';

@@ -100,10 +100,33 @@ $assertSame(
         'pagetitle' => 'Coffee',
         'content' => '<p>hidden</p>',
         'options' => ['size' => ['L']],
+        'images' => [['id' => 1, 'hash' => 'x']],
         'tv_private' => 'x',
     ], false, false),
-    'whitelist omits content/options when flags off'
+    'whitelist omits content/options/images when flags off'
 );
+
+$assertSame(
+    [
+        'id' => 3,
+        'pagetitle' => 'Mug',
+        'images' => [
+            ['id' => 9, 'url' => '/m.jpg'],
+        ],
+    ],
+    ProductCatalogService::whitelistPublicPayload([
+        'id' => 3,
+        'pagetitle' => 'Mug',
+        'images' => [
+            ['id' => 9, 'url' => '/m.jpg', 'hash' => 'secret', 'path' => '/fs', 'createdby' => 1],
+        ],
+        'hash' => 'nope',
+    ], false, false, true),
+    'images flag keeps allowlisted gallery rows'
+);
+
+$effectiveSingle = \MiniShop3\Services\Category\CategoryProductMenuindexService::effectiveMenuindexSql(42);
+$assertSame(true, str_contains($effectiveSingle, 'msProduct.parent = 42'), 'catalog effective menuindex uses category context');
 
 fwrite(STDOUT, "OK ProductCatalogServiceTest\n");
 exit(0);

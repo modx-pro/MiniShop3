@@ -8,6 +8,7 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Category\CategoryProductActionPermissions;
 use MiniShop3\Services\Category\CategoryProductDocumentPolicy;
+use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Category\CategoryProductsListService;
 use MiniShop3\Services\FilterConfigManager;
@@ -165,6 +166,7 @@ class CategoryProductsController
         $policyDenied = 0;
 
         $scope = $this->scopeService();
+        $menuindexService = new CategoryProductMenuindexService($this->modx);
 
         foreach ($items as $item) {
             $productId = (int) ($item['id'] ?? 0);
@@ -186,8 +188,7 @@ class CategoryProductsController
                 continue;
             }
 
-            $product->set('menuindex', $menuindex);
-            if ($product->save()) {
+            if ($menuindexService->setMenuindexInCategory($productId, $categoryId, $menuindex)) {
                 $updated++;
             }
         }
@@ -772,8 +773,8 @@ class CategoryProductsController
                 'label' => 'published',
                 'placeholder' => 'all',
                 'options' => [
-                    ['label' => 'Да', 'value' => 1],
-                    ['label' => 'Нет', 'value' => 0],
+                    ['label' => 'yes', 'value' => 1],
+                    ['label' => 'no', 'value' => 0],
                 ],
                 'width' => '120px',
                 'position' => 20,
