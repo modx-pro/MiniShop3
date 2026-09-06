@@ -56,13 +56,10 @@ const fieldForm = ref({
 })
 
 /**
- * Available model classes
+ * Available model classes (only models with their own ms3_* table; no modResource STI).
  */
 const classOptions = computed(() => [
-  // Товары
-  { label: _('ms3_vue_class_product'), value: 'MiniShop3\\Model\\msProduct' },
   { label: _('ms3_vue_class_product_data'), value: 'MiniShop3\\Model\\msProductData' },
-  { label: _('ms3_vue_class_category'), value: 'MiniShop3\\Model\\msCategory' },
   { label: _('ms3_vue_class_vendor'), value: 'MiniShop3\\Model\\msVendor' },
   { label: _('ms3_vue_class_option'), value: 'MiniShop3\\Model\\msOption' },
   { label: _('ms3_vue_class_link'), value: 'MiniShop3\\Model\\msLink' },
@@ -151,6 +148,13 @@ const XTYPE_DB_DEFAULTS = {
   [REPEATER_XTYPE]: { dbtype: 'json', phptype: 'json', precision: '', null: true },
   [KEY_VALUE_XTYPE]: { dbtype: 'json', phptype: 'json', precision: '', null: true },
   [DATEFIELD_XTYPE]: { dbtype: 'date', phptype: 'datetime', precision: '', null: true },
+}
+
+/** Same rule as GridColumnRules::SQL_IDENTIFIER_PATTERN on the server. */
+const SQL_IDENTIFIER_PATTERN = /^[a-z0-9_]+$/i
+
+function isValidFieldKey(key) {
+  return typeof key === 'string' && key !== '' && SQL_IDENTIFIER_PATTERN.test(key)
 }
 
 watch(
@@ -296,6 +300,16 @@ async function createField() {
         severity: 'warn',
         summary: _('ms3_vue_validation'),
         detail: _('ms3_vue_validation_key_required'),
+        life: 3000,
+      })
+      return
+    }
+
+    if (!isValidFieldKey(fieldForm.value.key)) {
+      toast.add({
+        severity: 'warn',
+        summary: _('ms3_vue_validation'),
+        detail: _('ms3_vue_validation_key_invalid'),
         life: 3000,
       })
       return

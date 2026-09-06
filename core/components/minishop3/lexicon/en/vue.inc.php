@@ -300,6 +300,7 @@ $_lang['ms3_vue_error_loading'] = 'Loading Error';
 $_lang['ms3_vue_error_loading_fields'] = 'Failed to load fields list';
 $_lang['ms3_vue_validation'] = 'Validation';
 $_lang['ms3_vue_validation_key_required'] = 'Please specify field name (key)';
+$_lang['ms3_vue_validation_key_invalid'] = 'Field key must contain only Latin letters, digits, and underscores';
 $_lang['ms3_vue_validation_dbtype_required'] = 'Please specify database type (dbtype)';
 $_lang['ms3_vue_field_created'] = 'created';
 $_lang['ms3_vue_error_creating'] = 'Creation Error';
