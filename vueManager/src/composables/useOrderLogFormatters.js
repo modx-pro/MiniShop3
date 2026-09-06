@@ -1,3 +1,5 @@
+import { useLexicon } from '@vuetools/useLexicon'
+
 import { useOrderFormatters } from './useOrderFormatters.js'
 
 /**
@@ -5,15 +7,36 @@ import { useOrderFormatters } from './useOrderFormatters.js'
  * Pass `formatPrice` from `useOrderFormatters()` in `options` to avoid a second composable call.
  */
 export function useOrderLogFormatters(options = {}) {
+  const { _ } = useLexicon()
   const formatPrice = options.formatPrice ?? useOrderFormatters().formatPrice
 
-  function capitalizeFirst(str) {
-    if (!str) return ''
-    return str.charAt(0).toUpperCase() + str.slice(1)
+  const ACTION_SEVERITY = {
+    status: 'info',
+    products: 'success',
+    payment: 'warn',
+    address: 'secondary',
+    field: 'secondary',
+  }
+
+  function formatLogAction(action) {
+    if (!action) return '—'
+    const key = `log_action_${action}`
+    const label = _(key)
+    return label !== key ? label : action
+  }
+
+  function logActionSeverity(action) {
+    return ACTION_SEVERITY[action] || 'secondary'
+  }
+
+  function formatProductOperation(op) {
+    const key = `log_entry_product_op_${op}`
+    const label = _(key)
+    return label !== key ? label : op
   }
 
   function formatLogEntryObject(action, entry) {
-    if (!entry) return '-'
+    if (!entry) return '—'
 
     switch (action) {
       case 'status':
@@ -21,21 +44,21 @@ export function useOrderLogFormatters(options = {}) {
           return entry.new_status_name
         }
         if (entry.status_id) {
-          return `Status ID: ${entry.status_id}`
+          return _('log_entry_status_id').replace('{id}', String(entry.status_id))
         }
         break
 
       case 'products': {
-        const op = entry.operation || 'unknown'
+        const op = formatProductOperation(entry.operation || 'unknown')
         const productName = entry.product_name || ''
         const count = entry.count ? ` (×${entry.count})` : ''
-        return `${capitalizeFirst(op)}: ${productName}${count}`
+        return `${op}: ${productName}${count}`.trim()
       }
 
       case 'field': {
         if (entry.fields) {
           const fieldNames = Object.keys(entry.fields)
-          return `Fields: ${fieldNames.join(', ')}`
+          return _('log_entry_fields').replace('{fields}', fieldNames.join(', '))
         }
         break
       }
@@ -43,15 +66,15 @@ export function useOrderLogFormatters(options = {}) {
       case 'address': {
         if (entry.fields) {
           const fieldNames = Object.keys(entry.fields)
-          return `Address: ${fieldNames.join(', ')}`
+          return _('log_entry_address').replace('{fields}', fieldNames.join(', '))
         }
         break
       }
 
       case 'payment': {
-        const payOp = entry.operation || 'unknown'
+        const payOp = formatProductOperation(entry.operation || 'unknown')
         const amount = entry.amount || 0
-        return `${capitalizeFirst(payOp)}: ${formatPrice(amount)}`
+        return `${payOp}: ${formatPrice(amount)}`
       }
 
       default: {
@@ -59,33 +82,44 @@ export function useOrderLogFormatters(options = {}) {
           .filter(([, v]) => v !== null && v !== undefined)
           .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
           .slice(0, 3)
-        return pairs.join(', ') || '-'
+        return pairs.join(', ') || '—'
       }
     }
 
     return JSON.stringify(entry)
   }
 
-  function formatLogEntry(data) {
-    if (!data || !data.entry) return '-'
+  function resolveEntryPayload(data) {
+    if (!data) return null
+    if (data.entry_data != null) return data.entry_data
+    return data.entry
+  }
 
-    if (typeof data.entry === 'string') {
+  function formatLogEntry(data) {
+    if (!data) return '—'
+
+    const raw = resolveEntryPayload(data)
+    if (raw == null) return '—'
+
+    if (typeof raw === 'string') {
       try {
-        const parsed = JSON.parse(data.entry)
+        const parsed = JSON.parse(raw)
         return formatLogEntryObject(data.action, parsed)
       } catch {
-        return data.entry
+        return raw
       }
     }
 
-    if (typeof data.entry === 'object') {
-      return formatLogEntryObject(data.action, data.entry)
+    if (typeof raw === 'object') {
+      return formatLogEntryObject(data.action, raw)
     }
 
-    return String(data.entry)
+    return String(raw)
   }
 
   return {
+    formatLogAction,
+    logActionSeverity,
     formatLogEntry,
   }
 }

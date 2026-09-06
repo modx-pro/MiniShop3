@@ -494,6 +494,8 @@ a.x-menu-item .x-menu-item-text .icon {
     box-sizing: border-box !important;
 }
 
-.p-select-filter {
-    width: 90% !important;
+/* Select filter must fill IconField (was 90% — left a dead strip and misaligned search icon). */
+.p-select-overlay .p-select-filter,
+.p-multiselect-overlay .p-multiselect-filter {
+    width: 100% !important;
 }

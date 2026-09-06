@@ -8,6 +8,7 @@
 $_lang['ms3_vue_product_fields_title'] = 'Product Fields (Admin)';
 $_lang['ms3_vue_product_fields_description'] = 'Here you can configure which fields are displayed on the "Product Data" tab when editing a product';
 $_lang['ms3_vue_product_properties'] = 'Product Properties';
+$_lang['ms3_product_links_empty'] = 'No links yet. Create the first one.';
 
 // Grid Fields Config Widget
 $_lang['grid_fields_config_title'] = 'Grid Configuration';
@@ -657,6 +658,19 @@ $_lang['log_date'] = 'Date';
 $_lang['log_action'] = 'Action';
 $_lang['log_user'] = 'User';
 $_lang['log_entry'] = 'Entry';
+$_lang['log_empty'] = 'No order history yet';
+$_lang['log_action_status'] = 'Status';
+$_lang['log_action_field'] = 'Field';
+$_lang['log_action_address'] = 'Address';
+$_lang['log_action_products'] = 'Products';
+$_lang['log_action_payment'] = 'Payment';
+$_lang['log_entry_status_id'] = 'Status ID: {id}';
+$_lang['log_entry_fields'] = 'Fields: {fields}';
+$_lang['log_entry_address'] = 'Address: {fields}';
+$_lang['log_entry_product_op_add'] = 'Added';
+$_lang['log_entry_product_op_remove'] = 'Removed';
+$_lang['log_entry_product_op_update'] = 'Updated';
+$_lang['log_entry_product_op_unknown'] = 'Change';
 $_lang['address_first_name'] = 'First Name';
 $_lang['address_last_name'] = 'Last Name';
 $_lang['address_phone'] = 'Phone';
@@ -1145,6 +1159,10 @@ $_lang['ms3_vendor_phone'] = 'Phone';
 $_lang['ms3_vendor_email'] = 'Email';
 $_lang['ms3_vendor_description'] = 'Description';
 $_lang['ms3_vendor_properties'] = 'Properties';
+$_lang['ms3_vendor_select'] = 'Select vendor';
+$_lang['ms3_vendor_search'] = 'Search vendor…';
+$_lang['ms3_vendor_empty'] = 'No vendors found. Add a vendor in component settings.';
+$_lang['ms3_vendor_not_found'] = 'Vendor not found';
 
 // Vendor sections
 $_lang['ms3_section_vendor_info'] = 'Information';

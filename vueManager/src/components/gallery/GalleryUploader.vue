@@ -1,6 +1,6 @@
 <template>
-  <div class="gallery-uploader" :class="{ 'gallery-uploader--has-files': hasFiles }">
-    <div id="uppy-dashboard" class="uppy-container"></div>
+  <div class="gallery-uploader">
+    <div ref="dashboardEl" class="uppy-container" />
   </div>
 </template>
 
@@ -10,14 +10,14 @@ import Dashboard from '@uppy/dashboard'
 import ImageEditor from '@uppy/image-editor'
 import XHRUpload from '@uppy/xhr-upload'
 import { useLexicon } from '@vuetools/useLexicon'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const { _ } = useLexicon()
 
-const EMPTY_HEIGHT = 96
-const FILE_ROW_HEIGHT = 48
-const CHROME_HEIGHT = 92
-const MAX_HEIGHT = 220
+/** Compact drop target while idle; expands when files are queued or uploading. */
+const HEIGHT_IDLE = 168
+const HEIGHT_WITH_FILES = 300
+const HEIGHT_BUSY = 380
 
 const props = defineProps({
   productId: {
@@ -59,17 +59,18 @@ const props = defineProps({
 
 const emit = defineEmits(['upload-success', 'upload-error', 'upload-complete'])
 
-const hasFiles = ref(false)
-
+const dashboardEl = ref(null)
 let uppy = null
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
   initUppy()
 })
 
 onBeforeUnmount(() => {
   if (uppy) {
     uppy.close()
+    uppy = null
   }
 })
 
@@ -83,6 +84,7 @@ const buildUppyLocale = () => {
       browseFolders: _('ms3_gallery_uppy_browse_folders'),
       back: _('ms3_gallery_uppy_back'),
       addMoreFiles: _('ms3_gallery_uppy_add_more_files'),
+      addingMoreFiles: _('ms3_gallery_uppy_adding_more_files'),
       dropHint: _('ms3_gallery_uppy_drop_hint'),
       uploadComplete: _('ms3_gallery_uppy_upload_complete'),
       uploadFailed: _('ms3_gallery_uppy_upload_failed'),
@@ -93,6 +95,11 @@ const buildUppyLocale = () => {
       edit: _('ms3_gallery_uppy_edit'),
       retry: _('ms3_gallery_uppy_retry'),
       addMore: _('ms3_gallery_uppy_add_more'),
+      // Image editor chrome (Dashboard panel)
+      editing: _('ms3_gallery_uppy_editing'),
+      save: _('ms3_gallery_uppy_save'),
+      finishEditingFile: _('ms3_gallery_uppy_finish_editing'),
+      saveChanges: _('ms3_gallery_uppy_save_changes'),
       error: _('ms3_gallery_uppy_error'),
       failedToUpload: _('ms3_gallery_uppy_failed_to_upload'),
       noDuplicates: _('ms3_gallery_uppy_no_duplicates'),
@@ -121,28 +128,37 @@ const buildUppyLocale = () => {
   }
 }
 
-function dashboardHeightForCount(count) {
-  if (count <= 0) {
-    return EMPTY_HEIGHT
+function dashboardHeightForState() {
+  if (!uppy) {
+    return HEIGHT_IDLE
   }
-  // Cap visible rows; overflow scrolls inside the files list
-  const visibleRows = Math.min(count, 3)
-  return Math.min(MAX_HEIGHT, CHROME_HEIGHT + visibleRows * FILE_ROW_HEIGHT)
+  const files = uppy.getFiles()
+  const count = files.length
+  if (count === 0) {
+    return HEIGHT_IDLE
+  }
+  const uploading = files.some(
+    f => f.progress?.uploadStarted && !f.progress?.uploadComplete && !f.error
+  )
+  if (uploading || count > 6) {
+    return HEIGHT_BUSY
+  }
+  return HEIGHT_WITH_FILES
 }
 
 function syncDashboardHeight() {
-  if (!uppy) {
+  const plugin = uppy?.getPlugin('Dashboard')
+  if (!plugin) {
     return
   }
-  const count = uppy.getFiles().length
-  hasFiles.value = count > 0
-  const dashboard = uppy.getPlugin('Dashboard')
-  if (dashboard) {
-    dashboard.setOptions({ height: dashboardHeightForCount(count) })
-  }
+  plugin.setOptions({ height: dashboardHeightForState() })
 }
 
 const initUppy = () => {
+  if (!dashboardEl.value) {
+    return
+  }
+
   const locale = buildUppyLocale()
   uppy = new Uppy({
     id: 'gallery-uploader',
@@ -163,24 +179,39 @@ const initUppy = () => {
   )
 
   uppy.use(Dashboard, {
-    target: '#uppy-dashboard',
+    target: dashboardEl.value,
     inline: true,
     width: '100%',
-    height: EMPTY_HEIGHT,
+    height: HEIGHT_IDLE,
     proudlyDisplayPoweredByUppy: false,
     showProgressDetails: true,
     hideUploadButton: false,
+    hideProgressAfterFinish: true,
+    // Gallery is multi-file; one file should not monopolize the panel.
+    singleFileFullScreen: false,
     note: noteText,
     theme: 'light',
-    // Prevent one selected file from expanding into a full-screen panel
-    singleFileFullScreen: false,
-    thumbnailWidth: 48,
-    thumbnailHeight: 48,
+    doneButtonHandler: () => {
+      uppy.cancelAll()
+      syncDashboardHeight()
+    },
   })
 
   uppy.use(ImageEditor, {
     target: Dashboard,
     quality: 0.8,
+    locale: {
+      strings: {
+        revert: _('ms3_gallery_uppy_revert'),
+        rotate: _('ms3_gallery_uppy_rotate'),
+        zoomIn: _('ms3_gallery_uppy_zoom_in'),
+        zoomOut: _('ms3_gallery_uppy_zoom_out'),
+        flipHorizontal: _('ms3_gallery_uppy_flip_horizontal'),
+        aspectRatioSquare: _('ms3_gallery_uppy_crop_square'),
+        aspectRatioLandscape: _('ms3_gallery_uppy_crop_landscape'),
+        aspectRatioPortrait: _('ms3_gallery_uppy_crop_portrait'),
+      },
+    },
   })
 
   uppy.use(XHRUpload, {
@@ -188,15 +219,21 @@ const initUppy = () => {
     method: 'POST',
     formData: true,
     fieldName: 'file',
-    timeout: 60000, // 60 seconds
+    timeout: 60000,
     headers: {
       Accept: 'application/json',
     },
   })
 
-  uppy.on('file-added', syncDashboardHeight)
-  uppy.on('file-removed', syncDashboardHeight)
-  uppy.on('files-added', syncDashboardHeight)
+  uppy.on('file-added', () => {
+    syncDashboardHeight()
+  })
+  uppy.on('file-removed', () => {
+    syncDashboardHeight()
+  })
+  uppy.on('upload', () => {
+    syncDashboardHeight()
+  })
 
   uppy.on('upload-success', (file, response) => {
     emit('upload-success', { file, response })
@@ -209,13 +246,17 @@ const initUppy = () => {
 
   uppy.on('complete', result => {
     emit('upload-complete', result)
+    syncDashboardHeight()
 
     setTimeout(() => {
+      if (!uppy) {
+        return
+      }
       result.successful.forEach(file => {
         uppy.removeFile(file.id)
       })
       syncDashboardHeight()
-    }, 2000)
+    }, 1500)
   })
 
   uppy.on('restriction-failed', (file, error) => {
@@ -244,7 +285,6 @@ const formatBytes = (bytes, decimals = 2) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-// Watch sourceId to rebuild upload URL
 watch(
   () => props.sourceId,
   () => {
@@ -265,282 +305,139 @@ watch(
 <style scoped>
 .gallery-uploader {
   width: 100%;
-  max-width: 100%;
 }
 
-.gallery-uploader:not(.gallery-uploader--has-files) {
-  width: fit-content;
-  max-width: 100%;
-}
-
+/* Theme surface: no second dashed frame outside Uppy’s AddFiles. */
 .uppy-container {
-  border: var(--ms3-border-width-focus, 2px) dashed var(--ms3-border-upload, #c5c9ce);
-  border-radius: var(--ms3-radius-md, 0.375rem);
+  border-radius: var(--p-content-border-radius, 3px);
   overflow: hidden;
-  background: var(--ms3-bg-gray-50, var(--ms3-bg-muted, #f8f9fa));
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
-}
-
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container {
-  width: fit-content;
-  max-width: 100%;
-  min-width: min(100%, 22rem);
-}
-
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container:hover {
-  border-color: var(--p-primary-color, #6cb24a);
-  background: var(--ms3-bg-accent, #f4faf0);
-}
-
-.gallery-uploader--has-files .uppy-container {
-  width: 100%;
-  border-style: solid;
-  background: var(--p-surface-0, #fff);
-}
-
-/* Don't stretch empty space between file list and upload button */
-.gallery-uploader--has-files .uppy-container :deep(.uppy-Dashboard-filesContainer) {
-  flex: 0 1 auto !important;
-  max-height: 9.5rem;
-}
-
-.gallery-uploader--has-files .uppy-container :deep(.uppy-Dashboard-innerWrap) {
-  justify-content: flex-start;
-}
-
-.uppy-container :deep(.uppy-Dashboard) {
-  width: 100% !important;
-}
-
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard),
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-inner),
-.gallery-uploader:not(.gallery-uploader--has-files)
-  .uppy-container
-  :deep(.uppy-Dashboard-innerWrap) {
-  width: auto !important;
-  max-width: 100% !important;
-  height: auto !important;
-  min-height: 0 !important;
 }
 
 .uppy-container :deep(.uppy-Dashboard-inner) {
-  border: none !important;
-  background: transparent !important;
+  background-color: var(--p-surface-ground, #f4f4f4);
+  border: 1px solid var(--p-content-border-color, #ccc);
+  border-radius: var(--p-content-border-radius, 3px);
+  width: 100% !important;
+  max-width: 100%;
+  transition: height 0.2s ease;
 }
 
-.uppy-container :deep(.uppy-Dashboard--isDraggingOver) {
-  box-shadow: inset 0 0 0 2px var(--p-primary-color, #6cb24a);
+.uppy-container :deep(.uppy-Dashboard-AddFiles) {
+  border-color: var(--p-content-border-color, #ccc);
+  border-radius: var(--p-content-border-radius, 3px);
 }
 
-/* Empty dropzone: icon + copy + real button CTA (Import-like) */
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles) {
-  margin: 0 !important;
-  border: none !important;
-  height: auto !important;
-    min-height: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-    align-items: stretch;
-    justify-content: center;
-    padding: 0.75rem 1.25rem !important;
-  }
-  
-  .gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles::before) {
-    content: none;
-  }
-  
-  .gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-title) {
-    position: static !important;
-    inset: auto !important;
-    display: inline-flex !important;
-  flex-direction: row !important;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.75rem;
-    width: auto !important;
-    max-width: none;
-    margin: 0 !important;
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    line-height: 1.35 !important;
-    color: var(--p-text-color, #212529);
-}
-
-.gallery-uploader:not(.gallery-uploader--has-files)
-  .uppy-container
-    :deep(.uppy-Dashboard-AddFiles-title::before) {
-  content: '\e944';
-  font-family: 'primeicons';
-  font-size: 1.5rem;
-  line-height: 1;
-  color: var(--p-primary-color, #6cb24a);
-  flex-shrink: 0;
+.uppy-container :deep(.uppy-Dashboard--isDraggingOver) .uppy-Dashboard-AddFiles,
+.uppy-container :deep(.uppy-Dashboard-dropFilesHereHint) {
+  border-color: var(--p-primary-color, #234368);
 }
 
 .uppy-container :deep(.uppy-Dashboard-AddFiles-title) {
-  display: inline-flex !important;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.5rem 0.75rem;
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  line-height: 1.35 !important;
-  max-width: none;
-  margin: 0 !important;
-  color: var(--p-text-color, #212529);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--p-text-color, #333);
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-list:empty) {
-  display: none !important;
-}
-
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-info) {
-  margin: 0.25rem 0 0 !important;
-  padding: 0 !important;
-}
-.uppy-container :deep(.uppy-Dashboard-browse) {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  margin: 0 !important;
-  height: 2.25rem !important;
-    min-height: 2.25rem !important;
-    padding: 0 0.875rem !important;
-  border: 1px solid var(--p-primary-color, #6cb24a) !important;
-  border-radius: var(--ms3-radius-md, 0.375rem) !important;
-  background: var(--p-primary-color, #6cb24a) !important;
-  color: var(--p-primary-contrast-color, #fff) !important;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
-  line-height: 1.25 !important;
-  text-decoration: none !important;
-  box-shadow: none !important;
-  cursor: pointer;
-  vertical-align: middle;
-  box-sizing: border-box !important;
-}
-
-.uppy-container :deep(.uppy-Dashboard-browse:hover),
-.uppy-container :deep(.uppy-Dashboard-browse:focus-visible) {
-  background: var(--p-primary-600, #528738) !important;
-  border-color: var(--p-primary-600, #528738) !important;
-  color: var(--p-primary-contrast-color, #fff) !important;
-  outline: 2px solid var(--p-primary-color, #6cb24a);
-  outline-offset: 2px;
+/* Uppy hides .AddFiles-info below height-md; keep the size note in the compact idle zone. */
+.uppy-container :deep(.uppy-Dashboard-AddFiles-info) {
+  display: block !important;
+  position: static !important;
+  padding-top: 0.25rem;
+  padding-bottom: 0.5rem;
+  margin-top: 0;
 }
 
 .uppy-container :deep(.uppy-Dashboard-note) {
-  font-size: 0.75rem !important;
-  line-height: 1.3 !important;
-  margin-top: 0 !important;
-  width: auto;
-  text-align: start;
-  color: var(--p-text-muted-color, #6c757d);
+  color: var(--p-text-muted-color, #757575);
+  font-size: 0.8125rem;
 }
 
-/* Selected files: force list rows even at md/lg/xl (Uppy otherwise uses tall floated cards) */
-.uppy-container :deep(.uppy-Dashboard-files) {
-  padding: 0.25rem 0.5rem !important;
-}
-
-.uppy-container :deep(.uppy-Dashboard-files)::after {
-  display: none !important;
-}
-
-.uppy-container :deep(.uppy-Dashboard-Item),
-.uppy-container :deep(.uppy-size--md .uppy-Dashboard-Item),
-.uppy-container :deep(.uppy-size--lg .uppy-Dashboard-Item),
-.uppy-container :deep(.uppy-size--xl .uppy-Dashboard-Item) {
-  float: none !important;
-  display: flex !important;
-  align-items: center !important;
-  width: 100% !important;
-  max-width: none !important;
-  height: auto !important;
-  min-height: 2.75rem;
-  margin: 0 !important;
-  padding: 0.375rem 0.5rem !important;
-  border-bottom: 1px solid var(--ms3-border-color-alt, #eaeaea) !important;
-  position: relative !important;
-}
-
-.uppy-container :deep(.uppy-Dashboard-Item-preview),
-.uppy-container :deep(.uppy-size--md .uppy-Dashboard-Item-preview),
-.uppy-container :deep(.uppy-size--lg .uppy-Dashboard-Item-preview),
-.uppy-container :deep(.uppy-size--xl .uppy-Dashboard-Item-preview) {
-  width: 2.5rem !important;
-  height: 2.5rem !important;
-  flex-shrink: 0;
-}
-
-.uppy-container :deep(.uppy-Dashboard-Item-previewImg),
-.uppy-container :deep(.uppy-Dashboard-Item-previewIconWrap) {
-  width: 2.5rem !important;
-  height: 2.5rem !important;
-}
-
-.uppy-container :deep(.uppy-Dashboard-Item-fileInfoAndButtons),
-.uppy-container :deep(.uppy-size--md .uppy-Dashboard-Item-fileInfoAndButtons),
-.uppy-container :deep(.uppy-size--lg .uppy-Dashboard-Item-fileInfoAndButtons),
-.uppy-container :deep(.uppy-size--xl .uppy-Dashboard-Item-fileInfoAndButtons) {
-  align-items: center !important;
-  padding: 0 0.25rem 0 0.5rem !important;
-}
-
-.uppy-container :deep(.uppy-size--md .uppy-Dashboard-Item-action--remove) {
-  position: static !important;
-  inset: auto !important;
-  margin-inline-start: 0.25rem;
-}
-
-.uppy-container :deep(.uppy-Dashboard-Item-name) {
-  font-size: 0.8125rem !important;
-  line-height: 1.25 !important;
-  margin-bottom: 0.125rem !important;
-}
-
-.uppy-container :deep(.uppy-Dashboard-Item-status) {
-  font-size: 0.75rem !important;
+.uppy-container :deep(.uppy-Dashboard-browse),
+.uppy-container :deep(.uppy-DashboardContent-back),
+.uppy-container :deep(.uppy-DashboardContent-addMore),
+.uppy-container :deep(.uppy-StatusBar-actionBtn:not(.uppy-StatusBar-actionBtn--upload)) {
+  color: var(--p-primary-color, #234368);
 }
 
 .uppy-container :deep(.uppy-DashboardContent-bar) {
-  min-height: 2.25rem !important;
-  height: auto !important;
-  padding: 0.25rem 0.5rem !important;
+  min-height: var(--p-modx-control-height, 2.25rem);
+  height: auto;
+  padding-block: 0.25rem;
+  padding-inline: var(--p-modx-space-panel, 15px);
+  background: var(--p-surface-50, #fafafa);
+  border-bottom-color: var(--p-content-border-color, #e4e4e4);
 }
 
-.uppy-container :deep(.uppy-StatusBar) {
-  height: auto !important;
-  min-height: 2.5rem;
-  border-top: var(--ms3-border-width, 1px) solid var(--ms3-border-color-alt, #e5e7eb);
+.uppy-container :deep(.uppy-DashboardContent-title) {
+  color: var(--p-text-color, #333);
+  font-size: var(--p-modx-font-size-lg, 0.875rem);
+  font-weight: 500;
+  line-height: var(--p-modx-control-height, 2.25rem);
+  max-width: min(60%, 20rem);
 }
 
-.uppy-container :deep(.uppy-StatusBar:not([aria-hidden='true']).is-waiting) {
-  height: auto !important;
-  min-height: 2.75rem;
+/* Save = mgr success CTA (same role as StatusBar upload). */
+.uppy-container :deep(.uppy-DashboardContent-save) {
+  color: #fff;
+  background-color: var(--p-button-success-background, #6cb24a);
+  min-height: var(--p-modx-control-height, 2.25rem);
+  padding: 0.375rem 0.875rem;
+  margin-inline-start: 0;
+  border-radius: var(--p-button-border-radius, 3px);
+  font-size: var(--p-modx-font-size-lg, 0.875rem);
+  font-weight: 500;
+  line-height: 1.2;
 }
 
-.uppy-container :deep(.uppy-StatusBar-actions) {
-  padding: 0.375rem 0.5rem !important;
+.uppy-container :deep(.uppy-DashboardContent-save:hover) {
+  color: #fff;
+  background-color: var(--p-button-success-hover-background, #5a9a3c);
 }
 
+.uppy-container :deep(.uppy-DashboardContent-save:focus) {
+  color: #fff;
+  background-color: var(--p-button-success-background, #6cb24a);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--p-button-success-background, #6cb24a) 40%, transparent);
+}
+.uppy-container :deep(.uppy-Dashboard-browse:focus),
+.uppy-container :deep(.uppy-Dashboard-browse:hover) {
+  border-bottom-color: var(--p-primary-color, #234368);
+}
+
+/* Primary CTA = theme success (same as mgr success buttons). */
 .uppy-container :deep(.uppy-StatusBar.is-waiting .uppy-StatusBar-actionBtn--upload) {
-  background-color: var(--p-primary-color, #6cb24a) !important;
-  font-size: 0.8125rem !important;
-  padding: 0.5rem 0.875rem !important;
+  background-color: var(--p-button-success-background, #6cb24a);
+  min-height: var(--p-modx-control-height, 2.25rem);
+  padding-block: 0.5rem;
+  border-radius: var(--p-button-border-radius, 3px);
 }
 
 .uppy-container :deep(.uppy-StatusBar.is-waiting .uppy-StatusBar-actionBtn--upload:hover) {
-  background-color: var(--p-primary-600, #528738) !important;
+  background-color: var(--p-button-success-hover-background, #5a9a3c);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .uppy-container {
-    transition: none;
-  }
+.uppy-container :deep(.uppy-StatusBar-progress) {
+  background-color: var(--p-primary-color, #234368);
+}
+
+.uppy-container :deep(.uppy-StatusBar.is-complete .uppy-StatusBar-progress),
+.uppy-container :deep(.uppy-StatusBar.is-complete .uppy-StatusBar-statusIndicator) {
+  background-color: var(--p-button-success-background, #6cb24a);
+  color: var(--p-button-success-background, #6cb24a);
+}
+
+.uppy-container :deep(.uppy-DashboardTab-iconMyDevice),
+.uppy-container :deep(.uppy-StatusBar-spinner) {
+  color: var(--p-primary-color, #234368);
+  fill: var(--p-primary-color, #234368);
+}
+
+.uppy-container :deep(.uppy-Dashboard-Item-action:focus),
+.uppy-container :deep(.uppy-StatusBar-actionCircleBtn:focus),
+.uppy-container :deep(.uppy-DashboardContent-back:focus),
+.uppy-container :deep(.uppy-DashboardContent-addMore:focus) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--p-primary-color, #234368) 35%, transparent);
 }
 </style>

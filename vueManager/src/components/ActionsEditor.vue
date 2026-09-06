@@ -5,13 +5,7 @@
  * Allows adding, removing and editing actions in grid column
  */
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { Button, Checkbox, Column, DataTable, Dialog, InputText, Select } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import actionRegistry from '../actionRegistry.js'
@@ -223,22 +217,19 @@ function closeDialog() {
         <template #body="{ data, index }">
           <Button
             icon="pi pi-arrow-up"
-            size="small"
             text
             :disabled="index === 0"
             @click="moveUp(index)"
           />
           <Button
             icon="pi pi-arrow-down"
-            size="small"
             text
             :disabled="index === localActions.length - 1"
             @click="moveDown(index)"
           />
-          <Button icon="pi pi-pencil" size="small" text @click="openEditDialog(data, index)" />
+          <Button icon="pi pi-pencil" text @click="openEditDialog(data, index)" />
           <Button
             icon="pi pi-trash"
-            size="small"
             text
             severity="danger"
             @click="removeAction(index)"
@@ -248,7 +239,7 @@ function closeDialog() {
     </DataTable>
 
     <!-- Add button -->
-    <Button :label="_('add_action')" icon="pi pi-plus" size="small" @click="openAddDialog" />
+    <Button :label="_('add_action')" icon="pi pi-plus" @click="openAddDialog" />
 
     <!-- Action edit dialog -->
     <Dialog

@@ -145,6 +145,7 @@ $_lang['ms3_gallery_file_url'] = 'Ссылка';
 $_lang['ms3_gallery_file_source'] = 'Источник файла';
 
 $_lang['ms3_gallery_button_upload'] = 'Выбрать файлы';
+$_lang['ms3_gallery_actions'] = 'Действия галереи';
 
 $_lang['ms3_gallery_file_show'] = 'Открыть в новом окне';
 $_lang['ms3_gallery_file_update'] = 'Изменить свойства';
@@ -184,6 +185,7 @@ $_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Загрузить %{smart_count}
 $_lang['ms3_gallery_uppy_note_max_size'] = 'Макс. размер: %{maxSize}';
 $_lang['ms3_gallery_uppy_back'] = 'Назад';
 $_lang['ms3_gallery_uppy_add_more_files'] = 'Добавить ещё файлы';
+$_lang['ms3_gallery_uppy_adding_more_files'] = 'Добавление файлов';
 $_lang['ms3_gallery_uppy_drop_hint'] = 'Перетащите файлы сюда';
 $_lang['ms3_gallery_uppy_error'] = 'Ошибка';
 $_lang['ms3_gallery_uppy_failed_to_upload'] = 'Не удалось загрузить %{file}';
@@ -191,6 +193,18 @@ $_lang['ms3_gallery_uppy_no_duplicates'] = 'Нельзя добавить дуб
 $_lang['ms3_gallery_uppy_no_files_found'] = 'У вас нет файлов или папок';
 $_lang['ms3_gallery_uppy_pause_upload'] = 'Приостановить загрузку';
 $_lang['ms3_gallery_uppy_resume_upload'] = 'Возобновить загрузку';
+$_lang['ms3_gallery_uppy_editing'] = 'Редактирование изображения';
+$_lang['ms3_gallery_uppy_save'] = 'Сохранить';
+$_lang['ms3_gallery_uppy_finish_editing'] = 'Завершить редактирование';
+$_lang['ms3_gallery_uppy_save_changes'] = 'Сохранить изменения';
+$_lang['ms3_gallery_uppy_revert'] = 'Сбросить';
+$_lang['ms3_gallery_uppy_rotate'] = 'Повернуть на 90°';
+$_lang['ms3_gallery_uppy_zoom_in'] = 'Увеличить';
+$_lang['ms3_gallery_uppy_zoom_out'] = 'Уменьшить';
+$_lang['ms3_gallery_uppy_flip_horizontal'] = 'Отразить по горизонтали';
+$_lang['ms3_gallery_uppy_crop_square'] = 'Квадратная обрезка';
+$_lang['ms3_gallery_uppy_crop_landscape'] = 'Альбомная обрезка (16:9)';
+$_lang['ms3_gallery_uppy_crop_portrait'] = 'Портретная обрезка (9:16)';
 
 $_lang['ms3_gallery_search_placeholder'] = 'Поиск файлов...';
 $_lang['ms3_gallery_search_clear'] = 'Очистить поиск';

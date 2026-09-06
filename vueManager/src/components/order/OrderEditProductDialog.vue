@@ -1,11 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { Button, Dialog, InputNumber, InputText, Select, Textarea } from 'primevue'
 
 const { _ } = useLexicon()
 
@@ -104,14 +99,12 @@ defineProps({
           <Button
             :label="_('options_mode_table')"
             :severity="optionsEditMode === 'table' ? 'primary' : 'secondary'"
-            size="small"
             text
             @click="switchOptionsMode('table')"
           />
           <Button
             :label="_('options_mode_json')"
             :severity="optionsEditMode === 'json' ? 'primary' : 'secondary'"
-            size="small"
             text
             @click="switchOptionsMode('json')"
           />
@@ -198,7 +191,6 @@ defineProps({
             severity="danger"
             text
             rounded
-            size="small"
             @click="removeOptionRow(index)"
           />
         </div>
@@ -206,7 +198,6 @@ defineProps({
           :label="_('options_add_row')"
           icon="pi pi-plus"
           severity="secondary"
-          size="small"
           text
           @click="addOptionRow"
         />
@@ -237,6 +228,7 @@ defineProps({
     <Button
       :label="_('save')"
       icon="pi pi-check"
+      severity="success"
       :loading="savingProduct"
       @click="saveEditedProduct"
     />

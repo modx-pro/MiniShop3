@@ -1,19 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputGroup, InputGroupAddon, InputText, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
 import { useGridFilterParams } from '../composables/useGridFilterParams.js'
@@ -53,9 +40,6 @@ const sortField = ref('id')
 const sortOrder = ref(-1)
 const filterValues = ref({})
 const filterableColumns = computed(() => columns.value.filter(col => col.filterable && col.visible))
-const hasActiveFilters = computed(() =>
-  Object.values(filterValues.value).some(v => v !== null && v !== undefined && String(v).trim() !== '')
-)
 const searchQuery = ref('')
 const editDialogVisible = ref(false)
 const editingCustomer = ref(null)
@@ -451,11 +435,18 @@ function initFilters() {
 
   columns.value.forEach(column => {
     if (column.filterable) {
-      newFilters[column.name] = ''
+      newFilters[column.name] = null
     }
   })
 
   filterValues.value = newFilters
+}
+
+function booleanFilterOptions() {
+  return [
+    { label: _('yes'), value: 1 },
+    { label: _('no'), value: 0 },
+  ]
 }
 
 /**
@@ -661,68 +652,77 @@ onMounted(async () => {
       </template>
 
       <template #content>
-        <!-- Search: sole solid primary CTA on this screen -->
-        <div class="customers-search mb-3">
-          <div class="p-inputgroup">
-            <InputText
-              v-model="searchQuery"
-              name="ms3-customers-grid-search"
-              autocomplete="off"
-              :placeholder="_('search_placeholder')"
-              @keyup.enter="onSearch"
-            />
-            <Button
-              icon="pi pi-search"
-              :label="_('search')"
-              severity="primary"
-              size="small"
-              @click="onSearch"
-            />
-          </div>
-        </div>
+        <!-- Search -->
+        <InputGroup class="mb-4">
+          <InputText
+            v-model="searchQuery"
+            name="ms3-customers-grid-search"
+            autocomplete="off"
+            :placeholder="_('search_placeholder')"
+            @keyup.enter="onSearch"
+          />
+          <Button
+            icon="pi pi-search"
+            :label="_('search')"
+            severity="success"
+            @click="onSearch"
+          />
+        </InputGroup>
 
         <!-- Filters form -->
         <div
           v-if="filterableColumns.length > 0"
-          class="filters-form mb-3 p-3 surface-ground"
+          class="filters-form mb-4 surface-ground"
         >
-          <div class="filters-row">
+          <div class="filters-form-fields">
             <div
               v-for="column in filterableColumns"
               :key="column.name"
-              class="filter-item"
+              class="filters-form-field"
             >
-              <label :for="`filter-${column.name}`">{{ column.label }}</label>
-              <InputText
-                :id="`filter-${column.name}`"
-                v-model="filterValues[column.name]"
-                class="w-full"
-                :placeholder="_('filter_by').replace('{field}', column.label)"
-                @keyup.enter="applyFilters"
-              />
+              <div class="field">
+                <label :for="`filter-${column.name}`">{{ column.label }}</label>
+                <Select
+                  v-if="column.type === 'boolean'"
+                  :id="`filter-${column.name}`"
+                  v-model="filterValues[column.name]"
+                  :options="booleanFilterOptions()"
+                  option-label="label"
+                  option-value="value"
+                  :placeholder="_('all')"
+                  :show-clear="true"
+                  class="w-full"
+                  @change="applyFilters"
+                />
+                <InputText
+                  v-else
+                  :id="`filter-${column.name}`"
+                  v-model="filterValues[column.name]"
+                  :placeholder="_('filter_by').replace('{field}', column.label)"
+                  class="w-full"
+                  @keyup.enter="applyFilters"
+                />
+              </div>
             </div>
           </div>
-          <div class="filter-buttons">
+          <div class="filters-form-actions">
             <Button
               :label="_('apply_filters')"
               icon="pi pi-filter"
-              severity="secondary"
-              size="small"
+              severity="success"
               @click="applyFilters"
             />
             <Button
-              v-if="hasActiveFilters"
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
               severity="secondary"
-              size="small"
               @click="clearFilters"
             />
           </div>
         </div>
 
         <!-- Bulk actions toolbar -->
-        <div v-if="hasSelection" class="bulk-actions-bar mb-3">
+        <div v-if="hasSelection" class="bulk-actions-bar mb-4">
           <div class="bulk-info">
             <i class="pi pi-check-square"></i>
             <span>{{ _('selected_count').replace('{count}', selectionCount) }}</span>
@@ -732,7 +732,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -740,7 +739,6 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -832,7 +830,7 @@ onMounted(async () => {
       :header="_('edit_customer')"
       :modal="true"
       :closable="true"
-      :style="{ width: '36rem' }"
+      :style="{ width: '34.375rem' }"
       :append-to="'self'"
     >
       <form
@@ -890,7 +888,7 @@ onMounted(async () => {
         <div class="form-row">
           <div class="form-col-full">
             <label for="ms3-customer-new_password">{{ _('customer_new_password') }}</label>
-            <InputGroup class="customer-password-group">
+            <InputGroup>
               <InputText
                 id="ms3-customer-new_password"
                 v-model="newPassword"
@@ -899,22 +897,20 @@ onMounted(async () => {
                 :placeholder="_('customer_password_placeholder')"
                 class="w-full"
               />
-              <InputGroupAddon class="customer-password-addons">
+              <InputGroupAddon>
                 <Button
                   type="button"
                   :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"
                   text
-                  severity="secondary"
-                  :aria-label="showPassword ? _('hide_password') : _('show_password')"
                   :title="showPassword ? _('hide_password') : _('show_password')"
                   @click="showPassword = !showPassword"
                 />
+              </InputGroupAddon>
+              <InputGroupAddon>
                 <Button
                   type="button"
                   icon="pi pi-refresh"
                   text
-                  severity="secondary"
-                  :aria-label="_('generate_password')"
                   :title="_('generate_password')"
                   @click="generatePassword"
                 />
@@ -954,16 +950,13 @@ onMounted(async () => {
           :label="_('cancel')"
           icon="pi pi-times"
           severity="secondary"
-          text
-          size="small"
           @click="editDialogVisible = false"
         />
         <Button
           type="button"
           :label="_('save')"
           icon="pi pi-check"
-          severity="primary"
-          size="small"
+          severity="success"
           :loading="saving"
           @click="saveCustomer"
         />
@@ -1130,12 +1123,13 @@ onMounted(async () => {
             <Button
               :label="_('cancel')"
               icon="pi pi-times"
-              class="p-button-text"
+              severity="secondary"
               @click="cancelAddressEdit"
             />
             <Button
               :label="_('save')"
               icon="pi pi-check"
+              severity="success"
               :loading="savingAddress"
               @click="saveAddress"
             />
@@ -1148,45 +1142,35 @@ onMounted(async () => {
 
 <style scoped>
 .customers-grid {
-  padding: 1.25rem;
-}
+  height: 100%;
+  }
 
-.customers-search {
-  max-width: 36rem;
-}
+  .filters-form {
+    padding: 15px 0;
+    border-radius: 3px;
+  }
 
-.filters-form {
-  border-radius: var(--ms3-radius-md, 0.375rem);
-}
+  .filters-form-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
 
-.filters-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+  .filters-form-field {
+    flex: 1 1 18.75rem;
+    min-width: 15.625rem;
+  }
 
-.filter-item {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 12.5rem;
-  min-width: 11.25rem;
-  max-width: 18.75rem;
-}
+  .filters-form-field label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
 
-.filter-item label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--ms3-text-muted);
-}
-
-.filter-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  .filters-form-actions {
+    display: flex;
+    gap: 0.5rem;
 }
 
 /* Bulk actions toolbar */
@@ -1194,10 +1178,10 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 15px;
   background: var(--ms3-bg-warning);
   border: var(--ms3-border-width) solid var(--ms3-border-warning);
-  border-radius: 0.375rem;
+  border-radius: 3px;
 }
 
 .bulk-info {
@@ -1248,7 +1232,6 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-muted);
 }
 
 .form-col-full {
@@ -1262,66 +1245,30 @@ onMounted(async () => {
   font-size: 0.75rem;
 }
 
-/* Password InputGroup: lock input + addon to one control height */
-.customer-password-group {
-  --pw-control-h: 2.25rem;
-  width: 100%;
-  align-items: stretch;
-}
-
-.customer-password-group :deep(.p-inputtext) {
-  width: 100%;
-  height: var(--pw-control-h);
-  min-height: var(--pw-control-h);
-  box-sizing: border-box;
-}
-
-.customer-password-group :deep(.p-inputgroupaddon.customer-password-addons) {
-  display: flex;
-  align-items: stretch;
-  padding: 0;
-  height: var(--pw-control-h);
-  min-height: var(--pw-control-h);
-  box-sizing: border-box;
-}
-
-.customer-password-addons :deep(.p-button.p-button) {
-  width: var(--pw-control-h);
-  height: 100%;
-  min-width: var(--pw-control-h);
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  box-sizing: border-box;
-  align-self: stretch;
-}
-
-/* Checkboxes: content-sized, no forced 25% columns (stops label wrap) */
+/* Checkboxes row */
 .checkboxes-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1.5rem;
-  padding: 0.25rem 0;
+  gap: 1rem 1.5rem;
+  padding: 0.5rem 0;
 }
 
 .checkbox-col {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  max-width: 100%;
+  min-width: 0;
 }
 
 .checkbox-col label {
   margin: 0;
+  line-height: 1;
   cursor: pointer;
   font-size: 0.875rem;
-  line-height: 1.25;
-  white-space: nowrap;
+  font-weight: 500;
   user-select: none;
+  white-space: nowrap;
 }
 
 .w-full {
@@ -1440,11 +1387,19 @@ onMounted(async () => {
   flex: 1 1 100%;
 }
 
-.address-form label {
+.address-form .form-col label,
+.address-form .form-col-sm label,
+.address-form .form-col-full label {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
+}
+
+.address-form .checkbox-col label {
+  display: inline;
+  margin: 0;
+  line-height: 1;
 }
 
 .form-actions {

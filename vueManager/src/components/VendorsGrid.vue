@@ -1,20 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Paginator from 'primevue/paginator'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, ConfirmDialog, Dialog, InputText, Paginator, Tab, TabList, TabPanel, TabPanels, Tabs, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -506,7 +492,12 @@ onMounted(async () => {
             </template>
           </div>
           <div class="filter-buttons">
-            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
+            <Button
+              :label="_('apply_filters')"
+              icon="pi pi-filter"
+              severity="success"
+              @click="applyFilters"
+            />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -527,7 +518,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -535,7 +525,6 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -673,7 +662,7 @@ onMounted(async () => {
                   <div class="form-grid">
                     <template v-for="field in group.fields" :key="field.name">
                       <div
-                        class="form-row mb-3"
+                        class="form-row"
                         :style="{ gridColumn: `span ${field.width || 6}` }"
                       >
                         <label :for="`vendor-field-${field.name}`">
@@ -712,17 +701,17 @@ onMounted(async () => {
               <!-- Tab 1: Info -->
               <TabPanel value="0">
                 <div class="edit-form">
-                  <div class="form-row mb-3">
+                  <div class="form-row">
                     <label>{{ _('vendor_name') }} *</label>
                     <InputText v-model="editingVendor.name" class="w-full" />
                   </div>
 
-                  <div class="form-row mb-3">
+                  <div class="form-row">
                     <label>{{ _('vendor_country') }}</label>
                     <InputText v-model="editingVendor.country" class="w-full" />
                   </div>
 
-                  <div class="form-row mb-3">
+                  <div class="form-row">
                     <label>{{ _('vendor_logo') }}</label>
                     <FileBrowser
                       v-model="editingVendor.logo"
@@ -731,7 +720,7 @@ onMounted(async () => {
                     />
                   </div>
 
-                  <div class="form-row mb-3">
+                  <div class="form-row">
                     <label>{{ _('vendor_description') }}</label>
                     <Textarea v-model="editingVendor.description" class="w-full" rows="4" />
                   </div>
@@ -741,12 +730,12 @@ onMounted(async () => {
               <!-- Tab 2: Contacts -->
               <TabPanel value="1">
                 <div class="edit-form">
-                  <div class="form-row mb-3">
+                  <div class="form-row">
                     <label>{{ _('vendor_address') }}</label>
                     <Textarea v-model="editingVendor.address" class="w-full" rows="2" />
                   </div>
 
-                  <div class="form-row-group mb-3">
+                  <div class="form-row-group">
                     <div class="form-row">
                       <label>{{ _('vendor_phone') }}</label>
                       <InputText v-model="editingVendor.phone" class="w-full" />
@@ -758,7 +747,7 @@ onMounted(async () => {
                     </div>
                   </div>
 
-                  <div class="form-row mb-3">
+                  <div class="form-row">
                     <label>{{ _('vendor_resource') }}</label>
                     <InputText
                       v-model="editingVendor.resource_id"
@@ -782,7 +771,13 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveVendor" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveVendor"
+        />
       </template>
     </Dialog>
   </div>
@@ -790,7 +785,7 @@ onMounted(async () => {
 
 <style scoped>
 .vendors-grid {
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .grid-header {
@@ -831,11 +826,11 @@ onMounted(async () => {
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 15px;
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 15px 0;
   background: var(--ms3-bg-slate);
-  border-radius: 0.375rem;
+  border-radius: 3px;
 }
 
 .filter-item {
@@ -846,10 +841,9 @@ onMounted(async () => {
 
 .filter-item label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 4px;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -911,10 +905,11 @@ onMounted(async () => {
   color: var(--ms3-text-light);
 }
 
-/* Edit form styles */
+/* Edit form styles — spacing like MODX resource fields (panel 15px / label 4px) */
 .edit-form {
   display: flex;
   flex-direction: column;
+  gap: 15px;
 }
 
 .mb-3 {
@@ -925,13 +920,13 @@ onMounted(async () => {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 1rem;
+  gap: 15px;
 }
 
 .form-row {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 4px;
 }
 
 .form-row label {
@@ -947,7 +942,7 @@ onMounted(async () => {
 .form-row-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 15px;
 }
 
 @media (max-width: 37.5rem) {
@@ -977,7 +972,7 @@ onMounted(async () => {
 }
 
 :deep(.p-tabpanel) {
-  padding: 1rem 0;
+  padding: 15px 0 0;
 }
 
 /* Drag and drop styles */

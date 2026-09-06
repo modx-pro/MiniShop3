@@ -1,6 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
+import { Button } from 'primevue'
 
 defineProps({
   isCreateMode: { type: Boolean, required: true },
@@ -20,7 +20,6 @@ const { _ } = useLexicon()
       :label="_('ms3_order_create')"
       icon="pi pi-plus"
       severity="success"
-      size="small"
       :loading="saving"
       @click="emit('create')"
     />
@@ -28,7 +27,7 @@ const { _ } = useLexicon()
       v-else
       :label="_('save')"
       icon="pi pi-check"
-      size="small"
+      severity="success"
       :loading="saving"
       :disabled="recalculatingCost"
       @click="emit('save')"
@@ -37,7 +36,6 @@ const { _ } = useLexicon()
       :label="_('cancel')"
       icon="pi pi-times"
       severity="secondary"
-      size="small"
       @click="emit('cancel')"
     />
   </div>

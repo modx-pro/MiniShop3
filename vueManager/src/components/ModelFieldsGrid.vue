@@ -1,22 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import Fieldset from 'primevue/fieldset'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Panel from 'primevue/panel'
-import Select from 'primevue/select'
-import Slider from 'primevue/slider'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Checkbox, Column, ConfirmDialog, DataTable, Dialog, Fieldset, InputNumber, InputText, Panel, Select, Slider, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -643,7 +627,7 @@ onMounted(async () => {
     <p class="tab-description">{{ _('ms3_utilities_model_fields_description') }}</p>
 
     <!-- Model filter - top bar -->
-    <div class="model-filter-bar mb-3">
+    <div class="model-filter-bar ms3-utilities-section">
       <div style="display: flex; align-items: center; gap: 0.5rem">
         <label style="font-weight: 500">{{ _('ms3_model_field_model') }}:</label>
         <Select
@@ -662,13 +646,13 @@ onMounted(async () => {
       v-model:collapsed="sectionsPanelCollapsed"
       :header="_('ms3_model_sections_title')"
       :toggleable="true"
-      class="sections-panel mb-3"
+      class="sections-panel ms3-utilities-section ms3-config-panel"
     >
       <template #icons>
         <Button
           :label="_('ms3_model_section_add')"
           icon="pi pi-plus"
-          class="p-button-sm"
+          severity="success"
           @click.stop="createSection"
         />
       </template>
@@ -676,7 +660,6 @@ onMounted(async () => {
       <DataTable
         :value="sections"
         :loading="sectionsLoading"
-        size="small"
         striped-rows
         class="sections-table"
       >
@@ -699,8 +682,7 @@ onMounted(async () => {
           <template #body="{ data }">
             <Button
               :icon="data.hidden ? 'pi pi-eye-slash' : 'pi pi-eye'"
-              :class="data.hidden ? 'p-button-secondary' : 'p-button-success'"
-              class="p-button-sm p-button-text"
+              :class="data.hidden ? 'p-button-secondary' : 'p-button-success'" class="p-button-text"
               @click="toggleSectionHidden(data)"
             />
           </template>
@@ -714,17 +696,21 @@ onMounted(async () => {
         </Column>
         <Column :header="_('actions')" style="width: 7.5rem">
           <template #body="{ data }">
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-sm p-button-text p-button-warning"
-              @click="editSection(data)"
-            />
-            <Button
-              icon="pi pi-trash"
-              class="p-button-sm p-button-text p-button-danger"
-              :disabled="data.is_default"
-              @click="deleteSection(data)"
-            />
+            <div class="row-actions">
+              <Button
+                icon="pi pi-pencil"
+                text
+                severity="secondary"
+                @click="editSection(data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                text
+                severity="danger"
+                :disabled="data.is_default"
+                @click="deleteSection(data)"
+              />
+            </div>
           </template>
         </Column>
         <template #empty>
@@ -733,111 +719,115 @@ onMounted(async () => {
       </DataTable>
     </Panel>
 
-    <!-- Fields Card -->
-    <Card>
-      <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>{{ _('ms3_model_fields_title') }}</span>
-          <Button
-            :label="_('ms3_model_field_add')"
-            icon="pi pi-plus"
-            class="p-button-sm"
-            @click="createField"
-          />
-        </div>
+    <!-- Fields panel (same chrome as sections above) -->
+    <Panel
+      :header="_('ms3_model_fields_title')"
+      class="fields-panel ms3-utilities-section ms3-config-panel"
+    >
+      <template #icons>
+        <Button
+          :label="_('ms3_model_field_add')"
+          icon="pi pi-plus"
+          severity="success"
+          @click.stop="createField"
+        />
       </template>
 
-      <template #content>
-        <!-- Fields table with VueDraggable -->
-        <div v-if="!loading" class="p-datatable p-component p-datatable-striped p-datatable-sm">
-          <div class="p-datatable-wrapper">
-            <table class="p-datatable-table">
-              <thead class="p-datatable-thead">
+      <!-- Fields table with VueDraggable -->
+      <div v-if="!loading" class="p-datatable p-component p-datatable-striped">
+        <div class="p-datatable-wrapper">
+          <table class="p-datatable-table">
+            <thead class="p-datatable-thead">
+              <tr>
+                <th style="width: 3rem"></th>
+                <th>{{ _('ms3_model_field_name') }}</th>
+                <th>{{ _('ms3_model_field_label') }}</th>
+                <th style="width: 7.5rem">{{ _('ms3_model_field_section') }}</th>
+                <th style="width: 6.25rem">{{ _('ms3_model_field_width') }}</th>
+                <th style="width: 7.5rem">{{ _('ms3_model_field_xtype') }}</th>
+                <th style="width: 6.5rem">{{ _('ms3_model_field_visible') }}</th>
+                <th style="width: 8.5rem">{{ _('ms3_model_field_required') }}</th>
+                <th style="width: 7.5rem">{{ _('actions') }}</th>
+              </tr>
+            </thead>
+            <draggable
+              v-model="fields"
+              tag="tbody"
+              class="p-datatable-tbody"
+              handle=".drag-handle"
+              item-key="id"
+              :animation="200"
+              ghost-class="ghost-row"
+              @end="onDragEnd"
+            >
+              <template #item="{ element: field }">
                 <tr>
-                  <th style="width: 3rem"></th>
-                  <th>{{ _('ms3_model_field_name') }}</th>
-                  <th>{{ _('ms3_model_field_label') }}</th>
-                  <th style="width: 7.5rem">{{ _('ms3_model_field_section') }}</th>
-                  <th style="width: 6.25rem">{{ _('ms3_model_field_width') }}</th>
-                  <th style="width: 7.5rem">{{ _('ms3_model_field_xtype') }}</th>
-                  <th style="width: 5rem">{{ _('ms3_model_field_visible') }}</th>
-                  <th style="width: 5rem">{{ _('ms3_model_field_required') }}</th>
-                  <th style="width: 7.5rem">{{ _('actions') }}</th>
-                </tr>
-              </thead>
-              <draggable
-                v-model="fields"
-                tag="tbody"
-                class="p-datatable-tbody"
-                handle=".drag-handle"
-                item-key="id"
-                :animation="200"
-                ghost-class="ghost-row"
-                @end="onDragEnd"
-              >
-                <template #item="{ element: field }">
-                  <tr>
-                    <td class="drag-handle-cell">
-                      <i class="pi pi-bars drag-handle"></i>
-                    </td>
-                    <td>
-                      <strong>{{ field.name }}</strong>
-                    </td>
-                    <td>
-                      {{ field.label_translated || field.label || '-' }}
-                    </td>
-                    <td>
-                      {{ getSectionLabel(field.section_id) }}
-                    </td>
-                    <td>{{ field.width }}/12</td>
-                    <td>
-                      {{ getXtypeLabel(field.xtype) }}
-                    </td>
-                    <td>
-                      <Button
-                        :icon="field.visible ? 'pi pi-eye' : 'pi pi-eye-slash'"
-                        :class="field.visible ? 'p-button-success' : 'p-button-secondary'"
-                        class="p-button-sm p-button-text"
-                        @click="toggleVisible(field)"
-                      />
-                    </td>
-                    <td>
-                      <i
-                        :class="
-                          field.required
-                            ? 'pi pi-check text-green-500'
-                            : 'pi pi-minus text-gray-400'
-                        "
-                      />
-                    </td>
-                    <td>
+                  <td class="drag-handle-cell">
+                    <i class="pi pi-bars drag-handle"></i>
+                  </td>
+                  <td>
+                    <strong>{{ field.name }}</strong>
+                  </td>
+                  <td>
+                    {{ field.label_translated || field.label || '-' }}
+                  </td>
+                  <td>
+                    {{ getSectionLabel(field.section_id) }}
+                  </td>
+                  <td>{{ field.width }}/12</td>
+                  <td>
+                    {{ getXtypeLabel(field.xtype) }}
+                  </td>
+                  <td>
+                    <Button
+                      :icon="field.visible ? 'pi pi-eye' : 'pi pi-eye-slash'"
+                      :class="field.visible ? 'p-button-success' : 'p-button-secondary'"
+                      class="p-button-text"
+                      @click="toggleVisible(field)"
+                    />
+                  </td>
+                  <td>
+                    <i
+                      :class="
+                        field.required
+                          ? 'pi pi-check text-green-500'
+                          : 'pi pi-minus text-gray-400'
+                      "
+                    />
+                  </td>
+                  <td class="row-actions-cell">
+                    <div class="row-actions">
                       <Button
                         icon="pi pi-pencil"
-                        class="p-button-sm p-button-text p-button-warning"
+                        text
+                        severity="secondary"
+                        :title="_('edit')"
                         @click="editField(field)"
                       />
                       <Button
                         icon="pi pi-trash"
-                        class="p-button-sm p-button-text p-button-danger"
+                        text
+                        severity="danger"
+                        :title="_('delete')"
                         @click="deleteField(field)"
                       />
-                    </td>
-                  </tr>
-                </template>
-              </draggable>
-            </table>
-          </div>
-          <div v-if="fields.length === 0" class="text-center p-4">
-            {{ _('ms3_model_fields_empty') }}
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </draggable>
+          </table>
         </div>
+        <div v-if="fields.length === 0" class="text-center p-4">
+          {{ _('ms3_model_fields_empty') }}
+        </div>
+      </div>
 
-        <!-- Loading indicator -->
-        <div v-if="loading" class="loading-indicator">
-          <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
-        </div>
-      </template>
-    </Card>
+      <!-- Loading indicator -->
+      <div v-if="loading" class="loading-indicator">
+        <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+      </div>
+    </Panel>
 
     <!-- Edit Field Dialog -->
     <Dialog
@@ -851,7 +841,7 @@ onMounted(async () => {
       <div v-if="editingField" class="edit-form">
         <!-- Basic info -->
         <Fieldset :legend="_('ms3_model_field_basic_info')" class="mb-3">
-          <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+          <div class="ms3-dialog-grid">
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_model') }} *</label>
               <Select
@@ -883,7 +873,7 @@ onMounted(async () => {
             />
           </div>
 
-          <div class="grid mt-3" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+          <div class="ms3-dialog-grid mt-3">
             <div class="field">
               <label class="block mb-2 font-medium">{{ _('ms3_model_field_xtype') }}</label>
               <Select
@@ -910,7 +900,7 @@ onMounted(async () => {
 
         <!-- Display settings -->
         <Fieldset :legend="_('ms3_model_field_display_settings')" class="mb-3">
-          <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem">
+          <div class="ms3-dialog-grid">
             <div class="field">
               <label class="block mb-2 font-medium"
                 >{{ _('ms3_model_field_width') }} ({{ editingField.width }}/12)</label
@@ -943,7 +933,7 @@ onMounted(async () => {
             />
           </div>
 
-          <div class="field mt-3" style="display: flex; gap: 2rem">
+          <div class="field mt-3" style="display: flex; gap: var(--p-modx-space-panel, 15px)">
             <div style="display: flex; align-items: center; gap: 0.5rem">
               <Checkbox v-model="editingField.visible" :binary="true" input-id="visible" />
               <label for="visible">{{ _('ms3_model_field_visible') }}</label>
@@ -982,10 +972,16 @@ onMounted(async () => {
         <Button
           :label="_('cancel')"
           icon="pi pi-times"
-          class="p-button-text"
+          severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveField" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveField"
+        />
       </template>
     </Dialog>
 
@@ -1062,10 +1058,16 @@ onMounted(async () => {
         <Button
           :label="_('cancel')"
           icon="pi pi-times"
-          class="p-button-text"
+          severity="secondary"
           @click="sectionDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :loading="savingSec" @click="saveSection" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="savingSec"
+          @click="saveSection"
+        />
       </template>
     </Dialog>
   </div>
@@ -1079,37 +1081,15 @@ onMounted(async () => {
 }
 
 .model-filter-bar {
-  padding: 0.75rem 1rem;
+  padding: var(--p-modx-space-panel, 15px);
   background: var(--ms3-bg-muted);
-  border-radius: 0.375rem;
-  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  border-radius: 0.25rem;
+  border: 1px solid var(--ms3-border-color-alt);
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .sections-panel {
-  margin-bottom: 1rem;
-}
-
-.sections-panel :deep(.p-panel-header) {
-  padding: 0.75rem 1rem;
-  background: var(--ms3-bg-muted);
-}
-
-.sections-panel :deep(.p-panel-content) {
-  padding: 0;
-}
-
-.sections-panel :deep(.p-panel-icons) {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.sections-table :deep(.p-datatable-header) {
-  display: none;
-}
-
-.model-fields-grid :deep(.p-card) {
-  width: 100%;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .model-fields-grid :deep(.p-datatable-wrapper) {
@@ -1121,9 +1101,15 @@ onMounted(async () => {
   table-layout: fixed;
 }
 
+.model-fields-grid :deep(.p-datatable-thead th) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .edit-form .field label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
   font-weight: 500;
 }
 
@@ -1186,7 +1172,7 @@ onMounted(async () => {
 }
 
 .mb-3 {
-  margin-bottom: 1rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .text-center {

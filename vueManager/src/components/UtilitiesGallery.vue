@@ -1,11 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Fieldset from 'primevue/fieldset'
-import InputNumber from 'primevue/inputnumber'
-import Message from 'primevue/message'
-import ProgressBar from 'primevue/progressbar'
+import { Button, Card, Fieldset, InputNumber, Message, ProgressBar } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../request.js'
@@ -160,15 +155,14 @@ onMounted(() => {
         }}</label>
         <InputNumber
           v-model="limit"
-          class="limit-stepper"
           input-id="limit-input"
+          class="limit-input"
           :min="1"
           :max="100"
           :disabled="isRunning"
           show-buttons
           button-layout="horizontal"
           :step="5"
-          size="small"
           decrement-button-class="p-button-secondary"
           increment-button-class="p-button-secondary"
           increment-button-icon="pi pi-plus"
@@ -182,19 +176,16 @@ onMounted(() => {
       <Button
         :label="_('ms3_utilities_gallery_refresh', 'Regenerate Thumbnails')"
         icon="pi pi-refresh"
-        size="small"
         :loading="isRunning"
         :disabled="!canStart"
-        severity="primary"
+        severity="success"
         @click="startRegeneration"
       />
       <Button
         v-if="isCompleted"
         :label="_('ms3_utilities_gallery_reset', 'Reset')"
         icon="pi pi-times"
-        size="small"
-        severity="secondary"
-        class="reset-btn"
+        severity="secondary" class="reset-btn"
         @click="resetState"
       />
     </div>
@@ -232,166 +223,96 @@ onMounted(() => {
 <style scoped>
 .utilities-gallery {
   padding: 0;
-  max-width: 40rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  max-width: none;
+  width: 100%;
 }
 
 .info-card {
-  margin: 0;
-}
-
-.info-card :deep(.p-card-body),
-.info-card :deep(.p-card-content) {
-  padding: 0.75rem 1rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .info-content {
-  line-height: 1.45;
-  font-size: 0.875rem;
-  color: var(--ms3-text-muted);
+  line-height: 1.8;
 }
 
 .info-content :deep(strong) {
-  color: var(--ms3-text-dark);
-  font-weight: 600;
+  color: var(--ms3-text-accent-dark);
 }
 
 .params-fieldset {
-  margin: 0;
-}
-
-.params-fieldset :deep(.p-fieldset-content) {
-  padding: 0.75rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .thumbnails-info {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.75rem;
-  line-height: 1.45;
+  font-family: monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
   background: var(--ms3-bg-muted);
-  padding: 0.625rem 0.75rem;
-  border-radius: var(--ms3-radius-sm, 0.25rem);
-  overflow: auto;
-  max-height: 7.5rem;
+  padding: 0.625rem;
+  border-radius: 0.25rem;
 }
 
 .thumbnails-info :deep(strong) {
-  color: var(--ms3-text-dark);
+  color: var(--ms3-text-hint);
 }
 
 .settings-section {
-  width: fit-content;
-  max-width: 100%;
   background: var(--ms3-bg-muted);
-  padding: 0.625rem 0.875rem;
-  border-radius: var(--ms3-radius-md, 0.375rem);
-  border: 1px solid var(--ms3-border-color);
+  padding: var(--p-modx-space-panel, 15px);
+  border-radius: 0.25rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .setting-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.625rem 0.875rem;
+  gap: 0.9375rem;
 }
 
 .setting-row label {
   font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--ms3-text-muted);
-  margin: 0;
-  white-space: nowrap;
+  min-width: 9.375rem;
 }
 
-/* One cohesive stepper control */
-.limit-stepper {
-  --limit-control-h: 2rem;
-  display: inline-flex;
-  width: auto !important;
-  height: var(--limit-control-h);
-  border: 1px solid var(--ms3-border-color);
-  border-radius: var(--ms3-radius-md, 0.375rem);
-  overflow: hidden;
-  background: var(--ms3-bg-surface, #fff);
-  vertical-align: middle;
+/* Compact stepper for 1–100; ± buttons are 1.875rem each. */
+.limit-input {
+  width: 7.5rem;
+  flex: 0 0 auto;
 }
 
-.limit-stepper.p-inputnumber,
-.limit-stepper :deep(.p-inputnumber) {
-  display: inline-flex;
-  align-items: stretch;
-  height: var(--limit-control-h);
-  width: auto;
-  line-height: 1;
-}
-
-.limit-stepper :deep(.p-inputnumber-input) {
-  width: 2.75rem !important;
-  min-width: 2.75rem;
-  flex: 0 0 2.75rem;
-  height: var(--limit-control-h) !important;
-  min-height: var(--limit-control-h) !important;
-  box-sizing: border-box;
+.limit-input :deep(.p-inputnumber-input) {
+  width: 100%;
+  min-width: 0;
   text-align: center;
-  padding: 0 0.25rem !important;
-  margin: 0;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-.limit-stepper :deep(.p-inputnumber-button) {
-  width: var(--limit-control-h) !important;
-  min-width: var(--limit-control-h) !important;
-  height: var(--limit-control-h) !important;
-  min-height: var(--limit-control-h) !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  box-sizing: border-box;
-  align-self: stretch;
-}
-
-.limit-stepper :deep(.p-inputnumber-decrement-button) {
-  border-inline-end: 1px solid var(--ms3-border-color) !important;
-}
-
-.limit-stepper :deep(.p-inputnumber-increment-button) {
-  border-inline-start: 1px solid var(--ms3-border-color) !important;
 }
 
 .action-section {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   gap: 0.5rem;
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .reset-btn {
-  margin-inline-start: auto;
+  margin-left: auto;
 }
 
 .progress-section {
   background: var(--ms3-bg-surface);
-  border: var(--ms3-border-width) solid var(--ms3-border-color);
-  border-radius: var(--ms3-radius-md, 0.375rem);
-  padding: 0.75rem;
+  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  border-radius: 0.25rem;
+  padding: var(--p-modx-space-panel, 15px);
+  margin-bottom: var(--p-modx-space-panel, 15px);
 }
 
 .progress-labels {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.625rem;
   font-weight: 600;
-  font-size: 0.875rem;
 }
 
 .progress-percent {
-  color: var(--p-primary-color, #6cb24a);
+  color: var(--ms3-text-accent-dark);
 }
 
 .progress-iteration {
@@ -403,14 +324,14 @@ onMounted(() => {
 }
 
 .progress-bar :deep(.p-progressbar-value) {
-  background: var(--p-primary-color, #6cb24a);
+  background: var(--ms3-accent-teal);
 }
 
 .status-message {
-  margin: 0;
+  margin-top: 0.9375rem;
 }
 
 .status-message :deep(.pi-check-circle) {
-  margin-inline-end: 0.5rem;
+  margin-right: 0.5rem;
 }
 </style>

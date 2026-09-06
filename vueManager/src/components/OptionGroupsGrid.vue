@@ -1,16 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Badge from 'primevue/badge'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Badge, Button, Card, Checkbox, ConfirmDialog, Dialog, InputText, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -226,7 +216,6 @@ onMounted(() => {
               :label="_('ms3_option_group_create')"
               icon="pi pi-plus"
               severity="success"
-              size="small"
               @click="openCreateDialog"
             />
             <Button
@@ -234,12 +223,15 @@ onMounted(() => {
               :label="`${_('delete')} (${selectionCount})`"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               @click="confirmBulkDelete"
             />
           </div>
           <div class="right">
-            <InputText v-model="searchQuery" :placeholder="_('search')" size="small" />
+            <InputText
+              v-model="searchQuery"
+              :placeholder="_('search')"
+              class="groups-search"
+            />
           </div>
         </div>
 
@@ -295,7 +287,7 @@ onMounted(() => {
                   {{ element.description || '—' }}
                 </span>
                 <span class="col-count">
-                  <Badge :value="element.options_count || 0" severity="info" />
+                  <Badge :value="element.options_count || 0" severity="secondary" />
                 </span>
                 <span class="col-actions">
                   <Button
@@ -303,7 +295,6 @@ onMounted(() => {
                     severity="secondary"
                     text
                     rounded
-                    size="small"
                     :aria-label="_('edit')"
                     @click="openEditDialog(element)"
                   />
@@ -312,7 +303,6 @@ onMounted(() => {
                     severity="danger"
                     text
                     rounded
-                    size="small"
                     :aria-label="_('delete')"
                     @click="confirmDelete(element)"
                   />
@@ -353,7 +343,13 @@ onMounted(() => {
       </div>
       <template #footer>
         <Button :label="_('cancel')" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveGroup" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="saveGroup"
+        />
       </template>
     </Dialog>
   </div>
@@ -372,12 +368,22 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 15px;
 }
 
 .vueApp .ms3-option-groups .grid-toolbar .left {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+}
+
+.vueApp .ms3-option-groups .grid-toolbar .right {
+  display: flex;
+  align-items: center;
+}
+
+.vueApp .ms3-option-groups .groups-search {
+  width: 14rem;
 }
 
 .vueApp .ms3-option-groups .status-row,
@@ -388,8 +394,8 @@ onMounted(() => {
 }
 
 .vueApp .ms3-option-groups .reorder-hint {
-  margin: 0.5rem 0 0.75rem 0;
-  font-size: 0.8rem;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.75rem;
   color: var(--ms3-text-muted);
 }
 
@@ -399,23 +405,25 @@ onMounted(() => {
   grid-template-columns: 2rem 2rem 1fr 2fr 8rem 7rem;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
+  padding: 0.5rem 0.625rem;
+  min-height: 2.25rem;
 }
 
 .vueApp .ms3-option-groups .list-header {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ms3-text-muted);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.8125rem;
+  text-transform: none;
+  letter-spacing: normal;
   border-bottom: var(--ms3-border-width) solid var(--ms3-border-color);
+  margin-bottom: 0.5rem;
 }
 
 .vueApp .ms3-option-groups .list-row {
   border: var(--ms3-border-width) solid var(--ms3-border-color);
-  border-radius: 0.375rem;
+  border-radius: 3px;
   background: var(--ms3-bg-slate);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .vueApp .ms3-option-groups .list-row.selected {
@@ -453,17 +461,18 @@ onMounted(() => {
 .vueApp .ms3-option-groups .edit-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 15px;
 }
 
 .vueApp .ms3-option-groups .form-row {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 4px;
 }
 
 .vueApp .ms3-option-groups .form-row label {
   font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .vueApp .ms3-option-groups .required {

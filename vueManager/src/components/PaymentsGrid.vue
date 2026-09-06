@@ -1,23 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Badge from 'primevue/badge'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import ToggleSwitch from 'primevue/toggleswitch'
-import { useToast } from 'primevue/usetoast'
+import { Badge, Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputText, Tab, TabList, TabPanel, TabPanels, Tabs, Textarea, Toast, ToggleSwitch, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -424,7 +407,12 @@ onMounted(async () => {
             </template>
           </div>
           <div class="filter-buttons">
-            <Button :label="_('apply_filters')" icon="pi pi-filter" @click="applyFilters" />
+            <Button
+              :label="_('apply_filters')"
+              icon="pi pi-filter"
+              severity="success"
+              @click="applyFilters"
+            />
             <Button
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
@@ -445,7 +433,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -453,7 +440,6 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -700,7 +686,13 @@ onMounted(async () => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="savePayment" />
+        <Button
+          :label="_('save')"
+          icon="pi pi-check"
+          severity="success"
+          :loading="saving"
+          @click="savePayment"
+        />
       </template>
     </Dialog>
   </div>
@@ -708,7 +700,7 @@ onMounted(async () => {
 
 <style scoped>
 .payments-grid {
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .grid-header {
@@ -749,11 +741,11 @@ onMounted(async () => {
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 15px;
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 15px 0;
   background: var(--ms3-bg-slate);
-  border-radius: 0.375rem;
+  border-radius: 3px;
 }
 
 .filter-item {
@@ -764,10 +756,9 @@ onMounted(async () => {
 
 .filter-item label {
   display: block;
-  margin-bottom: var(--ms3-spacing-2);
+  margin-bottom: 4px;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--ms3-text-muted);
 }
 
 .filter-buttons {
@@ -934,11 +925,16 @@ onMounted(async () => {
 .checkbox-field {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .checkbox-field label {
-  margin-left: 0.5rem;
+  margin: 0;
+  line-height: 1;
   cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
 }
 
 /* Grid thumbnail */

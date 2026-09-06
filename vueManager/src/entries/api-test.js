@@ -7,9 +7,33 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import { ConfirmationService, ModxManagerTheme, PrimeVue, ToastService } from 'primevue'
+import { createApp } from 'vue'
+
 import VueApiTest from '../components/ApiTest.vue'
-import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+
+/**
+ * Creates and configures Vue application
+ */
+function createVueApp() {
+  const app = createApp(VueApiTest)
+
+  const pinia = createPinia()
+  app.use(pinia)
+
+  app.use(PrimeVue, {
+    theme: ModxManagerTheme,
+    locale: getPrimeVueLocale(),
+  })
+
+  app.use(ConfirmationService)
+  app.use(ToastService)
+
+  return app
+}
 
 /**
  * Widget initialization
@@ -28,7 +52,7 @@ export function init(selector = '#vue-api-test') {
     return null
   }
 
-  const app = createMs3VueApp(VueApiTest)
+  const app = createVueApp()
   app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'

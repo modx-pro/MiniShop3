@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import AutoComplete from 'primevue/autocomplete'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
+import { AutoComplete, Button, Dialog, InputNumber } from 'primevue'
 
 const { _ } = useLexicon()
 
@@ -133,6 +130,7 @@ defineProps({
     <Button
       :label="_('save')"
       icon="pi pi-check"
+      severity="success"
       :loading="savingNewProduct"
       :disabled="!selectedProduct || !selectedProduct.id"
       @click="saveNewProduct"

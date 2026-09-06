@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import ColorPicker from 'primevue/colorpicker'
-import InputText from 'primevue/inputtext'
+import { Button, ColorPicker, InputText } from 'primevue'
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -137,7 +135,6 @@ function hexWithHash(v) {
             severity="danger"
             text
             rounded
-            size="small"
             @click="removeRow(index)"
           />
         </div>
@@ -147,9 +144,7 @@ function hexWithHash(v) {
     <Button
       icon="pi pi-plus"
       :label="_('ms3_add_value') || 'Добавить значение'"
-      severity="secondary"
-      size="small"
-      class="add-button"
+      severity="secondary" class="add-button"
       @click="addRow"
     />
   </div>

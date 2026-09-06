@@ -5,8 +5,12 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import { ConfirmationService, ModxManagerTheme, PrimeVue, ToastService } from 'primevue'
+import { createApp } from 'vue'
+
 import UtilitiesPage from '../components/UtilitiesPage.vue'
-import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 export function init(selector = '#ms3-vue-utilities') {
@@ -15,7 +19,14 @@ export function init(selector = '#ms3-vue-utilities') {
     return null
   }
 
-  const app = createMs3VueApp(UtilitiesPage)
+  const app = createApp(UtilitiesPage)
+  app.use(createPinia())
+  app.use(PrimeVue, {
+    theme: ModxManagerTheme,
+    locale: getPrimeVueLocale(),
+  })
+  app.use(ConfirmationService)
+  app.use(ToastService)
   app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'

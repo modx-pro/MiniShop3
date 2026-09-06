@@ -8,12 +8,40 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import { ConfirmationService, ModxManagerTheme, PrimeVue, ToastService } from 'primevue'
+import { createApp } from 'vue'
+
 import CategoryProductsGrid from '../components/CategoryProductsGrid.vue'
 import { provideUiGroup } from '../composables/uiGroup.js'
-import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 let appInstance = null
+
+/**
+ * Creates and configures Vue application
+ * @param {number} categoryId - Category ID
+ */
+function createVueApp(categoryId) {
+  const app = createApp(CategoryProductsGrid, {
+    categoryId: categoryId,
+  })
+
+  const pinia = createPinia()
+  app.use(pinia)
+
+  app.use(PrimeVue, {
+    theme: ModxManagerTheme,
+    locale: getPrimeVueLocale(),
+  })
+
+  app.use(ConfirmationService)
+  app.use(ToastService)
+  provideUiGroup(app, 'category-products')
+
+  return app
+}
 
 /**
  * Widget initialization
@@ -39,14 +67,12 @@ export function init(selector = '#ms3-vue-category-products', categoryId = 0) {
     return null
   }
 
-  const app = createMs3VueApp(CategoryProductsGrid, { categoryId })
-  provideUiGroup(app, 'category-products')
-  app.mount(selector)
+  appInstance = createVueApp(categoryId)
+  appInstance.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'
-  appInstance = app
 
-  return app
+  return appInstance
 }
 
 /**

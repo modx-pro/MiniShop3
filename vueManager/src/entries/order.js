@@ -5,6 +5,11 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { createPinia } from 'pinia'
+import { ConfirmationService, ModxManagerTheme, PrimeVue, ToastService } from 'primevue'
+import { createApp } from 'vue'
+
 import OrderView from '../components/OrderView.vue'
 import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
@@ -119,6 +124,25 @@ class OrderTabsRegistry {
 const earlyPending = window.MS3OrderTabsRegistry?.pendingTabs || []
 window.MS3OrderTabsRegistry = new OrderTabsRegistry()
 earlyPending.forEach(tab => window.MS3OrderTabsRegistry.register(tab))
+
+/**
+ * Creates and configures Vue application
+ */
+function createVueApp() {
+  const app = createApp(OrderView)
+  const pinia = createPinia()
+  app.use(pinia)
+
+  app.use(PrimeVue, {
+    theme: ModxManagerTheme,
+    locale: getPrimeVueLocale(),
+  })
+
+  app.use(ConfirmationService)
+  app.use(ToastService)
+
+  return app
+}
 
 /**
  * Mount OrderView into the tpl node

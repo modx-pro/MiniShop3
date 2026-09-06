@@ -8,6 +8,7 @@
 $_lang['ms3_vue_product_fields_title'] = 'Поля товара (админка)';
 $_lang['ms3_vue_product_fields_description'] = 'Здесь вы можете настроить, какие поля отображаются на вкладке "Данные товара" при редактировании товара';
 $_lang['ms3_vue_product_properties'] = 'Свойства товара';
+$_lang['ms3_product_links_empty'] = 'Связей пока нет. Создайте первую.';
 
 // Grid Fields Config Widget
 $_lang['grid_fields_config_title'] = 'Конфигурация гридов';
@@ -656,6 +657,19 @@ $_lang['log_date'] = 'Дата';
 $_lang['log_action'] = 'Действие';
 $_lang['log_user'] = 'Пользователь';
 $_lang['log_entry'] = 'Запись';
+$_lang['log_empty'] = 'История заказа пуста';
+$_lang['log_action_status'] = 'Статус';
+$_lang['log_action_field'] = 'Поле';
+$_lang['log_action_address'] = 'Адрес';
+$_lang['log_action_products'] = 'Товары';
+$_lang['log_action_payment'] = 'Оплата';
+$_lang['log_entry_status_id'] = 'Статус ID: {id}';
+$_lang['log_entry_fields'] = 'Поля: {fields}';
+$_lang['log_entry_address'] = 'Адрес: {fields}';
+$_lang['log_entry_product_op_add'] = 'Добавлен';
+$_lang['log_entry_product_op_remove'] = 'Удалён';
+$_lang['log_entry_product_op_update'] = 'Изменён';
+$_lang['log_entry_product_op_unknown'] = 'Изменение';
 $_lang['address_first_name'] = 'Имя';
 $_lang['address_last_name'] = 'Фамилия';
 $_lang['address_phone'] = 'Телефон';
@@ -1147,6 +1161,10 @@ $_lang['ms3_vendor_phone'] = 'Телефон';
 $_lang['ms3_vendor_email'] = 'Email';
 $_lang['ms3_vendor_description'] = 'Описание';
 $_lang['ms3_vendor_properties'] = 'Свойства';
+$_lang['ms3_vendor_select'] = 'Выберите производителя';
+$_lang['ms3_vendor_search'] = 'Поиск производителя…';
+$_lang['ms3_vendor_empty'] = 'Производители не найдены. Добавьте производителя в настройках компонента.';
+$_lang['ms3_vendor_not_found'] = 'Производитель не найден';
 
 // Vendor sections
 $_lang['ms3_section_vendor_info'] = 'Информация';

@@ -1,9 +1,10 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import ContextMenu from 'primevue/contextmenu'
-import Paginator from 'primevue/paginator'
+import { ContextMenu, InputText, Paginator } from 'primevue'
 import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
+
+import { debounce } from '../../utils/modx.js'
 
 const { _ } = useLexicon()
 
@@ -24,14 +25,11 @@ const props = defineProps({
     type: Number,
     default: 20,
   },
-  searchQuery: {
-    type: String,
-    default: '',
-  },
 })
 
 const emit = defineEmits([
   'sort',
+  'search',
   'page-change',
   'edit',
   'show',
@@ -40,6 +38,7 @@ const emit = defineEmits([
   'delete',
 ])
 
+const searchQuery = ref('')
 const currentPage = ref(0)
 
 // Context menu
@@ -98,11 +97,21 @@ watch(
   { immediate: true }
 )
 
-const emptyMessage = computed(() =>
-  props.searchQuery.trim()
-    ? _('ms3_gallery_search_empty')
-    : _('ms3_gallery_empty_text')
-)
+const debouncedSearch = debounce(query => {
+  currentPage.value = 0
+  emit('search', query)
+}, 300)
+
+function onSearchInput(event) {
+  searchQuery.value = event.target.value
+  debouncedSearch(searchQuery.value)
+}
+
+function clearSearch() {
+  searchQuery.value = ''
+  currentPage.value = 0
+  emit('search', '')
+}
 
 function onPageChange(event) {
   currentPage.value = event.page
@@ -120,7 +129,7 @@ function onDragEnd(event) {
   }
 }
 
-function onEdit(image) {
+function onDblClick(image) {
   emit('edit', image)
 }
 
@@ -128,36 +137,32 @@ function onContextMenu(event, image) {
   contextMenuTarget.value = image
   contextMenuRef.value.show(event)
 }
-
-function onItemKeydown(event, image) {
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault()
-    onEdit(image)
-    return
-  }
-  if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
-    event.preventDefault()
-    onContextMenu(event, image)
-  }
-}
-
-function onEditClick(event, image) {
-  event.stopPropagation()
-  onEdit(image)
-}
 </script>
 
 <template>
   <div class="gallery-grid">
+    <!-- Search -->
+    <div class="gallery-search">
+      <span class="p-input-icon-left p-input-icon-right gallery-search-wrap">
+        <i class="pi pi-search" />
+        <InputText
+          :value="searchQuery"
+          :placeholder="_('ms3_gallery_search_placeholder')"
+          class="gallery-search-input"
+          @input="onSearchInput"
+        />
+        <i v-if="searchQuery" class="pi pi-times gallery-search-clear" @click="clearSearch" />
+      </span>
+    </div>
+
     <!-- Loading -->
-    <div v-if="loading" class="gallery-loading" role="status">
-      <i class="pi pi-spinner pi-spin" aria-hidden="true" />
+    <div v-if="loading" class="gallery-loading">
+      <i class="pi pi-spinner pi-spin" />
     </div>
 
     <!-- Empty state -->
     <div v-else-if="images.length === 0" class="gallery-empty">
-      <i class="pi pi-images gallery-empty-icon" aria-hidden="true" />
-      <p class="gallery-empty-text">{{ emptyMessage }}</p>
+      {{ _('ms3_gallery_empty_text') }}
     </div>
 
     <!-- Image grid -->
@@ -173,12 +178,9 @@ function onEditClick(event, image) {
         <div
           class="gallery-item"
           :class="{ 'gallery-item--preview': element.is_preview }"
-          tabindex="0"
-          :aria-label="element.name || element.file"
-          :title="_('ms3_gallery_item_hint')"
-          @dblclick="onEdit(element)"
+          :title="_('ms3_gallery_drag_hint')"
+          @dblclick="onDblClick(element)"
           @contextmenu.prevent="onContextMenu($event, element)"
-          @keydown="onItemKeydown($event, element)"
         >
           <div class="gallery-item-thumb">
             <span v-if="element.is_preview" class="gallery-item-badge">
@@ -191,17 +193,8 @@ function onEditClick(event, image) {
               loading="lazy"
             />
             <div v-else class="gallery-item-icon">
-              <i class="pi pi-file" aria-hidden="true" />
+              <i class="pi pi-file" />
             </div>
-            <button
-              type="button"
-              class="gallery-item-edit"
-              tabindex="-1"
-              :aria-label="_('ms3_gallery_file_update')"
-              @click="onEditClick($event, element)"
-            >
-              <i class="pi pi-pencil" aria-hidden="true" />
-            </button>
           </div>
           <div class="gallery-item-name" :title="element.file">
             {{ element.file }}
@@ -229,6 +222,42 @@ function onEditClick(event, image) {
   width: 100%;
 }
 
+.gallery-search {
+  padding: 0;
+  margin-bottom: var(--p-modx-space-panel, 15px);
+}
+
+.gallery-search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 20rem;
+}
+
+.gallery-search-wrap > i:first-child {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--p-text-muted-color);
+  z-index: 1;
+}
+
+.gallery-search-input {
+  width: 100%;
+  padding-left: 2.25rem;
+  padding-right: 2.25rem;
+}
+
+.gallery-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+}
+
+.gallery-search-clear:hover {
+  color: var(--p-text-color);
+}
+
 .gallery-loading {
   display: flex;
   justify-content: center;
@@ -238,25 +267,9 @@ function onEditClick(event, image) {
 }
 
 .gallery-empty {
-  display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 2.5rem 1.5rem;
-  text-align: center;
-}
-
-.gallery-empty-icon {
-  font-size: 1.75rem;
-  color: var(--p-text-muted-color);
-  opacity: 0.7;
-}
-
-.gallery-empty-text {
-  margin: 0;
-  max-width: 28rem;
+  padding: var(--p-modx-space-panel, 15px) 0;
+  text-align: start;
   font-size: 0.875rem;
-  line-height: 1.45;
   color: var(--p-text-muted-color);
 }
 
@@ -264,7 +277,7 @@ function onEditClick(event, image) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  padding: 0.25rem 0 0;
+  padding: 0.5rem 0;
   min-height: 6rem;
 }
 
@@ -274,9 +287,7 @@ function onEditClick(event, image) {
   border: 1px solid var(--p-surface-200);
   border-radius: 0.375rem;
   overflow: hidden;
-  transition:
-      border-color 0.15s,
-      box-shadow 0.15s;
+  transition: border-color 0.15s;
   background: var(--p-surface-0);
 }
 
@@ -284,13 +295,8 @@ function onEditClick(event, image) {
   border-color: var(--p-primary-color);
 }
 
-.gallery-images :deep(.gallery-item:focus-visible) {
-  outline: 2px solid var(--p-primary-color);
-  outline-offset: 2px;
-}
 .gallery-images :deep(.gallery-item--preview) {
   border-color: var(--p-primary-color);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--p-primary-color) 35%, transparent);
 }
 
 .gallery-images :deep(.gallery-item-thumb) {
@@ -310,20 +316,18 @@ function onEditClick(event, image) {
   left: 0.25rem;
   z-index: 1;
   padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
+  border-radius: var(--p-border-radius-sm, 3px);
   font-size: 0.625rem;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--p-primary-contrast-color, #fff);
-  background: var(--p-primary-color);
+  color: var(--p-button-success-contrast-color, #fff);
+  background: var(--p-button-success-background, #6cb24a);
 }
 
 .gallery-images :deep(.gallery-item-thumb img) {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  outline: 1px solid color-mix(in srgb, var(--p-surface-900) 8%, transparent);
-    outline-offset: -1px;
 }
 
 .gallery-images :deep(.gallery-item-icon) {
@@ -331,49 +335,9 @@ function onEditClick(event, image) {
   color: var(--p-text-muted-color);
 }
 
-.gallery-images :deep(.gallery-item-edit) {
-  position: absolute;
-  right: 0.25rem;
-  bottom: 0.25rem;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border: 0;
-  border-radius: 0.25rem;
-  background: color-mix(in srgb, var(--p-surface-0) 92%, transparent);
-  color: var(--p-text-color);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--p-surface-900) 18%, transparent);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.gallery-images :deep(.gallery-item:hover .gallery-item-edit),
-.gallery-images :deep(.gallery-item:focus-within .gallery-item-edit) {
-  opacity: 1;
-}
-
-.gallery-images :deep(.gallery-item-edit:focus-visible) {
-  opacity: 1;
-  outline: 2px solid var(--p-primary-color);
-  outline-offset: 1px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-  .gallery-images :deep(.gallery-item),
-  .gallery-images :deep(.gallery-item-edit) {
-    transition: none;
-  }
-}
 .gallery-images :deep(.gallery-item-name) {
-  padding: 0.375rem 0.375rem;
-    font-size: 0.75rem;
-    line-height: 1.25;
+  padding: 0.25rem 0.375rem;
+  font-size: 0.6875rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

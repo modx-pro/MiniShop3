@@ -5,9 +5,24 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
+import { ModxManagerTheme, PrimeVue } from 'primevue'
+import { createApp } from 'vue'
+
 import HelpPage from '../components/HelpPage.vue'
-import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+
+/**
+ * Creates and configures Vue application
+ */
+function createVueApp() {
+  const app = createApp(HelpPage)
+
+  app.use(PrimeVue, {
+    theme: ModxManagerTheme,
+  })
+
+  return app
+}
 
 /**
  * Widget initialization
@@ -15,11 +30,16 @@ import { injectFormStylesOverride } from '../utils/formStyles.js'
 export function init(selector = '#ms3-vue-help') {
   const $el = document.querySelector(selector)
 
-  if (!$el || $el.dataset.vApp === 'true') {
+  if (!$el) {
     return null
   }
 
-  const app = createMs3VueApp(HelpPage)
+  // Check if already mounted
+  if ($el.dataset.vApp === 'true') {
+    return null
+  }
+
+  const app = createVueApp()
   app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'

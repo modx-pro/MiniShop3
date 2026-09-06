@@ -1,17 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import DatePicker from 'primevue/datepicker'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, DatePicker, InputText, Select, Tag, Toast, useToast } from 'primevue'
 import { onMounted, ref } from 'vue'
 
 import { useGridConfig } from '../composables/useGridConfig.js'
@@ -68,7 +57,6 @@ const { columns, loadGridConfig } = useGridConfig({
     setDirectFilterKeys(response?.direct_filter_keys || [])
   },
 })
-
 
 /**
  * Build GET params shared by list and stats endpoints (#469).
@@ -401,13 +389,7 @@ function getDefaultColumns() {
       width: '7.5rem',
       type: 'actions',
       actions: [
-        {
-          name: 'edit',
-          handler: 'edit',
-          icon: 'pi-pencil',
-          label: 'edit',
-          severity: 'secondary',
-        },
+        { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
         {
           name: 'delete',
           handler: 'delete',
@@ -428,13 +410,7 @@ function getDefaultColumns() {
 function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
-      {
-        name: 'edit',
-        handler: 'edit',
-        icon: 'pi-pencil',
-        label: 'edit',
-        severity: 'secondary',
-      },
+      { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
       {
         name: 'delete',
         handler: 'delete',
@@ -478,8 +454,7 @@ onMounted(async () => {
             <Button
               :label="_('ms3_order_create')"
               icon="pi pi-plus"
-              severity="primary"
-              size="small"
+              severity="success"
               @click="createNewOrder"
             />
           </div>
@@ -511,8 +486,7 @@ onMounted(async () => {
         <!-- Filters form -->
         <div
           v-if="sortedFilters.length > 0"
-          class="filters-form mb-3 p-3 surface-ground"
-          style="border-radius: 0.375rem"
+          class="filters-form mb-4 surface-ground"
         >
           <div class="filters-row">
             <template v-for="filter in sortedFilters" :key="filter.key">
@@ -598,8 +572,7 @@ onMounted(async () => {
             <Button
               :label="_('apply_filters')"
               icon="pi pi-filter"
-              severity="secondary"
-              size="small"
+              severity="success"
               @click="applyFilters"
             />
             <Button
@@ -607,14 +580,13 @@ onMounted(async () => {
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
               severity="secondary"
-              size="small"
               @click="clearFilters"
             />
           </div>
         </div>
 
         <!-- Bulk actions toolbar -->
-        <div v-if="hasSelection" class="bulk-actions-bar mb-3">
+        <div v-if="hasSelection" class="bulk-actions-bar mb-4">
           <div class="bulk-info">
             <i class="pi pi-check-square"></i>
             <span>{{ _('selected_count').replace('{count}', selectionCount) }}</span>
@@ -624,7 +596,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -632,7 +603,6 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -750,7 +720,7 @@ onMounted(async () => {
 
 <style scoped>
 .orders-grid {
-  padding: 1.25rem;
+  height: 100%;
 }
 
 .grid-header {
@@ -809,11 +779,15 @@ onMounted(async () => {
   width: 100%;
 }
 
+.filters-form {
+  padding: 15px 0;
+  border-radius: 3px;
+}
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 15px;
+    margin-bottom: 15px;
 }
 
 .filter-item {
@@ -824,7 +798,7 @@ onMounted(async () => {
 
 .filter-item label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 4px;
   font-weight: 500;
   font-size: 0.875rem;
   color: var(--ms3-text-muted);
@@ -855,10 +829,10 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 15px;
   background: var(--ms3-bg-warning);
   border: var(--ms3-border-width) solid var(--ms3-border-warning);
-  border-radius: 0.375rem;
+  border-radius: 3px;
 }
 
 .bulk-info {

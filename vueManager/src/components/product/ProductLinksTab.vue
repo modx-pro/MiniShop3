@@ -1,15 +1,19 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import AutoComplete from 'primevue/autocomplete'
-import Button from 'primevue/button'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import {
+  AutoComplete,
+  Button,
+  Column,
+  ConfirmDialog,
+  DataTable,
+  Dialog,
+  IconField,
+  InputIcon,
+  InputText,
+  Select,
+  useConfirm,
+  useToast,
+} from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../../request.js'
@@ -34,12 +38,17 @@ const rows = ref([])
 const totalRecords = ref(0)
 const first = ref(0)
 const pageRows = ref(20)
+const rowsPerPageOptions = [10, 20, 50, 100]
 const query = ref('')
 const linkTypes = ref([])
 const createVisible = ref(false)
 const selectedLinkId = ref(null)
 const productSuggestions = ref([])
 const selectedSlave = ref(null)
+
+const pageReportTemplate = computed(
+  () => `${_('showing')} {first} - {last} ${_('of')} {totalRecords}`
+)
 
 const resourceUpdateUrl = computed(() => {
   if (typeof MODx !== 'undefined' && MODx?.config?.manager_url) {
@@ -225,24 +234,19 @@ onMounted(async () => {
       <Button
         :label="_('ms3_btn_create')"
         icon="pi pi-plus"
+        severity="success"
         :disabled="!linkTypes.length"
         @click="openCreate"
       />
-      <InputText
-        v-model="query"
-        type="search"
-        class="product-links-tab__search"
-        :placeholder="_('search')"
-        :aria-label="_('search')"
-        @keyup.enter="searchLinks"
-      />
-      <Button
-        icon="pi pi-search"
-        severity="secondary"
-        outlined
-        :aria-label="_('search')"
-        @click="searchLinks"
-      />
+      <IconField class="product-links-tab__search">
+        <InputIcon><i class="pi pi-search" /></InputIcon>
+        <InputText
+          v-model="query"
+          type="search"
+          :placeholder="_('search')"
+          @keyup.enter="searchLinks"
+        />
+      </IconField>
     </div>
 
     <DataTable
@@ -251,10 +255,14 @@ onMounted(async () => {
       :lazy="true"
       :paginator="true"
       :rows="pageRows"
+      :rows-per-page-options="rowsPerPageOptions"
       :total-records="totalRecords"
       :first="first"
+      paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+      :current-page-report-template="pageReportTemplate"
       data-key="_rowKey"
       size="small"
+      striped-rows
       @page="onPage"
     >
       <Column :header="_('ms3_link_name')">
@@ -290,12 +298,16 @@ onMounted(async () => {
             severity="danger"
             text
             rounded
-            size="small"
             :aria-label="_('ms3_menu_remove')"
             @click="removeLink(data)"
           />
         </template>
       </Column>
+      <template #empty>
+        <div class="product-links-tab__empty">
+          {{ _('ms3_product_links_empty') }}
+        </div>
+      </template>
     </DataTable>
 
     <Dialog
@@ -304,14 +316,13 @@ onMounted(async () => {
       append-to="self"
       :header="_('ms3_link')"
       :style="{ width: '32rem' }"
+      :closable="!saving"
     >
-      <div class="product-links-tab__form">
-        <div class="product-links-tab__field">
-          <label class="product-links-tab__label" for="ms3-product-link-type">{{
-            _('ms3_link')
-          }}</label>
+      <div class="edit-form">
+        <div class="field">
+          <label for="product-link-type" class="product-links-tab__label">{{ _('ms3_link') }}</label>
           <Select
-            id="ms3-product-link-type"
+            id="product-link-type"
             v-model="selectedLinkId"
             :options="linkTypes"
             option-label="name"
@@ -327,86 +338,98 @@ onMounted(async () => {
           </Select>
         </div>
 
-        <div class="product-links-tab__field">
-          <label class="product-links-tab__label" for="ms3-product-link-slave">{{
+        <div class="field">
+          <label for="product-link-slave" class="product-links-tab__label">{{
             _('ms3_product')
           }}</label>
           <AutoComplete
+            id="product-link-slave"
             v-model="selectedSlave"
-            input-id="ms3-product-link-slave"
             :suggestions="productSuggestions"
             option-label="label"
             dropdown
             force-selection
-            class="w-full product-links-tab__autocomplete"
+            class="w-full"
             @complete="searchProducts"
           />
         </div>
       </div>
 
       <template #footer>
-        <Button :label="_('close')" severity="secondary" text @click="createVisible = false" />
+        <Button
+          :label="_('close')"
+          severity="secondary"
+          :disabled="saving"
+          @click="createVisible = false"
+        />
         <Button
           :label="_('save')"
+          severity="success"
+          outlined
           :loading="saving"
-          severity="secondary"
           @click="saveLink(false)"
         />
-        <Button :label="_('save_and_close')" :loading="saving" @click="saveLink()" />
+        <Button
+          :label="_('save_and_close')"
+          severity="success"
+          :loading="saving"
+          @click="saveLink()"
+        />
       </template>
     </Dialog>
   </div>
 </template>
 
-<style scoped>
-.product-links-tab {
+<style>
+/* Non-scoped + .vueApp: dialog teleports; keep theme rhythm with other mgr grids */
+.vueApp .product-links-tab {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--p-modx-space-panel, 15px);
   width: 100%;
   min-height: 18rem;
-  /* Dialog append-to=self needs a positioning context */
-  position: relative;
+  padding: 0;
 }
 
-.product-links-tab__toolbar {
+.vueApp .product-links-tab__toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.product-links-tab__search {
-  flex: 1;
-  min-width: 0;
+.vueApp .product-links-tab__search {
+  flex: 0 1 20rem;
+  min-width: 14rem;
+  max-width: 20rem;
+  margin-inline-start: auto;
 }
 
-.product-links-tab__form {
+.vueApp .product-links-tab__empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--p-text-muted-color, #9ca3af);
+}
+
+.vueApp .product-links-tab .edit-form .field,
+.p-dialog .product-links-tab .edit-form .field {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.25rem;
 }
 
-.product-links-tab__field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.product-links-tab__label {
+.vueApp .product-links-tab__label,
+.p-dialog .product-links-tab__label {
   display: block;
   margin: 0;
   font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.25;
-  color: var(--p-text-muted-color, #6c757d);
+  font-weight: 500;
+  color: var(--ms3-text-primary, #333);
 }
 
-.product-links-tab__autocomplete :deep(.p-autocomplete-dropdown) {
-  width: 2.25rem;
-  height: 2.25rem;
-}
-
-.w-full {
+.vueApp .product-links-tab .w-full,
+.p-dialog .w-full {
   width: 100%;
 }
 </style>

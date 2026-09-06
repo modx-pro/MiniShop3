@@ -1,6 +1,5 @@
 <script setup>
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
+import { Button, InputText } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import { normalizeImagePath } from '../utils/displayFormatters.js'
@@ -155,12 +154,12 @@ function getImageUrl(path) {
         v-if="inputValue && !disabled"
         icon="pi pi-times"
         severity="secondary"
-        text
-        class="clear-button"
+        text class="clear-button"
         @click="clearValue"
       />
       <Button
         icon="pi pi-folder-open"
+        severity="success"
         :disabled="disabled"
         class="browse-button"
         @click="openBrowser"

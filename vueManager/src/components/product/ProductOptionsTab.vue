@@ -1,6 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ProductOptionField from './ProductOptionField.vue'
 
@@ -47,38 +47,10 @@ watch(
   { immediate: true }
 )
 
-const tabId = groupId => `ms3-vtab-${groupId}`
-const panelId = groupId => `ms3-vtab-panel-${groupId}`
-
-function activateGroup(groupId) {
-  activeGroupId.value = groupId
-  nextTick(() => {
-    document.getElementById(tabId(groupId))?.focus()
-  })
-}
-
-function onTabKeydown(event, index) {
-  const count = groups.value.length
-  if (count === 0) return
-  let next = index
-  switch (event.key) {
-    case 'ArrowDown':
-      next = (index + 1) % count
-      break
-    case 'ArrowUp':
-      next = (index - 1 + count) % count
-      break
-    case 'Home':
-      next = 0
-      break
-    case 'End':
-      next = count - 1
-      break
-    default:
-      return
-  }
-  event.preventDefault()
-  activateGroup(groups.value[next].id)
+function onOptionChange(payload) {
+  // Hidden inputs propagate values into the MODX form POST automatically.
+  // Hook left here for future dirty-tracking / validation wiring.
+  void payload
 }
 </script>
 
@@ -94,6 +66,7 @@ function onTabKeydown(event, index) {
         v-for="option in groups[0].options"
         :key="option.key"
         :option="option"
+        @change="onOptionChange"
       />
     </div>
 
@@ -101,18 +74,14 @@ function onTabKeydown(event, index) {
     <div v-else class="vtabs">
       <nav class="vtabs-nav" role="tablist" aria-orientation="vertical">
         <button
-          v-for="(group, index) in groups"
-          :id="tabId(group.id)"
+          v-for="group in groups"
           :key="group.id"
           type="button"
           role="tab"
           class="vtabs-nav-item"
           :class="{ 'is-active': group.id === activeGroupId }"
           :aria-selected="group.id === activeGroupId"
-          :aria-controls="panelId(group.id)"
-          :tabindex="group.id === activeGroupId ? 0 : -1"
-          @click="activateGroup(group.id)"
-          @keydown="onTabKeydown($event, index)"
+          @click="activeGroupId = group.id"
         >
           {{ group.title }}
           <span class="vtabs-nav-count">{{ group.options.length }}</span>
@@ -129,16 +98,15 @@ function onTabKeydown(event, index) {
       <section
         v-for="group in groups"
         v-show="group.id === activeGroupId"
-        :id="panelId(group.id)"
         :key="group.id"
         class="vtabs-panel"
         role="tabpanel"
-        :aria-labelledby="tabId(group.id)"
       >
         <ProductOptionField
           v-for="option in group.options"
           :key="option.key"
           :option="option"
+          @change="onOptionChange"
         />
       </section>
     </div>
@@ -199,8 +167,9 @@ function onTabKeydown(event, index) {
 }
 
 .vueApp .product-options-tab .vtabs-nav-item.is-active {
-  color: var(--p-tabs-tab-active-color, var(--p-primary-color));
-  border-right-color: var(--p-tabs-tab-active-border-color, var(--p-primary-color));
+  /* Do not use tabs activeBorderColor — theme keeps it transparent for horizontal strip. */
+  color: var(--p-tabs-tab-active-color, var(--p-primary-color, #234368));
+  border-right-color: var(--p-primary-color, #234368);
   font-weight: 600;
 }
 

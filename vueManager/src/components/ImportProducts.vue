@@ -1,16 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Message from 'primevue/message'
-import ProgressBar from 'primevue/progressbar'
-import RadioButton from 'primevue/radiobutton'
-import Select from 'primevue/select'
-import SelectButton from 'primevue/selectbutton'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Checkbox, Column, DataTable, Message, ProgressBar, RadioButton, Select, SelectButton, Toast, useToast } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
@@ -328,38 +318,46 @@ onMounted(() => {
       {{ fieldsError }}
     </Message>
 
-    <div class="step-indicators">
-      <div
+    <nav class="step-indicators" :aria-label="_('ms3_utilities_import')">
+      <button
+        type="button"
         class="step-indicator"
         :class="{ active: currentStep === 1, completed: currentStep > 1 }"
+        :aria-current="currentStep === 1 ? 'step' : undefined"
         @click="goToStep(1)"
       >
-        <span class="step-number">1</span>
+        <span class="step-number" aria-hidden="true">1</span>
         <span class="step-title">{{ _('ms3_import_step_upload') }}</span>
-      </div>
-      <div class="step-connector" :class="{ active: currentStep > 1 }"></div>
-      <div
+      </button>
+      <span class="step-connector" :class="{ active: currentStep > 1 }" aria-hidden="true" />
+      <button
+        type="button"
         class="step-indicator"
         :class="{
           active: currentStep === 2,
           completed: currentStep > 2,
           disabled: !canProceedToStep2,
         }"
+        :disabled="!canProceedToStep2"
+        :aria-current="currentStep === 2 ? 'step' : undefined"
         @click="goToStep(2)"
       >
-        <span class="step-number">2</span>
+        <span class="step-number" aria-hidden="true">2</span>
         <span class="step-title">{{ _('ms3_import_step_mapping') }}</span>
-      </div>
-      <div class="step-connector" :class="{ active: currentStep > 2 }"></div>
-      <div
+      </button>
+      <span class="step-connector" :class="{ active: currentStep > 2 }" aria-hidden="true" />
+      <button
+        type="button"
         class="step-indicator"
         :class="{ active: currentStep === 3, disabled: !canProceedToStep3 }"
+        :disabled="!canProceedToStep3"
+        :aria-current="currentStep === 3 ? 'step' : undefined"
         @click="goToStep(3)"
       >
-        <span class="step-number">3</span>
+        <span class="step-number" aria-hidden="true">3</span>
         <span class="step-title">{{ _('ms3_import_step_import') }}</span>
-      </div>
-    </div>
+      </button>
+    </nav>
 
     <!-- Step 1: File Upload -->
     <div v-show="currentStep === 1" class="step-content">
@@ -368,9 +366,10 @@ onMounted(() => {
       <div class="upload-section">
         <div
           class="upload-area"
-          :class="{ uploading: uploading }"
           role="button"
           tabindex="0"
+          :class="{ uploading: uploading }"
+          :aria-label="_('ms3_import_drop_or_click')"
           @click="triggerFileInput"
           @keydown.enter.prevent="triggerFileInput"
           @keydown.space.prevent="triggerFileInput"
@@ -379,20 +378,18 @@ onMounted(() => {
             ref="fileInputRef"
             type="file"
             accept=".csv"
-            class="upload-input-hidden"
+            class="upload-input"
             @change="handleFileSelect"
           />
           <i
-            v-if="!uploading"
-            class="pi pi-cloud-upload upload-icon"
+            class="upload-icon"
+            :class="uploading ? 'pi pi-spin pi-spinner' : 'pi pi-cloud-upload'"
             aria-hidden="true"
-          ></i>
-          <i v-else class="pi pi-spin pi-spinner upload-icon" aria-hidden="true"></i>
+          />
           <div class="upload-copy">
-            <span class="upload-text">
-              <template v-if="!uploading">{{ _('ms3_import_drop_or_click') }}</template>
-              <template v-else>{{ _('ms3_import_uploading') }}</template>
-            </span>
+            <span class="upload-text">{{
+              uploading ? _('ms3_import_uploading') : _('ms3_import_drop_or_click')
+            }}</span>
             <span class="upload-hint">{{ _('ms3_import_csv_only') }}</span>
           </div>
         </div>
@@ -420,12 +417,13 @@ onMounted(() => {
       <div v-if="filePath" class="settings-section">
         <h4>{{ _('ms3_import_settings') }}</h4>
         <div class="setting-row">
-          <label>{{ _('ms3_import_delimiter') }}</label>
+          <label id="ms3-import-delimiter-label">{{ _('ms3_import_delimiter') }}</label>
           <SelectButton
             v-model="delimiter"
             :options="delimiterOptions"
             option-label="label"
             option-value="value"
+            aria-labelledby="ms3-import-delimiter-label"
           />
         </div>
         <div class="setting-row">
@@ -453,13 +451,12 @@ onMounted(() => {
         }}</Message>
       </div>
 
-      <div class="step-actions step-actions--compact">
+      <div class="step-actions">
         <Button
           :label="_('ms3_import_next')"
           icon="pi pi-arrow-right"
           icon-pos="right"
-          size="small"
-          severity="primary"
+          severity="success"
           :disabled="!canProceedToStep2"
           @click="currentStep = 2"
         />
@@ -539,6 +536,7 @@ onMounted(() => {
           :label="_('ms3_import_next')"
           icon="pi pi-arrow-right"
           icon-pos="right"
+          severity="success"
           :disabled="!canProceedToStep3"
           @click="currentStep = 3"
         />
@@ -605,7 +603,8 @@ onMounted(() => {
           <Button
             :label="_('ms3_import_start')"
             icon="pi pi-play"
-            :loading="loading"
+            severity="success"
+            :loading="importRunning"
             @click="startImport"
           />
         </div>
@@ -646,7 +645,12 @@ onMounted(() => {
           <template v-else>{{ importResult.message }}</template>
         </Message>
         <div class="step-actions">
-          <Button :label="_('ms3_import_new')" icon="pi pi-plus" @click="resetImport" />
+          <Button
+            :label="_('ms3_import_new')"
+            icon="pi pi-plus"
+            severity="success"
+            @click="resetImport"
+          />
         </div>
       </div>
     </div>
@@ -656,337 +660,239 @@ onMounted(() => {
 <style scoped>
 .import-products {
   padding: 0;
-  max-width: 36rem;
+  max-width: none;
+  width: 100%;
 }
-
-.tab-description {
-  margin: 0 0 0.75rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: var(--ms3-text-muted);
-  background: var(--ms3-bg-muted);
-  border-radius: var(--ms3-radius-md, 0.375rem);
-}
-
 .import-global-error {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
+/* Quiet MODX-style stepper: green marks progress (same as primary CTA). */
 .step-indicators {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 0.25rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
   padding: 0;
 }
-
 .step-indicator {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-  background: var(--ms3-bg-muted);
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--ms3-text-muted, #64748b);
+  font: inherit;
   font-size: 0.875rem;
+  line-height: 1.25;
+  cursor: pointer;
 }
-
-.step-indicator:hover:not(.disabled) {
-  background: var(--ms3-bg-neutral);
+.step-indicator:hover:not(:disabled):not(.disabled) {
+  color: var(--ms3-text-darkest, #1e293b);
+  background: var(--ms3-bg-muted, #f8f9fa);
 }
-
 .step-indicator.active {
-  background: var(--ms3-accent-primary);
-  color: var(--ms3-text-on-primary);
+  color: var(--ms3-text-darkest, #1e293b);
+  font-weight: 600;
 }
-
 .step-indicator.completed {
-  background: var(--p-primary-color, #6cb24a);
-  color: var(--ms3-text-on-primary);
+  color: var(--ms3-text-darkest, #1e293b);
 }
-
+.step-indicator:disabled,
 .step-indicator.disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
-
 .step-number {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 50%;
-  background: rgb(0 0 0 / 10%);
+  border: 1px solid var(--ms3-border-color-alt, #dee2e6);
+  background: var(--ms3-bg-surface, #fff);
+  color: inherit;
+  font-size: 0.75rem;
   font-weight: 600;
-  font-size: 0.8125rem;
+  box-sizing: border-box;
 }
-
 .step-indicator.active .step-number,
 .step-indicator.completed .step-number {
-  background: rgb(255 255 255 / 20%);
+  border-color: var(--p-green-600, #6cb24a);
+  background: var(--p-green-600, #6cb24a);
+  color: #fff;
 }
-
 .step-title {
-  font-weight: 500;
+  font-weight: inherit;
 }
-
 .step-connector {
-  width: 1.25rem;
-  height: 0.125rem;
-  background: var(--ms3-border-color-alt);
-  margin: 0 0.25rem;
+  display: block;
+  width: 1.5rem;
+  height: 1px;
+  margin: 0 0.125rem;
+  background: var(--ms3-border-color-alt, #dee2e6);
   flex-shrink: 0;
 }
-
 .step-connector.active {
-  background: var(--p-primary-color, #6cb24a);
+  background: var(--p-green-600, #6cb24a);
 }
-
 .step-content {
   padding: 0;
 }
-
 .step-content h3 {
-  margin: 0 0 0.5rem;
-  font-size: 0.9375rem;
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: var(--ms3-text-dark, var(--p-text-color));
+  color: var(--ms3-text-darkest, #1e293b);
 }
-
 .step-content h4 {
   margin: 1rem 0 0.5rem;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 600;
 }
-
-.file-source-tabs {
-  margin-bottom: 1rem;
-}
-
-.source-tab-buttons {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.source-tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
-  background: var(--ms3-bg-surface);
-  border-radius: var(--ms3-radius-md);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.875rem;
-}
-
-.source-tab-btn:hover {
-  background: var(--ms3-bg-muted);
-}
-
-.source-tab-btn.active {
-  background: var(--ms3-accent-primary);
-  color: var(--ms3-text-on-primary);
-  border-color: var(--ms3-accent-primary);
-}
-
-.source-tab-content {
-  min-height: 0;
-}
-
 .upload-section {
-  width: fit-content;
-  max-width: 100%;
+  max-width: 28rem;
 }
-
-.upload-input-hidden {
-  display: none;
-}
-
 .upload-area {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.875rem;
-  width: fit-content;
-  max-width: 100%;
-  border: var(--ms3-border-width-focus) dashed var(--ms3-border-color-alt);
-  border-radius: var(--ms3-radius-md, 0.375rem);
-  padding: 0.875rem 1.25rem;
-  text-align: start;
+  gap: 0.75rem;
+  max-width: 28rem;
+  border: 1px dashed var(--ms3-border-color-alt, #dee2e6);
+  border-radius: 0.25rem;
+  padding: var(--p-modx-space-panel, 15px);
   cursor: pointer;
   transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
-  background: var(--ms3-bg-gray-50, var(--ms3-bg-muted));
+    border-color 0.15s,
+    background 0.15s;
+  background: var(--ms3-bg-gray-50, #fafafa);
 }
-
 .upload-area:hover,
 .upload-area:focus-visible {
-  border-color: var(--ms3-accent-primary);
-  background: var(--ms3-bg-accent, #f4faf0);
+  border-color: var(--p-green-600, #6cb24a);
+  background: var(--ms3-bg-success-light, #e8f5e9);
   outline: none;
 }
-
 .upload-area.uploading {
   pointer-events: none;
   opacity: 0.7;
 }
-
-.upload-icon {
-  flex-shrink: 0;
-  font-size: 1.375rem;
-  color: var(--p-primary-color, #6cb24a);
-  margin: 0;
+.upload-input {
+  display: none;
 }
-
+.upload-icon {
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--ms3-text-muted, #64748b);
+}
 .upload-copy {
-  display: inline-flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
   min-width: 0;
 }
-
 .upload-text {
-  font-size: 0.9375rem;
-  font-weight: 500;
+  font-size: 0.875rem;
   line-height: 1.35;
-  margin: 0;
-  color: var(--ms3-text-dark, var(--p-text-color));
+  color: var(--ms3-text-darkest, #1e293b);
 }
-
 .upload-hint {
   font-size: 0.8125rem;
   line-height: 1.35;
-  color: var(--ms3-text-muted);
-  white-space: nowrap;
+  color: var(--ms3-text-muted, #64748b);
 }
-
-.upload-hint::before {
-  content: '·';
-  margin-inline-end: 0.75rem;
-  color: var(--ms3-text-muted);
-  opacity: 0.7;
-}
-
 .modx-browser-section {
   text-align: center;
-  padding: 1rem;
-  background: var(--ms3-bg-gray-50, var(--ms3-bg-muted));
-  border-radius: var(--ms3-radius-md);
-  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  padding: 1.5rem 1rem;
+  background: var(--ms3-bg-gray-50);
+  border-radius: 0.25rem;
+  border: 1px solid var(--ms3-border-color-alt);
 }
-
 .browser-hint {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   color: var(--ms3-text-muted);
 }
-
 .selected-file {
-  margin: 0.5rem 0 0;
-  width: fit-content;
-  max-width: 100%;
-  padding: 0.5rem 0.75rem;
+  margin: 1rem 0;
+  padding: 0.625rem 0.875rem;
   background: var(--ms3-bg-success-light);
-  border-radius: var(--ms3-radius-md);
-  border: var(--ms3-border-width) solid var(--ms3-border-success-light);
+  border-radius: 0.25rem;
+  border: 1px solid var(--ms3-border-success-light);
 }
-
 .selected-file-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
 }
-
 .selected-file-header i {
   color: var(--ms3-text-success-dark);
-  font-size: 1rem;
+  font-size: 1.125rem;
 }
-
 .file-name {
   flex: 1;
   font-weight: 500;
-  font-size: 0.875rem;
   color: var(--ms3-text-success-dark);
 }
-
 .settings-section,
 .update-settings,
 .import-options {
   background: var(--ms3-bg-muted);
-  padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
-  margin: 0.75rem 0 0;
+  padding: var(--p-modx-space-panel, 15px);
+  border-radius: 0.25rem;
+  margin: var(--p-modx-space-panel, 15px) 0;
 }
-
 .setting-row {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  margin: 0.5rem 0;
+  margin: 0;
 }
-
+.setting-row + .setting-row {
+  margin-top: var(--p-modx-space-panel, 15px);
+}
 .setting-row label {
   cursor: pointer;
-  font-size: 0.875rem;
 }
-
 .file-info {
-  margin: 0.75rem 0;
+  margin: 1rem 0;
 }
-
 .step-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt);
+  margin-top: 1.25rem;
+  padding-top: 0.9375rem;
+  border-top: 1px solid var(--ms3-border-color-alt);
 }
-
-.step-actions--compact {
-  justify-content: flex-start;
-  margin-top: 0.75rem;
-  padding-top: 0;
-  border-top: none;
-}
-
 .mapping-table {
-  margin: 0.75rem 0;
+  margin: 1.25rem 0;
 }
-
 .column-info {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
-
 .column-letter {
   font-weight: 600;
   color: var(--ms3-text-hint);
 }
-
 .column-name {
   color: var(--ms3-text-muted);
 }
-
 .mapping-arrow {
   color: var(--ms3-text-muted);
 }
-
 .field-select {
   width: 100%;
   min-width: 12.5rem;
 }
-
 .preview-value {
   color: var(--ms3-text-muted);
   font-size: 0.875rem;
@@ -996,7 +902,6 @@ onMounted(() => {
   white-space: nowrap;
   display: block;
 }
-
 .key-select {
   min-width: 9.375rem;
 }
@@ -1038,7 +943,7 @@ onMounted(() => {
 }
 .progress-section {
   text-align: center;
-  padding: 1.25rem 1rem;
+  padding: 2.5rem 1.25rem;
 }
 .import-progress-bar {
   height: 0.5rem;
