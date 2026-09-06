@@ -29,6 +29,7 @@ import {
   parseRepeaterConfig,
   REPEATER_XTYPE,
 } from '../utils/repeaterField.js'
+import { DATEFIELD_XTYPE } from '../utils/structuredExtraField.js'
 import KeyValueSchemaEditor from './KeyValueSchemaEditor.vue'
 import RepeaterSchemaEditor from './RepeaterSchemaEditor.vue'
 
@@ -106,6 +107,7 @@ const xtypeOptions = computed(() => [
   { label: _('ms3_vue_xtype_combo_vendor'), value: 'ms3-combo-vendor' },
   { label: _('ms3_vue_xtype_combo_autocomplete'), value: 'ms3-combo-autocomplete' },
   { label: _('ms3_vue_xtype_combo_options'), value: 'ms3-combo-options' },
+  { label: _('ms3_vue_xtype_datefield'), value: DATEFIELD_XTYPE },
 ])
 
 /**
@@ -116,6 +118,7 @@ const dbtypeOptions = computed(() => [
   { label: _('ms3_vue_dbtype_text'), value: 'text' },
   { label: _('ms3_vue_dbtype_int'), value: 'int' },
   { label: _('ms3_vue_dbtype_decimal'), value: 'decimal' },
+  { label: _('ms3_vue_dbtype_date'), value: 'date' },
   { label: _('ms3_vue_dbtype_datetime'), value: 'datetime' },
   { label: _('ms3_vue_dbtype_timestamp'), value: 'timestamp' },
   { label: _('ms3_vue_dbtype_tinyint'), value: 'tinyint' },
@@ -158,17 +161,19 @@ const indexTypeOptions = computed(() => [
 const isRepeaterField = computed(() => fieldForm.value.xtype === REPEATER_XTYPE)
 const isKeyValueField = computed(() => fieldForm.value.xtype === KEY_VALUE_XTYPE)
 
+const XTYPE_DB_DEFAULTS = {
+  [REPEATER_XTYPE]: { dbtype: 'json', phptype: 'json', precision: '', null: true },
+  [KEY_VALUE_XTYPE]: { dbtype: 'json', phptype: 'json', precision: '', null: true },
+  [DATEFIELD_XTYPE]: { dbtype: 'date', phptype: 'datetime', precision: '', null: true },
+}
+
 watch(
   () => fieldForm.value.xtype,
   xtype => {
-    if (xtype !== REPEATER_XTYPE && xtype !== KEY_VALUE_XTYPE) {
-      return
+    const defaults = XTYPE_DB_DEFAULTS[xtype]
+    if (defaults) {
+      Object.assign(fieldForm.value, defaults)
     }
-
-    fieldForm.value.dbtype = 'json'
-    fieldForm.value.phptype = 'json'
-    fieldForm.value.precision = ''
-    fieldForm.value.null = true
 
     if (xtype === REPEATER_XTYPE && !fieldForm.value.repeater_config?.columns?.length) {
       fieldForm.value.repeater_config = defaultRepeaterConfig()
