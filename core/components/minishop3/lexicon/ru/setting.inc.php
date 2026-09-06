@@ -24,6 +24,8 @@ $_lang['area_ms3_notifications'] = 'Уведомления';
 
 $_lang['setting_ms3_chunks_categories'] = 'Категории для списка чанков';
 $_lang['setting_ms3_chunks_categories_desc'] = 'Список ID категорий через запятую  для списка чанков.';
+$_lang['setting_ms3_version'] = 'Версия установленного пакета';
+$_lang['setting_ms3_version_desc'] = 'Версия последнего успешно установленного транспортного пакета MiniShop3. Используется для health-check и обнаружения сбоев копирования файлов.';
 $_lang['setting_ms3_tmp_storage'] = 'Хранилище корзины и временных полей заказа';
 $_lang['setting_ms3_tmp_storage_desc'] = "
 Для хранения корзины и временных полей заказа в сессии укажите <strong>session</strong><br>

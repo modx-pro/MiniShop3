@@ -24,6 +24,8 @@ $_lang['area_ms3_notifications'] = 'Notifications';
 
 $_lang['setting_ms3_chunks_categories'] = 'Categories for chunks list';
 $_lang['setting_ms3_chunks_categories_desc'] = 'Comma-separated list of category IDs for chunks list.';
+$_lang['setting_ms3_version'] = 'Installed package version';
+$_lang['setting_ms3_version_desc'] = 'Version of the last successfully installed MiniShop3 transport package. Used for health checks and detecting file copy failures.';
 $_lang['setting_ms3_tmp_storage'] = 'Cart and temporary order fields storage';
 $_lang['setting_ms3_tmp_storage_desc'] = "
 To store cart and temporary order fields in session specify <strong>session</strong><br>

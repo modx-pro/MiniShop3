@@ -34,7 +34,7 @@ $router->group('/api/mgr', function ($router) use ($modx) {
     $router->get('/health', function () use ($modx) {
         return Response::success([
             'status' => 'ok',
-            'version' => $modx->getOption('ms3_version', null, '1.0.0'),
+            'version' => $modx->getOption('ms3_version', null, '1.0.0', true),
             'timestamp' => time(),
             'api' => 'manager'
         ]);
