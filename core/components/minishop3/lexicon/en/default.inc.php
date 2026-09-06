@@ -170,6 +170,7 @@ $_lang['ms3_message_close_all'] = 'close all';
 $_lang['ms3_err_unknown'] = 'Unknown error';
 $_lang['ms3_err_ns'] = 'This field is required';
 $_lang['ms3_err_product_key_required'] = 'Product key is required';
+$_lang['ms3_err_cart_options'] = 'options must be an object or a JSON string';
 $_lang['ms3_err_field_key_required'] = 'Field key is required';
 $_lang['ms3_err_fields_required'] = 'Fields array is required';
 $_lang['ms3_err_field_nf'] = 'Field not found';

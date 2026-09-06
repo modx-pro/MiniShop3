@@ -129,14 +129,23 @@ class CartController
             );
         }
 
-        if (!is_array($options) || $options === []) {
+        if (!is_array($options) && !is_string($options)) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_cart_options'),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $ms3 = $this->modx->services->get('ms3');
+        $options = CartItemManager::normalizeOptions($options);
+
+        if ($options === []) {
             return Response::error(
                 $this->modx->lexicon('ms3_cart_change_options_error'),
                 HttpStatus::BAD_REQUEST
             );
         }
 
-        $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;
         $cart->initialize($this->pageContextKey(), $token);
 

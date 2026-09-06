@@ -170,6 +170,7 @@ $_lang['ms3_message_close_all'] = 'закрыть все';
 $_lang['ms3_err_unknown'] = 'Неизвестная ошибка';
 $_lang['ms3_err_ns'] = 'Это поле обязательно';
 $_lang['ms3_err_product_key_required'] = 'Не указан ключ товара';
+$_lang['ms3_err_cart_options'] = 'options должен быть объектом или JSON-строкой';
 $_lang['ms3_err_field_key_required'] = 'Не указан ключ поля';
 $_lang['ms3_err_fields_required'] = 'Требуется массив полей';
 $_lang['ms3_err_field_nf'] = 'Поле не найдено';
