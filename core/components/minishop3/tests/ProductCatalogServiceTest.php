@@ -125,5 +125,8 @@ $assertSame(
     'images flag keeps allowlisted gallery rows'
 );
 
+$effectiveSingle = \MiniShop3\Services\Category\CategoryProductMenuindexService::effectiveMenuindexSql(42);
+$assertSame(true, str_contains($effectiveSingle, 'msProduct.parent = 42'), 'catalog effective menuindex uses category context');
+
 fwrite(STDOUT, "OK ProductCatalogServiceTest\n");
 exit(0);

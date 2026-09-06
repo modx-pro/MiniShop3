@@ -106,10 +106,16 @@
                index="pk"/>
         <field key="category_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
                index="pk"/>
+        <field key="menuindex" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false"
+               default="0"/>
 
         <index alias="product" name="product" primary="true" unique="true" type="BTREE">
             <column key="product_id" length="" collation="A" null="false"/>
             <column key="category_id" length="" collation="A" null="false"/>
+        </index>
+        <index alias="category_menuindex" name="category_menuindex" primary="false" unique="false" type="BTREE">
+            <column key="category_id" length="" collation="A" null="false"/>
+            <column key="menuindex" length="" collation="A" null="false"/>
         </index>
 
         <aggregate alias="Product" class="MiniShop3\Model\msProduct" local="product_id" foreign="id" cardinality="one" owner="foreign"/>

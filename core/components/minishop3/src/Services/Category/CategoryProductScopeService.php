@@ -232,20 +232,11 @@ class CategoryProductScopeService
     }
 
     /**
-     * menuindex reorder applies only to direct children (not additional-category-only links).
+     * Whether drag-drop menuindex reorder is allowed in this category grid (#625).
      */
     public function canReorderInCategory(int $productId, int $categoryId): bool
     {
-        if ($productId <= 0 || $categoryId <= 0) {
-            return false;
-        }
-
-        $product = $this->modx->getObject(msProduct::class, $productId);
-        if (!$product) {
-            return false;
-        }
-
-        return (int) $product->get('parent') === $categoryId;
+        return $this->findInCategory($categoryId, $productId, false) !== null;
     }
 
     /**
