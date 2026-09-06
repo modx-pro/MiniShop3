@@ -28,27 +28,7 @@ final class HeadlessCartSqliteHttpTest extends WebApiTestCase
 
     public function testCartMutationsPersistViaSqliteThroughHttpEnvelope(): void
     {
-        $store = new OrderProductSqliteStore();
-        $draft = new RecordingMsOrder([
-            'id' => 42,
-            'cart_cost' => 0,
-            'delivery_cost' => 0,
-            'cost' => 0,
-            'weight' => 0,
-        ]);
-        $product = new SqliteDraftCartProduct([
-            'id' => JourneyProductCatalog::FIXTURE_PRODUCT_ID,
-            'pagetitle' => 'Shirt',
-            'price' => 25.0,
-            'old_price' => 30.0,
-            'weight' => 0.5,
-            'class_key' => msProduct::class,
-            'deleted' => 0,
-            'published' => 1,
-        ]);
-
-        $this->modx->ms3->cart = $this->makeSqliteDraftCart($store, $draft, $product);
-        $this->modx->journeyTokens->putToken('sqlite-http-token', 0);
+        $store = $this->installSqliteDraftCart();
 
         $add = $this->dispatch(
             'POST',
@@ -87,5 +67,58 @@ final class HeadlessCartSqliteHttpTest extends WebApiTestCase
         self::assertSame(HttpStatus::OK, $get['status']);
         self::assertTrue($get['success']);
         self::assertSame(3, $get['data']['status']['total_count'] ?? null);
+    }
+
+    public function testCartAddOptionsJsonStringPersistsViaSqliteThroughHttpEnvelope(): void
+    {
+        $store = $this->installSqliteDraftCart();
+
+        $add = $this->dispatch(
+            'POST',
+            '/api/v1/cart/add',
+            [],
+            [
+                'id' => JourneyProductCatalog::FIXTURE_PRODUCT_ID,
+                'count' => 1,
+                'options' => '{"color":"red"}',
+            ],
+            [],
+            'sqlite-http-token'
+        );
+        self::assertSame(HttpStatus::OK, $add['status'], $add['message']);
+        self::assertTrue($add['success']);
+        $key = (string) ($add['data']['last_key'] ?? '');
+        self::assertNotSame('', $key);
+
+        $row = $store->findOne(['order_id' => 42, 'product_key' => $key]);
+        self::assertNotNull($row);
+        self::assertSame(['color' => 'red'], $row['options']);
+    }
+
+    private function installSqliteDraftCart(): OrderProductSqliteStore
+    {
+        $store = new OrderProductSqliteStore();
+        $draft = new RecordingMsOrder([
+            'id' => 42,
+            'cart_cost' => 0,
+            'delivery_cost' => 0,
+            'cost' => 0,
+            'weight' => 0,
+        ]);
+        $product = new SqliteDraftCartProduct([
+            'id' => JourneyProductCatalog::FIXTURE_PRODUCT_ID,
+            'pagetitle' => 'Shirt',
+            'price' => 25.0,
+            'old_price' => 30.0,
+            'weight' => 0.5,
+            'class_key' => msProduct::class,
+            'deleted' => 0,
+            'published' => 1,
+        ]);
+
+        $this->modx->ms3->cart = $this->makeSqliteDraftCart($store, $draft, $product);
+        $this->modx->journeyTokens->putToken('sqlite-http-token', 0);
+
+        return $store;
     }
 }

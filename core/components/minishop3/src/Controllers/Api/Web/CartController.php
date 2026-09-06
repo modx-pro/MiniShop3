@@ -7,6 +7,7 @@ use MiniShop3\Router\DomainMs2Response;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Api\WebApiContextResolver;
+use MiniShop3\Services\Cart\CartItemManager;
 use MiniShop3\Services\Cart\CartResponseNormalizer;
 use MiniShop3\Services\Catalog\CatalogQuery;
 use MODX\Revolution\modX;
@@ -26,7 +27,7 @@ class CartController
     public function __construct(modX $modx)
     {
         $this->modx = $modx;
-        $this->modx->lexicon->load('minishop3:customer', 'minishop3:default');
+        $this->modx->lexicon->load('minishop3:customer', 'minishop3:default', 'minishop3:cart');
     }
 
     /**
@@ -48,6 +49,15 @@ class CartController
         if ($token === '') {
             return $this->tokenRequiredError();
         }
+
+        if (!is_array($options) && !is_string($options)) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_cart_options'),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $options = CartItemManager::normalizeOptions($options);
 
         $ms3 = $this->modx->services->get('ms3');
         $cart = $ms3->cart;

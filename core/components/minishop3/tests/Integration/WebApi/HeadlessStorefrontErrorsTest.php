@@ -8,6 +8,7 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Tests\Integration\WebApi\Support\JourneyBrokenTokenMint;
 use MiniShop3\Tests\Integration\WebApi\Support\JourneyOrder;
 use MiniShop3\Tests\Integration\WebApi\Support\JourneyProductCatalog;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Error / auth edge cases for headless Web API journey (#574).
@@ -64,6 +65,70 @@ final class HeadlessStorefrontErrorsTest extends WebApiTestCase
             $token
         );
         $this->assertApiError($res, HttpStatus::BAD_REQUEST, 'ms3_cart_change_options_error');
+    }
+
+    #[DataProvider('cartAddOptionsJsonStringCases')]
+    public function testCartAddOptionsJsonString(string $options, array $expectedOptions): void
+    {
+        $res = $this->dispatch('POST', '/api/v1/cart/add', [], [
+            'id' => JourneyProductCatalog::FIXTURE_PRODUCT_ID,
+            'count' => 1,
+            'options' => $options,
+        ]);
+
+        self::assertSame(HttpStatus::OK, $res['status'], $res['message']);
+        self::assertTrue($res['success']);
+
+        $key = (string) ($res['data']['last_key'] ?? '');
+        self::assertNotSame('', $key);
+        $item = $res['data']['cart'][$key] ?? null;
+        self::assertIsArray($item);
+        self::assertSame($expectedOptions, $item['options'] ?? null);
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: array<string, mixed>}>
+     */
+    public static function cartAddOptionsJsonStringCases(): iterable
+    {
+        yield 'empty array' => ['[]', []];
+        yield 'empty object' => ['{}', []];
+        yield 'object' => ['{"color":"red"}', ['color' => 'red']];
+        yield 'invalid json' => ['{bad', []];
+    }
+
+    public function testCartAddOptionsInvalidTypeReturns400(): void
+    {
+        $token = $this->modx->journeyTokens->generateCustomerToken()['token'];
+        $this->modx->journeyTokens->putToken($token, 0);
+
+        $res = $this->dispatch(
+            'POST',
+            '/api/v1/cart/add',
+            [],
+            [
+                'id' => JourneyProductCatalog::FIXTURE_PRODUCT_ID,
+                'count' => 1,
+                'options' => 1,
+            ],
+            [],
+            $token
+        );
+        $this->assertApiError($res, HttpStatus::BAD_REQUEST, 'ms3_err_cart_options');
+    }
+
+    public function testCartOptionsErrorLexiconExistsInEnAndRu(): void
+    {
+        $lexiconRoot = dirname(__DIR__, 2) . '/../lexicon';
+        foreach (['en', 'ru'] as $lang) {
+            foreach (['default', 'cart'] as $topic) {
+                $path = $lexiconRoot . "/{$lang}/{$topic}.inc.php";
+                self::assertFileExists($path);
+                $contents = file_get_contents($path);
+                self::assertIsString($contents);
+                self::assertStringContainsString("'ms3_err_cart_options'", $contents, $path);
+            }
+        }
     }
 
     public function testSubmitEmptyCartReturnsBusinessError(): void
