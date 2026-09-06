@@ -3,8 +3,10 @@
 namespace MiniShop3\Services\Order;
 
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerAddress;
 use MiniShop3\Model\msOrder;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MODX\Revolution\modX;
 
 /**
@@ -183,6 +185,34 @@ class OrderAddressManager
                 $orderData[$orderField] = $customerData[$customerField];
             }
         }
+    }
+
+    /**
+     * Prefill empty checkout profile fields on the customer's draft from their public profile.
+     *
+     * Only fills fields that are still empty in the draft (does not overwrite checkout edits).
+     */
+    public function prefillProfileFieldsFromCustomer(msOrder $draft, msCustomer $customer): void
+    {
+        $draftCustomerId = (int) $draft->get('customer_id');
+        $customerId = (int) $customer->get('id');
+        if ($draftCustomerId <= 0 || $draftCustomerId !== $customerId) {
+            return;
+        }
+
+        $customerData = [];
+        foreach (CustomerPublicDto::CORE_PROFILE_EDITABLE_FIELDS as $field) {
+            $value = $customer->get($field);
+            if ($value !== null && $value !== '') {
+                $customerData[$field] = $value;
+            }
+        }
+        if ($customerData === []) {
+            return;
+        }
+
+        $orderData = $this->draftManager->toArray($draft);
+        $this->fillFromCustomer($draft, $orderData, $customerData);
     }
 
     /**

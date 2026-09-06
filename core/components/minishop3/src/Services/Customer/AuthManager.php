@@ -6,6 +6,8 @@ use MiniShop3\Controllers\Auth\AuthProviderInterface;
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Services\Cart\CartDraftContext;
+use MiniShop3\Services\Order\OrderAddressManager;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\TokenService;
 use MiniShop3\Utils\CookieHelper;
@@ -256,10 +258,46 @@ class AuthManager
             session_regenerate_id(true);
         }
 
+        $this->prefillOrderDraftFromCustomer($customer, $tokenString, $draftManager);
+
         return [
             'token' => $tokenString,
             'expires_at' => $tokenObj->get('expires_at'),
         ];
+    }
+
+    /**
+     * Copy empty profile fields from the authenticated customer into their draft order.
+     *
+     * Failures are logged and must not block login/register.
+     */
+    private function prefillOrderDraftFromCustomer(
+        msCustomer $customer,
+        string $token,
+        OrderDraftManager $draftManager
+    ): void {
+        if ($token === '' || !$this->modx->services->has('ms3_order_address_manager')) {
+            return;
+        }
+
+        try {
+            $pageCtx = $this->modx->context->key ?? CartDraftContext::DEFAULT_CONTEXT;
+            $ctx = CartDraftContext::resolve($this->modx, $pageCtx);
+            $draft = $draftManager->findDraftByToken($token, $ctx);
+            if (!$draft) {
+                return;
+            }
+
+            /** @var OrderAddressManager $addressManager */
+            $addressManager = $this->modx->services->get('ms3_order_address_manager');
+            $addressManager->prefillProfileFieldsFromCustomer($draft, $customer);
+        } catch (\Throwable $e) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[AuthManager] prefillOrderDraftFromCustomer failed for customer #'
+                . (int) $customer->get('id') . ': ' . $e->getMessage()
+            );
+        }
     }
 
     /**
