@@ -83,6 +83,7 @@ return [
     'msOnGetProductPrice',
     'msOnGetProductWeight',
     'msOnGetProductFields',
+    'msOnGetPublicSeo',
 
     // msProducts snippet events (for extending with external packages)
     'msOnProductsLoad',    // After loading products, for bulk data loading

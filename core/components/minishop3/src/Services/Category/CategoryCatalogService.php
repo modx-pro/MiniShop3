@@ -6,6 +6,7 @@ namespace MiniShop3\Services\Category;
 
 use MiniShop3\Model\msCategory;
 use MiniShop3\Services\Catalog\CatalogQuery;
+use MiniShop3\Services\Seo\PublicSeoService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
@@ -125,6 +126,9 @@ class CategoryCatalogService
     }
 
     /**
+     * Query: context, include_hidden, include_content, include_breadcrumbs,
+     *        include_children, include_seo (default 1). List/tree omit seo.
+     *
      * @param array<string, mixed> $params
      * @return array<string, mixed>|null
      */
@@ -158,7 +162,10 @@ class CategoryCatalogService
             );
         }
 
-        return $payload;
+        /** @var PublicSeoService $seo */
+        $seo = $this->modx->services->get('ms3_public_seo');
+
+        return $seo->maybeAttachCategory($payload, $params);
     }
 
     /**
