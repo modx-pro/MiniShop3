@@ -6,6 +6,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Catalog\CatalogResolve;
 use MiniShop3\Services\Product\ProductCatalogFilterException;
 use MiniShop3\Services\Product\ProductCatalogService;
 use MiniShop3\Services\Product\ProductFacetService;
@@ -46,6 +47,48 @@ class ProductController
         }
 
         $product = $this->catalog()->getById($productId, $params);
+
+        if ($product === null) {
+            return Response::error(
+                $this->modx->lexicon('ms3_err_product_nf'),
+                HttpStatus::NOT_FOUND
+            );
+        }
+
+        return Response::success($product);
+    }
+
+    /**
+     * GET /api/v1/product/get?alias=…|uri=…&context=…
+     *
+     * @param array<string, mixed> $params
+     */
+    public function resolve(array $params = []): Response
+    {
+        $parsed = CatalogResolve::parseLookup(
+            $params,
+            (string) ($this->modx->context->key ?? 'web'),
+        );
+
+        if (!$parsed['ok']) {
+            $lexiconKey = match ($parsed['error']) {
+                'required' => 'ms3_err_catalog_lookup_required',
+                'conflict' => 'ms3_err_catalog_lookup_conflict',
+                'invalid' => 'ms3_err_catalog_lookup_invalid',
+            };
+
+            return Response::error(
+                $this->modx->lexicon($lexiconKey),
+                HttpStatus::BAD_REQUEST
+            );
+        }
+
+        $product = $this->catalog()->resolveByLookup(
+            $params,
+            $parsed['field'],
+            $parsed['value'],
+            $parsed['context'],
+        );
 
         if ($product === null) {
             return Response::error(

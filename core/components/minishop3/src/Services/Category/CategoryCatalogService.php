@@ -6,6 +6,7 @@ namespace MiniShop3\Services\Category;
 
 use MiniShop3\Model\msCategory;
 use MiniShop3\Services\Catalog\CatalogQuery;
+use MiniShop3\Services\Catalog\CatalogResolve;
 use MiniShop3\Services\Seo\PublicSeoService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
@@ -169,6 +170,33 @@ class CategoryCatalogService
     }
 
     /**
+     * Resolve category by alias OR uri (+ context). Same payload as getById().
+     *
+     * @param array<string, mixed> $params
+     */
+    public function resolveByLookup(
+        array $params,
+        string $field,
+        string $value,
+        string $context,
+    ): ?array {
+        $paramsWithContext = array_merge($params, ['context' => $context]);
+        $includeHidden = CatalogQuery::toBool($params['include_hidden'] ?? false);
+
+        $categoryId = match ($field) {
+            'alias' => $this->findIdByAlias($value, $paramsWithContext, $includeHidden),
+            'uri' => $this->findIdByUri($value, $paramsWithContext, $includeHidden),
+            default => null,
+        };
+
+        if ($categoryId === null) {
+            return null;
+        }
+
+        return $this->getById($categoryId, $paramsWithContext);
+    }
+
+    /**
      * @param array<string, mixed> $params
      * @return array{items: list<array<string, mixed>>, total: int, limit: int, offset: int}
      */
@@ -263,6 +291,47 @@ class CategoryCatalogService
         $category = $this->modx->getObject(msCategory::class, $criteria);
 
         return $category ?: null;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function findIdByAlias(string $alias, array $params, bool $includeHidden): ?int
+    {
+        return CatalogResolve::findUniqueId(
+            $this->modx,
+            msCategory::class,
+            $this->lookupCriteria(['alias' => $alias], $params, $includeHidden),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function findIdByUri(string $uri, array $params, bool $includeHidden): ?int
+    {
+        foreach (CatalogResolve::uriLookupVariants($uri) as $variant) {
+            $id = CatalogResolve::findUniqueId(
+                $this->modx,
+                msCategory::class,
+                $this->lookupCriteria(['uri' => $variant], $params, $includeHidden),
+            );
+            if ($id !== null) {
+                return $id;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    private function lookupCriteria(array $extra, array $params, bool $includeHidden): array
+    {
+        return $this->publicCriteria(array_merge($extra, $this->visibilityCriteria($params, $includeHidden)));
     }
 
     /**
