@@ -148,11 +148,16 @@ class ServiceRegistryFactories
                 );
             },
 
+            'ms3_order_lifecycle_ports' => static function (modX $modx, object $services, string $class): object {
+                return new $class();
+            },
+
             'ms3_order_status' => static function (modX $modx, object $services, string $class): object {
                 return new $class(
                     $modx,
                     self::ms3($modx),
-                    $services->get('ms3_order_log')
+                    $services->get('ms3_order_log'),
+                    $services->get('ms3_order_lifecycle_ports')
                 );
             },
 

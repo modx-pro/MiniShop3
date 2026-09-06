@@ -62,15 +62,32 @@ use MODX\Revolution\modX;
  *         }
  *
  *         if ($data['status'] === 'succeeded') {
- *             $order->set('status_id', $this->getPaidStatusId());
- *             $order->save();
- *             return $this->success('Payment confirmed');
+ *             // Non-draft status changes must go through OrderStatusService (issue #592).
+ *             // Prefer PaymentLifecycle (#590) when available; until then:
+ *             $status = $this->modx->services->get('ms3_order_status');
+ *             $result = $status->change(
+ *                 (int) $order->get('id'),
+ *                 $this->getPaidStatusId(),
+ *                 false,
+ *                 ['idempotent' => true]
+ *             );
+ *             return $result === true
+ *                 ? $this->success('Payment confirmed')
+ *                 : $this->error((string) $result);
  *         }
  *
  *         if ($data['status'] === 'canceled') {
- *             $order->set('status_id', $this->getCanceledStatusId());
- *             $order->save();
- *             return $this->error('Payment canceled');
+ *             $status = $this->modx->services->get('ms3_order_status');
+ *             $result = $status->change(
+ *                 (int) $order->get('id'),
+ *                 $this->getCanceledStatusId(),
+ *                 false,
+ *                 ['idempotent' => true]
+ *             );
+ *             // ACK the webhook even when payment was canceled; distinguish transport vs business.
+ *             return $result === true
+ *                 ? $this->success('Payment canceled')
+ *                 : $this->error((string) $result);
  *         }
  *
  *         return $this->error('Payment failed');
