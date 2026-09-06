@@ -1210,3 +1210,9 @@ $_lang['ms3_utilities_import_description'] = 'Import products from CSV file. Upl
 $_lang['ms3_utilities_extra_fields_description'] = 'Create additional fields for MiniShop3 models. Fields are automatically added to database tables.';
 $_lang['ms3_utilities_grid_fields_description'] = 'Configure admin grid columns: visibility, sorting, filtering, order. Add computed and related fields.';
 $_lang['ms3_utilities_model_fields_description'] = 'Configure form fields for editing orders, vendors, and other entities. Group by sections, set visibility and order.';
+
+// Category options tab toasts (#615 / #7)
+$_lang['ms3_options_order_saved'] = 'Order saved';
+$_lang['ms3_options_added'] = 'Added';
+$_lang['ms3_options_removed'] = 'Removed';
+$_lang['ms3_options_copied'] = 'Copied: {copied}, skipped: {skipped}';

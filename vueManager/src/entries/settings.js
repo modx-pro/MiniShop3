@@ -5,33 +5,9 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
-import { createApp } from 'vue'
-
 import SettingsPage from '../components/SettingsPage.vue'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-
-function createVueApp() {
-  const app = createApp(SettingsPage)
-
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
-    locale: getPrimeVueLocale(),
-  })
-  app.use(ConfirmationService)
-  app.use(ToastService)
-
-  return app
-}
 
 export function init(selector = '#ms3-vue-settings') {
   const $el = document.querySelector(selector)
@@ -39,7 +15,7 @@ export function init(selector = '#ms3-vue-settings') {
     return null
   }
 
-  const app = createVueApp()
+  const app = createMs3VueApp(SettingsPage)
   app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'

@@ -369,6 +369,15 @@ onBeforeUnmount(() => {
   min-height: 25rem;
 }
 
+/* One inset for every product tab — children must not add a second padding layer */
+.product-tabs :deep(.p-tabpanels) {
+  padding: var(--ms3-tab-panel-padding, var(--ms3-spacing-4, 1rem));
+}
+
+.product-tabs :deep(.p-tabpanel) {
+  padding: 0;
+}
+
 .extjs-container {
   min-height: 18.75rem;
   width: 100%;
@@ -381,7 +390,6 @@ onBeforeUnmount(() => {
 
 /* Fix padding for ExtJS panels inside Vue tabs */
 .extjs-container :deep(.x-panel-body) {
-  padding: 0.625rem;
+  padding: 0;
 }
-
 </style>

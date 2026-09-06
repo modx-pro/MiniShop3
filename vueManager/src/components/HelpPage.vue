@@ -77,9 +77,13 @@ const resourceCards = computed(() => [
   },
 ])
 
+function isExternal(href) {
+  return Boolean(href && href.startsWith('http'))
+}
+
 function navigateTo(href) {
   if (href && href !== '#') {
-    if (href.startsWith('http')) {
+    if (isExternal(href)) {
       window.open(href, '_blank')
     } else {
       window.location.href = href
@@ -106,7 +110,7 @@ function navigateTo(href) {
     <!-- Quick links -->
     <Card class="ms3-quick-links">
       <template #content>
-        <div class="quick-links-grid">
+        <nav class="quick-links-grid" :aria-label="_('ms3_help')">
           <Button
             v-for="link in quickLinks"
             :key="link.href"
@@ -114,28 +118,29 @@ function navigateTo(href) {
             :icon="link.icon"
             severity="secondary"
             outlined
+            size="small"
             @click="navigateTo(link.href)"
           />
-        </div>
+        </nav>
       </template>
     </Card>
 
-    <!-- Resource cards -->
+    <!-- Resource cards: keep Card chrome; real <a> for keyboard / middle-click -->
     <div class="ms3-resource-cards">
-      <Card
-        v-for="card in resourceCards"
-        :key="card.title"
-        class="resource-card"
-        @click="navigateTo(card.href)"
-      >
+      <Card v-for="card in resourceCards" :key="card.title" class="resource-card">
         <template #content>
-          <div class="resource-content">
-            <i :class="[card.icon, 'resource-icon']" />
-            <div class="resource-text">
+          <a
+            class="resource-link"
+            :href="card.href"
+            :target="isExternal(card.href) ? '_blank' : undefined"
+            :rel="isExternal(card.href) ? 'noopener noreferrer' : undefined"
+          >
+            <i :class="[card.icon, 'resource-icon']" aria-hidden="true" />
+            <span class="resource-text">
               <strong>{{ card.title }}</strong>
               <span>{{ card.text }}</span>
-            </div>
-          </div>
+            </span>
+          </a>
         </template>
       </Card>
     </div>
@@ -153,7 +158,9 @@ function navigateTo(href) {
 <style scoped>
 .ms3-help-page {
   padding: 1rem;
-  max-width: 75rem;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
 }
 
 .ms3-help-header {
@@ -195,16 +202,17 @@ function navigateTo(href) {
 
 .ms3-resource-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .resource-card {
-  cursor: pointer;
+  min-width: 0;
   transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .resource-card:hover {
@@ -212,36 +220,72 @@ function navigateTo(href) {
   box-shadow: var(--ms3-shadow-dropdown);
 }
 
-.resource-content {
+.resource-card :deep(.p-card-body) {
+  padding: 0.875rem 1rem;
+}
+
+.resource-card :deep(.p-card-content) {
+  padding: 0;
+}
+
+.resource-link {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 0.75rem;
+  text-align: start;
+  text-decoration: none;
+  color: inherit;
+  outline: none;
+}
+
+.resource-link:focus-visible {
+  outline: 2px solid var(--p-primary-color, #6cb24a);
+  outline-offset: 0.25rem;
+  border-radius: var(--ms3-radius-sm, 0.25rem);
 }
 
 .resource-icon {
-  font-size: 2rem;
-  color: var(--p-primary-color);
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-top: 0.125rem;
+  color: var(--p-primary-color, #6cb24a);
 }
 
 .resource-text {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
 }
 
 .resource-text strong {
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
   color: var(--p-text-color);
 }
 
 .resource-text span {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
   color: var(--p-text-muted-color);
 }
 
 .ms3-support-section :deep(a) {
-  color: var(--p-primary-color);
+  color: var(--p-primary-color, #6cb24a);
+}
+
+@media (max-width: 64rem) {
+  .ms3-resource-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .ms3-resource-cards {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

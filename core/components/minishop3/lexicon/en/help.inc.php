@@ -26,7 +26,7 @@ $_lang['ms3_github_title'] = 'github.com';
 $_lang['ms3_help'] = 'Help and support';
 $_lang['ms3_help_text'] = 'MiniShop3 - the most flexible and fast e-commerce component for MODX3.';
 $_lang['ms3_help_text_support'] = '<strong>You can support MiniShop3 financially:</strong>
-<br>- All details <a href="https://modx.pro/about" target="_blank">here</a>';
+<br>- All details <a href="https://modx.pro/about" target="_blank">on modx.pro</a>';
 $_lang['ms3_lexicons_href'] = '?a=workspaces/lexicon&ns=minishop3';
 $_lang['ms3_lexicons_text'] = 'Lexicon management';
 $_lang['ms3_localization_href'] = 'https://crowdin.com/project/minishop3-ecommerce';

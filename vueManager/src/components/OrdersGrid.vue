@@ -401,7 +401,13 @@ function getDefaultColumns() {
       width: '7.5rem',
       type: 'actions',
       actions: [
-        { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+        {
+          name: 'edit',
+          handler: 'edit',
+          icon: 'pi-pencil',
+          label: 'edit',
+          severity: 'secondary',
+        },
         {
           name: 'delete',
           handler: 'delete',
@@ -422,7 +428,13 @@ function getDefaultColumns() {
 function getActionsConfig(column) {
   if (!column.actions || column.actions.length === 0) {
     return [
-      { name: 'edit', handler: 'edit', icon: 'pi-pencil', label: 'edit' },
+      {
+        name: 'edit',
+        handler: 'edit',
+        icon: 'pi-pencil',
+        label: 'edit',
+        severity: 'secondary',
+      },
       {
         name: 'delete',
         handler: 'delete',
@@ -466,7 +478,7 @@ onMounted(async () => {
             <Button
               :label="_('ms3_order_create')"
               icon="pi pi-plus"
-              severity="success"
+              severity="primary"
               size="small"
               @click="createNewOrder"
             />
@@ -586,6 +598,7 @@ onMounted(async () => {
             <Button
               :label="_('apply_filters')"
               icon="pi pi-filter"
+              severity="secondary"
               size="small"
               @click="applyFilters"
             />

@@ -395,9 +395,11 @@ onMounted(() => {
     <ProductGalleryToolbar
       :sources="sources"
       :current-source-id="currentSourceId"
+      :search-query="searchQuery"
       @change-source="onChangeSource"
       @regenerate-all="onRegenerateAll"
       @delete-all="onDeleteAll"
+      @search="onSearch"
     />
 
     <GalleryUploader
@@ -416,8 +418,8 @@ onMounted(() => {
       :total="total"
       :loading="isLoading"
       :page-size="pageSize"
+      :search-query="searchQuery"
       @sort="onSort"
-      @search="onSearch"
       @page-change="onPageChange"
       @edit="onEdit"
       @show="onShow"
@@ -436,7 +438,10 @@ onMounted(() => {
 
 <style scoped>
 .product-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.5rem;
+  padding: 0;
 }
 </style>

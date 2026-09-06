@@ -450,8 +450,8 @@ function addSuggestion(s) {
 }
 
 .combo-options-suggestion:hover {
-  background: var(--p-primary-color, #10b981);
-  border-color: var(--p-primary-color, #10b981);
+  background: var(--p-primary-color);
+  border-color: var(--p-primary-color);
   color: #fff;
 }
 </style>

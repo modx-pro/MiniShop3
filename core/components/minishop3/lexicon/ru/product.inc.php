@@ -164,7 +164,7 @@ $_lang['ms3_gallery_errors'] = 'Ошибки при загрузке';
 // Строки Uppy для загрузки в галерею
 $_lang['ms3_gallery_uppy_drop_paste'] = 'Перетащите файлы сюда или %{browse}';
 $_lang['ms3_gallery_uppy_browse'] = 'выбрать';
-$_lang['ms3_gallery_uppy_browse_files'] = 'выбрать файлы';
+$_lang['ms3_gallery_uppy_browse_files'] = 'Выбрать файлы';
 $_lang['ms3_gallery_uppy_browse_folders'] = 'выбрать папки';
 $_lang['ms3_gallery_uppy_upload_complete'] = 'Загрузка завершена';
 $_lang['ms3_gallery_uppy_upload_failed'] = 'Ошибка загрузки';
@@ -193,8 +193,11 @@ $_lang['ms3_gallery_uppy_pause_upload'] = 'Приостановить загру
 $_lang['ms3_gallery_uppy_resume_upload'] = 'Возобновить загрузку';
 
 $_lang['ms3_gallery_search_placeholder'] = 'Поиск файлов...';
+$_lang['ms3_gallery_search_clear'] = 'Очистить поиск';
+$_lang['ms3_gallery_search_empty'] = 'По запросу ничего не найдено.';
 $_lang['ms3_gallery_empty_text'] = 'Файлов нет. Загрузите через область выше.';
 $_lang['ms3_gallery_drag_hint'] = 'Перетащите для изменения порядка';
+$_lang['ms3_gallery_item_hint'] = 'Перетащите для порядка. Enter или двойной клик — свойства. Правый клик — меню.';
 $_lang['ms3_product_change_source_confirm'] = 'Вы уверены, что хотите изменить источник файлов? Страница будет перезагружена.';
 
 $_lang['ms3_product_data_vue'] = 'Данные товара (Vue)';

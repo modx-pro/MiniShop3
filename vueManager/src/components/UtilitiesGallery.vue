@@ -160,6 +160,7 @@ onMounted(() => {
         }}</label>
         <InputNumber
           v-model="limit"
+          class="limit-stepper"
           input-id="limit-input"
           :min="1"
           :max="100"
@@ -167,6 +168,7 @@ onMounted(() => {
           show-buttons
           button-layout="horizontal"
           :step="5"
+          size="small"
           decrement-button-class="p-button-secondary"
           increment-button-class="p-button-secondary"
           increment-button-icon="pi pi-plus"
@@ -180,6 +182,7 @@ onMounted(() => {
       <Button
         :label="_('ms3_utilities_gallery_refresh', 'Regenerate Thumbnails')"
         icon="pi pi-refresh"
+        size="small"
         :loading="isRunning"
         :disabled="!canStart"
         severity="primary"
@@ -189,6 +192,7 @@ onMounted(() => {
         v-if="isCompleted"
         :label="_('ms3_utilities_gallery_reset', 'Reset')"
         icon="pi pi-times"
+        size="small"
         severity="secondary"
         class="reset-btn"
         @click="resetState"
@@ -227,84 +231,167 @@ onMounted(() => {
 
 <style scoped>
 .utilities-gallery {
-  padding: 1.25rem;
-  max-width: 50rem;
+  padding: 0;
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .info-card {
-  margin-bottom: 1.25rem;
+  margin: 0;
+}
+
+.info-card :deep(.p-card-body),
+.info-card :deep(.p-card-content) {
+  padding: 0.75rem 1rem;
 }
 
 .info-content {
-  line-height: 1.8;
+  line-height: 1.45;
+  font-size: 0.875rem;
+  color: var(--ms3-text-muted);
 }
 
 .info-content :deep(strong) {
-  color: var(--ms3-text-accent-dark);
+  color: var(--ms3-text-dark);
+  font-weight: 600;
 }
 
 .params-fieldset {
-  margin-bottom: 1.25rem;
+  margin: 0;
+}
+
+.params-fieldset :deep(.p-fieldset-content) {
+  padding: 0.75rem;
 }
 
 .thumbnails-info {
-  font-family: monospace;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.45;
   background: var(--ms3-bg-muted);
-  padding: 0.625rem;
-  border-radius: 0.25rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--ms3-radius-sm, 0.25rem);
+  overflow: auto;
+  max-height: 7.5rem;
 }
 
 .thumbnails-info :deep(strong) {
-  color: var(--ms3-text-hint);
+  color: var(--ms3-text-dark);
 }
 
 .settings-section {
+  width: fit-content;
+  max-width: 100%;
   background: var(--ms3-bg-muted);
-  padding: 0.9375rem 1.25rem;
-  border-radius: 0.375rem;
-  margin-bottom: 1.25rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--ms3-radius-md, 0.375rem);
+  border: 1px solid var(--ms3-border-color);
 }
 
 .setting-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.9375rem;
+  gap: 0.625rem 0.875rem;
 }
 
 .setting-row label {
   font-weight: 500;
-  min-width: 9.375rem;
+  font-size: 0.875rem;
+  color: var(--ms3-text-muted);
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* One cohesive stepper control */
+.limit-stepper {
+  --limit-control-h: 2rem;
+  display: inline-flex;
+  width: auto !important;
+  height: var(--limit-control-h);
+  border: 1px solid var(--ms3-border-color);
+  border-radius: var(--ms3-radius-md, 0.375rem);
+  overflow: hidden;
+  background: var(--ms3-bg-surface, #fff);
+  vertical-align: middle;
+}
+
+.limit-stepper.p-inputnumber,
+.limit-stepper :deep(.p-inputnumber) {
+  display: inline-flex;
+  align-items: stretch;
+  height: var(--limit-control-h);
+  width: auto;
+  line-height: 1;
+}
+
+.limit-stepper :deep(.p-inputnumber-input) {
+  width: 2.75rem !important;
+  min-width: 2.75rem;
+  flex: 0 0 2.75rem;
+  height: var(--limit-control-h) !important;
+  min-height: var(--limit-control-h) !important;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 0 0.25rem !important;
+  margin: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.limit-stepper :deep(.p-inputnumber-button) {
+  width: var(--limit-control-h) !important;
+  min-width: var(--limit-control-h) !important;
+  height: var(--limit-control-h) !important;
+  min-height: var(--limit-control-h) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box;
+  align-self: stretch;
+}
+
+.limit-stepper :deep(.p-inputnumber-decrement-button) {
+  border-inline-end: 1px solid var(--ms3-border-color) !important;
+}
+
+.limit-stepper :deep(.p-inputnumber-increment-button) {
+  border-inline-start: 1px solid var(--ms3-border-color) !important;
 }
 
 .action-section {
   display: flex;
-  gap: 0.625rem;
-  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .reset-btn {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .progress-section {
   background: var(--ms3-bg-surface);
-  border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
-  border-radius: 0.375rem;
-  padding: 0.9375rem;
-  margin-bottom: 1.25rem;
+  border: var(--ms3-border-width) solid var(--ms3-border-color);
+  border-radius: var(--ms3-radius-md, 0.375rem);
+  padding: 0.75rem;
 }
 
 .progress-labels {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.625rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
+  font-size: 0.875rem;
 }
 
 .progress-percent {
-  color: var(--ms3-text-accent-dark);
+  color: var(--p-primary-color, #6cb24a);
 }
 
 .progress-iteration {
@@ -316,14 +403,14 @@ onMounted(() => {
 }
 
 .progress-bar :deep(.p-progressbar-value) {
-  background: var(--ms3-accent-teal);
+  background: var(--p-primary-color, #6cb24a);
 }
 
 .status-message {
-  margin-top: 0.9375rem;
+  margin: 0;
 }
 
 .status-message :deep(.pi-check-circle) {
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
 }
 </style>
