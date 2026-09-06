@@ -454,6 +454,16 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_security',
     ],
+    'ms3_payment_on_failed_status' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
+    'ms3_payment_on_refunded_status' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
     'ms3_snippet_token_secret' => [
         'value' => '', // Генерируется автоматически при первом запуске
         'xtype' => 'textfield',
