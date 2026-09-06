@@ -234,6 +234,11 @@ return [
     'ms3_delivery_service' => [
         'class' => \MyCompany\Delivery\CdekDeliveryService::class,
     ],
+
+    // External WMS / fulfillment:
+    // 'ms3_shipment_lifecycle' => [
+    //     'class' => \MyCompany\Fulfillment\WmsShipmentLifecycle::class,
+    // ],
     */
 
 ];

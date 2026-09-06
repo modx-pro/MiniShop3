@@ -316,6 +316,21 @@ return [
         'xtype' => 'combo-boolean',
         'area' => 'ms3_statuses',
     ],
+    'ms3_shipment_enabled' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_on_delivered_status' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_on_in_transit_status' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
     'ms3_customer_cancel_allowed_statuses' => [
         'value' => '2,3',
         'xtype' => 'textfield',

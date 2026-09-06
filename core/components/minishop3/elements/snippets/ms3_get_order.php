@@ -263,6 +263,7 @@ try {
             ? $tmp->toArray()
             : [],
         'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
+        'shipments' => $ms3->shipmentPublicForOrder((int) $id),
         'total' => [
             'cost' => (float)$msOrder->get('cost'),
             'cost_formatted' => $ms3->format->price($msOrder->get('cost'), true),

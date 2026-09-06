@@ -3,6 +3,7 @@
 namespace MiniShop3;
 
 use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Services\Payment\PaymentService;
 use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\modX;
 
@@ -216,8 +217,12 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Delivery\DeliveryService::class,
             'interface' => null,
         ],
+        'ms3_shipment_lifecycle' => [
+            'class' => \MiniShop3\Services\Shipment\ShipmentLifecycleService::class,
+            'interface' => null,
+        ],
         'ms3_payment_service' => [
-            'class' => \MiniShop3\Services\Payment\PaymentService::class,
+            'class' => PaymentService::class,
             'interface' => null,
         ],
         'ms3_payment_link_resolver' => [

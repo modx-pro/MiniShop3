@@ -92,6 +92,7 @@ $expected = [
     'GET /api/mgr/orders/{id}' => 'msorder_list',
     'GET /api/mgr/orders/{id}/products' => 'msorder_list',
     'GET /api/mgr/orders/{id}/logs' => 'msorder_list',
+    'GET /api/mgr/orders/{id}/shipment' => 'msorder_list',
     'POST /api/mgr/orders' => 'msorder_save',
     'DELETE /api/mgr/orders/bulk' => 'msorder_save',
     'POST /api/mgr/orders/{id}/finalize' => 'msorder_save',
@@ -101,6 +102,7 @@ $expected = [
     'POST /api/mgr/orders/{id}/products' => 'msorder_save',
     'PUT /api/mgr/orders/{id}/products/{product_id}' => 'msorder_save',
     'DELETE /api/mgr/orders/{id}/products/{product_id}' => 'msorder_save',
+    'PUT /api/mgr/orders/{id}/shipment' => 'msorder_save',
 ];
 
 $actual = [];
