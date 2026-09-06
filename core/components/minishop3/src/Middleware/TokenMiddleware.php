@@ -49,6 +49,16 @@ class TokenMiddleware implements MiddlewareInterface
     ];
 
     /**
+     * Glob patterns (`*` = one path segment). Keeps /{id}/images public without
+     * opening the whole `/api/v1/product/*` group via a prefix (#584).
+     *
+     * @var list<string>
+     */
+    private array $publicRoutePatterns = [
+        '/api/v1/product/*/images',
+    ];
+
+    /**
      * @param modX $modx MODX instance
      */
     public function __construct(modX $modx)
@@ -196,13 +206,42 @@ class TokenMiddleware implements MiddlewareInterface
             $route = preg_replace('#^/assets/components/minishop3/api\.php#', '', $path);
         }
 
+        $route = $this->normalizePublicPath((string) $route);
+
         foreach ($this->publicRoutes as $publicRoute) {
             if (str_starts_with($route, $publicRoute)) {
                 return true;
             }
         }
 
+        foreach ($this->publicRoutePatterns as $pattern) {
+            if (self::matchesSegmentPattern($route, $pattern)) {
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    private function normalizePublicPath(string $route): string
+    {
+        $qPos = strpos($route, '?');
+        if ($qPos !== false) {
+            $route = substr($route, 0, $qPos);
+        }
+
+        if ($route !== '/') {
+            $route = rtrim($route, '/');
+        }
+
+        return $route;
+    }
+
+    private static function matchesSegmentPattern(string $path, string $pattern): bool
+    {
+        $regex = '#^' . str_replace('\\*', '[^/]+', preg_quote($pattern, '#')) . '$#';
+
+        return (bool) preg_match($regex, $path);
     }
 
     /**

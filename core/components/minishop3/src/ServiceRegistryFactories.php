@@ -40,6 +40,7 @@ class ServiceRegistryFactories
             'ms3_product_link_service' => $modxOnly(),
             'ms3_product_catalog' => $modxOnly(),
             'ms3_product_facets' => $modxOnly(),
+            'ms3_product_gallery_public' => $modxOnly(),
             'ms3_category_catalog' => $modxOnly(),
             'ms3_delivery_catalog' => $modxOnly(),
             'ms3_payment_catalog' => $modxOnly(),
