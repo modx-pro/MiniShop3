@@ -145,6 +145,8 @@ $_lang['setting_ms3_status_sent'] = 'Shipped / sent order status ID';
 $_lang['setting_ms3_status_sent_desc'] = 'Status ID treated as shipped for order lifecycle ports (default seed: 4).';
 $_lang['setting_ms3_order_status_transitions'] = 'Allowed order status transitions';
 $_lang['setting_ms3_order_status_transitions_desc'] = 'Optional allow-list of status edges in addition to final/fixed rules. Empty = no matrix (default final/fixed only). Format: CSV pairs from:to (e.g. 2:3,3:4,2:5) or JSON [[2,3],[3,4]].';
+$_lang['setting_ms3_inventory_enabled'] = 'Enforce product stock';
+$_lang['setting_ms3_inventory_enabled_desc'] = 'Off by default: cart, checkout and payment behave as before and ignore stock. When on, MiniShop3 checks availability before allocating an order number, reserves stock on the New status (ms3_status_new), commits on Paid (ms3_status_paid), and releases on Canceled (ms3_status_canceled) if the order was not yet paid. A failed payment send() cancels the order so the reserve is not left hanging. Replace the ms3_inventory service to use an external warehouse. Multi-warehouse, lots and ERP sync are out of scope.';
 $_lang['setting_ms3_customer_cancel_allowed_statuses'] = 'Statuses from which customer can cancel order';
 $_lang['setting_ms3_customer_cancel_allowed_statuses_desc'] = 'Comma-separated status IDs. Default: New and Paid (2,3). Empty = use ms3_status_new and ms3_status_paid.';
 $_lang['setting_ms3_status_for_stat'] = 'Status IDs for statistics';

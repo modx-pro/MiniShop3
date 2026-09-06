@@ -14,3 +14,4 @@ require __DIR__ . '/support/modresource_stub.php';
 require __DIR__ . '/support/SqliteDraftCartProduct.php';
 require __DIR__ . '/support/SqliteHarnessCart.php';
 require __DIR__ . '/support/SqliteDraftCartHarnessTrait.php';
+require __DIR__ . '/support/InMemoryInventoryStockStore.php';

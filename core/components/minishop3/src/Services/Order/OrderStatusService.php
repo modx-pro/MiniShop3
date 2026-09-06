@@ -9,6 +9,8 @@ use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
 use MiniShop3\Notifications\Order\StatusChangedNotification;
+use MiniShop3\Services\Inventory\InventoryException;
+use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MODX\Revolution\modContextSetting;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
@@ -34,18 +36,21 @@ class OrderStatusService
     protected MiniShop3 $ms3;
     protected OrderLogService $orderLog;
     protected OrderLifecyclePortsInterface $lifecyclePorts;
+    protected ?OrderInventoryCoordinator $inventoryCoordinator = null;
     protected ?NotificationManager $notifications = null;
 
     public function __construct(
         modX $modx,
         MiniShop3 $ms3,
         OrderLogService $orderLog,
-        ?OrderLifecyclePortsInterface $lifecyclePorts = null
+        ?OrderLifecyclePortsInterface $lifecyclePorts = null,
+        ?OrderInventoryCoordinator $inventoryCoordinator = null
     ) {
         $this->modx = $modx;
         $this->ms3 = $ms3;
         $this->orderLog = $orderLog;
         $this->lifecyclePorts = $lifecyclePorts ?? new NullOrderLifecyclePorts();
+        $this->inventoryCoordinator = $inventoryCoordinator;
 
         $this->modx->lexicon->load('minishop3:default');
     }
@@ -165,9 +170,9 @@ class OrderStatusService
             }
         }
 
-        $msOrder->set('status_id', $statusId);
-        if (!$msOrder->save()) {
-            return $this->modx->lexicon('ms3_err_unknown');
+        $persistError = $this->persistStatusWithInventory($msOrder, $statusId);
+        if ($persistError !== null) {
+            return $persistError;
         }
 
         $portError = $this->runLifecyclePorts($msOrder, $statusId, $previousStatusId);
@@ -181,6 +186,8 @@ class OrderStatusService
             'status' => $statusId,
         ]);
         if (!$response['success']) {
+            $this->undoUncommittedNewStatus($msOrder, $previousStatusId, $statusId);
+
             return $this->rollbackStatus($msOrder, $previousStatusId) ?? $response['message'];
         }
 
@@ -255,6 +262,54 @@ class OrderStatusService
     }
 
     /**
+     * Apply inventory for the new status, then persist status_id.
+     * When inventory is on, both steps share one DB transaction so a failed save cannot leave a hanging reserve.
+     */
+    protected function persistStatusWithInventory(msOrder $msOrder, int $statusId): ?string
+    {
+        $inventory = $this->inventory();
+        $useTx = $inventory !== null
+            && OrderInventoryCoordinator::isInventoryEnabled($this->modx)
+            && is_callable([$this->modx, 'beginTransaction']);
+        if ($useTx) {
+            $this->modx->beginTransaction();
+        }
+
+        try {
+            $inventory?->applyStatusChange($msOrder, $statusId);
+            $msOrder->set('status_id', $statusId);
+            if (!$msOrder->save()) {
+                if ($useTx) {
+                    $this->modx->rollback();
+                } else {
+                    $inventory?->releaseOrder($msOrder);
+                }
+
+                return $this->modx->lexicon('ms3_err_unknown');
+            }
+            if ($useTx) {
+                $this->modx->commit();
+            }
+        } catch (InventoryException $exception) {
+            if ($useTx) {
+                $this->modx->rollback();
+            }
+
+            return $this->modx->lexicon($exception->getLexiconKey(), $exception->getPlaceholders());
+        } catch (\Throwable $exception) {
+            if (!$useTx) {
+                throw $exception;
+            }
+            $this->modx->rollback();
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[OrderStatusService] ' . $exception->getMessage());
+
+            return $this->modx->lexicon('ms3_err_unknown');
+        }
+
+        return null;
+    }
+
+    /**
      * Restore previous status_id after failed after-event or lifecycle port.
      *
      * @return string|null Lexicon/error when rollback persist fails
@@ -276,6 +331,40 @@ class OrderStatusService
         );
 
         return $this->modx->lexicon('ms3_err_status_rollback');
+    }
+
+    protected function inventory(): ?OrderInventoryCoordinator
+    {
+        return $this->inventoryCoordinator;
+    }
+
+    /**
+     * After-event failure must not leave New + a live reserve.
+     * Paid/canceled persists stay: those inventory operations already finished.
+     */
+    protected function undoUncommittedNewStatus(msOrder $msOrder, mixed $oldStatusId, int $newStatusId): void
+    {
+        $inventory = $this->inventory();
+        if ($inventory === null || !OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return;
+        }
+        $newId = (int) $this->modx->getOption('ms3_status_new', null, 2);
+        if ($newStatusId !== $newId) {
+            return;
+        }
+        try {
+            $inventory->releaseOrder($msOrder);
+        } catch (InventoryException $exception) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OrderStatusService] release after msOnChangeOrderStatus failure: ' . $exception->getMessage()
+            );
+        }
+        $previousId = is_numeric($oldStatusId)
+            ? (int) $oldStatusId
+            : ((int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1);
+        $msOrder->set('status_id', $previousId);
+        $msOrder->save();
     }
 
     /**
