@@ -99,6 +99,7 @@ class ServiceRegistryFactories
             'ms3_order_log' => $modxAndMs3(),
             'ms3_manager_order_cost_recalculator' => $modxAndMs3(),
             'ms3_cart_item_manager' => $modxAndMs3(),
+            'ms3_cart_response_normalizer' => $modxOnly(),
             'ms3_customer_address_manager' => $modxAndMs3(),
             'ms3_customer_field_manager' => $modxAndMs3(),
 
