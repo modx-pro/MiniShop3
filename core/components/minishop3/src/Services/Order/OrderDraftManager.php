@@ -30,6 +30,24 @@ class OrderDraftManager
     }
 
     /**
+     * Find draft order by session token only (no customer_id fallback).
+     */
+    public function findDraftByToken(string $token, string $ctx = 'web'): ?msOrder
+    {
+        if ($token === '') {
+            return null;
+        }
+
+        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
+
+        return $this->modx->getObject(msOrder::class, [
+            'token' => $token,
+            'status_id' => $statusDraft,
+            'context' => $ctx,
+        ]);
+    }
+
+    /**
      * Get existing draft order by token
      *
      * Hybrid search strategy:
@@ -43,27 +61,20 @@ class OrderDraftManager
             return null;
         }
 
-        $status_draft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
-
-        // 1. Try to find by token first (primary method)
-        $draft = $this->modx->getObject(msOrder::class, [
-            'token' => $token,
-            'status_id' => $status_draft,
-            'context' => $ctx,
-        ]);
-
+        $draft = $this->findDraftByToken($token, $ctx);
         if ($draft) {
             return $draft;
         }
 
         // 2. Fallback: search by customer_id for authenticated customers
         //    Sort by id DESC to get the most recent draft when multiple exist
+        $statusDraft = (int) $this->modx->getOption('ms3_status_draft', null, 1) ?: 1;
         $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
         if ($customerId > 0) {
             $q = $this->modx->newQuery(msOrder::class);
             $q->where([
                 'customer_id' => $customerId,
-                'status_id' => $status_draft,
+                'status_id' => $statusDraft,
                 'context' => $ctx,
             ]);
             $q->sortby('id', 'DESC');
