@@ -133,8 +133,9 @@ Ext.extend(ms3.panel.UpdateProduct, ms3.panel.Product, {
             // Gallery tab is now inside Vue ProductTabs component
             // No need to add it separately here
 
-            tabs.push(pageSettingsTab);
-            tabs.push(accessPermissionsTab);
+            // Optional tabs: MODX omits access permissions without resourcegroup_resource_list (#652)
+            pageSettingsTab && tabs.push(pageSettingsTab);
+            accessPermissionsTab && tabs.push(accessPermissionsTab);
 
             item.items = tabs;
             fields.push(item);
