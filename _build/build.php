@@ -471,40 +471,15 @@ class MiniShop3Package
     }
 
     /**
-     * Add access policy
+     * Access policies are nested under policy templates (see policyTemplates()).
      */
     private function policies(): void
     {
-        /** @noinspection PhpIncludeInspection */
-        $policies = include($this->config['elements'] . 'policies.php');
-        if (!is_array($policies)) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not package in Access Policies');
-            return;
-        }
-        $attributes = [
-            xPDOTransport::PRESERVE_KEYS => false,
-            xPDOTransport::UNIQUE_KEY => ['name'],
-            xPDOTransport::UPDATE_OBJECT => !empty($this->config['update']['policies']),
-        ];
-        foreach ($policies as $name => $data) {
-            if (isset($data['data'])) {
-                $data['data'] = json_encode($data['data']);
-            }
-            /** @var $policy modAccessPolicy */
-            $policy = $this->modx->newObject(modAccessPolicy::class);
-            $policy->fromArray(array_merge([
-                    'name' => $name,
-                    'lexicon' => $this->config['name_lower'] . ':permissions',
-                ], $data)
-                , '', true, true);
-            $vehicle = $this->builder->createVehicle($policy, $attributes);
-            $this->builder->putVehicle($vehicle);
-        }
-        $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($policies) . ' Access Policies');
+        $this->modx->log(modX::LOG_LEVEL_INFO, 'Access policies packaged via policyTemplates()');
     }
 
     /**
-     * Add policy templates
+     * Add policy templates (and nested default policies).
      */
     private function policyTemplates(): void
     {
@@ -513,6 +488,11 @@ class MiniShop3Package
         if (!is_array($policy_templates)) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not package in Policy Templates');
             return;
+        }
+        /** @noinspection PhpIncludeInspection */
+        $policy_definitions = include($this->config['elements'] . 'policies.php');
+        if (!is_array($policy_definitions)) {
+            $policy_definitions = [];
         }
         $attributes = [
             xPDOTransport::PRESERVE_KEYS => false,
@@ -524,6 +504,11 @@ class MiniShop3Package
                     xPDOTransport::PRESERVE_KEYS => false,
                     xPDOTransport::UPDATE_OBJECT => !empty($this->config['update']['permission']),
                     xPDOTransport::UNIQUE_KEY => ['template', 'name'],
+                ],
+                'Policies' => [
+                    xPDOTransport::PRESERVE_KEYS => false,
+                    xPDOTransport::UPDATE_OBJECT => !empty($this->config['update']['policies']),
+                    xPDOTransport::UNIQUE_KEY => ['name'],
                 ],
             ],
         ];
@@ -542,17 +527,37 @@ class MiniShop3Package
                     $permissions[] = $permission;
                 }
             }
-            /** @var $permission modAccessPolicyTemplate */
-            $permission = $this->modx->newObject(modAccessPolicyTemplate::class);
-            $permission->fromArray(array_merge([
+            /** @var modAccessPolicyTemplate $template */
+            $template = $this->modx->newObject(modAccessPolicyTemplate::class);
+            $template->fromArray(array_merge([
                     'name' => $name,
                     'lexicon' => $this->config['name_lower'] . ':permissions',
                 ], $data)
                 , '', true, true);
             if (!empty($permissions)) {
-                $permission->addMany($permissions);
+                $template->addMany($permissions);
             }
-            $vehicle = $this->builder->createVehicle($permission, $attributes);
+            if ($name === 'miniShopManagerPolicyTemplate' && $policy_definitions !== []) {
+                $policies = [];
+                foreach ($policy_definitions as $policyName => $policyData) {
+                    $payload = $policyData;
+                    if (isset($payload['data']) && is_array($payload['data'])) {
+                        $payload['data'] = json_encode($payload['data']);
+                    }
+                    /** @var modAccessPolicy $policy */
+                    $policy = $this->modx->newObject(modAccessPolicy::class);
+                    $policy->fromArray(array_merge([
+                            'name' => $policyName,
+                            'lexicon' => $this->config['name_lower'] . ':permissions',
+                        ], $payload)
+                        , '', true, true);
+                    $policies[] = $policy;
+                }
+                if ($policies !== []) {
+                    $template->addMany($policies, 'Policies');
+                }
+            }
+            $vehicle = $this->builder->createVehicle($template, $attributes);
             $this->builder->putVehicle($vehicle);
         }
         $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($policy_templates) . ' Access Policy Templates');

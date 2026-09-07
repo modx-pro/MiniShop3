@@ -189,6 +189,7 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         new PermissionMiddleware($modx, 'view_document')
     ]);
 
+    // Extra fields reads: order/product forms load schema without settings perm (#613)
     $router->group('/extra-fields', function ($router) use ($modx) {
         $router->get('', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
@@ -198,6 +199,10 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
             return $controller->get($params);
         });
+    });
+
+    // Extra fields writes: schema mutations require mssetting_save (#381)
+    $router->group('/extra-fields', function ($router) use ($modx) {
         $router->post('', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ExtraFieldsController($modx);
             return $controller->create();
@@ -984,17 +989,41 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Model fields schema reads: order/product forms load layout without settings perm (#613).
+    // Pure metadata — no combo source execution.
     $router->group('/model-fields', function ($router) use ($modx) {
         $router->get('/models', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
             return $controller->getModels();
         });
+
+        // Section routes
+        $router->get('/sections/{model}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getSections($params);
+        });
+
+        // Field routes
+        $router->get('', function ($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->getList($allParams);
+        });
+        $router->get('/{id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
+            return $controller->get($params);
+        });
+    });
+
+    // Model fields data reads: visible embeds comboOptions; combo-options executes sources
+    // (e.g. msCustomer PII). Require a form/settings permission — not mgr-auth alone (#613).
+    $router->group('/model-fields', function ($router) use ($modx) {
         $router->get('/visible/{model}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
             return $controller->getVisibleFields($params);
         });
 
-        // Combo options routes
         $router->get('/combo-options/{model}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
             return $controller->getComboOptions($params);
@@ -1003,12 +1032,22 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
             return $controller->getFieldComboOptions($params);
         });
+    }, [
+        new AnyPermissionMiddleware($modx, [
+            'msorder_list',
+            'msorder_view',
+            'msorder_save',
+            'msproduct_save',
+            'mscategory_save',
+            'mssetting_list',
+            'mssetting_view',
+            'mssetting_save',
+            'view_document',
+        ]),
+    ]);
 
-        // Section routes
-        $router->get('/sections/{model}', function ($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
-            return $controller->getSections($params);
-        });
+    // Model fields writes: schema mutations require mssetting_save (#381)
+    $router->group('/model-fields', function ($router) use ($modx) {
         $router->post('/sections', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
@@ -1036,17 +1075,6 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             return $controller->deleteSection($params);
         });
 
-        // Field routes
-        $router->get('', function ($params) use ($modx) {
-            $allParams = array_merge($_GET, $params);
-
-            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
-            return $controller->getList($allParams);
-        });
-        $router->get('/{id}', function ($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\ModelFieldsController($modx);
-            return $controller->get($params);
-        });
         $router->post('', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
