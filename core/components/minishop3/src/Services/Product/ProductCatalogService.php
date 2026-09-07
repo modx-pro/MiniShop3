@@ -130,6 +130,7 @@ class ProductCatalogService
         array $payload,
         bool $includeContent,
         bool $includeOptions,
+        bool $includeImages = false,
     ): array {
         $allowed = array_merge(self::RESOURCE_FIELDS, self::DATA_FIELDS);
         if ($includeContent) {
@@ -147,6 +148,10 @@ class ProductCatalogService
             $result['options'] = self::stripOptionMetadata($payload['options']);
         }
 
+        if ($includeImages && is_array($payload['images'] ?? null)) {
+            $result['images'] = ProductGalleryPublicSerializer::whitelistItems($payload['images']);
+        }
+
         return $result;
     }
 
@@ -158,10 +163,48 @@ class ProductCatalogService
     /**
      * Single published product by ID (same visibility rules as list).
      *
+     * Query: context, include_images (0|1, default 0).
+     *
      * @param array<string, mixed> $params Optional context override
      * @return array<string, mixed>|null
      */
     public function getById(int $productId, array $params = []): ?array
+    {
+        $product = $this->findVisibleProduct($productId, $params);
+        if ($product === null) {
+            return null;
+        }
+
+        $options = self::stripOptionMetadata(
+            $this->optionService()->loadOptionsForProduct($productId, false)
+        );
+
+        $includeImages = self::toBool($params['include_images'] ?? false);
+        $images = $includeImages ? $this->loadImagesForProduct($product) : null;
+
+        return $this->formatProduct($product, true, $options, $images);
+    }
+
+    /**
+     * Gallery only: same visibility as get. Always returns images[] (may be empty).
+     *
+     * @param array<string, mixed> $params
+     * @return array{images: list<array<string, mixed>>}|null
+     */
+    public function getPublicImages(int $productId, array $params = []): ?array
+    {
+        $product = $this->findVisibleProduct($productId, $params);
+        if ($product === null) {
+            return null;
+        }
+
+        return ['images' => $this->loadImagesForProduct($product)];
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function findVisibleProduct(int $productId, array $params): ?msProduct
     {
         if ($productId <= 0) {
             return null;
@@ -176,15 +219,46 @@ class ProductCatalogService
         /** @var msProduct|null $product */
         $product = $this->modx->getObject(msProduct::class, $this->publicCriteria($criteria));
 
-        if (!$product) {
-            return null;
+        return $product ?: null;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function loadImagesForProduct(msProduct $product): array
+    {
+        $data = $product->loadData();
+        $previewFileId = $data
+            ? $this->imageService()->resolvePreviewFileId($data)
+            : 0;
+
+        return $this->gallery()->loadForProduct(
+            (int) $product->get('id'),
+            (string) $product->get('pagetitle'),
+            $previewFileId,
+        );
+    }
+
+    /**
+     * @param list<msProduct> $products
+     * @return array<int, list<array<string, mixed>>>
+     */
+    private function loadImagesForProducts(array $products): array
+    {
+        $meta = [];
+        foreach ($products as $product) {
+            $id = (int) $product->get('id');
+            if ($id <= 0) {
+                continue;
+            }
+            $data = $product->loadData();
+            $meta[$id] = [
+                'pagetitle' => (string) $product->get('pagetitle'),
+                'preview_file_id' => $data ? (int) $data->get('preview_file_id') : 0,
+            ];
         }
 
-        $options = self::stripOptionMetadata(
-            $this->optionService()->loadOptionsForProduct($productId, false)
-        );
-
-        return $this->formatProduct($product, true, $options);
+        return $this->gallery()->loadForProducts($meta, ProductGalleryPublicSerializer::MAX_IMAGES_LIST);
     }
 
     /**
@@ -198,7 +272,7 @@ class ProductCatalogService
      * - in_stock, stock_min, vendor_id, new, popular, favorite
      * - options: JSON object or bracket map (AND between keys, OR within key)
      * - limit, offset | page, sort, dir, query, context
-     * - include_options, include_content
+     * - include_options, include_content, include_images (default 0; cap 10 files / product)
      *
      * @param array<string, mixed> $params
      * @return array{items: list<array<string, mixed>>, total: int, limit: int, offset: int}
@@ -213,6 +287,7 @@ class ProductCatalogService
         $offset = self::resolveOffset($params, $limit);
         $includeOptions = self::toBool($params['include_options'] ?? false);
         $includeContent = self::toBool($params['include_content'] ?? false);
+        $includeImages = self::toBool($params['include_images'] ?? false);
 
         $total = $this->countList($params, $filters);
 
@@ -230,11 +305,16 @@ class ProductCatalogService
             ? $this->loadOptionsForProducts($ids)
             : [];
 
+        $galleries = ($includeImages && $ids !== [])
+            ? $this->loadImagesForProducts($productList)
+            : [];
+
         $items = [];
         foreach ($productList as $product) {
             $productId = (int) $product->get('id');
             $options = $includeOptions ? ($optionsByProduct[$productId] ?? []) : null;
-            $items[] = $this->formatProduct($product, $includeContent, $options);
+            $images = $includeImages ? ($galleries[$productId] ?? []) : null;
+            $items[] = $this->formatProduct($product, $includeContent, $options, $images);
         }
 
         return [
@@ -439,12 +519,14 @@ class ProductCatalogService
 
     /**
      * @param array<string, mixed>|null $options null = omit options key; array = include
+     * @param list<array<string, mixed>>|null $images null = omit images key; array = include
      * @return array<string, mixed>
      */
     private function formatProduct(
         msProduct $product,
         bool $includeContent,
         ?array $options = null,
+        ?array $images = null,
     ): array {
         $data = $product->loadData();
         $payload = [];
@@ -482,11 +564,36 @@ class ProductCatalogService
             $payload['options'] = $options;
         }
 
+        if ($images !== null) {
+            $payload['images'] = $images;
+        }
+
         $modified = $product->modifyFields($payload);
         if (is_array($modified)) {
             $payload = $modified;
         }
 
-        return self::whitelistPublicPayload($payload, $includeContent, $options !== null);
+        return self::whitelistPublicPayload(
+            $payload,
+            $includeContent,
+            $options !== null,
+            $images !== null,
+        );
+    }
+
+    private function gallery(): ProductGalleryPublicService
+    {
+        /** @var ProductGalleryPublicService $service */
+        $service = $this->modx->services->get('ms3_product_gallery_public');
+
+        return $service;
+    }
+
+    private function imageService(): ProductImageService
+    {
+        /** @var ProductImageService $service */
+        $service = $this->modx->services->get('ms3_product_image');
+
+        return $service;
     }
 }

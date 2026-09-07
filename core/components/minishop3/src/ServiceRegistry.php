@@ -162,6 +162,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductFacetService::class,
             'interface' => null,
         ],
+        'ms3_product_gallery_public' => [
+            'class' => \MiniShop3\Services\Product\ProductGalleryPublicService::class,
+            'interface' => null,
+        ],
         'ms3_category_catalog' => [
             'class' => \MiniShop3\Services\Category\CategoryCatalogService::class,
             'interface' => null,
