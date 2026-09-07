@@ -3,6 +3,9 @@
 /**
  * Regression #613: /model-fields read vs write ACL map (no MODX).
  *
+ * Schema reads stay auth-only; data-bearing visible/combo-options use AnyPermissionMiddleware;
+ * writes require mssetting_save.
+ *
  * Запуск: php tests/ModelFieldsRouteAclTest.php
  */
 
@@ -14,7 +17,7 @@ $fail = static function (string $message): never {
 };
 
 /**
- * @return list<array{body: string, perm: string|null}>
+ * @return list<array{body: string, gate: string|null}>
  */
 $extractRouteGroups = static function (string $src, string $path): array {
     $needle = "\$router->group('{$path}'";
@@ -52,18 +55,21 @@ $extractRouteGroups = static function (string $src, string $path): array {
         }
 
         $body = substr($src, $braceStart + 1, $closedAt - $braceStart - 1);
-        $perm = null;
+        $tail = substr($src, $closedAt, 400);
+        $gate = null;
         if (
             preg_match(
                 '/^\}\s*,\s*\[\s*new\s+PermissionMiddleware\(\s*\$modx\s*,\s*\'([^\']+)\'\s*\)/',
-                substr($src, $closedAt, 200),
+                $tail,
                 $permMatch
             )
         ) {
-            $perm = $permMatch[1];
+            $gate = $permMatch[1];
+        } elseif (preg_match('/^\}\s*,\s*\[\s*new\s+AnyPermissionMiddleware\(/', $tail)) {
+            $gate = 'any';
         }
 
-        $groups[] = ['body' => $body, 'perm' => $perm];
+        $groups[] = ['body' => $body, 'gate' => $gate];
         $offset = $closedAt + 1;
     }
 
@@ -81,8 +87,8 @@ if ($groups === []) {
     $fail('no /model-fields route groups found');
 }
 
-/** @var array<string, string|null> $routePerm */
-$routePerm = [];
+/** @var array<string, string|null> $routeGate */
+$routeGate = [];
 
 foreach ($groups as $group) {
     if (
@@ -95,22 +101,25 @@ foreach ($groups as $group) {
     ) {
         foreach ($routeMatches as $routeMatch) {
             $key = strtoupper($routeMatch[1]) . ' ' . $routeMatch[2];
-            if (array_key_exists($key, $routePerm) && $routePerm[$key] !== $group['perm']) {
+            if (array_key_exists($key, $routeGate) && $routeGate[$key] !== $group['gate']) {
                 $fail("conflicting permissions for {$key}");
             }
-            $routePerm[$key] = $group['perm'];
+            $routeGate[$key] = $group['gate'];
         }
     }
 }
 
-$expectedReads = [
+$expectedSchemaReads = [
     'GET /models',
-    'GET /visible/{model}',
-    'GET /combo-options/{model}',
-    'GET /combo-options/{model}/{field_name}',
     'GET /sections/{model}',
     'GET ',
     'GET /{id}',
+];
+
+$expectedDataReads = [
+    'GET /visible/{model}' => 'any',
+    'GET /combo-options/{model}' => 'any',
+    'GET /combo-options/{model}/{field_name}' => 'any',
 ];
 
 $expectedWrites = [
@@ -124,23 +133,33 @@ $expectedWrites = [
     'DELETE /{id}' => 'mssetting_save',
 ];
 
-foreach ($expectedReads as $key) {
-    if (!array_key_exists($key, $routePerm)) {
-        $fail("missing read route {$key}");
+foreach ($expectedSchemaReads as $key) {
+    if (!array_key_exists($key, $routeGate)) {
+        $fail("missing schema read route {$key}");
     }
-    if ($routePerm[$key] !== null) {
-        $fail("{$key} must be auth-only, got: " . var_export($routePerm[$key], true));
+    if ($routeGate[$key] !== null) {
+        $fail("{$key} must be auth-only, got: " . var_export($routeGate[$key], true));
+    }
+}
+
+foreach ($expectedDataReads as $key => $gate) {
+    if (($routeGate[$key] ?? null) !== $gate) {
+        $fail("{$key} must use AnyPermissionMiddleware, got: " . var_export($routeGate[$key] ?? null, true));
     }
 }
 
 foreach ($expectedWrites as $key => $perm) {
-    if (($routePerm[$key] ?? null) !== $perm) {
-        $fail("{$key} must require {$perm}, got: " . var_export($routePerm[$key] ?? null, true));
+    if (($routeGate[$key] ?? null) !== $perm) {
+        $fail("{$key} must require {$perm}, got: " . var_export($routeGate[$key] ?? null, true));
     }
 }
 
-$expectedKeys = array_merge($expectedReads, array_keys($expectedWrites));
-foreach ($routePerm as $key => $perm) {
+$expectedKeys = array_merge(
+    $expectedSchemaReads,
+    array_keys($expectedDataReads),
+    array_keys($expectedWrites)
+);
+foreach ($routeGate as $key => $gate) {
     if (!in_array($key, $expectedKeys, true)) {
         $fail("unexpected model-fields route registered: {$key}");
     }

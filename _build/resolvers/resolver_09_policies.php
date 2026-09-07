@@ -50,7 +50,8 @@ foreach ($definitions as $name => $data) {
             }
             $modx->log(modX::LOG_LEVEL_INFO, "[MiniShop3] Linked existing policy {$name} to template");
         }
-        // Existing policy data is preserved (custom site ACL overrides).
+        // Existing policy data is left untouched by this resolver (no fromArray overwrite).
+        // Note: transport update.policies=true may still rewrite policy data on upgrade via xPDOObjectVehicle.
         continue;
     }
 
