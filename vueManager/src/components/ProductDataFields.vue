@@ -7,6 +7,7 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../request.js'
+import { groupProductDataSections } from '../utils/groupProductDataSections.js'
 import {
   isFullWidthExtraFieldXtype,
   parseStructuredExtraFieldValue,
@@ -201,32 +202,11 @@ const visibleFields = computed(() => {
 })
 
 /**
- * Group fields by sections
- * Show only !hidden sections
+ * Group fields by sections (array ordered by section.sort_order).
+ * Do not return an id-keyed object: Vue/JS enumerates those keys by ascending id (#611).
  */
 const fieldsBySections = computed(() => {
-  const sections = {}
-
-  visibleFields.value.forEach(field => {
-    const sectionKey = field.section || 'default'
-    const sectionConfig = fieldsConfig.value.sections[sectionKey]
-
-    // Skip hidden sections
-    if (sectionConfig && sectionConfig.hidden === true) {
-      return
-    }
-
-    if (!sections[sectionKey]) {
-      sections[sectionKey] = {
-        ...sectionConfig,
-        fields: [],
-      }
-    }
-
-    sections[sectionKey].fields.push(field)
-  })
-
-  return sections
+  return groupProductDataSections(visibleFields.value, fieldsConfig.value.sections || {})
 })
 
 // Load configuration on mount
@@ -253,9 +233,9 @@ onMounted(() => {
 
         <div v-else class="sections-container">
           <Fieldset
-            v-for="(section, sectionKey) in fieldsBySections"
-            :key="sectionKey"
-            :legend="section.label || sectionKey"
+            v-for="section in fieldsBySections"
+            :key="section.id ?? section.key"
+            :legend="section.label || section.key"
             :toggleable="true"
             :collapsed="section.collapsed"
             class="section-fieldset"
