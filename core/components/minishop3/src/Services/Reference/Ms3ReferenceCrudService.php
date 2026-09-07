@@ -315,7 +315,9 @@ class Ms3ReferenceCrudService
         }
 
         $member = $this->modx->newObject(msDeliveryMember::class);
-        $member->fromArray($criteria);
+        // Composite PK: xPDO fromArray() skips PK fields unless setPrimaryKeys is true.
+        $member->set($this->config->memberOwnFk, $ownId);
+        $member->set($this->config->memberPeerFk, $peerId);
 
         if (!$member->save()) {
             return Response::error(
