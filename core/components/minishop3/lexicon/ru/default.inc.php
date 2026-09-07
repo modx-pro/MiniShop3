@@ -173,6 +173,7 @@ $_lang['ms3_err_fields_required'] = 'Требуется массив полей'
 $_lang['ms3_err_field_nf'] = 'Поле не найдено';
 $_lang['ms3_err_ae'] = 'Это поле должно быть уникально';
 $_lang['ms3_err_json'] = 'Это поле требует JSON строку';
+$_lang['ms3_err_cart_options'] = 'options должен быть объектом или JSON-строкой';
 $_lang['ms3_repeater_validation_error'] = 'Поле повторителя «[[+field]]»: [[+error]]';
 $_lang['ms3_key_value_validation_error'] = 'Поле key-value «[[+field]]»: [[+error]]';
 
