@@ -36,13 +36,24 @@
  */
 
 use MiniShop3\Router\Response;
+use MiniShop3\Middleware\CorsMiddleware;
 use MiniShop3\Middleware\TokenMiddleware;
 
-// Пример: группа с префиксом и middleware (раскомментируйте после копирования в .php)
+// Пример: группа с префиксом и middleware (раскомментируйте после копирования в .php).
+// CorsMiddleware обязателен, если в группе есть TokenMiddleware / RateLimitMiddleware:
+// без него Router не запускает стек на OPTIONS (405), иначе preflight мог бы минтить токен.
 /*
+$corsMiddleware = new CorsMiddleware([
+    'allowed_origins' => $modx->getOption('ms3_cors_allowed_origins', null, ''),
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'MS3TOKEN'],
+    'allow_credentials' => true,
+    'max_age' => 86400,
+]);
+
 $router->group('/api/v1/myaddon', function ($router) use ($modx) {
     $router->get('/ping', function (array $vars, \MODX\Revolution\modX $modx) {
         return Response::success(['ok' => true]);
     });
-}, [new TokenMiddleware($modx)]);
+}, [$corsMiddleware, new TokenMiddleware($modx)]);
 */

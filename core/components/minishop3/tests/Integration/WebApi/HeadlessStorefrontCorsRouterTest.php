@@ -94,6 +94,36 @@ final class HeadlessStorefrontCorsRouterTest extends WebApiTestCase
         self::assertSame(405, $response->getStatusCode());
     }
 
+    /**
+     * Addon pattern from ms3.routes.d/web/example-addon.php.dist: TokenMiddleware without
+     * CorsMiddleware must not mint an anonymous token on OPTIONS (#634 review).
+     */
+    public function testOptionsPreflightWithTokenMiddlewareButNoCorsDoesNotMintToken(): void
+    {
+        unset($_REQUEST['ms3_token'], $_SESSION['ms3']);
+        $handlerCalled = false;
+        $router = new \MiniShop3\Router\Router($this->modx);
+        $router->group('/api/v1', function ($router) use (&$handlerCalled) {
+            $router->post('/addon-probe', function () use (&$handlerCalled) {
+                $handlerCalled = true;
+
+                return \MiniShop3\Router\Response::success(['ok' => true]);
+            });
+        }, [new \MiniShop3\Middleware\TokenMiddleware($this->modx)]);
+        $router->build();
+
+        $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
+        $_SERVER['REQUEST_URI'] = '/api/v1/addon-probe';
+        $_SERVER['HTTP_ORIGIN'] = 'https://evil.example';
+        $_REQUEST = ['route' => '/api/v1/addon-probe'];
+
+        $response = $router->dispatch('/api/v1/addon-probe', 'OPTIONS');
+
+        self::assertFalse($handlerCalled);
+        self::assertSame(405, $response->getStatusCode());
+        self::assertArrayNotHasKey('ms3_token', $_REQUEST);
+    }
+
     public function testGetHealthStillWorksAfterCorsChanges(): void
     {
         $res = $this->dispatch('GET', '/api/v1/health');

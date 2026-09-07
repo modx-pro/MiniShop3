@@ -4,6 +4,7 @@ namespace MiniShop3\Router;
 
 use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
+use MiniShop3\Middleware\CorsMiddleware;
 use MODX\Revolution\modX;
 use function FastRoute\simpleDispatcher;
 
@@ -398,10 +399,14 @@ class Router
     }
 
     /**
-     * Run middleware for a valid storefront path when FastRoute has no OPTIONS handler.
+     * Answer browser CORS preflight when FastRoute has no OPTIONS handler.
      *
-     * Never invokes the route handler: preflight must not trigger POST/GET side effects (#634).
-     * CorsMiddleware (first on stock /api/v1 routes) returns 200 and stops the chain.
+     * Runs the matched route's middleware chain only if it includes CorsMiddleware.
+     * Without CorsMiddleware the stack is not invoked (405, same as before this fix),
+     * so TokenMiddleware / RateLimitMiddleware cannot mint tokens or open sessions
+     * on unauthenticated OPTIONS. The route handler is never called (#634).
+     *
+     * On stock /api/v1 routes CorsMiddleware is first and returns 200, stopping the chain.
      *
      * @param list<string> $allowedMethods
      */
@@ -418,9 +423,14 @@ class Router
             return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
         }
 
+        $middlewares = $probeInfo[1]['middlewares'] ?? [];
+        if (!$this->middlewareStackHasCors($middlewares)) {
+            return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
+        }
+
         $vars = array_merge($_GET, $probeInfo[2] ?? []);
 
-        foreach ($probeInfo[1]['middlewares'] ?? [] as $middleware) {
+        foreach ($middlewares as $middleware) {
             $result = $this->resolveMiddleware($middleware)->handle($vars);
 
             if ($result instanceof Response) {
@@ -429,6 +439,23 @@ class Router
         }
 
         return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
+    }
+
+    /**
+     * @param list<object|string> $middlewares
+     */
+    protected function middlewareStackHasCors(array $middlewares): bool
+    {
+        foreach ($middlewares as $middleware) {
+            if ($middleware instanceof CorsMiddleware) {
+                return true;
+            }
+            if (is_string($middleware) && is_a($middleware, CorsMiddleware::class, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
