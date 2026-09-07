@@ -6,7 +6,9 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
+use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msVendor;
+use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Utils\EventGate;
 use MiniShop3\Utils\ProductThumbnailJoin;
@@ -154,6 +156,31 @@ if ($_ms3Parents !== '' && $_ms3Parents !== '0' && $modx->services->has('ms3_cat
     if ($_ms3CategoryIds !== []) {
         $where[] = $scopeService->buildMsProductsWhereForCategories($_ms3CategoryIds);
         $scriptProperties['parents'] = 0;
+    }
+}
+
+// Per-category menuindex for additional categories when sorting by menuindex (#625).
+$_ms3MenuindexCategoryIds = [];
+if (isset($_ms3CategoryIds) && $_ms3CategoryIds !== []) {
+    $_ms3MenuindexCategoryIds = $_ms3CategoryIds;
+} else {
+    $_ms3SingleParent = (int)($scriptProperties['parent'] ?? $scriptProperties['category'] ?? 0);
+    if ($_ms3SingleParent > 0) {
+        $_ms3MenuindexCategoryIds = [$_ms3SingleParent];
+    }
+}
+$_ms3SortBy = (string)($scriptProperties['sortby'] ?? '');
+if ($_ms3MenuindexCategoryIds !== [] && preg_match('/\bmenuindex\b/i', $_ms3SortBy)) {
+    $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
+    $leftJoin[$memberAlias] = [
+        'class' => msCategoryMember::class,
+        'on' => CategoryProductMenuindexService::memberJoinOnCategories($_ms3MenuindexCategoryIds, $memberAlias),
+    ];
+    $effectiveSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($_ms3MenuindexCategoryIds);
+    if (preg_match('/\bmsProduct\.menuindex\b/i', $_ms3SortBy)) {
+        $scriptProperties['sortby'] = preg_replace('/\bmsProduct\.menuindex\b/i', $effectiveSql, $_ms3SortBy);
+    } elseif (preg_match('/\bmenuindex\b/i', $_ms3SortBy) && !str_contains($_ms3SortBy, 'CASE WHEN')) {
+        $scriptProperties['sortby'] = preg_replace('/\bmenuindex\b/i', $effectiveSql, $_ms3SortBy, 1);
     }
 }
 

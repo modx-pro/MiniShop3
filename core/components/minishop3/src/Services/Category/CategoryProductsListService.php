@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MiniShop3\Services\Category;
 
 use MiniShop3\Model\msCategory;
+use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductOption;
@@ -48,15 +49,20 @@ final class CategoryProductsListService
         $optionSpecs = GridOptionColumnResolver::resolve($gridFields);
         $relationSpecs = GridRelationColumnResolver::resolve($this->modx, $gridFields);
 
-        $c = $this->buildProductListQuery($categoryId, $params, $nested, $optionSpecs, $relationSpecs);
+        $scopeCategoryIds = $nested
+            ? $this->treeService()->productParentIds($categoryId, true)
+            : [$categoryId];
 
-        $countQuery = $this->buildProductListQuery($categoryId, $params, $nested, $optionSpecs, $relationSpecs);
+        $c = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs);
+
+        $countQuery = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs);
         $countQuery->select('COUNT(DISTINCT msProduct.id)');
         $countQuery->prepare();
         $countQuery->stmt->execute();
         $total = (int) $countQuery->stmt->fetchColumn();
 
-        $sortField = $this->mapSortField($sortBy, $optionSpecs, $relationSpecs);
+        $effectiveMenuindexSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($scopeCategoryIds);
+        $sortField = $this->mapSortField($sortBy, $optionSpecs, $relationSpecs, $effectiveMenuindexSql);
         $c->sortby($sortField, $sortDir);
         $c->limit($limit, $start);
 
@@ -80,9 +86,10 @@ final class CategoryProductsListService
         foreach ($relationSpecs as $spec) {
             $selectParts[] = $spec->selectExpression();
         }
+        $selectParts[] = "{$effectiveMenuindexSql} AS effective_menuindex";
         // xPDOQuery::select() declares string, accepts both at runtime but PHPStan is strict.
         $c->select(implode(', ', $selectParts));
-        if ($optionSpecs !== []) {
+        if ($optionSpecs !== [] || count($scopeCategoryIds) > 1) {
             $c->groupby('msProduct.id');
         }
 
@@ -114,8 +121,12 @@ final class CategoryProductsListService
      * @param list<OptionColumnSpec>    $optionSpecs
      * @param list<RelationColumnSpec>  $relationSpecs
      */
-    private function mapSortField(string $sortBy, array $optionSpecs, array $relationSpecs): string
-    {
+    private function mapSortField(
+        string $sortBy,
+        array $optionSpecs,
+        array $relationSpecs,
+        string $effectiveMenuindexSql,
+    ): string {
         foreach ($optionSpecs as $spec) {
             if ($spec->fieldName === $sortBy) {
                 return $this->aggregateOptionValueSql($spec->alias);
@@ -126,7 +137,10 @@ final class CategoryProductsListService
                 return $spec->sortExpression();
             }
         }
-        $productFields = ['id', 'pagetitle', 'menuindex', 'published', 'createdon', 'editedon'];
+        if ($sortBy === 'menuindex') {
+            return $effectiveMenuindexSql;
+        }
+        $productFields = ['id', 'pagetitle', 'published', 'createdon', 'editedon'];
         if (in_array($sortBy, $productFields, true)) {
             return "msProduct.{$sortBy}";
         }
@@ -139,13 +153,13 @@ final class CategoryProductsListService
     }
 
     /**
-     * @param list<OptionColumnSpec>    $optionSpecs
-     * @param list<RelationColumnSpec>  $relationSpecs
+     * @param list<int>               $scopeCategoryIds
+     * @param list<OptionColumnSpec>  $optionSpecs
+     * @param list<RelationColumnSpec> $relationSpecs
      */
     private function buildProductListQuery(
-        int $categoryId,
+        array $scopeCategoryIds,
         array $params,
-        bool $nested,
         array $optionSpecs,
         array $relationSpecs,
     ): xPDOQuery {
@@ -167,15 +181,17 @@ final class CategoryProductsListService
             $c->leftJoin($spec->modelClass, $spec->alias, $spec->joinCondition());
         }
 
+        $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
+        $c->leftJoin(
+            msCategoryMember::class,
+            $memberAlias,
+            CategoryProductMenuindexService::memberJoinOnCategories($scopeCategoryIds, $memberAlias)
+        );
+
         $c->where(['msProduct.class_key' => msProduct::class]);
 
         $scopeService = $this->getCategoryProductScopeService();
-        if ($nested) {
-            $categoryIds = $this->treeService()->productParentIds($categoryId, true);
-            $scopeService->applyProductCategoryScope($c, $categoryIds);
-        } else {
-            $scopeService->applyProductCategoryScope($c, [$categoryId]);
-        }
+        $scopeService->applyProductCategoryScope($c, $scopeCategoryIds);
 
         if ($query !== '') {
             $c->where([
@@ -308,7 +324,7 @@ final class CategoryProductsListService
             'longtitle' => $row['longtitle'] ?? '',
             'alias' => $row['alias'] ?? '',
             'parent' => (int) ($row['parent'] ?? 0),
-            'menuindex' => (int) ($row['menuindex'] ?? 0),
+            'menuindex' => (int) ($row['effective_menuindex'] ?? $row['menuindex'] ?? 0),
             'published' => (bool) ($row['published'] ?? false),
             'deleted' => (bool) ($row['deleted'] ?? false),
             'hidemenu' => (bool) ($row['hidemenu'] ?? false),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Stubs;
 
 use MiniShop3\Model\msCategory;
+use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msProduct;
 use MODX\Revolution\modX;
 
@@ -16,8 +17,11 @@ class CategoryProductScopeModxStub extends modX
     /** @var object|null */
     public $lexicon;
 
-    /** @var list<array{id: int, parent: int, published?: int, deleted?: int, policies?: array<string, bool>}> */
+    /** @var list<array{id: int, parent: int, published?: int, deleted?: int, menuindex?: int, policies?: array<string, bool>}> */
     public array $products = [];
+
+    /** @var list<array{product_id: int, category_id: int, menuindex?: int}> */
+    public array $members = [];
 
     /** @var list<array{id: int, parent: int}> */
     public array $categories = [];
@@ -74,6 +78,19 @@ class CategoryProductScopeModxStub extends modX
     {
         $this->getObjectCalls[] = ['class' => $className, 'criteria' => $criteria];
 
+        if ($className === msCategoryMember::class && is_array($criteria)) {
+            $productId = (int) ($criteria['product_id'] ?? 0);
+            $categoryId = (int) ($criteria['category_id'] ?? 0);
+
+            foreach ($this->members as $row) {
+                if ((int) $row['product_id'] === $productId && (int) $row['category_id'] === $categoryId) {
+                    return new StubMsCategoryMember($row, $this);
+                }
+            }
+
+            return null;
+        }
+
         if ($className === msCategory::class) {
             $categoryId = is_array($criteria)
                 ? (int) ($criteria['id'] ?? 0)
@@ -110,6 +127,18 @@ class CategoryProductScopeModxStub extends modX
             foreach ($this->products as $row) {
                 if ((int) $row['id'] === $productId && (int) $row['parent'] === $parentId) {
                     return new StubMsProduct($row, $row['policies'] ?? null);
+                }
+            }
+
+            if ($parentId > 0) {
+                return null;
+            }
+
+            if ($productId > 0) {
+                foreach ($this->products as $row) {
+                    if ((int) $row['id'] === $productId) {
+                        return new StubMsProduct($row, $row['policies'] ?? null);
+                    }
                 }
             }
 

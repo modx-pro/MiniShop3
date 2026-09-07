@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Product;
 
 use MiniShop3\Model\msCategoryMember;
+use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MODX\Revolution\Processors\Model\CreateProcessor;
 
 class Category extends CreateProcessor
@@ -22,13 +23,10 @@ class Category extends CreateProcessor
             /** @var msCategoryMember $res */
             $res = $this->modx->getObject(msCategoryMember::class, ['category_id' => $cid, 'product_id' => $pid]);
             if (!$res) {
-                $res = $this->modx->newObject(msCategoryMember::class);
-                $res->set('product_id', $pid);
-                $res->set('category_id', $cid);
-                $res->save();
+                $menuindexService = new CategoryProductMenuindexService($this->modx);
+                $menuindexService->ensureMember((int) $pid, (int) $cid);
             } else {
-                $table = $this->modx->getTableName(msCategoryMember::class);
-                $this->modx->exec("DELETE FROM {$table} WHERE `product_id` = {$pid} AND `category_id` = {$cid};");
+                $res->remove();
             }
         }
 
