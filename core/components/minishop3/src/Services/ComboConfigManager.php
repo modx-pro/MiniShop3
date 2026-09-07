@@ -318,8 +318,11 @@ class ComboConfigManager
                 },
                 $template
             );
-            // Clean up multiple spaces and trim
-            $label = trim(preg_replace('/\s+/', ' ', $label));
+            // Collapse Unicode whitespace (e.g. NBSP U+00A0). Without /u, PCRE treats the
+            // subject as bytes and does not treat UTF-8 NBSP as \s, so combo labels can keep
+            // non-ASCII spaces and break downstream JSON consumers of model-fields (#618).
+            $collapsed = preg_replace('/\s+/u', ' ', $label);
+            $label = trim(is_string($collapsed) ? $collapsed : $label);
         } else {
             // Fallback to single field
             $label = $item->get($singleField);
