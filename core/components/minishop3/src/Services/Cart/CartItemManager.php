@@ -259,26 +259,32 @@ class CartItemManager
             return null;
         }
 
-        $c = $this->modx->newQuery(msProduct::class);
-        $c->where([
+        $filter = [
             'id' => $productId,
             'class_key' => msProduct::class,
-        ]);
+        ];
 
         if (!$this->config['allow_deleted']) {
-            $c->where(['deleted' => 0]);
+            $filter['deleted'] = 0;
         }
 
         if (!$this->config['allow_unpublished']) {
-            $c->where(['published' => 1]);
+            $filter['published'] = 1;
+        }
+
+        $visibility = new CatalogResourceGroupVisibility($this->modx);
+        if (!$visibility->isEnabled()) {
+            return $this->modx->getObject(msProduct::class, $filter) ?: null;
         }
 
         // Same anonymous RG ACL gate as public catalog (#659) — no cart bypass via product id.
+        $c = $this->modx->newQuery(msProduct::class);
+        $c->where($filter);
         $context = (string) ($this->modx->context->key ?? 'web');
         if ($context === '') {
             $context = 'web';
         }
-        (new CatalogResourceGroupVisibility($this->modx))->apply($c, 'msProduct', $context);
+        $visibility->apply($c, 'msProduct', $context);
 
         return $this->modx->getObject(msProduct::class, $c) ?: null;
     }
