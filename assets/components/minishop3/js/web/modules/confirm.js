@@ -72,7 +72,7 @@ const ms3Confirm = (function () {
     const opts = {
       confirmText: options.confirmText || lexicon.ms3_confirm_ok || t.ok,
       cancelText: options.cancelText || lexicon.ms3_confirm_cancel || t.cancel,
-      confirmClass: options.confirmClass || 'btn-primary'
+      confirmClass: options.confirmClass || 'btn-primary',
     }
 
     const el = getOrCreateModal()

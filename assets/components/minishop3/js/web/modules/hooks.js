@@ -48,7 +48,7 @@ window.ms3Hooks = {
         console.error(`Error executing hook "${name}":`, error)
       }
     }
-  }
+  },
 }
 
 window.ms3Hooks.addHook('afterSendRequest', () => {
