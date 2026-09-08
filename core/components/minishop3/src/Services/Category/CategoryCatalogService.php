@@ -7,6 +7,7 @@ namespace MiniShop3\Services\Category;
 use MiniShop3\Model\msCategory;
 use MiniShop3\Services\Catalog\CatalogQuery;
 use MiniShop3\Services\Catalog\CatalogResolve;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use MiniShop3\Services\Seo\PublicSeoService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
@@ -282,13 +283,14 @@ class CategoryCatalogService
      */
     private function findVisibleCategory(int $categoryId, array $params, bool $includeHidden): ?msCategory
     {
-        $criteria = $this->publicCriteria(array_merge(
-            ['id' => $categoryId],
-            $this->visibilityCriteria($params, $includeHidden),
-        ));
+        if ($categoryId <= 0) {
+            return null;
+        }
+
+        $c = $this->createVisibleCategoriesQuery($params, $includeHidden, ['id' => $categoryId]);
 
         /** @var msCategory|null $category */
-        $category = $this->modx->getObject(msCategory::class, $criteria);
+        $category = $this->modx->getObject(msCategory::class, $c);
 
         return $category ?: null;
     }
@@ -496,12 +498,7 @@ class CategoryCatalogService
         $ids = array_reverse($ids);
         $ids[] = (int) $category->get('id');
 
-        $criteria = $this->publicCriteria(array_merge(
-            ['id:IN' => $ids],
-            $this->visibilityCriteria($params, $includeHidden),
-        ));
-
-        $query = $this->modx->newQuery(msCategory::class, $criteria);
+        $query = $this->createVisibleCategoriesQuery($params, $includeHidden, ['id:IN' => $ids]);
         $query->select($this->modx->getSelectColumns(msCategory::class, 'msCategory', '', self::RESOURCE_FIELDS));
 
         /** @var array<int, array<string, mixed>> $byId */
@@ -536,8 +533,14 @@ class CategoryCatalogService
         $c = $this->modx->newQuery(msCategory::class);
         $c->where($this->publicCriteria($extra));
         $this->applyVisibilityFilters($c, $params, $includeHidden);
+        $this->resourceGroupVisibility()->apply($c, 'msCategory', $this->resolveContext($params));
 
         return $c;
+    }
+
+    private function resourceGroupVisibility(): CatalogResourceGroupVisibility
+    {
+        return new CatalogResourceGroupVisibility($this->modx);
     }
 
     /**
