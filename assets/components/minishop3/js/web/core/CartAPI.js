@@ -72,7 +72,7 @@ class CartAPI {
     const data = {
       id,
       count,
-      options
+      options,
     }
 
     if (render) {
@@ -98,7 +98,7 @@ class CartAPI {
   async change (productKey, count, render = null) {
     const data = {
       product_key: productKey,
-      count
+      count,
     }
 
     if (render) {
@@ -124,7 +124,7 @@ class CartAPI {
   async changeOption (productKey, options = {}, render = null) {
     const data = {
       product_key: productKey,
-      options
+      options,
     }
 
     if (render) {
@@ -148,7 +148,7 @@ class CartAPI {
    */
   async remove (productKey, render = null) {
     const data = {
-      product_key: productKey
+      product_key: productKey,
     }
 
     if (render) {

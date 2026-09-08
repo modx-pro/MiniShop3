@@ -250,7 +250,7 @@ class OrderUI {
       }
 
       return response
-    } catch (error) {
+    } catch (_error) {
       this.message.error('Order submission error')
       return { success: false }
     }
@@ -290,7 +290,7 @@ class OrderUI {
       }
 
       return response
-    } catch (error) {
+    } catch (_error) {
       this.message.error('Order clearing error')
       return { success: false }
     }
@@ -311,7 +311,7 @@ class OrderUI {
       const selectorList = [
         `[name="${fieldName}"]`,
         `[name="address_${fieldName}"]`,
-        `[name="order_${fieldName}"]`
+        `[name="order_${fieldName}"]`,
       ]
 
       selectorList.forEach(selector => {

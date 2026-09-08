@@ -21,8 +21,8 @@
       'entrance',
       'floor',
       'room',
-      'text_address'
-    ]
+      'text_address',
+    ],
   }
 
   /**
@@ -32,11 +32,8 @@
     config.addressSelect = document.getElementById('saved_address_id')
 
     if (!config.addressSelect) {
-      console.log('[MS3 Order Addresses] Select not found (customer not authenticated or no addresses)')
       return
     }
-
-    console.log('[MS3 Order Addresses] Initializing address selection handler')
 
     config.addressSelect.addEventListener('change', handleAddressChange)
   }
@@ -49,7 +46,6 @@
     const addressId = selectedOption.value
 
     if (!addressId) {
-      console.log('[MS3 Order Addresses] New address selected, clearing fields')
       clearAddressFields()
       return
     }
@@ -63,7 +59,6 @@
 
     try {
       const address = JSON.parse(addressData)
-      console.log('[MS3 Order Addresses] Selected address #' + addressId)
       fillAddressFields(address)
     } catch (error) {
       console.error('[MS3 Order Addresses] Failed to parse address data:', error)

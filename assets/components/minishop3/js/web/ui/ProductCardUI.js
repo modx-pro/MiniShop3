@@ -100,14 +100,14 @@ class ProductCardUI {
       if (!this.cartState[productId]) {
         this.cartState[productId] = {
           entries: [],
-          totalCount: 0
+          totalCount: 0,
         }
       }
 
       this.cartState[productId].entries.push({
         key: item.product_key,
         count: item.count,
-        options: item.options || {}
+        options: item.options || {},
       })
 
       this.cartState[productId].totalCount += parseInt(item.count)
