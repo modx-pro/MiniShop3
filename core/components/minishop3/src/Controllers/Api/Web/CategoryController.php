@@ -6,6 +6,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Catalog\CatalogContextException;
 use MiniShop3\Services\Category\CategoryCatalogService;
 use MODX\Revolution\modX;
 
@@ -40,7 +41,11 @@ class CategoryController
             );
         }
 
-        $category = $this->catalog()->getById($categoryId, $params);
+        try {
+            $category = $this->catalog()->getById($categoryId, $params);
+        } catch (CatalogContextException $e) {
+            return $this->catalogContextBadRequest($e);
+        }
 
         if ($category === null) {
             return Response::error(
@@ -62,7 +67,13 @@ class CategoryController
      */
     public function getList(array $params = []): Response
     {
-        return Response::success($this->catalog()->getList($params));
+        try {
+            $result = $this->catalog()->getList($params);
+        } catch (CatalogContextException $e) {
+            return $this->catalogContextBadRequest($e);
+        }
+
+        return Response::success($result);
     }
 
     /**
@@ -74,7 +85,21 @@ class CategoryController
      */
     public function getTree(array $params = []): Response
     {
-        return Response::success($this->catalog()->getTree($params));
+        try {
+            $result = $this->catalog()->getTree($params);
+        } catch (CatalogContextException $e) {
+            return $this->catalogContextBadRequest($e);
+        }
+
+        return Response::success($result);
+    }
+
+    private function catalogContextBadRequest(CatalogContextException $e): Response
+    {
+        return Response::error(
+            $this->modx->lexicon($e->getLexiconKey()),
+            HttpStatus::BAD_REQUEST
+        );
     }
 
     private function catalog(): CategoryCatalogService

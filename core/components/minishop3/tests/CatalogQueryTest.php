@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use MiniShop3\Services\Catalog\CatalogContextException;
 use MiniShop3\Services\Catalog\CatalogQuery;
 
 $fail = static function (string $message): never {
@@ -23,6 +24,17 @@ $assertSame = static function ($expected, $actual, string $case) use ($fail): vo
     }
 };
 
+$expectContextException = static function (callable $fn, string $case) use ($fail): void {
+    try {
+        $fn();
+        $fail($case . ': expected CatalogContextException');
+    } catch (CatalogContextException $e) {
+        if ($e->getLexiconKey() !== CatalogContextException::LEXICON_INVALID) {
+            $fail($case . ': unexpected lexicon key ' . $e->getLexiconKey());
+        }
+    }
+};
+
 $assertSame(20, CatalogQuery::resolveLimit([]), 'default limit');
 $assertSame(100, CatalogQuery::resolveLimit(['limit' => 500]), 'limit cap');
 $assertSame(40, CatalogQuery::resolveOffset(['page' => 3], 20), 'page offset');
@@ -33,6 +45,48 @@ $assertSame('shop', CatalogQuery::resolveContext(['context' => ' shop '], 'web')
 $assertSame('web', CatalogQuery::resolveContext(['context' => ''], 'web'), 'empty context → fallback');
 $assertSame('web', CatalogQuery::resolveContext(['context' => '   '], 'web'), 'whitespace context → fallback');
 $assertSame('web', CatalogQuery::resolveContext([], ''), 'empty fallback → web');
+$assertSame('web', CatalogQuery::resolveContext([], 'mgr'), 'invalid fallback mgr → web');
+$assertSame('shop', CatalogQuery::resolveContext(['context' => 'shop'], 'web'), 'valid explicit context');
+$assertSame('shop-v2', CatalogQuery::resolveContext(['context' => 'shop-v2'], 'web'), 'valid charset with dash/underscore');
+
+$expectContextException(
+    static fn () => CatalogQuery::resolveContext(['context' => 'bad chars!'], 'web'),
+    'invalid charset'
+);
+$expectContextException(
+    static fn () => CatalogQuery::resolveContext(['context' => str_repeat('a', 101)], 'web'),
+    'length > 100'
+);
+$expectContextException(
+    static fn () => CatalogQuery::resolveContext(['context' => 'mgr'], 'web'),
+    'mgr prefix lowercase'
+);
+$expectContextException(
+    static fn () => CatalogQuery::resolveContext(['context' => 'Mgr'], 'web'),
+    'mgr prefix mixed case'
+);
+$expectContextException(
+    static fn () => CatalogQuery::resolveContext(['context' => 'mgrCustom'], 'web'),
+    'mgr prefix prefix'
+);
+$expectContextException(
+    static fn () => CatalogQuery::resolveContext(['context' => ['web']], 'web'),
+    'array context'
+);
+$expectContextException(
+    static fn () => CatalogQuery::resolveContext(['context' => true], 'web'),
+    'bool context'
+);
+
+$assertSame(null, CatalogQuery::sanitizeContext(null), 'sanitize null → absent');
+$assertSame(null, CatalogQuery::sanitizeContext(''), 'sanitize empty → absent');
+$assertSame(null, CatalogQuery::sanitizeContext('   '), 'sanitize whitespace → absent');
+$assertSame('web', CatalogQuery::sanitizeContext(' web '), 'sanitize valid trim');
+
+$expectContextException(
+    static fn () => CatalogQuery::sanitizeContext('mgr'),
+    'sanitize throws on mgr'
+);
 
 $map = [
     'id' => 't.id',

@@ -230,6 +230,7 @@ $_lang['ms3_err_category_products_no_updates'] = 'No products were updated';
 $_lang['ms3_err_product_id_required'] = 'Product ID is required';
 $_lang['ms3_err_product_nf'] = 'Product not found';
 $_lang['ms3_err_product_update_failed'] = 'Failed to update product';
+$_lang['ms3_err_catalog_context_invalid'] = 'Invalid context parameter';
 $_lang['ms3_err_catalog_parents_invalid'] = 'Invalid parents filter';
 $_lang['ms3_err_catalog_parents_limit'] = 'Too many parent category IDs';
 $_lang['ms3_err_catalog_price_invalid'] = 'Invalid price filter';
