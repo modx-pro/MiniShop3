@@ -8,9 +8,11 @@ use MODX\Revolution\Processors\ModelProcessor;
 
 class Sort extends ModelProcessor
 {
+    public $classKey = msProductFile::class;
+    public $languageTopics = ['minishop3:default'];
+    public $permission = 'msproductfile_save';
+
     /**
-     *
-     *
      * @return array|string
      */
     public function process()
