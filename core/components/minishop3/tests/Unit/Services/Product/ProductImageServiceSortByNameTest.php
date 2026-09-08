@@ -50,6 +50,23 @@ final class ProductImageServiceSortByNameTest extends TestCase
         self::assertSame([2 => 0, 1 => 1], $ranks);
     }
 
+    /**
+     * strnatcasecmp alone does not case-fold Cyrillic under locale C (#616 review).
+     */
+    public function testBuildNaturalSortRanksIsCaseInsensitiveForCyrillic(): void
+    {
+        $rows = [
+            ['id' => 1, 'name' => 'Фото 1.jpg', 'file' => 'f1.jpg'],
+            ['id' => 4, 'name' => 'Фото 10.jpg', 'file' => 'f10.jpg'],
+            ['id' => 2, 'name' => 'фото 2.jpg', 'file' => 'f2.jpg'],
+            ['id' => 3, 'name' => 'фото 3.jpg', 'file' => 'f3.jpg'],
+        ];
+
+        $ranks = ProductImageService::buildNaturalSortRanks($rows);
+
+        self::assertSame([1 => 0, 2 => 1, 3 => 2, 4 => 3], $ranks);
+    }
+
     public function testBuildNaturalSortRanksFallsBackToFileWhenNameEmpty(): void
     {
         $rows = [

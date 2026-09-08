@@ -132,12 +132,15 @@ class ProductImageService
         }
 
         usort($rows, static function (array $a, array $b): int {
-            $cmp = strnatcasecmp(self::naturalSortKey($a), self::naturalSortKey($b));
+            $cmp = strnatcmp(self::naturalSortKey($a), self::naturalSortKey($b));
             if ($cmp !== 0) {
                 return $cmp;
             }
 
-            $cmp = strnatcasecmp((string) ($a['file'] ?? ''), (string) ($b['file'] ?? ''));
+            $cmp = strnatcmp(
+                self::foldNaturalSortString((string) ($a['file'] ?? '')),
+                self::foldNaturalSortString((string) ($b['file'] ?? '')),
+            );
             if ($cmp !== 0) {
                 return $cmp;
             }
@@ -307,8 +310,18 @@ class ProductImageService
     private static function naturalSortKey(array $row): string
     {
         $name = trim((string) ($row['name'] ?? ''));
+        $key = $name !== '' ? $name : (string) ($row['file'] ?? '');
 
-        return $name !== '' ? $name : (string) ($row['file'] ?? '');
+        return self::foldNaturalSortString($key);
+    }
+
+    /**
+     * Case-fold for natural sort. strnatcasecmp is C-locale and skips multibyte
+     * letters (Cyrillic), so UTF-8 names need mb_strtolower first (#616 review).
+     */
+    private static function foldNaturalSortString(string $value): string
+    {
+        return mb_strtolower($value, 'UTF-8');
     }
 
     /**
