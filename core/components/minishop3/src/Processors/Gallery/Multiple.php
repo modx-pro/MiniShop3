@@ -6,6 +6,9 @@ use MODX\Revolution\Processors\ModelProcessor;
 
 class Multiple extends ModelProcessor
 {
+    public $languageTopics = ['minishop3:default'];
+    public $permission = 'msproductfile_save';
+
     /**
      * @return array|string
      */
