@@ -13,6 +13,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use MiniShop3\Services\Grid\GridColumnRules;
 use MiniShop3\Services\Grid\ProductDataForeignKeys;
 use MiniShop3\Services\Grid\RelationColumnSpec;
+use MiniShop3\Services\Grid\RelationSqlFragments;
 
 $fail = static function (string $message): never {
     fwrite(STDERR, "FAIL: {$message}\n");
@@ -54,19 +55,32 @@ $spec = RelationColumnSpec::fromGroupField($group, [
 ]);
 $assertTrue($spec instanceof RelationColumnSpec, 'valid relation spec is created');
 $assertSame(
-    '`rel_msVendor_vendor_id`.id = Data.vendor_id',
+    '`rel_msVendor_vendor_id`.`id` = `Data`.`vendor_id`',
     $spec->joinCondition(),
     'vendor join condition'
 );
 $assertSame(
-    '`rel_msVendor_vendor_id`.address AS `vendor_address`',
+    '`rel_msVendor_vendor_id`.`address` AS `vendor_address`',
     $spec->selectExpression(),
     'vendor select expression'
 );
 $assertSame(
-    '`rel_msVendor_vendor_id`.address',
+    '`rel_msVendor_vendor_id`.`address`',
     $spec->sortExpression(),
     'vendor sort/filter expression'
+);
+
+$rankGroup = $group;
+$rankGroup['foreignKey'] = 'vendor_id';
+$rankSpec = RelationColumnSpec::fromGroupField($rankGroup, [
+    'name' => 'vendor_rank',
+    'displayField' => 'rank',
+]);
+$assertTrue($rankSpec instanceof RelationColumnSpec, 'grandfathered reserved displayField is accepted');
+$assertSame(
+    '`rel_msVendor_vendor_id`.`rank` AS `vendor_rank`',
+    $rankSpec->selectExpression(),
+    'reserved displayField is quoted'
 );
 
 $assertNull(
@@ -92,6 +106,17 @@ $assertTrue(
 $assertTrue(
     !GridColumnRules::isValidCategoryProductExtraFieldName('vendor_id'),
     'vendor_id is reserved'
+);
+
+$assertSame(
+    '`rel_msVendor_vendor_id`.`rank` AS `vendor_rank`',
+    RelationSqlFragments::selectAs('rel_msVendor_vendor_id', 'rank', 'vendor_rank'),
+    'RelationSqlFragments quotes reserved displayField'
+);
+$assertSame(
+    '`rel_status`.`id` = `msOrder`.`status_id`',
+    RelationSqlFragments::joinEqualsId('rel_status', 'msOrder', 'status_id'),
+    'RelationSqlFragments order join'
 );
 
 fwrite(STDOUT, "OK RelationColumnSpecTest\n");

@@ -236,10 +236,22 @@ class ExtraFieldsService
             ];
         }
 
-        if (!GridColumnRules::isValidSqlIdentifier((string) $data['key'])) {
+        $key = (string) $data['key'];
+        $keyClass = GridColumnRules::classifySqlIdentifier($key);
+        if ($keyClass === GridColumnRules::CLASSIFY_INVALID) {
             return [
                 'success' => false,
                 'message' => $this->modx->lexicon('ms3_err_extra_field_key_invalid'),
+                'field' => 'key',
+            ];
+        }
+        if ($keyClass === GridColumnRules::CLASSIFY_RESERVED) {
+            return [
+                'success' => false,
+                'message' => $this->modx->lexicon('ms3_err_extra_field_key_reserved', [
+                    'key' => $key,
+                    'suggestion' => GridColumnRules::suggestSqlIdentifierAlternative($key),
+                ]),
                 'field' => 'key',
             ];
         }

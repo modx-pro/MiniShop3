@@ -68,21 +68,22 @@ final readonly class RelationColumnSpec
 
     public function joinCondition(): string
     {
-        return "`{$this->alias}`.id = {$this->localAlias}.{$this->foreignKey}";
+        return RelationSqlFragments::joinEqualsId($this->alias, $this->localAlias, $this->foreignKey);
     }
 
     public function selectExpression(): string
     {
-        return "`{$this->alias}`.{$this->displayField} AS `{$this->fieldName}`";
+        return RelationSqlFragments::selectAs($this->alias, $this->displayField, $this->fieldName);
     }
 
     public function sortExpression(): string
     {
-        return "`{$this->alias}`.{$this->displayField}";
+        return RelationSqlFragments::columnRef($this->alias, $this->displayField);
     }
 
     private static function isSafeSqlIdentifier(string $name): bool
     {
-        return GridColumnRules::isValidSqlIdentifier($name);
+        // Charset-only so reserved MySQL words stored before #655 still load when quoted.
+        return GridColumnRules::matchesSqlIdentifierPattern($name);
     }
 }

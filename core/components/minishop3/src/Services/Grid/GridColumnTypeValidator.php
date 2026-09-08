@@ -32,6 +32,9 @@ final class GridColumnTypeValidator
         'displayField' => 'relation.displayField is required',
     ];
 
+    private const NON_RESERVED_SQL_IDENTIFIER_MSG =
+        'must be a non-reserved SQL identifier (letters, numbers, underscores)';
+
     public function __construct(private modX $modx)
     {
     }
@@ -86,14 +89,14 @@ final class GridColumnTypeValidator
         if (!GridColumnRules::isValidSqlIdentifier((string) $relation['foreignKey'])) {
             return [
                 'success' => false,
-                'message' => 'relation.foreignKey must contain only letters, numbers and underscores',
+                'message' => 'relation.foreignKey ' . self::NON_RESERVED_SQL_IDENTIFIER_MSG,
             ];
         }
 
         if (!GridColumnRules::isValidSqlIdentifier((string) $relation['displayField'])) {
             return [
                 'success' => false,
-                'message' => 'relation.displayField must contain only letters, numbers and underscores',
+                'message' => 'relation.displayField ' . self::NON_RESERVED_SQL_IDENTIFIER_MSG,
             ];
         }
 
