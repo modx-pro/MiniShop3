@@ -274,9 +274,8 @@ class Response
      */
     public function send(): void
     {
-        http_response_code($this->statusCode);
-
         if ($this->redirectUrl !== null) {
+            http_response_code($this->statusCode);
             header('Location: ' . $this->redirectUrl);
             foreach ($this->headers as $name => $value) {
                 header("{$name}: {$value}");
@@ -284,13 +283,135 @@ class Response
             exit;
         }
 
+        $body = $this->encodeJsonBody(self::resolveModxLogger());
+
+        http_response_code($this->statusCode);
         header('Content-Type: application/json; charset=utf-8');
         foreach ($this->headers as $name => $value) {
             header("{$name}: {$value}");
         }
 
-        echo json_encode($this->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        echo $body;
         exit;
+    }
+
+    /**
+     * Encode response payload for the wire (#654).
+     *
+     * Never returns an empty string: invalid UTF-8 is substituted (U+FFFD) after a MODX
+     * log line; if encoding still fails, status becomes 500 and a static ASCII envelope
+     * is returned.
+     */
+    public function encodeJsonBody(?object $modx = null): string
+    {
+        $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+        $json = json_encode($this->data, $flags);
+        if ($json !== false) {
+            return $json;
+        }
+
+        self::logJsonEncodeFailure($modx, json_last_error_msg(), $this->data);
+
+        $json = json_encode($this->data, $flags | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json !== false) {
+            return $json;
+        }
+
+        self::logJsonEncodeFailure($modx, json_last_error_msg(), $this->data, true);
+        $this->statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
+        $this->data = [
+            'success' => false,
+            'message' => 'Internal server error',
+            'code' => HttpStatus::INTERNAL_SERVER_ERROR,
+            'errors' => null,
+            'error_code' => ApiErrorCode::INTERNAL_ERROR,
+        ];
+
+        $fallback = json_encode($this->data, $flags);
+        return $fallback !== false ? $fallback : '{"success":false,"message":"Internal server error","code":500,"errors":null,"error_code":"internal_error"}';
+    }
+
+    /**
+     * Encode an arbitrary payload with the same UTF-8 safety as {@see encodeJsonBody()} (#654).
+     *
+     * Used by api.php (storefront does not call send()).
+     */
+    public static function encodeJson(mixed $data, ?object $modx = null): string
+    {
+        $response = new self($data);
+
+        return $response->encodeJsonBody($modx);
+    }
+
+    /**
+     * @param object|null $modx Object with log($level, $message)
+     */
+    private static function logJsonEncodeFailure(
+        ?object $modx,
+        string $jsonError,
+        mixed $data,
+        bool $afterSubstitute = false,
+    ): void {
+        if ($modx === null || !method_exists($modx, 'log')) {
+            return;
+        }
+
+        $paths = self::collectInvalidUtf8Paths($data);
+        $pathHint = $paths === []
+            ? 'no invalid UTF-8 strings found (non-UTF8 failure?)'
+            : implode('; ', array_slice($paths, 0, 20));
+        $phase = $afterSubstitute ? 'after UTF-8 substitute' : 'initial encode';
+
+        $level = class_exists(\MODX\Revolution\modX::class, false)
+            ? \MODX\Revolution\modX::LOG_LEVEL_ERROR
+            : 3;
+
+        $modx->log(
+            $level,
+            '[MiniShop3 Response] json_encode failed (' . $phase . '): '
+            . $jsonError . '. Invalid paths: ' . $pathHint
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function collectInvalidUtf8Paths(mixed $data, string $prefix = ''): array
+    {
+        if (is_string($data)) {
+            if (mb_check_encoding($data, 'UTF-8')) {
+                return [];
+            }
+            $label = $prefix === '' ? '(root)' : $prefix;
+            $snippet = substr($data, 0, 16);
+
+            return [$label . ' hex=' . bin2hex($snippet)];
+        }
+
+        if (!is_array($data)) {
+            return [];
+        }
+
+        $paths = [];
+        foreach ($data as $key => $value) {
+            $child = $prefix === '' ? (string) $key : $prefix . '.' . $key;
+            $paths = array_merge($paths, self::collectInvalidUtf8Paths($value, $child));
+            if (count($paths) >= 20) {
+                break;
+            }
+        }
+
+        return $paths;
+    }
+
+    private static function resolveModxLogger(): ?object
+    {
+        $modx = $GLOBALS['modx'] ?? null;
+        if (!is_object($modx) || !method_exists($modx, 'log')) {
+            return null;
+        }
+
+        return $modx;
     }
 
     /**
