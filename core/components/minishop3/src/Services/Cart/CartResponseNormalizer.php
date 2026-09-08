@@ -12,6 +12,8 @@ use MODX\Revolution\modX;
  *
  * Does not change draft storage. Cart totals stay in CartItemManager::calculateStatus.
  * Checkout delivery/payment/final live on GET /api/v1/order/cost, not here.
+ * Shared cart status keys (total_cost / total_weight / total_discount) use
+ * {@see projectStatus()} so cart/get and order/cost stay numerically aligned.
  */
 class CartResponseNormalizer
 {
@@ -128,6 +130,9 @@ class CartResponseNormalizer
     }
 
     /**
+     * Round cart status totals for public JSON (money 2dp, weight 3dp).
+     * Used by cart/get and by order/cost when it merges Cart::status().
+     *
      * @param array<string, mixed> $status
      * @return array{
      *     total_positions: int,
@@ -137,7 +142,7 @@ class CartResponseNormalizer
      *     total_discount: float
      * }
      */
-    private static function projectStatus(array $status): array
+    public static function projectStatus(array $status): array
     {
         return [
             'total_positions' => (int) ($status['total_positions'] ?? 0),

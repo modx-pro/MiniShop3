@@ -77,6 +77,15 @@ if (str_contains($normalizer, 'OrderCostCalculator')) {
     $fail('CartResponseNormalizer must not call OrderCostCalculator');
 }
 
+$costCalculator = file_get_contents(__DIR__ . '/../src/Services/Order/OrderCostCalculator.php');
+if ($costCalculator === false) {
+    $fail('unable to read OrderCostCalculator');
+}
+
+if (!str_contains($costCalculator, 'CartResponseNormalizer::projectStatus')) {
+    $fail('OrderCostCalculator must round merged cart status via CartResponseNormalizer::projectStatus');
+}
+
 if (!str_contains($registry, 'ms3_cart_response_normalizer')) {
     $fail('ServiceRegistry missing ms3_cart_response_normalizer');
 }

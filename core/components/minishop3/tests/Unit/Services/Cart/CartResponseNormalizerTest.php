@@ -106,6 +106,35 @@ final class CartResponseNormalizerTest extends TestCase
         self::assertSame(40.0, $out['status']['total_discount']);
     }
 
+    public function testProjectStatusRoundsBinaryFloatArtifacts(): void
+    {
+        // 0.1 + 0.2 style residue must match cart/get and order/cost merge.
+        $status = CartResponseNormalizer::projectStatus([
+            'total_positions' => 1,
+            'total_count' => 3,
+            'total_cost' => 0.1 + 0.2,
+            'total_weight' => 0.1 + 0.2,
+            'total_discount' => 0.1 + 0.2,
+        ]);
+
+        self::assertSame(0.3, $status['total_cost']);
+        self::assertSame(0.3, $status['total_weight']);
+        self::assertSame(0.3, $status['total_discount']);
+        self::assertSame(
+            $status,
+            $this->normalizer->normalize([
+                'cart' => [],
+                'status' => [
+                    'total_positions' => 1,
+                    'total_count' => 3,
+                    'total_cost' => 0.1 + 0.2,
+                    'total_weight' => 0.1 + 0.2,
+                    'total_discount' => 0.1 + 0.2,
+                ],
+            ])['status']
+        );
+    }
+
     public function testDiscountCostFallsBackFromDiscountPriceTimesCount(): void
     {
         $out = $this->normalizer->normalize([
