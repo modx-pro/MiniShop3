@@ -90,12 +90,12 @@ try {
         exit;
     }
 
-    $responseData = $response->getData();
+    $body = $response->encodeJsonBody($modx ?? null);
 
-    http_response_code($statusCode);
+    http_response_code($response->getStatusCode());
     header('Content-Type: application/json; charset=utf-8');
 
-    echo json_encode($responseData, JSON_UNESCAPED_UNICODE);
+    echo $body;
 
 } catch (\Throwable $e) {
     // Возвращаем ошибку (Throwable: TypeError from null context must not escape as bare 500)
