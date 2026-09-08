@@ -1,19 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-<<<<<<< HEAD
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ColorPicker from 'primevue/colorpicker'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
-=======
-import { Button, Card, Checkbox, ColorPicker, ConfirmDialog, Dialog, InputText, Textarea, Toast, useConfirm, useToast } from 'primevue'
->>>>>>> 253d099d (fix(vue): align manager grids and forms with Modx theme)
+import { Button, Card, Checkbox, ColorPicker, ConfirmDialog, Dialog, InputText, Textarea, Toast, useToast } from 'primevue'
 import { onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
