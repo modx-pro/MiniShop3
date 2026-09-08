@@ -402,11 +402,10 @@ class Router
      * Answer browser CORS preflight when FastRoute has no OPTIONS handler.
      *
      * Runs the matched route's middleware chain only if it includes CorsMiddleware.
-     * Without CorsMiddleware the stack is not invoked (405, same as before this fix),
-     * so TokenMiddleware / RateLimitMiddleware cannot mint tokens or open sessions
-     * on unauthenticated OPTIONS. The route handler is never called (#634).
-     *
-     * On stock /api/v1 routes CorsMiddleware is first and returns 200, stopping the chain.
+     * Without CorsMiddleware the stack is not invoked (405, same as before this fix).
+     * TokenMiddleware / RateLimitMiddleware short-circuit on OPTIONS so they cannot
+     * mint tokens, open sessions, or consume rate-limit quota during preflight —
+     * regardless of middleware order. The route handler is never called (#634).
      *
      * @param list<string> $allowedMethods
      */

@@ -24,6 +24,7 @@ final class RateLimitMiddlewareTest extends TestCase
 
     protected function tearDown(): void
     {
+        unset($_SERVER['REQUEST_METHOD']);
         foreach (glob($this->storagePath . '/*') ?: [] as $file) {
             if (is_file($file)) {
                 unlink($file);
@@ -72,5 +73,22 @@ final class RateLimitMiddlewareTest extends TestCase
         $response = $middleware->handle([]);
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(HttpStatus::TOO_MANY_REQUESTS, $response->getStatusCode());
+    }
+
+    public function testOptionsPreflightDoesNotConsumeQuota(): void
+    {
+        $store = new FileRateLimitStore($this->storagePath, 60);
+        $middleware = new RateLimitMiddleware(1, 60, $store);
+
+        $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
+        self::assertNull($middleware->handle([]));
+        self::assertNull($middleware->handle([]));
+
+        $key = 'rate_limit:' . md5('127.0.0.1');
+        self::assertSame(0, $store->read($key)['attempts']);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        self::assertNull($middleware->handle([]));
+        self::assertSame(1, $store->read($key)['attempts']);
     }
 }

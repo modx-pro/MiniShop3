@@ -72,6 +72,11 @@ class TokenMiddleware implements MiddlewareInterface
      */
     public function handle(array $params)
     {
+        // CORS preflight must not mint tokens or touch session (#634).
+        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+            return null;
+        }
+
         $this->stripQueryStringApiTokens();
 
         // Cookie injection: make cookie token available via $_REQUEST for backward compat
