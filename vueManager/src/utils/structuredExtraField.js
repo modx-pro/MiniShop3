@@ -29,6 +29,11 @@ export function parseDateFieldValue(value) {
     return null
   }
 
+  // MySQL zero-date / zero-datetime — treat as empty, not a real calendar day.
+  if (value.startsWith('0000-00-00')) {
+    return null
+  }
+
   const ymd = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
   if (ymd) {
     const local = new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]))

@@ -23,6 +23,13 @@ describe('structuredExtraField datefield', () => {
     expect(parsed.getDate()).toBe(20)
   })
 
+  it('treats null, empty string, and MySQL zero-date as empty', () => {
+    expect(parseDateFieldValue(null)).toBeNull()
+    expect(parseDateFieldValue('')).toBeNull()
+    expect(parseDateFieldValue('0000-00-00')).toBeNull()
+    expect(parseDateFieldValue('0000-00-00 00:00:00')).toBeNull()
+  })
+
   it('serializes Date without UTC ISO shift', () => {
     const localMidnight = new Date(2026, 3, 20, 0, 0, 0)
     expect(formatLocalDateYmd(localMidnight)).toBe('2026-04-20')
