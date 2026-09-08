@@ -36,8 +36,8 @@ export function groupProductDataSections(fields, sectionsById = {}) {
   const sections = Array.from(grouped.values())
 
   sections.sort((a, b) => {
-    const sortA = Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : Number.MAX_SAFE_INTEGER
-    const sortB = Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : Number.MAX_SAFE_INTEGER
+    const sortA = toSortOrder(a.sort_order)
+    const sortB = toSortOrder(b.sort_order)
     if (sortA !== sortB) {
       return sortA - sortB
     }
@@ -52,4 +52,20 @@ export function groupProductDataSections(fields, sectionsById = {}) {
   })
 
   return sections
+}
+
+/**
+ * Normalize section sort_order. null / '' / undefined / non-finite → end of list.
+ * Preserves 0 as a valid leading position (#656).
+ *
+ * @param {unknown} value
+ * @returns {number}
+ */
+function toSortOrder(value) {
+  if (value === null || value === '' || value === undefined) {
+    return Number.MAX_SAFE_INTEGER
+  }
+
+  const n = Number(value)
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER
 }
