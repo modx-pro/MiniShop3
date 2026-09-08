@@ -13,6 +13,7 @@ final class CatalogQuery
     public const MAX_LIMIT = 100;
     public const DEFAULT_DEPTH = 5;
     public const MAX_DEPTH = 10;
+    public const MAX_CONTEXT_LENGTH = 100;
 
     /**
      * @param array<string, mixed> $params
@@ -76,20 +77,91 @@ final class CatalogQuery
     }
 
     /**
-     * Empty / whitespace context falls back (avoids unscoped cross-context reads).
+     * Sanitize a MODX context key for catalog queries.
+     *
+     * Empty / whitespace input is treated as absent (returns null).
+     * Non-empty invalid input throws CatalogContextException.
+     *
+     * @throws CatalogContextException
+     */
+    public static function sanitizeContext(?string $key): ?string
+    {
+        if ($key === null) {
+            return null;
+        }
+
+        $key = trim($key);
+        if ($key === '') {
+            return null;
+        }
+
+        if (!self::isValidContextKey($key)) {
+            throw CatalogContextException::invalid();
+        }
+
+        return $key;
+    }
+
+    /**
+     * Empty / whitespace / absent context falls back (avoids unscoped cross-context reads).
+     * Explicit non-empty invalid values throw CatalogContextException (HTTP 400).
      *
      * @param array<string, mixed> $params
+     *
+     * @throws CatalogContextException
      */
     public static function resolveContext(array $params, string $fallback = 'web'): string
     {
-        $context = trim((string) ($params['context'] ?? ''));
-        if ($context !== '') {
-            return $context;
+        if (!array_key_exists('context', $params)) {
+            return self::resolveContextFallback($fallback);
         }
 
-        $fallback = trim($fallback);
+        $sanitized = self::sanitizeContextParam($params['context']);
 
-        return $fallback !== '' ? $fallback : 'web';
+        return $sanitized ?? self::resolveContextFallback($fallback);
+    }
+
+    /**
+     * @throws CatalogContextException
+     */
+    private static function sanitizeContextParam(mixed $raw): ?string
+    {
+        if ($raw === null) {
+            return null;
+        }
+
+        if (is_array($raw) || is_object($raw) || is_bool($raw)) {
+            throw CatalogContextException::invalid();
+        }
+
+        if (!is_string($raw) && !is_int($raw) && !is_float($raw)) {
+            throw CatalogContextException::invalid();
+        }
+
+        return self::sanitizeContext((string) $raw);
+    }
+
+    private static function isValidContextKey(string $key): bool
+    {
+        if (strlen($key) > self::MAX_CONTEXT_LENGTH) {
+            return false;
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $key)) {
+            return false;
+        }
+
+        return !str_starts_with(strtolower($key), 'mgr');
+    }
+
+    private static function resolveContextFallback(string $fallback): string
+    {
+        $fallback = trim($fallback);
+        if ($fallback !== '' && self::isValidContextKey($fallback)) {
+            return $fallback;
+        }
+
+        return 'web';
     }
 
     public static function toBool(mixed $value): bool

@@ -232,6 +232,7 @@ $_lang['ms3_err_category_products_no_updates'] = 'Ни один товар не 
 $_lang['ms3_err_product_id_required'] = 'Не указан ID товара';
 $_lang['ms3_err_product_nf'] = 'Товар не найден';
 $_lang['ms3_err_product_update_failed'] = 'Не удалось обновить товар';
+$_lang['ms3_err_catalog_context_invalid'] = 'Некорректный параметр context';
 $_lang['ms3_err_catalog_parents_invalid'] = 'Некорректный фильтр parents';
 $_lang['ms3_err_catalog_parents_limit'] = 'Слишком много ID категорий в parents';
 $_lang['ms3_err_catalog_price_invalid'] = 'Некорректный фильтр цены';

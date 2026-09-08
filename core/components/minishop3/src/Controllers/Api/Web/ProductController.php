@@ -6,6 +6,7 @@ namespace MiniShop3\Controllers\Api\Web;
 
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Catalog\CatalogContextException;
 use MiniShop3\Services\Product\ProductCatalogFilterException;
 use MiniShop3\Services\Product\ProductCatalogService;
 use MiniShop3\Services\Product\ProductFacetService;
@@ -44,7 +45,11 @@ class ProductController
             );
         }
 
-        $product = $this->catalog()->getById($productId, $params);
+        try {
+            $product = $this->catalog()->getById($productId, $params);
+        } catch (CatalogContextException $e) {
+            return $this->catalogParamBadRequest($e);
+        }
 
         if ($product === null) {
             return Response::error(
@@ -70,11 +75,8 @@ class ProductController
     {
         try {
             $result = $this->catalog()->getList($params);
-        } catch (ProductCatalogFilterException $e) {
-            return Response::error(
-                $this->modx->lexicon($e->getLexiconKey()),
-                HttpStatus::BAD_REQUEST
-            );
+        } catch (ProductCatalogFilterException|CatalogContextException $e) {
+            return $this->catalogParamBadRequest($e);
         }
 
         return Response::success($result);
@@ -92,11 +94,8 @@ class ProductController
     {
         try {
             $result = $this->facets()->getFilters($params);
-        } catch (ProductCatalogFilterException $e) {
-            return Response::error(
-                $this->modx->lexicon($e->getLexiconKey()),
-                HttpStatus::BAD_REQUEST
-            );
+        } catch (ProductCatalogFilterException|CatalogContextException $e) {
+            return $this->catalogParamBadRequest($e);
         }
 
         return Response::success($result);
@@ -120,7 +119,11 @@ class ProductController
             );
         }
 
-        $result = $this->catalog()->getPublicImages($productId, $params);
+        try {
+            $result = $this->catalog()->getPublicImages($productId, $params);
+        } catch (CatalogContextException $e) {
+            return $this->catalogParamBadRequest($e);
+        }
 
         if ($result === null) {
             return Response::error(
@@ -130,6 +133,14 @@ class ProductController
         }
 
         return Response::success($result);
+    }
+
+    private function catalogParamBadRequest(ProductCatalogFilterException|CatalogContextException $e): Response
+    {
+        return Response::error(
+            $this->modx->lexicon($e->getLexiconKey()),
+            HttpStatus::BAD_REQUEST
+        );
     }
 
     private function catalog(): ProductCatalogService
