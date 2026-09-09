@@ -99,11 +99,13 @@ final class CatalogResolveTest extends TestCase
         self::assertSame('web', $result['context']);
     }
 
-    public function testMgrFallbackContextIsRejected(): void
+    public function testMgrFallbackContextFallsBackToWeb(): void
     {
+        // Live MODX context key can be mgr; CatalogQuery soft-falls back to web (#665).
         $result = CatalogResolve::parseLookup(['alias' => 'tea'], 'mgr');
 
-        self::assertSame(['ok' => false, 'error' => 'invalid'], $result);
+        self::assertTrue($result['ok']);
+        self::assertSame('web', $result['context']);
     }
 
     public function testIntAliasIsAccepted(): void
