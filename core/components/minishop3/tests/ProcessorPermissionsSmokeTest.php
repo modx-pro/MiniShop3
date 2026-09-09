@@ -53,7 +53,6 @@ $allowEmptyPermission = [
     'Product/Get.php' => 'read: legacy combo/get; no msproduct_list in policy',
     'Product/GetList.php' => 'read: legacy combo list; no msproduct_list in policy',
     'Product/GetOptions.php' => 'read: option helper; no msproduct_list in policy',
-    'Product/Autocomplete.php' => 'read: autocomplete; Manager REST has own route',
 
     // Category tree helpers (resource UI)
     'Category/GetCats.php' => 'read: category picker list',
