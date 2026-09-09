@@ -8,8 +8,8 @@ use MODX\Revolution\Processors\ModelProcessor;
 class Sort extends ModelProcessor
 {
     public $classKey = msProduct::class;
+    public $permission = 'msproduct_save';
     private $parent;
-
 
     /**
      * @return array|string
