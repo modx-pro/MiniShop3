@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Unit\Router;
 
+use MiniShop3\Processors\Api\ProcessesManagerConnectorRouteTrait;
 use MiniShop3\Router\ApiErrorCode;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
@@ -55,6 +56,73 @@ final class ResponseJsonEncodeTest extends TestCase
         );
     }
 
+    public function testSanitizeUtf8ForJsonSubstitutesInvalidBytes(): void
+    {
+        $modx = $this->makeLogger();
+        $clean = Response::sanitizeUtf8ForJson(['label' => "ab\xC3\x28cd"], $modx);
+
+        self::assertIsArray($clean);
+        self::assertIsString($clean['label']);
+        self::assertStringContainsString("\u{FFFD}", $clean['label']);
+        self::assertNotFalse(json_encode($clean));
+        self::assertNotEmpty($modx->logs);
+        self::assertStringContainsString('label', $modx->logs[0]);
+        self::assertStringContainsString('hex=', $modx->logs[0]);
+    }
+
+    public function testSanitizeUtf8ForJsonLeavesValidDataUnchanged(): void
+    {
+        $payload = ['title' => 'Товар', 'n' => 1];
+        self::assertSame($payload, Response::sanitizeUtf8ForJson($payload));
+    }
+
+    public function testSanitizeUtf8ForJsonReturnsNullWhenUnencodable(): void
+    {
+        $modx = $this->makeLogger();
+        self::assertNull(Response::sanitizeUtf8ForJson(['value' => NAN], $modx));
+        self::assertNotEmpty($modx->logs);
+    }
+
+    /**
+     * Manager connector path: trait respondFromRouter → Processor success → xPDO-style json_encode (#671).
+     */
+    public function testManagerConnectorRespondFromRouterSurvivesBareJsonEncode(): void
+    {
+        $modx = $this->makeLogger();
+        $harness = $this->makeConnectorHarness($modx);
+        $apiData = [
+            'success' => true,
+            'message' => null,
+            'data' => ['fields' => [['label' => "bad\xC3\x28"]]],
+        ];
+
+        $result = $harness->exposeRespond($apiData, 200);
+
+        self::assertTrue($result['success']);
+        self::assertArrayHasKey('object', $result);
+        // Mirrors xPDO::toJSON / modConnectorResponse (no flags, no false check).
+        $encoded = json_encode($result);
+        self::assertNotFalse($encoded);
+        self::assertNotSame('', $encoded);
+        $decoded = json_decode($encoded, true);
+        self::assertStringContainsString("\u{FFFD}", $decoded['object']['fields'][0]['label']);
+        self::assertNotEmpty($modx->logs);
+    }
+
+    public function testManagerConnectorRespondFromRouterFailsClosedOnNan(): void
+    {
+        $modx = $this->makeLogger();
+        $harness = $this->makeConnectorHarness($modx);
+        $result = $harness->exposeRespond(['success' => false, 'message' => 'x', 'value' => NAN], 400);
+
+        self::assertFalse($result['success']);
+        self::assertSame('Internal server error', $result['message']);
+        self::assertSame(['code' => 500], $result['object']);
+        $encoded = json_encode($result);
+        self::assertNotFalse($encoded);
+        self::assertNotSame('', $encoded);
+    }
+
     public function testNonUtf8EncodeFailureFallsBackTo500Envelope(): void
     {
         $modx = $this->makeLogger();
@@ -79,6 +147,51 @@ final class ResponseJsonEncodeTest extends TestCase
             public function log($level, $message): void
             {
                 $this->logs[] = (string) $message;
+            }
+        };
+    }
+
+    /**
+     * Minimal Processor stand-in that exercises trait respondFromRouter (#671).
+     */
+    private function makeConnectorHarness(object $modx): object
+    {
+        return new class ($modx) {
+            use ProcessesManagerConnectorRouteTrait;
+
+            public object $modx;
+
+            public function __construct(object $modx)
+            {
+                $this->modx = $modx;
+            }
+
+            public function exposeRespond(mixed $responseData, int $statusCode): mixed
+            {
+                return $this->respondFromRouter($responseData, $statusCode);
+            }
+
+            public function success($message = '', $object = null): array
+            {
+                return [
+                    'success' => true,
+                    'message' => $message,
+                    'object' => $object,
+                ];
+            }
+
+            public function failure($message = '', $object = null): array
+            {
+                return [
+                    'success' => false,
+                    'message' => $message,
+                    'object' => $object,
+                ];
+            }
+
+            public function getProperty($key, $default = null): mixed
+            {
+                return $default;
             }
         };
     }

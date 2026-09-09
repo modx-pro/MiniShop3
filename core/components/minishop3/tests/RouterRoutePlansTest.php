@@ -112,6 +112,9 @@ if (!str_contains($traitSrc, 'http_response_code(404)')) {
 if (!str_contains($traitSrc, 'catch (\\Throwable')) {
     $fail('trait must catch \\Throwable so TypeError stays JSON (#531/#532)');
 }
+if (!str_contains($traitSrc, 'respondFromRouter') || !str_contains($traitSrc, 'sanitizeUtf8ForJson')) {
+    $fail('trait must sanitize UTF-8 via respondFromRouter before success()/failure() (#671)');
+}
 if (str_contains($traitSrc, 'loadWebRoutes') || str_contains($traitSrc, 'ManagerConnectorRouteLoader')) {
     $fail('trait must not load web routes or use deleted ManagerConnectorRouteLoader');
 }

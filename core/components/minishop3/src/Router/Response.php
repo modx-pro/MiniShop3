@@ -24,6 +24,8 @@ class Response
     /** @var string|null HTTP redirect target (Location) */
     protected ?string $redirectUrl = null;
 
+    private const JSON_ENCODE_FLAGS = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+
     public function __construct($data, int $statusCode = HttpStatus::OK, array $headers = [])
     {
         $this->data = $data;
@@ -304,20 +306,11 @@ class Response
      */
     public function encodeJsonBody(?object $modx = null): string
     {
-        $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
-        $json = json_encode($this->data, $flags);
-        if ($json !== false) {
+        $json = self::encodeJsonUtf8Safe($this->data, $modx);
+        if ($json !== null) {
             return $json;
         }
 
-        self::logJsonEncodeFailure($modx, json_last_error_msg(), $this->data);
-
-        $json = json_encode($this->data, $flags | JSON_INVALID_UTF8_SUBSTITUTE);
-        if ($json !== false) {
-            return $json;
-        }
-
-        self::logJsonEncodeFailure($modx, json_last_error_msg(), $this->data, true);
         $this->statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
         $this->data = [
             'success' => false,
@@ -327,8 +320,63 @@ class Response
             'error_code' => ApiErrorCode::INTERNAL_ERROR,
         ];
 
-        $fallback = json_encode($this->data, $flags);
+        $fallback = json_encode($this->data, self::JSON_ENCODE_FLAGS);
         return $fallback !== false ? $fallback : '{"success":false,"message":"Internal server error","code":500,"errors":null,"error_code":"internal_error"}';
+    }
+
+    /**
+     * Return a JSON-encodable copy of $data for MODX connector toJSON() (#671).
+     *
+     * Same UTF-8 handling as {@see encodeJsonBody()}: log invalid paths (hex snippets only),
+     * then substitute invalid sequences. Returns $data unchanged when already encodable.
+     * When encoding still fails (e.g. NAN), returns null so the caller can fail closed.
+     */
+    public static function sanitizeUtf8ForJson(mixed $data, ?object $modx = null): mixed
+    {
+        if (json_encode($data, self::JSON_ENCODE_FLAGS) !== false) {
+            return $data;
+        }
+
+        $json = self::encodeJsonSubstitutingUtf8($data, $modx);
+        if ($json === null) {
+            return null;
+        }
+
+        $decoded = json_decode($json, true);
+
+        return json_last_error() === JSON_ERROR_NONE ? $decoded : null;
+    }
+
+    /**
+     * json_encode with UTF-8 substitute fallback and MODX logging (#654 / #671).
+     *
+     * @return string|null JSON string, or null when unencodable even after substitute.
+     */
+    private static function encodeJsonUtf8Safe(mixed $data, ?object $modx): ?string
+    {
+        $json = json_encode($data, self::JSON_ENCODE_FLAGS);
+        if ($json !== false) {
+            return $json;
+        }
+
+        return self::encodeJsonSubstitutingUtf8($data, $modx);
+    }
+
+    /**
+     * Log + re-encode with JSON_INVALID_UTF8_SUBSTITUTE after a failed first encode.
+     */
+    private static function encodeJsonSubstitutingUtf8(mixed $data, ?object $modx): ?string
+    {
+        self::logJsonEncodeFailure($modx, json_last_error_msg(), $data);
+
+        $json = json_encode($data, self::JSON_ENCODE_FLAGS | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false) {
+            self::logJsonEncodeFailure($modx, json_last_error_msg(), $data, true);
+
+            return null;
+        }
+
+        return $json;
     }
 
     /**
