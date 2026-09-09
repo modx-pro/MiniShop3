@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MiniShop3\Services\Catalog;
 
+use MiniShop3\Model\msCategory;
+use MiniShop3\Model\msProduct;
 use MODX\Revolution\modAccessResourceGroup;
 use MODX\Revolution\modResourceGroupResource;
 use MODX\Revolution\modUserGroup;
@@ -54,21 +56,62 @@ final class CatalogResourceGroupVisibility
 
     public function apply(xPDOQuery $query, string $resourceAlias, string $contextKey): void
     {
+        $fragment = $this->buildWhereFragment($resourceAlias, $contextKey);
+        if ($fragment !== null) {
+            $query->where($fragment);
+        }
+    }
+
+    /**
+     * Raw NOT EXISTS fragment for pdoTools WHERE (anonymous-safe only).
+     *
+     * Uses the same SQL as {@see apply()}. Member-aware listing for logged-in
+     * users is out of scope here — shared pdoTools cache must stay anonymous-safe (#669).
+     *
+     * @return non-empty-string|null SQL when filtering applies; null when disabled or invalid alias
+     */
+    public function buildWhereFragment(string $resourceAlias, string $contextKey): ?string
+    {
         if (!$this->isEnabled() || $contextKey === '') {
-            return;
+            return null;
         }
 
         if (!in_array($resourceAlias, ['msProduct', 'msCategory'], true)) {
-            return;
+            return null;
         }
 
         $dgTable = $this->modx->getTableName(modResourceGroupResource::class);
         $argTable = $this->modx->getTableName(modAccessResourceGroup::class);
         $quotedContext = $this->modx->quote($contextKey);
 
-        $query->where(
-            self::buildNotExistsSql($dgTable, $argTable, $resourceAlias, $quotedContext)
-        );
+        return self::buildNotExistsSql($dgTable, $argTable, $resourceAlias, $quotedContext);
+    }
+
+    /**
+     * Anonymous-safe visibility for a single catalog resource (same ACL as {@see apply()}).
+     */
+    public function isVisible(int $resourceId, string $resourceAlias = 'msProduct', ?string $contextKey = null): bool
+    {
+        if ($resourceId <= 0) {
+            return false;
+        }
+
+        $contextKey ??= (string) ($this->modx->context->key ?? '');
+        if ($contextKey === '') {
+            $contextKey = 'web';
+        }
+
+        $fragment = $this->buildWhereFragment($resourceAlias, $contextKey);
+        if ($fragment === null) {
+            return true;
+        }
+
+        $class = $resourceAlias === 'msCategory' ? msCategory::class : msProduct::class;
+        $query = $this->modx->newQuery($class);
+        $query->where(['id' => $resourceId]);
+        $query->where($fragment);
+
+        return $this->modx->getCount($class, $query) > 0;
     }
 
     public static function buildNotExistsSql(
