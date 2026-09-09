@@ -8,7 +8,7 @@
     use MiniShop3\MiniShop3;
     use ModxPro\PdoTools\Fetch;
 
-    /** @var modX $modx */
+    /** @var \MODX\Revolution\modX $modx */
     /** @var array $scriptProperties */
     /** @var MiniShop3 $ms3 */
 
@@ -22,7 +22,7 @@
     $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGallery');
     $thumbnailsFilter = $modx->getOption('thumbnails', $scriptProperties, '');
 
-    /** @var msProduct $product */
+    // $product from snippet props may be an id (int|string), not an msProduct yet.
     $_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
     $product = $_ms3LoadedById
         ? $modx->getObject(msProduct::class, ['id' => (int) $product])
