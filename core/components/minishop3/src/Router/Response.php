@@ -381,7 +381,7 @@ class Response
         $clean = self::sanitizeUtf8ForJson($data, $modx);
         $json = $clean !== null ? json_encode($clean) : false;
 
-        if ($json === false || $json === '') {
+        if ($json === false) {
             return [self::connectorFailClosedJson(), true];
         }
 

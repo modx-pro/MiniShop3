@@ -40,14 +40,11 @@ class Utf8SafeConnectorResponse extends modConnectorResponse
             $this->responseCode = 404;
             $this->body = $this->modx->error->failure($modx->lexicon('action_err_ns'), ['code' => 404]);
         } else {
-            if (!isset($_POST)) {
-                $_POST = [];
-            }
-            if (!isset($_GET) || $isLogin) {
+            if ($isLogin) {
                 $_GET = [];
             }
             $scriptProperties = array_merge($_GET, $_POST);
-            if (isset($_FILES) && !empty($_FILES)) {
+            if ($_FILES !== []) {
                 $scriptProperties = array_merge($scriptProperties, $_FILES);
             }
 
