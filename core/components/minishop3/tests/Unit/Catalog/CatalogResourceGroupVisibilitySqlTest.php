@@ -154,6 +154,36 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
         self::assertStringNotContainsString("'modUserGroup'", $sql);
         self::assertStringContainsString('OR EXISTS', $sql);
         self::assertStringContainsString('dg_anon.`document`', $sql);
+        self::assertStringContainsString('NOT EXISTS', $sql);
+    }
+
+    public function testAllowedResourceGroupOpensClosedMembership(): void
+    {
+        // Closed A; customer allowed for A → visible (#669 / #677 review).
+        $this->seedProduct(10);
+        $this->link(10, 110);
+        $this->acl(110, 1, 'web');
+        self::assertFalse($this->isVisible(10));
+        self::assertTrue($this->isVisibleWithAllowed(10, [110]));
+    }
+
+    public function testAllowedGroupPlusClosedOtherMembershipIsVisible(): void
+    {
+        // Closed A + membership in allowed F → visible for customer (#677 review).
+        $this->seedProduct(11);
+        $this->link(11, 120);
+        $this->link(11, 121);
+        $this->acl(120, 1, 'web');
+        self::assertFalse($this->isVisible(11));
+        self::assertTrue($this->isVisibleWithAllowed(11, [121]));
+    }
+
+    public function testAllowedGroupDoesNotOpenUnrelatedClosedResource(): void
+    {
+        $this->seedProduct(12);
+        $this->link(12, 130);
+        $this->acl(130, 1, 'web');
+        self::assertFalse($this->isVisibleWithAllowed(12, [999]));
     }
 
     private function seedProduct(int $id): void
@@ -181,8 +211,26 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
 
     private function isVisible(int $id): bool
     {
-        $sql = 'SELECT COUNT(*) FROM msProduct WHERE id = ' . $id . ' AND ' . $this->predicate;
-        $count = (int) $this->pdo->query($sql)->fetchColumn();
+        return $this->isVisibleWithAllowed($id, []);
+    }
+
+    /**
+     * @param list<int> $allowedIds
+     */
+    private function isVisibleWithAllowed(int $id, array $allowedIds): bool
+    {
+        $sql = CatalogResourceGroupVisibility::buildVisibilitySql(
+            'document_groups',
+            'access_resource_groups',
+            'msProduct',
+            "'web'",
+            $this->quotedPrincipalClass,
+            $allowedIds,
+        );
+        $predicate = str_replace('`', '', $sql);
+        $count = (int) $this->pdo->query(
+            'SELECT COUNT(*) FROM msProduct WHERE id = ' . $id . ' AND ' . $predicate
+        )->fetchColumn();
 
         return $count === 1;
     }

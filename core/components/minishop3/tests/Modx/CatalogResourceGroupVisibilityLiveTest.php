@@ -85,6 +85,34 @@ final class CatalogResourceGroupVisibilityLiveTest extends ExtraTestCase
         );
     }
 
+    public function testAllowedResourceGroupOpensClosedProductForCustomer(): void
+    {
+        $this->modx->setOption(CatalogResourceGroupVisibility::SETTING_KEY, true);
+        $this->modx->setOption('access_resource_group_enabled', true);
+
+        $suffix = bin2hex(random_bytes(3));
+        $product = $this->createPublishedProduct('tb-rg-allowed-' . $suffix);
+        $closed = $this->createResourceGroup('TB Closed Allowed ' . $suffix);
+        $this->linkProductToGroup((int) $product->get('id'), (int) $closed->get('id'));
+        $this->createAcl((int) $closed->get('id'), principal: 1, contextKey: 'web');
+
+        $productId = (int) $product->get('id');
+        $closedId = (int) $closed->get('id');
+
+        self::assertFalse(
+            $this->isProductVisibleViaFilter($productId, 'web'),
+            'Anonymous must not see closed RG product'
+        );
+        self::assertTrue(
+            $this->isProductVisibleViaFilter($productId, 'web', [$closedId]),
+            'Customer allowed for closed RG must see the product'
+        );
+        self::assertFalse(
+            $this->isProductVisibleViaFilter($productId, 'web', [999999]),
+            'Unrelated allowed RG must not open closed product'
+        );
+    }
+
     public function testApplySqlUsesConnectionQuotedFqcn(): void
     {
         $quoted = $this->modx->quote(modUserGroup::class);
@@ -167,8 +195,14 @@ final class CatalogResourceGroupVisibilityLiveTest extends ExtraTestCase
         );
     }
 
-    private function isProductVisibleViaFilter(int $productId, string $contextKey): bool
-    {
+    /**
+     * @param list<int> $allowedResourceGroupIds
+     */
+    private function isProductVisibleViaFilter(
+        int $productId,
+        string $contextKey,
+        array $allowedResourceGroupIds = [],
+    ): bool {
         $c = $this->modx->newQuery(msProduct::class);
         $c->where([
             'id' => $productId,
@@ -176,7 +210,12 @@ final class CatalogResourceGroupVisibilityLiveTest extends ExtraTestCase
             'published' => 1,
             'deleted' => 0,
         ]);
-        (new CatalogResourceGroupVisibility($this->modx))->apply($c, 'msProduct', $contextKey);
+        (new CatalogResourceGroupVisibility($this->modx))->apply(
+            $c,
+            'msProduct',
+            $contextKey,
+            $allowedResourceGroupIds,
+        );
 
         return $this->modx->getObject(msProduct::class, $c) !== null;
     }

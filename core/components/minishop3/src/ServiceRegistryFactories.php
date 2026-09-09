@@ -44,6 +44,7 @@ class ServiceRegistryFactories
             'ms3_product_gallery_public' => $modxOnly(),
             'ms3_public_seo' => $modxOnly(),
             'ms3_category_catalog' => $modxOnly(),
+            'ms3_customer_resource_group_resolver' => $modxOnly(),
             'ms3_delivery_catalog' => $modxOnly(),
             'ms3_payment_catalog' => $modxOnly(),
             'ms3_repeater_field' => $modxOnly(),
