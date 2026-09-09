@@ -113,10 +113,8 @@ abstract class ExtraTestCase extends TestCase
     {
         $object = $this->modx->newObject($class);
         self::assertNotNull($object, $class . ' is not in the xPDO map');
-        $object->fromArray($fields);
-        // Composite PK / named-PK objects become "not new" after fromArray, and save() UPDATEs
-        // zero rows. persistObject always inserts.
-        $object->setNew(true);
+        // Third arg setPrimaryKeys: fromArray skips PK fields (composite keys) otherwise.
+        $object->fromArray($fields, '', true);
         self::assertTrue($object->save(), 'Failed to save ' . $class);
 
         return $object;
@@ -150,7 +148,6 @@ abstract class ExtraTestCase extends TestCase
             $event->set('name', $eventName);
             $event->set('service', 1);
             $event->set('groupname', 'MiniShop3');
-            $event->setNew(true);
             self::assertTrue($event->save(), 'Failed to save modEvent ' . $eventName);
         }
 
@@ -159,8 +156,7 @@ abstract class ExtraTestCase extends TestCase
             'pluginid' => $plugin->get('id'),
             'event' => $eventName,
             'priority' => 0,
-        ]);
-        $pluginEvent->setNew(true);
+        ], '', true);
         self::assertTrue($pluginEvent->save(), 'Failed to attach plugin to ' . $eventName);
 
         $pluginId = (int) $plugin->get('id');

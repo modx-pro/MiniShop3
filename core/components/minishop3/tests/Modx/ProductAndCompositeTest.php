@@ -54,7 +54,7 @@ final class ProductAndCompositeTest extends ExtraTestCase
                 'id' => $product->get('id'),
                 'article' => 'TB-RES-' . $suffix,
                 'price' => 42.0,
-            ]);
+            ], '', true);
             self::assertTrue($data->save(), 'Failed to save msProductData with resource id');
         } else {
             $data->set('article', 'TB-RES-' . $suffix);
