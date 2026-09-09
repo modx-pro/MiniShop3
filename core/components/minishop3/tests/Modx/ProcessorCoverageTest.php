@@ -31,17 +31,8 @@ use MiniShop3\Tests\Modx\Support\ExtraTestCase;
 
 final class ProcessorCoverageTest extends ExtraTestCase
 {
-    public function testGetListProcessorsDenyAnonymousAndSucceedForSudo(): void
+    public function testGetListProcessorsSucceedForSudo(): void
     {
-        $this->actingAsPlain();
-
-        foreach ($this->getListProcessors() as [$class, $properties]) {
-            $this->modx->error->reset();
-            $response = $this->runExtraProcessor($class, $properties);
-            $this->assertProcessorFailure($response);
-            self::assertStringContainsStringIgnoringCase('access denied', $response->getMessage());
-        }
-
         $this->actingAsSudo();
 
         foreach ($this->getListProcessors() as [$class, $properties]) {
@@ -56,6 +47,20 @@ final class ProcessorCoverageTest extends ExtraTestCase
             'limit' => 10,
         ]);
         $this->assertProcessorSuccess($combo);
+    }
+
+    public function testGetListProcessorsDenyAnonymousWhenPoliciesAreEnforced(): void
+    {
+        $this->skipUnlessProcessorPoliciesAreEnforced();
+
+        $this->actingAsPlain();
+
+        foreach ($this->getListProcessors() as [$class, $properties]) {
+            $this->modx->error->reset();
+            $response = $this->runExtraProcessor($class, $properties);
+            $this->assertProcessorFailure($response);
+            self::assertStringContainsStringIgnoringCase('access denied', $response->getMessage());
+        }
     }
 
     public function testSettingsCreateEnableDisableRoundTrip(): void

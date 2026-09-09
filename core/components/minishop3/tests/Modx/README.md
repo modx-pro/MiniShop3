@@ -53,3 +53,5 @@ The suite covers schema (`SHOW TABLES`), persist for every MiniShop3 table class
 Schema for this suite comes from `PackageDefinition::tables()` (xPDO `createObjectContainer`). Full Phinx migrate is not run here: `InitialSchema` boots a second kernel from `config.core.php` at the extra root, which is not a MODX install in git. `phinx.php` is still checked against the live `$modx` connection. A later change can inject that `$modx` into `InitialSchema`.
 
 Processors are PSR-4 classes under `src/Processors/`. Address them by FQCN (`Create::class`). A string action without `processors_path` is resolved against core processors and fails with “Requested processor not found”.
+
+`$permission` on processors is checked through `modContext::checkPolicy()`. That method returns true unless the MODX session is `SESSION_STATE_INITIALIZED`. Testbench boots in API mode without that session, so ACL-deny cases are skipped (`skipUnlessProcessorPoliciesAreEnforced()`). Sudo create/list still runs.

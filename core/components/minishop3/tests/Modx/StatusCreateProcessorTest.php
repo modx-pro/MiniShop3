@@ -12,6 +12,7 @@ final class StatusCreateProcessorTest extends ExtraTestCase
 {
     public function testCreateRequiresMssettingSave(): void
     {
+        $this->skipUnlessProcessorPoliciesAreEnforced();
         $user = $this->createUser(['username' => 'editor-no-settings']);
         $this->actingAs($user);
 

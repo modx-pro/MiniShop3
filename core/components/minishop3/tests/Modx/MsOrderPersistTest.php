@@ -26,6 +26,8 @@ final class MsOrderPersistTest extends ExtraTestCase
         $product = $this->modx->newObject(msOrderProduct::class);
         $product->fromArray([
             'order_id' => $order->get('id'),
+            'product_id' => 0,
+            'product_key' => substr(md5('tb-order-1-widget'), 0, 32),
             'name' => 'Widget',
             'count' => 2,
             'price' => 75.0,

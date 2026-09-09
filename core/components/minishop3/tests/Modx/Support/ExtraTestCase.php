@@ -12,6 +12,7 @@ use ModxKit\Testbench\TestCase;
 use MODX\Revolution\modEvent;
 use MODX\Revolution\modPlugin;
 use MODX\Revolution\modPluginEvent;
+use MODX\Revolution\modX;
 use MODX\Revolution\Processors\ProcessorResponse;
 use ReflectionClass;
 use xPDO\Om\xPDOObject;
@@ -113,6 +114,9 @@ abstract class ExtraTestCase extends TestCase
         $object = $this->modx->newObject($class);
         self::assertNotNull($object, $class . ' is not in the xPDO map');
         $object->fromArray($fields);
+        // Composite PK / named-PK objects become "not new" after fromArray, and save() UPDATEs
+        // zero rows. persistObject always inserts.
+        $object->setNew(true);
         self::assertTrue($object->save(), 'Failed to save ' . $class);
 
         return $object;
@@ -143,11 +147,10 @@ abstract class ExtraTestCase extends TestCase
 
         if ($this->modx->getCount(modEvent::class, ['name' => $eventName]) === 0) {
             $event = $this->modx->newObject(modEvent::class);
-            $event->fromArray([
-                'name' => $eventName,
-                'service' => 1,
-                'groupname' => 'MiniShop3',
-            ]);
+            $event->set('name', $eventName);
+            $event->set('service', 1);
+            $event->set('groupname', 'MiniShop3');
+            $event->setNew(true);
             self::assertTrue($event->save(), 'Failed to save modEvent ' . $eventName);
         }
 
@@ -157,10 +160,29 @@ abstract class ExtraTestCase extends TestCase
             'event' => $eventName,
             'priority' => 0,
         ]);
+        $pluginEvent->setNew(true);
         self::assertTrue($pluginEvent->save(), 'Failed to attach plugin to ' . $eventName);
 
         $pluginId = (int) $plugin->get('id');
         $this->modx->pluginCache[(string) $pluginId] = $plugin->toArray();
         $this->modx->eventMap[$eventName][$pluginId] = $pluginId;
+    }
+
+    /**
+     * Processor $permission is enforced via context checkPolicy(), which returns true unless
+     * the session is INITIALIZED. Testbench boots the kernel in API mode without that session.
+     */
+    protected function processorPoliciesAreEnforced(): bool
+    {
+        return $this->modx->getSessionState() === modX::SESSION_STATE_INITIALIZED;
+    }
+
+    protected function skipUnlessProcessorPoliciesAreEnforced(): void
+    {
+        if (!$this->processorPoliciesAreEnforced()) {
+            self::markTestSkipped(
+                'Processor ACL is not enforced without an initialized MODX session (testbench API boot).'
+            );
+        }
     }
 }

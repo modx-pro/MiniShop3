@@ -73,6 +73,8 @@ final class ModelPersistTest extends ExtraTestCase
 
         $this->persistObject(msOrderProduct::class, [
             'order_id' => $order->get('id'),
+            'product_id' => 0,
+            'product_key' => substr(md5('tb-line-' . $suffix), 0, 32),
             'name' => 'TB Line',
             'count' => 1,
             'price' => 25.5,
