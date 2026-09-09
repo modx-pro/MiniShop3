@@ -8,6 +8,7 @@ use MODX\Revolution\Processors\ModelProcessor;
 class Multiple extends ModelProcessor
 {
     public $classKey = msProduct::class;
+    public $permission = 'msproduct_save';
     /**
      * @return array|string
      */
