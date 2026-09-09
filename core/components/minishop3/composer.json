@@ -30,7 +30,10 @@
   "scripts": {
     "test": "phpunit",
     "test:smoke": "php tests/run-smoke.php",
+    "test:unit": "phpunit --testsuite Unit",
+    "test:integration": "phpunit --testsuite Integration",
     "test:web-api": "phpunit --testsuite WebApi",
+    "test:modx": "phpunit -c phpunit.modx.xml --testsuite Modx",
     "ci:php": "bash scripts/ci-php.sh",
     "stan:prepare": "bash scripts/phpstan-prepare-deps.sh",
     "stan": "vendor/bin/phpstan analyse -c ../../../phpstan.neon --memory-limit=1G"
@@ -42,6 +45,7 @@
     "ext-memcached": "Alternative shared rate-limit storage (ms3_rate_limit_store=memcached)"
   },
   "require-dev": {
+    "modxkit/testbench": "^1.0",
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^11.5"
   }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "541a2bb3a6d325164f8600968e830d0d",
+    "content-hash": "04ae27b660f08e56f67dc68b5622bf58",
     "packages": [
         {
             "name": "brick/math",
@@ -2049,6 +2049,73 @@
     ],
     "packages-dev": [
         {
+            "name": "modxkit/testbench",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/modxkit/testbench.git",
+                "reference": "82edb0cb797b86d85762043b7353e6b529893fe6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/modxkit/testbench/zipball/82edb0cb797b86d85762043b7353e6b529893fe6",
+                "reference": "82edb0cb797b86d85762043b7353e6b529893fe6",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-pdo": "*",
+                "ext-pdo_mysql": "*",
+                "ext-zip": "*",
+                "php": ">=8.2",
+                "phpunit/phpunit": "^10.5.62|^11.5.50|^12.5.22",
+                "symfony/console": "^6.4|^7.0|^8.0",
+                "symfony/process": "^6.4.33|^7.1.7|^8.0"
+            },
+            "require-dev": {
+                "ext-posix": "*",
+                "friendsofphp/php-cs-fixer": "^3.94",
+                "phpstan/phpstan": "^2.2",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "rector/rector": "^2.3"
+            },
+            "bin": [
+                "bin/modx-testbench"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ModxKit\\Testbench\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Prihod",
+                    "email": "prihod2004@gmail.com"
+                }
+            ],
+            "description": "Automated testing environment for MODX Revolution 3 extras",
+            "homepage": "https://github.com/modxkit/testbench",
+            "keywords": [
+                "Extras",
+                "TestBench",
+                "modx",
+                "modx-revolution",
+                "phpunit",
+                "testing"
+            ],
+            "support": {
+                "issues": "https://github.com/modxkit/testbench/issues",
+                "source": "https://github.com/modxkit/testbench"
+            },
+            "time": "2026-09-05T15:17:10+00:00"
+        },
+        {
             "name": "myclabs/deep-copy",
             "version": "1.13.4",
             "source": {
@@ -3825,6 +3892,71 @@
                 }
             ],
             "time": "2024-10-20T05:08:20+00:00"
+        },
+        {
+            "name": "symfony/process",
+            "version": "v8.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/process.git",
+                "reference": "d863f5e70d7c87abb906ac11b61f83036093000b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/process/zipball/d863f5e70d7c87abb906ac11b61f83036093000b",
+                "reference": "d863f5e70d7c87abb906ac11b61f83036093000b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Process\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Executes commands in sub-processes",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/process/tree/v8.1.6"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-08-21T17:47:34+00:00"
         },
         {
             "name": "theseer/tokenizer",

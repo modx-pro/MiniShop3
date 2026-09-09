@@ -45,6 +45,7 @@ assets/customScript.js
 !CHANGELOG.md
 !changelogs/*.md
 !.github/**/*.md
+!core/components/minishop3/tests/**/*.md
 
 # Environment
 .env
