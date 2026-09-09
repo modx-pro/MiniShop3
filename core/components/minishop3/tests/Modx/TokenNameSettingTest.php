@@ -17,6 +17,24 @@ final class TokenNameSettingTest extends ExtraTestCase
         self::assertSame('ms3_test_token', $this->modx->getOption('ms3_token_name'));
     }
 
+    public function testCatalogSettingsRoundTrip(): void
+    {
+        $settings = [
+            'ms3_currency' => 'EUR',
+            'ms3_register_frontend' => '0',
+            'ms3_customer_require_email_verification' => '0',
+            'ms3_customer_send_welcome_email' => '0',
+            'ms3_password_min_length' => '10',
+            'ms3_product_show_in_tree_default' => '1',
+        ];
+
+        foreach ($settings as $key => $value) {
+            $this->setSetting($key, $value);
+            $this->assertSettingEquals($key, $value);
+            self::assertSame($value, (string) $this->modx->getOption($key));
+        }
+    }
+
     public function testMs3ServiceAndRegistryAreRegistered(): void
     {
         self::assertTrue($this->modx->services->has('ms3'));

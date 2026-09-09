@@ -9,7 +9,7 @@
         failOnWarning="true">
     <testsuites>
         <testsuite name="Modx">
-            <directory>tests/Modx</directory>
+            <directory suffix="Test.php">tests/Modx</directory>
         </testsuite>
     </testsuites>
 </phpunit>

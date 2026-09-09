@@ -72,7 +72,7 @@ jobs:
       fail-fast: false
       matrix:
         php: ['8.2']
-        modx: ['3.1.2-pl', '3.2.3-pl']
+        modx: ['3.1.2-pl', '3.2.3-pl', '3.2.4-pl']
 
     services:
       mysql:
@@ -105,7 +105,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-          extensions: pdo_mysql, zip
+          extensions: pdo_mysql, zip, gd
           tools: composer:v2
 
       - name: Cache testbench MODX releases

@@ -14,9 +14,9 @@ PHPUnit suite on a real MODX 3 kernel. Stub suites (`tests/Unit`, `tests/Integra
 
 ## Requirements
 
-- PHP 8.2–8.4, extensions `pdo_mysql` and `zip`
+- PHP 8.2–8.4, extensions `pdo_mysql`, `zip`, and `gd` (or `imagick` for `ms3_image`)
 - MySQL 8 / MariaDB 10.11
-- MODX **3.1.2-pl** or **3.2.3-pl** (testbench default `3.2.3-pl`)
+- MODX **3.1.2-pl**, **3.2.3-pl**, or **3.2.4-pl** (testbench default `3.2.3-pl`)
 
 MODX 3.0.x is not supported by [modxkit/testbench](https://github.com/modxkit/testbench): the core cannot boot in API mode (`reloadConfig()` redeclares model classes). MiniShop3 still documents 3.0.0+ for shops; this suite does not promise 3.0. See [modxcms/revolution#17020](https://github.com/modxcms/revolution/issues/17020).
 
@@ -45,7 +45,10 @@ Do not run stub PHPUnit and `test:modx` in one PHP process (different bootstraps
 ## Layout
 
 - `Support/ExtraTestCase.php` — `PackageDefinition` matching `bootstrap.php`, `ServiceRegistry` via `ms3`
+- `Support/PackageModels.php` — xPDO table classes passed to `->tables()` (`msProduct` / `msCategory` stay on `modResource`)
 - `phpunit.modx.xml` — testbench bootstrap, suite `Modx`
+
+The suite covers schema (`SHOW TABLES`), persist for every MiniShop3 table class, product/category resources plus composite rows, GetList/Create/Enable/Disable processors, DI `has()`/`get()` for every default service, extra-field `loadMap()`, customer `RegisterService`, settings, and plugin events (`msOnSaveOrder`, `msOnVendorCreate`).
 
 Schema for this suite comes from `PackageDefinition::tables()` (xPDO `createObjectContainer`). Full Phinx migrate is not run here: `InitialSchema` boots a second kernel from `config.core.php` at the extra root, which is not a MODX install in git. `phinx.php` is still checked against the live `$modx` connection. A later change can inject that `$modx` into `InitialSchema`.
 

@@ -40,6 +40,11 @@
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
+  "config": {
+    "platform": {
+      "php": "8.2.0"
+    }
+  },
   "suggest": {
     "ext-redis": "Shared rate-limit counters for multi-node Web API (ms3_rate_limit_store=redis)",
     "ext-memcached": "Alternative shared rate-limit storage (ms3_rate_limit_store=memcached)"
@@ -47,6 +52,7 @@
   "require-dev": {
     "modxkit/testbench": "^1.0",
     "phpstan/phpstan": "^2.1",
-    "phpunit/phpunit": "^11.5"
+    "phpunit/phpunit": "^11.5",
+    "symfony/process": "^6.4.33 || ^7.1.7"
   }
 }

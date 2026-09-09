@@ -8,9 +8,6 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Tests\Modx\Support\ExtraTestCase;
 use MiniShop3\Utils\EventGate;
-use MODX\Revolution\modEvent;
-use MODX\Revolution\modPlugin;
-use MODX\Revolution\modPluginEvent;
 
 final class OrderSaveEventTest extends ExtraTestCase
 {
@@ -46,38 +43,5 @@ final class OrderSaveEventTest extends ExtraTestCase
             'msOrder' => $order,
         ]);
         self::assertFalse($gated['success']);
-    }
-
-    private function registerPlugin(string $eventName, string $phpCode): void
-    {
-        $plugin = $this->modx->newObject(modPlugin::class);
-        $plugin->fromArray([
-            'name' => 'testbench-' . $eventName . '-' . bin2hex(random_bytes(3)),
-            'plugincode' => $phpCode,
-            'disabled' => false,
-        ]);
-        self::assertTrue($plugin->save(), 'Failed to save test plugin');
-
-        if ($this->modx->getCount(modEvent::class, ['name' => $eventName]) === 0) {
-            $event = $this->modx->newObject(modEvent::class);
-            $event->fromArray([
-                'name' => $eventName,
-                'service' => 1,
-                'groupname' => 'MiniShop3',
-            ]);
-            self::assertTrue($event->save(), 'Failed to save modEvent ' . $eventName);
-        }
-
-        $pluginEvent = $this->modx->newObject(modPluginEvent::class);
-        $pluginEvent->fromArray([
-            'pluginid' => $plugin->get('id'),
-            'event' => $eventName,
-            'priority' => 0,
-        ]);
-        self::assertTrue($pluginEvent->save(), 'Failed to attach plugin to ' . $eventName);
-
-        $pluginId = (int) $plugin->get('id');
-        $this->modx->pluginCache[(string) $pluginId] = $plugin->toArray();
-        $this->modx->eventMap[$eventName][$pluginId] = $pluginId;
     }
 }
