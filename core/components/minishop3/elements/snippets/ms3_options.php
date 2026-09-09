@@ -2,6 +2,7 @@
 
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use ModxPro\PdoTools\CoreTools;
 
 /** @var modX $modx */
@@ -24,13 +25,17 @@ if (!empty($name) && empty($options)) {
     $options = $name;
 }
 
-$product = !empty($product) && $product != $modx->resource->id
-    ? $modx->getObject(msProduct::class, ['id' => $product])
+$_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+$product = $_ms3LoadedById
+    ? $modx->getObject(msProduct::class, ['id' => (int) $product])
     : $modx->resource;
 if (!($product instanceof msProduct)) {
     return $modx->lexicon('ms3_err_options_is_not_msproduct', [
         'id' => $product->id
     ]);
+}
+if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisible((int) $product->id)) {
+    return '';
 }
 
 $names = array_map('trim', explode(',', $options));

@@ -254,7 +254,7 @@ $_lang['setting_ms3_import_upload_path_desc'] = 'Relative path from MODX_BASE_PA
 $_lang['setting_ms3_api_debug'] = 'API debug mode';
 $_lang['setting_ms3_api_debug_desc'] = 'Enables extended logging of API requests and responses for debugging. Not recommended in production.';
 $_lang['setting_ms3_web_catalog_respect_resource_groups'] = 'Respect resource group ACL in public catalog';
-$_lang['setting_ms3_web_catalog_respect_resource_groups_desc'] = 'When enabled, the public Web API catalog hides products and categories that belong to a MODX resource group with Resource Group Access ACL for the request context (anonymous MVP). Disable to restore pre-#659 catalog behavior.';
+$_lang['setting_ms3_web_catalog_respect_resource_groups_desc'] = 'When enabled, the public Web API catalog and Fenom storefront snippets (e.g. ms3_products) hide products and categories that belong to a MODX resource group with Resource Group Access ACL for the request context (anonymous MVP). Disable to restore pre-#659 catalog behavior.';
 $_lang['setting_ms3_cors_allowed_origins'] = 'Allowed CORS origins';
 $_lang['setting_ms3_cors_allowed_origins_desc'] = 'Comma-separated origins allowed to call the Web API (e.g. https://shop.example.com). Empty = no cross-origin CORS (same-origin only). Use "*" for any origin without credentials; for headless with cookies list explicit domains.';
 $_lang['setting_ms3_rate_limit_max_attempts'] = 'API rate limit';

@@ -124,7 +124,83 @@ foreach ($settingCases as $case) {
     $assertSame($case['cacheKey'], $service->appliesToCacheKey(), $case['label'] . ' cache key');
 }
 
+$makeModxWithTables = static function (array $options): modX {
+    return new class ($options) extends modX {
+        /** @param array<string, mixed> $options */
+        public function __construct(private array $options)
+        {
+        }
+
+        public function getOption(string $key, $options = null, $default = null)
+        {
+            return $this->options[$key] ?? $default;
+        }
+
+        public function getTableName($className, $includeTablePrefix = true)
+        {
+            return match ($className) {
+                \MODX\Revolution\modResourceGroupResource::class => '`modx_document_groups`',
+                \MODX\Revolution\modAccessResourceGroup::class => '`modx_access_resource_groups`',
+                default => parent::getTableName($className, $includeTablePrefix),
+            };
+        }
+
+        public function quote($string)
+        {
+            return "'" . str_replace("'", "''", (string) $string) . "'";
+        }
+    };
+};
+
+$enabledService = new CatalogResourceGroupVisibility($makeModxWithTables([]));
+$fragment = $enabledService->buildWhereFragment('msProduct', 'web');
+$assertTrue(is_string($fragment) && $fragment !== '', 'buildWhereFragment returns SQL when enabled');
+$assertSame($sql, $fragment, 'buildWhereFragment matches buildNotExistsSql for msProduct/web');
+$assertSame(null, $enabledService->buildWhereFragment('msVendor', 'web'), 'buildWhereFragment rejects unknown alias');
+$assertSame(null, $enabledService->buildWhereFragment('msProduct', ''), 'buildWhereFragment rejects empty context');
+
+$disabledService = new CatalogResourceGroupVisibility($makeModx([
+    CatalogResourceGroupVisibility::SETTING_KEY => false,
+]));
+$assertSame(null, $disabledService->buildWhereFragment('msProduct', 'web'), 'buildWhereFragment null when disabled');
+
 $assertSame(true, CatalogQuery::toBool('yes'), 'toBool parity for setting values');
+
+// Regression: pdoTools Fetch::additionalConditions suppresses &resources/&context when a
+// numeric-keyed where string mentions msProduct + \bid\b / context_key (#670 review).
+$pdoToolsWouldSuppress = static function (string $sql, string $alias, string $field): bool {
+    return str_contains($sql, $alias) && (bool) preg_match('/\b' . preg_quote($field, '/') . '\b/i', $sql);
+};
+$assertTrue(
+    $pdoToolsWouldSuppress((string) $fragment, 'msProduct', 'id'),
+    'RG fragment would suppress resources if placed in numeric where'
+);
+$assertTrue(
+    $pdoToolsWouldSuppress((string) $fragment, 'msProduct', 'context_key'),
+    'RG fragment would suppress context if placed in numeric where'
+);
+// INNER JOIN ON path must still carry the same SQL for filtering.
+$assertTrue(
+    str_contains((string) $fragment, 'NOT EXISTS')
+    && str_contains((string) $fragment, 'msProduct'),
+    'join ON still uses shared NOT EXISTS SQL'
+);
+
+$ms3ProductsSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/ms3_products.php');
+$assertTrue(
+    str_contains($ms3ProductsSrc, "\$innerJoin['ms3RgVisibility']"),
+    'ms3_products wires RG via innerJoin (not numeric where)'
+);
+$assertTrue(
+    !preg_match('/\$where\[\]\s*=\s*\$_ms3RgWhere/', $ms3ProductsSrc),
+    'ms3_products does not append RG fragment to numeric where'
+);
+
+$visibleWhenDisabled = new CatalogResourceGroupVisibility($makeModx([
+    CatalogResourceGroupVisibility::SETTING_KEY => false,
+]));
+$assertTrue($visibleWhenDisabled->isVisible(1), 'isVisible true when setting disabled');
+$assertTrue(!$visibleWhenDisabled->isVisible(0), 'isVisible false for non-positive id');
 
 fwrite(STDOUT, "OK CatalogResourceGroupVisibilityTest\n");
 exit(0);
