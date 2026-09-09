@@ -51,6 +51,13 @@ $assertTrue(
     str_contains($sql, "arg.`context_key` = 'web' OR arg.`context_key` = '' OR arg.`context_key` IS NULL"),
     'SQL scopes context with empty and NULL fallbacks'
 );
+$assertTrue(str_contains($sql, 'arg.`principal` <> 0'), 'SQL ignores anonymous principal on protect path');
+$assertTrue(str_contains($sql, 'arg_anon.`principal` = 0'), 'SQL keeps explicit anonymous grant visible');
+$assertTrue(str_contains($sql, 'principal_class` IN ('), 'SQL filters principal_class like core');
+$assertTrue(
+    str_contains($sql, 'MODX\\\\Revolution\\\\modUserGroup') || str_contains($sql, "MODX\\Revolution\\modUserGroup"),
+    'SQL includes FQCN principal_class'
+);
 
 $makeModx = static function (array $options): modX {
     return new class ($options) extends modX {
