@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Processors\Api;
 
+use MiniShop3\Router\Response;
 use MiniShop3\Router\Router as ApiRouter;
 
 /**
@@ -65,14 +66,9 @@ trait ProcessesManagerConnectorRouteTrait
 
             http_response_code($statusCode);
 
-            if ($statusCode >= 200 && $statusCode < 300) {
-                return $this->success('', $responseData['data'] ?? $responseData);
-            }
-
-            return $this->failure(
-                $responseData['message'] ?? 'API request failed',
-                $responseData
-            );
+            // Sanitize before Processor success()/failure() → modConnectorResponse → xPDO::toJSON()
+            // which has no UTF-8 fallback (#671 / #654).
+            return $this->respondFromRouter($responseData, $statusCode);
         } catch (\Throwable $e) {
             // TypeError/Error must stay JSON — display_errors HTML breaks Vue request.json() (#531/#532).
             $this->modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3 API] ' . $e->getMessage());
@@ -85,5 +81,35 @@ trait ProcessesManagerConnectorRouteTrait
                 ['code' => 500]
             );
         }
+    }
+
+    /**
+     * Map router Response payload to MODX Processor success()/failure() after UTF-8 sanitize (#671).
+     *
+     * @param mixed $responseData Router Response::getData()
+     * @internal Exposed for unit tests of the manager connector reshape path.
+     */
+    protected function respondFromRouter(mixed $responseData, int $statusCode): mixed
+    {
+        $payload = is_array($responseData) ? $responseData : ['code' => $statusCode];
+        $clean = Response::sanitizeUtf8ForJson($payload, $this->modx);
+        if (!is_array($clean)) {
+            return $this->connectorJsonEncodeFailure();
+        }
+
+        if ($statusCode >= 200 && $statusCode < 300) {
+            return $this->success('', $clean['data'] ?? $clean);
+        }
+
+        $message = (string) ($clean['message'] ?? 'API request failed');
+
+        return $this->failure($message !== '' ? $message : 'API request failed', $clean);
+    }
+
+    private function connectorJsonEncodeFailure(): mixed
+    {
+        http_response_code(500);
+
+        return $this->failure('Internal server error', ['code' => 500]);
     }
 }
