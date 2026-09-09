@@ -142,5 +142,61 @@ $assertSame(
     'RelationSqlFragments order join'
 );
 
+$assertSame('modx_ms3_orders', RelationSqlFragments::stripIdentQuotes('`modx_ms3_orders`'), 'stripIdentQuotes');
+
+$customersSql = RelationSqlFragments::customerRelationAggregateSql(
+    '`modx_ms3_customers`',
+    'modx_ms3_orders',
+    'user_id',
+    'rank',
+    'COUNT',
+    [1, 2],
+);
+$assertTrue(
+    is_string($customersSql)
+    && str_contains($customersSql, '`modx_ms3_orders`.`rank`')
+    && str_contains($customersSql, 'COUNT(`modx_ms3_orders`.`rank`)')
+    && str_contains($customersSql, 'LEFT JOIN `modx_ms3_orders` ON `modx_ms3_orders`.`user_id` = `modx_ms3_customers`.`id`')
+    && str_contains($customersSql, 'IN (1,2)'),
+    'customerRelationAggregateSql quotes reserved displayField and tables'
+);
+
+$fkSql = RelationSqlFragments::customerRelationAggregateSql(
+    'modx_ms3_customers',
+    'modx_ms3_orders',
+    'order',
+    'cost',
+    'SUM',
+    [5],
+);
+$assertTrue(
+    is_string($fkSql) && str_contains($fkSql, '`modx_ms3_orders`.`order`'),
+    'customerRelationAggregateSql quotes reserved foreignKey'
+);
+
+$assertTrue(
+    RelationSqlFragments::customerRelationAggregateSql(
+        'c',
+        'r',
+        'fk',
+        'col',
+        'DROP',
+        [1],
+    ) === null,
+    'customerRelationAggregateSql rejects unknown aggregation'
+);
+
+$assertTrue(
+    RelationSqlFragments::customerRelationAggregateSql(
+        'modx_ms3_customers',
+        'modx_ms3_orders',
+        'user_id',
+        'address; DROP TABLE',
+        'COUNT',
+        [1],
+    ) === null,
+    'customerRelationAggregateSql rejects invalid identifier charset'
+);
+
 fwrite(STDOUT, "OK RelationColumnSpecTest\n");
 exit(0);
