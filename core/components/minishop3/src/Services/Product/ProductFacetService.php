@@ -399,9 +399,10 @@ final class ProductFacetService
         bool $includePrice,
         bool $includeVendors,
     ): string {
+        $context = (string) ($params['context'] ?? '');
         $payload = [
-            'context' => (string) ($params['context'] ?? ''),
-            'resource_groups' => $this->resourceGroupVisibility()->appliesToCacheKey(),
+            'context' => $context,
+            'resource_groups' => $this->resourceGroupVisibility()->appliesToCacheKeyForRequest($context),
             'parent' => (int) ($params['parent'] ?? $params['category'] ?? 0),
             'parents' => $filters->parentIds,
             'nested' => $filters->nested,

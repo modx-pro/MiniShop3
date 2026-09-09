@@ -121,8 +121,8 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
         self::assertStringContainsString('principal` = 0', $sql);
         self::assertStringContainsString('principal_class` IN (', $sql);
         self::assertStringContainsString('modUserGroup', $sql);
-        self::assertStringContainsString('OR EXISTS', $sql);
         self::assertStringContainsString('dg_anon.`document`', $sql);
+        self::assertStringContainsString('NOT EXISTS', $sql);
     }
 
     private function seedProduct(int $id): void

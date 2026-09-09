@@ -4,6 +4,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Model\msCustomerGroup;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
@@ -172,16 +173,27 @@ class CustomersController
             return Response::error('Customer not found', HttpStatus::NOT_FOUND)->getData();
         }
 
-        $allowedFields = ['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_blocked'];
+        $allowedFields = ['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_blocked', 'customer_group_id'];
 
         foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
-                $value = $data[$field];
-                if ($field === 'email' && is_string($value)) {
-                    $value = AuthManager::normalizeEmail($value);
-                }
-                $customer->set($field, $value);
+            if (!array_key_exists($field, $data)) {
+                continue;
             }
+
+            if ($field === 'customer_group_id') {
+                $groupResult = $this->resolveCustomerGroupAssignment($data['customer_group_id']);
+                if ($groupResult['error'] !== null) {
+                    return Response::error($groupResult['error'], HttpStatus::BAD_REQUEST)->getData();
+                }
+                $customer->set('customer_group_id', $groupResult['value']);
+                continue;
+            }
+
+            $value = $data[$field];
+            if ($field === 'email' && is_string($value)) {
+                $value = AuthManager::normalizeEmail($value);
+            }
+            $customer->set($field, $value);
         }
 
         if (isset($data['password'])) {
@@ -328,6 +340,39 @@ class CustomersController
     }
 
     /**
+     * @return array{value: int|null, error: string|null}
+     */
+    protected function resolveCustomerGroupAssignment(mixed $raw): array
+    {
+        if ($raw === null || $raw === '' || $raw === 0 || $raw === '0') {
+            return ['value' => null, 'error' => null];
+        }
+
+        $groupId = (int) $raw;
+        if ($groupId <= 0) {
+            $this->modx->lexicon->load('minishop3:default');
+
+            return [
+                'value' => null,
+                'error' => (string) $this->modx->lexicon('ms3_err_customer_group_not_found'),
+            ];
+        }
+
+        /** @var msCustomerGroup|null $group */
+        $group = $this->modx->getObject(msCustomerGroup::class, $groupId);
+        if ($group === null || !(bool) $group->get('active')) {
+            $this->modx->lexicon->load('minishop3:default');
+
+            return [
+                'value' => null,
+                'error' => (string) $this->modx->lexicon('ms3_err_customer_group_not_found'),
+            ];
+        }
+
+        return ['value' => $groupId, 'error' => null];
+    }
+
+    /**
      * Format customer object for API response
      *
      * @param msCustomer $customer
@@ -341,6 +386,9 @@ class CustomersController
             'last_name' => $customer->get('last_name'),
             'email' => $customer->get('email'),
             'phone' => $customer->get('phone'),
+            'customer_group_id' => $customer->get('customer_group_id') !== null
+                ? (int) $customer->get('customer_group_id')
+                : null,
             'is_active' => (bool)$customer->get('is_active'),
             'is_blocked' => (bool)$customer->get('is_blocked'),
             'email_verified_at' => $customer->get('email_verified_at'),

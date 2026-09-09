@@ -457,7 +457,8 @@ class CategoryCatalogService
         $c = $this->modx->newQuery(msCategory::class);
         $c->where($this->publicCriteria($extra));
         $this->applyVisibilityFilters($c, $params, $includeHidden);
-        $this->resourceGroupVisibility()->apply($c, 'msCategory', $this->resolveContext($params));
+        $context = $this->resolveContext($params);
+        $this->resourceGroupVisibility()->applyForRequest($c, 'msCategory', $context);
 
         return $c;
     }
