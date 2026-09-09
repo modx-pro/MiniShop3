@@ -8,6 +8,7 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
+use MiniShop3\Services\Grid\RelationSqlFragments;
 use MODX\Revolution\modX;
 
 /**
@@ -421,7 +422,7 @@ class CustomersController
             }
         }
 
-        $customersTable = $this->modx->getTableName(msCustomer::class);
+        $customersTable = (string) $this->modx->getTableName(msCustomer::class);
 
         foreach ($relationFields as $fieldName => $config) {
             $relationTable = $config['resolvedTableName'] ?? $config['table'] ?? null;
@@ -433,31 +434,26 @@ class CustomersController
                 continue;
             }
 
+            $relationTable = RelationSqlFragments::stripIdentQuotes((string) $relationTable);
+
             // Fallback for configs saved before table prefix fix — can be removed
             // after all existing relation configs are re-saved via utility page
             $tablePrefix = $this->modx->config['table_prefix'] ?? '';
-            if ($tablePrefix !== ''
-                && !str_starts_with($relationTable, $tablePrefix)
-                && !str_starts_with($relationTable, '`')
-            ) {
+            if ($tablePrefix !== '' && !str_starts_with($relationTable, $tablePrefix)) {
                 $relationTable = $tablePrefix . $relationTable;
             }
 
-            if ($aggregation) {
-                $selectExpr = "{$aggregation}({$relationTable}.{$displayField})";
-            } else {
-                $selectExpr = "{$relationTable}.{$displayField}";
+            $sql = RelationSqlFragments::customerRelationAggregateSql(
+                $customersTable,
+                $relationTable,
+                (string) $foreignKey,
+                (string) $displayField,
+                is_string($aggregation) && $aggregation !== '' ? $aggregation : null,
+                $customerIds,
+            );
+            if ($sql === null) {
+                continue;
             }
-
-            $sql = "
-                SELECT
-                    {$customersTable}.id as customer_id,
-                    {$selectExpr} as field_value
-                FROM {$customersTable}
-                LEFT JOIN {$relationTable} ON {$relationTable}.{$foreignKey} = {$customersTable}.id
-                WHERE {$customersTable}.id IN (" . implode(',', $customerIds) . ")
-                GROUP BY {$customersTable}.id
-            ";
 
             $stmt = $this->modx->prepare($sql);
             $stmt->execute();
@@ -467,9 +463,10 @@ class CustomersController
                 $customerId = (int)$row['customer_id'];
                 $value = $row['field_value'];
 
-                if ($aggregation === 'COUNT') {
+                $aggUpper = is_string($aggregation) ? strtoupper($aggregation) : null;
+                if ($aggUpper === 'COUNT') {
                     $value = (int)$value;
-                } elseif (in_array($aggregation, ['SUM', 'AVG'])) {
+                } elseif (in_array($aggUpper, ['SUM', 'AVG'], true)) {
                     $value = (float)$value;
                 }
 
