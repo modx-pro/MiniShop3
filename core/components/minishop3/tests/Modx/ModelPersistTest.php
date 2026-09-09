@@ -90,6 +90,7 @@ final class ModelPersistTest extends ExtraTestCase
             'order_id' => $order->get('id'),
             'action' => 'testbench',
             'entry' => ['ok' => true],
+            'ip' => ['ip' => '127.0.0.1'],
             'timestamp' => $now,
         ]);
         $this->persistObject(msCustomerAddress::class, [

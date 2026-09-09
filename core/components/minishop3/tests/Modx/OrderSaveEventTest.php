@@ -15,7 +15,8 @@ final class OrderSaveEventTest extends ExtraTestCase
     {
         $this->registerPlugin(
             'msOnSaveOrder',
-            '$modx->setPlaceholder("ms3_testbench_save", "1"); return "cancel";',
+            // invokeEvent collects $modx->event->_output, not the plugin return value.
+            '$modx->setPlaceholder("ms3_testbench_save", "1"); $modx->event->_output = "cancel";',
         );
 
         $order = $this->modx->newObject(msOrder::class);
