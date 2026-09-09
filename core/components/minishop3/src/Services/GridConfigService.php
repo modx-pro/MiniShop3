@@ -341,7 +341,8 @@ class GridConfigService
                 (string) ($data['type'] ?? 'model'),
                 is_array($data['config'] ?? null) ? $data['config'] : [],
                 (string) $data['field_name'],
-                $gridKey
+                $gridKey,
+                null,
             );
             if (!$prepared['success']) {
                 return $prepared;
@@ -411,7 +412,8 @@ class GridConfigService
                 (string) ($data['type'] ?? 'model'),
                 is_array($data['config'] ?? null) ? $data['config'] : [],
                 (string) ($data['field_name'] ?? $fieldName),
-                $gridKey
+                $gridKey,
+                $this->repository->decodeConfig($field->get('config')),
             );
             if (!$prepared['success']) {
                 return $prepared;
@@ -500,11 +502,23 @@ class GridConfigService
      * Type rules + combo editor cleanup for add/update payloads.
      *
      * @param array<string, mixed> $config
+     * @param array<string, mixed>|null $existingConfig Stored config on update (null = create)
      * @return array{success: bool, message?: string, config?: array<string, mixed>}
      */
-    private function prepareTypedConfig(string $type, array $config, string $fieldName, string $gridKey = ''): array
-    {
-        $validation = $this->typeValidator->validateForType($type, $config, $fieldName, $gridKey);
+    private function prepareTypedConfig(
+        string $type,
+        array $config,
+        string $fieldName,
+        string $gridKey = '',
+        ?array $existingConfig = null,
+    ): array {
+        $validation = $this->typeValidator->validateForType(
+            $type,
+            $config,
+            $fieldName,
+            $gridKey,
+            $existingConfig,
+        );
         if (!$validation['success']) {
             return $validation;
         }

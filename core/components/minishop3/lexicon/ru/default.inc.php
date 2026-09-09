@@ -174,6 +174,7 @@ $_lang['ms3_err_cart_options'] = 'options должен быть объектом
 $_lang['ms3_err_field_key_required'] = 'Не указан ключ поля';
 $_lang['ms3_err_extra_field_class_unsupported'] = 'Этот класс модели не может содержать дополнительные поля. Используйте модель с собственной таблицей БД (например, msProductData).';
 $_lang['ms3_err_extra_field_key_invalid'] = 'Ключ поля может содержать только латинские буквы, цифры и подчёркивание.';
+$_lang['ms3_err_extra_field_key_reserved'] = 'Ключ поля «[[+key]]» — зарезервированное слово MySQL. Выберите другое имя, например «[[+suggestion]]».';
 $_lang['ms3_err_fields_required'] = 'Требуется массив полей';
 $_lang['ms3_err_field_nf'] = 'Поле не найдено';
 $_lang['ms3_err_ae'] = 'Это поле должно быть уникально';

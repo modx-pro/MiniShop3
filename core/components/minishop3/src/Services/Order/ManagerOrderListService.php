@@ -4,6 +4,7 @@ namespace MiniShop3\Services\Order;
 
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderAddress;
+use MiniShop3\Services\Grid\RelationSqlFragments;
 use MiniShop3\Services\FilterConfigManager;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MODX\Revolution\modX;
@@ -85,7 +86,11 @@ class ManagerOrderListService
                 $c->leftJoin(
                     $group['modelClass'],
                     $group['alias'],
-                    "`{$group['alias']}`.id = msOrder.{$group['foreignKey']}"
+                    RelationSqlFragments::joinEqualsId(
+                        (string) $group['alias'],
+                        'msOrder',
+                        (string) $group['foreignKey']
+                    )
                 );
             }
         }
@@ -149,7 +154,11 @@ class ManagerOrderListService
         // Add SELECT for relation fields
         foreach ($relationGroups as $group) {
             foreach ($group['fields'] as $fieldDef) {
-                $selectParts[] = "`{$group['alias']}`.{$fieldDef['displayField']} as `{$fieldDef['name']}`";
+                $selectParts[] = RelationSqlFragments::selectAs(
+                    (string) $group['alias'],
+                    (string) $fieldDef['displayField'],
+                    (string) $fieldDef['name']
+                );
             }
         }
 

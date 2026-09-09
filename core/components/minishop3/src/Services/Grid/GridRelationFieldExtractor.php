@@ -69,8 +69,10 @@ final class GridRelationFieldExtractor
             $displayField = (string) $relation['displayField'];
             $fieldName = (string) ($field['name'] ?? '');
 
-            if (!GridColumnRules::isValidSqlIdentifier($foreignKey)
-                || !GridColumnRules::isValidSqlIdentifier($displayField)
+            // Charset-only: grandfather reserved MySQL words stored before #655.
+            // RelationColumnSpec quotes identifiers in JOIN/SELECT.
+            if (!GridColumnRules::matchesSqlIdentifierPattern($foreignKey)
+                || !GridColumnRules::matchesSqlIdentifierPattern($displayField)
             ) {
                 continue;
             }

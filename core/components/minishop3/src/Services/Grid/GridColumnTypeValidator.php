@@ -32,19 +32,28 @@ final class GridColumnTypeValidator
         'displayField' => 'relation.displayField is required',
     ];
 
+    private const NON_RESERVED_SQL_IDENTIFIER_MSG =
+        'must be a non-reserved SQL identifier (letters, numbers, underscores)';
+
     public function __construct(private modX $modx)
     {
     }
 
     /**
      * @param array<string, mixed> $config
+     * @param array<string, mixed>|null $existingConfig Stored field config on update (null = create)
      * @return ValidationResult
      */
-    public function validateForType(string $type, array $config, string $fieldName = '', string $gridKey = ''): array
-    {
+    public function validateForType(
+        string $type,
+        array $config,
+        string $fieldName = '',
+        string $gridKey = '',
+        ?array $existingConfig = null,
+    ): array {
         return match ($type) {
             'template' => $this->validateTemplateConfig($config),
-            'relation' => $this->validateRelationConfig($config, $fieldName, $gridKey),
+            'relation' => $this->validateRelationConfig($config, $fieldName, $gridKey, $existingConfig),
             'computed' => $this->validateComputedConfig($config),
             'actions' => $this->validateActionsConfig($config),
             'option' => $this->validateOptionConfig($config, $fieldName),
@@ -71,11 +80,19 @@ final class GridColumnTypeValidator
 
     /**
      * @param array<string, mixed> $config
+     * @param array<string, mixed>|null $existingConfig Stored field config on update (null = create)
      * @return ValidationResult
      */
-    public function validateRelationConfig(array $config, string $fieldName = '', string $gridKey = ''): array
-    {
+    public function validateRelationConfig(
+        array $config,
+        string $fieldName = '',
+        string $gridKey = '',
+        ?array $existingConfig = null,
+    ): array {
         $relation = $config['relation'] ?? [];
+        $existingRelation = is_array($existingConfig['relation'] ?? null)
+            ? $existingConfig['relation']
+            : null;
 
         foreach (self::RELATION_REQUIRED as $key => $message) {
             if (empty($relation[$key])) {
@@ -83,29 +100,37 @@ final class GridColumnTypeValidator
             }
         }
 
-        if (!GridColumnRules::isValidSqlIdentifier((string) $relation['foreignKey'])) {
-            return [
-                'success' => false,
-                'message' => 'relation.foreignKey must contain only letters, numbers and underscores',
-            ];
+        $fkError = $this->assertRelationSqlIdentifier(
+            (string) $relation['foreignKey'],
+            'relation.foreignKey',
+            $existingRelation['foreignKey'] ?? null,
+        );
+        if ($fkError !== null) {
+            return $fkError;
         }
 
-        if (!GridColumnRules::isValidSqlIdentifier((string) $relation['displayField'])) {
-            return [
-                'success' => false,
-                'message' => 'relation.displayField must contain only letters, numbers and underscores',
-            ];
+        $displayError = $this->assertRelationSqlIdentifier(
+            (string) $relation['displayField'],
+            'relation.displayField',
+            $existingRelation['displayField'] ?? null,
+        );
+        if ($displayError !== null) {
+            return $displayError;
         }
 
-        if ($gridKey === 'category-products' && $fieldName !== ''
-            && !GridColumnRules::isValidCategoryProductExtraFieldName($fieldName)
-        ) {
-            return [
-                'success' => false,
-                'message' => "Field name '{$fieldName}' is not allowed for relation columns: "
-                    . 'it collides with a builtin product column or contains invalid characters. '
-                    . "Use a distinct name like 'vendor_address' instead.",
-            ];
+        if ($gridKey === 'category-products' && $fieldName !== '') {
+            $fieldNameOk = $existingConfig !== null
+                ? GridColumnRules::isReadableCategoryProductExtraFieldName($fieldName)
+                : GridColumnRules::isValidCategoryProductExtraFieldName($fieldName);
+            if (!$fieldNameOk) {
+                return [
+                    'success' => false,
+                    'message' => "Field name '{$fieldName}' is not allowed for relation columns: "
+                        . 'it collides with a builtin product column, is a reserved SQL word, '
+                        . 'or contains invalid characters. '
+                        . "Use a distinct name like 'vendor_address' instead.",
+                ];
+            }
         }
 
         $aggregation = $relation['aggregation'] ?? null;
@@ -162,6 +187,36 @@ final class GridColumnTypeValidator
         return ['success' => true, 'config' => $config];
     }
 
+    /**
+     * Create: non-reserved. Update: unchanged value may stay reserved; new value must not.
+     *
+     * @return ValidationResult|null null when OK
+     */
+    private function assertRelationSqlIdentifier(
+        string $value,
+        string $label,
+        mixed $existingValue,
+    ): ?array {
+        if (!GridColumnRules::matchesSqlIdentifierPattern($value)) {
+            return [
+                'success' => false,
+                'message' => $label . ' must be a SQL identifier (letters, numbers, underscores)',
+            ];
+        }
+
+        if ($existingValue !== null && (string) $existingValue === $value) {
+            return null;
+        }
+
+        if (!GridColumnRules::isValidSqlIdentifier($value)) {
+            return [
+                'success' => false,
+                'message' => $label . ' ' . self::NON_RESERVED_SQL_IDENTIFIER_MSG,
+            ];
+        }
+
+        return null;
+    }
 
     /**
      * @param array<string, mixed> $config
