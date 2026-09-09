@@ -5,7 +5,7 @@ use MiniShop3\Model\msProduct;
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use ModxPro\PdoTools\CoreTools;
 
-/** @var modX $modx */
+/** @var \MODX\Revolution\modX $modx */
 /** @var array $scriptProperties */
 /** @var MiniShop3 $ms3 */
 
