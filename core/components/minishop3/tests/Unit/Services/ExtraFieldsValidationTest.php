@@ -77,6 +77,7 @@ final class ExtraFieldsValidationTest extends TestCase
         $this->assertContains('order', $list);
         $this->assertContains('rank', $list);
         $this->assertContains('groups', $list);
+        $this->assertContains('array', $list);
         $this->assertSame(count($list), count(array_unique($list)));
         foreach ($list as $word) {
             $this->assertSame(strtolower($word), $word);

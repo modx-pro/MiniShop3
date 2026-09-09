@@ -13,8 +13,9 @@ namespace MiniShop3\Services\Grid;
  *
  * Grandfathering (#655):
  * - Extra fields: key validated only on create (update does not rename).
- * - Existing relation FK/displayField: runtime extractors use charset-only checks
- *   plus quoted SQL in RelationColumnSpec; bulk grid save does not re-validate keys.
+ * - Relation create: foreignKey/displayField/fieldName use strict isValidSqlIdentifier.
+ * - Relation update: unchanged FK/displayField keep charset-only; changed values must be non-reserved.
+ * - Runtime extractors (RelationColumnSpec): charset + no builtin collision; quoted SQL.
  *
  * @see Mysql8ReservedKeywords
  * @see https://dev.mysql.com/doc/refman/8.0/en/keywords.html
@@ -129,11 +130,23 @@ final class GridColumnRules
     }
 
     /**
-     * fieldName for category-products extra columns: safe SQL alias + no builtin collision.
+     * fieldName for category-products extra columns on create: non-reserved SQL + no builtin collision.
      */
     public static function isValidCategoryProductExtraFieldName(string $name): bool
     {
         if (!self::isValidSqlIdentifier($name)) {
+            return false;
+        }
+
+        return !in_array(strtolower($name), self::RESERVED_CATEGORY_PRODUCT_FIELD_NAMES, true);
+    }
+
+    /**
+     * fieldName for reading grandfathered category-products columns (charset + no builtin collision).
+     */
+    public static function isReadableCategoryProductExtraFieldName(string $name): bool
+    {
+        if (!self::matchesSqlIdentifierPattern($name)) {
             return false;
         }
 

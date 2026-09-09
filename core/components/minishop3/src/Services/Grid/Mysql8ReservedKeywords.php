@@ -23,6 +23,7 @@ final class Mysql8ReservedKeywords
         'alter',
         'analyze',
         'and',
+        'array',
         'as',
         'asc',
         'asensitive',

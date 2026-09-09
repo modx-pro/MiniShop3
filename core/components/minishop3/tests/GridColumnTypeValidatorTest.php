@@ -88,5 +88,100 @@ $failAgg = $validator->validateForType('relation', [
 ]);
 $assertTrue(($failAgg['success'] ?? true) === false, 'invalid aggregation fails');
 
+$failReservedCreate = $validator->validateForType('relation', [
+    'relation' => [
+        'table' => 'ms3_orders',
+        'foreignKey' => 'id',
+        'displayField' => 'rank',
+    ],
+]);
+$assertTrue(($failReservedCreate['success'] ?? true) === false, 'create rejects reserved displayField');
+
+$okReservedUpdate = $validator->validateForType(
+    'relation',
+    [
+        'relation' => [
+            'table' => 'ms3_orders',
+            'foreignKey' => 'id',
+            'displayField' => 'rank',
+        ],
+    ],
+    'orders_rank',
+    'orders',
+    [
+        'type' => 'relation',
+        'relation' => [
+            'table' => 'ms3_orders',
+            'foreignKey' => 'id',
+            'displayField' => 'rank',
+        ],
+    ],
+);
+$assertTrue(($okReservedUpdate['success'] ?? false) === true, 'update grandfathers reserved displayField');
+
+$failReservedChange = $validator->validateForType(
+    'relation',
+    [
+        'relation' => [
+            'table' => 'ms3_orders',
+            'foreignKey' => 'id',
+            'displayField' => 'rank',
+        ],
+    ],
+    'orders_num',
+    'orders',
+    [
+        'type' => 'relation',
+        'relation' => [
+            'table' => 'ms3_orders',
+            'foreignKey' => 'id',
+            'displayField' => 'num',
+        ],
+    ],
+);
+$assertTrue(($failReservedChange['success'] ?? true) === false, 'update rejects newly reserved displayField');
+
+$okRankFieldNameUpdate = $validator->validateForType(
+    'relation',
+    [
+        'relation' => [
+            'table' => 'ms3_vendors',
+            'foreignKey' => 'vendor_id',
+            'displayField' => 'name',
+        ],
+    ],
+    'rank',
+    'category-products',
+    [
+        'type' => 'relation',
+        'relation' => [
+            'table' => 'ms3_vendors',
+            'foreignKey' => 'vendor_id',
+            'displayField' => 'name',
+        ],
+    ],
+);
+$assertTrue(
+    ($okRankFieldNameUpdate['success'] ?? false) === true,
+    'update allows grandfathered reserved category-products fieldName'
+);
+
+$failRankFieldNameCreate = $validator->validateForType(
+    'relation',
+    [
+        'relation' => [
+            'table' => 'ms3_vendors',
+            'foreignKey' => 'vendor_id',
+            'displayField' => 'name',
+        ],
+    ],
+    'rank',
+    'category-products',
+);
+$assertTrue(
+    ($failRankFieldNameCreate['success'] ?? true) === false,
+    'create rejects reserved category-products fieldName'
+);
+
 fwrite(STDOUT, "OK: GridColumnTypeValidatorTest\n");
 exit(0);

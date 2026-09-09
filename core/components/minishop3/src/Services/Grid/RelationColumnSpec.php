@@ -47,7 +47,8 @@ final readonly class RelationColumnSpec
             return null;
         }
 
-        if (!GridColumnRules::isValidCategoryProductExtraFieldName($fieldName)) {
+        // Charset + no builtin collision; MySQL reserved aliases are grandfathered when quoted.
+        if (!GridColumnRules::isReadableCategoryProductExtraFieldName($fieldName)) {
             return null;
         }
 

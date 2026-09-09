@@ -83,6 +83,29 @@ $assertSame(
     'reserved displayField is quoted'
 );
 
+$rankAliasSpec = RelationColumnSpec::fromGroupField($rankGroup, [
+    'name' => 'rank',
+    'displayField' => 'name',
+]);
+$assertTrue(
+    $rankAliasSpec instanceof RelationColumnSpec,
+    'grandfathered reserved fieldName alias is accepted at read time'
+);
+$assertSame(
+    '`rel_msVendor_vendor_id`.`name` AS `rank`',
+    $rankAliasSpec->selectExpression(),
+    'reserved fieldName alias is quoted'
+);
+
+$assertTrue(
+    !GridColumnRules::isValidCategoryProductExtraFieldName('rank'),
+    'create path still rejects reserved fieldName'
+);
+$assertTrue(
+    GridColumnRules::isReadableCategoryProductExtraFieldName('rank'),
+    'read path allows reserved fieldName'
+);
+
 $assertNull(
     RelationColumnSpec::fromGroupField($group, [
         'name' => 'article',
