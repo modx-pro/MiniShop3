@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MiniShop3\Services\Catalog;
 
+use MiniShop3\Model\msCategory;
+use MiniShop3\Model\msProduct;
 use MODX\Revolution\modAccessResourceGroup;
 use MODX\Revolution\modResourceGroupResource;
 use MODX\Revolution\modUserGroup;
@@ -21,7 +23,12 @@ use xPDO\Om\xPDOQuery;
  *
  * principal_class is compared to the single FQCN MODX 3 writes
  * ({@see modUserGroup::class}), quoted via the DB connection — manual string
- * literals break MySQL backslash escaping (#666 review).
+ * literals break MySQL backslash escaping (#666 / #681 review).
+ *
+ * Entry points:
+ * - {@see apply()} — xPDO WHERE for Web API / cart add
+ * - {@see buildWhereFragment()} — SQL for Fenom/pdoTools INNER JOIN ON (#670)
+ * - {@see isVisible()} — single-id check for Fenom &product= (#670)
  */
 final class CatalogResourceGroupVisibility
 {
@@ -47,12 +54,28 @@ final class CatalogResourceGroupVisibility
 
     public function apply(xPDOQuery $query, string $resourceAlias, string $contextKey): void
     {
+        $fragment = $this->buildWhereFragment($resourceAlias, $contextKey);
+        if ($fragment !== null) {
+            $query->where($fragment);
+        }
+    }
+
+    /**
+     * Visibility SQL for pdoTools INNER JOIN ON / WHERE (anonymous-safe).
+     *
+     * Same SQL as {@see apply()}. Fenom listings stay anonymous-safe; member-aware
+     * catalog/cart for logged-in customers is #669.
+     *
+     * @return non-empty-string|null SQL when filtering applies; null when disabled or invalid alias
+     */
+    public function buildWhereFragment(string $resourceAlias, string $contextKey): ?string
+    {
         if (!$this->isEnabled() || $contextKey === '') {
-            return;
+            return null;
         }
 
         if (!in_array($resourceAlias, ['msProduct', 'msCategory'], true)) {
-            return;
+            return null;
         }
 
         $dgTable = $this->modx->getTableName(modResourceGroupResource::class);
@@ -60,15 +83,40 @@ final class CatalogResourceGroupVisibility
         $quotedContext = $this->modx->quote($contextKey);
         $quotedPrincipalClass = $this->modx->quote(modUserGroup::class);
 
-        $query->where(
-            self::buildNotExistsSql(
-                $dgTable,
-                $argTable,
-                $resourceAlias,
-                $quotedContext,
-                $quotedPrincipalClass,
-            )
+        return self::buildNotExistsSql(
+            $dgTable,
+            $argTable,
+            $resourceAlias,
+            $quotedContext,
+            $quotedPrincipalClass,
         );
+    }
+
+    /**
+     * Anonymous-safe visibility for a single catalog resource (same ACL as {@see apply()}).
+     */
+    public function isVisible(int $resourceId, string $resourceAlias = 'msProduct', ?string $contextKey = null): bool
+    {
+        if ($resourceId <= 0) {
+            return false;
+        }
+
+        $contextKey ??= (string) ($this->modx->context->key ?? '');
+        if ($contextKey === '') {
+            $contextKey = 'web';
+        }
+
+        $fragment = $this->buildWhereFragment($resourceAlias, $contextKey);
+        if ($fragment === null) {
+            return true;
+        }
+
+        $class = $resourceAlias === 'msCategory' ? msCategory::class : msProduct::class;
+        $query = $this->modx->newQuery($class);
+        $query->where(['id' => $resourceId]);
+        $query->where($fragment);
+
+        return $this->modx->getCount($class, $query) > 0;
     }
 
     /**
