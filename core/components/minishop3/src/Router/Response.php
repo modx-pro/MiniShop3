@@ -348,6 +348,52 @@ class Response
     }
 
     /**
+     * Envelope that modConnectorResponse::outputContent() passes to toJSON().
+     *
+     * @param array<string, mixed> $body Processor success()/failure() array
+     *
+     * @return array<string, mixed>
+     */
+    public static function connectorProcessorEnvelope(array $body, ?object $modx = null): array
+    {
+        $errorMessage = ($modx !== null && method_exists($modx, 'lexicon'))
+            ? (string) $modx->lexicon('error')
+            : 'error';
+
+        return [
+            'success' => $body['success'] ?? 0,
+            'message' => $body['message'] ?? $errorMessage,
+            'total' => (isset($body['total']) && $body['total'] > 0)
+                ? (int) $body['total']
+                : (isset($body['errors']) ? count($body['errors']) : 1),
+            'data' => $body['errors'] ?? [],
+            'object' => $body['object'] ?? [],
+        ];
+    }
+
+    /**
+     * JSON for the MiniShop3 connector die() path (#689). Never returns an empty string.
+     *
+     * @return array{0: string, 1: bool} Encoded body and whether encoding failed closed
+     */
+    public static function encodeConnectorJson(mixed $data, ?object $modx = null): array
+    {
+        $clean = self::sanitizeUtf8ForJson($data, $modx);
+        $json = $clean !== null ? json_encode($clean) : false;
+
+        if ($json === false || $json === '') {
+            return [self::connectorFailClosedJson(), true];
+        }
+
+        return [$json, false];
+    }
+
+    public static function connectorFailClosedJson(): string
+    {
+        return '{"success":false,"message":"Internal server error","total":1,"data":[],"object":{"code":500}}';
+    }
+
+    /**
      * json_encode with UTF-8 substitute fallback and MODX logging (#654 / #671).
      *
      * @return string|null JSON string, or null when unencodable even after substitute.
