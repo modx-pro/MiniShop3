@@ -61,6 +61,68 @@ jobs:
       - name: PHP syntax check + smoke + PHPUnit
         run: composer ci:php
 
+  modx-testbench:
+    name: MODX testbench (${{ matrix.modx }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: core/components/minishop3
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2']
+        modx: ['3.1.2-pl', '3.2.3-pl', '3.2.4-pl']
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: modx_testbench
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+
+    env:
+      MODX_TESTBENCH_VERSION: ${{ matrix.modx }}
+      MODX_TESTBENCH_DB_HOST: 127.0.0.1
+      MODX_TESTBENCH_DB_PORT: 3306
+      MODX_TESTBENCH_DB_NAME: modx_testbench
+      MODX_TESTBENCH_DB_USER: root
+      MODX_TESTBENCH_DB_PASS: root
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          extensions: pdo_mysql, zip, gd
+          tools: composer:v2
+
+      - name: Cache testbench MODX releases
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/modx-testbench/releases
+          key: testbench-releases-${{ matrix.modx }}-${{ runner.os }}
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install MODX testbench environment
+        run: vendor/bin/modx-testbench install
+
+      - name: Live MODX PHPUnit
+        run: composer test:modx
+
   phpstan:
     name: PHPStan
     runs-on: ubuntu-latest

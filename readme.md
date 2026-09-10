@@ -36,7 +36,7 @@
 
 | Компонент | Версия |
 |-----------|--------|
-| MODX Revolution | 3.0.0+ |
+| MODX Revolution | 3.0.0+ (CI live-тесты: 3.1.2-pl, 3.2.3-pl, 3.2.4-pl) |
 | PHP | 8.2+ |
 | MySQL | 5.7+ / MariaDB 10.3+ |
 
@@ -152,6 +152,21 @@ MiniShop3/
 3. Закоммитьте изменения (`git commit -m 'Add amazing feature'`)
 4. Запушьте ветку (`git push origin feature/amazing-feature`)
 5. Откройте Pull Request
+
+### Тесты PHP
+
+Из `core/components/minishop3` после `composer install`:
+
+| Команда | Что проверяет |
+| --- | --- |
+| `composer test:smoke` | Скрипты `tests/*Test.php` без ядра MODX |
+| `composer test` | PHPUnit Unit + Integration + WebApi на стабах xPDO |
+| `composer ci:php` | `php -l` + smoke + `composer test` (как job `PHP lint + smoke`) |
+| `composer test:modx` | Живое ядро MODX 3.1+ / 3.2 через [modxkit/testbench](https://github.com/modxkit/testbench) |
+
+`composer test` и `ci:php` **не** поднимают ядро. Для `test:modx` нужны MySQL и переменные `MODX_TESTBENCH_DB_HOST` / `USER` / `PASS`. Подробности: [`core/components/minishop3/tests/Modx/README.md`](core/components/minishop3/tests/Modx/README.md).
+
+CI гоняет live-сьют на MODX 3.1.2-pl, 3.2.3-pl и 3.2.4-pl. Линейка 3.0.x в этом сьюте не проверяется (ядро не поднимается в API-режиме).
 
 ## 📝 Changelog
 

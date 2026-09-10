@@ -10,6 +10,9 @@ parameters:
     excludePaths:
         analyseAndScan:
             - core/components/minishop3/src/Model/mysql (?)
+            # Testbench PHPStan stubs redeclare empty MODX/xPDO classes and collide with
+            # .phpstan-deps/modx. MiniShop3 src does not import modxkit.
+            - core/components/minishop3/vendor/modxkit
     scanDirectories:
         - core/components/minishop3/vendor
         # Filled by composer stan:prepare (or MS3_PHPSTAN_* env overrides).

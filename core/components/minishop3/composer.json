@@ -30,19 +30,29 @@
   "scripts": {
     "test": "phpunit",
     "test:smoke": "php tests/run-smoke.php",
+    "test:unit": "phpunit --testsuite Unit",
+    "test:integration": "phpunit --testsuite Integration",
     "test:web-api": "phpunit --testsuite WebApi",
+    "test:modx": "phpunit -c phpunit.modx.xml --testsuite Modx",
     "ci:php": "bash scripts/ci-php.sh",
     "stan:prepare": "bash scripts/phpstan-prepare-deps.sh",
     "stan": "vendor/bin/phpstan analyse -c ../../../phpstan.neon --memory-limit=1G"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
+  "config": {
+    "platform": {
+      "php": "8.2.0"
+    }
+  },
   "suggest": {
     "ext-redis": "Shared rate-limit counters for multi-node Web API (ms3_rate_limit_store=redis)",
     "ext-memcached": "Alternative shared rate-limit storage (ms3_rate_limit_store=memcached)"
   },
   "require-dev": {
+    "modxkit/testbench": "^1.0",
     "phpstan/phpstan": "^2.1",
-    "phpunit/phpunit": "^11.5"
+    "phpunit/phpunit": "^11.5",
+    "symfony/process": "^6.4.33 || ^7.1.7"
   }
 }
