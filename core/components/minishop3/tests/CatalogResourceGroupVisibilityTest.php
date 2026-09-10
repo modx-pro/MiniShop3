@@ -42,10 +42,12 @@ $dgTable = '`modx_document_groups`';
 $argTable = '`modx_access_resource_groups`';
 $sql = CatalogResourceGroupVisibility::buildNotExistsSql($dgTable, $argTable, 'msProduct', "'web'");
 
-$assertTrue(str_contains($sql, 'NOT EXISTS'), 'SQL contains NOT EXISTS');
+$assertTrue(str_contains($sql, 'NOT EXISTS'), 'SQL contains NOT EXISTS for restricted membership');
+$assertTrue(str_contains($sql, 'OR EXISTS'), 'SQL ORs anonymous grant across document groups');
 $assertTrue(str_contains($sql, $dgTable), 'SQL contains document_groups table');
 $assertTrue(str_contains($sql, $argTable), 'SQL contains access_resource_groups table');
 $assertTrue(str_contains($sql, 'dg.`document` = msProduct.`id`'), 'SQL joins document to resource id');
+$assertTrue(str_contains($sql, 'dg_anon.`document` = msProduct.`id`'), 'anon path joins on document id');
 $assertTrue(str_contains($sql, 'arg.`target` = dg.`document_group`'), 'SQL joins ACL target to group');
 $assertTrue(
     str_contains($sql, "arg.`context_key` = 'web' OR arg.`context_key` = '' OR arg.`context_key` IS NULL"),

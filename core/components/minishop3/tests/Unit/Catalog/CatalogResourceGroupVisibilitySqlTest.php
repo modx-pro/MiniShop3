@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
  * Execute anonymous RG visibility SQL against in-memory tables (#666 review).
  *
  * Cases: no group; group without ACL; ACL for another user group only;
- * explicit anonymous (principal=0) grant.
+ * explicit anonymous (principal=0) grant; multi-group OR (restricted + anon).
  */
 final class CatalogResourceGroupVisibilitySqlTest extends TestCase
 {
@@ -88,6 +88,27 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
         self::assertTrue($this->isVisible(5));
     }
 
+    public function testMultiGroupRestrictedPlusAnonymousIsVisible(): void
+    {
+        // Resource in closed group A and open (anon) group B — core OR semantics (#666).
+        $this->seedProduct(6);
+        $this->link(6, 50);
+        $this->link(6, 60);
+        $this->acl(50, 1, 'web');
+        $this->acl(60, 0, 'web');
+        self::assertTrue($this->isVisible(6));
+    }
+
+    public function testMultiGroupTwoRestrictedIsHidden(): void
+    {
+        $this->seedProduct(7);
+        $this->link(7, 70);
+        $this->link(7, 80);
+        $this->acl(70, 1, 'web');
+        $this->acl(80, 2, 'web');
+        self::assertFalse($this->isVisible(7));
+    }
+
     public function testGeneratedSqlMentionsAnonymousPrincipalAndClass(): void
     {
         $sql = CatalogResourceGroupVisibility::buildNotExistsSql(
@@ -100,6 +121,8 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
         self::assertStringContainsString('principal` = 0', $sql);
         self::assertStringContainsString('principal_class` IN (', $sql);
         self::assertStringContainsString('modUserGroup', $sql);
+        self::assertStringContainsString('OR EXISTS', $sql);
+        self::assertStringContainsString('dg_anon.`document`', $sql);
     }
 
     private function seedProduct(int $id): void
