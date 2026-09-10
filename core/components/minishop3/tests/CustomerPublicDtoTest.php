@@ -69,7 +69,7 @@ if ($public !== $expected) {
     ));
 }
 
-foreach (['password', 'token', 'privacy_ip', 'failed_login_attempts', 'blocked_until', 'is_blocked', 'user_id', 'future_secret_column'] as $hidden) {
+foreach (['password', 'token', 'privacy_ip', 'failed_login_attempts', 'blocked_until', 'is_blocked', 'user_id', 'customer_group_id', 'user_group_id', 'future_secret_column'] as $hidden) {
     if (array_key_exists($hidden, $public)) {
         $fail("hidden field still present: {$hidden}");
     }

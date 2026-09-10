@@ -283,3 +283,15 @@ $_lang['ms3_mgr_order_recalc_manual_delivery_missing'] = 'Manual delivery cost (
 $_lang['ms3_order_cost_recalc_success'] = 'Order cost recalculated';
 $_lang['ms3_order_finalize_cost_recalc_required'] =
     'Recalculate order cost before finalizing: the selected delivery or payment requires manual cost or force_provider mode.';
+
+// Customer groups (#669)
+$_lang['ms3_err_customer_group_id_required'] = 'Customer group ID is required';
+$_lang['ms3_err_customer_group_not_found'] = 'Customer group not found or inactive';
+$_lang['ms3_err_customer_group_name_required'] = 'Customer group name is required';
+$_lang['ms3_err_customer_group_user_group_invalid'] = 'A valid MODX user group is required';
+$_lang['ms3_err_customer_group_save'] = 'Failed to save customer group';
+$_lang['ms3_err_customer_group_delete'] = 'Failed to delete customer group';
+$_lang['ms3_err_customer_group_detach'] = 'Failed to detach customers before group removal';
+$_lang['ms3_customer_group_created'] = 'Customer group created';
+$_lang['ms3_customer_group_updated'] = 'Customer group updated';
+$_lang['ms3_customer_group_deleted'] = 'Customer group deleted';

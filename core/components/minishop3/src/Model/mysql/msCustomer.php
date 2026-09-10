@@ -16,6 +16,7 @@ class msCustomer extends \MiniShop3\Model\msCustomer
         'fields' =>
             [
                 'user_id' => 0,
+                'customer_group_id' => null,
                 'first_name' => '',
                 'last_name' => '',
                 'email' => '',
@@ -46,6 +47,14 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                         'attributes' => 'unsigned',
                         'null' => false,
                         'default' => 0,
+                    ],
+                'customer_group_id' =>
+                    [
+                        'dbtype' => 'int',
+                        'precision' => '10',
+                        'phptype' => 'integer',
+                        'attributes' => 'unsigned',
+                        'null' => true,
                     ],
                 'first_name' =>
                     [
@@ -204,6 +213,22 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                                     ],
                             ],
                     ],
+                'customer_group_id' =>
+                    [
+                        'alias' => 'customer_group_id',
+                        'primary' => false,
+                        'unique' => false,
+                        'type' => 'BTREE',
+                        'columns' =>
+                            [
+                                'customer_group_id' =>
+                                    [
+                                        'length' => '',
+                                        'collation' => 'A',
+                                        'null' => true,
+                                    ],
+                            ],
+                    ],
                 'first_name' =>
                     [
                         'alias' => 'first_name',
@@ -291,6 +316,14 @@ class msCustomer extends \MiniShop3\Model\msCustomer
                     [
                         'class' => 'MODX\\Revolution\\modUser',
                         'local' => 'user_id',
+                        'foreign' => 'id',
+                        'owner' => 'foreign',
+                        'cardinality' => 'one',
+                    ],
+                'CustomerGroup' =>
+                    [
+                        'class' => 'MiniShop3\\Model\\msCustomerGroup',
+                        'local' => 'customer_group_id',
                         'foreign' => 'id',
                         'owner' => 'foreign',
                         'cardinality' => 'one',

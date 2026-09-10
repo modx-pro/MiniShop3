@@ -283,3 +283,15 @@ $_lang['ms3_mgr_order_recalc_manual_delivery_missing'] = 'В режиме manual
 $_lang['ms3_order_cost_recalc_success'] = 'Стоимость заказа пересчитана';
 $_lang['ms3_order_finalize_cost_recalc_required'] =
     'Перед оформлением пересчитайте стоимость заказа: для выбранных доставки или оплаты нужен ручной расчёт или force_provider.';
+
+// Группы покупателей (#669)
+$_lang['ms3_err_customer_group_id_required'] = 'Не указан ID группы покупателей';
+$_lang['ms3_err_customer_group_not_found'] = 'Группа покупателей не найдена или неактивна';
+$_lang['ms3_err_customer_group_name_required'] = 'Укажите название группы покупателей';
+$_lang['ms3_err_customer_group_user_group_invalid'] = 'Укажите корректную группу пользователей MODX';
+$_lang['ms3_err_customer_group_save'] = 'Не удалось сохранить группу покупателей';
+$_lang['ms3_err_customer_group_delete'] = 'Не удалось удалить группу покупателей';
+$_lang['ms3_err_customer_group_detach'] = 'Не удалось отвязать покупателей перед удалением группы';
+$_lang['ms3_customer_group_created'] = 'Группа покупателей создана';
+$_lang['ms3_customer_group_updated'] = 'Группа покупателей обновлена';
+$_lang['ms3_customer_group_deleted'] = 'Группа покупателей удалена';

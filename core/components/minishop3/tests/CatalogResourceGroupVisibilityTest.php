@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Static checks for CatalogResourceGroupVisibility (#659).
+ * Static checks for CatalogResourceGroupVisibility (#659, #669, #670).
  *
  * Run: php tests/CatalogResourceGroupVisibilityTest.php
  */
@@ -42,8 +42,7 @@ $dgTable = '`modx_document_groups`';
 $argTable = '`modx_access_resource_groups`';
 $sql = CatalogResourceGroupVisibility::buildNotExistsSql($dgTable, $argTable, 'msProduct', "'web'");
 
-$assertTrue(str_contains($sql, 'NOT EXISTS'), 'SQL contains NOT EXISTS for restricted membership');
-$assertTrue(str_contains($sql, 'OR EXISTS'), 'SQL ORs anonymous grant across document groups');
+$assertTrue(str_contains($sql, 'NOT EXISTS'), 'SQL contains NOT EXISTS for protected membership');
 $assertTrue(str_contains($sql, $dgTable), 'SQL contains document_groups table');
 $assertTrue(str_contains($sql, $argTable), 'SQL contains access_resource_groups table');
 $assertTrue(str_contains($sql, 'dg.`document` = msProduct.`id`'), 'SQL joins document to resource id');
@@ -60,6 +59,35 @@ $assertTrue(
     str_contains($sql, 'MODX\\\\Revolution\\\\modUserGroup') || str_contains($sql, "MODX\\Revolution\\modUserGroup"),
     'SQL includes FQCN principal_class'
 );
+
+$authSql = CatalogResourceGroupVisibility::buildVisibilitySql(
+    $dgTable,
+    $argTable,
+    'msProduct',
+    "'web'",
+    [5, 12],
+);
+
+$assertTrue(str_contains($authSql, 'NOT EXISTS'), 'authenticated SQL keeps protected NOT EXISTS branch');
+$assertTrue(str_contains($authSql, 'dg_allow'), 'authenticated SQL has allowed-group alias');
+$assertTrue(str_contains($authSql, 'document_group` IN (5,12)'), 'authenticated SQL lists allowed group ids');
+$assertTrue(str_contains($authSql, ' OR ('), 'authenticated SQL ORs allowed membership');
+
+$multiSql = CatalogResourceGroupVisibility::buildVisibilitySql(
+    $dgTable,
+    $argTable,
+    'msCategory',
+    "'web'",
+    [3, 7, 9],
+);
+$assertTrue(str_contains($multiSql, 'document_group` IN (3,7,9)'), 'multi-RG OR uses IN list on allowed groups');
+
+try {
+    CatalogResourceGroupVisibility::buildVisibilitySql($dgTable, $argTable, 'evil', "'web'", []);
+    $fail('buildVisibilitySql must reject unsafe alias');
+} catch (\InvalidArgumentException) {
+    // expected
+}
 
 $makeModx = static function (array $options): modX {
     return new class ($options) extends modX {
@@ -124,7 +152,90 @@ foreach ($settingCases as $case) {
     $assertSame($case['cacheKey'], $service->appliesToCacheKey(), $case['label'] . ' cache key');
 }
 
+$makeModxWithTables = static function (array $options): modX {
+    return new class ($options) extends modX {
+        /** @param array<string, mixed> $options */
+        public function __construct(private array $options)
+        {
+        }
+
+        public function getOption(string $key, $options = null, $default = null)
+        {
+            return $this->options[$key] ?? $default;
+        }
+
+        public function getTableName($className, $includeTablePrefix = true)
+        {
+            return match ($className) {
+                \MODX\Revolution\modResourceGroupResource::class => '`modx_document_groups`',
+                \MODX\Revolution\modAccessResourceGroup::class => '`modx_access_resource_groups`',
+                default => parent::getTableName($className, $includeTablePrefix),
+            };
+        }
+
+        public function quote($string)
+        {
+            return "'" . str_replace("'", "''", (string) $string) . "'";
+        }
+    };
+};
+
+$enabledService = new CatalogResourceGroupVisibility($makeModxWithTables([]));
+$fragment = $enabledService->buildWhereFragment('msProduct', 'web');
+$assertTrue(is_string($fragment) && $fragment !== '', 'buildWhereFragment returns SQL when enabled');
+$assertSame($sql, $fragment, 'buildWhereFragment matches buildNotExistsSql for msProduct/web');
+$assertSame(null, $enabledService->buildWhereFragment('msVendor', 'web'), 'buildWhereFragment rejects unknown alias');
+$assertSame(null, $enabledService->buildWhereFragment('msProduct', ''), 'buildWhereFragment rejects empty context');
+
+$disabledService = new CatalogResourceGroupVisibility($makeModx([
+    CatalogResourceGroupVisibility::SETTING_KEY => false,
+]));
+$assertSame(null, $disabledService->buildWhereFragment('msProduct', 'web'), 'buildWhereFragment null when disabled');
+
+$principalCacheKey = $enabledService->appliesToCacheKey([12, 5]);
+$assertTrue(str_starts_with($principalCacheKey, '1:'), 'principal cache key is hashed segment');
+$assertSame(
+    $enabledService->appliesToCacheKey([5, 12]),
+    $principalCacheKey,
+    'principal cache key order independent'
+);
+
 $assertSame(true, CatalogQuery::toBool('yes'), 'toBool parity for setting values');
+
+// Regression: pdoTools Fetch::additionalConditions suppresses &resources/&context when a
+// numeric-keyed where string mentions msProduct + \bid\b / context_key (#670 review).
+$pdoToolsWouldSuppress = static function (string $sql, string $alias, string $field): bool {
+    return str_contains($sql, $alias) && (bool) preg_match('/\b' . preg_quote($field, '/') . '\b/i', $sql);
+};
+$assertTrue(
+    $pdoToolsWouldSuppress((string) $fragment, 'msProduct', 'id'),
+    'RG fragment would suppress resources if placed in numeric where'
+);
+$assertTrue(
+    $pdoToolsWouldSuppress((string) $fragment, 'msProduct', 'context_key'),
+    'RG fragment would suppress context if placed in numeric where'
+);
+$assertTrue(
+    str_contains((string) $fragment, 'NOT EXISTS')
+    && str_contains((string) $fragment, 'msProduct'),
+    'join ON still uses shared NOT EXISTS SQL'
+);
+
+$ms3ProductsSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/ms3_products.php');
+$assertTrue(
+    str_contains($ms3ProductsSrc, "\$innerJoin['ms3RgVisibility']"),
+    'ms3_products wires RG via innerJoin (not numeric where)'
+);
+$assertTrue(
+    !preg_match('/\$where\[\]\s*=\s*\$_ms3RgWhere/', $ms3ProductsSrc),
+    'ms3_products does not append RG fragment to numeric where'
+);
+
+$visibleWhenDisabled = new CatalogResourceGroupVisibility($makeModx([
+    CatalogResourceGroupVisibility::SETTING_KEY => false,
+]));
+$assertTrue($visibleWhenDisabled->isVisible(1), 'isVisible true when setting disabled');
+$assertTrue(!$visibleWhenDisabled->isVisible(0), 'isVisible false for non-positive id');
 
 fwrite(STDOUT, "OK CatalogResourceGroupVisibilityTest\n");
 exit(0);

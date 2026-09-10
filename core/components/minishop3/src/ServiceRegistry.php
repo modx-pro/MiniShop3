@@ -170,6 +170,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Category\CategoryCatalogService::class,
             'interface' => null,
         ],
+        'ms3_customer_resource_group_resolver' => [
+            'class' => \MiniShop3\Services\Catalog\CustomerResourceGroupResolver::class,
+            'interface' => null,
+        ],
         'ms3_delivery_catalog' => [
             'class' => \MiniShop3\Services\Delivery\DeliveryCatalogService::class,
             'interface' => null,

@@ -10,6 +10,7 @@ use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msVendor;
 use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use MiniShop3\Utils\EventGate;
 use MiniShop3\Utils\ProductThumbnailJoin;
 use MODX\Revolution\modPlugin;
@@ -259,6 +260,24 @@ if (!empty($scriptProperties['sortbyOptions'])) {
             $joinedOptions[] = $option;
         }
     }
+}
+
+// Anonymous RG ACL for storefront listing (#670); same SQL as Web API.
+// Put the NOT EXISTS in an INNER JOIN ON — not in $where[] — so pdoTools
+// additionalConditions() does not false-positive-suppress &resources / &context
+// (raw numeric where strings that mention msProduct + \bid\b / context_key).
+$_ms3RgVisibility = new CatalogResourceGroupVisibility($modx);
+$_ms3RgContext = trim((string) ($modx->context->key ?? ''));
+if ($_ms3RgContext === '') {
+    $_ms3RgContext = 'web';
+}
+$_ms3RgWhere = $_ms3RgVisibility->buildWhereFragment('msProduct', $_ms3RgContext);
+if ($_ms3RgWhere !== null) {
+    $innerJoin['ms3RgVisibility'] = [
+        'class' => msProduct::class,
+        'alias' => 'ms3RgVisibility',
+        'on' => '`ms3RgVisibility`.`id` = `msProduct`.`id` AND ' . $_ms3RgWhere,
+    ];
 }
 
 $default = [

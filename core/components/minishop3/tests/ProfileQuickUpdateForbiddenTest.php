@@ -37,7 +37,7 @@ if (!preg_match('/array_intersect_key\\(\\$this->getProfileFieldRules\\(\\),\\s*
     $fail('update must restrict validation to core rules for fields present in $data');
 }
 
-foreach (['privacy_accepted_at', 'privacy_ip', 'password', 'token', 'email_verified_at'] as $key) {
+foreach (['privacy_accepted_at', 'privacy_ip', 'password', 'token', 'email_verified_at', 'customer_group_id'] as $key) {
     if (!in_array($key, CustomerPublicDto::SYSTEM_NON_EDITABLE_FIELDS, true)) {
         $fail("SYSTEM_NON_EDITABLE_FIELDS must include {$key}");
     }

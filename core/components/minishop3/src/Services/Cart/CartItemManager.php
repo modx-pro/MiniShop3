@@ -277,14 +277,14 @@ class CartItemManager
             return $this->modx->getObject(msProduct::class, $filter) ?: null;
         }
 
-        // Same anonymous RG ACL gate as public catalog (#659) — no cart bypass via product id.
+        // Same query gate as public catalog (#659/#669): token principals via applyForRequest.
         $c = $this->modx->newQuery(msProduct::class);
         $c->where($filter);
         $context = (string) ($this->modx->context->key ?? 'web');
         if ($context === '') {
             $context = 'web';
         }
-        $visibility->apply($c, 'msProduct', $context);
+        $visibility->applyForRequest($c, 'msProduct', $context);
 
         return $this->modx->getObject(msProduct::class, $c) ?: null;
     }
