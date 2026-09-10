@@ -3,11 +3,12 @@
     use MiniShop3\Model\msProduct;
     use MiniShop3\Model\msProductData;
     use MiniShop3\Model\msProductFile;
+    use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
     use MODX\Revolution\modX;
     use MiniShop3\MiniShop3;
     use ModxPro\PdoTools\Fetch;
 
-    /** @var modX $modx */
+    /** @var \MODX\Revolution\modX $modx */
     /** @var array $scriptProperties */
     /** @var MiniShop3 $ms3 */
 
@@ -21,12 +22,16 @@
     $tpl = $modx->getOption('tpl', $scriptProperties, 'tpl.msGallery');
     $thumbnailsFilter = $modx->getOption('thumbnails', $scriptProperties, '');
 
-    /** @var msProduct $product */
-    $product = !empty($product) && $product != $modx->resource->id
-        ? $modx->getObject(msProduct::class, ['id' => $product])
+    // $product from snippet props may be an id (int|string), not an msProduct yet.
+    $_ms3LoadedById = !empty($product) && (int) $product !== (int) $modx->resource->id;
+    $product = $_ms3LoadedById
+        ? $modx->getObject(msProduct::class, ['id' => (int) $product])
         : $modx->resource;
     if (!($product instanceof msProduct)) {
         $modx->log(modX::LOG_LEVEL_ERROR, "[msGallery] Resource {$product->id} is not msProduct");
+        return '';
+    }
+    if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisible((int) $product->id)) {
         return '';
     }
 

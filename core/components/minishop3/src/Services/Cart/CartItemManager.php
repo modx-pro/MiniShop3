@@ -277,7 +277,7 @@ class CartItemManager
             return $this->modx->getObject(msProduct::class, $filter) ?: null;
         }
 
-        // Same anonymous RG ACL gate as public catalog (#659) — no cart bypass via product id.
+        // Same query gate as public catalog (#659). #669 upgrades this to applyForRequest().
         $c = $this->modx->newQuery(msProduct::class);
         $c->where($filter);
         $context = (string) ($this->modx->context->key ?? 'web');
