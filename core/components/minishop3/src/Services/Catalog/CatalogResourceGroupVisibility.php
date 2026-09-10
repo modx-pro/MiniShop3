@@ -61,7 +61,7 @@ final class CatalogResourceGroupVisibility
     }
 
     /**
-     * Visibility SQL for pdoTools INNER JOIN ON / WHERE (anonymous-safe).
+     * Visibility SQL fragment for pdoTools INNER JOIN ON / WHERE (anonymous-safe).
      *
      * Same SQL as {@see apply()}. Fenom listings stay anonymous-safe; member-aware
      * catalog/cart for logged-in customers is #669.
