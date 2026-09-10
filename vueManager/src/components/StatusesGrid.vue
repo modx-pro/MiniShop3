@@ -255,7 +255,13 @@ onMounted(() => {
             </div>
           </div>
           <div class="grid-header-right">
-            <Button :label="_('create')" icon="pi pi-plus" severity="success" @click="openCreate" />
+            <Button
+              :label="_('create')"
+              icon="pi pi-plus"
+              severity="primary"
+              size="small"
+              @click="openCreate"
+            />
           </div>
         </div>
       </template>

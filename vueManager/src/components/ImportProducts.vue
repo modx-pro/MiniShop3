@@ -366,23 +366,35 @@ onMounted(() => {
       <h3>{{ _('ms3_import_select_file') }}</h3>
 
       <div class="upload-section">
-        <div class="upload-area" :class="{ uploading: uploading }" @click="triggerFileInput">
+        <div
+          class="upload-area"
+          :class="{ uploading: uploading }"
+          role="button"
+          tabindex="0"
+          @click="triggerFileInput"
+          @keydown.enter.prevent="triggerFileInput"
+          @keydown.space.prevent="triggerFileInput"
+        >
           <input
             ref="fileInputRef"
             type="file"
             accept=".csv"
-            style="display: none"
+            class="upload-input-hidden"
             @change="handleFileSelect"
           />
-          <div class="upload-icon">
-            <i v-if="!uploading" class="pi pi-cloud-upload"></i>
-            <i v-else class="pi pi-spin pi-spinner"></i>
+          <i
+            v-if="!uploading"
+            class="pi pi-cloud-upload upload-icon"
+            aria-hidden="true"
+          ></i>
+          <i v-else class="pi pi-spin pi-spinner upload-icon" aria-hidden="true"></i>
+          <div class="upload-copy">
+            <span class="upload-text">
+              <template v-if="!uploading">{{ _('ms3_import_drop_or_click') }}</template>
+              <template v-else>{{ _('ms3_import_uploading') }}</template>
+            </span>
+            <span class="upload-hint">{{ _('ms3_import_csv_only') }}</span>
           </div>
-          <div class="upload-text">
-            <span v-if="!uploading">{{ _('ms3_import_drop_or_click') }}</span>
-            <span v-else>{{ _('ms3_import_uploading') }}</span>
-          </div>
-          <div class="upload-hint">{{ _('ms3_import_csv_only') }}</div>
         </div>
         <Message v-if="uploadError" severity="error" :closable="true" @close="uploadError = null">{{
           uploadError
@@ -441,11 +453,13 @@ onMounted(() => {
         }}</Message>
       </div>
 
-      <div class="step-actions">
+      <div class="step-actions step-actions--compact">
         <Button
           :label="_('ms3_import_next')"
           icon="pi pi-arrow-right"
           icon-pos="right"
+          size="small"
+          severity="primary"
           :disabled="!canProceedToStep2"
           @click="currentStep = 2"
         />
@@ -641,226 +655,338 @@ onMounted(() => {
 
 <style scoped>
 .import-products {
-  padding: 1.25rem;
-  max-width: 62.5rem;
+  padding: 0;
+  max-width: 36rem;
 }
+
+.tab-description {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ms3-text-muted);
+  background: var(--ms3-bg-muted);
+  border-radius: var(--ms3-radius-md, 0.375rem);
+}
+
 .import-global-error {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
+
 .step-indicators {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 1.875rem;
-  padding: 1.25rem 0;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  padding: 0;
 }
+
 .step-indicator {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  border-radius: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.15s ease;
   background: var(--ms3-bg-muted);
+  font-size: 0.875rem;
 }
+
 .step-indicator:hover:not(.disabled) {
   background: var(--ms3-bg-neutral);
 }
+
 .step-indicator.active {
   background: var(--ms3-accent-primary);
   color: var(--ms3-text-on-primary);
 }
+
 .step-indicator.completed {
-  background: var(--ms3-text-success);
+  background: var(--p-primary-color, #6cb24a);
   color: var(--ms3-text-on-primary);
 }
+
 .step-indicator.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
 .step-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgb(0 0 0 / 10%);
   font-weight: 600;
+  font-size: 0.8125rem;
 }
+
 .step-indicator.active .step-number,
 .step-indicator.completed .step-number {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgb(255 255 255 / 20%);
 }
+
 .step-title {
   font-weight: 500;
 }
+
 .step-connector {
-  width: 2.5rem;
+  width: 1.25rem;
   height: 0.125rem;
   background: var(--ms3-border-color-alt);
-  margin: 0 0.5rem;
+  margin: 0 0.25rem;
+  flex-shrink: 0;
 }
+
 .step-connector.active {
-  background: var(--ms3-text-success);
+  background: var(--p-primary-color, #6cb24a);
 }
+
 .step-content {
-  padding: 1.25rem 0;
+  padding: 0;
 }
+
 .step-content h3 {
-  margin-bottom: 1.25rem;
-  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
   font-weight: 600;
+  color: var(--ms3-text-dark, var(--p-text-color));
 }
+
 .step-content h4 {
-  margin: 1.25rem 0 0.625rem;
-  font-size: 1rem;
+  margin: 1rem 0 0.5rem;
+  font-size: 0.9375rem;
   font-weight: 500;
 }
+
 .file-source-tabs {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
+
 .source-tab-buttons {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
+
 .source-tab-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
   background: var(--ms3-bg-surface);
   border-radius: var(--ms3-radius-md);
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
+
 .source-tab-btn:hover {
   background: var(--ms3-bg-muted);
 }
+
 .source-tab-btn.active {
   background: var(--ms3-accent-primary);
   color: var(--ms3-text-on-primary);
   border-color: var(--ms3-accent-primary);
 }
+
 .source-tab-content {
-  min-height: 9.375rem;
+  min-height: 0;
 }
+
+.upload-section {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.upload-input-hidden {
+  display: none;
+}
+
 .upload-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: fit-content;
+  max-width: 100%;
   border: var(--ms3-border-width-focus) dashed var(--ms3-border-color-alt);
-  border-radius: var(--ms3-radius-lg);
-  padding: 2.5rem 1.25rem;
-  text-align: center;
+  border-radius: var(--ms3-radius-md, 0.375rem);
+  padding: 0.875rem 1.25rem;
+  text-align: start;
   cursor: pointer;
-  transition: all 0.2s;
-  background: var(--ms3-bg-gray-50);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+  background: var(--ms3-bg-gray-50, var(--ms3-bg-muted));
 }
-.upload-area:hover {
+
+.upload-area:hover,
+.upload-area:focus-visible {
   border-color: var(--ms3-accent-primary);
-  background: var(--ms3-bg-accent);
+  background: var(--ms3-bg-accent, #f4faf0);
+  outline: none;
 }
+
 .upload-area.uploading {
   pointer-events: none;
   opacity: 0.7;
 }
+
 .upload-icon {
-  font-size: 3rem;
-  color: var(--ms3-text-muted);
-  margin-bottom: 0.9375rem;
+  flex-shrink: 0;
+  font-size: 1.375rem;
+  color: var(--p-primary-color, #6cb24a);
+  margin: 0;
 }
+
+.upload-copy {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
+}
+
 .upload-text {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 0;
+  color: var(--ms3-text-dark, var(--p-text-color));
 }
+
 .upload-hint {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
   color: var(--ms3-text-muted);
+  white-space: nowrap;
 }
+
+.upload-hint::before {
+  content: '·';
+  margin-inline-end: 0.75rem;
+  color: var(--ms3-text-muted);
+  opacity: 0.7;
+}
+
 .modx-browser-section {
   text-align: center;
-  padding: 2.5rem 1.25rem;
-  background: var(--ms3-bg-gray-50);
-  border-radius: var(--ms3-radius-lg);
+  padding: 1rem;
+  background: var(--ms3-bg-gray-50, var(--ms3-bg-muted));
+  border-radius: var(--ms3-radius-md);
   border: var(--ms3-border-width) solid var(--ms3-border-color-alt);
 }
+
 .browser-hint {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
   color: var(--ms3-text-muted);
 }
+
 .selected-file {
-  margin: 1.25rem 0;
-  padding: 0.75rem 1rem;
+  margin: 0.5rem 0 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
   background: var(--ms3-bg-success-light);
   border-radius: var(--ms3-radius-md);
   border: var(--ms3-border-width) solid var(--ms3-border-success-light);
 }
+
 .selected-file-header {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
 }
+
 .selected-file-header i {
   color: var(--ms3-text-success-dark);
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
+
 .file-name {
   flex: 1;
   font-weight: 500;
+  font-size: 0.875rem;
   color: var(--ms3-text-success-dark);
 }
+
 .settings-section,
 .update-settings,
 .import-options {
   background: var(--ms3-bg-muted);
-  padding: 0.9375rem;
+  padding: 0.75rem 1rem;
   border-radius: 0.375rem;
-  margin: 1.25rem 0;
+  margin: 0.75rem 0 0;
 }
+
 .setting-row {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  margin: 0.625rem 0;
+  margin: 0.5rem 0;
 }
+
 .setting-row label {
   cursor: pointer;
+  font-size: 0.875rem;
 }
+
 .file-info {
-  margin: 1.25rem 0;
+  margin: 0.75rem 0;
 }
+
 .step-actions {
   display: flex;
-  gap: 0.625rem;
+  gap: 0.5rem;
   justify-content: flex-end;
-  margin-top: 1.875rem;
-  padding-top: 1.25rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
   border-top: var(--ms3-border-width) solid var(--ms3-border-color-alt);
 }
-.mapping-table {
-  margin: 1.25rem 0;
+
+.step-actions--compact {
+  justify-content: flex-start;
+  margin-top: 0.75rem;
+  padding-top: 0;
+  border-top: none;
 }
+
+.mapping-table {
+  margin: 0.75rem 0;
+}
+
 .column-info {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
+
 .column-letter {
   font-weight: 600;
   color: var(--ms3-text-hint);
 }
+
 .column-name {
   color: var(--ms3-text-muted);
 }
+
 .mapping-arrow {
   color: var(--ms3-text-muted);
 }
+
 .field-select {
   width: 100%;
   min-width: 12.5rem;
 }
+
 .preview-value {
   color: var(--ms3-text-muted);
   font-size: 0.875rem;
@@ -870,6 +996,7 @@ onMounted(() => {
   white-space: nowrap;
   display: block;
 }
+
 .key-select {
   min-width: 9.375rem;
 }
@@ -911,7 +1038,7 @@ onMounted(() => {
 }
 .progress-section {
   text-align: center;
-  padding: 2.5rem 1.25rem;
+  padding: 1.25rem 1rem;
 }
 .import-progress-bar {
   height: 0.5rem;

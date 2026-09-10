@@ -102,19 +102,21 @@ function goTo(path) {
 <template>
   <div class="ms3-utilities-page">
     <div class="ms3-utilities-page__header">
-      <h2 class="ms3-utilities-page__title">
+      <h2 class="ms3-utilities-page__title" :title="`${_('ms3_header')} :: ${_('ms3_utilities')}`">
         {{ _('ms3_header') }} :: {{ _('ms3_utilities') }}
       </h2>
       <div v-if="canListSettings" class="ms3-utilities-page__actions">
         <Button
           :label="_('ms3_orders')"
-          class="p-button-sm"
-          severity="contrast"
+          size="small"
+          severity="secondary"
           @click="goTo('?a=mgr/orders&namespace=minishop3')"
         />
         <Button
           :label="_('ms3_settings')"
-          class="p-button-sm p-button-secondary"
+          size="small"
+          severity="secondary"
+          outlined
           @click="goTo('?a=mgr/settings&namespace=minishop3')"
         />
       </div>
@@ -137,7 +139,7 @@ function goTo(path) {
 
 <style scoped>
 .ms3-utilities-page {
-  padding: 1.25rem;
+  padding: var(--ms3-spacing-4, 1rem);
 }
 
 .ms3-utilities-page__header {
@@ -146,19 +148,33 @@ function goTo(path) {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--ms3-spacing-4, 1rem);
 }
 
 .ms3-utilities-page__title {
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #333;
+  color: var(--ms3-text-dark, #333);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ms3-utilities-page__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* Same inset as product tabs — tab bodies keep padding: 0 */
+.ms3-utilities-page__tabs :deep(.p-tabpanels) {
+  padding: var(--ms3-tab-panel-padding, var(--ms3-spacing-4, 1rem));
+}
+
+.ms3-utilities-page__tabs :deep(.p-tabpanel) {
+  padding: 0;
 }
 </style>

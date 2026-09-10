@@ -5,15 +5,9 @@
  * ms3-grid-category-option + ms3-window-option-add + ms3-window-copy-category.
  */
 
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
-import { createApp } from 'vue'
-
 import CategoryOptionsTab from '../components/CategoryOptionsTab.vue'
 import { provideUiGroup } from '../composables/uiGroup.js'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 
 const MOUNT_ID = 'ms3-vue-category-options'
@@ -31,20 +25,12 @@ function mountApp() {
     return false
   }
 
-  app = createApp(CategoryOptionsTab, { categoryId })
-
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: '.dark-mode',
-        cssLayer: false,
-      },
+  app = createMs3VueApp(CategoryOptionsTab, { categoryId }, {
+    themeOptions: {
+      darkModeSelector: '.dark-mode',
+      cssLayer: false,
     },
-    locale: getPrimeVueLocale(),
   })
-  app.use(ToastService)
-  app.use(ConfirmationService)
   provideUiGroup(app, 'category-options')
 
   app.mount(container)

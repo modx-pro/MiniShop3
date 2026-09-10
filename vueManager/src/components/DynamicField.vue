@@ -256,6 +256,7 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
+import { fieldHtmlId as buildFieldHtmlId } from '../utils/fieldHtmlId.js'
 import { getKeyValueConfigFromField, serializeKeyValueForPost } from '../utils/keyValueField.js'
 import { getRepeaterConfigFromField } from '../utils/repeaterField.js'
 import { parseStructuredExtraFieldValue } from '../utils/structuredExtraField.js'
@@ -317,7 +318,7 @@ const props = defineProps({
  * Prefer explicit fieldConfig.htmlId, otherwise generate from prefix + name.
  */
 const fieldHtmlId = computed(() => {
-  return props.fieldConfig.htmlId || `${props.idPrefix}-field-${props.fieldConfig.name}`
+  return props.fieldConfig.htmlId || buildFieldHtmlId(props.fieldConfig.name, props.idPrefix)
 })
 
 /**

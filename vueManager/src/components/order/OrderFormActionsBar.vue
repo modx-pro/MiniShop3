@@ -20,6 +20,7 @@ const { _ } = useLexicon()
       :label="_('ms3_order_create')"
       icon="pi pi-plus"
       severity="success"
+      size="small"
       :loading="saving"
       @click="emit('create')"
     />
@@ -27,6 +28,7 @@ const { _ } = useLexicon()
       v-else
       :label="_('save')"
       icon="pi pi-check"
+      size="small"
       :loading="saving"
       :disabled="recalculatingCost"
       @click="emit('save')"
@@ -35,6 +37,7 @@ const { _ } = useLexicon()
       :label="_('cancel')"
       icon="pi pi-times"
       severity="secondary"
+      size="small"
       @click="emit('cancel')"
     />
   </div>
