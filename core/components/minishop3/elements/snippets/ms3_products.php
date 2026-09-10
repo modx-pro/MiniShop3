@@ -278,13 +278,6 @@ if ($_ms3RgWhere !== null) {
         'alias' => 'ms3RgVisibility',
         'on' => '`ms3RgVisibility`.`id` = `msProduct`.`id` AND ' . $_ms3RgWhere,
     ];
-    $_ms3RgCacheSuffix = '_rg' . $_ms3RgVisibility->appliesToCacheKey()
-        . '_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $_ms3RgContext);
-    foreach (['cacheKey', 'cache_key'] as $_ms3CacheProp) {
-        if (!empty($scriptProperties[$_ms3CacheProp])) {
-            $scriptProperties[$_ms3CacheProp] .= $_ms3RgCacheSuffix;
-        }
-    }
 }
 
 $default = [
