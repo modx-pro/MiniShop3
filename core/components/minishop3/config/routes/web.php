@@ -320,6 +320,11 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             $controller = new \MiniShop3\Controllers\Api\Web\DeliveryController($modx);
             return $controller->getList($params);
         });
+
+        $router->post('/webhook/{delivery_id}', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\DeliveryWebhookController($modx);
+            return $controller->handle($params);
+        });
     });
 
     $router->group('/payment', function ($router) use ($modx) {

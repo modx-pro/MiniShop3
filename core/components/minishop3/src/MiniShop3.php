@@ -9,6 +9,7 @@ use MiniShop3\Controllers\Options\Options;
 use MiniShop3\Controllers\Order\Order;
 use MiniShop3\Controllers\Payment\PaymentProviderInterface;
 use MiniShop3\ServiceRegistry;
+use MiniShop3\Services\Shipment\ShipmentLifecycleService;
 use MiniShop3\Utils\ExtraFields;
 use MiniShop3\Utils\Format;
 use MiniShop3\Utils\Services;
@@ -248,6 +249,25 @@ class MiniShop3
     public function getCustomer(): \MiniShop3\Controllers\Customer\Customer
     {
         return $this->modx->services->get('ms3_customer');
+    }
+
+    /**
+     * Public shipment rows for Fenom / storefront. Uses `$this->modx` so snippets
+     * do not add extra `$modx->services` hits (phpstan baseline ignore.count).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function shipmentPublicForOrder(int $orderId): array
+    {
+        if (!$this->modx->services->has('ms3_shipment_lifecycle')) {
+            return [];
+        }
+        $lifecycle = $this->modx->services->get('ms3_shipment_lifecycle');
+        if (!$lifecycle instanceof ShipmentLifecycleService) {
+            return [];
+        }
+
+        return $lifecycle->publicListForOrder($orderId);
     }
 
     /**
