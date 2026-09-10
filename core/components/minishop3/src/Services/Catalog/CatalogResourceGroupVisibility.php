@@ -15,8 +15,9 @@ use xPDO\Om\xPDOQuery;
  * with Resource Group Access ACL for the request context (#659).
  *
  * Matches core anonymous policy loading: principal = 0 («(anonymous)») is an
- * explicit grant — those resources stay visible even when other user groups
- * also have ACL rows on the same document group (#666 review).
+ * explicit grant. Membership is OR across a resource's groups (checkPolicy):
+ * a document stays visible when any of its groups has an anonymous grant,
+ * even if another membership is restricted (#666 review).
  */
 final class CatalogResourceGroupVisibility
 {
@@ -83,25 +84,29 @@ final class CatalogResourceGroupVisibility
                 . " OR {$aclAlias}.`context_key` IS NULL)";
         };
 
-        // Hide only when a non-anonymous ACL closes the group and there is no
-        // explicit principal=0 (anonymous) grant for the same document group.
-        return "NOT EXISTS (
-            SELECT 1
-            FROM {$dgTable} AS dg
-            INNER JOIN {$argTable} AS arg
-                ON arg.`target` = dg.`document_group`
-                AND arg.`principal_class` IN ({$principalIn})
-                AND arg.`principal` <> 0
-                AND {$contextPred('arg')}
-            WHERE dg.`document` = {$alias}.`id`
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM {$argTable} AS arg_anon
-                    WHERE arg_anon.`target` = dg.`document_group`
-                        AND arg_anon.`principal_class` IN ({$principalIn})
-                        AND arg_anon.`principal` = 0
-                        AND {$contextPred('arg_anon')}
-                )
+        // Hide only when the document has a restricted membership and none of
+        // its groups carry an explicit principal=0 grant (OR across groups).
+        return "(
+            NOT EXISTS (
+                SELECT 1
+                FROM {$dgTable} AS dg
+                INNER JOIN {$argTable} AS arg
+                    ON arg.`target` = dg.`document_group`
+                    AND arg.`principal_class` IN ({$principalIn})
+                    AND arg.`principal` <> 0
+                    AND {$contextPred('arg')}
+                WHERE dg.`document` = {$alias}.`id`
+            )
+            OR EXISTS (
+                SELECT 1
+                FROM {$dgTable} AS dg_anon
+                INNER JOIN {$argTable} AS arg_anon
+                    ON arg_anon.`target` = dg_anon.`document_group`
+                    AND arg_anon.`principal_class` IN ({$principalIn})
+                    AND arg_anon.`principal` = 0
+                    AND {$contextPred('arg_anon')}
+                WHERE dg_anon.`document` = {$alias}.`id`
+            )
         )";
     }
 
