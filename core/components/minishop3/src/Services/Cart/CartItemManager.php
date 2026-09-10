@@ -272,16 +272,21 @@ class CartItemManager
             $filter['published'] = 1;
         }
 
-        $product = $this->modx->getObject(msProduct::class, $filter);
-        if (!$product instanceof msProduct) {
-            return null;
+        $visibility = new CatalogResourceGroupVisibility($this->modx);
+        if (!$visibility->isEnabled()) {
+            return $this->modx->getObject(msProduct::class, $filter) ?: null;
         }
 
-        if (!(new CatalogResourceGroupVisibility($this->modx))->isVisible($productId)) {
-            return null;
+        // Same query gate as public catalog (#659). #669 upgrades this to applyForRequest().
+        $c = $this->modx->newQuery(msProduct::class);
+        $c->where($filter);
+        $context = (string) ($this->modx->context->key ?? 'web');
+        if ($context === '') {
+            $context = 'web';
         }
+        $visibility->apply($c, 'msProduct', $context);
 
-        return $product;
+        return $this->modx->getObject(msProduct::class, $c) ?: null;
     }
 
     /**

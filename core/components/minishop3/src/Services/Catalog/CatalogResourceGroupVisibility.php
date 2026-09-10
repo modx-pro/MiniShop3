@@ -63,10 +63,10 @@ final class CatalogResourceGroupVisibility
     }
 
     /**
-     * Raw NOT EXISTS fragment for pdoTools WHERE (anonymous-safe only).
+     * Visibility SQL fragment for pdoTools INNER JOIN ON / WHERE (anonymous-safe).
      *
-     * Uses the same SQL as {@see apply()}. Member-aware listing for logged-in
-     * users is out of scope here — shared pdoTools cache must stay anonymous-safe (#669).
+     * Same SQL as {@see apply()}. Fenom listings stay anonymous-safe; member-aware
+     * catalog/cart for logged-in customers is #669.
      *
      * @return non-empty-string|null SQL when filtering applies; null when disabled or invalid alias
      */
