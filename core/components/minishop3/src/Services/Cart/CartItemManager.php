@@ -6,6 +6,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use MODX\Revolution\modX;
 
 /**
@@ -271,7 +272,21 @@ class CartItemManager
             $filter['published'] = 1;
         }
 
-        return $this->modx->getObject(msProduct::class, $filter);
+        $visibility = new CatalogResourceGroupVisibility($this->modx);
+        if (!$visibility->isEnabled()) {
+            return $this->modx->getObject(msProduct::class, $filter) ?: null;
+        }
+
+        // Same anonymous RG ACL gate as public catalog (#659) — no cart bypass via product id.
+        $c = $this->modx->newQuery(msProduct::class);
+        $c->where($filter);
+        $context = (string) ($this->modx->context->key ?? 'web');
+        if ($context === '') {
+            $context = 'web';
+        }
+        $visibility->apply($c, 'msProduct', $context);
+
+        return $this->modx->getObject(msProduct::class, $c) ?: null;
     }
 
     /**

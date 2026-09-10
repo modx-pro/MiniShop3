@@ -8,6 +8,7 @@ use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Services\Catalog\CatalogQuery;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Option\OptionService;
@@ -212,14 +213,12 @@ class ProductCatalogService
             return null;
         }
 
-        $criteria = ['id' => $productId];
-        $context = $this->resolveContext($params);
-        if ($context !== '') {
-            $criteria['context_key'] = $context;
-        }
+        $c = $this->modx->newQuery(msProduct::class);
+        $c->where($this->publicCriteria(['id' => $productId]));
+        $this->applyProductCatalogScope($c, $params);
 
         /** @var msProduct|null $product */
-        $product = $this->modx->getObject(msProduct::class, $this->publicCriteria($criteria));
+        $product = $this->modx->getObject(msProduct::class, $c);
 
         return $product ?: null;
     }
@@ -399,11 +398,6 @@ class ProductCatalogService
         $c->innerJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
         $c->where($this->publicCriteria());
 
-        $context = $this->resolveContext($params);
-        if ($context !== '') {
-            $c->where(['msProduct.context_key' => $context]);
-        }
-
         if (!$filters->hasParents()) {
             $parent = (int) ($params['parent'] ?? $params['category'] ?? 0);
             if ($parent > 0) {
@@ -420,8 +414,26 @@ class ProductCatalogService
         }
 
         $this->filterApplier()->apply($c, $filters, $dedupeRows);
+        $this->applyProductCatalogScope($c, $params);
 
         return $c;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function applyProductCatalogScope(xPDOQuery $query, array $params): void
+    {
+        $context = $this->resolveContext($params);
+        if ($context !== '') {
+            $query->where(['msProduct.context_key' => $context]);
+        }
+        $this->resourceGroupVisibility()->apply($query, 'msProduct', $context);
+    }
+
+    private function resourceGroupVisibility(): CatalogResourceGroupVisibility
+    {
+        return new CatalogResourceGroupVisibility($this->modx);
     }
 
     private function filterApplier(): ProductCatalogFilterApplier
