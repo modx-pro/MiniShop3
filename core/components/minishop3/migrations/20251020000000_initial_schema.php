@@ -75,12 +75,11 @@ class InitialSchema extends AbstractMigration
 
             $tableName = $modx->getTableName($fullClassName);
 
-            // Check if table already exists
+            // Existence check on the same PDO that runs DDL. Phinx's connection is inside
+            // START TRANSACTION and MySQL 8 will not see tables created on another connection.
             $sql = "SHOW TABLES LIKE '" . trim($tableName, '`') . "'";
-            $stmt = $this->adapter->getConnection()->prepare($sql);
-            $stmt->execute();
-
-            if ($stmt->fetch()) {
+            $exists = $modx->query($sql);
+            if ($exists && $exists->fetch()) {
                 $this->output->writeln("<comment>  Table {$tableName} already exists, skipping</comment>");
                 continue;
             }
@@ -101,8 +100,9 @@ class InitialSchema extends AbstractMigration
                 continue;
             }
 
-            $logicalTable = $this->resolveLogicalTableName($className);
-            if ($logicalTable !== null && !$this->hasTable($logicalTable)) {
+            $verify = $modx->query($sql);
+            if (!$verify || !$verify->fetch()) {
+                $logicalTable = $this->resolveLogicalTableName($className) ?? trim($tableName, '`');
                 $this->output->writeln(
                     "<error>  ✗ Failed to create table: {$tableName} (createObjectContainer succeeded but table is missing)</error>"
                 );
@@ -117,6 +117,9 @@ class InitialSchema extends AbstractMigration
         }
 
         $this->output->writeln('<info>MiniShop3 schema creation completed!</info>');
+
+        // Re-open Phinx TX so hasTable / addForeignKey see xPDO-created tables.
+        ms3MigrationRefreshPhinxTransaction($this->getAdapter());
 
         // Add foreign keys after all tables are created
         $this->addForeignKeys();

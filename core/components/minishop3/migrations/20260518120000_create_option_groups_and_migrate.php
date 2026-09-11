@@ -42,6 +42,8 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
                 $this->output->writeln('<error>Failed to create table ' . $optionGroupsFqn . '</error>');
                 return;
             }
+            // xPDO DDL is on another PDO; refresh Phinx TX so later hasTable/table() see it.
+            ms3MigrationRefreshPhinxTransaction($this->getAdapter());
             $this->output->writeln('<info>Created table ' . $optionGroupsFqn . '</info>');
         } else {
             $this->output->writeln('<comment>Table ' . $optionGroupsFqn . ' already exists, skipping create</comment>');

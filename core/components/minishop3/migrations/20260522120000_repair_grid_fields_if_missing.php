@@ -113,6 +113,7 @@ final class RepairGridFieldsIfMissing extends AbstractMigration
 
         $tableFqn = $modx->getTableName(\MiniShop3\Model\msGridField::class);
         $created = $modx->getManager()->createObjectContainer(\MiniShop3\Model\msGridField::class);
+        ms3MigrationRefreshPhinxTransaction($this->getAdapter());
         if (!$created || !$this->hasTable('ms3_grid_fields')) {
             throw new \RuntimeException('Failed to create table ' . trim($tableFqn, '`'));
         }

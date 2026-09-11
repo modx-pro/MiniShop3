@@ -106,3 +106,31 @@ if (!function_exists('ms3MigrationBootstrap')) {
         return $modx;
     }
 }
+
+if (!function_exists('ms3MigrationRefreshPhinxTransaction')) {
+    /**
+     * Phinx wraps each migration in START TRANSACTION. xPDO DDL uses a separate PDO.
+     * MySQL 8 data-dictionary reads inside that open transaction do not see tables created
+     * on the other connection, so Phinx hasTable()/SHOW TABLES return false. Call after
+     * cross-connection DDL and before Phinx metadata checks or $this->table() on those tables.
+     *
+     * Duck-typed for AdapterInterface (no Phinx import — keeps migrations self-contained).
+     */
+    function ms3MigrationRefreshPhinxTransaction(object $adapter): void
+    {
+        if (
+            !method_exists($adapter, 'getConnection')
+            || !method_exists($adapter, 'commitTransaction')
+            || !method_exists($adapter, 'beginTransaction')
+        ) {
+            return;
+        }
+
+        $connection = $adapter->getConnection();
+        if ($connection instanceof \PDO && $connection->inTransaction()) {
+            $adapter->commitTransaction();
+        }
+
+        $adapter->beginTransaction();
+    }
+}

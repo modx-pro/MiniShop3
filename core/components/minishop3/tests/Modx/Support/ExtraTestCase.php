@@ -6,6 +6,7 @@ namespace MiniShop3\Tests\Modx\Support;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\ServiceRegistry;
+use MiniShop3\Utils\ExtraFields;
 use ModxKit\Testbench\Concerns\RefreshesDatabase;
 use ModxKit\Testbench\Package\PackageDefinition;
 use ModxKit\Testbench\TestCase;
@@ -15,6 +16,7 @@ use MODX\Revolution\modPluginEvent;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\ProcessorResponse;
 use ReflectionClass;
+use ReflectionProperty;
 use xPDO\Om\xPDOObject;
 
 /**
@@ -57,6 +59,29 @@ abstract class ExtraTestCase extends TestCase
     {
         /** @var MiniShop3 $ms3 */
         $ms3 = $this->modx->services->get('ms3');
+
+        // ExtraFields::loadMap() merges into $modx->map and file-caches meta. RefreshesDatabase
+        // rolls back msExtraField rows but leaves map/cache dirty across tests
+        // (ExtraFieldMapTest → later msVendor asserts). Rebuild a clean map each test.
+        (new ExtraFields($this->modx))->clearCache();
+        $mapLoaded = new ReflectionProperty(MiniShop3::class, 'mapLoaded');
+        $mapLoaded->setAccessible(true);
+        $mapLoaded->setValue($ms3, false);
+
+        $inner = new ReflectionProperty($this->modx->map, 'map');
+        $inner->setAccessible(true);
+        /** @var array<string, mixed> $loaded */
+        $loaded = $inner->getValue($this->modx->map);
+        foreach (array_keys($loaded) as $class) {
+            if (
+                is_string($class)
+                && str_starts_with($class, 'MiniShop3\\Model\\')
+                && !str_contains($class, '\\mysql\\')
+            ) {
+                unset($this->modx->map[$class]);
+            }
+        }
+
         $ms3->loadMap();
     }
 

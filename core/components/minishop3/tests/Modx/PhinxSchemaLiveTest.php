@@ -88,11 +88,18 @@ final class PhinxSchemaLiveTest extends ExtraTestCase
             /** @var array{fields?: array<string, mixed>} $metaMap */
             $metaMap = $mysqlClass::$metaMap;
             $mapFields = array_keys($metaMap['fields'] ?? []);
-            // PK comes from xPDOSimpleObject; generated maps omit it from fields.
-            if (!in_array('id', $mapFields, true)) {
+            $dbColumns = $this->listColumns($table);
+            // xPDOSimpleObject PK `id` is often omitted from generated `fields` but present on
+            // the table. Some maps still extend SimpleObject without an `id` column
+            // (e.g. msProductOption) — only expect `id` when it exists physically.
+            $extends = (string) ($metaMap['extends'] ?? '');
+            if (
+                str_ends_with($extends, 'xPDOSimpleObject')
+                && !in_array('id', $mapFields, true)
+                && in_array('id', $dbColumns, true)
+            ) {
                 $mapFields[] = 'id';
             }
-            $dbColumns = $this->listColumns($table);
 
             self::assertSame(
                 [],
