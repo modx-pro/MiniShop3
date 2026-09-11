@@ -50,12 +50,27 @@ final class PhinxSchemaBootstrap
             throw new \RuntimeException('MiniShop3 phinx.php did not return a migrations path');
         }
 
+        $output = new BufferedOutput();
         $manager = new PhinxManager(
             new PhinxConfig($configArray),
             new StringInput(''),
-            new BufferedOutput(),
+            $output,
         );
-        $manager->migrate('production');
+
+        try {
+            $manager->migrate('production');
+        } catch (\Throwable $e) {
+            $buffer = trim($output->fetch());
+            if ($buffer !== '') {
+                throw new \RuntimeException(
+                    $e->getMessage() . "\n--- Phinx output ---\n" . $buffer,
+                    (int) $e->getCode(),
+                    $e
+                );
+            }
+
+            throw $e;
+        }
     }
 
     private static function syncLockTableCount(TestbenchKernel $kernel): void

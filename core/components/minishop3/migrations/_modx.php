@@ -16,7 +16,9 @@
  * Resolution order for the model path (addPackage):
  *  1. The `ms3_core_path` system setting — set by the transport resolver on a real install and
  *     injected via $modx->setOption() by the testbench hook before Phinx runs.
- *  2. Fallback: MODX_CORE_PATH . 'components/minishop3/src/Model/' — the standard install layout.
+ *  2. Fallback: MODX_CORE_PATH . 'components/minishop3/src/' — PSR-4 root (same as composer.json
+ *     and PackageDefinition::model()). With namespacePrefix MiniShop3\, xPDO loads
+ *     {path}Model/metadata.mysql.php — so the path must be .../src/, not .../src/Model/.
  */
 
 if (!function_exists('ms3MigrationModx')) {
@@ -55,15 +57,25 @@ if (!function_exists('ms3MigrationModx')) {
 if (!function_exists('ms3MigrationModelPath')) {
     function ms3MigrationModelPath(\MODX\Revolution\modX $modx): string
     {
+        $candidates = [];
         $core = $modx->getOption('ms3_core_path', null, null);
         if (is_string($core) && $core !== '') {
-            $path = rtrim($core, '/') . '/src/Model/';
-            if (is_dir($path)) {
+            $candidates[] = rtrim($core, '/\\') . '/src/';
+        }
+        if (defined('MODX_CORE_PATH')) {
+            $candidates[] = MODX_CORE_PATH . 'components/minishop3/src/';
+        }
+
+        foreach ($candidates as $path) {
+            if (is_file($path . 'Model/metadata.mysql.php')) {
                 return $path;
             }
         }
 
-        return MODX_CORE_PATH . 'components/minishop3/src/Model/';
+        // Last resort: keep a directory that exists so addPackage does not fall back to XPDO_CORE_PATH.
+        return $candidates[0] ?? (defined('MODX_CORE_PATH')
+            ? MODX_CORE_PATH . 'components/minishop3/src/'
+            : __DIR__ . '/../src/');
     }
 }
 

@@ -81,7 +81,17 @@ final class PhinxSchemaLiveTest extends ExtraTestCase
             $table = str_replace('`', '', (string) $quoted);
             $mappedTables[$table] = $class;
 
-            $mapFields = array_keys($this->modx->getFields($class));
+            // Compare against the generated mysql map, not runtime $modx->map (ExtraFields::loadMap
+            // can leave process-local fields after ExtraFieldMapTest).
+            $mysqlClass = str_replace('\\Model\\', '\\Model\\mysql\\', $class);
+            self::assertTrue(class_exists($mysqlClass), 'missing mysql map class ' . $mysqlClass);
+            /** @var array{fields?: array<string, mixed>} $metaMap */
+            $metaMap = $mysqlClass::$metaMap;
+            $mapFields = array_keys($metaMap['fields'] ?? []);
+            // PK comes from xPDOSimpleObject; generated maps omit it from fields.
+            if (!in_array('id', $mapFields, true)) {
+                $mapFields[] = 'id';
+            }
             $dbColumns = $this->listColumns($table);
 
             self::assertSame(
