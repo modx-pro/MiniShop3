@@ -1,13 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
-import Toast from 'primevue/toast'
+import { Button, ConfirmDialog, Tab, TabList, TabPanel, TabPanels, Tabs, Toast } from 'primevue'
 import { provide } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../composables/orderContext.js'

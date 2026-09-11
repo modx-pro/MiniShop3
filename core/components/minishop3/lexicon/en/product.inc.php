@@ -145,6 +145,7 @@ $_lang['ms3_gallery_file_url'] = 'URL';
 $_lang['ms3_gallery_file_source'] = 'File Source';
 
 $_lang['ms3_gallery_button_upload'] = 'Select Files';
+$_lang['ms3_gallery_actions'] = 'Gallery actions';
 
 $_lang['ms3_gallery_file_show'] = 'Open in New Window';
 $_lang['ms3_gallery_file_update'] = 'Edit Properties';
@@ -184,6 +185,7 @@ $_lang['ms3_gallery_uppy_upload_x_files_2'] = 'Upload %{smart_count} files';
 $_lang['ms3_gallery_uppy_note_max_size'] = 'Maximum size: %{maxSize}';
 $_lang['ms3_gallery_uppy_back'] = 'Back';
 $_lang['ms3_gallery_uppy_add_more_files'] = 'Add more files';
+$_lang['ms3_gallery_uppy_adding_more_files'] = 'Adding more files';
 $_lang['ms3_gallery_uppy_drop_hint'] = 'Drop your files here';
 $_lang['ms3_gallery_uppy_error'] = 'Error';
 $_lang['ms3_gallery_uppy_failed_to_upload'] = 'Failed to upload %{file}';
@@ -191,6 +193,18 @@ $_lang['ms3_gallery_uppy_no_duplicates'] = 'Cannot add the duplicate file \'%{fi
 $_lang['ms3_gallery_uppy_no_files_found'] = 'You have no files or folders here';
 $_lang['ms3_gallery_uppy_pause_upload'] = 'Pause upload';
 $_lang['ms3_gallery_uppy_resume_upload'] = 'Resume upload';
+$_lang['ms3_gallery_uppy_editing'] = 'Editing image';
+$_lang['ms3_gallery_uppy_save'] = 'Save';
+$_lang['ms3_gallery_uppy_finish_editing'] = 'Finish editing';
+$_lang['ms3_gallery_uppy_save_changes'] = 'Save changes';
+$_lang['ms3_gallery_uppy_revert'] = 'Reset';
+$_lang['ms3_gallery_uppy_rotate'] = 'Rotate 90°';
+$_lang['ms3_gallery_uppy_zoom_in'] = 'Zoom in';
+$_lang['ms3_gallery_uppy_zoom_out'] = 'Zoom out';
+$_lang['ms3_gallery_uppy_flip_horizontal'] = 'Flip horizontally';
+$_lang['ms3_gallery_uppy_crop_square'] = 'Crop square';
+$_lang['ms3_gallery_uppy_crop_landscape'] = 'Crop landscape (16:9)';
+$_lang['ms3_gallery_uppy_crop_portrait'] = 'Crop portrait (9:16)';
 
 $_lang['ms3_gallery_search_placeholder'] = 'Search files...';
 $_lang['ms3_gallery_empty_text'] = 'No images yet. Upload files using the area above.';

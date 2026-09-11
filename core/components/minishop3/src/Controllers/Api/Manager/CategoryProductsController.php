@@ -773,8 +773,8 @@ class CategoryProductsController
                 'label' => 'published',
                 'placeholder' => 'all',
                 'options' => [
-                    ['label' => 'Да', 'value' => 1],
-                    ['label' => 'Нет', 'value' => 0],
+                    ['label' => 'yes', 'value' => 1],
+                    ['label' => 'no', 'value' => 0],
                 ],
                 'width' => '120px',
                 'position' => 20,

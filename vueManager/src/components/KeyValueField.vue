@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
+import { Button, InputNumber, InputText, Message } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import {
