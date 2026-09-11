@@ -23,7 +23,8 @@
  *
  * @see https://github.com/modx-pro/MiniShop3/issues/539
  */
-import { useToast } from 'primevue/usetoast'
+
+import { useToast } from 'primevue'
 import { inject } from 'vue'
 
 export const MS3_UI_GROUP = Symbol('ms3UiGroup')

@@ -1,5 +1,5 @@
 import { useLexicon } from '@vuetools/useLexicon'
-import { useConfirm } from 'primevue/useconfirm'
+import { useConfirm } from 'primevue'
 import { computed, ref } from 'vue'
 
 import { resolveUiGroup, toUiGroup, useGroupedToast } from './uiGroup.js'

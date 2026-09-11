@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Card from 'primevue/card'
-import Fieldset from 'primevue/fieldset'
-import Message from 'primevue/message'
-import { useToast } from 'primevue/usetoast'
+import { Card, Fieldset, Message, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../request.js'

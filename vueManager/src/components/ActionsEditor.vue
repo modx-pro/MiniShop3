@@ -5,13 +5,7 @@
  * Allows adding, removing and editing actions in grid column
  */
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { Button, Checkbox, Column, DataTable, Dialog, InputText, Select } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import actionRegistry from '../actionRegistry.js'
