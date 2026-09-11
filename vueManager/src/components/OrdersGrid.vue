@@ -1,17 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import DatePicker from 'primevue/datepicker'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, DatePicker, InputText, Select, Tag, Toast, useToast } from 'primevue'
 import { onMounted, ref } from 'vue'
 
 import { useGridConfig } from '../composables/useGridConfig.js'
@@ -68,7 +57,6 @@ const { columns, loadGridConfig } = useGridConfig({
     setDirectFilterKeys(response?.direct_filter_keys || [])
   },
 })
-
 
 /**
  * Build GET params shared by list and stats endpoints (#469).

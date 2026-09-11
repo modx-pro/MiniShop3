@@ -1,11 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Fieldset from 'primevue/fieldset'
-import InputNumber from 'primevue/inputnumber'
-import Message from 'primevue/message'
-import ProgressBar from 'primevue/progressbar'
+import { Button, Card, Fieldset, InputNumber, Message, ProgressBar } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../request.js'

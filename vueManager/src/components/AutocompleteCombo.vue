@@ -17,7 +17,8 @@
 </template>
 
 <script setup>
-import AutoComplete from 'primevue/autocomplete'
+
+import { AutoComplete } from 'primevue'
 import { onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'

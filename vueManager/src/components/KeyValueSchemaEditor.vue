@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { Button, Checkbox, InputText, Select } from 'primevue'
 import { computed } from 'vue'
 
 import { defaultKeyValueConfig } from '../utils/keyValueField.js'

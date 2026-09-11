@@ -11,7 +11,7 @@
 $_lang['ms3_components_href'] = 'https://modstore.pro/';
 $_lang['ms3_components_text'] = 'Платные и бесплатные дополнения';
 $_lang['ms3_components_title'] = 'Дополнения';
-$_lang['ms3_demo_href'] = '#';
+$_lang['ms3_demo_href'] = 'https://minishop3.ru/';
 $_lang['ms3_demo_text'] = 'Перейти на демо-сайт';
 $_lang['ms3_demo_title'] = 'Демо';
 $_lang['ms3_docs_href'] = 'https://docs.modx.pro/components/minishop3/';
@@ -24,9 +24,11 @@ $_lang['ms3_github_href'] = 'https://github.com/modx-pro/MiniShop3';
 $_lang['ms3_github_text'] = 'Нашли проблему? Сообщите об этом!';
 $_lang['ms3_github_title'] = 'github.com';
 $_lang['ms3_help'] = 'Помощь и поддержка';
+$_lang['ms3_help_nav_title'] = 'Разделы менеджера';
+$_lang['ms3_help_resources_title'] = 'Ресурсы';
 $_lang['ms3_help_text'] = 'MiniShop3 - самый гибкий и быстрый компонент интернет-магазина для MODX3.';
-$_lang['ms3_help_text_support'] = '<strong>Вы можете поддержать MiniShop3 финансово:</strong>
-<br>- Все реквизиты <a href="https://modx.pro/about" target="_blank">здесь</a>';
+$_lang['ms3_help_text_support'] = '<strong>Поддержите разработку MiniShop3</strong>
+<br>Реквизиты для перевода — на <a href="https://modx.pro/about" target="_blank" rel="noopener noreferrer">странице о проекте</a>.';
 $_lang['ms3_lexicons_href'] = '?a=workspaces/lexicon&ns=minishop3';
 $_lang['ms3_lexicons_text'] = 'Управление словарями';
 $_lang['ms3_localization_href'] = 'https://crowdin.com/project/minishop3-ecommerce';
@@ -41,6 +43,6 @@ $_lang['ms3_orders_text'] = 'Заказы';
 $_lang['ms3_settings_href'] = '?a=mgr/settings&namespace=minishop3';
 $_lang['ms3_settings_text'] = 'Настройки';
 $_lang['ms3_sys_settings_href'] = '?a=system/settings&ns=minishop3';
-$_lang['ms3_sys_settings_text'] = 'Системные настройки & События';
+$_lang['ms3_sys_settings_text'] = 'Системные настройки';
 $_lang['ms3_utilities_href'] = '?a=mgr/utilities&namespace=minishop3';
 $_lang['ms3_utilities_text'] = 'Утилиты';
