@@ -125,7 +125,7 @@ class ProductDataService
             $productData->set('source_id', $this->modx->getOption('ms3_product_source_default', null, 1));
         }
 
-        // Cast numeric/boolean fields (incl. extra fields) so '' does not break MySQL decimals/ints
+        // Cast numeric/boolean/date fields (incl. extra fields) so '' does not break MySQL
         foreach ($productData->_fieldMeta as $key => $meta) {
             if ($key === 'id') {
                 continue;
@@ -139,9 +139,28 @@ class ProductDataService
                 'float' => $productData->set($key, $isEmpty ? 0.0 : (float)$value),
                 'integer' => $productData->set($key, $isEmpty ? 0 : (int)$value),
                 'boolean' => $productData->set($key, $isEmpty ? false : (bool)$value),
+                'date', 'datetime', 'timestamp' => $productData->set(
+                    $key,
+                    $this->isEmptyDateScalar($value) ? null : $value
+                ),
                 default => null,
             };
         }
+    }
+
+    /**
+     * Empty form posts and MySQL zero-dates must become NULL for DATE/DATETIME columns.
+     */
+    private function isEmptyDateScalar(mixed $value): bool
+    {
+        if ($value === '' || $value === null) {
+            return true;
+        }
+        if (!is_string($value)) {
+            return false;
+        }
+
+        return str_starts_with($value, '0000-00-00');
     }
 
     public function saveCategories(msProductData $productData): void

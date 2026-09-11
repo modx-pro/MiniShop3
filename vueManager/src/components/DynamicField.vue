@@ -92,19 +92,25 @@
     />
 
     <!-- Date picker -->
-    <DatePicker
-      v-else-if="fieldConfig.xtype === 'datefield'"
-      v-model="localValue"
-      class="w-full"
-      :input-id="fieldHtmlId"
-      :placeholder="fieldConfig.placeholder"
-      :disabled="disabled"
-      show-icon
-      fluid
-      icon-display="input"
-      :date-format="fieldConfig.props?.dateFormat ?? 'dd.mm.yy'"
-      @blur="handleBlur"
-    />
+    <template v-else-if="fieldConfig.xtype === DATEFIELD_XTYPE">
+      <DatePicker
+        v-model="datePickerValue"
+        class="w-full"
+        :input-id="fieldHtmlId"
+        :placeholder="fieldConfig.placeholder"
+        :disabled="disabled"
+        show-icon
+        fluid
+        icon-display="input"
+        :date-format="fieldConfig.props?.dateFormat ?? 'dd.mm.yy'"
+        @blur="handleBlur"
+      />
+      <input
+        type="hidden"
+        :name="fieldConfig.name"
+        :value="formatLocalDateYmd(datePickerValue) ?? ''"
+      />
+    </template>
 
     <!-- Color picker -->
     <ColorPicker
@@ -238,8 +244,7 @@
       <Message severity="warn"> Unknown field type: {{ fieldConfig.xtype }} </Message>
     </div>
 
-    <!-- Hidden field for complex types (combobox, datefield, colorpicker, chips, multiselect) -->
-    <!-- These fields require JSON serialization to pass to ExtJS form -->
+    <!-- Hidden field for complex types (combobox, colorpicker, chips, multiselect) -->
     <input v-if="isComplexField" type="hidden" :name="fieldConfig.name" :value="serializedValue" />
   </div>
 </template>
@@ -256,9 +261,10 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { computed, ref, watch } from 'vue'
 
+import { formatLocalDateYmd } from '../utils/formatLocalDateYmd.js'
 import { getKeyValueConfigFromField, serializeKeyValueForPost } from '../utils/keyValueField.js'
 import { getRepeaterConfigFromField } from '../utils/repeaterField.js'
-import { parseStructuredExtraFieldValue } from '../utils/structuredExtraField.js'
+import { DATEFIELD_XTYPE, parseDateFieldValue, parseStructuredExtraFieldValue } from '../utils/structuredExtraField.js'
 import AutocompleteCombo from './AutocompleteCombo.vue'
 import FileBrowser from './FileBrowser.vue'
 import KeyValueField from './KeyValueField.vue'
@@ -332,7 +338,7 @@ const isFileBrowserXtype = computed(() => {
  * Determine if field is complex type (requires hidden field with JSON)
  */
 const isComplexField = computed(() => {
-  const complexTypes = ['combobox', 'datefield', 'colorpicker', 'chips', 'multiselect']
+  const complexTypes = ['combobox', 'colorpicker', 'chips', 'multiselect']
   return complexTypes.includes(props.fieldConfig.xtype)
 })
 
@@ -368,9 +374,26 @@ const selectOptions = computed(() => {
 
 const repeaterConfig = computed(() => getRepeaterConfigFromField(props.fieldConfig))
 const keyValueConfig = computed(() => getKeyValueConfigFromField(props.fieldConfig))
+const isDateField = computed(() => props.fieldConfig.xtype === DATEFIELD_XTYPE)
 
 function normalizeIncomingValue(value) {
   return parseStructuredExtraFieldValue(props.fieldConfig.xtype, value)
+}
+
+function normalizedDateString(value) {
+  if (value == null || value === '') {
+    return null
+  }
+
+  if (typeof value === 'string') {
+    return value.match(/^(\d{4}-\d{2}-\d{2})/)?.[1] ?? value
+  }
+
+  return formatLocalDateYmd(value)
+}
+
+function sameCalendarDay(left, right) {
+  return normalizedDateString(left) === normalizedDateString(right)
 }
 
 /**
@@ -426,27 +449,61 @@ const serializedValue = computed(() => {
 
 const emit = defineEmits(['update:modelValue', 'blur'])
 
-// Local value for v-model
-const localValue = ref(normalizeIncomingValue(props.modelValue))
+// Local value for v-model (non-date fields)
+const localValue = ref(
+  isDateField.value ? null : normalizeIncomingValue(props.modelValue)
+)
+
+// DatePicker uses Date internally; parent state stays YYYY-MM-DD string
+const datePickerValue = ref(
+  isDateField.value ? parseDateFieldValue(props.modelValue) : null
+)
 
 // Watch for external changes
 watch(
   () => props.modelValue,
   newValue => {
+    if (isDateField.value) {
+      const parsed = parseDateFieldValue(newValue)
+      if (!sameCalendarDay(datePickerValue.value, parsed)) {
+        datePickerValue.value = parsed
+      }
+      return
+    }
+
     localValue.value = normalizeIncomingValue(newValue)
   }
 )
 
 // Watch for local changes and emit to parent
 watch(localValue, newValue => {
+  if (isDateField.value) {
+    return
+  }
+
   emit('update:modelValue', newValue)
+})
+
+watch(datePickerValue, newDate => {
+  if (!isDateField.value) {
+    return
+  }
+
+  const serialized = formatLocalDateYmd(newDate) ?? null
+  if (sameCalendarDay(serialized, props.modelValue)) {
+    return
+  }
+
+  emit('update:modelValue', serialized)
 })
 
 // Handle blur event
 const handleBlur = () => {
   emit('blur', {
     fieldId: props.fieldConfig.id,
-    value: localValue.value,
+    value: isDateField.value
+      ? (formatLocalDateYmd(datePickerValue.value) ?? null)
+      : localValue.value,
   })
 }
 </script>
