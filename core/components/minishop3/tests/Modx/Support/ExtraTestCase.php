@@ -21,7 +21,8 @@ use xPDO\Om\xPDOObject;
  * Live MODX 3 kernel for MiniShop3 (testbench level 2).
  *
  * Isolated from stub PHPUnit via phpunit.modx.xml. RefreshesDatabase is required:
- * PackageDefinition::tables() runs DDL, which commits the test transaction.
+ * Phinx migrations run DDL once per process, then the baseline snapshot is recaptured
+ * ({@see PhinxSchemaBootstrap}).
  */
 abstract class ExtraTestCase extends TestCase
 {
@@ -32,16 +33,24 @@ abstract class ExtraTestCase extends TestCase
         $core = $this->extraCorePath();
         $assets = $this->extraAssetsPath();
 
+        // No ->tables(...): schema comes from Phinx (PhinxSchemaBootstrap).
         return PackageDefinition::make('minishop3')
             ->corePath($core)
             ->assetsPath($assets)
             ->model('MiniShop3\\Model', $core . 'src/', null, 'MiniShop3\\')
-            ->tables(...PackageModels::tables())
             ->settings([
                 'ms3_core_path' => $core,
                 'ms3_token_name' => 'ms3_token',
             ])
             ->service('ms3', fn (): MiniShop3 => new MiniShop3($this->modx));
+    }
+
+    protected function setUp(): void
+    {
+        // Before parent::setUp() opens snapshot isolation and loadMap() hits ms3_extra_fields.
+        PhinxSchemaBootstrap::ensure($this->extraCorePath());
+
+        parent::setUp();
     }
 
     protected function afterPackageRegistered(): void

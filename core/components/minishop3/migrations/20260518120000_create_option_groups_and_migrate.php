@@ -30,7 +30,8 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
 
         // --- Step 1: create ms3_option_groups table via xPDO Manager ---
         if (!$this->hasTable('ms3_option_groups')) {
-            $modx = $this->bootstrapModx();
+            require_once __DIR__ . '/_modx.php';
+            $modx = ms3MigrationBootstrap();
             if ($modx === null) {
                 $this->output->writeln('<error>Cannot bootstrap MODX, aborting migration</error>');
                 return;
@@ -72,12 +73,7 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
         // Only run while modcategory_id still exists; on re-run after step 4 this becomes a no-op.
         $optionsTable = $this->table('ms3_options'); // refresh handle after schema change
         if ($optionsTable->hasColumn('modcategory_id')) {
-            $modxPrefix = $this->getModxTablePrefix();
-            if ($modxPrefix !== null) {
-                $this->migrateGroupData($modxPrefix, $optionsFqn, $optionGroupsFqn);
-            } else {
-                $this->output->writeln('<error>Cannot resolve MODX table prefix — skipping data migration. Existing modcategory_id values will be lost on column drop.</error>');
-            }
+            $this->migrateGroupData($prefix, $optionsFqn, $optionGroupsFqn);
 
             // --- Step 4: drop modcategory_id ---
             $optionsTable = $this->table('ms3_options'); // refresh handle
@@ -127,76 +123,6 @@ class CreateOptionGroupsAndMigrate extends AbstractMigration
         if ($this->hasTable('ms3_option_groups')) {
             $this->table('ms3_option_groups')->drop()->update();
         }
-    }
-
-    /**
-     * Bootstrap MODX with MS3 package registered. Returns null on failure.
-     *
-     * Same pattern as 20251020000000_initial_schema.php.
-     */
-    private function bootstrapModx(): ?\MODX\Revolution\modX
-    {
-        $modxConfigPath = dirname(__FILE__, 5) . '/config.core.php';
-        if (!file_exists($modxConfigPath)) {
-            $this->output->writeln('<error>MODX config.core.php not found</error>');
-            return null;
-        }
-
-        require_once $modxConfigPath;
-        if (!defined('MODX_CORE_PATH')) {
-            $this->output->writeln('<error>MODX_CORE_PATH not defined</error>');
-            return null;
-        }
-
-        require_once MODX_CORE_PATH . 'vendor/autoload.php';
-        require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
-
-        $modx = new \MODX\Revolution\modX();
-        $modx->initialize('mgr');
-
-        $modelPath = MODX_CORE_PATH . 'components/minishop3/src/Model/';
-        $modx->addPackage('MiniShop3\\Model', $modelPath, null, 'MiniShop3\\');
-
-        return $modx;
-    }
-
-    /**
-     * Read MODX table prefix from config.core.php → MODX_CONFIG_KEY → core/config/{key}.inc.php.
-     */
-    private function getModxTablePrefix(): ?string
-    {
-        $modxConfigPath = dirname(__FILE__, 5) . '/config.core.php';
-        if (!file_exists($modxConfigPath)) {
-            return null;
-        }
-        require_once $modxConfigPath;
-        if (!defined('MODX_CORE_PATH') || !defined('MODX_CONFIG_KEY')) {
-            return null;
-        }
-
-        $cfgPath = MODX_CORE_PATH . 'config/' . MODX_CONFIG_KEY . '.inc.php';
-        if (!file_exists($cfgPath)) {
-            return null;
-        }
-
-        // The MODX config script defines $config_options['table_prefix'] and other variables.
-        $config_options = [];
-        $database_dsn = null;
-        $database_user = null;
-        $database_password = null;
-        $database_type = null;
-        $table_prefix = null;
-
-        // phpcs:ignore — variables become available after include
-        include $cfgPath;
-
-        if (is_string($table_prefix)) {
-            return $table_prefix;
-        }
-        if (is_array($config_options) && isset($config_options['table_prefix'])) {
-            return (string) $config_options['table_prefix'];
-        }
-        return null;
     }
 
     /**

@@ -47,26 +47,14 @@ class InitialSchema extends AbstractMigration
      */
     public function up()
     {
-        // Get MODX instance
-        $modxConfigPath = dirname(__FILE__, 5) . '/config.core.php';
-        if (!file_exists($modxConfigPath)) {
-            throw new \RuntimeException('MODX config.core.php not found');
+        require_once __DIR__ . '/_modx.php';
+
+        $modx = ms3MigrationBootstrap();
+        if ($modx === null) {
+            throw new \RuntimeException('MODX could not be bootstrapped for InitialSchema migration');
         }
 
-        require_once $modxConfigPath;
-        if (!defined('MODX_CORE_PATH')) {
-            throw new \RuntimeException('MODX_CORE_PATH not defined');
-        }
-
-        require_once MODX_CORE_PATH . 'vendor/autoload.php';
-        require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
-
-        $modx = new \MODX\Revolution\modX();
-        $modx->initialize('mgr');
-
-        // Add MiniShop3 package with correct path
-        $modelPath = MODX_CORE_PATH . 'components/minishop3/src/Model/';
-        $modx->addPackage('MiniShop3\\Model', $modelPath, null, 'MiniShop3\\');
+        $modelPath = ms3MigrationModelPath($modx);
 
         $manager = $modx->getManager();
         $failedTables = [];
