@@ -8,6 +8,7 @@ use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Services\Catalog\CatalogQuery;
+use MiniShop3\Services\Catalog\CatalogResolve;
 use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Option\OptionService;
@@ -264,6 +265,31 @@ class ProductCatalogService
     }
 
     /**
+     * Resolve product by alias OR uri (+ context). Same payload as getById().
+     *
+     * @param array<string, mixed> $params
+     */
+    public function resolveByLookup(
+        array $params,
+        string $field,
+        string $value,
+        string $context,
+    ): ?array {
+        $paramsWithContext = array_merge($params, ['context' => $context]);
+        $productId = match ($field) {
+            'alias' => $this->findIdByAlias($value, $paramsWithContext),
+            'uri' => $this->findIdByUri($value, $paramsWithContext),
+            default => null,
+        };
+
+        if ($productId === null) {
+            return null;
+        }
+
+        return $this->getById($productId, $paramsWithContext);
+    }
+
+    /**
      * Paginated product list.
      *
      * Supported filters in $params:
@@ -350,6 +376,53 @@ class ProductCatalogService
             $params,
             (string) ($this->modx->context->key ?? 'web'),
         );
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function findIdByAlias(string $alias, array $params): ?int
+    {
+        return CatalogResolve::findUniqueId(
+            $this->modx,
+            msProduct::class,
+            $this->lookupCriteria(['alias' => $alias], $params),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function findIdByUri(string $uri, array $params): ?int
+    {
+        foreach (CatalogResolve::uriLookupVariants($uri) as $variant) {
+            $id = CatalogResolve::findUniqueId(
+                $this->modx,
+                msProduct::class,
+                $this->lookupCriteria(['uri' => $variant], $params),
+            );
+            if ($id !== null) {
+                return $id;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    private function lookupCriteria(array $extra, array $params): array
+    {
+        $criteria = $extra;
+        $context = $this->resolveContext($params);
+        if ($context !== '') {
+            $criteria['context_key'] = $context;
+        }
+
+        return $this->publicCriteria($criteria);
     }
 
     /**

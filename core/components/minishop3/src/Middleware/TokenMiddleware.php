@@ -31,17 +31,17 @@ class TokenMiddleware implements MiddlewareInterface
 {
     private modX $modx;
 
-    /** @var list<string> Prefixes matched with str_starts_with; missing token skips auto-mint */
+    /** @var list<string> Prefixes matched exactly or as path segment; missing token skips auto-mint */
     private array $publicRoutes = [
-        '/api/v1/product/get/',
+        '/api/v1/product/get',
         '/api/v1/product/list',
         '/api/v1/product/filters',
-        '/api/v1/category/get/',
+        '/api/v1/category/get',
         '/api/v1/category/list',
         '/api/v1/category/tree',
-        '/api/v1/delivery/get/',
+        '/api/v1/delivery/get',
         '/api/v1/delivery/list',
-        '/api/v1/payment/get/',
+        '/api/v1/payment/get',
         '/api/v1/payment/list',
         '/api/v1/customer/token/get',
         '/api/v1/customer/logout',
@@ -214,7 +214,7 @@ class TokenMiddleware implements MiddlewareInterface
         $route = $this->normalizePublicPath((string) $route);
 
         foreach ($this->publicRoutes as $publicRoute) {
-            if (str_starts_with($route, $publicRoute)) {
+            if ($route === $publicRoute || str_starts_with($route, $publicRoute . '/')) {
                 return true;
             }
         }

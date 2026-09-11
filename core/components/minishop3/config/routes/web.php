@@ -270,6 +270,11 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
 
     // Public catalog — no TokenMiddleware (headless storefront without customer session)
     $router->group('/product', function ($router) use ($modx) {
+        $router->get('/get', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
+            return $controller->resolve($params);
+        });
+
         $router->get('/get/{id}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\ProductController($modx);
             return $controller->get($params);
@@ -293,6 +298,11 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
 
     // Public category catalog — no TokenMiddleware (headless nav / PLP)
     $router->group('/category', function ($router) use ($modx) {
+        $router->get('/get', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Web\CategoryController($modx);
+            return $controller->resolve($params);
+        });
+
         $router->get('/get/{id}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Web\CategoryController($modx);
             return $controller->get($params);
