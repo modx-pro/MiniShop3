@@ -48,6 +48,11 @@ class RateLimitMiddleware implements MiddlewareInterface
      */
     public function handle(array $params)
     {
+        // CORS preflight must not consume rate-limit quota (#634).
+        if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+            return null;
+        }
+
         $key = $this->resolveRequestKey();
 
         $state = $this->store->read($key);
