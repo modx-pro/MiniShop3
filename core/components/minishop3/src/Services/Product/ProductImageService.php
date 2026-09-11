@@ -120,6 +120,77 @@ class ProductImageService
     }
 
     /**
+     * Build natural-sort positions for gallery rows by name (fallback: file), then id.
+     *
+     * @param list<array{id: int, name: string, file: string}> $rows
+     * @return array<int, int> file_id => position (0..n-1)
+     */
+    public static function buildNaturalSortRanks(array $rows): array
+    {
+        if ($rows === []) {
+            return [];
+        }
+
+        usort($rows, static function (array $a, array $b): int {
+            $cmp = strnatcmp(self::naturalSortKey($a), self::naturalSortKey($b));
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            $cmp = strnatcmp(
+                self::foldNaturalSortString((string) ($a['file'] ?? '')),
+                self::foldNaturalSortString((string) ($b['file'] ?? '')),
+            );
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return (int) ($a['id'] ?? 0) <=> (int) ($b['id'] ?? 0);
+        });
+
+        $ranks = [];
+        foreach ($rows as $position => $row) {
+            $ranks[(int) $row['id']] = $position;
+        }
+
+        return $ranks;
+    }
+
+    /**
+     * Re-rank top-level gallery files by natural sort on name/file (#616).
+     *
+     * Includes all parent_id=0 rows (not only type=image), matching Upload position counting.
+     *
+     * @return bool|mixed save result from updateProductImage(), or true when gallery is empty
+     */
+    public function sortProductImagesByName(msProductData $productData): mixed
+    {
+        $productId = (int) $productData->get('id');
+
+        $rows = [];
+
+        /** @var msProductFile $file */
+        foreach ($this->modx->getIterator(msProductFile::class, [
+            'product_id' => $productId,
+            'parent_id' => 0,
+        ]) as $file) {
+            $rows[] = [
+                'id' => (int) $file->get('id'),
+                'name' => (string) $file->get('name'),
+                'file' => (string) $file->get('file'),
+            ];
+        }
+
+        if ($rows === []) {
+            return true;
+        }
+
+        $this->rankProductImages($productData, self::buildNaturalSortRanks($rows));
+
+        return $this->updateProductImage($productData);
+    }
+
+    /**
      * Set which gallery file is the product preview without changing sort order (#130).
      *
      * @return bool|mixed save result from updateProductImage()
@@ -231,6 +302,26 @@ class ProductImageService
         $file = $this->modx->getObject(msProductFile::class, $c);
 
         return $file ?: null;
+    }
+
+    /**
+     * @param array{name?: string, file?: string} $row
+     */
+    private static function naturalSortKey(array $row): string
+    {
+        $name = trim((string) ($row['name'] ?? ''));
+        $key = $name !== '' ? $name : (string) ($row['file'] ?? '');
+
+        return self::foldNaturalSortString($key);
+    }
+
+    /**
+     * Case-fold for natural sort. strnatcasecmp is C-locale and skips multibyte
+     * letters (Cyrillic), so UTF-8 names need mb_strtolower first (#616 review).
+     */
+    private static function foldNaturalSortString(string $value): string
+    {
+        return mb_strtolower($value, 'UTF-8');
     }
 
     /**
