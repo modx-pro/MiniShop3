@@ -12,28 +12,25 @@ final class StatusCreateProcessorTest extends ExtraTestCase
 {
     public function testCreateRequiresMssettingSave(): void
     {
-        $this->skipUnlessProcessorPoliciesAreEnforced();
-        $user = $this->createUser(['username' => 'editor-no-settings']);
-        $this->actingAs($user);
+        $this->withProcessorPoliciesEnforced(function (): void {
+            $this->actingAsPlain();
 
-        $response = $this->runProcessor(Create::class, [
-            'name' => 'testbench-denied',
-        ]);
+            $response = $this->runExtraProcessor(Create::class, [
+                'name' => 'testbench-denied',
+                'action' => 'ms3_acl_deny',
+            ]);
 
-        $this->assertProcessorFailure($response);
-        self::assertStringContainsStringIgnoringCase('access denied', $response->getMessage());
-        $this->assertObjectMissing(msOrderStatus::class, ['name' => 'testbench-denied']);
+            $this->assertProcessorPermissionDenied($response, 'mssetting_save', 'ms3_acl_deny');
+            $this->assertObjectMissing(msOrderStatus::class, ['name' => 'testbench-denied']);
+        });
     }
 
     public function testCreateSucceedsForSudoUser(): void
     {
-        $user = $this->createUser(['username' => 'sudo-settings', 'sudo' => true]);
-        $this->actingAs($user);
+        $this->actingAsSudo();
 
-        $response = $this->runProcessor(Create::class, [
+        $response = $this->runExtraProcessor(Create::class, [
             'name' => 'testbench-status',
-        ], [
-            'processors_path' => dirname(__DIR__, 2) . '/src/Processors/',
         ]);
 
         $this->assertProcessorSuccess($response);

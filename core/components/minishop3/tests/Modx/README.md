@@ -54,4 +54,9 @@ Schema for this suite comes from `PackageDefinition::tables()` (xPDO `createObje
 
 Processors are PSR-4 classes under `src/Processors/`. Address them by FQCN (`Create::class`). A string action without `processors_path` is resolved against core processors and fails with “Requested processor not found”.
 
-`$permission` on processors is checked through `modContext::checkPolicy()`. That method returns true unless the MODX session is `SESSION_STATE_INITIALIZED`. Testbench boots in API mode without that session, so ACL-deny cases are skipped (`skipUnlessProcessorPoliciesAreEnforced()`). Sudo create/list still runs.
+Processor `$permission` runs through `modContext::checkPolicy()` only when the session is
+`SESSION_STATE_INITIALIZED`. Testbench boots in API/CLI (`SESSION_STATE_UNAVAILABLE`), so deny
+tests use `ExtraTestCase::withProcessorPoliciesEnforced()` to force INITIALIZED for the callback
+and restore afterward (#696). Use `assertProcessorPermissionDenied()` — it compares the full
+`permission_denied_processor` lexicon string (pass the same `action` property you give the
+processor). Pass `action` so core `preg_replace` on PHP 8.4+ does not see `null`.
