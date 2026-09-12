@@ -37,6 +37,33 @@ final class StatusCreateProcessorTest extends ExtraTestCase
         $this->assertObjectExists(msOrderStatus::class, ['name' => 'testbench-status']);
     }
 
+    public function testCreateSucceedsForUserWithGrantedMssettingSave(): void
+    {
+        $this->withProcessorPoliciesEnforced(function (): void {
+            $user = $this->createUser(['username' => 'granted-' . bin2hex(random_bytes(3))]);
+            $policy = $this->grantContextPermissions($user, ['mssetting_save']);
+            $this->actingAs($user);
+
+            $response = $this->runExtraProcessor(Create::class, [
+                'name' => 'testbench-granted',
+                'action' => 'ms3_acl_grant',
+            ]);
+
+            $this->assertProcessorSuccess($response);
+            $this->assertObjectExists(msOrderStatus::class, ['name' => 'testbench-granted']);
+
+            $this->revokeContextPermissions($policy);
+
+            $denied = $this->runExtraProcessor(Create::class, [
+                'name' => 'testbench-revoked',
+                'action' => 'ms3_acl_revoke',
+            ]);
+
+            $this->assertProcessorPermissionDenied($denied, 'mssetting_save', 'ms3_acl_revoke');
+            $this->assertObjectMissing(msOrderStatus::class, ['name' => 'testbench-revoked']);
+        });
+    }
+
     public function testStringActionWithoutProcessorsPathIsNotFound(): void
     {
         $user = $this->createUser(['username' => 'sudo-missing-path', 'sudo' => true]);
