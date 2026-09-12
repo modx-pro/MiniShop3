@@ -47,26 +47,14 @@ class InitialSchema extends AbstractMigration
      */
     public function up()
     {
-        // Get MODX instance
-        $modxConfigPath = dirname(__FILE__, 5) . '/config.core.php';
-        if (!file_exists($modxConfigPath)) {
-            throw new \RuntimeException('MODX config.core.php not found');
+        require_once __DIR__ . '/_modx.php';
+
+        $modx = ms3MigrationBootstrap();
+        if ($modx === null) {
+            throw new \RuntimeException('MODX could not be bootstrapped for InitialSchema migration');
         }
 
-        require_once $modxConfigPath;
-        if (!defined('MODX_CORE_PATH')) {
-            throw new \RuntimeException('MODX_CORE_PATH not defined');
-        }
-
-        require_once MODX_CORE_PATH . 'vendor/autoload.php';
-        require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
-
-        $modx = new \MODX\Revolution\modX();
-        $modx->initialize('mgr');
-
-        // Add MiniShop3 package with correct path
-        $modelPath = MODX_CORE_PATH . 'components/minishop3/src/Model/';
-        $modx->addPackage('MiniShop3\\Model', $modelPath, null, 'MiniShop3\\');
+        $modelPath = ms3MigrationModelPath($modx);
 
         $manager = $modx->getManager();
         $failedTables = [];
@@ -87,12 +75,11 @@ class InitialSchema extends AbstractMigration
 
             $tableName = $modx->getTableName($fullClassName);
 
-            // Check if table already exists
+            // Existence check on the same PDO that runs DDL. Phinx's connection is inside
+            // START TRANSACTION and MySQL 8 will not see tables created on another connection.
             $sql = "SHOW TABLES LIKE '" . trim($tableName, '`') . "'";
-            $stmt = $this->adapter->getConnection()->prepare($sql);
-            $stmt->execute();
-
-            if ($stmt->fetch()) {
+            $exists = $modx->query($sql);
+            if ($exists && $exists->fetch()) {
                 $this->output->writeln("<comment>  Table {$tableName} already exists, skipping</comment>");
                 continue;
             }
@@ -113,8 +100,9 @@ class InitialSchema extends AbstractMigration
                 continue;
             }
 
-            $logicalTable = $this->resolveLogicalTableName($className);
-            if ($logicalTable !== null && !$this->hasTable($logicalTable)) {
+            $verify = $modx->query($sql);
+            if (!$verify || !$verify->fetch()) {
+                $logicalTable = $this->resolveLogicalTableName($className) ?? trim($tableName, '`');
                 $this->output->writeln(
                     "<error>  ✗ Failed to create table: {$tableName} (createObjectContainer succeeded but table is missing)</error>"
                 );
@@ -129,6 +117,9 @@ class InitialSchema extends AbstractMigration
         }
 
         $this->output->writeln('<info>MiniShop3 schema creation completed!</info>');
+
+        // Re-open Phinx TX so hasTable / addForeignKey see xPDO-created tables.
+        ms3MigrationRefreshPhinxTransaction($this->getAdapter());
 
         // Add foreign keys after all tables are created
         $this->addForeignKeys();

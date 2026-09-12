@@ -15,7 +15,7 @@ $fail = static function (string $message): never {
     exit(1);
 };
 
-$files = glob($migrationsDir . '/*.php') ?: [];
+$files = glob($migrationsDir . '/[0-9]*.php') ?: [];
 if ($files === []) {
     $fail('no migration files found');
 }
@@ -26,6 +26,15 @@ foreach ($files as $file) {
 
     if (preg_match('/^use MiniShop3\\\\/m', $source)) {
         $fail("{$basename} imports MiniShop3 namespace — keep migrations self-contained");
+    }
+}
+
+// Helpers colocated under migrations/ (e.g. _modx.php) must also stay free of use MiniShop3\.
+foreach (glob($migrationsDir . '/_*.php') ?: [] as $helper) {
+    $source = (string) file_get_contents($helper);
+    $basename = basename($helper);
+    if (preg_match('/^use MiniShop3\\\\/m', $source)) {
+        $fail("{$basename} imports MiniShop3 namespace — keep migration helpers self-contained");
     }
 }
 

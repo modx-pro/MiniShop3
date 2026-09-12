@@ -34,6 +34,10 @@ if (!isset($modx)) {
     $modx->initialize('mgr');
 }
 
+// Expose the booted $modx to migrations: the three MODX-bootstrapping migrations resolve the
+// instance via $GLOBALS['modx'] (see migrations/_modx.php) instead of booting a second kernel.
+$GLOBALS['modx'] = $modx;
+
 require_once __DIR__ . '/phinx_mysql_charset.php';
 
 $dsnCharset = ms3PhinxExtractDsnCharset($modx->getOption('database_dsn', null, null));

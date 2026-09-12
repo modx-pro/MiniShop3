@@ -154,10 +154,15 @@ final class ModelPersistTest extends ExtraTestCase
             'name' => 'tb_' . $suffix,
             'label' => 'TB',
         ]);
+        // Phinx InitialSchema adds FK ms3_product_fields.section → ms3_page_sections.id (#695).
+        $productSection = $this->persistObject(msPageSection::class, [
+            'page_key' => 'product',
+            'section_key' => 'tb_pf_' . $suffix,
+        ]);
         $this->persistObject(msProductField::class, [
             'name' => 'tb_' . $suffix,
             'label' => 'TB',
-            'section' => 'main',
+            'section' => (int) $productSection->get('id'),
         ]);
 
         $this->assertObjectExists(msVendor::class, ['name' => 'TB Vendor ' . $suffix]);

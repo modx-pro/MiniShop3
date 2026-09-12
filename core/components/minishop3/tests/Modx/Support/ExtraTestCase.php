@@ -6,6 +6,7 @@ namespace MiniShop3\Tests\Modx\Support;
 
 use MiniShop3\MiniShop3;
 use MiniShop3\ServiceRegistry;
+use MiniShop3\Utils\ExtraFields;
 use ModxKit\Testbench\Concerns\RefreshesDatabase;
 use ModxKit\Testbench\Package\PackageDefinition;
 use ModxKit\Testbench\TestCase;
@@ -22,7 +23,8 @@ use xPDO\Om\xPDOObject;
  * Live MODX 3 kernel for MiniShop3 (testbench level 2).
  *
  * Isolated from stub PHPUnit via phpunit.modx.xml. RefreshesDatabase is required:
- * PackageDefinition::tables() runs DDL, which commits the test transaction.
+ * Phinx migrations run DDL once per process, then the baseline snapshot is recaptured
+ * ({@see PhinxSchemaBootstrap}).
  */
 abstract class ExtraTestCase extends TestCase
 {
@@ -33,11 +35,11 @@ abstract class ExtraTestCase extends TestCase
         $core = $this->extraCorePath();
         $assets = $this->extraAssetsPath();
 
+        // No ->tables(...): schema comes from Phinx (PhinxSchemaBootstrap).
         return PackageDefinition::make('minishop3')
             ->corePath($core)
             ->assetsPath($assets)
             ->model('MiniShop3\\Model', $core . 'src/', null, 'MiniShop3\\')
-            ->tables(...PackageModels::tables())
             ->settings([
                 'ms3_core_path' => $core,
                 'ms3_token_name' => 'ms3_token',
@@ -45,10 +47,41 @@ abstract class ExtraTestCase extends TestCase
             ->service('ms3', fn (): MiniShop3 => new MiniShop3($this->modx));
     }
 
+    protected function setUp(): void
+    {
+        // Before parent::setUp() opens snapshot isolation and loadMap() hits ms3_extra_fields.
+        PhinxSchemaBootstrap::ensure($this->extraCorePath());
+
+        parent::setUp();
+    }
+
     protected function afterPackageRegistered(): void
     {
         /** @var MiniShop3 $ms3 */
         $ms3 = $this->modx->services->get('ms3');
+
+        // ExtraFields::loadMap() merges into $modx->map and file-caches meta. RefreshesDatabase
+        // rolls back msExtraField rows but leaves map/cache dirty across tests
+        // (ExtraFieldMapTest → later msVendor asserts). Rebuild a clean map each test.
+        (new ExtraFields($this->modx))->clearCache();
+        $mapLoaded = new ReflectionProperty(MiniShop3::class, 'mapLoaded');
+        $mapLoaded->setAccessible(true);
+        $mapLoaded->setValue($ms3, false);
+
+        $inner = new ReflectionProperty($this->modx->map, 'map');
+        $inner->setAccessible(true);
+        /** @var array<string, mixed> $loaded */
+        $loaded = $inner->getValue($this->modx->map);
+        foreach (array_keys($loaded) as $class) {
+            if (
+                is_string($class)
+                && str_starts_with($class, 'MiniShop3\\Model\\')
+                && !str_contains($class, '\\mysql\\')
+            ) {
+                unset($this->modx->map[$class]);
+            }
+        }
+
         $ms3->loadMap();
     }
 

@@ -42,15 +42,32 @@ vendor/bin/modx-testbench destroy
 
 Do not run stub PHPUnit and `test:modx` in one PHP process (different bootstraps).
 
+## Schema source: Phinx migrations (#695)
+
+Live tests do **not** call `PackageDefinition::tables()`. Schema and seed data come from the same Phinx path as a real install (`resolver_02_migrations.php` → `phinx.php` → `Manager::migrate('production')`).
+
+How it runs in testbench:
+
+1. `ExtraTestCase` calls `PhinxSchemaBootstrap::ensure()` before opening snapshot isolation and sets `ms3_core_path` to the checkout core.
+2. On the **first** test of a process it runs all pending migrations (no-op when already applied), then **always** recaptures the RefreshesDatabase baseline so snapshot and DB cannot diverge after a crash between migrate and capture.
+3. Migrations that need xPDO Manager (`initial_schema`, `create_option_groups_and_migrate`, `repair_grid_fields_if_missing`) resolve `$modx` via `migrations/_modx.php` (injected instance first, `config.core.php` fallback for CLI on a real site).
+4. The lock `table_count` is synced via `SchemaInventory::countTablesWithPrefix()` so the next process does not reinstall.
+
+CI job `modx-testbench` already runs `composer test:modx` with a non-empty `MODX_TESTBENCH_DB_PREFIX` (`modx_`). `PhinxSchemaLiveTest` asserts seeds, bidirectional map↔table columns, and a second `migrate()` without duplicate rows.
+
+All other live tests in this suite share that post-migration snapshot through `ExtraTestCase`.
+
+To force a clean reinstall (drop migrated baseline): `MODX_TESTBENCH_FORCE_INSTALL=1 vendor/bin/modx-testbench install`.
+
 ## Layout
 
-- `Support/ExtraTestCase.php` — `PackageDefinition` matching `bootstrap.php`, `ServiceRegistry` via `ms3`
-- `Support/PackageModels.php` — xPDO table classes passed to `->tables()` (`msProduct` / `msCategory` stay on `modResource`)
+- `Support/ExtraTestCase.php` — `PackageDefinition` without `->tables()`, delegates schema to `PhinxSchemaBootstrap`
+- `Support/PhinxSchemaBootstrap.php` — once-per-process migrate + snapshot recapture + lock sync
+- `Support/PackageModels.php` — xPDO table classes for schema comparison (`msProduct` / `msCategory` are separate because they extend `modResource`)
+- `PhinxSchemaLiveTest.php` — migration outcome checks (#695)
 - `phpunit.modx.xml` — testbench bootstrap, suite `Modx`
 
 The suite covers schema (`SHOW TABLES`), persist for every MiniShop3 table class, product/category resources plus composite rows, GetList/Create/Enable/Disable processors, DI `has()`/`get()` for every default service, extra-field `loadMap()`, customer `RegisterService`, settings, and plugin events (`msOnSaveOrder`, `msOnVendorCreate`).
-
-Schema for this suite comes from `PackageDefinition::tables()` (xPDO `createObjectContainer`). Full Phinx migrate is not run here: `InitialSchema` boots a second kernel from `config.core.php` at the extra root, which is not a MODX install in git. `phinx.php` is still checked against the live `$modx` connection. A later change can inject that `$modx` into `InitialSchema`.
 
 Processors are PSR-4 classes under `src/Processors/`. Address them by FQCN (`Create::class`). A string action without `processors_path` is resolved against core processors and fails with “Requested processor not found”.
 
