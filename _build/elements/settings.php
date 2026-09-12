@@ -301,6 +301,16 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
+    'ms3_status_sent' => [
+        'value' => 4,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_order_status_transitions' => [
+        'value' => '',
+        'xtype' => 'textfield',
+        'area' => 'ms3_statuses',
+    ],
     'ms3_customer_cancel_allowed_statuses' => [
         'value' => '2,3',
         'xtype' => 'textfield',
