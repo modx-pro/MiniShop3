@@ -401,11 +401,11 @@ class Router
     /**
      * Answer browser CORS preflight when FastRoute has no OPTIONS handler.
      *
-     * Runs the matched route's middleware chain only if it includes CorsMiddleware.
-     * Without CorsMiddleware the stack is not invoked (405, same as before this fix).
-     * TokenMiddleware / RateLimitMiddleware short-circuit on OPTIONS so they cannot
-     * mint tokens, open sessions, or consume rate-limit quota during preflight —
-     * regardless of middleware order. The route handler is never called (#634).
+     * Invokes only the first CorsMiddleware::handle on the matched route stack.
+     * Without CorsMiddleware the stack is not invoked (405).
+     * Other middleware (TokenMiddleware, RateLimitMiddleware, etc.) is skipped so
+     * preflight cannot mint tokens, open sessions, or consume side effects.
+     * The route handler is never called (#634, #706).
      *
      * @param list<string> $allowedMethods
      */
@@ -415,26 +415,20 @@ class Router
             return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
         }
 
-        $probeMethod = $allowedMethods[0];
-        $probeInfo = $this->dispatcher->dispatch($probeMethod, $uri);
+        $probeInfo = $this->dispatcher->dispatch($allowedMethods[0], $uri);
 
         if ($probeInfo[0] !== Dispatcher::FOUND) {
             return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
         }
 
-        $middlewares = $probeInfo[1]['middlewares'] ?? [];
-        if (!$this->middlewareStackHasCors($middlewares)) {
+        $corsMiddleware = $this->resolveFirstCorsMiddleware($probeInfo[1]['middlewares'] ?? []);
+        if ($corsMiddleware === null) {
             return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
         }
 
-        $vars = array_merge($_GET, $probeInfo[2] ?? []);
-
-        foreach ($middlewares as $middleware) {
-            $result = $this->resolveMiddleware($middleware)->handle($vars);
-
-            if ($result instanceof Response) {
-                return $result;
-            }
+        $result = $corsMiddleware->handle(array_merge($_GET, $probeInfo[2] ?? []));
+        if ($result instanceof Response) {
+            return $result;
         }
 
         return Response::error('Method not allowed', HttpStatus::METHOD_NOT_ALLOWED);
@@ -443,18 +437,15 @@ class Router
     /**
      * @param list<object|string> $middlewares
      */
-    protected function middlewareStackHasCors(array $middlewares): bool
+    protected function resolveFirstCorsMiddleware(array $middlewares): ?CorsMiddleware
     {
         foreach ($middlewares as $middleware) {
             if ($middleware instanceof CorsMiddleware) {
-                return true;
-            }
-            if (is_string($middleware) && is_a($middleware, CorsMiddleware::class, true)) {
-                return true;
+                return $middleware;
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
