@@ -120,6 +120,11 @@ class ServiceRegistryFactories
             },
 
             'ms3_order_submit_handler' => static function (modX $modx, object $services, string $class): object {
+                $inventory = new \MiniShop3\Services\Inventory\OrderInventoryCoordinator(
+                    $modx,
+                    $services->get('ms3_inventory')
+                );
+
                 return new $class(
                     $modx,
                     self::ms3($modx),
@@ -128,7 +133,8 @@ class ServiceRegistryFactories
                     $services->get('ms3_order_field_manager'),
                     $services->get('ms3_order_address_manager'),
                     $services->get('ms3_order_user_resolver'),
-                    $services->get('ms3_order_number_generator')
+                    $services->get('ms3_order_number_generator'),
+                    $inventory
                 );
             },
 
@@ -153,8 +159,27 @@ class ServiceRegistryFactories
                 return new $class(
                     $modx,
                     self::ms3($modx),
-                    $services->get('ms3_order_log')
+                    $services->get('ms3_order_log'),
+                    new \MiniShop3\Services\Inventory\OrderInventoryCoordinator(
+                        $modx,
+                        $services->get('ms3_inventory')
+                    )
                 );
+            },
+
+            'ms3_inventory' => static function (modX $modx, object $services, string $class): object {
+                $prefix = (string) $modx->getOption('table_prefix', null, '');
+                $productsTable = $modx->getTableName(\MiniShop3\Model\msProductData::class);
+                if (!is_string($productsTable) || $productsTable === '') {
+                    $productsTable = $prefix . 'ms3_products';
+                }
+                $store = new \MiniShop3\Services\Inventory\PdoInventoryStockStore(
+                    $modx,
+                    $productsTable,
+                    $prefix . 'ms3_inventory_reservations'
+                );
+
+                return new $class($store, self::ms3($modx));
             },
 
             'ms3_cart_mutation_handler' => static function (modX $modx, object $services, string $class): object {

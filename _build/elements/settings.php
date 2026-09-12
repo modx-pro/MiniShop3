@@ -301,6 +301,11 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
+    'ms3_inventory_enabled' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_statuses',
+    ],
     'ms3_customer_cancel_allowed_statuses' => [
         'value' => '2,3',
         'xtype' => 'textfield',
