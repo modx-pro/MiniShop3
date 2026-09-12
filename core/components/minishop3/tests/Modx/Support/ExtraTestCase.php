@@ -15,6 +15,7 @@ use MODX\Revolution\modPluginEvent;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\ProcessorResponse;
 use ReflectionClass;
+use ReflectionProperty;
 use xPDO\Om\xPDOObject;
 
 /**
@@ -165,20 +166,59 @@ abstract class ExtraTestCase extends TestCase
     }
 
     /**
-     * Processor $permission is enforced via context checkPolicy(), which returns true unless
-     * the session is INITIALIZED. Testbench boots the kernel in API mode without that session.
+     * Force SESSION_STATE_INITIALIZED so processor $permission checks run (#696).
+     * Testbench defaults to UNAVAILABLE and checkPolicy() short-circuits to true.
+     *
+     * @template T
+     * @param callable(): T $callback
+     * @return T
      */
-    protected function processorPoliciesAreEnforced(): bool
+    protected function withProcessorPoliciesEnforced(callable $callback): mixed
     {
-        return $this->modx->getSessionState() === modX::SESSION_STATE_INITIALIZED;
+        $sessionState = new ReflectionProperty(modX::class, '_sessionState');
+        $sessionState->setAccessible(true);
+        $previous = $sessionState->getValue($this->modx);
+        $sessionState->setValue($this->modx, modX::SESSION_STATE_INITIALIZED);
+
+        try {
+            // Processor::run() emits permission_denied_processor before loading getLanguageTopics().
+            $this->modx->lexicon->load('default');
+
+            return $callback();
+        } finally {
+            $sessionState->setValue($this->modx, $previous);
+            $this->clearUserAttributeSessionCache();
+        }
     }
 
-    protected function skipUnlessProcessorPoliciesAreEnforced(): void
+    /**
+     * @param non-empty-string $permission Processor $permission value expected in the lexicon message
+     * @param string $action Value for [[+action]] (empty string matches Processor::run when action is unset)
+     */
+    protected function assertProcessorPermissionDenied(
+        ProcessorResponse $response,
+        string $permission,
+        string $action = ''
+    ): void {
+        $this->assertProcessorFailure($response);
+        self::assertSame(
+            $this->modx->lexicon('permission_denied_processor', [
+                'permission' => $permission,
+                'action' => $action,
+            ]),
+            $response->getMessage()
+        );
+    }
+
+    private function clearUserAttributeSessionCache(): void
     {
-        if (!$this->processorPoliciesAreEnforced()) {
-            self::markTestSkipped(
-                'Processor ACL is not enforced without an initialized MODX session (testbench API boot).'
-            );
+        if (!isset($_SESSION) || !is_array($_SESSION)) {
+            return;
+        }
+
+        $keys = preg_grep('/^modx\.user\..*attributes/', array_keys($_SESSION)) ?: [];
+        foreach ($keys as $key) {
+            unset($_SESSION[$key]);
         }
     }
 }

@@ -51,16 +51,17 @@ final class ProcessorCoverageTest extends ExtraTestCase
 
     public function testGetListProcessorsDenyAnonymousWhenPoliciesAreEnforced(): void
     {
-        $this->skipUnlessProcessorPoliciesAreEnforced();
+        $this->withProcessorPoliciesEnforced(function (): void {
+            $this->actingAsPlain();
 
-        $this->actingAsPlain();
-
-        foreach ($this->getListProcessors() as [$class, $properties]) {
-            $this->modx->error->reset();
-            $response = $this->runExtraProcessor($class, $properties);
-            $this->assertProcessorFailure($response);
-            self::assertStringContainsStringIgnoringCase('access denied', $response->getMessage());
-        }
+            foreach ($this->getListProcessors() as [$class, $properties, $permission]) {
+                $this->modx->error->reset();
+                $response = $this->runExtraProcessor($class, $properties + [
+                    'action' => 'ms3_acl_deny',
+                ]);
+                $this->assertProcessorPermissionDenied($response, $permission, 'ms3_acl_deny');
+            }
+        });
     }
 
     public function testSettingsCreateEnableDisableRoundTrip(): void
@@ -114,19 +115,19 @@ final class ProcessorCoverageTest extends ExtraTestCase
     }
 
     /**
-     * @return list<array{0: class-string, 1: array<string, mixed>}>
+     * @return list<array{0: class-string, 1: array<string, mixed>, 2: string}>
      */
     private function getListProcessors(): array
     {
         return [
-            [VendorGetList::class, ['limit' => 10]],
-            [PaymentGetList::class, ['limit' => 10]],
-            [DeliveryGetList::class, ['limit' => 10]],
-            [LinkGetList::class, ['limit' => 10]],
-            [StatusGetList::class, ['limit' => 10]],
-            [CustomerGetList::class, ['limit' => 10]],
-            [CustomerAddressGetList::class, ['limit' => 10]],
-            [GalleryGetList::class, ['product_id' => 0, 'limit' => 10]],
+            [VendorGetList::class, ['limit' => 10], 'mssetting_list'],
+            [PaymentGetList::class, ['limit' => 10], 'mssetting_list'],
+            [DeliveryGetList::class, ['limit' => 10], 'mssetting_list'],
+            [LinkGetList::class, ['limit' => 10], 'mssetting_list'],
+            [StatusGetList::class, ['limit' => 10], 'mssetting_list'],
+            [CustomerGetList::class, ['limit' => 10], 'msorder_list'],
+            [CustomerAddressGetList::class, ['limit' => 10], 'msorder_list'],
+            [GalleryGetList::class, ['product_id' => 0, 'limit' => 10], 'msproductfile_list'],
         ];
     }
 }
