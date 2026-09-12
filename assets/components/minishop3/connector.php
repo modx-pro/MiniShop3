@@ -44,6 +44,10 @@ if (!empty($_REQUEST['class_key'])) {
     }
 }
 
+// All processors on this connector share UTF-8-safe JSON (issue #689).
+$modx->setOption('modResponse.class', \MiniShop3\Router\Utf8SafeConnectorResponse::class);
+$modx->response = new \MiniShop3\Router\Utf8SafeConnectorResponse($modx);
+
 /** @var modConnectorRequest $request */
 $request = $modx->request;
 $request->handleRequest([
