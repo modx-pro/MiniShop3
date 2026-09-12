@@ -56,6 +56,13 @@ if (substr_count($categoryCatalog, 'maybeAttachCategory') !== 1) {
     $fail('category catalog must attach seo only once (get)');
 }
 
+if (!preg_match('/function resolveByLookup.*?return \$this->getById\(/s', $productCatalog)) {
+    $fail('product resolveByLookup must reuse getById so seo attaches');
+}
+if (!preg_match('/function resolveByLookup.*?return \$this->getById\(/s', $categoryCatalog)) {
+    $fail('category resolveByLookup must reuse getById so seo attaches');
+}
+
 if (str_contains($productCatalog, 'PublicSeoBuilder')) {
     $fail('product catalog must not import PublicSeoBuilder');
 }
