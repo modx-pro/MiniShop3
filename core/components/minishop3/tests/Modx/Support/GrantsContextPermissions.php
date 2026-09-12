@@ -35,7 +35,8 @@ trait GrantsContextPermissions
         self::assertNotSame('', $contextKey, 'Cannot grant context permissions without a context key');
 
         $suffix = bin2hex(random_bytes(4));
-        $role = $this->modx->getObject(modUserGroupRole::class, ['name' => modUserGroupRole::ROLE_MEMBER]);
+        // String name: ROLE_MEMBER exists only from MODX 3.2+; CI also runs 3.1.2-pl.
+        $role = $this->modx->getObject(modUserGroupRole::class, ['name' => 'Member']);
         self::assertInstanceOf(modUserGroupRole::class, $role, 'Member role is required in testbench');
 
         $template = $this->modx->newObject(modAccessPolicyTemplate::class);
