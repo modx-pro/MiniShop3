@@ -7,12 +7,9 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
+import { Aura, ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import VueApiTest from '../components/ApiTest.vue'

@@ -1,12 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Chip from 'primevue/chip'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import ToggleSwitch from 'primevue/toggleswitch'
+import { Button, Chip, Dialog, InputText, Select, Textarea, ToggleSwitch } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'

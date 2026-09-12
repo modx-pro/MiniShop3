@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import ContextMenu from 'primevue/contextmenu'
-import InputText from 'primevue/inputtext'
-import Paginator from 'primevue/paginator'
+import { ContextMenu, InputText, Paginator } from 'primevue'
 import { computed, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 

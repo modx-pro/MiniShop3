@@ -1,12 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Tab from 'primevue/tab'
-import TabList from 'primevue/tablist'
-import TabPanel from 'primevue/tabpanel'
-import TabPanels from 'primevue/tabpanels'
-import Tabs from 'primevue/tabs'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Tab, TabList, TabPanel, TabPanels, Tabs, Toast, useToast } from 'primevue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import ProductGallery from '../gallery/ProductGallery.vue'

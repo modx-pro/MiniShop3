@@ -7,8 +7,7 @@
  * and the return shape consumed by OrderView.vue are preserved unchanged.
  */
 import { useLexicon } from '@vuetools/useLexicon'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { useConfirm, useToast } from 'primevue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useOrderCostRecalc } from './useOrderCostRecalc.js'
