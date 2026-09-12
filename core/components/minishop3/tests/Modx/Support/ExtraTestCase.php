@@ -29,6 +29,7 @@ use xPDO\Om\xPDOObject;
 abstract class ExtraTestCase extends TestCase
 {
     use RefreshesDatabase;
+    use GrantsContextPermissions;
 
     protected function packageDefinition(): PackageDefinition
     {
@@ -230,7 +231,7 @@ abstract class ExtraTestCase extends TestCase
         );
     }
 
-    private function clearUserAttributeSessionCache(): void
+    protected function clearUserAttributeSessionCache(): void
     {
         if (!isset($_SESSION) || !is_array($_SESSION)) {
             return;
