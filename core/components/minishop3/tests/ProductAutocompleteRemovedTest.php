@@ -51,6 +51,13 @@ $assertTrue(
     'ProcessorPermissionsSmokeTest must not allowlist the removed processor'
 );
 
+$obsolete = require $root . '/config/obsolete_package_files.php';
+$assertTrue(
+    is_array($obsolete['core'] ?? null)
+    && in_array('src/Processors/Product/Autocomplete.php', $obsolete['core'], true),
+    'upgrade resolver list must include Product/Autocomplete.php'
+);
+
 $processorsRoot = $src . '/Processors';
 $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($processorsRoot, FilesystemIterator::SKIP_DOTS)
