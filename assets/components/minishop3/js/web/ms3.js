@@ -79,7 +79,7 @@ const ms3 = {
         '#resend-verification-email, [data-ms3-resend-verification]',
       authLoginForm: '#ms3-login-form',
       authRegisterForm: '#ms3-register-form',
-      authForgotPassword: '#forgot-password-link'
+      authForgotPassword: '#forgot-password-link',
     }
     this.hooks = window.ms3Hooks || this.createFallbackHooks()
     this.message = window.ms3Message || this.createFallbackMessage()
@@ -88,13 +88,13 @@ const ms3 = {
     this.config = { ...this.config, selectors: { ...selectorDefaults, ...rawSelectors }, confirm: this.confirm }
 
     this.tokenManager = new TokenManager({
-      tokenName: this.config.tokenName || 'ms3_token'
+      tokenName: this.config.tokenName || 'ms3_token',
     })
 
     this.apiClient = new ApiClient({
       baseUrl: this.config.actionUrl || '/assets/components/minishop3/api.php',
       tokenManager: this.tokenManager,
-      ctx: this.config.ctx
+      ctx: this.config.ctx,
     })
 
     this.tokenManager.setApiClient(this.apiClient)
@@ -132,8 +132,6 @@ const ms3 = {
     this.initLinkHandler()
 
     document.dispatchEvent(new Event('ms3:ready'))
-
-    console.log('MiniShop3 initialized')
   },
 
   /**
@@ -292,7 +290,7 @@ const ms3 = {
           },
           clean: () => {
             return this.cartUI.handleClean()
-          }
+          },
         },
         order: {
           submit: () => {
@@ -300,7 +298,7 @@ const ms3 = {
           },
           clean: () => {
             return this.orderUI.handleClean()
-          }
+          },
         },
         customer: {
           'update-profile': () => {
@@ -311,8 +309,8 @@ const ms3 = {
           },
           'address-update': () => {
             return this.customerUI.handleAddressUpdate(formData)
-          }
-        }
+          },
+        },
       }
 
       if (handlers[entity] && handlers[entity][method]) {
@@ -347,7 +345,7 @@ const ms3 = {
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length > 0) {
           return parsed
         }
-      } catch (e) {
+      } catch (_e) {
         // Not valid JSON, continue to array format
       }
     }
@@ -384,7 +382,7 @@ const ms3 = {
             console.error('Hook error:', name, error)
           }
         }
-      }
+      },
     }
   },
 
@@ -398,7 +396,7 @@ const ms3 = {
       },
       error (msg) {
         if (msg) alert(msg)
-      }
+      },
     }
   },
 
@@ -412,10 +410,10 @@ const ms3 = {
     try {
       JSON.parse(str)
       return true
-    } catch (e) {
+    } catch (_e) {
       return false
     }
-  }
+  },
 }
 
 // Expose `ms3` on the global window so third-party components and inline scripts

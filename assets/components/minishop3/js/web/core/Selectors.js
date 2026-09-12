@@ -26,7 +26,7 @@ const defaultSelectors = {
     '#resend-verification-email, [data-ms3-resend-verification]',
   authLoginForm: '#ms3-login-form',
   authRegisterForm: '#ms3-register-form',
-  authForgotPassword: '#forgot-password-link'
+  authForgotPassword: '#forgot-password-link',
 }
 
 /**

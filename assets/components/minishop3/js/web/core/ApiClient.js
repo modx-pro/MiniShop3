@@ -53,13 +53,13 @@ class ApiClient {
 
     const headers = {
       Accept: 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
+      'X-Requested-With': 'XMLHttpRequest',
     }
 
     const options = {
       method,
       headers,
-      credentials: 'same-origin'
+      credentials: 'same-origin',
     }
 
     if (data && (method === 'POST' || method === 'PATCH' || method === 'PUT')) {
@@ -76,7 +76,7 @@ class ApiClient {
 
     // Handle token errors: request new token from server and retry
     if (!isRetry && response.status === 401 && this.isTokenError(result)) {
-      console.log('[ApiClient] Token invalid, refreshing and retrying request')
+      console.warn('[ApiClient] Token invalid, refreshing and retrying request')
       await this.tokenManager.fetchNewToken()
       return this.request(method, endpoint, data, true)
     }
