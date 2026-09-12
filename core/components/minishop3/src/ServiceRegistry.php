@@ -297,6 +297,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Cart\CartItemManager::class,
             'interface' => null,
         ],
+        'ms3_cart_response_normalizer' => [
+            'class' => \MiniShop3\Services\Cart\CartResponseNormalizer::class,
+            'interface' => null,
+        ],
         'ms3_cart_mutation_handler' => [
             'class' => \MiniShop3\Services\Cart\CartMutationHandler::class,
             'interface' => null,
