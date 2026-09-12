@@ -98,6 +98,8 @@ final class CatalogResolve
 
     /**
      * Lexicon key for a failed {@see parseLookup()} result.
+     *
+     * @param 'required'|'conflict'|'invalid' $error
      */
     public static function lookupErrorLexiconKey(string $error): string
     {
