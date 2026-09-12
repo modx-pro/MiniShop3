@@ -65,20 +65,18 @@ class CategoryController
      */
     public function resolve(array $params = []): Response
     {
-        $parsed = CatalogResolve::parseLookup(
-            $params,
-            (string) ($this->modx->context->key ?? 'web'),
-        );
+        try {
+            $parsed = CatalogResolve::parseLookup(
+                $params,
+                (string) ($this->modx->context->key ?? 'web'),
+            );
+        } catch (CatalogContextException $e) {
+            return $this->catalogContextBadRequest($e);
+        }
 
         if (!$parsed['ok']) {
-            $lexiconKey = match ($parsed['error']) {
-                'required' => 'ms3_err_catalog_lookup_required',
-                'conflict' => 'ms3_err_catalog_lookup_conflict',
-                'invalid' => 'ms3_err_catalog_lookup_invalid',
-            };
-
             return Response::error(
-                $this->modx->lexicon($lexiconKey),
+                $this->modx->lexicon(CatalogResolve::lookupErrorLexiconKey($parsed['error'])),
                 HttpStatus::BAD_REQUEST
             );
         }

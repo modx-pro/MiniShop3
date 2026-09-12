@@ -63,6 +63,10 @@ if (!str_contains($controllerSrc, 'CatalogResolve::parseLookup')) {
     $fail('CategoryController must parse catalog lookup via CatalogResolve');
 }
 
+if (!str_contains($controllerSrc, 'CatalogContextException')) {
+    $fail('CategoryController resolve must map CatalogContextException');
+}
+
 if (!str_contains($serviceSrc, 'hidemenu')) {
     $fail('CategoryCatalogService must handle hidemenu / include_hidden');
 }

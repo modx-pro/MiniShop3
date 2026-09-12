@@ -45,8 +45,12 @@ if (!str_contains($controllerSrc, 'CatalogResolve::parseLookup')) {
     $fail('ProductController must parse catalog lookup via CatalogResolve');
 }
 
-if (!str_contains($controllerSrc, 'ms3_err_catalog_lookup_required')) {
-    $fail('ProductController must map catalog lookup parse errors');
+if (!str_contains($controllerSrc, 'CatalogContextException')) {
+    $fail('ProductController resolve must map CatalogContextException');
+}
+
+if (!str_contains($controllerSrc, 'CatalogResolve::lookupErrorLexiconKey')) {
+    $fail('ProductController must map catalog lookup parse errors via CatalogResolve');
 }
 
 if (!str_contains($serviceSrc, 'resolveByLookup')) {
@@ -66,6 +70,12 @@ if (!str_contains($resolveSrc, "->select('id')")) {
 }
 if (preg_match('/getSelectColumns\s*\(\s*\$class\s*,\s*\$class\b/', $resolveSrc)) {
     $fail('CatalogResolve must not pass FQCN as getSelectColumns table alias');
+}
+if (!str_contains($resolveSrc, 'CatalogQuery::resolveContext')) {
+    $fail('CatalogResolve must validate context via CatalogQuery (#705)');
+}
+if (preg_match('/private static function sanitizeContext\b/', $resolveSrc)) {
+    $fail('CatalogResolve must not keep a private sanitizeContext duplicate (#705)');
 }
 
 fwrite(STDOUT, "OK ProductCatalogRoutesTest\n");
