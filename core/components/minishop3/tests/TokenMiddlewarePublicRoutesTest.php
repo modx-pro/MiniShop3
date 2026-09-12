@@ -61,6 +61,7 @@ foreach (
         '/api/v1/delivery/list',
         '/api/v1/payment/get',
         '/api/v1/payment/list',
+        '/api/v1/payment/webhook/',
         '/api/v1/customer/token/get',
         '/api/v1/health',
     ] as $prefix

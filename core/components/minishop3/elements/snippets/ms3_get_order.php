@@ -3,6 +3,7 @@
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Payment\PaymentLinkResolver;
+use MiniShop3\Services\Payment\PaymentPublicFields;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
@@ -248,6 +249,7 @@ foreach ($rows as $product) {
 }
 
 try {
+    $payment = $msOrder->getOne('Payment');
     $pls = array_merge($scriptProperties, [
         'order' => $msOrder->toArray(),
         'products' => $products,
@@ -260,9 +262,7 @@ try {
         'delivery' => ($tmp = $msOrder->getOne('Delivery'))
             ? $tmp->toArray()
             : [],
-        'payment' => ($payment = $msOrder->getOne('Payment'))
-            ? $payment->toArray()
-            : [],
+        'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
         'total' => [
             'cost' => (float)$msOrder->get('cost'),
             'cost_formatted' => $ms3->format->price($msOrder->get('cost'), true),

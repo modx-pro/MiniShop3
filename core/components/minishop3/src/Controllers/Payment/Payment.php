@@ -6,6 +6,8 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
 use MiniShop3\Services\Order\OrderCostEngine;
+use MiniShop3\Services\Payment\PaymentService;
+use MiniShop3\Services\Payment\PaymentWebhookHmac;
 use MODX\Revolution\modX;
 
 /**
@@ -61,15 +63,14 @@ use MODX\Revolution\modX;
  *             return $this->error('Invalid order hash');
  *         }
  *
+ *         $lifecycle = $this->modx->services->get('ms3_payment_lifecycle');
  *         if ($data['status'] === 'succeeded') {
- *             $order->set('status_id', $this->getPaidStatusId());
- *             $order->save();
+ *             $lifecycle->markPaid($attemptId, $data['event_id'] ?? null);
  *             return $this->success('Payment confirmed');
  *         }
  *
  *         if ($data['status'] === 'canceled') {
- *             $order->set('status_id', $this->getCanceledStatusId());
- *             $order->save();
+ *             $lifecycle->markCancelled($attemptId, $data['event_id'] ?? null);
  *             return $this->error('Payment canceled');
  *         }
  *
@@ -150,19 +151,25 @@ abstract class Payment implements PaymentProviderInterface
     /**
      * Get payment link for order
      *
-     * Calls send() method and extracts payment_link from response.
-     * Used to display "Pay" button on order page.
-     *
-     * Note: Method calls send() each time without caching.
-     * For payment systems with API limits caching is recommended.
+     * Goes through PaymentService when the handler is bound to an msPayment
+     * (stored open attempt, otherwise send() + initiate). Direct send() remains
+     * only for handlers constructed without that binding.
      *
      * @param msOrder $order Order for payment
      * @return string|null Payment link or null if failed
      */
     public function getPaymentLink(msOrder $order): ?string
     {
+        $payment = $this->configuredPayment();
+        if ($payment instanceof msPayment && $this->modx->services->has('ms3_payment_service')) {
+            $service = $this->modx->services->get('ms3_payment_service');
+            if ($service instanceof PaymentService) {
+                return $service->resolvePaymentLink($payment, $this, $order);
+            }
+        }
         try {
             $response = $this->send($order);
+
             return $response['data']['payment_link'] ?? null;
         } catch (\Exception $e) {
             $this->modx->log(
@@ -234,6 +241,42 @@ abstract class Payment implements PaymentProviderInterface
     protected function success(string $message = '', array $data = [], array $placeholders = []): array
     {
         return $this->ms3->utils->success($message, $data, $placeholders);
+    }
+
+    /**
+     * HMAC-SHA256 over the raw webhook body. Call from verifyWebhook().
+     */
+    protected function verifyWebhookHmac(string $rawBody, string $signature, ?string $secret = null): bool
+    {
+        return PaymentWebhookHmac::verify($rawBody, $signature, $secret ?? $this->webhookSecret());
+    }
+
+    /**
+     * Secret for webhook HMAC: msPayment.properties then ms3_payment_secret.
+     */
+    protected function webhookSecret(): string
+    {
+        $payment = $this->configuredPayment();
+        if ($payment instanceof msPayment) {
+            $properties = $payment->get('properties');
+            if (is_array($properties)) {
+                foreach (['secret', 'secret_key', 'webhook_secret'] as $key) {
+                    $value = $properties[$key] ?? null;
+                    if (is_string($value) && $value !== '') {
+                        return $value;
+                    }
+                }
+            }
+        }
+
+        return (string) $this->modx->getOption('ms3_payment_secret', null, '');
+    }
+
+    private function configuredPayment(): ?msPayment
+    {
+        $payment = $this->config['payment'] ?? null;
+
+        return $payment instanceof msPayment ? $payment : null;
     }
 
     /**

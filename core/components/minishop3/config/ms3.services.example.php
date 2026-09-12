@@ -183,6 +183,7 @@ return [
      * ------------------
      * 'ms3_delivery_service'        - Delivery service
      * 'ms3_payment_service'         - Payment service
+     * 'ms3_payment_lifecycle'       - Payment attempt lifecycle (async providers)
      *
      * Orders:
      * -------

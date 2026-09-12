@@ -180,7 +180,11 @@ $_lang['setting_ms3_email_verification_url_desc'] = 'Если пусто, в п�
 $_lang['setting_ms3_email_verification_success_url'] = 'URL редиректа после успешной верификации email (необязательно)';
 $_lang['setting_ms3_email_verification_success_url_desc'] = 'Используется при переходе по ссылке из письма (параметр html=1). Если пусто — берётся site_url; к URL добавляется параметр ms3_email_verified=1.';
 $_lang['setting_ms3_payment_secret'] = 'Секретный ключ для платежей';
-$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платежных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
+$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платёжных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
+$_lang['setting_ms3_payment_on_failed_status'] = 'Статус заказа после неуспешной оплаты';
+$_lang['setting_ms3_payment_on_failed_status_desc'] = 'ID статуса заказа, который ставится при failed/cancelled попытки до оплаты. 0 — не менять заказ. По умолчанию статус отмены (5).';
+$_lang['setting_ms3_payment_on_refunded_status'] = 'Статус заказа после полного возврата';
+$_lang['setting_ms3_payment_on_refunded_status_desc'] = 'ID статуса заказа после полного refund. 0 — не менять заказ. Частичный возврат статус заказа не меняет. По умолчанию статус отмены (5).';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Символ валюты';
