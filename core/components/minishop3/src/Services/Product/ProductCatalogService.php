@@ -12,6 +12,7 @@ use MiniShop3\Services\Catalog\CatalogResolve;
 use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Option\OptionService;
+use MiniShop3\Services\Seo\PublicSeoService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
@@ -166,7 +167,8 @@ class ProductCatalogService
     /**
      * Single published product by ID (same visibility rules as list).
      *
-     * Query: context, include_images (0|1, default 0).
+     * Query: context, include_images (0|1, default 0), include_seo (default 1).
+     * List payloads omit seo.
      *
      * @param array<string, mixed> $params Optional context override
      * @return array<string, mixed>|null
@@ -185,7 +187,12 @@ class ProductCatalogService
         $includeImages = self::toBool($params['include_images'] ?? false);
         $images = $includeImages ? $this->loadImagesForProduct($product) : null;
 
-        return $this->formatProduct($product, true, $options, $images);
+        $payload = $this->formatProduct($product, true, $options, $images);
+
+        /** @var PublicSeoService $seo */
+        $seo = $this->modx->services->get('ms3_public_seo');
+
+        return $seo->maybeAttachProduct($payload, $params);
     }
 
     /**

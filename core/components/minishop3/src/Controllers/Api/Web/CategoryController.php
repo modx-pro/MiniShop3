@@ -29,6 +29,9 @@ class CategoryController
     /**
      * GET /api/v1/category/get/{id}
      *
+     * Query: context, include_hidden, include_content, include_breadcrumbs,
+     *        include_children, include_seo (default 1).
+     *
      * @param array<string, mixed> $params
      */
     public function get(array $params = []): Response

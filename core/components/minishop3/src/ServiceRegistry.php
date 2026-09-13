@@ -166,6 +166,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductGalleryPublicService::class,
             'interface' => null,
         ],
+        'ms3_public_seo' => [
+            'class' => \MiniShop3\Services\Seo\PublicSeoService::class,
+            'interface' => null,
+        ],
         'ms3_category_catalog' => [
             'class' => \MiniShop3\Services\Category\CategoryCatalogService::class,
             'interface' => null,
