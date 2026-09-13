@@ -39,8 +39,8 @@ if (preg_match(
 }
 
 $token = $read('src/Middleware/TokenMiddleware.php');
-if (!str_contains($token, "'/api/v1/delivery/webhook/'")) {
-    $fail('TokenMiddleware must list /api/v1/delivery/webhook/ as public');
+if (!str_contains($token, "'/api/v1/delivery/webhook'")) {
+    $fail('TokenMiddleware must list /api/v1/delivery/webhook as public');
 }
 
 $registry = $read('src/ServiceRegistry.php');
