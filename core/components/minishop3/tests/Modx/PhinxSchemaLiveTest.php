@@ -141,6 +141,24 @@ final class PhinxSchemaLiveTest extends ExtraTestCase
         }
     }
 
+    public function testProductFieldsSectionForeignKeyExists(): void
+    {
+        $prefix = (string) $this->modx->getOption('table_prefix', null, '');
+        $table = $prefix . 'ms3_product_fields';
+        $statement = $this->modx->prepare(
+            'SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS'
+            . ' WHERE CONSTRAINT_SCHEMA = DATABASE()'
+            . ' AND TABLE_NAME = ?'
+            . ' AND CONSTRAINT_TYPE = \'FOREIGN KEY\''
+            . ' AND CONSTRAINT_NAME = ?'
+        );
+        $statement->execute([$table, 'fk_product_fields_section']);
+        self::assertNotFalse(
+            $statement->fetch(\PDO::FETCH_ASSOC),
+            'fk_product_fields_section must exist on ' . $table . ' (#711)'
+        );
+    }
+
     /**
      * @return list<string>
      */
