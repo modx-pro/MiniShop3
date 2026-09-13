@@ -111,7 +111,7 @@ class ProductController
      * Query: parent|category, parents, nested, price_min, price_max, in_stock, stock_min,
      *        vendor_id, new, popular, favorite, options (JSON),
      *        limit, offset|page, sort, dir, query, context, include_options, include_content,
-     *        include_images (0|1, default 0, cap 10 files per item)
+     *        include_images (0|1, default 0, cap 10 files per item), include_seo (default 0)
      *
      * @param array<string, mixed> $params Route + query params (Router merges $_GET)
      */

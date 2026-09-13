@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace MiniShop3\Services\Seo;
 
+use MiniShop3\Services\Catalog\CatalogQuery;
+
 /**
- * Core SEO projection for public catalog JSON (#567).
+ * Core SEO projection for public catalog JSON (#567, #703).
  *
  * Fallbacks: title ← longtitle|pagetitle; description ← description|introtext;
- * canonical / og.image ← absolute site_url + uri/image|thumb; robots = index,follow.
+ * canonical ← absolute site_url + uri (PublicSeoService may override via makeUrl);
+ * og.image ← absolute site_url + image|thumb; robots from searchable when present.
  * og.type is product|website. Unknown keys are dropped by whitelist().
- * No third-party SEO Extra. Optional overrides: event msOnGetPublicSeo
- * (returnedValues['seo'] assoc patch). TV map ms3_public_seo_tv_map is a follow-up.
+ * TV overlay and canonical makeUrl live in PublicSeoService.
+ *
+ * SOFT (#703): og.image uses a single URL (image|thumb). Multi-size gallery og
+ * variants deferred — see issue #703 item 5 / #566.
  */
 final class PublicSeoBuilder
 {
@@ -67,7 +72,7 @@ final class PublicSeoBuilder
             'title' => $title,
             'description' => $description,
             'canonical' => self::absoluteUrl($siteUrl, (string) ($fields['uri'] ?? '')),
-            'robots' => 'index,follow',
+            'robots' => self::resolveRobots($fields),
             'og' => [
                 'title' => $title,
                 'description' => $description,
@@ -100,6 +105,18 @@ final class PublicSeoBuilder
         }
 
         return $out;
+    }
+
+    /**
+     * @param array<string, mixed> $fields
+     */
+    private static function resolveRobots(array $fields): string
+    {
+        if (!array_key_exists('searchable', $fields)) {
+            return 'index,follow';
+        }
+
+        return CatalogQuery::toBool($fields['searchable']) ? 'index,follow' : 'noindex,nofollow';
     }
 
     /**

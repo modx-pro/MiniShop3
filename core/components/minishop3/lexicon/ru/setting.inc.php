@@ -275,6 +275,8 @@ $_lang['setting_ms3_rate_limit_redis_database'] = 'Redis database (rate limit)';
 $_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Номер БД Redis (0 по умолчанию), если DSN не задан.';
 $_lang['setting_ms3_rate_limit_memcached_servers'] = 'Memcached servers (rate limit)';
 $_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Список серверов host:port через запятую для memcached-драйвера. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Требует ext-memcached.';
+$_lang['setting_ms3_public_seo_tv_map'] = 'Карта TV для публичного SEO';
+$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Необязательный JSON: allowlisted-ключи seo → TV, например {"title":"tv.seo_title","robots":"tv.robots"}. Некорректный JSON игнорируется. Для product/category get и list/tree при include_seo=1.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Токен Telegram бота';
