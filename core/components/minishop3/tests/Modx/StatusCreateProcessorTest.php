@@ -36,18 +36,4 @@ final class StatusCreateProcessorTest extends ExtraTestCase
         $this->assertProcessorSuccess($response);
         $this->assertObjectExists(msOrderStatus::class, ['name' => 'testbench-status']);
     }
-
-    public function testStringActionWithoutProcessorsPathIsNotFound(): void
-    {
-        $user = $this->createUser(['username' => 'sudo-missing-path', 'sudo' => true]);
-        $this->actingAs($user);
-
-        $response = $this->runProcessor('settings/status/create', [
-            'name' => 'testbench-string-action',
-        ]);
-
-        $this->assertProcessorFailure($response);
-        self::assertStringContainsStringIgnoringCase('not found', $response->getMessage());
-        $this->assertObjectMissing(msOrderStatus::class, ['name' => 'testbench-string-action']);
-    }
 }

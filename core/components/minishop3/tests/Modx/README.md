@@ -67,7 +67,7 @@ To force a clean reinstall (drop migrated baseline): `MODX_TESTBENCH_FORCE_INSTA
 - `PhinxSchemaLiveTest.php` — migration outcome checks (#695)
 - `phpunit.modx.xml` — testbench bootstrap, suite `Modx`
 
-The suite covers schema (`SHOW TABLES`), persist for every MiniShop3 table class, product/category resources plus composite rows, GetList/Create/Enable/Disable processors, DI `has()`/`get()` for every default service, extra-field `loadMap()`, customer `RegisterService`, settings, and plugin events (`msOnSaveOrder`, `msOnVendorCreate`).
+The suite covers MiniShop3 surfaces that can fail independently of testbench setup: persist for table classes, product/category resources plus composite rows, GetList/Create/Enable/Disable processors, DI `has()`/`get()` for every default service, extra-field `loadMap()`, customer `RegisterService`, `phinx.php` vs live `$modx` dbname, and plugin events (`msOnSaveOrder`, `msOnVendorCreate`). Hollow checks of MODX settings helpers or `SHOW TABLES` against the same `PackageModels::tables()` list are intentionally omitted (#697).
 
 Processors are PSR-4 classes under `src/Processors/`. Address them by FQCN (`Create::class`). A string action without `processors_path` is resolved against core processors and fails with “Requested processor not found”.
 
