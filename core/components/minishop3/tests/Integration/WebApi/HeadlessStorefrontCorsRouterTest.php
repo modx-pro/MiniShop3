@@ -125,6 +125,48 @@ final class HeadlessStorefrontCorsRouterTest extends WebApiTestCase
     }
 
     /**
+     * Writing middleware before CorsMiddleware must not run on OPTIONS preflight (#706).
+     */
+    public function testOptionsPreflightSkipsMiddlewareStackBeforeCors(): void
+    {
+        unset($_REQUEST['__preflight_writing_middleware_ran']);
+        $handlerCalled = false;
+        $writingMiddleware = new class implements \MiniShop3\Router\Middleware\MiddlewareInterface {
+            public function handle(array $params)
+            {
+                $_REQUEST['__preflight_writing_middleware_ran'] = '1';
+
+                return null;
+            }
+        };
+        $router = new \MiniShop3\Router\Router($this->modx);
+        $router->group('/api/v1', function ($router) use (&$handlerCalled) {
+            $router->post('/cors-preflight-probe', function () use (&$handlerCalled) {
+                $handlerCalled = true;
+
+                return \MiniShop3\Router\Response::success(['ok' => true]);
+            });
+        }, [
+            $writingMiddleware,
+            new \MiniShop3\Middleware\CorsMiddleware([
+                'allowed_origins' => ['https://trusted.example'],
+            ]),
+        ]);
+        $router->build();
+
+        $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
+        $_SERVER['REQUEST_URI'] = '/api/v1/cors-preflight-probe';
+        $_SERVER['HTTP_ORIGIN'] = 'https://trusted.example';
+        $_REQUEST = ['route' => '/api/v1/cors-preflight-probe'];
+
+        $response = $router->dispatch('/api/v1/cors-preflight-probe', 'OPTIONS');
+
+        self::assertFalse($handlerCalled);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertArrayNotHasKey('__preflight_writing_middleware_ran', $_REQUEST);
+    }
+
+    /**
      * Cors present but after TokenMiddleware: preflight must still not mint a token (#634 review).
      */
     public function testOptionsPreflightWithTokenBeforeCorsDoesNotMintToken(): void

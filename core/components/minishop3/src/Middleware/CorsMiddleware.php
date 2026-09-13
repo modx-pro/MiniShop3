@@ -51,19 +51,23 @@ class CorsMiddleware implements MiddlewareInterface
      */
     public function handle(array $params)
     {
+        $this->applyOriginHeadersIfAllowed();
+
+        // Preflight: stop with 200. Router may call this alone without the rest of the stack (#706).
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+            return Response::success(null, null, HttpStatus::OK);
+        }
+
+        return null; // Continue execution
+    }
+
+    private function applyOriginHeadersIfAllowed(): void
+    {
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
         if (CorsConfig::isOriginAllowed($origin, $this->allowedOrigins)) {
             $this->setCorsHeaders($origin);
         }
-
-        // Preflight: stop middleware chain with 200 (Router/api.php sends the envelope).
-        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        if ($method === 'OPTIONS') {
-            return Response::success(null, null, HttpStatus::OK);
-        }
-
-        return null; // Continue execution
     }
 
     /**
