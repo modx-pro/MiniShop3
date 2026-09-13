@@ -27,6 +27,25 @@ final class HeadlessStorefrontErrorsTest extends WebApiTestCase
         $this->assertApiError($res, HttpStatus::BAD_REQUEST, 'ms3_err_catalog_lookup_required');
     }
 
+    #[DataProvider('invalidCatalogContextRoutes')]
+    public function testInvalidCatalogContextReturnsSameErrorKey(string $route, array $query): void
+    {
+        $res = $this->dispatch('GET', $route, $query);
+        $this->assertApiError($res, HttpStatus::BAD_REQUEST, 'ms3_err_catalog_context_invalid');
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: array<string, mixed>}>
+     */
+    public static function invalidCatalogContextRoutes(): iterable
+    {
+        // "bad" in #705 means an invalid key; charset/mgr rules live in CatalogQuery (#665).
+        yield 'product get by id' => ['/api/v1/product/get/1', ['context' => 'mgr']];
+        yield 'product get by alias' => ['/api/v1/product/get', ['alias' => 'x', 'context' => 'mgr']];
+        yield 'category get by id' => ['/api/v1/category/get/1', ['context' => 'mgr']];
+        yield 'category get by alias' => ['/api/v1/category/get', ['alias' => 'x', 'context' => 'mgr']];
+    }
+
     public function testInvalidBearerReturns401(): void
     {
         $res = $this->dispatch(

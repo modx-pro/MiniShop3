@@ -19,6 +19,8 @@ final class JourneyWebApiModx extends WebApiModxStub
 
     public JourneyProductCatalog $catalog;
 
+    public JourneyCategoryCatalog $categoryCatalog;
+
     public JourneyCustomerOrderService $customerOrders;
 
     /** @var array<string, mixed> */
@@ -41,6 +43,7 @@ final class JourneyWebApiModx extends WebApiModxStub
         $this->journeyTokens = new JourneyTokenService();
         $this->tokenService = $this->journeyTokens;
         $this->catalog = new JourneyProductCatalog($this);
+        $this->categoryCatalog = new JourneyCategoryCatalog($this);
         $this->customerOrders = new JourneyCustomerOrderService($this);
 
         $rlPath = sys_get_temp_dir() . '/ms3-webapi-rl-' . getmypid();
@@ -71,6 +74,7 @@ final class JourneyWebApiModx extends WebApiModxStub
                     'ms3',
                     'ms3_token_service',
                     'ms3_product_catalog',
+                    'ms3_category_catalog',
                     'ms3_customer_order',
                 ], true);
             }
@@ -81,6 +85,7 @@ final class JourneyWebApiModx extends WebApiModxStub
                     'ms3' => $this->modx->ms3,
                     'ms3_token_service' => $this->modx->tokenService,
                     'ms3_product_catalog' => $this->modx->catalog,
+                    'ms3_category_catalog' => $this->modx->categoryCatalog,
                     'ms3_customer_order' => $this->modx->customerOrders,
                     default => null,
                 };

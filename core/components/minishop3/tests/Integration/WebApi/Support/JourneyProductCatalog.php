@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Integration\WebApi\Support;
 
+use MiniShop3\Services\Catalog\CatalogQuery;
 use MiniShop3\Services\Product\ProductCatalogService;
 use MODX\Revolution\modX;
 
@@ -25,7 +26,8 @@ final class JourneyProductCatalog extends ProductCatalogService
      */
     public function getById(int $productId, array $params = []): ?array
     {
-        unset($params);
+        CatalogQuery::resolveContext($params, 'web');
+
         if ($productId !== self::FIXTURE_PRODUCT_ID) {
             return null;
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Unit\Services\Catalog;
 
+use MiniShop3\Services\Catalog\CatalogContextException;
 use MiniShop3\Services\Catalog\CatalogResolve;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -49,13 +50,29 @@ final class CatalogResolveTest extends TestCase
         yield 'uri double slash' => [['uri' => 'a//b']];
         yield 'uri nul' => [['uri' => "bad\0uri"]];
         yield 'alias path traversal' => [['alias' => '..']];
+        yield 'alias array param' => [['alias' => ['x']]];
+        yield 'uri array param' => [['uri' => ['catalog/tea']]];
+        yield 'alias object param' => [['alias' => (object) ['x' => 1]]];
+    }
+
+    #[DataProvider('invalidContextParams')]
+    public function testInvalidContextThrowsCatalogContextException(array $params): void
+    {
+        $this->expectException(CatalogContextException::class);
+        $this->expectExceptionMessage(CatalogContextException::LEXICON_INVALID);
+
+        CatalogResolve::parseLookup($params);
+    }
+
+    /**
+     * @return iterable<string, array{0: array<string, mixed>}>
+     */
+    public static function invalidContextParams(): iterable
+    {
         yield 'mgr context' => [['alias' => 'tea', 'context' => 'mgr']];
         yield 'mgr prefix context' => [['alias' => 'tea', 'context' => 'mgrCustom']];
         yield 'invalid context chars' => [['alias' => 'tea', 'context' => 'en us']];
-        yield 'alias array param' => [['alias' => ['x']]];
-        yield 'uri array param' => [['uri' => ['catalog/tea']]];
         yield 'context array param' => [['alias' => 'tea', 'context' => ['web']]];
-        yield 'alias object param' => [['alias' => (object) ['x' => 1]]];
     }
 
     public function testAliasLookupWithContextFallback(): void
