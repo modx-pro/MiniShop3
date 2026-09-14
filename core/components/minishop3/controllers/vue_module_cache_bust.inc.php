@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Append cache-bust query to a Vue module URL.
+ * Append cache-bust query to a Vue manager asset URL (JS or CSS under vue-dist).
  *
  * Package version alone does not change when an Extra rebuilds vue-dist, so
- * HTTP caches keep stale plugin tabs (Aura theme, size=small buttons, etc.).
- * When the URL maps under assets_path, filemtime is mixed into `v=`.
+ * HTTP caches keep stale modules/styles. When the URL maps under assets_path,
+ * filemtime is mixed into `v=`.
  */
 function ms3_vue_module_cache_bust_url($modx, string $src, string $packageVersion): string
 {

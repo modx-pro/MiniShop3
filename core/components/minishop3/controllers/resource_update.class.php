@@ -33,7 +33,8 @@ class msResourceUpdateController extends ResourceUpdateManagerController
      */
     public function addCss($script)
     {
-        $script = $script . '?v=' . $this->ms3->version;
+        require_once __DIR__ . '/vue_module_cache_bust.inc.php';
+        $script = ms3_vue_module_cache_bust_url($this->modx, $script, (string) $this->ms3->version);
         parent::addCss($script);
     }
 
