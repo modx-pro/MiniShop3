@@ -24,8 +24,6 @@ $_lang['ms3_github_href'] = 'https://github.com/modx-pro/MiniShop3';
 $_lang['ms3_github_text'] = 'Нашли проблему? Сообщите об этом!';
 $_lang['ms3_github_title'] = 'github.com';
 $_lang['ms3_help'] = 'Помощь и поддержка';
-$_lang['ms3_help_nav_title'] = 'Разделы менеджера';
-$_lang['ms3_help_resources_title'] = 'Ресурсы';
 $_lang['ms3_help_text'] = 'MiniShop3 - самый гибкий и быстрый компонент интернет-магазина для MODX3.';
 $_lang['ms3_help_text_support'] = '<strong>Поддержите разработку MiniShop3</strong>
 <br>Реквизиты для перевода — на <a href="https://modx.pro/about" target="_blank" rel="noopener noreferrer">странице о проекте</a>.';

@@ -24,8 +24,6 @@ $_lang['ms3_github_href'] = 'https://github.com/modx-pro/MiniShop3';
 $_lang['ms3_github_text'] = 'Found an issue? Report it!';
 $_lang['ms3_github_title'] = 'github.com';
 $_lang['ms3_help'] = 'Help and support';
-$_lang['ms3_help_nav_title'] = 'Manager sections';
-$_lang['ms3_help_resources_title'] = 'Resources';
 $_lang['ms3_help_text'] = 'MiniShop3 - the most flexible and fast e-commerce component for MODX3.';
 $_lang['ms3_help_text_support'] = '<strong>Support MiniShop3 development</strong>
 <br>Payment details are on the <a href="https://modx.pro/about" target="_blank" rel="noopener noreferrer">about page</a>.';

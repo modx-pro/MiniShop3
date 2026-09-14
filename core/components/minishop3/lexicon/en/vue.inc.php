@@ -8,7 +8,6 @@
 $_lang['ms3_vue_product_fields_title'] = 'Product Fields (Admin)';
 $_lang['ms3_vue_product_fields_description'] = 'Here you can configure which fields are displayed on the "Product Data" tab when editing a product';
 $_lang['ms3_vue_product_properties'] = 'Product Properties';
-$_lang['ms3_product_links_empty'] = 'No links yet. Create the first one.';
 
 // Grid Fields Config Widget
 $_lang['grid_fields_config_title'] = 'Grid Configuration';

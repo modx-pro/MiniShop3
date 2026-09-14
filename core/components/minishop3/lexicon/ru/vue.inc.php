@@ -8,7 +8,6 @@
 $_lang['ms3_vue_product_fields_title'] = 'Поля товара (админка)';
 $_lang['ms3_vue_product_fields_description'] = 'Здесь вы можете настроить, какие поля отображаются на вкладке "Данные товара" при редактировании товара';
 $_lang['ms3_vue_product_properties'] = 'Свойства товара';
-$_lang['ms3_product_links_empty'] = 'Связей пока нет. Создайте первую.';
 
 // Grid Fields Config Widget
 $_lang['grid_fields_config_title'] = 'Конфигурация гридов';
