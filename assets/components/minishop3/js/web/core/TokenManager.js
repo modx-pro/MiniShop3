@@ -99,8 +99,8 @@ class TokenManager {
         credentials: 'same-origin',
         headers: {
           Accept: 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        }
+          'X-Requested-With': 'XMLHttpRequest',
+        },
       })
 
       const result = await response.json()
@@ -121,7 +121,7 @@ class TokenManager {
   cleanupLegacyStorage () {
     try {
       localStorage.removeItem(this.tokenName)
-    } catch (e) {
+    } catch (_e) {
       // Ignore storage errors
     }
   }

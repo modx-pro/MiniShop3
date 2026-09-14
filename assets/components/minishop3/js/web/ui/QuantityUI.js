@@ -165,7 +165,7 @@ class QuantityUI {
         productKey,
         count,
         response,
-        form
+        form,
       })
 
       if (response.success) {
@@ -259,7 +259,7 @@ class QuantityUI {
    */
   dispatchUpdate (data) {
     document.dispatchEvent(new CustomEvent('ms3:cart:updated', {
-      detail: data
+      detail: data,
     }))
   }
 }

@@ -14,11 +14,11 @@ window.ms3Message = {
     if (!message || message === '') return
 
     if (typeof iziToast !== 'undefined') {
-      // eslint-disable-next-line no-undef
+       
       iziToast[type]({
         message,
         position: 'topRight',
-        timeout: 3000
+        timeout: 3000,
       })
     } else {
       alert(message)
@@ -59,5 +59,5 @@ window.ms3Message = {
    */
   warning (message) {
     this.show('warning', message)
-  }
+  },
 }

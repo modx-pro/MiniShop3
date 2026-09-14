@@ -19,7 +19,7 @@ const CUSTOMER_UI_LEXICON = {
   ms3_customer_order_cancel_request_error: 'Request failed',
   ms3_customer_address_set_default_error: 'Failed to set default address',
   ms3_customer_address_delete_error: 'Failed to delete address',
-  ms3_email_verification_sent: 'Verification email has been sent'
+  ms3_email_verification_sent: 'Verification email has been sent',
 }
 
 class CustomerUI {
@@ -351,7 +351,7 @@ class CustomerUI {
           await this.hooks.runHooks('afterResendVerificationEmail', { response, button: btn })
           if (response.success) {
             this.message.success(
-              response.message || this.t('ms3_email_verification_sent')
+              response.message || this.t('ms3_email_verification_sent'),
             )
             setTimeout(() => {
               window.location.reload()

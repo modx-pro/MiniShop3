@@ -8,6 +8,7 @@
  * Form validation errors are shown inline (DOM alerts),
  * network errors use toast notifications via this.message.
  */
+/* global ApiClient */
 
 /** Default strings (EN) when window.ms3Lexicon is not set by template */
 const AUTH_UI_LEXICON = {
@@ -18,7 +19,7 @@ const AUTH_UI_LEXICON = {
   ms3_customer_err_privacy_required: 'You must accept the privacy policy',
   ms3_customer_register_success: 'Registration successful',
   ms3_err_unknown: 'An unknown error occurred',
-  ms3_customer_password_recovery_not_available: 'Password recovery feature will be implemented in the next version'
+  ms3_customer_password_recovery_not_available: 'Password recovery feature will be implemented in the next version',
 }
 
 class AuthUI {
@@ -164,7 +165,7 @@ class AuthUI {
         first_name: data.first_name || '',
         last_name: data.last_name || '',
         phone: data.phone || '',
-        privacy_accepted: data.privacy_accepted ? '1' : '0'
+        privacy_accepted: data.privacy_accepted ? '1' : '0',
       })
 
       this.setButtonLoading('register-submit-btn', false)
@@ -174,7 +175,7 @@ class AuthUI {
       if (result.success) {
         this.showMessage('register-messages',
           result.message || this.t('ms3_customer_register_success'),
-          'success'
+          'success',
         )
 
         const payload = ApiClient.getPayload(result)
