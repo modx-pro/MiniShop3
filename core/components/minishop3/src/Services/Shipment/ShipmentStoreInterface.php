@@ -50,6 +50,13 @@ interface ShipmentStoreInterface
     public function findById(int $id): ?array;
 
     /**
+     * Lock the shipment row for the current transaction (SELECT … FOR UPDATE).
+     *
+     * @return ShipmentRow|null
+     */
+    public function findByIdForUpdate(int $id): ?array;
+
+    /**
      * @return ShipmentRow|null
      */
     public function findByOrderId(int $orderId): ?array;

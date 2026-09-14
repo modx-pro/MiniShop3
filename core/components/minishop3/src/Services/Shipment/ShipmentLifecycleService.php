@@ -482,7 +482,17 @@ class ShipmentLifecycleService
 
                 return $this->requireShipment($shipmentId);
             }
-            $updated = $mutate($shipment);
+            // Re-read under row lock so concurrent distinct events see each other's commits
+            // (stale pre-txn snapshot would let the slower writer overwrite the newer status).
+            $locked = $this->store->findByIdForUpdate($shipmentId);
+            if ($locked === null) {
+                throw new ShipmentLifecycleException(
+                    'ms3_err_shipment_nf',
+                    ['id' => $shipmentId],
+                    ShipmentLifecycleException::KIND_NOT_FOUND
+                );
+            }
+            $updated = $mutate($locked);
             $this->store->commit();
         } catch (\Throwable $exception) {
             $this->store->rollBack();

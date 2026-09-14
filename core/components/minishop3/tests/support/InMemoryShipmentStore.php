@@ -22,6 +22,8 @@ final class InMemoryShipmentStore implements ShipmentStoreInterface
     /** @var array{rows: array<int, ShipmentRow>, events: array<string, true>, nextId: int}|null */
     private ?array $txSnapshot = null;
 
+    public int $forUpdateCalls = 0;
+
     public function create(
         int $orderId,
         int $deliveryId,
@@ -76,6 +78,13 @@ final class InMemoryShipmentStore implements ShipmentStoreInterface
     public function findById(int $id): ?array
     {
         return $this->rows[$id] ?? null;
+    }
+
+    public function findByIdForUpdate(int $id): ?array
+    {
+        ++$this->forUpdateCalls;
+
+        return $this->findById($id);
     }
 
     public function findByOrderId(int $orderId): ?array

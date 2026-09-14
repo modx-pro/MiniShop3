@@ -234,6 +234,25 @@ final class ShipmentLifecycleServiceTest extends TestCase
         self::assertSame([[10, 4]], $this->statusChanges);
     }
 
+    public function testClaimedEventRelocksShipmentBeforeMutate(): void
+    {
+        $store = new InMemoryShipmentStore();
+        $service = $this->service($store);
+        $row = $service->create(10);
+
+        $service->transition($row['id'], ShipmentStatus::SHIPPED, 'evt-lock-1');
+        self::assertSame(1, $store->forUpdateCalls);
+
+        $store->forUpdateCalls = 0;
+        $replay = $service->transition($row['id'], ShipmentStatus::SHIPPED, 'evt-lock-1');
+        self::assertSame(0, $store->forUpdateCalls);
+        self::assertSame(ShipmentStatus::SHIPPED, $replay['status']);
+
+        $store->forUpdateCalls = 0;
+        $service->transition($row['id'], ShipmentStatus::IN_TRANSIT);
+        self::assertSame(0, $store->forUpdateCalls);
+    }
+
     public function testIllegalProviderEventDoesNotPersistTracking(): void
     {
         $store = new InMemoryShipmentStore();

@@ -19,6 +19,9 @@ final class PdoShipmentStore implements ShipmentStoreInterface
 
     private string $eventsTable;
 
+    /** True only when this store opened the current transaction (nested-safe). */
+    private bool $ownsTransaction = false;
+
     public function __construct(
         private readonly PDO $db,
         string $table,
@@ -40,24 +43,21 @@ final class PdoShipmentStore implements ShipmentStoreInterface
             (order_id, delivery_id, status, provider, meta, createdon, updatedon)
             VALUES (:order_id, :delivery_id, :status, :provider, :meta, :createdon, :updatedon)";
         $stmt = $this->prepare($sql);
-        try {
-            $stmt->execute([
-                'order_id' => $orderId,
-                'delivery_id' => $deliveryId,
-                'status' => $status,
-                'provider' => $provider,
-                'meta' => json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-                'createdon' => $now,
-                'updatedon' => $now,
-            ]);
-        } catch (PDOException $exception) {
-            if ($this->isDuplicate($exception)) {
-                $existing = $this->findByOrderId($orderId);
-                if ($existing !== null) {
-                    return $existing;
-                }
+        $inserted = $this->executeWrite($stmt, [
+            'order_id' => $orderId,
+            'delivery_id' => $deliveryId,
+            'status' => $status,
+            'provider' => $provider,
+            'meta' => json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            'createdon' => $now,
+            'updatedon' => $now,
+        ], allowDuplicate: true);
+        if (!$inserted) {
+            $existing = $this->findByOrderId($orderId);
+            if ($existing !== null) {
+                return $existing;
             }
-            throw $exception;
+            throw new RuntimeException('shipment insert hit integrity constraint without existing row');
         }
 
         $id = (int) $this->db->lastInsertId();
@@ -93,7 +93,7 @@ final class PdoShipmentStore implements ShipmentStoreInterface
             $params[$key] = $value;
         }
         $sql = 'UPDATE ' . $this->table . ' SET ' . implode(', ', $sets) . ' WHERE id = :id';
-        $this->prepare($sql)->execute($params);
+        $this->executeWrite($this->prepare($sql), $params, allowDuplicate: false);
         $updated = $this->findById($id);
         if ($updated === null) {
             throw new RuntimeException('shipment update did not persist');
@@ -105,6 +105,14 @@ final class PdoShipmentStore implements ShipmentStoreInterface
     public function findById(int $id): ?array
     {
         return $this->fetchOne("SELECT * FROM {$this->table} WHERE id = :id", ['id' => $id]);
+    }
+
+    public function findByIdForUpdate(int $id): ?array
+    {
+        return $this->fetchOne(
+            "SELECT * FROM {$this->table} WHERE id = :id FOR UPDATE",
+            ['id' => $id],
+        );
     }
 
     public function findByOrderId(int $orderId): ?array
@@ -130,10 +138,10 @@ final class PdoShipmentStore implements ShipmentStoreInterface
             WHERE shipment_id = :shipment_id AND provider_event_id = :provider_event_id
             LIMIT 1";
         $stmt = $this->prepare($sql);
-        $stmt->execute([
+        $this->executeWrite($stmt, [
             'shipment_id' => $shipmentId,
             'provider_event_id' => $providerEventId,
-        ]);
+        ], allowDuplicate: false);
 
         return $stmt->fetchColumn() !== false;
     }
@@ -143,20 +151,12 @@ final class PdoShipmentStore implements ShipmentStoreInterface
         $sql = "INSERT INTO {$this->eventsTable}
             (shipment_id, provider_event_id, createdon)
             VALUES (:shipment_id, :provider_event_id, :createdon)";
-        try {
-            $this->prepare($sql)->execute([
-                'shipment_id' => $shipmentId,
-                'provider_event_id' => $providerEventId,
-                'createdon' => time(),
-            ]);
 
-            return true;
-        } catch (PDOException $exception) {
-            if ($this->isDuplicate($exception)) {
-                return false;
-            }
-            throw $exception;
-        }
+        return $this->executeWrite($this->prepare($sql), [
+            'shipment_id' => $shipmentId,
+            'provider_event_id' => $providerEventId,
+            'createdon' => time(),
+        ], allowDuplicate: true);
     }
 
     public function recordEvent(int $shipmentId, string $providerEventId): void
@@ -168,21 +168,80 @@ final class PdoShipmentStore implements ShipmentStoreInterface
     {
         if (!$this->db->inTransaction()) {
             $this->db->beginTransaction();
+            $this->ownsTransaction = true;
         }
     }
 
     public function commit(): void
     {
+        if (!$this->ownsTransaction) {
+            return;
+        }
         if ($this->db->inTransaction()) {
             $this->db->commit();
         }
+        $this->ownsTransaction = false;
     }
 
     public function rollBack(): void
     {
+        if (!$this->ownsTransaction) {
+            return;
+        }
         if ($this->db->inTransaction()) {
             $this->db->rollBack();
         }
+        $this->ownsTransaction = false;
+    }
+
+    /**
+     * Run a write (or parameterised read) without relying on PDO ERRMODE.
+     * MODX opens `$modx->pdo` with ERRMODE_SILENT: unique violations return false
+     * from execute() instead of throwing. Never change ATTR_ERRMODE on the shared handle.
+     *
+     * @param array<string, mixed> $params
+     * @return bool true on success; false only when allowDuplicate and SQLSTATE 23000
+     */
+    private function executeWrite(PDOStatement $stmt, array $params, bool $allowDuplicate): bool
+    {
+        try {
+            $ok = $stmt->execute($params);
+        } catch (PDOException $exception) {
+            if ($allowDuplicate && $this->isIntegrityViolation($exception->errorInfo)) {
+                return false;
+            }
+            throw $exception;
+        }
+
+        if ($ok === true) {
+            return true;
+        }
+
+        $errorInfo = $stmt->errorInfo();
+        if ($allowDuplicate && $this->isIntegrityViolation($errorInfo)) {
+            return false;
+        }
+
+        throw $this->statementFailure('Shipment store statement failed', $stmt);
+    }
+
+    /**
+     * @param array<int, mixed>|null $errorInfo
+     */
+    private function isIntegrityViolation(?array $errorInfo): bool
+    {
+        return is_array($errorInfo) && (string) ($errorInfo[0] ?? '') === '23000';
+    }
+
+    private function statementFailure(string $message, PDOStatement $stmt): RuntimeException
+    {
+        $info = $stmt->errorInfo();
+        $detail = implode(' | ', array_map(
+            static fn (mixed $part): string => is_scalar($part) || $part === null ? (string) $part : gettype($part),
+            $info,
+        ));
+
+        return new RuntimeException($message . ($detail !== '' ? ': ' . $detail : ''));
     }
 
     /**
@@ -192,7 +251,7 @@ final class PdoShipmentStore implements ShipmentStoreInterface
     private function fetchOne(string $sql, array $params): ?array
     {
         $stmt = $this->prepare($sql);
-        $stmt->execute($params);
+        $this->executeWrite($stmt, $params, allowDuplicate: false);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return is_array($row) ? $this->hydrate($row) : null;
@@ -234,13 +293,6 @@ final class PdoShipmentStore implements ShipmentStoreInterface
     private function nullableString(mixed $value): ?string
     {
         return isset($value) && $value !== '' ? (string) $value : null;
-    }
-
-    private function isDuplicate(PDOException $exception): bool
-    {
-        $sqlState = $exception->errorInfo[0] ?? $exception->getCode();
-
-        return (string) $sqlState === '23000';
     }
 
     private function prepare(string $sql): PDOStatement

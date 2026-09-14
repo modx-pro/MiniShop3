@@ -94,6 +94,81 @@ final class PdoShipmentStoreMysqlTest extends TestCase
         self::assertSame(2, $count);
     }
 
+    public function testClaimEventDetectsDuplicateUnderSilentErrMode(): void
+    {
+        $previous = (int) $this->pdo->getAttribute(PDO::ATTR_ERRMODE);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        try {
+            self::assertSame(PDO::ERRMODE_SILENT, (int) $this->pdo->getAttribute(PDO::ATTR_ERRMODE));
+            $row = $this->store->create(20, 7, 'preparing', 'Cdek');
+            self::assertTrue($this->store->claimEvent($row['id'], 'evt-shipped'));
+            self::assertFalse($this->store->claimEvent($row['id'], 'evt-shipped'));
+            $count = (int) $this->pdo->query(
+                'SELECT COUNT(*) FROM `' . $this->eventsTable . '` WHERE shipment_id = ' . (int) $row['id']
+            )->fetchColumn();
+            self::assertSame(1, $count);
+        } finally {
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, $previous);
+        }
+    }
+
+    public function testCreateDuplicateUnderSilentErrModeReturnsExisting(): void
+    {
+        $previous = (int) $this->pdo->getAttribute(PDO::ATTR_ERRMODE);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+        try {
+            $first = $this->store->create(21, 7, 'preparing', 'Cdek');
+            $again = $this->store->create(21, 9, 'shipped', 'Other');
+            self::assertSame($first['id'], $again['id']);
+            self::assertSame(7, $again['delivery_id']);
+            $count = (int) $this->pdo->query(
+                'SELECT COUNT(*) FROM `' . $this->shipmentsTable . '` WHERE order_id = 21'
+            )->fetchColumn();
+            self::assertSame(1, $count);
+        } finally {
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, $previous);
+        }
+    }
+
+    public function testCommitDoesNotEndOuterTransaction(): void
+    {
+        $shipmentId = 0;
+        $this->pdo->beginTransaction();
+        try {
+            $this->store->beginTransaction();
+            $row = $this->store->create(22, 7, 'preparing', 'Cdek');
+            $shipmentId = $row['id'];
+            self::assertTrue($this->store->claimEvent($shipmentId, 'evt-outer'));
+            $this->store->commit();
+            self::assertTrue($this->pdo->inTransaction());
+        } finally {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+        }
+
+        self::assertNull($this->store->findByOrderId(22));
+        self::assertFalse($this->store->hasEvent($shipmentId, 'evt-outer'));
+    }
+
+    public function testFindByIdForUpdateReturnsRowInsideTransaction(): void
+    {
+        $row = $this->store->create(23, 7, 'preparing', 'Cdek');
+        $this->store->beginTransaction();
+        try {
+            $locked = $this->store->findByIdForUpdate($row['id']);
+            self::assertNotNull($locked);
+            self::assertSame($row['id'], $locked['id']);
+            $this->store->update($row['id'], ['status' => 'shipped']);
+            $this->store->commit();
+        } catch (\Throwable $exception) {
+            $this->store->rollBack();
+            throw $exception;
+        }
+        $fresh = $this->store->findById($row['id']);
+        self::assertSame('shipped', $fresh['status'] ?? null);
+    }
+
     private function dropTable(string $table): void
     {
         $this->pdo->query('DROP TABLE IF EXISTS `' . $table . '`');
