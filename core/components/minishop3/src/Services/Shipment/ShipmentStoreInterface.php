@@ -61,5 +61,17 @@ interface ShipmentStoreInterface
 
     public function hasEvent(int $shipmentId, string $providerEventId): bool;
 
+    /**
+     * Insert provider_event_id for this shipment.
+     * Returns true when this caller owns the event; false when the unique key already exists.
+     */
+    public function claimEvent(int $shipmentId, string $providerEventId): bool;
+
     public function recordEvent(int $shipmentId, string $providerEventId): void;
+
+    public function beginTransaction(): void;
+
+    public function commit(): void;
+
+    public function rollBack(): void;
 }

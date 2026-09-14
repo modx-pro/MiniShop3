@@ -138,7 +138,7 @@ final class PdoShipmentStore implements ShipmentStoreInterface
         return $stmt->fetchColumn() !== false;
     }
 
-    public function recordEvent(int $shipmentId, string $providerEventId): void
+    public function claimEvent(int $shipmentId, string $providerEventId): bool
     {
         $sql = "INSERT INTO {$this->eventsTable}
             (shipment_id, provider_event_id, createdon)
@@ -149,11 +149,39 @@ final class PdoShipmentStore implements ShipmentStoreInterface
                 'provider_event_id' => $providerEventId,
                 'createdon' => time(),
             ]);
+
+            return true;
         } catch (PDOException $exception) {
             if ($this->isDuplicate($exception)) {
-                return;
+                return false;
             }
             throw $exception;
+        }
+    }
+
+    public function recordEvent(int $shipmentId, string $providerEventId): void
+    {
+        $this->claimEvent($shipmentId, $providerEventId);
+    }
+
+    public function beginTransaction(): void
+    {
+        if (!$this->db->inTransaction()) {
+            $this->db->beginTransaction();
+        }
+    }
+
+    public function commit(): void
+    {
+        if ($this->db->inTransaction()) {
+            $this->db->commit();
+        }
+    }
+
+    public function rollBack(): void
+    {
+        if ($this->db->inTransaction()) {
+            $this->db->rollBack();
         }
     }
 

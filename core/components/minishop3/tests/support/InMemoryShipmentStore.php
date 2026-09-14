@@ -19,6 +19,9 @@ final class InMemoryShipmentStore implements ShipmentStoreInterface
 
     private int $nextId = 1;
 
+    /** @var array{rows: array<int, ShipmentRow>, events: array<string, true>, nextId: int}|null */
+    private ?array $txSnapshot = null;
+
     public function create(
         int $orderId,
         int $deliveryId,
@@ -107,9 +110,48 @@ final class InMemoryShipmentStore implements ShipmentStoreInterface
         return isset($this->events[$this->eventKey($shipmentId, $providerEventId)]);
     }
 
+    public function claimEvent(int $shipmentId, string $providerEventId): bool
+    {
+        $key = $this->eventKey($shipmentId, $providerEventId);
+        if (isset($this->events[$key])) {
+            return false;
+        }
+        $this->events[$key] = true;
+
+        return true;
+    }
+
     public function recordEvent(int $shipmentId, string $providerEventId): void
     {
-        $this->events[$this->eventKey($shipmentId, $providerEventId)] = true;
+        $this->claimEvent($shipmentId, $providerEventId);
+    }
+
+    public function beginTransaction(): void
+    {
+        if ($this->txSnapshot !== null) {
+            return;
+        }
+        $this->txSnapshot = [
+            'rows' => $this->rows,
+            'events' => $this->events,
+            'nextId' => $this->nextId,
+        ];
+    }
+
+    public function commit(): void
+    {
+        $this->txSnapshot = null;
+    }
+
+    public function rollBack(): void
+    {
+        if ($this->txSnapshot === null) {
+            return;
+        }
+        $this->rows = $this->txSnapshot['rows'];
+        $this->events = $this->txSnapshot['events'];
+        $this->nextId = $this->txSnapshot['nextId'];
+        $this->txSnapshot = null;
     }
 
     private function eventKey(int $shipmentId, string $providerEventId): string

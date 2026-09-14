@@ -260,6 +260,54 @@ final class ShipmentLifecycleServiceTest extends TestCase
         self::assertFalse($store->hasEvent((int) $row['id'], 'hook-bad'));
     }
 
+    public function testClaimedEventIsRolledBackWhenBeforePluginCancels(): void
+    {
+        $store = new InMemoryShipmentStore();
+        $order = new StubMsOrder(['id' => 10, 'delivery_id' => 7, 'status_id' => 3]);
+        $orderStatus = $this->createMock(OrderStatusService::class);
+        $modx = $this->modx($order, true);
+        $ms3 = new class {
+            public object $utils;
+            public function __construct()
+            {
+                $this->utils = new class {
+                    public function invokeEvent(string $event, array $params): array
+                    {
+                        if ($event === 'msOnBeforeChangeShipmentStatus') {
+                            return ['success' => false];
+                        }
+
+                        return ['success' => true];
+                    }
+                };
+            }
+        };
+        $modx->services = new class ($ms3) {
+            public function __construct(private object $ms3)
+            {
+            }
+
+            public function has(string $key): bool
+            {
+                return $key === 'ms3';
+            }
+
+            public function get(string $key): object
+            {
+                return $this->ms3;
+            }
+        };
+        $service = new ShipmentLifecycleService($store, $modx, $orderStatus);
+        $row = $service->create(10);
+        try {
+            $service->transition($row['id'], ShipmentStatus::SHIPPED, 'evt-cancel');
+            self::fail('expected cancel');
+        } catch (ShipmentLifecycleException) {
+        }
+        self::assertFalse($store->hasEvent((int) $row['id'], 'evt-cancel'));
+        self::assertSame(ShipmentStatus::PREPARING, $store->findById((int) $row['id'])['status']);
+    }
+
     public function testIllegalFirstWebhookDoesNotCreateShipment(): void
     {
         $store = new InMemoryShipmentStore();

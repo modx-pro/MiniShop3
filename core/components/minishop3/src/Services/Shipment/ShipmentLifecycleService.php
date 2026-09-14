@@ -140,24 +140,28 @@ class ShipmentLifecycleService
         if ($trackingNumber === '') {
             throw new ShipmentLifecycleException('ms3_err_shipment_tracking_invalid');
         }
-        if ($this->isReplay($shipment, $eventId)) {
-            return $shipment;
-        }
-        if (!$this->fire('msOnBeforeUpdateShipmentTracking', [
-            'shipment' => $shipment,
-            'tracking_number' => $trackingNumber,
-        ])) {
-            throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
-        }
-        $fields = ['tracking_number' => $trackingNumber];
-        if ($this->isNonEmpty($eventId)) {
-            $fields['last_event_id'] = $eventId;
-        }
-        $updated = $this->store->update($shipmentId, $fields);
-        $this->rememberEvent($shipmentId, $eventId);
-        $this->fire('msOnUpdateShipmentTracking', ['shipment' => $updated]);
 
-        return $updated;
+        return $this->applyWithEventClaim(
+            $shipment,
+            $eventId,
+            function (array $shipment) use ($shipmentId, $trackingNumber, $eventId): array {
+                if (!$this->fire('msOnBeforeUpdateShipmentTracking', [
+                    'shipment' => $shipment,
+                    'tracking_number' => $trackingNumber,
+                ])) {
+                    throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
+                }
+                $fields = ['tracking_number' => $trackingNumber];
+                if ($this->isNonEmpty($eventId)) {
+                    $fields['last_event_id'] = $eventId;
+                }
+
+                return $this->store->update($shipmentId, $fields);
+            },
+            function (array $updated): void {
+                $this->fire('msOnUpdateShipmentTracking', ['shipment' => $updated]);
+            },
+        );
     }
 
     /**
@@ -166,26 +170,30 @@ class ShipmentLifecycleService
     public function transition(int $shipmentId, string $target, ?string $eventId = null): array
     {
         $shipment = $this->requireShipment($shipmentId);
-        if ($this->isReplay($shipment, $eventId)) {
-            return $shipment;
-        }
-        $this->assertTransition($shipment['status'], $target);
-        if (!$this->fire('msOnBeforeChangeShipmentStatus', [
-            'shipment' => $shipment,
-            'status' => $target,
-        ])) {
-            throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
-        }
-        $fields = ['status' => $target] + $this->transitionTimestamps($shipment, $target);
-        if ($this->isNonEmpty($eventId)) {
-            $fields['last_event_id'] = $eventId;
-        }
-        $updated = $this->store->update($shipmentId, $fields);
-        $this->rememberEvent($shipmentId, $eventId);
-        $this->syncOrderStatus($updated['order_id'], $target);
-        $this->fire('msOnChangeShipmentStatus', ['shipment' => $updated]);
 
-        return $updated;
+        return $this->applyWithEventClaim(
+            $shipment,
+            $eventId,
+            function (array $shipment) use ($shipmentId, $target, $eventId): array {
+                $this->assertTransition($shipment['status'], $target);
+                if (!$this->fire('msOnBeforeChangeShipmentStatus', [
+                    'shipment' => $shipment,
+                    'status' => $target,
+                ])) {
+                    throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
+                }
+                $fields = ['status' => $target] + $this->transitionTimestamps($shipment, $target);
+                if ($this->isNonEmpty($eventId)) {
+                    $fields['last_event_id'] = $eventId;
+                }
+
+                return $this->store->update($shipmentId, $fields);
+            },
+            function (array $updated) use ($target): void {
+                $this->syncOrderStatus($updated['order_id'], $target);
+                $this->fire('msOnChangeShipmentStatus', ['shipment' => $updated]);
+            },
+        );
     }
 
     /**
@@ -194,49 +202,55 @@ class ShipmentLifecycleService
     public function applyProviderEvent(ShipmentWebhookEvent $event, int $deliveryId, string $provider): array
     {
         $shipment = $this->resolveShipment($event, $deliveryId, $provider);
-        if ($shipment !== null && $this->isReplay($shipment, $event->providerEventId)) {
-            return $shipment;
-        }
-        $from = $shipment['status'] ?? ShipmentStatus::PREPARING;
-        $this->assertTransition($from, $event->eventType);
         if ($shipment === null) {
+            // Validate before create so an illegal first webhook leaves no shipment row.
+            $this->assertTransition(ShipmentStatus::PREPARING, $event->eventType);
             $shipment = $this->create((int) $event->orderId);
         }
 
         $trackingNumber = $event->trackingNumber !== null ? trim($event->trackingNumber) : '';
-        $trackingChanged = $trackingNumber !== '' && $trackingNumber !== (string) $shipment['tracking_number'];
-        $fields = $this->providerEventFields($shipment, $event);
-        $fields['status'] = $event->eventType;
-        $fields += $this->transitionTimestamps($shipment, $event->eventType);
-        if ($this->isNonEmpty($event->providerEventId)) {
-            $fields['last_event_id'] = $event->providerEventId;
-        }
-        if ($trackingNumber !== '') {
-            $fields['tracking_number'] = $trackingNumber;
-        }
+        $trackingChanged = false;
 
-        if ($trackingChanged && !$this->fire('msOnBeforeUpdateShipmentTracking', [
-            'shipment' => $shipment,
-            'tracking_number' => $trackingNumber,
-        ])) {
-            throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
-        }
-        if (!$this->fire('msOnBeforeChangeShipmentStatus', [
-            'shipment' => $shipment,
-            'status' => $event->eventType,
-        ])) {
-            throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
-        }
+        return $this->applyWithEventClaim(
+            $shipment,
+            $event->providerEventId,
+            function (array $shipment) use ($event, $trackingNumber, &$trackingChanged): array {
+                $this->assertTransition($shipment['status'], $event->eventType);
+                $trackingChanged = $trackingNumber !== ''
+                    && $trackingNumber !== (string) ($shipment['tracking_number'] ?? '');
+                $fields = $this->providerEventFields($shipment, $event);
+                $fields['status'] = $event->eventType;
+                $fields += $this->transitionTimestamps($shipment, $event->eventType);
+                if ($this->isNonEmpty($event->providerEventId)) {
+                    $fields['last_event_id'] = $event->providerEventId;
+                }
+                if ($trackingNumber !== '') {
+                    $fields['tracking_number'] = $trackingNumber;
+                }
 
-        $updated = $this->store->update($shipment['id'], $fields);
-        $this->rememberEvent((int) $updated['id'], $event->providerEventId);
-        $this->syncOrderStatus($updated['order_id'], $event->eventType);
-        if ($trackingChanged) {
-            $this->fire('msOnUpdateShipmentTracking', ['shipment' => $updated]);
-        }
-        $this->fire('msOnChangeShipmentStatus', ['shipment' => $updated]);
+                if ($trackingChanged && !$this->fire('msOnBeforeUpdateShipmentTracking', [
+                    'shipment' => $shipment,
+                    'tracking_number' => $trackingNumber,
+                ])) {
+                    throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
+                }
+                if (!$this->fire('msOnBeforeChangeShipmentStatus', [
+                    'shipment' => $shipment,
+                    'status' => $event->eventType,
+                ])) {
+                    throw new ShipmentLifecycleException('ms3_err_shipment_cancelled');
+                }
 
-        return $updated;
+                return $this->store->update((int) $shipment['id'], $fields);
+            },
+            function (array $updated) use ($event, &$trackingChanged): void {
+                $this->syncOrderStatus($updated['order_id'], $event->eventType);
+                if ($trackingChanged) {
+                    $this->fire('msOnUpdateShipmentTracking', ['shipment' => $updated]);
+                }
+                $this->fire('msOnChangeShipmentStatus', ['shipment' => $updated]);
+            },
+        );
     }
 
     /**
@@ -437,30 +451,47 @@ class ShipmentLifecycleService
     }
 
     /**
+     * Claim provider_event_id inside a transaction before mutating the shipment (#605 review).
+     * Unique conflict → already processed (return current row). Plugin cancel / errors roll back
+     * the claim so the provider retry is not treated as handled. syncOrderStatus and msOn* run
+     * only after commit.
+     *
      * @param ShipmentRow $shipment
+     * @param callable(ShipmentRow): ShipmentRow $mutate
+     * @param callable(ShipmentRow): void $afterCommit
+     * @return ShipmentRow
      */
-    private function isReplay(array $shipment, ?string $eventId): bool
-    {
+    private function applyWithEventClaim(
+        array $shipment,
+        ?string $eventId,
+        callable $mutate,
+        callable $afterCommit,
+    ): array {
         if (!$this->isNonEmpty($eventId)) {
-            return false;
-        }
-        if ($this->store->hasEvent((int) $shipment['id'], $eventId)) {
-            return true;
-        }
-        if ($shipment['last_event_id'] === $eventId) {
-            $this->store->recordEvent((int) $shipment['id'], $eventId);
+            $updated = $mutate($shipment);
+            $afterCommit($updated);
 
-            return true;
+            return $updated;
         }
 
-        return false;
-    }
+        $shipmentId = (int) $shipment['id'];
+        $this->store->beginTransaction();
+        try {
+            if (!$this->store->claimEvent($shipmentId, $eventId)) {
+                $this->store->rollBack();
 
-    private function rememberEvent(int $shipmentId, ?string $eventId): void
-    {
-        if ($this->isNonEmpty($eventId)) {
-            $this->store->recordEvent($shipmentId, $eventId);
+                return $this->requireShipment($shipmentId);
+            }
+            $updated = $mutate($shipment);
+            $this->store->commit();
+        } catch (\Throwable $exception) {
+            $this->store->rollBack();
+            throw $exception;
         }
+
+        $afterCommit($updated);
+
+        return $updated;
     }
 
     private function isNonEmpty(?string $value): bool

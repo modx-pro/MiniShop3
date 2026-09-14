@@ -38,7 +38,7 @@ export function useOrderPluginTabs(deps) {
       kind: 'builtin',
     },
     {
-      key: 'tracking',
+      key: 'ms3_shipment',
       title: _('order_tracking'),
       position: 3,
       hideOnCreate: true,
