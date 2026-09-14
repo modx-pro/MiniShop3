@@ -77,3 +77,7 @@ tests use `ExtraTestCase::withProcessorPoliciesEnforced()` to force INITIALIZED 
 and restore afterward (#696). Use `assertProcessorPermissionDenied()` — it compares the full
 `permission_denied_processor` lexicon string (pass the same `action` property you give the
 processor). Pass `action` so core `preg_replace` on PHP 8.4+ does not see `null`.
+
+Non-sudo success: `grantContextPermissions($user, ['mssetting_save'])` on the live context
+(`web` in testbench). Revoke with `revokeContextPermissions($policy)` — empty policy data is
+allow-all in MODX, so revoke keeps a sentinel without the target key (#710).
