@@ -209,12 +209,12 @@ class ShipmentLifecycleService
         }
 
         $trackingNumber = $event->trackingNumber !== null ? trim($event->trackingNumber) : '';
-        $trackingChanged = false;
+        $previousTracking = (string) ($shipment['tracking_number'] ?? '');
 
         return $this->applyWithEventClaim(
             $shipment,
             $event->providerEventId,
-            function (array $shipment) use ($event, $trackingNumber, &$trackingChanged): array {
+            function (array $shipment) use ($event, $trackingNumber): array {
                 $this->assertTransition($shipment['status'], $event->eventType);
                 $trackingChanged = $trackingNumber !== ''
                     && $trackingNumber !== (string) ($shipment['tracking_number'] ?? '');
@@ -243,9 +243,9 @@ class ShipmentLifecycleService
 
                 return $this->store->update((int) $shipment['id'], $fields);
             },
-            function (array $updated) use ($event, &$trackingChanged): void {
+            function (array $updated) use ($event, $trackingNumber, $previousTracking): void {
                 $this->syncOrderStatus($updated['order_id'], $event->eventType);
-                if ($trackingChanged) {
+                if ($trackingNumber !== '' && $trackingNumber !== $previousTracking) {
                     $this->fire('msOnUpdateShipmentTracking', ['shipment' => $updated]);
                 }
                 $this->fire('msOnChangeShipmentStatus', ['shipment' => $updated]);
