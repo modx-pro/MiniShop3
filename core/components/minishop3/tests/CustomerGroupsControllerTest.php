@@ -50,7 +50,7 @@ $makeModx = static function (bool $userGroupExists = false): modX {
             };
         }
 
-        public function lexicon(string $key, array $params = [], string $language = '')
+        public function lexicon(string $key, array $params = []): string
         {
             return $key;
         }

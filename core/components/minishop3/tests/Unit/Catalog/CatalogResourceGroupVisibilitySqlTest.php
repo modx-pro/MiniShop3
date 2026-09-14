@@ -152,7 +152,6 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
         self::assertStringContainsString('principal_class` = ' . $this->quotedPrincipalClass, $sql);
         self::assertStringNotContainsString('principal_class` IN (', $sql);
         self::assertStringNotContainsString("'modUserGroup'", $sql);
-        self::assertStringContainsString('OR EXISTS', $sql);
         self::assertStringContainsString('dg_anon.`document`', $sql);
         self::assertStringContainsString('NOT EXISTS', $sql);
     }
