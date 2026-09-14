@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MiniShop3\Services\Catalog;
 
+use MiniShop3\Services\ContextKey;
+
 /**
  * Shared query-param helpers for public Web API catalog services (product / category).
  */
@@ -13,7 +15,6 @@ final class CatalogQuery
     public const MAX_LIMIT = 100;
     public const DEFAULT_DEPTH = 5;
     public const MAX_DEPTH = 10;
-    public const MAX_CONTEXT_LENGTH = 100;
 
     /**
      * @param array<string, mixed> $params
@@ -95,7 +96,7 @@ final class CatalogQuery
             return null;
         }
 
-        if (!self::isValidContextKey($key)) {
+        if (!ContextKey::isValid($key)) {
             throw CatalogContextException::invalid();
         }
 
@@ -141,23 +142,10 @@ final class CatalogQuery
         return self::sanitizeContext((string) $raw);
     }
 
-    private static function isValidContextKey(string $key): bool
-    {
-        if (strlen($key) > self::MAX_CONTEXT_LENGTH) {
-            return false;
-        }
-
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $key)) {
-            return false;
-        }
-
-        return !str_starts_with(strtolower($key), 'mgr');
-    }
-
     private static function resolveContextFallback(string $fallback): string
     {
         $fallback = trim($fallback);
-        if ($fallback !== '' && self::isValidContextKey($fallback)) {
+        if (ContextKey::isValid($fallback)) {
             return $fallback;
         }
 

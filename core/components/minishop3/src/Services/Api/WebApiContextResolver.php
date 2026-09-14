@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MiniShop3\Services\Api;
 
+use MiniShop3\Services\ContextKey;
+
 /**
  * Resolve a safe front-end context key for Web API bootstrap (api.php).
  *
@@ -16,8 +18,6 @@ namespace MiniShop3\Services\Api;
 final class WebApiContextResolver
 {
     public const DEFAULT_CONTEXT = 'web';
-
-    private const MAX_KEY_LENGTH = 100;
 
     /**
      * Sanitize client ctx to a candidate key (does not switch).
@@ -93,15 +93,7 @@ final class WebApiContextResolver
         }
 
         $key = trim($requested);
-        if ($key === '' || strlen($key) > self::MAX_KEY_LENGTH) {
-            return null;
-        }
-
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $key)) {
-            return null;
-        }
-
-        if (str_starts_with(strtolower($key), 'mgr')) {
+        if (!ContextKey::isValid($key)) {
             return null;
         }
 
