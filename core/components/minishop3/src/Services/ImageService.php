@@ -305,7 +305,7 @@ class ImageService
      *
      * @param string $format
      * @param int $quality
-     * @return \Intervention\Image\Encoders\EncoderInterface
+     * @return \Intervention\Image\Interfaces\EncoderInterface
      */
     private function getEncoder(string $format, int $quality)
     {
