@@ -18,23 +18,16 @@ use xPDO\Om\xPDOQuery;
  * explicit grant. Membership is OR across a resource's groups (checkPolicy):
  * a document stays visible when any of its groups has an anonymous grant,
  * even if another membership is restricted (#666 review).
+ *
+ * principal_class is compared to the single FQCN MODX 3 writes
+ * ({@see modUserGroup::class}), quoted via the DB connection — manual string
+ * literals break MySQL backslash escaping (#666 review).
  */
 final class CatalogResourceGroupVisibility
 {
     public const SETTING_KEY = 'ms3_web_catalog_respect_resource_groups';
 
     private const MODX_ACCESS_RG_ENABLED = 'access_resource_group_enabled';
-
-    /**
-     * Same principal_class forms MODX writes / accepts for user-group ACL.
-     *
-     * @var list<string>
-     */
-    public const PRINCIPAL_CLASSES = [
-        modUserGroup::class,
-        'modUserGroup',
-        'MODX\\Revolution\\modUserGroup',
-    ];
 
     public function __construct(
         private modX $modx,
@@ -65,19 +58,31 @@ final class CatalogResourceGroupVisibility
         $dgTable = $this->modx->getTableName(modResourceGroupResource::class);
         $argTable = $this->modx->getTableName(modAccessResourceGroup::class);
         $quotedContext = $this->modx->quote($contextKey);
+        $quotedPrincipalClass = $this->modx->quote(modUserGroup::class);
 
         $query->where(
-            self::buildNotExistsSql($dgTable, $argTable, $resourceAlias, $quotedContext)
+            self::buildNotExistsSql(
+                $dgTable,
+                $argTable,
+                $resourceAlias,
+                $quotedContext,
+                $quotedPrincipalClass,
+            )
         );
     }
 
+    /**
+     * @param string $quotedContext Already connection-quoted context_key literal
+     * @param string $quotedPrincipalClass Already connection-quoted principal_class
+     *                                     (use $modx->quote(modUserGroup::class))
+     */
     public static function buildNotExistsSql(
         string $dgTable,
         string $argTable,
         string $alias,
         string $quotedContext,
+        string $quotedPrincipalClass,
     ): string {
-        $principalIn = self::principalClassInList();
         $contextPred = function (string $aclAlias) use ($quotedContext): string {
             return "({$aclAlias}.`context_key` = {$quotedContext}"
                 . " OR {$aclAlias}.`context_key` = ''"
@@ -86,13 +91,14 @@ final class CatalogResourceGroupVisibility
 
         // Hide only when the document has a restricted membership and none of
         // its groups carry an explicit principal=0 grant (OR across groups).
+        // principal_class equality matches modResource::findPolicy() / loadAttributes().
         return "(
             NOT EXISTS (
                 SELECT 1
                 FROM {$dgTable} AS dg
                 INNER JOIN {$argTable} AS arg
                     ON arg.`target` = dg.`document_group`
-                    AND arg.`principal_class` IN ({$principalIn})
+                    AND arg.`principal_class` = {$quotedPrincipalClass}
                     AND arg.`principal` <> 0
                     AND {$contextPred('arg')}
                 WHERE dg.`document` = {$alias}.`id`
@@ -102,24 +108,11 @@ final class CatalogResourceGroupVisibility
                 FROM {$dgTable} AS dg_anon
                 INNER JOIN {$argTable} AS arg_anon
                     ON arg_anon.`target` = dg_anon.`document_group`
-                    AND arg_anon.`principal_class` IN ({$principalIn})
+                    AND arg_anon.`principal_class` = {$quotedPrincipalClass}
                     AND arg_anon.`principal` = 0
                     AND {$contextPred('arg_anon')}
                 WHERE dg_anon.`document` = {$alias}.`id`
             )
         )";
-    }
-
-    /**
-     * Quoted IN-list for principal_class (SQL string literals).
-     */
-    public static function principalClassInList(): string
-    {
-        $parts = [];
-        foreach (self::PRINCIPAL_CLASSES as $class) {
-            $parts[] = "'" . str_replace("'", "''", $class) . "'";
-        }
-
-        return implode(',', $parts);
     }
 }

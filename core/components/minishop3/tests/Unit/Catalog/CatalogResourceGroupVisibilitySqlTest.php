@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Unit\Catalog;
 
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MODX\Revolution\modUserGroup;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -12,13 +13,16 @@ use PHPUnit\Framework\TestCase;
  * Execute anonymous RG visibility SQL against in-memory tables (#666 review).
  *
  * Cases: no group; group without ACL; ACL for another user group only;
- * explicit anonymous (principal=0) grant; multi-group OR (restricted + anon).
+ * explicit anonymous (principal=0) grant; multi-group OR (restricted + anon);
+ * restricted + membership without ACL; anon grant only in another context.
  */
 final class CatalogResourceGroupVisibilitySqlTest extends TestCase
 {
     private PDO $pdo;
 
     private string $predicate;
+
+    private string $quotedPrincipalClass;
 
     protected function setUp(): void
     {
@@ -41,11 +45,16 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
             )'
         );
 
+        $quoted = $this->pdo->quote(modUserGroup::class);
+        self::assertIsString($quoted);
+        $this->quotedPrincipalClass = $quoted;
+
         $sql = CatalogResourceGroupVisibility::buildNotExistsSql(
             'document_groups',
             'access_resource_groups',
             'msProduct',
             "'web'",
+            $this->quotedPrincipalClass,
         );
         $this->predicate = str_replace('`', '', $sql);
     }
@@ -109,18 +118,40 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
         self::assertFalse($this->isVisible(7));
     }
 
-    public function testGeneratedSqlMentionsAnonymousPrincipalAndClass(): void
+    public function testRestrictedPlusGroupWithoutAclIsHidden(): void
+    {
+        // Closed group A + membership in group B with no ACL → still hidden (#666 review).
+        $this->seedProduct(8);
+        $this->link(8, 90);
+        $this->link(8, 91);
+        $this->acl(90, 1, 'web');
+        self::assertFalse($this->isVisible(8));
+    }
+
+    public function testAnonymousGrantInOtherContextDoesNotOpenWeb(): void
+    {
+        // Restricted in web; principal=0 only for mgr → hidden on web (#666 review).
+        $this->seedProduct(9);
+        $this->link(9, 100);
+        $this->acl(100, 1, 'web');
+        $this->acl(100, 0, 'mgr');
+        self::assertFalse($this->isVisible(9));
+    }
+
+    public function testGeneratedSqlUsesQuotedPrincipalEquality(): void
     {
         $sql = CatalogResourceGroupVisibility::buildNotExistsSql(
             '`dg`',
             '`arg`',
             'msProduct',
             "'web'",
+            $this->quotedPrincipalClass,
         );
         self::assertStringContainsString('principal` <> 0', $sql);
         self::assertStringContainsString('principal` = 0', $sql);
-        self::assertStringContainsString('principal_class` IN (', $sql);
-        self::assertStringContainsString('modUserGroup', $sql);
+        self::assertStringContainsString('principal_class` = ' . $this->quotedPrincipalClass, $sql);
+        self::assertStringNotContainsString('principal_class` IN (', $sql);
+        self::assertStringNotContainsString("'modUserGroup'", $sql);
         self::assertStringContainsString('OR EXISTS', $sql);
         self::assertStringContainsString('dg_anon.`document`', $sql);
     }
@@ -145,7 +176,7 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
             'INSERT INTO access_resource_groups (target, principal_class, principal, context_key)
              VALUES (?, ?, ?, ?)'
         );
-        $stmt->execute([$target, 'MODX\\Revolution\\modUserGroup', $principal, $contextKey]);
+        $stmt->execute([$target, modUserGroup::class, $principal, $contextKey]);
     }
 
     private function isVisible(int $id): bool

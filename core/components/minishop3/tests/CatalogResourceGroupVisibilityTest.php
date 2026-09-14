@@ -40,7 +40,14 @@ $assertFalse = static function (bool $actual, string $case) use ($fail): void {
 
 $dgTable = '`modx_document_groups`';
 $argTable = '`modx_access_resource_groups`';
-$sql = CatalogResourceGroupVisibility::buildNotExistsSql($dgTable, $argTable, 'msProduct', "'web'");
+$quotedPrincipal = "'" . str_replace('\\', '\\\\', \MODX\Revolution\modUserGroup::class) . "'";
+$sql = CatalogResourceGroupVisibility::buildNotExistsSql(
+    $dgTable,
+    $argTable,
+    'msProduct',
+    "'web'",
+    $quotedPrincipal,
+);
 
 $assertTrue(str_contains($sql, 'NOT EXISTS'), 'SQL contains NOT EXISTS for restricted membership');
 $assertTrue(str_contains($sql, 'OR EXISTS'), 'SQL ORs anonymous grant across document groups');
@@ -55,11 +62,14 @@ $assertTrue(
 );
 $assertTrue(str_contains($sql, 'arg.`principal` <> 0'), 'SQL ignores anonymous principal on protect path');
 $assertTrue(str_contains($sql, 'arg_anon.`principal` = 0'), 'SQL keeps explicit anonymous grant visible');
-$assertTrue(str_contains($sql, 'principal_class` IN ('), 'SQL filters principal_class like core');
+$assertTrue(str_contains($sql, 'principal_class` = '), 'SQL equals principal_class like core');
+$assertFalse(str_contains($sql, 'principal_class` IN ('), 'SQL does not use IN-list for principal_class');
 $assertTrue(
     str_contains($sql, 'MODX\\\\Revolution\\\\modUserGroup') || str_contains($sql, "MODX\\Revolution\\modUserGroup"),
     'SQL includes FQCN principal_class'
 );
+$assertFalse(str_contains($sql, "'modUserGroup'"), 'SQL omits short principal_class that core ignores');
+
 
 $makeModx = static function (array $options): modX {
     return new class ($options) extends modX {
