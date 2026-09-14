@@ -24,14 +24,19 @@ class ImageService
     private modX $modx;
     private ImageManager $imageManager;
 
+    /** Optional site root override (tests); production uses MODX_BASE_PATH. */
+    private ?string $basePath;
+
     /**
      * ImageService constructor.
      *
      * @param modX $modx
+     * @param string|null $basePath Optional filesystem root for resolving watermark paths
      */
-    public function __construct(modX $modx)
+    public function __construct(modX $modx, ?string $basePath = null)
     {
         $this->modx = $modx;
+        $this->basePath = $basePath;
 
         // Auto-select driver (Imagick is preferred for WebP/AVIF)
         $driver = extension_loaded('imagick') ? new ImagickDriver() : new GdDriver();
@@ -57,6 +62,8 @@ class ImageService
      *                       - 'quality' (int): quality 1-100 (default 90)
      *                       - 'format' (string): jpg, png, webp, avif (default jpg)
      *                       - 'mode' (string): resize mode - cover, contain, max, stretch (default cover)
+     *                       - 'watermark' (array): optional overlay from Media Source thumbnails JSON
+     *                         (enabled, path, position, offset_x, offset_y, opacity)
      *
      * @return string|null Binary thumbnail data or null on error
      *
@@ -100,12 +107,13 @@ class ImageService
                 $this->applyResize($image, $width, $height, $mode);
             }
 
+            $this->applyWatermark($image, $options);
+
             // Get encoder for required format
             $encoder = $this->getEncoder($format, $quality);
 
             // Return binary data
             return $image->encode($encoder)->toString();
-
         } catch (\Exception $e) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -113,6 +121,145 @@ class ImageService
             );
             return null;
         }
+    }
+
+    /**
+     * Overlay watermark from thumbnails JSON (docs gallery Watermarks section).
+     * Missing/invalid file is logged; thumbnail generation continues without overlay.
+     *
+     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     * @param array<string, mixed> $options
+     */
+    private function applyWatermark($image, array $options): void
+    {
+        $config = $options['watermark'] ?? null;
+        if (!is_array($config) || empty($config['enabled'])) {
+            return;
+        }
+
+        $path = trim((string) ($config['path'] ?? ''));
+        if ($path === '') {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[ImageService] Watermark enabled but path is empty');
+
+            return;
+        }
+
+        $resolved = $this->resolveWatermarkPath($path);
+        if ($resolved === null) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Watermark file not found or outside site base path: {$path}"
+            );
+
+            return;
+        }
+
+        try {
+            $image->place(
+                $resolved,
+                (string) ($config['position'] ?? 'bottom-right'),
+                (int) ($config['offset_x'] ?? 0),
+                (int) ($config['offset_y'] ?? 0),
+                $this->normalizeWatermarkOpacity($config['opacity'] ?? 100)
+            );
+        } catch (\Exception $e) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Failed to apply watermark: {$e->getMessage()}"
+            );
+        }
+    }
+
+    /**
+     * Resolve watermark path relative to the site base path; reject traversal outside the root.
+     * Paths like `/assets/watermark.png` are treated as site-relative when the FS absolute miss.
+     */
+    private function resolveWatermarkPath(string $path): ?string
+    {
+        $base = $this->siteBasePath();
+        if ($base === '') {
+            return $this->readableRealPath($path);
+        }
+
+        $baseReal = realpath($base);
+        if ($baseReal === false) {
+            return null;
+        }
+
+        foreach ($this->watermarkPathCandidates($path, $baseReal) as $candidate) {
+            $real = $this->readableRealPath($candidate);
+            if ($real !== null && $this->isPathWithinBase($real, $baseReal)) {
+                return $real;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function watermarkPathCandidates(string $path, string $baseReal): array
+    {
+        $relative = $baseReal . DIRECTORY_SEPARATOR . ltrim(
+            str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path),
+            '/\\'
+        );
+
+        if (!$this->isAbsoluteFilesystemPath($path)) {
+            return [$relative];
+        }
+
+        // Absolute FS path, plus URL-style "/assets/..." fallback under the site root.
+        return [$path, $relative];
+    }
+
+    private function normalizeWatermarkOpacity(mixed $opacity): int
+    {
+        if ($opacity === '' || $opacity === null) {
+            return 100;
+        }
+
+        return max(0, min(100, (int) $opacity));
+    }
+
+    private function readableRealPath(string $path): ?string
+    {
+        if (!is_file($path) || !is_readable($path)) {
+            return null;
+        }
+
+        $real = realpath($path);
+
+        return $real !== false ? $real : null;
+    }
+
+    private function isPathWithinBase(string $path, string $baseReal): bool
+    {
+        $basePrefix = rtrim(str_replace('\\', '/', $baseReal), '/') . '/';
+
+        return str_starts_with(str_replace('\\', '/', $path), $basePrefix);
+    }
+
+    private function siteBasePath(): string
+    {
+        if ($this->basePath !== null && $this->basePath !== '') {
+            return $this->basePath;
+        }
+
+        return defined('MODX_BASE_PATH') ? (string) MODX_BASE_PATH : '';
+    }
+
+    private function isAbsoluteFilesystemPath(string $path): bool
+    {
+        if ($path === '') {
+            return false;
+        }
+        if ($path[0] === '/' || $path[0] === '\\') {
+            return true;
+        }
+
+        return (bool) preg_match('#^[A-Za-z]:[\\\\/]#', $path);
     }
 
     /**
@@ -164,7 +311,7 @@ class ImageService
     {
         $format = strtolower($format);
 
-        return match($format) {
+        return match ($format) {
             'webp' => new \Intervention\Image\Encoders\WebpEncoder($quality),
             'avif' => new \Intervention\Image\Encoders\AvifEncoder($quality),
             'png' => new \Intervention\Image\Encoders\PngEncoder(),
@@ -221,7 +368,6 @@ class ImageService
             );
 
             return $url;
-
         } catch (\Exception $e) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
