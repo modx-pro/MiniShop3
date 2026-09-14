@@ -249,6 +249,13 @@ class CartItemManager
      * - Is msProduct class
      * - Not deleted (unless allow_deleted)
      * - Published (unless allow_unpublished)
+     * - Resource-group ACL for anonymous catalog (#659) — same gate as Web API /
+     *   Fenom listings. #669 upgrades this path to applyForRequest().
+     *
+     * Intentional: this gate runs only at add time. ms3_cart renders draft line
+     * items by product_id without re-checking RG visibility (#681 review): a
+     * product closed after the customer added it stays in the cart until they
+     * remove it or place the order. Listing/resource cache staleness is #717.
      *
      * @param int $productId Product ID
      * @return msProduct|null Valid product or null

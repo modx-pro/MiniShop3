@@ -157,7 +157,9 @@ $makeModxWithTables = static function (array $options): modX {
 
         public function quote($string)
         {
-            return "'" . str_replace("'", "''", (string) $string) . "'";
+            $string = str_replace(['\\', "'"], ['\\\\', "''"], (string) $string);
+
+            return "'" . $string . "'";
         }
     };
 };
