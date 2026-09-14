@@ -6,6 +6,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msPayment;
+use MiniShop3\Services\Cart\CartResponseNormalizer;
 use MODX\Revolution\modX;
 
 /**
@@ -308,11 +309,10 @@ class OrderCostCalculator
             'payment_cost' => $paymentCost,
         ];
 
-        // Add cart status info
+        // Add cart status info (same rounding as cart/get — #570 / review on #600)
         $response = $this->ms3->getCart()->status();
         if ($response['success']) {
-            $status = $response['data'];
-            $data = array_merge($data, $status);
+            $data = array_merge($data, CartResponseNormalizer::projectStatus($response['data'] ?? []));
         }
 
         return $this->success('ms3_order_getcost_success', $data);

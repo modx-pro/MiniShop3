@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Integration\WebApi\Support;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Cart\CartResponseNormalizer;
 use MiniShop3\Tests\Stubs\ProcessorResponseStub;
 use MODX\Revolution\WebApiModxStub;
 
 /**
- * WebApiModxStub extended with journey DI (ms3, catalog, customer orders).
+ * WebApiModxStub extended with journey DI (ms3, catalog, cart projection, customer orders).
  */
 final class JourneyWebApiModx extends WebApiModxStub
 {
@@ -22,6 +23,8 @@ final class JourneyWebApiModx extends WebApiModxStub
     public JourneyCategoryCatalog $categoryCatalog;
 
     public JourneyCustomerOrderService $customerOrders;
+
+    public CartResponseNormalizer $cartNormalizer;
 
     /** @var array<string, mixed> */
     private array $options = [];
@@ -45,6 +48,7 @@ final class JourneyWebApiModx extends WebApiModxStub
         $this->catalog = new JourneyProductCatalog($this);
         $this->categoryCatalog = new JourneyCategoryCatalog($this);
         $this->customerOrders = new JourneyCustomerOrderService($this);
+        $this->cartNormalizer = new CartResponseNormalizer($this);
 
         $rlPath = sys_get_temp_dir() . '/ms3-webapi-rl-' . getmypid();
         if (!is_dir($rlPath)) {
@@ -76,6 +80,7 @@ final class JourneyWebApiModx extends WebApiModxStub
                     'ms3_product_catalog',
                     'ms3_category_catalog',
                     'ms3_customer_order',
+                    'ms3_cart_response_normalizer',
                 ], true);
             }
 
@@ -87,6 +92,7 @@ final class JourneyWebApiModx extends WebApiModxStub
                     'ms3_product_catalog' => $this->modx->catalog,
                     'ms3_category_catalog' => $this->modx->categoryCatalog,
                     'ms3_customer_order' => $this->modx->customerOrders,
+                    'ms3_cart_response_normalizer' => $this->modx->cartNormalizer,
                     default => null,
                 };
             }

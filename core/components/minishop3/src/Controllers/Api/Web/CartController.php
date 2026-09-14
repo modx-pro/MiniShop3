@@ -8,6 +8,8 @@ use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Api\WebApiContextResolver;
 use MiniShop3\Services\Cart\CartItemManager;
+use MiniShop3\Services\Cart\CartResponseNormalizer;
+use MiniShop3\Services\Catalog\CatalogQuery;
 use MODX\Revolution\modX;
 
 /**
@@ -190,6 +192,10 @@ class CartController
      * Get cart
      * GET /api/v1/cart/get
      *
+     * Query: include_thumbs (0|1, default 0).
+     * Response data: items (always array), cart (legacy map, empty object), status totals.
+     * Cart status is merchandise only. Delivery/payment/final: GET /api/v1/order/cost.
+     *
      * @param array $params URL parameters
      * @return Response
      */
@@ -282,6 +288,15 @@ class CartController
     {
         $input = $this->getRequestData();
         $renderTokens = $input['render'] ?? null;
+
+        if (!empty($result['success']) && is_array($result['data'] ?? null)) {
+            /** @var CartResponseNormalizer $normalizer */
+            $normalizer = $this->modx->services->get('ms3_cart_response_normalizer');
+            $result['data'] = $normalizer->normalize(
+                $result['data'],
+                CatalogQuery::toBool($input['include_thumbs'] ?? false)
+            );
+        }
 
         if (!empty($renderTokens) && !empty($result['success'])) {
             $customerToken = $_REQUEST['ms3_token'] ?? '';

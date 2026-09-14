@@ -34,8 +34,16 @@ class ApiClient {
    */
   buildUrl (endpoint) {
     const url = new URL(this.baseUrl, window.location.origin)
-    url.searchParams.set('route', endpoint)
+    const qPos = endpoint.indexOf('?')
+    const path = qPos === -1 ? endpoint : endpoint.slice(0, qPos)
+    const query = qPos === -1 ? '' : endpoint.slice(qPos + 1)
+    url.searchParams.set('route', path)
     url.searchParams.set('ctx', this.ctx)
+    if (query !== '') {
+      new URLSearchParams(query).forEach((value, key) => {
+        url.searchParams.set(key, value)
+      })
+    }
     return url
   }
 
