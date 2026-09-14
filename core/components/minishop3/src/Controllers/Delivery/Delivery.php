@@ -14,6 +14,8 @@ use MODX\Revolution\modX;
  * Provides common functionality for all delivery methods.
  * Custom providers (CDEK, Russian Post, DPD, etc.) can inherit
  * this class and override getCost() method for their calculation logic.
+ * Async tracking/webhooks use optional ShipmentProviderInterface;
+ * cost-only classes stay on DeliveryProviderInterface only.
  *
  * Example of creating a CDEK provider:
  * ```php

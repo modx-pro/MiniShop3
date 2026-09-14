@@ -3,8 +3,16 @@
  * Keeps rules in one place for both the pre-mount queue (order.js) and direct registration.
  */
 
-/** Keys used by built-in tabs; plugin tabs must use different keys */
-export const RESERVED_ORDER_TAB_KEYS = new Set(['info', 'products', 'address', 'history'])
+/** Keys used by built-in tabs; plugin tabs must use different keys.
+ * Built-in shipment tab uses `ms3_shipment` so docs/examples can keep `tracking`.
+ */
+export const RESERVED_ORDER_TAB_KEYS = new Set([
+  'info',
+  'products',
+  'address',
+  'ms3_shipment',
+  'history',
+])
 
 /**
  * Shallow snapshot for the pre-mount queue: top-level fields and nested `extConfig` / `props` are

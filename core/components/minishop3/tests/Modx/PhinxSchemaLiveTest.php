@@ -20,12 +20,14 @@ use MiniShop3\Tests\Modx\Support\PhinxSchemaBootstrap;
 final class PhinxSchemaLiveTest extends ExtraTestCase
 {
     /**
-     * Phinx metadata table is not an xPDO model — expected DB-only table.
+     * Tables without an xPDO model (Phinx metadata; PDO-backed shipment store #591).
      *
      * @var list<string> logical (unprefixed) names
      */
     private const DB_ONLY_TABLES = [
         'ms3_migrations',
+        'ms3_shipments',
+        'ms3_shipment_events',
     ];
 
     public function testTablePrefixIsNonEmpty(): void
