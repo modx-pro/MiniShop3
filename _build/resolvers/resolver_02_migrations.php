@@ -77,10 +77,19 @@ if ($transport->xpdo) {
             ms3ReconnectMigrations($modx);
 
             try {
-                // Загрузка Composer autoload (только если ещё не загружен)
-                if (!class_exists('Phinx\\Config\\Config')) {
-                    require_once $vendorAutoload;
+                // Always prefer MiniShop3 vendor Phinx; log if another extra already loaded it (#719).
+                $phinxVendorHelper = $componentPath . 'phinx_vendor.php';
+                if (!file_exists($phinxVendorHelper)) {
+                    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] phinx_vendor.php not found at: ' . $phinxVendorHelper);
+                    break;
                 }
+                require_once $phinxVendorHelper;
+                ms3PhinxBootstrapVendor(
+                    $componentPath,
+                    static function (string $message) use ($modx): void {
+                        $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] ' . $message);
+                    }
+                );
 
                 // Загрузка конфигурации Phinx
                 // $modx автоматически доступен в scope загружаемого файла

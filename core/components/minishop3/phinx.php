@@ -38,6 +38,22 @@ if (!isset($modx)) {
 // instance via $GLOBALS['modx'] (see migrations/_modx.php) instead of booting a second kernel.
 $GLOBALS['modx'] = $modx;
 
+// After MODX init, other extras may have prepended their Composer autoload (e.g. mSearch).
+// Re-prepend MiniShop3 vendor so late Phinx classes stay on this package's Phinx (#719).
+require_once __DIR__ . '/phinx_vendor.php';
+ms3PhinxBootstrapVendor(
+    __DIR__,
+    static function (string $message) use ($modx): void {
+        $errorLogLevel = 1; // modX::LOG_LEVEL_ERROR
+        if (class_exists(\MODX\Revolution\modX::class, false)) {
+            $errorLogLevel = \MODX\Revolution\modX::LOG_LEVEL_ERROR;
+        } elseif (class_exists('modX', false)) {
+            $errorLogLevel = modX::LOG_LEVEL_ERROR;
+        }
+        $modx->log($errorLogLevel, '[MiniShop3] ' . $message);
+    }
+);
+
 require_once __DIR__ . '/phinx_mysql_charset.php';
 
 $dsnCharset = ms3PhinxExtractDsnCharset($modx->getOption('database_dsn', null, null));
