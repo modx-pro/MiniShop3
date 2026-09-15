@@ -177,12 +177,10 @@ if ($_ms3MenuindexCategoryIds !== [] && preg_match('/\bmenuindex\b/i', $_ms3Sort
         'class' => msCategoryMember::class,
         'on' => CategoryProductMenuindexService::memberJoinOnCategories($_ms3MenuindexCategoryIds, $memberAlias),
     ];
-    $effectiveSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($_ms3MenuindexCategoryIds);
-    if (preg_match('/\bmsProduct\.menuindex\b/i', $_ms3SortBy)) {
-        $scriptProperties['sortby'] = preg_replace('/\bmsProduct\.menuindex\b/i', $effectiveSql, $_ms3SortBy);
-    } elseif (preg_match('/\bmenuindex\b/i', $_ms3SortBy) && !str_contains($_ms3SortBy, 'CASE WHEN')) {
-        $scriptProperties['sortby'] = preg_replace('/\bmenuindex\b/i', $effectiveSql, $_ms3SortBy, 1);
-    }
+    $scriptProperties['sortby'] = CategoryProductMenuindexService::substituteMenuindexSortby(
+        $_ms3SortBy,
+        $_ms3MenuindexCategoryIds
+    );
 }
 
 // Add filters by options

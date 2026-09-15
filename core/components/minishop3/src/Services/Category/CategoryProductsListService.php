@@ -87,14 +87,24 @@ final class CategoryProductsListService
             $selectParts[] = $spec->selectExpression();
         }
         $selectParts[] = "{$effectiveMenuindexSql} AS effective_menuindex";
-        // xPDOQuery::select() declares string, accepts both at runtime but PHPStan is strict.
-        $c->select(implode(', ', $selectParts));
+        // Pass an array: select() explodes a string on commas and backtick-quotes bare pieces,
+        // so "parent IN (3,5,7)" in the effective menuindex expression became IN (3,`5`,7).
+        // @phpstan-ignore argument.type (xPDO docblock says string; arrays are supported and kept intact)
+        $c->select($selectParts);
         if ($optionSpecs !== [] || count($scopeCategoryIds) > 1) {
             $c->groupby('msProduct.id');
         }
 
-        $c->prepare();
-        $rows = $c->stmt->execute() ? $c->stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
+        $rows = [];
+        if ($c->prepare() && $c->stmt->execute()) {
+            $rows = $c->stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } else {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[MiniShop3] Category products grid query failed: '
+                . json_encode($c->stmt?->errorInfo(), JSON_UNESCAPED_UNICODE)
+            );
+        }
 
         $optionFieldNames = array_map(static fn (OptionColumnSpec $s) => $s->fieldName, $optionSpecs);
         $relationFieldNames = array_map(static fn (RelationColumnSpec $s) => $s->fieldName, $relationSpecs);

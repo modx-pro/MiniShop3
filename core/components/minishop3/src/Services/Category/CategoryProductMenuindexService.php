@@ -35,6 +35,10 @@ final class CategoryProductMenuindexService
 
     /**
      * Effective sort/select expression for a single category grid context.
+     *
+     * Identifiers are backtick-quoted: msProducts passes this expression as pdoTools
+     * sortby, and Fetch::addSort() splits it on commas and rewrites every `alias.field `
+     * piece that has no backtick, which breaks the CASE/COALESCE into invalid SQL.
      */
     public static function effectiveMenuindexSql(
         int $categoryId,
@@ -42,8 +46,8 @@ final class CategoryProductMenuindexService
         string $memberAlias = self::MEMBER_JOIN_ALIAS,
     ): string {
         return self::effectiveMenuindexCase(
-            "{$productAlias}.parent = " . max(0, $categoryId),
-            "{$memberAlias}.menuindex",
+            self::column($productAlias, 'parent') . ' = ' . max(0, $categoryId),
+            self::column($memberAlias, 'menuindex'),
             $productAlias,
         );
     }
@@ -60,7 +64,7 @@ final class CategoryProductMenuindexService
     ): string {
         $categoryIds = self::normalizeCategoryIds($categoryIds);
         if ($categoryIds === []) {
-            return "{$productAlias}.menuindex";
+            return self::column($productAlias, 'menuindex');
         }
 
         if (count($categoryIds) === 1) {
@@ -68,10 +72,36 @@ final class CategoryProductMenuindexService
         }
 
         return self::effectiveMenuindexCase(
-            "{$productAlias}.parent IN (" . implode(',', $categoryIds) . ')',
-            "MIN({$memberAlias}.menuindex)",
+            self::column($productAlias, 'parent') . ' IN (' . implode(',', $categoryIds) . ')',
+            'MIN(' . self::column($memberAlias, 'menuindex') . ')',
             $productAlias,
         );
+    }
+
+    /**
+     * Replace the product menuindex column in a pdoTools sortby (plain or JSON) with the
+     * effective per-category expression for msProducts.
+     *
+     * Matches `msProduct.menuindex` (every occurrence) or a bare `menuindex` (first one), with
+     * or without backticks. A menuindex qualified by another alias (e.g. CategoryMember.menuindex)
+     * is left alone. Unchanged when there is no category scope or the sortby is already substituted.
+     *
+     * @param list<int> $categoryIds
+     */
+    public static function substituteMenuindexSortby(string $sortby, array $categoryIds): string
+    {
+        $categoryIds = self::normalizeCategoryIds($categoryIds);
+        if ($categoryIds === [] || str_contains($sortby, 'CASE WHEN')) {
+            return $sortby;
+        }
+
+        $effectiveSql = self::effectiveMenuindexSqlForCategories($categoryIds);
+        $aliased = '/`?\bmsProduct`?\.`?menuindex\b`?/i';
+        if (preg_match($aliased, $sortby)) {
+            return (string) preg_replace($aliased, $effectiveSql, $sortby);
+        }
+
+        return (string) preg_replace('/(?<![\w.`])`?menuindex\b`?/i', $effectiveSql, $sortby, 1);
     }
 
     public static function memberJoinOn(int $categoryId, string $memberAlias = self::MEMBER_JOIN_ALIAS): string
@@ -131,11 +161,18 @@ final class CategoryProductMenuindexService
         string $memberMenuindexExpression,
         string $productAlias,
     ): string {
+        $productMenuindex = self::column($productAlias, 'menuindex');
+
         return 'CASE WHEN '
             . "{$nativeParentCondition} "
-            . "THEN {$productAlias}.menuindex "
-            . "ELSE COALESCE({$memberMenuindexExpression}, {$productAlias}.menuindex) "
+            . "THEN {$productMenuindex} "
+            . "ELSE COALESCE({$memberMenuindexExpression}, {$productMenuindex}) "
             . 'END';
+    }
+
+    private static function column(string $alias, string $column): string
+    {
+        return "`{$alias}`.`{$column}`";
     }
 
     public function getNextMemberMenuindex(int $categoryId): int
