@@ -627,6 +627,39 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         new PermissionMiddleware($modx, 'mssetting_save')
     ]);
 
+    // Customer groups (#669) — MODX user group link for catalog RG ACL (Manager API only)
+    $router->group('/customer-groups', function ($router) use ($modx) {
+        $router->get('', function ($params) use ($modx) {
+            $allParams = array_merge($_GET, $params);
+            return (new \MiniShop3\Controllers\Api\Manager\CustomerGroupsController($modx))->getList($allParams);
+        }, [
+            new PermissionMiddleware($modx, 'msorder_list'),
+        ]);
+        $router->post('', function () use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\CustomerGroupsController($modx))->create($data);
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save'),
+        ]);
+        $router->get('/{id}', function ($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\CustomerGroupsController($modx))->get($params);
+        }, [
+            new PermissionMiddleware($modx, 'msorder_view'),
+        ]);
+        $router->put('/{id}', function ($params) use ($modx) {
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            $data['id'] = $params['id'] ?? null;
+            return (new \MiniShop3\Controllers\Api\Manager\CustomerGroupsController($modx))->update($data);
+        }, [
+            new PermissionMiddleware($modx, 'msorder_save'),
+        ]);
+        $router->delete('/{id}', function ($params) use ($modx) {
+            return (new \MiniShop3\Controllers\Api\Manager\CustomerGroupsController($modx))->delete($params);
+        }, [
+            new PermissionMiddleware($modx, 'msorder_remove'),
+        ]);
+    });
+
     // Option groups (#10) — dedicated grouping model replacing legacy msOption.modcategory_id
     $router->group('/option-groups', function ($router) use ($modx) {
         $router->put('/positions', function () use ($modx) {

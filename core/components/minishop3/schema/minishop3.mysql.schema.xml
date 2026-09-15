@@ -430,8 +430,26 @@
         <aggregate alias="Slave" class="MiniShop3\Model\msProduct" local="slave" foreign="id" owner="foreign" cardinality="one"/>
     </object>
 
+    <object class="msCustomerGroup" table="ms3_customer_groups" extends="xPDO\Om\xPDOSimpleObject">
+        <field key="name" dbtype="varchar" precision="255" phptype="string" null="false" default=""/>
+        <field key="user_group_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0"/>
+        <field key="active" dbtype="tinyint" precision="1" attributes="unsigned" phptype="boolean" null="false" default="1"/>
+        <field key="created_at" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP"/>
+        <field key="updated_at" dbtype="timestamp" phptype="timestamp" null="true" extra="on update CURRENT_TIMESTAMP"/>
+
+        <index alias="user_group_id" name="user_group_id" primary="false" unique="false" type="BTREE">
+            <column key="user_group_id" length="" collation="A" null="false"/>
+        </index>
+        <index alias="active" name="active" primary="false" unique="false" type="BTREE">
+            <column key="active" length="" collation="A" null="false"/>
+        </index>
+
+        <aggregate alias="Customers" class="MiniShop3\Model\msCustomer" local="id" foreign="customer_group_id" cardinality="many" owner="local"/>
+    </object>
+
     <object class="msCustomer" table="ms3_customers" extends="xPDO\Om\xPDOSimpleObject">
         <field key="user_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true" default="0"/>
+        <field key="customer_group_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="true"/>
         <field key="first_name" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="last_name" dbtype="varchar" precision="191" phptype="string" null="true" default=""/>
         <field key="phone" dbtype="varchar" precision="50" phptype="string" null="true" default=""/>
@@ -455,6 +473,9 @@
         <index alias="user_id" name="user_id" primary="false" unique="false" type="BTREE">
             <column key="user_id" length="" collation="A" null="false"/>
         </index>
+        <index alias="customer_group_id" name="customer_group_id" primary="false" unique="false" type="BTREE">
+            <column key="customer_group_id" length="" collation="A" null="true"/>
+        </index>
         <index alias="first_name" name="first_name" primary="false" unique="false" type="BTREE">
             <column key="first_name" length="" collation="A" null="false"/>
         </index>
@@ -469,6 +490,7 @@
         </index>
 
         <aggregate alias="User" class="MODX\Revolution\modUser" local="user_id" foreign="id" owner="foreign" cardinality="one"/>
+        <aggregate alias="CustomerGroup" class="MiniShop3\Model\msCustomerGroup" local="customer_group_id" foreign="id" owner="foreign" cardinality="one"/>
         <composite alias="Tokens" class="MiniShop3\Model\msCustomerToken" local="id" foreign="customer_id" cardinality="many" owner="local"/>
     </object>
 

@@ -508,7 +508,7 @@ class ProductCatalogService
         if ($context !== '') {
             $query->where(['msProduct.context_key' => $context]);
         }
-        $this->resourceGroupVisibility()->apply($query, 'msProduct', $context);
+        $this->resourceGroupVisibility()->applyForRequest($query, 'msProduct', $context);
     }
 
     private function resourceGroupVisibility(): CatalogResourceGroupVisibility
