@@ -177,11 +177,14 @@ if ($_ms3MenuindexCategoryIds !== [] && preg_match('/\bmenuindex\b/i', $_ms3Sort
         'class' => msCategoryMember::class,
         'on' => CategoryProductMenuindexService::memberJoinOnCategories($_ms3MenuindexCategoryIds, $memberAlias),
     ];
+    // The expression is backtick-quoted so pdoTools sortby escaping leaves it intact;
+    // match the column with or without backticks so the quotes are replaced too.
     $effectiveSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($_ms3MenuindexCategoryIds);
-    if (preg_match('/\bmsProduct\.menuindex\b/i', $_ms3SortBy)) {
-        $scriptProperties['sortby'] = preg_replace('/\bmsProduct\.menuindex\b/i', $effectiveSql, $_ms3SortBy);
-    } elseif (preg_match('/\bmenuindex\b/i', $_ms3SortBy) && !str_contains($_ms3SortBy, 'CASE WHEN')) {
-        $scriptProperties['sortby'] = preg_replace('/\bmenuindex\b/i', $effectiveSql, $_ms3SortBy, 1);
+    $_ms3AliasMenuindex = '/`?\bmsProduct`?\.`?menuindex\b`?/i';
+    if (preg_match($_ms3AliasMenuindex, $_ms3SortBy)) {
+        $scriptProperties['sortby'] = preg_replace($_ms3AliasMenuindex, $effectiveSql, $_ms3SortBy);
+    } elseif (!str_contains($_ms3SortBy, 'CASE WHEN')) {
+        $scriptProperties['sortby'] = preg_replace('/`?\bmenuindex\b`?/i', $effectiveSql, $_ms3SortBy, 1);
     }
 }
 

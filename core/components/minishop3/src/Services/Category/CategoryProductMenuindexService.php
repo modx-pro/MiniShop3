@@ -35,6 +35,10 @@ final class CategoryProductMenuindexService
 
     /**
      * Effective sort/select expression for a single category grid context.
+     *
+     * Identifiers are backtick-quoted: msProducts passes this expression as pdoTools
+     * sortby, and Fetch::addSort() splits it on commas and rewrites every `alias.field `
+     * piece that has no backtick, which breaks the CASE/COALESCE into invalid SQL.
      */
     public static function effectiveMenuindexSql(
         int $categoryId,
@@ -42,8 +46,8 @@ final class CategoryProductMenuindexService
         string $memberAlias = self::MEMBER_JOIN_ALIAS,
     ): string {
         return self::effectiveMenuindexCase(
-            "{$productAlias}.parent = " . max(0, $categoryId),
-            "{$memberAlias}.menuindex",
+            self::column($productAlias, 'parent') . ' = ' . max(0, $categoryId),
+            self::column($memberAlias, 'menuindex'),
             $productAlias,
         );
     }
@@ -60,7 +64,7 @@ final class CategoryProductMenuindexService
     ): string {
         $categoryIds = self::normalizeCategoryIds($categoryIds);
         if ($categoryIds === []) {
-            return "{$productAlias}.menuindex";
+            return self::column($productAlias, 'menuindex');
         }
 
         if (count($categoryIds) === 1) {
@@ -68,8 +72,8 @@ final class CategoryProductMenuindexService
         }
 
         return self::effectiveMenuindexCase(
-            "{$productAlias}.parent IN (" . implode(',', $categoryIds) . ')',
-            "MIN({$memberAlias}.menuindex)",
+            self::column($productAlias, 'parent') . ' IN (' . implode(',', $categoryIds) . ')',
+            'MIN(' . self::column($memberAlias, 'menuindex') . ')',
             $productAlias,
         );
     }
@@ -131,11 +135,18 @@ final class CategoryProductMenuindexService
         string $memberMenuindexExpression,
         string $productAlias,
     ): string {
+        $productMenuindex = self::column($productAlias, 'menuindex');
+
         return 'CASE WHEN '
             . "{$nativeParentCondition} "
-            . "THEN {$productAlias}.menuindex "
-            . "ELSE COALESCE({$memberMenuindexExpression}, {$productAlias}.menuindex) "
+            . "THEN {$productMenuindex} "
+            . "ELSE COALESCE({$memberMenuindexExpression}, {$productMenuindex}) "
             . 'END';
+    }
+
+    private static function column(string $alias, string $column): string
+    {
+        return "`{$alias}`.`{$column}`";
     }
 
     public function getNextMemberMenuindex(int $categoryId): int
