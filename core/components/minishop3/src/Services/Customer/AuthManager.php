@@ -131,34 +131,24 @@ class AuthManager
                 $customer = $provider->authenticate($credentials);
 
                 if ($customer) {
-                    if ($customer->get('is_blocked')) {
+                    if (CustomerAccess::isAccessDenied($customer)) {
+                        $inactive = !$customer->get('is_active');
+                        $this->lastAuthFailure = $inactive ? 'inactive' : 'blocked';
                         $blockedUntil = $customer->get('blocked_until');
-                        if ($blockedUntil && strtotime($blockedUntil) > time()) {
-                            $this->lastAuthFailure = 'blocked';
-                            $this->modx->log(
-                                modX::LOG_LEVEL_WARN,
-                                "[AuthManager] Customer #{$customer->id} is blocked until {$blockedUntil}"
-                            );
-                            return null;
-                        }
-                        $customer->set('is_blocked', false);
-                        $customer->set('blocked_until', null);
-                        $customer->set('failed_login_attempts', 0);
-                        if (!$customer->save()) {
-                            $this->modx->log(
-                                modX::LOG_LEVEL_ERROR,
-                                "[AuthManager] Failed to clear block flags for customer #{$customer->id}"
-                            );
-                        }
-                    }
-
-                    if (!$customer->get('is_active')) {
-                        $this->lastAuthFailure = 'inactive';
                         $this->modx->log(
                             modX::LOG_LEVEL_WARN,
-                            "[AuthManager] Customer #{$customer->id} is not active"
+                            $inactive
+                                ? "[AuthManager] Customer #{$customer->id} is not active"
+                                : "[AuthManager] Customer #{$customer->id} is blocked"
+                                    . ($blockedUntil ? " until {$blockedUntil}" : ' (permanent)')
                         );
+
                         return null;
+                    }
+
+                    if (CustomerAccess::isLockoutExpired($customer)) {
+                        $customer->set('is_blocked', false);
+                        $customer->set('blocked_until', null);
                     }
 
                     $customer->set('last_login_at', date('Y-m-d H:i:s'));
