@@ -13,24 +13,23 @@ class CreateCustomerGroups extends AbstractMigration
 {
     public function up(): void
     {
+        $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
+        $groupsFqn = $prefix . 'ms3_customer_groups';
+
         if (!$this->hasTable('ms3_customer_groups')) {
-            $modx = $this->bootstrapModx();
+            require_once __DIR__ . '/_modx.php';
+            $modx = ms3MigrationBootstrap();
             if ($modx === null) {
-                $this->output->writeln('<error>Cannot bootstrap MODX, aborting migration</error>');
-
-                return;
+                throw new \RuntimeException('Cannot bootstrap MODX for ms3_customer_groups');
             }
-            $manager = $modx->getManager();
-            $created = $manager->createObjectContainer(\MiniShop3\Model\msCustomerGroup::class);
+            $created = $modx->getManager()->createObjectContainer(\MiniShop3\Model\msCustomerGroup::class);
             if (!$created) {
-                $prefix = $this->getAdapter()->getOption('table_prefix') ?? '';
-                $this->output->writeln('<error>Failed to create table ' . $prefix . 'ms3_customer_groups</error>');
-
-                return;
+                throw new \RuntimeException('Failed to create table ' . $groupsFqn);
             }
-            $this->output->writeln('<info>Created table ms3_customer_groups</info>');
+            ms3MigrationRefreshPhinxTransaction($this->getAdapter());
+            $this->output->writeln('<info>Created table ' . $groupsFqn . '</info>');
         } else {
-            $this->output->writeln('<comment>Table ms3_customer_groups already exists, skipping create</comment>');
+            $this->output->writeln('<comment>Table ' . $groupsFqn . ' already exists, skipping create</comment>');
         }
 
         if (!$this->hasTable('ms3_customers')) {
@@ -68,33 +67,5 @@ class CreateCustomerGroups extends AbstractMigration
         if ($this->hasTable('ms3_customer_groups')) {
             $this->table('ms3_customer_groups')->drop()->save();
         }
-    }
-
-    private function bootstrapModx(): ?\MODX\Revolution\modX
-    {
-        $modxConfigPath = dirname(__FILE__, 5) . '/config.core.php';
-        if (!file_exists($modxConfigPath)) {
-            $this->output->writeln('<error>MODX config.core.php not found</error>');
-
-            return null;
-        }
-
-        require_once $modxConfigPath;
-        if (!defined('MODX_CORE_PATH')) {
-            $this->output->writeln('<error>MODX_CORE_PATH not defined</error>');
-
-            return null;
-        }
-
-        require_once MODX_CORE_PATH . 'vendor/autoload.php';
-        require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
-
-        $modx = new \MODX\Revolution\modX();
-        $modx->initialize('mgr');
-
-        $modelPath = MODX_CORE_PATH . 'components/minishop3/src/Model/';
-        $modx->addPackage('MiniShop3\\Model', $modelPath, null, 'MiniShop3\\');
-
-        return $modx;
     }
 }

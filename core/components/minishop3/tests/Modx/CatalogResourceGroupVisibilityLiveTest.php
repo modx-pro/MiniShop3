@@ -128,13 +128,11 @@ final class CatalogResourceGroupVisibilityLiveTest extends ExtraTestCase
         self::assertTrue($userGroup->save(), 'Failed to save modUserGroup');
         $userGroupId = (int) $userGroup->get('id');
 
-        $customerGroup = $this->modx->newObject(msCustomerGroup::class);
-        $customerGroup->fromArray([
+        $customerGroup = $this->persistObject(msCustomerGroup::class, [
             'name' => 'TB CG ' . $suffix,
             'user_group_id' => $userGroupId,
             'active' => true,
         ]);
-        self::assertTrue($customerGroup->save(), 'Failed to save msCustomerGroup');
 
         $customer = $this->modx->newObject(msCustomer::class);
         $customer->fromArray([
