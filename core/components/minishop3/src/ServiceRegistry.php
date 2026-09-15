@@ -179,6 +179,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Catalog\CustomerResourceGroupResolver::class,
             'interface' => null,
         ],
+        'ms3_catalog_acl_cache' => [
+            'class' => \MiniShop3\Services\Catalog\CatalogAclCacheInvalidator::class,
+            'interface' => null,
+        ],
         'ms3_delivery_catalog' => [
             'class' => \MiniShop3\Services\Delivery\DeliveryCatalogService::class,
             'interface' => null,
