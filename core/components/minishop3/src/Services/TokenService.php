@@ -2,7 +2,9 @@
 
 namespace MiniShop3\Services;
 
+use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Utils\CookieHelper;
 use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\modX;
@@ -140,6 +142,7 @@ class TokenService
      * Does not extend TTL and does not keep the same token string alive.
      *
      * @return array{token: ?msCustomerToken, reason: 'ok'|'missing'|'expired'}
+     *         reason missing also covers a live token whose customer is inactive or blocked
      */
     public function resolveApiToken(string $tokenString): array
     {
@@ -165,6 +168,10 @@ class TokenService
             $tokenObj->remove();
 
             return ['token' => null, 'reason' => 'expired'];
+        }
+
+        if (!$this->apiTokenPrincipalAllowed($tokenObj)) {
+            return ['token' => null, 'reason' => 'missing'];
         }
 
         return ['token' => $tokenObj, 'reason' => 'ok'];
@@ -696,6 +703,10 @@ class TokenService
             return;
         }
 
+        if (!$this->apiTokenPrincipalAllowed($tokenObj)) {
+            return;
+        }
+
         if ($tokenObj->isExpired() && !$this->renewTokenIfExpired($tokenObj)) {
             return;
         }
@@ -728,6 +739,10 @@ class TokenService
             return false;
         }
 
+        if (!$this->apiTokenPrincipalAllowed($tokenObj)) {
+            return false;
+        }
+
         if ($tokenObj->isExpired() && !$this->renewTokenIfExpired($tokenObj)) {
             return false;
         }
@@ -736,6 +751,23 @@ class TokenService
         CookieHelper::setTokenCookie($this->modx, (string)$tokenObj->get('token'));
 
         return true;
+    }
+
+    /**
+     * Guest API tokens (customer_id = 0) skip the customer row.
+     * Missing or denied customers must not hydrate/renew.
+     */
+    private function apiTokenPrincipalAllowed(msCustomerToken $tokenObj): bool
+    {
+        $customerId = (int) $tokenObj->get('customer_id');
+        if ($customerId <= 0) {
+            return true;
+        }
+
+        /** @var msCustomer|null $customer */
+        $customer = $this->modx->getObject(msCustomer::class, $customerId);
+
+        return $customer instanceof msCustomer && !CustomerAccess::isAccessDenied($customer);
     }
 
     /**

@@ -69,9 +69,12 @@ abstract class CustomerPageService
      */
     public function checkAuth(): bool
     {
-        if ($this->modx->services->has('ms3_token_service')) {
-            /** @var TokenService $tokenService */
-            $tokenService = $this->modx->services->get('ms3_token_service');
+        /** @var TokenService|null $tokenService */
+        $tokenService = $this->modx->services->has('ms3_token_service')
+            ? $this->modx->services->get('ms3_token_service')
+            : null;
+
+        if ($tokenService) {
             $tokenService->ensureSessionActive();
             $tokenService->restoreSessionFromCookie();
         } else {
@@ -88,19 +91,13 @@ abstract class CustomerPageService
 
         $this->customerId = (int)$_SESSION['ms3']['customer_id'];
 
-        /** @var TokenService $tokenService */
-        $tokenService = $this->modx->services->has('ms3_token_service')
-            ? $this->modx->services->get('ms3_token_service')
-            : null;
-
         if (!$tokenService || !$tokenService->sessionTokenBelongsToCustomer($this->customerId)) {
-            $this->clearAuthSession();
             $this->modx->log(
                 modX::LOG_LEVEL_WARN,
                 "[CustomerPageService] Session customer #{$this->customerId} does not match API token"
             );
-            $this->customerId = null;
-            return false;
+
+            return $this->rejectAuth();
         }
 
         $this->customer = $this->modx->getObject(msCustomer::class, $this->customerId);
@@ -110,29 +107,24 @@ abstract class CustomerPageService
                 modX::LOG_LEVEL_WARN,
                 "[CustomerPageService] Customer #{$this->customerId} not found in database"
             );
-            $this->clearAuthSession();
-            $this->customerId = null;
-            return false;
+
+            return $this->rejectAuth();
         }
 
-        if (!$this->customer->get('is_active')) {
-            $this->clearAuthSession();
-            $this->customerId = null;
-            $this->customer = null;
-            return false;
-        }
-
-        if ($this->customer->get('is_blocked')) {
-            $blockedUntil = $this->customer->get('blocked_until');
-            if ($blockedUntil && strtotime((string)$blockedUntil) > time()) {
-                $this->clearAuthSession();
-                $this->customerId = null;
-                $this->customer = null;
-                return false;
-            }
+        if (CustomerAccess::isAccessDenied($this->customer)) {
+            return $this->rejectAuth();
         }
 
         return true;
+    }
+
+    private function rejectAuth(): bool
+    {
+        $this->clearAuthSession();
+        $this->customerId = null;
+        $this->customer = null;
+
+        return false;
     }
 
     private function clearAuthSession(): void
