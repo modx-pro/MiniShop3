@@ -195,6 +195,7 @@ return [
         'js/mgr/utilities/xtypes.min.js',
         'js/web/default.js',
         'js/web/message_settings.js',
+        'js/web/modules/auth-forms.js',
         'js/web/modules/callback.js',
         'js/web/modules/cart.js',
         'js/web/modules/customer-addresses.js',

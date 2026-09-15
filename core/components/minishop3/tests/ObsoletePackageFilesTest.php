@@ -35,6 +35,9 @@ if (!is_string($resolverSrc)) {
 if (!str_contains($resolverSrc, 'ACTION_UPGRADE') || !str_contains($resolverSrc, 'ObsoletePackageFiles')) {
     $fail('resolver must run on ACTION_UPGRADE via ObsoletePackageFiles');
 }
+if (!str_contains($resolverSrc, 'ms3_frontend_assets') || !str_contains($resolverSrc, 'isReferencedByFrontendAssets')) {
+    $fail('resolver must skip assets still listed in ms3_frontend_assets');
+}
 
 require_once $helperPath;
 
@@ -217,6 +220,7 @@ $expectedAssets = [
     'js/mgr/utilities/xtypes.min.js',
     'js/web/default.js',
     'js/web/message_settings.js',
+    'js/web/modules/auth-forms.js',
     'js/web/modules/callback.js',
     'js/web/modules/cart.js',
     'js/web/modules/customer-addresses.js',

@@ -49,22 +49,79 @@ final class ObsoletePackageFiles
     }
 
     /**
-     * @param list<string> $relativePaths
-     * @return array{removed: list<string>, skipped: list<string>, rejected: list<string>}
+     * True when an obsolete assets path is still listed in ms3_frontend_assets (#728).
+     *
+     * @param array{jsUrl?: string, cssUrl?: string, assetsUrl?: string} $placeholders
      */
-    public static function purge(string $root, array $relativePaths): array
+    public static function isReferencedByFrontendAssets(
+        string $relative,
+        string $setting,
+        array $placeholders = [],
+    ): bool {
+        $relative = str_replace('\\', '/', $relative);
+        $haystack = str_replace('\\/', '/', $setting);
+        $jsUrl = (string) ($placeholders['jsUrl'] ?? '');
+        $cssUrl = (string) ($placeholders['cssUrl'] ?? '');
+        $assetsUrl = (string) ($placeholders['assetsUrl'] ?? '');
+        $expanded = str_replace(
+            ['[[+jsUrl]]', '[[+cssUrl]]', '[[+assetsUrl]]'],
+            [$jsUrl, $cssUrl, $assetsUrl],
+            $haystack,
+        );
+
+        $needles = [$relative];
+        if (str_starts_with($relative, 'js/')) {
+            $suffix = substr($relative, 3);
+            $needles[] = '[[+jsUrl]]' . $suffix;
+            if ($jsUrl !== '') {
+                $needles[] = $jsUrl . $suffix;
+            }
+        }
+        if (str_starts_with($relative, 'css/')) {
+            $suffix = substr($relative, 4);
+            $needles[] = '[[+cssUrl]]' . $suffix;
+            if ($cssUrl !== '') {
+                $needles[] = $cssUrl . $suffix;
+            }
+        }
+        if ($assetsUrl !== '') {
+            $needles[] = $assetsUrl . $relative;
+        }
+
+        foreach ($needles as $needle) {
+            if ($needle !== '' && (str_contains($haystack, $needle) || str_contains($expanded, $needle))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param list<string> $relativePaths
+     * @param list<string> $keepRelative paths still referenced (do not delete)
+     * @return array{removed: list<string>, skipped: list<string>, rejected: list<string>, kept: list<string>}
+     */
+    public static function purge(string $root, array $relativePaths, array $keepRelative = []): array
     {
         $rootReal = realpath($root);
         if ($rootReal === false) {
-            return ['removed' => [], 'skipped' => [], 'rejected' => $relativePaths];
+            return ['removed' => [], 'skipped' => [], 'rejected' => $relativePaths, 'kept' => []];
         }
 
+        $keep = array_fill_keys($keepRelative, true);
         $prefix = $rootReal . DIRECTORY_SEPARATOR;
         $removed = [];
         $skipped = [];
         $rejected = [];
+        $kept = [];
 
         foreach ($relativePaths as $relative) {
+            if (isset($keep[$relative])) {
+                $kept[] = $relative;
+                continue;
+            }
+
             $candidate = self::resolveUnderRoot($rootReal, $relative);
             if ($candidate === null) {
                 $rejected[] = $relative;
@@ -91,6 +148,7 @@ final class ObsoletePackageFiles
             'removed' => $removed,
             'skipped' => $skipped,
             'rejected' => $rejected,
+            'kept' => $kept,
         ];
     }
 
