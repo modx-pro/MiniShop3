@@ -528,6 +528,11 @@ return [
         'xtype' => 'combo-boolean',
         'area' => 'ms3_api',
     ],
+    'ms3_web_catalog_respect_resource_groups' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_api',
+    ],
     'ms3_cors_allowed_origins' => [
         'value' => '',
         'xtype' => 'textfield',
