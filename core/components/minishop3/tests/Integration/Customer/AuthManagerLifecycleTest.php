@@ -75,13 +75,13 @@ class AuthManagerLifecycleTest extends TestCase
 
     public function testAuthenticateRejectsBlockedAndInactive(): void
     {
-        $blocked = $this->seedCustomer([
+        $this->seedCustomer([
             'email' => 'blocked@example.com',
             'is_active' => 1,
             'is_blocked' => 1,
             'blocked_until' => date('Y-m-d H:i:s', time() + 3600),
         ]);
-        $inactive = $this->seedCustomer([
+        $this->seedCustomer([
             'email' => 'inactive@example.com',
             'is_active' => 0,
             'is_blocked' => 0,
@@ -95,6 +95,49 @@ class AuthManagerLifecycleTest extends TestCase
         $auth = $this->makeAuthManager($modx);
         self::assertNull($auth->authenticate(['email' => 'inactive@example.com', 'password' => 'secret']));
         self::assertSame('inactive', $auth->getLastAuthFailure());
+    }
+
+    public function testAuthenticateRejectsPermanentManagerBlockWithoutClearingFlags(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'manager-blocked@example.com',
+            'is_active' => 1,
+            'is_blocked' => 1,
+            'blocked_until' => null,
+        ]);
+
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+        self::assertNull($auth->authenticate(['email' => 'manager-blocked@example.com', 'password' => 'secret']));
+        self::assertSame('blocked', $auth->getLastAuthFailure());
+
+        $row = $this->store->findCustomerById((int) $customer->id);
+        self::assertNotNull($row);
+        self::assertSame(1, (int) $row['is_blocked']);
+        self::assertNull($row['blocked_until']);
+    }
+
+    public function testAuthenticateClearsExpiredTemporaryLockoutOnLogin(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'expired-lockout@example.com',
+            'is_active' => 1,
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() - 60),
+            'failed_login_attempts' => 5,
+        ]);
+
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+        $authed = $auth->authenticate(['email' => 'expired-lockout@example.com', 'password' => 'secret']);
+        self::assertNotNull($authed);
+        self::assertSame('none', $auth->getLastAuthFailure());
+
+        $row = $this->store->findCustomerById((int) $customer->id);
+        self::assertNotNull($row);
+        self::assertSame(0, (int) $row['is_blocked']);
+        self::assertNull($row['blocked_until']);
+        self::assertSame(0, (int) $row['failed_login_attempts']);
     }
 
     public function testEstablishSessionRotatesTokenAndLogoutMintsGuest(): void
