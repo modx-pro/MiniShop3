@@ -42,10 +42,37 @@ $targets = [
     'assets' => MODX_ASSETS_PATH . 'components/minishop3/',
 ];
 
+$assetsUrl = MODX_ASSETS_URL . 'components/minishop3/';
+$frontendAssets = (string) $modx->getOption('ms3_frontend_assets', null, '');
+$frontendPlaceholders = [
+    'jsUrl' => $assetsUrl . 'js/',
+    'cssUrl' => $assetsUrl . 'css/',
+    'assetsUrl' => $assetsUrl,
+];
+
 foreach ($targets as $bucket => $root) {
-    $result = ObsoletePackageFiles::purge($root, $list[$bucket]);
+    $keep = [];
+    if ($bucket === 'assets' && $frontendAssets !== '') {
+        foreach ($list['assets'] as $relative) {
+            if (ObsoletePackageFiles::isReferencedByFrontendAssets(
+                $relative,
+                $frontendAssets,
+                $frontendPlaceholders,
+            )) {
+                $keep[] = $relative;
+            }
+        }
+    }
+
+    $result = ObsoletePackageFiles::purge($root, $list[$bucket], $keep);
     foreach ($result['removed'] as $relative) {
         $modx->log(modX::LOG_LEVEL_INFO, "[MiniShop3] Removed leftover {$bucket} file: {$relative}");
+    }
+    foreach ($result['kept'] as $relative) {
+        $modx->log(
+            modX::LOG_LEVEL_WARN,
+            "[MiniShop3] Kept leftover {$bucket} file still listed in ms3_frontend_assets: {$relative}"
+        );
     }
     foreach ($result['rejected'] as $relative) {
         $modx->log(modX::LOG_LEVEL_WARN, "[MiniShop3] Rejected leftover {$bucket} path: {$relative}");

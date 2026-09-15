@@ -78,6 +78,50 @@ final class ObsoletePackageFilesTest extends TestCase
         self::assertSame(['src/Processors/Autocomplete.php'], $result['removed']);
         self::assertSame(['src/Processors/Missing.php'], $result['skipped']);
         self::assertSame([], $result['rejected']);
+        self::assertSame([], $result['kept']);
+    }
+
+    public function testPurgeKeepsPathsStillListedInFrontendAssets(): void
+    {
+        $dir = $this->root . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'web'
+            . DIRECTORY_SEPARATOR . 'modules';
+        self::assertTrue(mkdir($dir, 0777, true));
+        $form = $dir . DIRECTORY_SEPARATOR . 'form.js';
+        $cart = $dir . DIRECTORY_SEPARATOR . 'cart.js';
+        self::assertTrue(file_put_contents($form, 'form') !== false);
+        self::assertTrue(file_put_contents($cart, 'cart') !== false);
+
+        $result = ObsoletePackageFiles::purge(
+            $this->root,
+            ['js/web/modules/form.js', 'js/web/modules/cart.js'],
+            ['js/web/modules/form.js'],
+        );
+
+        self::assertFileExists($form);
+        self::assertFileDoesNotExist($cart);
+        self::assertSame(['js/web/modules/cart.js'], $result['removed']);
+        self::assertSame(['js/web/modules/form.js'], $result['kept']);
+    }
+
+    public function testIsReferencedByFrontendAssetsMatchesPlaceholdersAndEscapedSlashes(): void
+    {
+        $setting = '["[[+jsUrl]]web\\/modules\\/form.js","[[+jsUrl]]web/ms3.js"]';
+        $placeholders = [
+            'jsUrl' => '/assets/components/minishop3/js/',
+            'cssUrl' => '/assets/components/minishop3/css/',
+            'assetsUrl' => '/assets/components/minishop3/',
+        ];
+
+        self::assertTrue(ObsoletePackageFiles::isReferencedByFrontendAssets(
+            'js/web/modules/form.js',
+            $setting,
+            $placeholders,
+        ));
+        self::assertFalse(ObsoletePackageFiles::isReferencedByFrontendAssets(
+            'js/web/modules/cart.js',
+            $setting,
+            $placeholders,
+        ));
     }
 
     public function testPurgeRejectsSymlinkOutsideRoot(): void
