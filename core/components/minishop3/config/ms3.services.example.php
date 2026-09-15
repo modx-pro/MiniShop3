@@ -204,6 +204,10 @@ return [
      * -------------------
      * 'ms3_manager_order_cost_recalculator' - manager order totals recalc
      *
+     * Inventory:
+     * ----------
+     * 'ms3_inventory'                - stock reserve/commit/release (InventoryServiceInterface)
+     *
      * Utilities:
      * --------
      * 'ms3_token_service'           - Token operations
