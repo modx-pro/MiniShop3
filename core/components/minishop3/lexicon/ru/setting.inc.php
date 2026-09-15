@@ -262,7 +262,7 @@ $_lang['setting_ms3_import_upload_path_desc'] = 'Относительный пу
 $_lang['setting_ms3_api_debug'] = 'Режим отладки API';
 $_lang['setting_ms3_api_debug_desc'] = 'Включает расширенное логирование API запросов и ответов для отладки. Не рекомендуется на продакшене.';
 $_lang['setting_ms3_web_catalog_respect_resource_groups'] = 'Учитывать ACL групп ресурсов в публичном каталоге';
-$_lang['setting_ms3_web_catalog_respect_resource_groups_desc'] = 'Если включено, публичный Web API каталог и Fenom-сниппеты витрины (например ms3_products) скрывают товары и категории, входящие в группу ресурсов MODX с ACL «Доступ к группе ресурсов» для контекста запроса (анонимный MVP). Отключите, чтобы вернуть поведение каталога до #659.';
+$_lang['setting_ms3_web_catalog_respect_resource_groups_desc'] = 'Если включено, публичный Web API каталог и Fenom-сниппеты витрины (например ms3_products) скрывают товары и категории, входящие в группу ресурсов MODX с ACL «Доступ к группе ресурсов» для контекста запроса (анонимный MVP). MiniShop3 сбрасывает кэш страниц MODX (resource) и кэш фасетов при изменении ACL или членства в группах ресурсов через плагин менеджера. Остаточные пробелы: ACL, записанный в обход процессоров MODX (SQL, свои скрипты), и HTML за внешним CDN могут оставаться устаревшими до ручной очистки кэша. Отключите, чтобы вернуть поведение каталога до #659.';
 $_lang['setting_ms3_cors_allowed_origins'] = 'Разрешённые CORS origins';
 $_lang['setting_ms3_cors_allowed_origins_desc'] = 'Origins через запятую для Web API (например https://shop.example.com). Пусто = CORS только same-origin. «*» — любой origin без credentials; для headless с cookies укажите домены явно.';
 $_lang['setting_ms3_rate_limit_max_attempts'] = 'Лимит запросов API';

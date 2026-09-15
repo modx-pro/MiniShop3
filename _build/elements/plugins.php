@@ -12,6 +12,11 @@ return [
             'OnUserSave',
             'OnBeforeUserFormSave',
             'OnUserRemove',
+            'OnResourceGroupSave',
+            'OnResourceGroupRemove',
+            'OnResourceAddToResourceGroup',
+            'OnResourceRemoveFromResourceGroup',
+            'OnUserGroupRemove',
         ],
     ],
 ];
