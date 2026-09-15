@@ -20,7 +20,7 @@ use MiniShop3\Tests\Modx\Support\PhinxSchemaBootstrap;
 final class PhinxSchemaLiveTest extends ExtraTestCase
 {
     /**
-     * Tables without an xPDO model (Phinx metadata; PDO-backed shipment store #591).
+     * Tables without an xPDO model (Phinx metadata; PDO-backed stores).
      *
      * @var list<string> logical (unprefixed) names
      */
@@ -28,6 +28,8 @@ final class PhinxSchemaLiveTest extends ExtraTestCase
         'ms3_migrations',
         'ms3_shipments',
         'ms3_shipment_events',
+        'ms3_payment_attempts',
+        'ms3_payment_attempt_events',
     ];
 
     public function testTablePrefixIsNonEmpty(): void
