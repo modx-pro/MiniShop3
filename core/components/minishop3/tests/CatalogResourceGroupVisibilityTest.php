@@ -214,5 +214,11 @@ $visibleWhenDisabled = new CatalogResourceGroupVisibility($makeModx([
 $assertTrue($visibleWhenDisabled->isVisible(1), 'isVisible true when setting disabled');
 $assertTrue(!$visibleWhenDisabled->isVisible(0), 'isVisible false for non-positive id');
 
+$isVisibleSrc = (string) file_get_contents(__DIR__ . '/../src/Services/Catalog/CatalogResourceGroupVisibility.php');
+$assertTrue(
+    str_contains($isVisibleSrc, "'class_key' => \$class"),
+    'isVisible must pin class_key because getCount skips derivative criteria'
+);
+
 fwrite(STDOUT, "OK CatalogResourceGroupVisibilityTest\n");
 exit(0);

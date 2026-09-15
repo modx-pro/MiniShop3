@@ -113,7 +113,12 @@ final class CatalogResourceGroupVisibility
 
         $class = $resourceAlias === 'msCategory' ? msCategory::class : msProduct::class;
         $query = $this->modx->newQuery($class);
-        $query->where(['id' => $resourceId]);
+        // getCount() does not add derivative class_key (unlike getObject()); pin it
+        // so a raw id from a request cannot match a non-product/non-category resource.
+        $query->where([
+            'id' => $resourceId,
+            'class_key' => $class,
+        ]);
         $query->where($fragment);
 
         return $this->modx->getCount($class, $query) > 0;
