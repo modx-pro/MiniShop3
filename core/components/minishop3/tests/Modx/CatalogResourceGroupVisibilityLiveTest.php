@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace MiniShop3\Tests\Modx;
 
+use MiniShop3\Model\msCustomer;
+use MiniShop3\Model\msCustomerGroup;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Services\Catalog\CustomerResourceGroupResolver;
 use MiniShop3\Tests\Modx\Support\ExtraTestCase;
 use MODX\Revolution\modAccessResourceGroup;
 use MODX\Revolution\modResourceGroup;
@@ -110,6 +113,78 @@ final class CatalogResourceGroupVisibilityLiveTest extends ExtraTestCase
         self::assertFalse(
             $this->isProductVisibleViaFilter($productId, 'web', [999999]),
             'Unrelated allowed RG must not open closed product'
+        );
+    }
+
+    public function testResolverQueryFindsWebAndEmptyContextAcls(): void
+    {
+        $this->modx->setOption(CatalogResourceGroupVisibility::SETTING_KEY, true);
+        $this->modx->setOption('access_resource_group_enabled', true);
+
+        $suffix = bin2hex(random_bytes(3));
+
+        $userGroup = $this->modx->newObject(modUserGroup::class);
+        $userGroup->set('name', 'TB UG ' . $suffix);
+        self::assertTrue($userGroup->save(), 'Failed to save modUserGroup');
+        $userGroupId = (int) $userGroup->get('id');
+
+        $customerGroup = $this->modx->newObject(msCustomerGroup::class);
+        $customerGroup->fromArray([
+            'name' => 'TB CG ' . $suffix,
+            'user_group_id' => $userGroupId,
+            'active' => true,
+        ]);
+        self::assertTrue($customerGroup->save(), 'Failed to save msCustomerGroup');
+
+        $customer = $this->modx->newObject(msCustomer::class);
+        $customer->fromArray([
+            'email' => 'tb-rg-res-' . $suffix . '@example.invalid',
+            'first_name' => 'TB',
+            'last_name' => 'Rgres' . $suffix,
+            'is_active' => true,
+            'is_blocked' => false,
+            'customer_group_id' => (int) $customerGroup->get('id'),
+        ]);
+        self::assertTrue($customer->save(), 'Failed to save msCustomer');
+
+        $product = $this->createPublishedProduct('tb-rg-resolver-' . $suffix);
+        $closed = $this->createResourceGroup('TB Closed Resolver ' . $suffix);
+        $this->linkProductToGroup((int) $product->get('id'), (int) $closed->get('id'));
+        $this->createAcl((int) $closed->get('id'), principal: $userGroupId, contextKey: 'web');
+
+        $emptyCtxGroup = $this->createResourceGroup('TB Empty Ctx ' . $suffix);
+        $this->createAcl((int) $emptyCtxGroup->get('id'), principal: $userGroupId, contextKey: '');
+
+        $mgrGroup = $this->createResourceGroup('TB Mgr ' . $suffix);
+        $this->createAcl((int) $mgrGroup->get('id'), principal: $userGroupId, contextKey: 'mgr');
+
+        $allowed = (new CustomerResourceGroupResolver($this->modx))
+            ->resolveAllowedResourceGroupIdsForCustomer((int) $customer->get('id'), 'web');
+
+        self::assertContains(
+            (int) $closed->get('id'),
+            $allowed,
+            'Resolver must execute ACL query and return the web grant'
+        );
+        self::assertContains(
+            (int) $emptyCtxGroup->get('id'),
+            $allowed,
+            'Empty context_key ACL must match like core loadAttributes()'
+        );
+        self::assertNotContains(
+            (int) $mgrGroup->get('id'),
+            $allowed,
+            'mgr ACL must not leak into web allowed ids'
+        );
+
+        $productId = (int) $product->get('id');
+        self::assertFalse(
+            $this->isProductVisibleViaFilter($productId, 'web'),
+            'Anonymous must not see closed RG product'
+        );
+        self::assertTrue(
+            $this->isProductVisibleViaFilter($productId, 'web', $allowed),
+            'apply() with resolver ids must open the closed product'
         );
     }
 

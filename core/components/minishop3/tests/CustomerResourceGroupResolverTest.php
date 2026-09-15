@@ -215,11 +215,19 @@ $resolver = new CustomerResourceGroupResolver($makeModx([
 $assertSame(
     [15],
     $resolver->resolveAllowedResourceGroupIdsForCustomer(24, 'web'),
-    'expired blocked_until restores catalog groups like AuthManager'
+    'expired blocked_until restores catalog groups without mutating flags'
 );
 
 $resolver = new CustomerResourceGroupResolver($makeModx([], [], [8, 3]));
 $assertSame([3, 8], $resolver->resolveAllowedResourceGroupIdsForUserGroups([99, 5], 'web'), 'direct user group ids sorted unique');
+
+$resolverSource = (string) file_get_contents(__DIR__ . '/../src/Services/Catalog/CustomerResourceGroupResolver.php');
+if (!str_contains($resolverSource, "'OR:context_key:='")) {
+    $fail('ACL context OR empty string must use three-part xPDO key OR:context_key:=');
+}
+if (str_contains($resolverSource, "'OR:context_key' =>")) {
+    $fail('Two-part OR:context_key is invalid xPDO and breaks the resolver query');
+}
 
 // Optional token path: empty request → anonymous (no TokenService).
 $assertSame([], $resolver->resolveAllowedIdsForRequest('web'), 'no token service → anonymous');

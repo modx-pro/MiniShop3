@@ -11,6 +11,7 @@ use MiniShop3\Services\TokenService;
 use MODX\Revolution\modAccessResourceGroup;
 use MODX\Revolution\modUserGroup;
 use MODX\Revolution\modX;
+use xPDO\Om\xPDOQuery;
 
 /**
  * Resolve MODX resource group ids a customer may see via linked modUserGroup ACL (#669).
@@ -22,9 +23,10 @@ use MODX\Revolution\modX;
  * - authority / role rank is not compared (customers have no modUserRole).
  * - principal_class matches only {@see modUserGroup::class}, same as MODX 3 processors.
  *
- * Blocked customers: permanent is_blocked without a future blocked_until stays closed.
- * When blocked_until is in the past, catalog access is restored without mutating flags
- * (AuthManager clears the block on the next authenticate()).
+ * Blocked customers: is_blocked with empty/null blocked_until stays closed here
+ * (manager permanent block). AuthManager::authenticate() would clear that flag
+ * and let the customer in; this resolver does not mutate flags.
+ * When blocked_until is in the past, catalog groups are restored without mutating flags.
  */
 final class CustomerResourceGroupResolver
 {
@@ -141,6 +143,7 @@ final class CustomerResourceGroupResolver
             return $this->userGroupCache[$cacheKey];
         }
 
+        /** @var xPDOQuery $c */
         $c = $this->modx->newQuery(modAccessResourceGroup::class);
         $c->where([
             'principal:IN' => $userGroupIds,
@@ -148,18 +151,26 @@ final class CustomerResourceGroupResolver
         ]);
         $c->where([
             'context_key' => $contextKey,
-            'OR:context_key' => '',
+            'OR:context_key:=' => '',
             'OR:context_key:IS' => null,
         ]);
         $c->select('DISTINCT modAccessResourceGroup.target AS target');
 
         $ids = [];
-        if ($c->prepare() && $c->stmt->execute()) {
-            while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
-                $target = (int) ($row['target'] ?? 0);
-                if ($target > 0) {
-                    $ids[] = $target;
-                }
+        if (!$c->prepare()) {
+            $this->logAclQueryFailure($c, 'prepare');
+
+            return $this->userGroupCache[$cacheKey] = [];
+        }
+        if ($c->stmt === null || !$c->stmt->execute()) {
+            $this->logAclQueryFailure($c, 'execute');
+
+            return $this->userGroupCache[$cacheKey] = [];
+        }
+        while ($row = $c->stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $target = (int) ($row['target'] ?? 0);
+            if ($target > 0) {
+                $ids[] = $target;
             }
         }
 
@@ -194,9 +205,9 @@ final class CustomerResourceGroupResolver
             return [];
         }
 
-        // Align with AuthManager::authenticate(): inactive always closed; is_blocked with
-        // a future blocked_until (or permanent block with no/empty until) stays closed.
-        // Expired blocked_until restores catalog access without clearing flags here.
+        // Inactive is always closed. Permanent is_blocked (empty blocked_until) stays
+        // closed here; AuthManager would clear that on authenticate(). Future blocked_until
+        // stays closed. Expired blocked_until restores groups without clearing flags.
         if (!(bool) $customer->get('is_active')) {
             return [];
         }
@@ -226,5 +237,19 @@ final class CustomerResourceGroupResolver
         }
 
         return $this->resolveAllowedResourceGroupIdsForUserGroups([$userGroupId], $contextKey);
+    }
+
+    private function logAclQueryFailure(xPDOQuery $c, string $stage): void
+    {
+        $info = [];
+        if (is_object($c->stmt) && method_exists($c->stmt, 'errorInfo')) {
+            $info = $c->stmt->errorInfo();
+        }
+
+        $this->modx->log(
+            modX::LOG_LEVEL_ERROR,
+            '[MiniShop3] CustomerResourceGroupResolver ACL query ' . $stage
+            . ' failed: ' . json_encode($info, JSON_UNESCAPED_UNICODE),
+        );
     }
 }
