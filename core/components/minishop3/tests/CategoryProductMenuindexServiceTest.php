@@ -71,6 +71,32 @@ foreach ([[12], [4, 8], [3, 5, 7, 11]] as $ids) {
     $assertSame($sql, $pdoToolsEscapeSortby($sql), 'pdoTools sortby escaping keeps expression for ' . implode(',', $ids));
 }
 
+// msProducts sortby substitution.
+$scope = [3, 5, 7];
+$expr = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($scope);
+$substitute = static fn (string $sortby, array $ids = [3, 5, 7]): string
+    => CategoryProductMenuindexService::substituteMenuindexSortby($sortby, $ids);
+
+foreach (['menuindex', '`menuindex`', 'msProduct.menuindex', '`msProduct`.`menuindex`', 'MenuIndex'] as $sortby) {
+    $assertSame($expr, $substitute($sortby), 'substitute ' . $sortby);
+}
+$assertSame($expr . ' DESC, pagetitle', $substitute('menuindex DESC, pagetitle'), 'substitute with direction and second column');
+$assertSame(
+    $substitute('menuindex DESC, pagetitle'),
+    $pdoToolsEscapeSortby($substitute('menuindex DESC, pagetitle')),
+    'substituted multi-column sortby survives pdoTools escaping'
+);
+
+$json = $substitute('{"menuindex":"ASC","pagetitle":"DESC"}');
+$decoded = json_decode($json, true);
+$assertSame([$expr => 'ASC', 'pagetitle' => 'DESC'], $decoded, 'substitute inside JSON sortby keeps valid JSON');
+
+$assertSame('pagetitle', $substitute('pagetitle'), 'no menuindex in sortby');
+$assertSame('CategoryMember.menuindex', $substitute('CategoryMember.menuindex'), 'other alias menuindex untouched');
+$assertSame('`CategoryMember`.`menuindex`', $substitute('`CategoryMember`.`menuindex`'), 'quoted other alias menuindex untouched');
+$assertSame('menuindex', $substitute('menuindex', []), 'no category scope');
+$assertSame($expr, $substitute($expr), 'already substituted sortby unchanged');
+
 $joinSingle = CategoryProductMenuindexService::memberJoinOn(15);
 $assertSame(
     '`CategoryMember`.product_id = msProduct.id AND `CategoryMember`.category_id = 15',

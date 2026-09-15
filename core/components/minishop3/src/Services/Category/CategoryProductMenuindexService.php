@@ -78,6 +78,32 @@ final class CategoryProductMenuindexService
         );
     }
 
+    /**
+     * Replace the product menuindex column in a pdoTools sortby (plain or JSON) with the
+     * effective per-category expression for msProducts.
+     *
+     * Matches `msProduct.menuindex` (every occurrence) or a bare `menuindex` (first one), with
+     * or without backticks. A menuindex qualified by another alias (e.g. CategoryMember.menuindex)
+     * is left alone. Unchanged when there is no category scope or the sortby is already substituted.
+     *
+     * @param list<int> $categoryIds
+     */
+    public static function substituteMenuindexSortby(string $sortby, array $categoryIds): string
+    {
+        $categoryIds = self::normalizeCategoryIds($categoryIds);
+        if ($categoryIds === [] || str_contains($sortby, 'CASE WHEN')) {
+            return $sortby;
+        }
+
+        $effectiveSql = self::effectiveMenuindexSqlForCategories($categoryIds);
+        $aliased = '/`?\bmsProduct`?\.`?menuindex\b`?/i';
+        if (preg_match($aliased, $sortby)) {
+            return (string) preg_replace($aliased, $effectiveSql, $sortby);
+        }
+
+        return (string) preg_replace('/(?<![\w.`])`?menuindex\b`?/i', $effectiveSql, $sortby, 1);
+    }
+
     public static function memberJoinOn(int $categoryId, string $memberAlias = self::MEMBER_JOIN_ALIAS): string
     {
         $categoryId = max(0, $categoryId);
