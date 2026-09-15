@@ -50,8 +50,8 @@
   --ms3-text-warning: #92400e;
   --ms3-text-warning-accent: #f59e0b;
   --ms3-text-warning-dark: #854d0e;
-  --ms3-text-success: #22c55e;
-  --ms3-text-success-dark: #2e7d32;
+  --ms3-text-success: var(--p-primary-color, #6cb24a);
+  --ms3-text-success-dark: #528738;
   --ms3-text-danger: #ef4444;
   --ms3-text-danger-alt: #dc2626;
   --ms3-text-darkest: #1e293b;
@@ -65,10 +65,11 @@
   --ms3-text-error-result: #721c24;
 
   /* Colors — accents */
-  --ms3-accent-primary: #3b82f6;
-  --ms3-accent-focus: rgb(59 130 246 / 30%);
+  --ms3-accent-primary: var(--p-primary-color, #6cb24a);
+  --ms3-accent-focus: rgb(108 178 74 / 30%);
   --ms3-accent-teal: #32ab9a;
-  --ms3-accent-green: #4caf50;
+  /* Hue-matched to MODX primary (not Aura #22c55e / Material #4caf50) */
+  --ms3-accent-green: var(--p-primary-color, #6cb24a);
   --ms3-border-upload: #ddd;
 
   /* Spacing (margins, paddings, gaps) */
@@ -76,6 +77,8 @@
   --ms3-spacing-2: 0.5rem;
   --ms3-spacing-3: 0.75rem;
   --ms3-spacing-4: 1rem;
+  /* Shared inset for PrimeVue TabPanels (product + utilities) */
+  --ms3-tab-panel-padding: var(--ms3-spacing-4);
 
   /* Radius */
   --ms3-radius-sm: 0.25rem;

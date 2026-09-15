@@ -164,7 +164,7 @@ $_lang['ms3_gallery_errors'] = 'Upload Errors';
 // Uppy gallery uploader strings
 $_lang['ms3_gallery_uppy_drop_paste'] = 'Drop files here or %{browse}';
 $_lang['ms3_gallery_uppy_browse'] = 'browse';
-$_lang['ms3_gallery_uppy_browse_files'] = 'browse files';
+$_lang['ms3_gallery_uppy_browse_files'] = 'Select files';
 $_lang['ms3_gallery_uppy_browse_folders'] = 'browse folders';
 $_lang['ms3_gallery_uppy_upload_complete'] = 'Upload complete';
 $_lang['ms3_gallery_uppy_upload_failed'] = 'Upload failed';
@@ -193,8 +193,11 @@ $_lang['ms3_gallery_uppy_pause_upload'] = 'Pause upload';
 $_lang['ms3_gallery_uppy_resume_upload'] = 'Resume upload';
 
 $_lang['ms3_gallery_search_placeholder'] = 'Search files...';
+$_lang['ms3_gallery_search_clear'] = 'Clear search';
+$_lang['ms3_gallery_search_empty'] = 'No files match your search.';
 $_lang['ms3_gallery_empty_text'] = 'No images yet. Upload files using the area above.';
 $_lang['ms3_gallery_drag_hint'] = 'Drag to reorder';
+$_lang['ms3_gallery_item_hint'] = 'Drag to reorder. Enter or double-click to edit. Right-click for more actions.';
 $_lang['ms3_product_change_source_confirm'] = 'Are you sure you want to change the media source? The page will be reloaded.';
 
 $_lang['ms3_product_data_vue'] = 'Product Data (Vue)';

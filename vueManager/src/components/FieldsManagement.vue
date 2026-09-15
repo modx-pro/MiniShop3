@@ -3,7 +3,7 @@ import ProductDataConfig from './ProductDataConfig.vue'
 </script>
 
 <template>
-  <div style="padding: 1.25rem">
+  <div style="padding: 0">
     <ProductDataConfig />
   </div>
 </template>

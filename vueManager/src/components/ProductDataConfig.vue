@@ -23,7 +23,8 @@ const { _ } = useLexicon()
 
 // State
 const loading = ref(false)
-const saving = ref(false)
+const savingFields = ref(false)
+const savingSections = ref(false)
 const fields = ref([])
 const sections = ref([])
 const loadingSections = ref(false)
@@ -158,7 +159,7 @@ function onSectionDragEnd() {
  * Save sections (order and visibility)
  */
 async function saveSections() {
-  saving.value = true
+  savingSections.value = true
 
   try {
     // Update sort_order based on current order
@@ -192,7 +193,7 @@ async function saveSections() {
       life: 5000,
     })
   } finally {
-    saving.value = false
+    savingSections.value = false
   }
 }
 
@@ -411,7 +412,7 @@ async function loadFields() {
  * Save configuration
  */
 async function saveConfig() {
-  saving.value = true
+  savingFields.value = true
 
   try {
     // Update sort_order based on current order
@@ -440,7 +441,7 @@ async function saveConfig() {
       life: 5000,
     })
   } finally {
-    saving.value = false
+    savingFields.value = false
   }
 }
 
@@ -486,7 +487,7 @@ function closeEditDialog() {
  */
 async function saveFieldChanges() {
   if (editingFieldIndex.value >= 0 && editingField.value) {
-    saving.value = true
+    savingFields.value = true
 
     try {
       // Update field in array
@@ -522,7 +523,7 @@ async function saveFieldChanges() {
         life: 5000,
       })
     } finally {
-      saving.value = false
+      savingFields.value = false
     }
   }
 }
@@ -538,16 +539,17 @@ onMounted(() => {
     <p class="tab-description">{{ _('ms3_vue_product_fields_description') }}</p>
 
     <!-- Sections table -->
-    <Card style="margin-top: 1.25rem">
+    <Card class="config-card">
       <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>{{ _('ms3_vue_sections') }}</span>
-          <div style="display: flex; gap: 0.625rem">
+        <div class="config-card-header">
+          <span class="config-card-title">{{ _('ms3_vue_sections') }}</span>
+          <div class="config-card-actions">
             <Button
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
               size="small"
-              :loading="saving"
+              severity="primary"
+              :loading="savingSections"
               :disabled="loadingSections"
               @click="saveSections"
             />
@@ -555,6 +557,7 @@ onMounted(() => {
               :label="_('ms3_vue_section_add')"
               icon="pi pi-plus"
               size="small"
+              severity="secondary"
               @click="openAddSectionDialog"
             />
           </div>
@@ -562,17 +565,19 @@ onMounted(() => {
       </template>
 
       <template #content>
-        <!-- Sections table with VueDraggable -->
-        <div v-if="!loadingSections" class="p-datatable p-component p-datatable-striped">
+        <div
+          v-if="!loadingSections"
+          class="p-datatable p-component p-datatable-striped p-datatable-sm config-table-wrap config-table-wrap--sections"
+        >
           <div class="p-datatable-wrapper">
-            <table class="p-datatable-table" style="min-width: 50rem">
+            <table class="p-datatable-table config-table">
               <thead class="p-datatable-thead">
                 <tr>
-                  <th style="width: 3rem"></th>
-                  <th style="width: 6.25rem">{{ _('ms3_vue_visible') }}</th>
-                  <th style="width: 12.5rem">{{ _('ms3_vue_section_key') }}</th>
-                  <th style="width: 15.625rem">{{ _('ms3_vue_section_label') }}</th>
-                  <th style="width: 6.25rem">{{ _('ms3_vue_actions') }}</th>
+                  <th class="col-drag"></th>
+                  <th class="col-visible">{{ _('ms3_vue_visible') }}</th>
+                  <th class="col-key">{{ _('ms3_vue_section_key') }}</th>
+                  <th class="col-label">{{ _('ms3_vue_section_label') }}</th>
+                  <th class="col-actions">{{ _('ms3_vue_actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -587,10 +592,10 @@ onMounted(() => {
               >
                 <template #item="{ element: section, index }">
                   <tr>
-                    <td class="drag-handle-cell">
+                    <td class="drag-handle-cell col-drag">
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
-                    <td>
+                    <td class="col-visible">
                       <Checkbox
                         v-model="section.hidden"
                         :binary="true"
@@ -598,22 +603,25 @@ onMounted(() => {
                         :false-value="true"
                       />
                     </td>
-                    <td>{{ section.key }}</td>
-                    <td>{{ section.label }}</td>
-                    <td>
+                    <td class="col-key">{{ section.key }}</td>
+                    <td class="col-label">{{ section.label }}</td>
+                    <td class="col-actions">
                       <Button
                         icon="pi pi-pencil"
                         size="small"
                         text
+                        severity="secondary"
                         :title="_('ms3_vue_section_edit')"
+                        :aria-label="_('ms3_vue_section_edit')"
                         @click="openEditSectionDialog(section, index)"
                       />
                       <Button
                         icon="pi pi-trash"
                         size="small"
-                        severity="danger"
                         text
+                        severity="danger"
                         :title="_('ms3_vue_section_delete')"
+                        :aria-label="_('ms3_vue_section_delete')"
                         @click="deleteSection(section.key)"
                       />
                     </td>
@@ -624,7 +632,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Loading indicator -->
         <div v-if="loadingSections" class="loading-indicator">
           <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
         </div>
@@ -632,35 +639,41 @@ onMounted(() => {
     </Card>
 
     <!-- Fields table -->
-    <Card style="margin-top: 1.25rem">
+    <Card class="config-card">
       <template #title>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>{{ _('ms3_vue_product_properties') }}</span>
-          <Button
-            :label="_('ms3_vue_save_changes')"
-            icon="pi pi-save"
-            :loading="saving"
-            :disabled="loading"
-            @click="saveConfig"
-          />
+        <div class="config-card-header">
+          <span class="config-card-title">{{ _('ms3_vue_product_properties') }}</span>
+          <div class="config-card-actions">
+            <Button
+              :label="_('ms3_vue_save_changes')"
+              icon="pi pi-save"
+              size="small"
+              severity="primary"
+              :loading="savingFields"
+              :disabled="loading"
+              @click="saveConfig"
+            />
+          </div>
         </div>
       </template>
 
       <template #content>
-        <!-- Fields table with VueDraggable -->
-        <div v-if="!loading" class="p-datatable p-component p-datatable-striped">
+        <div
+          v-if="!loading"
+          class="p-datatable p-component p-datatable-striped p-datatable-sm config-table-wrap"
+        >
           <div class="p-datatable-wrapper">
-            <table class="p-datatable-table" style="min-width: 50rem">
+            <table class="p-datatable-table config-table">
               <thead class="p-datatable-thead">
                 <tr>
-                  <th style="width: 3rem"></th>
-                  <th style="width: 6.25rem">{{ _('ms3_vue_visible_column') }}</th>
-                  <th style="width: 12.5rem">{{ _('ms3_vue_field_column') }}</th>
-                  <th style="width: 12.5rem">{{ _('ms3_vue_label_column') }}</th>
-                  <th style="width: 9.375rem">{{ _('ms3_vue_type_column') }}</th>
-                  <th style="width: 9.375rem">{{ _('ms3_vue_section_column') }}</th>
-                  <th>{{ _('ms3_vue_description_column') }}</th>
-                  <th style="width: 7.5rem">{{ _('ms3_vue_actions_column') }}</th>
+                  <th class="col-drag"></th>
+                  <th class="col-visible">{{ _('ms3_vue_visible') }}</th>
+                  <th class="col-field">{{ _('ms3_vue_field_column') }}</th>
+                  <th class="col-label">{{ _('ms3_vue_label_column') }}</th>
+                  <th class="col-type">{{ _('ms3_vue_type_column') }}</th>
+                  <th class="col-section">{{ _('ms3_vue_section_column') }}</th>
+                  <th class="col-desc">{{ _('ms3_vue_description_column') }}</th>
+                  <th class="col-actions">{{ _('ms3_vue_actions') }}</th>
                 </tr>
               </thead>
               <draggable
@@ -675,10 +688,10 @@ onMounted(() => {
               >
                 <template #item="{ element: field, index }">
                   <tr>
-                    <td class="drag-handle-cell">
+                    <td class="drag-handle-cell col-drag">
                       <i class="pi pi-bars drag-handle"></i>
                     </td>
-                    <td>
+                    <td class="col-visible">
                       <Checkbox
                         v-model="field.visible"
                         :binary="true"
@@ -686,17 +699,19 @@ onMounted(() => {
                         :false-value="false"
                       />
                     </td>
-                    <td>{{ field.name }}</td>
-                    <td>{{ field.label }}</td>
-                    <td>{{ field.xtype }}</td>
-                    <td>{{ getSectionLabel(field.section) }}</td>
-                    <td>{{ field.description }}</td>
-                    <td>
+                    <td class="col-field">{{ field.name }}</td>
+                    <td class="col-label">{{ field.label }}</td>
+                    <td class="col-type">{{ field.xtype }}</td>
+                    <td class="col-section">{{ getSectionLabel(field.section) }}</td>
+                    <td class="col-desc">{{ field.description }}</td>
+                    <td class="col-actions">
                       <Button
                         icon="pi pi-pencil"
                         size="small"
-                        outlined
+                        text
+                        severity="secondary"
                         :title="_('ms3_vue_edit_field_button')"
+                        :aria-label="_('ms3_vue_edit_field_button')"
                         @click="openEditDialog(field, index)"
                       />
                     </td>
@@ -707,7 +722,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Loading indicator -->
         <div v-if="loading" class="loading-indicator">
           <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
         </div>
@@ -987,13 +1001,13 @@ onMounted(() => {
           :label="_('ms3_vue_field_cancel')"
           icon="pi pi-times"
           severity="secondary"
-          :disabled="saving"
+          :disabled="savingFields"
           @click="closeEditDialog"
         />
         <Button
           :label="_('ms3_vue_field_save')"
           icon="pi pi-save"
-          :loading="saving"
+          :loading="savingFields"
           @click="saveFieldChanges"
         />
       </template>
@@ -1006,30 +1020,108 @@ onMounted(() => {
 
 <style scoped>
 .product-data-config {
-  padding: 1.25rem;
+  padding: 0;
 }
 
-h2 {
-  margin: 0 0 0.625rem 0;
-  font-size: 1.5rem;
+.tab-description {
+  margin: 0 0 1rem;
 }
 
-p {
-  margin: 0 0 1.25rem 0;
-  color: var(--ms3-text-muted);
+.config-card {
+  margin-top: 0;
+}
+
+.config-card + .config-card {
+  margin-top: 1rem;
+}
+
+.config-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.config-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.config-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.config-table-wrap--sections {
+  max-width: 40rem;
+}
+
+.config-table {
+  width: 100%;
+  table-layout: fixed;
+  min-width: 0;
+}
+
+.config-table th,
+.config-table td {
+  vertical-align: middle;
+}
+
+.config-table .col-drag {
+  width: 2.5rem;
+}
+
+.config-table .col-visible {
+  width: 5.5rem;
+  text-align: center;
+}
+
+.config-table .col-key,
+.config-table .col-field {
+  width: 9rem;
+}
+
+.config-table .col-type,
+.config-table .col-section {
+  width: 7.5rem;
+}
+
+.config-table .col-desc {
+  width: auto;
+}
+
+.config-table .col-actions {
+  width: 5.5rem;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.config-table .col-label,
+.config-table .col-field,
+.config-table .col-key,
+.config-table .col-type,
+.config-table .col-section,
+.config-table .col-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .drag-handle-cell {
   text-align: center;
   vertical-align: middle;
-  padding: 0.5rem;
+  padding: 0.375rem;
 }
 
 .drag-handle {
   cursor: grab;
   color: var(--ms3-text-muted);
-  font-size: 1.2rem;
-  padding: 0.5rem;
+  font-size: 1rem;
+  padding: 0.25rem;
   user-select: none;
 }
 
@@ -1056,7 +1148,7 @@ p {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 3rem;
+  padding: 2rem;
   color: var(--ms3-text-muted);
 }
 
@@ -1066,6 +1158,14 @@ p {
 
 :deep(.p-datatable-tbody tr:hover) {
   background: var(--ms3-bg-neutral);
+}
+
+:deep(.p-card-title) {
+  margin-bottom: 0.75rem;
+}
+
+:deep(.p-card-body) {
+  padding: 1rem;
 }
 </style>
 

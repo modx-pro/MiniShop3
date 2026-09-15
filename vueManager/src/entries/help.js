@@ -5,30 +5,9 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import PrimeVue from 'primevue/config'
-import { createApp } from 'vue'
-
 import HelpPage from '../components/HelpPage.vue'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-
-/**
- * Creates and configures Vue application
- */
-function createVueApp() {
-  const app = createApp(HelpPage)
-
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
-  })
-
-  return app
-}
 
 /**
  * Widget initialization
@@ -36,16 +15,11 @@ function createVueApp() {
 export function init(selector = '#ms3-vue-help') {
   const $el = document.querySelector(selector)
 
-  if (!$el) {
+  if (!$el || $el.dataset.vApp === 'true') {
     return null
   }
 
-  // Check if already mounted
-  if ($el.dataset.vApp === 'true') {
-    return null
-  }
-
-  const app = createVueApp()
+  const app = createMs3VueApp(HelpPage)
   app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'

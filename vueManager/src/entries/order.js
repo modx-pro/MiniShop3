@@ -5,15 +5,8 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
-import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
-import { createApp } from 'vue'
-
 import OrderView from '../components/OrderView.vue'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
 import {
   snapshotOrderTabConfigForQueue,
@@ -128,30 +121,6 @@ window.MS3OrderTabsRegistry = new OrderTabsRegistry()
 earlyPending.forEach(tab => window.MS3OrderTabsRegistry.register(tab))
 
 /**
- * Creates and configures Vue application
- */
-function createVueApp() {
-  const app = createApp(OrderView)
-  const pinia = createPinia()
-  app.use(pinia)
-
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
-    locale: getPrimeVueLocale(),
-  })
-
-  app.use(ConfirmationService)
-  app.use(ToastService)
-
-  return app
-}
-
-/**
  * Mount OrderView into the tpl node
  *
  * @returns {import('vue').App | null}
@@ -163,7 +132,7 @@ export function init(selector = '#ms3-order-vue-wrapper') {
     return null
   }
 
-  const app = createVueApp()
+  const app = createMs3VueApp(OrderView)
   const instance = app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'
