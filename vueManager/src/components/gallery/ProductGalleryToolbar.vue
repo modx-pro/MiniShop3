@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Menu from 'primevue/menu'
-import Select from 'primevue/select'
+import { Button, Menu, Select } from 'primevue'
 import { computed, ref } from 'vue'
 
 const { _ } = useLexicon()

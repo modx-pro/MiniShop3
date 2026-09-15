@@ -1,13 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Checkbox from 'primevue/checkbox'
-import DatePicker from 'primevue/datepicker'
-import InputChips from 'primevue/inputchips'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import MultiSelect from 'primevue/multiselect'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { AutoComplete, Checkbox, DatePicker, InputNumber, InputText, MultiSelect, Select, Textarea } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import request from '../../request.js'
@@ -122,14 +115,13 @@ const multiArrayValue = computed({
 })
 
 /**
- * Distinct values already saved for this option key by other products. Shown under the
- * InputChips as clickable pills — the autocomplete flavor of the comboOptions type.
- * Loaded lazily on the first keystroke and re-filtered client-side as the user types
- * so we don't spam the server on every key.
+ * Distinct values already saved for this option key by other products.
+ * Fed into AutoComplete suggestions (InputChips is deprecated in PrimeVue 4
+ * and missing from the VueTools 1.1.2 barrel — use multiple + typeahead=false).
  */
 const suggestions = ref([])
 const suggestionsLoaded = ref(false)
-let comboOptionsInputEl = null
+const comboOptionsSuggestions = ref([])
 
 async function loadComboOptionsSuggestions() {
   if (optionType.value !== 'combooptions' || suggestionsLoaded.value) return
@@ -145,27 +137,19 @@ async function loadComboOptionsSuggestions() {
   }
 }
 
-function onComboOptionsKeyup(event) {
-  if (!comboOptionsInputEl && event?.target) {
-    comboOptionsInputEl = event.target
-  }
-  loadComboOptionsSuggestions()
+async function onComboOptionsComplete(event) {
+  await loadComboOptionsSuggestions()
+  const query = String(event?.query ?? '')
+    .trim()
+    .toLowerCase()
+  const picked = new Set(multiArrayValue.value)
+  comboOptionsSuggestions.value = suggestions.value
+    .filter(s => !picked.has(s))
+    .filter(s => query === '' || String(s).toLowerCase().includes(query))
+    .slice(0, 20)
 }
 
-// Hide already-added values and narrow by what the user is currently typing.
-const filteredSuggestions = computed(() => {
-  const picked = new Set(multiArrayValue.value)
-  const typed = (comboOptionsInputEl?.value || '').trim().toLowerCase()
-  return suggestions.value
-    .filter(s => !picked.has(s))
-    .filter(s => typed === '' || s.toLowerCase().includes(typed))
-    .slice(0, 20)
-})
-
-function addSuggestion(s) {
-  if (multiArrayValue.value.includes(s)) return
-  value.value = [...multiArrayValue.value, s]
-  if (comboOptionsInputEl) comboOptionsInputEl.value = ''
+function onComboOptionsChange() {
   onChange()
 }
 </script>
@@ -299,43 +283,23 @@ function addSuggestion(s) {
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
-    <!-- ComboOptions (free-form multi tags with autocomplete) -->
-    <!-- Chips for committed tags (Enter / comma / blur add the typed value) + suggestions list -->
-    <!-- below the field that pulls values already saved by other products for the same key. -->
+    <!-- ComboOptions: free-form multi tags via AutoComplete (VueTools barrel has no InputChips) -->
     <template v-else-if="optionType === 'combooptions'">
-      <InputChips
+      <AutoComplete
         v-model="multiArrayValue"
         :input-id="fieldId"
+        multiple
+        :typeahead="false"
+        :suggestions="comboOptionsSuggestions"
         class="w-full"
-        separator=","
-        :add-on-blur="true"
         :placeholder="
           _('ms3_combo_options_chips_placeholder') ||
           'Введите значение — Enter, запятая или клик вне поля добавят его'
         "
-        @add="onChange"
-        @remove="onChange"
-        @keyup="onComboOptionsKeyup"
+        @complete="onComboOptionsComplete"
+        @item-select="onComboOptionsChange"
+        @value-change="onComboOptionsChange"
       />
-      <div
-        v-if="suggestions.length > 0"
-        class="combo-options-suggestions"
-        role="listbox"
-        aria-label="Подсказки"
-      >
-        <span class="combo-options-suggestions-label">
-          {{ _('ms3_combo_options_suggestions') || 'Подсказки' }}:
-        </span>
-        <button
-          v-for="s in filteredSuggestions"
-          :key="s"
-          type="button"
-          class="combo-options-suggestion"
-          @click="addSuggestion(s)"
-        >
-          {{ s }}
-        </button>
-      </div>
       <input type="hidden" :name="fieldName" :value="JSON.stringify(multiArrayValue)" />
     </template>
 
@@ -417,41 +381,5 @@ function addSuggestion(s) {
 
 .w-full {
   width: 100%;
-}
-
-.combo-options-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  align-items: center;
-  margin-top: 0.4rem;
-  padding: 0.35rem 0.5rem;
-  background: var(--p-content-background, #f9fafb);
-  border: 1px solid var(--p-content-border-color, #e5e7eb);
-  border-radius: 0.25rem;
-}
-
-.combo-options-suggestions-label {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-right: 0.15rem;
-}
-
-.combo-options-suggestion {
-  padding: 0.15rem 0.55rem;
-  background: #fff;
-  border: 1px solid var(--p-content-border-color, #d1d5db);
-  border-radius: 999px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition:
-    background-color 0.15s,
-    border-color 0.15s;
-}
-
-.combo-options-suggestion:hover {
-  background: var(--p-primary-color, #10b981);
-  border-color: var(--p-primary-color, #10b981);
-  color: #fff;
 }
 </style>

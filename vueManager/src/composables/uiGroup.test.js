@@ -8,7 +8,7 @@ const remove = vi.fn()
 const removeGroup = vi.fn()
 const removeAllGroups = vi.fn()
 
-vi.mock('primevue/usetoast', () => ({
+vi.mock('primevue', () => ({
   useToast: () => ({
     add,
     remove,

@@ -1,14 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import AutoComplete from 'primevue/autocomplete'
-import Button from 'primevue/button'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import Select from 'primevue/select'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { AutoComplete, Button, Column, ConfirmDialog, DataTable, Dialog, Select, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import request from '../../request.js'

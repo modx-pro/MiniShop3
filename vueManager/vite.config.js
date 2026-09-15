@@ -101,6 +101,23 @@ export default defineConfig(({ command }) => {
     '@vuetools/usePrimeVueLocale',
   ]
 
+  // Subpath imports (primevue/button) resolve to node_modules and ship a second
+  // @primeuix Theme copy. Theme tokens then land on the Import Map instance while
+  // components read the bundled one → missing --p-button-* / broken chrome.
+  // Always: import { Button, DataTable } from 'primevue'
+  const rejectPrimeVueSubpaths = {
+    name: 'ms3-reject-primevue-subpaths',
+    resolveId(id) {
+      if (id === 'primevue' || !id.startsWith('primevue/')) {
+        return null
+      }
+      return this.error(
+        `Import "${id}" is not allowed. Use a named import from "primevue" ` +
+          `(VueTools Import Map barrel) so theme and components share one Theme instance.`,
+      )
+    },
+  }
+
   if (command === 'serve') {
     return {
       build: {
@@ -110,7 +127,7 @@ export default defineConfig(({ command }) => {
           external: [...external, ...vuetoolsComposables],
         },
       },
-      plugins: [vue(), vueDevTools()],
+      plugins: [rejectPrimeVueSubpaths, vue(), vueDevTools()],
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -133,7 +150,7 @@ export default defineConfig(({ command }) => {
         cssMinify: false, // Отключаем минификацию CSS чтобы сохранить Unicode символы в PrimeIcons
         minify: 'esbuild',
       },
-      plugins: [vue()],
+      plugins: [rejectPrimeVueSubpaths, vue()],
       resolve: {
         alias: {
           '@': fileURLToPath(new URL('./src', import.meta.url)),

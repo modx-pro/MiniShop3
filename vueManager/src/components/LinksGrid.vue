@@ -1,17 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Paginator from 'primevue/paginator'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Column, ConfirmDialog, DataTable, Dialog, InputText, Paginator, Select, Textarea, Toast, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import { useCrudDialog } from '../composables/useCrudDialog.js'
