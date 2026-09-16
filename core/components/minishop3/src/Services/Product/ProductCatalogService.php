@@ -41,6 +41,7 @@ class ProductCatalogService
         'publishedon',
         'createdon',
         'editedon',
+        'searchable',
     ];
 
     /** @var list<string> */
@@ -169,7 +170,7 @@ class ProductCatalogService
      * Single published product by ID (same visibility rules as list).
      *
      * Query: context, include_images (0|1, default 0), include_seo (default 1).
-     * List payloads omit seo.
+     * List: include_seo (default 0).
      *
      * @param array<string, mixed> $params Optional context override
      * @return array<string, mixed>|null
@@ -190,10 +191,7 @@ class ProductCatalogService
 
         $payload = $this->formatProduct($product, true, $options, $images);
 
-        /** @var PublicSeoService $seo */
-        $seo = $this->modx->services->get('ms3_public_seo');
-
-        return $seo->maybeAttachProduct($payload, $params);
+        return $this->publicSeo()->maybeAttachProduct($payload, $params);
     }
 
     /**
@@ -307,6 +305,7 @@ class ProductCatalogService
      * - options: JSON object or bracket map (AND between keys, OR within key)
      * - limit, offset | page, sort, dir, query, context
      * - include_options, include_content, include_images (default 0; cap 10 files / product)
+     * - include_seo (default 0)
      *
      * @param array<string, mixed> $params
      * @return array{items: list<array<string, mixed>>, total: int, limit: int, offset: int}
@@ -350,6 +349,8 @@ class ProductCatalogService
             $images = $includeImages ? ($galleries[$productId] ?? []) : null;
             $items[] = $this->formatProduct($product, $includeContent, $options, $images);
         }
+
+        $items = $this->publicSeo()->attachSeoToProductList($items, $params);
 
         return [
             'items' => $items,
@@ -687,7 +688,11 @@ class ProductCatalogService
         $payload = [];
 
         foreach (self::RESOURCE_FIELDS as $field) {
-            $payload[$field] = $product->get($field);
+            $value = $product->get($field);
+            if ($field === 'searchable') {
+                $value = CatalogQuery::toBool($value);
+            }
+            $payload[$field] = $value;
         }
 
         $dataValues = [];
@@ -734,6 +739,14 @@ class ProductCatalogService
             $options !== null,
             $images !== null,
         );
+    }
+
+    private function publicSeo(): PublicSeoService
+    {
+        /** @var PublicSeoService $service */
+        $service = $this->modx->services->get('ms3_public_seo');
+
+        return $service;
     }
 
     private function gallery(): ProductGalleryPublicService

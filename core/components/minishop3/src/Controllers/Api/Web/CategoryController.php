@@ -105,7 +105,7 @@ class CategoryController
      * GET /api/v1/category/list
      *
      * Query: parent, limit, offset|page, sort, dir, context,
-     *        include_hidden, include_content
+     *        include_hidden, include_content, include_seo (default 0)
      *
      * @param array<string, mixed> $params
      */
@@ -123,7 +123,7 @@ class CategoryController
     /**
      * GET /api/v1/category/tree
      *
-     * Query: parent, depth, context, include_hidden, sort, dir
+     * Query: parent, depth, context, include_hidden, sort, dir, include_seo (default 0)
      *
      * @param array<string, mixed> $params
      */

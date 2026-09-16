@@ -89,6 +89,8 @@ return [
     'msOnGetProductPrice',
     'msOnGetProductWeight',
     'msOnGetProductFields',
+
+    // Public catalog / SEO (product get + category get/list/tree when include_seo=1)
     'msOnGetPublicSeo',
 
     // msProducts snippet events (for extending with external packages)

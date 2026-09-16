@@ -289,6 +289,8 @@ $_lang['setting_ms3_rate_limit_redis_database'] = 'Rate limit Redis database';
 $_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Redis database index (default 0) when DSN is not set.';
 $_lang['setting_ms3_rate_limit_memcached_servers'] = 'Rate limit Memcached servers';
 $_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Comma-separated host:port list for the memcached driver. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Requires ext-memcached.';
+$_lang['setting_ms3_public_seo_tv_map'] = 'Public SEO TV map';
+$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Optional JSON map of allowlisted seo keys to TV references for Web API catalog payloads, e.g. {"title":"tv.seo_title","robots":"tv.robots"}. Invalid JSON is ignored. Applies to product/category get and list/tree when include_seo=1.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Telegram bot token';
