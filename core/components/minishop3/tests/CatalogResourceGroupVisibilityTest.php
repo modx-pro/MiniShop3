@@ -237,8 +237,10 @@ $assertTrue(
 
 $ms3ProductsSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/ms3_products.php');
 $assertTrue(
-    str_contains($ms3ProductsSrc, "\$innerJoin['ms3RgVisibility']"),
-    'ms3_products wires RG via innerJoin (not numeric where)'
+    str_contains($ms3ProductsSrc, "\$innerJoin['ms3RgVisibility']")
+    && str_contains($ms3ProductsSrc, 'CatalogSortbyQualifier::qualifyUnaliasedResourceFields')
+    && !str_contains($ms3ProductsSrc, "unset(\$leftJoin['Data'])"),
+    'ms3_products wires RG via ms3RgVisibility + sortby qualify (not Data INNER)'
 );
 $assertTrue(
     !preg_match('/\$where\[\]\s*=\s*\$_ms3RgWhere/', $ms3ProductsSrc),
