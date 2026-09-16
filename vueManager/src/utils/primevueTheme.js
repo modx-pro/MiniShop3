@@ -1,27 +1,35 @@
 /**
- * Manager PrimeVue theme options.
+ * PrimeVue theme for MiniShop3 manager entries.
  *
- * VueTools `useTheme` resolves the active theme from the `vuetools.theme` system
- * setting (registry: `aura` → `{ theme: { preset: Aura } }`, `modx` →
- * `{ theme: ModxManagerTheme }` where `ModxManagerTheme = { preset, options }`).
- *
- * The manager chrome stays light even when the OS prefers dark, so
- * `darkModeSelector: 'none'` is forced on top of the registry defaults.
- * Spreading `active.theme` keeps both shapes intact: aura's `{ preset }` and
- * modx's `{ preset, options }`.
+ * Resolves `vuetools.theme` via VueTools and forces `darkModeSelector: 'none'`
+ * so manager chrome stays light (aura `{ preset }` or modx `{ preset, options }`).
  */
-import { getActiveTheme } from '@vuetools/useTheme'
+import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
+import { getActiveTheme, getThemeName } from '@vuetools/useTheme'
+
+export function isModxManagerTheme() {
+  return getThemeName() === 'modx'
+}
 
 export function getManagerPrimeVueThemeOptions() {
-  const active = getActiveTheme()
+  const { theme, ...rest } = getActiveTheme()
   return {
-    ...active,
+    ...rest,
     theme: {
-      ...active.theme,
+      ...theme,
       options: {
-        ...(active.theme?.options ?? {}),
+        ...theme?.options,
         darkModeSelector: 'none',
       },
     },
+  }
+}
+
+/** Theme options plus manager locale; pass PrimeVue extras (e.g. `pt`) when needed. */
+export function getManagerPrimeVueConfig(extra = {}) {
+  return {
+    ...getManagerPrimeVueThemeOptions(),
+    locale: getPrimeVueLocale(),
+    ...extra,
   }
 }

@@ -5,14 +5,13 @@
  * ms3-grid-category-option + ms3-window-option-add + ms3-window-copy-category.
  */
 
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import CategoryOptionsTab from '../components/CategoryOptionsTab.vue'
 import { provideUiGroup } from '../composables/uiGroup.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { getManagerPrimeVueThemeOptions } from '../utils/primevueTheme.js'
+import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
 
 const MOUNT_ID = 'ms3-vue-category-options'
 
@@ -31,10 +30,7 @@ function mountApp() {
 
   app = createApp(CategoryOptionsTab, { categoryId })
 
-  app.use(PrimeVue, {
-    ...getManagerPrimeVueThemeOptions(),
-    locale: getPrimeVueLocale(),
-  })
+  app.use(PrimeVue, getManagerPrimeVueConfig())
   app.use(ToastService)
   app.use(ConfirmationService)
   provideUiGroup(app, 'category-options')

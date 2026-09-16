@@ -8,13 +8,13 @@
  * Под Modx preset (vuetools.theme = modx) инжект отключён: Modx сам владеет высотой
  * контролов и плотностью, наши переопределения конфликтовали бы с его токенами.
  */
-import { getThemeName } from '@vuetools/useTheme'
+import { isModxManagerTheme } from './primevueTheme.js'
 
 const STYLE_ID = 'ms3-form-styles-override'
 
 export function injectFormStylesOverride() {
   // Modx preset owns control height/density — skip our Aura-era overrides.
-  if (getThemeName() === 'modx') return
+  if (isModxManagerTheme()) return
   if (document.getElementById(STYLE_ID)) return
 
   const css = `

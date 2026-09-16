@@ -5,21 +5,17 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import SettingsPage from '../components/SettingsPage.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { getManagerPrimeVueThemeOptions } from '../utils/primevueTheme.js'
+import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
 
 function createVueApp() {
   const app = createApp(SettingsPage)
 
-  app.use(PrimeVue, {
-    ...getManagerPrimeVueThemeOptions(),
-    locale: getPrimeVueLocale(),
-  })
+  app.use(PrimeVue, getManagerPrimeVueConfig())
   app.use(ConfirmationService)
   app.use(ToastService)
 
