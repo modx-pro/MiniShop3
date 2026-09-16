@@ -11,6 +11,10 @@ export default defineConfig({
       '@vuetools/useLexicon': fileURLToPath(
         new URL('./src/test/stubs/useLexicon.js', import.meta.url)
       ),
+      '@vuetools/useTheme': fileURLToPath(new URL('./src/test/stubs/useTheme.js', import.meta.url)),
+      '@vuetools/usePrimeVueLocale': fileURLToPath(
+        new URL('./src/test/stubs/usePrimeVueLocale.js', import.meta.url)
+      ),
     },
   },
   test: {

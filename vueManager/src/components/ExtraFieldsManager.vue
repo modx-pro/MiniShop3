@@ -10,6 +10,7 @@ import {
   KEY_VALUE_XTYPE,
   parseKeyValueConfig,
 } from '../utils/keyValueField.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import {
   defaultRepeaterConfig,
   parseRepeaterConfig,
@@ -22,6 +23,7 @@ import RepeaterSchemaEditor from './RepeaterSchemaEditor.vue'
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 // State
 const loading = ref(false)
@@ -894,7 +896,7 @@ onMounted(() => {
         <Button
           :label="isEditMode ? _('ms3_vue_dialog_save') : _('ms3_vue_dialog_create')"
           icon="pi pi-check"
-          severity="success"
+          :severity="primarySaveSeverity"
           :loading="saving"
           @click="saveField"
         />

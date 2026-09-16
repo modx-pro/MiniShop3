@@ -9,6 +9,7 @@ import { Button, Checkbox, Column, DataTable, Dialog, InputText, Select } from '
 import { computed, ref, watch } from 'vue'
 
 import actionRegistry from '../actionRegistry.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 
 const props = defineProps({
   /**
@@ -31,6 +32,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const localActions = ref([])
 
@@ -370,7 +372,7 @@ function closeDialog() {
         <Button
           :label="_('save')"
           icon="pi pi-check"
-          severity="success"
+          :severity="primarySaveSeverity"
           :disabled="!editingAction?.name"
           @click="saveAction"
         />

@@ -11,12 +11,14 @@ import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { formatValue, normalizeImagePath } from '../utils/displayFormatters.js'
 import { applyDeleteConfirmDefaults, gridDeleteAction } from '../utils/gridDeleteAction.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import ActionsColumn from './ActionsColumn.vue'
 import DynamicField from './DynamicField.vue'
 import FileBrowser from './FileBrowser.vue'
 
 const toast = useToast()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const CONFIRM_GROUP = 'settings-vendors'
 
@@ -767,7 +769,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="saving" @click="saveVendor" />
+        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveVendor" />
       </template>
     </Dialog>
   </div>

@@ -42,7 +42,22 @@ export function getManagerPrimeVueConfig(options = {}) {
   return config
 }
 
+export function isModxManagerTheme() {
+  return getThemeName() === 'modx'
+}
+
 /** Aura-era form density inject should not run under Modx preset. */
 export function shouldInjectFormStylesOverride() {
-  return getThemeName() !== 'modx'
+  return !isModxManagerTheme()
+}
+
+/**
+ * Severity for primary Save (and order Create) actions.
+ * Modx uses success green; Aura keeps default primary so Part B does not
+ * restyle the default theme (#701 / #738 review).
+ *
+ * @returns {'success'|undefined}
+ */
+export function getPrimarySaveSeverity() {
+  return isModxManagerTheme() ? 'success' : undefined
 }
