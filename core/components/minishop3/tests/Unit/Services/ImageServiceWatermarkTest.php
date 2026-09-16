@@ -132,10 +132,110 @@ final class ImageServiceWatermarkTest extends TestCase
         self::assertSame($tiled, $tiledAlias);
         self::assertSame([], $this->errorMessages());
 
-        // Imagick mutates reused watermark alpha — assert tiles away from (0,0) still differ from plain.
+        // Reused mark with baked opacity — far tiles must still differ from plain.
         $plainCorner = $this->pngPixelRgb($plain, 50, 50);
         $tiledCorner = $this->pngPixelRgb($tiled, 50, 50);
         self::assertNotSame($plainCorner, $tiledCorner);
+    }
+
+    public function testSemiTransparentWatermarkKeepsClearPixelsOnTransparentSource(): void
+    {
+        $this->writeTransparentSourceWithBlueCenter($this->sourcePng, 80, 80);
+        $this->writeWatermarkWithClearHalf($this->watermarkPng, 40, 20);
+
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $out = $this->thumbnail($service, [
+            'width' => 80,
+            'height' => 80,
+            'mode' => 'stretch',
+            'format' => 'png',
+            'quality' => 90,
+            'watermark' => [
+                'enabled' => true,
+                'path' => 'assets/watermark.png',
+                'position' => 'bottom-right',
+                'opacity' => 50,
+            ],
+        ]);
+
+        self::assertNotNull($out);
+        self::assertSame([], $this->errorMessages());
+
+        // Transparent half of the logo sits over transparent canvas — must stay fully transparent
+        // (not the opaque gray plate from GD imagecopymerge).
+        $clear = $this->pngPixelRgba($out, 70, 70);
+        self::assertSame(127, $clear[3], 'clear watermark area must remain transparent');
+
+        // Opaque red half of the logo should be semi-transparent red.
+        $red = $this->pngPixelRgba($out, 50, 70);
+        self::assertLessThan(100, $red[3], 'red watermark half must be semi-transparent');
+        self::assertGreaterThan(200, $red[0]);
+        self::assertLessThan(40, $red[1]);
+        self::assertLessThan(40, $red[2]);
+    }
+
+    public function testPhpThumbBrPositionMapsToBottomRight(): void
+    {
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $base = [
+            'width' => 80,
+            'height' => 80,
+            'mode' => 'cover',
+            'format' => 'png',
+            'quality' => 90,
+        ];
+        $viaName = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'path' => 'assets/watermark.png',
+                'position' => 'bottom-right',
+                'opacity' => 100,
+            ],
+        ]);
+        $viaCode = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'path' => 'assets/watermark.png',
+                'position' => 'BR',
+                'opacity' => 100,
+            ],
+        ]);
+
+        self::assertNotNull($viaName);
+        self::assertNotNull($viaCode);
+        self::assertSame($viaName, $viaCode);
+        self::assertSame([], $this->errorMessages());
+        self::assertSame([255, 0, 0], $this->pngPixelRgb($viaCode, 70, 70));
+        self::assertSame([20, 40, 200], $this->pngPixelRgb($viaCode, 10, 10));
+    }
+
+    public function testUnknownWatermarkPositionIsLoggedAndSkipped(): void
+    {
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $base = [
+            'width' => 80,
+            'height' => 80,
+            'mode' => 'cover',
+            'format' => 'png',
+            'quality' => 90,
+        ];
+        $plain = $this->thumbnail($service, $base);
+        $this->logs = [];
+        $marked = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'path' => 'assets/watermark.png',
+                'position' => 'nope',
+                'opacity' => 50,
+            ],
+        ]);
+
+        self::assertNotNull($plain);
+        self::assertNotNull($marked);
+        self::assertSame($plain, $marked);
+        $errors = $this->errorMessages();
+        self::assertNotEmpty($errors);
+        self::assertStringContainsString('Unknown watermark position', $errors[0]);
     }
 
     /**
@@ -143,13 +243,28 @@ final class ImageServiceWatermarkTest extends TestCase
      */
     private function pngPixelRgb(string $pngBytes, int $x, int $y): array
     {
+        $rgba = $this->pngPixelRgba($pngBytes, $x, $y);
+
+        return [$rgba[0], $rgba[1], $rgba[2]];
+    }
+
+    /**
+     * @return array{0: int, 1: int, 2: int, 3: int} RGB + GD alpha (0 opaque … 127 transparent)
+     */
+    private function pngPixelRgba(string $pngBytes, int $x, int $y): array
+    {
         $im = imagecreatefromstring($pngBytes);
         self::assertNotFalse($im);
         $color = imagecolorat($im, $x, $y);
         self::assertNotFalse($color);
         imagedestroy($im);
 
-        return [($color >> 16) & 0xFF, ($color >> 8) & 0xFF, $color & 0xFF];
+        return [
+            ($color >> 16) & 0xFF,
+            ($color >> 8) & 0xFF,
+            $color & 0xFF,
+            ($color & 0x7F000000) >> 24,
+        ];
     }
 
     public function testLeadingSlashPathResolvesUnderSiteBase(): void
@@ -295,6 +410,40 @@ final class ImageServiceWatermarkTest extends TestCase
         $color = imagecolorallocate($im, $rgb[0], $rgb[1], $rgb[2]);
         self::assertNotFalse($color);
         imagefilledrectangle($im, 0, 0, $width, $height, $color);
+        self::assertTrue(imagepng($im, $path));
+        imagedestroy($im);
+    }
+
+    private function writeTransparentSourceWithBlueCenter(string $path, int $width, int $height): void
+    {
+        $im = imagecreatetruecolor($width, $height);
+        self::assertNotFalse($im);
+        imagealphablending($im, false);
+        imagesavealpha($im, true);
+        $clear = imagecolorallocatealpha($im, 0, 0, 0, 127);
+        self::assertNotFalse($clear);
+        imagefilledrectangle($im, 0, 0, $width, $height, $clear);
+        imagealphablending($im, true);
+        $blue = imagecolorallocate($im, 0, 0, 255);
+        self::assertNotFalse($blue);
+        $inset = (int) ($width / 4);
+        imagefilledrectangle($im, $inset, $inset, $width - $inset, $height - $inset, $blue);
+        self::assertTrue(imagepng($im, $path));
+        imagedestroy($im);
+    }
+
+    private function writeWatermarkWithClearHalf(string $path, int $width, int $height): void
+    {
+        $im = imagecreatetruecolor($width, $height);
+        self::assertNotFalse($im);
+        imagealphablending($im, false);
+        imagesavealpha($im, true);
+        $clear = imagecolorallocatealpha($im, 0, 0, 0, 127);
+        self::assertNotFalse($clear);
+        imagefilledrectangle($im, 0, 0, $width, $height, $clear);
+        $red = imagecolorallocatealpha($im, 255, 0, 0, 0);
+        self::assertNotFalse($red);
+        imagefilledrectangle($im, 0, 0, (int) ($width / 2), $height, $red);
         self::assertTrue(imagepng($im, $path));
         imagedestroy($im);
     }

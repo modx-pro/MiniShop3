@@ -64,7 +64,7 @@ class ImageService
      *                       - 'mode' (string): resize mode - cover, contain, max, stretch (default cover)
      *                       - 'watermark' (array): optional overlay from Media Source thumbnails JSON
      *                         (enabled, path, position, offset_x, offset_y, opacity).
-     *                         position `*` / `tile` tiles the mark across the canvas (phpThumb wmi / MS2).
+     *                         position: Intervention names, phpThumb wmi codes (TL…BR), or `*`/`tile`.
      *                         For tile mode offset_x / offset_y are inter-tile margins in pixels.
      *
      * @return string|null Binary thumbnail data or null on error
@@ -157,12 +157,31 @@ class ImageService
         }
 
         try {
-            $position = (string) ($config['position'] ?? 'bottom-right');
+            $rawPosition = trim((string) ($config['position'] ?? 'bottom-right'));
+            $position = $this->resolveWatermarkPosition($rawPosition);
+            if ($position === null) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[ImageService] Unknown watermark position \"{$rawPosition}\";"
+                    . ' use Intervention names, phpThumb codes (TL…BR), or */tile'
+                );
+
+                return;
+            }
+
             $offsetX = (int) ($config['offset_x'] ?? 0);
             $offsetY = (int) ($config['offset_y'] ?? 0);
             $opacity = $this->normalizeWatermarkOpacity($config['opacity'] ?? 100);
+            $mark = $this->prepareWatermarkOverlay($resolved, $opacity);
 
-            $this->placeWatermark($image, $resolved, $position, $offsetX, $offsetY, $opacity);
+            if ($position === 'tile') {
+                $this->placeTiledWatermark($image, $mark, $offsetX, $offsetY);
+
+                return;
+            }
+
+            // Opacity is baked into the mark alpha so GD uses imagecopy() (not imagecopymerge).
+            $image->place($mark, $position, $offsetX, $offsetY, 100);
         } catch (\Exception $e) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -172,43 +191,117 @@ class ImageService
     }
 
     /**
-     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     * Map Intervention names and phpThumb/MS2 wmi codes to place() positions.
+     * Returns `tile` for mosaic; null when the value is unknown.
      */
-    private function placeWatermark(
-        $image,
-        string $resolvedPath,
-        string $position,
-        int $offsetX,
-        int $offsetY,
-        int $opacity,
-    ): void {
-        if ($this->isTiledWatermarkPosition($position)) {
-            $this->placeTiledWatermark($image, $resolvedPath, $offsetX, $offsetY, $opacity);
+    private function resolveWatermarkPosition(string $position): ?string
+    {
+        $key = strtolower(trim($position));
+        if ($key === '') {
+            return 'bottom-right';
+        }
+
+        /** @var array<string, string> $map */
+        static $map = [
+            'top-left' => 'top-left',
+            'top' => 'top',
+            'top-right' => 'top-right',
+            'left' => 'left',
+            'center' => 'center',
+            'right' => 'right',
+            'bottom-left' => 'bottom-left',
+            'bottom' => 'bottom',
+            'bottom-right' => 'bottom-right',
+            // phpThumb / miniShop2 wmi alignment codes
+            'tl' => 'top-left',
+            't' => 'top',
+            'tr' => 'top-right',
+            'l' => 'left',
+            'c' => 'center',
+            'r' => 'right',
+            'bl' => 'bottom-left',
+            'b' => 'bottom',
+            'br' => 'bottom-right',
+            '*' => 'tile',
+            'tile' => 'tile',
+        ];
+
+        return $map[$key] ?? null;
+    }
+
+    /**
+     * Decode the watermark and bake opacity into its alpha channel.
+     *
+     * Intervention GD place() with opacity < 100 uses imagecopymerge(), which ignores
+     * source alpha and paints opaque gray boxes on transparent canvases. Baking opacity
+     * and placing at 100 uses imagecopy() with correct alpha. The same Image is safe to
+     * reuse for tiling (Imagick PlaceModifier no longer mutates alpha per call).
+     *
+     * @return \Intervention\Image\Interfaces\ImageInterface
+     */
+    private function prepareWatermarkOverlay(string $resolvedPath, int $opacity)
+    {
+        $mark = $this->imageManager->read($resolvedPath);
+        if ($opacity < 100) {
+            $this->bakeWatermarkOpacity($mark, $opacity);
+        }
+
+        return $mark;
+    }
+
+    /**
+     * @param \Intervention\Image\Interfaces\ImageInterface $watermark
+     */
+    private function bakeWatermarkOpacity($watermark, int $opacity): void
+    {
+        $native = $watermark->core()->native();
+        if ($native instanceof \Imagick) {
+            $native->setImageAlphaChannel(\Imagick::ALPHACHANNEL_SET);
+            $native->evaluateImage(
+                \Imagick::EVALUATE_DIVIDE,
+                $opacity > 0 ? 100 / $opacity : 1000,
+                \Imagick::CHANNEL_ALPHA
+            );
 
             return;
         }
 
-        $image->place($resolvedPath, $position, $offsetX, $offsetY, $opacity);
+        if (!($native instanceof \GdImage)) {
+            return;
+        }
+
+        imagealphablending($native, false);
+        imagesavealpha($native, true);
+        $factor = $opacity / 100.0;
+        $width = imagesx($native);
+        $height = imagesy($native);
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                $color = imagecolorat($native, $x, $y);
+                $alpha = ($color & 0x7F000000) >> 24;
+                $red = ($color >> 16) & 0xFF;
+                $green = ($color >> 8) & 0xFF;
+                $blue = $color & 0xFF;
+                $newAlpha = (int) round(127 - (127 - $alpha) * $factor);
+                $allocated = imagecolorallocatealpha($native, $red, $green, $blue, $newAlpha);
+                if ($allocated !== false) {
+                    imagesetpixel($native, $x, $y, $allocated);
+                }
+            }
+        }
     }
 
     /**
-     * phpThumb / miniShop2 wmi alignment `*` — tile watermark over the whole canvas.
-     *
-     * Pass the file path into each place() call: Imagick PlaceModifier mutates the
-     * watermark alpha when opacity < 100, so reusing one Image leaves only the first tile visible.
+     * Tile the prepared watermark across the canvas (phpThumb wmi `*` / `tile`).
+     * offset_x / offset_y are inter-tile margins. Mark opacity must already be baked.
      *
      * @param \Intervention\Image\Interfaces\ImageInterface $image
+     * @param \Intervention\Image\Interfaces\ImageInterface $mark
      */
-    private function placeTiledWatermark(
-        $image,
-        string $resolvedPath,
-        int $marginX,
-        int $marginY,
-        int $opacity,
-    ): void {
-        $probe = $this->imageManager->read($resolvedPath);
-        $tileW = $probe->width();
-        $tileH = $probe->height();
+    private function placeTiledWatermark($image, $mark, int $marginX, int $marginY): void
+    {
+        $tileW = $mark->width();
+        $tileH = $mark->height();
         if ($tileW <= 0 || $tileH <= 0) {
             return;
         }
@@ -220,14 +313,9 @@ class ImageService
 
         for ($y = 0; $y < $canvasH; $y += $stepY) {
             for ($x = 0; $x < $canvasW; $x += $stepX) {
-                $image->place($resolvedPath, 'top-left', $x, $y, $opacity);
+                $image->place($mark, 'top-left', $x, $y, 100);
             }
         }
-    }
-
-    private function isTiledWatermarkPosition(string $position): bool
-    {
-        return $position === '*' || strcasecmp($position, 'tile') === 0;
     }
 
     /**
