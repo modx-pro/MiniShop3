@@ -74,7 +74,7 @@ foreach ([[12], [4, 8], [3, 5, 7, 11]] as $ids) {
 // msProducts sortby substitution.
 $scope = [3, 5, 7];
 $expr = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($scope);
-$substitute = static fn (string $sortby, array $ids = [3, 5, 7]): string
+$substitute = static fn (string|array $sortby, array $ids = [3, 5, 7]): string
     => CategoryProductMenuindexService::substituteMenuindexSortby($sortby, $ids);
 
 foreach (['menuindex', '`menuindex`', 'msProduct.menuindex', '`msProduct`.`menuindex`', 'MenuIndex'] as $sortby) {
@@ -90,6 +90,32 @@ $assertSame(
 $json = $substitute('{"menuindex":"ASC","pagetitle":"DESC"}');
 $decoded = json_decode($json, true);
 $assertSame([$expr => 'ASC', 'pagetitle' => 'DESC'], $decoded, 'substitute inside JSON sortby keeps valid JSON');
+
+// Array sortby (Fenom/PHP) must not cast to "Array" (#740).
+$arrayAsc = $substitute(['menuindex' => 'ASC']);
+$assertSame(
+    json_decode($substitute('{"menuindex":"ASC"}'), true),
+    json_decode($arrayAsc, true),
+    'array [menuindex => ASC] matches JSON equivalent'
+);
+$arrayMulti = $substitute(['menuindex' => 'DESC', 'pagetitle' => 'ASC']);
+$assertSame(
+    [$expr => 'DESC', 'pagetitle' => 'ASC'],
+    json_decode($arrayMulti, true),
+    'array [menuindex => DESC, pagetitle => ASC] substitutes key only'
+);
+$assertTrue(
+    CategoryProductMenuindexService::sortbyRefersToMenuindex(['menuindex' => 'ASC']),
+    'sortbyRefersToMenuindex detects array keys'
+);
+$assertTrue(
+    !CategoryProductMenuindexService::sortbyRefersToMenuindex(['pagetitle' => 'ASC']),
+    'sortbyRefersToMenuindex ignores array without menuindex'
+);
+$assertTrue(
+    !CategoryProductMenuindexService::sortbyRefersToMenuindex('Array'),
+    'literal Array string is not treated as menuindex sortby'
+);
 
 $assertSame('pagetitle', $substitute('pagetitle'), 'no menuindex in sortby');
 $assertSame('CategoryMember.menuindex', $substitute('CategoryMember.menuindex'), 'other alias menuindex untouched');
