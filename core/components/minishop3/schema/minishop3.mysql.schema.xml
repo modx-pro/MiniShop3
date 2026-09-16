@@ -527,7 +527,7 @@
     <object class="msCustomerToken" table="ms3_customer_tokens" extends="xPDO\Om\xPDOSimpleObject">
         <field key="customer_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" default="0"/>
         <field key="token" dbtype="varchar" precision="128" phptype="string" null="false" default=""/>
-        <field key="type" dbtype="enum" precision="'api','refresh','magic_link','email_verification'" phptype="string" null="false" default="api"/>
+        <field key="type" dbtype="enum" precision="'api','refresh','magic_link','email_verification','password_reset'" phptype="string" null="false" default="api"/>
         <field key="expires_at" dbtype="datetime" phptype="datetime" null="false"/>
         <field key="created_at" dbtype="datetime" phptype="datetime" null="false" default="CURRENT_TIMESTAMP"/>
         <field key="used_at" dbtype="datetime" phptype="datetime" null="true"/>

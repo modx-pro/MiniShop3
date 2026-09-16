@@ -147,8 +147,7 @@ class AuthManager
                     }
 
                     if (CustomerAccess::isLockoutExpired($customer)) {
-                        $customer->set('is_blocked', false);
-                        $customer->set('blocked_until', null);
+                        CustomerAccess::liftTimedLockout($customer);
                     }
 
                     $customer->set('last_login_at', date('Y-m-d H:i:s'));
@@ -453,7 +452,7 @@ class AuthManager
      * Create token for customer
      *
      * @param msCustomer $customer
-     * @param string $type Token type (api, refresh, magic_link, email_verification)
+     * @param string $type Token type (api, refresh, magic_link, email_verification, password_reset)
      * @param int $ttl TTL in seconds (default 24 hours)
      * @return msCustomerToken|null
      */
@@ -497,7 +496,7 @@ class AuthManager
      * Validate token and get customer
      *
      * @param string $tokenString Token string
-     * @param string $type Token type (api, refresh, magic_link, email_verification)
+     * @param string $type Token type (api, refresh, magic_link, email_verification, password_reset)
      * @return msCustomer|null
      */
     public function validateToken(string $tokenString, string $type = 'api'): ?msCustomer

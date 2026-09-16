@@ -321,6 +321,25 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertSame(0, $this->store->countTokens((int) $customer->id, msCustomerToken::TYPE_API));
     }
 
+    public function testCreateAndValidatePasswordResetToken(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'reset@example.com',
+            'is_active' => 1,
+            'is_blocked' => 0,
+        ]);
+        $modx = $this->makeModx();
+        $auth = $this->makeAuthManager($modx);
+
+        $token = $auth->createToken($customer, msCustomerToken::TYPE_PASSWORD_RESET, 3600);
+        self::assertNotNull($token);
+        self::assertSame(msCustomerToken::TYPE_PASSWORD_RESET, $token->get('type'));
+        $validated = $auth->validateToken((string) $token->get('token'), msCustomerToken::TYPE_PASSWORD_RESET);
+        self::assertNotNull($validated);
+        self::assertSame((int) $customer->id, (int) $validated->id);
+        self::assertNull($auth->validateToken((string) $token->get('token'), msCustomerToken::TYPE_API));
+    }
+
     public function testHandleFailedLoginBlocksAfterMaxAttempts(): void
     {
         $customer = $this->seedCustomer([

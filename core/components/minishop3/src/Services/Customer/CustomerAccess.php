@@ -34,20 +34,45 @@ final class CustomerAccess
      */
     public static function isLockoutExpired(msCustomer $customer): bool
     {
+        $timestamp = self::blockedUntilTimestamp($customer);
+
+        return $timestamp !== null && $timestamp <= time();
+    }
+
+    /**
+     * Whether is_blocked with a real blocked_until (active or expired lockout, not a manager block).
+     */
+    public static function hasTimedLockout(msCustomer $customer): bool
+    {
+        return self::blockedUntilTimestamp($customer) !== null;
+    }
+
+    public static function liftTimedLockout(msCustomer $customer): void
+    {
+        if (self::blockedUntilTimestamp($customer) === null) {
+            return;
+        }
+
+        $customer->set('is_blocked', false);
+        $customer->set('blocked_until', null);
+    }
+
+    private static function blockedUntilTimestamp(msCustomer $customer): ?int
+    {
         if (!$customer->get('is_blocked')) {
-            return false;
+            return null;
         }
 
         $blockedUntil = $customer->get('blocked_until');
         if ($blockedUntil === null || $blockedUntil === '') {
-            return false;
+            return null;
         }
 
         $timestamp = strtotime((string) $blockedUntil);
         if ($timestamp === false || $timestamp <= 0) {
-            return false;
+            return null;
         }
 
-        return $timestamp <= time();
+        return $timestamp;
     }
 }

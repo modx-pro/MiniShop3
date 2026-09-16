@@ -6,7 +6,6 @@ namespace MiniShop3\Tests\Unit\Controllers\Api\Manager;
 
 use MiniShop3\Controllers\Api\Manager\CustomersController;
 use MiniShop3\Model\msCustomer;
-use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Services\Customer\AuthManager;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
@@ -32,7 +31,7 @@ final class CustomersControllerUpdateTest extends TestCase
         $authManager = $this->createMock(AuthManager::class);
         $authManager->expects(self::once())
             ->method('revokeTokens')
-            ->with(self::identicalTo($customer), msCustomerToken::TYPE_API)
+            ->with(self::identicalTo($customer))
             ->willReturn(2);
 
         $data = (new CustomersController($this->modx($customer, $authManager)))->update([
@@ -54,7 +53,7 @@ final class CustomersControllerUpdateTest extends TestCase
         $authManager = $this->createMock(AuthManager::class);
         $authManager->expects(self::once())
             ->method('revokeTokens')
-            ->with(self::identicalTo($customer), msCustomerToken::TYPE_API)
+            ->with(self::identicalTo($customer))
             ->willReturn(1);
 
         $data = (new CustomersController($this->modx($customer, $authManager)))->update([
@@ -66,20 +65,21 @@ final class CustomersControllerUpdateTest extends TestCase
         self::assertNull($customer->get('blocked_until'));
     }
 
-    public function testUpdateBlockClearsPastLockoutUntilAndRevokes(): void
+    public function testUpdateNewBlockClearsLeftoverLockoutUntilAndRevokes(): void
     {
+        $until = date('Y-m-d H:i:s', time() + 900);
         $customer = new FakeUpdateCustomer([
             'id' => 9,
             'first_name' => 'Eve',
             'is_active' => 1,
-            'is_blocked' => 1,
-            'blocked_until' => date('Y-m-d H:i:s', time() - 60),
+            'is_blocked' => 0,
+            'blocked_until' => $until,
             'failed_login_attempts' => 9,
         ]);
         $authManager = $this->createMock(AuthManager::class);
         $authManager->expects(self::once())
             ->method('revokeTokens')
-            ->with(self::identicalTo($customer), msCustomerToken::TYPE_API)
+            ->with(self::identicalTo($customer))
             ->willReturn(1);
 
         $data = (new CustomersController($this->modx($customer, $authManager)))->update([
@@ -91,13 +91,44 @@ final class CustomersControllerUpdateTest extends TestCase
         self::assertNull($customer->get('blocked_until'));
     }
 
+    public function testUpdateKeepsLockoutUntilWhenAlreadyBlocked(): void
+    {
+        $until = date('Y-m-d H:i:s', time() + 900);
+        $customer = new FakeUpdateCustomer([
+            'id' => 10,
+            'first_name' => 'Fay',
+            'is_active' => 1,
+            'is_blocked' => 1,
+            'blocked_until' => $until,
+            'failed_login_attempts' => 4,
+        ]);
+        $authManager = $this->createMock(AuthManager::class);
+        $authManager->expects(self::once())
+            ->method('revokeTokens')
+            ->with(self::identicalTo($customer))
+            ->willReturn(1);
+
+        $data = (new CustomersController($this->modx($customer, $authManager)))->update([
+            'id' => 10,
+            'is_blocked' => 1,
+            'phone' => '+100',
+        ]);
+
+        self::assertTrue($data['success'] ?? false);
+        self::assertSame($until, $customer->get('blocked_until'));
+        self::assertSame(4, $customer->get('failed_login_attempts'));
+        self::assertSame('+100', $customer->get('phone'));
+    }
+
     public function testUpdateUnblockClearsUntilWithoutRevoke(): void
     {
         $customer = new FakeUpdateCustomer([
             'id' => 7,
             'first_name' => 'Cal',
             'is_active' => 1,
-            'is_blocked' => 0,
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() + 900),
+            'failed_login_attempts' => 9,
         ]);
         $authManager = $this->createMock(AuthManager::class);
         $authManager->expects(self::never())->method('revokeTokens');

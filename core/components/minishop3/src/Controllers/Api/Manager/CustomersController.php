@@ -5,7 +5,6 @@ namespace MiniShop3\Controllers\Api\Manager;
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerGroup;
-use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
@@ -175,6 +174,8 @@ class CustomersController
             return Response::error('Customer not found', HttpStatus::NOT_FOUND)->getData();
         }
 
+        $wasBlocked = (bool) $customer->get('is_blocked');
+
         $allowedFields = ['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_blocked', 'customer_group_id'];
 
         foreach ($allowedFields as $field) {
@@ -198,9 +199,9 @@ class CustomersController
             $customer->set($field, $value);
         }
 
-        if (array_key_exists('is_blocked', $data)) {
+        if (array_key_exists('is_blocked', $data) && (bool) $customer->get('is_blocked') !== $wasBlocked) {
             $customer->set('blocked_until', null);
-            if (!(bool) $customer->get('is_blocked')) {
+            if (!$customer->get('is_blocked')) {
                 $customer->set('failed_login_attempts', 0);
             }
         }
@@ -219,7 +220,7 @@ class CustomersController
         if (CustomerAccess::isAccessDenied($customer)) {
             /** @var AuthManager $authManager */
             $authManager = $this->modx->services->get('ms3_auth_manager');
-            $authManager->revokeTokens($customer, msCustomerToken::TYPE_API);
+            $authManager->revokeTokens($customer);
         }
 
         return Response::success($this->formatCustomer($customer), 'Customer updated successfully')->getData();

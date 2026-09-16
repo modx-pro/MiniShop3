@@ -23,6 +23,31 @@ final class CustomerAccessTest extends TestCase
         self::assertSame($expectedExpired, CustomerAccess::isLockoutExpired($this->customer($fields)));
     }
 
+    #[DataProvider('timedLockoutCases')]
+    public function testHasTimedLockout(array $fields, bool $expected): void
+    {
+        self::assertSame($expected, CustomerAccess::hasTimedLockout($this->customer($fields)));
+    }
+
+    public function testLiftTimedLockoutClearsOnlyParseableUntil(): void
+    {
+        $lockout = $this->customer([
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() + 60),
+        ]);
+        CustomerAccess::liftTimedLockout($lockout);
+        self::assertFalse((bool) $lockout->get('is_blocked'));
+        self::assertNull($lockout->get('blocked_until'));
+
+        $permanent = $this->customer([
+            'is_blocked' => 1,
+            'blocked_until' => null,
+        ]);
+        CustomerAccess::liftTimedLockout($permanent);
+        self::assertTrue((bool) $permanent->get('is_blocked'));
+        self::assertNull($permanent->get('blocked_until'));
+    }
+
     /**
      * @return iterable<string, array{0: array<string, mixed>, 1: bool}>
      */
@@ -65,6 +90,24 @@ final class CustomerAccessTest extends TestCase
     }
 
     /**
+     * @return iterable<string, array{0: array<string, mixed>, 1: bool}>
+     */
+    public static function timedLockoutCases(): iterable
+    {
+        yield 'not blocked' => [['is_blocked' => 0, 'blocked_until' => date('Y-m-d H:i:s', time() + 60)], false];
+        yield 'permanent block' => [['is_blocked' => 1, 'blocked_until' => null], false];
+        yield 'mysql zero datetime' => [['is_blocked' => 1, 'blocked_until' => '0000-00-00 00:00:00'], false];
+        yield 'future lockout' => [[
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() + 3600),
+        ], true];
+        yield 'expired lockout' => [[
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() - 60),
+        ], true];
+    }
+
+    /**
      * @param array<string, mixed> $fields
      */
     private function customer(array $fields): msCustomer
@@ -83,5 +126,12 @@ final class FakeAccessCustomer extends msCustomer
     public function get($key)
     {
         return $this->fields[$key] ?? null;
+    }
+
+    public function set($key, $value, $vType = '')
+    {
+        $this->fields[$key] = $value;
+
+        return $this;
     }
 }
