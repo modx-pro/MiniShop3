@@ -6,6 +6,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Services\Payment\PaymentPublicFields;
 use MODX\Revolution\modResource;
 
 /**
@@ -210,7 +211,7 @@ class OrdersPageService extends CustomerPageService
             'order' => $orderArray,
             'products' => $products,
             'delivery' => $delivery ? $delivery->toArray() : [],
-            'payment' => $payment ? $payment->toArray() : [],
+            'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
             'address' => $address ? $address->toArray() : [],
             'total' => [
                 'cost' => $this->ms3->format->price($order->get('cost')),
@@ -440,7 +441,7 @@ class OrdersPageService extends CustomerPageService
             ]),
             'products' => $products,
             'delivery' => $delivery ? $delivery->toArray() : [],
-            'payment' => $payment ? $payment->toArray() : [],
+            'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
             'address' => $address ? $address->toArray() : [],
             'total' => [
                 'cost' => $this->ms3->format->price($order->get('cost')),
