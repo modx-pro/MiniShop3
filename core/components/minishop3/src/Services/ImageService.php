@@ -194,6 +194,9 @@ class ImageService
     /**
      * phpThumb / miniShop2 wmi alignment `*` — tile watermark over the whole canvas.
      *
+     * Pass the file path into each place() call: Imagick PlaceModifier mutates the
+     * watermark alpha when opacity < 100, so reusing one Image leaves only the first tile visible.
+     *
      * @param \Intervention\Image\Interfaces\ImageInterface $image
      */
     private function placeTiledWatermark(
@@ -203,9 +206,9 @@ class ImageService
         int $marginY,
         int $opacity,
     ): void {
-        $watermark = $this->imageManager->read($resolvedPath);
-        $tileW = $watermark->width();
-        $tileH = $watermark->height();
+        $probe = $this->imageManager->read($resolvedPath);
+        $tileW = $probe->width();
+        $tileH = $probe->height();
         if ($tileW <= 0 || $tileH <= 0) {
             return;
         }
@@ -217,7 +220,7 @@ class ImageService
 
         for ($y = 0; $y < $canvasH; $y += $stepY) {
             for ($x = 0; $x < $canvasW; $x += $stepX) {
-                $image->place($watermark, 'top-left', $x, $y, $opacity);
+                $image->place($resolvedPath, 'top-left', $x, $y, $opacity);
             }
         }
     }

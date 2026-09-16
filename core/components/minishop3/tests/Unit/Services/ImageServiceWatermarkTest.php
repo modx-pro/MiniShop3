@@ -101,7 +101,7 @@ final class ImageServiceWatermarkTest extends TestCase
                 'enabled' => true,
                 'path' => 'assets/watermark.png',
                 'position' => 'center',
-                'opacity' => 100,
+                'opacity' => 25,
             ],
         ]);
         $tiled = $this->thumbnail($service, $base + [
@@ -111,7 +111,7 @@ final class ImageServiceWatermarkTest extends TestCase
                 'position' => '*',
                 'offset_x' => 0,
                 'offset_y' => 0,
-                'opacity' => 100,
+                'opacity' => 25,
             ],
         ]);
         $tiledAlias = $this->thumbnail($service, $base + [
@@ -119,7 +119,7 @@ final class ImageServiceWatermarkTest extends TestCase
                 'enabled' => true,
                 'path' => 'assets/watermark.png',
                 'position' => 'tile',
-                'opacity' => 100,
+                'opacity' => 25,
             ],
         ]);
 
@@ -131,6 +131,25 @@ final class ImageServiceWatermarkTest extends TestCase
         self::assertNotSame($center, $tiled);
         self::assertSame($tiled, $tiledAlias);
         self::assertSame([], $this->errorMessages());
+
+        // Imagick mutates reused watermark alpha — assert tiles away from (0,0) still differ from plain.
+        $plainCorner = $this->pngPixelRgb($plain, 50, 50);
+        $tiledCorner = $this->pngPixelRgb($tiled, 50, 50);
+        self::assertNotSame($plainCorner, $tiledCorner);
+    }
+
+    /**
+     * @return array{0: int, 1: int, 2: int}
+     */
+    private function pngPixelRgb(string $pngBytes, int $x, int $y): array
+    {
+        $im = imagecreatefromstring($pngBytes);
+        self::assertNotFalse($im);
+        $color = imagecolorat($im, $x, $y);
+        self::assertNotFalse($color);
+        imagedestroy($im);
+
+        return [($color >> 16) & 0xFF, ($color >> 8) & 0xFF, $color & 0xFF];
     }
 
     public function testLeadingSlashPathResolvesUnderSiteBase(): void
