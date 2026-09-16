@@ -27,6 +27,7 @@ const { _ } = useLexicon()
       v-else
       :label="_('save')"
       icon="pi pi-check"
+      severity="success"
       :loading="saving"
       :disabled="recalculatingCost"
       @click="emit('save')"

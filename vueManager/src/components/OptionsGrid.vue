@@ -550,7 +550,7 @@ onBeforeUnmount(() => {
           :disabled="dialogSaving"
           @click="dialogVisible = false"
         />
-        <Button :label="_('save') || 'Сохранить'" :loading="dialogSaving" @click="saveOption" />
+        <Button :label="_('save') || 'Сохранить'" severity="success" :loading="dialogSaving" @click="saveOption" />
       </template>
     </Dialog>
 

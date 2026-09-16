@@ -370,6 +370,7 @@ function closeDialog() {
         <Button
           :label="_('save')"
           icon="pi pi-check"
+          severity="success"
           :disabled="!editingAction?.name"
           @click="saveAction"
         />

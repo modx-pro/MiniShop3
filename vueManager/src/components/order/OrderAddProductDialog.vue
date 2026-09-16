@@ -130,6 +130,7 @@ defineProps({
     <Button
       :label="_('save')"
       icon="pi pi-check"
+      severity="success"
       :loading="savingNewProduct"
       :disabled="!selectedProduct || !selectedProduct.id"
       @click="saveNewProduct"

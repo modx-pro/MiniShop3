@@ -7,7 +7,7 @@ import 'primeicons/primeicons.css'
 
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
-import { Aura, ConfirmationService, PrimeVue, ToastService } from 'primevue'
+import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import OrderView from '../components/OrderView.vue'
@@ -16,6 +16,7 @@ import {
   snapshotOrderTabConfigForQueue,
   validateOrderPluginTabConfig,
 } from '../utils/orderPluginTab.js'
+import { getManagerPrimeVueThemeOptions } from '../utils/primevueTheme.js'
 
 /**
  * Plugin registry for third-party order manager tabs (Vue / ExtJS). See GitHub #166.
@@ -133,12 +134,7 @@ function createVueApp() {
   app.use(pinia)
 
   app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
+    ...getManagerPrimeVueThemeOptions(),
     locale: getPrimeVueLocale(),
   })
 

@@ -10,12 +10,13 @@ import 'primeicons/primeicons.css'
 
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
-import { Aura, ConfirmationService, PrimeVue, ToastService } from 'primevue'
+import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import CategoryProductsGrid from '../components/CategoryProductsGrid.vue'
 import { provideUiGroup } from '../composables/uiGroup.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+import { getManagerPrimeVueThemeOptions } from '../utils/primevueTheme.js'
 
 let appInstance = null
 
@@ -32,12 +33,7 @@ function createVueApp(categoryId) {
   app.use(pinia)
 
   app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
+    ...getManagerPrimeVueThemeOptions(),
     locale: getPrimeVueLocale(),
   })
 

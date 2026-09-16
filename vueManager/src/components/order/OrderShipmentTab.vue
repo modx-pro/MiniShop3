@@ -181,6 +181,7 @@ watch(orderId, loadShipment, { immediate: true })
           <Button
             :label="_('save')"
             icon="pi pi-check"
+            severity="success"
             :loading="saving"
             @click="saveShipment(false)"
           />

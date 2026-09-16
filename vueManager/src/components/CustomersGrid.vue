@@ -933,6 +933,7 @@ onMounted(async () => {
           type="button"
           :label="_('save')"
           icon="pi pi-check"
+          severity="success"
           :loading="saving"
           @click="saveCustomer"
         />
@@ -1105,6 +1106,7 @@ onMounted(async () => {
             <Button
               :label="_('save')"
               icon="pi pi-check"
+              severity="success"
               :loading="savingAddress"
               @click="saveAddress"
             />

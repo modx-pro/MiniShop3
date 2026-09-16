@@ -1098,7 +1098,7 @@ onMounted(() => {
 
         <!-- Save button -->
         <div class="flex justify-content-end">
-          <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveConfig" />
+          <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="saving" @click="saveConfig" />
         </div>
       </template>
     </Card>
@@ -1718,6 +1718,7 @@ onMounted(() => {
         <Button
           :label="_('save')"
           icon="pi pi-check"
+          severity="success"
           :disabled="!editingField || !editingField.field_name"
           @click="saveEdit"
         />

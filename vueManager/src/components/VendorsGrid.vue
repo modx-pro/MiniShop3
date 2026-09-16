@@ -767,7 +767,7 @@ onMounted(async () => {
           severity="secondary"
           @click="editDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveVendor" />
+        <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="saving" @click="saveVendor" />
       </template>
     </Dialog>
   </div>

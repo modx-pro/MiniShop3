@@ -98,7 +98,9 @@ class msResourceUpdateController extends ResourceUpdateManagerController
     if (importMap) {
         try {
             var mapContent = JSON.parse(importMap.textContent);
-            hasVueCore = mapContent.imports && mapContent.imports.vue;
+            hasVueCore = mapContent.imports
+                && mapContent.imports.vue
+                && mapContent.imports['vuetools/theme'];
         } catch (e) {
             hasVueCore = false;
         }

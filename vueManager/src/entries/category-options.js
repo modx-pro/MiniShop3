@@ -6,12 +6,13 @@
  */
 
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
-import { Aura, ConfirmationService, PrimeVue, ToastService } from 'primevue'
+import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import CategoryOptionsTab from '../components/CategoryOptionsTab.vue'
 import { provideUiGroup } from '../composables/uiGroup.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+import { getManagerPrimeVueThemeOptions } from '../utils/primevueTheme.js'
 
 const MOUNT_ID = 'ms3-vue-category-options'
 
@@ -31,13 +32,7 @@ function mountApp() {
   app = createApp(CategoryOptionsTab, { categoryId })
 
   app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-        cssLayer: false,
-      },
-    },
+    ...getManagerPrimeVueThemeOptions(),
     locale: getPrimeVueLocale(),
   })
   app.use(ToastService)

@@ -510,6 +510,7 @@ onMounted(() => {
         />
         <Button
           :label="_('save') || 'Сохранить'"
+          severity="success"
           :loading="addSaving"
           :disabled="!addOptionId"
           @click="addOption"

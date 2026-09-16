@@ -894,6 +894,7 @@ onMounted(() => {
         <Button
           :label="isEditMode ? _('ms3_vue_dialog_save') : _('ms3_vue_dialog_create')"
           icon="pi pi-check"
+          severity="success"
           :loading="saving"
           @click="saveField"
         />

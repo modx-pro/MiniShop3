@@ -682,7 +682,7 @@ onMounted(async () => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="savePayment" />
+        <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="saving" @click="savePayment" />
       </template>
     </Dialog>
   </div>

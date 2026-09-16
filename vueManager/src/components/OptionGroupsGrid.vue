@@ -343,7 +343,7 @@ onMounted(() => {
       </div>
       <template #footer>
         <Button :label="_('cancel')" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveGroup" />
+        <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="saving" @click="saveGroup" />
       </template>
     </Dialog>
   </div>

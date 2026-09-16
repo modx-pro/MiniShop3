@@ -969,7 +969,7 @@ onMounted(async () => {
           class="p-button-text"
           @click="editDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveField" />
+        <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="saving" @click="saveField" />
       </template>
     </Dialog>
 
@@ -1049,7 +1049,7 @@ onMounted(async () => {
           class="p-button-text"
           @click="sectionDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :loading="savingSec" @click="saveSection" />
+        <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="savingSec" @click="saveSection" />
       </template>
     </Dialog>
   </div>

@@ -3,8 +3,10 @@ import 'primeicons/primeicons.css'
 
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
-import { Aura, ConfirmationService, PrimeVue, ToastService } from 'primevue'
+import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
+
+import { getManagerPrimeVueThemeOptions } from './utils/primevueTheme.js'
 
 /**
  * MiniShop3 Vue Manager
@@ -37,14 +39,7 @@ export function createVueApp(rootComponent) {
   app.use(pinia)
 
   app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-        cssLayer: false,
-        prefix: 'p',
-      },
-    },
+    ...getManagerPrimeVueThemeOptions(),
     locale: getPrimeVueLocale(),
     pt: {
       directives: {

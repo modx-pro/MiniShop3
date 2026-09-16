@@ -505,7 +505,7 @@ onMounted(async () => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" class="p-button-text" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveNotification" />
+        <Button :label="_('save')" icon="pi pi-check" severity="success" :loading="saving" @click="saveNotification" />
       </template>
     </Dialog>
   </div>
