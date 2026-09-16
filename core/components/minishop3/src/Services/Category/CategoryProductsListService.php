@@ -57,9 +57,9 @@ final class CategoryProductsListService
 
         $countQuery = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs);
         $countQuery->select('COUNT(DISTINCT msProduct.id)');
-        $countQuery->prepare();
-        $countQuery->stmt->execute();
-        $total = (int) $countQuery->stmt->fetchColumn();
+        $total = $this->executeGridQuery($countQuery, 'count')
+            ? (int) $countQuery->stmt->fetchColumn()
+            : 0;
 
         $effectiveMenuindexSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($scopeCategoryIds);
         $sortField = $this->mapSortField($sortBy, $optionSpecs, $relationSpecs, $effectiveMenuindexSql);
@@ -96,14 +96,12 @@ final class CategoryProductsListService
         }
 
         $rows = [];
-        if ($c->prepare() && $c->stmt->execute()) {
+        if ($this->executeGridQuery($c, 'list')) {
             $rows = $c->stmt->fetchAll(\PDO::FETCH_ASSOC);
         } else {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                '[MiniShop3] Category products grid query failed: '
-                . json_encode($c->stmt?->errorInfo(), JSON_UNESCAPED_UNICODE)
-            );
+            // Keep the total consistent with the rows: a count from the successful count query
+            // over an empty grid reads as a paginator pointing at pages that never load.
+            $total = 0;
         }
 
         $optionFieldNames = array_map(static fn (OptionColumnSpec $s) => $s->fieldName, $optionSpecs);
@@ -117,6 +115,31 @@ final class CategoryProductsListService
             'results' => $results,
             'total' => $total,
         ];
+    }
+
+    /**
+     * Prepare and execute a grid query, logging a failure with the SQL that caused it.
+     *
+     * @param string $context Which of the two grid queries failed: 'count' or 'list'
+     */
+    private function executeGridQuery(xPDOQuery $query, string $context): bool
+    {
+        $stmt = $query->prepare();
+        if ($stmt instanceof \PDOStatement && $stmt->execute()) {
+            return true;
+        }
+
+        $error = $stmt instanceof \PDOStatement
+            ? (string) json_encode($stmt->errorInfo(), JSON_UNESCAPED_UNICODE)
+            : 'statement not prepared';
+
+        $this->modx->log(
+            modX::LOG_LEVEL_ERROR,
+            "[MiniShop3] Category products grid: {$context} query failed: {$error}"
+            . ' SQL: ' . $query->toSQL()
+        );
+
+        return false;
     }
 
     /**
