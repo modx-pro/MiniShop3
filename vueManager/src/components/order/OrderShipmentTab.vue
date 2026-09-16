@@ -1,10 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Fieldset from 'primevue/fieldset'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import { useToast } from 'primevue/usetoast'
+import { Button, Fieldset, InputText, Select, useToast } from 'primevue'
 import { computed, inject, ref, watch } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
