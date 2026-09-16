@@ -64,8 +64,7 @@ class ImageService
      *                       - 'mode' (string): resize mode - cover, contain, max, stretch (default cover)
      *                       - 'watermark' (array): optional overlay from Media Source thumbnails JSON
      *                         (enabled, path, position, offset_x, offset_y, opacity).
-     *                         position: Intervention names, phpThumb wmi codes (TL…BR), or `*`/`tile`.
-     *                         For tile mode offset_x / offset_y are inter-tile margins in pixels.
+     *                         position: Intervention names or `tile` (mosaic; offsets = margins).
      *
      * @return string|null Binary thumbnail data or null on error
      *
@@ -163,7 +162,7 @@ class ImageService
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
                     "[ImageService] Unknown watermark position \"{$rawPosition}\";"
-                    . ' use Intervention names, phpThumb codes (TL…BR), or */tile'
+                    . ' use Intervention names (top-left…bottom-right) or tile'
                 );
 
                 return;
@@ -191,8 +190,8 @@ class ImageService
     }
 
     /**
-     * Map Intervention names and phpThumb/MS2 wmi codes to place() positions.
-     * Returns `tile` for mosaic; null when the value is unknown.
+     * Accept Intervention place() positions plus `tile` for mosaic.
+     * Returns null when the value is unknown (caller logs and skips overlay).
      */
     private function resolveWatermarkPosition(string $position): ?string
     {
@@ -212,17 +211,6 @@ class ImageService
             'bottom-left' => 'bottom-left',
             'bottom' => 'bottom',
             'bottom-right' => 'bottom-right',
-            // phpThumb / miniShop2 wmi alignment codes
-            'tl' => 'top-left',
-            't' => 'top',
-            'tr' => 'top-right',
-            'l' => 'left',
-            'c' => 'center',
-            'r' => 'right',
-            'bl' => 'bottom-left',
-            'b' => 'bottom',
-            'br' => 'bottom-right',
-            '*' => 'tile',
             'tile' => 'tile',
         ];
 
@@ -292,7 +280,7 @@ class ImageService
     }
 
     /**
-     * Tile the prepared watermark across the canvas (phpThumb wmi `*` / `tile`).
+     * Tile the prepared watermark across the canvas (`position: tile`).
      * offset_x / offset_y are inter-tile margins. Mark opacity must already be baked.
      *
      * @param \Intervention\Image\Interfaces\ImageInterface $image

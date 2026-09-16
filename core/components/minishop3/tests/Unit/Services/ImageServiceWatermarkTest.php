@@ -108,17 +108,9 @@ final class ImageServiceWatermarkTest extends TestCase
             'watermark' => [
                 'enabled' => true,
                 'path' => 'assets/watermark.png',
-                'position' => '*',
+                'position' => 'tile',
                 'offset_x' => 0,
                 'offset_y' => 0,
-                'opacity' => 25,
-            ],
-        ]);
-        $tiledAlias = $this->thumbnail($service, $base + [
-            'watermark' => [
-                'enabled' => true,
-                'path' => 'assets/watermark.png',
-                'position' => 'tile',
                 'opacity' => 25,
             ],
         ]);
@@ -126,10 +118,8 @@ final class ImageServiceWatermarkTest extends TestCase
         self::assertNotNull($plain);
         self::assertNotNull($center);
         self::assertNotNull($tiled);
-        self::assertNotNull($tiledAlias);
         self::assertNotSame($plain, $tiled);
         self::assertNotSame($center, $tiled);
-        self::assertSame($tiled, $tiledAlias);
         self::assertSame([], $this->errorMessages());
 
         // Reused mark with baked opacity — far tiles must still differ from plain.
@@ -174,7 +164,7 @@ final class ImageServiceWatermarkTest extends TestCase
         self::assertLessThan(40, $red[2]);
     }
 
-    public function testPhpThumbBrPositionMapsToBottomRight(): void
+    public function testPhpThumbLegacyPositionsAreRejected(): void
     {
         $service = new ImageService($this->loggingModx(), $this->baseDir);
         $base = [
@@ -184,29 +174,25 @@ final class ImageServiceWatermarkTest extends TestCase
             'format' => 'png',
             'quality' => 90,
         ];
-        $viaName = $this->thumbnail($service, $base + [
-            'watermark' => [
-                'enabled' => true,
-                'path' => 'assets/watermark.png',
-                'position' => 'bottom-right',
-                'opacity' => 100,
-            ],
-        ]);
-        $viaCode = $this->thumbnail($service, $base + [
-            'watermark' => [
-                'enabled' => true,
-                'path' => 'assets/watermark.png',
-                'position' => 'BR',
-                'opacity' => 100,
-            ],
-        ]);
+        $plain = $this->thumbnail($service, $base);
 
-        self::assertNotNull($viaName);
-        self::assertNotNull($viaCode);
-        self::assertSame($viaName, $viaCode);
-        self::assertSame([], $this->errorMessages());
-        self::assertSame([255, 0, 0], $this->pngPixelRgb($viaCode, 70, 70));
-        self::assertSame([20, 40, 200], $this->pngPixelRgb($viaCode, 10, 10));
+        foreach (['BR', 'C', '*'] as $legacy) {
+            $this->logs = [];
+            $marked = $this->thumbnail($service, $base + [
+                'watermark' => [
+                    'enabled' => true,
+                    'path' => 'assets/watermark.png',
+                    'position' => $legacy,
+                    'opacity' => 100,
+                ],
+            ]);
+
+            self::assertNotNull($marked);
+            self::assertSame($plain, $marked, "legacy position {$legacy} must not place overlay");
+            $errors = $this->errorMessages();
+            self::assertNotEmpty($errors);
+            self::assertStringContainsString('Unknown watermark position', $errors[0]);
+        }
     }
 
     public function testUnknownWatermarkPositionIsLoggedAndSkipped(): void
