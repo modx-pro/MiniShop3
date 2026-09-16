@@ -170,8 +170,11 @@ if (isset($_ms3CategoryIds) && $_ms3CategoryIds !== []) {
         $_ms3MenuindexCategoryIds = [$_ms3SingleParent];
     }
 }
-$_ms3SortBy = (string)($scriptProperties['sortby'] ?? '');
-if ($_ms3MenuindexCategoryIds !== [] && preg_match('/\bmenuindex\b/i', $_ms3SortBy)) {
+$_ms3SortBy = $scriptProperties['sortby'] ?? '';
+if (!is_array($_ms3SortBy)) {
+    $_ms3SortBy = (string) $_ms3SortBy;
+}
+if ($_ms3MenuindexCategoryIds !== [] && CategoryProductMenuindexService::sortbyRefersToMenuindex($_ms3SortBy)) {
     $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
     $leftJoin[$memberAlias] = [
         'class' => msCategoryMember::class,

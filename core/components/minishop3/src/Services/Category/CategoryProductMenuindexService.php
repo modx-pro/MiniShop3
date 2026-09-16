@@ -79,17 +79,22 @@ final class CategoryProductMenuindexService
     }
 
     /**
-     * Replace the product menuindex column in a pdoTools sortby (plain or JSON) with the
+     * Replace the product menuindex column in a pdoTools sortby (plain, JSON, or array) with the
      * effective per-category expression for msProducts.
      *
      * Matches `msProduct.menuindex` (every occurrence) or a bare `menuindex` (first one), with
      * or without backticks. A menuindex qualified by another alias (e.g. CategoryMember.menuindex)
      * is left alone. Unchanged when there is no category scope or the sortby is already substituted.
      *
+     * Arrays (Fenom/PHP) are normalized to JSON before substitution so `(string)` cast is never
+     * used — that would turn `['menuindex' => 'ASC']` into `"Array"` and skip the CASE (#740).
+     *
+     * @param string|array<string, string> $sortby
      * @param list<int> $categoryIds
      */
-    public static function substituteMenuindexSortby(string $sortby, array $categoryIds): string
+    public static function substituteMenuindexSortby(string|array $sortby, array $categoryIds): string
     {
+        $sortby = self::normalizeSortbyInput($sortby);
         $categoryIds = self::normalizeCategoryIds($categoryIds);
         if ($categoryIds === [] || str_contains($sortby, 'CASE WHEN')) {
             return $sortby;
@@ -102,6 +107,36 @@ final class CategoryProductMenuindexService
         }
 
         return (string) preg_replace('/(?<![\w.`])`?menuindex\b`?/i', $effectiveSql, $sortby, 1);
+    }
+
+    /**
+     * Whether sortby (string, JSON, or array) refers to menuindex for JOIN gating in msProducts.
+     *
+     * @param string|array<string, string>|null $sortby
+     */
+    public static function sortbyRefersToMenuindex(string|array|null $sortby): bool
+    {
+        if ($sortby === null || $sortby === '' || $sortby === []) {
+            return false;
+        }
+
+        $normalized = self::normalizeSortbyInput($sortby);
+
+        return $normalized !== '' && (bool) preg_match('/\bmenuindex\b/i', $normalized);
+    }
+
+    /**
+     * @param string|array<string, string> $sortby
+     */
+    private static function normalizeSortbyInput(string|array $sortby): string
+    {
+        if (is_array($sortby)) {
+            $json = json_encode($sortby, JSON_UNESCAPED_UNICODE);
+
+            return is_string($json) ? $json : '';
+        }
+
+        return $sortby;
     }
 
     public static function memberJoinOn(int $categoryId, string $memberAlias = self::MEMBER_JOIN_ALIAS): string
