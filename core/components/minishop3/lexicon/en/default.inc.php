@@ -294,7 +294,7 @@ $_lang['ms3_help'] = 'Help and support';
 $_lang['ms3_help_desc'] = 'Useful links and information';
 
 $_lang['ms3_error'] = 'Error';
-$_lang['ms3_vuetools_required'] = 'VueTools package (>= 1.2.0) is required for MiniShop3. Please install it via Package Manager.';
+$_lang['ms3_vuetools_required'] = 'VueTools package (>= 1.2.0) is required for MiniShop3. Please install or update it via Package Manager.';
 
 $_lang['ms3_mgr_order_recalc_invalid_mode'] = 'Invalid order cost recalculation mode.';
 $_lang['ms3_mgr_order_recalc_manual_delivery_missing'] = 'Manual delivery cost (manual_delivery_cost) is required in manual mode.';

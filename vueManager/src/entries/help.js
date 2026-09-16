@@ -10,7 +10,7 @@ import { createApp } from 'vue'
 
 import HelpPage from '../components/HelpPage.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { getManagerPrimeVueThemeOptions } from '../utils/primevueTheme.js'
+import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
 
 /**
  * Creates and configures Vue application
@@ -18,7 +18,7 @@ import { getManagerPrimeVueThemeOptions } from '../utils/primevueTheme.js'
 function createVueApp() {
   const app = createApp(HelpPage)
 
-  app.use(PrimeVue, getManagerPrimeVueThemeOptions())
+  app.use(PrimeVue, getManagerPrimeVueConfig())
 
   return app
 }

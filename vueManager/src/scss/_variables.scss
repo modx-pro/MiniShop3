@@ -64,9 +64,9 @@
   --ms3-text-info-result: #0c5460;
   --ms3-text-error-result: #721c24;
 
-  /* Colors — accents (alias ModxManagerTheme primary, not Tailwind blue) */
-  --ms3-accent-primary: var(--p-primary-color, #234368);
-  --ms3-accent-focus: color-mix(in srgb, var(--p-primary-color, #234368) 30%, transparent);
+  /* Colors — accents (fixed blue: Aura --p-primary-color is emerald and fails AA on links) */
+  --ms3-accent-primary: #3b82f6;
+  --ms3-accent-focus: rgb(59 130 246 / 30%);
   --ms3-accent-teal: #32ab9a;
   --ms3-accent-green: #4caf50;
   --ms3-border-upload: #ddd;

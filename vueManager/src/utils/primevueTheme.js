@@ -1,17 +1,18 @@
 /**
  * PrimeVue theme for MiniShop3 manager entries.
  *
- * Resolves `vuetools.theme` via VueTools and forces `darkModeSelector: 'none'`
- * so manager chrome stays light (aura `{ preset }` or modx `{ preset, options }`).
+ * Resolves `vuetools.theme` via VueTools and forces manager chrome options:
+ * - `darkModeSelector: 'none'` — stay light even when the OS prefers dark
+ * - `cssLayer: false` — keep cascade against MODX/Ext manager CSS (was on
+ *   main.js / category-options before getActiveTheme migration)
+ *
+ * Registry shapes: aura `{ theme: { preset } }`, modx `{ theme: ModxManagerTheme }`
+ * where ModxManagerTheme = `{ preset, options }`.
  */
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { getActiveTheme, getThemeName } from '@vuetools/useTheme'
 
-export function isModxManagerTheme() {
-  return getThemeName() === 'modx'
-}
-
-export function getManagerPrimeVueThemeOptions() {
+function getManagerPrimeVueThemeOptions() {
   const { theme, ...rest } = getActiveTheme()
   return {
     ...rest,
@@ -20,16 +21,28 @@ export function getManagerPrimeVueThemeOptions() {
       options: {
         ...theme?.options,
         darkModeSelector: 'none',
+        cssLayer: false,
       },
     },
   }
 }
 
-/** Theme options plus manager locale; pass PrimeVue extras (e.g. `pt`) when needed. */
-export function getManagerPrimeVueConfig(extra = {}) {
-  return {
+/**
+ * Theme options plus manager locale.
+ * @param {{ pt?: object }} [options]
+ */
+export function getManagerPrimeVueConfig(options = {}) {
+  const config = {
     ...getManagerPrimeVueThemeOptions(),
     locale: getPrimeVueLocale(),
-    ...extra,
   }
+  if (options.pt !== undefined) {
+    config.pt = options.pt
+  }
+  return config
+}
+
+/** Aura-era form density inject should not run under Modx preset. */
+export function shouldInjectFormStylesOverride() {
+  return getThemeName() !== 'modx'
 }
