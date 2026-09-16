@@ -19,7 +19,7 @@ $packages = [
         'service_url' => 'modstore.pro',
     ],
     'VueTools' => [
-        'version' => '1.1.2-pl',
+        'version' => '1.2.0-pl',
         'service_url' => 'modstore.pro',
     ],
 ];
