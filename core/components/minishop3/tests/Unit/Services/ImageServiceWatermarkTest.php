@@ -85,6 +85,54 @@ final class ImageServiceWatermarkTest extends TestCase
         self::assertSame([], $this->errorMessages());
     }
 
+    public function testTiledWatermarkPositionFillsCanvas(): void
+    {
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $base = [
+            'width' => 80,
+            'height' => 80,
+            'mode' => 'cover',
+            'format' => 'png',
+            'quality' => 90,
+        ];
+        $plain = $this->thumbnail($service, $base);
+        $center = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'path' => 'assets/watermark.png',
+                'position' => 'center',
+                'opacity' => 100,
+            ],
+        ]);
+        $tiled = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'path' => 'assets/watermark.png',
+                'position' => '*',
+                'offset_x' => 0,
+                'offset_y' => 0,
+                'opacity' => 100,
+            ],
+        ]);
+        $tiledAlias = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'path' => 'assets/watermark.png',
+                'position' => 'tile',
+                'opacity' => 100,
+            ],
+        ]);
+
+        self::assertNotNull($plain);
+        self::assertNotNull($center);
+        self::assertNotNull($tiled);
+        self::assertNotNull($tiledAlias);
+        self::assertNotSame($plain, $tiled);
+        self::assertNotSame($center, $tiled);
+        self::assertSame($tiled, $tiledAlias);
+        self::assertSame([], $this->errorMessages());
+    }
+
     public function testLeadingSlashPathResolvesUnderSiteBase(): void
     {
         $service = new ImageService($this->loggingModx(), $this->baseDir);

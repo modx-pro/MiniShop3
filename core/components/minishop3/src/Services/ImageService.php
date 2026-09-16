@@ -63,7 +63,9 @@ class ImageService
      *                       - 'format' (string): jpg, png, webp, avif (default jpg)
      *                       - 'mode' (string): resize mode - cover, contain, max, stretch (default cover)
      *                       - 'watermark' (array): optional overlay from Media Source thumbnails JSON
-     *                         (enabled, path, position, offset_x, offset_y, opacity)
+     *                         (enabled, path, position, offset_x, offset_y, opacity).
+     *                         position `*` / `tile` tiles the mark across the canvas (phpThumb wmi / MS2).
+     *                         For tile mode offset_x / offset_y are inter-tile margins in pixels.
      *
      * @return string|null Binary thumbnail data or null on error
      *
@@ -155,19 +157,74 @@ class ImageService
         }
 
         try {
-            $image->place(
-                $resolved,
-                (string) ($config['position'] ?? 'bottom-right'),
-                (int) ($config['offset_x'] ?? 0),
-                (int) ($config['offset_y'] ?? 0),
-                $this->normalizeWatermarkOpacity($config['opacity'] ?? 100)
-            );
+            $position = (string) ($config['position'] ?? 'bottom-right');
+            $offsetX = (int) ($config['offset_x'] ?? 0);
+            $offsetY = (int) ($config['offset_y'] ?? 0);
+            $opacity = $this->normalizeWatermarkOpacity($config['opacity'] ?? 100);
+
+            $this->placeWatermark($image, $resolved, $position, $offsetX, $offsetY, $opacity);
         } catch (\Exception $e) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
                 "[ImageService] Failed to apply watermark: {$e->getMessage()}"
             );
         }
+    }
+
+    /**
+     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     */
+    private function placeWatermark(
+        $image,
+        string $resolvedPath,
+        string $position,
+        int $offsetX,
+        int $offsetY,
+        int $opacity,
+    ): void {
+        if ($this->isTiledWatermarkPosition($position)) {
+            $this->placeTiledWatermark($image, $resolvedPath, $offsetX, $offsetY, $opacity);
+
+            return;
+        }
+
+        $image->place($resolvedPath, $position, $offsetX, $offsetY, $opacity);
+    }
+
+    /**
+     * phpThumb / miniShop2 wmi alignment `*` — tile watermark over the whole canvas.
+     *
+     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     */
+    private function placeTiledWatermark(
+        $image,
+        string $resolvedPath,
+        int $marginX,
+        int $marginY,
+        int $opacity,
+    ): void {
+        $watermark = $this->imageManager->read($resolvedPath);
+        $tileW = $watermark->width();
+        $tileH = $watermark->height();
+        if ($tileW <= 0 || $tileH <= 0) {
+            return;
+        }
+
+        $stepX = $tileW + max(0, $marginX);
+        $stepY = $tileH + max(0, $marginY);
+        $canvasW = $image->width();
+        $canvasH = $image->height();
+
+        for ($y = 0; $y < $canvasH; $y += $stepY) {
+            for ($x = 0; $x < $canvasW; $x += $stepX) {
+                $image->place($watermark, 'top-left', $x, $y, $opacity);
+            }
+        }
+    }
+
+    private function isTiledWatermarkPosition(string $position): bool
+    {
+        return $position === '*' || strcasecmp($position, 'tile') === 0;
     }
 
     /**
