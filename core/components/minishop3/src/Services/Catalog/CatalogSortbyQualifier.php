@@ -63,7 +63,7 @@ final class CatalogSortbyQualifier
             return $part;
         }
 
-        if (($match['table'] ?? '') !== '') {
+        if ($match['table'] !== '') {
             return $part;
         }
 
