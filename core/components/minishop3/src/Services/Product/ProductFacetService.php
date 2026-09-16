@@ -97,6 +97,16 @@ final class ProductFacetService
         return $result;
     }
 
+    public function clearCache(): bool
+    {
+        $cacheManager = $this->modx->cacheManager;
+        if (!is_object($cacheManager)) {
+            return false;
+        }
+
+        return $cacheManager->clean($this->cacheOptions());
+    }
+
     /**
      * @param array<string, mixed> $params
      * @return array{0: list<string>, 1: bool} keys, SQL ok
