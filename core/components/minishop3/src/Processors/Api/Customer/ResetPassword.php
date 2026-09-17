@@ -4,8 +4,10 @@ namespace MiniShop3\Processors\Api\Customer;
 
 use MiniShop3\Controllers\Auth\PasswordAuthProvider;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Customer\RateLimiter;
 use MiniShop3\Services\Customer\RegisterService;
 use MODX\Revolution\Processors\Processor;
@@ -64,7 +66,7 @@ class ResetPassword extends Processor
         $authManager = $this->modx->services->get('ms3_auth_manager');
 
         /** @var msCustomer $customer */
-        $customer = $authManager->validateToken($token, 'password_reset');
+        $customer = $authManager->validateToken($token, msCustomerToken::TYPE_PASSWORD_RESET);
 
         if (!$customer) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_token_invalid'));
@@ -82,8 +84,7 @@ class ResetPassword extends Processor
         $customer->set('password', $hashedPassword);
 
         $customer->set('failed_login_attempts', 0);
-        $customer->set('is_blocked', false);
-        $customer->set('blocked_until', null);
+        CustomerAccess::liftTimedLockout($customer);
 
         if (!$customer->save()) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_save'));

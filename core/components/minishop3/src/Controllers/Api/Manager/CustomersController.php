@@ -8,6 +8,7 @@ use MiniShop3\Model\msCustomerGroup;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
 use MiniShop3\Services\Grid\RelationSqlFragments;
 use MODX\Revolution\modX;
@@ -173,6 +174,8 @@ class CustomersController
             return Response::error('Customer not found', HttpStatus::NOT_FOUND)->getData();
         }
 
+        $wasBlocked = (bool) $customer->get('is_blocked');
+
         $allowedFields = ['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_blocked', 'customer_group_id'];
 
         foreach ($allowedFields as $field) {
@@ -196,6 +199,13 @@ class CustomersController
             $customer->set($field, $value);
         }
 
+        if (array_key_exists('is_blocked', $data) && (bool) $customer->get('is_blocked') !== $wasBlocked) {
+            $customer->set('blocked_until', null);
+            if (!$customer->get('is_blocked')) {
+                $customer->set('failed_login_attempts', 0);
+            }
+        }
+
         if (isset($data['password'])) {
             $password = trim((string)$data['password']);
             if ($password !== '') {
@@ -205,6 +215,12 @@ class CustomersController
 
         if (!$customer->save()) {
             return Response::error('Failed to save customer', HttpStatus::INTERNAL_SERVER_ERROR)->getData();
+        }
+
+        if (CustomerAccess::isAccessDenied($customer)) {
+            /** @var AuthManager $authManager */
+            $authManager = $this->modx->services->get('ms3_auth_manager');
+            $authManager->revokeTokens($customer);
         }
 
         return Response::success($this->formatCustomer($customer), 'Customer updated successfully')->getData();

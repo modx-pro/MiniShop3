@@ -30,6 +30,7 @@ class msCustomerToken extends xPDOSimpleObject
     const TYPE_REFRESH = 'refresh';
     const TYPE_MAGIC_LINK = 'magic_link';
     const TYPE_EMAIL_VERIFICATION = 'email_verification';
+    const TYPE_PASSWORD_RESET = 'password_reset';
 
     /**
      * Check if token is expired
