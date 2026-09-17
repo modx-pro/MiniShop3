@@ -6,11 +6,13 @@ import { computed, nextTick, onMounted, ref } from 'vue'
 import { useGridFilterParams } from '../composables/useGridFilterParams.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 // Bulk selection
 const {
@@ -933,6 +935,7 @@ onMounted(async () => {
           type="button"
           :label="_('save')"
           icon="pi pi-check"
+          :severity="primarySaveSeverity"
           :loading="saving"
           @click="saveCustomer"
         />
@@ -1105,6 +1108,7 @@ onMounted(async () => {
             <Button
               :label="_('save')"
               icon="pi pi-check"
+              :severity="primarySaveSeverity"
               :loading="savingAddress"
               @click="saveAddress"
             />

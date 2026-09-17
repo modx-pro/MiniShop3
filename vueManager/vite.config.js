@@ -99,6 +99,7 @@ export default defineConfig(({ command }) => {
     '@vuetools/useModx',
     '@vuetools/usePermission',
     '@vuetools/usePrimeVueLocale',
+    '@vuetools/useTheme',
   ]
 
   // Subpath imports (primevue/button) resolve to node_modules and ship a second
