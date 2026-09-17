@@ -216,7 +216,6 @@ $_lang['ms3_err_status_wrong'] = 'Invalid order status.';
 $_lang['ms3_err_status_same'] = 'This status is already set.';
 $_lang['ms3_err_status_transition'] = 'This status transition is not allowed.';
 $_lang['ms3_err_status_transitions_invalid'] = 'Order status transition allow-list is invalid.';
-$_lang['ms3_err_status_rollback'] = 'Failed to roll back order status after a rejected transition.';
 $_lang['ms3_err_register_globals'] = 'Error: php parameter <b>register_globals</b> must be disabled.';
 $_lang['ms3_err_link_equal'] = 'You are trying to add product link to itself';
 $_lang['ms3_err_no_link'] = 'Link type not found';

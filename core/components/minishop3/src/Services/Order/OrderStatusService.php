@@ -20,13 +20,17 @@ use MODX\Revolution\modX;
  * Do not write `status_id` directly for paid / cancel / sent — call {@see change()}.
  * Draft creation may still set draft status_id without going through this service.
  *
- * After a successful gate: lifecycle ports (#589–#591) → msOnChangeOrderStatus → log → notify.
- * If after-event or a port fails, status is rolled back (no log / notify).
- * msOrderLog is written only after a successful after-event (plugins must not rely on a fresh
- * log row inside msOnChangeOrderStatus).
+ * Flow (contract with #603, see PR #596):
+ * 1. Validate + msOnBeforeChangeOrderStatus (may abort before any persist).
+ * 2. DB transaction: in-TX lifecycle ports (may deny) → persist status_id → commit.
+ *    Rollback is only the DB transaction — no compensating status save after commit.
+ * 3. After commit: msOnChangeOrderStatus → log → notify.
+ *    Plugin failure after commit returns an error but does **not** revert status_id
+ *    (status and future inventory stay consistent).
  *
  * Options for {@see change()}:
  * - idempotent=true: already-in-status returns true without events/notify (integrations).
+ *   Prefer {@see ensure()} when callers only need "end up in this status".
  */
 class OrderStatusService implements OrderStatusChanger
 {
@@ -185,14 +189,9 @@ class OrderStatusService implements OrderStatusChanger
             }
         }
 
-        $msOrder->set('status_id', $statusId);
-        if (!$msOrder->save()) {
-            return $this->modx->lexicon('ms3_err_unknown');
-        }
-
-        $portError = $this->runLifecyclePorts($msOrder, $statusId, $previousStatusId);
-        if ($portError !== null) {
-            return $this->rollbackStatus($msOrder, $previousStatusId) ?? $portError;
+        $persistError = $this->persistStatusWithPorts($msOrder, $statusId, $previousStatusId);
+        if ($persistError !== null) {
+            return $persistError;
         }
 
         $response = $this->ms3->utils->invokeEvent('msOnChangeOrderStatus', [
@@ -201,7 +200,8 @@ class OrderStatusService implements OrderStatusChanger
             'status' => $statusId,
         ]);
         if (!$response['success']) {
-            return $this->rollbackStatus($msOrder, $previousStatusId) ?? $response['message'];
+            // Status (and in-TX domain work) already committed — do not compensate.
+            return $response['message'];
         }
 
         $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
@@ -215,6 +215,61 @@ class OrderStatusService implements OrderStatusChanger
         }
 
         return true;
+    }
+
+    /**
+     * In-TX domain hooks then persist status_id. On failure rolls back the transaction only.
+     */
+    protected function persistStatusWithPorts(
+        msOrder $msOrder,
+        int $statusId,
+        ?int $previousStatusId
+    ): ?string {
+        $useTx = is_callable([$this->modx, 'beginTransaction'])
+            && is_callable([$this->modx, 'commit'])
+            && is_callable([$this->modx, 'rollback']);
+
+        if ($useTx) {
+            $this->modx->beginTransaction();
+        }
+
+        try {
+            $portError = $this->runLifecyclePorts($msOrder, $statusId, $previousStatusId);
+            if ($portError !== null) {
+                if ($useTx) {
+                    $this->modx->rollback();
+                }
+
+                return $portError;
+            }
+
+            $msOrder->set('status_id', $statusId);
+            if (!$msOrder->save()) {
+                if ($useTx) {
+                    $this->modx->rollback();
+                }
+                $msOrder->set('status_id', $previousStatusId);
+
+                return $this->modx->lexicon('ms3_err_unknown');
+            }
+
+            if ($useTx) {
+                $this->modx->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($useTx) {
+                $this->modx->rollback();
+            }
+            $msOrder->set('status_id', $previousStatusId);
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OrderStatusService] persistStatusWithPorts: ' . $e->getMessage()
+            );
+
+            return $this->modx->lexicon('ms3_err_unknown');
+        }
+
+        return null;
     }
 
     /**
@@ -253,7 +308,8 @@ class OrderStatusService implements OrderStatusChanger
     }
 
     /**
-     * Invoke semantic lifecycle ports when the target matches configured status ids.
+     * Invoke in-TX semantic lifecycle ports when the target matches configured status ids.
+     * May deny the transition before status_id is persisted (#589–#591 / #603).
      */
     protected function runLifecyclePorts(msOrder $order, int $statusId, ?int $previousStatusId): ?string
     {
@@ -272,30 +328,6 @@ class OrderStatusService implements OrderStatusChanger
         }
 
         return null;
-    }
-
-    /**
-     * Restore previous status_id after failed after-event or lifecycle port.
-     *
-     * @return string|null Lexicon/error when rollback persist fails
-     */
-    protected function rollbackStatus(msOrder $order, ?int $previousStatusId): ?string
-    {
-        $order->set('status_id', $previousStatusId);
-        if ($order->save()) {
-            return null;
-        }
-
-        $this->modx->log(
-            modX::LOG_LEVEL_ERROR,
-            sprintf(
-                '[MiniShop3] Failed to rollback order #%s status to %s',
-                (string) $order->get('id'),
-                $previousStatusId === null ? 'null' : (string) $previousStatusId
-            )
-        );
-
-        return $this->modx->lexicon('ms3_err_status_rollback');
     }
 
     /**
