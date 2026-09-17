@@ -8,6 +8,8 @@ import {
   formatMissingReport,
   parseExportBindings,
   parseImportBindings,
+  readResolverVueToolsVersion,
+  stripBindingComments,
 } from './vuetoolsExportGuard.js'
 
 describe('vuetoolsExportGuard (#714)', () => {
@@ -27,6 +29,21 @@ describe('vuetoolsExportGuard (#714)', () => {
     expect(parseImportBindings('{ type Ref, ref }')).toEqual(['ref'])
   })
 
+  it('stripBindingComments removes line and block comments', () => {
+    expect(stripBindingComments('Card, // trailing\n NoSuch, /* x */ Button')).toMatch(
+      /Card,\s+NoSuch,\s+Button/,
+    )
+  })
+
+  it('parseImportBindings finds names after trailing comments', () => {
+    expect(
+      parseImportBindings(`{
+  Card, // trailing comment
+  NoSuch_AfterTrailingComment,
+}`),
+    ).toEqual(['Card', 'NoSuch_AfterTrailingComment'])
+  })
+
   it('collectNamedImports finds multiline primevue imports and skips type-only', () => {
     const source = `
 import type { Foo } from 'primevue'
@@ -41,6 +58,16 @@ export { createPinia } from 'pinia'
     expect([...map.get('primevue')].sort()).toEqual(['Button', 'DataTable'])
     expect([...map.get('vue')]).toEqual(['ref'])
     expect([...map.get('pinia')]).toEqual(['createPinia'])
+  })
+
+  it('collectNamedImports reports default and mixed default+named', () => {
+    const map = collectNamedImports(`
+import Foo from 'primevue'
+import Bar, { Button } from 'vue'
+import /* c */ { ref } from 'vue'
+`)
+    expect([...map.get('primevue')]).toEqual(['default'])
+    expect([...map.get('vue')].sort()).toEqual(['Button', 'default', 'ref'])
   })
 
   it('findMissingExports reports unknown names with file label', () => {
@@ -80,5 +107,19 @@ export { createPinia } from 'pinia'
   it('extractVendorExports uses public name after as', () => {
     const src = `const x=1;export{n as ref,DataTable,foo as Button};`
     expect(extractVendorExports(src)).toEqual(['Button', 'DataTable', 'ref'])
+  })
+
+  it('readResolverVueToolsVersion parses resolver PHP', () => {
+    const php = `
+$packages = [
+    'pdoTools' => ['version' => '3.0.2-pl'],
+    'VueTools' => [
+        // Keep fixture in sync
+        'version' => '1.2.0-pl',
+        'service_url' => 'modstore.pro',
+    ],
+];
+`
+    expect(readResolverVueToolsVersion(php)).toBe('1.2.0-pl')
   })
 })

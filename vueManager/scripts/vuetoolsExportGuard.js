@@ -3,25 +3,57 @@
 export const EXTERNAL_MODULES = Object.freeze(['vue', 'pinia', 'primevue'])
 
 /**
+ * Read VueTools.version from `_build/resolvers/resolver_01_setup.php`.
+ * @param {string} phpSource
+ * @returns {string}
+ */
+export function readResolverVueToolsVersion(phpSource) {
+  const match = phpSource.match(
+    /'VueTools'\s*=>\s*\[[\s\S]*?'version'\s*=>\s*'([^']+)'/,
+  )
+  if (!match) {
+    throw new Error(
+      "Could not parse VueTools 'version' from resolver_01_setup.php",
+    )
+  }
+  return match[1]
+}
+
+/**
  * @param {string} source
  * @param {readonly string[]} [modules]
  * @returns {Map<string, Set<string>>}
  */
 export function collectNamedImports(source, modules = EXTERNAL_MODULES) {
   const modAlt = modules.map(escapeRegExp).join('|')
-  const re = new RegExp(
-    String.raw`(?:(?<![.\w$])(?:import|export)\s+)(?<type>type\s+)?(?<clause>\{[^}]*\})\s*from\s*['"](?<mod>${modAlt})['"]`,
-    'g',
-  )
   const out = new Map(modules.map(m => [m, new Set()]))
 
-  for (const match of source.matchAll(re)) {
+  // import|export [type] [Default,] [/*c*/] { … } from 'mod'
+  const braced = new RegExp(
+    String.raw`(?:(?<![.\w$])(?:import|export)\s+)(?<type>type\s+)?(?:(?<defaultBind>[A-Za-z_$][\w$]*)\s*,\s*)?(?:\/\*[\s\S]*?\*\/\s*)*(?<clause>\{[^}]*\})\s*from\s*['"](?<mod>${modAlt})['"]`,
+    'g',
+  )
+  for (const match of source.matchAll(braced)) {
     if (match.groups?.type) continue
     const set = out.get(match.groups.mod)
     if (!set) continue
+    if (match.groups.defaultBind) {
+      set.add('default')
+    }
     for (const name of parseImportBindings(match.groups.clause)) {
       set.add(name)
     }
+  }
+
+  // import Default from 'mod' (no named clause; vue/pinia/primevue have no default)
+  const defaultOnly = new RegExp(
+    String.raw`(?:(?<![.\w$])import\s+)(?!type\s)(?:\/\*[\s\S]*?\*\/\s*)*(?<defaultBind>[A-Za-z_$][\w$]*)\s+from\s*['"](?<mod>${modAlt})['"]`,
+    'g',
+  )
+  for (const match of source.matchAll(defaultOnly)) {
+    const set = out.get(match.groups.mod)
+    if (!set) continue
+    set.add('default')
   }
 
   return out
@@ -113,18 +145,24 @@ export function extractVendorExports(source) {
   return [...names].sort()
 }
 
+/** Strip line and block comments so trailing comments cannot hide the next binding. */
+export function stripBindingComments(text) {
+  return text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n\r]*/g, ' ')
+}
+
 /**
  * @param {string} braceOrInner
  * @param {'import'|'export'} side
  */
 function parseBindingList(braceOrInner, side) {
-  const inner =
+  let inner =
     braceOrInner.trim().startsWith('{') && braceOrInner.trim().endsWith('}')
       ? braceOrInner.trim().slice(1, -1)
       : braceOrInner
+  inner = stripBindingComments(inner)
   const names = []
   for (const part of inner.split(',')) {
-    let token = part.trim()
+    const token = part.trim()
     if (!token) continue
     if (/^type\s+/.test(token)) continue
     const sides = token.split(/\s+as\s+/)

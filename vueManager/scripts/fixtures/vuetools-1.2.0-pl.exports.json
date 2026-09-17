@@ -1,6 +1,6 @@
 {
   "vuetoolsVersion": "1.2.0-pl",
-  "generatedFrom": "/Users/ibochkarev/Sites/project/assets/components/vuetools/vendor",
+  "generatedFrom": "vuetools/vendor/{vue,pinia,primevue}.min.js (VueTools 1.2.0-pl)",
   "generatedAt": "2026-09-17",
   "note": "Keep in sync with _build/resolvers/resolver_01_setup.php VueTools.version. Regenerate: node scripts/check-vuetools-exports.mjs --write-fixture /path/to/vuetools/vendor",
   "modules": {

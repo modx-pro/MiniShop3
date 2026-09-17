@@ -11,20 +11,34 @@ import {
   EXTERNAL_MODULES,
   extractVendorExports,
   formatMissingReport,
+  readResolverVueToolsVersion,
 } from './vuetoolsExportGuard.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const vueManagerRoot = path.join(__dirname, '..')
+const repoRoot = path.join(vueManagerRoot, '..')
 const srcRoot = path.join(vueManagerRoot, 'src')
 const fixturesDir = path.join(__dirname, 'fixtures')
-
-/** Must match `_build/resolvers/resolver_01_setup.php` → VueTools.version */
-const VUETOOLS_VERSION = '1.2.0-pl'
-const FIXTURE_PATH = path.join(fixturesDir, `vuetools-${VUETOOLS_VERSION}.exports.json`)
+const resolverPath = path.join(repoRoot, '_build/resolvers/resolver_01_setup.php')
 
 function fail(message) {
   console.error(`FAIL: ${message}`)
   process.exit(1)
+}
+
+function expectedVueToolsVersion() {
+  if (!fs.existsSync(resolverPath)) {
+    fail(`Missing resolver: ${resolverPath}`)
+  }
+  try {
+    return readResolverVueToolsVersion(fs.readFileSync(resolverPath, 'utf8'))
+  } catch (error) {
+    fail(error instanceof Error ? error.message : String(error))
+  }
+}
+
+function fixturePathFor(version) {
+  return path.join(fixturesDir, `vuetools-${version}.exports.json`)
 }
 
 function walkSourceFiles(dir, acc = []) {
@@ -44,18 +58,19 @@ function walkSourceFiles(dir, acc = []) {
   return acc
 }
 
-function loadFixture() {
-  if (!fs.existsSync(FIXTURE_PATH)) {
+function loadFixture(version) {
+  const fixturePath = fixturePathFor(version)
+  if (!fs.existsSync(fixturePath)) {
     fail(
-      `Missing fixture ${path.basename(FIXTURE_PATH)}. Generate with:\n` +
+      `Missing fixture ${path.basename(fixturePath)} for resolver VueTools ${version}. Generate with:\n` +
         `  node scripts/check-vuetools-exports.mjs --write-fixture /path/to/vuetools/vendor`,
     )
   }
-  const fixture = JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8'))
-  if (fixture.vuetoolsVersion !== VUETOOLS_VERSION) {
+  const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'))
+  if (fixture.vuetoolsVersion !== version) {
     fail(
-      `Fixture vuetoolsVersion=${fixture.vuetoolsVersion} != expected ${VUETOOLS_VERSION} ` +
-        `(sync with _build/resolvers/resolver_01_setup.php)`,
+      `Fixture vuetoolsVersion=${fixture.vuetoolsVersion} != resolver VueTools ${version} ` +
+        `(_build/resolvers/resolver_01_setup.php)`,
     )
   }
   for (const mod of EXTERNAL_MODULES) {
@@ -67,6 +82,7 @@ function loadFixture() {
 }
 
 function writeFixture(vendorDir) {
+  const version = expectedVueToolsVersion()
   const abs = path.resolve(vendorDir)
   if (!fs.existsSync(abs)) {
     fail(`Vendor dir not found: ${abs}`)
@@ -81,13 +97,14 @@ function writeFixture(vendorDir) {
     modules[mod] = extractVendorExports(fs.readFileSync(file, 'utf8'))
   }
 
+  const out = fixturePathFor(version)
   fs.mkdirSync(fixturesDir, { recursive: true })
   fs.writeFileSync(
-    FIXTURE_PATH,
+    out,
     `${JSON.stringify(
       {
-        vuetoolsVersion: VUETOOLS_VERSION,
-        generatedFrom: abs,
+        vuetoolsVersion: version,
+        generatedFrom: `vuetools/vendor/{vue,pinia,primevue}.min.js (VueTools ${version})`,
         generatedAt: new Date().toISOString().slice(0, 10),
         note:
           'Keep in sync with _build/resolvers/resolver_01_setup.php VueTools.version. ' +
@@ -98,14 +115,15 @@ function writeFixture(vendorDir) {
       2,
     )}\n`,
   )
-  console.warn(`Wrote ${FIXTURE_PATH}`)
+  console.warn(`Wrote ${out}`)
   for (const mod of EXTERNAL_MODULES) {
     console.warn(`  ${mod}: ${modules[mod].length} exports`)
   }
 }
 
 function runCheck() {
-  const fixture = loadFixture()
+  const version = expectedVueToolsVersion()
+  const fixture = loadFixture(version)
   const files = walkSourceFiles(srcRoot).map(full => ({
     path: path.relative(vueManagerRoot, full).replaceAll('\\', '/'),
     source: fs.readFileSync(full, 'utf8'),
@@ -118,8 +136,7 @@ function runCheck() {
     }
     console.error(
       `\n${result.missing.length} missing export(s) vs VueTools ${result.vuetoolsVersion} fixture.\n` +
-        `If you raised the VueTools minimum, regenerate the fixture and bump VUETOOLS_VERSION ` +
-        `in this script + resolver_01_setup.php.`,
+        `If you raised the VueTools minimum, bump resolver_01_setup.php and regenerate the fixture.`,
     )
     process.exit(1)
   }
