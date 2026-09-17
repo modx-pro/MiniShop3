@@ -7,6 +7,7 @@ namespace MiniShop3\Services\Catalog;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerGroup;
 use MiniShop3\Model\msCustomerToken;
+use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\TokenService;
 use MODX\Revolution\modAccessResourceGroup;
 use MODX\Revolution\modUserGroup;
@@ -23,10 +24,10 @@ use xPDO\Om\xPDOQuery;
  * - authority / role rank is not compared (customers have no modUserRole).
  * - principal_class matches only {@see modUserGroup::class}, same as MODX 3 processors.
  *
- * Blocked customers: is_blocked with empty/null blocked_until stays closed here
- * (manager permanent block). AuthManager::authenticate() would clear that flag
- * and let the customer in; this resolver does not mutate flags.
- * When blocked_until is in the past, catalog groups are restored without mutating flags.
+ * Blocked customers: permanent manager block (empty/null blocked_until) stays closed.
+ * AuthManager does not lift manual blocks (#734); only timed lockout is lifted on
+ * login or password reset. Expired blocked_until restores catalog groups without
+ * mutating flags here.
  */
 final class CustomerResourceGroupResolver
 {
@@ -205,19 +206,8 @@ final class CustomerResourceGroupResolver
             return [];
         }
 
-        // Inactive is always closed. Permanent is_blocked (empty blocked_until) stays
-        // closed here; AuthManager would clear that on authenticate(). Future blocked_until
-        // stays closed. Expired blocked_until restores groups without clearing flags.
-        if (!(bool) $customer->get('is_active')) {
+        if (CustomerAccess::isAccessDenied($customer)) {
             return [];
-        }
-
-        if ((bool) $customer->get('is_blocked')) {
-            $blockedUntil = $customer->get('blocked_until');
-            $untilTs = is_string($blockedUntil) && $blockedUntil !== '' ? strtotime($blockedUntil) : false;
-            if ($untilTs === false || $untilTs > time()) {
-                return [];
-            }
         }
 
         $groupId = (int) ($customer->get('customer_group_id') ?? 0);

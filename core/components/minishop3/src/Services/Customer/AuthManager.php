@@ -622,6 +622,17 @@ class AuthManager
      */
     public function handleFailedLogin(msCustomer $customer): void
     {
+        if (CustomerAccess::isLockoutExpired($customer)) {
+            CustomerAccess::liftTimedLockout($customer);
+            $customer->set('failed_login_attempts', 0);
+        }
+
+        // Permanent manager block must keep empty blocked_until so ForgotPassword
+        // still treats the account as manually blocked (#747), not as a timed lockout.
+        if ((bool) $customer->get('is_blocked') && !CustomerAccess::hasTimedLockout($customer)) {
+            return;
+        }
+
         $maxAttempts = (int)$this->modx->getOption('ms3_customer_max_login_attempts', null, 5);
         $blockDuration = (int)$this->modx->getOption('ms3_customer_block_duration', null, 3600);
 

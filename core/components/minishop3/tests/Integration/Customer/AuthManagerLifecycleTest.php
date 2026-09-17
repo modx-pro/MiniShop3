@@ -8,6 +8,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Order\OrderAddressManager;
 use MiniShop3\Services\Order\OrderDraftManager;
 use MiniShop3\Services\TokenService;
@@ -358,6 +359,57 @@ class AuthManagerLifecycleTest extends TestCase
         self::assertTrue((bool) $customer->get('is_blocked'));
         self::assertSame(3, (int) $customer->get('failed_login_attempts'));
         self::assertNotEmpty($customer->get('blocked_until'));
+    }
+
+    public function testHandleFailedLoginClearsExpiredLockoutAndResetsAttempts(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'expired-lockout@example.com',
+            'is_active' => 1,
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() - 60),
+            'failed_login_attempts' => 5,
+        ]);
+        $modx = $this->makeModx(['ms3_customer_max_login_attempts' => 5, 'ms3_customer_block_duration' => 3600]);
+        $auth = $this->makeAuthManager($modx);
+
+        $auth->handleFailedLogin($customer);
+
+        self::assertFalse((bool) $customer->get('is_blocked'));
+        self::assertNull($customer->get('blocked_until'));
+        self::assertSame(1, (int) $customer->get('failed_login_attempts'));
+
+        $row = $this->store->findCustomerById((int) $customer->id);
+        self::assertNotNull($row);
+        self::assertSame(0, (int) $row['is_blocked']);
+        self::assertNull($row['blocked_until']);
+        self::assertSame(1, (int) $row['failed_login_attempts']);
+    }
+
+    public function testHandleFailedLoginDoesNotStampTimedLockoutOnPermanentBlock(): void
+    {
+        $customer = $this->seedCustomer([
+            'email' => 'permanent-block@example.com',
+            'is_active' => 1,
+            'is_blocked' => 1,
+            'blocked_until' => null,
+            'failed_login_attempts' => 4,
+        ]);
+        $modx = $this->makeModx(['ms3_customer_max_login_attempts' => 5, 'ms3_customer_block_duration' => 3600]);
+        $auth = $this->makeAuthManager($modx);
+
+        $auth->handleFailedLogin($customer);
+
+        self::assertTrue((bool) $customer->get('is_blocked'));
+        self::assertNull($customer->get('blocked_until'));
+        self::assertSame(4, (int) $customer->get('failed_login_attempts'));
+        self::assertTrue(CustomerAccess::isPasswordResetDenied($customer));
+
+        $row = $this->store->findCustomerById((int) $customer->id);
+        self::assertNotNull($row);
+        self::assertSame(1, (int) $row['is_blocked']);
+        self::assertNull($row['blocked_until']);
+        self::assertSame(4, (int) $row['failed_login_attempts']);
     }
 
     /**

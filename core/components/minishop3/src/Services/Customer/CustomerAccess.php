@@ -28,6 +28,21 @@ final class CustomerAccess
     }
 
     /**
+     * Whether password reset must be denied (ForgotPassword silent success path).
+     *
+     * Inactive accounts and permanent manager blocks (is_blocked without parseable
+     * blocked_until) are denied. Timed lockouts — active or expired — may request reset.
+     */
+    public static function isPasswordResetDenied(msCustomer $customer): bool
+    {
+        if (!(bool) $customer->get('is_active')) {
+            return true;
+        }
+
+        return (bool) $customer->get('is_blocked') && !self::hasTimedLockout($customer);
+    }
+
+    /**
      * Whether is_blocked with blocked_until already in the past.
      *
      * Empty, null, or unparseable blocked_until is treated as a permanent block (not expired).
