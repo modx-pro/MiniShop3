@@ -1,6 +1,8 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
+import { Button } from 'primevue'
+
+import { getPrimarySaveSeverity } from '../../utils/primevueTheme.js'
 
 defineProps({
   isCreateMode: { type: Boolean, required: true },
@@ -11,6 +13,7 @@ defineProps({
 
 const emit = defineEmits(['create', 'save', 'cancel'])
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 </script>
 
 <template>
@@ -19,7 +22,7 @@ const { _ } = useLexicon()
       v-if="isCreateMode"
       :label="_('ms3_order_create')"
       icon="pi pi-plus"
-      severity="success"
+      :severity="primarySaveSeverity"
       :loading="saving"
       @click="emit('create')"
     />
@@ -27,6 +30,7 @@ const { _ } = useLexicon()
       v-else
       :label="_('save')"
       icon="pi pi-check"
+      :severity="primarySaveSeverity"
       :loading="saving"
       :disabled="recalculatingCost"
       @click="emit('save')"

@@ -1,16 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Message from 'primevue/message'
-import ProgressBar from 'primevue/progressbar'
-import RadioButton from 'primevue/radiobutton'
-import Select from 'primevue/select'
-import SelectButton from 'primevue/selectbutton'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Checkbox, Column, DataTable, Message, ProgressBar, RadioButton, Select, SelectButton, Toast, useToast } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'

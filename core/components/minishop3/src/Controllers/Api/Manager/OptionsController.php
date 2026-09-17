@@ -422,13 +422,22 @@ class OptionsController
         if ($query !== '') {
             $c->where(['value:LIKE' => "%{$query}%"]);
         }
-        $c->select('DISTINCT value');
+        // xPDOQuery::select() quotes bare tokens — never pass 'DISTINCT value' as one string.
+        $c->select($this->modx->escape('value'));
+        $c->distinct();
         $c->sortby('value', 'ASC');
         $c->limit($limit);
 
         $results = [];
-        if ($c->prepare() && $c->stmt->execute()) {
+        if ($c->prepare() && $c->stmt !== null && $c->stmt->execute()) {
             $results = $c->stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+        } else {
+            $errorInfo = $c->stmt !== null ? $c->stmt->errorInfo() : [];
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[OptionsController] getSuggestions query failed for key=' . $key
+                . ' errorInfo=' . json_encode($errorInfo)
+            );
         }
 
         return Response::success(['results' => $results, 'total' => count($results)])->getData();

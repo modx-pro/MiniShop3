@@ -4,10 +4,17 @@
  * Вызывать после app.mount(). PrimeVue с @primeuix/themes встраивает тему в runtime
  * после загрузки бандла, поэтому стили из SCSS (даже с !important) загружаются раньше
  * и перезаписываются. Runtime injection обеспечивает применение наших правил последними.
+ *
+ * Под Modx preset (vuetools.theme = modx) инжект отключён: Modx сам владеет высотой
+ * контролов и плотностью, наши переопределения конфликтовали бы с его токенами.
  */
+import { shouldInjectFormStylesOverride } from './primevueTheme.js'
+
 const STYLE_ID = 'ms3-form-styles-override'
 
 export function injectFormStylesOverride() {
+  // Modx preset owns control height/density — skip our Aura-era overrides.
+  if (!shouldInjectFormStylesOverride()) return
   if (document.getElementById(STYLE_ID)) return
 
   const css = `

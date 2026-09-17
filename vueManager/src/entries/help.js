@@ -5,12 +5,12 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import PrimeVue from 'primevue/config'
+import { PrimeVue } from 'primevue'
 import { createApp } from 'vue'
 
 import HelpPage from '../components/HelpPage.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
 
 /**
  * Creates and configures Vue application
@@ -18,14 +18,7 @@ import { injectFormStylesOverride } from '../utils/formStyles.js'
 function createVueApp() {
   const app = createApp(HelpPage)
 
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
-  })
+  app.use(PrimeVue, getManagerPrimeVueConfig())
 
   return app
 }

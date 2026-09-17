@@ -1,13 +1,11 @@
 import './scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
+import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
+
+import { getManagerPrimeVueConfig } from './utils/primevueTheme.js'
 
 /**
  * MiniShop3 Vue Manager
@@ -39,16 +37,7 @@ export function createVueApp(rootComponent) {
   const pinia = createPinia()
   app.use(pinia)
 
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-        cssLayer: false,
-        prefix: 'p',
-      },
-    },
-    locale: getPrimeVueLocale(),
+  app.use(PrimeVue, getManagerPrimeVueConfig({
     pt: {
       directives: {
         tooltip: {
@@ -56,7 +45,7 @@ export function createVueApp(rootComponent) {
         },
       },
     },
-  })
+  }))
 
   app.use(ConfirmationService)
   app.use(ToastService)

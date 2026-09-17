@@ -603,6 +603,11 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_api',
     ],
+    'ms3_public_seo_tv_map' => [
+        'value' => '',
+        'xtype' => 'textarea',
+        'area' => 'ms3_api',
+    ],
 
     // Notifications
     'ms3_telegram_bot_token' => [

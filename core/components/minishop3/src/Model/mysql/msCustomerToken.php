@@ -40,7 +40,7 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
             ],
             'type' => [
                 'dbtype' => 'enum',
-                'precision' => "'api','refresh','magic_link','email_verification'",
+                'precision' => "'api','refresh','magic_link','email_verification','password_reset'",
                 'phptype' => 'string',
                 'null' => false,
                 'default' => 'api',

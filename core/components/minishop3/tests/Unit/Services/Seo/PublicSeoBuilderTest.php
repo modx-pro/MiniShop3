@@ -124,6 +124,18 @@ final class PublicSeoBuilderTest extends TestCase
         self::assertSame('website', $category['og']['type']);
     }
 
+    public function testRobotsFromSearchableWhenPresent(): void
+    {
+        $indexed = PublicSeoBuilder::build(['searchable' => 1], 'https://shop.example/', PublicSeoBuilder::OG_TYPE_PRODUCT);
+        self::assertSame('index,follow', $indexed['robots']);
+
+        $hidden = PublicSeoBuilder::build(['searchable' => 0], 'https://shop.example/', PublicSeoBuilder::OG_TYPE_PRODUCT);
+        self::assertSame('noindex,nofollow', $hidden['robots']);
+
+        $default = PublicSeoBuilder::build([], 'https://shop.example/', PublicSeoBuilder::OG_TYPE_PRODUCT);
+        self::assertSame('index,follow', $default['robots']);
+    }
+
     public function testWhitelistDropsUnknownKeys(): void
     {
         $clean = PublicSeoBuilder::whitelist([

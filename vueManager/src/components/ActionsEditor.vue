@@ -5,16 +5,11 @@
  * Allows adding, removing and editing actions in grid column
  */
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { Button, Checkbox, Column, DataTable, Dialog, InputText, Select } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import actionRegistry from '../actionRegistry.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 
 const props = defineProps({
   /**
@@ -37,6 +32,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const localActions = ref([])
 
@@ -376,6 +372,7 @@ function closeDialog() {
         <Button
           :label="_('save')"
           icon="pi pi-check"
+          :severity="primarySaveSeverity"
           :disabled="!editingAction?.name"
           @click="saveAction"
         />

@@ -3,8 +3,10 @@
 namespace MiniShop3\Processors\Api\Customer;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
 
@@ -60,10 +62,10 @@ class ForgotPassword extends Processor
             return $this->success($message);
         }
 
-        if (!$customer->get('is_active') || $customer->get('is_blocked')) {
+        if (CustomerAccess::isPasswordResetDenied($customer)) {
             $this->modx->log(
                 \MODX\Revolution\modX::LOG_LEVEL_WARN,
-                "[ForgotPassword] Customer #{$customer->id} is inactive or blocked"
+                "[ForgotPassword] Customer #{$customer->id} is inactive or permanently blocked"
             );
             return $this->success($message);
         }
@@ -71,10 +73,10 @@ class ForgotPassword extends Processor
         /** @var AuthManager $authManager */
         $authManager = $this->modx->services->get('ms3_auth_manager');
 
-        $authManager->revokeTokens($customer, 'password_reset');
+        $authManager->revokeTokens($customer, msCustomerToken::TYPE_PASSWORD_RESET);
 
         $ttl = (int)$this->modx->getOption('ms3_password_reset_token_ttl', null, 3600);
-        $tokenObj = $authManager->createToken($customer, 'password_reset', $ttl);
+        $tokenObj = $authManager->createToken($customer, msCustomerToken::TYPE_PASSWORD_RESET, $ttl);
 
         if (!$tokenObj) {
             $this->modx->log(

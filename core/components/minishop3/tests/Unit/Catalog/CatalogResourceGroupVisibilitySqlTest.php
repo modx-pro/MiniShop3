@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Unit\Catalog;
 
 use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Services\Catalog\CatalogSortbyQualifier;
 use MODX\Revolution\modUserGroup;
 use PDO;
+use PDOException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -183,6 +185,88 @@ final class CatalogResourceGroupVisibilitySqlTest extends TestCase
         $this->link(12, 130);
         $this->acl(130, 1, 'web');
         self::assertFalse($this->isVisibleWithAllowed(12, [999]));
+    }
+
+    public function testSelfJoinSiteContentMakesUnqualifiedMultiColumnOrderByAmbiguous(): void
+    {
+        $pdo = $this->listingPdo();
+        $this->expectException(PDOException::class);
+        $this->expectExceptionMessageMatches('/ambiguous/i');
+        $pdo->query(
+            'SELECT msProduct.id FROM site_content msProduct
+             INNER JOIN site_content ms3RgVisibility ON ms3RgVisibility.id = msProduct.id
+             ORDER BY pagetitle DESC, publishedon'
+        );
+    }
+
+    public function testQualifiedSortbyWorksWithSiteContentSelfJoinAndOrphanProduct(): void
+    {
+        $pdo = $this->listingPdo();
+        $predicate = str_replace('`', '', CatalogResourceGroupVisibility::buildNotExistsSql(
+            'document_groups',
+            'access_resource_groups',
+            'msProduct',
+            "'web'",
+            $this->quotedPrincipalClass,
+        ));
+        $orderBy = CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+            'pagetitle DESC, publishedon',
+            ['pagetitle', 'publishedon'],
+        );
+        self::assertSame('msProduct.pagetitle DESC, msProduct.publishedon', $orderBy);
+
+        $rows = $pdo->query(
+            'SELECT msProduct.id FROM site_content msProduct
+             LEFT JOIN ms3_products Data ON Data.id = msProduct.id
+             INNER JOIN site_content ms3RgVisibility
+                ON ms3RgVisibility.id = msProduct.id AND ' . $predicate . '
+             ORDER BY ' . $orderBy
+        );
+        self::assertInstanceOf(\PDOStatement::class, $rows);
+        $ids = $rows->fetchAll(PDO::FETCH_COLUMN);
+        // id 2 is RG-hidden; id 4 has no ms3_products row but must remain (#742 review).
+        self::assertSame([4, 3, 1], $ids);
+    }
+
+    private function listingPdo(): PDO
+    {
+        $pdo = new PDO('sqlite::memory:');
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->exec(
+            'CREATE TABLE site_content (
+                id INTEGER PRIMARY KEY,
+                pagetitle TEXT NOT NULL,
+                publishedon INTEGER NOT NULL
+            )'
+        );
+        $pdo->exec('CREATE TABLE ms3_products (id INTEGER PRIMARY KEY)');
+        $pdo->exec(
+            'CREATE TABLE document_groups (
+                document INTEGER NOT NULL,
+                document_group INTEGER NOT NULL
+            )'
+        );
+        $pdo->exec(
+            'CREATE TABLE access_resource_groups (
+                target INTEGER NOT NULL,
+                principal_class TEXT NOT NULL,
+                principal INTEGER NOT NULL,
+                context_key TEXT NULL
+            )'
+        );
+        $pdo->exec("INSERT INTO site_content (id, pagetitle, publishedon) VALUES
+            (1, 'B', 20),
+            (2, 'A', 30),
+            (3, 'C', 10),
+            (4, 'D', 40)");
+        $pdo->exec('INSERT INTO ms3_products (id) VALUES (1), (2), (3)');
+        $pdo->exec('INSERT INTO document_groups (document, document_group) VALUES (2, 20)');
+        $pdo->exec(
+            'INSERT INTO access_resource_groups (target, principal_class, principal, context_key)
+             VALUES (20, ' . $this->quotedPrincipalClass . ', 1, \'web\')'
+        );
+
+        return $pdo;
     }
 
     private function seedProduct(int $id): void

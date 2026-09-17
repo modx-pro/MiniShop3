@@ -1,17 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Paginator from 'primevue/paginator'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Column, ConfirmDialog, DataTable, Dialog, InputText, Paginator, Select, Textarea, Toast, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import { useCrudDialog } from '../composables/useCrudDialog.js'
@@ -19,10 +8,12 @@ import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
 import { gridDeleteAction } from '../utils/gridDeleteAction.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const CONFIRM_GROUP = 'settings-links'
 
@@ -355,7 +346,7 @@ onMounted(() => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveLink" />
+        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveLink" />
       </template>
     </Dialog>
   </div>

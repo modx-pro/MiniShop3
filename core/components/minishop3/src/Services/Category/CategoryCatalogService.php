@@ -37,6 +37,7 @@ class CategoryCatalogService
         'publishedon',
         'createdon',
         'editedon',
+        'searchable',
     ];
 
     /** @var list<string> */
@@ -129,7 +130,7 @@ class CategoryCatalogService
 
     /**
      * Query: context, include_hidden, include_content, include_breadcrumbs,
-     *        include_children, include_seo (default 1). List/tree omit seo.
+     *        include_children, include_seo (default 1). List/tree: include_seo (default 0).
      *
      * @param array<string, mixed> $params
      * @return array<string, mixed>|null
@@ -156,18 +157,22 @@ class CategoryCatalogService
         }
 
         if (CatalogQuery::toBool($params['include_children'] ?? false)) {
-            $payload['children'] = $this->listDirectChildrenPayloads(
+            $children = $this->listDirectChildrenPayloads(
                 $categoryId,
                 $params,
                 $includeHidden,
                 CatalogQuery::resolveLimit($params),
             );
+            if (CatalogQuery::resolveBool($params, 'include_seo', true)) {
+                $children = $this->publicSeo()->attachSeoToCategoryList(
+                    $children,
+                    array_merge($params, ['include_seo' => 1]),
+                );
+            }
+            $payload['children'] = $children;
         }
 
-        /** @var PublicSeoService $seo */
-        $seo = $this->modx->services->get('ms3_public_seo');
-
-        return $seo->maybeAttachCategory($payload, $params);
+        return $this->publicSeo()->maybeAttachCategory($payload, $params);
     }
 
     /**
@@ -224,8 +229,13 @@ class CategoryCatalogService
         $this->applySort($listQuery, $params);
         $listQuery->limit($limit, $offset);
 
+        $items = $this->publicSeo()->attachSeoToCategoryList(
+            $this->fetchFormattedCategories($listQuery, $includeContent),
+            $params,
+        );
+
         return [
-            'items' => $this->fetchFormattedCategories($listQuery, $includeContent),
+            'items' => $items,
             'total' => $total,
             'limit' => $limit,
             'offset' => $offset,
@@ -250,7 +260,10 @@ class CategoryCatalogService
         [$byId, $childrenByParent] = $this->indexCategoryRows($rows);
 
         return [
-            'items' => self::buildTreeNodes($byId, $childrenByParent, $parent, $depth),
+            'items' => $this->publicSeo()->attachSeoToCategoryTree(
+                self::buildTreeNodes($byId, $childrenByParent, $parent, $depth),
+                $params,
+            ),
         ];
     }
 
@@ -595,9 +608,17 @@ class CategoryCatalogService
         }
     }
 
+    private function publicSeo(): PublicSeoService
+    {
+        /** @var PublicSeoService $service */
+        $service = $this->modx->services->get('ms3_public_seo');
+
+        return $service;
+    }
+
     private function castResourceField(string $field, mixed $value): mixed
     {
-        if ($field === 'hidemenu') {
+        if ($field === 'hidemenu' || $field === 'searchable') {
             return (bool) $value;
         }
         if (in_array($field, self::INT_FIELDS, true)) {

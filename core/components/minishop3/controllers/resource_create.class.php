@@ -29,7 +29,8 @@ class msResourceCreateController extends ResourceCreateManagerController
      */
     public function addCss($script)
     {
-        $script = $script . '?v=' . $this->ms3->version;
+        require_once __DIR__ . '/vue_module_cache_bust.inc.php';
+        $script = ms3_vue_module_cache_bust_url($this->modx, $script, (string) $this->ms3->version);
         parent::addCss($script);
     }
 
@@ -65,8 +66,8 @@ class msResourceCreateController extends ResourceCreateManagerController
             self::$vueCoreCheckRegistered = true;
         }
 
-        // Add version to URL
-        $src = $src . '?v=' . $this->ms3->version;
+        require_once __DIR__ . '/vue_module_cache_bust.inc.php';
+        $src = ms3_vue_module_cache_bust_url($this->modx, $src, (string) $this->ms3->version);
 
         // Register the module (will be blocked by check if VueCore not installed)
         $this->modx->regClientStartupHTMLBlock(
@@ -80,57 +81,11 @@ class msResourceCreateController extends ResourceCreateManagerController
      */
     protected function registerVueCoreCheck()
     {
+        require_once __DIR__ . '/vue_core_check.inc.php';
         $alertTitle = $this->modx->lexicon('ms3_error') ?: 'Error';
         $alertMessage = $this->modx->lexicon('ms3_vuetools_required')
-            ?: 'VueTools package is required. Please install it from Package Manager.';
-
-        $script = <<<JS
-<script>
-(function() {
-    var importMap = document.querySelector('script[type="importmap"]');
-    var hasVueCore = false;
-
-    if (importMap) {
-        try {
-            var mapContent = JSON.parse(importMap.textContent);
-            hasVueCore = mapContent.imports && mapContent.imports.vue;
-        } catch (e) {
-            hasVueCore = false;
-        }
-    }
-
-    if (!hasVueCore) {
-        document.querySelectorAll('script[type="module"][data-vue-module]').forEach(function(el) {
-            el.remove();
-        });
-
-        if (typeof Ext !== 'undefined') {
-            Ext.onReady(function() {
-                if (typeof MODx !== 'undefined' && MODx.msg) {
-                    MODx.msg.alert('{$alertTitle}', '{$alertMessage}');
-                } else {
-                    alert('{$alertMessage}');
-                }
-            });
-        } else {
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
-                    if (typeof MODx !== 'undefined' && MODx.msg) {
-                        MODx.msg.alert('{$alertTitle}', '{$alertMessage}');
-                    } else {
-                        alert('{$alertMessage}');
-                    }
-                }, 500);
-            });
-        }
-
-        window.MS3_VUE_CORE_MISSING = true;
-    }
-})();
-</script>
-JS;
-
-        $this->modx->regClientStartupHTMLBlock($script);
+            ?: 'VueTools package (>= 1.2.0) is required. Please install or update it via Package Manager.';
+        ms3_register_vue_core_check($this->modx, $alertTitle, $alertMessage);
     }
 
     /**

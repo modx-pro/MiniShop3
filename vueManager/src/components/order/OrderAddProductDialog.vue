@@ -1,11 +1,11 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import AutoComplete from 'primevue/autocomplete'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
+import { AutoComplete, Button, Dialog, InputNumber } from 'primevue'
+
+import { getPrimarySaveSeverity } from '../../utils/primevueTheme.js'
 
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const visible = defineModel('visible', { type: Boolean, default: false })
 const selectedProduct = defineModel('selectedProduct', { type: Object, default: null })
@@ -133,6 +133,7 @@ defineProps({
     <Button
       :label="_('save')"
       icon="pi pi-check"
+      :severity="primarySaveSeverity"
       :loading="savingNewProduct"
       :disabled="!selectedProduct || !selectedProduct.id"
       @click="saveNewProduct"

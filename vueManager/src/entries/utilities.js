@@ -5,16 +5,13 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
 import { createPinia } from 'pinia'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
+import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import UtilitiesPage from '../components/UtilitiesPage.vue'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
+import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
 
 export function init(selector = '#ms3-vue-utilities') {
   const $el = document.querySelector(selector)
@@ -24,15 +21,7 @@ export function init(selector = '#ms3-vue-utilities') {
 
   const app = createApp(UtilitiesPage)
   app.use(createPinia())
-  app.use(PrimeVue, {
-    theme: {
-      preset: Aura,
-      options: {
-        darkModeSelector: 'none',
-      },
-    },
-    locale: getPrimeVueLocale(),
-  })
+  app.use(PrimeVue, getManagerPrimeVueConfig())
   app.use(ConfirmationService)
   app.use(ToastService)
   app.mount(selector)

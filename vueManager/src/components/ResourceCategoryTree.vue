@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Checkbox from 'primevue/checkbox'
-import ContextMenu from 'primevue/contextmenu'
-import Tree from 'primevue/tree'
+import { Checkbox, ContextMenu, Tree } from 'primevue'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'

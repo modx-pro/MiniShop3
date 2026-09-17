@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Smoke: public seo block wiring for product/category get (#567).
+ * Smoke: public seo block wiring for product/category get (#567) and list/tree (#703).
  *
  * Run: php tests/PublicSeoRoutesTest.php
  */
@@ -30,6 +30,7 @@ $categoryController = $read('src/Controllers/Api/Web/CategoryController.php');
 $registry = $read('src/ServiceRegistry.php');
 $factories = $read('src/ServiceRegistryFactories.php');
 $events = $read('../../../_build/elements/events.php');
+$settings = $read('../../../_build/elements/settings.php');
 $composer = $read('composer.json');
 
 if (!str_contains($registry, "'ms3_public_seo'")) {
@@ -41,6 +42,12 @@ if (!str_contains($factories, "'ms3_public_seo'")) {
 if (!str_contains($events, "'msOnGetPublicSeo'")) {
     $fail('events.php missing msOnGetPublicSeo');
 }
+if (!str_contains($events, 'Public catalog / SEO')) {
+    $fail('events.php must document msOnGetPublicSeo under catalog/SEO section');
+}
+if (!str_contains($settings, "'ms3_public_seo_tv_map'")) {
+    $fail('settings.php missing ms3_public_seo_tv_map');
+}
 
 if (!str_contains($productCatalog, 'maybeAttachProduct')) {
     $fail('product getById must attach product seo');
@@ -49,11 +56,19 @@ if (!str_contains($categoryCatalog, 'maybeAttachCategory')) {
     $fail('category getById must attach category seo');
 }
 
-if (substr_count($productCatalog, 'maybeAttachProduct') !== 1) {
-    $fail('product catalog must attach seo only once (get)');
+if (!str_contains($productCatalog, 'attachSeoToProductList')) {
+    $fail('product getList must attach seo via attachSeoToProductList (include_seo)');
 }
-if (substr_count($categoryCatalog, 'maybeAttachCategory') !== 1) {
-    $fail('category catalog must attach seo only once (get)');
+if (!str_contains($categoryCatalog, 'attachSeoToCategoryList')) {
+    $fail('category getList must attach seo via attachSeoToCategoryList (include_seo)');
+}
+
+$seoService = $read('src/Services/Seo/PublicSeoService.php');
+if (!str_contains($seoService, "resolveBool(\$params, 'include_seo', false)")) {
+    $fail('PublicSeoService list/tree must default include_seo to 0');
+}
+if (!str_contains($seoService, "resolveBool(\$params, 'include_seo', true)")) {
+    $fail('PublicSeoService get (maybeAttach) must default include_seo to 1');
 }
 
 if (!preg_match('/function resolveByLookup.*?return \$this->getById\(/s', $productCatalog)) {
@@ -70,14 +85,15 @@ if (str_contains($categoryCatalog, 'PublicSeoBuilder')) {
     $fail('category catalog must not import PublicSeoBuilder');
 }
 
-if (preg_match('/function getList.*?maybeAttach/s', $productCatalog)) {
-    $fail('product getList must not attach seo');
+if (!str_contains($categoryCatalog, 'attachSeoToCategoryTree')) {
+    $fail('category getTree must support include_seo via attachSeoToCategoryTree');
 }
-if (preg_match('/function getList.*?maybeAttach/s', $categoryCatalog)) {
-    $fail('category getList must not attach seo');
+
+if (!str_contains($productCatalog, "'searchable'")) {
+    $fail('product RESOURCE_FIELDS must include searchable');
 }
-if (preg_match('/function getTree.*?maybeAttach/s', $categoryCatalog)) {
-    $fail('category getTree must not attach seo');
+if (!str_contains($categoryCatalog, "'searchable'")) {
+    $fail('category RESOURCE_FIELDS must include searchable');
 }
 
 if (!str_contains($productController, 'include_seo')) {

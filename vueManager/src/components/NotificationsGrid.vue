@@ -1,28 +1,17 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, Column, ConfirmDialog, DataTable, Dialog, InputNumber, InputText, Select, Tag, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 
 import { useCrudDialog } from '../composables/useCrudDialog.js'
 import { useResourceList } from '../composables/useResourceList.js'
 import request from '../request.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const references = ref({
   statuses: [],
@@ -518,7 +507,7 @@ onMounted(async () => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" class="p-button-text" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveNotification" />
+        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveNotification" />
       </template>
     </Dialog>
   </div>

@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import ColorPicker from 'primevue/colorpicker'
-import InputText from 'primevue/inputtext'
+import { Button, ColorPicker, InputText } from 'primevue'
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
 
