@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/stubs/ModxStub.php';
+require __DIR__ . '/stubs/XpdoStub.php';
 
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerGroup;
@@ -141,53 +142,64 @@ $fieldObject = static function (array $fields): object {
     };
 };
 
+$customerObject = static fn (array $fields): msCustomer => new class ($fields) extends msCustomer {
+    public function __construct(private array $fields)
+    {
+    }
+
+    public function get(string $key, $format = null, $formatTemplate = null): mixed
+    {
+        return $this->fields[$key] ?? null;
+    }
+};
+
 $resolver = new CustomerResourceGroupResolver($makeModx());
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(0, 'web'), 'invalid customer id');
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(-1, 'web'), 'negative customer id');
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(1, ''), 'empty context');
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    10 => $fieldObject(['customer_group_id' => null, 'is_active' => true, 'is_blocked' => false]),
+    10 => $customerObject(['customer_group_id' => null, 'is_active' => true, 'is_blocked' => false]),
 ]));
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(10, 'web'), 'customer without group');
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    11 => $fieldObject(['customer_group_id' => 2, 'is_active' => true, 'is_blocked' => false]),
+    11 => $customerObject(['customer_group_id' => 2, 'is_active' => true, 'is_blocked' => false]),
 ], [
     2 => $fieldObject(['active' => false, 'user_group_id' => 5]),
 ]));
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(11, 'web'), 'inactive group fails closed');
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    12 => $fieldObject(['customer_group_id' => 3, 'is_active' => true, 'is_blocked' => false]),
+    12 => $customerObject(['customer_group_id' => 3, 'is_active' => true, 'is_blocked' => false]),
 ], [
     3 => $fieldObject(['active' => true, 'user_group_id' => 0]),
 ]));
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(12, 'web'), 'missing user_group_id');
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    20 => $fieldObject(['customer_group_id' => 4, 'is_active' => true, 'is_blocked' => false]),
+    20 => $customerObject(['customer_group_id' => 4, 'is_active' => true, 'is_blocked' => false]),
 ], [
     4 => $fieldObject(['active' => true, 'user_group_id' => 7]),
 ], [15, 22, 15]));
 $assertSame([15, 22], $resolver->resolveAllowedResourceGroupIdsForCustomer(20, 'web'), 'active group resolves ACL targets');
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    21 => $fieldObject(['customer_group_id' => 4, 'is_active' => false, 'is_blocked' => false]),
+    21 => $customerObject(['customer_group_id' => 4, 'is_active' => false, 'is_blocked' => false]),
 ], [
     4 => $fieldObject(['active' => true, 'user_group_id' => 7]),
 ], [15]));
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(21, 'web'), 'inactive customer fails closed');
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    22 => $fieldObject(['customer_group_id' => 4, 'is_active' => true, 'is_blocked' => true]),
+    22 => $customerObject(['customer_group_id' => 4, 'is_active' => true, 'is_blocked' => true]),
 ], [
     4 => $fieldObject(['active' => true, 'user_group_id' => 7]),
 ], [15]));
 $assertSame([], $resolver->resolveAllowedResourceGroupIdsForCustomer(22, 'web'), 'blocked customer fails closed');
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    23 => $fieldObject([
+    23 => $customerObject([
         'customer_group_id' => 4,
         'is_active' => true,
         'is_blocked' => true,
@@ -203,7 +215,7 @@ $assertSame(
 );
 
 $resolver = new CustomerResourceGroupResolver($makeModx([
-    24 => $fieldObject([
+    24 => $customerObject([
         'customer_group_id' => 4,
         'is_active' => true,
         'is_blocked' => true,

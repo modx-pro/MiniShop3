@@ -6,6 +6,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Customer\RateLimiter;
 use MODX\Revolution\Processors\Processor;
 
@@ -61,10 +62,10 @@ class ForgotPassword extends Processor
             return $this->success($message);
         }
 
-        if (!(bool) $customer->get('is_active') || (bool) $customer->get('is_blocked')) {
+        if (CustomerAccess::isPasswordResetDenied($customer)) {
             $this->modx->log(
                 \MODX\Revolution\modX::LOG_LEVEL_WARN,
-                "[ForgotPassword] Customer #{$customer->id} is inactive or blocked"
+                "[ForgotPassword] Customer #{$customer->id} is inactive or permanently blocked"
             );
             return $this->success($message);
         }

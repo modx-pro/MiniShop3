@@ -29,6 +29,12 @@ final class CustomerAccessTest extends TestCase
         self::assertSame($expected, CustomerAccess::hasTimedLockout($this->customer($fields)));
     }
 
+    #[DataProvider('passwordResetDeniedCases')]
+    public function testIsPasswordResetDenied(array $fields, bool $expectedDenied): void
+    {
+        self::assertSame($expectedDenied, CustomerAccess::isPasswordResetDenied($this->customer($fields)));
+    }
+
     public function testLiftTimedLockoutClearsOnlyParseableUntil(): void
     {
         $lockout = $this->customer([
@@ -87,6 +93,34 @@ final class CustomerAccessTest extends TestCase
             'is_blocked' => 1,
             'blocked_until' => date('Y-m-d H:i:s', time() - 60),
         ], true];
+    }
+
+    /**
+     * @return iterable<string, array{0: array<string, mixed>, 1: bool}>
+     */
+    public static function passwordResetDeniedCases(): iterable
+    {
+        yield 'active not blocked' => [['is_active' => 1, 'is_blocked' => 0], false];
+        yield 'inactive' => [['is_active' => 0, 'is_blocked' => 0], true];
+        yield 'inactive with timed lockout still denied' => [[
+            'is_active' => 0,
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() + 3600),
+        ], true];
+        yield 'permanent manager block' => [['is_active' => 1, 'is_blocked' => 1, 'blocked_until' => null], true];
+        yield 'permanent empty until' => [['is_active' => 1, 'is_blocked' => 1, 'blocked_until' => ''], true];
+        yield 'unparseable until' => [['is_active' => 1, 'is_blocked' => 1, 'blocked_until' => 'not-a-date'], true];
+        yield 'mysql zero datetime is permanent' => [['is_active' => 1, 'is_blocked' => 1, 'blocked_until' => '0000-00-00 00:00:00'], true];
+        yield 'future timed lockout allowed' => [[
+            'is_active' => 1,
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() + 3600),
+        ], false];
+        yield 'expired timed lockout allowed' => [[
+            'is_active' => 1,
+            'is_blocked' => 1,
+            'blocked_until' => date('Y-m-d H:i:s', time() - 60),
+        ], false];
     }
 
     /**
