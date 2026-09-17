@@ -5,8 +5,7 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import Aura from '@primeuix/themes/aura'
-import PrimeVue from 'primevue/config'
+import { Aura, PrimeVue } from 'primevue'
 import { createApp } from 'vue'
 
 import HelpPage from '../components/HelpPage.vue'

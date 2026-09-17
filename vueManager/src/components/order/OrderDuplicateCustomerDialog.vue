@@ -1,7 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import { Button, Dialog } from 'primevue'
 
 const { _ } = useLexicon()
 

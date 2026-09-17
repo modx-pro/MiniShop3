@@ -1,6 +1,6 @@
 <script setup>
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
+
+import { Button, InputText } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import { normalizeImagePath } from '../utils/displayFormatters.js'

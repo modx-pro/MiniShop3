@@ -1,6 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
+import { Button } from 'primevue'
 
 defineProps({
   isCreateMode: { type: Boolean, required: true },

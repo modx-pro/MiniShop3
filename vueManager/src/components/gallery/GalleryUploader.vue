@@ -76,6 +76,7 @@ const buildUppyLocale = () => {
       browseFolders: _('ms3_gallery_uppy_browse_folders'),
       back: _('ms3_gallery_uppy_back'),
       addMoreFiles: _('ms3_gallery_uppy_add_more_files'),
+      addingMoreFiles: _('ms3_gallery_uppy_adding_more_files'),
       dropHint: _('ms3_gallery_uppy_drop_hint'),
       uploadComplete: _('ms3_gallery_uppy_upload_complete'),
       uploadFailed: _('ms3_gallery_uppy_upload_failed'),
@@ -86,6 +87,10 @@ const buildUppyLocale = () => {
       edit: _('ms3_gallery_uppy_edit'),
       retry: _('ms3_gallery_uppy_retry'),
       addMore: _('ms3_gallery_uppy_add_more'),
+      editing: _('ms3_gallery_uppy_editing'),
+      save: _('ms3_gallery_uppy_save'),
+      finishEditingFile: _('ms3_gallery_uppy_finish_editing'),
+      saveChanges: _('ms3_gallery_uppy_save_changes'),
       error: _('ms3_gallery_uppy_error'),
       failedToUpload: _('ms3_gallery_uppy_failed_to_upload'),
       noDuplicates: _('ms3_gallery_uppy_no_duplicates'),
@@ -149,6 +154,18 @@ const initUppy = () => {
   uppy.use(ImageEditor, {
     target: Dashboard,
     quality: 0.8,
+    locale: {
+      strings: {
+        revert: _('ms3_gallery_uppy_revert'),
+        rotate: _('ms3_gallery_uppy_rotate'),
+        zoomIn: _('ms3_gallery_uppy_zoom_in'),
+        zoomOut: _('ms3_gallery_uppy_zoom_out'),
+        flipHorizontal: _('ms3_gallery_uppy_flip_horizontal'),
+        aspectRatioSquare: _('ms3_gallery_uppy_crop_square'),
+        aspectRatioLandscape: _('ms3_gallery_uppy_crop_landscape'),
+        aspectRatioPortrait: _('ms3_gallery_uppy_crop_portrait'),
+      },
+    },
   })
 
   uppy.use(XHRUpload, {

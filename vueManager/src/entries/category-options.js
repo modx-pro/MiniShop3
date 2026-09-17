@@ -5,11 +5,8 @@
  * ms3-grid-category-option + ms3-window-option-add + ms3-window-copy-category.
  */
 
-import Aura from '@primeuix/themes/aura'
 import { getPrimeVueLocale } from '@vuetools/usePrimeVueLocale'
-import PrimeVue from 'primevue/config'
-import ConfirmationService from 'primevue/confirmationservice'
-import ToastService from 'primevue/toastservice'
+import { Aura, ConfirmationService, PrimeVue, ToastService } from 'primevue'
 import { createApp } from 'vue'
 
 import CategoryOptionsTab from '../components/CategoryOptionsTab.vue'
@@ -37,7 +34,7 @@ function mountApp() {
     theme: {
       preset: Aura,
       options: {
-        darkModeSelector: '.dark-mode',
+        darkModeSelector: 'none',
         cssLayer: false,
       },
     },

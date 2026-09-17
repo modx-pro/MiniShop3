@@ -29,7 +29,8 @@ class msResourceCreateController extends ResourceCreateManagerController
      */
     public function addCss($script)
     {
-        $script = $script . '?v=' . $this->ms3->version;
+        require_once __DIR__ . '/vue_module_cache_bust.inc.php';
+        $script = ms3_vue_module_cache_bust_url($this->modx, $script, (string) $this->ms3->version);
         parent::addCss($script);
     }
 
@@ -65,8 +66,8 @@ class msResourceCreateController extends ResourceCreateManagerController
             self::$vueCoreCheckRegistered = true;
         }
 
-        // Add version to URL
-        $src = $src . '?v=' . $this->ms3->version;
+        require_once __DIR__ . '/vue_module_cache_bust.inc.php';
+        $src = ms3_vue_module_cache_bust_url($this->modx, $src, (string) $this->ms3->version);
 
         // Register the module (will be blocked by check if VueCore not installed)
         $this->modx->regClientStartupHTMLBlock(

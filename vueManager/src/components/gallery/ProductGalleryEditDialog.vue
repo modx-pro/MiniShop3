@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
+import { Button, Dialog, InputText, Textarea } from 'primevue'
 import { ref, watch } from 'vue'
 
 const { _ } = useLexicon()

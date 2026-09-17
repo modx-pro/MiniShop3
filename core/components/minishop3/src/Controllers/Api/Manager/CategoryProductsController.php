@@ -760,6 +760,8 @@ class CategoryProductsController
      */
     protected function getDefaultFilters(): array
     {
+        $this->modx->lexicon->load('minishop3:vue');
+
         return [
             'query' => [
                 'type' => 'text',
@@ -773,8 +775,8 @@ class CategoryProductsController
                 'label' => 'published',
                 'placeholder' => 'all',
                 'options' => [
-                    ['label' => 'Да', 'value' => 1],
-                    ['label' => 'Нет', 'value' => 0],
+                    ['label' => $this->modx->lexicon('ms3_yes'), 'value' => 1],
+                    ['label' => $this->modx->lexicon('ms3_no'), 'value' => 0],
                 ],
                 'width' => '120px',
                 'position' => 20,
