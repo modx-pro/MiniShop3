@@ -1,13 +1,15 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Checkbox from 'primevue/checkbox'
-import DatePicker from 'primevue/datepicker'
-import InputChips from 'primevue/inputchips'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import MultiSelect from 'primevue/multiselect'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import {
+  Checkbox,
+  DatePicker,
+  InputChips,
+  InputNumber,
+  InputText,
+  MultiSelect,
+  Select,
+  Textarea,
+} from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import request from '../../request.js'
@@ -126,6 +128,9 @@ const multiArrayValue = computed({
  * InputChips as clickable pills — the autocomplete flavor of the comboOptions type.
  * Loaded lazily on the first keystroke and re-filtered client-side as the user types
  * so we don't spam the server on every key.
+ *
+ * InputChips is deprecated in PrimeVue 4 but remains in the VueTools 1.2.0 barrel and
+ * matches Enter / comma / blur commit behavior expected by the placeholder.
  */
 const suggestions = ref([])
 const suggestionsLoaded = ref(false)
@@ -158,7 +163,7 @@ const filteredSuggestions = computed(() => {
   const typed = (comboOptionsInputEl?.value || '').trim().toLowerCase()
   return suggestions.value
     .filter(s => !picked.has(s))
-    .filter(s => typed === '' || s.toLowerCase().includes(typed))
+    .filter(s => typed === '' || String(s).toLowerCase().includes(typed))
     .slice(0, 20)
 })
 

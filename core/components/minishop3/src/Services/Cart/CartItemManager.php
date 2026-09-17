@@ -6,6 +6,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use MODX\Revolution\modX;
 
 /**
@@ -248,6 +249,13 @@ class CartItemManager
      * - Is msProduct class
      * - Not deleted (unless allow_deleted)
      * - Published (unless allow_unpublished)
+     * - Resource-group ACL for anonymous catalog (#659) — same gate as Web API /
+     *   Fenom listings. #669 upgrades this path to applyForRequest().
+     *
+     * Intentional: this gate runs only at add time. ms3_cart renders draft line
+     * items by product_id without re-checking RG visibility (#681 review): a
+     * product closed after the customer added it stays in the cart until they
+     * remove it or place the order. Listing/resource cache staleness is #717.
      *
      * @param int $productId Product ID
      * @return msProduct|null Valid product or null
@@ -271,7 +279,21 @@ class CartItemManager
             $filter['published'] = 1;
         }
 
-        return $this->modx->getObject(msProduct::class, $filter);
+        $visibility = new CatalogResourceGroupVisibility($this->modx);
+        if (!$visibility->isEnabled()) {
+            return $this->modx->getObject(msProduct::class, $filter) ?: null;
+        }
+
+        // Same RG ACL gate as public catalog (#659/#666); authenticated principals via applyForRequest (#669).
+        $c = $this->modx->newQuery(msProduct::class);
+        $c->where($filter);
+        $context = (string) ($this->modx->context->key ?? 'web');
+        if ($context === '') {
+            $context = 'web';
+        }
+        $visibility->applyForRequest($c, 'msProduct', $context);
+
+        return $this->modx->getObject(msProduct::class, $c) ?: null;
     }
 
     /**

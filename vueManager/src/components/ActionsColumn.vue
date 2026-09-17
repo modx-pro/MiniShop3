@@ -36,7 +36,7 @@
  * }
  */
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
+import { Button } from 'primevue'
 import { computed } from 'vue'
 
 import { useActions } from '../composables/useActions.js'

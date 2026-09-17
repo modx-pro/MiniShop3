@@ -56,6 +56,7 @@ final class CustomerPublicDto
         'id',
         'token',
         'user_id',
+        'customer_group_id',
         'password',
         'email_verified_at',
         'is_active',

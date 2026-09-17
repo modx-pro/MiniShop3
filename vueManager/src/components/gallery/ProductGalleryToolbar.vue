@@ -1,9 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Menu from 'primevue/menu'
-import Select from 'primevue/select'
+import { Button, InputText, Menu, Select } from 'primevue'
 import { computed, ref, watch } from 'vue'
 
 import { debounce } from '../../utils/modx.js'

@@ -193,8 +193,23 @@ $_lang['ms3_err_product_not_in_category_scope'] = 'Product is not in the scope o
 $_lang['ms3_err_status_nf'] = 'Status with this identifier not found.';
 $_lang['ms3_err_delivery_nf'] = 'Delivery method with this identifier not found.';
 $_lang['ms3_err_delivery_id_required'] = 'Delivery ID is required';
+$_lang['ms3_err_shipment_nf'] = 'Shipment not found.';
+$_lang['ms3_err_shipment_disabled'] = 'Shipment lifecycle is disabled.';
+$_lang['ms3_err_shipment_cancelled'] = 'Shipment operation was cancelled.';
+$_lang['ms3_err_shipment_tracking_invalid'] = 'Tracking number is empty.';
+$_lang['ms3_err_shipment_event_conflict'] = 'This shipment event cannot be applied to the current shipment.';
+$_lang['ms3_err_shipment_webhook_unsupported'] = 'This delivery method does not support the core webhook.';
+$_lang['ms3_err_shipment_webhook_invalid'] = 'Delivery callback payload is invalid.';
+$_lang['ms3_err_shipment_webhook_unauthorized'] = 'Delivery callback signature is invalid.';
 $_lang['ms3_err_payment_nf'] = 'Payment method with this identifier not found.';
 $_lang['ms3_err_payment_id_required'] = 'Payment ID is required';
+$_lang['ms3_err_payment_webhook_unsupported'] = 'This payment method does not support the core webhook.';
+$_lang['ms3_err_payment_webhook_invalid'] = 'Payment callback payload is invalid.';
+$_lang['ms3_err_payment_webhook_unauthorized'] = 'Payment callback signature is invalid.';
+$_lang['ms3_err_payment_webhook_conflict'] = 'Payment callback conflicts with the current attempt state.';
+$_lang['ms3_err_payment_attempt_nf'] = 'Payment attempt not found.';
+$_lang['ms3_err_payment_attempt_record'] = 'Could not record the payment attempt after sending the order to the gateway.';
+$_lang['ms3_err_payment_event_conflict'] = 'This payment event cannot be applied to the current attempt.';
 $_lang['ms3_err_status_final'] = 'Final status is set. It cannot be changed.';
 $_lang['ms3_err_status_fixed'] = 'Fixed status is set. You cannot change it to earlier one.';
 $_lang['ms3_err_status_wrong'] = 'Invalid order status.';
@@ -279,10 +294,22 @@ $_lang['ms3_help'] = 'Help and support';
 $_lang['ms3_help_desc'] = 'Useful links and information';
 
 $_lang['ms3_error'] = 'Error';
-$_lang['ms3_vuetools_required'] = 'VueTools package is required for MiniShop3. Please install it via Package Manager.';
+$_lang['ms3_vuetools_required'] = 'VueTools package (>= 1.2.0) is required for MiniShop3. Please install or update it via Package Manager.';
 
 $_lang['ms3_mgr_order_recalc_invalid_mode'] = 'Invalid order cost recalculation mode.';
 $_lang['ms3_mgr_order_recalc_manual_delivery_missing'] = 'Manual delivery cost (manual_delivery_cost) is required in manual mode.';
 $_lang['ms3_order_cost_recalc_success'] = 'Order cost recalculated';
 $_lang['ms3_order_finalize_cost_recalc_required'] =
     'Recalculate order cost before finalizing: the selected delivery or payment requires manual cost or force_provider mode.';
+
+// Customer groups (#669)
+$_lang['ms3_err_customer_group_id_required'] = 'Customer group ID is required';
+$_lang['ms3_err_customer_group_not_found'] = 'Customer group not found or inactive';
+$_lang['ms3_err_customer_group_name_required'] = 'Customer group name is required';
+$_lang['ms3_err_customer_group_user_group_invalid'] = 'A valid MODX user group is required';
+$_lang['ms3_err_customer_group_save'] = 'Failed to save customer group';
+$_lang['ms3_err_customer_group_delete'] = 'Failed to delete customer group';
+$_lang['ms3_err_customer_group_detach'] = 'Failed to detach customers before group removal';
+$_lang['ms3_customer_group_created'] = 'Customer group created';
+$_lang['ms3_customer_group_updated'] = 'Customer group updated';
+$_lang['ms3_customer_group_deleted'] = 'Customer group deleted';

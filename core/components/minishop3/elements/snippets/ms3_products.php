@@ -10,6 +10,8 @@ use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msVendor;
 use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
+use MiniShop3\Services\Catalog\CatalogSortbyQualifier;
 use MiniShop3\Utils\EventGate;
 use MiniShop3\Utils\ProductThumbnailJoin;
 use MODX\Revolution\modPlugin;
@@ -169,19 +171,26 @@ if (isset($_ms3CategoryIds) && $_ms3CategoryIds !== []) {
         $_ms3MenuindexCategoryIds = [$_ms3SingleParent];
     }
 }
-$_ms3SortBy = (string)($scriptProperties['sortby'] ?? '');
-if ($_ms3MenuindexCategoryIds !== [] && preg_match('/\bmenuindex\b/i', $_ms3SortBy)) {
+$_ms3SortBy = $scriptProperties['sortby'] ?? '';
+if (!is_array($_ms3SortBy)) {
+    $_ms3SortBy = (string) $_ms3SortBy;
+    // Qualify bare resource columns before menuindex CASE injects commas (#741 / #742 review).
+    $_ms3SortBy = CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        $_ms3SortBy,
+        array_keys($modx->getFields(msProduct::class) ?: [])
+    );
+    $scriptProperties['sortby'] = $_ms3SortBy;
+}
+if ($_ms3MenuindexCategoryIds !== [] && CategoryProductMenuindexService::sortbyRefersToMenuindex($_ms3SortBy)) {
     $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
     $leftJoin[$memberAlias] = [
         'class' => msCategoryMember::class,
         'on' => CategoryProductMenuindexService::memberJoinOnCategories($_ms3MenuindexCategoryIds, $memberAlias),
     ];
-    $effectiveSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($_ms3MenuindexCategoryIds);
-    if (preg_match('/\bmsProduct\.menuindex\b/i', $_ms3SortBy)) {
-        $scriptProperties['sortby'] = preg_replace('/\bmsProduct\.menuindex\b/i', $effectiveSql, $_ms3SortBy);
-    } elseif (preg_match('/\bmenuindex\b/i', $_ms3SortBy) && !str_contains($_ms3SortBy, 'CASE WHEN')) {
-        $scriptProperties['sortby'] = preg_replace('/\bmenuindex\b/i', $effectiveSql, $_ms3SortBy, 1);
-    }
+    $scriptProperties['sortby'] = CategoryProductMenuindexService::substituteMenuindexSortby(
+        $_ms3SortBy,
+        $_ms3MenuindexCategoryIds
+    );
 }
 
 // Add filters by options
@@ -259,6 +268,26 @@ if (!empty($scriptProperties['sortbyOptions'])) {
             $joinedOptions[] = $option;
         }
     }
+}
+
+// Anonymous RG ACL for storefront listing (#670); same SQL as Web API.
+// Put the NOT EXISTS in an INNER JOIN ON — not in $where[] — so pdoTools
+// additionalConditions() does not false-positive-suppress &resources / &context
+// (raw numeric where strings that mention msProduct + \bid\b / context_key).
+// Self-join on site_content duplicates resource columns: bare multi-column sortby
+// is qualified via CatalogSortbyQualifier before pdoTools (#741 / #742 review).
+$_ms3RgVisibility = new CatalogResourceGroupVisibility($modx);
+$_ms3RgContext = trim((string) ($modx->context->key ?? ''));
+if ($_ms3RgContext === '') {
+    $_ms3RgContext = 'web';
+}
+$_ms3RgWhere = $_ms3RgVisibility->buildWhereFragment('msProduct', $_ms3RgContext);
+if ($_ms3RgWhere !== null) {
+    $innerJoin['ms3RgVisibility'] = [
+        'class' => msProduct::class,
+        'alias' => 'ms3RgVisibility',
+        'on' => '`ms3RgVisibility`.`id` = `msProduct`.`id` AND ' . $_ms3RgWhere,
+    ];
 }
 
 $default = [

@@ -70,6 +70,59 @@ final class ResponseJsonEncodeTest extends TestCase
         self::assertStringContainsString('hex=', $modx->logs[0]);
     }
 
+    public function testEncodeConnectorJsonSubstitutesInvalidUtf8WithoutEmptyBody(): void
+    {
+        $modx = $this->makeLogger();
+        $envelope = Response::connectorProcessorEnvelope([
+            'success' => true,
+            'message' => '',
+            'object' => ['label' => "ab\xC3\x28cd"],
+        ], $modx);
+        [$json, $failed] = Response::encodeConnectorJson($envelope, $modx);
+
+        self::assertFalse($failed);
+        self::assertNotSame('', $json);
+        self::assertNotFalse(json_decode($json, true));
+        $decoded = json_decode($json, true);
+        self::assertTrue((bool) $decoded['success']);
+        self::assertStringContainsString("\u{FFFD}", $decoded['object']['label']);
+        self::assertNotEmpty($modx->logs);
+    }
+
+    public function testEncodeConnectorJsonFailsClosedOnNan(): void
+    {
+        $modx = $this->makeLogger();
+        [$json, $failed] = Response::encodeConnectorJson(['value' => NAN], $modx);
+
+        self::assertTrue($failed);
+        self::assertSame(Response::connectorFailClosedJson(), $json);
+        self::assertNotSame('', $json);
+        $decoded = json_decode($json, true);
+        self::assertFalse($decoded['success']);
+        self::assertSame(500, $decoded['object']['code']);
+    }
+
+    public function testConnectorProcessorEnvelopeMatchesModxShape(): void
+    {
+        $modx = new class {
+            public function lexicon(string $key): string
+            {
+                return $key === 'error' ? 'Error' : $key;
+            }
+        };
+        $envelope = Response::connectorProcessorEnvelope([
+            'success' => true,
+            'message' => 'ok',
+            'object' => ['id' => 1],
+        ], $modx);
+
+        self::assertSame(true, $envelope['success']);
+        self::assertSame('ok', $envelope['message']);
+        self::assertSame(1, $envelope['total']);
+        self::assertSame([], $envelope['data']);
+        self::assertSame(['id' => 1], $envelope['object']);
+    }
+
     public function testSanitizeUtf8ForJsonLeavesValidDataUnchanged(): void
     {
         $payload = ['title' => 'Товар', 'n' => 1];

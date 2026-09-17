@@ -1,14 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import DatePicker from 'primevue/datepicker'
-import Fieldset from 'primevue/fieldset'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { Button, Checkbox, DatePicker, Fieldset, InputNumber, InputText, Message, Select, Textarea } from 'primevue'
 import { computed, inject, watch } from 'vue'
 
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'

@@ -64,9 +64,9 @@
   --ms3-text-info-result: #0c5460;
   --ms3-text-error-result: #721c24;
 
-  /* Colors — accents */
-  --ms3-accent-primary: var(--p-primary-color, #6cb24a);
-  --ms3-accent-focus: rgb(108 178 74 / 30%);
+  /* Colors — accents (fixed blue: Aura --p-primary-color is emerald and fails AA on links) */
+  --ms3-accent-primary: #3b82f6;
+  --ms3-accent-focus: rgb(59 130 246 / 30%);
   --ms3-accent-teal: #32ab9a;
   /* Hue-matched to MODX primary (not Aura #22c55e / Material #4caf50) */
   --ms3-accent-green: var(--p-primary-color, #6cb24a);

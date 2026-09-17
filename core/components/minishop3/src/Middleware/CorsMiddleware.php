@@ -51,19 +51,23 @@ class CorsMiddleware implements MiddlewareInterface
      */
     public function handle(array $params)
     {
+        $this->applyOriginHeadersIfAllowed();
+
+        // Preflight: stop with 200. Router may call this alone without the rest of the stack (#706).
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+            return Response::success(null, null, HttpStatus::OK);
+        }
+
+        return null; // Continue execution
+    }
+
+    private function applyOriginHeadersIfAllowed(): void
+    {
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
         if (CorsConfig::isOriginAllowed($origin, $this->allowedOrigins)) {
             $this->setCorsHeaders($origin);
         }
-
-        // Preflight: stop middleware chain with 200 (Router/api.php sends the envelope).
-        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        if ($method === 'OPTIONS') {
-            return Response::success(null, null, HttpStatus::OK);
-        }
-
-        return null; // Continue execution
     }
 
     /**
@@ -75,18 +79,26 @@ class CorsMiddleware implements MiddlewareInterface
     private function setCorsHeaders(string $origin): void
     {
         if (CorsConfig::hasWildcardOrigin($this->allowedOrigins)) {
-            header('Access-Control-Allow-Origin: *');
+            $this->emitHeader('Access-Control-Allow-Origin: *');
         } else {
-            header('Access-Control-Allow-Origin: ' . $origin);
-            header('Vary: Origin');
+            $this->emitHeader('Access-Control-Allow-Origin: ' . $origin);
+            $this->emitHeader('Vary: Origin');
 
             if ($this->allowCredentials) {
-                header('Access-Control-Allow-Credentials: true');
+                $this->emitHeader('Access-Control-Allow-Credentials: true');
             }
         }
 
-        header('Access-Control-Allow-Methods: ' . implode(', ', $this->allowedMethods));
-        header('Access-Control-Allow-Headers: ' . implode(', ', $this->allowedHeaders));
-        header('Access-Control-Max-Age: ' . $this->maxAge);
+        $this->emitHeader('Access-Control-Allow-Methods: ' . implode(', ', $this->allowedMethods));
+        $this->emitHeader('Access-Control-Allow-Headers: ' . implode(', ', $this->allowedHeaders));
+        $this->emitHeader('Access-Control-Max-Age: ' . $this->maxAge);
+    }
+
+    /**
+     * Hook for tests that need to capture CORS headers without a web SAPI.
+     */
+    protected function emitHeader(string $header): void
+    {
+        header($header);
     }
 }

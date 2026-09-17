@@ -301,6 +301,26 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_statuses',
     ],
+    'ms3_status_sent' => [
+        'value' => 4,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_enabled' => [
+        'value' => false,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_on_delivered_status' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
+    'ms3_shipment_on_in_transit_status' => [
+        'value' => 0,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_statuses',
+    ],
     'ms3_customer_cancel_allowed_statuses' => [
         'value' => '2,3',
         'xtype' => 'textfield',
@@ -439,6 +459,16 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_security',
     ],
+    'ms3_payment_on_failed_status' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
+    'ms3_payment_on_refunded_status' => [
+        'value' => 5,
+        'xtype' => 'numberfield',
+        'area' => 'ms3_order',
+    ],
     'ms3_snippet_token_secret' => [
         'value' => '', // Генерируется автоматически при первом запуске
         'xtype' => 'textfield',
@@ -508,6 +538,11 @@ return [
         'xtype' => 'combo-boolean',
         'area' => 'ms3_api',
     ],
+    'ms3_web_catalog_respect_resource_groups' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_api',
+    ],
     'ms3_cors_allowed_origins' => [
         'value' => '',
         'xtype' => 'textfield',
@@ -561,6 +596,11 @@ return [
     'ms3_rate_limit_memcached_servers' => [
         'value' => '127.0.0.1:11211',
         'xtype' => 'textfield',
+        'area' => 'ms3_api',
+    ],
+    'ms3_public_seo_tv_map' => [
+        'value' => '',
+        'xtype' => 'textarea',
         'area' => 'ms3_api',
     ],
 

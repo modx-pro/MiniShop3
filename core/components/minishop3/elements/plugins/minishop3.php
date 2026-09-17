@@ -3,13 +3,16 @@
  * MiniShop3 Plugin
  *
  * Events:
- * - OnMODXInit: Load extra fields through ExtraFields
+ * - OnMODXInit: Load extra fields; mgr connector ACL mutations → cache invalidator (#717)
  * - OnLoadWebDocument: Initialize frontend, register product fields as [[*resource]] tags
  * - OnManagerPageBeforeRender: Load lexicon and JS in admin panel
  * - OnDocFormSave: Handle resource-to-product conversion
  * - OnUserSave: Synchronize msCustomer ↔ modUser (create/update)
  * - OnBeforeUserFormSave: Synchronize msCustomer when modUser profile changes
  * - OnUserRemove: Unlink msCustomer from deleted modUser
+ * - OnResourceGroupSave / OnResourceGroupRemove: resource group CRUD (#717)
+ * - OnResourceAddToResourceGroup / OnResourceRemoveFromResourceGroup: membership (#717)
+ * - OnUserGroupRemove: user-group delete drops RG ACL rows (#717)
  *
  * @var \MODX\Revolution\modX $modx
  * @var array $scriptProperties
@@ -17,10 +20,19 @@
 
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msProduct;
+use MiniShop3\Services\Catalog\CatalogAclProcessorActionMatcher;
 use MiniShop3\Services\Product\ProductService;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modX;
+
+$ms3ScheduleCatalogAclCacheInvalidate = static function (modX $modx): void {
+    if (!$modx->services->has('ms3_catalog_acl_cache')) {
+        return;
+    }
+
+    $modx->services->get('ms3_catalog_acl_cache')->schedule();
+};
 
 switch ($modx->event->name) {
     case 'OnMODXInit':
@@ -31,6 +43,16 @@ switch ($modx->event->name) {
         /** @var \MiniShop3\MiniShop3 $ms3 */
         $ms3 = $modx->services->get('ms3');
         $ms3->loadMap();
+
+        // modConnectorRequest never fires OnHandleRequest; schedule on OnMODXInit for mgr connector.
+        if (($modx->context->key ?? '') === 'mgr'
+            && is_object($modx->user)
+            && method_exists($modx->user, 'hasSessionContext')
+            && $modx->user->hasSessionContext('mgr')
+            && CatalogAclProcessorActionMatcher::matches((string) ($_REQUEST['action'] ?? ''), $_REQUEST)
+        ) {
+            $ms3ScheduleCatalogAclCacheInvalidate($modx);
+        }
         break;
 
     case 'OnManagerPageBeforeRender':
@@ -287,6 +309,14 @@ switch ($modx->event->name) {
                 "[MiniShop3] Unlinked msCustomer #{$customer->id} from deleted modUser #{$userId}"
             );
         }
+        break;
+
+    case 'OnResourceGroupSave':
+    case 'OnResourceGroupRemove':
+    case 'OnResourceAddToResourceGroup':
+    case 'OnResourceRemoveFromResourceGroup':
+    case 'OnUserGroupRemove':
+        $ms3ScheduleCatalogAclCacheInvalidate($modx);
         break;
 
     // OnCategoryRemove handler removed in #10 — msOption no longer references modCategory.

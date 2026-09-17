@@ -1,27 +1,19 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, ConfirmDialog, Dialog, InputText, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 import { GridColumnEditorType, normalizeGridColumnEditorType } from '../constants/gridColumnEditorTypes.js'
 import request from '../request.js'
 import { isAllowlistedComboEndpoint } from '../utils/gridEditorOptions.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import ActionsEditor from './ActionsEditor.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const loading = ref(false)
 const saving = ref(false)
@@ -1108,7 +1100,7 @@ onMounted(() => {
 
         <!-- Save button -->
         <div class="flex justify-content-end">
-          <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveConfig" />
+          <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveConfig" />
         </div>
       </template>
     </Card>
@@ -1728,6 +1720,7 @@ onMounted(() => {
         <Button
           :label="_('save')"
           icon="pi pi-check"
+          :severity="primarySaveSeverity"
           :disabled="!editingField || !editingField.field_name"
           @click="saveEdit"
         />

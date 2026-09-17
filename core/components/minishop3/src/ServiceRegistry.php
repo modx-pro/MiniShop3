@@ -3,6 +3,7 @@
 namespace MiniShop3;
 
 use MiniShop3\Services\Order\OrderDraftManager;
+use MiniShop3\Services\Payment\PaymentService;
 use MiniShop3\Services\Product\Import\ProductImportService;
 use MODX\Revolution\modX;
 
@@ -108,6 +109,7 @@ class ServiceRegistry
         ],
         'ms3_order_finalize' => ['ms3_order_number_generator'],
         'ms3_order_status' => ['ms3_order_log'],
+        'ms3_payment_lifecycle' => ['ms3_order_status'],
         'ms3_cart_mutation_handler' => [
             'ms3_order_draft_manager',
             'ms3_cart_item_manager',
@@ -166,8 +168,20 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductGalleryPublicService::class,
             'interface' => null,
         ],
+        'ms3_public_seo' => [
+            'class' => \MiniShop3\Services\Seo\PublicSeoService::class,
+            'interface' => null,
+        ],
         'ms3_category_catalog' => [
             'class' => \MiniShop3\Services\Category\CategoryCatalogService::class,
+            'interface' => null,
+        ],
+        'ms3_customer_resource_group_resolver' => [
+            'class' => \MiniShop3\Services\Catalog\CustomerResourceGroupResolver::class,
+            'interface' => null,
+        ],
+        'ms3_catalog_acl_cache' => [
+            'class' => \MiniShop3\Services\Catalog\CatalogAclCacheInvalidator::class,
             'interface' => null,
         ],
         'ms3_delivery_catalog' => [
@@ -210,12 +224,20 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Delivery\DeliveryService::class,
             'interface' => null,
         ],
+        'ms3_shipment_lifecycle' => [
+            'class' => \MiniShop3\Services\Shipment\ShipmentLifecycleService::class,
+            'interface' => null,
+        ],
         'ms3_payment_service' => [
-            'class' => \MiniShop3\Services\Payment\PaymentService::class,
+            'class' => PaymentService::class,
             'interface' => null,
         ],
         'ms3_payment_link_resolver' => [
             'class' => \MiniShop3\Services\Payment\PaymentLinkResolver::class,
+            'interface' => null,
+        ],
+        'ms3_payment_lifecycle' => [
+            'class' => \MiniShop3\Services\Payment\PaymentLifecycleService::class,
             'interface' => null,
         ],
         'ms3_order_service' => [
@@ -295,6 +317,10 @@ class ServiceRegistry
         // Cart services
         'ms3_cart_item_manager' => [
             'class' => \MiniShop3\Services\Cart\CartItemManager::class,
+            'interface' => null,
+        ],
+        'ms3_cart_response_normalizer' => [
+            'class' => \MiniShop3\Services\Cart\CartResponseNormalizer::class,
             'interface' => null,
         ],
         'ms3_cart_mutation_handler' => [

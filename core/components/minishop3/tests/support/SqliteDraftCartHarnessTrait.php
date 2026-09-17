@@ -87,6 +87,8 @@ trait SqliteDraftCartHarnessTrait
                     'ms3_cart_max_count' => 1000,
                     'ms3_cart_product_key_fields' => 'id,options',
                     'ms3_cart_context' => '0',
+                    // Draft harness has no xPDO newQuery/ACL tables; catalog RG is covered elsewhere (#659).
+                    'ms3_web_catalog_respect_resource_groups' => false,
                     default => $default,
                 };
             }

@@ -125,6 +125,48 @@ final class HeadlessStorefrontCorsRouterTest extends WebApiTestCase
     }
 
     /**
+     * Writing middleware before CorsMiddleware must not run on OPTIONS preflight (#706).
+     */
+    public function testOptionsPreflightSkipsMiddlewareStackBeforeCors(): void
+    {
+        unset($_REQUEST['__preflight_writing_middleware_ran']);
+        $handlerCalled = false;
+        $writingMiddleware = new class implements \MiniShop3\Router\Middleware\MiddlewareInterface {
+            public function handle(array $params)
+            {
+                $_REQUEST['__preflight_writing_middleware_ran'] = '1';
+
+                return null;
+            }
+        };
+        $router = new \MiniShop3\Router\Router($this->modx);
+        $router->group('/api/v1', function ($router) use (&$handlerCalled) {
+            $router->post('/cors-preflight-probe', function () use (&$handlerCalled) {
+                $handlerCalled = true;
+
+                return \MiniShop3\Router\Response::success(['ok' => true]);
+            });
+        }, [
+            $writingMiddleware,
+            new \MiniShop3\Middleware\CorsMiddleware([
+                'allowed_origins' => ['https://trusted.example'],
+            ]),
+        ]);
+        $router->build();
+
+        $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
+        $_SERVER['REQUEST_URI'] = '/api/v1/cors-preflight-probe';
+        $_SERVER['HTTP_ORIGIN'] = 'https://trusted.example';
+        $_REQUEST = ['route' => '/api/v1/cors-preflight-probe'];
+
+        $response = $router->dispatch('/api/v1/cors-preflight-probe', 'OPTIONS');
+
+        self::assertFalse($handlerCalled);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertArrayNotHasKey('__preflight_writing_middleware_ran', $_REQUEST);
+    }
+
+    /**
      * Cors present but after TokenMiddleware: preflight must still not mint a token (#634 review).
      */
     public function testOptionsPreflightWithTokenBeforeCorsDoesNotMintToken(): void
@@ -158,11 +200,132 @@ final class HeadlessStorefrontCorsRouterTest extends WebApiTestCase
         self::assertArrayNotHasKey('ms3_token', $_REQUEST);
     }
 
+    /**
+     * Nested CorsMiddleware layers: preflight must accumulate headers like GET (#718).
+     * Origins: only-outer, only-inner, both, neither — OPTIONS headers === GET headers.
+     */
+    public function testNestedCorsPreflightHeadersMatchGetForEachOrigin(): void
+    {
+        $handlerCalled = false;
+        $bag = (object) ['lines' => []];
+        $outerCors = self::recordingCors([
+            'allowed_origins' => ['https://outer.example', 'https://both.example'],
+            'allow_credentials' => true,
+            'max_age' => 100,
+            'allowed_methods' => ['GET', 'OPTIONS'],
+            'allowed_headers' => ['Content-Type', 'X-Outer'],
+        ], $bag);
+        $innerCors = self::recordingCors([
+            'allowed_origins' => ['https://inner.example', 'https://both.example'],
+            'allow_credentials' => false,
+            'max_age' => 600,
+            'allowed_methods' => ['GET', 'POST', 'OPTIONS'],
+            'allowed_headers' => ['Content-Type', 'X-Inner'],
+        ], $bag);
+
+        $writingMiddleware = new class implements \MiniShop3\Router\Middleware\MiddlewareInterface {
+            public function handle(array $params)
+            {
+                $_REQUEST['__nested_writing_middleware_ran'] = '1';
+
+                return null;
+            }
+        };
+
+        $router = new \MiniShop3\Router\Router($this->modx);
+        $router->group('/api/v1', function ($router) use (&$handlerCalled, $innerCors, $writingMiddleware) {
+            $router->group('/nested', function ($router) use (&$handlerCalled) {
+                $router->get('/probe', function () use (&$handlerCalled) {
+                    $handlerCalled = true;
+
+                    return \MiniShop3\Router\Response::success(['ok' => true]);
+                });
+            }, [$writingMiddleware, $innerCors]);
+        }, [$outerCors]);
+        $router->build();
+
+        $uri = '/api/v1/nested/probe';
+        foreach (
+            [
+                'https://outer.example',
+                'https://inner.example',
+                'https://both.example',
+                'https://nobody.example',
+            ] as $origin
+        ) {
+            unset($_REQUEST['__nested_writing_middleware_ran']);
+            $handlerCalled = false;
+            $bag->lines = [];
+            $_SERVER['REQUEST_METHOD'] = 'OPTIONS';
+            $_SERVER['REQUEST_URI'] = $uri;
+            $_SERVER['HTTP_ORIGIN'] = $origin;
+            $_REQUEST = ['route' => $uri];
+            $optionsResponse = $router->dispatch($uri, 'OPTIONS');
+            $optionsHeaders = $bag->lines;
+            self::assertSame(200, $optionsResponse->getStatusCode(), $origin);
+            self::assertFalse($handlerCalled, $origin);
+            self::assertArrayNotHasKey('__nested_writing_middleware_ran', $_REQUEST, $origin);
+
+            $handlerCalled = false;
+            $bag->lines = [];
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+            $_SERVER['REQUEST_URI'] = $uri;
+            $_SERVER['HTTP_ORIGIN'] = $origin;
+            $_REQUEST = ['route' => $uri];
+            $getResponse = $router->dispatch($uri, 'GET');
+            $getHeaders = $bag->lines;
+            self::assertTrue($handlerCalled, $origin);
+            self::assertSame(200, $getResponse->getStatusCode(), $origin);
+            self::assertSame(
+                self::corsHeaderMap($getHeaders),
+                self::corsHeaderMap($optionsHeaders),
+                "OPTIONS CORS headers must match GET for origin {$origin}"
+            );
+        }
+    }
+
     public function testGetHealthStillWorksAfterCorsChanges(): void
     {
         $res = $this->dispatch('GET', '/api/v1/health');
 
         self::assertSame(200, $res['status']);
         self::assertTrue($res['success']);
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private static function recordingCors(array $config, object $bag): \MiniShop3\Middleware\CorsMiddleware
+    {
+        return new class ($config, $bag) extends \MiniShop3\Middleware\CorsMiddleware {
+            public function __construct(array $config, private object $bag)
+            {
+                parent::__construct($config);
+            }
+
+            protected function emitHeader(string $header): void
+            {
+                $this->bag->lines[] = $header;
+            }
+        };
+    }
+
+    /**
+     * @param list<string> $headers
+     * @return array<string, string>
+     */
+    private static function corsHeaderMap(array $headers): array
+    {
+        $map = [];
+        foreach ($headers as $line) {
+            $pos = strpos($line, ':');
+            if ($pos === false) {
+                continue;
+            }
+            $name = strtolower(trim(substr($line, 0, $pos)));
+            $map[$name] = trim(substr($line, $pos + 1));
+        }
+
+        return $map;
     }
 }

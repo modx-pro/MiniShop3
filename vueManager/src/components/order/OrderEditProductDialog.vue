@@ -1,13 +1,11 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { Button, Dialog, InputNumber, InputText, Select, Textarea } from 'primevue'
+
+import { getPrimarySaveSeverity } from '../../utils/primevueTheme.js'
 
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const visible = defineModel('visible', { type: Boolean, default: false })
 const editProductForm = defineModel('editProductForm', { type: Object, required: true })
@@ -237,6 +235,7 @@ defineProps({
     <Button
       :label="_('save')"
       icon="pi pi-check"
+      :severity="primarySaveSeverity"
       :loading="savingProduct"
       @click="saveEditedProduct"
     />

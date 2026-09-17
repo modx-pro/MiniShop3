@@ -141,6 +141,14 @@ $_lang['setting_ms3_status_paid'] = 'Paid order status ID';
 $_lang['setting_ms3_status_paid_desc'] = 'What status to set after order payment';
 $_lang['setting_ms3_status_canceled'] = 'Canceled order status ID';
 $_lang['setting_ms3_status_canceled_desc'] = 'What status to set when canceling order';
+$_lang['setting_ms3_status_sent'] = 'Sent order status ID';
+$_lang['setting_ms3_status_sent_desc'] = 'Order status to set when a shipment becomes shipped (if the transition is allowed).';
+$_lang['setting_ms3_shipment_enabled'] = 'Enable shipment lifecycle';
+$_lang['setting_ms3_shipment_enabled_desc'] = 'Off (default): checkout and order statuses are unchanged. On: shipment shipped maps to ms3_status_sent via OrderStatusService, cancelled/failed maps to ms3_status_canceled. Create/setTracking still work when off. Webhook is 404 when off. Replace ms3_shipment_lifecycle to use an external WMS.';
+$_lang['setting_ms3_shipment_on_delivered_status'] = 'Order status ID on delivered shipment';
+$_lang['setting_ms3_shipment_on_delivered_status_desc'] = 'Optional. 0 (default) keeps order status unchanged when the shipment becomes delivered. Seed sent is final, so leave 0 unless you use a non-final sent status.';
+$_lang['setting_ms3_shipment_on_in_transit_status'] = 'Order status ID on in-transit shipment';
+$_lang['setting_ms3_shipment_on_in_transit_status_desc'] = 'Optional. 0 (default) keeps order status unchanged when the shipment becomes in_transit.';
 $_lang['setting_ms3_customer_cancel_allowed_statuses'] = 'Statuses from which customer can cancel order';
 $_lang['setting_ms3_customer_cancel_allowed_statuses_desc'] = 'Comma-separated status IDs. Default: New and Paid (2,3). Empty = use ms3_status_new and ms3_status_paid.';
 $_lang['setting_ms3_status_for_stat'] = 'Status IDs for statistics';
@@ -181,6 +189,10 @@ $_lang['setting_ms3_email_verification_success_url'] = 'Redirect URL after succe
 $_lang['setting_ms3_email_verification_success_url_desc'] = 'Used when the user opens the verification link from email (html=1). If empty, site_url is used; the query parameter ms3_email_verified=1 is appended.';
 $_lang['setting_ms3_payment_secret'] = 'Payment secret key';
 $_lang['setting_ms3_payment_secret_desc'] = 'Secret key for generating payment notification signatures. Recommended to set a unique value for improved security.';
+$_lang['setting_ms3_payment_on_failed_status'] = 'Order status after failed/cancelled payment';
+$_lang['setting_ms3_payment_on_failed_status_desc'] = 'Order status ID applied when a payment attempt fails or is cancelled before paid. 0 leaves the order unchanged. Default is the canceled status (5).';
+$_lang['setting_ms3_payment_on_refunded_status'] = 'Order status after full refund';
+$_lang['setting_ms3_payment_on_refunded_status_desc'] = 'Order status ID applied after a full refund. 0 leaves the order unchanged. Partial refunds never change order status. Default is the canceled status (5).';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Currency symbol';
@@ -253,6 +265,8 @@ $_lang['setting_ms3_import_upload_path_desc'] = 'Relative path from MODX_BASE_PA
 // API Settings
 $_lang['setting_ms3_api_debug'] = 'API debug mode';
 $_lang['setting_ms3_api_debug_desc'] = 'Enables extended logging of API requests and responses for debugging. Not recommended in production.';
+$_lang['setting_ms3_web_catalog_respect_resource_groups'] = 'Respect resource group ACL in public catalog';
+$_lang['setting_ms3_web_catalog_respect_resource_groups_desc'] = 'When enabled, the public Web API catalog and Fenom storefront snippets (e.g. ms3_products) hide products and categories that belong to a MODX resource group with Resource Group Access ACL for the request context (anonymous MVP). MiniShop3 invalidates MODX resource (page) cache and facet cache when resource-group ACL or membership changes via the manager plugin. Residual gaps: ACL rows written outside MODX processors (SQL, custom scripts) and HTML cached by an external CDN may stay stale until you clear cache manually. Disable to restore pre-#659 catalog behavior.';
 $_lang['setting_ms3_cors_allowed_origins'] = 'Allowed CORS origins';
 $_lang['setting_ms3_cors_allowed_origins_desc'] = 'Comma-separated origins allowed to call the Web API (e.g. https://shop.example.com). Empty = no cross-origin CORS (same-origin only). Use "*" for any origin without credentials; for headless with cookies list explicit domains.';
 $_lang['setting_ms3_rate_limit_max_attempts'] = 'API rate limit';
@@ -275,6 +289,8 @@ $_lang['setting_ms3_rate_limit_redis_database'] = 'Rate limit Redis database';
 $_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Redis database index (default 0) when DSN is not set.';
 $_lang['setting_ms3_rate_limit_memcached_servers'] = 'Rate limit Memcached servers';
 $_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Comma-separated host:port list for the memcached driver. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Requires ext-memcached.';
+$_lang['setting_ms3_public_seo_tv_map'] = 'Public SEO TV map';
+$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Optional JSON map of allowlisted seo keys to TV references for Web API catalog payloads, e.g. {"title":"tv.seo_title","robots":"tv.robots"}. Invalid JSON is ignored. Applies to product/category get and list/tree when include_seo=1.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Telegram bot token';

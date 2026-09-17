@@ -1,15 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ColorPicker from 'primevue/colorpicker'
-import ConfirmDialog from 'primevue/confirmdialog'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useToast } from 'primevue/usetoast'
+import { Button, Card, Checkbox, ColorPicker, ConfirmDialog, Dialog, InputText, Textarea, Toast, useToast } from 'primevue'
 import { onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
@@ -19,10 +10,12 @@ import { useSelection } from '../composables/useSelection.js'
 import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { gridDeleteAction } from '../utils/gridDeleteAction.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const CONFIRM_GROUP = 'settings-statuses'
 
@@ -459,7 +452,7 @@ onMounted(() => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveStatus" />
+        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveStatus" />
       </template>
     </Dialog>
   </div>

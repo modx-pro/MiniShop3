@@ -31,7 +31,8 @@ class ProductController
     /**
      * GET /api/v1/product/get/{id}
      *
-     * Query: context, include_images (0|1, default 0 — omit images[]; name→alt, no DB alt).
+     * Query: context, include_images (0|1, default 0 — omit images[]; name→alt, no DB alt),
+     *        include_seo (default 1).
      *
      * @param array<string, mixed> $params
      */
@@ -69,20 +70,18 @@ class ProductController
      */
     public function resolve(array $params = []): Response
     {
-        $parsed = CatalogResolve::parseLookup(
-            $params,
-            (string) ($this->modx->context->key ?? 'web'),
-        );
+        try {
+            $parsed = CatalogResolve::parseLookup(
+                $params,
+                (string) ($this->modx->context->key ?? 'web'),
+            );
+        } catch (CatalogContextException $e) {
+            return $this->catalogParamBadRequest($e);
+        }
 
         if (!$parsed['ok']) {
-            $lexiconKey = match ($parsed['error']) {
-                'required' => 'ms3_err_catalog_lookup_required',
-                'conflict' => 'ms3_err_catalog_lookup_conflict',
-                'invalid' => 'ms3_err_catalog_lookup_invalid',
-            };
-
             return Response::error(
-                $this->modx->lexicon($lexiconKey),
+                $this->modx->lexicon(CatalogResolve::lookupErrorLexiconKey($parsed['error'])),
                 HttpStatus::BAD_REQUEST
             );
         }
@@ -110,7 +109,7 @@ class ProductController
      * Query: parent|category, parents, nested, price_min, price_max, in_stock, stock_min,
      *        vendor_id, new, popular, favorite, options (JSON),
      *        limit, offset|page, sort, dir, query, context, include_options, include_content,
-     *        include_images (0|1, default 0, cap 10 files per item)
+     *        include_images (0|1, default 0, cap 10 files per item), include_seo (default 0)
      *
      * @param array<string, mixed> $params Route + query params (Router merges $_GET)
      */

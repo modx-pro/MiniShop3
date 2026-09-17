@@ -8,6 +8,7 @@ use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Model\msCategoryOption;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerAddress;
+use MiniShop3\Model\msCustomerGroup;
 use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msDeliveryMember;
@@ -48,6 +49,7 @@ final class PackageModels
             msCategoryOption::class,
             msCustomer::class,
             msCustomerAddress::class,
+            msCustomerGroup::class,
             msCustomerToken::class,
             msDelivery::class,
             msDeliveryMember::class,

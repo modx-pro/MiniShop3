@@ -40,8 +40,8 @@ use MiniShop3\Middleware\CorsMiddleware;
 use MiniShop3\Middleware\TokenMiddleware;
 
 // Пример: группа с префиксом и middleware (раскомментируйте после копирования в .php).
-// CorsMiddleware обязателен, если в группе есть TokenMiddleware / RateLimitMiddleware:
-// без него Router не запускает стек на OPTIONS (405), иначе preflight мог бы минтить токен.
+// CorsMiddleware помечает группу как CORS-capable: Router отвечает на OPTIONS только
+// через него, не входя в остальной middleware stack (405 без Cors; см. #706).
 /*
 $corsMiddleware = new CorsMiddleware([
     'allowed_origins' => $modx->getOption('ms3_cors_allowed_origins', null, ''),

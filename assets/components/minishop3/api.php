@@ -40,10 +40,17 @@ try {
 
     /** @var \MODX\Revolution\modX $modx */
     $modx = new \MODX\Revolution\modX();
+
+    // OPTIONS: mark session external before initialize — do not pass session_enabled
+    // options (they poison context.cache.php on a cold cache). #720 / #725
+    $componentPath = MODX_CORE_PATH . 'components/minishop3/';
+    require_once $componentPath . 'src/Services/Api/WebApiModxBootstrap.php';
+    \MiniShop3\Services\Api\WebApiModxBootstrap::prepareForInitialize(
+        (string) ($_SERVER['REQUEST_METHOD'] ?? '')
+    );
     $modx->initialize('web');
 
     // Загружаем autoloader компонента для классов роутера
-    $componentPath = MODX_CORE_PATH . 'components/minishop3/';
     $autoloader = $componentPath . 'vendor/autoload.php';
 
     if (!file_exists($autoloader)) {

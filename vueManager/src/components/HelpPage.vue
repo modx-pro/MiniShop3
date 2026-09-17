@@ -1,7 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
+import { Button, Card } from 'primevue'
 import { computed } from 'vue'
 
 const { _ } = useLexicon()

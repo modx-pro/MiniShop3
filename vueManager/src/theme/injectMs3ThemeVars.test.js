@@ -16,7 +16,7 @@ describe('injectMs3ThemeVars', () => {
     expect(el.textContent).toContain(`--p-primary-500:${PRIMARY_500}`)
     expect(el.textContent).toContain(`--p-emerald-500:${PRIMARY_500}`)
     expect(el.textContent).toContain(`--p-green-500:${PRIMARY_SCALE[500]}`)
-    expect(el.textContent).toContain(`--ms3-accent-primary:${PRIMARY_500}`)
+    expect(el.textContent).not.toContain('--ms3-accent-primary:')
   })
 
   it('is idempotent (updates the same style node)', () => {

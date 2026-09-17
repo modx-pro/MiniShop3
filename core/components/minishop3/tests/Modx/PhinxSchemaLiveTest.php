@@ -20,12 +20,16 @@ use MiniShop3\Tests\Modx\Support\PhinxSchemaBootstrap;
 final class PhinxSchemaLiveTest extends ExtraTestCase
 {
     /**
-     * Phinx metadata table is not an xPDO model — expected DB-only table.
+     * Tables without an xPDO model (Phinx metadata; PDO-backed stores).
      *
      * @var list<string> logical (unprefixed) names
      */
     private const DB_ONLY_TABLES = [
         'ms3_migrations',
+        'ms3_shipments',
+        'ms3_shipment_events',
+        'ms3_payment_attempts',
+        'ms3_payment_attempt_events',
     ];
 
     public function testTablePrefixIsNonEmpty(): void
@@ -139,6 +143,24 @@ final class PhinxSchemaLiveTest extends ExtraTestCase
         foreach ($seedClasses as $class) {
             self::assertSame($before[$class], $this->modx->getCount($class), $class);
         }
+    }
+
+    public function testProductFieldsSectionForeignKeyExists(): void
+    {
+        $prefix = (string) $this->modx->getOption('table_prefix', null, '');
+        $table = $prefix . 'ms3_product_fields';
+        $statement = $this->modx->prepare(
+            'SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS'
+            . ' WHERE CONSTRAINT_SCHEMA = DATABASE()'
+            . ' AND TABLE_NAME = ?'
+            . ' AND CONSTRAINT_TYPE = \'FOREIGN KEY\''
+            . ' AND CONSTRAINT_NAME = ?'
+        );
+        $statement->execute([$table, 'fk_product_fields_section']);
+        self::assertNotFalse(
+            $statement->fetch(\PDO::FETCH_ASSOC),
+            'fk_product_fields_section must exist on ' . $table . ' (#711)'
+        );
     }
 
     /**

@@ -141,6 +141,14 @@ $_lang['setting_ms3_status_paid'] = 'ID статуса оплаченного з
 $_lang['setting_ms3_status_paid_desc'] = 'Какой статус нужно устанавливать после оплаты заказа';
 $_lang['setting_ms3_status_canceled'] = 'ID статуса отмены заказа';
 $_lang['setting_ms3_status_canceled_desc'] = 'Какой статус нужно устанавливать при отмене заказа';
+$_lang['setting_ms3_status_sent'] = 'ID статуса «отправлен»';
+$_lang['setting_ms3_status_sent_desc'] = 'Статус заказа при переходе отгрузки в shipped, если переход разрешён.';
+$_lang['setting_ms3_shipment_enabled'] = 'Включить lifecycle отгрузки';
+$_lang['setting_ms3_shipment_enabled_desc'] = 'Выкл. (по умолчанию): оформление и статусы заказа как сейчас. Вкл.: shipped ставит ms3_status_sent через OrderStatusService, cancelled/failed — ms3_status_canceled. create/setTracking работают и при выкл. Webhook при выкл. отвечает 404. Внешний WMS подменяется через ms3_shipment_lifecycle.';
+$_lang['setting_ms3_shipment_on_delivered_status'] = 'ID статуса заказа при delivered';
+$_lang['setting_ms3_shipment_on_delivered_status_desc'] = 'Необязательно. 0 (по умолчанию) не меняет статус заказа, когда отгрузка становится delivered. Сид sent финальный, поэтому оставьте 0, если не используете нефинальный sent.';
+$_lang['setting_ms3_shipment_on_in_transit_status'] = 'ID статуса заказа при in_transit';
+$_lang['setting_ms3_shipment_on_in_transit_status_desc'] = 'Необязательно. 0 (по умолчанию) не меняет статус заказа, когда отгрузка становится in_transit.';
 $_lang['setting_ms3_customer_cancel_allowed_statuses'] = 'Статусы, из которых покупатель может отменить заказ';
 $_lang['setting_ms3_customer_cancel_allowed_statuses_desc'] = 'ID статусов через запятую. По умолчанию: «Новый» и «Оплачен» (2,3). Пусто — использовать ms3_status_new и ms3_status_paid.';
 $_lang['setting_ms3_status_for_stat'] = 'ID статусов для статистики';
@@ -180,7 +188,11 @@ $_lang['setting_ms3_email_verification_url_desc'] = 'Если пусто, в п�
 $_lang['setting_ms3_email_verification_success_url'] = 'URL редиректа после успешной верификации email (необязательно)';
 $_lang['setting_ms3_email_verification_success_url_desc'] = 'Используется при переходе по ссылке из письма (параметр html=1). Если пусто — берётся site_url; к URL добавляется параметр ms3_email_verified=1.';
 $_lang['setting_ms3_payment_secret'] = 'Секретный ключ для платежей';
-$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платежных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
+$_lang['setting_ms3_payment_secret_desc'] = 'Секретный ключ для генерации подписей платёжных уведомлений. Рекомендуется установить уникальное значение для повышения безопасности.';
+$_lang['setting_ms3_payment_on_failed_status'] = 'Статус заказа после неуспешной оплаты';
+$_lang['setting_ms3_payment_on_failed_status_desc'] = 'ID статуса заказа, который ставится при failed/cancelled попытки до оплаты. 0 — не менять заказ. По умолчанию статус отмены (5).';
+$_lang['setting_ms3_payment_on_refunded_status'] = 'Статус заказа после полного возврата';
+$_lang['setting_ms3_payment_on_refunded_status_desc'] = 'ID статуса заказа после полного refund. 0 — не менять заказ. Частичный возврат статус заказа не меняет. По умолчанию статус отмены (5).';
 
 // Currency and Formatting Settings
 $_lang['setting_ms3_currency_symbol'] = 'Символ валюты';
@@ -253,6 +265,8 @@ $_lang['setting_ms3_import_upload_path_desc'] = 'Относительный пу
 // API Settings
 $_lang['setting_ms3_api_debug'] = 'Режим отладки API';
 $_lang['setting_ms3_api_debug_desc'] = 'Включает расширенное логирование API запросов и ответов для отладки. Не рекомендуется на продакшене.';
+$_lang['setting_ms3_web_catalog_respect_resource_groups'] = 'Учитывать ACL групп ресурсов в публичном каталоге';
+$_lang['setting_ms3_web_catalog_respect_resource_groups_desc'] = 'Если включено, публичный Web API каталог и Fenom-сниппеты витрины (например ms3_products) скрывают товары и категории, входящие в группу ресурсов MODX с ACL «Доступ к группе ресурсов» для контекста запроса (анонимный MVP). MiniShop3 сбрасывает кэш страниц MODX (resource) и кэш фасетов при изменении ACL или членства в группах ресурсов через плагин менеджера. Остаточные пробелы: ACL, записанный в обход процессоров MODX (SQL, свои скрипты), и HTML за внешним CDN могут оставаться устаревшими до ручной очистки кэша. Отключите, чтобы вернуть поведение каталога до #659.';
 $_lang['setting_ms3_cors_allowed_origins'] = 'Разрешённые CORS origins';
 $_lang['setting_ms3_cors_allowed_origins_desc'] = 'Origins через запятую для Web API (например https://shop.example.com). Пусто = CORS только same-origin. «*» — любой origin без credentials; для headless с cookies укажите домены явно.';
 $_lang['setting_ms3_rate_limit_max_attempts'] = 'Лимит запросов API';
@@ -275,6 +289,8 @@ $_lang['setting_ms3_rate_limit_redis_database'] = 'Redis database (rate limit)';
 $_lang['setting_ms3_rate_limit_redis_database_desc'] = 'Номер БД Redis (0 по умолчанию), если DSN не задан.';
 $_lang['setting_ms3_rate_limit_memcached_servers'] = 'Memcached servers (rate limit)';
 $_lang['setting_ms3_rate_limit_memcached_servers_desc'] = 'Список серверов host:port через запятую для memcached-драйвера. Env: MS3_RATE_LIMIT_MEMCACHED_SERVERS. Требует ext-memcached.';
+$_lang['setting_ms3_public_seo_tv_map'] = 'Карта TV для публичного SEO';
+$_lang['setting_ms3_public_seo_tv_map_desc'] = 'Необязательный JSON: allowlisted-ключи seo → TV, например {"title":"tv.seo_title","robots":"tv.robots"}. Некорректный JSON игнорируется. Для product/category get и list/tree при include_seo=1.';
 
 // Notifications
 $_lang['setting_ms3_telegram_bot_token'] = 'Токен Telegram бота';

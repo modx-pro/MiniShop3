@@ -1,14 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Card from 'primevue/card'
-import Checkbox from 'primevue/checkbox'
-import ConfirmDialog from 'primevue/confirmdialog'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Tag from 'primevue/tag'
-import Toast from 'primevue/toast'
+import { Button, Card, Checkbox, ConfirmDialog, InputNumber, InputText, Select, Tag, Toast } from 'primevue'
 import { computed, defineProps, onMounted, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 

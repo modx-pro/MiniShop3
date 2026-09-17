@@ -9,9 +9,11 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msCategoryMember;
 use MiniShop3\Services\Catalog\CatalogQuery;
 use MiniShop3\Services\Catalog\CatalogResolve;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Option\OptionService;
+use MiniShop3\Services\Seo\PublicSeoService;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
 
@@ -39,6 +41,7 @@ class ProductCatalogService
         'publishedon',
         'createdon',
         'editedon',
+        'searchable',
     ];
 
     /** @var list<string> */
@@ -166,7 +169,8 @@ class ProductCatalogService
     /**
      * Single published product by ID (same visibility rules as list).
      *
-     * Query: context, include_images (0|1, default 0).
+     * Query: context, include_images (0|1, default 0), include_seo (default 1).
+     * List: include_seo (default 0).
      *
      * @param array<string, mixed> $params Optional context override
      * @return array<string, mixed>|null
@@ -185,7 +189,9 @@ class ProductCatalogService
         $includeImages = self::toBool($params['include_images'] ?? false);
         $images = $includeImages ? $this->loadImagesForProduct($product) : null;
 
-        return $this->formatProduct($product, true, $options, $images);
+        $payload = $this->formatProduct($product, true, $options, $images);
+
+        return $this->publicSeo()->maybeAttachProduct($payload, $params);
     }
 
     /**
@@ -213,14 +219,12 @@ class ProductCatalogService
             return null;
         }
 
-        $criteria = ['id' => $productId];
-        $context = $this->resolveContext($params);
-        if ($context !== '') {
-            $criteria['context_key'] = $context;
-        }
+        $c = $this->modx->newQuery(msProduct::class);
+        $c->where($this->publicCriteria(['id' => $productId]));
+        $this->applyProductCatalogScope($c, $params);
 
         /** @var msProduct|null $product */
-        $product = $this->modx->getObject(msProduct::class, $this->publicCriteria($criteria));
+        $product = $this->modx->getObject(msProduct::class, $c);
 
         return $product ?: null;
     }
@@ -301,6 +305,7 @@ class ProductCatalogService
      * - options: JSON object or bracket map (AND between keys, OR within key)
      * - limit, offset | page, sort, dir, query, context
      * - include_options, include_content, include_images (default 0; cap 10 files / product)
+     * - include_seo (default 0)
      *
      * @param array<string, mixed> $params
      * @return array{items: list<array<string, mixed>>, total: int, limit: int, offset: int}
@@ -344,6 +349,8 @@ class ProductCatalogService
             $images = $includeImages ? ($galleries[$productId] ?? []) : null;
             $items[] = $this->formatProduct($product, $includeContent, $options, $images);
         }
+
+        $items = $this->publicSeo()->attachSeoToProductList($items, $params);
 
         return [
             'items' => $items,
@@ -472,11 +479,6 @@ class ProductCatalogService
         $c->innerJoin(msProductData::class, 'Data', 'msProduct.id = Data.id');
         $c->where($this->publicCriteria());
 
-        $context = $this->resolveContext($params);
-        if ($context !== '') {
-            $c->where(['msProduct.context_key' => $context]);
-        }
-
         if (!$filters->hasParents()) {
             $parent = (int) ($params['parent'] ?? $params['category'] ?? 0);
             if ($parent > 0) {
@@ -493,8 +495,26 @@ class ProductCatalogService
         }
 
         $this->filterApplier()->apply($c, $filters, $dedupeRows);
+        $this->applyProductCatalogScope($c, $params);
 
         return $c;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function applyProductCatalogScope(xPDOQuery $query, array $params): void
+    {
+        $context = $this->resolveContext($params);
+        if ($context !== '') {
+            $query->where(['msProduct.context_key' => $context]);
+        }
+        $this->resourceGroupVisibility()->applyForRequest($query, 'msProduct', $context);
+    }
+
+    private function resourceGroupVisibility(): CatalogResourceGroupVisibility
+    {
+        return new CatalogResourceGroupVisibility($this->modx);
     }
 
     private function filterApplier(): ProductCatalogFilterApplier
@@ -668,7 +688,11 @@ class ProductCatalogService
         $payload = [];
 
         foreach (self::RESOURCE_FIELDS as $field) {
-            $payload[$field] = $product->get($field);
+            $value = $product->get($field);
+            if ($field === 'searchable') {
+                $value = CatalogQuery::toBool($value);
+            }
+            $payload[$field] = $value;
         }
 
         $dataValues = [];
@@ -715,6 +739,14 @@ class ProductCatalogService
             $options !== null,
             $images !== null,
         );
+    }
+
+    private function publicSeo(): PublicSeoService
+    {
+        /** @var PublicSeoService $service */
+        $service = $this->modx->services->get('ms3_public_seo');
+
+        return $service;
     }
 
     private function gallery(): ProductGalleryPublicService

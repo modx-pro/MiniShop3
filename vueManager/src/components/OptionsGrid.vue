@@ -1,26 +1,18 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
-import Toast from 'primevue/toast'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { Button, Column, ConfirmDialog, DataTable, Dialog, InputText, Select, Textarea, Toast, useConfirm, useToast } from 'primevue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
 import { onOptionGroupsChanged } from '../utils/optionGroupsBus.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import OptionCategoryTree from './OptionCategoryTree.vue'
 import OptionValuesEditor from './OptionValuesEditor.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const CONFIRM_GROUP = 'settings-options'
 
@@ -560,7 +552,7 @@ onBeforeUnmount(() => {
           :disabled="dialogSaving"
           @click="dialogVisible = false"
         />
-        <Button :label="_('save') || 'Сохранить'" :loading="dialogSaving" @click="saveOption" />
+        <Button :label="_('save') || 'Сохранить'" :severity="primarySaveSeverity" :loading="dialogSaving" @click="saveOption" />
       </template>
     </Dialog>
 

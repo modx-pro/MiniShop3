@@ -24,14 +24,19 @@ class ImageService
     private modX $modx;
     private ImageManager $imageManager;
 
+    /** Optional site root override (tests); production uses MODX_BASE_PATH. */
+    private ?string $basePath;
+
     /**
      * ImageService constructor.
      *
      * @param modX $modx
+     * @param string|null $basePath Optional filesystem root for resolving watermark paths
      */
-    public function __construct(modX $modx)
+    public function __construct(modX $modx, ?string $basePath = null)
     {
         $this->modx = $modx;
+        $this->basePath = $basePath;
 
         // Auto-select driver (Imagick is preferred for WebP/AVIF)
         $driver = extension_loaded('imagick') ? new ImagickDriver() : new GdDriver();
@@ -57,6 +62,9 @@ class ImageService
      *                       - 'quality' (int): quality 1-100 (default 90)
      *                       - 'format' (string): jpg, png, webp, avif (default jpg)
      *                       - 'mode' (string): resize mode - cover, contain, max, stretch (default cover)
+     *                       - 'watermark' (array): optional overlay from Media Source thumbnails JSON
+     *                         (enabled, path, position, offset_x, offset_y, opacity).
+     *                         position: Intervention names or `tile` (mosaic; offsets = margins).
      *
      * @return string|null Binary thumbnail data or null on error
      *
@@ -100,12 +108,13 @@ class ImageService
                 $this->applyResize($image, $width, $height, $mode);
             }
 
+            $this->applyWatermark($image, $options);
+
             // Get encoder for required format
             $encoder = $this->getEncoder($format, $quality);
 
             // Return binary data
             return $image->encode($encoder)->toString();
-
         } catch (\Exception $e) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -113,6 +122,280 @@ class ImageService
             );
             return null;
         }
+    }
+
+    /**
+     * Overlay watermark from thumbnails JSON (docs gallery Watermarks section).
+     * Missing/invalid file is logged; thumbnail generation continues without overlay.
+     *
+     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     * @param array<string, mixed> $options
+     */
+    private function applyWatermark($image, array $options): void
+    {
+        $config = $options['watermark'] ?? null;
+        if (!is_array($config) || empty($config['enabled'])) {
+            return;
+        }
+
+        $path = trim((string) ($config['path'] ?? ''));
+        if ($path === '') {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[ImageService] Watermark enabled but path is empty');
+
+            return;
+        }
+
+        $resolved = $this->resolveWatermarkPath($path);
+        if ($resolved === null) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Watermark file not found or outside site base path: {$path}"
+            );
+
+            return;
+        }
+
+        try {
+            $rawPosition = trim((string) ($config['position'] ?? 'bottom-right'));
+            $position = $this->resolveWatermarkPosition($rawPosition);
+            if ($position === null) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[ImageService] Unknown watermark position \"{$rawPosition}\";"
+                    . ' use Intervention names (top-left…bottom-right) or tile'
+                );
+
+                return;
+            }
+
+            $offsetX = (int) ($config['offset_x'] ?? 0);
+            $offsetY = (int) ($config['offset_y'] ?? 0);
+            $opacity = $this->normalizeWatermarkOpacity($config['opacity'] ?? 100);
+            $mark = $this->prepareWatermarkOverlay($resolved, $opacity);
+
+            if ($position === 'tile') {
+                $this->placeTiledWatermark($image, $mark, $offsetX, $offsetY);
+
+                return;
+            }
+
+            // Opacity is baked into the mark alpha so GD uses imagecopy() (not imagecopymerge).
+            $image->place($mark, $position, $offsetX, $offsetY, 100);
+        } catch (\Exception $e) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Failed to apply watermark: {$e->getMessage()}"
+            );
+        }
+    }
+
+    /**
+     * Accept Intervention place() positions plus `tile` for mosaic.
+     * Returns null when the value is unknown (caller logs and skips overlay).
+     */
+    private function resolveWatermarkPosition(string $position): ?string
+    {
+        $key = strtolower(trim($position));
+        if ($key === '') {
+            return 'bottom-right';
+        }
+
+        /** @var array<string, string> $map */
+        static $map = [
+            'top-left' => 'top-left',
+            'top' => 'top',
+            'top-right' => 'top-right',
+            'left' => 'left',
+            'center' => 'center',
+            'right' => 'right',
+            'bottom-left' => 'bottom-left',
+            'bottom' => 'bottom',
+            'bottom-right' => 'bottom-right',
+            'tile' => 'tile',
+        ];
+
+        return $map[$key] ?? null;
+    }
+
+    /**
+     * Decode the watermark and bake opacity into its alpha channel.
+     *
+     * Intervention GD place() with opacity < 100 uses imagecopymerge(), which ignores
+     * source alpha and paints opaque gray boxes on transparent canvases. Baking opacity
+     * and placing at 100 uses imagecopy() with correct alpha. The same Image is safe to
+     * reuse for tiling (Imagick PlaceModifier no longer mutates alpha per call).
+     *
+     * @return \Intervention\Image\Interfaces\ImageInterface
+     */
+    private function prepareWatermarkOverlay(string $resolvedPath, int $opacity)
+    {
+        $mark = $this->imageManager->read($resolvedPath);
+        if ($opacity < 100) {
+            $this->bakeWatermarkOpacity($mark, $opacity);
+        }
+
+        return $mark;
+    }
+
+    /**
+     * @param \Intervention\Image\Interfaces\ImageInterface $watermark
+     */
+    private function bakeWatermarkOpacity($watermark, int $opacity): void
+    {
+        $native = $watermark->core()->native();
+        if ($native instanceof \Imagick) {
+            $native->setImageAlphaChannel(\Imagick::ALPHACHANNEL_SET);
+            $native->evaluateImage(
+                \Imagick::EVALUATE_DIVIDE,
+                $opacity > 0 ? 100 / $opacity : 1000,
+                \Imagick::CHANNEL_ALPHA
+            );
+
+            return;
+        }
+
+        if (!($native instanceof \GdImage)) {
+            return;
+        }
+
+        imagealphablending($native, false);
+        imagesavealpha($native, true);
+        $factor = $opacity / 100.0;
+        $width = imagesx($native);
+        $height = imagesy($native);
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                $color = imagecolorat($native, $x, $y);
+                $alpha = ($color & 0x7F000000) >> 24;
+                $red = ($color >> 16) & 0xFF;
+                $green = ($color >> 8) & 0xFF;
+                $blue = $color & 0xFF;
+                $newAlpha = (int) round(127 - (127 - $alpha) * $factor);
+                $allocated = imagecolorallocatealpha($native, $red, $green, $blue, $newAlpha);
+                if ($allocated !== false) {
+                    imagesetpixel($native, $x, $y, $allocated);
+                }
+            }
+        }
+    }
+
+    /**
+     * Tile the prepared watermark across the canvas (`position: tile`).
+     * offset_x / offset_y are inter-tile margins. Mark opacity must already be baked.
+     *
+     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     * @param \Intervention\Image\Interfaces\ImageInterface $mark
+     */
+    private function placeTiledWatermark($image, $mark, int $marginX, int $marginY): void
+    {
+        $tileW = $mark->width();
+        $tileH = $mark->height();
+        if ($tileW <= 0 || $tileH <= 0) {
+            return;
+        }
+
+        $stepX = $tileW + max(0, $marginX);
+        $stepY = $tileH + max(0, $marginY);
+        $canvasW = $image->width();
+        $canvasH = $image->height();
+
+        for ($y = 0; $y < $canvasH; $y += $stepY) {
+            for ($x = 0; $x < $canvasW; $x += $stepX) {
+                $image->place($mark, 'top-left', $x, $y, 100);
+            }
+        }
+    }
+
+    /**
+     * Resolve watermark path relative to the site base path; reject traversal outside the root.
+     * Paths like `/assets/watermark.png` are treated as site-relative when the FS absolute miss.
+     */
+    private function resolveWatermarkPath(string $path): ?string
+    {
+        $base = $this->siteBasePath();
+        if ($base === '') {
+            return $this->readableRealPath($path);
+        }
+
+        $baseReal = realpath($base);
+        if ($baseReal === false) {
+            return null;
+        }
+
+        foreach ($this->watermarkPathCandidates($path, $baseReal) as $candidate) {
+            $real = $this->readableRealPath($candidate);
+            if ($real !== null && $this->isPathWithinBase($real, $baseReal)) {
+                return $real;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function watermarkPathCandidates(string $path, string $baseReal): array
+    {
+        $relative = $baseReal . DIRECTORY_SEPARATOR . ltrim(
+            str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path),
+            '/\\'
+        );
+
+        if (!$this->isAbsoluteFilesystemPath($path)) {
+            return [$relative];
+        }
+
+        // Absolute FS path, plus URL-style "/assets/..." fallback under the site root.
+        return [$path, $relative];
+    }
+
+    private function normalizeWatermarkOpacity(mixed $opacity): int
+    {
+        if ($opacity === '' || $opacity === null) {
+            return 100;
+        }
+
+        return max(0, min(100, (int) $opacity));
+    }
+
+    private function readableRealPath(string $path): ?string
+    {
+        if (!is_file($path) || !is_readable($path)) {
+            return null;
+        }
+
+        $real = realpath($path);
+
+        return $real !== false ? $real : null;
+    }
+
+    private function isPathWithinBase(string $path, string $baseReal): bool
+    {
+        $basePrefix = rtrim(str_replace('\\', '/', $baseReal), '/') . '/';
+
+        return str_starts_with(str_replace('\\', '/', $path), $basePrefix);
+    }
+
+    private function siteBasePath(): string
+    {
+        if ($this->basePath !== null && $this->basePath !== '') {
+            return $this->basePath;
+        }
+
+        return defined('MODX_BASE_PATH') ? (string) MODX_BASE_PATH : '';
+    }
+
+    private function isAbsoluteFilesystemPath(string $path): bool
+    {
+        if ($path === '') {
+            return false;
+        }
+        if ($path[0] === '/' || $path[0] === '\\') {
+            return true;
+        }
+
+        return (bool) preg_match('#^[A-Za-z]:[\\\\/]#', $path);
     }
 
     /**
@@ -158,13 +441,13 @@ class ImageService
      *
      * @param string $format
      * @param int $quality
-     * @return \Intervention\Image\Encoders\EncoderInterface
+     * @return \Intervention\Image\Interfaces\EncoderInterface
      */
     private function getEncoder(string $format, int $quality)
     {
         $format = strtolower($format);
 
-        return match($format) {
+        return match ($format) {
             'webp' => new \Intervention\Image\Encoders\WebpEncoder($quality),
             'avif' => new \Intervention\Image\Encoders\AvifEncoder($quality),
             'png' => new \Intervention\Image\Encoders\PngEncoder(),
@@ -221,7 +504,6 @@ class ImageService
             );
 
             return $url;
-
         } catch (\Exception $e) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,

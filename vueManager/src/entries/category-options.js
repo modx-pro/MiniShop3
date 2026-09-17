@@ -25,12 +25,7 @@ function mountApp() {
     return false
   }
 
-  app = createMs3VueApp(CategoryOptionsTab, { categoryId }, {
-    themeOptions: {
-      darkModeSelector: '.dark-mode',
-      cssLayer: false,
-    },
-  })
+  app = createMs3VueApp(CategoryOptionsTab, { categoryId })
   provideUiGroup(app, 'category-options')
 
   app.mount(container)

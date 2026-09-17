@@ -354,7 +354,7 @@ class CartUI {
         '#msb-test-cart',
         '#msCart',
         '[data-ms-cart]',
-        '.msCart'
+        '.msCart',
       ]
 
       let element = null
@@ -396,7 +396,7 @@ class CartUI {
    */
   dispatchCartUpdated (data) {
     document.dispatchEvent(new CustomEvent('ms3:cart:updated', {
-      detail: data
+      detail: data,
     }))
   }
 }

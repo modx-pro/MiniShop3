@@ -21,7 +21,7 @@ function buildCss() {
   decls.push(`--p-primary-hover-color:${PRIMARY_SCALE[600]}`)
   decls.push(`--p-primary-active-color:${PRIMARY_SCALE[700]}`)
   decls.push(`--p-primary-contrast-color:#ffffff`)
-  decls.push(`--ms3-accent-primary:${PRIMARY_500}`)
+  // Keep --ms3-accent-primary for links (fixed blue in _variables.scss, #738 AA).
   return `:root,:host{${decls.join(';')}}`
 }
 

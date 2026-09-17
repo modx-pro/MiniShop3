@@ -11,8 +11,6 @@ use MODX\Revolution\modX;
  */
 final class CatalogResolve
 {
-    private const MAX_CONTEXT_LENGTH = 100;
-
     /**
      * Return resource id when exactly one row matches $criteria; 0 or 2+ rows → null.
      *
@@ -45,61 +43,71 @@ final class CatalogResolve
     /**
      * @param array<string, mixed> $params
      * @return array{ok: true, field: 'alias'|'uri', value: string, context: string}|array{ok: false, error: 'required'|'conflict'|'invalid'}
+     *
+     * @throws CatalogContextException
      */
     public static function parseLookup(array $params, string $contextFallback = 'web'): array
     {
-        foreach (['alias', 'uri', 'context'] as $key) {
+        foreach (['alias', 'uri'] as $key) {
             if (array_key_exists($key, $params) && !self::isScalarLookupParam($params[$key])) {
                 return ['ok' => false, 'error' => 'invalid'];
             }
         }
 
-        $hasAlias = array_key_exists('alias', $params);
-        $hasUri = array_key_exists('uri', $params);
+        $alias = array_key_exists('alias', $params) ? trim((string) $params['alias']) : null;
+        $uri = array_key_exists('uri', $params) ? trim((string) $params['uri']) : null;
 
-        $aliasRaw = $hasAlias ? trim((string) $params['alias']) : '';
-        $uriRaw = $hasUri ? trim((string) $params['uri']) : '';
+        $hasAlias = $alias !== null && $alias !== '';
+        $hasUri = $uri !== null && $uri !== '';
 
-        $aliasProvided = $hasAlias && $aliasRaw !== '';
-        $uriProvided = $hasUri && $uriRaw !== '';
-
-        if ($aliasProvided && $uriProvided) {
+        if ($hasAlias && $hasUri) {
             return ['ok' => false, 'error' => 'conflict'];
         }
 
-        if (!$aliasProvided && !$uriProvided) {
+        if (!$hasAlias && !$hasUri) {
             return ['ok' => false, 'error' => 'required'];
         }
 
-        $context = self::resolveLookupContext($params, $contextFallback);
-        if ($context === null) {
-            return ['ok' => false, 'error' => 'invalid'];
-        }
+        $context = CatalogQuery::resolveContext($params, $contextFallback);
 
-        if ($aliasProvided) {
-            if (!self::isValidAlias($aliasRaw)) {
+        if ($hasAlias) {
+            if (self::containsUriRejectPattern($alias)) {
                 return ['ok' => false, 'error' => 'invalid'];
             }
 
             return [
                 'ok' => true,
                 'field' => 'alias',
-                'value' => $aliasRaw,
+                'value' => $alias,
                 'context' => $context,
             ];
         }
 
-        $uri = self::normalizeUri($uriRaw);
-        if ($uri === null) {
+        $normalizedUri = self::normalizeUri($uri ?? '');
+        if ($normalizedUri === null) {
             return ['ok' => false, 'error' => 'invalid'];
         }
 
         return [
             'ok' => true,
             'field' => 'uri',
-            'value' => $uri,
+            'value' => $normalizedUri,
             'context' => $context,
         ];
+    }
+
+    /**
+     * Lexicon key for a failed {@see parseLookup()} result.
+     *
+     * @param 'required'|'conflict'|'invalid' $error
+     */
+    public static function lookupErrorLexiconKey(string $error): string
+    {
+        return match ($error) {
+            'required' => 'ms3_err_catalog_lookup_required',
+            'conflict' => 'ms3_err_catalog_lookup_conflict',
+            'invalid' => 'ms3_err_catalog_lookup_invalid',
+        };
     }
 
     /**
@@ -141,49 +149,9 @@ final class CatalogResolve
         return array_values(array_unique($variants));
     }
 
-    /**
-     * @param array<string, mixed> $params
-     */
-    private static function resolveLookupContext(array $params, string $fallback): ?string
-    {
-        if (array_key_exists('context', $params)) {
-            $raw = trim((string) $params['context']);
-            if ($raw !== '') {
-                return self::sanitizeContext($raw);
-            }
-        }
-
-        $resolved = CatalogQuery::resolveContext($params, $fallback);
-
-        return self::sanitizeContext($resolved);
-    }
-
     private static function isScalarLookupParam(mixed $value): bool
     {
         return is_string($value) || is_int($value);
-    }
-
-    private static function sanitizeContext(string $key): ?string
-    {
-        $key = trim($key);
-        if ($key === '' || strlen($key) > self::MAX_CONTEXT_LENGTH) {
-            return null;
-        }
-
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $key)) {
-            return null;
-        }
-
-        if (str_starts_with(strtolower($key), 'mgr')) {
-            return null;
-        }
-
-        return $key;
-    }
-
-    private static function isValidAlias(string $alias): bool
-    {
-        return $alias !== '' && !self::containsUriRejectPattern($alias);
     }
 
     private static function containsUriRejectPattern(string $value): bool

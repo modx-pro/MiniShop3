@@ -29,6 +29,9 @@ class CategoryController
     /**
      * GET /api/v1/category/get/{id}
      *
+     * Query: context, include_hidden, include_content, include_breadcrumbs,
+     *        include_children, include_seo (default 1).
+     *
      * @param array<string, mixed> $params
      */
     public function get(array $params = []): Response
@@ -65,20 +68,18 @@ class CategoryController
      */
     public function resolve(array $params = []): Response
     {
-        $parsed = CatalogResolve::parseLookup(
-            $params,
-            (string) ($this->modx->context->key ?? 'web'),
-        );
+        try {
+            $parsed = CatalogResolve::parseLookup(
+                $params,
+                (string) ($this->modx->context->key ?? 'web'),
+            );
+        } catch (CatalogContextException $e) {
+            return $this->catalogContextBadRequest($e);
+        }
 
         if (!$parsed['ok']) {
-            $lexiconKey = match ($parsed['error']) {
-                'required' => 'ms3_err_catalog_lookup_required',
-                'conflict' => 'ms3_err_catalog_lookup_conflict',
-                'invalid' => 'ms3_err_catalog_lookup_invalid',
-            };
-
             return Response::error(
-                $this->modx->lexicon($lexiconKey),
+                $this->modx->lexicon(CatalogResolve::lookupErrorLexiconKey($parsed['error'])),
                 HttpStatus::BAD_REQUEST
             );
         }
@@ -104,7 +105,7 @@ class CategoryController
      * GET /api/v1/category/list
      *
      * Query: parent, limit, offset|page, sort, dir, context,
-     *        include_hidden, include_content
+     *        include_hidden, include_content, include_seo (default 0)
      *
      * @param array<string, mixed> $params
      */
@@ -122,7 +123,7 @@ class CategoryController
     /**
      * GET /api/v1/category/tree
      *
-     * Query: parent, depth, context, include_hidden, sort, dir
+     * Query: parent, depth, context, include_hidden, sort, dir, include_seo (default 0)
      *
      * @param array<string, mixed> $params
      */

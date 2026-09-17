@@ -1,10 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
+import { Button, Checkbox, InputNumber, InputText, Select } from 'primevue'
 import { computed } from 'vue'
 
 import { defaultRepeaterConfig } from '../utils/repeaterField.js'

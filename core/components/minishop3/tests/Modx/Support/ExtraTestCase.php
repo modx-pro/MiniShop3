@@ -29,6 +29,7 @@ use xPDO\Om\xPDOObject;
 abstract class ExtraTestCase extends TestCase
 {
     use RefreshesDatabase;
+    use GrantsContextPermissions;
 
     protected function packageDefinition(): PackageDefinition
     {
@@ -154,19 +155,6 @@ abstract class ExtraTestCase extends TestCase
         return $object;
     }
 
-    /**
-     * @param class-string $class
-     */
-    protected function assertTableExists(string $class): void
-    {
-        $quoted = $this->modx->getTableName($class);
-        self::assertNotFalse($quoted, 'No table name for ' . $class);
-        $table = str_replace('`', '', (string) $quoted);
-        $statement = $this->modx->prepare('SHOW TABLES LIKE ?');
-        $statement->execute([$table]);
-        self::assertNotFalse($statement->fetch(), 'Missing table ' . $table . ' for ' . $class);
-    }
-
     protected function registerPlugin(string $eventName, string $phpCode): void
     {
         $plugin = $this->modx->newObject(modPlugin::class);
@@ -243,7 +231,7 @@ abstract class ExtraTestCase extends TestCase
         );
     }
 
-    private function clearUserAttributeSessionCache(): void
+    protected function clearUserAttributeSessionCache(): void
     {
         if (!isset($_SESSION) || !is_array($_SESSION)) {
             return;

@@ -1,8 +1,6 @@
 <script setup>
 import { useLexicon } from '@vuetools/useLexicon'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useConfirm } from 'primevue/useconfirm'
-import { useToast } from 'primevue/usetoast'
+import { ConfirmDialog, useConfirm, useToast } from 'primevue'
 import { onMounted, ref } from 'vue'
 
 import { useGalleryApi } from '../../composables/useGalleryApi.js'

@@ -106,7 +106,10 @@ if (empty($cart)) {
     return compact('total', 'products', 'status');
 }
 
-// Select cart products
+// Select cart products.
+// Intentionally no CatalogResourceGroupVisibility filter here (#681 review):
+// validateProduct() already gated add-to-cart; lines stay visible in the draft
+// even if the product is closed later. Listing/resource cache staleness is #717.
 $where = [
     'msProduct.id:IN' => [],
 ];

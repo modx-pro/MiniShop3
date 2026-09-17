@@ -314,17 +314,17 @@ final class CustomerAuthPdoStore
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
         );
         $this->pdo->query(
-            'CREATE TABLE ms_customer_token (
+            "CREATE TABLE ms_customer_token (
                 id INT NOT NULL PRIMARY KEY,
                 customer_id INT NOT NULL DEFAULT 0,
                 token VARCHAR(128) NOT NULL,
-                type VARCHAR(32) NOT NULL,
+                type ENUM('api','refresh','magic_link','email_verification','password_reset') NOT NULL DEFAULT 'api',
                 expires_at DATETIME NOT NULL,
                 created_at DATETIME NULL,
                 used_at DATETIME NULL,
                 UNIQUE KEY uniq_token_type (token, type),
                 KEY idx_customer_type (customer_id, type)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
     }
 

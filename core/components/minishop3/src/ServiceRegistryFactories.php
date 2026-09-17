@@ -2,6 +2,9 @@
 
 namespace MiniShop3;
 
+use MiniShop3\Services\Order\OrderStatusService;
+use MiniShop3\Services\Payment\PdoPaymentAttemptStore;
+use MiniShop3\Services\Shipment\PdoShipmentStore;
 use MODX\Revolution\modX;
 
 /**
@@ -41,7 +44,10 @@ class ServiceRegistryFactories
             'ms3_product_catalog' => $modxOnly(),
             'ms3_product_facets' => $modxOnly(),
             'ms3_product_gallery_public' => $modxOnly(),
+            'ms3_public_seo' => $modxOnly(),
             'ms3_category_catalog' => $modxOnly(),
+            'ms3_customer_resource_group_resolver' => $modxOnly(),
+            'ms3_catalog_acl_cache' => $modxOnly(),
             'ms3_delivery_catalog' => $modxOnly(),
             'ms3_payment_catalog' => $modxOnly(),
             'ms3_repeater_field' => $modxOnly(),
@@ -51,8 +57,36 @@ class ServiceRegistryFactories
             'ms3_product_image' => $modxOnly(),
             'ms3_vendor_service' => $modxOnly(),
             'ms3_delivery_service' => $modxOnly(),
+            'ms3_shipment_lifecycle' => static function (modX $modx, object $services, string $class): object {
+                if (!$modx->pdo instanceof \PDO) {
+                    throw new \RuntimeException('ms3_shipment_lifecycle requires MODX PDO');
+                }
+                $prefix = (string) $modx->getOption('table_prefix', null, '');
+                $store = new PdoShipmentStore(
+                    $modx->pdo,
+                    $prefix . 'ms3_shipments',
+                    $prefix . 'ms3_shipment_events'
+                );
+
+                return new $class($store, $modx, $services->get('ms3_order_status'));
+            },
             'ms3_payment_service' => $modxOnly(),
             'ms3_payment_link_resolver' => $modxOnly(),
+            'ms3_payment_lifecycle' => static function (modX $modx, object $services, string $class): object {
+                if (!$modx->pdo instanceof \PDO) {
+                    throw new \RuntimeException('ms3_payment_lifecycle requires MODX PDO');
+                }
+                $prefix = (string) $modx->getOption('table_prefix', null, '');
+                $store = new PdoPaymentAttemptStore(
+                    $modx->pdo,
+                    $prefix . 'ms3_payment_attempts',
+                    $prefix . 'ms3_payment_attempt_events'
+                );
+                /** @var OrderStatusService $orderStatus */
+                $orderStatus = $services->get('ms3_order_status');
+
+                return new $class($store, $modx, $orderStatus);
+            },
             'ms3_order_service' => $modxOnly(),
             'ms3_customer_order' => $modxOnly(),
             'ms3_order_number_generator' => $modxOnly(),
@@ -99,6 +133,7 @@ class ServiceRegistryFactories
             'ms3_order_log' => $modxAndMs3(),
             'ms3_manager_order_cost_recalculator' => $modxAndMs3(),
             'ms3_cart_item_manager' => $modxAndMs3(),
+            'ms3_cart_response_normalizer' => $modxOnly(),
             'ms3_customer_address_manager' => $modxAndMs3(),
             'ms3_customer_field_manager' => $modxAndMs3(),
 

@@ -193,8 +193,23 @@ $_lang['ms3_err_product_not_in_category_scope'] = 'Товар не входит 
 $_lang['ms3_err_status_nf'] = 'Статус с таким идентификатором не найден.';
 $_lang['ms3_err_delivery_nf'] = 'Способ доставки с таким идентификатором не найден.';
 $_lang['ms3_err_delivery_id_required'] = 'Не указан ID доставки';
+$_lang['ms3_err_shipment_nf'] = 'Отгрузка не найдена.';
+$_lang['ms3_err_shipment_disabled'] = 'Lifecycle отгрузки выключен.';
+$_lang['ms3_err_shipment_cancelled'] = 'Операция с отгрузкой отменена.';
+$_lang['ms3_err_shipment_tracking_invalid'] = 'Номер отслеживания пустой.';
+$_lang['ms3_err_shipment_event_conflict'] = 'Это событие отгрузки нельзя применить к текущей отгрузке.';
+$_lang['ms3_err_shipment_webhook_unsupported'] = 'Этот способ доставки не поддерживает системный webhook.';
+$_lang['ms3_err_shipment_webhook_invalid'] = 'Тело callback доставки некорректно.';
+$_lang['ms3_err_shipment_webhook_unauthorized'] = 'Подпись callback доставки недействительна.';
 $_lang['ms3_err_payment_nf'] = 'Способ оплаты с таким идентификатором не найден.';
 $_lang['ms3_err_payment_id_required'] = 'Не указан ID оплаты';
+$_lang['ms3_err_payment_webhook_unsupported'] = 'Этот способ оплаты не поддерживает системный webhook.';
+$_lang['ms3_err_payment_webhook_invalid'] = 'Некорректное тело платёжного callback.';
+$_lang['ms3_err_payment_webhook_unauthorized'] = 'Подпись платёжного callback недействительна.';
+$_lang['ms3_err_payment_webhook_conflict'] = 'Callback конфликтует с текущим состоянием попытки оплаты.';
+$_lang['ms3_err_payment_attempt_nf'] = 'Попытка оплаты не найдена.';
+$_lang['ms3_err_payment_attempt_record'] = 'Не удалось записать попытку оплаты после отправки заказа в платёжный шлюз.';
+$_lang['ms3_err_payment_event_conflict'] = 'Это платёжное событие нельзя применить к текущей попытке.';
 $_lang['ms3_err_status_final'] = 'Установлен финальный статус. Его нельзя менять.';
 $_lang['ms3_err_status_fixed'] = 'Установлен фиксирующий статус. Вы не можете сменить его на более ранний.';
 $_lang['ms3_err_status_wrong'] = 'Неверный статус заказа.';
@@ -279,10 +294,22 @@ $_lang['ms3_help'] = 'Помощь и поддержка';
 $_lang['ms3_help_desc'] = 'Полезные ссылки и информация';
 
 $_lang['ms3_error'] = 'Ошибка';
-$_lang['ms3_vuetools_required'] = 'Для работы MiniShop3 требуется пакет VueTools. Установите его через Менеджер пакетов.';
+$_lang['ms3_vuetools_required'] = 'Для работы MiniShop3 требуется пакет VueTools (>= 1.2.0). Установите или обновите его через Менеджер пакетов.';
 
 $_lang['ms3_mgr_order_recalc_invalid_mode'] = 'Недопустимый режим пересчёта стоимости заказа.';
 $_lang['ms3_mgr_order_recalc_manual_delivery_missing'] = 'В режиме manual обязательно укажите manual_delivery_cost (стоимость доставки).';
 $_lang['ms3_order_cost_recalc_success'] = 'Стоимость заказа пересчитана';
 $_lang['ms3_order_finalize_cost_recalc_required'] =
     'Перед оформлением пересчитайте стоимость заказа: для выбранных доставки или оплаты нужен ручной расчёт или force_provider.';
+
+// Группы покупателей (#669)
+$_lang['ms3_err_customer_group_id_required'] = 'Не указан ID группы покупателей';
+$_lang['ms3_err_customer_group_not_found'] = 'Группа покупателей не найдена или неактивна';
+$_lang['ms3_err_customer_group_name_required'] = 'Укажите название группы покупателей';
+$_lang['ms3_err_customer_group_user_group_invalid'] = 'Укажите корректную группу пользователей MODX';
+$_lang['ms3_err_customer_group_save'] = 'Не удалось сохранить группу покупателей';
+$_lang['ms3_err_customer_group_delete'] = 'Не удалось удалить группу покупателей';
+$_lang['ms3_err_customer_group_detach'] = 'Не удалось отвязать покупателей перед удалением группы';
+$_lang['ms3_customer_group_created'] = 'Группа покупателей создана';
+$_lang['ms3_customer_group_updated'] = 'Группа покупателей обновлена';
+$_lang['ms3_customer_group_deleted'] = 'Группа покупателей удалена';

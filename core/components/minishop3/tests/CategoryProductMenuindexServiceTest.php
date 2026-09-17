@@ -37,12 +37,91 @@ $assertSame(false, CategoryProductMenuindexService::isNativeInCategory(5, 9), 'n
 $assertSame(true, CategoryProductMenuindexService::isNativeInCategories(3, [1, 3, 7]), 'native in list');
 
 $singleSql = CategoryProductMenuindexService::effectiveMenuindexSql(12);
-$assertTrue(str_contains($singleSql, 'msProduct.parent = 12'), 'single category parent check');
-$assertTrue(str_contains($singleSql, 'COALESCE(CategoryMember.menuindex, msProduct.menuindex)'), 'single coalesce');
+$assertSame(
+    'CASE WHEN `msProduct`.`parent` = 12 THEN `msProduct`.`menuindex` '
+    . 'ELSE COALESCE(`CategoryMember`.`menuindex`, `msProduct`.`menuindex`) END',
+    $singleSql,
+    'single category expression'
+);
 
 $multiSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories([4, 8]);
-$assertTrue(str_contains($multiSql, 'msProduct.parent IN (4,8)'), 'multi parent in');
-$assertTrue(str_contains($multiSql, 'MIN(CategoryMember.menuindex)'), 'multi uses min');
+$assertSame(
+    'CASE WHEN `msProduct`.`parent` IN (4,8) THEN `msProduct`.`menuindex` '
+    . 'ELSE COALESCE(MIN(`CategoryMember`.`menuindex`), `msProduct`.`menuindex`) END',
+    $multiSql,
+    'multi category expression'
+);
+$assertSame('`msProduct`.`menuindex`', CategoryProductMenuindexService::effectiveMenuindexSqlForCategories([]), 'no categories');
+
+// msProducts passes the expression as pdoTools sortby. pdoTools\Fetch::addSort() (3.0.x) splits
+// the clause on commas and rewrites `alias.field ` in every piece without a backtick; the result
+// was invalid SQL (empty catalog). The expression must survive that step unchanged.
+$pdoToolsEscapeSortby = static function (string $sortby): string {
+    $tmp = explode(',', $sortby);
+    array_walk($tmp, static function (&$value) {
+        if (strpos($value, '`') === false) {
+            $value = preg_replace('#(.*?)\.(.*?)\s#', '`$1`.`$2`', $value);
+        }
+    });
+
+    return implode(',', $tmp);
+};
+foreach ([[12], [4, 8], [3, 5, 7, 11]] as $ids) {
+    $sql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($ids);
+    $assertSame($sql, $pdoToolsEscapeSortby($sql), 'pdoTools sortby escaping keeps expression for ' . implode(',', $ids));
+}
+
+// msProducts sortby substitution.
+$scope = [3, 5, 7];
+$expr = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($scope);
+$substitute = static fn (string|array $sortby, array $ids = [3, 5, 7]): string
+    => CategoryProductMenuindexService::substituteMenuindexSortby($sortby, $ids);
+
+foreach (['menuindex', '`menuindex`', 'msProduct.menuindex', '`msProduct`.`menuindex`', 'MenuIndex'] as $sortby) {
+    $assertSame($expr, $substitute($sortby), 'substitute ' . $sortby);
+}
+$assertSame($expr . ' DESC, pagetitle', $substitute('menuindex DESC, pagetitle'), 'substitute with direction and second column');
+$assertSame(
+    $substitute('menuindex DESC, pagetitle'),
+    $pdoToolsEscapeSortby($substitute('menuindex DESC, pagetitle')),
+    'substituted multi-column sortby survives pdoTools escaping'
+);
+
+$json = $substitute('{"menuindex":"ASC","pagetitle":"DESC"}');
+$decoded = json_decode($json, true);
+$assertSame([$expr => 'ASC', 'pagetitle' => 'DESC'], $decoded, 'substitute inside JSON sortby keeps valid JSON');
+
+// Array sortby (Fenom/PHP) must not cast to "Array" (#740).
+$arrayAsc = $substitute(['menuindex' => 'ASC']);
+$assertSame(
+    json_decode($substitute('{"menuindex":"ASC"}'), true),
+    json_decode($arrayAsc, true),
+    'array [menuindex => ASC] matches JSON equivalent'
+);
+$arrayMulti = $substitute(['menuindex' => 'DESC', 'pagetitle' => 'ASC']);
+$assertSame(
+    [$expr => 'DESC', 'pagetitle' => 'ASC'],
+    json_decode($arrayMulti, true),
+    'array [menuindex => DESC, pagetitle => ASC] substitutes key only'
+);
+$assertTrue(
+    CategoryProductMenuindexService::sortbyRefersToMenuindex(['menuindex' => 'ASC']),
+    'sortbyRefersToMenuindex detects array keys'
+);
+$assertTrue(
+    !CategoryProductMenuindexService::sortbyRefersToMenuindex(['pagetitle' => 'ASC']),
+    'sortbyRefersToMenuindex ignores array without menuindex'
+);
+$assertTrue(
+    !CategoryProductMenuindexService::sortbyRefersToMenuindex('Array'),
+    'literal Array string is not treated as menuindex sortby'
+);
+
+$assertSame('pagetitle', $substitute('pagetitle'), 'no menuindex in sortby');
+$assertSame('CategoryMember.menuindex', $substitute('CategoryMember.menuindex'), 'other alias menuindex untouched');
+$assertSame('`CategoryMember`.`menuindex`', $substitute('`CategoryMember`.`menuindex`'), 'quoted other alias menuindex untouched');
+$assertSame('menuindex', $substitute('menuindex', []), 'no category scope');
+$assertSame($expr, $substitute($expr), 'already substituted sortby unchanged');
 
 $joinSingle = CategoryProductMenuindexService::memberJoinOn(15);
 $assertSame(

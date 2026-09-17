@@ -9,8 +9,9 @@
  *   success: true/false,
  *   message: "Message",
  *   data: {
- *     cart: [],           // Product array
- *     status: {},         // Cart totals (total_cost, total_count, etc.)
+ *     cart: {},           // Legacy map keyed by product_key (empty object, not [])
+ *     items: [],          // Always an array of line items (preferred for Nuxt)
+ *     status: {},         // Cart totals (total_cost, total_count, total_weight, total_discount, total_positions)
  *     render: {}          // HTML blocks for rendering (if requested)
  *   }
  * }
@@ -35,20 +36,19 @@ class CartAPI {
    *
    * GET /api/v1/cart/get
    *
-   * @param {Object} params - Additional parameters
-   * @param {Object} params.render - Render configuration (selectors for HTML update)
-   * @returns {Promise<Object>} - { success, message, data: { cart, status, render } }
+   * @param {Object} [params] - Query flags
+   * @param {boolean|number|string} [params.include_thumbs] - Opt-in item.thumb from product data
+   * @returns {Promise<Object>} - { success, message, data: { cart, items, status, render } }
    *
    * @example
    * const response = await cart.get()
-   * console.log(response.data.cart)
+   * console.log(response.data.items)
    * console.log(response.data.status.total_cost)
    */
   async get (params = {}) {
-    const endpoint = '/api/v1/cart/get'
-
-    if (params.render) {
-      // TODO: add render parameter support in backend
+    let endpoint = '/api/v1/cart/get'
+    if (params.include_thumbs) {
+      endpoint += '?include_thumbs=1'
     }
 
     return this.api.get(endpoint)
@@ -72,7 +72,7 @@ class CartAPI {
     const data = {
       id,
       count,
-      options
+      options,
     }
 
     if (render) {
@@ -98,7 +98,7 @@ class CartAPI {
   async change (productKey, count, render = null) {
     const data = {
       product_key: productKey,
-      count
+      count,
     }
 
     if (render) {
@@ -124,7 +124,7 @@ class CartAPI {
   async changeOption (productKey, options = {}, render = null) {
     const data = {
       product_key: productKey,
-      options
+      options,
     }
 
     if (render) {
@@ -148,7 +148,7 @@ class CartAPI {
    */
   async remove (productKey, render = null) {
     const data = {
-      product_key: productKey
+      product_key: productKey,
     }
 
     if (render) {
