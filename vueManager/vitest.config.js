@@ -19,7 +19,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
-    include: ['src/**/*.{test,spec}.{js,mjs}'],
+    include: ['src/**/*.{test,spec}.{js,mjs}', 'scripts/**/*.{test,spec}.{js,mjs}'],
     clearMocks: true,
   },
 })
