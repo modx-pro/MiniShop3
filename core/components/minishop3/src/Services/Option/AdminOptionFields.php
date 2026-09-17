@@ -43,23 +43,14 @@ class AdminOptionFields
     {
         /** @var xPDOQuery $c */
         $c = $this->prepareOptionListCriteria($productId, $parentId);
-        $c->sortby('msCategoryOption.position');
 
         // Join msOptionGroup for group_name (for grouping in admin UI)
         $c->leftJoin(msOptionGroup::class, '`OptionGroup`', '`OptionGroup`.id = `msOption`.option_group_id');
 
-        // Exclude msCategoryOption.caption/description from the select — after PR #203 these
-        // columns shadow msOption.caption/description during xPDO hydration and leave the option
-        // labels empty. The per-category override is layered on top via the overlay below.
+        // msCategoryOption join is for WHERE only; category columns need aggregates under ONLY_FULL_GROUP_BY (#615 / #4).
         $c->select($this->xpdo->getSelectColumns(msOption::class, '`msOption`'));
-        $c->select($this->xpdo->getSelectColumns(
-            msCategoryOption::class,
-            '`msCategoryOption`',
-            '',
-            ['id', 'option_id', 'category_id', 'caption', 'description'],
-            true
-        ));
         $c->select('`OptionGroup`.name AS `group_name`');
+        $this->selectCategoryOptionAggregates($c);
 
         $preloadedValues = $this->getValuesForProduct($productId);
 
@@ -107,6 +98,19 @@ class AdminOptionFields
         }
 
         return $fields;
+    }
+
+    /**
+     * Aggregated msCategoryOption columns + GROUP BY for ONLY_FULL_GROUP_BY (#615 / #4).
+     */
+    protected function selectCategoryOptionAggregates(xPDOQuery $c): void
+    {
+        $c->select('MAX(`msCategoryOption`.required) AS `required`');
+        $c->select('MIN(`msCategoryOption`.value) AS `value`');
+        $c->select('MIN(`msCategoryOption`.position) AS `min_category_position`');
+        $c->sortby('`min_category_position`', 'ASC');
+        $c->groupby('`msOption`.id');
+        $c->groupby('`OptionGroup`.name');
     }
 
     /**

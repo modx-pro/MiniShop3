@@ -384,7 +384,8 @@ onMounted(async () => {
             <Button
               :label="_('create')"
               icon="pi pi-plus"
-              severity="success"
+              severity="primary"
+              size="small"
               @click="createPayment"
             />
           </div>
