@@ -16,7 +16,7 @@ use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Level-2: OrderStatusService gate — idempotency, allow-list, after-event rollback, ports.
+ * Level-2: OrderStatusService gate — idempotency, allow-list, after-event, in-TX ports.
  */
 final class OrderStatusServiceLifecycleTest extends TestCase
 {
@@ -128,7 +128,7 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         self::assertSame(1, $ports->shipCalls);
     }
 
-    public function testAfterEventFailureRollsBackStatusAndSkipsLog(): void
+    public function testAfterEventFailureKeepsCommittedStatusAndSkipsLog(): void
     {
         $harness = $this->makeHarness(statusId: 2);
         $log = $this->recordingLog();
@@ -144,12 +144,12 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         $result = $service->change(10, 3, true);
 
         self::assertSame('after failed', $result);
-        self::assertSame(2, $harness['order']->get('status_id'));
+        self::assertSame(3, $harness['order']->get('status_id'));
         self::assertSame([], $log->entries);
         self::assertSame(['msOnBeforeChangeOrderStatus', 'msOnChangeOrderStatus'], $events);
     }
 
-    public function testPaidPortRunsAndFailureRollsBack(): void
+    public function testPaidPortFailureAbortsBeforeSave(): void
     {
         $harness = $this->makeHarness(statusId: 2);
         $log = $this->recordingLog();
