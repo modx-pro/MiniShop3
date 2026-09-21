@@ -196,3 +196,9 @@ MIT. Текст: [LICENSE](LICENSE).
 - [GitHub Issues](https://github.com/modx-pro/MiniShop3/issues): баги и предложения
 - [Документация](https://docs.modx.pro/components/minishop3/): руководства и справочники
 - [Telegram](https://t.me/modx_pro): сообщество MODX
+
+---
+
+<p align="center">
+  Сделано с ❤️ для сообщества MODX
+</p>
