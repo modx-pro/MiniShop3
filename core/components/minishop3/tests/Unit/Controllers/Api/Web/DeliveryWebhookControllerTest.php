@@ -213,8 +213,10 @@ final class DeliveryWebhookControllerTest extends TestCase
     {
         $orderStatus = $this->createMock(OrderStatusService::class);
         $orderStatus->method('ensure')->willReturnCallback(
-            function (int $orderId, int $statusId): bool {
+            function (int $orderId, int $statusId) use ($order): bool {
                 $this->statusChanges[] = [$orderId, $statusId];
+                // Persist so shipment syncOrderStatus skips ensure on provider retry (#754).
+                $order->set('status_id', $statusId);
 
                 return true;
             }

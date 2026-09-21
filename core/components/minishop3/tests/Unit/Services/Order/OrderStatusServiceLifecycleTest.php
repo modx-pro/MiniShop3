@@ -147,9 +147,64 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         self::assertSame(3, $harness['order']->get('status_id'));
         self::assertSame([[10, 3, 'status']], $log->entries);
         self::assertSame(
-            ['msOnBeforeChangeOrderStatus', 'log-present', 'msOnChangeOrderStatus'],
+            ['msOnBeforeChangeOrderStatus', 'msOnChangeOrderStatus'],
             $events
         );
+    }
+
+    public function testEnsureUsesIdempotentChangeForRaceSafeSameStatus(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+
+        $service = $this->makeService($harness, $log, new NullOrderLifecyclePorts(), $events);
+        $result = $service->ensure(10, 2);
+
+        self::assertTrue($result);
+        self::assertSame([], $log->entries);
+        self::assertSame([], $events);
+    }
+
+    public function testAfterEventFailureStillAttemptsNotificationsWhenNotSkipped(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            afterFail: true,
+            trackNotifications: true
+        );
+        $result = $service->change(10, 3, false);
+
+        self::assertSame('after failed', $result);
+        self::assertSame(3, $harness['order']->get('status_id'));
+        self::assertContains('notification-sent', $events);
+    }
+
+    public function testEnsureSucceedsWhenChangeCommittedButAfterEventFailed(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            afterFail: true
+        );
+        $result = $service->ensure(10, 3, true);
+
+        self::assertTrue($result);
+        self::assertSame(3, $harness['order']->get('status_id'));
+        self::assertSame([[10, 3, 'status']], $log->entries);
     }
 
     public function testJoinsOuterTransactionWithoutBeginOrCommit(): void
@@ -368,7 +423,8 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         OrderLogService $log,
         OrderLifecyclePortsInterface $ports,
         array &$events,
-        bool $afterFail = false
+        bool $afterFail = false,
+        bool $trackNotifications = false,
     ): OrderStatusService {
         $modx = new class($harness, $afterFail) extends modX {
             /** @var array{order: RecordingMsOrder, statuses: array<int, object>, options: array<string, mixed>, tx?: object} */
@@ -454,25 +510,19 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         $ms3 = $this->createMock(MiniShop3::class);
         $ms3->method('initialize')->willReturn(true);
 
-        $utils = new class($events, $afterFail, $log) {
+        $utils = new class($events, $afterFail) {
             /** @var list<string> */
             private array $events;
             private bool $afterFail;
-            private OrderLogService $log;
 
-            public function __construct(array &$events, bool $afterFail, OrderLogService $log)
+            public function __construct(array &$events, bool $afterFail)
             {
                 $this->events = &$events;
                 $this->afterFail = $afterFail;
-                $this->log = $log;
             }
 
             public function invokeEvent(string $eventName, array $params = [], $glue = '<br/>'): array
             {
-                if ($eventName === 'msOnChangeOrderStatus' && $this->afterFail) {
-                    $entries = $this->log->entries ?? [];
-                    $this->events[] = $entries === [] ? 'log-missing' : 'log-present';
-                }
                 $this->events[] = $eventName;
                 if ($eventName === 'msOnChangeOrderStatus' && $this->afterFail) {
                     return ['success' => false, 'message' => 'after failed', 'data' => []];
@@ -483,6 +533,33 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         };
         $ms3->utils = $utils;
 
-        return new OrderStatusService($modx, $ms3, $log, $ports);
+        $service = new class($modx, $ms3, $log, $ports, $events, $trackNotifications) extends OrderStatusService {
+            /** @var list<string> */
+            private array $events;
+
+            public function __construct(
+                modX $modx,
+                MiniShop3 $ms3,
+                OrderLogService $orderLog,
+                OrderLifecyclePortsInterface $lifecyclePorts,
+                array &$events,
+                private readonly bool $trackNotifications,
+            ) {
+                parent::__construct($modx, $ms3, $orderLog, $lifecyclePorts);
+                $this->events = &$events;
+            }
+
+            protected function sendNotifications(
+                msOrder $msOrder,
+                msOrderStatus $newStatus,
+                ?msOrderStatus $oldStatus
+            ): void {
+                if ($this->trackNotifications) {
+                    $this->events[] = 'notification-sent';
+                }
+            }
+        };
+
+        return $service;
     }
 }

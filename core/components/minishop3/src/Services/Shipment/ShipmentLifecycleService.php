@@ -479,8 +479,11 @@ class ShipmentLifecycleService
         try {
             if (!$this->store->claimEvent($shipmentId, $eventId)) {
                 $this->store->rollBack();
+                $current = $this->requireShipment($shipmentId);
+                // Heal order status on provider retry without re-firing msOn* (#754).
+                $this->syncOrderStatus($current['order_id'], $current['status']);
 
-                return $this->requireShipment($shipmentId);
+                return $current;
             }
             // Re-read under row lock so concurrent distinct events see each other's commits
             // (stale pre-txn snapshot would let the slower writer overwrite the newer status).
