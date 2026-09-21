@@ -194,6 +194,10 @@ class OrderStatusService implements OrderStatusChanger
             return $persistError;
         }
 
+        // Log before the after-event: status is already committed, and a plugin
+        // error must not erase the history of that transition.
+        $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
+
         $response = $this->ms3->utils->invokeEvent('msOnChangeOrderStatus', [
             'msOrder' => $msOrder,
             'old_status' => $previousStatusId,
@@ -203,8 +207,6 @@ class OrderStatusService implements OrderStatusChanger
             // Status (and in-TX domain work) already committed — do not compensate.
             return $response['message'];
         }
-
-        $this->orderLog->add($msOrder->get('id'), $statusId, 'status');
 
         // Send notifications via NotificationManager (unless skipped)
         // Use output buffering to prevent any stray output from Fenom/pdoTools
@@ -218,48 +220,36 @@ class OrderStatusService implements OrderStatusChanger
     }
 
     /**
-     * In-TX domain hooks then persist status_id. On failure rolls back the transaction only.
+     * In-TX domain hooks then persist status_id.
+     * Joins an already open transaction instead of starting a nested one.
+     * On failure rolls back only the transaction this method opened.
      */
     protected function persistStatusWithPorts(
         msOrder $msOrder,
         int $statusId,
         ?int $previousStatusId
     ): ?string {
-        $useTx = is_callable([$this->modx, 'beginTransaction'])
-            && is_callable([$this->modx, 'commit'])
-            && is_callable([$this->modx, 'rollback']);
-
-        if ($useTx) {
-            $this->modx->beginTransaction();
-        }
+        $ownsTx = $this->beginOwnedTransaction();
 
         try {
             $portError = $this->runLifecyclePorts($msOrder, $statusId, $previousStatusId);
             if ($portError !== null) {
-                if ($useTx) {
-                    $this->modx->rollback();
-                }
+                $this->rollbackOwnedTransaction($ownsTx);
 
                 return $portError;
             }
 
             $msOrder->set('status_id', $statusId);
             if (!$msOrder->save()) {
-                if ($useTx) {
-                    $this->modx->rollback();
-                }
+                $this->rollbackOwnedTransaction($ownsTx);
                 $msOrder->set('status_id', $previousStatusId);
 
                 return $this->modx->lexicon('ms3_err_unknown');
             }
 
-            if ($useTx) {
-                $this->modx->commit();
-            }
+            $this->commitOwnedTransaction($ownsTx);
         } catch (\Throwable $e) {
-            if ($useTx) {
-                $this->modx->rollback();
-            }
+            $this->rollbackOwnedTransaction($ownsTx);
             $msOrder->set('status_id', $previousStatusId);
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
@@ -270,6 +260,47 @@ class OrderStatusService implements OrderStatusChanger
         }
 
         return null;
+    }
+
+    /**
+     * Start a transaction only when none is active.
+     * PDO::beginTransaction() throws if one is already open.
+     */
+    private function beginOwnedTransaction(): bool
+    {
+        if (
+            !is_callable([$this->modx, 'inTransaction'])
+            || !is_callable([$this->modx, 'beginTransaction'])
+            || !is_callable([$this->modx, 'commit'])
+            || !is_callable([$this->modx, 'rollback'])
+        ) {
+            return false;
+        }
+        if ($this->modx->inTransaction()) {
+            return false;
+        }
+
+        $this->modx->beginTransaction();
+
+        return true;
+    }
+
+    private function commitOwnedTransaction(bool $ownsTx): void
+    {
+        if ($ownsTx) {
+            $this->modx->commit();
+        }
+    }
+
+    private function rollbackOwnedTransaction(bool $ownsTx): void
+    {
+        if (!$ownsTx) {
+            return;
+        }
+        if (is_callable([$this->modx, 'inTransaction']) && !$this->modx->inTransaction()) {
+            return;
+        }
+        $this->modx->rollback();
     }
 
     /**

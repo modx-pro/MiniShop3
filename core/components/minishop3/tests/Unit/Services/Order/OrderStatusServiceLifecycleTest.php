@@ -128,7 +128,7 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         self::assertSame(1, $ports->shipCalls);
     }
 
-    public function testAfterEventFailureKeepsCommittedStatusAndSkipsLog(): void
+    public function testAfterEventFailureKeepsCommittedStatusAndStillLogs(): void
     {
         $harness = $this->makeHarness(statusId: 2);
         $log = $this->recordingLog();
@@ -145,8 +145,69 @@ final class OrderStatusServiceLifecycleTest extends TestCase
 
         self::assertSame('after failed', $result);
         self::assertSame(3, $harness['order']->get('status_id'));
-        self::assertSame([], $log->entries);
-        self::assertSame(['msOnBeforeChangeOrderStatus', 'msOnChangeOrderStatus'], $events);
+        self::assertSame([[10, 3, 'status']], $log->entries);
+        self::assertSame(
+            ['msOnBeforeChangeOrderStatus', 'log-present', 'msOnChangeOrderStatus'],
+            $events
+        );
+    }
+
+    public function testJoinsOuterTransactionWithoutBeginOrCommit(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $harness['tx'] = (object) [
+            'outer' => true,
+            'open' => false,
+            'begins' => 0,
+            'commits' => 0,
+            'rollbacks' => 0,
+        ];
+        $log = $this->recordingLog();
+        $events = [];
+        $service = $this->makeService($harness, $log, new NullOrderLifecyclePorts(), $events);
+
+        self::assertTrue($service->change(10, 3, true));
+        self::assertSame(3, $harness['order']->get('status_id'));
+        self::assertSame(0, $harness['tx']->begins);
+        self::assertSame(0, $harness['tx']->commits);
+        self::assertSame(0, $harness['tx']->rollbacks);
+    }
+
+    public function testOwnedTransactionRollsBackWhenPortDenies(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $harness['tx'] = (object) [
+            'outer' => false,
+            'open' => false,
+            'begins' => 0,
+            'commits' => 0,
+            'rollbacks' => 0,
+        ];
+        $log = $this->recordingLog();
+        $events = [];
+        $ports = new class implements OrderLifecyclePortsInterface {
+            public function onOrderBecamePaid(msOrder $order, ?int $previousStatusId): ?string
+            {
+                return 'port failed';
+            }
+
+            public function onOrderCancelled(msOrder $order, ?int $previousStatusId): ?string
+            {
+                return null;
+            }
+
+            public function onOrderShipped(msOrder $order, ?int $previousStatusId): ?string
+            {
+                return null;
+            }
+        };
+        $service = $this->makeService($harness, $log, $ports, $events);
+
+        self::assertSame('port failed', $service->change(10, 3, true));
+        self::assertSame(2, $harness['order']->get('status_id'));
+        self::assertSame(1, $harness['tx']->begins);
+        self::assertSame(0, $harness['tx']->commits);
+        self::assertSame(1, $harness['tx']->rollbacks);
     }
 
     public function testPaidPortFailureAbortsBeforeSave(): void
@@ -310,7 +371,7 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         bool $afterFail = false
     ): OrderStatusService {
         $modx = new class($harness, $afterFail) extends modX {
-            /** @var array{order: RecordingMsOrder, statuses: array<int, object>, options: array<string, mixed>} */
+            /** @var array{order: RecordingMsOrder, statuses: array<int, object>, options: array<string, mixed>, tx?: object} */
             private array $harness;
             private bool $afterFail;
 
@@ -319,6 +380,47 @@ final class OrderStatusServiceLifecycleTest extends TestCase
                 parent::__construct();
                 $this->harness = $harness;
                 $this->afterFail = $afterFail;
+                if (!isset($this->harness['tx'])) {
+                    $this->harness['tx'] = (object) [
+                        'outer' => false,
+                        'open' => false,
+                        'begins' => 0,
+                        'commits' => 0,
+                        'rollbacks' => 0,
+                    ];
+                }
+            }
+
+            public function inTransaction(): bool
+            {
+                return $this->harness['tx']->outer || $this->harness['tx']->open;
+            }
+
+            public function beginTransaction()
+            {
+                if ($this->inTransaction()) {
+                    throw new \PDOException('There is already an active transaction');
+                }
+                $this->harness['tx']->begins++;
+                $this->harness['tx']->open = true;
+
+                return true;
+            }
+
+            public function commit()
+            {
+                $this->harness['tx']->commits++;
+                $this->harness['tx']->open = false;
+
+                return true;
+            }
+
+            public function rollback()
+            {
+                $this->harness['tx']->rollbacks++;
+                $this->harness['tx']->open = false;
+
+                return true;
             }
 
             public function getOption(string $key, $options = null, $default = null)
@@ -352,19 +454,25 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         $ms3 = $this->createMock(MiniShop3::class);
         $ms3->method('initialize')->willReturn(true);
 
-        $utils = new class($events, $afterFail) {
+        $utils = new class($events, $afterFail, $log) {
             /** @var list<string> */
             private array $events;
             private bool $afterFail;
+            private OrderLogService $log;
 
-            public function __construct(array &$events, bool $afterFail)
+            public function __construct(array &$events, bool $afterFail, OrderLogService $log)
             {
                 $this->events = &$events;
                 $this->afterFail = $afterFail;
+                $this->log = $log;
             }
 
             public function invokeEvent(string $eventName, array $params = [], $glue = '<br/>'): array
             {
+                if ($eventName === 'msOnChangeOrderStatus' && $this->afterFail) {
+                    $entries = $this->log->entries ?? [];
+                    $this->events[] = $entries === [] ? 'log-missing' : 'log-present';
+                }
                 $this->events[] = $eventName;
                 if ($eventName === 'msOnChangeOrderStatus' && $this->afterFail) {
                     return ['success' => false, 'message' => 'after failed', 'data' => []];
