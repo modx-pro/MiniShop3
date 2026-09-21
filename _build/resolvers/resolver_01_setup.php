@@ -19,6 +19,7 @@ $packages = [
         'service_url' => 'modstore.pro',
     ],
     'VueTools' => [
+        // Keep vueManager/scripts/fixtures/vuetools-<version>.exports.json in sync (#714).
         'version' => '1.2.0-pl',
         'service_url' => 'modstore.pro',
     ],
