@@ -61,7 +61,7 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
         ], allowDuplicate: true);
         if (!$inserted) {
             $existing = $externalId !== null
-                ? $this->findByExternalId($provider, $externalId, $paymentMethodId)
+                ? $this->findDuplicateForUpdate($provider, $externalId, $paymentMethodId)
                 : null;
             if ($existing !== null) {
                 return $existing;
@@ -131,6 +131,28 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
         }
 
         return $this->fetchOne($sql, $params);
+    }
+
+    /**
+     * Use a current read so an outer REPEATABLE READ transaction can see the row
+     * whose committed unique key caused create() to fail.
+     *
+     * @return PaymentAttemptRow|null
+     */
+    private function findDuplicateForUpdate(string $provider, string $externalId, int $paymentMethodId): ?array
+    {
+        return $this->fetchOne(
+            "SELECT * FROM {$this->attemptsTable}
+                WHERE provider = :provider
+                  AND external_id = :external_id
+                  AND payment_method_id = :payment_method_id
+                FOR UPDATE",
+            [
+                'provider' => $provider,
+                'external_id' => $externalId,
+                'payment_method_id' => $paymentMethodId,
+            ],
+        );
     }
 
     public function findLatestForOrder(int $orderId, ?int $paymentMethodId = null): ?array

@@ -69,6 +69,25 @@ final class PdoPaymentAttemptStoreMysqlTest extends TestCase
         self::assertSame($first['order_id'], $duplicate['order_id']);
     }
 
+    public function testDuplicateCreateSeesAttemptCommittedAfterTransactionSnapshot(): void
+    {
+        $otherPdo = MysqlTestConnection::connect();
+        $otherStore = new PdoPaymentAttemptStore($otherPdo, $this->attemptsTable, $this->eventsTable);
+
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->query('SELECT COUNT(*) FROM `' . $this->attemptsTable . '`')->fetchColumn();
+            $created = $otherStore->create(30, 2, 'Test', 'concurrent', 'new', 10.0, 'RUB', []);
+
+            $duplicate = $this->store->create(31, 2, 'Test', 'concurrent', 'new', 10.0, 'RUB', []);
+
+            self::assertSame($created['id'], $duplicate['id']);
+            self::assertSame($created['order_id'], $duplicate['order_id']);
+        } finally {
+            $this->pdo->rollBack();
+        }
+    }
+
     public function testCreateFailureIncludesSqlErrorUnderSilentErrMode(): void
     {
         $this->expectException(RuntimeException::class);
