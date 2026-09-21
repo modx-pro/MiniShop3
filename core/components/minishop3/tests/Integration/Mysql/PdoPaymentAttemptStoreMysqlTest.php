@@ -130,6 +130,41 @@ final class PdoPaymentAttemptStoreMysqlTest extends TestCase
         $store->findById(1);
     }
 
+    public function testRecordEventDetectsDuplicateUnderSilentErrMode(): void
+    {
+        $row = $this->createAttempt('duplicate-event');
+
+        self::assertTrue($this->store->recordEvent($row['id'], 'paid', 'event-1'));
+        self::assertFalse($this->store->recordEvent($row['id'], 'paid', 'event-1'));
+        self::assertTrue($this->store->hasEvent($row['id'], 'paid', 'event-1'));
+    }
+
+    public function testRecordEventFailureIsReportedUnderSilentErrMode(): void
+    {
+        $row = $this->createAttempt('event-failure');
+
+        try {
+            $this->store->recordEvent($row['id'], 'paid', str_repeat('X', 300));
+            self::fail('Expected an exception for an event insert failure');
+        } catch (RuntimeException $exception) {
+            self::assertStringContainsString('Payment attempt store statement failed', $exception->getMessage());
+        }
+
+        $count = (int) $this->pdo->query('SELECT COUNT(*) FROM `' . $this->eventsTable . '`')->fetchColumn();
+        self::assertSame(0, $count);
+    }
+
+    public function testHasEventFailureIsReportedUnderSilentErrMode(): void
+    {
+        $row = $this->createAttempt('event-read-failure');
+        $this->dropTable($this->eventsTable);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Payment attempt store statement failed');
+
+        $this->store->hasEvent($row['id'], 'paid', 'event-1');
+    }
+
     /**
      * @return array<string, mixed>
      */

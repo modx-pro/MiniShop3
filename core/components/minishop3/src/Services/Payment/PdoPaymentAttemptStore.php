@@ -173,21 +173,13 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
             (attempt_id, event_type, provider_event_id, createdon)
             VALUES (:attempt_id, :event_type, :provider_event_id, :createdon)";
         $stmt = $this->prepare($sql);
-        try {
-            $stmt->execute([
-                'attempt_id' => $attemptId,
-                'event_type' => $eventType,
-                'provider_event_id' => $providerEventId,
-                'createdon' => time(),
-            ]);
-        } catch (PDOException $exception) {
-            if ($this->isDuplicate($exception)) {
-                return false;
-            }
-            throw $exception;
-        }
 
-        return true;
+        return $this->executeStatement($stmt, [
+            'attempt_id' => $attemptId,
+            'event_type' => $eventType,
+            'provider_event_id' => $providerEventId,
+            'createdon' => time(),
+        ], allowDuplicate: true);
     }
 
     public function hasEvent(int $attemptId, string $eventType, string $providerEventId): bool
@@ -196,11 +188,11 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
             WHERE attempt_id = :attempt_id AND event_type = :event_type AND provider_event_id = :provider_event_id
             LIMIT 1";
         $stmt = $this->prepare($sql);
-        $stmt->execute([
+        $this->executeStatement($stmt, [
             'attempt_id' => $attemptId,
             'event_type' => $eventType,
             'provider_event_id' => $providerEventId,
-        ]);
+        ], allowDuplicate: false);
 
         return $stmt->fetchColumn() !== false;
     }
@@ -326,11 +318,6 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
             'createdon' => (int) ($row['createdon'] ?? 0),
             'updatedon' => (int) ($row['updatedon'] ?? 0),
         ];
-    }
-
-    private function isDuplicate(PDOException $exception): bool
-    {
-        return $this->isDuplicateError($exception->errorInfo);
     }
 
     /**
