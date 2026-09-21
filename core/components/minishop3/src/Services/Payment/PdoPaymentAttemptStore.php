@@ -47,7 +47,7 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
             VALUES (:order_id, :payment_method_id, :provider, :external_id, :status, :amount, :currency, :payload,
              0, :createdon, :updatedon)";
         $stmt = $this->prepare($sql);
-        $stmt->execute([
+        $inserted = $this->executeStatement($stmt, [
             'order_id' => $orderId,
             'payment_method_id' => $paymentMethodId,
             'provider' => $provider,
@@ -58,7 +58,16 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
             'payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
             'createdon' => $now,
             'updatedon' => $now,
-        ]);
+        ], allowDuplicate: true);
+        if (!$inserted) {
+            $existing = $externalId !== null
+                ? $this->findDuplicateWithSharedLock($provider, $externalId, $paymentMethodId)
+                : null;
+            if ($existing !== null) {
+                return $existing;
+            }
+            throw new RuntimeException('Payment attempt insert hit duplicate constraint without existing row');
+        }
         $id = (int) $this->lastInsertId();
         $row = $this->findById($id);
         if ($row === null) {
@@ -95,7 +104,7 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
         }
         $sql = 'UPDATE ' . $this->attemptsTable . ' SET ' . implode(', ', $set) . ' WHERE id = :id';
         $stmt = $this->prepare($sql);
-        $stmt->execute($params);
+        $this->executeStatement($stmt, $params, allowDuplicate: false);
         $row = $this->findById($id);
         if ($row === null) {
             throw new RuntimeException('Payment attempt not found after update');
@@ -124,6 +133,28 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
         return $this->fetchOne($sql, $params);
     }
 
+    /**
+     * Use a current read so an outer REPEATABLE READ transaction can see the row
+     * whose committed unique key caused create() to fail.
+     *
+     * @return PaymentAttemptRow|null
+     */
+    private function findDuplicateWithSharedLock(string $provider, string $externalId, int $paymentMethodId): ?array
+    {
+        return $this->fetchOne(
+            "SELECT * FROM {$this->attemptsTable}
+                WHERE provider = :provider
+                  AND external_id = :external_id
+                  AND payment_method_id = :payment_method_id
+                LOCK IN SHARE MODE",
+            [
+                'provider' => $provider,
+                'external_id' => $externalId,
+                'payment_method_id' => $paymentMethodId,
+            ],
+        );
+    }
+
     public function findLatestForOrder(int $orderId, ?int $paymentMethodId = null): ?array
     {
         $sql = "SELECT * FROM {$this->attemptsTable} WHERE order_id = :order_id";
@@ -142,21 +173,13 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
             (attempt_id, event_type, provider_event_id, createdon)
             VALUES (:attempt_id, :event_type, :provider_event_id, :createdon)";
         $stmt = $this->prepare($sql);
-        try {
-            $stmt->execute([
-                'attempt_id' => $attemptId,
-                'event_type' => $eventType,
-                'provider_event_id' => $providerEventId,
-                'createdon' => time(),
-            ]);
-        } catch (PDOException $exception) {
-            if ($this->isDuplicate($exception)) {
-                return false;
-            }
-            throw $exception;
-        }
 
-        return true;
+        return $this->executeStatement($stmt, [
+            'attempt_id' => $attemptId,
+            'event_type' => $eventType,
+            'provider_event_id' => $providerEventId,
+            'createdon' => time(),
+        ], allowDuplicate: true);
     }
 
     public function hasEvent(int $attemptId, string $eventType, string $providerEventId): bool
@@ -165,11 +188,11 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
             WHERE attempt_id = :attempt_id AND event_type = :event_type AND provider_event_id = :provider_event_id
             LIMIT 1";
         $stmt = $this->prepare($sql);
-        $stmt->execute([
+        $this->executeStatement($stmt, [
             'attempt_id' => $attemptId,
             'event_type' => $eventType,
             'provider_event_id' => $providerEventId,
-        ]);
+        ], allowDuplicate: false);
 
         return $stmt->fetchColumn() !== false;
     }
@@ -228,9 +251,38 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
     private function fetchOne(string $sql, array $params): ?array
     {
         $stmt = $this->prepare($sql);
-        $stmt->execute($params);
+        $this->executeStatement($stmt, $params, allowDuplicate: false);
 
         return $this->hydrate($stmt->fetch(PDO::FETCH_ASSOC));
+    }
+
+    /**
+     * Run a statement without relying on PDO ERRMODE.
+     * MODX opens `$modx->pdo` with ERRMODE_SILENT, where execute() returns false on failure.
+     *
+     * @param array<string, mixed> $params
+     * @return bool true on success; false only for an allowed duplicate-key violation
+     */
+    private function executeStatement(PDOStatement $stmt, array $params, bool $allowDuplicate): bool
+    {
+        try {
+            $ok = $stmt->execute($params);
+        } catch (PDOException $exception) {
+            if ($allowDuplicate && $this->isDuplicateError($exception->errorInfo)) {
+                return false;
+            }
+            throw $exception;
+        }
+
+        if ($ok === true) {
+            return true;
+        }
+
+        if ($allowDuplicate && $this->isDuplicateError($stmt->errorInfo())) {
+            return false;
+        }
+
+        throw $this->statementFailure('Payment attempt store statement failed', $stmt);
     }
 
     /**
@@ -268,11 +320,25 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
         ];
     }
 
-    private function isDuplicate(PDOException $exception): bool
+    /**
+     * @param array<int, mixed>|null $errorInfo
+     */
+    private function isDuplicateError(?array $errorInfo): bool
     {
-        $sqlState = $exception->errorInfo[0] ?? $exception->getCode();
+        $sqlState = $errorInfo[0] ?? null;
+        $driverCode = $errorInfo[1] ?? null;
 
-        return (string) $sqlState === '23000';
+        return (string) $sqlState === '23000' && (string) $driverCode === '1062';
+    }
+
+    private function statementFailure(string $message, PDOStatement $stmt): RuntimeException
+    {
+        $detail = implode(' | ', array_map(
+            static fn (mixed $part): string => is_scalar($part) || $part === null ? (string) $part : gettype($part),
+            $stmt->errorInfo(),
+        ));
+
+        return new RuntimeException($message . ($detail !== '' ? ': ' . $detail : ''));
     }
 
     private function lastInsertId(): string
