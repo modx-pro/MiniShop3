@@ -5,7 +5,7 @@
 <h1 align="center">MiniShop3</h1>
 
 <p align="center">
-  <strong>Современный компонент интернет-магазина для MODX 3</strong>
+  <strong>Интернет-магазин для MODX 3</strong>
 </p>
 
 <p align="center">
@@ -24,15 +24,15 @@
 
 ---
 
-## ✨ Особенности
+## Особенности
 
-- 🚀 **Для MODX 3** — PHP 8.2+, namespaces, PSR-4, миграции Phinx
-- 🔌 **REST API** — полноценный API для headless-интеграций
-- 🎨 **Vue 3 + PrimeVue** — современный интерфейс админки
-- ⚡ **Без jQuery** — нативный JavaScript на фронтенде
-- 🔄 **Совместимость с miniShop2** — те же сниппеты, чанки и параметры
+- Для MODX 3: PHP 8.2+, namespaces, PSR-4, миграции Phinx
+- REST API для headless-интеграций
+- Админка на Vue 3 и PrimeVue
+- Фронтенд без jQuery, на нативном JavaScript
+- Сниппеты, чанки и параметры совместимы с miniShop2
 
-## 📋 Требования
+## Требования
 
 | Компонент | Версия |
 |-----------|--------|
@@ -44,21 +44,21 @@
 
 | Пакет | Обязательный | Описание |
 |-------|--------------|----------|
-| [pdoTools 3.x](https://docs.modx.pro/components/pdotools/) | ✅ | Сниппеты и шаблонизатор Fenom |
-| [VueTools](https://docs.modx.pro/components/vuetools/) | ✅ | Vue 3 и PrimeVue для админки |
-| [Scheduler](https://docs.modx.pro/components/scheduler/) | ❌ | Фоновые задачи (импорт, уведомления) |
+| [pdoTools 3.x](https://docs.modx.pro/components/pdotools/) | да | Сниппеты и шаблонизатор Fenom |
+| [VueTools](https://docs.modx.pro/components/vuetools/) | да | Vue 3 и PrimeVue для админки |
+| [Scheduler](https://docs.modx.pro/components/scheduler/) | нет | Фоновые задачи (импорт, уведомления) |
 
-## 🚀 Установка
+## Установка
 
-### Через менеджер пакетов (рекомендуется)
+### Через менеджер пакетов
 
 ```
 Extras → Installer → Download Extras → MiniShop3 → Install
 ```
 
-> ⚠️ Убедитесь, что **VueTools** установлен до MiniShop3
+VueTools нужно поставить до MiniShop3.
 
-### Из исходников (для разработчиков)
+### Из исходников
 
 ```bash
 # Клонирование
@@ -68,21 +68,21 @@ cd MiniShop3
 # PHP зависимости
 cd core/components/minishop3 && composer install && cd ../../..
 
-# Vue виджеты (Node.js 18+)
+# Vue-админка (Node.js 18+ локально, в GitHub Actions 24)
 cd vueManager && npm install && npm run build && cd ..
 
 # Сборка пакета
 php _build/build.php
 ```
 
-## 📖 Документация
+## Документация
 
-Полная документация доступна на **[docs.modx.pro/components/minishop3](https://docs.modx.pro/components/minishop3/)**
+Справочник: [docs.modx.pro/components/minishop3](https://docs.modx.pro/components/minishop3/)
 
-- [Быстрый старт](https://docs.modx.pro/components/minishop3/quick-start) — первоначальная настройка
-- [Сниппеты](https://docs.modx.pro/components/minishop3/snippets/) — msProducts, msCart, msOrder и др.
-- [REST API](https://docs.modx.pro/components/minishop3/development/api) — интеграция с внешними системами
-- [События](https://docs.modx.pro/components/minishop3/development/events) — расширение функциональности
+- [Быстрый старт](https://docs.modx.pro/components/minishop3/quick-start): первоначальная настройка
+- [Сниппеты](https://docs.modx.pro/components/minishop3/snippets/): msProducts, msCart, msOrder и др.
+- [REST API](https://docs.modx.pro/components/minishop3/development/api): интеграция с внешними системами
+- [События](https://docs.modx.pro/components/minishop3/development/events): расширение функциональности
 
 ### Каталог товаров (Web API)
 
@@ -95,36 +95,42 @@ GET /assets/components/minishop3/api.php?route=/api/v1/product/list
 
 Параметры: `parent` / `category` (только primary parent, без `msCategoryMember`), `limit` (max 100), `offset` / `page`, `sort` + `dir`, `query`, `context`, `include_options`, `include_content`.
 
-Ответ `list`: `{ items, total, limit, offset }`. Цена и вес — через `msOnGetProductPrice` / `msOnGetProductWeight`; поля ответа allowlist’ятся после `msOnGetProductFields`.
+Ответ `list`: `{ items, total, limit, offset }`. Цена и вес считаются в `msOnGetProductPrice` / `msOnGetProductWeight`. Поля ответа проходят allowlist после `msOnGetProductFields`.
 
-Полный справочник REST — на [docs.modx.pro](https://docs.modx.pro/components/minishop3/development/api) (раздел каталога стоит синхронизировать с этим релизом).
+Полный справочник REST: [docs.modx.pro](https://docs.modx.pro/components/minishop3/development/api). Раздел каталога на сайте документации стоит синхронизировать с этим релизом.
 
 ### Подтверждение email (Web API)
 
-Ссылка в письме ведёт на `api.php` с путём верификации и параметром `html=1` — в ответ сервер отдаёт **HTTP-редирект** (302) на сайт с признаком `ms3_email_verified=1` либо `ms3_email_verified=0`. URL после успешной проверки задаётся системной настройкой `ms3_email_verification_success_url` (если пусто — `site_url`).
+Ссылка в письме ведёт на `api.php` с путём верификации и параметром `html=1`. Сервер отвечает HTTP-редиректом 302 на сайт с `ms3_email_verified=1` или `ms3_email_verified=0`. URL после успешной проверки берётся из `ms3_email_verification_success_url`. Если настройка пустая, используется `site_url`.
 
-Если открыть тот же URL **без** `html=1` или с `format=json`, ответ будет **JSON** (удобно для API-клиентов; в браузере увидите «сырое» тело).
+Тот же URL без `html=1` или с `format=json` возвращает JSON. Так удобнее API-клиентам. В браузере будет сырое тело ответа.
 
-## 🏗️ Структура проекта
+## Структура проекта
 
 ```
 MiniShop3/
-├── _build/                 # Сборка транспортного пакета
+├── _build/                          # Сборка транспортного пакета
+├── phpstan.neon                     # PHPStan level 5 + baseline
 ├── assets/components/minishop3/
-│   ├── js/web/             # Frontend JavaScript
-│   ├── js/mgr/             # Admin ExtJS + Vue
-│   └── css/                # Стили
+│   ├── api.php                      # Вход публичного Web API
+│   ├── connector.php                # Вход менеджерского API
+│   ├── js/web/                      # Frontend JavaScript
+│   ├── js/mgr/                      # ExtJS и собранный Vue (vue-dist)
+│   └── css/
 ├── core/components/minishop3/
-│   ├── elements/           # Сниппеты, чанки, плагины
-│   ├── src/                # PHP классы (PSR-4)
-│   ├── migrations/         # Phinx миграции
-│   └── lexicon/            # Переводы (ru, en)
-└── vueManager/             # Vue 3 исходники админки
+│   ├── elements/                    # Сниппеты, чанки, плагины
+│   ├── config/routes/               # web.php и manager.php (FastRoute)
+│   ├── src/                         # PHP-классы (PSR-4)
+│   ├── migrations/                  # Phinx
+│   ├── lexicon/                     # Переводы (ru, en)
+│   ├── processors/                  # MODX processors
+│   └── tests/                       # Smoke и PHPUnit
+└── vueManager/                      # Исходники Vue 3 админки (Vite)
 ```
 
-### Слои под `src/Controllers/` (HTTP vs domain facade)
+### Слои под `src/Controllers/`
 
-Оба живут в namespace `MiniShop3\Controllers\…`, но это **разные роли**. Не кладите HTTP-парсинг в domain facade и не тащите бизнес-логику корзины/заказа в API-класс.
+Каталог `MiniShop3\Controllers\…` совмещает HTTP и domain facade. Это разные роли. HTTP-разбор не кладите в facade, а логику корзины и заказа не кладите в API-класс.
 
 | Слой | Путь | Роль |
 |------|------|------|
@@ -133,7 +139,7 @@ MiniShop3/
 | Provider plugins | `Controllers/Delivery`, `Payment` | Abstract base для методов доставки/оплаты (не DI-фасады `ms3_*`) |
 | Services | `Services/*` | Каноническая бизнес-логика |
 
-Ключевые DI-ключи фасадов (см. также `ServiceRegistry`):
+DI-ключи фасадов (см. также `ServiceRegistry`):
 
 | DI key | Класс | Роль |
 |--------|-------|------|
@@ -141,14 +147,12 @@ MiniShop3/
 | `ms3_order` | `MiniShop3\Controllers\Order\Order` | Domain facade заказа (не HTTP) |
 | `ms3_customer` | `MiniShop3\Controllers\Customer\Customer` | Domain facade покупателя (не HTTP) |
 
-Переименование namespace (`Domain\` / `Facades\`) — отдельный major с bc-aliases; этот репозиторий пока фиксирует границу документацией и PHPDoc.
+Переименование namespace (`Domain\` / `Facades\`) остаётся на отдельный major с bc-aliases. Сейчас граница зафиксирована документацией и PHPDoc.
 
-## 🤝 Участие в разработке
-
-Мы приветствуем вклад в развитие проекта!
+## Участие в разработке
 
 1. Форкните репозиторий
-2. Создайте ветку для фичи (`git checkout -b feature/amazing-feature`)
+2. Создайте ветку (`git checkout -b feature/amazing-feature`)
 3. Закоммитьте изменения (`git commit -m 'Add amazing feature'`)
 4. Запушьте ветку (`git push origin feature/amazing-feature`)
 5. Откройте Pull Request
@@ -164,26 +168,31 @@ MiniShop3/
 | `composer ci:php` | `php -l` + smoke + `composer test` (как job `PHP lint + smoke`) |
 | `composer test:modx` | Живое ядро MODX 3.1+ / 3.2 через [modxkit/testbench](https://github.com/modxkit/testbench) |
 
-`composer test` и `ci:php` **не** поднимают ядро. Для `test:modx` нужны MySQL и переменные `MODX_TESTBENCH_DB_HOST` / `USER` / `PASS`. Подробности: [`core/components/minishop3/tests/Modx/README.md`](core/components/minishop3/tests/Modx/README.md).
+`composer test` и `ci:php` не поднимают ядро. Для `test:modx` нужны MySQL и переменные `MODX_TESTBENCH_DB_HOST`, `MODX_TESTBENCH_DB_USER`, `MODX_TESTBENCH_DB_PASS`. Подробности: [`core/components/minishop3/tests/Modx/README.md`](core/components/minishop3/tests/Modx/README.md).
 
-CI гоняет live-сьют на MODX 3.1.2-pl, 3.2.3-pl и 3.2.4-pl. Линейка 3.0.x в этом сьюте не проверяется (ядро не поднимается в API-режиме).
+CI гоняет live-сьют на MODX 3.1.2-pl, 3.2.3-pl и 3.2.4-pl. Линейка 3.0.x в этом сьюте не проверяется: ядро не поднимается в API-режиме.
 
-## 📝 Changelog
+### Тесты Vue Manager
 
-Смотрите [CHANGELOG.md](CHANGELOG.md) для истории изменений.
+Из `vueManager` (Node.js 18+ локально, в CI 24):
 
-## 📄 Лицензия
+```bash
+npm ci
+npm run lint:ci
+npm test
+npm run build
+```
 
-Распространяется под лицензией MIT. Смотрите [LICENSE](LICENSE) для подробностей.
+## Changelog
 
-## 💬 Поддержка
+История изменений: [CHANGELOG.md](CHANGELOG.md).
 
-- 🐛 [GitHub Issues](https://github.com/modx-pro/MiniShop3/issues) — баги и предложения
-- 📚 [Документация](https://docs.modx.pro/components/minishop3/) — руководства и справочники
-- 💬 [Telegram](https://t.me/modx_pro) — сообщество MODX
+## Лицензия
 
----
+MIT. Текст: [LICENSE](LICENSE).
 
-<p align="center">
-  Сделано с ❤️ для сообщества MODX
-</p>
+## Поддержка
+
+- [GitHub Issues](https://github.com/modx-pro/MiniShop3/issues): баги и предложения
+- [Документация](https://docs.modx.pro/components/minishop3/): руководства и справочники
+- [Telegram](https://t.me/modx_pro): сообщество MODX
