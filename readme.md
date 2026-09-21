@@ -69,7 +69,7 @@ cd MiniShop3
 cd core/components/minishop3 && composer install && cd ../../..
 
 # Vue-админка (Node.js 18+ локально, в GitHub Actions 24)
-cd vueManager && npm install && npm run build && cd ..
+cd vueManager && npm ci && npm run build && cd ..
 
 # Сборка пакета
 php _build/build.php
@@ -110,7 +110,9 @@ GET /assets/components/minishop3/api.php?route=/api/v1/product/list
 ```
 MiniShop3/
 ├── _build/                          # Сборка транспортного пакета
-├── phpstan.neon                     # PHPStan level 5 + baseline
+├── changelogs/                      # Помесячные записи (сводка в CHANGELOG.md)
+├── phpstan.neon                     # PHPStan level 5
+├── phpstan-baseline.neon            # Известные замечания PHPStan
 ├── assets/components/minishop3/
 │   ├── api.php                      # Вход публичного Web API
 │   ├── connector.php                # Вход менеджерского API
@@ -118,9 +120,23 @@ MiniShop3/
 │   ├── js/mgr/                      # ExtJS и собранный Vue (vue-dist)
 │   └── css/
 ├── core/components/minishop3/
+│   ├── controllers/                 # Контроллеры менеджера MODX (не src/Controllers)
 │   ├── elements/                    # Сниппеты, чанки, плагины
-│   ├── config/routes/               # web.php и manager.php (FastRoute)
+│   ├── config/
+│   │   ├── routes/                  # web.php и manager.php (FastRoute)
+│   │   ├── ms3.services.example.php # Пример оверрайда сервисов
+│   │   ├── ms3.services.d/          # Доп. сервисы аддонов
+│   │   └── ms3.routes.d/            # Доп. маршруты аддонов
+│   ├── custom/                      # custom/filters, сейчас .gitkeep
+│   ├── schema/                      # xPDO-схема
+│   ├── scripts/                     # ci-php.sh, phpstan-prepare-deps.sh
 │   ├── src/                         # PHP-классы (PSR-4)
+│   │   ├── Controllers/             # HTTP API и domain facade
+│   │   ├── Middleware/
+│   │   ├── Notifications/
+│   │   ├── Router/
+│   │   ├── Services/
+│   │   └── ServiceRegistry.php
 │   ├── migrations/                  # Phinx
 │   ├── lexicon/                     # Переводы (ru, en)
 │   ├── processors/                  # MODX processors
@@ -130,7 +146,7 @@ MiniShop3/
 
 ### Слои под `src/Controllers/`
 
-Каталог `MiniShop3\Controllers\…` совмещает HTTP и domain facade. Это разные роли. HTTP-разбор не кладите в facade, а логику корзины и заказа не кладите в API-класс.
+Каталог `MiniShop3\Controllers\…` совмещает HTTP и domain facade. Это разные роли. HTTP-разбор не кладите в facade, а логику корзины и заказа не кладите в API-класс. Рядом, в `core/components/minishop3/controllers/`, лежат контроллеры страниц менеджера MODX. Регистр каталога другой, это не тот же слой.
 
 | Слой | Путь | Роль |
 |------|------|------|
@@ -157,6 +173,8 @@ DI-ключи фасадов (см. также `ServiceRegistry`):
 4. Запушьте ветку (`git push origin feature/amazing-feature`)
 5. Откройте Pull Request
 
+Если удаляете PHP-файл из поставляемого компонента (`core/components/minishop3/` или `assets/components/minishop3/`), добавьте путь в `config/obsolete_package_files.php`. При апгрейде MODX копирует новое дерево и не удаляет файлы, которых больше нет в пакете. Оставшийся processor по-прежнему вызывается через `connector.php`. Подробности: [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md).
+
 ### 🧪 Тесты PHP
 
 Из `core/components/minishop3` после `composer install`:
@@ -165,10 +183,13 @@ DI-ключи фасадов (см. также `ServiceRegistry`):
 | --- | --- |
 | `composer test:smoke` | Скрипты `tests/*Test.php` без ядра MODX |
 | `composer test` | PHPUnit Unit + Integration + WebApi на стабах xPDO |
-| `composer ci:php` | `php -l` + smoke + `composer test` (как job `PHP lint + smoke`) |
+| `composer ci:php` | `php -l` + smoke + `composer test` (job `PHP lint + smoke`) |
+| `composer stan:prepare && composer stan` | PHPStan level 5, baseline в `phpstan-baseline.neon` |
 | `composer test:modx` | Живое ядро MODX 3.1+ / 3.2 через [modxkit/testbench](https://github.com/modxkit/testbench) |
 
 `composer test` и `ci:php` не поднимают ядро. Для `test:modx` нужны MySQL и переменные `MODX_TESTBENCH_DB_HOST`, `MODX_TESTBENCH_DB_USER`, `MODX_TESTBENCH_DB_PASS`. Подробности: [`core/components/minishop3/tests/Modx/README.md`](core/components/minishop3/tests/Modx/README.md).
+
+Тесты `@group mysql` входят в `composer test`. Job `PHP lint + smoke` поднимает MySQL 8 и задаёт `MS3_TEST_MYSQL_DSN`, `MS3_TEST_MYSQL_USER`, `MS3_TEST_MYSQL_PASSWORD`. Локально без `MS3_TEST_MYSQL_DSN` эта группа пропускается.
 
 CI гоняет live-сьют на MODX 3.1.2-pl, 3.2.3-pl и 3.2.4-pl. Линейка 3.0.x в этом сьюте не проверяется: ядро не поднимается в API-режиме.
 
@@ -176,16 +197,21 @@ CI гоняет live-сьют на MODX 3.1.2-pl, 3.2.3-pl и 3.2.4-pl. Лине
 
 Из `vueManager` (Node.js 18+ локально, в CI 24):
 
+Job `vueManager lint` запускает:
+
 ```bash
 npm ci
 npm run lint:ci
+npm run lint:storefront
 npm test
-npm run build
+npm run test:smoke
 ```
+
+`lint:storefront` проверяет `assets/components/minishop3/js/web`. `test:smoke` проверяет экспорт VueTools. `npm run build` в этом job нет: сборка нужна локально, когда пакет собираете из исходников.
 
 ## 📝 Changelog
 
-История изменений: [CHANGELOG.md](CHANGELOG.md).
+История изменений: [CHANGELOG.md](CHANGELOG.md). Помесячные файлы лежат в [`changelogs/`](changelogs/).
 
 ## 📄 Лицензия
 
