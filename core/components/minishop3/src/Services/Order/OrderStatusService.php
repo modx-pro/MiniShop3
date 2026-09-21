@@ -265,24 +265,40 @@ class OrderStatusService implements OrderStatusChanger
     /**
      * Start a transaction only when none is active.
      * PDO::beginTransaction() throws if one is already open.
+     *
+     * xPDO exposes the connection as public $pdo and has no inTransaction().
      */
     private function beginOwnedTransaction(): bool
     {
         if (
-            !is_callable([$this->modx, 'inTransaction'])
-            || !is_callable([$this->modx, 'beginTransaction'])
+            !is_callable([$this->modx, 'beginTransaction'])
             || !is_callable([$this->modx, 'commit'])
-            || !is_callable([$this->modx, 'rollback'])
+            || !is_callable([$this->modx, 'rollBack'])
         ) {
             return false;
         }
-        if ($this->modx->inTransaction()) {
+        if ($this->hasOpenTransaction()) {
             return false;
         }
 
         $this->modx->beginTransaction();
 
         return true;
+    }
+
+    /**
+     * Test doubles may define inTransaction() on the modX subclass.
+     * Production xPDO does not: the check is $modx->pdo->inTransaction().
+     */
+    private function hasOpenTransaction(): bool
+    {
+        if (method_exists($this->modx, 'inTransaction')) {
+            return (bool) $this->modx->inTransaction();
+        }
+
+        $pdo = $this->modx->pdo ?? null;
+
+        return $pdo instanceof \PDO && $pdo->inTransaction();
     }
 
     private function commitOwnedTransaction(bool $ownsTx): void
@@ -297,7 +313,7 @@ class OrderStatusService implements OrderStatusChanger
         if (!$ownsTx) {
             return;
         }
-        if (is_callable([$this->modx, 'inTransaction']) && !$this->modx->inTransaction()) {
+        if (!$this->hasOpenTransaction()) {
             return;
         }
         $this->modx->rollback();
