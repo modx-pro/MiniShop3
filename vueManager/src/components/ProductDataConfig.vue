@@ -5,6 +5,9 @@ import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 import request from '../request.js'
+import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
+
+const primarySaveSeverity = getPrimarySaveSeverity()
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -537,7 +540,7 @@ onMounted(() => {
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
               size="small"
-              severity="primary"
+              :severity="primarySaveSeverity"
               :loading="savingSections"
               :disabled="loadingSections"
               @click="saveSections"
@@ -637,7 +640,7 @@ onMounted(() => {
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
               size="small"
-              severity="primary"
+              :severity="primarySaveSeverity"
               :loading="savingFields"
               :disabled="loading"
               @click="saveConfig"

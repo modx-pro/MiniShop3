@@ -54,11 +54,17 @@ class AdminOptionFields
 
         $preloadedValues = $this->getValuesForProduct($productId);
 
+        if (!$c->prepare()) {
+            $this->logOptionQueryFailure($c);
+            return [];
+        }
+
         // Materialize iterator: two passes (globals map, then field building) without re-querying.
         $options = [];
         foreach ($this->xpdo->getIterator(msOption::class, $c) as $option) {
             $options[] = $option;
         }
+        $this->logOptionQueryFailure($c);
 
         $globalsByOptionId = [];
         foreach ($options as $option) {
@@ -101,7 +107,14 @@ class AdminOptionFields
     }
 
     /**
-     * Aggregated msCategoryOption columns + GROUP BY for ONLY_FULL_GROUP_BY (#615 / #4).
+     * Aggregated msCategoryOption columns + GROUP BY for ONLY_FULL_GROUP_BY (#615).
+     *
+     * A product in several categories: required is MAX (required if any category
+     * marks it required), value is MIN (one deterministic default, not a merge of
+     * distinct defaults), position is MIN (earliest slot wins the sort).
+     *
+     * MariaDB 10.6 does not infer that other msOption columns depend on
+     * msOption.id (MySQL 5.7+ does). Group every selected msOption column.
      */
     protected function selectCategoryOptionAggregates(xPDOQuery $c): void
     {
@@ -109,8 +122,51 @@ class AdminOptionFields
         $c->select('MIN(`msCategoryOption`.value) AS `value`');
         $c->select('MIN(`msCategoryOption`.position) AS `min_category_position`');
         $c->sortby('`min_category_position`', 'ASC');
-        $c->groupby('`msOption`.id');
+        $this->groupBySelectedOptionColumns($c);
         $c->groupby('`OptionGroup`.name');
+    }
+
+    /**
+     * GROUP BY each selected msOption expression so ONLY_FULL_GROUP_BY is valid
+     * on MariaDB, which does not treat the primary key as a functional dependency.
+     */
+    protected function groupBySelectedOptionColumns(xPDOQuery $c): void
+    {
+        $select = $this->xpdo->getSelectColumns(msOption::class, '`msOption`');
+        foreach (explode(',', $select) as $column) {
+            $column = trim($column);
+            if ($column === '') {
+                continue;
+            }
+            $expression = preg_split('/\s+AS\s+/i', $column)[0] ?? '';
+            $expression = trim($expression);
+            if ($expression !== '') {
+                $c->groupby($expression);
+            }
+        }
+    }
+
+    /**
+     * getIterator() swallows a failed prepare/execute and yields nothing, which
+     * shows up as an empty Options tab. Log the SQL error when there is one.
+     */
+    protected function logOptionQueryFailure(xPDOQuery $c): void
+    {
+        $stmt = $c->stmt ?? null;
+        if ($stmt instanceof \PDOStatement) {
+            $info = $stmt->errorInfo();
+            if (($info[0] ?? '00000') === '00000') {
+                return;
+            }
+            $message = (string) ($info[2] ?? 'SQL error');
+        } else {
+            $message = 'query was not prepared';
+        }
+
+        $this->xpdo->log(
+            xPDO::LOG_LEVEL_ERROR,
+            '[AdminOptionFields] getFieldsForProduct failed: ' . $message
+        );
     }
 
     /**
@@ -126,7 +182,10 @@ class AdminOptionFields
     {
         /** @var xPDOQuery $c */
         $c = $this->prepareOptionListCriteria($productId, $parentId);
-        $c->select('msOption.key');
+        $c->select('`msOption`.`key`');
+        // MariaDB ONLY_FULL_GROUP_BY rejects a selected column that is not grouped,
+        // even when msOption.id (PK) is already in GROUP BY.
+        $c->groupby('`msOption`.`key`');
 
         if (!$c->prepare() || !$c->stmt->execute()) {
             return [];

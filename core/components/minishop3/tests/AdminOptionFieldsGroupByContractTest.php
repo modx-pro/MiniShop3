@@ -55,5 +55,32 @@ if (preg_match("/groupby\(\s*'`OptionGroup`\.name'/", $src) !== 1) {
     $fail('must groupby OptionGroup.name (cross-join functional dependency is not inferred)');
 }
 
+// MariaDB does not infer msOption columns from the PK (MySQL 5.7+ does).
+if (preg_match('/function groupBySelectedOptionColumns/', $src) !== 1) {
+    $fail('must group every selected msOption column (MariaDB ONLY_FULL_GROUP_BY)');
+}
+if (preg_match('/\$this->groupBySelectedOptionColumns\(\$c\)/', $src) !== 1) {
+    $fail('selectCategoryOptionAggregates must call groupBySelectedOptionColumns');
+}
+if (preg_match("/groupby\(\s*'`msOption`\.`key`'/", $src) !== 1) {
+    $fail('getOptionKeys must groupby msOption.key (MariaDB rejects PK-only GROUP BY)');
+}
+
+// Failed SQL must be logged: getIterator() yields nothing and hides the error.
+if (preg_match('/function logOptionQueryFailure/', $src) !== 1) {
+    $fail('must log when the option-fields query fails');
+}
+if (preg_match('/LOG_LEVEL_ERROR/', $src) !== 1) {
+    $fail('query failure must be logged at error level');
+}
+
+// Multi-category semantics are intentional, not an accident of MIN/MAX.
+if (preg_match('/required if any category/i', $src) !== 1) {
+    $fail('document MAX(required): required if any category marks the option required');
+}
+if (preg_match('/one deterministic default/i', $src) !== 1) {
+    $fail('document MIN(value): one deterministic default, not a merge');
+}
+
 fwrite(STDOUT, "OK AdminOptionFieldsGroupByContractTest\n");
 exit(0);
