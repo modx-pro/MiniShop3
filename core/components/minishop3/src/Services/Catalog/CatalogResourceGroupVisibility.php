@@ -188,11 +188,12 @@ final class CatalogResourceGroupVisibility
         if (self::positiveIntIds($allowedResourceGroupIds) === []) {
             return;
         }
-        // API / CLI may have no current resource; isset avoids nullCoalesce on the typed $modx property.
-        if (!isset($this->modx->resource) || !is_object($this->modx->resource)) {
+        // Fenom has a current resource; Web API / CLI often do not ($resource is null at runtime).
+        $resource = $this->modx->resource;
+        if (!is_object($resource)) {
             return;
         }
-        $this->modx->resource->set('cacheable', 0);
+        $resource->set('cacheable', 0);
     }
 
     /**
