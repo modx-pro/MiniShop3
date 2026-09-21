@@ -5,23 +5,9 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import { PrimeVue } from 'primevue'
-import { createApp } from 'vue'
-
 import HelpPage from '../components/HelpPage.vue'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
-
-/**
- * Creates and configures Vue application
- */
-function createVueApp() {
-  const app = createApp(HelpPage)
-
-  app.use(PrimeVue, getManagerPrimeVueConfig())
-
-  return app
-}
 
 /**
  * Widget initialization
@@ -29,16 +15,11 @@ function createVueApp() {
 export function init(selector = '#ms3-vue-help') {
   const $el = document.querySelector(selector)
 
-  if (!$el) {
+  if (!$el || $el.dataset.vApp === 'true') {
     return null
   }
 
-  // Check if already mounted
-  if ($el.dataset.vApp === 'true') {
-    return null
-  }
-
-  const app = createVueApp()
+  const app = createMs3VueApp(HelpPage)
   app.mount(selector)
   injectFormStylesOverride()
   $el.dataset.vApp = 'true'

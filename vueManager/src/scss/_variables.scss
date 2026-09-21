@@ -77,6 +77,9 @@
   --ms3-spacing-3: 0.75rem;
   --ms3-spacing-4: 1rem;
 
+  /* Shared inset for PrimeVue TabPanels (product + utilities) */
+  --ms3-tab-panel-padding: var(--ms3-spacing-4);
+
   /* Radius */
   --ms3-radius-sm: 0.25rem;
   --ms3-radius-md: 0.375rem;

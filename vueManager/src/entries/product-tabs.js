@@ -9,13 +9,9 @@
 import '../scss/primevue.scss'
 import 'primeicons/primeicons.css'
 
-import { createPinia } from 'pinia'
-import { ConfirmationService, PrimeVue, ToastService } from 'primevue'
-import { createApp } from 'vue'
-
 import ProductTabs from '../components/product/ProductTabs.vue'
+import { createMs3VueApp } from '../theme/createMs3VueApp.js'
 import { injectFormStylesOverride } from '../utils/formStyles.js'
-import { getManagerPrimeVueConfig } from '../utils/primevueTheme.js'
 
 /**
  * Plugin Registry for third-party tabs
@@ -115,26 +111,6 @@ class ProductTabsRegistry {
 window.MS3ProductTabsRegistry = window.MS3ProductTabsRegistry || new ProductTabsRegistry()
 
 /**
- * Creates and configures Vue application
- *
- * @param {Object} props - Component props
- * @returns {Object} Vue app instance
- */
-function createVueApp(props) {
-  const app = createApp(ProductTabs, props)
-
-  const pinia = createPinia()
-  app.use(pinia)
-
-  app.use(PrimeVue, getManagerPrimeVueConfig())
-
-  app.use(ToastService)
-  app.use(ConfirmationService)
-
-  return app
-}
-
-/**
  * Initialize Product Tabs Vue application
  *
  * @param {Object} config - Configuration object
@@ -198,7 +174,7 @@ window.MS3_initProductTabs = function (config) {
     config: mergedConfig,
   }
 
-  const app = createVueApp(props)
+  const app = createMs3VueApp(ProductTabs, props)
   const instance = app.mount(container)
   injectFormStylesOverride()
 
