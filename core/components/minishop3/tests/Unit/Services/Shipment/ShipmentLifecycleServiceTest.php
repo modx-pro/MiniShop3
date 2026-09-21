@@ -123,7 +123,7 @@ final class ShipmentLifecycleServiceTest extends TestCase
         $order = new StubMsOrder(['id' => 10, 'delivery_id' => 7, 'status_id' => 3]);
         $modx = $this->modx($order, true);
         $orderStatus = $this->createMock(OrderStatusService::class);
-        $orderStatus->method('change')->willReturn('ms3_err_status_final');
+        $orderStatus->method('ensure')->willReturn('ms3_err_status_final');
         $service = new ShipmentLifecycleService($store, $modx, $orderStatus);
         $row = $service->create(10);
         $updated = $service->transition($row['id'], ShipmentStatus::SHIPPED, 'evt-1');
@@ -350,7 +350,7 @@ final class ShipmentLifecycleServiceTest extends TestCase
         $store = new InMemoryShipmentStore();
         $order = new StubMsOrder(['id' => 10, 'delivery_id' => 5, 'status_id' => 3]);
         $orderStatus = $this->createMock(OrderStatusService::class);
-        $orderStatus->method('change')->willReturnCallback(
+        $orderStatus->method('ensure')->willReturnCallback(
             function (int $orderId, int $statusId): bool {
                 $this->statusChanges[] = [$orderId, $statusId];
 
@@ -377,7 +377,7 @@ final class ShipmentLifecycleServiceTest extends TestCase
     {
         $order = new StubMsOrder(['id' => 10, 'delivery_id' => 7, 'status_id' => 3]);
         $orderStatus = $this->createMock(OrderStatusService::class);
-        $orderStatus->method('change')->willReturnCallback(
+        $orderStatus->method('ensure')->willReturnCallback(
             function (int $orderId, int $statusId): bool {
                 $this->statusChanges[] = [$orderId, $statusId];
 

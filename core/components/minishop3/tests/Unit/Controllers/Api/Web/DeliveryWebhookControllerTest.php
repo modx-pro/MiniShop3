@@ -212,7 +212,7 @@ final class DeliveryWebhookControllerTest extends TestCase
     private function lifecycle(InMemoryShipmentStore $store, msOrder $order): ShipmentLifecycleService
     {
         $orderStatus = $this->createMock(OrderStatusService::class);
-        $orderStatus->method('change')->willReturnCallback(
+        $orderStatus->method('ensure')->willReturnCallback(
             function (int $orderId, int $statusId): bool {
                 $this->statusChanges[] = [$orderId, $statusId];
 

@@ -141,7 +141,7 @@ final class OrderShipmentControllerTest extends TestCase
         $store = new InMemoryShipmentStore();
         $order = new StubMsOrder(['id' => 10, 'delivery_id' => 7, 'status_id' => 3]);
         $orderStatus = $this->createMock(OrderStatusService::class);
-        $orderStatus->method('change')->willReturn(true);
+        $orderStatus->method('ensure')->willReturn(true);
         $lifecycle = new ShipmentLifecycleService($store, $this->modx($order), $orderStatus);
 
         return $this->modx($order, ['ms3_shipment_lifecycle' => $lifecycle]);

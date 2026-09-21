@@ -352,7 +352,7 @@ class ShipmentLifecycleService
         if ((int) $order->get('status_id') === $statusId) {
             return;
         }
-        $result = $this->orderStatus->change($orderId, $statusId);
+        $result = $this->orderStatus->ensure($orderId, $statusId);
         if ($result !== true) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
