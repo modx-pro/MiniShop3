@@ -61,7 +61,7 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
         ], allowDuplicate: true);
         if (!$inserted) {
             $existing = $externalId !== null
-                ? $this->findDuplicateForUpdate($provider, $externalId, $paymentMethodId)
+                ? $this->findDuplicateWithSharedLock($provider, $externalId, $paymentMethodId)
                 : null;
             if ($existing !== null) {
                 return $existing;
@@ -139,14 +139,14 @@ final class PdoPaymentAttemptStore implements PaymentAttemptStoreInterface
      *
      * @return PaymentAttemptRow|null
      */
-    private function findDuplicateForUpdate(string $provider, string $externalId, int $paymentMethodId): ?array
+    private function findDuplicateWithSharedLock(string $provider, string $externalId, int $paymentMethodId): ?array
     {
         return $this->fetchOne(
             "SELECT * FROM {$this->attemptsTable}
                 WHERE provider = :provider
                   AND external_id = :external_id
                   AND payment_method_id = :payment_method_id
-                FOR UPDATE",
+                LOCK IN SHARE MODE",
             [
                 'provider' => $provider,
                 'external_id' => $externalId,

@@ -88,6 +88,30 @@ final class PdoPaymentAttemptStoreMysqlTest extends TestCase
         }
     }
 
+    public function testDuplicateCreateUsesACompatibleSharedLock(): void
+    {
+        $writerPdo = MysqlTestConnection::connect();
+        $writerStore = new PdoPaymentAttemptStore($writerPdo, $this->attemptsTable, $this->eventsTable);
+        $created = $writerStore->create(40, 2, 'Test', 'shared-lock', 'new', 10.0, 'RUB', []);
+
+        $lockerPdo = MysqlTestConnection::connect();
+        $lockerPdo->beginTransaction();
+        $this->pdo->beginTransaction();
+        try {
+            $lockerPdo->query(
+                'SELECT * FROM `' . $this->attemptsTable . '` WHERE id = ' . $created['id'] . ' LOCK IN SHARE MODE'
+            )->fetch();
+            $this->pdo->exec('SET SESSION innodb_lock_wait_timeout = 1');
+
+            $duplicate = $this->store->create(41, 2, 'Test', 'shared-lock', 'new', 10.0, 'RUB', []);
+
+            self::assertSame($created['id'], $duplicate['id']);
+        } finally {
+            $this->pdo->rollBack();
+            $lockerPdo->rollBack();
+        }
+    }
+
     public function testCreateFailureIncludesSqlErrorUnderSilentErrMode(): void
     {
         $this->expectException(RuntimeException::class);
