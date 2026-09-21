@@ -60,6 +60,43 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         ];
     }
 
+    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+    {
+        $key = $this->reservationKey($orderId, $productId);
+        if (isset($this->reservations[$key])) {
+            return false;
+        }
+        $this->saveReservation($orderId, $productId, $qty, $state);
+
+        return true;
+    }
+
+    public function transitionReservation(
+        int $orderId,
+        int $productId,
+        string $fromState,
+        string $toState,
+        ?float $qty = null
+    ): bool {
+        $key = $this->reservationKey($orderId, $productId);
+        $row = $this->reservations[$key] ?? null;
+        if ($row === null || $row['state'] !== $fromState) {
+            return false;
+        }
+        $row['state'] = $toState;
+        if ($qty !== null) {
+            $row['qty'] = round($qty, 3);
+        }
+        $this->reservations[$key] = $row;
+
+        return true;
+    }
+
+    public function deleteReservation(int $orderId, int $productId): void
+    {
+        unset($this->reservations[$this->reservationKey($orderId, $productId)]);
+    }
+
     public function runInTransaction(callable $work): void
     {
         $work();

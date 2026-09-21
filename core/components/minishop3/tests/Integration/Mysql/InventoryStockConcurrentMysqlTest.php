@@ -113,4 +113,39 @@ final class InventoryStockConcurrentMysqlTest extends TestCase
         self::assertNotFalse($stock);
         self::assertSame(0.0, (float) $stock->fetchColumn());
     }
+
+    public function testSecondConnectionCannotReleaseTheSameOrderTwice(): void
+    {
+        $storeA = new PdoInventoryStockStore($this->pdo, $this->productsTable, $this->reservationsTable);
+        $inventoryA = new ProductStockInventory($storeA);
+        $key = new InventoryKey(15);
+        $ctx = new InventoryContext(7);
+        $inventoryA->reserve($key, 1, $ctx);
+        self::assertSame(0.0, $inventoryA->getAvailable($key));
+
+        $this->pdo->beginTransaction();
+        self::assertTrue($storeA->transitionReservation(7, 15, 'reserved', 'released'));
+        $storeA->increment(15, 1.0);
+
+        $pdoB = MysqlTestConnection::connect();
+        $pdoB->query('SET SESSION innodb_lock_wait_timeout = 1');
+        $storeB = new PdoInventoryStockStore($pdoB, $this->productsTable, $this->reservationsTable);
+        $secondWon = true;
+        $pdoB->beginTransaction();
+        try {
+            $secondWon = $storeB->transitionReservation(7, 15, 'reserved', 'released');
+        } catch (\PDOException) {
+            $secondWon = false;
+        }
+        self::assertFalse($secondWon, 'second connection must not claim a release already held');
+
+        $this->pdo->commit();
+        if ($pdoB->inTransaction()) {
+            $pdoB->rollBack();
+        }
+
+        $inventoryB = new ProductStockInventory($storeB);
+        $inventoryB->release($key, 1, $ctx);
+        self::assertSame(1.0, $inventoryA->getAvailable($key));
+    }
 }

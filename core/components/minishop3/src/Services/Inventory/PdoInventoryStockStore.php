@@ -109,6 +109,71 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         ]);
     }
 
+    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool
+    {
+        $now = time();
+        $sql = "INSERT INTO {$this->reservationsTable}
+            (order_id, product_id, qty, state, createdon, updatedon)
+            VALUES (:order_id, :product_id, :qty, :state, :createdon, :updatedon)";
+        $stmt = $this->prepare($sql);
+        try {
+            $stmt->execute([
+                'order_id' => $orderId,
+                'product_id' => $productId,
+                'qty' => $qty,
+                'state' => $state,
+                'createdon' => $now,
+                'updatedon' => $now,
+            ]);
+        } catch (\PDOException $exception) {
+            if ($this->isDuplicateKey($exception)) {
+                return false;
+            }
+            throw $exception;
+        }
+
+        return $stmt->rowCount() === 1;
+    }
+
+    public function transitionReservation(
+        int $orderId,
+        int $productId,
+        string $fromState,
+        string $toState,
+        ?float $qty = null
+    ): bool {
+        $assignments = 'state = :to_state, updatedon = :updatedon';
+        $params = [
+            'to_state' => $toState,
+            'updatedon' => time(),
+            'order_id' => $orderId,
+            'product_id' => $productId,
+            'from_state' => $fromState,
+        ];
+        if ($qty !== null) {
+            $assignments .= ', qty = :qty';
+            $params['qty'] = $qty;
+        }
+        $sql = "UPDATE {$this->reservationsTable}
+            SET {$assignments}
+            WHERE order_id = :order_id AND product_id = :product_id AND state = :from_state";
+        $stmt = $this->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->rowCount() === 1;
+    }
+
+    public function deleteReservation(int $orderId, int $productId): void
+    {
+        $sql = "DELETE FROM {$this->reservationsTable}
+            WHERE order_id = :order_id AND product_id = :product_id";
+        $stmt = $this->prepare($sql);
+        $stmt->execute([
+            'order_id' => $orderId,
+            'product_id' => $productId,
+        ]);
+    }
+
     public function runInTransaction(callable $work): void
     {
         $alreadyOpen = method_exists($this->db, 'inTransaction') && $this->db->inTransaction();
@@ -147,6 +212,13 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         if (method_exists($this->db, 'rollback')) {
             $this->db->rollback();
         }
+    }
+
+    private function isDuplicateKey(\PDOException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? $exception->getCode();
+
+        return (string) $sqlState === '23000';
     }
 
     private function prepare(string $sql): PDOStatement

@@ -40,16 +40,13 @@ class ProductStockInventory implements InventoryServiceInterface
         }
 
         $this->fire('msOnBeforeInventoryReserve', $key, $qty, $ctx);
-        if (!$this->store->tryDecrement($key->productId, $qty)) {
-            throw $this->insufficient($key, $qty);
+        $didReserve = false;
+        $this->store->runInTransaction(function () use ($key, $qty, $ctx, &$didReserve): void {
+            $didReserve = $this->claimReserve($key, $qty, $ctx);
+        });
+        if ($didReserve) {
+            $this->fire('msOnInventoryReserve', $key, $qty, $ctx);
         }
-        $this->store->saveReservation(
-            $ctx->orderId,
-            $key->productId,
-            $qty,
-            InventoryReservationState::RESERVED
-        );
-        $this->fire('msOnInventoryReserve', $key, $qty, $ctx);
     }
 
     public function release(InventoryKey $key, float $qty, InventoryContext $ctx): void
@@ -62,16 +59,22 @@ class ProductStockInventory implements InventoryServiceInterface
 
         $held = (float) $existing['qty'];
         $this->fire('msOnBeforeInventoryRelease', $key, $held, $ctx);
-        $this->store->runInTransaction(function () use ($key, $held, $ctx): void {
-            $this->store->increment($key->productId, $held);
-            $this->store->saveReservation(
+        $didRelease = false;
+        $this->store->runInTransaction(function () use ($key, $ctx, $held, &$didRelease): void {
+            if (!$this->store->transitionReservation(
                 $ctx->orderId,
                 $key->productId,
-                $held,
+                InventoryReservationState::RESERVED,
                 InventoryReservationState::RELEASED
-            );
+            )) {
+                return;
+            }
+            $this->store->increment($key->productId, $held);
+            $didRelease = true;
         });
-        $this->fire('msOnInventoryRelease', $key, $held, $ctx);
+        if ($didRelease) {
+            $this->fire('msOnInventoryRelease', $key, $held, $ctx);
+        }
     }
 
     public function commit(InventoryKey $key, float $qty, InventoryContext $ctx): void
@@ -94,13 +97,88 @@ class ProductStockInventory implements InventoryServiceInterface
 
         $held = (float) $existing['qty'];
         $this->fire('msOnBeforeInventoryCommit', $key, $held, $ctx);
-        $this->store->saveReservation(
+        $didCommit = false;
+        $this->store->runInTransaction(function () use ($key, $ctx, &$didCommit): void {
+            $didCommit = $this->store->transitionReservation(
+                $ctx->orderId,
+                $key->productId,
+                InventoryReservationState::RESERVED,
+                InventoryReservationState::COMMITTED
+            );
+        });
+        if (!$didCommit) {
+            $again = $this->store->findReservation($ctx->orderId, $key->productId);
+            if ($again !== null && $again['state'] === InventoryReservationState::COMMITTED) {
+                return;
+            }
+            throw new InventoryException(
+                'ms3_err_inventory_not_reserved',
+                ['id' => $key->productId, 'order_id' => $ctx->orderId]
+            );
+        }
+        $this->fire('msOnInventoryCommit', $key, $held, $ctx);
+    }
+
+    /**
+     * Claim the ledger row, then decrement stock only if this call won the claim.
+     *
+     * @throws InventoryException
+     */
+    private function claimReserve(InventoryKey $key, float $qty, InventoryContext $ctx): bool
+    {
+        $row = $this->store->findReservation($ctx->orderId, $key->productId);
+        $state = $row['state'] ?? null;
+        if ($state === InventoryReservationState::RESERVED
+            || $state === InventoryReservationState::COMMITTED
+        ) {
+            return false;
+        }
+
+        $inserted = false;
+        if ($row === null) {
+            $inserted = $this->store->insertReservation(
+                $ctx->orderId,
+                $key->productId,
+                $qty,
+                InventoryReservationState::RESERVED
+            );
+            if (!$inserted) {
+                $row = $this->store->findReservation($ctx->orderId, $key->productId);
+                $state = $row['state'] ?? null;
+                if ($state === InventoryReservationState::RESERVED
+                    || $state === InventoryReservationState::COMMITTED
+                    || $state !== InventoryReservationState::RELEASED
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        if (!$inserted && !$this->store->transitionReservation(
             $ctx->orderId,
             $key->productId,
-            $held,
-            InventoryReservationState::COMMITTED
-        );
-        $this->fire('msOnInventoryCommit', $key, $held, $ctx);
+            InventoryReservationState::RELEASED,
+            InventoryReservationState::RESERVED,
+            $qty
+        )) {
+            return false;
+        }
+
+        if (!$this->store->tryDecrement($key->productId, $qty)) {
+            if ($inserted) {
+                $this->store->deleteReservation($ctx->orderId, $key->productId);
+            } else {
+                $this->store->transitionReservation(
+                    $ctx->orderId,
+                    $key->productId,
+                    InventoryReservationState::RESERVED,
+                    InventoryReservationState::RELEASED
+                );
+            }
+            throw $this->insufficient($key, $qty);
+        }
+
+        return true;
     }
 
     private function normalizeQty(float $qty): float

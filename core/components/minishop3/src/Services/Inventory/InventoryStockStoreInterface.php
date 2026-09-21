@@ -26,6 +26,25 @@ interface InventoryStockStoreInterface
     public function saveReservation(int $orderId, int $productId, float $qty, string $state): void;
 
     /**
+     * Insert a new ledger row. False when (order_id, product_id) already exists.
+     */
+    public function insertReservation(int $orderId, int $productId, float $qty, string $state): bool;
+
+    /**
+     * Move the ledger row from $fromState to $toState.
+     * True only when this call updated the row. Stock changes must follow a true result.
+     */
+    public function transitionReservation(
+        int $orderId,
+        int $productId,
+        string $fromState,
+        string $toState,
+        ?float $qty = null
+    ): bool;
+
+    public function deleteReservation(int $orderId, int $productId): void;
+
+    /**
      * Run $work in a DB transaction. Nested calls join an already open transaction.
      *
      * @param callable(): void $work
