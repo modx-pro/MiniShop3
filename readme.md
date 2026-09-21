@@ -12,7 +12,7 @@
   <a href="https://github.com/modx-pro/MiniShop3/releases"><img src="https://img.shields.io/github/v/release/modx-pro/MiniShop3?include_prereleases" alt="Version"></a>
   <a href="#"><img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.2+"></a>
   <a href="#"><img src="https://img.shields.io/badge/MODX-3.0%2B-green?logo=modx&logoColor=white" alt="MODX 3.0+"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="License MIT"></a>
+  <img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="License MIT">
 </p>
 
 <p align="center">
@@ -134,12 +134,12 @@ MiniShop3/
 │   │   ├── Controllers/             # HTTP API и domain facade
 │   │   ├── Middleware/
 │   │   ├── Notifications/
+│   │   ├── Processors/              # Процессоры MODX (вызов через connector.php)
 │   │   ├── Router/
 │   │   ├── Services/
 │   │   └── ServiceRegistry.php
 │   ├── migrations/                  # Phinx
 │   ├── lexicon/                     # Переводы (ru, en)
-│   ├── processors/                  # MODX processors
 │   └── tests/                       # Smoke и PHPUnit
 └── vueManager/                      # Исходники Vue 3 админки (Vite)
 ```
@@ -215,7 +215,7 @@ npm run test:smoke
 
 ## 📄 Лицензия
 
-MIT. Текст: [LICENSE](LICENSE).
+Распространяется под лицензией MIT — она объявлена в [`core/components/minishop3/composer.json`](core/components/minishop3/composer.json).
 
 ## 💬 Поддержка
 
