@@ -24,15 +24,15 @@
 
 ---
 
-## Особенности
+## ✨ Особенности
 
-- Для MODX 3: PHP 8.2+, namespaces, PSR-4, миграции Phinx
-- REST API для headless-интеграций
-- Админка на Vue 3 и PrimeVue
-- Фронтенд без jQuery, на нативном JavaScript
-- Сниппеты, чанки и параметры совместимы с miniShop2
+- 🚀 **Для MODX 3:** PHP 8.2+, namespaces, PSR-4, миграции Phinx
+- 🔌 **REST API** для headless-интеграций
+- 🎨 Админка на Vue 3 и PrimeVue
+- ⚡ Фронтенд без jQuery, на нативном JavaScript
+- 🔄 Сниппеты, чанки и параметры совместимы с miniShop2
 
-## Требования
+## 📋 Требования
 
 | Компонент | Версия |
 |-----------|--------|
@@ -44,11 +44,11 @@
 
 | Пакет | Обязательный | Описание |
 |-------|--------------|----------|
-| [pdoTools 3.x](https://docs.modx.pro/components/pdotools/) | да | Сниппеты и шаблонизатор Fenom |
-| [VueTools](https://docs.modx.pro/components/vuetools/) | да | Vue 3 и PrimeVue для админки |
-| [Scheduler](https://docs.modx.pro/components/scheduler/) | нет | Фоновые задачи (импорт, уведомления) |
+| [pdoTools 3.x](https://docs.modx.pro/components/pdotools/) | ✅ | Сниппеты и шаблонизатор Fenom |
+| [VueTools](https://docs.modx.pro/components/vuetools/) | ✅ | Vue 3 и PrimeVue для админки |
+| [Scheduler](https://docs.modx.pro/components/scheduler/) | ❌ | Фоновые задачи (импорт, уведомления) |
 
-## Установка
+## 🚀 Установка
 
 ### Через менеджер пакетов
 
@@ -56,7 +56,7 @@
 Extras → Installer → Download Extras → MiniShop3 → Install
 ```
 
-VueTools нужно поставить до MiniShop3.
+> ⚠️ VueTools нужно поставить до MiniShop3.
 
 ### Из исходников
 
@@ -75,7 +75,7 @@ cd vueManager && npm install && npm run build && cd ..
 php _build/build.php
 ```
 
-## Документация
+## 📖 Документация
 
 Справочник: [docs.modx.pro/components/minishop3](https://docs.modx.pro/components/minishop3/)
 
@@ -105,7 +105,7 @@ GET /assets/components/minishop3/api.php?route=/api/v1/product/list
 
 Тот же URL без `html=1` или с `format=json` возвращает JSON. Так удобнее API-клиентам. В браузере будет сырое тело ответа.
 
-## Структура проекта
+## 🏗️ Структура проекта
 
 ```
 MiniShop3/
@@ -149,7 +149,7 @@ DI-ключи фасадов (см. также `ServiceRegistry`):
 
 Переименование namespace (`Domain\` / `Facades\`) остаётся на отдельный major с bc-aliases. Сейчас граница зафиксирована документацией и PHPDoc.
 
-## Участие в разработке
+## 🤝 Участие в разработке
 
 1. Форкните репозиторий
 2. Создайте ветку (`git checkout -b feature/amazing-feature`)
@@ -157,7 +157,7 @@ DI-ключи фасадов (см. также `ServiceRegistry`):
 4. Запушьте ветку (`git push origin feature/amazing-feature`)
 5. Откройте Pull Request
 
-### Тесты PHP
+### 🧪 Тесты PHP
 
 Из `core/components/minishop3` после `composer install`:
 
@@ -172,7 +172,7 @@ DI-ключи фасадов (см. также `ServiceRegistry`):
 
 CI гоняет live-сьют на MODX 3.1.2-pl, 3.2.3-pl и 3.2.4-pl. Линейка 3.0.x в этом сьюте не проверяется: ядро не поднимается в API-режиме.
 
-### Тесты Vue Manager
+### 🧪 Тесты Vue Manager
 
 Из `vueManager` (Node.js 18+ локально, в CI 24):
 
@@ -183,19 +183,19 @@ npm test
 npm run build
 ```
 
-## Changelog
+## 📝 Changelog
 
 История изменений: [CHANGELOG.md](CHANGELOG.md).
 
-## Лицензия
+## 📄 Лицензия
 
 MIT. Текст: [LICENSE](LICENSE).
 
-## Поддержка
+## 💬 Поддержка
 
-- [GitHub Issues](https://github.com/modx-pro/MiniShop3/issues): баги и предложения
-- [Документация](https://docs.modx.pro/components/minishop3/): руководства и справочники
-- [Telegram](https://t.me/modx_pro): сообщество MODX
+- 🐛 [GitHub Issues](https://github.com/modx-pro/MiniShop3/issues): баги и предложения
+- 📚 [Документация](https://docs.modx.pro/components/minishop3/): руководства и справочники
+- 💬 [Telegram](https://t.me/modx_pro): сообщество MODX
 
 ---
 
