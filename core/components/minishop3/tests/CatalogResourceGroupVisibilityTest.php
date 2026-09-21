@@ -238,10 +238,18 @@ $assertTrue(
 $ms3ProductsSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/ms3_products.php');
 $assertTrue(
     str_contains($ms3ProductsSrc, "\$innerJoin['ms3RgVisibility']")
+    && str_contains($ms3ProductsSrc, 'buildWhereFragmentForRequest')
     && str_contains($ms3ProductsSrc, 'CatalogSortbyQualifier::qualifyUnaliasedResourceFields')
     && !str_contains($ms3ProductsSrc, "unset(\$leftJoin['Data'])"),
-    'ms3_products wires RG via ms3RgVisibility + sortby qualify (not Data INNER)'
+    'ms3_products wires RG via ms3RgVisibility + request-aware ACL + sortby qualify'
 );
+foreach (['ms3_gallery.php', 'ms3_options.php', 'ms3_product_options.php'] as $snippetFile) {
+    $snippetSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/' . $snippetFile);
+    $assertTrue(
+        str_contains($snippetSrc, 'isVisibleForRequest'),
+        $snippetFile . ' uses isVisibleForRequest for member ACL'
+    );
+}
 $assertTrue(
     !preg_match('/\$where\[\]\s*=\s*\$_ms3RgWhere/', $ms3ProductsSrc),
     'ms3_products does not append RG fragment to numeric where'
@@ -253,9 +261,14 @@ $visibleWhenDisabled = new CatalogResourceGroupVisibility($makeModx([
 $assertTrue($visibleWhenDisabled->isVisible(1), 'isVisible true when setting disabled');
 $assertTrue(!$visibleWhenDisabled->isVisible(0), 'isVisible false for non-positive id');
 
-$isVisibleSrc = (string) file_get_contents(__DIR__ . '/../src/Services/Catalog/CatalogResourceGroupVisibility.php');
+$visibilitySrc = (string) file_get_contents(__DIR__ . '/../src/Services/Catalog/CatalogResourceGroupVisibility.php');
 $assertTrue(
-    str_contains($isVisibleSrc, "'class_key' => \$class"),
+    str_contains($visibilitySrc, 'buildWhereFragmentForRequest')
+    && str_contains($visibilitySrc, 'isVisibleForRequest'),
+    'CatalogResourceGroupVisibility exposes request-aware helpers'
+);
+$assertTrue(
+    str_contains($visibilitySrc, "'class_key' => \$class"),
     'isVisible must pin class_key because getCount skips derivative criteria'
 );
 

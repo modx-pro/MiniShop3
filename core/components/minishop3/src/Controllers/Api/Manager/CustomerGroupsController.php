@@ -6,6 +6,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerGroup;
+use MiniShop3\Services\Catalog\CatalogAclCacheInvalidator;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MODX\Revolution\modUserGroup;
@@ -170,6 +171,9 @@ class CustomerGroupsController
             )->getData();
         }
 
+        $previousUserGroupId = (int) $group->get('user_group_id');
+        $previousActive = (bool) $group->get('active');
+
         if (array_key_exists('name', $data)) {
             $name = trim((string) $data['name']);
             if ($name === '') {
@@ -201,6 +205,13 @@ class CustomerGroupsController
                 $this->lexicon('ms3_err_customer_group_save'),
                 HttpStatus::INTERNAL_SERVER_ERROR,
             )->getData();
+        }
+
+        $aclFieldsChanged = (array_key_exists('user_group_id', $data)
+            && (int) $group->get('user_group_id') !== $previousUserGroupId)
+            || (array_key_exists('active', $data) && (bool) $group->get('active') !== $previousActive);
+        if ($aclFieldsChanged) {
+            CatalogAclCacheInvalidator::scheduleForModx($this->modx);
         }
 
         return Response::success(
@@ -246,6 +257,8 @@ class CustomerGroupsController
                 HttpStatus::INTERNAL_SERVER_ERROR,
             )->getData();
         }
+
+        CatalogAclCacheInvalidator::scheduleForModx($this->modx);
 
         return Response::success([], $this->lexicon('ms3_customer_group_deleted'))->getData();
     }

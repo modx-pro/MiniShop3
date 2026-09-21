@@ -174,10 +174,49 @@ if (isset($_ms3CategoryIds) && $_ms3CategoryIds !== []) {
 $_ms3SortBy = $scriptProperties['sortby'] ?? '';
 if (!is_array($_ms3SortBy)) {
     $_ms3SortBy = (string) $_ms3SortBy;
-    // Qualify bare resource columns before menuindex CASE injects commas (#741 / #742 review).
+    // Whitelist + qualify bare columns before menuindex / sortbyOptions inject expressions (#755).
+    $_ms3Passthrough = [];
+    if (!empty($scriptProperties['includeTVs'])) {
+        $tvList = is_array($scriptProperties['includeTVs'])
+            ? $scriptProperties['includeTVs']
+            : array_map('trim', explode(',', (string) $scriptProperties['includeTVs']));
+        foreach ($tvList as $tvName) {
+            if (is_string($tvName) && $tvName !== '') {
+                $_ms3Passthrough[] = $tvName;
+            }
+        }
+    }
+    if (!empty($scriptProperties['includeVendor']) || !empty($scriptProperties['includeVendorFields'])) {
+        $vendorFields = !empty($scriptProperties['includeVendorFields'])
+            ? (is_array($scriptProperties['includeVendorFields'])
+                ? $scriptProperties['includeVendorFields']
+                : array_map('trim', explode(',', (string) $scriptProperties['includeVendorFields'])))
+            : ['name'];
+        foreach ($vendorFields as $vendorField) {
+            if (!is_string($vendorField) || $vendorField === '') {
+                continue;
+            }
+            $_ms3Passthrough[] = str_starts_with($vendorField, 'vendor_')
+                ? $vendorField
+                : 'vendor_' . $vendorField;
+        }
+    }
+    if (!empty($scriptProperties['sortbyOptions'])) {
+        foreach (array_map('trim', explode(',', (string) $scriptProperties['sortbyOptions'])) as $sortOpt) {
+            $optKey = explode(':', $sortOpt)[0] ?? '';
+            if ($optKey !== '') {
+                $_ms3Passthrough[] = $optKey;
+            }
+        }
+    }
     $_ms3SortBy = CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
         $_ms3SortBy,
-        array_keys($modx->getFields(msProduct::class) ?: [])
+        array_keys($modx->getFields(msProduct::class) ?: []),
+        'msProduct',
+        true,
+        array_keys($modx->getFields(msProductData::class) ?: []),
+        'Data',
+        $_ms3Passthrough,
     );
     $scriptProperties['sortby'] = $_ms3SortBy;
 }
@@ -270,18 +309,14 @@ if (!empty($scriptProperties['sortbyOptions'])) {
     }
 }
 
-// Anonymous RG ACL for storefront listing (#670); same SQL as Web API.
+// Member-aware RG ACL for storefront listing (#670 / #755); same resolver path as Web API.
 // Put the NOT EXISTS in an INNER JOIN ON — not in $where[] — so pdoTools
 // additionalConditions() does not false-positive-suppress &resources / &context
 // (raw numeric where strings that mention msProduct + \bid\b / context_key).
 // Self-join on site_content duplicates resource columns: bare multi-column sortby
 // is qualified via CatalogSortbyQualifier before pdoTools (#741 / #742 review).
 $_ms3RgVisibility = new CatalogResourceGroupVisibility($modx);
-$_ms3RgContext = trim((string) ($modx->context->key ?? ''));
-if ($_ms3RgContext === '') {
-    $_ms3RgContext = 'web';
-}
-$_ms3RgWhere = $_ms3RgVisibility->buildWhereFragment('msProduct', $_ms3RgContext);
+$_ms3RgWhere = $_ms3RgVisibility->buildWhereFragmentForRequest('msProduct');
 if ($_ms3RgWhere !== null) {
     $innerJoin['ms3RgVisibility'] = [
         'class' => msProduct::class,
