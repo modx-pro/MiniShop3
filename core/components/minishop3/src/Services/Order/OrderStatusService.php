@@ -296,9 +296,12 @@ class OrderStatusService implements OrderStatusChanger
             return (bool) $this->modx->inTransaction();
         }
 
-        $pdo = $this->modx->pdo ?? null;
+        $pdo = $this->modx->pdo;
+        if (!$pdo instanceof \PDO) {
+            return false;
+        }
 
-        return $pdo instanceof \PDO && $pdo->inTransaction();
+        return $pdo->inTransaction();
     }
 
     private function commitOwnedTransaction(bool $ownsTx): void
