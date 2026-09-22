@@ -23,7 +23,6 @@ const primarySaveSeverity = getPrimarySaveSeverity()
       :label="_('ms3_order_create')"
       icon="pi pi-plus"
       :severity="primarySaveSeverity"
-
       :loading="saving"
       @click="emit('create')"
     />
@@ -32,7 +31,6 @@ const primarySaveSeverity = getPrimarySaveSeverity()
       :label="_('save')"
       icon="pi pi-check"
       :severity="primarySaveSeverity"
-
       :loading="saving"
       :disabled="recalculatingCost"
       @click="emit('save')"
@@ -41,7 +39,6 @@ const primarySaveSeverity = getPrimarySaveSeverity()
       :label="_('cancel')"
       icon="pi pi-times"
       severity="secondary"
-
       @click="emit('cancel')"
     />
   </div>

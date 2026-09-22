@@ -140,7 +140,6 @@ const showOrderInfoActions = computed(
               :label="_('order_cost_recalculate')"
               icon="pi pi-sync"
               class="cost-recalc-btn"
-
               :disabled="recalculateBlocked"
               :loading="recalculatingCost"
               @click="recalculateOrderCost()"
@@ -177,7 +176,6 @@ const showOrderInfoActions = computed(
           <Button
             :label="_('order_cost_recalc_apply_manual')"
             icon="pi pi-check"
-
             :loading="recalculatingCost"
             type="button"
             @click="applyManualDeliveryCost()"
@@ -288,7 +286,6 @@ const showOrderInfoActions = computed(
           :label="_('ms3_order_finalize_btn')"
           icon="pi pi-check-circle"
           severity="success"
-
           :loading="finalizing"
           class="finalize-button"
           @click="confirmFinalizeOrder"

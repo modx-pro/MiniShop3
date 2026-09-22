@@ -171,7 +171,6 @@ function onDragEnd() {
               severity="danger"
               text
               rounded
-
               class="ms3-repeater-actions-col"
               :disabled="disabled || !canRemoveRow"
               @click="removeRow(index)"
@@ -184,7 +183,6 @@ function onDragEnd() {
         icon="pi pi-plus"
         :label="_('ms3_vue_repeater_add_row')"
         severity="secondary"
-
         class="ms3-repeater-add"
         :disabled="disabled || !canAddRow"
         @click="addRow"

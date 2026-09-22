@@ -103,13 +103,11 @@ function goTo(path) {
       <div v-if="canListSettings" class="ms3-utilities-page__actions">
         <Button
           :label="_('ms3_orders')"
-
           severity="secondary"
           @click="goTo('?a=mgr/orders&namespace=minishop3')"
         />
         <Button
           :label="_('ms3_settings')"
-
           severity="secondary"
           outlined
           @click="goTo('?a=mgr/settings&namespace=minishop3')"

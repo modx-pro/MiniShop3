@@ -539,7 +539,6 @@ onMounted(() => {
             <Button
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
-
               :severity="primarySaveSeverity"
               :loading="savingSections"
               :disabled="loadingSections"
@@ -548,7 +547,6 @@ onMounted(() => {
             <Button
               :label="_('ms3_vue_section_add')"
               icon="pi pi-plus"
-
               severity="secondary"
               @click="openAddSectionDialog"
             />
@@ -600,7 +598,6 @@ onMounted(() => {
                     <td class="col-actions">
                       <Button
                         icon="pi pi-pencil"
-
                         text
                         severity="secondary"
                         :title="_('ms3_vue_section_edit')"
@@ -609,7 +606,6 @@ onMounted(() => {
                       />
                       <Button
                         icon="pi pi-trash"
-
                         text
                         severity="danger"
                         :title="_('ms3_vue_section_delete')"
@@ -639,7 +635,6 @@ onMounted(() => {
             <Button
               :label="_('ms3_vue_save_changes')"
               icon="pi pi-save"
-
               :severity="primarySaveSeverity"
               :loading="savingFields"
               :disabled="loading"
@@ -699,7 +694,6 @@ onMounted(() => {
                     <td class="col-actions">
                       <Button
                         icon="pi pi-pencil"
-
                         text
                         severity="secondary"
                         :title="_('ms3_vue_edit_field_button')"

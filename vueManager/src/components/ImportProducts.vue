@@ -129,7 +129,6 @@ const previewFile = async () => {
     exceedsLimit.value = data.exceeds_limit || false
     schedulerAvailable.value = data.scheduler_available || false
     detectedEncoding.value = data.encoding || 'UTF-8'
-
     fieldMapping.value = csvHeaders.value.map(() => null)
     autoMapFields()
   } catch (err) {
@@ -448,7 +447,6 @@ onMounted(() => {
           :label="_('ms3_import_next')"
           icon="pi pi-arrow-right"
           icon-pos="right"
-
           severity="primary"
           :disabled="!canProceedToStep2"
           @click="currentStep = 2"

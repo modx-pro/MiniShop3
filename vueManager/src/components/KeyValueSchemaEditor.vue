@@ -81,7 +81,6 @@ function updateKey(index, patch) {
         <Button
           icon="pi pi-plus"
           :label="_('ms3_vue_key_value_add_key')"
-
           severity="secondary"
           @click="addKey"
         />
@@ -122,7 +121,6 @@ function updateKey(index, patch) {
           severity="danger"
           text
           rounded
-
           @click="removeKey(index)"
         />
       </div>

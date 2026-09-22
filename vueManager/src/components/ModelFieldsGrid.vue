@@ -193,7 +193,6 @@ function editField(field) {
     comboSourceJson.value = ''
   }
   comboSourceError.value = ''
-
   editDialogVisible.value = true
 }
 

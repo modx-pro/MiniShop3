@@ -252,7 +252,6 @@ onMounted(() => {
               :label="_('create')"
               icon="pi pi-plus"
               severity="primary"
-
               @click="openCreate"
             />
           </div>
@@ -271,7 +270,6 @@ onMounted(() => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-
               text
               @click="clearSelection"
             />
@@ -279,7 +277,6 @@ onMounted(() => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />

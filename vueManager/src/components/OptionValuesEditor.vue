@@ -135,7 +135,6 @@ function hexWithHash(v) {
             severity="danger"
             text
             rounded
-
             @click="removeRow(index)"
           />
         </div>
@@ -146,7 +145,6 @@ function hexWithHash(v) {
       icon="pi pi-plus"
       :label="_('ms3_add_value') || 'Добавить значение'"
       severity="secondary"
-
       class="add-button"
       @click="addRow"
     />

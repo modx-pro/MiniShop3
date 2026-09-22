@@ -293,7 +293,6 @@ onMounted(() => {
                     severity="secondary"
                     text
                     rounded
-
                     :aria-label="_('edit')"
                     @click="openEditDialog(element)"
                   />
@@ -302,7 +301,6 @@ onMounted(() => {
                     severity="danger"
                     text
                     rounded
-
                     :aria-label="_('delete')"
                     @click="confirmDelete(element)"
                   />
