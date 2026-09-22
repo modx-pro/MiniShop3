@@ -50,16 +50,22 @@ class TokenService
     {
         $existingToken = $this->ensureCustomerTokenLoaded();
         if ($existingToken !== null) {
-            $expires = (int)($_SESSION['ms3']['customer_token_expires'] ?? (time() + 86400));
-            $lifetime = max(0, $expires - time());
+            $resolved = $this->resolveApiToken($existingToken);
+            if ($resolved['reason'] === 'ok') {
+                $tokenObj = $resolved['token'];
+                $expires = (int) strtotime((string) $tokenObj->get('expires_at'));
+                $lifetime = max(0, $expires - time());
 
-            CookieHelper::setTokenCookie($this->modx, $existingToken);
+                CookieHelper::setTokenCookie($this->modx, $existingToken);
 
-            return [
-                'token' => $existingToken,
-                'expires' => $expires,
-                'lifetime' => $lifetime * 1000,
-            ];
+                return [
+                    'token' => $existingToken,
+                    'expires' => $expires,
+                    'lifetime' => $lifetime * 1000,
+                ];
+            }
+
+            $this->discardStaleCustomerSession();
         }
 
         $customerId = (int)($_SESSION['ms3']['customer_id'] ?? 0);
@@ -200,9 +206,7 @@ class TokenService
                 return $sessionToken;
             }
 
-            $this->clearCustomerToken();
-            CookieHelper::clearTokenCookie($this->modx);
-            unset($_SESSION['ms3']['customer_id']);
+            $this->discardStaleCustomerSession();
         }
 
         // 2. Check cookie
@@ -453,6 +457,16 @@ class TokenService
     }
 
     /**
+     * Drop revoked session token, cookie, and bound customer id before minting anew.
+     */
+    private function discardStaleCustomerSession(): void
+    {
+        $this->clearCustomerToken();
+        CookieHelper::clearTokenCookie($this->modx);
+        unset($_SESSION['ms3']['customer_id']);
+    }
+
+    /**
      * Clear customer token from session
      *
      * @return void
@@ -518,10 +532,10 @@ class TokenService
      * 1. Authorization: Bearer
      * 2. HTTP_MS3TOKEN (legacy)
      * 3. httpOnly cookie `ms3_token`
-     * 4. $_REQUEST['ms3_token'] after middleware cookie inject (#576: query stripped)
+     * 4. $_REQUEST['ms3_token'] when not from query string (cookie inject / POST body)
      * 5. PHP session cache
      *
-     * Query-string `token` / `ms3_token` are not accepted here.
+     * Query-string `ms3_token` is never accepted (#576, #755 public catalog ACL).
      */
     public static function resolveTokenFromRequest(): string
     {
@@ -536,7 +550,7 @@ class TokenService
         }
 
         $fromRequest = $_REQUEST['ms3_token'] ?? '';
-        if ($fromRequest !== '') {
+        if ($fromRequest !== '' && !array_key_exists('ms3_token', $_GET)) {
             return (string) $fromRequest;
         }
 

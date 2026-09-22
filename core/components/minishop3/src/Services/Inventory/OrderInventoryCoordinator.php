@@ -51,9 +51,9 @@ class OrderInventoryCoordinator
         }
         $ctx = new InventoryContext((int) $order->get('id'));
         match ($newStatusId) {
-            (int) $this->modx->getOption('ms3_status_new', null, 2) => $this->reserveAll($order, $ctx),
-            (int) $this->modx->getOption('ms3_status_paid', null, 3) => $this->commitAll($order, $ctx),
-            (int) $this->modx->getOption('ms3_status_canceled', null, 5) => $this->releaseAll($order, $ctx),
+            $this->statusNewId() => $this->reserveAll($order, $ctx),
+            $this->statusPaidId() => $this->commitAll($order, $ctx),
+            $this->statusCanceledId() => $this->releaseAll($order, $ctx),
             default => null,
         };
     }
@@ -71,18 +71,23 @@ class OrderInventoryCoordinator
         $this->releaseAll($order, new InventoryContext((int) $order->get('id')));
     }
 
-    private function reserveAll(msOrder $order, InventoryContext $ctx): void
+    private function reserveAll(msOrder $order, InventoryContext $ctx, bool $notify = true): void
     {
+        $qtyByProduct = $this->qtyByProduct($order);
+        if ($this->inventory instanceof ProductStockInventory) {
+            $this->inventory->reserveBatch($qtyByProduct, $ctx, $notify);
+
+            return;
+        }
+
         $done = [];
         try {
-            foreach ($this->qtyByProduct($order) as $productId => $qty) {
+            foreach ($qtyByProduct as $productId => $qty) {
                 $key = new InventoryKey($productId);
-                $this->inventory->reserve($key, $qty, $ctx);
+                $this->inventory->reserve($key, $qty, $ctx, $notify);
                 $done[] = [$key, $qty];
             }
         } catch (InventoryException $exception) {
-            // Silent release: the caller transaction rolls the SQL back, so release events
-            // would describe a hold that never committed (#603 review).
             foreach (array_reverse($done) as [$key, $qty]) {
                 $this->inventory->release($key, $qty, $ctx, false);
             }
@@ -102,6 +107,12 @@ class OrderInventoryCoordinator
      * Caller must restore the previous status_id on $order first: releaseAll()
      * treats a paid status as final and would otherwise leave a commit in place.
      *
+     * Events are suppressed ($notify=false): this runs inside an open foreign
+     * transaction that will roll the SQL back (#762).
+     *
+     * Attempted cancel: applyStatusChange already released; if previous status
+     * was New, re-reserve silently so the hold matches the restored status_id.
+     *
      * @throws InventoryException
      */
     public function compensateUnpersistedChange(msOrder $order, int $attemptedStatusId): void
@@ -109,28 +120,35 @@ class OrderInventoryCoordinator
         if (!$this->enabled()) {
             return;
         }
-        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
         $ctx = new InventoryContext((int) $order->get('id'));
-        if ($attemptedStatusId === $paidId && $this->inventory instanceof ProductStockInventory) {
+
+        if ($attemptedStatusId === $this->statusPaidId() && $this->inventory instanceof ProductStockInventory) {
             foreach (array_keys($this->qtyByProduct($order)) as $productId) {
                 $this->inventory->revertCommitToReserved(new InventoryKey($productId), $ctx);
             }
 
             return;
         }
-        $this->releaseAll($order, $ctx);
+
+        if ($attemptedStatusId === $this->statusCanceledId()) {
+            if ((int) $order->get('status_id') === $this->statusNewId()) {
+                $this->reserveAll($order, $ctx, false);
+            }
+
+            return;
+        }
+
+        $this->releaseAll($order, $ctx, false);
     }
 
-    private function releaseAll(msOrder $order, InventoryContext $ctx): void
+    private function releaseAll(msOrder $order, InventoryContext $ctx, bool $notify = true): void
     {
-        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
-        // Fast exit before per-line release(). ProductStockInventory::release() also
-        // ignores committed rows; this skips the lookup when the order is already paid.
-        if ((int) $order->get('status_id') === $paidId) {
+        // Paid orders keep committed stock; release() would no-op per line anyway.
+        if ((int) $order->get('status_id') === $this->statusPaidId()) {
             return;
         }
         foreach ($this->qtyByProduct($order) as $productId => $qty) {
-            $this->inventory->release(new InventoryKey($productId), $qty, $ctx);
+            $this->inventory->release(new InventoryKey($productId), $qty, $ctx, $notify);
         }
     }
 
@@ -162,5 +180,20 @@ class OrderInventoryCoordinator
     private function enabled(): bool
     {
         return self::isInventoryEnabled($this->modx);
+    }
+
+    private function statusNewId(): int
+    {
+        return (int) $this->modx->getOption('ms3_status_new', null, 2);
+    }
+
+    private function statusPaidId(): int
+    {
+        return (int) $this->modx->getOption('ms3_status_paid', null, 3);
+    }
+
+    private function statusCanceledId(): int
+    {
+        return (int) $this->modx->getOption('ms3_status_canceled', null, 5);
     }
 }

@@ -6,9 +6,15 @@ namespace MiniShop3\Tests\Unit\Controllers\Api\Manager;
 
 use MiniShop3\Controllers\Api\Manager\CustomersController;
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Model\msCustomerGroup;
+use MiniShop3\Services\Catalog\CatalogAclCacheInvalidator;
+use MiniShop3\Services\Catalog\CatalogResourceGroupVisibility;
 use MiniShop3\Services\Customer\AuthManager;
+use MiniShop3\Tests\Stubs\CatalogAclInvalidatorModxStub;
 use MODX\Revolution\modX;
 use PHPUnit\Framework\TestCase;
+
+require_once dirname(__DIR__, 4) . '/stubs/CatalogAclModxStub.php';
 
 final class CustomersControllerUpdateTest extends TestCase
 {
@@ -143,6 +149,51 @@ final class CustomersControllerUpdateTest extends TestCase
         self::assertSame(0, $customer->get('failed_login_attempts'));
     }
 
+    public function testUpdateSchedulesAclCacheWhenCustomerGroupChanges(): void
+    {
+        $customer = new FakeUpdateCustomer([
+            'id' => 11,
+            'first_name' => 'Gus',
+            'is_active' => 1,
+            'is_blocked' => 0,
+            'customer_group_id' => 1,
+        ]);
+        $authManager = $this->createMock(AuthManager::class);
+        $authManager->expects(self::never())->method('revokeTokens');
+        [$modx, $invalidator] = $this->modxWithAclInvalidator($customer, $authManager, aclEnabled: true);
+
+        $data = (new CustomersController($modx))->update([
+            'id' => 11,
+            'customer_group_id' => 2,
+        ]);
+
+        self::assertTrue($data['success'] ?? false);
+        self::assertSame(2, $customer->get('customer_group_id'));
+        self::assertTrue($invalidator->wasScheduledForTests());
+    }
+
+    public function testUpdateDoesNotScheduleAclCacheWhenGroupUnchanged(): void
+    {
+        $customer = new FakeUpdateCustomer([
+            'id' => 12,
+            'first_name' => 'Hal',
+            'is_active' => 1,
+            'is_blocked' => 0,
+            'customer_group_id' => 3,
+        ]);
+        $authManager = $this->createMock(AuthManager::class);
+        $authManager->expects(self::never())->method('revokeTokens');
+        [$modx, $invalidator] = $this->modxWithAclInvalidator($customer, $authManager, aclEnabled: true);
+
+        $data = (new CustomersController($modx))->update([
+            'id' => 12,
+            'first_name' => 'Harry',
+        ]);
+
+        self::assertTrue($data['success'] ?? false);
+        self::assertFalse($invalidator->wasScheduledForTests());
+    }
+
     public function testUpdateDoesNotRevokeWhenOnlyProfileFieldsChange(): void
     {
         $customer = new FakeUpdateCustomer([
@@ -163,41 +214,118 @@ final class CustomersControllerUpdateTest extends TestCase
         self::assertSame('Daniel', $customer->get('first_name'));
     }
 
-    private function modx(FakeUpdateCustomer $customer, AuthManager $authManager): modX
-    {
-        return new class ($customer, $authManager) extends modX {
+    /** @return array{0: modX, 1: CatalogAclCacheInvalidator} */
+    private function modxWithAclInvalidator(
+        FakeUpdateCustomer $customer,
+        AuthManager $authManager,
+        bool $aclEnabled,
+    ): array {
+        $invalidator = new CatalogAclCacheInvalidator(new CatalogAclInvalidatorModxStub(
+            new class {
+                public function refresh(array $providers = [], array &$results = []): bool
+                {
+                    return true;
+                }
+            },
+            new class {
+                public function has(string $key): bool
+                {
+                    return false;
+                }
+            },
+            $aclEnabled
+                ? [
+                    'access_resource_group_enabled' => true,
+                    CatalogResourceGroupVisibility::SETTING_KEY => true,
+                ]
+                : [CatalogResourceGroupVisibility::SETTING_KEY => false],
+            ['web'],
+        ));
+
+        $modx = new class ($customer, $authManager, $invalidator) extends modX {
             public function __construct(
                 private FakeUpdateCustomer $customer,
                 private AuthManager $authManager,
+                private CatalogAclCacheInvalidator $invalidator,
             ) {
                 parent::__construct();
-                $this->services = new class ($this->authManager) {
-                    public function __construct(private AuthManager $authManager)
+                $this->lexicon = new class {
+                    public function load(string $topic): void
                     {
+                    }
+
+                    public function __invoke(string $key): string
+                    {
+                        return $key;
+                    }
+                };
+                $this->services = new class ($this->authManager, $this->invalidator) {
+                    public function __construct(
+                        private AuthManager $authManager,
+                        private CatalogAclCacheInvalidator $invalidator,
+                    ) {
                     }
 
                     public function has(string $key): bool
                     {
-                        return $key === 'ms3_auth_manager';
+                        return in_array($key, ['ms3_auth_manager', 'ms3_catalog_acl_cache'], true);
                     }
 
                     public function get(string $key): mixed
                     {
-                        return $key === 'ms3_auth_manager' ? $this->authManager : null;
+                        return match ($key) {
+                            'ms3_auth_manager' => $this->authManager,
+                            'ms3_catalog_acl_cache' => $this->invalidator,
+                            default => null,
+                        };
                     }
                 };
             }
 
+            public function lexicon(string $key, array $params = []): string
+            {
+                return $key;
+            }
+
             public function getObject($className, $criteria = null, $cacheFlag = true)
             {
-                if ($className !== msCustomer::class) {
-                    return null;
-                }
-                $id = is_array($criteria) ? (int) ($criteria['id'] ?? 0) : (int) $criteria;
+                if ($className === msCustomer::class) {
+                    $id = is_array($criteria) ? (int) ($criteria['id'] ?? 0) : (int) $criteria;
 
-                return $id === (int) $this->customer->get('id') ? $this->customer : null;
+                    return $id === (int) $this->customer->get('id') ? $this->customer : null;
+                }
+                if ($className === msCustomerGroup::class) {
+                    $id = is_array($criteria) ? (int) ($criteria['id'] ?? 0) : (int) $criteria;
+                    if ($id <= 0) {
+                        return null;
+                    }
+
+                    return new class ($id) extends msCustomerGroup {
+                        public function __construct(private int $id)
+                        {
+                        }
+
+                        public function get($key)
+                        {
+                            return match ($key) {
+                                'id' => $this->id,
+                                'active' => 1,
+                                default => null,
+                            };
+                        }
+                    };
+                }
+
+                return null;
             }
         };
+
+        return [$modx, $invalidator];
+    }
+
+    private function modx(FakeUpdateCustomer $customer, AuthManager $authManager): modX
+    {
+        return $this->modxWithAclInvalidator($customer, $authManager, aclEnabled: false)[0];
     }
 }
 

@@ -651,8 +651,8 @@ onMounted(async () => {
 
       <template #content>
         <!-- Search: sole solid primary CTA on this screen -->
-        <div class="customers-search mb-3">
-          <div class="p-inputgroup">
+        <div class="customers-search mb-3 ms3-control-row">
+          <InputGroup class="customers-search__group">
             <InputText
               v-model="searchQuery"
               name="ms3-customers-grid-search"
@@ -664,10 +664,9 @@ onMounted(async () => {
               icon="pi pi-search"
               :label="_('search')"
               severity="primary"
-              size="small"
               @click="onSearch"
             />
-          </div>
+          </InputGroup>
         </div>
 
         <!-- Filters form -->
@@ -691,12 +690,11 @@ onMounted(async () => {
               />
             </div>
           </div>
-          <div class="filter-buttons">
+          <div class="filter-buttons ms3-control-row">
             <Button
               :label="_('apply_filters')"
               icon="pi pi-filter"
               severity="secondary"
-              size="small"
               @click="applyFilters"
             />
             <Button
@@ -704,7 +702,6 @@ onMounted(async () => {
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
               severity="secondary"
-              size="small"
               @click="clearFilters"
             />
           </div>
@@ -1143,6 +1140,11 @@ onMounted(async () => {
 
 .customers-search {
   max-width: 36rem;
+}
+
+.customers-search__group {
+  width: 100%;
+  flex-wrap: nowrap;
 }
 
 .filters-form {
