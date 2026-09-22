@@ -204,9 +204,6 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
 
     private function prepare(string $sql): PDOStatement
     {
-        if (!method_exists($this->db, 'prepare')) {
-            throw new RuntimeException('Inventory stock store requires prepare() on the DB connection');
-        }
         $stmt = $this->db->prepare($sql);
         if (!$stmt instanceof PDOStatement) {
             throw new RuntimeException('Inventory stock store failed to prepare SQL');
