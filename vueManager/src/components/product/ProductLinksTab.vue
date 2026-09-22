@@ -7,6 +7,7 @@ import {
   ConfirmDialog,
   DataTable,
   Dialog,
+  InputGroup,
   InputText,
   Select,
   useConfirm,
@@ -223,28 +224,29 @@ onMounted(async () => {
   <div class="product-links-tab">
     <ConfirmDialog :group="UI_GROUP" append-to="self" />
 
-    <div class="product-links-tab__toolbar">
+    <div class="product-links-tab__toolbar ms3-control-row">
       <Button
         :label="_('ms3_btn_create')"
         icon="pi pi-plus"
         :disabled="!linkTypes.length"
         @click="openCreate"
       />
-      <InputText
-        v-model="query"
-        type="search"
-        class="product-links-tab__search"
-        :placeholder="_('search')"
-        :aria-label="_('search')"
-        @keyup.enter="searchLinks"
-      />
-      <Button
-        icon="pi pi-search"
-        severity="secondary"
-        outlined
-        :aria-label="_('search')"
-        @click="searchLinks"
-      />
+      <InputGroup class="product-links-tab__search">
+        <InputText
+          v-model="query"
+          type="search"
+          :placeholder="_('search')"
+          :aria-label="_('search')"
+          @keyup.enter="searchLinks"
+        />
+        <Button
+          icon="pi pi-search"
+          severity="secondary"
+          outlined
+          :aria-label="_('search')"
+          @click="searchLinks"
+        />
+      </InputGroup>
     </div>
 
     <DataTable
