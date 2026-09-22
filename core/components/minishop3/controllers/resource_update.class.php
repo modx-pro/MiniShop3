@@ -29,7 +29,7 @@ class msResourceUpdateController extends ResourceUpdateManagerController
     }
 
     /**
-     * Drop stale English minishop3:manager cache before lang.js.php reads it (#758).
+     * One-shot heal of a stale minishop3:manager cache before lang.js.php reads it (#758 / #766).
      */
     public function prepareLanguage()
     {

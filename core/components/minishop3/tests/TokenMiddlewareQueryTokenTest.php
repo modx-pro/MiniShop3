@@ -54,8 +54,8 @@ if (!str_contains($resolve, 'CookieHelper::getTokenFromCookie()')) {
 if (!str_contains($resolve, "\$_SESSION['ms3']['customer_token']")) {
     $fail('resolveTokenFromRequest must fall back to session cache');
 }
-if (str_contains($resolve, '$_GET')) {
-    $fail('resolveTokenFromRequest must not read $_GET (query is not a credential source)');
+if (!str_contains($resolve, "array_key_exists('ms3_token', \$_GET)")) {
+    $fail('resolveTokenFromRequest must reject ms3_token when it originated from query string');
 }
 if (str_contains($resolve, "['token']")) {
     $fail('resolveTokenFromRequest must not read legacy token param');

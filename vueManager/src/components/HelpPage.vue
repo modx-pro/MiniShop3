@@ -117,7 +117,6 @@ function navigateTo(href) {
             :icon="link.icon"
             severity="secondary"
             outlined
-            size="small"
             @click="navigateTo(link.href)"
           />
         </nav>

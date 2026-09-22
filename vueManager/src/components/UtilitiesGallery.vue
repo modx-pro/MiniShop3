@@ -177,7 +177,6 @@ onMounted(() => {
       <Button
         :label="_('ms3_utilities_gallery_refresh', 'Regenerate Thumbnails')"
         icon="pi pi-refresh"
-        size="small"
         :loading="isRunning"
         :disabled="!canStart"
         severity="primary"
@@ -187,7 +186,6 @@ onMounted(() => {
         v-if="isCompleted"
         :label="_('ms3_utilities_gallery_reset', 'Reset')"
         icon="pi pi-times"
-        size="small"
         severity="secondary"
         class="reset-btn"
         @click="resetState"

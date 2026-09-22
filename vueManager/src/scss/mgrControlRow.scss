@@ -1,10 +1,11 @@
 /**
- * Shared manager control height alignment for Modx theme toolbars (#760).
+ * Shared manager control height alignment (#760, #765).
  *
- * vueTools Modx preset pins buttons to `--p-modx-control-height` (2.25rem)
- * and single-line fields to `--p-modx-field-height` (2rem). In one toolbar
- * row that reads as a step. Opt-in via `.ms3-control-row`: stretch
- * default-size controls to the button control height.
+ * MODX 3 default controls are ~36px (`--p-modx-control-height`, 2.25rem).
+ * vueTools Modx preset pins buttons to that height and single-line fields to
+ * `--p-modx-field-height` (2rem). In one toolbar row that reads as a step.
+ * Opt-in via `.ms3-control-row`: stretch default-size controls to the
+ * button control height. Fallback `2.25rem` applies when theme tokens are absent.
  *
  * Layout (flex/gap) stays in the screen's scoped CSS.
  * Loaded from `primevue.scss` (all manager entries). Do not import from SFCs.

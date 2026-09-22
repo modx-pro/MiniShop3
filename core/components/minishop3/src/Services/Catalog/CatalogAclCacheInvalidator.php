@@ -29,6 +29,18 @@ final class CatalogAclCacheInvalidator
     ) {
     }
 
+    public static function scheduleForModx(modX $modx): void
+    {
+        if (!$modx->services->has('ms3_catalog_acl_cache')) {
+            return;
+        }
+
+        $invalidator = $modx->services->get('ms3_catalog_acl_cache');
+        if ($invalidator instanceof self) {
+            $invalidator->schedule();
+        }
+    }
+
     /**
      * Defer {@see invalidate()} until after the current processor finishes.
      */

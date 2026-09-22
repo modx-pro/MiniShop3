@@ -26,7 +26,8 @@ use MODX\Revolution\modX;
  * 1. Validate + msOnBeforeChangeOrderStatus (may abort before any persist).
  * 2. DB transaction: inventory when enabled, then in-TX lifecycle ports (may deny) → persist status_id → commit.
  *    Rollback is only the DB transaction — no compensating status save after commit.
- * 3. After commit: msOnChangeOrderStatus → log → notify.
+ * 3. After commit: order log, then msOnChangeOrderStatus, then notifications
+ *    (notifications still run if the after-event returns an error — status is already saved).
  *    Plugin failure after commit returns an error but does **not** revert status_id
  *    (status and future inventory stay consistent).
  *
@@ -109,7 +110,18 @@ class OrderStatusService implements OrderStatusChanger
             return true;
         }
 
-        return $this->change($orderId, $statusId, $skipNotifications);
+        $result = $this->change($orderId, $statusId, $skipNotifications, ['idempotent' => true]);
+        if ($result === true) {
+            return true;
+        }
+
+        // change() may have committed status_id before msOnChangeOrderStatus failed (#754).
+        $fresh = $this->modx->getObject(msOrder::class, ['id' => $orderId]);
+        if ($fresh instanceof msOrder && (int) $fresh->get('status_id') === $statusId) {
+            return true;
+        }
+
+        return $result;
     }
 
     /**
@@ -208,17 +220,19 @@ class OrderStatusService implements OrderStatusChanger
             'old_status' => $previousStatusId,
             'status' => $statusId,
         ]);
-        if (!$response['success']) {
-            // Status and inventory already committed (#596). Do not revert status_id.
-            return $response['message'];
-        }
+        // Status and inventory already committed (#596). Do not revert status_id.
+        // Defer return until after notifications (#754).
+        $afterEventError = !$response['success'] ? $response['message'] : null;
 
-        // Send notifications via NotificationManager (unless skipped)
-        // Use output buffering to prevent any stray output from Fenom/pdoTools
+        // Send notifications even when after-event failed — status is already committed (#754).
         if (!$skipNotifications) {
             ob_start();
             $this->sendNotifications($msOrder, $status, $oldStatus);
             ob_end_clean();
+        }
+
+        if ($afterEventError !== null) {
+            return $afterEventError;
         }
 
         return true;

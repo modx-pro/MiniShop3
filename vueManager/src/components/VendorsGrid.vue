@@ -470,7 +470,6 @@ onMounted(async () => {
               :label="_('create')"
               icon="pi pi-plus"
               severity="primary"
-              size="small"
               @click="createVendor"
             />
           </div>
@@ -515,7 +514,6 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
               text
               @click="clearSelection"
             />
@@ -523,7 +521,6 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />

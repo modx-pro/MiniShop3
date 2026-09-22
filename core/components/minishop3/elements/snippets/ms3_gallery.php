@@ -31,7 +31,7 @@
         $modx->log(modX::LOG_LEVEL_ERROR, "[msGallery] Resource {$product->id} is not msProduct");
         return '';
     }
-    if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisible((int) $product->id)) {
+    if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisibleForRequest((int) $product->id)) {
         return '';
     }
 

@@ -210,7 +210,7 @@ class PaymentLifecycleService
      */
     public function applyWebhook(PaymentWebhookEvent $event, int $paymentMethodId, string $provider): array
     {
-        $this->assertFinancialExternalId($event);
+        $this->assertFinancialWebhook($event);
         $attempt = $this->resolveAttempt($event, $paymentMethodId, $provider);
         $this->assertWebhookCurrency($attempt, $event);
         $payloadFields = [];
@@ -555,7 +555,7 @@ class PaymentLifecycleService
             PaymentAttemptStatus::FAILED, PaymentAttemptStatus::CANCELLED => (int) $this->modx->getOption(
                 'ms3_payment_on_failed_status',
                 null,
-                5
+                0
             ),
             PaymentAttemptStatus::REFUNDED => (int) $this->modx->getOption('ms3_payment_on_refunded_status', null, 5),
             default => 0,
@@ -586,7 +586,7 @@ class PaymentLifecycleService
         return $current === $externalId;
     }
 
-    private function assertFinancialExternalId(PaymentWebhookEvent $event): void
+    private function assertFinancialWebhook(PaymentWebhookEvent $event): void
     {
         if (!in_array($event->eventType, [
             PaymentAttemptStatus::PAID,
@@ -595,15 +595,15 @@ class PaymentLifecycleService
         ], true)) {
             return;
         }
-        if ($event->externalId !== null && $event->externalId !== '') {
-            return;
+        if ($event->externalId === null || $event->externalId === '') {
+            throw new PaymentLifecycleException(
+                'ms3_err_payment_webhook_invalid',
+                ['external_id' => 'required'],
+                PaymentLifecycleException::KIND_INVALID
+            );
         }
-
-        throw new PaymentLifecycleException(
-            'ms3_err_payment_webhook_invalid',
-            ['external_id' => 'required'],
-            PaymentLifecycleException::KIND_INVALID
-        );
+        // Currency stays optional: providers often omit it. Mismatch is still
+        // rejected in assertWebhookCurrency when the field is present (#754 review).
     }
 
     /**

@@ -59,6 +59,11 @@ $assertSame('session-token', TokenService::resolveTokenFromRequest(), 'session l
 unset($_SESSION['ms3']['customer_token']);
 $assertSame('', TokenService::resolveTokenFromRequest(), 'empty when nothing set');
 
+$_REQUEST['ms3_token'] = 'query-elevated-token';
+$_GET['ms3_token'] = 'query-elevated-token';
+$assertSame('', TokenService::resolveTokenFromRequest(), 'query-string ms3_token must not elevate ACL');
+unset($_GET['ms3_token'], $_REQUEST['ms3_token']);
+
 // --- CustomerPublicDto must not expose secrets (me allowlist) ---
 $leaky = [
     'id' => 1,
