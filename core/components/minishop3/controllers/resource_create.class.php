@@ -25,7 +25,7 @@ class msResourceCreateController extends ResourceCreateManagerController
     }
 
     /**
-     * Drop stale English minishop3:manager cache before MODx.lang is built (#758).
+     * One-shot heal of a stale minishop3:manager cache before MODx.lang is built (#758 / #766).
      */
     public function prepareLanguage()
     {
