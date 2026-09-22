@@ -772,20 +772,18 @@ onMounted(async () => {
     <Card>
       <template #title>
         <div class="grid-header">
-          <div class="grid-header-left">
+          <div class="grid-header-left ms3-control-row">
             <span>{{ _('category_products') }}</span>
             <Button
               :label="_('product_create')"
               icon="pi pi-plus"
               severity="success"
-              size="small"
               @click="createProduct"
             />
             <Button
               :label="_('category_create')"
               icon="pi pi-folder-plus"
               severity="secondary"
-              size="small"
               @click="createCategory"
             />
           </div>
@@ -851,11 +849,10 @@ onMounted(async () => {
           </div>
 
           <!-- Filter buttons -->
-          <div class="filter-buttons">
+          <div class="filter-buttons ms3-control-row">
             <Button
               :label="_('apply_filters')"
               icon="pi pi-filter"
-              size="small"
               @click="applyFilters"
             />
             <Button
@@ -863,7 +860,6 @@ onMounted(async () => {
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
               severity="secondary"
-              size="small"
               @click="clearFilters"
             />
           </div>
@@ -1154,8 +1150,7 @@ onMounted(async () => {
             <Select
               v-model="rows"
               :options="rowsPerPageOptions"
-              class="rows-per-page-select"
-              style="min-width: 5rem"
+              class="ms3-rows-per-page-select"
               @change="onRowsChange"
             />
           </div>

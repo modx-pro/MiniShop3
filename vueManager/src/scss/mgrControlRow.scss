@@ -1,0 +1,47 @@
+/**
+ * Shared manager control height alignment for Modx theme toolbars (#760).
+ *
+ * vueTools Modx preset pins buttons to `--p-modx-control-height` (2.25rem)
+ * and single-line fields to `--p-modx-field-height` (2rem). In one toolbar
+ * row that reads as a step. Opt-in via `.ms3-control-row`: stretch
+ * default-size controls to the button control height.
+ *
+ * Layout (flex/gap) stays in the screen's scoped CSS.
+ * Loaded from `primevue.scss` (all manager entries). Do not import from SFCs.
+ *
+ * Specificity: Modx preset uses `.p-inputtext:not(.sm):not(.lg)` at (0,3,0)
+ * and injects after our CSS. Doubled class beats equal specificity
+ * (same pattern as `.p-component.p-component` in the preset).
+ */
+
+.ms3-control-row.ms3-control-row .p-button:not(.p-button-sm, .p-button-lg),
+.ms3-control-row.ms3-control-row .p-inputtext:not(.p-inputtext-sm, .p-inputtext-lg),
+.ms3-control-row.ms3-control-row .p-select:not(.p-select-sm, .p-select-lg),
+.ms3-control-row.ms3-control-row .p-inputgroup,
+.ms3-control-row.ms3-control-row .p-inputgroupaddon {
+  box-sizing: border-box;
+  min-height: var(--p-modx-control-height, 2.25rem);
+  height: var(--p-modx-control-height, 2.25rem);
+}
+
+.ms3-control-row.ms3-control-row .p-inputgroup .p-button,
+.ms3-control-row.ms3-control-row .p-inputgroupaddon .p-button {
+  min-height: 100%;
+  height: 100%;
+}
+
+.ms3-control-row.ms3-control-row .p-select-label {
+  display: flex;
+  align-items: center;
+}
+
+/* Custom pager rows-per-page Select — compact width + control height */
+.ms3-rows-per-page-select.ms3-rows-per-page-select.p-select:not(.p-select-sm, .p-select-lg) {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 5rem;
+  max-width: 6rem;
+  min-height: var(--p-modx-control-height, 2.25rem);
+  height: var(--p-modx-control-height, 2.25rem);
+}
