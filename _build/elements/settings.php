@@ -24,11 +24,6 @@ return [
         'xtype' => 'textfield',
         'area' => 'ms3_main',
     ],
-    'ms3_lexicon_cache_heal_pending' => [
-        'value' => true,
-        'xtype' => 'combo-boolean',
-        'area' => 'ms3_main',
-    ],
 
     'ms3_category_show_nested_products' => [
         'value' => true,

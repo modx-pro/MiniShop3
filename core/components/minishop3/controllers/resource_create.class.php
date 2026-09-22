@@ -25,17 +25,12 @@ class msResourceCreateController extends ResourceCreateManagerController
     }
 
     /**
-     * One-shot heal of stale MiniShop3 lexicon caches before MODx.lang is built (#758 / #766).
+     * One-shot heal of a stale minishop3:manager cache before MODx.lang is built (#758 / #766).
      */
     public function prepareLanguage()
     {
-        $healPending = $this->modx->getOption('ms3_lexicon_cache_heal_pending', null, false);
-        if ($healPending === true || $healPending === 1 || $healPending === '1'
-            || filter_var($healPending, FILTER_VALIDATE_BOOLEAN)
-        ) {
-            require_once __DIR__ . '/lexicon_cache_heal.inc.php';
-            ms3_heal_stale_minishop3_lexicon_cache($this->modx);
-        }
+        require_once __DIR__ . '/lexicon_cache_heal.inc.php';
+        ms3_heal_stale_manager_lexicon_cache($this->modx);
         parent::prepareLanguage();
     }
 

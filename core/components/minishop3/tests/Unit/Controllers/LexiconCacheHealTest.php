@@ -83,16 +83,11 @@ final class LexiconCacheHealTest extends TestCase
             'ru/minishop3/setting' => $ru,
             'en/minishop3/setting' => $en,
         ];
-        $onDisk = [
-            'ru/manager' => true,
-            'ru/product' => true,
-            'ru/setting' => true,
-        ];
 
         $result = ms3_heal_stale_lexicon_topics(
-            ['ru'],
-            ['manager', 'product', 'setting'],
-            static fn (string $lang, string $topic): bool => !empty($onDisk["{$lang}/{$topic}"]),
+            'ru',
+            ['manager'],
+            static fn (string $lang, string $topic): bool => $topic === 'manager',
             static function (string $lang, string $namespace, string $topic) use ($files) {
                 return $files["{$lang}/{$namespace}/{$topic}"] ?? false;
             },
@@ -123,7 +118,7 @@ final class LexiconCacheHealTest extends TestCase
         };
 
         $result = ms3_heal_stale_lexicon_topics(
-            ['ru'],
+            'ru',
             ['manager'],
             static fn (): bool => true,
             static fn (): false => false,
@@ -136,10 +131,8 @@ final class LexiconCacheHealTest extends TestCase
         $this->assertSame(0, $result['deleted']);
     }
 
-    public function testHealSkipsMissingOnDiskTopicWithoutMarkingIncomplete(): void
+    public function testMissingManagerFileKeepsPassIncomplete(): void
     {
-        $en = ['ms3_tab_product' => 'Product'];
-        $ru = ['ms3_tab_product' => 'Товар'];
         $cache = new class {
             public function get(string $key, array $options = []): mixed
             {
@@ -153,46 +146,54 @@ final class LexiconCacheHealTest extends TestCase
         };
 
         $result = ms3_heal_stale_lexicon_topics(
-            ['ru'],
-            ['manager', 'missing'],
-            static fn (string $lang, string $topic): bool => $topic === 'manager',
-            static function (string $lang, string $namespace, string $topic) use ($en, $ru) {
-                if ($topic !== 'manager') {
-                    return false;
-                }
-
-                return $lang === 'en' ? $en : $ru;
-            },
-            static fn (string $namespace, string $topic, string $lang): string => "lexicon/{$lang}/{$namespace}/{$topic}",
+            'ru',
+            ['manager'],
+            static fn (): bool => false,
+            static fn (): false => false,
+            static fn (): string => 'lexicon/ru/minishop3/manager',
             $cache,
             []
         );
 
-        $this->assertTrue($result['complete']);
+        $this->assertFalse($result['complete']);
         $this->assertSame(0, $result['deleted']);
     }
 
-    public function testListTopicsAndLanguagesFromDisk(): void
+    public function testEnglishLanguageDoesNotCountAsComplete(): void
     {
-        $root = dirname(__DIR__, 3) . '/lexicon';
-        $topics = ms3_list_minishop3_lexicon_topics($root . '/en');
-        $langs = ms3_list_minishop3_non_en_lexicon_languages($root);
+        $cache = new class {
+            public function get(string $key, array $options = []): mixed
+            {
+                return false;
+            }
 
-        $this->assertContains('manager', $topics);
-        $this->assertContains('product', $topics);
-        $this->assertContains('setting', $topics);
-        $this->assertContains('vue', $topics);
-        $this->assertContains('ru', $langs);
-        $this->assertNotContains('en', $langs);
+            public function delete(string $key, array $options = []): bool
+            {
+                return true;
+            }
+        };
+
+        $result = ms3_heal_stale_lexicon_topics(
+            'en',
+            ['manager'],
+            static fn (): bool => true,
+            static fn (): false => false,
+            static fn (): string => 'unused',
+            $cache,
+            []
+        );
+
+        $this->assertFalse($result['complete']);
+        $this->assertSame(0, $result['deleted']);
     }
 
-    public function testOptionIsTruthy(): void
+    public function testPendingFlagValues(): void
     {
-        $this->assertTrue(ms3_option_is_truthy(true));
-        $this->assertTrue(ms3_option_is_truthy('1'));
-        $this->assertTrue(ms3_option_is_truthy(1));
-        $this->assertFalse(ms3_option_is_truthy(false));
-        $this->assertFalse(ms3_option_is_truthy('0'));
-        $this->assertFalse(ms3_option_is_truthy(0));
+        $this->assertTrue(ms3_lexicon_heal_is_pending(1));
+        $this->assertTrue(ms3_lexicon_heal_is_pending('1'));
+        $this->assertTrue(ms3_lexicon_heal_is_pending(true));
+        $this->assertFalse(ms3_lexicon_heal_is_pending(false));
+        $this->assertFalse(ms3_lexicon_heal_is_pending(null));
+        $this->assertFalse(ms3_lexicon_heal_is_pending(0));
     }
 }

@@ -61,16 +61,6 @@ switch ($modx->event->name) {
             break;
         }
 
-        // One-shot stale lexicon heal for all mgr pages (not only resource forms) (#766).
-        // Skip include once the install/upgrade pending flag is cleared.
-        $healPending = $modx->getOption('ms3_lexicon_cache_heal_pending', null, false);
-        if ($healPending === true || $healPending === 1 || $healPending === '1'
-            || filter_var($healPending, FILTER_VALIDATE_BOOLEAN)
-        ) {
-            require_once dirname(__DIR__, 2) . '/controllers/lexicon_cache_heal.inc.php';
-            ms3_heal_stale_minishop3_lexicon_cache($modx);
-        }
-
         // Version check runs before the ms3 service guard so a total copy failure
         // (no core/components/minishop3 on disk) still surfaces a banner (#622).
         $packageVersion = (string)$modx->getOption('ms3_version', null, '');

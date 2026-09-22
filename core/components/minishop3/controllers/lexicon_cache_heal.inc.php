@@ -1,34 +1,32 @@
 <?php
 
 /**
- * Drop stale non-English MiniShop3 lexicon topic caches that hold English strings (#758 / #766).
+ * Drop a stale non-English minishop3:manager lexicon cache that holds English strings (#758 / #766).
  *
  * MODX falls back to en when getFileTopic() misses, then caches that array under the
- * requested language key. Later loads keep English strings while other topics stay translated.
+ * requested language key. Later form loads keep English tab titles.
  *
- * Heal runs only while system setting ms3_lexicon_cache_heal_pending is truthy (set on
- * install/upgrade). One pass inspects every non-English lexicon language directory (not just
- * the current manager_language), then clears the flag so hot manager paths stay cheap.
- *
- * Call before prepareLanguage() / early on manager pages so lang.js.php and API lexicon
- * loads rebuild from file + DB instead of a poisoned English snapshot.
+ * A cache flag (not a system setting) is set on install/upgrade. The next non-English
+ * resource create/update form compares the manager topic cache to getFileTopic() and
+ * deletes a poisoned entry, then clears the flag. Healthy opens after that skip the
+ * file include and the lexicon cache read.
  */
 
 declare(strict_types=1);
 
-use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 use xPDO\Cache\xPDOCacheManager;
 use xPDO\xPDO;
 
-const MS3_LEXICON_CACHE_HEAL_PENDING_SETTING = 'ms3_lexicon_cache_heal_pending';
+const MS3_LEXICON_HEAL_PENDING_KEY = 'lexicon_heal_pending';
+
+const MS3_LEXICON_HEAL_TOPIC = 'manager';
 
 /**
  * True when a cached topic looks like an English snapshot under a non-English language key.
  *
- * Compares per-key against getFileTopic() for the requested language and English — no
- * hard-coded sentinel strings. Cold miss (non-array cache) and healthy translated/merged
- * caches return false.
+ * Compares per-key against getFileTopic() for the requested language and English.
+ * Cold miss and healthy translated or merged caches return false.
  *
  * @param array<string, mixed>|null|false $cached
  * @param array<string, mixed>|null|false $fromFile Topic for the manager language
@@ -57,50 +55,16 @@ function ms3_is_stale_lexicon_topic_cache($cached, $fromFile, $enFile): bool
 }
 
 /**
- * @return list<string>
- */
-function ms3_list_minishop3_lexicon_topics(string $lexiconEnDir): array
-{
-    if (!is_dir($lexiconEnDir)) {
-        return [];
-    }
-
-    $topics = [];
-    foreach (scandir($lexiconEnDir) ?: [] as $entry) {
-        if (!str_ends_with($entry, '.inc.php')) {
-            continue;
-        }
-        $topics[] = substr($entry, 0, -strlen('.inc.php'));
-    }
-    sort($topics);
-
-    return $topics;
-}
-
-/**
- * Non-English language codes that ship lexicon files under the component.
+ * Partition for the one-shot flag. Separate from lexicon_topics so a topic refresh
+ * does not drop the marker, and the flag never appears in System Settings.
  *
- * @return list<string>
+ * @return array<string, mixed>
  */
-function ms3_list_minishop3_non_en_lexicon_languages(string $lexiconRoot): array
+function ms3_lexicon_heal_flag_options(): array
 {
-    if (!is_dir($lexiconRoot)) {
-        return [];
-    }
-
-    $langs = [];
-    foreach (scandir($lexiconRoot) ?: [] as $entry) {
-        if ($entry === '.' || $entry === '..' || $entry === 'en') {
-            continue;
-        }
-        if (!is_dir($lexiconRoot . '/' . $entry)) {
-            continue;
-        }
-        $langs[] = $entry;
-    }
-    sort($langs);
-
-    return $langs;
+    return [
+        xPDO::OPT_CACHE_KEY => 'minishop3',
+    ];
 }
 
 /**
@@ -128,12 +92,11 @@ function ms3_lexicon_topic_cache_options(modX $modx): array
 }
 
 /**
- * Inspect and heal topics for every listed language.
+ * Inspect one language and the given topics.
  *
- * Skips topic+lang pairs with no on-disk file. If a file exists but getFileTopic() fails,
- * the pass is incomplete and the caller must keep the pending flag.
+ * If a file exists but getFileTopic() fails, the pass is incomplete and the caller
+ * must keep the pending flag.
  *
- * @param list<string> $languages
  * @param list<string> $topics
  * @param callable(string, string): bool $topicFileExists function (lang, topic): bool
  * @param callable(string, string, string): (array<string, mixed>|false) $getFileTopic
@@ -143,7 +106,7 @@ function ms3_lexicon_topic_cache_options(modX $modx): array
  * @return array{deleted: int, complete: bool}
  */
 function ms3_heal_stale_lexicon_topics(
-    array $languages,
+    string $lang,
     array $topics,
     callable $topicFileExists,
     callable $getFileTopic,
@@ -152,92 +115,70 @@ function ms3_heal_stale_lexicon_topics(
     array $cacheOptions,
     string $namespace = 'minishop3'
 ): array {
+    if ($lang === '' || $lang === 'en') {
+        return ['deleted' => 0, 'complete' => false];
+    }
+
     $deleted = 0;
     $complete = true;
 
-    foreach ($languages as $lang) {
-        if ($lang === '' || $lang === 'en') {
+    foreach ($topics as $topic) {
+        if (!$topicFileExists($lang, $topic)) {
+            $complete = false;
             continue;
         }
-        foreach ($topics as $topic) {
-            if (!$topicFileExists($lang, $topic)) {
-                continue;
-            }
 
-            $fromFile = $getFileTopic($lang, $namespace, $topic);
-            $enFile = $getFileTopic('en', $namespace, $topic);
-            if (!is_array($fromFile) || $fromFile === [] || !is_array($enFile) || $enFile === []) {
-                $complete = false;
-                continue;
-            }
-
-            $key = $getCacheKey($namespace, $topic, $lang);
-            $cached = $cacheManager->get($key, $cacheOptions);
-            if (!ms3_is_stale_lexicon_topic_cache($cached, $fromFile, $enFile)) {
-                continue;
-            }
-
-            $cacheManager->delete($key, $cacheOptions);
-            $deleted++;
+        $fromFile = $getFileTopic($lang, $namespace, $topic);
+        $enFile = $getFileTopic('en', $namespace, $topic);
+        if (!is_array($fromFile) || $fromFile === [] || !is_array($enFile) || $enFile === []) {
+            $complete = false;
+            continue;
         }
+
+        $key = $getCacheKey($namespace, $topic, $lang);
+        $cached = $cacheManager->get($key, $cacheOptions);
+        if (!ms3_is_stale_lexicon_topic_cache($cached, $fromFile, $enFile)) {
+            continue;
+        }
+
+        $cacheManager->delete($key, $cacheOptions);
+        $deleted++;
     }
 
     return ['deleted' => $deleted, 'complete' => $complete];
 }
 
-function ms3_option_is_truthy(mixed $value): bool
+function ms3_lexicon_heal_is_pending(mixed $value): bool
 {
-    return $value === true
-        || $value === 1
-        || $value === '1'
-        || filter_var($value, FILTER_VALIDATE_BOOLEAN);
-}
-
-function ms3_is_lexicon_cache_heal_pending(modX $modx): bool
-{
-    return ms3_option_is_truthy($modx->getOption(MS3_LEXICON_CACHE_HEAL_PENDING_SETTING, null, false));
-}
-
-function ms3_clear_lexicon_cache_heal_pending(modX $modx): void
-{
-    /** @var modSystemSetting|null $setting */
-    $setting = $modx->getObject(modSystemSetting::class, ['key' => MS3_LEXICON_CACHE_HEAL_PENDING_SETTING]);
-    if (!$setting) {
-        $modx->setOption(MS3_LEXICON_CACHE_HEAL_PENDING_SETTING, false);
-
-        return;
-    }
-
-    if (!ms3_option_is_truthy($setting->get('value'))) {
-        $modx->setOption(MS3_LEXICON_CACHE_HEAL_PENDING_SETTING, false);
-
-        return;
-    }
-
-    $setting->set('value', '0');
-    if (!$setting->save()) {
-        $modx->log(
-            modX::LOG_LEVEL_ERROR,
-            '[MiniShop3] Failed to clear ' . MS3_LEXICON_CACHE_HEAL_PENDING_SETTING
-        );
-
-        return;
-    }
-
-    $modx->setOption(MS3_LEXICON_CACHE_HEAL_PENDING_SETTING, false);
-
-    if (!$modx->cacheManager) {
-        $modx->getCacheManager();
-    }
-    $modx->cacheManager?->refresh(['system_settings' => []]);
+    return $value === 1 || $value === '1' || $value === true;
 }
 
 /**
- * One-shot heal for all non-English MiniShop3 lexicon languages/topics.
+ * One-shot heal of minishop3:manager for the current manager language.
+ *
+ * English sessions leave the flag in place so a later non-English resource form
+ * can still drop a poisoned ru (or other) cache.
  */
-function ms3_heal_stale_minishop3_lexicon_cache(modX $modx): void
+function ms3_heal_stale_manager_lexicon_cache(modX $modx): void
 {
-    if (!ms3_is_lexicon_cache_heal_pending($modx)) {
+    if (!$modx->cacheManager) {
+        $modx->getCacheManager();
+    }
+    if (!$modx->cacheManager) {
+        return;
+    }
+
+    $flagOptions = ms3_lexicon_heal_flag_options();
+    if (!ms3_lexicon_heal_is_pending($modx->cacheManager->get(MS3_LEXICON_HEAL_PENDING_KEY, $flagOptions))) {
+        return;
+    }
+
+    $mgrLang = (string) $modx->getOption(
+        'manager_language',
+        $_SESSION ?? [],
+        (string) $modx->getOption('cultureKey', null, 'en')
+    );
+    if ($mgrLang === '' || $mgrLang === 'en') {
         return;
     }
 
@@ -245,31 +186,11 @@ function ms3_heal_stale_minishop3_lexicon_cache(modX $modx): void
         return;
     }
 
-    if (!$modx->cacheManager) {
-        $modx->getCacheManager();
-    }
-    if (!$modx->cacheManager) {
-        return;
-    }
-
     $lexiconRoot = dirname(__DIR__) . '/lexicon';
-    $topics = ms3_list_minishop3_lexicon_topics($lexiconRoot . '/en');
-    if ($topics === []) {
-        return;
-    }
-
-    $languages = ms3_list_minishop3_non_en_lexicon_languages($lexiconRoot);
-    if ($languages === []) {
-        // Package ships English only — nothing to heal.
-        ms3_clear_lexicon_cache_heal_pending($modx);
-
-        return;
-    }
-
     $lexicon = $modx->lexicon;
     $result = ms3_heal_stale_lexicon_topics(
-        $languages,
-        $topics,
+        $mgrLang,
+        [MS3_LEXICON_HEAL_TOPIC],
         static fn (string $lang, string $topic): bool => is_file(
             $lexiconRoot . '/' . $lang . '/' . $topic . '.inc.php'
         ),
@@ -280,14 +201,6 @@ function ms3_heal_stale_minishop3_lexicon_cache(modX $modx): void
     );
 
     if ($result['complete']) {
-        ms3_clear_lexicon_cache_heal_pending($modx);
+        $modx->cacheManager->delete(MS3_LEXICON_HEAL_PENDING_KEY, $flagOptions);
     }
-}
-
-/**
- * @deprecated Use ms3_heal_stale_minishop3_lexicon_cache(); kept for external callers of #758.
- */
-function ms3_heal_stale_manager_lexicon_cache(modX $modx): void
-{
-    ms3_heal_stale_minishop3_lexicon_cache($modx);
 }

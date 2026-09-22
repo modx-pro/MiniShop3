@@ -1,17 +1,16 @@
 <?php
 
 /**
- * Resolver: clear MiniShop3 lexicon topic cache and arm one-shot heal (#758 / #766).
+ * Resolver: clear MiniShop3 lexicon topic cache and arm a one-shot heal (#758 / #766).
  *
- * Prevents a one-shot English fallback (getFileTopic miss during copy) from
- * sticking under a non-en language key until the site cache is wiped by hand.
- * Sets ms3_lexicon_cache_heal_pending so the next manager request compares
- * cached topics to getFileTopic() and drops poisoned entries, then clears the flag.
+ * The marker lives in the minishop3 cache partition, not in System Settings, so it
+ * is not a checkbox in the manager. The next non-English resource form compares
+ * minishop3:manager to getFileTopic() and drops a poisoned English snapshot.
  */
 
-use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 use xPDO\Transport\xPDOTransport;
+use xPDO\xPDO;
 
 /** @var xPDOTransport $transport */
 /** @var array $options */
@@ -33,37 +32,24 @@ if (!$modx->cacheManager) {
     $modx->getCacheManager();
 }
 
-if ($modx->cacheManager) {
-    $modx->cacheManager->refresh([
-        'lexicon_topics' => [],
-    ]);
-    $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Cleared lexicon topic cache (#758)');
+if (!$modx->cacheManager) {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Cannot arm lexicon cache heal: cache manager missing');
+
+    return true;
 }
 
-$pendingKey = 'ms3_lexicon_cache_heal_pending';
-/** @var modSystemSetting|null $setting */
-$setting = $modx->getObject(modSystemSetting::class, ['key' => $pendingKey]);
-if (!$setting) {
-    $setting = $modx->newObject(modSystemSetting::class);
-    $setting->fromArray([
-        'key' => $pendingKey,
-        'namespace' => 'minishop3',
-        'area' => 'ms3_main',
-        'xtype' => 'combo-boolean',
-        'value' => '1',
-    ], '', true, true);
-} else {
-    $setting->set('value', '1');
-}
+$modx->cacheManager->refresh([
+    'lexicon_topics' => [],
+]);
+$modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Cleared lexicon topic cache (#758)');
 
-if ($setting->save()) {
-    $modx->setOption($pendingKey, true);
-    if ($modx->cacheManager) {
-        $modx->cacheManager->refresh(['system_settings' => []]);
-    }
+$armed = $modx->cacheManager->set('lexicon_heal_pending', 1, 0, [
+    xPDO::OPT_CACHE_KEY => 'minishop3',
+]);
+if ($armed) {
     $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Armed lexicon cache heal pending (#766)');
 } else {
-    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to arm ' . $pendingKey);
+    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to arm lexicon_heal_pending');
 }
 
 return true;
