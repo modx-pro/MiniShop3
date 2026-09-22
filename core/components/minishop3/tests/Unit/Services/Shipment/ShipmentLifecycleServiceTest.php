@@ -117,6 +117,72 @@ final class ShipmentLifecycleServiceTest extends TestCase
         self::assertSame([[10, 5]], $this->statusChanges);
     }
 
+    public function testDuplicateEventClaimHealsOrderStatusWithoutAfterCommitEvents(): void
+    {
+        $store = new InMemoryShipmentStore();
+        $order = new StubMsOrder(['id' => 10, 'delivery_id' => 7, 'status_id' => 3]);
+        $state = (object) ['ensureCalls' => 0, 'afterStatusEvents' => 0];
+        $orderStatus = $this->createMock(OrderStatusService::class);
+        $orderStatus->method('ensure')->willReturnCallback(
+            function (int $orderId, int $statusId) use ($state): bool|string {
+                $state->ensureCalls++;
+                $this->statusChanges[] = [$orderId, $statusId];
+
+                return $state->ensureCalls === 1 ? 'ms3_err_status_transition' : true;
+            }
+        );
+        $modx = $this->modx($order, true);
+        $ms3 = new class ($state) {
+            public object $utils;
+
+            public function __construct(private object $state)
+            {
+                $this->utils = new class ($state) {
+                    public function __construct(private object $state)
+                    {
+                    }
+
+                    public function invokeEvent(string $event, array $params): array
+                    {
+                        if ($event === 'msOnChangeShipmentStatus') {
+                            $this->state->afterStatusEvents++;
+                        }
+
+                        return ['success' => true];
+                    }
+                };
+            }
+        };
+        $modx->services = new class ($ms3) {
+            public function __construct(private object $ms3)
+            {
+            }
+
+            public function has(string $key): bool
+            {
+                return $key === 'ms3';
+            }
+
+            public function get(string $key): object
+            {
+                return $this->ms3;
+            }
+        };
+        $service = new ShipmentLifecycleService($store, $modx, $orderStatus);
+        $row = $service->create(10);
+        $service->transition($row['id'], ShipmentStatus::SHIPPED, 'evt-heal');
+        self::assertSame(ShipmentStatus::SHIPPED, $store->findById((int) $row['id'])['status']);
+        self::assertSame(1, $state->ensureCalls);
+        self::assertSame(1, $state->afterStatusEvents);
+
+        $this->statusChanges = [];
+        $replay = $service->transition($row['id'], ShipmentStatus::SHIPPED, 'evt-heal');
+        self::assertSame(ShipmentStatus::SHIPPED, $replay['status']);
+        self::assertSame(2, $state->ensureCalls);
+        self::assertSame([[10, 4]], $this->statusChanges);
+        self::assertSame(1, $state->afterStatusEvents);
+    }
+
     public function testOrderStatusFailureDoesNotRollBackShipment(): void
     {
         $store = new InMemoryShipmentStore();
@@ -378,8 +444,9 @@ final class ShipmentLifecycleServiceTest extends TestCase
         $order = new StubMsOrder(['id' => 10, 'delivery_id' => 7, 'status_id' => 3]);
         $orderStatus = $this->createMock(OrderStatusService::class);
         $orderStatus->method('ensure')->willReturnCallback(
-            function (int $orderId, int $statusId): bool {
+            function (int $orderId, int $statusId) use ($order): bool {
                 $this->statusChanges[] = [$orderId, $statusId];
+                $order->set('status_id', $statusId);
 
                 return true;
             }

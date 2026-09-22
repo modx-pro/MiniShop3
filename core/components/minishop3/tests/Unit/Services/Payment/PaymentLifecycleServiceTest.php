@@ -11,6 +11,7 @@ use MiniShop3\Services\Payment\PaymentLifecycleException;
 use MiniShop3\Services\Payment\PaymentLifecycleService;
 use MiniShop3\Services\Order\OrderStatusChanger;
 use MiniShop3\Tests\Support\CallbackOrderStatusChanger;
+use MiniShop3\Tests\Support\CommittedButFailedOrderStatusChanger;
 use MiniShop3\Tests\Support\FixedReplayOrderStatusChanger;
 use MiniShop3\Tests\Support\InMemoryPaymentAttemptStore;
 use MiniShop3\Tests\Stubs\StubMsOrder;
@@ -48,13 +49,37 @@ final class PaymentLifecycleServiceTest extends TestCase
         self::assertNull($service->storedPaymentLink(10, 2));
     }
 
-    public function testFailedPaymentCancelsOrder(): void
+    public function testFailedPaymentLeavesOrderUnchangedByDefault(): void
     {
         $service = $this->service();
         $attempt = $service->initiate(11, 2, 'TestPay', 50.0);
         $failed = $service->markFailed($attempt['id'], 'evt-fail');
         self::assertSame(PaymentAttemptStatus::FAILED, $failed['status']);
-        self::assertSame([[11, 5]], $this->statusChanges);
+        self::assertSame([], $this->statusChanges);
+    }
+
+    public function testPaidAfterFailedPersistsUnderDefaultSettings(): void
+    {
+        $order = new StubMsOrder(['id' => 11, 'status_id' => 2, 'cost' => 50]);
+        $service = $this->service($order);
+        $failedAttempt = $service->initiate(11, 2, 'TestPay', 50.0, 'RUB', 'ext-fail');
+        $service->markFailed($failedAttempt['id'], 'evt-fail');
+        self::assertSame([], $this->statusChanges);
+
+        $paidAttempt = $service->initiate(11, 2, 'TestPay', 50.0, 'RUB', 'ext-paid');
+        $paid = $service->markPaid($paidAttempt['id'], 'evt-paid');
+        self::assertSame(PaymentAttemptStatus::PAID, $paid['status']);
+        self::assertSame([[11, 3]], $this->statusChanges);
+    }
+
+    public function testSyncOrderStatusSucceedsWhenStatusAlreadyCommitted(): void
+    {
+        $order = new StubMsOrder(['id' => 10, 'status_id' => 2, 'cost' => 100]);
+        $service = $this->service($order, changer: new CommittedButFailedOrderStatusChanger($order));
+        $attempt = $service->initiate(10, 2, 'TestPay', 100.0);
+        $paid = $service->markPaid($attempt['id'], 'evt-paid');
+        self::assertSame(PaymentAttemptStatus::PAID, $paid['status']);
+        self::assertSame(3, (int) $order->get('status_id'));
     }
 
     public function testPaidAfterCanceledOrderConflicts(): void
@@ -143,7 +168,12 @@ final class PaymentLifecycleServiceTest extends TestCase
         $service = $this->service();
         try {
             $service->applyWebhook(
-                new PaymentWebhookEvent(eventType: PaymentAttemptStatus::PAID, externalId: 'missing'),
+                new PaymentWebhookEvent(
+                    eventType: PaymentAttemptStatus::PAID,
+                    externalId: 'missing',
+                    amount: 100.0,
+                    currency: 'RUB',
+                ),
                 2,
                 'TestPay'
             );
@@ -163,6 +193,8 @@ final class PaymentLifecycleServiceTest extends TestCase
                 new PaymentWebhookEvent(
                     eventType: PaymentAttemptStatus::PAID,
                     externalId: 'gw-14',
+                    amount: 20.0,
+                    currency: 'RUB',
                     providerEventId: 'cb-1',
                 ),
                 9,
@@ -202,6 +234,7 @@ final class PaymentLifecycleServiceTest extends TestCase
             eventType: PaymentAttemptStatus::PAID,
             externalId: 'gw-14',
             amount: 20.0,
+            currency: 'RUB',
             providerEventId: 'cb-1',
         );
         $paid = $service->applyWebhook($event, 7, 'TestPay');
@@ -250,6 +283,7 @@ final class PaymentLifecycleServiceTest extends TestCase
                     externalId: 'AAA',
                     orderId: 10,
                     amount: 100.0,
+                    currency: 'RUB',
                     providerEventId: 'old-cb',
                 ),
                 2,
@@ -314,6 +348,7 @@ final class PaymentLifecycleServiceTest extends TestCase
             new PaymentWebhookEvent(
                 eventType: PaymentAttemptStatus::REFUNDED,
                 externalId: 'ext-ref',
+                currency: 'RUB',
                 providerEventId: 'evt-r2',
                 refundExternalId: 'ref-2',
             ),
@@ -336,6 +371,7 @@ final class PaymentLifecycleServiceTest extends TestCase
                 eventType: PaymentAttemptStatus::PAID,
                 externalId: 'ext-fixed',
                 amount: 100.0,
+                currency: 'RUB',
                 providerEventId: 'evt-paid',
             ),
             2,
@@ -350,6 +386,7 @@ final class PaymentLifecycleServiceTest extends TestCase
                 eventType: PaymentAttemptStatus::PAID,
                 externalId: 'ext-fixed',
                 amount: 100.0,
+                currency: 'RUB',
                 providerEventId: 'evt-paid',
             ),
             2,
@@ -357,6 +394,23 @@ final class PaymentLifecycleServiceTest extends TestCase
         );
         self::assertSame(PaymentAttemptStatus::PAID, $again['status']);
         self::assertSame([[10, 3]], $changer->changes);
+    }
+
+    public function testFinancialWebhookWithoutCurrencyIsAllowed(): void
+    {
+        $service = $this->service();
+        $service->initiate(10, 2, 'TestPay', 100.0, 'RUB', 'ext-cur');
+        $paid = $service->applyWebhook(
+            new PaymentWebhookEvent(
+                eventType: PaymentAttemptStatus::PAID,
+                externalId: 'ext-cur',
+                amount: 100.0,
+                providerEventId: 'evt-no-cur',
+            ),
+            2,
+            'TestPay'
+        );
+        self::assertSame(PaymentAttemptStatus::PAID, $paid['status']);
     }
 
     public function testWebhookCurrencyMismatchConflicts(): void
@@ -393,6 +447,7 @@ final class PaymentLifecycleServiceTest extends TestCase
                     eventType: PaymentAttemptStatus::PAID,
                     externalId: 'ext-cost',
                     amount: 100.0,
+                    currency: 'RUB',
                     providerEventId: 'evt-stale',
                 ),
                 2,
@@ -438,6 +493,7 @@ final class PaymentLifecycleServiceTest extends TestCase
                 externalId: 'gw-14',
                 orderId: 14,
                 amount: 20.0,
+                currency: 'RUB',
                 providerEventId: 'cb-bind',
             ),
             7,
@@ -485,7 +541,7 @@ final class PaymentLifecycleServiceTest extends TestCase
                 return match ($key) {
                     'ms3_status_paid' => 3,
                     'ms3_status_canceled' => 5,
-                    'ms3_payment_on_failed_status' => 5,
+                    'ms3_payment_on_failed_status' => 0,
                     'ms3_payment_on_refunded_status' => 5,
                     default => $default,
                 };
