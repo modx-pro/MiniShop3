@@ -28,7 +28,7 @@ final class CatalogSortbyQualifier
      * @param list<string> $dataFieldNames Field names from msProductData (qualified as Data.*)
      * @param list<string> $passthroughNames Bare names left as-is (TVs, vendor_*, option keys)
      * @param list<string> $allowedTableAliases When dropUnmatched, only these table prefixes pass
-     * @param list<string>|null $droppedParts Filled with rejected sort parts when dropUnmatched
+     * @param list<string>|null $droppedParts Optional out-list of rejected parts when the argument is passed
      */
     public static function qualifyUnaliasedResourceFields(
         string $sortby,
@@ -41,13 +41,22 @@ final class CatalogSortbyQualifier
         array $allowedTableAliases = ['msProduct', 'Data', 'Vendor'],
         ?array &$droppedParts = null,
     ): string {
-        $droppedParts = [];
+        $collectDropped = \func_num_args() >= 9;
+        $dropped = [];
         $trimmed = ltrim($sortby);
         if ($trimmed === '' || str_starts_with($trimmed, '{')) {
+            if ($collectDropped) {
+                $droppedParts = $dropped;
+            }
+
             return $sortby;
         }
 
         if (!$dropUnmatched && str_contains($sortby, '(')) {
+            if ($collectDropped) {
+                $droppedParts = $dropped;
+            }
+
             return $sortby;
         }
 
@@ -56,6 +65,10 @@ final class CatalogSortbyQualifier
         $passthrough = self::indexNames($passthroughNames);
         $allowedTables = self::indexNames($allowedTableAliases);
         if ($resourceFields === [] && $dataFields === [] && $passthrough === []) {
+            if ($collectDropped) {
+                $droppedParts = $dropped;
+            }
+
             return $sortby;
         }
 
@@ -88,7 +101,7 @@ final class CatalogSortbyQualifier
                     $passthrough,
                     $allowedTables,
                 )) {
-                    $droppedParts[] = $part;
+                    $dropped[] = $part;
                     continue;
                 }
             }
@@ -100,6 +113,10 @@ final class CatalogSortbyQualifier
                 $alias,
                 $dataAlias,
             );
+        }
+
+        if ($collectDropped) {
+            $droppedParts = $dropped;
         }
 
         if ($qualified === []) {
