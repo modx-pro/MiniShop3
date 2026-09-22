@@ -219,19 +219,27 @@ function closeDialog() {
         <template #body="{ data, index }">
           <Button
             icon="pi pi-arrow-up"
+            size="small"
             text
             :disabled="index === 0"
             @click="moveUp(index)"
           />
           <Button
             icon="pi pi-arrow-down"
+            size="small"
             text
             :disabled="index === localActions.length - 1"
             @click="moveDown(index)"
           />
-          <Button icon="pi pi-pencil" text @click="openEditDialog(data, index)" />
+          <Button
+            icon="pi pi-pencil"
+            size="small"
+            text
+            @click="openEditDialog(data, index)"
+          />
           <Button
             icon="pi pi-trash"
+            size="small"
             text
             severity="danger"
             @click="removeAction(index)"

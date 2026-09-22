@@ -16,6 +16,18 @@ const CONTROL_ROW_SCREENS = [
   'product/ProductLinksTab.vue',
 ]
 
+/**
+ * Screens with icon Buttons inside table rows. Those stay `small`: they sit in
+ * their own cell, never next to an input, and the MODX control height would add
+ * ~19% to every row of a grid people scroll through (#765 review).
+ */
+const ROW_ACTION_SCREENS = [
+  'ActionsColumn.vue',
+  'ActionsEditor.vue',
+  'GridFieldsConfig.vue',
+  'ProductDataConfig.vue',
+]
+
 function listVueFiles(dir, prefix = '') {
   const entries = readdirSync(dir, { withFileTypes: true })
   const files = []
@@ -135,10 +147,10 @@ describe('mgrControlRow layout contract (#760)', () => {
     ms3.remove()
   })
 
-  it('has no Button components with size="small" or p-button-sm (#765)', () => {
+  it('keeps toolbar Buttons at the MODX control height (#765)', () => {
     const buttonTagRe = /<Button\b[\s\S]*?\/?>/g
     for (const rel of listVueFiles(COMPONENTS)) {
-      if (rel === 'ActionsColumn.vue') {
+      if (ROW_ACTION_SCREENS.includes(rel)) {
         continue
       }
       const src = readFileSync(join(COMPONENTS, rel), 'utf8')
@@ -149,10 +161,9 @@ describe('mgrControlRow layout contract (#760)', () => {
     }
   })
 
-  it('ActionsColumn default size is normal (not small)', () => {
+  it('ActionsColumn default size stays small so grid rows stay compact', () => {
     const src = readFileSync(join(COMPONENTS, 'ActionsColumn.vue'), 'utf8')
-    expect(src).toMatch(/default:\s*'normal'/)
-    expect(src).not.toMatch(/default:\s*'small'/)
+    expect(src).toMatch(/default:\s*'small'/)
   })
 
   it('keeps ms3-control-row on OptionGroups toolbar after #765', () => {
