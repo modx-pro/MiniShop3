@@ -7,6 +7,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerGroup;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Catalog\CatalogAclCacheInvalidator;
 use MiniShop3\Services\Customer\AuthManager;
 use MiniShop3\Services\Customer\CustomerAccess;
 use MiniShop3\Services\Grid\ManagerListFilterPolicy;
@@ -175,6 +176,7 @@ class CustomersController
         }
 
         $wasBlocked = (bool) $customer->get('is_blocked');
+        $previousCustomerGroupId = $customer->get('customer_group_id');
 
         $allowedFields = ['first_name', 'last_name', 'email', 'phone', 'is_active', 'is_blocked', 'customer_group_id'];
 
@@ -221,6 +223,13 @@ class CustomersController
             /** @var AuthManager $authManager */
             $authManager = $this->modx->services->get('ms3_auth_manager');
             $authManager->revokeTokens($customer);
+        }
+
+        if (
+            array_key_exists('customer_group_id', $data)
+            && (int) ($customer->get('customer_group_id') ?? 0) !== (int) ($previousCustomerGroupId ?? 0)
+        ) {
+            CatalogAclCacheInvalidator::scheduleForModx($this->modx);
         }
 
         return Response::success($this->formatCustomer($customer), 'Customer updated successfully')->getData();

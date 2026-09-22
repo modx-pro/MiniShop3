@@ -105,10 +105,29 @@ final class CatalogResourceGroupVisibility
     }
 
     /**
+     * Visibility SQL for the current HTTP visitor (Fenom snippets, same path as Web API #755).
+     * Member-aware results also disable MODX page cache for this request so member HTML
+     * is not stored under the anonymous resource cache key.
+     *
+     * @return non-empty-string|null
+     */
+    public function buildWhereFragmentForRequest(
+        string $resourceAlias,
+        ?string $contextKey = null,
+    ): ?string {
+        $contextKey = $this->requestContextKey($contextKey);
+        $allowedIds = $this->customerResourceGroupResolver()->resolveAllowedIdsForRequest($contextKey);
+        $this->disablePageCacheForMemberCatalog($allowedIds);
+
+        return $this->buildWhereFragment($resourceAlias, $contextKey, $allowedIds);
+    }
+
+    /**
      * Visibility SQL for pdoTools INNER JOIN ON / xPDO where.
      *
-     * Fenom listings pass no allowed ids (anonymous-safe). Member-aware callers
-     * pass ids from {@see CustomerResourceGroupResolver} or use {@see applyForRequest()}.
+     * Empty $allowedResourceGroupIds → anonymous gate. Member-aware callers pass ids from
+     * {@see CustomerResourceGroupResolver} or use {@see buildWhereFragmentForRequest()} /
+     * {@see applyForRequest()}.
      *
      * @param list<int> $allowedResourceGroupIds
      *
@@ -143,6 +162,41 @@ final class CatalogResourceGroupVisibility
     }
 
     /**
+     * Single-resource visibility for the current HTTP visitor (#755 Fenom &product=).
+     * Member-aware lookups disable MODX page cache for this request (#755 cache key).
+     */
+    public function isVisibleForRequest(
+        int $resourceId,
+        string $resourceAlias = 'msProduct',
+        ?string $contextKey = null,
+    ): bool {
+        $contextKey = $this->requestContextKey($contextKey);
+        $allowedIds = $this->customerResourceGroupResolver()->resolveAllowedIdsForRequest($contextKey);
+        $this->disablePageCacheForMemberCatalog($allowedIds);
+
+        return $this->isVisible($resourceId, $resourceAlias, $contextKey, $allowedIds);
+    }
+
+    /**
+     * MODX page cache keys are per-resource, not per visitor. Member-expanded HTML must
+     * not be written into that shared key (#755).
+     *
+     * @param list<int> $allowedResourceGroupIds
+     */
+    private function disablePageCacheForMemberCatalog(array $allowedResourceGroupIds): void
+    {
+        if (self::positiveIntIds($allowedResourceGroupIds) === []) {
+            return;
+        }
+        // Fenom has a current resource; Web API / CLI often do not ($resource is null at runtime).
+        $resource = $this->modx->resource;
+        if (!is_object($resource)) {
+            return;
+        }
+        $resource->set('cacheable', 0);
+    }
+
+    /**
      * Single-resource visibility (Fenom &product= and similar).
      *
      * @param list<int> $allowedResourceGroupIds Empty → anonymous gate.
@@ -157,10 +211,7 @@ final class CatalogResourceGroupVisibility
             return false;
         }
 
-        $contextKey ??= (string) ($this->modx->context->key ?? '');
-        if ($contextKey === '') {
-            $contextKey = 'web';
-        }
+        $contextKey = $this->requestContextKey($contextKey);
 
         $fragment = $this->buildWhereFragment($resourceAlias, $contextKey, $allowedResourceGroupIds);
         if ($fragment === null) {
@@ -193,6 +244,15 @@ final class CatalogResourceGroupVisibility
         }
 
         return new CustomerResourceGroupResolver($this->modx);
+    }
+
+    private function requestContextKey(?string $contextKey = null): string
+    {
+        if ($contextKey === null) {
+            $contextKey = trim((string) ($this->modx->context->key ?? ''));
+        }
+
+        return $contextKey === '' ? 'web' : $contextKey;
     }
 
     /**

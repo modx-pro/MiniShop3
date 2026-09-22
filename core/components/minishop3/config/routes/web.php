@@ -184,7 +184,7 @@ $router->group('/api/v1', function ($router) use ($modx, $tokenMiddleware) {
             } else {
                 return Response::error($response['message'] ?? 'Token generation failed', $response['code'] ?? 500);
             }
-        });
+        }, [$tokenMiddleware]);
 
         $router->post('/token/refresh', function () use ($customerAuth) {
             return $customerAuth()->refreshToken();

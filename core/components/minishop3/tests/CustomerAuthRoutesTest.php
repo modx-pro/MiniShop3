@@ -139,6 +139,10 @@ $expectedRoutes = [
         'tokenMiddleware' => true,
         'handlerMethod' => 'refreshToken',
     ],
+    'GET /api/v1/customer/token/get' => [
+        'tokenMiddleware' => true,
+        'handlerMethod' => null,
+    ],
 ];
 
 $actual = [];
@@ -176,7 +180,9 @@ foreach ($expectedRoutes as $routeKey => $expectation) {
         $fail("route {$routeKey} must have callable handler");
     }
 
-    $handlerUsesAuthController($handler, $expectation['handlerMethod']);
+    if ($expectation['handlerMethod'] !== null) {
+        $handlerUsesAuthController($handler, $expectation['handlerMethod']);
+    }
 }
 
 echo "OK CustomerAuthRoutesTest\n";

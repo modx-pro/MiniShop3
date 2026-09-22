@@ -34,7 +34,7 @@ if (!($product instanceof msProduct)) {
         'id' => $product->id
     ]);
 }
-if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisible((int) $product->id)) {
+if ($_ms3LoadedById && !(new CatalogResourceGroupVisibility($modx))->isVisibleForRequest((int) $product->id)) {
     return '';
 }
 
