@@ -302,6 +302,7 @@ class ImageService
             'bottom-left' => [$offsetX, $height - $offsetY, 'left', 'bottom'],
             'bottom' => [$midX, $height - $offsetY, 'center', 'bottom'],
             'bottom-right' => [$width - $offsetX, $height - $offsetY, 'right', 'bottom'],
+            default => [$width - $offsetX, $height - $offsetY, 'right', 'bottom'],
         };
     }
 
