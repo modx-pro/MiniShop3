@@ -209,6 +209,7 @@ if (!is_array($_ms3SortBy)) {
             }
         }
     }
+    $_ms3DroppedSortParts = [];
     $_ms3SortBy = CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
         $_ms3SortBy,
         array_keys($modx->getFields(msProduct::class) ?: []),
@@ -217,7 +218,19 @@ if (!is_array($_ms3SortBy)) {
         array_keys($modx->getFields(msProductData::class) ?: []),
         'Data',
         $_ms3Passthrough,
+        array_values(array_unique(array_merge(
+            ['msProduct', 'Data', 'Vendor'],
+            CatalogSortbyQualifier::tableAliasesFromJoins($leftJoin, $innerJoin),
+        ))),
+        $_ms3DroppedSortParts,
     );
+    if ($_ms3DroppedSortParts !== []) {
+        $modx->log(
+            \MODX\Revolution\modX::LOG_LEVEL_WARN,
+            '[MiniShop3] ms3_products dropped unsafe/unknown sortby part(s): '
+            . implode(' | ', $_ms3DroppedSortParts)
+        );
+    }
     $scriptProperties['sortby'] = $_ms3SortBy;
 }
 if ($_ms3MenuindexCategoryIds !== [] && CategoryProductMenuindexService::sortbyRefersToMenuindex($_ms3SortBy)) {

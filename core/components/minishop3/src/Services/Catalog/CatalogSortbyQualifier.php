@@ -13,19 +13,22 @@ namespace MiniShop3\Services\Catalog;
  *
  * Snippet mode ($dropUnmatched): drop unknown *simple* parts before menuindex / sortbyOptions
  * inject expressions. Known resource fields → msProduct.*; known Data fields → Data.*;
- * optional passthrough names (TVs, vendor_*) stay bare. Parenthetical / CASE input from the
- * caller is rejected in drop mode (expressions are injected by the snippet afterwards).
- * Prefixed parts are kept only for allowed table aliases (not arbitrary table.field).
+ * optional passthrough names (TVs, vendor_*) stay bare. Safe SQL functions (RAND, FIELD,
+ * IFNULL, COALESCE, CAST) with validated arguments are kept (#757 review). Prefixed parts
+ * are kept only for allowed table aliases (including keys from snippet leftJoin/innerJoin).
  */
 final class CatalogSortbyQualifier
 {
     private const SIMPLE_SORT_PART = '/^(?:`?(?P<table>[A-Za-z_][\w]*)`?\.)?`?(?P<field>[A-Za-z_][\w]*)`?(?P<dir>\s+(?:ASC|DESC))?$/i';
+
+    private const SAFE_FUNCTION = '/^(?P<fn>RAND|FIELD|IFNULL|COALESCE|CAST)\s*\((?P<args>.*)\)(?P<dir>\s+(?:ASC|DESC))?$/is';
 
     /**
      * @param list<string> $resourceFieldNames Field names from modResource / msProduct
      * @param list<string> $dataFieldNames Field names from msProductData (qualified as Data.*)
      * @param list<string> $passthroughNames Bare names left as-is (TVs, vendor_*, option keys)
      * @param list<string> $allowedTableAliases When dropUnmatched, only these table prefixes pass
+     * @param list<string>|null $droppedParts Filled with rejected sort parts when dropUnmatched
      */
     public static function qualifyUnaliasedResourceFields(
         string $sortby,
@@ -36,7 +39,9 @@ final class CatalogSortbyQualifier
         string $dataAlias = 'Data',
         array $passthroughNames = [],
         array $allowedTableAliases = ['msProduct', 'Data', 'Vendor'],
+        ?array &$droppedParts = null,
     ): string {
+        $droppedParts = [];
         $trimmed = ltrim($sortby);
         if ($trimmed === '' || str_starts_with($trimmed, '{')) {
             return $sortby;
@@ -62,14 +67,30 @@ final class CatalogSortbyQualifier
             if ($part === '') {
                 continue;
             }
-            if ($dropUnmatched && !self::isAllowedSortPart(
-                $part,
-                $resourceFields,
-                $dataFields,
-                $passthrough,
-                $allowedTables,
-            )) {
-                continue;
+            if ($dropUnmatched) {
+                $safeFn = self::qualifySafeFunctionPart(
+                    $part,
+                    $resourceFields,
+                    $dataFields,
+                    $passthrough,
+                    $allowedTables,
+                    $alias,
+                    $dataAlias,
+                );
+                if ($safeFn !== null) {
+                    $qualified[] = $safeFn;
+                    continue;
+                }
+                if (!self::isAllowedSortPart(
+                    $part,
+                    $resourceFields,
+                    $dataFields,
+                    $passthrough,
+                    $allowedTables,
+                )) {
+                    $droppedParts[] = $part;
+                    continue;
+                }
             }
             $qualified[] = self::qualifySimplePart(
                 $part,
@@ -86,6 +107,27 @@ final class CatalogSortbyQualifier
         }
 
         return implode(', ', $qualified);
+    }
+
+    /**
+     * Collect pdoTools join map keys as allowed ORDER BY table aliases (#757 review).
+     *
+     * @param array<string, mixed> ...$joinMaps
+     * @return list<string>
+     */
+    public static function tableAliasesFromJoins(array ...$joinMaps): array
+    {
+        $aliases = [];
+        foreach ($joinMaps as $map) {
+            foreach (array_keys($map) as $key) {
+                $key = trim((string) $key);
+                if ($key !== '' && preg_match('/^[A-Za-z_][\w]*$/', $key)) {
+                    $aliases[] = $key;
+                }
+            }
+        }
+
+        return array_values(array_unique($aliases));
     }
 
     /**
@@ -155,7 +197,7 @@ final class CatalogSortbyQualifier
         array $passthrough,
         array $allowedTables,
     ): bool {
-        // Caller-supplied expressions are rejected in drop mode; snippet injects CASE/CAST later.
+        // Caller-supplied CASE / arbitrary expressions stay rejected; snippet injects those later.
         if (str_contains($part, '(') || preg_match('/^CASE\s+/i', trim($part))) {
             return false;
         }
@@ -174,6 +216,207 @@ final class CatalogSortbyQualifier
         return isset($resourceFields[$field])
             || isset($dataFields[$field])
             || isset($passthrough[$field]);
+    }
+
+    /**
+     * Allowlisted SQL functions with validated / qualified arguments (#757 review).
+     *
+     * @param array<string, true> $resourceFields
+     * @param array<string, true> $dataFields
+     * @param array<string, true> $passthrough
+     * @param array<string, true> $allowedTables
+     */
+    private static function qualifySafeFunctionPart(
+        string $part,
+        array $resourceFields,
+        array $dataFields,
+        array $passthrough,
+        array $allowedTables,
+        string $alias,
+        string $dataAlias,
+    ): ?string {
+        if (!preg_match(self::SAFE_FUNCTION, trim($part), $match)) {
+            return null;
+        }
+
+        $fn = strtoupper($match['fn']);
+        $args = trim($match['args']);
+        $dir = $match['dir'] ?? '';
+
+        if ($fn === 'RAND') {
+            return $args === '' ? 'RAND()' . $dir : null;
+        }
+
+        if ($args === '' || !self::isSafeFunctionArgs($args, $fn === 'CAST')) {
+            return null;
+        }
+
+        if (!self::functionArgsUseOnlyAllowedIdentifiers(
+            $args,
+            $resourceFields,
+            $dataFields,
+            $passthrough,
+            $allowedTables,
+            $fn === 'CAST',
+        )) {
+            return null;
+        }
+
+        $qualifiedArgs = self::qualifyIdentifiersInExpression(
+            $args,
+            $resourceFields,
+            $dataFields,
+            $passthrough,
+            $alias,
+            $dataAlias,
+            $fn === 'CAST',
+        );
+
+        return $fn . '(' . $qualifiedArgs . ')' . $dir;
+    }
+
+    private static function isSafeFunctionArgs(string $args, bool $allowCastAs): bool
+    {
+        // No nested calls, comments, or statement separators.
+        if (str_contains($args, '(') || str_contains($args, ')')
+            || str_contains($args, ';') || str_contains($args, '--')
+            || str_contains($args, '/*') || str_contains($args, '*/')) {
+            return false;
+        }
+
+        if (preg_match('/\b(SELECT|UNION|INSERT|UPDATE|DELETE|DROP|ALTER|INTO|SLEEP|BENCHMARK)\b/i', $args)) {
+            return false;
+        }
+
+        // Strip string literals, then only identifiers / numbers / punctuation may remain.
+        $stripped = preg_replace(
+            '/\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*"/',
+            ' ',
+            $args,
+        ) ?? $args;
+
+        if ($allowCastAs) {
+            $stripped = (string) preg_replace('/\bAS\b/i', ' ', $stripped);
+        }
+
+        return (bool) preg_match(
+            '/^[\s,.`0-9A-Za-z_]+$/',
+            $stripped,
+        );
+    }
+
+    /**
+     * @param array<string, true> $resourceFields
+     * @param array<string, true> $dataFields
+     * @param array<string, true> $passthrough
+     * @param array<string, true> $allowedTables
+     */
+    private static function functionArgsUseOnlyAllowedIdentifiers(
+        string $args,
+        array $resourceFields,
+        array $dataFields,
+        array $passthrough,
+        array $allowedTables,
+        bool $allowCastAs,
+    ): bool {
+        $withoutStrings = preg_replace(
+            '/\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*"/',
+            ' ',
+            $args,
+        ) ?? $args;
+
+        if ($allowCastAs) {
+            $withoutStrings = (string) preg_replace('/\bAS\b/i', ' ', $withoutStrings);
+        }
+
+        if (!preg_match_all('/`?([A-Za-z_][\w]*)`?(?:\.`?([A-Za-z_][\w]*)`?)?/', $withoutStrings, $matches, PREG_SET_ORDER)) {
+            return true;
+        }
+
+        foreach ($matches as $match) {
+            $first = $match[1];
+            $second = $match[2] ?? '';
+            if ($second !== '') {
+                if (!isset($allowedTables[strtolower($first)])) {
+                    return false;
+                }
+                continue;
+            }
+            $lower = strtolower($first);
+            // CAST type names (CHAR, SIGNED, …) and ASC/DESC never appear as lone first tokens
+            // after AS strip for CAST; still allow common SQL type tokens.
+            if ($allowCastAs && self::isSqlTypeToken($lower)) {
+                continue;
+            }
+            if (!isset($resourceFields[$lower]) && !isset($dataFields[$lower]) && !isset($passthrough[$lower])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function isSqlTypeToken(string $lower): bool
+    {
+        return in_array($lower, [
+            'char', 'varchar', 'binary', 'date', 'datetime', 'time', 'signed', 'unsigned',
+            'decimal', 'integer', 'int', 'bigint', 'float', 'double', 'real', 'json',
+        ], true);
+    }
+
+    /**
+     * @param array<string, true> $resourceFields
+     * @param array<string, true> $dataFields
+     * @param array<string, true> $passthrough
+     */
+    private static function qualifyIdentifiersInExpression(
+        string $args,
+        array $resourceFields,
+        array $dataFields,
+        array $passthrough,
+        string $alias,
+        string $dataAlias,
+        bool $allowCastAs,
+    ): string {
+        return (string) preg_replace_callback(
+            '/(\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*")|(`?[A-Za-z_][\w]*`?(?:\.`?[A-Za-z_][\w]*`?)?)/',
+            static function (array $m) use (
+                $resourceFields,
+                $dataFields,
+                $passthrough,
+                $alias,
+                $dataAlias,
+                $allowCastAs,
+            ): string {
+                if (($m[1] ?? '') !== '') {
+                    return $m[1];
+                }
+                $token = $m[2];
+                if (str_contains($token, '.')) {
+                    return $token;
+                }
+                if ($allowCastAs && preg_match('/^AS$/i', $token)) {
+                    return $token;
+                }
+                $bare = trim($token, '`');
+                $lower = strtolower($bare);
+                if ($allowCastAs && self::isSqlTypeToken($lower)) {
+                    return $token;
+                }
+                if (isset($resourceFields[$lower])) {
+                    return $alias . '.' . $bare;
+                }
+                if (isset($dataFields[$lower])) {
+                    return $dataAlias . '.' . $bare;
+                }
+                if (isset($passthrough[$lower])) {
+                    return $bare;
+                }
+
+                return $token;
+            },
+            $args,
+        );
     }
 
     /**

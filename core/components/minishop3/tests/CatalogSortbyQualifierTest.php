@@ -124,4 +124,93 @@ $assertSame(
     'snippet drop mode falls back to msProduct.id when all parts dropped'
 );
 
+$assertSame(
+    'RAND()',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields('RAND()', $fields, 'msProduct', true, $dataFields),
+    'snippet drop mode keeps RAND() without arguments'
+);
+$assertSame(
+    'RAND() DESC',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields('RAND() DESC', $fields, 'msProduct', true, $dataFields),
+    'snippet drop mode keeps RAND() with direction'
+);
+$assertSame(
+    'FIELD(msProduct.id, 5, 3, 1)',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'FIELD(id, 5, 3, 1)',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+    ),
+    'snippet drop mode keeps FIELD() and qualifies bare id'
+);
+$assertSame(
+    'IFNULL(msProduct.pagetitle, \'\') DESC',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'IFNULL(pagetitle, \'\') DESC',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+    ),
+    'snippet drop mode keeps IFNULL() and qualifies bare fields'
+);
+$assertSame(
+    'msProduct.id',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'RAND(1), SLEEP(1)',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+    ),
+    'snippet drop mode rejects RAND with args and unsafe functions'
+);
+
+$dropped = null;
+$assertSame(
+    'msProduct.pagetitle',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'pagetitle, evil_injection, (SELECT 1)',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+        'Data',
+        [],
+        ['msProduct', 'Data', 'Vendor'],
+        $dropped,
+    ),
+    'snippet drop mode keeps valid parts while collecting drops'
+);
+$assertSame(
+    ['evil_injection', '(SELECT 1)'],
+    $dropped,
+    'snippet drop mode reports dropped parts'
+);
+
+$assertSame(
+    ['Custom', 'Vendor'],
+    CatalogSortbyQualifier::tableAliasesFromJoins(
+        ['Custom' => ['class' => 'X'], 'Vendor' => ['class' => 'Y']],
+        ['bad key' => []],
+    ),
+    'join alias helper collects safe keys only'
+);
+$assertSame(
+    'Custom.score DESC, msProduct.pagetitle',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'Custom.score DESC, pagetitle, Other.x',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+        'Data',
+        [],
+        ['msProduct', 'Data', 'Vendor', 'Custom'],
+    ),
+    'snippet drop mode allows leftJoin aliases and rejects unknown prefixes'
+);
+
 fwrite(STDOUT, "OK: CatalogSortbyQualifierTest\n");

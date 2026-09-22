@@ -240,8 +240,10 @@ $assertTrue(
     str_contains($ms3ProductsSrc, "\$innerJoin['ms3RgVisibility']")
     && str_contains($ms3ProductsSrc, 'buildWhereFragmentForRequest')
     && str_contains($ms3ProductsSrc, 'CatalogSortbyQualifier::qualifyUnaliasedResourceFields')
+    && str_contains($ms3ProductsSrc, 'tableAliasesFromJoins')
+    && str_contains($ms3ProductsSrc, 'dropped unsafe/unknown sortby')
     && !str_contains($ms3ProductsSrc, "unset(\$leftJoin['Data'])"),
-    'ms3_products wires RG via ms3RgVisibility + request-aware ACL + sortby qualify'
+    'ms3_products wires RG via ms3RgVisibility + request-aware ACL + sortby qualify/log'
 );
 foreach (['ms3_gallery.php', 'ms3_options.php', 'ms3_product_options.php'] as $snippetFile) {
     $snippetSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/' . $snippetFile);
@@ -271,6 +273,39 @@ $assertTrue(
     str_contains($visibilitySrc, "'class_key' => \$class"),
     'isVisible must pin class_key because getCount skips derivative criteria'
 );
+
+// #757 review: disablePageCacheForMemberCatalog must set cacheable=0 for member RG sets.
+$cacheResource = new class {
+    private int $cacheable = 1;
+
+    public function set(string $key, mixed $value): void
+    {
+        if ($key === 'cacheable') {
+            $this->cacheable = (int) $value;
+        }
+    }
+
+    public function get(string $key): mixed
+    {
+        return $key === 'cacheable' ? $this->cacheable : null;
+    }
+};
+$cacheModx = new class ($cacheResource) extends modX {
+    public function __construct(public object $resource)
+    {
+    }
+
+    public function getOption(string $key, $options = null, $default = null)
+    {
+        return $default;
+    }
+};
+$cacheService = new CatalogResourceGroupVisibility($cacheModx);
+$disablePageCache = new ReflectionMethod(CatalogResourceGroupVisibility::class, 'disablePageCacheForMemberCatalog');
+$disablePageCache->invoke($cacheService, []);
+$assertSame(1, $cacheResource->get('cacheable'), 'empty member RG set leaves cacheable alone');
+$disablePageCache->invoke($cacheService, [12]);
+$assertSame(0, $cacheResource->get('cacheable'), 'member RG set forces cacheable=0');
 
 fwrite(STDOUT, "OK CatalogResourceGroupVisibilityTest\n");
 exit(0);
