@@ -660,14 +660,12 @@ onMounted(async () => {
               :placeholder="_('search_placeholder')"
               @keyup.enter="onSearch"
             />
-            <InputGroupAddon>
-              <Button
-                icon="pi pi-search"
-                :label="_('search')"
-                severity="primary"
-                @click="onSearch"
-              />
-            </InputGroupAddon>
+            <Button
+              icon="pi pi-search"
+              :label="_('search')"
+              severity="primary"
+              @click="onSearch"
+            />
           </InputGroup>
         </div>
 

@@ -17,17 +17,16 @@
 .ms3-control-row.ms3-control-row .p-button:not(.p-button-sm, .p-button-lg),
 .ms3-control-row.ms3-control-row .p-inputtext:not(.p-inputtext-sm, .p-inputtext-lg),
 .ms3-control-row.ms3-control-row .p-select:not(.p-select-sm, .p-select-lg),
-.ms3-control-row.ms3-control-row .p-inputgroup,
-.ms3-control-row.ms3-control-row .p-inputgroupaddon {
+.ms3-control-row.ms3-control-row .p-inputgroup {
   box-sizing: border-box;
   min-height: var(--p-modx-control-height, 2.25rem);
   height: var(--p-modx-control-height, 2.25rem);
 }
 
-.ms3-control-row.ms3-control-row .p-inputgroup .p-button,
-.ms3-control-row.ms3-control-row .p-inputgroupaddon .p-button {
-  min-height: 100%;
-  height: 100%;
+.ms3-control-row.ms3-control-row .p-inputgroup > .p-button {
+  box-sizing: border-box;
+  min-height: var(--p-modx-control-height, 2.25rem);
+  height: var(--p-modx-control-height, 2.25rem);
 }
 
 .ms3-control-row.ms3-control-row .p-select-label {

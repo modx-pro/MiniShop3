@@ -8,7 +8,6 @@ import {
   DataTable,
   Dialog,
   InputGroup,
-  InputGroupAddon,
   InputText,
   Select,
   useConfirm,
@@ -240,15 +239,13 @@ onMounted(async () => {
           :aria-label="_('search')"
           @keyup.enter="searchLinks"
         />
-        <InputGroupAddon>
-          <Button
-            icon="pi pi-search"
-            severity="secondary"
-            outlined
-            :aria-label="_('search')"
-            @click="searchLinks"
-          />
-        </InputGroupAddon>
+        <Button
+          icon="pi pi-search"
+          severity="secondary"
+          outlined
+          :aria-label="_('search')"
+          @click="searchLinks"
+        />
       </InputGroup>
     </div>
 
