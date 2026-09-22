@@ -26,6 +26,8 @@ $_lang['setting_ms3_chunks_categories'] = 'Categories for chunks list';
 $_lang['setting_ms3_chunks_categories_desc'] = 'Comma-separated list of category IDs for chunks list.';
 $_lang['setting_ms3_version'] = 'Installed package version';
 $_lang['setting_ms3_version_desc'] = 'Version of the last successfully installed MiniShop3 transport package. Used for health checks and detecting file copy failures.';
+$_lang['setting_ms3_lexicon_cache_heal_pending'] = 'Pending lexicon cache heal';
+$_lang['setting_ms3_lexicon_cache_heal_pending_desc'] = 'Set on install/upgrade. The next manager request drops MiniShop3 lexicon topic caches that still hold English strings under a non-English language key, then clears this flag.';
 $_lang['setting_ms3_tmp_storage'] = 'Cart and temporary order fields storage';
 $_lang['setting_ms3_tmp_storage_desc'] = "
 To store cart and temporary order fields in session specify <strong>session</strong><br>

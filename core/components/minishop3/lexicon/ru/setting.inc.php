@@ -26,6 +26,8 @@ $_lang['setting_ms3_chunks_categories'] = 'Категории для списк�
 $_lang['setting_ms3_chunks_categories_desc'] = 'Список ID категорий через запятую  для списка чанков.';
 $_lang['setting_ms3_version'] = 'Версия установленного пакета';
 $_lang['setting_ms3_version_desc'] = 'Версия последнего успешно установленного транспортного пакета MiniShop3. Используется для health-check и обнаружения сбоев копирования файлов.';
+$_lang['setting_ms3_lexicon_cache_heal_pending'] = 'Ожидается лечение кэша лексикона';
+$_lang['setting_ms3_lexicon_cache_heal_pending_desc'] = 'Выставляется при установке и апгрейде. При следующем открытии менеджера удаляются кэши топиков MiniShop3, в которых под неанглийским языком лежат английские строки, после чего флаг снимается.';
 $_lang['setting_ms3_tmp_storage'] = 'Хранилище корзины и временных полей заказа';
 $_lang['setting_ms3_tmp_storage_desc'] = "
 Для хранения корзины и временных полей заказа в сессии укажите <strong>session</strong><br>

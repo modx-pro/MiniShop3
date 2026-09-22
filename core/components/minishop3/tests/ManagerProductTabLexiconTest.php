@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Product tab lexicon keys must stay localized in ru/manager (#758).
+ * Product tab lexicon keys must stay localized in ru/manager (#758 / #766).
  *
  * English strings under the ru topic cache made Ext/Vue tabs say Product/Gallery
  * while the rest of the manager was Russian.
@@ -50,17 +50,14 @@ if (!is_readable($heal)) {
     $fail('Missing controllers/lexicon_cache_heal.inc.php');
 }
 $healSrc = file_get_contents($heal);
-if ($healSrc === false || !str_contains($healSrc, 'ms3_heal_stale_manager_lexicon_cache')) {
-    $fail('lexicon_cache_heal.inc.php must define ms3_heal_stale_manager_lexicon_cache');
+if ($healSrc === false || !str_contains($healSrc, 'ms3_heal_stale_minishop3_lexicon_cache')) {
+    $fail('lexicon_cache_heal.inc.php must define ms3_heal_stale_minishop3_lexicon_cache');
 }
-if (!str_contains($healSrc, 'MS3_MANAGER_LEXICON_EN_TAB_PRODUCT')) {
-    $fail('heal must use MS3_MANAGER_LEXICON_EN_TAB_PRODUCT sentinel');
+if (!str_contains($healSrc, 'ms3_is_stale_lexicon_topic_cache')) {
+    $fail('heal must compare cache to getFileTopic via ms3_is_stale_lexicon_topic_cache');
 }
-$enPath = __DIR__ . '/../lexicon/en/manager.inc.php';
-$_lang = [];
-include $enPath;
-if (($_lang['ms3_tab_product'] ?? null) !== 'Product') {
-    $fail('en/manager.inc.php ms3_tab_product must stay Product (heal sentinel)');
+if (!str_contains($healSrc, 'MS3_LEXICON_CACHE_HEAL_PENDING_SETTING')) {
+    $fail('heal must gate on MS3_LEXICON_CACHE_HEAL_PENDING_SETTING');
 }
 
 foreach (['resource_update.class.php', 'resource_create.class.php'] as $controller) {
@@ -69,9 +66,15 @@ foreach (['resource_update.class.php', 'resource_create.class.php'] as $controll
     if ($src === false) {
         $fail("Cannot read {$controller}");
     }
-    if (!str_contains($src, 'ms3_heal_stale_manager_lexicon_cache')) {
-        $fail("{$controller} must call ms3_heal_stale_manager_lexicon_cache in prepareLanguage (#758)");
+    if (!str_contains($src, 'ms3_heal_stale_minishop3_lexicon_cache')) {
+        $fail("{$controller} must call ms3_heal_stale_minishop3_lexicon_cache in prepareLanguage (#766)");
     }
+}
+
+$plugin = __DIR__ . '/../elements/plugins/minishop3.php';
+$pluginSrc = file_get_contents($plugin);
+if ($pluginSrc === false || !str_contains($pluginSrc, 'ms3_heal_stale_minishop3_lexicon_cache')) {
+    $fail('plugin must call ms3_heal_stale_minishop3_lexicon_cache on OnManagerPageBeforeRender (#766)');
 }
 
 $resolver = dirname(__DIR__, 4) . '/_build/resolvers/resolver_11_lexicon_cache.php';
@@ -82,6 +85,15 @@ $resolverSrc = file_get_contents($resolver);
 if ($resolverSrc === false || !str_contains($resolverSrc, 'lexicon_topics')) {
     $fail('resolver_11_lexicon_cache.php must refresh lexicon_topics');
 }
+if (!str_contains($resolverSrc, 'ms3_lexicon_cache_heal_pending')) {
+    $fail('resolver_11_lexicon_cache.php must arm ms3_lexicon_cache_heal_pending');
+}
 
-fwrite(STDOUT, 'OK ManagerProductTabLexiconTest (' . count($keys) . " keys × 2 langs + heal wiring)\n");
+$settings = dirname(__DIR__, 4) . '/_build/elements/settings.php';
+$settingsSrc = file_get_contents($settings);
+if ($settingsSrc === false || !str_contains($settingsSrc, 'ms3_lexicon_cache_heal_pending')) {
+    $fail('settings.php must register ms3_lexicon_cache_heal_pending');
+}
+
+fwrite(STDOUT, 'OK ManagerProductTabLexiconTest (' . count($keys) . " keys × 2 langs + heal wiring #766)\n");
 exit(0);

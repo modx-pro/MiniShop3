@@ -29,12 +29,17 @@ class msResourceUpdateController extends ResourceUpdateManagerController
     }
 
     /**
-     * Drop stale English minishop3:manager cache before lang.js.php reads it (#758).
+     * One-shot heal of stale MiniShop3 lexicon caches before lang.js.php reads them (#758 / #766).
      */
     public function prepareLanguage()
     {
-        require_once __DIR__ . '/lexicon_cache_heal.inc.php';
-        ms3_heal_stale_manager_lexicon_cache($this->modx);
+        $healPending = $this->modx->getOption('ms3_lexicon_cache_heal_pending', null, false);
+        if ($healPending === true || $healPending === 1 || $healPending === '1'
+            || filter_var($healPending, FILTER_VALIDATE_BOOLEAN)
+        ) {
+            require_once __DIR__ . '/lexicon_cache_heal.inc.php';
+            ms3_heal_stale_minishop3_lexicon_cache($this->modx);
+        }
         parent::prepareLanguage();
     }
 
