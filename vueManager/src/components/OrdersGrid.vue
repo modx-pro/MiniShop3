@@ -467,7 +467,7 @@ onMounted(async () => {
               :label="_('ms3_order_create')"
               icon="pi pi-plus"
               severity="primary"
-              size="small"
+
               @click="createNewOrder"
             />
           </div>
@@ -587,7 +587,7 @@ onMounted(async () => {
               :label="_('apply_filters')"
               icon="pi pi-filter"
               severity="secondary"
-              size="small"
+
               @click="applyFilters"
             />
             <Button
@@ -595,7 +595,7 @@ onMounted(async () => {
               :label="_('clear_filters')"
               icon="pi pi-filter-slash"
               severity="secondary"
-              size="small"
+
               @click="clearFilters"
             />
           </div>
@@ -612,7 +612,7 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
+
               text
               @click="clearSelection"
             />
@@ -620,7 +620,7 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
+
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />

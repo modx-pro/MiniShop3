@@ -102,14 +102,14 @@ defineProps({
           <Button
             :label="_('options_mode_table')"
             :severity="optionsEditMode === 'table' ? 'primary' : 'secondary'"
-            size="small"
+
             text
             @click="switchOptionsMode('table')"
           />
           <Button
             :label="_('options_mode_json')"
             :severity="optionsEditMode === 'json' ? 'primary' : 'secondary'"
-            size="small"
+
             text
             @click="switchOptionsMode('json')"
           />
@@ -196,7 +196,7 @@ defineProps({
             severity="danger"
             text
             rounded
-            size="small"
+
             @click="removeOptionRow(index)"
           />
         </div>
@@ -204,7 +204,7 @@ defineProps({
           :label="_('options_add_row')"
           icon="pi pi-plus"
           severity="secondary"
-          size="small"
+
           text
           @click="addOptionRow"
         />

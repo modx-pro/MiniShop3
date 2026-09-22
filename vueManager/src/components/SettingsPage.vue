@@ -103,13 +103,12 @@ function navigateTo(path) {
       <div v-if="canListOrders" class="ms3-settings-page__actions">
         <Button
           :label="_('ms3_orders')"
-          class="p-button-sm"
           severity="contrast"
           @click="navigateTo('?a=mgr/orders&namespace=minishop3')"
         />
         <Button
           :label="_('ms3_utilities')"
-          class="p-button-sm p-button-secondary"
+          class="p-button-secondary"
           @click="navigateTo('?a=mgr/utilities&namespace=minishop3')"
         />
       </div>

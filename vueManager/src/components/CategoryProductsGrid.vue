@@ -876,7 +876,7 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
+
               text
               @click="clearSelection"
             />
@@ -884,21 +884,21 @@ onMounted(async () => {
               :label="_('publish')"
               icon="pi pi-check"
               severity="success"
-              size="small"
+
               @click="bulkPublish"
             />
             <Button
               :label="_('unpublish')"
               icon="pi pi-times-circle"
               severity="secondary"
-              size="small"
+
               @click="bulkUnpublish"
             />
             <Button
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
+
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />

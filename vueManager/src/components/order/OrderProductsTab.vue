@@ -34,7 +34,7 @@ const { _ } = useLexicon()
         :label="_('order_add_product')"
         icon="pi pi-plus"
         severity="primary"
-        size="small"
+
         @click="openAddProductDialog"
       />
     </div>
@@ -149,7 +149,7 @@ const { _ } = useLexicon()
                 :severity="action.severity || 'secondary'"
                 text
                 rounded
-                size="small"
+
                 @click="handleProductAction(action, data)"
               />
             </div>

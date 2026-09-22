@@ -96,7 +96,7 @@ const props = defineProps({
    */
   size: {
     type: String,
-    default: 'small',
+    default: 'normal',
   },
 })
 

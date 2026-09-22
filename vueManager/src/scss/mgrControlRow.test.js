@@ -46,6 +46,7 @@ describe('mgrControlRow layout contract (#760)', () => {
   it('uses Modx control-height token and doubled-class specificity', () => {
     const scss = readFileSync(CONTROL_ROW_SCSS, 'utf8')
     expect(scss).toMatch(/--p-modx-control-height/)
+    expect(scss).toMatch(/var\(--p-modx-control-height,\s*2\.25rem\)/)
     expect(scss).not.toMatch(/--p-button-height/)
     expect(scss).toMatch(/\.ms3-control-row\.ms3-control-row/)
     expect(scss).toMatch(
@@ -105,5 +106,57 @@ describe('mgrControlRow layout contract (#760)', () => {
   it('keeps compact rows-per-page Select on category products pager', () => {
     const src = readFileSync(join(COMPONENTS, 'CategoryProductsGrid.vue'), 'utf8')
     expect(src).toMatch(/ms3-rows-per-page-select/)
+  })
+
+  it('resolves control height to 36px via 2.25rem when theme tokens are absent', () => {
+    const ms3 = document.createElement('style')
+    ms3.textContent = `
+      .ms3-control-row.ms3-control-row .p-inputtext:not(.p-inputtext-sm, .p-inputtext-lg),
+      .ms3-control-row.ms3-control-row .p-button:not(.p-button-sm, .p-button-lg) {
+        height: var(--p-modx-control-height, 2.25rem);
+      }
+    `
+    document.head.append(ms3)
+
+    const row = document.createElement('div')
+    row.className = 'ms3-control-row'
+    const input = document.createElement('input')
+    input.className = 'p-inputtext'
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'p-button'
+    row.append(input, button)
+    document.body.append(row)
+
+    expect(getComputedStyle(input).height).toBe('36px')
+    expect(getComputedStyle(button).height).toBe('36px')
+
+    row.remove()
+    ms3.remove()
+  })
+
+  it('has no Button components with size="small" or p-button-sm (#765)', () => {
+    const buttonTagRe = /<Button\b[\s\S]*?\/?>/g
+    for (const rel of listVueFiles(COMPONENTS)) {
+      if (rel === 'ActionsColumn.vue') {
+        continue
+      }
+      const src = readFileSync(join(COMPONENTS, rel), 'utf8')
+      for (const match of src.matchAll(buttonTagRe)) {
+        expect(match[0], rel).not.toMatch(/\bsize="small"/)
+        expect(match[0], rel).not.toMatch(/\bp-button-sm\b/)
+      }
+    }
+  })
+
+  it('ActionsColumn default size is normal (not small)', () => {
+    const src = readFileSync(join(COMPONENTS, 'ActionsColumn.vue'), 'utf8')
+    expect(src).toMatch(/default:\s*'normal'/)
+    expect(src).not.toMatch(/default:\s*'small'/)
+  })
+
+  it('keeps ms3-control-row on OptionGroups toolbar after #765', () => {
+    const src = readFileSync(join(COMPONENTS, 'OptionGroupsGrid.vue'), 'utf8')
+    expect(src).toMatch(/\bms3-control-row\b/)
   })
 })

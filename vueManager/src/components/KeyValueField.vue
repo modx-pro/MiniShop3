@@ -216,7 +216,7 @@ function removeFreePair(index) {
             severity="danger"
             text
             rounded
-            size="small"
+
             class="ms3-key-value-actions-col"
             :disabled="disabled"
             @click="removeFreePair(index)"
@@ -228,7 +228,7 @@ function removeFreePair(index) {
         icon="pi pi-plus"
         :label="_('ms3_vue_key_value_add_pair')"
         severity="secondary"
-        size="small"
+
         class="ms3-key-value-add"
         :disabled="disabled"
         @click="addFreePair"

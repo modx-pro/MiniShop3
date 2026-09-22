@@ -654,7 +654,6 @@ onMounted(async () => {
         <Button
           :label="_('ms3_model_section_add')"
           icon="pi pi-plus"
-          class="p-button-sm"
           @click.stop="createSection"
         />
       </template>
@@ -686,7 +685,7 @@ onMounted(async () => {
             <Button
               :icon="data.hidden ? 'pi pi-eye-slash' : 'pi pi-eye'"
               :class="data.hidden ? 'p-button-secondary' : 'p-button-success'"
-              class="p-button-sm p-button-text"
+              class="p-button-text"
               @click="toggleSectionHidden(data)"
             />
           </template>
@@ -702,12 +701,12 @@ onMounted(async () => {
           <template #body="{ data }">
             <Button
               icon="pi pi-pencil"
-              class="p-button-sm p-button-text p-button-warning"
+              class="p-button-text p-button-warning"
               @click="editSection(data)"
             />
             <Button
               icon="pi pi-trash"
-              class="p-button-sm p-button-text p-button-danger"
+              class="p-button-text p-button-danger"
               :disabled="data.is_default"
               @click="deleteSection(data)"
             />
@@ -727,7 +726,6 @@ onMounted(async () => {
           <Button
             :label="_('ms3_model_field_add')"
             icon="pi pi-plus"
-            class="p-button-sm"
             @click="createField"
           />
         </div>
@@ -783,28 +781,24 @@ onMounted(async () => {
                       <Button
                         :icon="field.visible ? 'pi pi-eye' : 'pi pi-eye-slash'"
                         :class="field.visible ? 'p-button-success' : 'p-button-secondary'"
-                        class="p-button-sm p-button-text"
+                        class="p-button-text"
                         @click="toggleVisible(field)"
                       />
                     </td>
                     <td>
                       <i
-                        :class="
-                          field.required
-                            ? 'pi pi-check text-green-500'
-                            : 'pi pi-minus text-gray-400'
-                        "
+                        :class="field.required ? 'pi pi-check text-green-500' : 'pi pi-minus text-gray-400'"
                       />
                     </td>
                     <td>
                       <Button
                         icon="pi pi-pencil"
-                        class="p-button-sm p-button-text p-button-warning"
+                        class="p-button-text p-button-warning"
                         @click="editField(field)"
                       />
                       <Button
                         icon="pi pi-trash"
-                        class="p-button-sm p-button-text p-button-danger"
+                        class="p-button-text p-button-danger"
                         @click="deleteField(field)"
                       />
                     </td>

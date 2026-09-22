@@ -448,7 +448,7 @@ onMounted(() => {
           :label="_('ms3_import_next')"
           icon="pi pi-arrow-right"
           icon-pos="right"
-          size="small"
+
           severity="primary"
           :disabled="!canProceedToStep2"
           @click="currentStep = 2"

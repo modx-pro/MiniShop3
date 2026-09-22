@@ -587,7 +587,7 @@ const editingFieldName = computed(() => {
       <div class="json-actions">
         <Button
           :label="_('apply')"
-          size="small"
+
           :disabled="!!jsonError"
           @click="applyJsonChanges"
         />
@@ -605,7 +605,7 @@ const editingFieldName = computed(() => {
             severity="danger"
             text
             rounded
-            size="small"
+
             @click="removeField(fieldIndex)"
           />
         </div>
@@ -621,7 +621,7 @@ const editingFieldName = computed(() => {
           <Button
             v-tooltip="_('ms3_add_rule')"
             icon="pi pi-plus"
-            size="small"
+
             severity="secondary"
             text
             rounded
@@ -634,7 +634,7 @@ const editingFieldName = computed(() => {
       <Button
         icon="pi pi-plus"
         :label="_('ms3_add_field')"
-        size="small"
+
         severity="secondary"
         outlined
         class="add-field-btn"

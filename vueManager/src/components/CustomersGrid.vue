@@ -718,7 +718,7 @@ onMounted(async () => {
               :label="_('clear_selection')"
               icon="pi pi-times"
               severity="secondary"
-              size="small"
+
               text
               @click="clearSelection"
             />
@@ -726,7 +726,7 @@ onMounted(async () => {
               :label="_('delete_selected')"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
+
               :loading="bulkProcessing"
               @click="confirmBulkDelete"
             />
@@ -941,7 +941,7 @@ onMounted(async () => {
           icon="pi pi-times"
           severity="secondary"
           text
-          size="small"
+
           @click="editDialogVisible = false"
         />
         <Button
@@ -949,7 +949,7 @@ onMounted(async () => {
           :label="_('save')"
           icon="pi pi-check"
           :severity="primarySaveSeverity"
-          size="small"
+
           :loading="saving"
           @click="saveCustomer"
         />

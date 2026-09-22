@@ -1070,7 +1070,7 @@ onMounted(() => {
                     <td>
                       <Button
                         icon="pi pi-pencil"
-                        size="small"
+
                         text
                         :title="_('edit')"
                         class="mr-2"
@@ -1078,7 +1078,7 @@ onMounted(() => {
                       />
                       <Button
                         icon="pi pi-trash"
-                        size="small"
+
                         severity="danger"
                         text
                         :title="_('delete')"

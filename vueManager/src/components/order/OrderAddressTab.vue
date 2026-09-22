@@ -130,7 +130,7 @@ const showAddressTabActions = computed(
               severity="secondary"
               text
               rounded
-              size="small"
+
               :title="_('ms3_order_clear_customer')"
               @click="clearCustomer"
             />

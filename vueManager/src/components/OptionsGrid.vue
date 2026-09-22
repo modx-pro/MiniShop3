@@ -414,7 +414,7 @@ onBeforeUnmount(() => {
                 severity="secondary"
                 text
                 rounded
-                size="small"
+
                 :title="_('edit') || 'Редактировать'"
                 @click="openEditDialog(data)"
               />
@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
                 severity="danger"
                 text
                 rounded
-                size="small"
+
                 :title="_('delete') || 'Удалить'"
                 @click="confirmDelete(data)"
               />
