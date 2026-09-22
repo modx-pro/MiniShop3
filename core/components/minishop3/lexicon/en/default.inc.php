@@ -192,7 +192,6 @@ $_lang['ms3_err_order_num_save'] = 'Could not save the order number. Please try 
 $_lang['ms3_err_inventory_insufficient'] = 'Not enough stock for product [[+id]].';
 $_lang['ms3_err_inventory_invalid_qty'] = 'Invalid inventory quantity.';
 $_lang['ms3_err_inventory_cancelled'] = 'Inventory operation was cancelled.';
-$_lang['ms3_err_inventory_unavailable'] = 'Inventory service is not available.';
 $_lang['ms3_err_inventory_not_reserved'] = 'Cannot commit stock that was not reserved for this order.';
 $_lang['ms3_err_product_not_in_category_scope'] = 'Product is not in the scope of this category.';
 $_lang['ms3_err_status_nf'] = 'Status with this identifier not found.';

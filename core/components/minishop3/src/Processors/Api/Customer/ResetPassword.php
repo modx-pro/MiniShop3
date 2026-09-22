@@ -68,7 +68,7 @@ class ResetPassword extends Processor
         /** @var msCustomer $customer */
         $customer = $authManager->validateToken($token, msCustomerToken::TYPE_PASSWORD_RESET);
 
-        if (!$customer) {
+        if (!$customer || CustomerAccess::isPasswordResetDenied($customer)) {
             return $this->failure($this->modx->lexicon('ms3_customer_err_token_invalid'));
         }
 

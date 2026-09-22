@@ -238,10 +238,20 @@ $assertTrue(
 $ms3ProductsSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/ms3_products.php');
 $assertTrue(
     str_contains($ms3ProductsSrc, "\$innerJoin['ms3RgVisibility']")
+    && str_contains($ms3ProductsSrc, 'buildWhereFragmentForRequest')
     && str_contains($ms3ProductsSrc, 'CatalogSortbyQualifier::qualifyUnaliasedResourceFields')
+    && str_contains($ms3ProductsSrc, 'tableAliasesFromJoins')
+    && str_contains($ms3ProductsSrc, 'dropped unsafe/unknown sortby')
     && !str_contains($ms3ProductsSrc, "unset(\$leftJoin['Data'])"),
-    'ms3_products wires RG via ms3RgVisibility + sortby qualify (not Data INNER)'
+    'ms3_products wires RG via ms3RgVisibility + request-aware ACL + sortby qualify/log'
 );
+foreach (['ms3_gallery.php', 'ms3_options.php', 'ms3_product_options.php'] as $snippetFile) {
+    $snippetSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/' . $snippetFile);
+    $assertTrue(
+        str_contains($snippetSrc, 'isVisibleForRequest'),
+        $snippetFile . ' uses isVisibleForRequest for member ACL'
+    );
+}
 $assertTrue(
     !preg_match('/\$where\[\]\s*=\s*\$_ms3RgWhere/', $ms3ProductsSrc),
     'ms3_products does not append RG fragment to numeric where'
@@ -253,11 +263,49 @@ $visibleWhenDisabled = new CatalogResourceGroupVisibility($makeModx([
 $assertTrue($visibleWhenDisabled->isVisible(1), 'isVisible true when setting disabled');
 $assertTrue(!$visibleWhenDisabled->isVisible(0), 'isVisible false for non-positive id');
 
-$isVisibleSrc = (string) file_get_contents(__DIR__ . '/../src/Services/Catalog/CatalogResourceGroupVisibility.php');
+$visibilitySrc = (string) file_get_contents(__DIR__ . '/../src/Services/Catalog/CatalogResourceGroupVisibility.php');
 $assertTrue(
-    str_contains($isVisibleSrc, "'class_key' => \$class"),
+    str_contains($visibilitySrc, 'buildWhereFragmentForRequest')
+    && str_contains($visibilitySrc, 'isVisibleForRequest'),
+    'CatalogResourceGroupVisibility exposes request-aware helpers'
+);
+$assertTrue(
+    str_contains($visibilitySrc, "'class_key' => \$class"),
     'isVisible must pin class_key because getCount skips derivative criteria'
 );
+
+// #757 review: disablePageCacheForMemberCatalog must set cacheable=0 for member RG sets.
+$cacheResource = new class {
+    private int $cacheable = 1;
+
+    public function set(string $key, mixed $value): void
+    {
+        if ($key === 'cacheable') {
+            $this->cacheable = (int) $value;
+        }
+    }
+
+    public function get(string $key): mixed
+    {
+        return $key === 'cacheable' ? $this->cacheable : null;
+    }
+};
+$cacheModx = new class ($cacheResource) extends modX {
+    public function __construct(public object $resource)
+    {
+    }
+
+    public function getOption(string $key, $options = null, $default = null)
+    {
+        return $default;
+    }
+};
+$cacheService = new CatalogResourceGroupVisibility($cacheModx);
+$disablePageCache = new ReflectionMethod(CatalogResourceGroupVisibility::class, 'disablePageCacheForMemberCatalog');
+$disablePageCache->invoke($cacheService, []);
+$assertSame(1, $cacheResource->get('cacheable'), 'empty member RG set leaves cacheable alone');
+$disablePageCache->invoke($cacheService, [12]);
+$assertSame(0, $cacheResource->get('cacheable'), 'member RG set forces cacheable=0');
 
 fwrite(STDOUT, "OK CatalogResourceGroupVisibilityTest\n");
 exit(0);

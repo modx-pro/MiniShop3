@@ -192,7 +192,6 @@ $_lang['ms3_err_order_num_save'] = 'Не удалось сохранить но�
 $_lang['ms3_err_inventory_insufficient'] = 'Недостаточно остатка для товара [[+id]].';
 $_lang['ms3_err_inventory_invalid_qty'] = 'Некорректное количество для учёта остатка.';
 $_lang['ms3_err_inventory_cancelled'] = 'Операция с остатком отменена.';
-$_lang['ms3_err_inventory_unavailable'] = 'Сервис учёта остатка недоступен.';
 $_lang['ms3_err_inventory_not_reserved'] = 'Нельзя зафиксировать остаток, который не был зарезервирован для этого заказа.';
 $_lang['ms3_err_product_not_in_category_scope'] = 'Товар не входит в область этой категории.';
 $_lang['ms3_err_status_nf'] = 'Статус с таким идентификатором не найден.';

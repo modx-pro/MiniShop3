@@ -28,24 +28,37 @@ class ProductStockInventory implements InventoryServiceInterface
         }
     }
 
-    public function reserve(InventoryKey $key, float $qty, InventoryContext $ctx): void
+    public function reserve(InventoryKey $key, float $qty, InventoryContext $ctx, bool $notify = true): void
     {
-        $qty = $this->normalizeQty($qty);
-        $existing = $this->store->findReservation($ctx->orderId, $key->productId);
-        $state = $existing['state'] ?? null;
-        if ($state === InventoryReservationState::RESERVED
-            || $state === InventoryReservationState::COMMITTED
-        ) {
-            return;
+        $this->reserveBatch([$key->productId => $qty], $ctx, $notify);
+    }
+
+    /**
+     * Reserve every line, then emit after-events only if the whole batch stuck.
+     * Before-events still run per line (plugins may cancel). On failure, prior
+     * lines are released with notify=false so subscribers never see a hold that
+     * the surrounding transaction will roll back (#762).
+     *
+     * @param array<int, float> $qtyByProduct
+     * @throws InventoryException
+     */
+    public function reserveBatch(array $qtyByProduct, InventoryContext $ctx, bool $notify = true): void
+    {
+        $done = [];
+        try {
+            foreach ($qtyByProduct as $productId => $qty) {
+                $reserved = $this->reserveLine(new InventoryKey((int) $productId), (float) $qty, $ctx, $notify);
+                if ($reserved !== null) {
+                    $done[] = $reserved;
+                }
+            }
+        } catch (InventoryException $exception) {
+            $this->silentReleaseBatch($done, $ctx);
+            throw $exception;
         }
 
-        $this->fire('msOnBeforeInventoryReserve', $key, $qty, $ctx);
-        $didReserve = false;
-        $this->store->runInTransaction(function () use ($key, $qty, $ctx, &$didReserve): void {
-            $didReserve = $this->claimReserve($key, $qty, $ctx);
-        });
-        if ($didReserve) {
-            $this->fire('msOnInventoryReserve', $key, $qty, $ctx);
+        if ($notify) {
+            $this->fireAfterReserveBatch($done, $ctx);
         }
     }
 
@@ -145,10 +158,7 @@ class ProductStockInventory implements InventoryServiceInterface
     private function claimReserve(InventoryKey $key, float $qty, InventoryContext $ctx): bool
     {
         $row = $this->store->findReservation($ctx->orderId, $key->productId);
-        $state = $row['state'] ?? null;
-        if ($state === InventoryReservationState::RESERVED
-            || $state === InventoryReservationState::COMMITTED
-        ) {
+        if ($this->isAlreadyHeld($row['state'] ?? null)) {
             return false;
         }
 
@@ -163,10 +173,7 @@ class ProductStockInventory implements InventoryServiceInterface
             if (!$inserted) {
                 $row = $this->store->findReservation($ctx->orderId, $key->productId);
                 $state = $row['state'] ?? null;
-                if ($state === InventoryReservationState::RESERVED
-                    || $state === InventoryReservationState::COMMITTED
-                    || $state !== InventoryReservationState::RELEASED
-                ) {
+                if ($this->isAlreadyHeld($state) || $state !== InventoryReservationState::RELEASED) {
                     return false;
                 }
             }
@@ -197,6 +204,59 @@ class ProductStockInventory implements InventoryServiceInterface
         }
 
         return true;
+    }
+
+    /**
+     * @return array{0: InventoryKey, 1: float}|null reserved key+qty, or null when idempotent skip
+     * @throws InventoryException
+     */
+    private function reserveLine(
+        InventoryKey $key,
+        float $qty,
+        InventoryContext $ctx,
+        bool $notify,
+    ): ?array {
+        $qty = $this->normalizeQty($qty);
+        $existing = $this->store->findReservation($ctx->orderId, $key->productId);
+        if ($this->isAlreadyHeld($existing['state'] ?? null)) {
+            return null;
+        }
+
+        if ($notify) {
+            $this->fire('msOnBeforeInventoryReserve', $key, $qty, $ctx);
+        }
+        $didReserve = false;
+        $this->store->runInTransaction(function () use ($key, $qty, $ctx, &$didReserve): void {
+            $didReserve = $this->claimReserve($key, $qty, $ctx);
+        });
+
+        return $didReserve ? [$key, $qty] : null;
+    }
+
+    private function isAlreadyHeld(?string $state): bool
+    {
+        return $state === InventoryReservationState::RESERVED
+            || $state === InventoryReservationState::COMMITTED;
+    }
+
+    /**
+     * @param list<array{0: InventoryKey, 1: float}> $done
+     */
+    private function silentReleaseBatch(array $done, InventoryContext $ctx): void
+    {
+        foreach (array_reverse($done) as [$key, $qty]) {
+            $this->release($key, $qty, $ctx, false);
+        }
+    }
+
+    /**
+     * @param list<array{0: InventoryKey, 1: float}> $done
+     */
+    private function fireAfterReserveBatch(array $done, InventoryContext $ctx): void
+    {
+        foreach ($done as [$key, $qty]) {
+            $this->fire('msOnInventoryReserve', $key, $qty, $ctx);
+        }
     }
 
     private function normalizeQty(float $qty): float

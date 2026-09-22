@@ -19,3 +19,4 @@ require __DIR__ . '/support/InMemoryPaymentAttemptStore.php';
 require __DIR__ . '/support/CallbackOrderStatusChanger.php';
 require __DIR__ . '/support/FixedReplayOrderStatusChanger.php';
 require __DIR__ . '/support/InMemoryInventoryStockStore.php';
+require __DIR__ . '/support/CommittedButFailedOrderStatusChanger.php';

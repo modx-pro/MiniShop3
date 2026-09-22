@@ -30,15 +30,18 @@ interface InventoryServiceInterface
     /**
      * Hold qty for an order. Idempotent for the same order_id + product.
      *
+     * $notify=false skips msOn*InventoryReserve. Use it when the hold may still
+     * roll back with a surrounding SQL transaction (#762).
+     *
      * @throws InventoryException
      */
-    public function reserve(InventoryKey $key, float $qty, InventoryContext $ctx): void;
+    public function reserve(InventoryKey $key, float $qty, InventoryContext $ctx, bool $notify = true): void;
 
     /**
      * Return qty held by reserve. No-op if already released or already committed.
      *
      * $notify=false skips msOn*InventoryRelease. Use it when compensating inside an
-     * open transaction that will roll the SQL back (#603 review).
+     * open transaction that will roll the SQL back (#603 / #762).
      *
      * @throws InventoryException
      */
