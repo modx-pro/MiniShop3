@@ -9,6 +9,8 @@ use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
 use MiniShop3\Notifications\Order\StatusChangedNotification;
+use MiniShop3\Services\Inventory\InventoryException;
+use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MODX\Revolution\modContextSetting;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modUserSetting;
@@ -22,7 +24,7 @@ use MODX\Revolution\modX;
  *
  * Flow (contract with #603, see PR #596):
  * 1. Validate + msOnBeforeChangeOrderStatus (may abort before any persist).
- * 2. DB transaction: in-TX lifecycle ports (may deny) → persist status_id → commit.
+ * 2. DB transaction: inventory when enabled, then in-TX lifecycle ports (may deny) → persist status_id → commit.
  *    Rollback is only the DB transaction — no compensating status save after commit.
  * 3. After commit: msOnChangeOrderStatus → log → notify.
  *    Plugin failure after commit returns an error but does **not** revert status_id
@@ -38,18 +40,21 @@ class OrderStatusService implements OrderStatusChanger
     protected MiniShop3 $ms3;
     protected OrderLogService $orderLog;
     protected OrderLifecyclePortsInterface $lifecyclePorts;
+    protected ?OrderInventoryCoordinator $inventoryCoordinator = null;
     protected ?NotificationManager $notifications = null;
 
     public function __construct(
         modX $modx,
         MiniShop3 $ms3,
         OrderLogService $orderLog,
-        ?OrderLifecyclePortsInterface $lifecyclePorts = null
+        ?OrderLifecyclePortsInterface $lifecyclePorts = null,
+        ?OrderInventoryCoordinator $inventoryCoordinator = null
     ) {
         $this->modx = $modx;
         $this->ms3 = $ms3;
         $this->orderLog = $orderLog;
         $this->lifecyclePorts = $lifecyclePorts ?? new NullOrderLifecyclePorts();
+        $this->inventoryCoordinator = $inventoryCoordinator;
 
         $this->modx->lexicon->load('minishop3:default');
     }
@@ -189,7 +194,7 @@ class OrderStatusService implements OrderStatusChanger
             }
         }
 
-        $persistError = $this->persistStatusWithPorts($msOrder, $statusId, $previousStatusId);
+        $persistError = $this->persistStatusWithInventory($msOrder, $statusId, $previousStatusId);
         if ($persistError !== null) {
             return $persistError;
         }
@@ -204,7 +209,7 @@ class OrderStatusService implements OrderStatusChanger
             'status' => $statusId,
         ]);
         if (!$response['success']) {
-            // Status (and in-TX domain work) already committed — do not compensate.
+            // Status and inventory already committed (#596). Do not revert status_id.
             return $response['message'];
         }
 
@@ -220,11 +225,11 @@ class OrderStatusService implements OrderStatusChanger
     }
 
     /**
-     * In-TX domain hooks then persist status_id.
+     * Inventory (when enabled), in-TX domain ports, then persist status_id.
      * Joins an already open transaction instead of starting a nested one.
      * On failure rolls back only the transaction this method opened.
      */
-    protected function persistStatusWithPorts(
+    protected function persistStatusWithInventory(
         msOrder $msOrder,
         int $statusId,
         ?int $previousStatusId
@@ -232,9 +237,12 @@ class OrderStatusService implements OrderStatusChanger
         $ownsTx = $this->beginOwnedTransaction();
 
         try {
+            $this->inventory()?->applyStatusChange($msOrder, $statusId);
+
             $portError = $this->runLifecyclePorts($msOrder, $statusId, $previousStatusId);
             if ($portError !== null) {
                 $this->rollbackOwnedTransaction($ownsTx);
+                $msOrder->set('status_id', $previousStatusId);
 
                 return $portError;
             }
@@ -243,17 +251,25 @@ class OrderStatusService implements OrderStatusChanger
             if (!$msOrder->save()) {
                 $this->rollbackOwnedTransaction($ownsTx);
                 $msOrder->set('status_id', $previousStatusId);
+                if (!$ownsTx) {
+                    $this->inventory()?->compensateUnpersistedChange($msOrder, $statusId);
+                }
 
                 return $this->modx->lexicon('ms3_err_unknown');
             }
 
             $this->commitOwnedTransaction($ownsTx);
+        } catch (InventoryException $exception) {
+            $this->rollbackOwnedTransaction($ownsTx);
+            $msOrder->set('status_id', $previousStatusId);
+
+            return $this->modx->lexicon($exception->getLexiconKey(), $exception->getPlaceholders());
         } catch (\Throwable $e) {
             $this->rollbackOwnedTransaction($ownsTx);
             $msOrder->set('status_id', $previousStatusId);
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                '[OrderStatusService] persistStatusWithPorts: ' . $e->getMessage()
+                '[OrderStatusService] persistStatusWithInventory: ' . $e->getMessage()
             );
 
             return $this->modx->lexicon('ms3_err_unknown');
@@ -378,6 +394,11 @@ class OrderStatusService implements OrderStatusChanger
         }
 
         return null;
+    }
+
+    protected function inventory(): ?OrderInventoryCoordinator
+    {
+        return $this->inventoryCoordinator;
     }
 
     /**

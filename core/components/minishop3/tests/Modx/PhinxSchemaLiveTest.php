@@ -30,6 +30,7 @@ final class PhinxSchemaLiveTest extends ExtraTestCase
         'ms3_shipment_events',
         'ms3_payment_attempts',
         'ms3_payment_attempt_events',
+        'ms3_inventory_reservations',
     ];
 
     public function testTablePrefixIsNonEmpty(): void
