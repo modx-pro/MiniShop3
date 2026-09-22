@@ -37,9 +37,12 @@ interface InventoryServiceInterface
     /**
      * Return qty held by reserve. No-op if already released or already committed.
      *
+     * $notify=false skips msOn*InventoryRelease. Use it when compensating inside an
+     * open transaction that will roll the SQL back (#603 review).
+     *
      * @throws InventoryException
      */
-    public function release(InventoryKey $key, float $qty, InventoryContext $ctx): void;
+    public function release(InventoryKey $key, float $qty, InventoryContext $ctx, bool $notify = true): void;
 
     /**
      * Finalize a reservation (sale). Does not decrement stock again after reserve.

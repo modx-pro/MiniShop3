@@ -49,7 +49,7 @@ class ProductStockInventory implements InventoryServiceInterface
         }
     }
 
-    public function release(InventoryKey $key, float $qty, InventoryContext $ctx): void
+    public function release(InventoryKey $key, float $qty, InventoryContext $ctx, bool $notify = true): void
     {
         $this->normalizeQty($qty);
         $existing = $this->store->findReservation($ctx->orderId, $key->productId);
@@ -58,7 +58,9 @@ class ProductStockInventory implements InventoryServiceInterface
         }
 
         $held = (float) $existing['qty'];
-        $this->fire('msOnBeforeInventoryRelease', $key, $held, $ctx);
+        if ($notify) {
+            $this->fire('msOnBeforeInventoryRelease', $key, $held, $ctx);
+        }
         $didRelease = false;
         $this->store->runInTransaction(function () use ($key, $ctx, $held, &$didRelease): void {
             if (!$this->store->transitionReservation(
@@ -72,7 +74,7 @@ class ProductStockInventory implements InventoryServiceInterface
             $this->store->increment($key->productId, $held);
             $didRelease = true;
         });
-        if ($didRelease) {
+        if ($didRelease && $notify) {
             $this->fire('msOnInventoryRelease', $key, $held, $ctx);
         }
     }
@@ -117,6 +119,22 @@ class ProductStockInventory implements InventoryServiceInterface
             );
         }
         $this->fire('msOnInventoryCommit', $key, $held, $ctx);
+    }
+
+    /**
+     * Undo a commit that was not persisted on the order (failed status save inside a foreign transaction).
+     * Stock stays decremented; the ledger returns to reserved. No events.
+     */
+    public function revertCommitToReserved(InventoryKey $key, InventoryContext $ctx): void
+    {
+        $this->store->runInTransaction(function () use ($key, $ctx): void {
+            $this->store->transitionReservation(
+                $ctx->orderId,
+                $key->productId,
+                InventoryReservationState::COMMITTED,
+                InventoryReservationState::RESERVED
+            );
+        });
     }
 
     /**

@@ -208,13 +208,17 @@ class ServiceRegistryFactories
             },
 
             'ms3_inventory' => static function (modX $modx, object $services, string $class): object {
+                if (!$modx->pdo instanceof \PDO) {
+                    throw new \RuntimeException('ms3_inventory requires MODX PDO');
+                }
                 $prefix = (string) $modx->getOption('table_prefix', null, '');
                 $productsTable = $modx->getTableName(\MiniShop3\Model\msProductData::class);
                 if (!is_string($productsTable) || $productsTable === '') {
                     $productsTable = $prefix . 'ms3_products';
                 }
+                // $modx->pdo, not $modx: xPDO has beginTransaction() but no inTransaction() (#603 review).
                 $store = new \MiniShop3\Services\Inventory\PdoInventoryStockStore(
-                    $modx,
+                    $modx->pdo,
                     $productsTable,
                     $prefix . 'ms3_inventory_reservations'
                 );

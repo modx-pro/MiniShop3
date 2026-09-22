@@ -45,8 +45,8 @@ if (!str_contains($submit, 'abortInventoryHold')) {
 if (!str_contains($submit, 'failAfterNumberAllocated')) {
     $fail('OrderSubmitHandler must revert the allocated number when submit fails after reserve check');
 }
-if (!str_contains($status, 'undoUncommittedNewStatus')) {
-    $fail('OrderStatusService must undo New + reserve when msOnChangeOrderStatus fails');
+if (str_contains($status, 'undoUncommittedNewStatus')) {
+    $fail('OrderStatusService must not revert status_id after commit (#596)');
 }
 
 $registry = file_get_contents($srcRoot . '/ServiceRegistry.php');
@@ -57,6 +57,9 @@ if ($registry === false || !str_contains($registry, "'ms3_inventory'")) {
 $factories = file_get_contents($srcRoot . '/ServiceRegistryFactories.php');
 if ($factories === false || !str_contains($factories, "'ms3_inventory'")) {
     $fail('ServiceRegistryFactories must wire ms3_inventory');
+}
+if (!preg_match("/'ms3_inventory'\\s*=>[\\s\\S]*\\\$modx->pdo/s", $factories)) {
+    $fail('ms3_inventory factory must pass $modx->pdo, not $modx');
 }
 
 fwrite(STDOUT, "OK InventoryLifecycleWiringTest\n");

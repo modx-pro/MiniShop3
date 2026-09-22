@@ -388,7 +388,13 @@ class OrderSubmitHandler
             return;
         }
         $draft->set('num', null);
-        $draft->save();
+        if ($draft->save()) {
+            return;
+        }
+        $this->modx->log(
+            modX::LOG_LEVEL_ERROR,
+            '[OrderSubmitHandler] failed to clear allocated order number for order #' . (int) $draft->get('id')
+        );
     }
 
     /**

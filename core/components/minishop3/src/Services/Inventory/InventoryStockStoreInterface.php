@@ -45,7 +45,11 @@ interface InventoryStockStoreInterface
     public function deleteReservation(int $orderId, int $productId): void;
 
     /**
-     * Run $work in a DB transaction. Nested calls join an already open transaction.
+     * Run $work in a DB transaction.
+     *
+     * When the PDO connection already has a transaction, $work joins it and this
+     * call does not commit or roll back. Construct the PDO store with $modx->pdo:
+     * xPDO has beginTransaction() but no inTransaction(), and a nested begin throws.
      *
      * @param callable(): void $work
      */

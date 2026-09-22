@@ -205,7 +205,7 @@ final class RecordingInventoryService implements InventoryServiceInterface
         $this->ops[] = 'reserve';
     }
 
-    public function release(InventoryKey $key, float $qty, InventoryContext $ctx): void
+    public function release(InventoryKey $key, float $qty, InventoryContext $ctx, bool $notify = true): void
     {
         $this->ops[] = 'release';
     }

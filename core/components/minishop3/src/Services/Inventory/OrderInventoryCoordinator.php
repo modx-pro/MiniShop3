@@ -81,8 +81,10 @@ class OrderInventoryCoordinator
                 $done[] = [$key, $qty];
             }
         } catch (InventoryException $exception) {
+            // Silent release: the caller transaction rolls the SQL back, so release events
+            // would describe a hold that never committed (#603 review).
             foreach (array_reverse($done) as [$key, $qty]) {
-                $this->inventory->release($key, $qty, $ctx);
+                $this->inventory->release($key, $qty, $ctx, false);
             }
             throw $exception;
         }
@@ -95,9 +97,35 @@ class OrderInventoryCoordinator
         }
     }
 
+    /**
+     * Undo inventory written for a status change whose order row did not save.
+     * Caller must restore the previous status_id on $order first: releaseAll()
+     * treats a paid status as final and would otherwise leave a commit in place.
+     *
+     * @throws InventoryException
+     */
+    public function compensateUnpersistedChange(msOrder $order, int $attemptedStatusId): void
+    {
+        if (!$this->enabled()) {
+            return;
+        }
+        $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
+        $ctx = new InventoryContext((int) $order->get('id'));
+        if ($attemptedStatusId === $paidId && $this->inventory instanceof ProductStockInventory) {
+            foreach (array_keys($this->qtyByProduct($order)) as $productId) {
+                $this->inventory->revertCommitToReserved(new InventoryKey($productId), $ctx);
+            }
+
+            return;
+        }
+        $this->releaseAll($order, $ctx);
+    }
+
     private function releaseAll(msOrder $order, InventoryContext $ctx): void
     {
         $paidId = (int) $this->modx->getOption('ms3_status_paid', null, 3);
+        // Fast exit before per-line release(). ProductStockInventory::release() also
+        // ignores committed rows; this skips the lookup when the order is already paid.
         if ((int) $order->get('status_id') === $paidId) {
             return;
         }

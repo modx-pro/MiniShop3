@@ -10,7 +10,9 @@ use RuntimeException;
 /**
  * Atomic SQL store: decrement stock with WHERE stock >= qty, ledger in ms3_inventory_reservations.
  *
- * $db is PDO or xPDO (prepare + execute). Table names are identifier-quoted; values are bound.
+ * $db must be PDO ($modx->pdo). xPDO/modX exposes beginTransaction() without inTransaction(),
+ * so a nested begin throws "There is already an active transaction".
+ * Table names are identifier-quoted; values are bound.
  */
 final class PdoInventoryStockStore implements InventoryStockStoreInterface
 {
@@ -19,7 +21,7 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
     private string $reservationsTable;
 
     public function __construct(
-        private readonly object $db,
+        private readonly PDO $db,
         string $productsTable,
         string $reservationsTable,
     ) {
@@ -176,41 +178,20 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
 
     public function runInTransaction(callable $work): void
     {
-        $alreadyOpen = method_exists($this->db, 'inTransaction') && $this->db->inTransaction();
-        $started = false;
-        if (!$alreadyOpen && method_exists($this->db, 'beginTransaction')) {
+        $alreadyOpen = $this->db->inTransaction();
+        if (!$alreadyOpen) {
             $this->db->beginTransaction();
-            $started = true;
         }
         try {
             $work();
-            if ($started) {
-                $this->commit();
+            if (!$alreadyOpen) {
+                $this->db->commit();
             }
         } catch (\Throwable $exception) {
-            if ($started) {
-                $this->rollback();
+            if (!$alreadyOpen && $this->db->inTransaction()) {
+                $this->db->rollBack();
             }
             throw $exception;
-        }
-    }
-
-    private function commit(): void
-    {
-        if (method_exists($this->db, 'commit')) {
-            $this->db->commit();
-        }
-    }
-
-    private function rollback(): void
-    {
-        if (method_exists($this->db, 'rollBack')) {
-            $this->db->rollBack();
-
-            return;
-        }
-        if (method_exists($this->db, 'rollback')) {
-            $this->db->rollback();
         }
     }
 
