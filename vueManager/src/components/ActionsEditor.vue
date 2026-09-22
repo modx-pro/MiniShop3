@@ -231,7 +231,12 @@ function closeDialog() {
             :disabled="index === localActions.length - 1"
             @click="moveDown(index)"
           />
-          <Button icon="pi pi-pencil" size="small" text @click="openEditDialog(data, index)" />
+          <Button
+            icon="pi pi-pencil"
+            size="small"
+            text
+            @click="openEditDialog(data, index)"
+          />
           <Button
             icon="pi pi-trash"
             size="small"
@@ -244,7 +249,7 @@ function closeDialog() {
     </DataTable>
 
     <!-- Add button -->
-    <Button :label="_('add_action')" icon="pi pi-plus" size="small" @click="openAddDialog" />
+    <Button :label="_('add_action')" icon="pi pi-plus" @click="openAddDialog" />
 
     <!-- Action edit dialog -->
     <Dialog

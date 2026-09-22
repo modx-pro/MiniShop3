@@ -212,13 +212,12 @@ onMounted(() => {
 
     <Card>
       <template #content>
-        <div class="grid-toolbar">
+        <div class="grid-toolbar ms3-control-row">
           <div class="left">
             <Button
               :label="_('ms3_option_group_create')"
               icon="pi pi-plus"
               severity="success"
-              size="small"
               @click="openCreateDialog"
             />
             <Button
@@ -226,12 +225,11 @@ onMounted(() => {
               :label="`${_('delete')} (${selectionCount})`"
               icon="pi pi-trash"
               severity="danger"
-              size="small"
               @click="confirmBulkDelete"
             />
           </div>
           <div class="right">
-            <InputText v-model="searchQuery" :placeholder="_('search')" size="small" />
+            <InputText v-model="searchQuery" :placeholder="_('search')" />
           </div>
         </div>
 
@@ -295,7 +293,6 @@ onMounted(() => {
                     severity="secondary"
                     text
                     rounded
-                    size="small"
                     :aria-label="_('edit')"
                     @click="openEditDialog(element)"
                   />
@@ -304,7 +301,6 @@ onMounted(() => {
                     severity="danger"
                     text
                     rounded
-                    size="small"
                     :aria-label="_('delete')"
                     @click="confirmDelete(element)"
                   />

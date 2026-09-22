@@ -102,7 +102,6 @@ function updateColumn(index, patch) {
       <Button
         icon="pi pi-plus"
         :label="_('ms3_vue_repeater_add_column')"
-        size="small"
         severity="secondary"
         @click="addColumn"
       />
@@ -143,7 +142,6 @@ function updateColumn(index, patch) {
         severity="danger"
         text
         rounded
-        size="small"
         :disabled="config.columns.length <= 1"
         @click="removeColumn(index)"
       />

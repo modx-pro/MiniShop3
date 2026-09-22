@@ -294,7 +294,6 @@ onMounted(async () => {
             severity="danger"
             text
             rounded
-            size="small"
             :aria-label="_('ms3_menu_remove')"
             @click="removeLink(data)"
           />
