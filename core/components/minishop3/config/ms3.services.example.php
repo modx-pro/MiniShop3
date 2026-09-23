@@ -209,6 +209,13 @@ return [
      * ----------
      * 'ms3_inventory'                - stock reserve/commit/release (InventoryServiceInterface)
      *
+     * Domain events / outbound webhooks:
+     * ----------------------------------
+     * 'ms3_webhook_dispatcher'       - outbound HTTP (WebhookDispatcherInterface; NullWebhookDispatcher default)
+     * 'ms3_domain_events'            - DomainEventBridge (final). Do NOT override the class here.
+     *                                  Register in-process listeners after resolve:
+     *                                  $modx->services->get('ms3_domain_events')->addListener($listener);
+     *
      * Utilities:
      * --------
      * 'ms3_token_service'           - Token operations
@@ -239,6 +246,16 @@ return [
     // 'ms3_shipment_lifecycle' => [
     //     'class' => \MyCompany\Fulfillment\WmsShipmentLifecycle::class,
     // ],
+
+    // Outbound commerce webhooks (CRM/ERP). Implement WebhookDispatcherInterface.
+    // 'ms3_webhook_dispatcher' => [
+    //     'class' => \MyCompany\Integration\HttpWebhookDispatcher::class,
+    //     'interface' => \MiniShop3\Services\Events\WebhookDispatcherInterface::class,
+    // ],
+
+    // In-process domain listeners: do not override ms3_domain_events.
+    // After MiniShop3 boots, call:
+    //   $modx->services->get('ms3_domain_events')->addListener(new MyDomainEventListener());
     */
 
 ];

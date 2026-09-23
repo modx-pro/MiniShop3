@@ -111,6 +111,32 @@ final class DomainEventBridgeTest extends TestCase
         $bridge->emit(DomainEvent::create('order.status_changed', []));
     }
 
+    public function testAddListenerRegistersForSubsequentEmit(): void
+    {
+        $modx = new modX();
+        $calls = [];
+        $listener = new class($calls) implements DomainEventListenerInterface {
+            /** @param list<string> $calls */
+            public function __construct(private array &$calls)
+            {
+            }
+
+            public function handle(DomainEvent $event): void
+            {
+                $this->calls[] = $event->eventType();
+            }
+        };
+
+        $bridge = new DomainEventBridge($modx, new NullWebhookDispatcher(), []);
+        $bridge->emit(DomainEvent::create('order.status_changed', []));
+        self::assertSame([], $calls);
+
+        $bridge->addListener($listener);
+        $bridge->emit(DomainEvent::create('order.status_changed', []));
+
+        self::assertSame(['order.status_changed'], $calls);
+    }
+
     private function modxRecordingLogs(): modX
     {
         return new class extends modX {
