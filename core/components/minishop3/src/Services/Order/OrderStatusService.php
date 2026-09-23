@@ -237,7 +237,10 @@ class OrderStatusService implements OrderStatusChanger
             ob_end_clean();
         }
 
-        if ($this->domainEvents !== null) {
+        // Only after the transition is really committed. When the caller owns the
+        // transaction it may still roll back, and an outbound webhook cannot be
+        // recalled — same reason reserve events wait for commit (#763).
+        if ($this->domainEvents !== null && !$this->hasOpenTransaction()) {
             $this->domainEvents->emit(DomainEvent::orderStatusChanged(
                 (int) $msOrder->get('id'),
                 (string) $msOrder->get('uuid'),
