@@ -345,6 +345,38 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         self::assertSame(['msOnBeforeChangeOrderStatus', 'msOnChangeOrderStatus'], $events);
     }
 
+    public function testOuterTransactionSuppressesDomainEvent(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        // Transaction owned by the caller: status_id is saved but not committed yet.
+        $harness['tx'] = (object) [
+            'outer' => true,
+            'open' => false,
+            'begins' => 0,
+            'commits' => 0,
+            'rollbacks' => 0,
+        ];
+        $log = $this->recordingLog();
+        $events = [];
+        $modx = new modX();
+        $domainEvents = $this->recordingBridge($modx);
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            domainEvents: $domainEvents->bridge
+        );
+
+        self::assertTrue($service->change(10, 3, true));
+        self::assertSame(3, $harness['order']->get('status_id'));
+        self::assertSame(0, $harness['tx']->commits);
+        // An outbound webhook cannot be recalled, so nothing is emitted until the
+        // caller commits — the transition may still roll back (#772 review).
+        self::assertSame([], $domainEvents->recorded);
+    }
+
     public function testSuccessfulStatusChangeEmitsOrderStatusChangedWithAllowlistPayload(): void
     {
         $harness = $this->makeHarness(statusId: 2);
