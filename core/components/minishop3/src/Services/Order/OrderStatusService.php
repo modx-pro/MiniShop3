@@ -9,6 +9,8 @@ use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
 use MiniShop3\Notifications\Order\StatusChangedNotification;
+use MiniShop3\Services\Events\DomainEvent;
+use MiniShop3\Services\Events\DomainEventBridge;
 use MiniShop3\Services\Inventory\InventoryException;
 use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MODX\Revolution\modContextSetting;
@@ -26,10 +28,11 @@ use MODX\Revolution\modX;
  * 1. Validate + msOnBeforeChangeOrderStatus (may abort before any persist).
  * 2. DB transaction: inventory when enabled, then in-TX lifecycle ports (may deny) → persist status_id → commit.
  *    Rollback is only the DB transaction — no compensating status save after commit.
- * 3. After commit: order log, then msOnChangeOrderStatus, then notifications
- *    (notifications still run if the after-event returns an error — status is already saved).
- *    Plugin failure after commit returns an error but does **not** revert status_id
- *    (status and future inventory stay consistent).
+ * 3. After commit: order log, then msOnChangeOrderStatus, then notifications, then domain
+ *    event emit ({@see DomainEvent::orderStatusChanged()} via optional bridge).
+ *    Notifications still run if the after-event returns an error — status is already saved.
+ *    A failed msOnChangeOrderStatus returns that error and does **not** revert status_id.
+ *    Listener and dispatcher failures are logged inside the bridge and do not change this return.
  *
  * Options for {@see change()}:
  * - idempotent=true: already-in-status returns true without events/notify (integrations).
@@ -43,19 +46,22 @@ class OrderStatusService implements OrderStatusChanger
     protected OrderLifecyclePortsInterface $lifecyclePorts;
     protected ?OrderInventoryCoordinator $inventoryCoordinator = null;
     protected ?NotificationManager $notifications = null;
+    protected ?DomainEventBridge $domainEvents = null;
 
     public function __construct(
         modX $modx,
         MiniShop3 $ms3,
         OrderLogService $orderLog,
         ?OrderLifecyclePortsInterface $lifecyclePorts = null,
-        ?OrderInventoryCoordinator $inventoryCoordinator = null
+        ?OrderInventoryCoordinator $inventoryCoordinator = null,
+        ?DomainEventBridge $domainEvents = null
     ) {
         $this->modx = $modx;
         $this->ms3 = $ms3;
         $this->orderLog = $orderLog;
         $this->lifecyclePorts = $lifecyclePorts ?? new NullOrderLifecyclePorts();
         $this->inventoryCoordinator = $inventoryCoordinator;
+        $this->domainEvents = $domainEvents;
 
         $this->modx->lexicon->load('minishop3:default');
     }
@@ -229,6 +235,21 @@ class OrderStatusService implements OrderStatusChanger
             ob_start();
             $this->sendNotifications($msOrder, $status, $oldStatus);
             ob_end_clean();
+        }
+
+        // Only after the transition is really committed. When the caller owns the
+        // transaction it may still roll back, and an outbound webhook cannot be
+        // recalled — same reason reserve events wait for commit (#763).
+        if ($this->domainEvents !== null && !$this->hasOpenTransaction()) {
+            $this->domainEvents->emit(DomainEvent::orderStatusChanged(
+                (int) $msOrder->get('id'),
+                (string) $msOrder->get('uuid'),
+                $previousStatusId,
+                $statusId,
+                (float) $msOrder->get('cost'),
+                (float) $msOrder->get('cart_cost'),
+                (float) $msOrder->get('delivery_cost'),
+            ));
         }
 
         if ($afterEventError !== null) {

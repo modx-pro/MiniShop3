@@ -2,6 +2,7 @@
 
 namespace MiniShop3;
 
+use MiniShop3\Services\Events\NullWebhookDispatcher;
 use MiniShop3\Services\Order\OrderStatusService;
 use MiniShop3\Services\Payment\PdoPaymentAttemptStore;
 use MiniShop3\Services\Shipment\PdoShipmentStore;
@@ -194,6 +195,18 @@ class ServiceRegistryFactories
                 return new $class();
             },
 
+            'ms3_webhook_dispatcher' => static function (modX $modx, object $services, string $class): object {
+                if (is_a($class, NullWebhookDispatcher::class, true)) {
+                    return new $class();
+                }
+
+                return new $class($modx);
+            },
+
+            'ms3_domain_events' => static function (modX $modx, object $services, string $class): object {
+                return new $class($modx, $services->get('ms3_webhook_dispatcher'), []);
+            },
+
             'ms3_order_status' => static function (modX $modx, object $services, string $class): object {
                 return new $class(
                     $modx,
@@ -203,7 +216,8 @@ class ServiceRegistryFactories
                     new \MiniShop3\Services\Inventory\OrderInventoryCoordinator(
                         $modx,
                         $services->get('ms3_inventory')
-                    )
+                    ),
+                    $services->get('ms3_domain_events')
                 );
             },
 

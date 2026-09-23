@@ -84,6 +84,7 @@ class ServiceRegistry
         'ms3_customer_order_resolver',
         'ms3_model_field_service',
         'ms3_programmatic_order',
+        'ms3_domain_events',
     ];
 
     /**
@@ -109,7 +110,8 @@ class ServiceRegistry
             'ms3_inventory',
         ],
         'ms3_order_finalize' => ['ms3_order_number_generator'],
-        'ms3_order_status' => ['ms3_order_log', 'ms3_order_lifecycle_ports', 'ms3_inventory'],
+        'ms3_domain_events' => ['ms3_webhook_dispatcher'],
+        'ms3_order_status' => ['ms3_order_log', 'ms3_order_lifecycle_ports', 'ms3_inventory', 'ms3_domain_events'],
         'ms3_payment_lifecycle' => ['ms3_order_status'],
         'ms3_cart_mutation_handler' => [
             'ms3_order_draft_manager',
@@ -290,6 +292,14 @@ class ServiceRegistry
         'ms3_order_lifecycle_ports' => [
             'class' => \MiniShop3\Services\Order\NullOrderLifecyclePorts::class,
             'interface' => \MiniShop3\Services\Order\OrderLifecyclePortsInterface::class,
+        ],
+        'ms3_webhook_dispatcher' => [
+            'class' => \MiniShop3\Services\Events\NullWebhookDispatcher::class,
+            'interface' => \MiniShop3\Services\Events\WebhookDispatcherInterface::class,
+        ],
+        'ms3_domain_events' => [
+            'class' => \MiniShop3\Services\Events\DomainEventBridge::class,
+            'interface' => null,
         ],
         'ms3_order_status' => [
             'class' => \MiniShop3\Services\Order\OrderStatusService::class,
