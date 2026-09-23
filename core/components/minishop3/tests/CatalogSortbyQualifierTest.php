@@ -213,4 +213,46 @@ $assertSame(
     'snippet drop mode allows leftJoin aliases and rejects unknown prefixes'
 );
 
+// Declared names win over table columns: an option key or TV may be called `weight`
+// just like a msProductData column, and the caller means their own join (#742 review).
+$assertSame(
+    'weight',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'weight',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+        'Data',
+        ['weight'],
+    ),
+    'sortbyOptions key shadows the Data column of the same name'
+);
+$assertSame(
+    'Data.weight',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'weight',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+        'Data',
+        [],
+    ),
+    'without a declared key the Data column is still qualified'
+);
+$assertSame(
+    'pagetitle DESC',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'pagetitle DESC',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+        'Data',
+        ['pagetitle'],
+    ),
+    'declared name shadows a resource column too, direction preserved'
+);
+
 fwrite(STDOUT, "OK: CatalogSortbyQualifierTest\n");

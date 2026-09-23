@@ -192,6 +192,14 @@ if (!is_array($_ms3SortBy)) {
                 ? $scriptProperties['includeVendorFields']
                 : array_map('trim', explode(',', (string) $scriptProperties['includeVendorFields'])))
             : ['name'];
+        // `*` is the registered default: expand it to real msVendor columns, otherwise
+        // sortby=vendor_name is silently dropped on a plain [[msProducts]] call.
+        if (in_array('*', $vendorFields, true)) {
+            $vendorFields = array_merge(
+                array_filter($vendorFields, static fn ($f): bool => $f !== '*'),
+                array_keys($modx->getFields(msVendor::class) ?: [])
+            );
+        }
         foreach ($vendorFields as $vendorField) {
             if (!is_string($vendorField) || $vendorField === '') {
                 continue;

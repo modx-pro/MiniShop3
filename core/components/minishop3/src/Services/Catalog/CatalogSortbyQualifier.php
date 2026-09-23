@@ -458,14 +458,17 @@ final class CatalogSortbyQualifier
         $lower = strtolower($field);
         $dir = $match['dir'] ?? '';
 
+        // Explicitly declared names win over table columns: a TV, vendor field or
+        // sortbyOptions key may be called `weight` or `color` just like a Data column,
+        // and the caller means their own join, not msProductData (#742 / #757 review).
+        if (isset($passthrough[$lower])) {
+            return $field . $dir;
+        }
         if (isset($resourceFields[$lower])) {
             return $alias . '.' . $field . $dir;
         }
         if (isset($dataFields[$lower])) {
             return $dataAlias . '.' . $field . $dir;
-        }
-        if (isset($passthrough[$lower])) {
-            return $field . $dir;
         }
 
         return $part;

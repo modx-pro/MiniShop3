@@ -245,6 +245,11 @@ $assertTrue(
     && !str_contains($ms3ProductsSrc, "unset(\$leftJoin['Data'])"),
     'ms3_products wires RG via ms3RgVisibility + request-aware ACL + sortby qualify/log'
 );
+$assertTrue(
+    str_contains($ms3ProductsSrc, "in_array('*', \$vendorFields, true)")
+    && str_contains($ms3ProductsSrc, 'getFields(msVendor::class)'),
+    'ms3_products expands includeVendorFields="*" so vendor_* stays sortable (#742 review)'
+);
 foreach (['ms3_gallery.php', 'ms3_options.php', 'ms3_product_options.php'] as $snippetFile) {
     $snippetSrc = (string) file_get_contents(__DIR__ . '/../elements/snippets/' . $snippetFile);
     $assertTrue(
