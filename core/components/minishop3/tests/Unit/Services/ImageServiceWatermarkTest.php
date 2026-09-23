@@ -187,8 +187,13 @@ final class ImageServiceWatermarkTest extends TestCase
                 ],
             ]);
 
+            self::assertNotNull($plain);
             self::assertNotNull($marked);
-            self::assertSame($plain, $marked, "legacy position {$legacy} must not place overlay");
+            self::assertSame(
+                $this->pngPixelBlob($plain),
+                $this->pngPixelBlob($marked),
+                "legacy position {$legacy} must not place overlay"
+            );
             $errors = $this->errorMessages();
             self::assertNotEmpty($errors);
             self::assertStringContainsString('Unknown watermark position', $errors[0]);
@@ -218,10 +223,31 @@ final class ImageServiceWatermarkTest extends TestCase
 
         self::assertNotNull($plain);
         self::assertNotNull($marked);
-        self::assertSame($plain, $marked);
+        self::assertSame($this->pngPixelBlob($plain), $this->pngPixelBlob($marked));
         $errors = $this->errorMessages();
         self::assertNotEmpty($errors);
         self::assertStringContainsString('Unknown watermark position', $errors[0]);
+    }
+
+    /**
+     * Pixel buffer without PNG ancillary chunks. GD and Intervention write tIME, so two
+     * identical thumbnails encoded a second apart are not byte-identical.
+     */
+    private function pngPixelBlob(string $pngBytes): string
+    {
+        $im = imagecreatefromstring($pngBytes);
+        self::assertNotFalse($im);
+        $width = imagesx($im);
+        $height = imagesy($im);
+        $blob = pack('NN', $width, $height);
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                $blob .= pack('N', imagecolorat($im, $x, $y));
+            }
+        }
+        imagedestroy($im);
+
+        return $blob;
     }
 
     /**
