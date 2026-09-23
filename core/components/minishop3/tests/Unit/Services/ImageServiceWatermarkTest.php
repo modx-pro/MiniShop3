@@ -16,6 +16,8 @@ final class ImageServiceWatermarkTest extends TestCase
 
     private string $watermarkPng;
 
+    private ?string $fontFile = null;
+
     /** @var list<array{0: int|string, 1: string}> */
     private array $logs = [];
 
@@ -44,8 +46,8 @@ final class ImageServiceWatermarkTest extends TestCase
             return;
         }
 
-        foreach ([$this->sourcePng, $this->watermarkPng] as $file) {
-            if (is_file($file)) {
+        foreach ([$this->sourcePng, $this->watermarkPng, $this->fontFile] as $file) {
+            if (is_string($file) && is_file($file)) {
                 @unlink($file);
             }
         }
@@ -366,6 +368,146 @@ final class ImageServiceWatermarkTest extends TestCase
         } finally {
             @unlink($outside);
         }
+    }
+
+    public function testTextWatermarkChangesThumbnailBytes(): void
+    {
+        if ($this->copyTestFont() === null) {
+            $this->markTestSkipped('No readable TTF available to copy into the site base');
+        }
+
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $base = [
+            'width' => 160,
+            'height' => 80,
+            'mode' => 'cover',
+            'format' => 'png',
+            'quality' => 90,
+        ];
+        $plain = $this->thumbnail($service, $base);
+        $marked = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'type' => 'text',
+                'text' => 'MyShop',
+                'font' => 'assets/DejaVuSans.ttf',
+                'size' => 28,
+                'color' => '#ffffff',
+                'position' => 'center',
+                'opacity' => 100,
+                'angle' => 0,
+            ],
+        ]);
+
+        self::assertNotNull($plain);
+        self::assertNotNull($marked);
+        self::assertNotSame($plain, $marked);
+        self::assertSame([], $this->errorMessages());
+    }
+
+    public function testMissingTextFontIsLoggedAndThumbnailStillGenerated(): void
+    {
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $base = [
+            'width' => 40,
+            'height' => 40,
+            'mode' => 'cover',
+            'format' => 'png',
+        ];
+        $plain = $this->thumbnail($service, $base);
+        $this->logs = [];
+        $marked = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'type' => 'text',
+                'text' => 'MyShop',
+                'font' => 'assets/missing.ttf',
+            ],
+        ]);
+
+        self::assertNotNull($plain);
+        self::assertNotNull($marked);
+        self::assertSame($plain, $marked);
+        $errors = $this->errorMessages();
+        self::assertNotEmpty($errors);
+        self::assertStringContainsString('Watermark font not found', $errors[0]);
+    }
+
+    public function testTextFontOutsideBaseIsRejected(): void
+    {
+        $outside = $this->bundledFontPath();
+        if ($outside === null) {
+            $this->markTestSkipped('Bundled DejaVu subset is missing');
+        }
+
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $out = $this->thumbnail($service, [
+            'width' => 40,
+            'height' => 40,
+            'format' => 'png',
+            'watermark' => [
+                'enabled' => true,
+                'type' => 'text',
+                'text' => 'MyShop',
+                'font' => $outside,
+            ],
+        ]);
+
+        self::assertNotNull($out);
+        $errors = $this->errorMessages();
+        self::assertNotEmpty($errors);
+        self::assertStringContainsString('outside site base path', $errors[0]);
+    }
+
+    public function testExplicitImageTypeKeepsFileWatermark(): void
+    {
+        $service = new ImageService($this->loggingModx(), $this->baseDir);
+        $base = [
+            'width' => 80,
+            'height' => 80,
+            'mode' => 'cover',
+            'format' => 'png',
+            'quality' => 90,
+        ];
+        $plain = $this->thumbnail($service, $base);
+        $marked = $this->thumbnail($service, $base + [
+            'watermark' => [
+                'enabled' => true,
+                'type' => 'image',
+                'path' => 'assets/watermark.png',
+                'position' => 'center',
+                'opacity' => 100,
+            ],
+        ]);
+
+        self::assertNotNull($plain);
+        self::assertNotNull($marked);
+        self::assertNotSame($plain, $marked);
+        self::assertSame([], $this->errorMessages());
+    }
+
+    private function copyTestFont(): ?string
+    {
+        $source = $this->bundledFontPath();
+        if ($source === null) {
+            return null;
+        }
+
+        $dest = $this->baseDir . '/assets/DejaVuSans.ttf';
+        if (!copy($source, $dest)) {
+            return null;
+        }
+
+        $this->fontFile = $dest;
+
+        return $dest;
+    }
+
+    private function bundledFontPath(): ?string
+    {
+        $path = dirname(__DIR__, 2) . '/fixtures/DejaVuSans-subset.ttf';
+
+        return is_readable($path) ? $path : null;
     }
 
     private function loggingModx(): modX

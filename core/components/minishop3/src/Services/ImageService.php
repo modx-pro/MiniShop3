@@ -62,8 +62,10 @@ class ImageService
      *                       - 'quality' (int): quality 1-100 (default 90)
      *                       - 'format' (string): jpg, png, webp, avif (default jpg)
      *                       - 'mode' (string): resize mode - cover, contain, max, stretch (default cover)
-     *                       - 'watermark' (array): optional overlay from Media Source thumbnails JSON
-     *                         (enabled, path, position, offset_x, offset_y, opacity).
+     *                       - 'watermark' (array): optional overlay from Media Source thumbnails JSON.
+     *                         Image (default): enabled, path, position, offset_x, offset_y, opacity.
+     *                         Text (`type: text`): text, font (TTF under site root), size, color, angle,
+     *                         plus the same position/offset/opacity keys. `tile` is image-only.
      *                         position: Intervention names or `tile` (mosaic; offsets = margins).
      *
      * @return string|null Binary thumbnail data or null on error
@@ -126,7 +128,7 @@ class ImageService
 
     /**
      * Overlay watermark from thumbnails JSON (docs gallery Watermarks section).
-     * Missing/invalid file is logged; thumbnail generation continues without overlay.
+     * Missing/invalid file or font is logged; thumbnail generation continues without overlay.
      *
      * @param \Intervention\Image\Interfaces\ImageInterface $image
      * @param array<string, mixed> $options
@@ -138,6 +140,23 @@ class ImageService
             return;
         }
 
+        $type = strtolower(trim((string) ($config['type'] ?? 'image')));
+        match ($type) {
+            '', 'image' => $this->applyImageWatermark($image, $config),
+            'text' => $this->applyTextWatermark($image, $config),
+            default => $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Unknown watermark type \"{$type}\"; use image or text"
+            ),
+        };
+    }
+
+    /**
+     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     * @param array<string, mixed> $config
+     */
+    private function applyImageWatermark($image, array $config): void
+    {
         $path = trim((string) ($config['path'] ?? ''));
         if ($path === '') {
             $this->modx->log(modX::LOG_LEVEL_ERROR, '[ImageService] Watermark enabled but path is empty');
@@ -187,6 +206,143 @@ class ImageService
                 "[ImageService] Failed to apply watermark: {$e->getMessage()}"
             );
         }
+    }
+
+    /**
+     * Draw a text watermark. Font path is jailed to the site root, same as image overlays.
+     *
+     * @param \Intervention\Image\Interfaces\ImageInterface $image
+     * @param array<string, mixed> $config
+     */
+    private function applyTextWatermark($image, array $config): void
+    {
+        $text = trim((string) ($config['text'] ?? ''));
+        if ($text === '') {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[ImageService] Text watermark enabled but text is empty');
+
+            return;
+        }
+
+        $fontPath = trim((string) ($config['font'] ?? ''));
+        if ($fontPath === '') {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, '[ImageService] Text watermark enabled but font is empty');
+
+            return;
+        }
+
+        $resolved = $this->resolveWatermarkPath($fontPath);
+        if ($resolved === null) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Watermark font not found or outside site base path: {$fontPath}"
+            );
+
+            return;
+        }
+
+        $rawPosition = trim((string) ($config['position'] ?? 'bottom-right'));
+        $position = $this->resolveWatermarkPosition($rawPosition);
+        if ($position === null || $position === 'tile') {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Unknown watermark position \"{$rawPosition}\" for text;"
+                . ' use Intervention names (top-left…bottom-right)'
+            );
+
+            return;
+        }
+
+        $offsetX = (int) ($config['offset_x'] ?? 0);
+        $offsetY = (int) ($config['offset_y'] ?? 0);
+        $fontSize = max(1, (int) ($config['size'] ?? 24));
+        [$x, $y, $align, $valign] = $this->textWatermarkAnchor(
+            $image->width(),
+            $image->height(),
+            $position,
+            $offsetX,
+            $offsetY,
+            $fontSize
+        );
+
+        try {
+            $image->text($text, $x, $y, function ($font) use ($resolved, $config, $align, $valign): void {
+                $font->filename($resolved);
+                $font->size(max(1, (int) ($config['size'] ?? 24)));
+                $font->color($this->watermarkTextColor(
+                    (string) ($config['color'] ?? '#ffffff'),
+                    $this->normalizeWatermarkOpacity($config['opacity'] ?? 100)
+                ));
+                $font->angle((float) ($config['angle'] ?? 0));
+                $font->align($align);
+                $font->valign($valign);
+            });
+        } catch (\Exception $e) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[ImageService] Failed to apply text watermark: {$e->getMessage()}"
+            );
+        }
+    }
+
+    /**
+     * Map Intervention place() names to text() coordinates and alignment.
+     *
+     * Bottom anchors keep a descender reserve: valign "bottom" puts the baseline on
+     * the given y, so tails of p, g, y — and of Cyrillic р, у, д, ф — would be cut
+     * off by the image edge when offset_y is not set (#731 review).
+     *
+     * @return array{0: int, 1: int, 2: string, 3: string}
+     */
+    private function textWatermarkAnchor(
+        int $width,
+        int $height,
+        string $position,
+        int $offsetX,
+        int $offsetY,
+        int $fontSize = 24
+    ): array {
+        $midX = (int) round($width / 2);
+        $midY = (int) round($height / 2);
+        $bottomY = $height - $offsetY - $this->descenderReserve($fontSize);
+
+        return match ($position) {
+            'top-left' => [$offsetX, $offsetY, 'left', 'top'],
+            'top' => [$midX, $offsetY, 'center', 'top'],
+            'top-right' => [$width - $offsetX, $offsetY, 'right', 'top'],
+            'left' => [$offsetX, $midY, 'left', 'middle'],
+            'center' => [$midX, $midY, 'center', 'middle'],
+            'right' => [$width - $offsetX, $midY, 'right', 'middle'],
+            'bottom-left' => [$offsetX, $bottomY, 'left', 'bottom'],
+            'bottom' => [$midX, $bottomY, 'center', 'bottom'],
+            'bottom-right' => [$width - $offsetX, $bottomY, 'right', 'bottom'],
+            default => [$width - $offsetX, $bottomY, 'right', 'bottom'],
+        };
+    }
+
+    /**
+     * Space kept under the baseline for descenders, as a share of the font size.
+     */
+    private function descenderReserve(int $fontSize): int
+    {
+        return (int) ceil(max(1, $fontSize) * 0.22);
+    }
+
+    private function watermarkTextColor(string $color, int $opacity): string
+    {
+        $color = trim($color) ?: '#ffffff';
+        if ($opacity >= 100) {
+            return $color;
+        }
+
+        $hex = ltrim($color, '#');
+        if (strlen($hex) === 3 && ctype_xdigit($hex)) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
+            return $color;
+        }
+
+        return sprintf('#%s%02x', $hex, (int) round($opacity * 255 / 100));
     }
 
     /**
