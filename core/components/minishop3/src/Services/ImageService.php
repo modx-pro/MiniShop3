@@ -254,12 +254,14 @@ class ImageService
 
         $offsetX = (int) ($config['offset_x'] ?? 0);
         $offsetY = (int) ($config['offset_y'] ?? 0);
+        $fontSize = max(1, (int) ($config['size'] ?? 24));
         [$x, $y, $align, $valign] = $this->textWatermarkAnchor(
             $image->width(),
             $image->height(),
             $position,
             $offsetX,
-            $offsetY
+            $offsetY,
+            $fontSize
         );
 
         try {
@@ -285,12 +287,23 @@ class ImageService
     /**
      * Map Intervention place() names to text() coordinates and alignment.
      *
+     * Bottom anchors keep a descender reserve: valign "bottom" puts the baseline on
+     * the given y, so tails of p, g, y — and of Cyrillic р, у, д, ф — would be cut
+     * off by the image edge when offset_y is not set (#731 review).
+     *
      * @return array{0: int, 1: int, 2: string, 3: string}
      */
-    private function textWatermarkAnchor(int $width, int $height, string $position, int $offsetX, int $offsetY): array
-    {
+    private function textWatermarkAnchor(
+        int $width,
+        int $height,
+        string $position,
+        int $offsetX,
+        int $offsetY,
+        int $fontSize = 24
+    ): array {
         $midX = (int) round($width / 2);
         $midY = (int) round($height / 2);
+        $bottomY = $height - $offsetY - $this->descenderReserve($fontSize);
 
         return match ($position) {
             'top-left' => [$offsetX, $offsetY, 'left', 'top'],
@@ -299,11 +312,19 @@ class ImageService
             'left' => [$offsetX, $midY, 'left', 'middle'],
             'center' => [$midX, $midY, 'center', 'middle'],
             'right' => [$width - $offsetX, $midY, 'right', 'middle'],
-            'bottom-left' => [$offsetX, $height - $offsetY, 'left', 'bottom'],
-            'bottom' => [$midX, $height - $offsetY, 'center', 'bottom'],
-            'bottom-right' => [$width - $offsetX, $height - $offsetY, 'right', 'bottom'],
-            default => [$width - $offsetX, $height - $offsetY, 'right', 'bottom'],
+            'bottom-left' => [$offsetX, $bottomY, 'left', 'bottom'],
+            'bottom' => [$midX, $bottomY, 'center', 'bottom'],
+            'bottom-right' => [$width - $offsetX, $bottomY, 'right', 'bottom'],
+            default => [$width - $offsetX, $bottomY, 'right', 'bottom'],
         };
+    }
+
+    /**
+     * Space kept under the baseline for descenders, as a share of the font size.
+     */
+    private function descenderReserve(int $fontSize): int
+    {
+        return (int) ceil(max(1, $fontSize) * 0.22);
     }
 
     private function watermarkTextColor(string $color, int $opacity): string
