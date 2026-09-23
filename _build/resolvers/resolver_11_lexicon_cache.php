@@ -43,7 +43,8 @@ $modx->cacheManager->refresh([
 ]);
 $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Cleared lexicon topic cache (#758)');
 
-$armed = $modx->cacheManager->set('lexicon_heal_pending', 1, 0, [
+$pending = 1;
+$armed = $modx->cacheManager->set('lexicon_heal_pending', $pending, 0, [
     xPDO::OPT_CACHE_KEY => 'minishop3',
 ]);
 if ($armed) {
