@@ -420,14 +420,17 @@ final class CatalogSortbyQualifier
                 if ($allowCastAs && self::isSqlTypeToken($lower)) {
                     return $token;
                 }
+                // Same precedence as qualifySimplePart(): a declared TV, vendor field or
+                // sortbyOptions key wins over a column of the same name, otherwise
+                // FIELD(color, 'red', 'blue') would become FIELD(Data.color, …).
+                if (isset($passthrough[$lower])) {
+                    return $bare;
+                }
                 if (isset($resourceFields[$lower])) {
                     return $alias . '.' . $bare;
                 }
                 if (isset($dataFields[$lower])) {
                     return $dataAlias . '.' . $bare;
-                }
-                if (isset($passthrough[$lower])) {
-                    return $bare;
                 }
 
                 return $token;

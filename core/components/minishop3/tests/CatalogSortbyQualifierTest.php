@@ -254,5 +254,33 @@ $assertSame(
     ),
     'declared name shadows a resource column too, direction preserved'
 );
+// Same precedence inside function arguments: FIELD(color, …) is the manual value
+// order for an option, it must not become FIELD(Data.color, …) (#776 review).
+$assertSame(
+    "FIELD(weight,1,2)",
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'FIELD(weight,1,2)',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+        'Data',
+        ['weight'],
+    ),
+    'declared key keeps its bare name inside function arguments'
+);
+$assertSame(
+    'FIELD(Data.weight,1,2)',
+    CatalogSortbyQualifier::qualifyUnaliasedResourceFields(
+        'FIELD(weight,1,2)',
+        $fields,
+        'msProduct',
+        true,
+        $dataFields,
+        'Data',
+        [],
+    ),
+    'undeclared column is still qualified inside function arguments'
+);
 
 fwrite(STDOUT, "OK: CatalogSortbyQualifierTest\n");

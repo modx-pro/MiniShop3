@@ -197,7 +197,8 @@ if (!is_array($_ms3SortBy)) {
         if (in_array('*', $vendorFields, true)) {
             $vendorFields = array_merge(
                 array_filter($vendorFields, static fn ($f): bool => $f !== '*'),
-                array_keys($modx->getFields(msVendor::class) ?: [])
+                // `id` is excluded from the `*` select above, so keep it out here too.
+                array_diff(array_keys($modx->getFields(msVendor::class) ?: []), ['id'])
             );
         }
         foreach ($vendorFields as $vendorField) {
