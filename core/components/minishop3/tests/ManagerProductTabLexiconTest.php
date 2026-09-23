@@ -94,6 +94,12 @@ if ($resolverSrc === false || !str_contains($resolverSrc, 'lexicon_topics')) {
 if (!str_contains($resolverSrc, 'lexicon_heal_pending') || str_contains($resolverSrc, 'modSystemSetting')) {
     $fail('resolver must arm a cache flag, not a system setting');
 }
+if (preg_match("/cacheManager->set\\(\\s*'lexicon_heal_pending'\\s*,\\s*\\d+/", $resolverSrc)) {
+    $fail('cacheManager->set() must not pass a literal as $var (pass-by-reference, #770)');
+}
+if (!preg_match("/cacheManager->set\\(\\s*'lexicon_heal_pending'\\s*,\\s*\\$[A-Za-z_][A-Za-z0-9_]*\\s*,/", $resolverSrc)) {
+    $fail('cacheManager->set() must pass a variable for lexicon_heal_pending (#770)');
+}
 
 $settings = dirname(__DIR__, 4) . '/_build/elements/settings.php';
 $settingsSrc = file_get_contents($settings);
