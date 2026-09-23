@@ -7,6 +7,12 @@ namespace MiniShop3\Tests\Unit\Services\Order;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderStatus;
+use MiniShop3\Services\Events\DomainEvent;
+use MiniShop3\Services\Events\DomainEventBridge;
+use MiniShop3\Services\Events\DomainEventCatalog;
+use MiniShop3\Services\Events\DomainEventListenerInterface;
+use MiniShop3\Services\Events\NullWebhookDispatcher;
+use MiniShop3\Services\Events\WebhookDispatcherInterface;
 use MiniShop3\Services\Order\NullOrderLifecyclePorts;
 use MiniShop3\Services\Order\OrderLifecyclePortsInterface;
 use MiniShop3\Services\Order\OrderLogService;
@@ -33,12 +39,14 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         $log = $this->recordingLog();
         $events = [];
 
-        $service = $this->makeService($harness, $log, new NullOrderLifecyclePorts(), $events);
+        $domainEvents = $this->recordingBridge(new modX());
+        $service = $this->makeService($harness, $log, new NullOrderLifecyclePorts(), $events, domainEvents: $domainEvents->bridge);
         $result = $service->change(10, 2, true, ['idempotent' => true]);
 
         self::assertTrue($result);
         self::assertSame([], $log->entries);
         self::assertSame([], $events);
+        self::assertSame([], $domainEvents->recorded);
     }
 
     public function testSameStatusWithoutIdempotentReturnsError(): void
@@ -337,6 +345,154 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         self::assertSame(['msOnBeforeChangeOrderStatus', 'msOnChangeOrderStatus'], $events);
     }
 
+    public function testSuccessfulStatusChangeEmitsOrderStatusChangedWithAllowlistPayload(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+        $modx = new modX();
+        $domainEvents = $this->recordingBridge($modx);
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            domainEvents: $domainEvents->bridge
+        );
+        $result = $service->change(10, 3, true);
+
+        self::assertTrue($result);
+        self::assertCount(1, $domainEvents->recorded);
+        $event = $domainEvents->recorded[0];
+        self::assertSame(DomainEventCatalog::ORDER_STATUS_CHANGED, $event->eventType());
+        self::assertSame([
+            'order_id' => 10,
+            'order_uuid' => '550e8400-e29b-41d4-a716-446655440000',
+            'old_status_id' => 2,
+            'new_status_id' => 3,
+            'cost' => 100.0,
+            'cart_cost' => 80.0,
+            'delivery_cost' => 20.0,
+        ], $event->data());
+        self::assertArrayNotHasKey('token', $event->data());
+        self::assertArrayNotHasKey('properties', $event->data());
+        self::assertArrayNotHasKey('idempotency_key', $event->data());
+    }
+
+    public function testEnsureSameStatusEmitsNothing(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+        $domainEvents = $this->recordingBridge(new modX());
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            domainEvents: $domainEvents->bridge
+        );
+
+        self::assertTrue($service->ensure(10, 2));
+        self::assertSame([], $domainEvents->recorded);
+    }
+
+    public function testBeforeEventVetoEmitsNothing(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+        $domainEvents = $this->recordingBridge(new modX());
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            beforeFail: true,
+            domainEvents: $domainEvents->bridge
+        );
+
+        self::assertSame('before failed', $service->change(10, 3, true));
+        self::assertSame([], $domainEvents->recorded);
+    }
+
+    public function testPersistFailureEmitsNothing(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+        $domainEvents = $this->recordingBridge(new modX());
+        $ports = new class implements OrderLifecyclePortsInterface {
+            public function onOrderBecamePaid(msOrder $order, ?int $previousStatusId): ?string
+            {
+                return 'port failed';
+            }
+
+            public function onOrderCancelled(msOrder $order, ?int $previousStatusId): ?string
+            {
+                return null;
+            }
+
+            public function onOrderShipped(msOrder $order, ?int $previousStatusId): ?string
+            {
+                return null;
+            }
+        };
+
+        $service = $this->makeService($harness, $log, $ports, $events, domainEvents: $domainEvents->bridge);
+        self::assertSame('port failed', $service->change(10, 3, true));
+        self::assertSame([], $domainEvents->recorded);
+    }
+
+    public function testAfterEventFailureStillEmitsDomainEvent(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+        $domainEvents = $this->recordingBridge(new modX());
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            afterFail: true,
+            domainEvents: $domainEvents->bridge
+        );
+
+        self::assertSame('after failed', $service->change(10, 3, true));
+        self::assertCount(1, $domainEvents->recorded);
+        self::assertSame(DomainEventCatalog::ORDER_STATUS_CHANGED, $domainEvents->recorded[0]->eventType());
+    }
+
+    public function testDispatcherFailureDoesNotChangeChangeReturnValue(): void
+    {
+        $harness = $this->makeHarness(statusId: 2);
+        $log = $this->recordingLog();
+        $events = [];
+        $modx = new modX();
+        $dispatcher = new class implements WebhookDispatcherInterface {
+            public function dispatch(DomainEvent $event): void
+            {
+                throw new \RuntimeException('dispatch failed');
+            }
+        };
+        $domainEvents = new DomainEventBridge($modx, $dispatcher, []);
+
+        $service = $this->makeService(
+            $harness,
+            $log,
+            new NullOrderLifecyclePorts(),
+            $events,
+            domainEvents: $domainEvents
+        );
+
+        self::assertTrue($service->change(10, 3, true));
+    }
+
     /**
      * @param array<string, mixed> $options
      * @return array{order: RecordingMsOrder, statuses: array<int, object>, options: array<string, mixed>}
@@ -345,8 +501,12 @@ final class OrderStatusServiceLifecycleTest extends TestCase
     {
         $order = new RecordingMsOrder([
             'id' => 10,
+            'uuid' => '550e8400-e29b-41d4-a716-446655440000',
             'status_id' => $statusId,
             'context' => 'web',
+            'cost' => 100.0,
+            'cart_cost' => 80.0,
+            'delivery_cost' => 20.0,
         ]);
 
         $statuses = [
@@ -415,6 +575,33 @@ final class OrderStatusServiceLifecycleTest extends TestCase
     }
 
     /**
+     * @return object{bridge: DomainEventBridge, recorded: list<DomainEvent>}
+     */
+    private function recordingBridge(modX $modx): object
+    {
+        /** @var list<DomainEvent> */
+        $recorded = [];
+        $listener = new class($recorded) implements DomainEventListenerInterface {
+            /**
+             * @param list<DomainEvent> $recorded
+             */
+            public function __construct(private array &$recorded)
+            {
+            }
+
+            public function handle(DomainEvent $event): void
+            {
+                $this->recorded[] = $event;
+            }
+        };
+
+        return (object) [
+            'bridge' => new DomainEventBridge($modx, new NullWebhookDispatcher(), [$listener]),
+            'recorded' => &$recorded,
+        ];
+    }
+
+    /**
      * @param array{order: RecordingMsOrder, statuses: array<int, object>, options: array<string, mixed>} $harness
      * @param list<string> $events
      */
@@ -424,18 +611,22 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         OrderLifecyclePortsInterface $ports,
         array &$events,
         bool $afterFail = false,
+        bool $beforeFail = false,
         bool $trackNotifications = false,
+        ?DomainEventBridge $domainEvents = null,
     ): OrderStatusService {
-        $modx = new class($harness, $afterFail) extends modX {
+        $modx = new class($harness, $afterFail, $beforeFail) extends modX {
             /** @var array{order: RecordingMsOrder, statuses: array<int, object>, options: array<string, mixed>, tx?: object} */
             private array $harness;
             private bool $afterFail;
+            private bool $beforeFail;
 
-            public function __construct(array $harness, bool $afterFail)
+            public function __construct(array $harness, bool $afterFail, bool $beforeFail)
             {
                 parent::__construct();
                 $this->harness = $harness;
                 $this->afterFail = $afterFail;
+                $this->beforeFail = $beforeFail;
                 if (!isset($this->harness['tx'])) {
                     $this->harness['tx'] = (object) [
                         'outer' => false,
@@ -510,20 +701,25 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         $ms3 = $this->createMock(MiniShop3::class);
         $ms3->method('initialize')->willReturn(true);
 
-        $utils = new class($events, $afterFail) {
+        $utils = new class($events, $afterFail, $beforeFail) {
             /** @var list<string> */
             private array $events;
             private bool $afterFail;
+            private bool $beforeFail;
 
-            public function __construct(array &$events, bool $afterFail)
+            public function __construct(array &$events, bool $afterFail, bool $beforeFail)
             {
                 $this->events = &$events;
                 $this->afterFail = $afterFail;
+                $this->beforeFail = $beforeFail;
             }
 
             public function invokeEvent(string $eventName, array $params = [], $glue = '<br/>'): array
             {
                 $this->events[] = $eventName;
+                if ($eventName === 'msOnBeforeChangeOrderStatus' && $this->beforeFail) {
+                    return ['success' => false, 'message' => 'before failed', 'data' => []];
+                }
                 if ($eventName === 'msOnChangeOrderStatus' && $this->afterFail) {
                     return ['success' => false, 'message' => 'after failed', 'data' => []];
                 }
@@ -533,7 +729,7 @@ final class OrderStatusServiceLifecycleTest extends TestCase
         };
         $ms3->utils = $utils;
 
-        $service = new class($modx, $ms3, $log, $ports, $events, $trackNotifications) extends OrderStatusService {
+        $service = new class($modx, $ms3, $log, $ports, $events, $trackNotifications, $domainEvents) extends OrderStatusService {
             /** @var list<string> */
             private array $events;
 
@@ -544,8 +740,9 @@ final class OrderStatusServiceLifecycleTest extends TestCase
                 OrderLifecyclePortsInterface $lifecyclePorts,
                 array &$events,
                 private readonly bool $trackNotifications,
+                ?DomainEventBridge $domainEvents,
             ) {
-                parent::__construct($modx, $ms3, $orderLog, $lifecyclePorts);
+                parent::__construct($modx, $ms3, $orderLog, $lifecyclePorts, null, $domainEvents);
                 $this->events = &$events;
             }
 
