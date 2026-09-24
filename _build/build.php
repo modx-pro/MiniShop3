@@ -14,6 +14,7 @@ use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 use MODX\Revolution\Transport\modPackageBuilder;
 use MODX\Revolution\Transport\modTransportPackage;
+use xPDO\Transport\xPDOFileVehicle;
 use xPDO\Transport\xPDOTransport;
 
 class MiniShop3Package
@@ -84,18 +85,12 @@ class MiniShop3Package
             }
         }
 
+        // Files go in their own vehicles, ahead of the category: the PHP resolvers
+        // below run after this vehicle's objects and need the files already on disk.
+        $this->packageFiles();
+
         // Create main vehicle
         $vehicle = $this->builder->createVehicle($this->category, $this->category_attributes);
-
-        // Files resolvers
-        $vehicle->resolve('file', [
-            'source' => $this->config['core'],
-            'target' => "return MODX_CORE_PATH . 'components/';",
-        ]);
-        $vehicle->resolve('file', [
-            'source' => $this->config['assets'],
-            'target' => "return MODX_ASSETS_PATH . 'components/';",
-        ]);
 
         // Add resolvers into vehicle - используем array_filter вместо foreach с continue
         $resolvers = array_filter(
@@ -564,6 +559,52 @@ class MiniShop3Package
             $this->builder->putVehicle($vehicle);
         }
         $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($policy_templates) . ' Access Policy Templates');
+    }
+
+    /**
+     * Ship core/ and assets/ as file vehicles that skip the preserved archive (#783).
+     *
+     * As file resolvers on the category vehicle they inherited PRESERVE_PREEXISTING,
+     * so every upgrade zipped the whole installed core/components/minishop3 —
+     * 4248 files, ~3 s on an SSD and long enough on shared hosting to hit
+     * max_execution_time. That archive is write-only: xPDO unpacks it solely under
+     * RESTORE_PREEXISTING, a mode nothing in xPDO or MODX ever sets.
+     *
+     * The mode has to live on a vehicle of its own. Setting it on the category
+     * vehicle would also change how its objects behave on uninstall, and narrowing
+     * the resolver is not an option either — _pack() archives the target directory
+     * on the site, not the source, so vendor/ would be swept in regardless.
+     *
+     * Removal on uninstall is unchanged: xPDOFileVehicle deletes the target tree
+     * unless UNINSTALL_FILES says otherwise, exactly as the resolver did.
+     */
+    private function packageFiles(): void
+    {
+        $filesets = [
+            [$this->config['core'], "return MODX_CORE_PATH . 'components/';"],
+            [$this->config['assets'], "return MODX_ASSETS_PATH . 'components/';"],
+        ];
+
+        foreach ($filesets as [$source, $target]) {
+            $stored = $this->builder->package->put(
+                [
+                    'source' => rtrim($source, '/\\'),
+                    'target' => $target,
+                    'name' => $this->config['name_lower'],
+                ],
+                [
+                    'vehicle_class' => xPDOFileVehicle::class,
+                    xPDOTransport::PREEXISTING_MODE => xPDOTransport::REMOVE_PREEXISTING,
+                    'namespace' => $this->builder->namespace,
+                ]
+            );
+
+            if (!$stored) {
+                exit('Could not package files from ' . $source . PHP_EOL);
+            }
+
+            $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged files from ' . $source);
+        }
     }
 
     /**
