@@ -42,7 +42,7 @@ function listVueFiles(dir, prefix = '') {
   return files
 }
 
-describe('mgrControlRow layout contract (#760)', () => {
+describe('mgrControlRow layout contract (#760 / vueTools #46)', () => {
   it('loads shared styles from primevue.scss (not per-SFC imports)', () => {
     const primevue = readFileSync(PRIMEVUE_SCSS, 'utf8')
     expect(primevue).toMatch(/@use\s+['"]mgrControlRow['"]/)
@@ -55,26 +55,24 @@ describe('mgrControlRow layout contract (#760)', () => {
     }
   })
 
-  it('uses Modx control-height token and doubled-class specificity', () => {
+  it('pins toolbar buttons to control height and leaves fields to the theme', () => {
     const scss = readFileSync(CONTROL_ROW_SCSS, 'utf8')
     expect(scss).toMatch(/--p-modx-control-height/)
     expect(scss).toMatch(/var\(--p-modx-control-height,\s*2\.25rem\)/)
     expect(scss).not.toMatch(/--p-button-height/)
-    expect(scss).toMatch(/\.ms3-control-row\.ms3-control-row/)
+    expect(scss).toMatch(/\.ms3-control-row\.ms3-control-row \.p-button/)
+    expect(scss).not.toMatch(/\.ms3-control-row\.ms3-control-row \.p-inputtext/)
+    expect(scss).not.toMatch(/\.ms3-control-row\.ms3-control-row \.p-select/)
+    expect(scss).not.toMatch(/\.ms3-control-row\.ms3-control-row \.p-inputgroup/)
     expect(scss).toMatch(
       /\.ms3-rows-per-page-select\.ms3-rows-per-page-select\.p-select/
     )
   })
 
-  it('beats Modx field-height when theme CSS loads after MS3', () => {
+  it('lets theme field-height win for inputs after #46', () => {
     const ms3 = document.createElement('style')
     ms3.textContent = `
-      .ms3-control-row.ms3-control-row .p-inputtext:not(.p-inputtext-sm, .p-inputtext-lg),
-      .ms3-control-row.ms3-control-row .p-select:not(.p-select-sm, .p-select-lg),
       .ms3-control-row.ms3-control-row .p-button:not(.p-button-sm, .p-button-lg) {
-        height: var(--p-modx-control-height, 2.25rem);
-      }
-      .ms3-rows-per-page-select.ms3-rows-per-page-select.p-select:not(.p-select-sm, .p-select-lg) {
         height: var(--p-modx-control-height, 2.25rem);
       }
     `
@@ -99,9 +97,9 @@ describe('mgrControlRow layout contract (#760)', () => {
     row.append(input, button, select)
     document.body.append(row)
 
-    expect(getComputedStyle(input).height).toBe(getComputedStyle(button).height)
-    expect(getComputedStyle(select).height).toBe(getComputedStyle(button).height)
-    expect(getComputedStyle(input).height).toBe('36px')
+    expect(getComputedStyle(input).height).toBe('32px')
+    expect(getComputedStyle(select).height).toBe('32px')
+    expect(getComputedStyle(button).height).toBe('36px')
 
     row.remove()
     ms3.remove()
@@ -120,10 +118,9 @@ describe('mgrControlRow layout contract (#760)', () => {
     expect(src).toMatch(/ms3-rows-per-page-select/)
   })
 
-  it('resolves control height to 36px via 2.25rem when theme tokens are absent', () => {
+  it('resolves button height to 36px via 2.25rem when theme tokens are absent', () => {
     const ms3 = document.createElement('style')
     ms3.textContent = `
-      .ms3-control-row.ms3-control-row .p-inputtext:not(.p-inputtext-sm, .p-inputtext-lg),
       .ms3-control-row.ms3-control-row .p-button:not(.p-button-sm, .p-button-lg) {
         height: var(--p-modx-control-height, 2.25rem);
       }
@@ -132,15 +129,12 @@ describe('mgrControlRow layout contract (#760)', () => {
 
     const row = document.createElement('div')
     row.className = 'ms3-control-row'
-    const input = document.createElement('input')
-    input.className = 'p-inputtext'
     const button = document.createElement('button')
     button.type = 'button'
     button.className = 'p-button'
-    row.append(input, button)
+    row.append(button)
     document.body.append(row)
 
-    expect(getComputedStyle(input).height).toBe('36px')
     expect(getComputedStyle(button).height).toBe('36px')
 
     row.remove()

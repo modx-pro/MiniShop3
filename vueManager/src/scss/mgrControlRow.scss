@@ -1,47 +1,30 @@
 /**
- * Shared manager control height alignment (#760, #765).
+ * Shared manager toolbar row (#760, #765, vueTools #46).
  *
- * MODX 3 default controls are ~36px (`--p-modx-control-height`, 2.25rem).
- * vueTools Modx preset pins buttons to that height and single-line fields to
- * `--p-modx-field-height` (2rem). In one toolbar row that reads as a step.
- * Opt-in via `.ms3-control-row`: stretch default-size controls to the
- * button control height. Fallback `2.25rem` applies when theme tokens are absent.
+ * vueTools Modx (PR #46) matches live MODX 3.2: fields 32px
+ * (`--p-modx-field-height`, 2rem), buttons 36px (`--p-modx-control-height`,
+ * 2.25rem). That step is intentional. This class only pins default-size
+ * buttons so they stay on the control height. Do not stretch
+ * `.p-inputtext` / `.p-select` / `.p-inputgroup` here.
  *
  * Layout (flex/gap) stays in the screen's scoped CSS.
  * Loaded from `primevue.scss` (all manager entries). Do not import from SFCs.
  *
- * Specificity: Modx preset uses `.p-inputtext:not(.sm):not(.lg)` at (0,3,0)
- * and injects after our CSS. Doubled class beats equal specificity
+ * Specificity: doubled class beats equal theme selectors
  * (same pattern as `.p-component.p-component` in the preset).
  */
 
-.ms3-control-row.ms3-control-row .p-button:not(.p-button-sm, .p-button-lg),
-.ms3-control-row.ms3-control-row .p-inputtext:not(.p-inputtext-sm, .p-inputtext-lg),
-.ms3-control-row.ms3-control-row .p-select:not(.p-select-sm, .p-select-lg),
-.ms3-control-row.ms3-control-row .p-inputgroup {
+.ms3-control-row.ms3-control-row .p-button:not(.p-button-sm, .p-button-lg) {
   box-sizing: border-box;
   min-height: var(--p-modx-control-height, 2.25rem);
   height: var(--p-modx-control-height, 2.25rem);
 }
 
-.ms3-control-row.ms3-control-row .p-inputgroup > .p-button {
-  box-sizing: border-box;
-  min-height: var(--p-modx-control-height, 2.25rem);
-  height: var(--p-modx-control-height, 2.25rem);
-}
-
-.ms3-control-row.ms3-control-row .p-select-label {
-  display: flex;
-  align-items: center;
-}
-
-/* Custom pager rows-per-page Select — compact width + control height */
+/* Custom pager rows-per-page Select — compact width. Height comes from the theme field token. */
 .ms3-rows-per-page-select.ms3-rows-per-page-select.p-select:not(.p-select-sm, .p-select-lg) {
   box-sizing: border-box;
   flex: 0 0 auto;
   width: auto;
   min-width: 5rem;
   max-width: 6rem;
-  min-height: var(--p-modx-control-height, 2.25rem);
-  height: var(--p-modx-control-height, 2.25rem);
 }

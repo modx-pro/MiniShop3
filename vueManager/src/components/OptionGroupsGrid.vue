@@ -10,8 +10,6 @@ import { useSelection } from '../composables/useSelection.js'
 import { useSortableList } from '../composables/useSortableList.js'
 import request from '../request.js'
 import { notifyOptionGroupsChanged } from '../utils/optionGroupsBus.js'
-import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
-
 /**
  * Option groups grid — manage msOptionGroup rows (#10).
  *
@@ -25,8 +23,6 @@ import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
-
 const CONFIRM_GROUP = 'settings-option-groups'
 
 const searchQuery = ref('')
@@ -341,7 +337,7 @@ onMounted(() => {
       </div>
       <template #footer>
         <Button :label="_('cancel')" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveGroup" />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveGroup" />
       </template>
     </Dialog>
   </div>

@@ -5,13 +5,9 @@ import { computed, onMounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 
 import request from '../request.js'
-import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
-
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
-
 const loading = ref(false)
 const fields = ref([])
 const totalRecords = ref(0)
@@ -964,7 +960,7 @@ onMounted(async () => {
           class="p-button-text"
           @click="editDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveField" />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveField" />
       </template>
     </Dialog>
 
@@ -1044,7 +1040,7 @@ onMounted(async () => {
           class="p-button-text"
           @click="sectionDialogVisible = false"
         />
-        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="savingSec" @click="saveSection" />
+        <Button :label="_('save')" icon="pi pi-check" :loading="savingSec" @click="saveSection" />
       </template>
     </Dialog>
   </div>

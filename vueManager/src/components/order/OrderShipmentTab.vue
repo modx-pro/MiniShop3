@@ -6,8 +6,6 @@ import { computed, inject, ref, watch } from 'vue'
 import { ORDER_CONTEXT_KEY } from '../../composables/orderContext.js'
 import { useOrderFormatters } from '../../composables/useOrderFormatters.js'
 import request from '../../request.js'
-import { getPrimarySaveSeverity } from '../../utils/primevueTheme.js'
-
 const STATUS_FALLBACK = [
   'preparing',
   'shipped',
@@ -29,7 +27,6 @@ if (!orderCtx) {
 const { order, isCreateMode } = orderCtx
 const { formatDate } = useOrderFormatters()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
 const toast = useToast()
 
 function formatUnix(value) {
@@ -183,8 +180,7 @@ watch(orderId, loadShipment, { immediate: true })
           <Button
             :label="_('save')"
             icon="pi pi-check"
-            :severity="primarySaveSeverity"
-            :loading="saving"
+                  :loading="saving"
             @click="saveShipment(false)"
           />
         </div>
