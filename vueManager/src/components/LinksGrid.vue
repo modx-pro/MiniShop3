@@ -8,13 +8,10 @@ import { useResourceList } from '../composables/useResourceList.js'
 import { useSelection } from '../composables/useSelection.js'
 import request from '../request.js'
 import { gridDeleteAction } from '../utils/gridDeleteAction.js'
-import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const toast = useToast()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
-
 const CONFIRM_GROUP = 'settings-links'
 
 const LINK_GRID_DELETE_ACTION = gridDeleteAction({
@@ -349,7 +346,7 @@ onMounted(() => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveLink" />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveLink" />
       </template>
     </Dialog>
   </div>

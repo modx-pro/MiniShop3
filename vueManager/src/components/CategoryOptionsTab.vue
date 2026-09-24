@@ -5,16 +5,12 @@ import { onMounted, ref, watch } from 'vue'
 
 import { useGroupedToast, useUiGroup } from '../composables/uiGroup.js'
 import request from '../request.js'
-import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
-
 const props = defineProps({
   categoryId: { type: Number, required: true },
 })
 
 const confirm = useConfirm()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
-
 // From entry provideUiGroup('category-options'); fallback for non-entry mounts (#538/#539).
 const UI_GROUP = useUiGroup() || 'category-options'
 const toast = useGroupedToast(UI_GROUP)
@@ -511,8 +507,7 @@ onMounted(() => {
         />
         <Button
           :label="_('save') || 'Сохранить'"
-          :severity="primarySaveSeverity"
-          :loading="addSaving"
+              :loading="addSaving"
           :disabled="!addOptionId"
           @click="addOption"
         />

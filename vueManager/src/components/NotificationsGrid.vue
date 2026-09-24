@@ -6,13 +6,9 @@ import { computed, onMounted, ref } from 'vue'
 import { useCrudDialog } from '../composables/useCrudDialog.js'
 import { useResourceList } from '../composables/useResourceList.js'
 import request from '../request.js'
-import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
-
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
-
 const references = ref({
   statuses: [],
   events: [],
@@ -507,7 +503,7 @@ onMounted(async () => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" class="p-button-text" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="saveNotification" />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="saveNotification" />
       </template>
     </Dialog>
   </div>

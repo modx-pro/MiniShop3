@@ -5,15 +5,12 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import request from '../request.js'
 import { onOptionGroupsChanged } from '../utils/optionGroupsBus.js'
-import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import OptionCategoryTree from './OptionCategoryTree.vue'
 import OptionValuesEditor from './OptionValuesEditor.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
-
 const CONFIRM_GROUP = 'settings-options'
 
 // Grid state
@@ -550,7 +547,7 @@ onBeforeUnmount(() => {
           :disabled="dialogSaving"
           @click="dialogVisible = false"
         />
-        <Button :label="_('save') || 'Сохранить'" :severity="primarySaveSeverity" :loading="dialogSaving" @click="saveOption" />
+        <Button :label="_('save') || 'Сохранить'" :loading="dialogSaving" @click="saveOption" />
       </template>
     </Dialog>
 

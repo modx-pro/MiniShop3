@@ -13,14 +13,11 @@ import request from '../request.js'
 import { resolveAddCostPriceBadgeKind } from '../utils/addCostPriceBadgeKind.js'
 import { formatValue, getDisplayName, normalizeImagePath } from '../utils/displayFormatters.js'
 import { applyDeleteConfirmDefaults, gridDeleteAction } from '../utils/gridDeleteAction.js'
-import { getPrimarySaveSeverity } from '../utils/primevueTheme.js'
 import ActionsColumn from './ActionsColumn.vue'
 import FileBrowser from './FileBrowser.vue'
 
 const toast = useToast()
 const { _ } = useLexicon()
-const primarySaveSeverity = getPrimarySaveSeverity()
-
 const CONFIRM_GROUP = 'settings-payments'
 
 const PAYMENT_GRID_DELETE_ACTION = gridDeleteAction({
@@ -682,7 +679,7 @@ onMounted(async () => {
 
       <template #footer>
         <Button :label="_('cancel')" icon="pi pi-times" severity="secondary" @click="close" />
-        <Button :label="_('save')" icon="pi pi-check" :severity="primarySaveSeverity" :loading="saving" @click="savePayment" />
+        <Button :label="_('save')" icon="pi pi-check" :loading="saving" @click="savePayment" />
       </template>
     </Dialog>
   </div>
