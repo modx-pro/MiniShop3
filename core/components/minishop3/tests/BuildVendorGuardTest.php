@@ -21,14 +21,17 @@ if ($buildSrc === false) {
     $fail('_build/build.php not readable');
 }
 
-if (!str_contains($buildSrc, 'assertProductionVendor()')) {
-    $fail('build.php must call assertProductionVendor() before it packages core/');
+$guardPos = strpos($buildSrc, '$this->assertProductionVendor();');
+if ($guardPos === false) {
+    $fail('build.php must call assertProductionVendor()');
 }
 
-$guardPos = strpos($buildSrc, '$this->assertProductionVendor();');
-$vehiclePos = strpos($buildSrc, '$this->builder->createVehicle(');
-if ($guardPos === false || $vehiclePos === false || $guardPos > $vehiclePos) {
-    $fail('the vendor guard must run before the vehicle is created');
+// Ahead of initialize(), or a rejected build still leaves a half-made package behind.
+foreach (['$this->initialize();', '$this->builder->createVehicle('] as $marker) {
+    $pos = strpos($buildSrc, $marker);
+    if ($pos === false || $guardPos > $pos) {
+        $fail('the vendor guard must run before ' . $marker);
+    }
 }
 
 $removeTree = static function (string $dir) use (&$removeTree): void {

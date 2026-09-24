@@ -58,6 +58,9 @@ class MiniShop3Package
         $this->modx->setLogLevel($this->config['log_level']);
         $this->modx->setLogTarget($this->config['log_target']);
 
+        // Before initialize(): a rejected build must not leave a half-made package behind.
+        $this->assertProductionVendor();
+
         $this->initialize();
     }
 
@@ -67,8 +70,6 @@ class MiniShop3Package
     public function process(): modPackageBuilder
     {
 //        $this->buildModel();
-
-        $this->assertProductionVendor();
 
         // Add elements - используем array_filter вместо foreach с continue
         $elements = array_filter(
