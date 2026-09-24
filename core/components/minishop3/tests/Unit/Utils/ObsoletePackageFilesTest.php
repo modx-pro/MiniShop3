@@ -81,6 +81,21 @@ final class ObsoletePackageFilesTest extends TestCase
         self::assertSame([], $result['kept']);
     }
 
+    public function testPurgeDeletesDirectoryTree(): void
+    {
+        $tests = $this->root . DIRECTORY_SEPARATOR . 'tests';
+        $nested = $tests . DIRECTORY_SEPARATOR . 'Unit';
+        self::assertTrue(mkdir($nested, 0777, true));
+        self::assertTrue(file_put_contents($nested . DIRECTORY_SEPARATOR . 'FooTest.php', '<?php') !== false);
+
+        $result = ObsoletePackageFiles::purge($this->root, ['tests', 'composer.json']);
+
+        self::assertDirectoryDoesNotExist($tests);
+        self::assertSame(['tests'], $result['removed']);
+        self::assertSame(['composer.json'], $result['skipped']);
+        self::assertSame([], $result['rejected']);
+    }
+
     public function testPurgeKeepsPathsStillListedInFrontendAssets(): void
     {
         $dir = $this->root . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'web'

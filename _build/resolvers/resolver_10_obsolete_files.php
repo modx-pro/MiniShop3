@@ -1,10 +1,11 @@
 <?php
 
 /**
- * Remove leftover Extra files that ACTION_UPGRADE does not delete (#704, #688).
+ * Remove leftover Extra files that ACTION_UPGRADE does not delete (#704, #688, #781).
  *
  * File vehicles only copy the new tree. Connector still autoloads processors
- * that remain on disk after they left the package.
+ * that remain on disk after they left the package. Test harness leftovers
+ * (tests/, composer.json, …) are listed the same way.
  */
 
 use MiniShop3\Utils\ObsoletePackageFiles;
