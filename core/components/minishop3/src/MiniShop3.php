@@ -21,7 +21,7 @@ use xPDO\xPDO;
 
 class MiniShop3
 {
-    public $version = '1.14.1-beta1';
+    public $version = '1.14.1-beta2';
 
     /** @var modX $modx */
     public $modx;
