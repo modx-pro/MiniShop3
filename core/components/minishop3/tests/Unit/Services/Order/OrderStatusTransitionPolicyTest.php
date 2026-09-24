@@ -49,9 +49,34 @@ final class OrderStatusTransitionPolicyTest extends TestCase
         self::assertSame(OrderStatusTransitionPolicy::MODE_INVALID, $resolved['mode']);
     }
 
+    public function testJsonWithoutValidPairsIsInvalidNotDenyAll(): void
+    {
+        foreach (['[]', '[[0,0]]', '[["a","b"]]', '[[3]]'] as $raw) {
+            $resolved = OrderStatusTransitionPolicy::resolve($raw);
+            self::assertSame(
+                OrderStatusTransitionPolicy::MODE_INVALID,
+                $resolved['mode'],
+                'expected MODE_INVALID for ' . $raw
+            );
+            self::assertSame([], $resolved['edges']);
+        }
+    }
+
+    public function testArrayWithoutValidPairsIsInvalid(): void
+    {
+        $resolved = OrderStatusTransitionPolicy::resolve([]);
+        self::assertSame(OrderStatusTransitionPolicy::MODE_INVALID, $resolved['mode']);
+    }
+
     public function testGarbageCsvIsInvalid(): void
     {
         $resolved = OrderStatusTransitionPolicy::resolve('2-3,foo');
+        self::assertSame(OrderStatusTransitionPolicy::MODE_INVALID, $resolved['mode']);
+    }
+
+    public function testCsvWithoutValidPairsIsInvalid(): void
+    {
+        $resolved = OrderStatusTransitionPolicy::resolve('0:0,a:b');
         self::assertSame(OrderStatusTransitionPolicy::MODE_INVALID, $resolved['mode']);
     }
 }

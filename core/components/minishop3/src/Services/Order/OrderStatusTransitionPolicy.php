@@ -31,7 +31,12 @@ final class OrderStatusTransitionPolicy
         }
 
         if (is_array($raw)) {
-            return ['mode' => self::MODE_ON, 'edges' => self::fromPairList($raw)];
+            $edges = self::fromPairList($raw);
+            if ($edges === []) {
+                return ['mode' => self::MODE_INVALID, 'edges' => []];
+            }
+
+            return ['mode' => self::MODE_ON, 'edges' => $edges];
         }
 
         $value = trim((string) $raw);
@@ -45,7 +50,12 @@ final class OrderStatusTransitionPolicy
                 return ['mode' => self::MODE_INVALID, 'edges' => []];
             }
 
-            return ['mode' => self::MODE_ON, 'edges' => self::fromPairList($decoded)];
+            $edges = self::fromPairList($decoded);
+            if ($edges === []) {
+                return ['mode' => self::MODE_INVALID, 'edges' => []];
+            }
+
+            return ['mode' => self::MODE_ON, 'edges' => $edges];
         }
 
         $pairs = [];
