@@ -57,8 +57,12 @@ if ($vehiclePos === false || $filesPos > $vehiclePos) {
 }
 
 // The category vehicle keeps the default mode: changing it there would also alter
-// how its objects behave on uninstall.
-if (preg_match('/category_attributes\s*=\s*\[[^\]]*preexisting_mode/s', $buildSrc)) {
+// how its objects behave on uninstall. Match the whole array — a lazy [^\]]* stops
+// at the first nested [] (RELATED_OBJECT_ATTRIBUTES) and never reaches the key.
+if (preg_match('/\$this->category_attributes\s*=\s*\[(.*?)\n\s*\];/s', $buildSrc, $attrs) !== 1) {
+    $fail('could not locate the $this->category_attributes array in build.php');
+}
+if (preg_match('/preexisting_mode/i', $attrs[1])) {
     $fail('the category vehicle must keep the default preexisting_mode');
 }
 

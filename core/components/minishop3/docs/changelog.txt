@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Package files are shipped as their own vehicles and no longer written to a `.preserved.zip` on every install. Upgrades get faster — 3.1 s to 2.2 s on a warm cache, more on slow disks — at the cost of the **Restore** uninstall mode for MiniShop3 files: with no archive there is nothing to roll back, so that mode now restores category objects while removing the files. **Preserve** (the default) and **Remove** behave exactly as before, and the rollback was already partial because Phinx migrations never roll back (#783).
+
 ## [1.14.1-beta1]
 
 ### Fixed
