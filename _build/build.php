@@ -58,6 +58,9 @@ class MiniShop3Package
         $this->modx->setLogLevel($this->config['log_level']);
         $this->modx->setLogTarget($this->config['log_target']);
 
+        // Before initialize(): a rejected build must not leave a half-made package behind.
+        $this->assertProductionVendor();
+
         $this->initialize();
     }
 
@@ -561,6 +564,19 @@ class MiniShop3Package
             $this->builder->putVehicle($vehicle);
         }
         $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($policy_templates) . ' Access Policy Templates');
+    }
+
+    /**
+     * Refuse to package a vendor directory that still holds require-dev packages (#779).
+     */
+    private function assertProductionVendor(): void
+    {
+        require_once dirname(__FILE__) . '/vendor_guard.php';
+
+        $problem = ms3BuildVendorProblem($this->config['core']);
+        if ($problem !== null) {
+            exit('Refusing to build: ' . $problem . PHP_EOL);
+        }
     }
 
     /**

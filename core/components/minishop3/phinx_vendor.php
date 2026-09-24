@@ -99,6 +99,48 @@ function ms3PhinxFindOwnedClassLoader(string $expectedRoot): ?\Composer\Autoload
 }
 
 /**
+ * Class name vendor/autoload.php hands control to, e.g. ComposerAutoloaderInitMiniShop3.
+ */
+function ms3PhinxAutoloaderInitClass(string $autoloadFile): ?string
+{
+    $contents = @file_get_contents($autoloadFile);
+    if (!is_string($contents)) {
+        return null;
+    }
+
+    if (preg_match('/\b(ComposerAutoloaderInit\w+)::getLoader\s*\(/', $contents, $matches) !== 1) {
+        return null;
+    }
+
+    return $matches[1];
+}
+
+/**
+ * Declare the autoloader init class when an upgrade replaced vendor mid-request (#779).
+ *
+ * bootstrap.php require_once's vendor/composer/autoload_real.php on every MODX
+ * request, so the PREVIOUS version's init class is already in memory when the
+ * transport unpacks a new vendor over it. Composer renames that class whenever the
+ * package set changes, and `require vendor/autoload.php` below re-reads the new file
+ * but skips its require_once on the unchanged autoload_real.php path — leaving a call
+ * to a class nobody declared. Requiring autoload_real.php directly re-reads the
+ * replaced file; its new class name cannot collide with the old one, which is exactly
+ * the condition that brought us here.
+ */
+function ms3PhinxEnsureAutoloaderInit(string $vendorPath): void
+{
+    $initClass = ms3PhinxAutoloaderInitClass($vendorPath . '/autoload.php');
+    if ($initClass === null || class_exists($initClass, false)) {
+        return;
+    }
+
+    $autoloadReal = $vendorPath . '/composer/autoload_real.php';
+    if (is_file($autoloadReal)) {
+        require $autoloadReal;
+    }
+}
+
+/**
  * Require MiniShop3 vendor/autoload.php and return its ClassLoader when possible.
  *
  * require_once returns true on a second call, so we fall back to scanning
@@ -106,10 +148,13 @@ function ms3PhinxFindOwnedClassLoader(string $expectedRoot): ?\Composer\Autoload
  */
 function ms3PhinxResolveClassLoader(string $componentPath): ?\Composer\Autoload\ClassLoader
 {
-    $autoload = ms3PhinxNormalizePath($componentPath) . '/vendor/autoload.php';
+    $vendorPath = ms3PhinxNormalizePath($componentPath) . '/vendor';
+    $autoload = $vendorPath . '/autoload.php';
     if (!is_file($autoload)) {
         return null;
     }
+
+    ms3PhinxEnsureAutoloaderInit($vendorPath);
 
     $result = require $autoload;
     if ($result instanceof \Composer\Autoload\ClassLoader) {
