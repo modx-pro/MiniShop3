@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.1-beta1]
+
+### Fixed
+- Upgrading over an installed MiniShop3 no longer dies with `Class "ComposerAutoloaderInit…" not found`. `bootstrap.php` loads `vendor/autoload.php` on every MODX request, so the previous version's `composer/autoload_real.php` is already in memory when the transport unpacks a new `vendor/` over it; the migrations resolver then re-reads `autoload.php`, skips its `require_once` on the unchanged `autoload_real.php` path and calls a class nobody declared. `ms3PhinxEnsureAutoloaderInit()` now reads the expected class name out of the new `autoload.php` and requires `composer/autoload_real.php` directly when it is missing (#779).
+- The generated autoloader class name is pinned through `config.autoloader-suffix`, so it no longer moves with the package set and cannot desynchronise across releases (#779).
+- The transport build refuses to package a `vendor/` that still holds `require-dev` packages. 1.14.0-beta1 shipped PHPUnit, PHPStan and the testbench — 45 MB instead of roughly seven (#779).
+
 ## [1.14.0-beta1]
 
 ### Added

@@ -43,7 +43,8 @@
   "config": {
     "platform": {
       "php": "8.2.0"
-    }
+    },
+    "autoloader-suffix": "MiniShop3"
   },
   "suggest": {
     "ext-redis": "Shared rate-limit counters for multi-node Web API (ms3_rate_limit_store=redis)",
