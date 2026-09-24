@@ -14,6 +14,7 @@ use MODX\Revolution\modSystemSetting;
 use MODX\Revolution\modX;
 use MODX\Revolution\Transport\modPackageBuilder;
 use MODX\Revolution\Transport\modTransportPackage;
+use xPDO\Transport\xPDOFileVehicle;
 use xPDO\Transport\xPDOTransport;
 
 class MiniShop3Package
@@ -84,18 +85,12 @@ class MiniShop3Package
             }
         }
 
+        // Files go in their own vehicles, ahead of the category: the PHP resolvers
+        // below run after this vehicle's objects and need the files already on disk.
+        $this->packageFiles();
+
         // Create main vehicle
         $vehicle = $this->builder->createVehicle($this->category, $this->category_attributes);
-
-        // Files resolvers
-        $vehicle->resolve('file', [
-            'source' => $this->config['core'],
-            'target' => "return MODX_CORE_PATH . 'components/';",
-        ]);
-        $vehicle->resolve('file', [
-            'source' => $this->config['assets'],
-            'target' => "return MODX_ASSETS_PATH . 'components/';",
-        ]);
 
         // Add resolvers into vehicle - используем array_filter вместо foreach с continue
         $resolvers = array_filter(
@@ -567,6 +562,60 @@ class MiniShop3Package
     }
 
     /**
+     * Ship core/ and assets/ as file vehicles that skip the preserved archive (#783).
+     *
+     * As file resolvers on the category vehicle they inherited PRESERVE_PREEXISTING,
+     * so every upgrade zipped the whole installed core/components/minishop3 — 4248
+     * files, ~3 s on an SSD and considerably longer on shared hosting, where the
+     * install then dies on a FastCGI or proxy timeout (modTransportPackage::install()
+     * already sets max_execution_time to 0, so PHP's own limit is rarely the wall).
+     *
+     * Deliberate trade-off: this gives up the "Restore" uninstall mode for our files.
+     * That mode is real — the uninstall dialog offers it as preexisting_mode=2 and
+     * Processors/Workspace/Packages/Uninstall.php passes it through — but with no
+     * archive there is nothing to restore, and xPDOVehicle::get() merges the payload
+     * over the caller's options, so the value pinned here wins over the user's choice.
+     * Picking "Restore" now rolls back category objects while the files are removed.
+     * The rollback was already partial (Phinx migrations never roll back), and the
+     * cost was paid by every upgrade on every site.
+     *
+     * The mode has to live on a vehicle of its own. Setting it on the category
+     * vehicle would also change how its objects behave on uninstall, and narrowing
+     * the resolver is not an option either — _pack() archives the target directory
+     * on the site, not the source, so vendor/ would be swept in regardless.
+     *
+     * "Preserve" (default) and "Remove" are unaffected: both removed the files before.
+     */
+    private function packageFiles(): void
+    {
+        $filesets = [
+            [$this->config['core'], "return MODX_CORE_PATH . 'components/';"],
+            [$this->config['assets'], "return MODX_ASSETS_PATH . 'components/';"],
+        ];
+
+        foreach ($filesets as [$source, $target]) {
+            $stored = $this->builder->package->put(
+                [
+                    'source' => rtrim($source, '/\\'),
+                    'target' => $target,
+                    'name' => $this->config['name_lower'],
+                ],
+                [
+                    'vehicle_class' => xPDOFileVehicle::class,
+                    xPDOTransport::PREEXISTING_MODE => xPDOTransport::REMOVE_PREEXISTING,
+                    'namespace' => $this->builder->namespace,
+                ]
+            );
+
+            if (!$stored) {
+                exit('Could not package files from ' . $source . PHP_EOL);
+            }
+
+            $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged files from ' . $source);
+        }
+    }
+
+    /**
      * Refuse to package a vendor directory that still holds require-dev packages (#779).
      */
     private function assertProductionVendor(): void
@@ -626,8 +675,16 @@ class MiniShop3Package
 
         // Match the first "## [version]" block, capturing everything up to (but not
         // including) the next "## [" heading or end of input.
-        if (preg_match('/^##\s+\[[^\]]+\][^\n]*\n.*?(?=^##\s+\[|\z)/ms', $full, $matches)) {
-            return rtrim($matches[0]);
+        // Skip [Unreleased]: it heads the file between releases, and shipping it as
+        // package metadata would tell installers nothing about the version they got.
+        if (preg_match_all('/^##\s+\[([^\]]+)\][^\n]*\n.*?(?=^##\s+\[|\z)/ms', $full, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                if (strcasecmp(trim($match[1]), 'Unreleased') === 0) {
+                    continue;
+                }
+
+                return rtrim($match[0]);
+            }
         }
 
         return $full;
