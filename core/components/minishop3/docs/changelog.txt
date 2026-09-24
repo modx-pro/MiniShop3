@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0-beta1]
+
+### Added
+- Opt-in inventory: stock is reserved on the New status, committed on Paid and released on Canceled, with an atomic ledger in `ms3_inventory_reservations` and six `msOnInventory*` events. Off by default (`ms3_inventory_enabled`); an external warehouse replaces the `ms3_inventory` service (#589, #603, #763).
+- Payment attempt lifecycle: `ms3_payment_attempts` + `ms3_payment_attempt_events`, a public `POST /api/v1/payment/webhook/{payment_method_id}` endpoint and idempotent webhook replay guarded by a unique `provider_event_id`. Gateways plug in through `PaymentWebhookHandlerInterface` (#590, #604, #626).
+- Shipment lifecycle: `ms3_shipments` + `ms3_shipment_events`, delivery webhook, tracking numbers and order-status sync, plus `GET|PUT /orders/{id}/shipment` in the Manager API and `{$shipments}` in `msGetOrder`. Off by default (`ms3_shipment_enabled`) (#591, #605, #606, #607).
+- Order status lifecycle gate: validated transitions with optional `ms3_order_status_transitions` allow-list, in-transaction domain ports and an idempotent `ensure()`. A plugin error after commit no longer reverts the status (#592, #596).
+- Domain events and an outbound webhook contract: `order.status_changed` with an id/amount-only payload, HMAC-SHA256 signature over `{timestamp}.{rawBody}` (`X-MS3-Signature`, `X-MS3-Timestamp`, 300 s skew), a `NullWebhookDispatcher` by default and in-process listeners via `DomainEventBridge::addListener()` (#593, #764, #772, #774).
+- Resource-group ACL across the storefront: the public catalog, Fenom snippets and cart honour MODX resource groups; a signed-in customer whose customer group is linked to a MODX user group sees the member catalog (`ms3_web_catalog_respect_resource_groups`). New `msCustomerGroup` model and Manager CRUD (#659, #666, #677, #681, #757).
+- Public Category API (`list` / `get` / `tree`), extended `product/list` filters, `product/filters` facets, public `delivery/list` and `payment/list`, product gallery in `product/{id}/images`, catalog resolve by `alias|uri` (#578, #580, #586, #597, #598, #644).
+- SEO block for the public catalog: `title`, `description`, `canonical`, `robots` and Open Graph fields, TV overlay through `ms3_public_seo_tv_map`, `robots` derived from `searchable`, and the `msOnGetPublicSeo` event (#599, #715).
+- Customer auth contract for SSR front ends: `me`, `refresh` and Bearer binding, plus order-draft prefill from the customer profile after login (#588, #639).
+- Text watermarks for Media Source thumbnails alongside the existing image overlay, with the font path jailed to the site root (#731, #769).
+- Per-category `menuindex`: products keep their own order inside additional categories, both in the manager grid and in `msProducts` (#625, #627).
+- Live MODX test suite on `modxkit/testbench` across MODX 3.1.2-pl, 3.2.3-pl and 3.2.4-pl, with the schema built from Phinx migrations and processor ACL assertions (#687, #698, #699, #712).
+
+### Changed
+- Vue manager follows the MODX 3 look: the theme comes from VueTools `getActiveTheme()` (Aura stays the default, `vuetools.theme=modx` switches), control heights in toolbars match MODX, and button sizes are unified across screens (#621, #702, #738, #760, #761, #765, #768).
+- `msProducts` validates string `sortby` against an allow-list before it reaches pdoTools: resource and product columns are qualified, declared TVs, vendor fields and `sortbyOptions` keys pass through, `RAND()`, `FIELD()`, `IFNULL()`, `COALESCE()` and `CAST()` are allowed with checked arguments, and anything else is dropped and logged (#741, #742, #757).
+- Failed payments no longer cancel the order by default — `ms3_payment_on_failed_status` now defaults to `0`, so a customer can retry without a 409. With inventory enabled the reservation stays with the order until it is canceled (#754, #756).
+- Notifications are sent even when a plugin on `msOnChangeOrderStatus` returns an error: the status is already committed, so the customer is no longer left uninformed (#754, #756).
+- Package upgrades clean up obsolete files from `core` and `assets`, skipping anything still listed in `ms3_frontend_assets`, and migrations always run on MiniShop3's own Phinx instead of another extra's copy (#690, #709, #726, #728).
+- CORS preflight is answered before the middleware stack, without touching the MODX session or poisoning the cache (#637, #708, #725, #727).
+
+### Fixed
+- Customer lockout: a temporary lockout no longer blocks password reset, permanent blocks revoke tokens, and the failure counter resets once the lockout expires (#734, #747, #748).
+- `PdoPaymentAttemptStore` no longer swallows write errors on the MODX connection (`ERRMODE_SILENT`): duplicate keys are reported honestly and failed statements raise instead of passing silently (#752, #753).
+- Repeated delivery webhooks heal an order status that drifted from the shipment, and a duplicate claim no longer re-emits `msOn*` events (#754, #756).
+- Option suggestions in the manager return distinct values again (#745, #746).
+- Manager connector never emits invalid UTF-8 or an empty JSON body on broken input (#662, #676, #691, #618).
+- Gallery and product sorting honour `msproductfile_save` / `msproduct_save` permissions, and order field ACL follows `miniShopManagerPolicy` (#614, #661, #675).
+- Facet and page caches are invalidated when resource-group ACL, group membership or a customer-group link changes (#735).
+- Cart accepts JSON strings for `options` in `cart/add` and `cart/change-option` (#633, #638).
+- A poisoned English lexicon cache under a non-English key is healed once after install or upgrade, restoring translated product tabs (#758, #759, #767, #771).
+
+### Notes
+- Documentation for inventory, shipment and payment attempts is not in `docs.modx.pro` yet — it follows in a separate update.
+
 ## [1.13.0-beta1]
 
 ### Added
