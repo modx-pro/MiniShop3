@@ -1,6 +1,7 @@
 <?php
 
 use MODX\Revolution\modCategory;
+use MODX\Revolution\modElement;
 use MODX\Revolution\modSnippet;
 use xPDO\Transport\xPDOTransport;
 
@@ -31,7 +32,17 @@ switch ($options[xPDOTransport::PACKAGE_ACTION] ?? null) {
         $snippets = $modx->getCollection(modSnippet::class, ['category' => $category->get('id')]);
         foreach ($snippets as $snippet) {
             /** @var modSnippet $snippet */
-            $properties = $snippet->get('properties');
+            // Bypass modElement::get('properties'): it lexicons $property['desc']
+            // without isset and emits "Undefined array key desc" for legacy rows
+            // this resolver is meant to heal. parent::get still unserializes
+            // phptype=array; getProperties() also calls get('properties').
+            $properties = \Closure::bind(
+                function () {
+                    return parent::get('properties');
+                },
+                $snippet,
+                modElement::class
+            )();
             if (!is_array($properties)) {
                 continue;
             }
