@@ -763,6 +763,18 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
             return $controller->sort($data);
         });
+        // Static path before /{id} so "transitions" is not captured as an id (#785).
+        $router->get('/transitions', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->getTransitions($params);
+        });
+        $router->put('/transitions', function ($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            return $controller->saveTransitions($data);
+        });
         $router->get('/{id}', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
             return $controller->get($params);

@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Api\Manager;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Order\OrderStatusTransitionsSettingsService;
 use MODX\Revolution\modX;
 
 /**
@@ -308,6 +309,40 @@ class StatusesController
     }
 
     /**
+     * Transition allow-list matrix for the statuses settings UI.
+     * GET /api/mgr/statuses/transitions
+     *
+     * @param array $params
+     * @return array Response
+     */
+    public function getTransitions(array $params = []): array
+    {
+        unset($params);
+        $matrix = $this->transitionsSettings()->getMatrix();
+
+        return Response::success($matrix)->getData();
+    }
+
+    /**
+     * Save transition allow-list (writes ms3_order_status_transitions as CSV or empty).
+     * PUT /api/mgr/statuses/transitions
+     *
+     * @param array $data Request body { edges: [[from, to], ...] }
+     * @return array Response
+     */
+    public function saveTransitions(array $data = []): array
+    {
+        $edges = $data['edges'] ?? null;
+        if (!is_array($edges)) {
+            return Response::error('Edges array is required', HttpStatus::BAD_REQUEST)->getData();
+        }
+
+        $matrix = $this->transitionsSettings()->saveEdges($edges);
+
+        return Response::success($matrix, 'Status transitions saved')->getData();
+    }
+
+    /**
      * Format status object for API response
      *
      * @param msOrderStatus $status
@@ -326,5 +361,10 @@ class StatusesController
             'position' => (int)$status->get('position'),
             'editable' => (bool)$status->get('editable'),
         ];
+    }
+
+    protected function transitionsSettings(): OrderStatusTransitionsSettingsService
+    {
+        return new OrderStatusTransitionsSettingsService($this->modx);
     }
 }
