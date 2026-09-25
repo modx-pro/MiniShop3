@@ -33,9 +33,10 @@ switch ($options[xPDOTransport::PACKAGE_ACTION] ?? null) {
         foreach ($snippets as $snippet) {
             /** @var modSnippet $snippet */
             // Bypass modElement::get('properties'): it lexicons $property['desc']
-            // without isset and emits "Undefined array key desc" for legacy rows
-            // this resolver is meant to heal. parent::get still unserializes
-            // phptype=array; getProperties() also calls get('properties').
+            // without isset and emits "Undefined array key desc". That fires on
+            // every package upgrade that reinstalls snippets (#782), not only on
+            // one-shot legacy rows. parent::get still unserializes phptype=array;
+            // getProperties() also calls get('properties') and is unsafe here.
             $properties = \Closure::bind(
                 function () {
                     return parent::get('properties');
