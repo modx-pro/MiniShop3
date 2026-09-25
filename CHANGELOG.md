@@ -17,11 +17,11 @@
 
 ## Сентябрь 2026
 
-### [2026-09-25] 🚀 Версия 1.14.1-beta2
+### [2026-09-25] Версия 1.14.1-beta2
 
 **Тип релиза:** PATCH (beta) — ускорение установки и обновления.
 
-#### 🔄 Изменено
+#### Изменено
 
 **Файлы компонента больше не архивируются при установке (#783).** `core` и `assets` переехали в собственные vehicle, и `.preserved.zip` при обновлении больше не создаётся — раньше на каждое обновление зиповалось 4248 файлов установленного компонента. Обновление ускорилось с 3,1 до 2,2 секунды на прогретом кэше файловой системы; на медленных дисках выигрыш заметно больше, и именно там архивация упирала установку в таймаут веб-сервера.
 
@@ -29,11 +29,11 @@
 
 ---
 
-### [2026-09-24] 🚀 Версия 1.14.1-beta1
+### [2026-09-24] Версия 1.14.1-beta1
 
 **Тип релиза:** PATCH (beta) — экстренный фикс: 1.14.0-beta1 не устанавливался поверх предыдущих версий.
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **Обновление падало с `Class "ComposerAutoloaderInit…" not found` (#779).** `bootstrap.php` подключает `vendor/autoload.php` на каждом запросе MODX, поэтому при обновлении в памяти уже лежит `composer/autoload_real.php` предыдущей версии. Транспорт распаковывает новый `vendor/` поверх, резолвер миграций делает `require vendor/autoload.php`, но его `require_once` на неизменившийся путь `composer/autoload_real.php` — no-op, и вызов уходит в необъявленный класс. Composer выводит имя этого класса из состава пакетов, а в 1.14.0-beta1 состав изменился (в `require-dev` добавился `modxkit/testbench`), поэтому старое имя перестало совпадать с новым. Теперь `ms3PhinxEnsureAutoloaderInit()` вычитывает имя класса из нового `autoload.php` и, если оно не объявлено, требует `composer/autoload_real.php` напрямую, в обход кэша `require_once`. Обновление проходит с любой прошлой версии.
 
@@ -43,11 +43,11 @@
 
 ---
 
-### [2026-09-23] 🚀 Версия 1.14.0-beta1
+### [2026-09-23] Версия 1.14.0-beta1
 
 **Тип релиза:** MINOR (beta) — коммерческий жизненный цикл заказа: складской учёт, попытки оплаты и отгрузки, доменные события с исходящими вебхуками; ACL групп ресурсов на всей витрине; закалка сортировки в `msProducts`.
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Складской учёт, выключенный по умолчанию (#589, #603, #763).** При включённой настройке `ms3_inventory_enabled` остаток резервируется на статусе «Новый», фиксируется на «Оплачен» и освобождается на «Отменён», если заказ ещё не был оплачен. Журнал резервов лежит в `ms3_inventory_reservations`, переходы состояния атомарны (условный `UPDATE ... WHERE state = ...`), так что параллельные запросы не спишут остаток дважды. Доступность проверяется до выдачи номера заказа. Шесть событий `msOnBeforeInventoryReserve` / `msOnInventoryReserve` / `Commit` / `Release` позволяют подключить внешнюю систему; события выпускаются только после фиксации транзакции, поэтому подписчик не получит уведомление о резерве, которого нет в базе. `NULL` в `stock` считается нулём — перед включением заполните остатки. Внешний склад подключается подменой сервиса `ms3_inventory`.
 
@@ -71,7 +71,7 @@
 
 **Живые тесты на настоящем MODX (#687, #698, #699, #712)** через `modxkit/testbench` на версиях 3.1.2-pl, 3.2.3-pl и 3.2.4-pl: схема поднимается из Phinx-миграций, проверяются права процессоров.
 
-#### 🔧 Изменено
+#### Изменено
 
 **Vue-менеджер выглядит как MODX 3 (#621, #702, #738, #760, #761, #765, #768).** Тема берётся из VueTools через `getActiveTheme()`: по умолчанию Aura, `vuetools.theme=modx` переключает на вид менеджера. Высоты кнопок, полей и списков в тулбарах выровнены, размеры кнопок приведены к единому виду по всем экранам; кнопки действий внутри строк таблиц остались компактными, чтобы гриды не раздувались.
 
@@ -85,7 +85,7 @@
 
 **CORS-preflight обрабатывается до стека middleware (#637, #708, #725, #727)** — без обращения к сессии MODX и без порчи кэша.
 
-#### 🐛 Исправлено
+#### Исправлено
 
 - **Блокировки покупателей (#734, #747, #748).** Временная блокировка по числу неудачных попыток больше не мешает восстановить пароль, перманентная отзывает токены, счётчик сбрасывается после истечения блокировки.
 - **Молчаливые ошибки записи попыток оплаты (#752, #753).** На соединении MODX (`ERRMODE_SILENT`) неудачные запросы возвращали `false` и терялись; теперь дубли распознаются честно, а сбой поднимает исключение.
@@ -98,17 +98,17 @@
 - **Английские вкладки товара при русском менеджере (#758, #759, #767, #771).** Отравленный кэш лексикона лечится один раз после установки или обновления.
 - **Сортировка по опциям и полям производителя (#776).** Ключ `sortbyOptions`, совпадающий с именем колонки (`weight`, `color`, `size`), больше не ломает запрос; `sortby=vendor_name` работает при дефолтных параметрах вызова.
 
-#### 📝 Примечание
+#### Примечание
 
 Документация по складскому учёту, отгрузкам и попыткам оплаты в `docs.modx.pro` пока отсутствует — выйдет отдельным обновлением.
 
 ## Август 2026
 
-### [2026-08-13] 🚀 Версия 1.13.0-beta1
+### [2026-08-13] Версия 1.13.0-beta1
 
 **Тип релиза:** MINOR (beta) — публичный Web API для headless-витрины и кабинета клиента, миграция менеджера на Ext-less Vue, масштабная security-закалка API и декомпозиция сервисов.
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Публичный Web API каталога товаров (#333):** headless-эндпойнты `GET /api/v1/product/list` и `GET /api/v1/product/get/{id}` работают **без авторизации** (без `TokenMiddleware`) — витрина на любом фронте может тянуть каталог напрямую. Новый `ProductCatalogService` + `Web\ProductController`, покрыт `ProductCatalogServiceTest`.
 
@@ -141,7 +141,7 @@
 
 **Инфраструктура тестов и CI-гейты (#394, #433, #495, #496):** PHP lint/smoke + ESLint-гейт на PR (#394), PHPStan-гейт + PHPUnit-скаффолд для чистых хелперов (#433), интеграционные тесты (MySQL CI + жизненный цикл `AuthManager` #496, finalize required fields + cart SQLite draft #495). Лексикон для сообщений `CategoryProductsController` (#467); паритет EN/RU и удаление дублей ключей (#360).
 
-#### 🔄 Изменено
+#### Изменено
 
 **Декомпозиция `OrdersController` + фабричная карта `ServiceRegistry` (#492):** list/mutation/products/presenter вынесены в отдельные сервисы (контроллер < 1k строк), менеджерские order-сервисы зарегистрированы в DI. Switch/`in_array`-разводка `ServiceRegistry` заменена явной картой `ServiceRegistryFactories`. Проверки пары доставка/оплата (#459) перенесены в `ManagerOrderMutationService`.
 
@@ -159,7 +159,7 @@
 
 **Производительность:** раздельный stats-эндпойнт с условным Address JOIN (#469), параллельная загрузка values опций в `OrderView` (#447), request-scoped мемоизация `getGridConfig` (#488).
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **Security/ACL-закалка Web API — сессии и токены:** ротация API-токена против token fixation (#516); закрытие обхода сессии после отзыва токена + харденинг web-logout (#462); безопасный CORS — без wildcard-with-credentials, same-origin по умолчанию (#463); корректные `HTTP 401/429` для auth и rate-limit (#434); авто-выпуск гостевого токена для `cart/get` + синхронизация `publicRoutes` (#440); привязка API-сессии на верификации email (#441); удаление false-success token/refresh-заглушки (#351); отказ по истёкшим API-токенам вместо тихого продления (#396); закрытие захвата чужого checkout-токена через email (#369/#391); восстановление storefront-логина и сессионной авторизации (#321).
 
@@ -175,7 +175,7 @@
 
 **DI:** подключение `OptionCategoryService` в `ms3_option_service` (#535); резолв платёжной ссылки через `PaymentService` (#485).
 
-#### 📦 Зависимости
+#### Зависимости
 
 Security-бампы транзитивных пакетов `vueManager` (js-yaml, fast-uri, happy-dom, vite 6.4.3) — #483, #506.
 
@@ -183,11 +183,11 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 
 ## Июнь 2026
 
-### [2026-06-22] 🚀 Версия 1.12.0-beta1
+### [2026-06-22] Версия 1.12.0-beta1
 
 **Тип релиза:** MINOR (beta) — три новые фичи в админке + обширная серия фиксов install reliability, processor флоу и Manager API.
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Тип extra field «повторитель» — `ms3-repeater` (#299, #301):** JSON-массив объектов со схемой колонок, drag-and-drop сортировкой строк и автоматическим проставлением `rank` при сохранении (MIGX-паттерн).
 
@@ -205,7 +205,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - Реестр allowed reference-ключей в `GridEditorReferenceRegistry` (на старте — `vendors`), валидация combo при сохранении конфига колонки. Override-URL через `editor_combo_endpoint` принимается только если путь в allowlist (`/api/mgr/references/`). Endpoint `GET /api/mgr/grid-config/category-products` теперь отдаёт `editor_references` (список доступных reference-ключей) для UI настройки. Эндпойнт `GET /api/mgr/references/vendors` дополняет ответ единым массивом `options: [{value, label}]`; поле `vendors` сохранено для обратной совместимости.
 - Vue composable `useCategoryProductsInlineEdit` инкапсулирует state inline-edit, загрузку combo, type coercion (фикс `bool ↔ int` mismatch'а в PrimeVue Select), global ESC handler и click-outside dismiss. Утилиты `gridEditorOptions.js`: allowlist URL, маппинг ответа API → options.
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **Сохранение `Data` и extra fields в процессорах товаров (#297, #298):** при вызове `MiniShop3\Processors\Product\Create|Update` (импорт CSV, сторонние интеграции, alias `Resource\Create::getInstance()` для `class_key=msProduct`) значения колонок `msProductData` молча терялись.
 
@@ -251,7 +251,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - На бэкенде `OrdersController::applyDraftVisibilityFilter()` — отдельный метод, переиспользуется в `getList()` и `getOrdersStats()`. Параметр `show_drafts` в запросе перебивает системную настройку через `FILTER_VALIDATE_BOOLEAN`. Подсказка над блоком статистики «Количество и сумма по оформленным заказам; черновики не учитываются» (счётчик намеренно не реагирует на drafts toggle — статистика по «оформленным»).
 - Tooltip над статистикой объясняет почему счётчик и грид могут показывать разные числа.
 
-#### ♻️ Рефакторинг
+#### Рефакторинг
 
 **Единый контракт `direct_filter_keys` для гридов (#314, #317):** список фильтров, отправляемых без префикса `filter_`, теперь живёт **на backend** и отдаётся фронту вместе с конфигом грида. Убрано дублирование между Vue-гридами и PHP-контроллерами.
 
@@ -265,12 +265,12 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - Добавлен `<object class="msOptionGroup">` (таблица `ms3_option_groups`, 5 полей, BTREE на `sort_order`, aggregate `Options` **local owner** — не composite, чтобы `$group->remove()` не каскадно удалял опции).
 - Runtime source of truth — `src/Model/mysql/*`, XML остаётся как справочный документ.
 
-#### 📋 Документация
+#### Документация
 
 - `docs/components/minishop3/development/events/notifications.md` — новая подтаблица `recipient` для customer-получателя (резолв `address → customer → profile`, зеркалирование в `recipient['customer']`, ссылка на issue #218). Закрывает гэп после PR #320.
 - `docs/components/minishop3/development/routing.md` — новый раздел «Конфигурация гридов (`/grid-config`)» с CRUD-эндпойнтами, известными `grid_key`, структурой ответа (`columns` / `direct_filter_keys` / `editor_references`) и контрактом фронт-фильтрации `useGridFilterParams`. Раньше в доке этой группы роутов не было вообще.
 
-#### 📦 Зависимости
+#### Зависимости
 
 Без изменений.
 
@@ -278,11 +278,11 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 
 ## Май 2026
 
-### [2026-05-22] 🚀 Версия 1.11.1-beta1
+### [2026-05-22] Версия 1.11.1-beta1
 
 **Тип релиза:** PATCH (beta) — точечные хотфиксы установки и каталога с превью
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **SQL-ошибка в `msProducts` / `msCart` / `msGetOrder` при `includeThumbs` (#293):**
 - Хелпер `ProductThumbnailJoin::buildLeftJoinOn()` оборачивал результат `$modx->getTableName()` ещё одной парой backticks. xPDO `getTableName()` уже экранирует имя таблицы — в итоге в runtime SQL появлялись тройные backticks вокруг имени, MySQL отвергал запрос как `Error 42000`. Любой вызов `includeThumbs=...` на витрине после установки 1.11.0-beta1 отдавал пустой каталог.
@@ -294,11 +294,11 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 
 ---
 
-### [2026-05-21] 🚀 Версия 1.11.0-beta1
+### [2026-05-21] Версия 1.11.0-beta1
 
 **Тип релиза:** MINOR (beta) — крупный цикл с breaking changes и новыми фичами
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Публичный refresh-API витринного JS (#274):**
 - `window.ms3.refresh()` + событие `ms3:refresh` — единая точка для интеграции со сторонними AJAX-компонентами (mFilter / mSearch2 / собственный AJAX / бесконечный скролл и т.д.), которые заменяют DOM каталога. После замены сторонний компонент вызывает `window.ms3?.refresh?.()` — MS3 ре-привязывает состояние своих UI-модулей (`ProductCardUI.updateAllCards()`, `QuantityUI.reinit()`, в будущем — другие).
@@ -312,7 +312,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - Режимы: `auto` (простая доставка/оплата по полям без вызова внешних провайдеров; для кастомных классов — предупреждение и сохранение прежней `delivery_cost` или комиссии 0), `manual` + `manual_delivery_cost`, расширенный `force_provider` (провайдер в `try/catch`, без молчаливого затирания при ошибке).
 - Vue: кнопка «Пересчитать стоимость» в сводке заказа, подсказка при несохранённой смене доставки/оплаты, блок для ручной стоимости доставки при предупреждении backend.
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **Дублирование товаров при `includeThumbs` (#281):**
 - В сниппетах `msProducts`, `msCart`, `msGetOrder` LEFT JOIN превью выбирал все картинки галереи товара — `GROUP BY` по URL размножал первую строку столько раз, сколько фото в галерее.
@@ -372,7 +372,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 
 **Товар — сохранение без вкладки «Категории» обнуляло дополнительные категории (#238):**
 - `ProductDataService::saveCategories()` при отсутствии ключа `categories` в `_fields` (POST не содержит поля, пока дерево вкладки не отрисовалось) больше не трактует это как пустой список и не вызывает `removeCollection`. Поведение согласовано с `saveLinks()`: явная передача `categories` по-прежнему синхронизирует `msCategoryMember` (в том числе пустой массив после открытия вкладки).
-- **⚠️ Изменение контракта:** интеграции, сознательно полагавшиеся на «нет `categories` в POST → очистить связи», должны теперь передавать пустой массив явно.
+- **Изменение контракта:** интеграции, сознательно полагавшиеся на «нет `categories` в POST → очистить связи», должны теперь передавать пустой массив явно.
 
 **Web API покупателя — отсутствующие маршруты CustomerAPI (#241):**
 - Добавлен `POST /api/v1/customer/add` для быстрого обновления полей профиля через `CustomerAPI.add()` и `CustomerUI.handleAdd()`.
@@ -388,7 +388,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - Переопределение `status` в `msOnBeforeChangeOrderStatus` применяется только если новое значение **числовое** (`is_numeric`); иное значение игнорируется, чтобы не получить «случайный» id из приведения типов.
 - **`msOnErrorValidateCustomerValue`:** при неуспехе события `Customer::validate()` возвращает `[$key => сообщение]`; при успехе, если ключ **`errors`** есть в merged `data` и это массив (включая пустой), результат валидации берётся из него, иначе — стандартный набор ошибок Rakit после сбоя правил.
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Отрицательная доп. стоимость доставки и оплаты (#211):**
 - Поле `price` у способов доставки и оплаты теперь поддерживает отрицательные фиксированные значения и проценты (`-100%`…`100%`).
@@ -405,7 +405,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - Скрытие панели «Сохранить»/«Отмена» при пустом наборе полей (`v-if="showOrderInfoActions"` / `showAddressTabActions`) — убирает лишний шум, когда сохранять нечего.
 - Выделение дублирующейся панели действий заказа в общий компонент `OrderFormActionsBar.vue`.
 
-**Группировка опций товара — новая модель `msOptionGroup` (#10, ⚠️ breaking):**
+**Группировка опций товара — новая модель `msOptionGroup` (#10, breaking):**
 - Группировка опций больше не использует `modCategory` — введена собственная модель `msOptionGroup` (id, name, description, sort_order, timestamps). Это убирает мусор от чужих компонентов в выпадающем списке группы и даёт удобную сортировку через drag-n-drop.
 - **Схема**: `msOption.modcategory_id` → `msOption.option_group_id` (nullable, FK на `ms3_option_groups`). Миграция Phinx `20260518120000_create_option_groups_and_migrate` автоматически переносит данные: для каждой уникальной `modcategory_id`, на которую ссылаются опции, создаётся `msOptionGroup` с именем из `modCategory.category`. Старая колонка `modcategory_id` дропается.
 - **REST API**: новый набор endpoint'ов `GET/POST/PUT/DELETE /api/mgr/option-groups` (CRUD), `PUT /api/mgr/option-groups/positions` (drag-n-drop reorder), `DELETE /api/mgr/option-groups/bulk`. Прежний `GET /api/mgr/options/modcategories` удалён.
@@ -419,7 +419,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - **Окно перехода во время апгрейда**: Phinx-миграция последовательно добавляет `option_group_id`, переносит данные и дропает `modcategory_id`. Между шагами обе колонки кратковременно существуют. Если в этот момент старый код успеет сохранить опцию, новый `option_group_id` останется `NULL`. MS3 апгрейдится оффлайн через MODX, кейс маловероятен, но если ловите рассинхрон — пересохраните опцию в админке.
 - **Уборка после апгрейда**: модельная категория MODX, под которой раньше группировались опции (обычно «Options» или одноимённая магазину), после успешной миграции остаётся в дереве `modCategory` неиспользованной. MS3 не имеет права чистить чужие категории — удалите её вручную, если она не нужна другим компонентам.
 
-#### ⚠️ Изменено (breaking, витринные сниппеты — контракт сумм/цен)
+#### Изменено (breaking, витринные сниппеты — контракт сумм/цен)
 
 Согласовано с обсуждением PR **#259** (ревью): **без суффикса** — число (`float`) для арифметики и `|number` в Fenom; **готовая строка для вывода** — только в полях `*_formatted` (цена с локалью и валютой при необходимости, вес с единицей). Поля `*_numeric` не используются.
 
@@ -436,13 +436,13 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 
 ## Апрель 2026
 
-### [2026-04-27] 🚀 Версия 1.10.1-beta1
+### [2026-04-27] Версия 1.10.1-beta1
 
 **Тип релиза:** PATCH (beta) — точечные исправления и восстановление контракта событий
 
 ---
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **Manager API — события жизненного цикла позиции заказа (#208, closes #207):**
 - Vue-админка дёргает `msOnBefore/Create/Update/Remove OrderProduct` через `Utils::invokeEvent` при добавлении/изменении/удалении позиций заказа — раньше события были зарегистрированы в `events.php`, но `OrdersController` их не вызывал, и сторонние подписчики (ms3PromoCode и т.п.) не срабатывали.
@@ -473,7 +473,7 @@ Security-бампы транзитивных пакетов `vueManager` (js-yam
 - `Response` и `api.php` поддерживают HTTP-редирект вместо JSON для таких маршрутов.
 - Подключены `CustomerAPI::resendVerificationEmail`, `CustomerUI`, селекторы и `ms3_customer_profile.tpl` — кнопка resend инициирует `POST /api/v1/customer/email/resend-verification`. Добавлены README, лексиконы, smoke-тест `core/components/minishop3/tests/EmailVerificationUrlTest.php`.
 
-#### 📁 Изменённые файлы
+#### Изменённые файлы
 
 ```
 _build/elements/plugins.php
@@ -491,13 +491,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ---
 
-### 🚀 Версия 1.10.0-beta1
+### Версия 1.10.0-beta1
 
 **Тип релиза:** MINOR (beta) — полный перевод управления опциями с ExtJS на Vue, рефакторинг карточки заказа, self-heal миграция
 
 ---
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Управление опциями товара полностью на Vue (#205, в т.ч. #200, #203):**
 - `Настройки → Опции` — грид (DataTable), дерево категорий MODX (`PrimeVue Tree`) с независимыми чекбоксами и контекстным меню (обновить / развернуть / свернуть / выделить все вложенные / снять все), диалог создания-редактирования с формой и деревом категорий для привязки, редактор значений для `combobox` / `comboMultiple` / `comboColors` (drag-drop сортировка через `vuedraggable`, `PrimeVue ColorPicker` для цветов)
@@ -509,7 +509,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 **Self-heal миграция `msOrder` / `msOrderAddress` (#201):** если seed `ms3_model_fields` / `ms3_model_field_sections` частично не применился (админка показывала `ms3_model_fields_empty`), миграция `20260420120000_repair_order_model_fields_if_missing` добавляет только отсутствующие записи — пользовательские настройки секций/ширин не затирает (update ограничен `WHERE section_id IS NULL`).
 
-#### ♻️ Рефакторинг
+#### Рефакторинг
 
 - **Опции:** удалены 7 ExtJS-файлов (`settings/option/*`, `category/option.*`) и 22 PHP-процессора (~2600 строк устаревшего кода)
 - **Карточка заказа — provide/inject вместо props-цепочки (#196, #204):** `provide(ORDER_CONTEXT_KEY)` в `OrderView`, composables `useOrderFormatters`, `useOrderFieldHelpers`, `useOrderLogFormatters`; вкладки получают только специфичные данные через props; безопасный `inject` до деструктуризации
@@ -517,7 +517,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - Multi-value опции товара отправляются одним hidden input с JSON-массивом + декодирование на сервере через `Utils::decodeOptionValue()` — обход ограничения `ExtJS BasicForm.getValues()`, который читал только последний input при нескольких hidden с одинаковым name
 - `ProductTabs.vue` — вкладка опций больше не монтирует `Ext.create('modx-vtabs')` + `ms3.utils.getExtField()`, всё рендерится Vue-компонентом `ProductOptionsTab` с вертикальными группами по `modcategory_id`
 
-#### 🐛 Исправлено
+#### Исправлено
 
 - **Удалённая опция товара снова появлялась после сохранения (#199, #202):** при сохранении из полей `options-*` теперь используется `removeOther=true` — ключи, которых нет в POST (после ручного удаления или копирования), удаляются из `msProductOption`. Автосинхронизация только JSON-полей по-прежнему через `saveOptions(null)` с принудительным `removeOther=false`, чтобы не повторить регрессию #153/#158.
 - Checkbox-опции товара `boolean`/`modx-combo-boolean`/`combo-boolean` отображались узкой полоской («V\|») при `labelAlign: 'top'` — регрессия `anchor: '25%'` из `ms3.utils.js`; старый путь удалён вместе с ExtJS UI, опции теперь рендерятся через PrimeVue
@@ -528,13 +528,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ---
 
-### 🚀 Версия 1.9.0-beta1
+### Версия 1.9.0-beta1
 
 **Тип релиза:** MINOR (beta) — vendor extra fields, ms3_cart status sync, рефакторинг опций и заказа
 
 ---
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Сниппет `ms3_cart` — синхронизация итогов со статусом (#197):**
 - После `msOnGetStatusCart` итоги в чанке/`return=data` выравниваются со всеми числовыми полями статуса (`total_cost`, `total_count`, `total_weight`, `total_discount`, `total_positions`)
@@ -548,7 +548,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - `ExtraFieldsService`: создание `msProductField` только для `msProductData` (не для msVendor и других моделей)
 - `DynamicField`: поддержка FileBrowser для файловых полей, `w-full` на всех инпутах, `fluid` на InputNumber, prop `idPrefix` для label/id accessibility
 
-#### 🐛 Исправлено
+#### Исправлено
 
 - **Удалённая опция товара в админке снова появлялась после сохранения (#199):** при сохранении из полей `options-*` использовался `removeOther=false`, из‑за чего строки в `msProductOption` для ключей, которых больше нет в POST (после удаления опции в форме, в т.ч. после копирования товара), не удалялись — для явного массива опций из процессора теперь `removeOther=true`; автосинхронизация только JSON-полей по-прежнему через `saveOptions(null)` с принудительным `removeOther=false` (#153, #158)
 - **Manager API затирал `msOrder.properties` данными адреса (#191):** `array_merge($order->toArray(), $address->toArray())` перезаписывал `properties` заказа значением `null` из `msOrderAddress` — выделен `mergeAddressIntoOrderData()` с исключением конфликтующих полей
@@ -560,7 +560,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - **Вкладки групп опций в карточке товара (#188):** опции группируются по `modcategory_id`, нормализация id, guard для пустых `option_fields`
 - **msPayment type hints в Payment Sort процессоре (#177):** заменены устаревшие type hints на msPayment
 
-#### ♻️ Рефакторинг
+#### Рефакторинг
 
 - **Грид товаров категории — option-колонки (#140, #154):** вынесены построение SQL и форматирование строк в `CategoryProductsListService` (`ms3_category_products_list`); DTO `OptionColumnSpec` и `GridOptionColumnResolver` для единой валидации ключа опции и спецификации JOIN; один метод агрегации `GROUP_CONCAT(DISTINCT …)` для SELECT и ORDER BY; `GridConfigService::extractOptionFields` делегирует resolver’у
 - **Inline-edit select/combo в гриде товаров категории (#155, #157):** единый контракт опций `{ value, label }` на фронте; `GET references/vendors` дополняет ответ массивом `options` (поле `vendors` сохранено для совместимости); `GridEditorReferenceRegistry` и валидация combo при сохранении конфига; в конфиге колонок — `editor_reference` и опциональный allowlisted `editor_combo_endpoint`; `GridFieldsConfig` — выбор справочника и override URL; composable `useCategoryProductsInlineEdit` и утилиты `gridEditorOptions.js` вместо логики внутри `CategoryProductsGrid`
@@ -571,7 +571,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - **OptionsChips:** стили вынесены из scoped в non-scoped с `.vueApp` префиксом (фикс несовпадения Vite scoped хешей между чанками)
 - **Prettier:** форматирование 25 Vue-компонентов
 
-#### 📦 Зависимости
+#### Зависимости
 
 - `lodash` 4.17.23 → 4.18.1
 - `vite` 6.4.1 → 6.4.2
@@ -580,13 +580,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ## Март 2026
 
-### 🚀 Версия 1.8.0-beta1
+### Версия 1.8.0-beta1
 
 **Тип релиза:** MINOR (beta) — Order Tabs Registry, модульные роуты аддонов, баг-фиксы
 
 ---
 
-#### ✨ Добавлено
+#### Добавлено
 
 **MS3OrderTabsRegistry — кастомные вкладки в окне заказа (#166, #167):**
 - `window.MS3OrderTabsRegistry.register()` — регистрация Vue и ExtJS вкладок на странице заказа без правки ядра
@@ -602,7 +602,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - Метод `Router::loadRoutesFromDirectory()`, путь `Router::coreAddonRoutesDirectory('manager'|'web')` с проверкой аргумента; `api.php` и `Processors\Api\Index` грузят web-фрагменты; `Processors\Api\Router` (встроенная админка) — только manager-фрагменты
 - Resolver создаёт каталоги при установке; примеры `example-addon.php.dist` в компоненте для копирования в `core/config/`
 
-#### 🐛 Исправлено
+#### Исправлено
 
 - **Пустая строка в decimal/int Extra Fields ломала сохранение товара (#170):** пустое значение кастомного поля (например `wholesale_price`) вызывало MySQL ошибку `Incorrect decimal value`, `save()` возвращал `false` и категории/опции/ссылки молча не сохранялись — хардкод каста `price`/`old_price`/`weight` заменён на универсальный цикл по `_fieldMeta` для всех `float`, `integer` и `boolean` полей
 - **Чекбокс «Скрыть дочерние ресурсы» не сохранялся в категориях (#161, #160):** `hide_children_in_tree` не обрабатывался в `handleCheckBoxes()` процессоров `Category/Update` и `Category/Create` — unchecked-состояние не передавалось в POST и значение сбрасывалось
@@ -611,13 +611,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ---
 
-### 🚀 Версия 1.7.0-beta1
+### Версия 1.7.0-beta1
 
 **Тип релиза:** MINOR (beta) — inline-edit, форматированные плейсхолдеры, миграция галереи на Vue, баг-фиксы
 
 ---
 
-#### ♻️ Рефакторинг
+#### Рефакторинг
 
 **Удаление неиспользуемой настройки ms3_category_grid_fields (#145, #146):**
 - Удалена логика `ms3_category_grid_fields`, `grid_fields`, `option_fields`, `product_fields` из контроллера `category/update`
@@ -637,7 +637,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - `GalleryUploader` (Uppy) встроен в `product-tabs` бандл, отдельный entry point `gallery-uploader` удалён
 - Удалено 6 ExtJS-файлов (~900 строк), добавлено 5 Vue-компонентов + composable (~1300 строк)
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Inline-редактирование в таблице товаров категории (#116, #134):**
 - Двойной клик по ячейке → редактирование прямо в таблице (text, number, boolean/checkbox)
@@ -656,7 +656,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - При создании заказа кастомные поля передаются в события `msOnBeforeCreateOrder` / `msOnCreateOrder` через параметр `customFields`, после чего очищаются
 - Чекбоксы на фронтенде отправляют состояние `input.checked` (`'1'`/`'0'`) вместо статического атрибута `value`
 
-#### 🐛 Исправлено
+#### Исправлено
 
 - **Не удалялись опции товара в админке (#148, #149):** форма отправляла `options-color[]`, но `substr($key, 8)` давал ключ `color[]` вместо `color` — опция не матчилась и не удалялась. Парсинг вынесен в `Utils::extractOptionKey()` с `rtrim('[]')`. Также исправлена обработка пустого массива опций в `OptionSyncService`
 - **Визуальный редактор (TinyMCE) не работал в категории товаров (#156):** `item_j.value = "<p></p>"` выполнялся безусловно, перезатирая контент при редактировании. Блок `modx-resource-content` был исключён из формы, `loadRichTextEditor()` закомментирован — всё восстановлено
@@ -673,19 +673,19 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - **Некорректные URL и хардкод английских сообщений в ЛК адресов (#142):** кнопки «Добавить адрес», «Редактировать», «Отмена» вели на корень сайта — URL формируются server-side через `makeUrl()` + `http_build_query()`. API-контроллер `CustomerAddressController` содержал хардкод английских строк вместо лексиконов — все сообщения заменены на `$this->modx->lexicon()`, добавлено 7 ключей в ru/en лексиконы
 - **Отсутствие ключа `desc` в свойствах сниппетов и источников при сборке пакета (#127):** добавлена инициализация `desc` пустой строкой если ключ отсутствует в определении свойства — устраняет warning/ошибку в `resolver_04_sources` и `resolver_08_snippet_properties`
 
-#### ⚠️ Breaking changes
+#### Breaking changes
 
 - **`cost_formatted` включает символ валюты (#147):** `cost_formatted` в списке заказов ЛК теперь включает символ валюты — кастомные чанки, добавляющие валюту вручную, получат двойной символ
 
 ---
 
-### 🚀 Версия 1.6.0-beta1
+### Версия 1.6.0-beta1
 
 **Тип релиза:** MINOR (beta) — httpOnly cookie auth, отмена заказов, community PRs
 
 ---
 
-#### ♻️ Рефакторинг
+#### Рефакторинг
 
 **Интеграция standalone ЛК-модулей в архитектуру ms3 (#126):**
 - Три standalone модуля (`order-cancel.js`, `customer-addresses.js`, `auth-forms.js`) заменены на UI-классы в единой архитектуре (API → UI → hooks → message)
@@ -704,7 +704,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - Ссылки на детали заказа используют `uuid` вместо integer `id` — безопаснее, не раскрывает количество заказов
 - Валидация формата UUID из `$_GET` перед запросом к БД
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Отмена заказа покупателем (#119, Issue #117):**
 - API endpoint `POST /api/v1/customer/orders/{id}/cancel` с авторизацией
@@ -715,13 +715,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - При переключении вкладки ключ сохраняется в `localStorage`, при перезагрузке восстанавливается
 - Настройка `ms3_product_remember_tabs` (по умолчанию включена)
 
-#### 🐛 Исправлено
+#### Исправлено
 
 - **httpOnly cookie token architecture (#124):** единый httpOnly cookie `ms3_token` вместо 4 несинхронизированных хранилищ (localStorage, `$_SESSION`, `ms3_customer_tokens`, `msCustomer.token`). Middleware injection (`$_COOKIE` → `$_REQUEST`) для обратной совместимости. Корзина сохраняется при логине/регистрации.
 - Корректное отображение кнопки «Сохранить» для товаров и категорий в MODX 3.2 (#118) — явное вычисление `canSave`/`locked` с учётом `save_document`, компонентных permissions и `checkPolicy('save')`
 - Формат `data` в политиках доступа для совместимости с апгрейдом MODX (#107, Issue #100) — устранено двойное JSON-кодирование при сборке пакета
 
-#### ⚠️ Breaking changes
+#### Breaking changes
 
 - **Register.php response format (#124):** поле `token` изменено с объекта `{token, expires_at}` на строку. `expires_at` вынесен на верхний уровень ответа. Кастомные темы, обращающиеся к `result.object.token.token`, потребуют обновления.
 
@@ -729,13 +729,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ## Февраль 2026
 
-### 🚀 Версия 1.5.0-beta1
+### Версия 1.5.0-beta1
 
 **Тип релиза:** MINOR (beta) — селекторы, обработка ошибок, community PRs
 
 ---
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Централизация селекторов (Issue #18):**
 - Новый модуль `Selectors.js` с дефолтными селекторами для всех UI-компонентов
@@ -767,7 +767,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - Параметр `formatPrices` в сниппете `msOrderTotal`
 - Сортировка в таблице списка заказов (Vue)
 
-#### 🐛 Исправлено
+#### Исправлено
 
 - Исправлены неточности в лексиконах (Issue #21)
 - Удалён `action` из конфигурации меню miniShop3 (#94)
@@ -779,7 +779,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - Корректные дефолтные ID статусов заказов с fallback для нулевых значений
 - `getIterator` для msProduct/msCategory — добавлен `class_key` в критерии
 
-#### 🔧 Изменено
+#### Изменено
 
 - Удалены избыточные проверки прав в `initialize()` процессоров (#95)
 - `CustomerAddressController::getAuthorizedCustomer()` упрощён (middleware гарантирует сервис)
@@ -787,13 +787,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ---
 
-### [2026-02-07] 🚀 Версия 1.4.0-beta1
+### [2026-02-07] Версия 1.4.0-beta1
 
 **Тип релиза:** MINOR (beta) — Notification Center, улучшения msOrder
 
 ---
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Notification Center — Email уведомления:**
 - Email-уведомления при смене статуса заказа
@@ -834,14 +834,14 @@ vueManager/src/components/product/ProductOptionsTab.vue
   - Товар скрывается из дерева согласно настройке `ms3_product_show_in_tree_default`
 - Логика в сервисе `ProductService::handleConversion()`
 
-#### 🔧 Изменено
+#### Изменено
 
 **Централизация сервисов:**
 - Все 41 сервис MiniShop3 теперь в ServiceRegistry
 - bootstrap.php содержит только основной `ms3` сервис
 - Добавлен `ms3_filter_config` в ServiceRegistry
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **Сниппет msOrder:**
 - Удалён мёртвый код валидации POST (валидация в OrderSubmitHandler)
@@ -860,7 +860,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - Исправлены стили компонента ProductOptions.vue
 - Удалён deprecated CSS код
 
-#### 🗑️ Удалено
+#### Удалено
 
 **Очистка неиспользуемых файлов:**
 - `misc/plupload/` — библиотека Plupload
@@ -881,7 +881,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ---
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Админка — Редактирование товара:**
 - Вложенные вкладки товара: верхний уровень (ExtJS) — Document, Товар, Page Settings, Access Permissions; вложенный уровень (Vue) — Properties, Gallery, Categories, Links, Options
@@ -912,7 +912,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 **Установка:**
 - VueTools добавлен в зависимости — устанавливается автоматически при отсутствии
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **Авторизация:**
 - Унифицирована авторизация в CustomerAddressController — теперь поддерживает и API-токен, и session customer_id
@@ -922,13 +922,13 @@ vueManager/src/components/product/ProductOptionsTab.vue
 
 ---
 
-### [2026-01-24] 🚀 Версия 1.2.3-beta1
+### [2026-01-24] Версия 1.2.3-beta1
 
 **Тип релиза:** PATCH (beta) — улучшения и исправления
 
 ---
 
-#### ✨ Добавлено
+#### Добавлено
 
 **Админка — Vue Manager:**
 - Локализация PrimeVue через `@vuetools/usePrimeVueLocale` во всех Vue-приложениях (заказы, товары, клиенты, доставки, оплаты, производители, связи, статусы, уведомления, категории товаров, галерея, импорт, поля и т.д.)
@@ -937,7 +937,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 - Добавлен `cultureKey` в мок MODx в api-test.html
 - Зависимость темы: `@primevue/themes` заменена на `@primeuix/themes` (PrimeVue 4.x)
 
-#### 🐛 Исправлено
+#### Исправлено
 
 **ESLint:**
 - Удалён неиспользуемый параметр `mutations` в MutationObserver (entry points)
@@ -948,7 +948,7 @@ vueManager/src/components/product/ProductOptionsTab.vue
 **OrderView.vue:**
 - Согласована сигнатура `onOptionTypeChange(row)` и вызов в шаблоне (удалён лишний аргумент `index`)
 
-#### 📁 Изменённые файлы
+#### Изменённые файлы
 
 ```
 vueManager/src/entries/api-test.js
