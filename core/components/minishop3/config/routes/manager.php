@@ -22,6 +22,7 @@
  * @version 1.0.0
  */
 
+use MiniShop3\Controllers\Api\Manager\StatusesController;
 use MiniShop3\Router\Middleware\AuthMiddleware;
 use MiniShop3\Router\Middleware\AnyPermissionMiddleware;
 use MiniShop3\Router\Middleware\PermissionMiddleware;
@@ -739,32 +740,44 @@ $router->group('/api/mgr', function ($router) use ($modx) {
         $router->get('', function ($params) use ($modx) {
             $allParams = array_merge($_GET, $params);
 
-            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            $controller = new StatusesController($modx);
             return $controller->getList($allParams);
         });
         $router->post('', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
-            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            $controller = new StatusesController($modx);
             return $controller->create($data);
         });
         $router->delete('/bulk', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
-            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            $controller = new StatusesController($modx);
             return $controller->bulkDelete($data);
         });
         $router->post('/sort', function ($params) use ($modx) {
             $input = file_get_contents('php://input');
             $data = json_decode($input, true) ?: [];
 
-            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            $controller = new StatusesController($modx);
             return $controller->sort($data);
         });
+        // Static path before /{id} so "transitions" is not captured as an id (#785).
+        $router->get('/transitions', function ($params) use ($modx) {
+            $controller = new StatusesController($modx);
+            return $controller->getTransitions($params);
+        });
+        $router->put('/transitions', function ($params) use ($modx) {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true) ?: [];
+
+            $controller = new StatusesController($modx);
+            return $controller->saveTransitions($data);
+        });
         $router->get('/{id}', function ($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            $controller = new StatusesController($modx);
             return $controller->get($params);
         });
         $router->put('/{id}', function ($params) use ($modx) {
@@ -772,11 +785,11 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $data = json_decode($input, true) ?: [];
             $data['id'] = $params['id'] ?? null;
 
-            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            $controller = new StatusesController($modx);
             return $controller->update($data);
         });
         $router->delete('/{id}', function ($params) use ($modx) {
-            $controller = new \MiniShop3\Controllers\Api\Manager\StatusesController($modx);
+            $controller = new StatusesController($modx);
             return $controller->delete($params);
         });
 

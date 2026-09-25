@@ -38,6 +38,15 @@ export function installSettingsGridMocks(http) {
     if (path.includes('/api/mgr/links')) {
       return Promise.resolve({ results: [settingsLinksRow], total: 1 })
     }
+    if (path.includes('/api/mgr/statuses/transitions')) {
+      return Promise.resolve({
+        mode: 0,
+        invalid: false,
+        statuses: [{ id: 3, name: 'New', color: '000000', active: true, final: false, fixed: false, position: 0 }],
+        edges: [],
+        unreachable: [],
+      })
+    }
     if (path.includes('/api/mgr/statuses')) {
       return Promise.resolve({
         results: [{ id: 3, name: 'New', color: '000000', active: true }],

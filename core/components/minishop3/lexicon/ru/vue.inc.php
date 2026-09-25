@@ -1132,6 +1132,22 @@ $_lang['status_updated'] = 'Статус обновлён';
 $_lang['status_deleted'] = 'Статус удалён';
 $_lang['status_delete_confirm_message'] = 'Вы уверены, что хотите удалить статус "{name}"?';
 $_lang['status_order_saved'] = 'Порядок статусов сохранён';
+
+$_lang['ms3_status_transitions'] = 'Переходы';
+$_lang['ms3_status_transitions_intro'] = 'Разрешённые переходы между статусами заказа. Пустая матрица = только правила final/fixed. Отметьте клетку и сохраните, чтобы включить allow-list.';
+$_lang['ms3_status_transitions_from_to'] = 'Из → В';
+$_lang['ms3_status_transitions_save'] = 'Сохранить переходы';
+$_lang['ms3_status_transitions_clear'] = 'Выключить allow-list';
+$_lang['ms3_status_transitions_saved'] = 'Переходы статусов сохранены';
+$_lang['ms3_status_transitions_load_error'] = 'Не удалось загрузить переходы статусов';
+$_lang['ms3_status_transitions_save_error'] = 'Не удалось сохранить переходы статусов';
+$_lang['ms3_status_transitions_empty'] = 'Статусов пока нет. Сначала создайте статусы.';
+$_lang['ms3_status_transitions_mode_off'] = 'Allow-list выключен. Действуют только правила final и fixed. Отметьте хотя бы один переход и сохраните, чтобы включить матрицу.';
+$_lang['ms3_status_transitions_mode_invalid'] = 'Текущая системная настройка переходов повреждена. Сохраните эту матрицу, чтобы заменить её.';
+$_lang['ms3_status_transitions_unreachable_hint'] = 'Подсвеченные статусы не имеют входящих переходов в allow-list. Пока матрица включена, заказ в них не попадёт.';
+$_lang['ms3_status_transitions_cell_self'] = 'Тот же статус';
+$_lang['ms3_status_transitions_cell_final'] = 'Финальный статус: уйти нельзя';
+$_lang['ms3_status_transitions_cell_fixed'] = 'Зафиксированный статус: нельзя перейти на более раннюю или ту же позицию';
 $_lang['delivery_order_saved'] = 'Порядок способов доставки сохранён';
 $_lang['payment_order_saved'] = 'Порядок способов оплаты сохранён';
 

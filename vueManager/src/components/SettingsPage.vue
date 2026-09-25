@@ -7,7 +7,7 @@ import DeliveriesGrid from './DeliveriesGrid.vue'
 import LinksGrid from './LinksGrid.vue'
 import OptionsAndGroupsTabs from './OptionsAndGroupsTabs.vue'
 import PaymentsGrid from './PaymentsGrid.vue'
-import StatusesGrid from './StatusesGrid.vue'
+import StatusesAndTransitionsTabs from './StatusesAndTransitionsTabs.vue'
 import VendorsGrid from './VendorsGrid.vue'
 
 const { _ } = useLexicon()
@@ -29,7 +29,7 @@ const tabs = [
     id: 'statuses',
     titleKey: 'ms3_statuses',
     introKey: 'ms3_statuses_intro',
-    component: StatusesGrid,
+    component: StatusesAndTransitionsTabs,
   },
   {
     id: 'vendors',
