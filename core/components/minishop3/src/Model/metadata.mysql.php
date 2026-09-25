@@ -37,6 +37,7 @@ $xpdo_meta_map = [
                     'MiniShop3\\Model\\msDeliveryMember',
                     'MiniShop3\\Model\\msProductLink',
                     'MiniShop3\\Model\\msCategoryOption',
+                    'MiniShop3\\Model\\msResourceSeo',
                 ],
         ],
 ];

@@ -1236,3 +1236,25 @@ $_lang['ms3_options_order_saved'] = 'Порядок сохранён';
 $_lang['ms3_options_added'] = 'Добавлено';
 $_lang['ms3_options_removed'] = 'Удалено';
 $_lang['ms3_options_copied'] = 'Скопировано: {copied}, пропущено: {skipped}';
+
+// Вкладка SEO для товара и категории (#790)
+$_lang['ms3_tab_product_seo'] = 'SEO';
+$_lang['ms3_tab_category_seo'] = 'SEO';
+$_lang['ms3_seo_fields_title'] = 'SEO-переопределения';
+$_lang['ms3_seo_fields_description'] = 'Пустое поле означает использование значения по умолчанию (заголовок страницы, описание, сгенерированный canonical и т. д.).';
+$_lang['ms3_seo_field_title'] = 'Meta title';
+$_lang['ms3_seo_field_description'] = 'Meta description';
+$_lang['ms3_seo_field_canonical'] = 'Canonical URL';
+$_lang['ms3_seo_field_robots'] = 'Robots';
+$_lang['ms3_seo_field_og_title'] = 'Open Graph title';
+$_lang['ms3_seo_field_og_description'] = 'Open Graph description';
+$_lang['ms3_seo_field_og_image'] = 'Open Graph image';
+$_lang['ms3_seo_robots_index_follow'] = 'index, follow';
+$_lang['ms3_seo_robots_noindex_follow'] = 'noindex, follow';
+$_lang['ms3_seo_robots_index_nofollow'] = 'index, nofollow';
+$_lang['ms3_seo_robots_noindex_nofollow'] = 'noindex, nofollow';
+$_lang['ms3_seo_saved'] = 'SEO сохранён';
+$_lang['ms3_seo_save_failed'] = 'Не удалось сохранить SEO';
+$_lang['ms3_seo_load_failed'] = 'Не удалось загрузить SEO';
+$_lang['ms3_seo_canonical_hint'] = 'Абсолютный https-адрес или путь от корня. Пусто = генерируется из URL ресурса.';
+$_lang['ms3_seo_og_image_hint'] = 'Абсолютный https-адрес или путь от корня. Пусто = изображение / превью товара.';

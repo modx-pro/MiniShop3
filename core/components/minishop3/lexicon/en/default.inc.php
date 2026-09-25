@@ -319,3 +319,8 @@ $_lang['ms3_err_customer_group_detach'] = 'Failed to detach customers before gro
 $_lang['ms3_customer_group_created'] = 'Customer group created';
 $_lang['ms3_customer_group_updated'] = 'Customer group updated';
 $_lang['ms3_customer_group_deleted'] = 'Customer group deleted';
+
+// Native SEO overrides API messages (#790)
+$_lang['ms3_err_seo_save_failed'] = 'Failed to save SEO data';
+$_lang['ms3_err_seo_class_key_mismatch'] = 'SEO overrides are only available for products and categories';
+$_lang['ms3_err_resource_not_found'] = 'Resource not found';

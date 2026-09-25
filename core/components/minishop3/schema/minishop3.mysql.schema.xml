@@ -826,4 +826,19 @@
 
         <aggregate alias="Section" class="MiniShop3\Model\msModelFieldSection" local="section_id" foreign="id" owner="foreign" cardinality="one"/>
     </object>
+
+    <object class="msResourceSeo" table="ms3_resource_seo" extends="xPDO\Om\xPDOObject">
+        <field key="resource_id" dbtype="int" precision="10" attributes="unsigned" phptype="integer" null="false" index="pk"/>
+        <field key="title" dbtype="varchar" precision="255" phptype="string" null="true" default="null"/>
+        <field key="description" dbtype="text" phptype="string" null="true" default="null"/>
+        <field key="canonical" dbtype="varchar" precision="500" phptype="string" null="true" default="null"/>
+        <field key="robots" dbtype="varchar" precision="100" phptype="string" null="true" default="null"/>
+        <field key="og_title" dbtype="varchar" precision="255" phptype="string" null="true" default="null"/>
+        <field key="og_description" dbtype="text" phptype="string" null="true" default="null"/>
+        <field key="og_image" dbtype="varchar" precision="500" phptype="string" null="true" default="null"/>
+
+        <index alias="resource_id" name="resource_id" primary="true" unique="true" type="BTREE">
+            <column key="resource_id" length="" collation="A" null="false"/>
+        </index>
+    </object>
 </model>

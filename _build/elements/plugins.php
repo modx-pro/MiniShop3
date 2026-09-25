@@ -17,6 +17,7 @@ return [
             'OnResourceAddToResourceGroup',
             'OnResourceRemoveFromResourceGroup',
             'OnUserGroupRemove',
+            'OnResourceDelete',
         ],
     ],
 ];

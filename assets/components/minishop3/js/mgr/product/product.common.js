@@ -117,6 +117,7 @@ Ext.extend(ms3.panel.Product, MODx.panel.Resource, {
                   show_categories: ms3.config.show_categories,
                   show_links: ms3.config.show_links,
                   show_options: ms3.config.show_options,
+                  show_seo: ms3.config.show_seo,
                   option_fields: ms3.config.option_fields || [],
                   media_source: ms3.config.media_source || {},
                   connector_url: ms3.config.connector_url
