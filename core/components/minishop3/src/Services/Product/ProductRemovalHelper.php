@@ -9,6 +9,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
+use MiniShop3\Model\msResourceSeo;
 use MODX\Revolution\modX;
 
 /**
@@ -36,6 +37,8 @@ class ProductRemovalHelper
             'master' => $productId,
             'OR:slave:=' => $productId,
         ]);
+        // Drop native SEO overrides so the row does not outlive the resource (#790).
+        $this->modx->removeCollection(msResourceSeo::class, ['resource_id' => $productId]);
 
         $this->removeProductFiles($productData, $productId);
 
