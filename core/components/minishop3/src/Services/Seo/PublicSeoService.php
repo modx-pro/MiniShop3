@@ -136,9 +136,9 @@ final class PublicSeoService
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param list<array<string, mixed>> $items
      * @param array<string, mixed> $params
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
     private function attachSeoToList(array $items, array $params, string $ogType): array
     {

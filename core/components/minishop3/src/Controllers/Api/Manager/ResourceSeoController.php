@@ -104,7 +104,7 @@ class ResourceSeoController
         return null;
     }
 
-    private function lexiconError(string $key, HttpStatus $status): Response
+    private function lexiconError(string $key, int $status): Response
     {
         $this->modx->lexicon->load('minishop3:default');
 
