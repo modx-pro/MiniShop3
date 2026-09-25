@@ -6,6 +6,8 @@ namespace MiniShop3\Utils;
 
 /**
  * Delete leftover Extra files that MODX upgrade leaves on disk (#704).
+ *
+ * Entries may be files or directories (directory trees are removed recursively).
  */
 final class ObsoletePackageFiles
 {
@@ -128,16 +130,17 @@ final class ObsoletePackageFiles
                 continue;
             }
 
-            $realFile = realpath($candidate);
-            if ($realFile === false) {
+            $realPath = realpath($candidate);
+            if ($realPath === false) {
                 $skipped[] = $relative;
                 continue;
             }
-            if (!is_file($realFile) || !str_starts_with($realFile, $prefix)) {
+            if (!str_starts_with($realPath, $prefix)) {
                 $rejected[] = $relative;
                 continue;
             }
-            if (@unlink($realFile)) {
+
+            if (self::deleteResolved($realPath)) {
                 $removed[] = $relative;
             } else {
                 $rejected[] = $relative;
@@ -197,5 +200,45 @@ final class ObsoletePackageFiles
         }
 
         return $out;
+    }
+
+    /**
+     * Delete a resolved path under the component root (file or directory tree).
+     */
+    private static function deleteResolved(string $realPath): bool
+    {
+        if (is_dir($realPath) && !is_link($realPath)) {
+            return self::removeTree($realPath);
+        }
+
+        return is_file($realPath) && @unlink($realPath);
+    }
+
+    /**
+     * Recursively delete a directory that already passed the under-root check.
+     */
+    private static function removeTree(string $dir): bool
+    {
+        $entries = @scandir($dir);
+        if ($entries === false) {
+            return false;
+        }
+
+        $ok = true;
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $path = $dir . DIRECTORY_SEPARATOR . $entry;
+            if (is_dir($path) && !is_link($path)) {
+                if (!self::removeTree($path)) {
+                    $ok = false;
+                }
+            } elseif (!@unlink($path)) {
+                $ok = false;
+            }
+        }
+
+        return @rmdir($dir) && $ok;
     }
 }
