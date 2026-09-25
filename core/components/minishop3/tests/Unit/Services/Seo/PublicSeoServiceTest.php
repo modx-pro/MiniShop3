@@ -247,6 +247,271 @@ final class PublicSeoServiceTest extends TestCase
         self::assertSame('Child', $out[0]['children'][0]['seo']['title']);
     }
 
+    public function testNativeSeoOverridesTitleAndDescription(): void
+    {
+        $out = $this->serviceWithNative([
+            'title' => 'Native title',
+            'description' => 'Native description',
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle', 'longtitle' => 'Electric kettle'],
+            [],
+        );
+
+        self::assertSame('Native title', $out['seo']['title']);
+        self::assertSame('Native description', $out['seo']['description']);
+        // og mirrors the native title/description (no explicit og patch from native).
+        self::assertSame('Native title', $out['seo']['og']['title']);
+        self::assertSame('Native description', $out['seo']['og']['description']);
+    }
+
+    public function testNativeSeoOgTitleSurvivesMirrorOgText(): void
+    {
+        $out = $this->serviceWithNative([
+            'og_title' => 'Social headline',
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle'],
+            [],
+        );
+
+        self::assertSame('Kettle', $out['seo']['title']);
+        self::assertSame('Social headline', $out['seo']['og']['title']);
+    }
+
+    public function testNativeSeoCanonicalAbsoluteHttpsIsKept(): void
+    {
+        $out = $this->serviceWithNative([
+            'canonical' => 'https://other.example/kettle',
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle', 'uri' => 'catalog/kettle/'],
+            [],
+        );
+
+        self::assertSame('https://other.example/kettle', $out['seo']['canonical']);
+    }
+
+    public function testNativeSeoCanonicalRelativeBecomesAbsolute(): void
+    {
+        $out = $this->serviceWithNative([
+            'canonical' => '/custom/path/',
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle', 'uri' => 'catalog/kettle/'],
+            [],
+        );
+
+        self::assertSame('https://shop.example/custom/path/', $out['seo']['canonical']);
+    }
+
+    public function testNativeSeoOgImageAbsoluteHttpsIsKept(): void
+    {
+        $out = $this->serviceWithNative([
+            'og_image' => 'https://cdn.example/og.jpg',
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle'],
+            [],
+        );
+
+        self::assertSame('https://cdn.example/og.jpg', $out['seo']['og']['image']);
+    }
+
+    public function testNativeSeoOgImageRelativeBecomesAbsolute(): void
+    {
+        $out = $this->serviceWithNative([
+            'og_image' => '/assets/og.jpg',
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle'],
+            [],
+        );
+
+        self::assertSame('https://shop.example/assets/og.jpg', $out['seo']['og']['image']);
+    }
+
+    public function testNativeSeoRobotsOverride(): void
+    {
+        $out = $this->serviceWithNative([
+            'robots' => 'noindex,nofollow',
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle', 'searchable' => 1],
+            [],
+        );
+
+        self::assertSame('noindex,nofollow', $out['seo']['robots']);
+    }
+
+    public function testNativeSeoEmptyFieldsFallThroughToDefaults(): void
+    {
+        $out = $this->serviceWithNative([
+            'title' => null,
+            'description' => '',
+            'canonical' => null,
+            'robots' => '',
+            'og_title' => null,
+            'og_description' => '',
+            'og_image' => null,
+        ])->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle', 'longtitle' => 'Electric kettle', 'uri' => 'catalog/kettle/'],
+            [],
+        );
+
+        self::assertSame('Electric kettle', $out['seo']['title']);
+        self::assertSame('https://shop.example/catalog/kettle/', $out['seo']['canonical']);
+        self::assertSame('index,follow', $out['seo']['robots']);
+    }
+
+    public function testNativeSeoAppliedAfterTvMap(): void
+    {
+        // TV sets title; native title must win when present.
+        $out = $this->serviceWithNativeAndTv(
+            ['title' => 'Native wins'],
+            ['seo_title' => 'TV title'],
+            '{"title":"tv.seo_title"}',
+        )->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle', 'longtitle' => ''],
+            [],
+        );
+
+        self::assertSame('Native wins', $out['seo']['title']);
+    }
+
+    public function testNativeSeoMissingServiceFallsThrough(): void
+    {
+        // Service container does not advertise ms3_resource_seo → native overlay is a no-op.
+        $out = $this->service()->maybeAttachProduct(
+            ['id' => 42, 'pagetitle' => 'Kettle'],
+            [],
+        );
+
+        self::assertSame('Kettle', $out['seo']['title']);
+    }
+
+    /**
+     * @param array<string, string|null> $native
+     */
+    private function serviceWithNative(array $native): PublicSeoService
+    {
+        return new PublicSeoService($this->modxWithNative($native));
+    }
+
+    /**
+     * @param array<string, string|null> $native
+     * @param array<string, string> $tvValues
+     */
+    private function serviceWithNativeAndTv(array $native, array $tvValues, ?string $tvMapSetting): PublicSeoService
+    {
+        return new PublicSeoService($this->modxWithNative($native, $tvValues, $tvMapSetting));
+    }
+
+    /**
+     * @param array<string, string|null> $native
+     * @param array<string, string> $tvValues
+     */
+    private function modxWithNative(array $native, array $tvValues = [], ?string $tvMapSetting = null): modX
+    {
+        return new class ($native, $tvValues, $tvMapSetting) extends modX {
+            public object $event;
+
+            /**
+             * @param array<string, string|null> $native
+             * @param array<string, string> $tvValues
+             */
+            public function __construct(
+                private array $native,
+                private array $tvValues,
+                private ?string $tvMapSetting,
+            ) {
+                parent::__construct();
+                $this->event = (object) ['returnedValues' => null];
+                $this->services = new class ($this->native) {
+                    /** @var array<string, string|null> */
+                    private array $native;
+
+                    public function __construct(array $native)
+                    {
+                        $this->native = $native;
+                    }
+
+                    public function has(string $key): bool
+                    {
+                        return $key === 'ms3' || $key === 'ms3_resource_seo';
+                    }
+
+                    public function get(string $key): mixed
+                    {
+                        if ($key === 'ms3_resource_seo') {
+                            return new class ($this->native) {
+                                /** @var array<string, string|null> */
+                                private array $native;
+
+                                public function __construct(array $native)
+                                {
+                                    $this->native = $native;
+                                }
+
+                                /**
+                                 * @return array<string, string|null>
+                                 */
+                                public function get(int $resourceId): array
+                                {
+                                    return $this->native;
+                                }
+                            };
+                        }
+
+                        return null;
+                    }
+                };
+            }
+
+            public function getOption(string $key, $options = null, $default = null)
+            {
+                if ($key === PublicSeoTvMap::SETTING_KEY) {
+                    return $this->tvMapSetting ?? $default;
+                }
+
+                return $key === 'site_url' ? 'https://shop.example/' : $default;
+            }
+
+            public function getContext($contextKey, $options = null)
+            {
+                return null;
+            }
+
+            public function makeUrl($id, $context = '', $args = '', $scheme = 'full', array $options = [])
+            {
+                return '';
+            }
+
+            public function invokeEvent($eventName, array $params = [])
+            {
+                return [];
+            }
+
+            public function getObject($className, $criteria = null, $cacheFlag = true)
+            {
+                if ($className !== modTemplateVar::class || !is_array($criteria)) {
+                    return null;
+                }
+
+                $name = $criteria['name'] ?? null;
+                if (!is_string($name) || !array_key_exists($name, $this->tvValues)) {
+                    return null;
+                }
+
+                return new class ($name, $this->tvValues[$name]) extends modTemplateVar {
+                    public function __construct(
+                        private string $name,
+                        private string $value,
+                    ) {
+                    }
+
+                    public function renderOutput($resourceId = 0)
+                    {
+                        return $this->value;
+                    }
+                };
+            }
+        };
+    }
+
     /**
      * @param array<string, mixed>|null $seoPatch
      * @param array<string, string> $contextUrls
