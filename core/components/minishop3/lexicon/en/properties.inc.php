@@ -23,7 +23,11 @@ $_lang['ms3_prop_where'] = 'JSON-encoded string with additional selection condit
 $_lang['ms3_prop_include_content'] = 'Select "content" field of products.';
 $_lang['ms3_prop_include_tvs'] = 'Comma-separated list of TV parameters to select. For example: "action,time" will give placeholders [[+action]] and [[+time]].';
 $_lang['ms3_prop_include_thumbs'] = 'Comma-separated list of thumbnail sizes to select. For example: "small,medium" will give placeholders [[+small]] and [[+medium]]. Images must be pre-generated in product gallery.';
+$_lang['ms3_prop_thumbnails'] = 'Comma-separated list of thumbnail sizes to load.';
 $_lang['ms3_prop_include_vendor_fields'] = 'Comma-separated list of vendor table fields to select. For example: "name,logo". By default all fields are selected via *.';
+$_lang['ms3_prop_include_options'] = 'Comma-separated list of product options to select. For example: "color,size" will give placeholders [[+color]] and [[+size]].';
+$_lang['ms3_prop_with_currency'] = 'Show prices with the currency symbol.';
+$_lang['ms3_prop_use_packages'] = 'Comma-separated list of external packages that take part in loading additional product data.';
 $_lang['ms3_prop_link'] = 'Products link id that is assigned automatically when creating new link in settings.';
 $_lang['ms3_prop_master'] = 'Master product id. If both "master" and "slave" are specified - selection will be by master.';
 $_lang['ms3_prop_slave'] = 'Slave product id. If "master" is specified - this option is ignored.';
@@ -32,6 +36,7 @@ $_lang['ms3_prop_tv_prefix'] = 'Prefix for TV placeholders, for example "tv.". B
 $_lang['ms3_prop_output_separator'] = 'Optional string to separate work results.';
 $_lang['ms3_prop_return_ids'] = 'Return string with product ids instead of formatted chunks.';
 $_lang['ms3_prop_return'] = 'Results output method';
+$_lang['ms3_prop_service'] = 'Account page to show: profile, addresses or orders.';
 
 $_lang['ms3_prop_show_unpublished'] = 'Show unpublished products.';
 $_lang['ms3_prop_show_deleted'] = 'Show deleted products.';
@@ -68,6 +73,11 @@ $_lang['ms3_prop_tpl_value'] = 'Template for one value (only for multiple option
 
 $_lang['ms3_prop_user_fields'] = 'Associative array mapping order fields to user profile fields (modUserProfile) in format "order field" => "profile field".';
 $_lang['ms3_prop_customer_fields'] = 'Associative array mapping order fields to customer fields (msCustomer) in format "order field" => "customer field".';
+$_lang['ms3_prop_include_customer_addresses'] = 'Add customer addresses to the order data.';
+$_lang['ms3_prop_pay_status'] = 'Comma-separated order status identifiers for which payment links are shown. By default only the "Awaiting payment" status is used.';
 $_lang['ms3_prop_wrap_if_empty'] = 'Enables output of wrapper chunk (tplWrapper) even if there are no results.';
+$_lang['ms3_prop_tpl_wrapper'] = 'Wrapper chunk around the whole snippet output.';
 $_lang['ms3_prop_include_delivery_fields'] = 'Comma-separated list of msDelivery table fields to select. For example: "name,price,free_delivery_amount". By default all fields are selected via *.';
 $_lang['ms3_prop_include_payment_fields'] = 'Comma-separated list of msPayment table fields to select. For example: "name,description,price,logo". By default all fields are selected via *.';
+$_lang['ms3_prop_format_prices'] = 'Format order prices using the site format settings.';
+$_lang['ms3_prop_hide_on_thanks'] = 'Hide the cart on the order success page.';

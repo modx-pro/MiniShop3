@@ -73,6 +73,18 @@ return [
                 'type' => 'textfield',
                 'value' => '*',
             ],
+            'includeOptions' => [
+                'type' => 'textfield',
+                'value' => '',
+            ],
+            'withCurrency' => [
+                'type' => 'combo-boolean',
+                'value' => false,
+            ],
+            'usePackages' => [
+                'type' => 'textfield',
+                'value' => '',
+            ],
             'optionFilters' => [
                 'type' => 'textfield',
                 'value' => '',
@@ -128,6 +140,10 @@ return [
             'wrapIfEmpty' => [
                 'type' => 'combo-boolean',
                 'value' => true,
+            ],
+            'tplWrapper' => [
+                'type' => 'textfield',
+                'value' => '',
             ],
         ],
     ],
@@ -213,6 +229,10 @@ return [
                 'type' => 'textfield',
                 'value' => '',
             ],
+            'thumbnails' => [
+                'type' => 'textfield',
+                'value' => '',
+            ],
             'return' => array(
                 'type' => 'textfield',
                 'value' => 'tpl',
@@ -245,6 +265,19 @@ return [
         'file' => 'ms3_customer',
         'description' => '',
         'properties' => [
+            'service' => [
+                'type' => 'list',
+                'options' => [
+                    ['text' => 'profile', 'value' => 'profile'],
+                    ['text' => 'addresses', 'value' => 'addresses'],
+                    ['text' => 'orders', 'value' => 'orders'],
+                ],
+                'value' => 'profile',
+            ],
+            'return' => [
+                'type' => 'textfield',
+                'value' => 'tpl',
+            ],
         ],
     ],
     'msOrder' => [
@@ -274,6 +307,10 @@ return [
             'includePaymentFields' => [
                 'type' => 'textfield',
                 'value' => '*',
+            ],
+            'includeCustomerAddresses' => [
+                'type' => 'combo-boolean',
+                'value' => true,
             ],
             'return' => [
                 'type' => 'textfield',
@@ -305,6 +342,10 @@ return [
                 'type' => 'combo-boolean',
                 'value' => false,
             ],
+            'payStatus' => [
+                'type' => 'textfield',
+                'value' => '1',
+            ],
         ],
     ],
     'msProductOptions' => [
@@ -318,6 +359,10 @@ return [
             'tpl' => [
                 'type' => 'textfield',
                 'value' => 'tpl.msProductOptions',
+            ],
+            'return' => [
+                'type' => 'textfield',
+                'value' => '',
             ],
             'ignoreGroups' => [
                 'type' => 'textfield',
