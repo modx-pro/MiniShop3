@@ -4,6 +4,7 @@ namespace MiniShop3\Notifications;
 
 use MODX\Revolution\modX;
 use MiniShop3\MiniShop3;
+use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Services\Customer\CustomerPublicDto;
@@ -159,7 +160,8 @@ abstract class Notification
         $pls['order']['weight_formatted'] = $formattedWeightWithUnit;
 
         // Add customer data
-        if ($customer = $this->order->getOne('Customer')) {
+        $customer = $this->order->getOne('Customer');
+        if ($customer instanceof msCustomer) {
             $pls['customer'] = CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3);
         }
 
