@@ -6,6 +6,7 @@ use MODX\Revolution\modX;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Payment\PaymentPublicFields;
 use MiniShop3\Notifications\Messages\EmailMessage;
 use MiniShop3\Notifications\Messages\TelegramMessage;
@@ -121,6 +122,7 @@ abstract class Notification
     public function getPlaceholders(): array
     {
         $orderData = $this->order->toArray();
+        unset($orderData['token'], $orderData['idempotency_key']);
 
         // Format prices and weight for display
         $formattedCost = $this->ms3->format->price($orderData['cost'] ?? 0);
@@ -158,7 +160,7 @@ abstract class Notification
 
         // Add customer data
         if ($customer = $this->order->getOne('Customer')) {
-            $pls['customer'] = $customer->toArray();
+            $pls['customer'] = CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3);
         }
 
         // Add address data

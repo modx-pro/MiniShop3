@@ -27,7 +27,7 @@ class ProfilePageService extends CustomerPageService
      */
     public function getData(): array
     {
-        $customerData = $this->customer->toArray();
+        $customerData = $this->getPublicCustomerData();
 
         $emailVerified = !empty($customerData['email_verified_at']);
         $emailVerifiedAt = $emailVerified

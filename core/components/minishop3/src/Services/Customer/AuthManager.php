@@ -191,7 +191,7 @@ class AuthManager
     {
         SessionHelper::ensureActive();
 
-        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
 
         /** @var TokenService $tokenService */
         $tokenService = $this->modx->services->get('ms3_token_service');

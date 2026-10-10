@@ -158,7 +158,7 @@ class OrdersPageService extends CustomerPageService
             'total' => $total,
             'statuses' => $statusesData,
             'pagination' => $pagination,
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'api_url' => $this->getCustomerApiUrl(),
             'assets_url' => $this->ms3->config['assetsUrl'],
             'page_url' => $pageUrl,
@@ -206,6 +206,7 @@ class OrdersPageService extends CustomerPageService
             'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
             'can_cancel' => $this->isOrderCancellableByCustomer($order),
         ]);
+        unset($orderArray['token'], $orderArray['idempotency_key']);
 
         $data = [
             'order' => $orderArray,
@@ -223,7 +224,7 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
                 'weight_formatted' => $this->ms3->format->weightWithUnit($order->get('weight')),
             ],
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'api_url' => $this->getCustomerApiUrl(),
             'assets_url' => $this->ms3->config['assetsUrl'],
         ];
@@ -398,7 +399,7 @@ class OrdersPageService extends CustomerPageService
             'total' => $total,
             'statuses' => $statusesData,
             'pagination' => $pagination,
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'page_url' => $pageUrl,
         ];
     }
@@ -420,7 +421,7 @@ class OrdersPageService extends CustomerPageService
         if (!$order) {
             return [
                 'error' => $this->modx->lexicon('ms3_err_order_nf'),
-                'customer' => $this->customer->toArray(),
+                'customer' => $this->getPublicCustomerData(),
             ];
         }
 
@@ -432,13 +433,16 @@ class OrdersPageService extends CustomerPageService
         $address = $order->getOne('Address');
         $status = $order->getOne('Status');
 
+        $orderArray = array_merge($order->toArray(), [
+            'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
+            'status_color' => $status ? $status->get('color') : '',
+            'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
+            'can_cancel' => $this->isOrderCancellableByCustomer($order),
+        ]);
+        unset($orderArray['token'], $orderArray['idempotency_key']);
+
         return [
-            'order' => array_merge($order->toArray(), [
-                'status_name' => $status ? $this->translateStatusName($status->get('name')) : '',
-                'status_color' => $status ? $status->get('color') : '',
-                'createdon_formatted' => date('d.m.Y H:i', strtotime($order->get('createdon'))),
-                'can_cancel' => $this->isOrderCancellableByCustomer($order),
-            ]),
+            'order' => $orderArray,
             'products' => $products,
             'delivery' => $delivery ? $delivery->toArray() : [],
             'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
@@ -453,7 +457,7 @@ class OrdersPageService extends CustomerPageService
                 'weight' => $this->ms3->format->weight($order->get('weight')),
                 'weight_formatted' => $this->ms3->format->weightWithUnit($order->get('weight')),
             ],
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'api_url' => $this->getCustomerApiUrl(),
             'assets_url' => $this->ms3->config['assetsUrl'],
         ];
