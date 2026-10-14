@@ -3,27 +3,31 @@
 declare(strict_types=1);
 
 use MODX\Revolution\modAccessContext;
-use MODX\Revolution\modAccessPermission;
 use MODX\Revolution\modAccessPolicy;
-use MODX\Revolution\modAccessPolicyTemplate;
+use MODX\Revolution\modCacheManager;
 use MODX\Revolution\modUserGroup;
 use MODX\Revolution\modX;
 use xPDO\Transport\xPDOTransport;
 
 /**
- * Выдаёт права MiniShop3 существующим политикам доступа (#893).
+ * Выдаёт политику miniShopManagerPolicy группам, которые уже работают в
+ * админке (#893).
  *
- * Без этого резолвера права компонента не попадают ни в одну политику: они
- * существуют только в miniShopManagerPolicy, которая никому не назначена.
- * Любой администратор без sudo упирается в «Access denied. Required
- * permission: msproduct_save» и не может сохранить товар или категорию.
+ * Без этого права компонента не достаются никому: они лежат только в
+ * miniShopManagerPolicy, а та не назначена ни одной группе. Любой
+ * администратор без sudo упирается в «Access denied. Required permission:
+ * msproduct_save» и не может сохранить товар или категорию. Первый
+ * администратор сайта проблемы не видит: sudo обходит проверки прав.
  *
- * Права раздаются по признаку, а не по имени группы — так накрываются и
- * кастомные админские политики, которых на боевых сайтах хватает:
+ * В miniShop2 это делал resolve.policy.php — выдавал политику группе
+ * Administrator. При переносе в MiniShop3 часть потерялась: resolver_09
+ * привязывает политику к шаблону, но никому её не назначает.
  *
- *   - политикам с save_document — ежедневная работа магазина
- *     (товары, категории, галерея, заказы);
- *   - политикам с settings — настройки магазина (редкая и опасная работа).
+ * Здесь то же самое, только политика достаётся не одной штатной группе, а
+ * всем, у кого уже есть доступ к контексту mgr: на боевых сайтах
+ * администраторы нередко сидят в своей группе, а не в Administrator. Кому
+ * входить в админку — решает владелец сайта; мы лишь добавляем магазин
+ * тем, кто уже внутри. Чужие политики при этом не меняются.
  *
  * @var xPDOTransport $transport
  * @var array<string, mixed> $options
@@ -38,176 +42,100 @@ if (!in_array($action, [xPDOTransport::ACTION_INSTALL, xPDOTransport::ACTION_UPG
     return true;
 }
 
-/** Ежедневная работа магазина: выдаётся везде, где разрешено сохранять ресурсы. */
-$dailyPermissions = [
-    'mscategory_save',
-    'msproduct_save',
-    'msproduct_publish',
-    'msproduct_delete',
-    'msproductfile_save',
-    'msproductfile_generate',
-    'msproductfile_list',
-    'msorder_save',
-    'msorder_view',
-    'msorder_list',
-    'msorder_remove',
-];
+/** @var modAccessPolicy|null $policy */
+$policy = $modx->getObject(modAccessPolicy::class, ['name' => 'miniShopManagerPolicy']);
+if (!$policy instanceof modAccessPolicy) {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] miniShopManagerPolicy not found; shop permissions not granted');
 
-/** Настройки магазина: выдаются только там, где есть доступ к системным настройкам. */
-$settingsPermissions = [
-    'mssetting_save',
-    'mssetting_view',
-    'mssetting_list',
-];
+    return false;
+}
 
-$allPermissions = array_merge($dailyPermissions, $settingsPermissions);
+$policyId = (int) $policy->get('id');
 
 /**
- * Права должны присутствовать в шаблоне политики, иначе администратор не
- * увидит их в списке и не сможет переключить вручную.
+ * Группы с доступом в админку. Ту же политику второй раз не выдаём, иначе
+ * обновление плодило бы дубли.
  */
-$adminTemplate = $modx->getObject(modAccessPolicyTemplate::class, ['name' => 'AdministratorTemplate']);
-if ($adminTemplate instanceof modAccessPolicyTemplate) {
-    $templateId = (int) $adminTemplate->get('id');
-    $added = 0;
-
-    foreach ($allPermissions as $name) {
-        $exists = $modx->getCount(modAccessPermission::class, [
-            'template' => $templateId,
-            'name' => $name,
-        ]);
-        if ($exists) {
-            continue;
-        }
-
-        $permission = $modx->newObject(modAccessPermission::class);
-        $permission->fromArray([
-            'template' => $templateId,
-            'name' => $name,
-            'description' => 'perm.' . $name . '_desc',
-            'value' => true,
-        ]);
-        if ($permission->save()) {
-            $added++;
-        }
-    }
-
-    if ($added) {
-        $modx->log(modX::LOG_LEVEL_INFO, "[MiniShop3] Added {$added} permissions to AdministratorTemplate");
-    }
-} else {
-    $modx->log(modX::LOG_LEVEL_WARN, '[MiniShop3] AdministratorTemplate not found; permissions not registered');
-}
-
-/**
- * Раздача прав политикам. Уже присутствующие ключи не трогаем: администратор
- * мог отключить право намеренно, и обновление не должно это переигрывать.
- */
-$touched = [];
-
-foreach ($modx->getIterator(modAccessPolicy::class) as $policy) {
-    /** @var modAccessPolicy $policy */
-    $data = $policy->get('data');
-    if (!is_array($data)) {
-        $data = json_decode((string) $data, true);
-    }
-    if (!is_array($data) || $data === []) {
-        continue;
-    }
-
-    $grant = [];
-    if (!empty($data['save_document'])) {
-        $grant = $dailyPermissions;
-    }
-    if (!empty($data['settings'])) {
-        $grant = array_merge($grant, $settingsPermissions);
-    }
-    if ($grant === []) {
-        continue;
-    }
-
-    $changed = false;
-    foreach ($grant as $name) {
-        if (array_key_exists($name, $data)) {
-            continue;
-        }
-        $data[$name] = true;
-        $changed = true;
-    }
-
-    if (!$changed) {
-        continue;
-    }
-
-    $policy->set('data', $data);
-    if ($policy->save()) {
-        $touched[] = (string) $policy->get('name');
-        continue;
-    }
-
-    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to update policy ' . $policy->get('name'));
-}
-
-if ($touched) {
-    $modx->log(
-        modX::LOG_LEVEL_INFO,
-        '[MiniShop3] Shop permissions granted to policies: ' . implode(', ', $touched)
-    );
-}
-
-/**
- * Группа для менеджеров магазина: человеку нужен магазин, но не админские
- * права. Группа создаётся пустой — пользователей в неё добавляют сами.
- */
-$shopPolicy = $modx->getObject(modAccessPolicy::class, ['name' => 'miniShopManagerPolicy']);
-if ($shopPolicy instanceof modAccessPolicy) {
-    $groupName = 'MiniShop3 Managers';
-    $group = $modx->getObject(modUserGroup::class, ['name' => $groupName]);
-
-    if (!$group instanceof modUserGroup) {
-        $group = $modx->newObject(modUserGroup::class);
-        $group->set('name', $groupName);
-        if (!$group->save()) {
-            $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to create user group ' . $groupName);
-            $group = null;
-        } else {
-            $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Created user group ' . $groupName);
-        }
-    }
-
-    if ($group instanceof modUserGroup) {
-        $hasAccess = $modx->getCount(modAccessContext::class, [
-            'target' => 'mgr',
-            'principal_class' => modUserGroup::class,
-            'principal' => (int) $group->get('id'),
-            'policy' => (int) $shopPolicy->get('id'),
-        ]);
-
-        if (!$hasAccess) {
-            $access = $modx->newObject(modAccessContext::class);
-            $access->fromArray([
-                'target' => 'mgr',
-                'principal_class' => modUserGroup::class,
-                'principal' => (int) $group->get('id'),
-                'authority' => 0,
-                'policy' => (int) $shopPolicy->get('id'),
-            ]);
-            if ($access->save()) {
-                $modx->log(
-                    modX::LOG_LEVEL_INFO,
-                    '[MiniShop3] Linked miniShopManagerPolicy to ' . $groupName . ' on mgr context'
-                );
-            } else {
-                $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to link policy to ' . $groupName);
-            }
-        }
-    }
-}
-
-/** Без сброса кэша правки политик не вступят в силу до ручной очистки. */
-$modx->getCacheManager()->refresh([
-    'system_settings' => [],
-    'default' => [],
+$groupIds = [];
+$query = $modx->newQuery(modAccessContext::class);
+$query->where([
+    'target' => 'mgr',
+    'principal_class' => modUserGroup::class,
+    'policy:!=' => $policyId,
 ]);
+
+foreach ($modx->getIterator(modAccessContext::class, $query) as $access) {
+    /** @var modAccessContext $access */
+    $groupId = (int) $access->get('principal');
+    if ($groupId > 0 && !in_array($groupId, $groupIds, true)) {
+        $groupIds[] = $groupId;
+    }
+}
+
+if ($groupIds === []) {
+    $modx->log(
+        modX::LOG_LEVEL_WARN,
+        '[MiniShop3] No user groups with mgr access found; grant miniShopManagerPolicy manually'
+    );
+
+    return true;
+}
+
+$granted = [];
+
+foreach ($groupIds as $groupId) {
+    $exists = $modx->getCount(modAccessContext::class, [
+        'target' => 'mgr',
+        'principal_class' => modUserGroup::class,
+        'principal' => $groupId,
+        'policy' => $policyId,
+    ]);
+    if ($exists) {
+        continue;
+    }
+
+    $access = $modx->newObject(modAccessContext::class);
+    $access->fromArray([
+        'target' => 'mgr',
+        'principal_class' => modUserGroup::class,
+        'principal' => $groupId,
+        // Добавочная политика: собственные права группы остаются главнее.
+        'authority' => 9999,
+        'policy' => $policyId,
+    ]);
+
+    if (!$access->save()) {
+        $modx->log(modX::LOG_LEVEL_ERROR, "[MiniShop3] Failed to grant shop policy to user group {$groupId}");
+        continue;
+    }
+
+    $group = $modx->getObject(modUserGroup::class, $groupId);
+    $granted[] = $group instanceof modUserGroup ? (string) $group->get('name') : (string) $groupId;
+}
+
+if ($granted === []) {
+    return true;
+}
+
+$modx->log(
+    modX::LOG_LEVEL_INFO,
+    '[MiniShop3] Shop policy granted to user groups: ' . implode(', ', $granted)
+);
+
+/**
+ * Права пользователя лежат в его сессии и перечитываются, только когда
+ * контекст помечен в session_stale. Обычный refresh() кэша сессий не
+ * касается, поэтому у того, кто уже залогинен, новые права не появятся до
+ * перелогина. Штатные процессоры политик (Security\Access\Policy\Create,
+ * Update, Remove) по этой же причине зовут flushPermissions().
+ *
+ * Кэш после установки пакета сбрасывает сам процессор установки
+ * (Workspace\Packages\Install), так что refresh() здесь не нужен.
+ */
+$cacheManager = $modx->cacheManager;
+if ($cacheManager instanceof modCacheManager) {
+    $cacheManager->flushPermissions();
+    $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Permissions flushed; active sessions will reload access');
+}
 
 return true;
