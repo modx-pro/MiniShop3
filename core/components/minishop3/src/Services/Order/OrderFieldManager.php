@@ -18,6 +18,49 @@ use MODX\Revolution\modX;
  */
 class OrderFieldManager
 {
+    /**
+     * Колонки msOrder, которые витрина менять не вправе (#860).
+     *
+     * Эти поля ведут оформление заказа, пересчёт стоимости и смена статуса, а
+     * не форма покупателя. Без запрета посетитель с токеном своей корзины
+     * подставлял в черновик чужой customer_id — при оформлении он уже не
+     * перезаписывается, и заказ уезжал в чужой личный кабинет.
+     *
+     * Публичными остаются поля формы: delivery_id, payment_id, order_comment.
+     * Ключи, которых нет ни в заказе, ни в адресе, по-прежнему уходят в
+     * properties['_validated'] — кастомные поля формы работают как раньше.
+     */
+    public const PROTECTED_ORDER_FIELDS = [
+        'id',
+        'user_id',
+        'customer_id',
+        'token',
+        'uuid',
+        'idempotency_key',
+        'createdon',
+        'updatedon',
+        'num',
+        'cost',
+        'cart_cost',
+        'delivery_cost',
+        'weight',
+        'status_id',
+        'context',
+        'properties',
+    ];
+
+    /**
+     * То же для msOrderAddress: адрес покупатель заполняет сам, закрыты только
+     * служебные колонки. properties адреса ведёт OrderAddressManager.
+     */
+    public const PROTECTED_ADDRESS_FIELDS = [
+        'id',
+        'order_id',
+        'createdon',
+        'updatedon',
+        'properties',
+    ];
+
     protected modX $modx;
     protected MiniShop3 $ms3;
     protected OrderDraftManager $draftManager;
@@ -53,6 +96,15 @@ class OrderFieldManager
      */
     public function add(?msOrder $draft, array $orderData, string $key, mixed $value = null): array
     {
+        if (static::isProtectedField($key)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[OrderFieldManager] Rejected write to protected order field '{$key}'"
+            );
+
+            return $this->error('ms3_err_field_protected', [$key => null]);
+        }
+
         $response = $this->ms3->utils->invokeEvent('msOnBeforeAddToOrder', [
             'key' => $key,
             'value' => $value,
@@ -142,6 +194,17 @@ class OrderFieldManager
      */
     public function remove(msOrder $draft, array $orderData, string $key): bool
     {
+        // Обнуление закрытого поля — та же запись в черновик, что и add():
+        // remove('token') лишал бы заказ привязки к сессии.
+        if (static::isProtectedField($key)) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[OrderFieldManager] Rejected removal of protected order field '{$key}'"
+            );
+
+            return false;
+        }
+
         $properties = $draft->get('properties') ?? [];
         $existsInValidated = isset($properties['_validated'][$key]);
 
@@ -172,6 +235,23 @@ class OrderFieldManager
         }
 
         return $exists;
+    }
+
+    /**
+     * Закрыт ли ключ для записи с витрины.
+     *
+     * Проверка идёт по обоим спискам сразу: один ключ может совпасть с
+     * колонкой и заказа, и адреса (id, createdon, updatedon, properties).
+     *
+     * Константы читаются через static::, чтобы магазин мог переопределить
+     * списки в подклассе и подставить его в DI-ключ ms3_order_field_manager
+     * через core/config/ms3.services.d/ — этот каталог живёт вне компонента и
+     * переживает обновление.
+     */
+    public static function isProtectedField(string $key): bool
+    {
+        return in_array($key, static::PROTECTED_ORDER_FIELDS, true)
+            || in_array($key, static::PROTECTED_ADDRESS_FIELDS, true);
     }
 
     /**

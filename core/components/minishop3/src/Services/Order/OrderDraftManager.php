@@ -275,16 +275,16 @@ class OrderDraftManager
         $orderFields = array_keys($draft->toArray());
         $addressFields = $draft->Address ? array_keys($draft->Address->toArray()) : [];
 
-        // Update order field
-        if (in_array($key, $orderFields)) {
+        // Один ключ — одна таблица. У заказа и адреса общие колонки id,
+        // createdon, updatedon и properties, и запись в обе затирала свойства
+        // адреса свойствами заказа (#860). Заказ главнее: именно его
+        // properties передаёт OrderAddressManager.
+        if (in_array($key, $orderFields, true)) {
             $draft->set($key, $value);
             $draft->set('updatedon', time());
             $draft->save();
             $updated = true;
-        }
-
-        // Update address field
-        if (in_array($key, $addressFields)) {
+        } elseif (in_array($key, $addressFields, true)) {
             $draft->Address->set($key, $value);
             $draft->Address->save();
             $draft->set('updatedon', time());

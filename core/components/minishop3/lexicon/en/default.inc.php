@@ -177,6 +177,7 @@ $_lang['ms3_err_extra_field_key_invalid'] = 'Field key must contain only Latin l
 $_lang['ms3_err_extra_field_key_reserved'] = 'Field key "[[+key]]" is a reserved MySQL word. Use a different name, for example "[[+suggestion]]".';
 $_lang['ms3_err_fields_required'] = 'Fields array is required';
 $_lang['ms3_err_field_nf'] = 'Field not found';
+$_lang['ms3_err_field_protected'] = 'This order field cannot be changed from the storefront';
 $_lang['ms3_err_ae'] = 'This field must be unique';
 $_lang['ms3_err_json'] = 'This field requires JSON string';
 $_lang['ms3_repeater_validation_error'] = 'Repeater field "[[+field]]": [[+error]]';
