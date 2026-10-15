@@ -177,6 +177,7 @@ $_lang['ms3_err_extra_field_key_invalid'] = 'Ключ поля может сод
 $_lang['ms3_err_extra_field_key_reserved'] = 'Ключ поля «[[+key]]» — зарезервированное слово MySQL. Выберите другое имя, например «[[+suggestion]]».';
 $_lang['ms3_err_fields_required'] = 'Требуется массив полей';
 $_lang['ms3_err_field_nf'] = 'Поле не найдено';
+$_lang['ms3_err_field_protected'] = 'Это поле заказа нельзя изменить с витрины';
 $_lang['ms3_err_ae'] = 'Это поле должно быть уникально';
 $_lang['ms3_err_json'] = 'Это поле требует JSON строку';
 $_lang['ms3_repeater_validation_error'] = 'Поле повторителя «[[+field]]»: [[+error]]';
