@@ -69,13 +69,31 @@ class modX
         };
     }
 
+    /** @var array<string, mixed> Переопределения для getOption(). */
+    public array $optionOverrides = [];
+
+    /** @var array<string, int> Ответы getCount() по имени класса. */
+    public array $counts = [];
+
     /**
      * @param mixed $default
      * @return mixed
      */
     public function getOption(string $key, $options = null, $default = null)
     {
-        return $default;
+        return array_key_exists($key, $this->optionOverrides) ? $this->optionOverrides[$key] : $default;
+    }
+
+    /**
+     * Подпись намеренно без типов — тесты переопределяют метод в анонимных
+     * подклассах со своей, более слабой.
+     *
+     * @param mixed $className
+     * @param mixed $criteria
+     */
+    public function getCount($className, $criteria = null)
+    {
+        return $this->counts[(string) $className] ?? 0;
     }
 
     /**
