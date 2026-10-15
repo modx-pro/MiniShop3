@@ -9,6 +9,7 @@ use MiniShop3\Model\msOrderStatus as msOrderStatusModel;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Notifications\NotificationManager;
 use MiniShop3\Notifications\Order\StatusChangedNotification;
+use MiniShop3\Services\Customer\CustomerPublicDto;
 use MiniShop3\Services\Events\DomainEvent;
 use MiniShop3\Services\Events\DomainEventBridge;
 use MiniShop3\Services\Inventory\InventoryException;
@@ -516,7 +517,10 @@ class OrderStatusService implements OrderStatusChanger
         /** @var msCustomer|null $customer */
         $customer = $msOrder->getOne('Customer');
         if ($customer) {
-            $recipient['customer'] = $customer->toArray();
+            // Публичный набор: toArray() несёт password и token покупателя, а
+            // получатель уходит в плагины и шаблоны каналов (#889).
+            // Дополнительные поля проходят — на них держится telegram_chat_id.
+            $recipient['customer'] = CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3);
 
             if (empty($recipient['email']) && ($email = $customer->get('email'))) {
                 $recipient['email'] = $email;

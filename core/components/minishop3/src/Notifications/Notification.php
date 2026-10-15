@@ -8,6 +8,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Services\Customer\CustomerPublicDto;
+use MiniShop3\Services\Delivery\DeliveryPublicFields;
 use MiniShop3\Services\Payment\PaymentPublicFields;
 use MiniShop3\Notifications\Messages\EmailMessage;
 use MiniShop3\Notifications\Messages\TelegramMessage;
@@ -116,14 +117,43 @@ abstract class Notification
     }
 
     /**
+     * Служебные колонки заказа, которым в шаблоне письма делать нечего (#889).
+     *
+     * token — это тот же токен, по которому витрина правит черновик и которым
+     * покупатель авторизует запросы к Web API; idempotency_key нужен только
+     * интеграциям. uuid остаётся: он и так уходит покупателю в ссылке на
+     * страницу «заказ оформлен».
+     *
+     * @var list<string>
+     */
+    public const ORDER_PRIVATE_FIELDS = [
+        'token',
+        'idempotency_key',
+    ];
+
+    /**
+     * Убрать служебные колонки из данных заказа.
+     *
+     * @param array<string, mixed> $orderData
+     * @return array<string, mixed>
+     */
+    public static function orderPublicFields(array $orderData): array
+    {
+        foreach (self::ORDER_PRIVATE_FIELDS as $field) {
+            unset($orderData[$field]);
+        }
+
+        return $orderData;
+    }
+
+    /**
      * Prepare placeholders for templates
      *
      * @return array
      */
     public function getPlaceholders(): array
     {
-        $orderData = $this->order->toArray();
-        unset($orderData['token'], $orderData['idempotency_key']);
+        $orderData = self::orderPublicFields($this->order->toArray());
 
         // Format prices and weight for display
         $formattedCost = $this->ms3->format->price($orderData['cost'] ?? 0);
@@ -162,6 +192,10 @@ abstract class Notification
         // Add customer data
         $customer = $this->order->getOne('Customer');
         if ($customer instanceof msCustomer) {
+            // Публичный набор: в toArray() лежат password и token покупателя,
+            // а любой чанк, выбранный в настройках уведомления, может их
+            // напечатать (#889). Дополнительные поля проходят, иначе из
+            // получателя пропал бы telegram_chat_id.
             $pls['customer'] = CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3);
         }
 
@@ -172,7 +206,9 @@ abstract class Notification
 
         // Add delivery data
         if ($delivery = $this->order->getOne('Delivery')) {
-            $pls['delivery'] = $delivery->toArray();
+            // properties доставки держат ключи интеграций, class и
+            // validation_rules — внутреннее устройство (#889).
+            $pls['delivery'] = DeliveryPublicFields::fromEntityOrEmpty($delivery);
         }
 
         // Add payment data
