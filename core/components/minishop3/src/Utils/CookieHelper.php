@@ -23,7 +23,7 @@ class CookieHelper
      *
      * Uses MODX session_cookie_* settings for domain, path, secure, samesite.
      * httpOnly is always true — token must not be accessible from JS.
-     * Lifetime from ms3_customer_token_ttl (default 604800 = 7 days).
+     * Lifetime from ms3_customer_token_ttl (default 86400 = 24 hours).
      *
      * Deduplication: skips if same token was already set in this PHP request.
      * Allows token change (e.g. Logout sets new token after middleware set old one).
@@ -45,7 +45,7 @@ class CookieHelper
         }
 
         if ($maxAge === null) {
-            $maxAge = (int)$modx->getOption('ms3_customer_token_ttl', null, 604800);
+            $maxAge = (int)$modx->getOption('ms3_customer_token_ttl', null, 86400);
         }
 
         $domain = (string)$modx->getOption('session_cookie_domain', null, '');

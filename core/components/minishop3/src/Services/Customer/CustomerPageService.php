@@ -161,6 +161,20 @@ abstract class CustomerPageService
     }
 
     /**
+     * Get safe public customer data filtered by CustomerPublicDto (#840)
+     *
+     * @return array
+     */
+    public function getPublicCustomerData(): array
+    {
+        if (!$this->customer) {
+            return [];
+        }
+
+        return CustomerPublicDto::fromCustomer($this->customer, $this->modx, $this->ms3);
+    }
+
+    /**
      * Render page for unauthenticated user
      *
      * @return string HTML content

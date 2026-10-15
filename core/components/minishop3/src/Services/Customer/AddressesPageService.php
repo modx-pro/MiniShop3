@@ -41,7 +41,7 @@ class AddressesPageService extends CustomerPageService
 
         $data = [
             'mode' => $mode,
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'page_url' => $pageUrl,
         ];
 
@@ -189,7 +189,7 @@ class AddressesPageService extends CustomerPageService
         $data = [
             'addresses' => implode("\n", $addressesData),
             'addresses_count' => count($addressesData),
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'success' => $_SESSION['ms3']['addresses_success'] ?? null,
             'error' => $_SESSION['ms3']['addresses_error'] ?? null,
             'page_url' => $pageUrl,
@@ -222,7 +222,7 @@ class AddressesPageService extends CustomerPageService
             'mode' => 'create',
             'address' => $_SESSION['ms3']['address_form_data'] ?? [],
             'errors' => $_SESSION['ms3']['address_form_errors'] ?? [],
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'page_url' => $pageUrl,
         ];
 
@@ -267,7 +267,7 @@ class AddressesPageService extends CustomerPageService
             'mode' => 'edit',
             'address' => $address->toArray(),
             'errors' => $_SESSION['ms3']['address_form_errors'] ?? [],
-            'customer' => $this->customer->toArray(),
+            'customer' => $this->getPublicCustomerData(),
             'page_url' => $pageUrl,
         ];
 
