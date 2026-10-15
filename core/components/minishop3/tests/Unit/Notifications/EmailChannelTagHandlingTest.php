@@ -185,6 +185,50 @@ final class EmailChannelTagHandlingTest extends TestCase
     }
 
     /**
+     * Маркер плоского ключа заканчивается меткой, поэтому стоящая сразу за ним
+     * цифра из TAG_OPENERS складывалась с ней в то, что ищет restoreTags():
+     * тема «Заказ {num}1 шт» уезжала с мусором вместо номера. Значения
+     * разворачиваются до восстановления последовательностей — тогда висячей
+     * метки в строке не остаётся.
+     *
+     * @param string $suffix текст сразу за плоским ключом
+     */
+    #[DataProvider('adjacentSuffixes')]
+    public function testFlatMarkerSurvivesAdjacentDigits(string $suffix): void
+    {
+        $channel = $this->makeChannel();
+        $nonce = $channel->probeNonce();
+
+        [$masked, $values] = $channel->probeMask(
+            'Заказ {num}' . $suffix,
+            ['num' => '2610/1'],
+            $nonce
+        );
+
+        // Порядок как в buildSubject(): значения, затем последовательности.
+        $result = $channel->probeRestore(strtr($masked, $values), $nonce);
+
+        self::assertSame('Заказ 2610/1' . $suffix, $result);
+        self::assertStringNotContainsString($nonce, $result);
+    }
+
+    /**
+     * @return list<array{string}>
+     */
+    public static function adjacentSuffixes(): array
+    {
+        return [
+            ['1 шт'],
+            ['2026'],
+            ['3 шт'],
+            [' 1 шт'],
+            [''],
+            ['12'],
+            ['21'],
+        ];
+    }
+
+    /**
      * strtr не идёт по только что вставленному тексту, поэтому значение с
      * {другим_ключом} внутри остаётся как есть.
      */

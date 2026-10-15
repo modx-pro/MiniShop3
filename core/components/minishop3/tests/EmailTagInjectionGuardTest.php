@@ -85,8 +85,12 @@ foreach ([
 if ($posSubjectRender !== false && !($posSubjectNeutralize < $posSubjectRender)) {
     $fail('EmailChannel::buildSubject must neutralize placeholders BEFORE rendering the subject');
 }
-if (!($posSubjectRestore < $posSubjectExpand)) {
-    $fail('EmailChannel::buildSubject must expand flat values AFTER restoring tag openers');
+// Разворачивание плоских значений идёт ПЕРЕД восстановлением открывающих
+// последовательностей: маркер плоского ключа заканчивается меткой, и стоящая
+// сразу за ним цифра из TAG_OPENERS складывалась бы с ней в то, что ищет
+// restoreTags() — маркер рвался на теме вида «Заказ {num}1 шт».
+if (!($posSubjectExpand < $posSubjectRestore)) {
+    $fail('EmailChannel::buildSubject must expand flat values BEFORE restoring tag openers (#888)');
 }
 
 $posSubjectParser = strpos($channel, "processElementTags('', \$subject");
