@@ -6,6 +6,7 @@ use MiniShop3\Model\msOrder;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Services\Delivery\DeliveryPublicFields;
 use MiniShop3\Services\Payment\PaymentPublicFields;
 use MODX\Revolution\modResource;
 
@@ -211,7 +212,10 @@ class OrdersPageService extends CustomerPageService
         $data = [
             'order' => $orderArray,
             'products' => $products,
-            'delivery' => $delivery ? $delivery->toArray() : [],
+            // properties доставки держат ключи интеграций, class и
+            // validation_rules — внутреннее устройство. Оплату рядом уже
+            // режет PaymentPublicFields (#889).
+            'delivery' => DeliveryPublicFields::fromEntityOrEmpty($delivery),
             'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
             'address' => $address ? $address->toArray() : [],
             'total' => [
@@ -444,7 +448,10 @@ class OrdersPageService extends CustomerPageService
         return [
             'order' => $orderArray,
             'products' => $products,
-            'delivery' => $delivery ? $delivery->toArray() : [],
+            // properties доставки держат ключи интеграций, class и
+            // validation_rules — внутреннее устройство. Оплату рядом уже
+            // режет PaymentPublicFields (#889).
+            'delivery' => DeliveryPublicFields::fromEntityOrEmpty($delivery),
             'payment' => PaymentPublicFields::fromEntityOrEmpty($payment),
             'address' => $address ? $address->toArray() : [],
             'total' => [
