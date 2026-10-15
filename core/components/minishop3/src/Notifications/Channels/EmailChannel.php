@@ -27,15 +27,21 @@ class EmailChannel implements ChannelInterface
      * поэтому из комментария покупателя исполнялись и `[[++setting]]`, и
      * `{$_modx->runSnippet(...)}`.
      *
-     * Данные уходят в тело с подменёнными открывающими последовательностями и
-     * возвращаются к исходному виду уже после парсера: чанк по-прежнему может
-     * пользоваться и MODX-тегами, и Fenom, а текст покупателя остаётся
+     * Данные уходят в рендер с подменёнными открывающими последовательностями
+     * и возвращаются к исходному виду уже после парсера: шаблон по-прежнему
+     * может пользоваться и MODX-тегами, и Fenom, а текст покупателя остаётся
      * текстом.
+     *
+     * Метки — цифры, чтобы модификатор вроде `|upper` не изменил маркер и
+     * разворачивание не прошло мимо.
      */
     private const TAG_OPENERS = [
-        '[[' => 'MODX',
-        '{' => 'FENOM',
+        '[[' => '1',
+        '{' => '2',
     ];
+
+    /** Метка замаскированного плоского плейсхолдера темы. */
+    private const FLAT_MARKER = '3';
 
     protected modX $modx;
 
@@ -196,6 +202,21 @@ class EmailChannel implements ChannelInterface
             $message->getPlaceholders()
         );
 
+        $nonce = $this->tagNonce();
+
+        // Плоские {key} прячем в самом шаблоне. Fenom такой синтаксис своим не
+        // считает, но спотыкается на нём при компиляции: тема вида
+        // «Заказ {num} / {$status_name}» валила разбор, а pdoTools на ошибке
+        // отдаёт пустую строку — тема уходила пустой.
+        [$subject, $flatValues] = $this->maskFlatPlaceholders($subject, $placeholders, $nonce);
+
+        // Значения тоже под защиту: getChunk() после Fenom сам подставляет
+        // [[+key]] и прогоняет остаток через разбор MODX-тегов
+        // (pdotools CoreTools::getChunk), поэтому данные покупателя, вставленные
+        // Fenom через {$order_comment} или {$address.first_name}, доезжали до
+        // парсера как шаблон.
+        $placeholders = $this->neutralizeTags($placeholders, $nonce);
+
         // Use output buffering to capture any stray output from Fenom/pdoTools
         ob_start();
 
@@ -213,39 +234,50 @@ class EmailChannel implements ChannelInterface
         // Discard any stray output
         ob_end_clean();
 
-        // Плоский {key} — последним шагом, когда парсеров за ним уже нет.
-        // Fenom понимает только {$key}, поэтому темы вида «Заказ {num}»
-        // держатся на этой подстановке. Раньше её делал
-        // StatusChangedNotification::processSubject() до компиляции, и
-        // комментарий покупателя попадал в текст шаблона (#888).
-        return $this->fillFlatPlaceholders($subject, $placeholders);
+        $subject = $this->restoreTags($subject, $nonce);
+
+        // Значения плоских ключей разворачиваем последними: парсеров за ними
+        // уже нет, поэтому шаблоном значение не станет. strtr не проходит по
+        // только что вставленному тексту, так что значение с {другим_ключом}
+        // внутри остаётся как есть.
+        return $flatValues === [] ? $subject : strtr($subject, $flatValues);
     }
 
     /**
-     * Подставить плоские плейсхолдеры вида {key}.
+     * Заменить в шаблоне темы плоские {key} на маркеры.
      *
-     * Только скаляры и только точное совпадение {key}: без фигурных скобок
-     * подстановка затронула бы любое вхождение имени ключа в тексте.
+     * Темы вида «Заказ {num}» держатся на этой подстановке: Fenom понимает
+     * только {$key}. Берём лишь скаляры и лишь точное совпадение {key} —
+     * без скобок подстановка затронула бы любое вхождение имени ключа.
      *
      * @param array<string, mixed> $placeholders
+     * @return array{0: string, 1: array<string, string>} шаблон и карта маркер => значение
      */
-    protected function fillFlatPlaceholders(string $subject, array $placeholders): string
+    protected function maskFlatPlaceholders(string $subject, array $placeholders, string $nonce): array
     {
         if (!str_contains($subject, '{')) {
-            return $subject;
+            return [$subject, []];
         }
 
-        $search = [];
-        $replace = [];
+        $values = [];
+        $index = 0;
 
         foreach ($placeholders as $key => $value) {
-            if (is_scalar($value)) {
-                $search[] = '{' . $key . '}';
-                $replace[] = (string) $value;
+            if (!is_scalar($value)) {
+                continue;
             }
+
+            $tag = '{' . $key . '}';
+            if (!str_contains($subject, $tag)) {
+                continue;
+            }
+
+            $marker = $nonce . self::FLAT_MARKER . $index++ . $nonce;
+            $subject = str_replace($tag, $marker, $subject);
+            $values[$marker] = (string) $value;
         }
 
-        return $search === [] ? $subject : str_replace($search, $replace, $subject);
+        return [$subject, $values];
     }
 
     /**
@@ -253,10 +285,18 @@ class EmailChannel implements ChannelInterface
      *
      * Случайная на каждое письмо: иначе покупатель мог бы вписать саму метку
      * в комментарий и получить обратно `[[` или `{` после разворачивания.
+     *
+     * Только цифры — модификатор шаблона вроде `|upper` не должен её изменить,
+     * иначе разворачивание пройдёт мимо и читатель увидит маркер.
+     *
+     * От модификатора, который режет строку (`|truncate`), это не спасает:
+     * обрезанный маркер развернуть не выйдет, и в письме останутся цифры
+     * вместо `[[` или `{`. Косметика, и только если покупатель вписал в поле
+     * открывающую последовательность, — но знать об этом стоит.
      */
     protected function tagNonce(): string
     {
-        return 'ms3tag' . bin2hex(random_bytes(8));
+        return '9' . random_int(10 ** 15, 10 ** 16 - 1) . '9';
     }
 
     /**

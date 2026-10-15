@@ -112,12 +112,34 @@ final class EmailChannelTagHandlingTest extends TestCase
     }
 
     /**
-     * Fenom понимает только {$key}, поэтому темы вида «Заказ {num}» держатся
-     * на плоской подстановке. Она идёт последней — после парсеров.
+     * Метка состоит только из цифр: модификатор шаблона вроде |upper не должен
+     * её изменить, иначе разворачивание пройдёт мимо и читатель увидит маркер.
      */
-    public function testFlatPlaceholdersFillOnlyBracedKeys(): void
+    public function testNonceSurvivesCaseModifiers(): void
     {
         $channel = $this->makeChannel();
+        $nonce = $channel->probeNonce();
+
+        self::assertMatchesRegularExpression('/^\d+$/', $nonce);
+
+        $neutralized = (string) $channel->probeNeutralize('x[[++site_url]]y', $nonce);
+
+        self::assertSame(
+            mb_strtoupper('x[[++site_url]]y'),
+            $channel->probeRestore(mb_strtoupper($neutralized), $nonce)
+        );
+    }
+
+    /**
+     * Fenom понимает только {$key}, поэтому темы вида «Заказ {num}» держатся
+     * на подстановке плоских ключей. Fenom при этом спотыкается на {num} при
+     * компиляции, а pdoTools на ошибке отдаёт пустую строку — поэтому ключи
+     * маскируются в шаблоне и разворачиваются после парсеров.
+     */
+    public function testFlatKeysAreMaskedInTheTemplate(): void
+    {
+        $channel = $this->makeChannel();
+        $nonce = $channel->probeNonce();
         $placeholders = [
             'num' => '2610/1',
             'status_name' => 'Новый',
@@ -125,34 +147,58 @@ final class EmailChannelTagHandlingTest extends TestCase
             'cost' => 7451.0,
         ];
 
-        self::assertSame(
-            'Заказ 2610/1 — Новый',
-            $channel->probeFlat('Заказ {num} — {status_name}', $placeholders)
-        );
+        [$masked, $values] = $channel->probeMask('Заказ {num} — {status_name}', $placeholders, $nonce);
+
+        // В шаблоне не осталось фигурных скобок — Fenom не на чем спотыкаться.
+        self::assertStringNotContainsString('{', $masked);
+        self::assertCount(2, $values);
+        self::assertSame('Заказ 2610/1 — Новый', strtr($masked, $values));
+
+        // Массивы не маскируем: {order} разбирает Fenom.
+        [$maskedArray, $arrayValues] = $channel->probeMask('{order}', $placeholders, $nonce);
+        self::assertSame('{order}', $maskedArray);
+        self::assertSame([], $arrayValues);
+
+        // Fenom-форма остаётся Fenom-форме.
+        [$maskedFenom] = $channel->probeMask('Заказ {$order.num}', $placeholders, $nonce);
+        self::assertSame('Заказ {$order.num}', $maskedFenom);
 
         // Без скобок подстановка затронула бы любое вхождение имени ключа.
-        self::assertSame('num и cost', $channel->probeFlat('num и cost', $placeholders));
-
-        // Массивы плоской подстановке не поддаются — их разбирает Fenom.
-        self::assertSame('{order}', $channel->probeFlat('{order}', $placeholders));
-
-        self::assertSame('7451', $channel->probeFlat('{cost}', $placeholders));
+        [$maskedBare, $bareValues] = $channel->probeMask('num и cost', $placeholders, $nonce);
+        self::assertSame('num и cost', $maskedBare);
+        self::assertSame([], $bareValues);
     }
 
     /**
-     * Подстановка идёт после парсеров, поэтому значение уже не шаблон: теги
-     * из данных остаются текстом даже в теме.
+     * Значение разворачивается после парсеров, поэтому шаблоном уже не станет.
      */
-    public function testFlatPlaceholderValueIsNotReinterpreted(): void
+    public function testFlatValueIsNotReinterpreted(): void
     {
         $channel = $this->makeChannel();
+        $nonce = $channel->probeNonce();
 
-        self::assertSame(
-            'Заказ: {$_modx->runSnippet("evil")}',
-            $channel->probeFlat('Заказ: {order_comment}', [
-                'order_comment' => '{$_modx->runSnippet("evil")}',
-            ])
-        );
+        [$masked, $values] = $channel->probeMask('Заказ: {order_comment}', [
+            'order_comment' => '{$_modx->runSnippet("evil")}',
+        ], $nonce);
+
+        self::assertSame('Заказ: {$_modx->runSnippet("evil")}', strtr($masked, $values));
+    }
+
+    /**
+     * strtr не идёт по только что вставленному тексту, поэтому значение с
+     * {другим_ключом} внутри остаётся как есть.
+     */
+    public function testFlatValueContainingAnotherKeyIsNotExpanded(): void
+    {
+        $channel = $this->makeChannel();
+        $nonce = $channel->probeNonce();
+
+        [$masked, $values] = $channel->probeMask('{order_comment} / {num}', [
+            'order_comment' => 'смотрите {num}',
+            'num' => '2610/1',
+        ], $nonce);
+
+        self::assertSame('смотрите {num} / 2610/1', strtr($masked, $values));
     }
 
     private function makeChannel(): EmailChannel
@@ -175,10 +221,11 @@ final class EmailChannelTagHandlingTest extends TestCase
 
             /**
              * @param array<string, mixed> $placeholders
+             * @return array{0: string, 1: array<string, string>}
              */
-            public function probeFlat(string $subject, array $placeholders): string
+            public function probeMask(string $subject, array $placeholders, string $nonce): array
             {
-                return $this->fillFlatPlaceholders($subject, $placeholders);
+                return $this->maskFlatPlaceholders($subject, $placeholders, $nonce);
             }
         };
     }

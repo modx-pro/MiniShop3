@@ -41,7 +41,7 @@ $read = static function (string $path) use ($fail): string {
 
 $channel = $read($srcDir . '/Notifications/Channels/EmailChannel.php');
 
-foreach (['neutralizeTags', 'restoreTags', 'tagNonce', 'fillFlatPlaceholders'] as $method) {
+foreach (['neutralizeTags', 'restoreTags', 'tagNonce', 'maskFlatPlaceholders'] as $method) {
     if (!str_contains($channel, 'function ' . $method)) {
         $fail("EmailChannel must define {$method}()");
     }
@@ -62,14 +62,48 @@ if (!($posParser < $posRestore)) {
     $fail('EmailChannel must restore tag openers AFTER the parser pass');
 }
 
-// Тема: плоская подстановка последней, иначе значение снова станет шаблоном.
-$posSubjectParser = strpos($channel, "processElementTags('', \$subject");
-$posSubjectFill = strpos($channel, '$this->fillFlatPlaceholders($subject');
-if ($posSubjectFill === false) {
-    $fail('EmailChannel::buildSubject must fill flat placeholders');
+// Тема защищается тем же механизмом: getChunk() у pdoTools после Fenom сам
+// подставляет [[+key]] и прогоняет остаток через разбор MODX-тегов, поэтому
+// значение, вставленное через {$order_comment}, доезжало до парсера шаблоном.
+$posSubjectMask = strpos($channel, '$this->maskFlatPlaceholders($subject');
+$posSubjectNeutralize = strpos($channel, '$placeholders = $this->neutralizeTags($placeholders, $nonce);', (int) $posSubjectMask);
+$posSubjectRender = strpos($channel, "getChunk('@INLINE ' . \$subject");
+$posSubjectRestore = strpos($channel, '$this->restoreTags($subject');
+$posSubjectExpand = strpos($channel, 'strtr($subject, $flatValues)');
+
+foreach ([
+    'maskFlatPlaceholders' => $posSubjectMask,
+    'neutralizeTags' => $posSubjectNeutralize,
+    'restoreTags' => $posSubjectRestore,
+    'flat value expansion' => $posSubjectExpand,
+] as $label => $position) {
+    if ($position === false) {
+        $fail("EmailChannel::buildSubject must use {$label} (#888)");
+    }
 }
-if ($posSubjectParser !== false && !($posSubjectParser < $posSubjectFill)) {
-    $fail('EmailChannel::buildSubject must run the parser BEFORE filling placeholders');
+
+if ($posSubjectRender !== false && !($posSubjectNeutralize < $posSubjectRender)) {
+    $fail('EmailChannel::buildSubject must neutralize placeholders BEFORE rendering the subject');
+}
+if (!($posSubjectRestore < $posSubjectExpand)) {
+    $fail('EmailChannel::buildSubject must expand flat values AFTER restoring tag openers');
+}
+
+$posSubjectParser = strpos($channel, "processElementTags('', \$subject");
+if ($posSubjectParser !== false && !($posSubjectParser < $posSubjectExpand)) {
+    $fail('EmailChannel::buildSubject must run the parser BEFORE expanding flat values');
+}
+
+// Метка должна быть только из цифр: модификатор вроде |upper иначе изменит её
+// и разворачивание пройдёт мимо.
+$noncePos = strpos($channel, 'function tagNonce');
+if ($noncePos === false) {
+    $fail('EmailChannel::tagNonce() missing');
+}
+$nonceEnd = strpos($channel, 'function ', $noncePos + 10);
+$nonceBody = substr($channel, $noncePos, $nonceEnd === false ? 400 : $nonceEnd - $noncePos);
+if (preg_match('/bin2hex|bin2hex\(|[\'"][A-Za-z]/', $nonceBody)) {
+    $fail('EmailChannel::tagNonce() must build a digits-only marker (#888)');
 }
 
 // --- StatusChangedNotification: подстановки в шаблон темы больше нет ---------
@@ -88,7 +122,14 @@ $sendEmailPos = strpos($utils, 'function sendEmail(');
 if ($sendEmailPos === false) {
     $fail('Utils::sendEmail() missing');
 }
-$sendEmailBody = substr($utils, $sendEmailPos, 1200);
+// Режем по следующему объявлению метода, а не по фиксированному окну: иначе
+// сторож уедет за пределы метода, стоит ему подрасти.
+$sendEmailEnd = strpos($utils, 'function ', $sendEmailPos + 10);
+$sendEmailBody = substr(
+    $utils,
+    $sendEmailPos,
+    $sendEmailEnd === false ? strlen($utils) - $sendEmailPos : $sendEmailEnd - $sendEmailPos
+);
 if (str_contains($sendEmailBody, 'processElementTags')) {
     $fail('Utils::sendEmail() must not run the parser over a body it received already built (#888)');
 }
