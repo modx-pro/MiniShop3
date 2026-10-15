@@ -12,6 +12,8 @@ use MiniShop3\Services\Category\CategoryProductMenuindexService;
 use MiniShop3\Services\Category\CategoryProductScopeService;
 use MiniShop3\Services\Category\CategoryProductsListService;
 use MiniShop3\Services\FilterConfigManager;
+use MODX\Revolution\modAccessResourceGroup;
+use MODX\Revolution\modUser;
 use MODX\Revolution\modX;
 
 /**
@@ -24,6 +26,9 @@ use MODX\Revolution\modX;
 class CategoryProductsController
 {
     protected modX $modx;
+
+    /** Кэш на запрос: ACL документов проверяется один раз. */
+    private ?bool $documentAclInert = null;
 
     public function __construct(modX $modx)
     {
@@ -85,6 +90,26 @@ class CategoryProductsController
             return $this->errorResponse('ms3_err_category_products_list_service', HttpStatus::INTERNAL_SERVER_ERROR);
         }
 
+        // Когда ACL документов никого не ограничивает, страницу отдаёт один
+        // запрос с LIMIT и один COUNT — так листинг и работал до #473.
+        if ($this->documentAclIsInert()) {
+            $page = $listService->getPage(
+                $categoryId,
+                $params,
+                $nested,
+                $gridFields,
+                $start,
+                $limit,
+                (string) $sortBy,
+                $sortDir
+            );
+
+            return Response::success([
+                'results' => $page['results'],
+                'total' => $page['total'],
+            ])->getData();
+        }
+
         $results = $this->collectVisibleListPage(
             $listService,
             $categoryId,
@@ -111,6 +136,44 @@ class CategoryProductsController
             'results' => $results,
             'total' => $total,
         ])->getData();
+    }
+
+    /**
+     * Может ли построчная проверка checkPolicy('view') хоть что-то отбросить.
+     *
+     * #473 добавил ACL уровня документа в грид товаров категории, и ради него
+     * прямой LIMIT/OFFSET заменили сканированием: проверять политику можно
+     * только по загруженному объекту. Из-за этого на каждый запрос страницы
+     * вычитывалась вся категория — для total всегда, плюс от начала до start
+     * для самой страницы. На 2114 товарах это около секунды, и чем дальше
+     * страница, тем дороже.
+     *
+     * Ограничить видимость ресурса может только группа ресурсов с записью
+     * доступа: modResource::findPolicy() собирает политику джойном
+     * modAccessResourceGroup + modResourceGroupResource и возвращает пустой
+     * набор, когда настройка контекста выключена. Значит ни одной записи
+     * доступа по группам ресурсов — ни одного закрытого товара, и фильтр
+     * заведомо пропускает всё. Для sudo он пропускает всё всегда.
+     *
+     * В этих случаях работает быстрый путь. Если группы ресурсов на сайте
+     * настроены, остаётся прежнее сканирование: права важнее скорости.
+     */
+    private function documentAclIsInert(): bool
+    {
+        if ($this->documentAclInert !== null) {
+            return $this->documentAclInert;
+        }
+
+        $user = $this->modx->user;
+        if ($user instanceof modUser && $user->get('sudo')) {
+            return $this->documentAclInert = true;
+        }
+
+        if (!$this->modx->getOption('access_resource_group_enabled', null, true)) {
+            return $this->documentAclInert = true;
+        }
+
+        return $this->documentAclInert = $this->modx->getCount(modAccessResourceGroup::class) === 0;
     }
 
     /**
