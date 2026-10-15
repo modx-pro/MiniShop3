@@ -18,6 +18,25 @@ use MiniShop3\Notifications\Messages\EmailMessage;
  */
 class EmailChannel implements ChannelInterface
 {
+    /**
+     * Открывающие последовательности тегов и метки для их подмены (#888).
+     *
+     * Fenom подставляет значения плейсхолдеров в вывод как есть, а идущий
+     * следом парсер читает готовое тело уже как шаблон. С установленным
+     * pdoTools `$modx->getParser()` — это Fenom, а не разбор MODX-тегов,
+     * поэтому из комментария покупателя исполнялись и `[[++setting]]`, и
+     * `{$_modx->runSnippet(...)}`.
+     *
+     * Данные уходят в тело с подменёнными открывающими последовательностями и
+     * возвращаются к исходному виду уже после парсера: чанк по-прежнему может
+     * пользоваться и MODX-тегами, и Fenom, а текст покупателя остаётся
+     * текстом.
+     */
+    private const TAG_OPENERS = [
+        '[[' => 'MODX',
+        '{' => 'FENOM',
+    ];
+
     protected modX $modx;
 
     public function __construct(modX $modx)
@@ -121,6 +140,7 @@ class EmailChannel implements ChannelInterface
         $this->modx->lexicon->load('minishop3:cart');
 
         $body = $message->getBody();
+        $nonce = null;
 
         // If chunk is specified, render it
         if ($chunkName = $message->getChunk()) {
@@ -128,6 +148,10 @@ class EmailChannel implements ChannelInterface
                 $notification->getPlaceholders(),
                 $message->getPlaceholders()
             );
+
+            // Данные покупателя не должны дожить до парсера в виде тегов.
+            $nonce = $this->tagNonce();
+            $placeholders = $this->neutralizeTags($placeholders, $nonce);
 
             // Use output buffering to capture any stray output from Fenom/pdoTools
             ob_start();
@@ -149,7 +173,7 @@ class EmailChannel implements ChannelInterface
         $this->modx->getParser()->processElementTags('', $body, true, false, '[[', ']]', [], 10);
         $this->modx->getParser()->processElementTags('', $body, true, true, '[[', ']]', [], 10);
 
-        return $body;
+        return $nonce === null ? $body : $this->restoreTags($body, $nonce);
     }
 
     /**
@@ -181,14 +205,7 @@ class EmailChannel implements ChannelInterface
             $pdoFetch = $this->modx->services->get(Fetch::class);
             $subject = $pdoFetch->getChunk('@INLINE ' . $subject, $placeholders);
         } else {
-            // Fallback: simple placeholder replacement + MODX parser
-            foreach ($placeholders as $key => $value) {
-                if (is_scalar($value)) {
-                    $subject = str_replace("{{$key}}", (string) $value, $subject);
-                    $subject = str_replace("{$key}", (string) $value, $subject);
-                }
-            }
-            // Process MODX tags (lexicon, settings, etc.)
+            // Process MODX tags (lexicon, settings, etc.) — до подстановки данных.
             $this->modx->getParser()->processElementTags('', $subject, true, false, '[[', ']]', [], 10);
             $this->modx->getParser()->processElementTags('', $subject, true, true, '[[', ']]', [], 10);
         }
@@ -196,7 +213,92 @@ class EmailChannel implements ChannelInterface
         // Discard any stray output
         ob_end_clean();
 
-        return $subject;
+        // Плоский {key} — последним шагом, когда парсеров за ним уже нет.
+        // Fenom понимает только {$key}, поэтому темы вида «Заказ {num}»
+        // держатся на этой подстановке. Раньше её делал
+        // StatusChangedNotification::processSubject() до компиляции, и
+        // комментарий покупателя попадал в текст шаблона (#888).
+        return $this->fillFlatPlaceholders($subject, $placeholders);
+    }
+
+    /**
+     * Подставить плоские плейсхолдеры вида {key}.
+     *
+     * Только скаляры и только точное совпадение {key}: без фигурных скобок
+     * подстановка затронула бы любое вхождение имени ключа в тексте.
+     *
+     * @param array<string, mixed> $placeholders
+     */
+    protected function fillFlatPlaceholders(string $subject, array $placeholders): string
+    {
+        if (!str_contains($subject, '{')) {
+            return $subject;
+        }
+
+        $search = [];
+        $replace = [];
+
+        foreach ($placeholders as $key => $value) {
+            if (is_scalar($value)) {
+                $search[] = '{' . $key . '}';
+                $replace[] = (string) $value;
+            }
+        }
+
+        return $search === [] ? $subject : str_replace($search, $replace, $subject);
+    }
+
+    /**
+     * Разовая метка для подмены открывающих последовательностей тегов.
+     *
+     * Случайная на каждое письмо: иначе покупатель мог бы вписать саму метку
+     * в комментарий и получить обратно `[[` или `{` после разворачивания.
+     */
+    protected function tagNonce(): string
+    {
+        return 'ms3tag' . bin2hex(random_bytes(8));
+    }
+
+    /**
+     * Подменить открывающие последовательности тегов во всех строках данных.
+     *
+     * Рекурсивно, потому что плейсхолдеры письма — вложенные массивы (order,
+     * address, customer, products). Объекты не обходим: в плейсхолдеры письма
+     * они не попадают, всё приводится к массивам через toArray().
+     */
+    protected function neutralizeTags(mixed $value, string $nonce): mixed
+    {
+        if (is_array($value)) {
+            return array_map(fn($item): mixed => $this->neutralizeTags($item, $nonce), $value);
+        }
+
+        if (!is_string($value) || $value === '') {
+            return $value;
+        }
+
+        $search = [];
+        $replace = [];
+        foreach (self::TAG_OPENERS as $opener => $label) {
+            $search[] = $opener;
+            $replace[] = $nonce . $label;
+        }
+
+        return str_replace($search, $replace, $value);
+    }
+
+    /**
+     * Вернуть подменённые последовательности на место — после всех парсеров.
+     */
+    protected function restoreTags(string $text, string $nonce): string
+    {
+        $search = [];
+        $replace = [];
+        foreach (self::TAG_OPENERS as $opener => $label) {
+            $search[] = $nonce . $label;
+            $replace[] = $opener;
+        }
+
+        return str_replace($search, $replace, $text);
     }
 
     /**

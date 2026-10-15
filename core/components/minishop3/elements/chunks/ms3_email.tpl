@@ -59,13 +59,13 @@
                                                 <td style="{$style.th}">
                                                     {if $product.thumb?}
                                                         <img src="{$site_url}{$product.thumb}"
-                                                             alt="{$product.pagetitle}"
-                                                             title="{$product.pagetitle}"
+                                                             alt="{$product.pagetitle | e}"
+                                                             title="{$product.pagetitle | e}"
                                                              width="120" height="90"/>
                                                     {else}
                                                         <img src="{$site_url}{$assets_url}components/minishop3/img/web/ms3_small@2x.png"
-                                                             alt="{$product.pagetitle}"
-                                                             title="{$product.pagetitle}"
+                                                             alt="{$product.pagetitle | e}"
+                                                             title="{$product.pagetitle | e}"
                                                              width="120" height="90"/>
                                                     {/if}
                                                 </td>
@@ -73,14 +73,14 @@
                                                     {if $product.product_id?}
                                                         <a href="{$product.product_id | url : ['scheme' => 'full']}"
                                                            style="{$style.a}">
-                                                            {$product.name}
+                                                            {$product.name | e}
                                                         </a>
                                                     {else}
-                                                        {$product.name}
+                                                        {$product.name | e}
                                                     {/if}
                                                     {if $product.options?}
                                                         <div class="small">
-                                                            {$product.options | join : '; '}
+                                                            {$product.options | join : '; ' | e}
                                                         </div>
                                                     {/if}
                                                 </td>
