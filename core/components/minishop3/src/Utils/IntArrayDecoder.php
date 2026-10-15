@@ -20,6 +20,12 @@ final class IntArrayDecoder
             return [];
         }
 
+        // Одиночный id нередко приходит числом (свойство процессора, параметр
+        // из кода). Без этого такой вход молча давал пустой список.
+        if (is_int($input) || is_float($input)) {
+            $input = (string) $input;
+        }
+
         if (is_string($input)) {
             $decoded = json_decode($input, true);
             if (is_array($decoded)) {

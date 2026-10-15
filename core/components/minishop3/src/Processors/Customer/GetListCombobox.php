@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Customer;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Utils\IntArrayDecoder;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use xPDO\Om\xPDOObject;
 use xPDO\Om\xPDOQuery;
@@ -20,9 +21,11 @@ class GetListCombobox extends GetListProcessor
      */
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
-        $id = $this->getProperty('id');
-        if (!empty($id) && $this->getProperty('combo')) {
-            $c->sortby("FIELD (msCustomer.id, {$id})", "DESC");
+        // id приезжает из запроса и уходит в SQL без подготовки выражения,
+        // поэтому приводим к списку положительных целых (#882).
+        $ids = IntArrayDecoder::decode($this->getProperty('id'));
+        if ($ids !== [] && $this->getProperty('combo')) {
+            $c->sortby('FIELD (msCustomer.id, ' . implode(',', $ids) . ')', 'DESC');
         }
 
         $query = $this->getProperty('query', '');

@@ -2,6 +2,7 @@
 
 namespace MiniShop3\Processors\System\User;
 
+use MiniShop3\Utils\IntArrayDecoder;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\Processors\Model\GetListProcessor;
@@ -23,9 +24,11 @@ class GetList extends GetListProcessor
     {
         $c->leftJoin(modUserProfile::class, 'Profile');
 
-        $id = $this->getProperty('id');
-        if (!empty($id) && $this->getProperty('combo')) {
-            $c->sortby("FIELD (modUser.id, {$id})", "DESC");
+        // id приезжает из запроса и уходит в SQL без подготовки выражения,
+        // поэтому приводим к списку положительных целых (#882).
+        $ids = IntArrayDecoder::decode($this->getProperty('id'));
+        if ($ids !== [] && $this->getProperty('combo')) {
+            $c->sortby('FIELD (modUser.id, ' . implode(',', $ids) . ')', 'DESC');
         }
 
         $query = $this->getProperty('query', '');
