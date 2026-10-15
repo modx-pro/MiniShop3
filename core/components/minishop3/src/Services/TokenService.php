@@ -103,7 +103,7 @@ class TokenService
         SessionHelper::ensureActive();
 
         if ($ttl === null) {
-            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         }
 
         $expiresAt = date('Y-m-d H:i:s', time() + $ttl);
@@ -268,7 +268,7 @@ class TokenService
         }
 
         if ($ttl === null) {
-            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+            $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         }
 
         SessionHelper::ensureActive();
@@ -793,7 +793,7 @@ class TokenService
             return true;
         }
 
-        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 604800);
+        $ttl = (int)$this->modx->getOption('ms3_customer_token_ttl', null, 86400);
         $previousExpires = $tokenObj->get('expires_at');
         $tokenObj->set('expires_at', date('Y-m-d H:i:s', time() + $ttl));
 
