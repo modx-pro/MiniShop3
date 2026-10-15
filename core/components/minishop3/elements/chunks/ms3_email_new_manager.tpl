@@ -13,7 +13,7 @@
                     {foreach ['first_name','last_name','phone','email'] as $field}
                         {if $address[$field]}
                             <tr>
-                                <td>{('ms3_frontend_' ~ $field) | lexicon}: {$address[$field]} </td>
+                                <td>{('ms3_frontend_' ~ $field) | lexicon}: {$address[$field] | e} </td>
                             </tr>
                         {/if}
                     {/foreach}
@@ -27,7 +27,7 @@
                     {foreach ['index','region','city', 'street', 'building', 'entrance','floor', 'room'] as $field}
                         {if $address[$field]}
                             <tr>
-                                <td>{('ms3_frontend_' ~ $field) | lexicon}: {$address[$field]} </td>
+                                <td>{('ms3_frontend_' ~ $field) | lexicon}: {$address[$field] | e} </td>
                             </tr>
                         {/if}
                     {/foreach}
@@ -41,7 +41,7 @@
                     <h3 style="{$style.h}{$style.h3} margin-bottom: 20px;">{'ms3_frontend_comment' | lexicon}</h3>
                     <table style="width:95%;margin:auto;">
                         <tr>
-                            <td>{$address.comment}</td>
+                            <td>{$address.comment | e}</td>
                         </tr>
                     </table>
                 </td>

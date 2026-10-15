@@ -196,9 +196,9 @@ class Utils
      */
     public function sendEmail(string $email, string $subject, string $body = ''): void
     {
-        $this->modx->getParser()->processElementTags('', $body, true, false, '[[', ']]', [], 10);
-        $this->modx->getParser()->processElementTags('', $body, true, true, '[[', ']]', [], 10);
-
+        // Тело приходит собранным, и прогон парсера по нему исполнял теги из
+        // данных покупателя (#888). Вызывающий код сам решает, что разбирать,
+        // пока в строке ещё нет чужого текста.
         $mail = new modPHPMailer($this->modx);
         $mail->setHTML(true);
 

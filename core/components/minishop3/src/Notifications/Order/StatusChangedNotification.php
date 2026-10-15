@@ -102,11 +102,10 @@ class StatusChangedNotification extends Notification
             return null;
         }
 
-        // Process subject placeholders
-        $subject = $this->processSubject($subject ?? '');
-
+        // Тема уходит шаблоном как есть: плейсхолдеры в ней подставляет
+        // EmailChannel::buildSubject() — после парсеров, а не до них (#888).
         return (new EmailMessage())
-            ->subject($subject)
+            ->subject($subject ?? '')
             ->chunk($template)
             ->with($this->getPlaceholders());
     }
@@ -292,26 +291,6 @@ class StatusChangedNotification extends Notification
         }
 
         return $this->paymentLink;
-    }
-
-    /**
-     * Process subject line with placeholders
-     *
-     * @param string $subject
-     * @return string
-     */
-    protected function processSubject(string $subject): string
-    {
-        $pls = $this->getPlaceholders();
-
-        // Simple placeholder replacement
-        foreach ($pls as $key => $value) {
-            if (is_scalar($value)) {
-                $subject = str_replace("{{$key}}", (string) $value, $subject);
-            }
-        }
-
-        return $subject;
     }
 
     /**
