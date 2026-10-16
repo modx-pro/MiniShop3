@@ -90,7 +90,9 @@
                                     {$old_price} ₽
                                 </div>
 
-                                {if $discount?}
+                                {set $ms3Service = $_modx->services->get('ms3')}
+                                {set $discount = $ms3Service->format->discount($old_price, $price)}
+                                {if $discount > 0}
                                     <div class="badge bg-danger mb-2">
                                         Скидка {$discount}%
                                     </div>
