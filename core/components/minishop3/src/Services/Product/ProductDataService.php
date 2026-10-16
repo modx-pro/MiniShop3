@@ -347,17 +347,31 @@ class ProductDataService
             return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product data not found'];
         }
 
-        // Static whitelist + active repeater/key-value extra-field keys for msProductData.
+        // Static whitelist + active msProductData fields from xPDO map (including msExtraField) + repeater/key-value extra-field keys.
         // Without the extra keys, values get silently dropped here and
         // prepareObject() then normalises the in-memory null/empty to [] on save —
         // user input is lost with no error (#301).
+        $allowedFields = self::$allowedUpdateFields;
+        if ($this->modx->services->has('ms3')) {
+            $ms3 = $this->modx->services->get('ms3');
+            if ($ms3 !== null && method_exists($ms3, 'loadMap')) {
+                $ms3->loadMap();
+            }
+        }
+        $dataMeta = $productData->_fieldMeta ?? $this->modx->getFieldMeta(msProductData::class) ?? [];
+        if (!empty($dataMeta)) {
+            $allowedFields = array_merge($allowedFields, array_keys($dataMeta));
+        }
+        $allowedFields = array_diff($allowedFields, ['id', 'preview_file_id']);
+        $allowedFields = array_merge(
+            $allowedFields,
+            array_keys($this->getProductRepeaterFields()),
+            array_keys($this->getProductKeyValueFields())
+        );
+
         $filtered = array_intersect_key(
             $data,
-            array_flip(array_merge(
-                self::$allowedUpdateFields,
-                array_keys($this->getProductRepeaterFields()),
-                array_keys($this->getProductKeyValueFields())
-            ))
+            array_flip($allowedFields)
         );
         $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
 
