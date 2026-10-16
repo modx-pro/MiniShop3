@@ -1130,6 +1130,22 @@ $_lang['status_updated'] = 'Status updated';
 $_lang['status_deleted'] = 'Status deleted';
 $_lang['status_delete_confirm_message'] = 'Are you sure you want to delete status "{name}"?';
 $_lang['status_order_saved'] = 'Status order saved';
+
+$_lang['ms3_status_transitions'] = 'Transitions';
+$_lang['ms3_status_transitions_intro'] = 'Allowed transitions between order statuses. Empty matrix = only final/fixed rules. Checking a cell and saving enables the allow-list.';
+$_lang['ms3_status_transitions_from_to'] = 'From → To';
+$_lang['ms3_status_transitions_save'] = 'Save transitions';
+$_lang['ms3_status_transitions_clear'] = 'Disable allow-list';
+$_lang['ms3_status_transitions_saved'] = 'Status transitions saved';
+$_lang['ms3_status_transitions_load_error'] = 'Failed to load status transitions';
+$_lang['ms3_status_transitions_save_error'] = 'Failed to save status transitions';
+$_lang['ms3_status_transitions_empty'] = 'No statuses yet. Create statuses first.';
+$_lang['ms3_status_transitions_mode_off'] = 'Allow-list is off. Only final and fixed rules apply. Check at least one allowed transition and save to enable the matrix.';
+$_lang['ms3_status_transitions_mode_invalid'] = 'The stored transition setting is invalid. Save this matrix to replace it.';
+$_lang['ms3_status_transitions_unreachable_hint'] = 'Highlighted statuses have no incoming transition in the allow-list. Orders cannot reach them while the matrix is on.';
+$_lang['ms3_status_transitions_cell_self'] = 'Same status';
+$_lang['ms3_status_transitions_cell_final'] = 'Final status: cannot leave';
+$_lang['ms3_status_transitions_cell_fixed'] = 'Fixed status: cannot move to an earlier or equal position';
 $_lang['delivery_order_saved'] = 'Delivery order saved';
 $_lang['payment_order_saved'] = 'Payment order saved';
 
