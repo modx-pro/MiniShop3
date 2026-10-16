@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.2-beta1]
+
+### Security
+- Storefront order endpoints no longer accept internal draft columns. `POST /api/v1/order/add` took any `key` and wrote it to the draft, so a visitor holding their own cart token could set a foreign `customer_id` — it is not overwritten on submit, and the order landed in someone else's account. The same route exposed `cost`, `status_id`, `num`, `token` and `properties`. Form fields and shop-defined extra columns stay writable (#860).
+- Customer-supplied values are no longer parsed as tags when an order e-mail is built. With pdoTools installed `$modx->getParser()` is Fenom rather than MODX tag parsing, so an order comment could run `[[++setting]]` and `{$_modx->runSnippet(...)}`. The subject was affected too: data was substituted into the subject string before compilation. Custom e-mail chunks keep working — Fenom, MODX settings, lexicon entries and snippets are still available in the template itself (#888).
+- E-mail placeholders no longer carry secrets: the order `token` and `idempotency_key`, the customer `password` and `token`, and the delivery method `properties` holding integration keys. Customer data now goes through `CustomerPublicDto` (active extra fields included), delivery through the new `DeliveryPublicFields` (#889).
+- Cabinet pages no longer expose the bcrypt password hash, the API token, the privacy-consent IP or login counters to Fenom chunks, and the order array no longer carries `token` and `idempotency_key` (#840, #848).
+- The order page in the cabinet no longer hands the full delivery row to chunks — `properties`, `class` and `validation_rules` are gone, matching what payment methods already did (#889).
+- Customer and user combo processors no longer concatenate the request `id` into `ORDER BY FIELD(id, …)`. The value is normalised to a list of positive integers (#882).
+
+### Fixed
+- Install and upgrade now grant the shop policy to user groups that already have access to the `mgr` context. Previously the component permissions lived only in `miniShopManagerPolicy`, which was assigned to nobody, so any administrator without `sudo` hit "Access denied. Required permission: msproduct_save". A group created after the install still needs the policy granted manually (#893).
+
+### Changed
+- The category product grid in the manager is paginated again. Document-level ACL added in #473 replaced `LIMIT`/`OFFSET` with scanning, so every page request read the whole category — 18 queries and 953 ms on a 2114-product category, 33 queries and 1350 ms on later pages. When no resource-group access records exist (or the context setting is off, or the user is `sudo`) the row-level check cannot drop anything, and a page is served by one `SELECT` with `LIMIT` plus one `COUNT`: 1 query and 24–31 ms, no longer growing with the page number. With resource groups configured the previous behaviour stays (#473).
+
+### Notes for upgrades
+- `ms3_customer_token_ttl` falls back to 86400 instead of 604800 when the setting is missing from the database, matching the packaged value. On sites without that setting customers will sign in again after a day rather than a week (#848).
+- Templates printing `{$customer.password}`, `{$order.token}` or `{$delivery.properties}` now get empty values. Delivery methods expose `id`, `name`, `description`, `price` and `logo` in e-mails and the cabinet.
+- `Utils::sendEmail()` no longer parses tags in the body it receives. The method is unused inside the component; add-ons that passed a body with MODX tags must parse it themselves, before any customer text is in the string (#888).
+
 ## [1.14.1-beta2]
 
 ### Changed
