@@ -1234,3 +1234,25 @@ $_lang['ms3_options_order_saved'] = 'Order saved';
 $_lang['ms3_options_added'] = 'Added';
 $_lang['ms3_options_removed'] = 'Removed';
 $_lang['ms3_options_copied'] = 'Copied: {copied}, skipped: {skipped}';
+
+// Native SEO tab (product / category) (#790)
+$_lang['ms3_tab_product_seo'] = 'SEO';
+$_lang['ms3_tab_category_seo'] = 'SEO';
+$_lang['ms3_seo_fields_title'] = 'SEO overrides';
+$_lang['ms3_seo_fields_description'] = 'Leave a field empty to fall back to the default value (page title, description, generated canonical, etc.).';
+$_lang['ms3_seo_field_title'] = 'Meta title';
+$_lang['ms3_seo_field_description'] = 'Meta description';
+$_lang['ms3_seo_field_canonical'] = 'Canonical URL';
+$_lang['ms3_seo_field_robots'] = 'Robots';
+$_lang['ms3_seo_field_og_title'] = 'Open Graph title';
+$_lang['ms3_seo_field_og_description'] = 'Open Graph description';
+$_lang['ms3_seo_field_og_image'] = 'Open Graph image';
+$_lang['ms3_seo_robots_index_follow'] = 'index, follow';
+$_lang['ms3_seo_robots_noindex_follow'] = 'noindex, follow';
+$_lang['ms3_seo_robots_index_nofollow'] = 'index, nofollow';
+$_lang['ms3_seo_robots_noindex_nofollow'] = 'noindex, nofollow';
+$_lang['ms3_seo_saved'] = 'SEO saved';
+$_lang['ms3_seo_save_failed'] = 'Failed to save SEO';
+$_lang['ms3_seo_load_failed'] = 'Failed to load SEO';
+$_lang['ms3_seo_canonical_hint'] = 'Absolute https URL or root-relative path. Empty = generated from the resource URL.';
+$_lang['ms3_seo_og_image_hint'] = 'Absolute https URL or root-relative path. Empty = product image / thumb.';

@@ -84,16 +84,38 @@ final class PublicSeoTvMap
      */
     public function overlay(array $seo, int $resourceId, array $map, string $siteUrl = ''): array
     {
+        if ($resourceId <= 0 || $map === []) {
+            return [$seo, []];
+        }
+
+        $values = [];
+        foreach ($map as $seoKey => $tvName) {
+            $value = $this->loadTvValue($resourceId, $tvName);
+            if ($value !== '') {
+                $values[$seoKey] = $value;
+            }
+        }
+
+        return self::applyValues($seo, $values, $siteUrl);
+    }
+
+    /**
+     * Merge allowlisted seoKey => non-empty string values into $seo (shared by TV + native).
+     *
+     * @param array<string, mixed> $seo
+     * @param array<string, string> $values
+     * @return array{0: array<string, mixed>, 1: list<string>}
+     */
+    public static function applyValues(array $seo, array $values, string $siteUrl = ''): array
+    {
         /** @var list<string> $applied */
         $applied = [];
 
-        if ($resourceId <= 0 || $map === []) {
-            return [$seo, $applied];
-        }
-
-        foreach ($map as $seoKey => $tvName) {
-            $value = $this->loadTvValue($resourceId, $tvName);
-            if ($value === '') {
+        foreach ($values as $seoKey => $value) {
+            if (!is_string($seoKey) || !is_string($value) || $value === '') {
+                continue;
+            }
+            if (!self::isAllowedSeoKey($seoKey)) {
                 continue;
             }
 
