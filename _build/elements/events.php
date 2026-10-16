@@ -11,6 +11,8 @@ return [
     'msOnBeforeChangeInCart',
     'msOnChangeInCart',
     'msOnBeforeChangeOptionsInCart',
+    'msOnChangeOptionsInCart',
+    // Deprecated miniShop2 spelling of msOnChangeOptionsInCart, still fired (#807).
     'msOnChangeOptionInCart',
     'msOnBeforeRemoveFromCart',
     'msOnRemoveFromCart',

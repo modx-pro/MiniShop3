@@ -51,4 +51,25 @@ final class DomainEventCatalogTest extends TestCase
             self::assertNotContains('msOnSubmitOrder', $modxEvents);
         }
     }
+
+    public function testCartOptionsChangedBindingUsesRuleConsistentName(): void
+    {
+        $bindings = DomainEventCatalog::bindings();
+
+        self::assertSame(
+            ['msOnChangeOptionsInCart'],
+            $bindings[DomainEventCatalog::CART_ITEM_OPTIONS_CHANGED]
+        );
+    }
+
+    public function testDeprecatedCartOptionEventIsNotBound(): void
+    {
+        foreach (DomainEventCatalog::bindings() as $eventType => $modxEvents) {
+            self::assertNotContains(
+                'msOnChangeOptionInCart',
+                $modxEvents,
+                "{$eventType} must not bind the deprecated msOnChangeOptionInCart alias (#807)"
+            );
+        }
+    }
 }

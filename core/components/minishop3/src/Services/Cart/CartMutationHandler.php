@@ -266,7 +266,7 @@ class CartMutationHandler
         $this->draftManager->recalculate($draft);
         $cart = $this->reloadCart($draft);
 
-        $this->invokeEvent($controller, 'msOnChangeOptionInCart', [
+        $this->invokeChangeOptionsEvents($controller, [
             'old_product_key' => $productKey,
             'product_key' => $newProductKey,
             'options' => $options,
@@ -403,5 +403,24 @@ class CartMutationHandler
         $params['controller'] = $controller;
 
         return $this->ms3->utils->invokeEvent($eventName, $params);
+    }
+
+    /**
+     * Fire the options-changed cart event pair (#807).
+     *
+     * `msOnChangeOptionsInCart` keeps the naming rule of every other cart pair
+     * ("after" = "before" without `Before`). The miniShop2 spelling
+     * `msOnChangeOptionInCart` is fired right after it for backward compatibility
+     * and is documented as deprecated; drop it in the next major release.
+     *
+     * modX::invokeEvent() returns immediately for event names without plugins,
+     * so the alias costs nothing while nobody listens to it.
+     *
+     * @param object $controller Cart facade (event payload BC)
+     */
+    protected function invokeChangeOptionsEvents(object $controller, array $params = []): void
+    {
+        $this->invokeEvent($controller, 'msOnChangeOptionsInCart', $params);
+        $this->invokeEvent($controller, 'msOnChangeOptionInCart', $params);
     }
 }
