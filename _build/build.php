@@ -588,8 +588,10 @@ class MiniShop3Package
      */
     private function packageFiles(): void
     {
+        // Core is staged without the test harness (#781): xPDOFileVehicle packs
+        // via copyTree without exclude options.
         $filesets = [
-            [$this->config['core'], "return MODX_CORE_PATH . 'components/';"],
+            [$this->stageCorePackageTree(), "return MODX_CORE_PATH . 'components/';"],
             [$this->config['assets'], "return MODX_ASSETS_PATH . 'components/';"],
         ];
 
@@ -626,6 +628,52 @@ class MiniShop3Package
         if ($problem !== null) {
             exit('Refusing to build: ' . $problem . PHP_EOL);
         }
+    }
+
+    /**
+     * Copy core/components/minishop3 into a filtered staging tree for packaging (#781).
+     */
+    private function stageCorePackageTree(): string
+    {
+        require_once dirname(__FILE__) . '/package_exclude.php';
+
+        $harnessExclude = ms3BuildCoreExcludeItems();
+        $source = rtrim($this->config['core'], '/\\');
+        $stageRoot = $this->config['build'] . '_package_stage';
+        $stage = $stageRoot . DIRECTORY_SEPARATOR . $this->config['name_lower'];
+
+        $cacheManager = $this->modx->getCacheManager();
+        if ($cacheManager === null) {
+            exit('Refusing to build: cache manager is unavailable for package staging' . PHP_EOL);
+        }
+
+        if (is_dir($stageRoot)) {
+            $cacheManager->deleteTree($stageRoot, [
+                'deleteTop' => true,
+                'skipDirs' => false,
+                'extensions' => [],
+            ]);
+        }
+
+        $copied = $cacheManager->copyTree($source, $stage, [
+            'copy_exclude_items' => array_merge(
+                ['.', '..', '.svn', '.svn/', '.svn\\'],
+                $harnessExclude,
+            ),
+        ]);
+        if ($copied === false || $copied === null || !is_dir($stage)) {
+            exit('Refusing to build: could not stage core package tree at ' . $stage . PHP_EOL);
+        }
+
+        foreach ($harnessExclude as $name) {
+            if (file_exists($stage . DIRECTORY_SEPARATOR . $name)) {
+                exit('Refusing to build: staged core still contains excluded path ' . $name . PHP_EOL);
+            }
+        }
+
+        $this->modx->log(modX::LOG_LEVEL_INFO, 'Staged core package tree without test harness at ' . $stage);
+
+        return $stage;
     }
 
     /**

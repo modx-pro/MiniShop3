@@ -40,6 +40,7 @@ if (!str_contains($resolverSrc, 'ms3_frontend_assets') || !str_contains($resolve
 }
 
 require_once $helperPath;
+require_once $repoRoot . '/_build/package_exclude.php';
 
 $list = ObsoletePackageFiles::load($configPath);
 $core = $list['core'];
@@ -47,6 +48,15 @@ $assets = $list['assets'];
 
 // Frozen sets from git history (#704 processors + #716 assets/config/mgr).
 $expectedCore = [
+    '.gitignore',
+    '.phpunit.cache',
+    'composer.json',
+    'composer.lock',
+    'phpunit.modx.xml',
+    'phpunit.xml',
+    'phpunit.xml.dist',
+    'scripts',
+    'tests',
     'config/mgr/product/data-tab-left.json',
     'config/mgr/product/data-tab-right.json',
     'config/mgr/settings/delivery/grid.json',
@@ -259,10 +269,15 @@ foreach ($assets as $path) {
 }
 
 // Autocomplete still ships until #690 removes it from the tree; upgrades purge it.
-$allowedStillShipped = ['src/Processors/Product/Autocomplete.php'];
+// Test harness (#781) stays in source but is excluded from the transport package.
+$allowedStillShipped = array_merge(
+    ms3BuildCoreExcludeItems(),
+    ['src/Processors/Product/Autocomplete.php'],
+);
 
 foreach ($core as $path) {
-    if (is_file($coreRoot . '/' . $path) && !in_array($path, $allowedStillShipped, true)) {
+    $full = $coreRoot . '/' . $path;
+    if ((is_file($full) || is_dir($full)) && !in_array($path, $allowedStillShipped, true)) {
         $fail("obsolete core path still ships in the Extra: {$path}");
     }
 }
