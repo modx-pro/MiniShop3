@@ -9,13 +9,42 @@ namespace xPDO\Om;
  */
 class xPDOSimpleObject
 {
-    public function get(string $key, $format = null, $formatTemplate = null): mixed
+    public $xpdo;
+
+    public function __construct(?\xPDO\xPDO $xpdo = null)
+    {
+        $this->xpdo = $xpdo;
+    }
+
+    public function get($key, $format = null, $formatTemplate = null)
     {
         return null;
     }
 
-    public function set(string $key, mixed $value): self
+    public function set($key, $value = null)
     {
         return $this;
+    }
+}
+
+namespace xPDO;
+
+class xPDO
+{
+    public $services;
+
+    public function __construct()
+    {
+        $this->services = new class {
+            public function has(string $key): bool
+            {
+                return false;
+            }
+
+            public function get(string $key): mixed
+            {
+                return null;
+            }
+        };
     }
 }

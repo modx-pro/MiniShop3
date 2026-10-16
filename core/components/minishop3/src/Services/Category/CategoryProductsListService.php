@@ -80,6 +80,18 @@ final class CategoryProductsListService
             'Data.popular',
             'Data.favorite',
         ];
+        $productDataMeta = $this->getProductDataMeta();
+        $basicDataFields = [
+            'id', 'preview_file_id', 'article', 'price', 'old_price', 'weight',
+            'image', 'thumb', 'vendor_id', 'made_in', 'new', 'popular', 'favorite',
+        ];
+        $extraDataFieldNames = [];
+        foreach (array_keys($productDataMeta) as $dataField) {
+            if (!in_array($dataField, $basicDataFields, true) && GridColumnRules::matchesSqlIdentifierPattern($dataField)) {
+                $selectParts[] = "Data.`{$dataField}`";
+                $extraDataFieldNames[] = $dataField;
+            }
+        }
         foreach ($optionSpecs as $spec) {
             $selectParts[] = $this->aggregateOptionValueSql($spec->alias) . " AS `{$spec->fieldName}`";
         }
@@ -108,7 +120,7 @@ final class CategoryProductsListService
         $relationFieldNames = array_map(static fn (RelationColumnSpec $s) => $s->fieldName, $relationSpecs);
         $results = [];
         foreach ($rows as $row) {
-            $results[] = $this->formatProductRow($row, $nested, $optionFieldNames, $relationFieldNames);
+            $results[] = $this->formatProductRow($row, $nested, $optionFieldNames, $relationFieldNames, $extraDataFieldNames);
         }
 
         return [
@@ -176,6 +188,10 @@ final class CategoryProductsListService
         $productFields = ['id', 'pagetitle', 'published', 'createdon', 'editedon'];
         if (in_array($sortBy, $productFields, true)) {
             return "msProduct.{$sortBy}";
+        }
+        $productDataMeta = $this->getProductDataMeta();
+        if (isset($productDataMeta[$sortBy])) {
+            return "Data.{$sortBy}";
         }
         $dataFields = ['article', 'price', 'old_price', 'weight', 'vendor_id', 'made_in'];
         if (in_array($sortBy, $dataFields, true)) {
@@ -349,6 +365,7 @@ final class CategoryProductsListService
         bool $nested,
         array $optionFieldNames,
         array $relationFieldNames,
+        array $extraDataFieldNames = [],
     ): array {
         $id = (int) $row['id'];
         $data = [
@@ -377,7 +394,7 @@ final class CategoryProductsListService
             'preview_url' => $this->modx->makeUrl($id, '', '', 'full'),
         ];
 
-        $allowedExtraFields = array_flip(array_merge($optionFieldNames, $relationFieldNames));
+        $allowedExtraFields = array_flip(array_merge($optionFieldNames, $relationFieldNames, $extraDataFieldNames));
         foreach ($row as $key => $value) {
             if (!array_key_exists($key, $data) && isset($allowedExtraFields[$key])) {
                 $data[$key] = $value;
@@ -392,6 +409,21 @@ final class CategoryProductsListService
         }
 
         return $data;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function getProductDataMeta(): array
+    {
+        if ($this->modx->services->has('ms3')) {
+            $ms3 = $this->modx->services->get('ms3');
+            if ($ms3 !== null && method_exists($ms3, 'loadMap')) {
+                $ms3->loadMap();
+            }
+        }
+
+        return $this->modx->getFieldMeta(msProductData::class) ?? [];
     }
 
     private function getCategoryProductScopeService(): CategoryProductScopeService
