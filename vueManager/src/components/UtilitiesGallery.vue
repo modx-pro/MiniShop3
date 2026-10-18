@@ -8,15 +8,6 @@ import { getMs3Config } from '../utils/modx.js'
 
 const { _ } = useLexicon()
 
-/**
- * Format string with ExtJS-style placeholders {0}, {1}, etc.
- */
-const formatString = (str, ...args) => {
-  return str.replace(/\{(\d+)\}/g, (match, index) => {
-    return args[index] !== undefined ? args[index] : match
-  })
-}
-
 const sourceId = ref(1)
 const sourceName = ref('')
 const totalProducts = ref(0)
@@ -45,18 +36,9 @@ const totalIterations = ref(0)
 const updatedCount = ref(0)
 const errorMessage = ref(null)
 
-// Computed
-const galleryInfoHtml = computed(() => {
-  const template = _('ms3_utilities_gallery_information')
-  // Format: {0}=source_name, {1}=source_id, {2}=total_products, {3}=total_files
-  return formatString(
-    template,
-    sourceName.value,
-    sourceId.value,
-    totalProducts.value,
-    totalFiles.value
-  )
-})
+const sourceUpdateUrl = computed(
+  () => `?a=source/update&id=${Number(sourceId.value) || 0}`
+)
 
 const progressPercent = computed(() => {
   if (total.value === 0) return 0
@@ -134,7 +116,19 @@ onMounted(() => {
     <!-- Info Section -->
     <Card class="info-card">
       <template #content>
-        <div class="info-content" v-html="galleryInfoHtml"></div>
+        <div class="info-content">
+          {{ _('ms3_utilities_gallery_total_products') }}
+          <strong>{{ totalProducts }} {{ _('ms3_utilities_gallery_pcs') }}</strong>
+          <br />
+          {{ _('ms3_utilities_gallery_total_images') }}
+          <strong>{{ totalFiles }} {{ _('ms3_utilities_gallery_pcs') }}</strong>
+          <br />
+          {{ _('ms3_utilities_gallery_source') }}
+          <strong>{{ sourceName }} ({{ sourceId }})</strong>
+          <a :href="sourceUpdateUrl" target="_blank" rel="noopener">
+            <i class="icon icon-cog"></i>
+          </a>
+        </div>
       </template>
     </Card>
 

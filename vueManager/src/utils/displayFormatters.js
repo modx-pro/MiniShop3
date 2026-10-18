@@ -3,6 +3,8 @@
  * Keep pure (no Vue state). Order-specific helpers stay in useOrderFormatters.
  */
 
+import { renderTemplate } from './escapeHtml.js'
+
 export function formatDate(dateString, locale = 'ru-RU') {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleString(locale, {
@@ -73,7 +75,7 @@ export function formatPriceConfigured(value, column = {}, ms3Config = null) {
 export function renderField(data, column) {
   if (!column) return ''
   if (column.template) {
-    return column.template.replace(/\{(\w+)\}/g, (match, key) => data?.[key] ?? '')
+    return renderTemplate(column.template, data)
   }
   return data?.[column.name]
 }

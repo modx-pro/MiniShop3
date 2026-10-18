@@ -1,17 +1,17 @@
 <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 ms3-product-card" data-product-id="{$id}" data-ms3-product-card>
     <div class="card h-100 border-0 shadow-sm product-card" itemtype="http://schema.org/Product" itemscope>
-        <meta itemprop="description" content="{$description ?: $pagetitle}">
-        <meta itemprop="name" content="{$pagetitle}">
+        <meta itemprop="description" content="{($description ?: $pagetitle) | e}">
+        <meta itemprop="name" content="{$pagetitle | e}">
 
         {* Изображение товара с hover эффектом *}
         <div class="position-relative overflow-hidden d-flex align-items-center justify-content-center product-image-wrapper">
             <a href="/{$id | url}" class="d-block product-image-link w-100 h-100 d-flex align-items-center justify-content-center">
                 {if $thumb?}
-                    <img src="{$thumb}" class="product-image" alt="{$pagetitle}" title="{$pagetitle}" itemprop="image"/>
+                    <img src="{$thumb | e}" class="product-image" alt="{$pagetitle | e}" title="{$pagetitle | e}" itemprop="image"/>
                 {else}
                     <img src="{'assets_url' | option}components/minishop3/img/web/ms3_small.png"
                          srcset="{'assets_url' | option}components/minishop3/img/web/ms3_small@2x.png 2x"
-                         class="product-image" alt="{$pagetitle}" title="{$pagetitle}"/>
+                         class="product-image" alt="{$pagetitle | e}" title="{$pagetitle | e}"/>
                 {/if}
             </a>
 
@@ -66,12 +66,12 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
                 {if $vendor_name?}
                     <small class="text-muted text-uppercase fw-semibold product-vendor">
-                        {$vendor_name}
+                        {$vendor_name | e}
                     </small>
                 {/if}
                 {if $article?}
                     <small class="text-muted product-article">
-                        арт. {$article}
+                        арт. {$article | e}
                     </small>
                 {/if}
             </div>
@@ -79,7 +79,7 @@
             {* Название товара *}
             <h6 class="card-title mb-2 flex-grow-1">
                 <a href="/{$id | url}" class="text-decoration-none text-dark product-title">
-                    {$pagetitle}
+                    {$pagetitle | e}
                 </a>
             </h6>
 
@@ -90,7 +90,7 @@
                         {if $color}
                             {foreach $color as $opt}
                                 {if $opt@index < 3}
-                                    <span class="badge bg-light text-dark border">{$opt}</span>
+                                    <span class="badge bg-light text-dark border">{$opt | e}</span>
                                 {/if}
                             {/foreach}
                             {if ($color | length) > 3}
@@ -100,7 +100,7 @@
                         {if $size}
                             {foreach $size as $opt}
                                 {if $opt@index < 3}
-                                    <span class="badge bg-light text-dark border">{$opt}</span>
+                                    <span class="badge bg-light text-dark border">{$opt | e}</span>
                                 {/if}
                             {/foreach}
                             {if ($size | length) > 3}
