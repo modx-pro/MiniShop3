@@ -117,7 +117,7 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
 
     /**
      * @param array<string, mixed> $row
-     * @return ReservationRow
+     * @return array{order_id: int, product_id: int, qty: float, state: string}
      */
     private function mapReservationRow(array $row): array
     {

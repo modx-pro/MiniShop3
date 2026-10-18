@@ -658,9 +658,7 @@ class ManagerOrderProductsService
         if ($this->inventoryOverrides === []) {
             return;
         }
-        $userId = isset($this->modx->user) && is_object($this->modx->user)
-            ? (int)$this->modx->user->id
-            : 0;
+        $userId = (int)$this->modx->user->id;
         foreach ($this->inventoryOverrides as $override) {
             $this->getOrderLog()->addEntry(
                 $orderId,
