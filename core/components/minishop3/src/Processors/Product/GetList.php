@@ -40,9 +40,7 @@ class GetList extends GetListProcessor
         if (!$this->getProperty('limit')) {
             $this->setProperty('limit', 20);
         }
-        if ($this->getProperty('sort') === 'menuindex') {
-            $this->setProperty('sort', 'msProduct.parent ' . $this->getProperty('dir') . ', msProduct.menuindex');
-        }
+
         return parent::initialize();
     }
 
@@ -102,23 +100,11 @@ class GetList extends GetListProcessor
 
         $q = clone $c;
         $q->query['columns'] = ['SQL_CALC_FOUND_ROWS msProduct.id'];
-        $sortClassKey = $this->getSortClassKey();
-        $sortAlias = $this->getSortClassKey();
-        if (strpos($sortAlias, '\\') !== false) {
-            $explodedAlias = explode('\\', $sortAlias);
-            $sortAlias = array_pop($explodedAlias);
-        }
-        $sortKey = $this->modx->getSelectColumns(
-            $sortClassKey,
-            $this->getProperty('sortAlias', $sortAlias),
-            '',
-            [$this->getProperty('sort')]
+        [$sortKey, $sortDir] = ProductComboSort::resolve(
+            (string) $this->getProperty('sort', $this->defaultSortField),
+            (string) $this->getProperty('dir', $this->defaultSortDirection)
         );
-
-        if (empty($sortKey)) {
-            $sortKey = $this->getProperty('sort');
-        }
-        $q->sortby($sortKey, $this->getProperty('dir'));
+        $q->sortby($sortKey, $sortDir);
         if ($limit > 0) {
             $q->limit($limit, $start);
         }
@@ -134,7 +120,7 @@ class GetList extends GetListProcessor
                 new xPDOQueryCondition(['sql' => 'msProduct.id IN ' . $ids, 'conjunction' => 'AND']),
             ]
         ];
-        $c->sortby($sortKey, $this->getProperty('dir'));
+        $c->sortby($sortKey, $sortDir);
 
         $this->setProperty('total', $total);
 
