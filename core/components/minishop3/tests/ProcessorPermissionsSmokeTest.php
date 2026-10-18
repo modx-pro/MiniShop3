@@ -52,6 +52,7 @@ $allowEmptyPermission = [
     // Product reads — no msproduct_list in policy; Vue uses Manager REST (#672)
     'Product/Get.php' => 'read: legacy combo/get; no msproduct_list in policy',
     'Product/GetList.php' => 'read: legacy combo list; no msproduct_list in policy',
+    'Product/ProductComboSort.php' => 'not a processor: sort allowlist for Product/GetList (#919)',
     'Product/GetOptions.php' => 'read: option helper; no msproduct_list in policy',
 
     // Category tree helpers (resource UI)
