@@ -34,4 +34,28 @@ use xPDO\Om\xPDOSimpleObject;
  */
 class msCustomer extends xPDOSimpleObject
 {
+    /**
+     * Columns that must never leave the component in a response: password hash and session token.
+     *
+     * Used by processors and services that return a raw toArray() of the customer (#908).
+     *
+     * @var list<string>
+     */
+    public const SECRET_FIELDS = ['password', 'token'];
+
+    /**
+     * Customer row without the secret columns.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, mixed>
+     */
+    public static function withoutSecrets(array $row): array
+    {
+        foreach (static::SECRET_FIELDS as $field) {
+            unset($row[$field]);
+        }
+
+        return $row;
+    }
 }

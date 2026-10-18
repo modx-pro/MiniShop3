@@ -19,6 +19,9 @@ class Get extends GetProcessor
     {
         $ms3 = $this->modx->services->get('ms3');
         $array = $this->object->toArray();
-        return $this->success('', $array);
+
+        // Карточка покупателя не показывает хеш пароля и токен сессии, а отдавала их
+        // каждому менеджеру с msorder_view (#908, тот же класс, что #840 и #848).
+        return $this->success('', msCustomer::withoutSecrets($array));
     }
 }

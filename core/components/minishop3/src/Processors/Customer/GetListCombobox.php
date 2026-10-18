@@ -59,12 +59,15 @@ class GetListCombobox extends GetListProcessor
 
         if ($this->getProperty('combo')) {
             $fullname = implode(' ', [$array['first_name'], $array['last_name']]);
-            $array = [
+
+            return [
                 'id' => $array['id'],
                 'fullname' => $fullname,
             ];
         }
 
-        return $array;
+        // Без combo строка уходила целиком, вместе с хешем пароля и токеном сессии (#908).
+        // Процессор не объявляет своего права, поэтому набор полей режем всегда.
+        return msCustomer::withoutSecrets($array);
     }
 }

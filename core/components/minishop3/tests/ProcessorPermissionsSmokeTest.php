@@ -62,9 +62,11 @@ $allowEmptyPermission = [
     'System/Element/Context/GetList.php' => 'read: MODX context combo',
     'System/Element/Chunk/GetList.php' => 'read: chunk combo',
     'System/Element/Resource/GetList.php' => 'read: resource combo',
+    // Credential columns are stripped unconditionally in prepareRow() (#908).
     'System/User/GetList.php' => 'read: user combo',
 
     // Customer combobox + legacy Multiple dispatchers (out of #672 scope)
+    // Password hash and session token are stripped unconditionally in prepareRow() (#908).
     'Customer/GetListCombobox.php' => 'read: customer combo',
     'Customer/Multiple.php' => 'deferred: Settings/Customer Multiple gate — follow-up',
     'Customer/Address/Multiple.php' => 'deferred: address Multiple gate — follow-up',
