@@ -74,6 +74,9 @@ class CategoryProductsController
         $start = (int) ($params['start'] ?? 0);
         $limit = (int) ($params['limit'] ?? 20);
         $sortBy = $params['sort'] ?? 'menuindex';
+        if (!is_string($sortBy)) {
+            $sortBy = 'menuindex';
+        }
         $sortDir = strtoupper((string) ($params['dir'] ?? 'ASC'));
         $nested = (bool) ($params['nested'] ?? false);
 

@@ -34,10 +34,27 @@ if (!preg_match(
     $fail('SELECT must add Data.{name} for each extra data column');
 }
 
-if (!str_contains($listSrc, '$dataColumns[$sortBy]')
-    || !preg_match('/isset\s*\(\s*\$dataColumns\[\$sortBy\]\s*\)[\s\S]*?return\s+"Data\.`\{\$sortBy\}`"/', $listSrc)
+$sortSrc = file_get_contents(__DIR__ . '/../src/Services/Category/CategoryProductSort.php');
+if ($sortSrc === false) {
+    $fail('unable to read CategoryProductSort.php');
+}
+
+if (!str_contains($listSrc, 'CategoryProductSort::expression(')) {
+    $fail('mapSortField must delegate sort resolution to CategoryProductSort');
+}
+
+if (str_contains($listSrc, 'return "msProduct.{$sortBy}"') || str_contains($sortSrc, 'return "msProduct.{$sortBy}"')) {
+    $fail('sort must not interpolate caller input into msProduct.{sort}');
+}
+
+if (!str_contains($sortSrc, 'return self::builtinExpression($sortBy) ?? $effectiveMenuindexSql;')) {
+    $fail('unknown sort must fall back to the effective menuindex expression');
+}
+
+if (!str_contains($sortSrc, 'GridColumnRules::matchesSqlIdentifierPattern($sortBy)')
+    || !str_contains($sortSrc, 'return "Data.`{$sortBy}`"')
 ) {
-    $fail('mapSortField must sort extra data columns on Data.{name}');
+    $fail('extra data sort columns must be qualified as Data.{name} after the identifier check');
 }
 
 fwrite(STDOUT, "OK CategoryProductsDataColumnsTest\n");

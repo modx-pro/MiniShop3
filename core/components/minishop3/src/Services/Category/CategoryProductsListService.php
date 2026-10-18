@@ -172,32 +172,22 @@ final class CategoryProductsListService
         array $dataColumns,
         string $effectiveMenuindexSql,
     ): string {
+        $optionSql = [];
         foreach ($optionSpecs as $spec) {
-            if ($spec->fieldName === $sortBy) {
-                return $this->aggregateOptionValueSql($spec->alias);
-            }
+            $optionSql[$spec->fieldName] = $this->aggregateOptionValueSql($spec->alias);
         }
+        $relationSql = [];
         foreach ($relationSpecs as $spec) {
-            if ($spec->fieldName === $sortBy) {
-                return $spec->sortExpression();
-            }
-        }
-        if (isset($dataColumns[$sortBy])) {
-            return "Data.`{$sortBy}`";
-        }
-        if ($sortBy === 'menuindex') {
-            return $effectiveMenuindexSql;
-        }
-        $productFields = ['id', 'pagetitle', 'published', 'createdon', 'editedon'];
-        if (in_array($sortBy, $productFields, true)) {
-            return "msProduct.{$sortBy}";
-        }
-        $dataFields = ['article', 'price', 'old_price', 'weight', 'vendor_id', 'made_in'];
-        if (in_array($sortBy, $dataFields, true)) {
-            return "Data.{$sortBy}";
+            $relationSql[$spec->fieldName] = $spec->sortExpression();
         }
 
-        return "msProduct.{$sortBy}";
+        return CategoryProductSort::expression(
+            $sortBy,
+            $optionSql,
+            $relationSql,
+            $dataColumns,
+            $effectiveMenuindexSql,
+        );
     }
 
     /**
