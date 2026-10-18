@@ -2,7 +2,8 @@
 
 /**
  * Smoke: manager-side customer/user processors must narrow their payload to an
- * allowlist, so credential columns never reach a response (#908).
+ * allowlist, so credential columns never reach a response, while the site's own
+ * msExtraField columns still travel with it (#908).
  *
  * Behaviour is covered by tests/Unit/Processors/SecretFieldsTest.php; this guard keeps
  * the narrowing from being dropped during a refactor of the processors themselves.
@@ -49,15 +50,35 @@ if (in_array('id', $excluded, true)) {
     $fail('CustomerManagerFields::excludedColumns() must not exclude allowlisted columns');
 }
 
-// 2. Every manager-side processor that returns a customer row goes through the allowlist.
+// 2. msExtraField columns widen the allowlist, but can never re-open a credential column.
+$withExtra = CustomerManagerFields::pick(
+    ['id' => 1, 'ms3_extra' => 'v', 'password' => 'hash'],
+    ['ms3_extra', 'password']
+);
+if ($withExtra !== ['id' => 1, 'ms3_extra' => 'v']) {
+    $fail('CustomerManagerFields::pick() must pass registered extra fields and still drop credentials');
+}
+if (in_array('ms3_extra', CustomerManagerFields::excludedColumns(['ms3_extra' => []], ['ms3_extra']), true)) {
+    $fail('CustomerManagerFields::excludedColumns() must keep registered extra fields in the SELECT');
+}
+
+// 3. Every manager-side processor that returns a customer row goes through the allowlist.
 $srcDir = dirname(__DIR__) . '/src/Processors';
 
 /** @var array<string, list<string>> $processors */
 $processors = [
-    'Customer/Get.php' => ['CustomerManagerFields::pick'],
-    'Customer/GetList.php' => ['CustomerManagerFields::pick', 'CustomerManagerFields::excludedColumns'],
-    'Customer/GetListCombobox.php' => ['CustomerManagerFields::pick', 'CustomerManagerFields::excludedColumns'],
-    'Customer/Update.php' => ['CustomerManagerFields::pick', 'function cleanup'],
+    'Customer/Get.php' => ['CustomerFieldAllowlistTrait', 'allowedCustomerFields'],
+    'Customer/GetList.php' => [
+        'CustomerFieldAllowlistTrait',
+        'allowedCustomerFields',
+        'CustomerManagerFields::excludedColumns',
+    ],
+    'Customer/GetListCombobox.php' => [
+        'CustomerFieldAllowlistTrait',
+        'allowedCustomerFields',
+        'CustomerManagerFields::excludedColumns',
+    ],
+    'Customer/Update.php' => ['CustomerFieldAllowlistTrait', 'allowedCustomerFields', 'function cleanup'],
     'System/User/GetList.php' => ['ALLOWED_FIELDS', 'array_intersect_key'],
 ];
 
@@ -75,7 +96,7 @@ foreach ($processors as $relative => $needles) {
     }
 }
 
-// 3. The modUser allowlist carries no credential column.
+// 4. The modUser allowlist carries no credential column.
 $userSource = (string) file_get_contents($srcDir . '/System/User/GetList.php');
 if (!preg_match('/ALLOWED_FIELDS\s*=\s*\[(.*?)\];/s', $userSource, $m)) {
     $fail('System/User/GetList.php: ALLOWED_FIELDS list not found');

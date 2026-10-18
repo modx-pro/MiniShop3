@@ -5,12 +5,13 @@ namespace MiniShop3\Processors\Customer;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msOrder;
-use MiniShop3\Services\Customer\CustomerManagerFields;
 use MODX\Revolution\Processors\Model\UpdateProcessor;
 use MODX\Revolution\Validation\modValidator;
 
 class Update extends UpdateProcessor
 {
+    use CustomerFieldAllowlistTrait;
+
     public $classKey = msCustomer::class;
     public $objectType = 'msCustomer';
     public $languageTopics = ['minishop3:default'];
@@ -27,6 +28,6 @@ class Update extends UpdateProcessor
      */
     public function cleanup()
     {
-        return $this->success('', CustomerManagerFields::pick($this->object->toArray()));
+        return $this->success('', $this->allowedCustomerFields($this->object->toArray()));
     }
 }

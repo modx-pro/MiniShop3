@@ -11,6 +11,8 @@ use xPDO\Om\xPDOQuery;
 
 class GetListCombobox extends GetListProcessor
 {
+    use CustomerFieldAllowlistTrait;
+
     public $classKey = msCustomer::class;
     public $languageTopics = ['customer'];
     public $defaultSortField = 'id';
@@ -51,11 +53,16 @@ class GetListCombobox extends GetListProcessor
     public function prepareQueryAfterCount(xPDOQuery $c)
     {
         // Хеш пароля и токен сессии не читаем вовсе: их нет ни в объекте, ни в ответе (#908).
+        // Ключи экстраполей берём первыми: они расширяют набор, который остаётся в выборке.
+        $extraFieldKeys = $this->extraFieldKeys();
         $c->select($this->modx->getSelectColumns(
             msCustomer::class,
             'msCustomer',
             '',
-            CustomerManagerFields::excludedColumns($this->modx->getFieldMeta(msCustomer::class)),
+            CustomerManagerFields::excludedColumns(
+                $this->modx->getFieldMeta(msCustomer::class),
+                $extraFieldKeys
+            ),
             true
         ));
         return $c;
@@ -76,6 +83,6 @@ class GetListCombobox extends GetListProcessor
 
         // Без combo строка уходила целиком, вместе с хешем пароля и токеном сессии (#908).
         // Процессор не объявляет своего права, поэтому набор полей ограничиваем всегда.
-        return CustomerManagerFields::pick($array);
+        return $this->allowedCustomerFields($array);
     }
 }

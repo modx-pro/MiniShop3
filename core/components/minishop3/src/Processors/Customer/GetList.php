@@ -10,6 +10,8 @@ use xPDO\Om\xPDOQueryCondition;
 
 class GetList extends GetListProcessor
 {
+    use CustomerFieldAllowlistTrait;
+
     public $classKey = msCustomer::class;
     public $languageTopics = ['default', 'minishop3:manager'];
     public $defaultSortField = 'id';
@@ -44,12 +46,17 @@ class GetList extends GetListProcessor
         $this->query = clone $c;
         // getData() отдаёт строки сырым fetchAll(), поэтому хеш пароля и токен сессии
         // не читаем из базы вовсе — ограничение набора полей в PHP было бы вторым рубежом (#908).
+        // Ключи экстраполей берём первыми: они расширяют набор, который остаётся в выборке.
+        $extraFieldKeys = $this->extraFieldKeys();
         $c->select(
             $this->modx->getSelectColumns(
                 msCustomer::class,
                 'msCustomer',
                 '',
-                CustomerManagerFields::excludedColumns($this->modx->getFieldMeta(msCustomer::class)),
+                CustomerManagerFields::excludedColumns(
+                    $this->modx->getFieldMeta(msCustomer::class),
+                    $extraFieldKeys
+                ),
                 true
             )
         );
@@ -129,7 +136,7 @@ class GetList extends GetListProcessor
     {
         // iterate() зовёт prepareArray(), а не prepareRow(), поэтому набор полей
         // ограничиваем здесь — второй рубеж к исключению колонок в запросе (#908).
-        $data = CustomerManagerFields::pick($data);
+        $data = $this->allowedCustomerFields($data);
 
         $data['actions'] = [
             [

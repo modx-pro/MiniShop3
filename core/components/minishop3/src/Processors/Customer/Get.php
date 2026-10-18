@@ -3,11 +3,12 @@
 namespace MiniShop3\Processors\Customer;
 
 use MiniShop3\Model\msCustomer;
-use MiniShop3\Services\Customer\CustomerManagerFields;
 use MODX\Revolution\Processors\Model\GetProcessor;
 
 class Get extends GetProcessor
 {
+    use CustomerFieldAllowlistTrait;
+
     public $classKey = msCustomer::class;
     public $languageTopics = ['minishop3:default'];
     public $permission = 'msorder_view';
@@ -23,6 +24,6 @@ class Get extends GetProcessor
 
         // Карточка покупателя не показывает хеш пароля и токен сессии, а отдавала их
         // каждому менеджеру с msorder_view (#908, тот же класс, что #840 и #848).
-        return $this->success('', CustomerManagerFields::pick($array));
+        return $this->success('', $this->allowedCustomerFields($array));
     }
 }
