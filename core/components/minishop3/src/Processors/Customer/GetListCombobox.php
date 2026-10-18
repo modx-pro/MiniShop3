@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Customer;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Customer\CustomerManagerFields;
 use MiniShop3\Utils\IntArrayDecoder;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use xPDO\Om\xPDOObject;
@@ -49,7 +50,14 @@ class GetListCombobox extends GetListProcessor
      */
     public function prepareQueryAfterCount(xPDOQuery $c)
     {
-        $c->select($this->modx->getSelectColumns(msCustomer::class, 'msCustomer'));
+        // Хеш пароля и токен сессии не читаем вовсе: их нет ни в объекте, ни в ответе (#908).
+        $c->select($this->modx->getSelectColumns(
+            msCustomer::class,
+            'msCustomer',
+            '',
+            CustomerManagerFields::excludedColumns($this->modx->getFieldMeta(msCustomer::class)),
+            true
+        ));
         return $c;
     }
 
@@ -67,7 +75,7 @@ class GetListCombobox extends GetListProcessor
         }
 
         // Без combo строка уходила целиком, вместе с хешем пароля и токеном сессии (#908).
-        // Процессор не объявляет своего права, поэтому набор полей режем всегда.
-        return msCustomer::withoutSecrets($array);
+        // Процессор не объявляет своего права, поэтому набор полей ограничиваем всегда.
+        return CustomerManagerFields::pick($array);
     }
 }

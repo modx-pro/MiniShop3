@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Customer;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Customer\CustomerManagerFields;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use xPDO\Om\xPDOQuery;
 use xPDO\Om\xPDOQueryCondition;
@@ -41,8 +42,16 @@ class GetList extends GetListProcessor
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
         $this->query = clone $c;
+        // getData() отдаёт строки сырым fetchAll(), поэтому хеш пароля и токен сессии
+        // не читаем из базы вовсе — ограничение набора полей в PHP было бы вторым рубежом (#908).
         $c->select(
-            $this->modx->getSelectColumns(msCustomer::class, 'msCustomer')
+            $this->modx->getSelectColumns(
+                msCustomer::class,
+                'msCustomer',
+                '',
+                CustomerManagerFields::excludedColumns($this->modx->getFieldMeta(msCustomer::class)),
+                true
+            )
         );
         return $c;
     }
@@ -118,6 +127,10 @@ class GetList extends GetListProcessor
      */
     public function prepareArray(array $data)
     {
+        // iterate() зовёт prepareArray(), а не prepareRow(), поэтому набор полей
+        // ограничиваем здесь — второй рубеж к исключению колонок в запросе (#908).
+        $data = CustomerManagerFields::pick($data);
+
         $data['actions'] = [
             [
                 'cls' => '',

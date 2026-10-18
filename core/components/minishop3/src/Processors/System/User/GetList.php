@@ -16,15 +16,25 @@ class GetList extends GetListProcessor
     public $defaultSortField = 'username';
 
     /**
-     * Credential columns of modUser that must not appear in a response (#908).
+     * modUser / modUserProfile fields this processor may return (#908).
      *
-     * Core strips password, cachepwd and salt in Security\User\GetList::prepareRow();
-     * remote_key and remote_data are added here — they hold the credentials of an
-     * external authentication provider.
+     * Allowlist, like CustomerManagerFields: credential columns (password, cachepwd,
+     * salt, remote_key, remote_data) stay out by construction, and a column added to
+     * modUser later does not leak until it is listed here.
      *
      * @var list<string>
      */
-    private const SECRET_FIELDS = ['password', 'cachepwd', 'salt', 'remote_key', 'remote_data'];
+    private const ALLOWED_FIELDS = [
+        'id',
+        'username',
+        'class_key',
+        'active',
+        'primary_group',
+        'sudo',
+        'createdon',
+        'fullname',
+        'email',
+    ];
 
     /**
      * @param xPDOQuery $c
@@ -81,11 +91,7 @@ class GetList extends GetListProcessor
         }
 
         // Без combo строка уходила целиком, вместе с хешем пароля и солью (#908).
-        // Процессор не объявляет своего права, поэтому учётные колонки режем всегда.
-        foreach (self::SECRET_FIELDS as $field) {
-            unset($array[$field]);
-        }
-
-        return $array;
+        // Процессор не объявляет своего права, поэтому набор полей ограничиваем всегда.
+        return array_intersect_key($array, array_flip(self::ALLOWED_FIELDS));
     }
 }
