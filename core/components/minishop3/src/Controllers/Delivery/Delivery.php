@@ -6,6 +6,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msDelivery;
 use MiniShop3\Model\msOrder;
 use MiniShop3\Services\Order\OrderCostEngine;
+use MiniShop3\Services\Order\OrderService;
 use MODX\Revolution\modX;
 
 /**
@@ -65,7 +66,7 @@ abstract class Delivery implements DeliveryProviderInterface
      * Calculate delivery cost (default implementation)
      *
      * Standard calculation logic includes:
-     * - Cost by weight (weight_price * order weight)
+     * - Cost by weight (weight_price * weight of the order products)
      * - Free delivery when threshold exceeded (free_delivery_amount)
      * - Fixed cost or percentage of order amount
      *
@@ -79,32 +80,15 @@ abstract class Delivery implements DeliveryProviderInterface
      */
     public function getCost(msOrder $order, msDelivery $delivery, float $cost): float
     {
-        // Get cart data for weight calculation
-        $cart = [
-            'total_weight' => 0,
-            'total_cost' => 0
-        ];
-
-        // Load controllers if not loaded yet
-        if (empty($this->ms3->cart)) {
-            $this->ms3->services->load($this->ms3->config['ctx'] ?? 'web');
-        }
-
-        // Get cart data if controller is available
-        if (!empty($this->ms3->cart)) {
-            $response = $this->ms3->cart->status();
-            if ($response['success']) {
-                $cart = $response['data'];
-            }
-        }
-
-        $cartWeight = (float) ($cart['total_weight'] ?? 0);
+        // Weight of the order's own products (per-unit weight × count). The cart controller
+        // is not used: outside a storefront session it has no customer token.
+        $orderWeight = OrderService::aggregateProductsTotals($order->getMany('Products') ?? [])['weight'];
 
         return OrderCostEngine::calculateDefaultDeliveryCost(
             $this->modx,
             $delivery,
             $cost,
-            $cartWeight
+            $orderWeight
         );
     }
 
