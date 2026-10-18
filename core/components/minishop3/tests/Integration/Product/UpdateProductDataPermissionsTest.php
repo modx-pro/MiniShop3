@@ -83,6 +83,62 @@ final class UpdateProductDataPermissionsTest extends TestCase
         self::assertTrue($data->saved);
     }
 
+    public function testSavesCustomFieldAndStockFromFieldMeta(): void
+    {
+        $data = new UpdatableProductData($this->xpdo(), [
+            'price' => 5,
+            'stock' => 1,
+            'warranty_months' => 12,
+        ]);
+        $product = new UpdatableProduct(allowSave: true, data: $data);
+        $service = $this->makeService(product: $product);
+
+        $result = $service->updateProductData(1, [
+            'stock' => 10,
+            'warranty_months' => 24,
+        ]);
+
+        self::assertTrue($result['ok']);
+        self::assertSame(10, $result['data']['stock']);
+        self::assertSame(24, $result['data']['warranty_months']);
+        self::assertTrue($data->saved);
+    }
+
+    public function testDropsInternalFieldsFromPayload(): void
+    {
+        $data = new UpdatableProductData($this->xpdo(), ['price' => 5, 'article' => 'A']);
+        $product = new UpdatableProduct(allowSave: true, data: $data);
+        $service = $this->makeService(product: $product);
+
+        $result = $service->updateProductData(1, [
+            'price' => 9,
+            'id' => 999,
+            'preview_file_id' => 42,
+        ]);
+
+        self::assertTrue($result['ok']);
+        self::assertSame(9, $result['data']['price']);
+        self::assertArrayNotHasKey('id', $result['data']);
+        self::assertArrayNotHasKey('preview_file_id', $result['data']);
+    }
+
+    public function testValidationWhenOnlyUnknownKeysInPayload(): void
+    {
+        $data = new UpdatableProductData($this->xpdo(), ['price' => 5]);
+        $product = new UpdatableProduct(allowSave: true, data: $data);
+        $service = $this->makeService(product: $product);
+
+        $result = $service->updateProductData(1, [
+            'hack' => 'drop-me',
+            'totally_unknown' => 'x',
+        ]);
+
+        self::assertFalse($result['ok']);
+        self::assertSame(ProductDataService::ERROR_VALIDATION, $result['code']);
+        self::assertSame('No updatable fields in request', $result['message']);
+        self::assertFalse($data->saved);
+    }
+
     private function makeService(bool $hasSaveDocument = true, ?UpdatableProduct $product = null): TestableProductDataService
     {
         $modx = new class ($hasSaveDocument, $product) extends modX {
@@ -199,6 +255,17 @@ final class UpdatableProductData extends msProductData
 {
     /** @var array<string, mixed> */
     public array $fields;
+
+    /** @var array<string, array<string, mixed>> */
+    public $_fieldMeta = [
+        'id' => ['phptype' => 'integer'],
+        'price' => ['phptype' => 'float'],
+        'article' => ['phptype' => 'string'],
+        'stock' => ['phptype' => 'float'],
+        'wholesale_price' => ['phptype' => 'float'],
+        'preview_file_id' => ['phptype' => 'integer'],
+        'warranty_months' => ['phptype' => 'integer'],
+    ];
 
     public bool $saved = false;
 

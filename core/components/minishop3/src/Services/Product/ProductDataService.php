@@ -7,6 +7,7 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Services\ExtraFields\KeyValueFieldService;
 use MiniShop3\Services\ExtraFields\RepeaterFieldService;
+use MiniShop3\Services\Grid\ProductDataColumnPolicy;
 use MODX\Revolution\modX;
 
 /**
@@ -22,12 +23,6 @@ class ProductDataService
     public const ERROR_NOT_FOUND = 404;
     public const ERROR_VALIDATION = 422;
     public const ERROR_SAVE = 500;
-
-    /** Allowed fields for inline / API update (msProductData) */
-    protected static array $allowedUpdateFields = [
-        'article', 'price', 'old_price', 'stock', 'weight',
-        'vendor_id', 'made_in', 'new', 'popular', 'favorite',
-    ];
 
     /** Resource (modResource) fields updatable via same API (e.g. published) */
     protected static array $allowedResourceFields = ['published'];
@@ -322,6 +317,25 @@ class ProductDataService
     }
 
     /**
+     * Payload keys allowed on msProductData (model meta + repeater/key-value extras).
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    protected function extractUpdatableFields(msProductData $productData, array $data): array
+    {
+        return array_intersect_key(
+            $data,
+            array_flip(array_merge(
+                ProductDataColumnPolicy::writableNames($productData->_fieldMeta),
+                array_keys($this->getProductRepeaterFields()),
+                array_keys($this->getProductKeyValueFields())
+            ))
+        );
+    }
+
+    /**
      * Update product data (msProductData and optionally resource fields like published).
      *
      * @return array Success: ['ok' => true, 'data' => array]. Error: ['ok' => false, 'code' => int, 'message' => string]
@@ -347,19 +361,16 @@ class ProductDataService
             return ['ok' => false, 'code' => self::ERROR_NOT_FOUND, 'message' => 'Product data not found'];
         }
 
-        // Static whitelist + active repeater/key-value extra-field keys for msProductData.
-        // Without the extra keys, values get silently dropped here and
-        // prepareObject() then normalises the in-memory null/empty to [] on save —
-        // user input is lost with no error (#301).
-        $filtered = array_intersect_key(
-            $data,
-            array_flip(array_merge(
-                self::$allowedUpdateFields,
-                array_keys($this->getProductRepeaterFields()),
-                array_keys($this->getProductKeyValueFields())
-            ))
-        );
+        $filtered = $this->extractUpdatableFields($productData, $data);
         $resourceData = array_intersect_key($data, array_flip(self::$allowedResourceFields));
+
+        if ($filtered === [] && $resourceData === []) {
+            return [
+                'ok' => false,
+                'code' => self::ERROR_VALIDATION,
+                'message' => 'No updatable fields in request',
+            ];
+        }
 
         if (!$this->validateProductDataUpdate($filtered)) {
             return ['ok' => false, 'code' => self::ERROR_VALIDATION, 'message' => 'Validation failed'];
