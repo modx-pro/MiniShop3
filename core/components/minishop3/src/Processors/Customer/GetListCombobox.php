@@ -3,6 +3,7 @@
 namespace MiniShop3\Processors\Customer;
 
 use MiniShop3\Model\msCustomer;
+use MiniShop3\Services\Customer\CustomerManagerFields;
 use MiniShop3\Utils\IntArrayDecoder;
 use MODX\Revolution\Processors\Model\GetListProcessor;
 use xPDO\Om\xPDOObject;
@@ -10,6 +11,8 @@ use xPDO\Om\xPDOQuery;
 
 class GetListCombobox extends GetListProcessor
 {
+    use CustomerFieldAllowlistTrait;
+
     public $classKey = msCustomer::class;
     public $languageTopics = ['customer'];
     public $defaultSortField = 'id';
@@ -49,7 +52,19 @@ class GetListCombobox extends GetListProcessor
      */
     public function prepareQueryAfterCount(xPDOQuery $c)
     {
-        $c->select($this->modx->getSelectColumns(msCustomer::class, 'msCustomer'));
+        // Хеш пароля и токен сессии не читаем вовсе: их нет ни в объекте, ни в ответе (#908).
+        // Ключи экстраполей берём первыми: они расширяют набор, который остаётся в выборке.
+        $extraFieldKeys = $this->extraFieldKeys();
+        $c->select($this->modx->getSelectColumns(
+            msCustomer::class,
+            'msCustomer',
+            '',
+            CustomerManagerFields::excludedColumns(
+                $this->modx->getFieldMeta(msCustomer::class),
+                $extraFieldKeys
+            ),
+            true
+        ));
         return $c;
     }
 
@@ -59,12 +74,15 @@ class GetListCombobox extends GetListProcessor
 
         if ($this->getProperty('combo')) {
             $fullname = implode(' ', [$array['first_name'], $array['last_name']]);
-            $array = [
+
+            return [
                 'id' => $array['id'],
                 'fullname' => $fullname,
             ];
         }
 
-        return $array;
+        // Без combo строка уходила целиком, вместе с хешем пароля и токеном сессии (#908).
+        // Процессор не объявляет своего права, поэтому набор полей ограничиваем всегда.
+        return $this->allowedCustomerFields($array);
     }
 }

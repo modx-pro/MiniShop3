@@ -62,9 +62,15 @@ $allowEmptyPermission = [
     'System/Element/Context/GetList.php' => 'read: MODX context combo',
     'System/Element/Chunk/GetList.php' => 'read: chunk combo',
     'System/Element/Resource/GetList.php' => 'read: resource combo',
+    // #908: prepareRow() narrows the payload to an allowlist, so credential columns are out.
+    // The permission gap itself stays: without `combo` the row still carries the user's
+    // username and email to anyone with a manager session — that part belongs to #895.
     'System/User/GetList.php' => 'read: user combo',
 
     // Customer combobox + legacy Multiple dispatchers (out of #672 scope)
+    // #908: same allowlist here. Credentials are gone, but the default branch still
+    // returns customer PII (email, phone, order totals) without a permission of its own —
+    // the compromise is narrower now, not resolved. See #895.
     'Customer/GetListCombobox.php' => 'read: customer combo',
     'Customer/Multiple.php' => 'deferred: Settings/Customer Multiple gate — follow-up',
     'Customer/Address/Multiple.php' => 'deferred: address Multiple gate — follow-up',

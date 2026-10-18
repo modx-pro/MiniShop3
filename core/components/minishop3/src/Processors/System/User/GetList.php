@@ -16,6 +16,27 @@ class GetList extends GetListProcessor
     public $defaultSortField = 'username';
 
     /**
+     * modUser / modUserProfile fields this processor may return (#908).
+     *
+     * Allowlist, like CustomerManagerFields: credential columns (password, cachepwd,
+     * salt, remote_key, remote_data) stay out by construction, and a column added to
+     * modUser later does not leak until it is listed here.
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_FIELDS = [
+        'id',
+        'username',
+        'class_key',
+        'active',
+        'primary_group',
+        'sudo',
+        'createdon',
+        'fullname',
+        'email',
+    ];
+
+    /**
      * @param xPDOQuery $c
      *
      * @return xPDOQuery
@@ -62,13 +83,15 @@ class GetList extends GetListProcessor
         $array = $object->toArray();
 
         if ($this->getProperty('combo')) {
-            $array = [
+            return [
                 'id' => $array['id'],
                 'username' => $array['username'],
                 'fullname' => !empty($array['fullname']) ? $array['fullname'] : $array['username'],
             ];
         }
 
-        return $array;
+        // Без combo строка уходила целиком, вместе с хешем пароля и солью (#908).
+        // Процессор не объявляет своего права, поэтому набор полей ограничиваем всегда.
+        return array_intersect_key($array, array_flip(self::ALLOWED_FIELDS));
     }
 }
