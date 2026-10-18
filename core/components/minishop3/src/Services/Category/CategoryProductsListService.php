@@ -12,6 +12,7 @@ use MiniShop3\Model\msProductOption;
 use MiniShop3\Services\Grid\GridOptionColumnResolver;
 use MiniShop3\Services\Grid\GridRelationColumnResolver;
 use MiniShop3\Services\Grid\OptionColumnSpec;
+use MiniShop3\Services\Grid\ProductDataColumnPolicy;
 use MiniShop3\Services\Grid\RelationColumnSpec;
 use MODX\Revolution\modX;
 use xPDO\Om\xPDOQuery;
@@ -48,6 +49,10 @@ final class CategoryProductsListService
     ): array {
         $optionSpecs = GridOptionColumnResolver::resolve($gridFields);
         $relationSpecs = GridRelationColumnResolver::resolve($this->modx, $gridFields);
+        $dataColumns = ProductDataColumnPolicy::extraReadableColumns(
+            $gridFields,
+            $this->modx->getFieldMeta(msProductData::class)
+        );
 
         $scopeCategoryIds = $nested
             ? $this->treeService()->productParentIds($categoryId, true)
@@ -62,7 +67,7 @@ final class CategoryProductsListService
             : 0;
 
         $effectiveMenuindexSql = CategoryProductMenuindexService::effectiveMenuindexSqlForCategories($scopeCategoryIds);
-        $sortField = $this->mapSortField($sortBy, $optionSpecs, $relationSpecs, $effectiveMenuindexSql);
+        $sortField = $this->mapSortField($sortBy, $optionSpecs, $relationSpecs, $dataColumns, $effectiveMenuindexSql);
         $c->sortby($sortField, $sortDir);
         $c->limit($limit, $start);
 
@@ -86,6 +91,9 @@ final class CategoryProductsListService
         foreach ($relationSpecs as $spec) {
             $selectParts[] = $spec->selectExpression();
         }
+        foreach (array_keys($dataColumns) as $dataColumnName) {
+            $selectParts[] = "Data.`{$dataColumnName}`";
+        }
         $selectParts[] = "{$effectiveMenuindexSql} AS effective_menuindex";
         // Pass an array: select() explodes a string on commas and backtick-quotes bare pieces,
         // so "parent IN (3,5,7)" in the effective menuindex expression became IN (3,`5`,7).
@@ -104,11 +112,13 @@ final class CategoryProductsListService
             $total = 0;
         }
 
-        $optionFieldNames = array_map(static fn (OptionColumnSpec $s) => $s->fieldName, $optionSpecs);
-        $relationFieldNames = array_map(static fn (RelationColumnSpec $s) => $s->fieldName, $relationSpecs);
+        $passthroughFieldNames = array_merge(
+            array_map(static fn (OptionColumnSpec $s) => $s->fieldName, $optionSpecs),
+            array_map(static fn (RelationColumnSpec $s) => $s->fieldName, $relationSpecs),
+        );
         $results = [];
         foreach ($rows as $row) {
-            $results[] = $this->formatProductRow($row, $nested, $optionFieldNames, $relationFieldNames);
+            $results[] = $this->formatProductRow($row, $nested, $passthroughFieldNames, $dataColumns);
         }
 
         return [
@@ -153,11 +163,13 @@ final class CategoryProductsListService
     /**
      * @param list<OptionColumnSpec>    $optionSpecs
      * @param list<RelationColumnSpec>  $relationSpecs
+     * @param array<string, string>     $dataColumns Extra msProductData columns (name => phptype)
      */
     private function mapSortField(
         string $sortBy,
         array $optionSpecs,
         array $relationSpecs,
+        array $dataColumns,
         string $effectiveMenuindexSql,
     ): string {
         foreach ($optionSpecs as $spec) {
@@ -169,6 +181,9 @@ final class CategoryProductsListService
             if ($spec->fieldName === $sortBy) {
                 return $spec->sortExpression();
             }
+        }
+        if (isset($dataColumns[$sortBy])) {
+            return "Data.`{$sortBy}`";
         }
         if ($sortBy === 'menuindex') {
             return $effectiveMenuindexSql;
@@ -339,16 +354,16 @@ final class CategoryProductsListService
     }
 
     /**
-     * @param list<string> $optionFieldNames   Allowed option field names (whitelist)
-     * @param list<string> $relationFieldNames Allowed relation field names (whitelist)
+     * @param list<string>        $passthroughFieldNames Option and relation column names
+     * @param array<string,string> $dataColumns          Extra msProductData columns (name => phptype)
      *
      * @return array<string, mixed>
      */
     private function formatProductRow(
         array $row,
         bool $nested,
-        array $optionFieldNames,
-        array $relationFieldNames,
+        array $passthroughFieldNames,
+        array $dataColumns,
     ): array {
         $id = (int) $row['id'];
         $data = [
@@ -377,10 +392,16 @@ final class CategoryProductsListService
             'preview_url' => $this->modx->makeUrl($id, '', '', 'full'),
         ];
 
-        $allowedExtraFields = array_flip(array_merge($optionFieldNames, $relationFieldNames));
+        $allowedPassthrough = array_flip($passthroughFieldNames);
         foreach ($row as $key => $value) {
-            if (!array_key_exists($key, $data) && isset($allowedExtraFields[$key])) {
+            if (!array_key_exists($key, $data) && isset($allowedPassthrough[$key])) {
                 $data[$key] = $value;
+            }
+        }
+
+        foreach ($dataColumns as $name => $phptype) {
+            if (array_key_exists($name, $row)) {
+                $data[$name] = ProductDataColumnPolicy::castValue($row[$name], $phptype);
             }
         }
 
