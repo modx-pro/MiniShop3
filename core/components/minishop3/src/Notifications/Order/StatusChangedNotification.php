@@ -9,6 +9,7 @@ use MiniShop3\Model\msNotificationConfig;
 use MiniShop3\Services\Notification\NotificationConfigService;
 use MiniShop3\Services\Payment\PaymentLinkResolver;
 use MiniShop3\Notifications\Notification;
+use MiniShop3\Notifications\TemplateTagGuard;
 use MiniShop3\Notifications\Messages\EmailMessage;
 use MiniShop3\Notifications\Messages\TelegramMessage;
 use MiniShop3\Notifications\Messages\SmsMessage;
@@ -124,7 +125,7 @@ class StatusChangedNotification extends Notification
 
         // Use template from config if available
         if ($config && $config->get('template')) {
-            $content = $this->renderTemplate($config->get('template'));
+            $content = $this->renderTemplate($config->get('template'), true);
         } else {
             // Default message with translated status
             $content = $this->buildDefaultTelegramMessage($recipientType);
@@ -294,22 +295,35 @@ class StatusChangedNotification extends Notification
     }
 
     /**
-     * Render a template with placeholders
+     * Render a template with placeholders.
+     *
+     * Значения покупателя маскируются до getChunk(): pdoTools после Fenom
+     * сам подставляет [[+key]] и прогоняет остаток через разбор тегов.
+     * Отдельный processElementTags после restore не вызываем — он снова
+     * исполнил бы теги. HTML-экранирование только для Telegram (parse_mode=HTML).
      *
      * @param string $template Chunk name
+     * @param bool $escapeHtml экранировать значения, не разметку шаблона
      * @return string
      */
-    protected function renderTemplate(string $template): string
+    protected function renderTemplate(string $template, bool $escapeHtml = false): string
     {
+        $guard = new TemplateTagGuard();
+        $nonce = $guard->nonce();
         $placeholders = $this->getPlaceholders();
+        if ($escapeHtml) {
+            $placeholders = $guard->escapeHtml($placeholders);
+        }
+        $placeholders = $guard->neutralize($placeholders, $nonce);
 
-        // Use pdoTools for Fenom rendering if available
         if ($this->modx->services->has(\ModxPro\PdoTools\Fetch::class)) {
             $pdoFetch = $this->modx->services->get(\ModxPro\PdoTools\Fetch::class);
-            return $pdoFetch->getChunk($template, $placeholders);
+            $body = $pdoFetch->getChunk($template, $placeholders);
+        } else {
+            $body = $this->modx->getChunk($template, $placeholders) ?: '';
         }
 
-        return $this->modx->getChunk($template, $placeholders) ?: '';
+        return $guard->restore(is_string($body) ? $body : '', $nonce);
     }
 
     /**
