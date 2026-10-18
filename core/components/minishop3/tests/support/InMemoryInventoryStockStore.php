@@ -40,6 +40,16 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
         return true;
     }
 
+    public function decrement(int $productId, float $qty): bool
+    {
+        if (!array_key_exists($productId, $this->stock)) {
+            return false;
+        }
+        $this->stock[$productId] = round($this->stock[$productId] - $qty, 3);
+
+        return true;
+    }
+
     public function increment(int $productId, float $qty): void
     {
         $this->stock[$productId] = round($this->getAvailable($productId) + $qty, 3);
@@ -48,6 +58,23 @@ final class InMemoryInventoryStockStore implements InventoryStockStoreInterface
     public function findReservation(int $orderId, int $productId): ?array
     {
         return $this->reservations[$this->reservationKey($orderId, $productId)] ?? null;
+    }
+
+    public function lockReservation(int $orderId, int $productId): ?array
+    {
+        return $this->findReservation($orderId, $productId);
+    }
+
+    public function listReservations(int $orderId): array
+    {
+        $rows = [];
+        foreach ($this->reservations as $row) {
+            if ($row['order_id'] === $orderId) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
     }
 
     public function saveReservation(int $orderId, int $productId, float $qty, string $state): void

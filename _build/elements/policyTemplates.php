@@ -10,6 +10,7 @@ return [
             'msproduct_publish' => [],
             'msproduct_delete' => [],
             'msorder_save' => [],
+            'msorder_inventory_override' => [],
             'msorder_view' => [],
             'msorder_list' => [],
             'msorder_remove' => [],

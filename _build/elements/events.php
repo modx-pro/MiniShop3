@@ -47,6 +47,8 @@ return [
     'msOnInventoryCommit',
     'msOnBeforeInventoryRelease',
     'msOnInventoryRelease',
+    'msOnBeforeInventoryAdjust',
+    'msOnInventoryAdjust',
     'msOnBeforeMgrCreateOrder',
     'msOnMgrCreateOrder',
     'msOnBeforeUpdateOrder',

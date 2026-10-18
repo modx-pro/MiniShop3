@@ -13,6 +13,7 @@ $_lang['msproduct_save'] = 'Allows creating/editing shop product';
 $_lang['msorder_view'] = 'Allows viewing order';
 $_lang['msorder_list'] = 'Allows displaying orders list';
 $_lang['msorder_save'] = 'Allows editing order';
+$_lang['msorder_inventory_override'] = 'Allows reserving and writing off more than the available stock when editing order lines';
 $_lang['msorder_remove'] = 'Allows removing order';
 
 $_lang['mssetting_view'] = 'Allows viewing settings';

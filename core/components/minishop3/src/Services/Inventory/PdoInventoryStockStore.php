@@ -57,6 +57,20 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
         return $stmt->rowCount() === 1;
     }
 
+    public function decrement(int $productId, float $qty): bool
+    {
+        $sql = "UPDATE {$this->productsTable}
+            SET stock = stock - :qty
+            WHERE id = :id";
+        $stmt = $this->prepare($sql);
+        $stmt->execute([
+            'qty' => $qty,
+            'id' => $productId,
+        ]);
+
+        return $stmt->rowCount() === 1;
+    }
+
     public function increment(int $productId, float $qty): void
     {
         $sql = "UPDATE {$this->productsTable} SET stock = stock + :qty WHERE id = :id";
@@ -82,12 +96,60 @@ final class PdoInventoryStockStore implements InventoryStockStoreInterface
             return null;
         }
 
+        return $this->mapReservationRow($row);
+    }
+
+    public function lockReservation(int $orderId, int $productId): ?array
+    {
+        $sql = "SELECT order_id, product_id, qty, state
+            FROM {$this->reservationsTable}
+            WHERE order_id = :order_id AND product_id = :product_id
+            FOR UPDATE";
+        $stmt = $this->prepare($sql);
+        $stmt->execute([
+            'order_id' => $orderId,
+            'product_id' => $productId,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $this->mapReservationRow($row) : null;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return ReservationRow
+     */
+    private function mapReservationRow(array $row): array
+    {
         return [
             'order_id' => (int) $row['order_id'],
             'product_id' => (int) $row['product_id'],
             'qty' => round((float) $row['qty'], 3),
             'state' => (string) $row['state'],
         ];
+    }
+
+    public function listReservations(int $orderId): array
+    {
+        $sql = "SELECT order_id, product_id, qty, state
+            FROM {$this->reservationsTable}
+            WHERE order_id = :order_id";
+        $stmt = $this->prepare($sql);
+        $stmt->execute(['order_id' => $orderId]);
+        $rows = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $rows[] = [
+                'order_id' => (int) $row['order_id'],
+                'product_id' => (int) $row['product_id'],
+                'qty' => round((float) $row['qty'], 3),
+                'state' => (string) $row['state'],
+            ];
+        }
+
+        return $rows;
     }
 
     public function saveReservation(int $orderId, int $productId, float $qty, string $state): void

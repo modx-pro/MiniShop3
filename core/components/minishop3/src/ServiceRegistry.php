@@ -112,6 +112,7 @@ class ServiceRegistry
         'ms3_order_finalize' => ['ms3_order_number_generator'],
         'ms3_domain_events' => ['ms3_webhook_dispatcher'],
         'ms3_order_status' => ['ms3_order_log', 'ms3_order_lifecycle_ports', 'ms3_inventory', 'ms3_domain_events'],
+        'ms3_manager_order_products' => ['ms3_order_log', 'ms3_inventory'],
         'ms3_payment_lifecycle' => ['ms3_order_status'],
         'ms3_cart_mutation_handler' => [
             'ms3_order_draft_manager',

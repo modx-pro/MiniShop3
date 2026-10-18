@@ -58,6 +58,18 @@ if (!isset($definitions['miniShopManagerPolicy']['data']['msorder_save'])) {
 if (!isset($definitions['miniShopManagerPolicy']['data']['mssetting_save'])) {
     $fail('miniShopManagerPolicy must grant mssetting_save');
 }
+if (isset($definitions['miniShopManagerPolicy']['data']['msorder_inventory_override'])) {
+    $fail('miniShopManagerPolicy must not grant msorder_inventory_override');
+}
+
+$templatePath = $repoRoot . '/_build/elements/policyTemplates.php';
+$templateSrc = file_get_contents($templatePath);
+if ($templateSrc === false || !str_contains($templateSrc, "'msorder_inventory_override'")) {
+    $fail('miniShopManagerPolicyTemplate must declare msorder_inventory_override');
+}
+if ($resolverSrc === false || !str_contains($resolverSrc, 'msorder_inventory_override')) {
+    $fail('resolver must add msorder_inventory_override to an existing template');
+}
 
 $elementsPolicies = $repoRoot . '/_build/elements/policies.php';
 $elementsSrc = file_get_contents($elementsPolicies);

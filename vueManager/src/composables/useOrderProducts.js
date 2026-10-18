@@ -44,6 +44,44 @@ export function useOrderProducts(deps) {
     return (form.count || 0) * (form.price || 0)
   }
 
+  function inventoryShortage(error) {
+    const body = error?.data
+    if (!body || typeof body !== 'object') return null
+    const details = body.data?.can_override != null ? body.data : body.errors
+    if (!details || details.can_override !== true) return null
+    return details
+  }
+
+  function confirmInventoryOverride(details) {
+    const message = _('order_inventory_override_confirm')
+      .replace('{available}', details.available)
+      .replace('{required}', details.required)
+
+    return new Promise((resolve) => {
+      confirm.require({
+        message,
+        header: _('order_inventory_override_header'),
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: _('yes'),
+        rejectLabel: _('no'),
+        accept: () => resolve(true),
+        reject: () => resolve(false),
+      })
+    })
+  }
+
+  async function withInventoryOverride(send) {
+    try {
+      return await send(false)
+    } catch (error) {
+      const details = inventoryShortage(error)
+      if (!details) throw error
+      const accepted = await confirmInventoryOverride(details)
+      if (!accepted) throw error
+      return await send(true)
+    }
+  }
+
   const editedProductCost = computed(() => productLineCost(editProductForm.value))
   const newProductCost = computed(() => productLineCost(addProductForm.value))
 
@@ -108,9 +146,11 @@ export function useOrderProducts(deps) {
         options: options.getOptionsForSave(),
       }
 
-      await request.put(
-        `/api/mgr/orders/${orderId.value}/products/${editingProduct.value.id}`,
-        data
+      await withInventoryOverride((force) =>
+        request.put(`/api/mgr/orders/${orderId.value}/products/${editingProduct.value.id}`, {
+          ...data,
+          ...(force ? { force: 1 } : {}),
+        })
       )
 
       toast.add({
@@ -216,7 +256,12 @@ export function useOrderProducts(deps) {
         options: addProductForm.value.options || {},
       }
 
-      await request.post(`/api/mgr/orders/${orderId.value}/products`, data)
+      await withInventoryOverride((force) =>
+        request.post(`/api/mgr/orders/${orderId.value}/products`, {
+          ...data,
+          ...(force ? { force: 1 } : {}),
+        })
+      )
 
       toast.add({
         severity: 'success',
@@ -272,7 +317,12 @@ export function useOrderProducts(deps) {
       acceptClass: 'p-button-danger',
       accept: async () => {
         try {
-          await request.delete(`/api/mgr/orders/${orderId.value}/products/${product.id}`)
+          await withInventoryOverride((force) =>
+            request.delete(
+              `/api/mgr/orders/${orderId.value}/products/${product.id}`,
+              force ? { force: 1 } : null
+            )
+          )
 
           toast.add({
             severity: 'success',

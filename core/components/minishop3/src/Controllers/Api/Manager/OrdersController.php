@@ -325,7 +325,9 @@ class OrdersController
             $errorPayload = $data;
         }
 
-        return Response::error($message, $status, $errorPayload)->getData();
+        $responseData = is_array($data) && array_key_exists('can_override', $data) ? $data : null;
+
+        return Response::error($message, $status, $errorPayload, null, $responseData)->getData();
     }
 
     protected function getPresenter(): ManagerOrderPresenter

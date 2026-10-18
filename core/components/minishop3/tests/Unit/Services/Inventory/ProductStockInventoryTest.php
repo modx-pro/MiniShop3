@@ -129,6 +129,11 @@ final class ProductStockInventoryTest extends TestCase
                 return $this->inner->tryDecrement($productId, $qty);
             }
 
+            public function decrement(int $productId, float $qty): bool
+            {
+                return $this->inner->decrement($productId, $qty);
+            }
+
             public function increment(int $productId, float $qty): void
             {
                 $this->inner->increment($productId, $qty);
@@ -137,6 +142,16 @@ final class ProductStockInventoryTest extends TestCase
             public function findReservation(int $orderId, int $productId): ?array
             {
                 return $this->inner->findReservation($orderId, $productId);
+            }
+
+            public function lockReservation(int $orderId, int $productId): ?array
+            {
+                return $this->inner->lockReservation($orderId, $productId);
+            }
+
+            public function listReservations(int $orderId): array
+            {
+                return $this->inner->listReservations($orderId);
             }
 
             public function saveReservation(int $orderId, int $productId, float $qty, string $state): void
