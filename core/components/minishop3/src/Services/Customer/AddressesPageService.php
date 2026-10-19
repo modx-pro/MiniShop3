@@ -78,17 +78,7 @@ class AddressesPageService extends CustomerPageService
                 foreach ($addresses as $address) {
                     $addressData = $address->toArray();
 
-                    if (empty($addressData['name'])) {
-                        $parts = array_filter([
-                            $addressData['city'],
-                            $addressData['street'],
-                            $addressData['building'] ? 'building ' . $addressData['building'] : null,
-                            $addressData['room'] ? 'room ' . $addressData['room'] : null,
-                        ]);
-                        $addressData['display_name'] = implode(', ', $parts);
-                    } else {
-                        $addressData['display_name'] = $addressData['name'];
-                    }
+                    $addressData['display_name'] = $this->getDisplayName($addressData);
 
                     $addressData['edit_url'] = $this->modx->makeUrl(
                         $resourceId,
@@ -109,6 +99,38 @@ class AddressesPageService extends CustomerPageService
         }
 
         return $data;
+    }
+
+    /**
+     * Build human readable address name
+     *
+     * Uses the saved address name when it is set, otherwise composes
+     * a fallback from the address parts with lexicon labels.
+     *
+     * @param array $addressData Address data
+     * @return string Address display name
+     */
+    protected function getDisplayName(array $addressData): string
+    {
+        if (!empty($addressData['name'])) {
+            return (string)$addressData['name'];
+        }
+
+        $building = trim((string)($addressData['building'] ?? ''));
+        $room = trim((string)($addressData['room'] ?? ''));
+
+        $parts = array_filter([
+            trim((string)($addressData['city'] ?? '')),
+            trim((string)($addressData['street'] ?? '')),
+            $building !== ''
+                ? $this->modx->lexicon('ms3_customer_building') . ' ' . $building
+                : null,
+            $room !== ''
+                ? $this->modx->lexicon('ms3_customer_room') . ' ' . $room
+                : null,
+        ], static fn(?string $part): bool => $part !== null && $part !== '');
+
+        return implode(', ', $parts);
     }
 
     /**
@@ -163,17 +185,7 @@ class AddressesPageService extends CustomerPageService
             $addressData = $address->toArray();
             $addressData['page_url'] = $pageUrl;
 
-            if (empty($addressData['name'])) {
-                $parts = array_filter([
-                    $addressData['city'],
-                    $addressData['street'],
-                    $addressData['building'] ? 'building ' . $addressData['building'] : null,
-                    $addressData['room'] ? 'room ' . $addressData['room'] : null,
-                ]);
-                $addressData['display_name'] = implode(', ', $parts);
-            } else {
-                $addressData['display_name'] = $addressData['name'];
-            }
+            $addressData['display_name'] = $this->getDisplayName($addressData);
 
             $addressData['edit_url'] = $this->modx->makeUrl(
                 $resourceId,
