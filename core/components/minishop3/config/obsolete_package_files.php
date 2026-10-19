@@ -23,6 +23,16 @@ declare(strict_types=1);
  */
 return [
     'core' => [
+        // Test harness from older packages (#781): purge on upgrade; still in Extra source.
+        '.gitignore',
+        '.phpunit.cache',
+        'composer.json',
+        'composer.lock',
+        'phpunit.modx.xml',
+        'phpunit.xml',
+        'phpunit.xml.dist',
+        'scripts',
+        'tests',
         'config/mgr/product/data-tab-left.json',
         'config/mgr/product/data-tab-right.json',
         'config/mgr/settings/delivery/grid.json',
