@@ -14,6 +14,7 @@ import {
   normalizeGridColumnEditorType,
 } from '../constants/gridColumnEditorTypes.js'
 import request from '../request.js'
+import { renderTemplate } from '../utils/escapeHtml.js'
 import ActionsColumn from './ActionsColumn.vue'
 
 const props = defineProps({
@@ -391,7 +392,7 @@ function formatWeight(value) {
  */
 function renderField(data, column) {
   if (column.template) {
-    return column.template.replace(/\{(\w+)\}/g, (match, key) => data[key] ?? '')
+    return renderTemplate(column.template, data)
   }
   return data[column.name] ?? ''
 }
