@@ -24,7 +24,8 @@ namespace MiniShop3\Services\Events;
  * - order.product.removed — msOnRemoveOrderProduct (ManagerOrderProductsService)
  * - cart.item.added — msOnAddToCart (CartMutationHandler)
  * - cart.item.changed — msOnChangeInCart (CartMutationHandler)
- * - cart.item.options_changed — msOnChangeOptionInCart (CartMutationHandler)
+ * - cart.item.options_changed — msOnChangeOptionsInCart (CartMutationHandler;
+ *   the miniShop2 spelling msOnChangeOptionInCart is a deprecated alias, not a separate binding)
  * - cart.item.removed — msOnRemoveFromCart (CartMutationHandler)
  * - cart.emptied — msOnEmptyCart (Cart controller, OrderDraftManager msOnEmptyOrder is draft clear)
  * - customer.created — msOnCreateCustomer (CustomerFieldManager)
@@ -90,7 +91,7 @@ final class DomainEventCatalog
             self::ORDER_PRODUCT_REMOVED => ['msOnRemoveOrderProduct'],
             self::CART_ITEM_ADDED => ['msOnAddToCart'],
             self::CART_ITEM_CHANGED => ['msOnChangeInCart'],
-            self::CART_ITEM_OPTIONS_CHANGED => ['msOnChangeOptionInCart'],
+            self::CART_ITEM_OPTIONS_CHANGED => ['msOnChangeOptionsInCart'],
             self::CART_ITEM_REMOVED => ['msOnRemoveFromCart'],
             self::CART_EMPTIED => ['msOnEmptyCart'],
             self::CUSTOMER_CREATED => ['msOnCreateCustomer'],
