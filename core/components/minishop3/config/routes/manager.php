@@ -145,6 +145,22 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             return $controller->removeLinks($params);
         });
 
+        // Native SEO overrides for a product (#790)
+        $router->get('/{id}/seo', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ResourceSeoController($modx);
+            return $controller->get(array_merge($params, [
+                'resource_id' => $params['id'] ?? 0,
+                'class_key' => \MiniShop3\Model\msProduct::class,
+            ]));
+        });
+        $router->put('/{id}/seo', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ResourceSeoController($modx);
+            return $controller->update(array_merge($params, [
+                'resource_id' => $params['id'] ?? 0,
+                'class_key' => \MiniShop3\Model\msProduct::class,
+            ]));
+        });
+
     }, [
         new AuthMiddleware($modx, 'mgr'),
         new PermissionMiddleware($modx, 'msproduct_save')
@@ -375,6 +391,25 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             return $controller->publish($allParams);
         }, [
             new PermissionMiddleware($modx, 'msproduct_publish')
+        ]);
+        // Native SEO overrides for a category (#790)
+        $router->get('/{id}/seo', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ResourceSeoController($modx);
+            return $controller->get(array_merge($params, [
+                'resource_id' => $params['id'] ?? 0,
+                'class_key' => \MiniShop3\Model\msCategory::class,
+            ]));
+        }, [
+            new PermissionMiddleware($modx, 'mscategory_save')
+        ]);
+        $router->put('/{id}/seo', function ($params) use ($modx) {
+            $controller = new \MiniShop3\Controllers\Api\Manager\ResourceSeoController($modx);
+            return $controller->update(array_merge($params, [
+                'resource_id' => $params['id'] ?? 0,
+                'class_key' => \MiniShop3\Model\msCategory::class,
+            ]));
+        }, [
+            new PermissionMiddleware($modx, 'mscategory_save')
         ]);
     });
 
