@@ -66,6 +66,61 @@ final class OrderStatusTransitionPolicy
     }
 
     /**
+     * Stable CSV for system setting (canonical write format for the matrix editor).
+     *
+     * @param array<int, array<int, true>> $edges
+     */
+    public static function toCsv(array $edges): string
+    {
+        $tokens = [];
+        foreach (self::collectValidPairs($edges) as [$fromId, $toId]) {
+            $tokens[] = $fromId . ':' . $toId;
+        }
+        sort($tokens, SORT_STRING);
+
+        return implode(',', $tokens);
+    }
+
+    /**
+     * @param array<int, array<int, true>> $edges
+     * @return list<array{0: int, 1: int}>
+     */
+    public static function toPairList(array $edges): array
+    {
+        $pairs = self::collectValidPairs($edges);
+        usort(
+            $pairs,
+            static fn(array $a, array $b): int => $a[0] <=> $b[0] ?: $a[1] <=> $b[1]
+        );
+
+        return $pairs;
+    }
+
+    /**
+     * @param array<int, array<int, true>> $edges
+     * @return list<array{0: int, 1: int}>
+     */
+    private static function collectValidPairs(array $edges): array
+    {
+        $pairs = [];
+        foreach ($edges as $from => $tos) {
+            if (!is_array($tos)) {
+                continue;
+            }
+            foreach (array_keys($tos) as $to) {
+                $fromId = (int) $from;
+                $toId = (int) $to;
+                if ($fromId < 1 || $toId < 1) {
+                    continue;
+                }
+                $pairs[] = [$fromId, $toId];
+            }
+        }
+
+        return $pairs;
+    }
+
+    /**
      * @param array<int, mixed> $pairs
      * @return array<int, array<int, true>>
      */
