@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.3-beta1]
+
+### Security
+- `Product/GetList` no longer passes `sort` and `dir` into `ORDER BY` unchecked. xPDO only blocks `;`, `union`, `sleep()` and `benchmark()`, so a comma and a subquery went through and the row order leaked arbitrary tables, including manager password hashes. The processor declares no permission, so any manager session was enough. Direction is now `ASC` or `DESC` only, the column comes from a fixed list and is quoted, everything else falls back to `menuindex` (#919).
+- The category products grid had the same hole: an unknown `sort` reached SQL as `msProduct.{sort}`, and `view_document` was enough to use it. Sorting is now built from grid option and relation columns, `msProductData` extra columns with a valid identifier, and a fixed map of built-in columns. This also fixes sorting by `new`, `popular` and `favorite`: they live in product data but were addressed with the wrong alias and unquoted, so `new` (a reserved MySQL word) broke the query and the grid returned an empty page (#918).
+- Product fields are escaped before output. The category grid substituted values into a column HTML template rendered with `v-html`, the gallery utility printed the media source name the same way, and the storefront row chunk emitted title, description, vendor and article unfiltered — a product title carrying markup executed in the browser, which in the manager targets a higher-privileged user. Grid values are escaped while the column template markup is kept, the gallery no longer stores HTML in a lexicon entry, and the chunk pipes fields through `|e`, attributes included (#920).
+- Telegram and SMS notifications no longer execute MODX tags coming from customer data. The guard added for e-mail in 1.14.2-beta1 did not cover these channels, so an order comment with `[[++setting]]` revealed system settings — and in a customer-facing channel the attacker read them. No account is needed: placing an order is enough. Tag masking moved to a shared `TemplateTagGuard`; Telegram values are additionally escaped for `parse_mode=HTML`, so an unclosed tag no longer breaks delivery (#929).
+- Customer and user processors no longer return credential columns. `Customer\GetListCombobox` and `System\User\GetList` narrowed the payload only inside the `combo` branch; `Customer\GetList` — a grid page — could not filter at all, leaking hashes and tokens for every customer at once, and `Customer\Update` returned the full row through core, so an empty update read any customer's password hash. All five now use an allowlist: a column added later stays out until it is listed. Extra fields registered by the site still travel. Credential columns are excluded from the query as well, so they are never read (#908).
+
+### Fixed
+- Delivery cost by weight was ignored on submit. `Delivery::getCost()` read the weight behind `empty($this->ms3->cart)`, but `MiniShop3` exposes `cart` through `__get()` without `__isset()`, so the check always passed and the weight stayed zero — the customer paid a cost without weight while the manager recalculation produced a different total. Weight now comes from the order's own products, matching the manager path: for "390 + 60 per kg" and a 0.4 kg cart the cost is 414 instead of 390 (#810).
+- Extra `msProductData` fields and `stock` work in the category products grid. A column bound to a custom field stayed empty and inline edits were lost while the API reported success. Reading and writing kept independent column lists, neither aware of extra fields; the same mismatch left the built-in `stock` column empty even though edits reached the database. Both paths now share one policy built from the model map (#914).
+- Editing order lines in the manager reconciles the stock ledger. Adding, changing quantity and removing a line left the reservation untouched, so payment and cancellation settled the pre-edit quantity. The ledger is now matched to the resulting quantity per product, stock moves by the delta, and a line is not saved when stock is short (#829).
+- The cabinet "Log out" link works with friendly URLs disabled. It was built as `[[~[[*id]]]]?action=logout`, which produced `index.php?id=47?action=logout` and a 404. The parameter now goes through the link tag so MODX picks the right separator (#850).
+- Upgrades no longer flood the install log. The snippet properties resolver read them through a method that touches the property description without a check, emitting one warning per property — about seventy lines that look like install errors (#782).
+
+### Changed
+- New permission `msorder_inventory_override` allows editing order lines past a stock shortage. It is created on upgrade but not granted in the default policy: grant it explicitly if your managers relied on going below zero. `sudo` users have it implicitly.
+- If `ms3_inventory` is replaced by a custom service that does not implement the new `AdjustableInventoryInterface`, editing an order that already holds stock is rejected.
+- Sorting the legacy product combo list by product data columns (article, for example) falls back to the default order. The combo returns only id, title and context, so the UI is unaffected.
+
 ## [1.14.2-beta1]
 
 ### Security
