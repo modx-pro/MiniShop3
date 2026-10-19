@@ -37,20 +37,38 @@ $read = static function (string $path) use ($fail): string {
     return $content;
 };
 
+// --- TemplateTagGuard: общая маскировка открывателей -------------------------
+
+$guard = $read($srcDir . '/Notifications/TemplateTagGuard.php');
+
+foreach (['nonce', 'neutralize', 'restore', 'escapeHtml'] as $method) {
+    if (!str_contains($guard, 'function ' . $method)) {
+        $fail("TemplateTagGuard must define {$method}()");
+    }
+}
+
+$noncePos = strpos($guard, 'function nonce');
+if ($noncePos === false) {
+    $fail('TemplateTagGuard::nonce() missing');
+}
+$nonceEnd = strpos($guard, 'function ', $noncePos + 10);
+$nonceBody = substr($guard, $noncePos, $nonceEnd === false ? 400 : $nonceEnd - $noncePos);
+if (preg_match('/bin2hex|bin2hex\(|[\'"][A-Za-z]/', $nonceBody)) {
+    $fail('TemplateTagGuard::nonce() must build a digits-only marker (#888)');
+}
+
 // --- EmailChannel: нейтрализация вокруг рендера и парсера --------------------
 
 $channel = $read($srcDir . '/Notifications/Channels/EmailChannel.php');
 
-foreach (['neutralizeTags', 'restoreTags', 'tagNonce', 'maskFlatPlaceholders'] as $method) {
-    if (!str_contains($channel, 'function ' . $method)) {
-        $fail("EmailChannel must define {$method}()");
-    }
+if (!str_contains($channel, 'function maskFlatPlaceholders')) {
+    $fail('EmailChannel must define maskFlatPlaceholders()');
 }
 
-$posNeutralize = strpos($channel, '$this->neutralizeTags(');
+$posNeutralize = strpos($channel, '$this->tagGuard->neutralize(');
 $posRender = strpos($channel, '$pdoFetch->getChunk($chunkName');
 $posParser = strpos($channel, "processElementTags('', \$body");
-$posRestore = strpos($channel, '$this->restoreTags($body');
+$posRestore = strpos($channel, '$this->tagGuard->restore($body');
 
 if ($posNeutralize === false || $posRender === false || $posParser === false || $posRestore === false) {
     $fail('EmailChannel::buildBody must neutralize, render, parse and restore');
@@ -66,9 +84,9 @@ if (!($posParser < $posRestore)) {
 // подставляет [[+key]] и прогоняет остаток через разбор MODX-тегов, поэтому
 // значение, вставленное через {$order_comment}, доезжало до парсера шаблоном.
 $posSubjectMask = strpos($channel, '$this->maskFlatPlaceholders($subject');
-$posSubjectNeutralize = strpos($channel, '$placeholders = $this->neutralizeTags($placeholders, $nonce);', (int) $posSubjectMask);
+$posSubjectNeutralize = strpos($channel, '$placeholders = $this->tagGuard->neutralize($placeholders, $nonce);', (int) $posSubjectMask);
 $posSubjectRender = strpos($channel, "getChunk('@INLINE ' . \$subject");
-$posSubjectRestore = strpos($channel, '$this->restoreTags($subject');
+$posSubjectRestore = strpos($channel, '$this->tagGuard->restore($subject');
 $posSubjectExpand = strpos($channel, 'strtr($subject, $flatValues)');
 
 foreach ([
@@ -98,24 +116,78 @@ if ($posSubjectParser !== false && !($posSubjectParser < $posSubjectExpand)) {
     $fail('EmailChannel::buildSubject must run the parser BEFORE expanding flat values');
 }
 
-// Метка должна быть только из цифр: модификатор вроде |upper иначе изменит её
-// и разворачивание пройдёт мимо.
-$noncePos = strpos($channel, 'function tagNonce');
-if ($noncePos === false) {
-    $fail('EmailChannel::tagNonce() missing');
-}
-$nonceEnd = strpos($channel, 'function ', $noncePos + 10);
-$nonceBody = substr($channel, $noncePos, $nonceEnd === false ? 400 : $nonceEnd - $noncePos);
-if (preg_match('/bin2hex|bin2hex\(|[\'"][A-Za-z]/', $nonceBody)) {
-    $fail('EmailChannel::tagNonce() must build a digits-only marker (#888)');
-}
-
 // --- StatusChangedNotification: подстановки в шаблон темы больше нет ---------
 
 $notification = $read($srcDir . '/Notifications/Order/StatusChangedNotification.php');
 
 if (str_contains($notification, 'processSubject')) {
     $fail('StatusChangedNotification must not substitute data into the subject template (#888)');
+}
+
+// --- Telegram/SMS: тот же guard вокруг getChunk, HTML только у Telegram -----
+
+$renderPos = strpos($notification, 'function renderTemplate');
+if ($renderPos === false) {
+    $fail('StatusChangedNotification::renderTemplate() missing');
+}
+$renderEnd = strpos($notification, 'function ', $renderPos + 10);
+$renderBody = substr(
+    $notification,
+    $renderPos,
+    $renderEnd === false ? strlen($notification) - $renderPos : $renderEnd - $renderPos
+);
+
+$posRenderEscape = strpos($renderBody, '$guard->escapeHtml(');
+$posRenderNeutralize = strpos($renderBody, '$guard->neutralize(');
+$posRenderChunk = strpos($renderBody, 'getChunk($template');
+$posRenderRestore = strpos($renderBody, '$guard->restore(');
+
+foreach ([
+    'escapeHtml' => $posRenderEscape,
+    'neutralize' => $posRenderNeutralize,
+    'getChunk' => $posRenderChunk,
+    'restore' => $posRenderRestore,
+] as $label => $position) {
+    if ($position === false) {
+        $fail("StatusChangedNotification::renderTemplate must use {$label} (#929)");
+    }
+}
+
+if (!($posRenderEscape < $posRenderNeutralize && $posRenderNeutralize < $posRenderChunk && $posRenderChunk < $posRenderRestore)) {
+    $fail('renderTemplate must escape, neutralize, render, then restore (#929)');
+}
+if (str_contains($renderBody, 'processElementTags')) {
+    $fail('renderTemplate must not run the parser after restore (#929)');
+}
+if (!str_contains($renderBody, 'if ($escapeHtml)')) {
+    $fail('renderTemplate must escape HTML only when asked (#929)');
+}
+
+$methodBody = static function (string $source, string $name) use ($fail): string {
+    $pos = strpos($source, 'function ' . $name);
+    if ($pos === false) {
+        $fail("StatusChangedNotification::{$name}() missing");
+    }
+    $end = strpos($source, 'function ', $pos + 10);
+
+    return substr(
+        $source,
+        $pos,
+        $end === false ? strlen($source) - $pos : $end - $pos
+    );
+};
+
+$telegramBody = $methodBody($notification, 'toTelegram');
+$smsBody = $methodBody($notification, 'toSms');
+
+if (!str_contains($telegramBody, "renderTemplate(\$config->get('template'), true)")) {
+    $fail('toTelegram must render with HTML escaping (#929)');
+}
+if (str_contains($smsBody, 'renderTemplate(') && str_contains($smsBody, ', true')) {
+    $fail('toSms must not HTML-escape placeholder values (#929)');
+}
+if (!str_contains($smsBody, "renderTemplate(\$config->get('template'))")) {
+    $fail('toSms must render the configured template through renderTemplate (#929)');
 }
 
 // --- Utils::sendEmail: парсер по готовому телу ------------------------------
