@@ -903,7 +903,9 @@ $router->group('/api/mgr', function ($router) use ($modx) {
                 ->updateProduct(array_merge($params, $data));
         });
         $router->delete('/{id}/products/{product_id}', function ($params) use ($modx) {
-            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))->deleteProduct($params);
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
+                ->deleteProduct(array_merge($params, $data));
         });
         $router->put('/{id}/shipment', function ($params) use ($modx) {
             $data = json_decode(file_get_contents('php://input'), true) ?: [];

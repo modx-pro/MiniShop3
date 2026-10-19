@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use MODX\Revolution\modAccessPermission;
 use MODX\Revolution\modAccessPolicy;
 use MODX\Revolution\modAccessPolicyTemplate;
 use MODX\Revolution\modX;
@@ -36,6 +37,26 @@ if (!$template instanceof modAccessPolicyTemplate) {
 }
 
 $templateId = (int) $template->get('id');
+
+$overridePermission = $modx->getObject(modAccessPermission::class, [
+    'template' => $templateId,
+    'name' => 'msorder_inventory_override',
+]);
+if (!$overridePermission instanceof modAccessPermission) {
+    $overridePermission = $modx->newObject(modAccessPermission::class);
+    $overridePermission->fromArray([
+        'template' => $templateId,
+        'name' => 'msorder_inventory_override',
+        'description' => 'msorder_inventory_override',
+        'value' => true,
+    ], '', true, true);
+    if (!$overridePermission->save()) {
+        $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Failed to add msorder_inventory_override to the policy template');
+
+        return false;
+    }
+    $modx->log(modX::LOG_LEVEL_INFO, '[MiniShop3] Added msorder_inventory_override to the policy template');
+}
 
 foreach ($definitions as $name => $data) {
     /** @var modAccessPolicy|null $policy */

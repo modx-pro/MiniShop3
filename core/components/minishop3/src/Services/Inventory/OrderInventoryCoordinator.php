@@ -3,6 +3,7 @@
 namespace MiniShop3\Services\Inventory;
 
 use MiniShop3\Model\msOrder;
+use MiniShop3\Model\msOrderStatus;
 use MODX\Revolution\modX;
 
 /**
@@ -56,6 +57,104 @@ class OrderInventoryCoordinator
             $this->statusCanceledId() => $this->releaseAll($order, $ctx),
             default => null,
         };
+    }
+
+    /**
+     * Match the ledger to the order lines the caller is about to save.
+     *
+     * $qtyByProduct is the target sum per product, including the unsaved edit.
+     * Products held in the ledger but absent from the map are released.
+     * Draft and canceled orders are left alone. Returns lines written past
+     * available stock when $force is set.
+     *
+     * @param array<int, float> $qtyByProduct
+     * @return list<array{product_id: int, available: float, required: float}>
+     * @throws InventoryException
+     */
+    public function reconcile(msOrder $order, array $qtyByProduct, bool $force = false, bool $notify = true): array
+    {
+        if (!$this->enabled()) {
+            return [];
+        }
+
+        $orderId = (int) $order->get('id');
+        $held = $this->inventory instanceof AdjustableInventoryInterface
+            ? $this->inventory->heldByProduct($orderId)
+            : [];
+        $mode = $this->holdMode($order, $held);
+        if ($mode === null) {
+            return [];
+        }
+        if (!$this->inventory instanceof AdjustableInventoryInterface) {
+            throw new InventoryException('ms3_err_inventory_adjust_unsupported', [
+                'order_id' => $orderId,
+            ]);
+        }
+
+        $targets = [];
+        foreach ($qtyByProduct as $productId => $qty) {
+            $productId = (int) $productId;
+            $qty = round((float) $qty, 3);
+            if ($productId <= 0 || $qty <= 0) {
+                continue;
+            }
+            $targets[$productId] = $qty;
+        }
+        $productIds = array_values(array_unique(array_merge(
+            array_keys($targets),
+            array_keys($held)
+        )));
+
+        $ctx = new InventoryContext($orderId, 'order', $mode);
+        $applied = [];
+        $overrides = [];
+        try {
+            foreach ($productIds as $productId) {
+                $target = $targets[$productId] ?? 0.0;
+                $oldQty = round((float) ($held[$productId]['qty'] ?? 0.0), 3);
+                $delta = round($target - $oldQty, 3);
+                $available = $this->inventory->getAvailable(new InventoryKey($productId));
+                $override = null;
+                if ($force && $delta > 0 && $available + 0.0001 < $delta) {
+                    $override = [
+                        'product_id' => $productId,
+                        'available' => $available,
+                        'required' => $target,
+                    ];
+                }
+                $this->inventory->adjust(new InventoryKey($productId), $target, $ctx, $force, $notify);
+                $applied[$productId] = $oldQty;
+                if ($override !== null) {
+                    $overrides[] = $override;
+                }
+            }
+        } catch (\Throwable $exception) {
+            $this->restoreApplied($applied, $ctx);
+            throw $exception;
+        }
+
+        return $overrides;
+    }
+
+    /**
+     * @param array<int, float> $applied product id => qty before this reconcile
+     */
+    private function restoreApplied(array $applied, InventoryContext $ctx): void
+    {
+        if (!$this->inventory instanceof AdjustableInventoryInterface) {
+            return;
+        }
+        foreach (array_reverse($applied, true) as $productId => $oldQty) {
+            try {
+                $this->inventory->adjust(new InventoryKey((int) $productId), $oldQty, $ctx, true, false);
+            } catch (\Throwable $exception) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[ms3] inventory reconcile rollback failed for product ' . $productId
+                    . ': ' . $exception->getMessage()
+                );
+            }
+        }
     }
 
     /**
@@ -180,6 +279,64 @@ class OrderInventoryCoordinator
     private function enabled(): bool
     {
         return self::isInventoryEnabled($this->modx);
+    }
+
+    /**
+     * @param array<int, array{qty: float, state: string}> $held
+     */
+    private function holdMode(msOrder $order, array $held): ?string
+    {
+        $statusId = (int) $order->get('status_id');
+        if ($statusId === $this->statusDraftId() || $statusId === $this->statusCanceledId()) {
+            return null;
+        }
+
+        foreach ($held as $row) {
+            if (($row['state'] ?? '') === InventoryReservationState::COMMITTED) {
+                return InventoryReservationState::COMMITTED;
+            }
+        }
+        if ($statusId === $this->statusPaidId() || $this->isPaidOrLater($statusId)) {
+            return InventoryReservationState::COMMITTED;
+        }
+
+        return InventoryReservationState::RESERVED;
+    }
+
+    private function isPaidOrLater(int $statusId): bool
+    {
+        if ($statusId === $this->statusPaidId()) {
+            return true;
+        }
+        $paidPosition = $this->statusPosition($this->statusPaidId());
+        $position = $this->statusPosition($statusId);
+        if ($paidPosition === null || $position === null) {
+            return false;
+        }
+
+        return $position >= $paidPosition;
+    }
+
+    private function statusPosition(int $statusId): ?int
+    {
+        if ($statusId <= 0) {
+            return null;
+        }
+        $status = $this->modx->getObject(msOrderStatus::class, $statusId);
+        if (!is_object($status) || !method_exists($status, 'get')) {
+            return null;
+        }
+        $position = $status->get('position');
+        if ($position === null || $position === '') {
+            return null;
+        }
+
+        return (int) $position;
+    }
+
+    private function statusDraftId(): int
+    {
+        return (int) $this->modx->getOption('ms3_status_draft', null, 1);
     }
 
     private function statusNewId(): int

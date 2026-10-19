@@ -16,12 +16,29 @@ interface InventoryStockStoreInterface
      */
     public function tryDecrement(int $productId, float $qty): bool;
 
+    /**
+     * Decrement even when stock would become negative. False only when the product row is missing.
+     */
+    public function decrement(int $productId, float $qty): bool;
+
     public function increment(int $productId, float $qty): void;
+
+    /**
+     * @return list<ReservationRow>
+     */
+    public function listReservations(int $orderId): array;
 
     /**
      * @return ReservationRow|null
      */
     public function findReservation(int $orderId, int $productId): ?array;
+
+    /**
+     * Same as findReservation, but locks the row for the open transaction.
+     *
+     * @return ReservationRow|null
+     */
+    public function lockReservation(int $orderId, int $productId): ?array;
 
     public function saveReservation(int $orderId, int $productId, float $qty, string $state): void;
 

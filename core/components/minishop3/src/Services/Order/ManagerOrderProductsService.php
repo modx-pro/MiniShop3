@@ -10,6 +10,10 @@ use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Router\HttpStatus;
+use MiniShop3\Services\Inventory\AdjustableInventoryInterface;
+use MiniShop3\Services\Inventory\InventoryException;
+use MiniShop3\Services\Inventory\InventoryServiceInterface;
+use MiniShop3\Services\Inventory\OrderInventoryCoordinator;
 use MiniShop3\Utils\Utils;
 use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
@@ -19,12 +23,24 @@ class ManagerOrderProductsService
     protected modX $modx;
     protected ?OrderLogService $orderLog;
     protected ?Utils $ms3Utils;
+    protected ?OrderInventoryCoordinator $inventoryCoordinator;
 
-    public function __construct(modX $modx, ?OrderLogService $orderLog = null, ?Utils $ms3Utils = null)
-    {
+    /** @var array<int, float> */
+    private array $snapshotBeforeSync = [];
+
+    /** @var list<array{product_id: int, available: float, required: float}> */
+    private array $inventoryOverrides = [];
+
+    public function __construct(
+        modX $modx,
+        ?OrderLogService $orderLog = null,
+        ?Utils $ms3Utils = null,
+        ?OrderInventoryCoordinator $inventoryCoordinator = null
+    ) {
         $this->modx = $modx;
         $this->orderLog = $orderLog;
         $this->ms3Utils = $ms3Utils;
+        $this->inventoryCoordinator = $inventoryCoordinator;
     }
 
     /**
@@ -147,9 +163,16 @@ class ManagerOrderProductsService
             return $this->error((string)$response['message'], HttpStatus::BAD_REQUEST);
         }
 
+        $inventoryError = $this->syncBeforePersist($order, $orderProduct, true, $params);
+        if ($inventoryError !== null) {
+            return $inventoryError;
+        }
+
         if (!$orderProduct->save()) {
+            $this->compensateInventory($order, $this->snapshotBeforeSync);
             return $this->error('Failed to add product to order', HttpStatus::INTERNAL_SERVER_ERROR);
         }
+        $this->logInventoryOverrides((int)$order->get('id'));
 
         // After-event: row already persisted, a plugin error cannot roll it back. Log and continue
         // so the client doesn't get a 4xx for a request that actually succeeded server-side.
@@ -301,9 +324,16 @@ class ManagerOrderProductsService
             return $this->error((string)$response['message'], HttpStatus::BAD_REQUEST);
         }
 
+        $inventoryError = $this->syncBeforePersist($order, $orderProduct, true, $params);
+        if ($inventoryError !== null) {
+            return $inventoryError;
+        }
+
         if (!$orderProduct->save()) {
+            $this->compensateInventory($order, $this->snapshotBeforeSync);
             return $this->error('Failed to update order product', HttpStatus::INTERNAL_SERVER_ERROR);
         }
+        $this->logInventoryOverrides((int)$order->get('id'));
 
         // After-event: row already persisted, a plugin error cannot roll it back. Log and continue
         // so the client doesn't get a 4xx for a request that actually succeeded server-side.
@@ -396,9 +426,16 @@ class ManagerOrderProductsService
             return $this->error((string)$response['message'], HttpStatus::BAD_REQUEST);
         }
 
+        $inventoryError = $this->syncBeforePersist($order, $orderProduct, false, $params);
+        if ($inventoryError !== null) {
+            return $inventoryError;
+        }
+
         if (!$orderProduct->remove()) {
+            $this->compensateInventory($order, $this->snapshotBeforeSync);
             return $this->error('Failed to delete order product', HttpStatus::INTERNAL_SERVER_ERROR);
         }
+        $this->logInventoryOverrides((int)$order->get('id'));
 
         // After-event: row already removed, a plugin error cannot roll it back. Log and continue
         // so the client doesn't get a 4xx for a request that actually succeeded server-side.
@@ -475,6 +512,221 @@ class ManagerOrderProductsService
         }
 
         return $this->ms3Utils;
+    }
+
+    /**
+     * Reconcile stock with the line that is about to be saved. Null means the
+     * caller can persist. A returned error means the line must not be saved.
+     *
+     * @param array<string, mixed> $params
+     * @return array{success: bool, message: string, data: array<string, mixed>, status: int}|null
+     */
+    private function syncBeforePersist(msOrder $order, object $pending, bool $includePending, array $params): ?array
+    {
+        $this->snapshotBeforeSync = [];
+        $this->inventoryOverrides = [];
+        if (!OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return null;
+        }
+        $orderId = (int)$order->get('id');
+        $this->snapshotBeforeSync = $this->heldSnapshot($orderId);
+        $requestedForce = $this->requestedForce($params);
+        $force = $requestedForce && $this->canOverrideInventory();
+
+        try {
+            $this->inventoryOverrides = $this->syncInventory(
+                $order,
+                $this->targetQty($orderId, $pending, $includePending),
+                $force
+            );
+        } catch (InventoryException $exception) {
+            return $this->inventoryFailure($exception, $requestedForce);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<int, float>
+     */
+    private function targetQty(int $orderId, object $pending, bool $includePending): array
+    {
+        $pendingId = (int)($pending->get('id') ?? 0);
+        $sums = [];
+        $lines = $this->modx->getIterator(msOrderProduct::class, ['order_id' => $orderId]);
+        if (is_iterable($lines)) {
+            foreach ($lines as $line) {
+                if (!is_object($line) || !method_exists($line, 'get')) {
+                    continue;
+                }
+                $lineId = (int)$line->get('id');
+                if ($pendingId > 0 && $lineId === $pendingId) {
+                    continue;
+                }
+                $this->addQty($sums, (int)$line->get('product_id'), (float)$line->get('count'));
+            }
+        }
+        if ($includePending) {
+            $this->addQty($sums, (int)$pending->get('product_id'), (float)$pending->get('count'));
+        }
+
+        return $sums;
+    }
+
+    /**
+     * @param array<int, float> $sums
+     */
+    private function addQty(array &$sums, int $productId, float $qty): void
+    {
+        $qty = round($qty, 3);
+        if ($productId <= 0 || $qty <= 0) {
+            return;
+        }
+        $sums[$productId] = round(($sums[$productId] ?? 0.0) + $qty, 3);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function requestedForce(array $params): bool
+    {
+        $value = $params['force'] ?? false;
+        if (is_string($value)) {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        return (bool)$value;
+    }
+
+    private function canOverrideInventory(): bool
+    {
+        return (bool)$this->modx->hasPermission('msorder_inventory_override');
+    }
+
+    /**
+     * @param array<int, float> $target
+     * @return list<array{product_id: int, available: float, required: float}>
+     * @throws InventoryException
+     */
+    private function syncInventory(msOrder $order, array $target, bool $force): array
+    {
+        if (!OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return [];
+        }
+        $coordinator = $this->inventoryCoordinator();
+
+        return $coordinator ? $coordinator->reconcile($order, $target, $force) : [];
+    }
+
+    /**
+     * @return array<int, float>
+     */
+    private function heldSnapshot(int $orderId): array
+    {
+        $inventory = $this->inventoryService();
+        if (!$inventory instanceof AdjustableInventoryInterface) {
+            return [];
+        }
+        $snapshot = [];
+        foreach ($inventory->heldByProduct($orderId) as $productId => $row) {
+            $snapshot[(int)$productId] = round((float)($row['qty'] ?? 0), 3);
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * @param array<int, float> $snapshot
+     */
+    private function compensateInventory(msOrder $order, array $snapshot): void
+    {
+        if (!OrderInventoryCoordinator::isInventoryEnabled($this->modx)) {
+            return;
+        }
+        try {
+            $this->inventoryCoordinator()?->reconcile($order, $snapshot, true, false);
+        } catch (\Throwable $exception) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                '[ms3] inventory compensate failed: ' . $exception->getMessage()
+            );
+        }
+    }
+
+    private function logInventoryOverrides(int $orderId): void
+    {
+        if ($this->inventoryOverrides === []) {
+            return;
+        }
+        $userId = (int)$this->modx->user->id;
+        foreach ($this->inventoryOverrides as $override) {
+            $this->getOrderLog()->addEntry(
+                $orderId,
+                msOrderLog::ACTION_PRODUCTS,
+                [
+                    'operation' => 'inventory_override',
+                    'user_id' => $userId,
+                    'product_id' => $override['product_id'],
+                    'available' => $override['available'],
+                    'reserved' => $override['required'],
+                ],
+                false
+            );
+        }
+    }
+
+    /**
+     * @return array{success: false, message: string, data: array<string, mixed>, status: int}
+     */
+    private function inventoryFailure(InventoryException $exception, bool $requestedForce): array
+    {
+        $placeholders = $exception->getPlaceholders();
+        $shortage = $exception->getLexiconKey() === 'ms3_err_inventory_short'
+            || $exception->getLexiconKey() === 'ms3_err_inventory_insufficient';
+        $canOverride = $shortage && $this->canOverrideInventory();
+        $data = [
+            'product_id' => (int)($placeholders['product_id'] ?? $placeholders['id'] ?? 0),
+            'available' => (float)($placeholders['available'] ?? 0),
+            'required' => (float)($placeholders['required'] ?? $placeholders['qty'] ?? 0),
+            'can_override' => $canOverride,
+        ];
+        $this->modx->lexicon->load('minishop3:default');
+        $translated = $this->modx->lexicon($exception->getLexiconKey(), $placeholders);
+        $message = is_string($translated) && $translated !== ''
+            ? $translated
+            : $exception->getMessage();
+        if ($shortage && $requestedForce && !$this->canOverrideInventory()) {
+            return $this->error($message, HttpStatus::FORBIDDEN, $data);
+        }
+        if ($shortage || $exception->getLexiconKey() === 'ms3_err_inventory_adjust_unsupported') {
+            return $this->error($message, HttpStatus::CONFLICT, $data);
+        }
+
+        return $this->error($message, HttpStatus::BAD_REQUEST, $data);
+    }
+
+    private function inventoryCoordinator(): ?OrderInventoryCoordinator
+    {
+        if ($this->inventoryCoordinator instanceof OrderInventoryCoordinator) {
+            return $this->inventoryCoordinator;
+        }
+        $inventory = $this->inventoryService();
+        if (!$inventory instanceof InventoryServiceInterface) {
+            return null;
+        }
+        $this->inventoryCoordinator = new OrderInventoryCoordinator($this->modx, $inventory);
+
+        return $this->inventoryCoordinator;
+    }
+
+    private function inventoryService(): ?InventoryServiceInterface
+    {
+        if (!$this->modx->services->has('ms3_inventory')) {
+            return null;
+        }
+        $inventory = $this->modx->services->get('ms3_inventory');
+
+        return $inventory instanceof InventoryServiceInterface ? $inventory : null;
     }
 
     /**

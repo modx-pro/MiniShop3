@@ -10,6 +10,7 @@ final class InventoryContext
     public function __construct(
         public readonly int $orderId,
         public readonly string $origin = 'order',
+        public readonly ?string $holdState = null,
     ) {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('InventoryContext orderId must be positive');

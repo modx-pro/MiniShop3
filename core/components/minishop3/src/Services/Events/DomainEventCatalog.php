@@ -35,6 +35,8 @@ namespace MiniShop3\Services\Events;
  * - inventory.reserved — msOnInventoryReserve (ProductStockInventory)
  * - inventory.committed — msOnInventoryCommit (ProductStockInventory)
  * - inventory.released — msOnInventoryRelease (ProductStockInventory)
+ * - inventory.adjusted — msOnInventoryAdjust (ProductStockInventory::adjust).
+ *   msOnBeforeInventoryAdjust is a veto before the stock write, same as the other before-events.
  * - import.completed — msOnAfterImport (ProductImportService)
  * - notification.sent — msOnAfterSendNotification (NotificationManager)
  *

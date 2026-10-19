@@ -3,11 +3,12 @@
 namespace MiniShop3\Services\Inventory;
 
 use MiniShop3\MiniShop3;
+use MODX\Revolution\modX;
 
 /**
  * Default inventory: decrement ms3_products.stock on reserve, restore on release, commit is ledger-only.
  */
-class ProductStockInventory implements InventoryServiceInterface
+class ProductStockInventory implements InventoryServiceInterface, AdjustableInventoryInterface
 {
     public function __construct(
         private readonly InventoryStockStoreInterface $store,
@@ -138,6 +139,64 @@ class ProductStockInventory implements InventoryServiceInterface
      * Undo a commit that was not persisted on the order (failed status save inside a foreign transaction).
      * Stock stays decremented; the ledger returns to reserved. No events.
      */
+    public function heldByProduct(int $orderId): array
+    {
+        $held = [];
+        foreach ($this->store->listReservations($orderId) as $row) {
+            $state = (string) ($row['state'] ?? '');
+            if (!$this->isAlreadyHeld($state)) {
+                continue;
+            }
+            $held[(int) $row['product_id']] = [
+                'qty' => round((float) $row['qty'], 3),
+                'state' => $state,
+            ];
+        }
+
+        return $held;
+    }
+
+    public function adjust(
+        InventoryKey $key,
+        float $targetQty,
+        InventoryContext $ctx,
+        bool $force = false,
+        bool $notify = true,
+    ): void {
+        $targetQty = round($targetQty, 3);
+        if ($targetQty < 0) {
+            throw new InventoryException('ms3_err_inventory_invalid_qty', ['qty' => $targetQty]);
+        }
+
+        $preview = $this->store->findReservation($ctx->orderId, $key->productId);
+        $previewState = is_array($preview) ? (string) $preview['state'] : null;
+        $previewHeld = $this->isAlreadyHeld($previewState) ? round((float) $preview['qty'], 3) : 0.0;
+        if ($this->adjustmentIsNoop($targetQty, $previewHeld, $previewState, $this->desiredHoldState($ctx, $previewState))) {
+            return;
+        }
+
+        if ($notify) {
+            $this->fireAdjust('msOnBeforeInventoryAdjust', $key, $ctx, $previewHeld, $targetQty, $force, true);
+        }
+
+        $written = null;
+        $this->store->runInTransaction(function () use ($key, $ctx, $targetQty, $force, &$written): void {
+            $written = $this->applyLockedAdjust($key, $ctx, $targetQty, $force);
+        });
+
+        if ($notify && is_array($written)) {
+            $this->fireAdjust(
+                'msOnInventoryAdjust',
+                $key,
+                $ctx,
+                $written['old'],
+                $written['new'],
+                $force,
+                false
+            );
+        }
+    }
+
     public function revertCommitToReserved(InventoryKey $key, InventoryContext $ctx): void
     {
         $this->store->runInTransaction(function () use ($key, $ctx): void {
@@ -267,6 +326,156 @@ class ProductStockInventory implements InventoryServiceInterface
         }
 
         return $qty;
+    }
+
+    private function desiredHoldState(InventoryContext $ctx, ?string $currentState): string
+    {
+        if ($ctx->holdState === InventoryReservationState::RESERVED
+            || $ctx->holdState === InventoryReservationState::COMMITTED
+        ) {
+            return $ctx->holdState;
+        }
+        if ($this->isAlreadyHeld($currentState)) {
+            return (string) $currentState;
+        }
+
+        return InventoryReservationState::RESERVED;
+    }
+
+    /**
+     * @param array{order_id: int, product_id: int, qty: float, state: string}|null $existing
+     */
+    private function writeAdjustedRow(
+        InventoryKey $key,
+        InventoryContext $ctx,
+        ?array $existing,
+        ?string $currentState,
+        string $desired,
+        float $targetQty,
+    ): void {
+        if ($targetQty <= 0.0) {
+            if ($this->isAlreadyHeld($currentState)) {
+                $this->store->transitionReservation(
+                    $ctx->orderId,
+                    $key->productId,
+                    (string) $currentState,
+                    InventoryReservationState::RELEASED
+                );
+            }
+
+            return;
+        }
+
+        if ($existing === null) {
+            if ($this->store->insertReservation($ctx->orderId, $key->productId, $targetQty, $desired)) {
+                return;
+            }
+        } elseif ($this->store->transitionReservation(
+            $ctx->orderId,
+            $key->productId,
+            (string) $currentState,
+            $desired,
+            $targetQty
+        )) {
+            return;
+        }
+
+        $this->store->saveReservation($ctx->orderId, $key->productId, $targetQty, $desired);
+    }
+
+    /**
+     * Re-read the ledger under the transaction lock and apply only that delta.
+     *
+     * @return array{old: float, new: float}|null
+     */
+    private function applyLockedAdjust(
+        InventoryKey $key,
+        InventoryContext $ctx,
+        float $targetQty,
+        bool $force,
+    ): ?array {
+        $existing = $this->store->lockReservation($ctx->orderId, $key->productId);
+        $currentState = is_array($existing) ? (string) $existing['state'] : null;
+        $held = $this->isAlreadyHeld($currentState) ? round((float) $existing['qty'], 3) : 0.0;
+        $desired = $targetQty === 0.0
+            ? InventoryReservationState::RELEASED
+            : $this->desiredHoldState($ctx, $currentState);
+        if ($this->adjustmentIsNoop($targetQty, $held, $currentState, $desired)) {
+            return null;
+        }
+
+        $delta = round($targetQty - $held, 3);
+        if ($delta > 0) {
+            $written = $force
+                ? $this->store->decrement($key->productId, $delta)
+                : $this->store->tryDecrement($key->productId, $delta);
+            if (!$written) {
+                throw new InventoryException(
+                    'ms3_err_inventory_short',
+                    [
+                        'id' => $key->productId,
+                        'product_id' => $key->productId,
+                        'qty' => $delta,
+                        'available' => $this->store->getAvailable($key->productId),
+                        'required' => $targetQty,
+                    ]
+                );
+            }
+        } elseif ($delta < 0) {
+            $this->store->increment($key->productId, abs($delta));
+        }
+
+        $this->writeAdjustedRow($key, $ctx, $existing, $currentState, $desired, $targetQty);
+
+        return ['old' => $held, 'new' => $targetQty];
+    }
+
+    private function adjustmentIsNoop(float $targetQty, float $held, ?string $currentState, string $desired): bool
+    {
+        if ($targetQty === 0.0) {
+            return $held <= 0.0;
+        }
+
+        return abs($targetQty - $held) < 0.0005 && $currentState === $desired;
+    }
+
+    private function fireAdjust(
+        string $event,
+        InventoryKey $key,
+        InventoryContext $ctx,
+        float $oldQty,
+        float $newQty,
+        bool $forced,
+        bool $cancelable,
+    ): void {
+        if ($this->ms3 === null || !isset($this->ms3->utils)) {
+            return;
+        }
+        $response = $this->ms3->utils->invokeEvent($event, [
+            'product_id' => $key->productId,
+            'order_id' => $ctx->orderId,
+            'old_qty' => $oldQty,
+            'new_qty' => $newQty,
+            'forced' => $forced,
+        ]);
+        if (!empty($response['success'])) {
+            return;
+        }
+        if (!$cancelable) {
+            if (isset($this->ms3->modx) && is_object($this->ms3->modx)) {
+                $this->ms3->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    '[ms3] ' . $event . ' reported an error after the stock write was committed'
+                );
+            }
+
+            return;
+        }
+        throw new InventoryException(
+            'ms3_err_inventory_cancelled',
+            ['event' => $event],
+            $response['message']
+        );
     }
 
     private function insufficient(InventoryKey $key, float $qty): InventoryException
