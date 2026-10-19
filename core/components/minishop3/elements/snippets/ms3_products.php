@@ -511,8 +511,10 @@ if (is_string($rows)) {
     if (empty($outputSeparator)) {
         $outputSeparator = "\n";
     }
-    $output['log'] = $log;
-    $output = implode($outputSeparator, $output);
+    // Log goes after the rows: putting it into $output before implode() added a
+    // trailing outputSeparator (and a separator before the log) for every visitor,
+    // because $log is only filled for the manager with &showLog (#806).
+    $output = implode($outputSeparator, $output) . $log;
 
     if (!empty($tplWrapper) && (!empty($wrapIfEmpty) || !empty($output))) {
         $output = $pdoFetch->getChunk($tplWrapper, [
