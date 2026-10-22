@@ -1021,10 +1021,16 @@ onMounted(async () => {
                             @change="saveInlineEdit(product, column)"
                           />
                         </div>
+                        <!--
+                          Enter without .capture on purpose: InputNumber writes the typed
+                          value into v-model inside its own keydown handler, so ours must
+                          run after it. Capturing here blurred the field first, the cell
+                          unmounted mid-handler and PrimeVue hit a null $refs.input (#943).
+                        -->
                         <div
                           v-else
                           class="inline-edit-input-wrapper w-full"
-                          @keydown.enter.capture.prevent="$event.target?.blur?.()"
+                          @keydown.enter.prevent="$event.target?.blur?.()"
                           @keydown.escape.capture.prevent="cancelInlineEdit"
                         >
                           <InputNumber
