@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.3-beta2]
+
+### Fixed
+- Inline editing of numeric columns in the category products grid now saves. The typed value snapped back, no request was sent and no error was shown: PrimeVue `InputNumber` writes the typed value into the model only on blur and on Enter, and it reports the blur before doing so, so the save handler read the value the cell had opened with and treated the edit as unchanged. Capturing Enter added a second failure — the cell was torn down before the field finished its own handler, which raised a console error. This affected every numeric column, not just custom product fields: built-in price and weight behaved the same way when in-table editing was enabled. Text columns and checkboxes were never affected (#943).
+
 ## [1.14.3-beta1]
 
 ### Security
