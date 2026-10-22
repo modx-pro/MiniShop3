@@ -205,6 +205,14 @@ export function useCategoryProductsInlineEdit(deps) {
     if (inlineEditSaving.value) {
       return
     }
+    // PrimeVue InputNumber emits `blur` before it writes the typed value into
+    // v-model, and on Enter commits it only inside its own keydown handler.
+    // Without this tick we would read the value the cell opened with and treat
+    // the edit as unchanged: no PUT, old value back in the cell (#943).
+    await nextTick()
+    if (!isEditingCell(product, column) || inlineEditSaving.value) {
+      return
+    }
     const value = normalizeValueForSave(inlineEditValue.value, column)
     if (isInlineValueUnchanged(product[column.name], value, column)) {
       clearInlineEditState()
