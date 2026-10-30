@@ -45,7 +45,7 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-vue": "^9.32.0",
     "globals": "^14.0.0",
-    "happy-dom": "^20.11.2",
+    "happy-dom": "^21.0.4",
     "postcss-prefix-selector": "^2.1.1",
     "prettier": "^3.8.1",
     "rimraf": "^3.0.2",
