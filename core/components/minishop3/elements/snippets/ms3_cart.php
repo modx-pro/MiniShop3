@@ -7,6 +7,7 @@ use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductOption;
 use MiniShop3\Model\msVendor;
 use MiniShop3\Utils\ProductThumbnailJoin;
+use MODX\Revolution\modX;
 use ModxPro\PdoTools\Fetch;
 
 /** @var modX $modx */
@@ -18,7 +19,7 @@ if (isset($_POST['render'])) {
 }
 
 if (!$modx->services->has('ms3')) {
-    $modx->log(\MODX\Revolution\modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
+    $modx->log(modX::LOG_LEVEL_ERROR, '[MiniShop3] Service not registered');
     return '';
 }
 
@@ -48,6 +49,26 @@ if ($hideOnThanks && !empty($_GET['msorder'])) {
 }
 
 $ms3->cart->initialize($modx->context->key, $token);
+
+// Cart output order comes from the cart itself, not from the query: rows are re-keyed
+// by product id below and rendered by iterating $cart. &sortby/&sortdir were merged
+// into the pdoFetch config and silently lost, so they are dropped with a warning
+// instead of pretending to work (#800).
+$ignoredSortProperties = [];
+foreach (['sortby', 'sortdir'] as $ignoredSortProperty) {
+    if (isset($scriptProperties[$ignoredSortProperty])) {
+        $ignoredSortProperties[] = $ignoredSortProperty;
+        unset($scriptProperties[$ignoredSortProperty]);
+    }
+}
+if ($ignoredSortProperties !== []) {
+    $modx->log(
+        modX::LOG_LEVEL_WARN,
+        '[MiniShop3] ms3_cart ignored ' . implode(', ', $ignoredSortProperties)
+        . ': product order follows the cart, not the query (#800)'
+    );
+}
+
 $ms3->registerSnippet($scriptProperties);
 /** @var Fetch $pdoFetch */
 $pdoFetch = $modx->services->get(Fetch::class);
@@ -173,8 +194,6 @@ $default = [
     'where' => $where,
     'leftJoin' => $leftJoin,
     'select' => $select,
-    'sortby' => 'msProduct.id',
-    'sortdir' => 'ASC',
     'groupby' => 'msProduct.id',
     'limit' => 0,
     'return' => 'data',
