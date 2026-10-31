@@ -248,11 +248,9 @@ if (!is_array($_ms3SortBy) && $_ms3SortBy !== 'ids') {
         : array_map('trim', explode(',', (string) $scriptProperties['resources']));
     $caseParts = [];
     foreach ($resources as $index => $id) {
-        $caseParts[] = "WHEN msProduct.id = " . (int)$id . " THEN " . $index;
+        $caseParts[] = "WHEN msProduct.id = " . (int) $id . " THEN " . (int) $index;
     }
-    if ($caseParts !== []) {
-        $scriptProperties['sortby'] = "CASE " . implode(" ", $caseParts) . " ELSE " . count($resources) . " END";
-    }
+    $scriptProperties['sortby'] = 'CASE ' . implode(' ', $caseParts) . ' ELSE ' . count($caseParts) . ' END';
 }
 if ($_ms3MenuindexCategoryIds !== [] && CategoryProductMenuindexService::sortbyRefersToMenuindex($_ms3SortBy)) {
     $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
