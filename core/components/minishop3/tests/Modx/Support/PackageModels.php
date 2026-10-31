@@ -32,6 +32,7 @@ use MiniShop3\Model\msProductField;
 use MiniShop3\Model\msProductFile;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Model\msProductOption;
+use MiniShop3\Model\msResourceSeo;
 use MiniShop3\Model\msVendor;
 
 /**
@@ -73,6 +74,7 @@ final class PackageModels
             msProductFile::class,
             msProductLink::class,
             msProductOption::class,
+            msResourceSeo::class,
             msVendor::class,
         ];
     }

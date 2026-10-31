@@ -26,6 +26,7 @@ const ProdInput = {
   'notifications': 'src/entries/notifications.js',
   'category-options': 'src/entries/category-options.js',
   'category-products': 'src/entries/category-products.js',
+  'category-seo': 'src/entries/category-seo.js',
   'help': 'src/entries/help.js',
   'settings': 'src/entries/settings.js',
   'utilities': 'src/entries/utilities.js',
