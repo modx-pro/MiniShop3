@@ -142,7 +142,6 @@ async function loadConfig() {
 /**
  * Save product data
  */
-// eslint-disable-next-line no-unused-vars
 async function saveProductData() {
   saving.value = true
   try {
@@ -204,6 +203,11 @@ const fieldsBySections = computed(() => {
 // Load configuration on mount
 onMounted(() => {
   loadConfig()
+})
+
+// Expose save method for external calls (ExtJS Save button)
+defineExpose({
+  saveProductData,
 })
 </script>
 

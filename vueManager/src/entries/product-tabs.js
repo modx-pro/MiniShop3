@@ -185,6 +185,11 @@ window.MS3_initProductTabs = function (config) {
   // Notify registry
   window.MS3ProductTabsRegistry._onMounted(instance)
 
+  // Expose saveProductData globally for ExtJS integration
+  if (instance && typeof instance.saveProductData === 'function') {
+    window.MS3_saveProductData = () => instance.saveProductData()
+  }
+
   return {
     app,
     instance,
@@ -192,6 +197,7 @@ window.MS3_initProductTabs = function (config) {
       app.unmount()
       delete container.__vueApp__
       delete container.__vueInstance__
+      delete window.MS3_saveProductData
       window.MS3ProductTabsRegistry._onUnmounted()
     },
   }
