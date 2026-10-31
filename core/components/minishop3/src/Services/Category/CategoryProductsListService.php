@@ -287,6 +287,35 @@ final class CategoryProductsListService
             }
         }
 
+        // Filter by msProductData extra columns (custom fields from xPDO map)
+        foreach ($dataColumns as $fieldName => $phptype) {
+            // Support both filter_<col> and direct <col> param names
+            $paramKey = 'filter_' . $fieldName;
+            $directKey = $fieldName;
+            $filterValue = $params[$paramKey] ?? $params[$directKey] ?? null;
+
+            if ($filterValue === null || $filterValue === '') {
+                continue;
+            }
+
+            // Skip non-scalar values (e.g., filter_x[]=1) to prevent "Array to string conversion"
+            if (!is_scalar($filterValue)) {
+                continue;
+            }
+
+            $filterValue = (string) $filterValue;
+
+            // Apply filter based on phptype
+            match (strtolower($phptype)) {
+                'string', 'text' => $c->where(["Data.`{$fieldName}`:LIKE" => "%{$filterValue}%"]),
+                'integer', 'float' => $c->where(["Data.`{$fieldName}`" => (float) $filterValue]),
+                'boolean' => $c->where(["Data.`{$fieldName}`" => (int) (bool) $filterValue]),
+                'date', 'datetime' => $c->where(["Data.`{$fieldName}`:LIKE" => "{$filterValue}%"]),
+                // json, internal fields excluded from filtering
+                default => null,
+            };
+        }
+
         if (!isset($params['deleted']) || $params['deleted'] === '') {
             $c->where(['msProduct.deleted' => 0]);
         }
