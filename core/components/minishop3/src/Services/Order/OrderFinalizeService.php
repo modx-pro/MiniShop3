@@ -46,7 +46,6 @@ class OrderFinalizeService
      * @param array $options Options for finalization:
      *   - skip_validation: bool - Skip validation checks
      *   - skip_notifications: bool - Skip sending notifications
-     *   - skip_payment: bool - Skip payment gateway call
      *   - create_customer: bool - Create customer from order address data
      *   - force_create_customer: bool - Create customer even if duplicate found
      *   - origin: string - Event context origin (`manager` default, `integration`, `storefront`)
