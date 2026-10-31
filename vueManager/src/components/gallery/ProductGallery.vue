@@ -35,7 +35,6 @@ const {
   isLoading,
   fetchGalleryList,
   sortFiles,
-  sortFilesByName,
   deleteFiles,
   deleteAll,
   regenerateThumbs,
@@ -364,10 +363,8 @@ async function runUploadComplete(result) {
 
   try {
     if (hasUploads) {
-      const { thumb } = await sortFilesByName(props.productId)
-      if (thumb) {
-        updateProductThumb(thumb)
-      }
+      // Thumbnails and product thumb are refreshed by the Upload processor
+      // No need to re‑sort files by name after each upload; manual order is preserved.
     }
   } catch (error) {
     toast.add({
