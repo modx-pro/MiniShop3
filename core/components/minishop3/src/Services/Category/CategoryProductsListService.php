@@ -58,9 +58,9 @@ final class CategoryProductsListService
             ? $this->treeService()->productParentIds($categoryId, true)
             : [$categoryId];
 
-        $c = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs);
+        $c = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs, $dataColumns);
 
-        $countQuery = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs);
+        $countQuery = $this->buildProductListQuery($scopeCategoryIds, $params, $optionSpecs, $relationSpecs, $dataColumns);
         $countQuery->select('COUNT(DISTINCT msProduct.id)');
         $total = $this->executeGridQuery($countQuery, 'count')
             ? (int) $countQuery->stmt->fetchColumn()
@@ -191,15 +191,17 @@ final class CategoryProductsListService
     }
 
     /**
-     * @param list<int>               $scopeCategoryIds
-     * @param list<OptionColumnSpec>  $optionSpecs
+     * @param list<int>                $scopeCategoryIds
+     * @param list<OptionColumnSpec>   $optionSpecs
      * @param list<RelationColumnSpec> $relationSpecs
+     * @param array<string, string>    $dataColumns Extra msProductData columns (name => phptype)
      */
     private function buildProductListQuery(
         array $scopeCategoryIds,
         array $params,
         array $optionSpecs,
         array $relationSpecs,
+        array $dataColumns,
     ): xPDOQuery {
         $query = trim((string) ($params['query'] ?? ''));
         $c = $this->modx->newQuery(msProduct::class);
@@ -285,6 +287,35 @@ final class CategoryProductsListService
             if (isset($params[$paramKey]) && $params[$paramKey] !== '') {
                 $c->where([$spec->sortExpression() . ':LIKE' => "%{$params[$paramKey]}%"]);
             }
+        }
+
+        // Filter by msProductData extra columns (custom fields from xPDO map)
+        foreach ($dataColumns as $fieldName => $phptype) {
+            // Support both filter_<col> and direct <col> param names
+            $paramKey = 'filter_' . $fieldName;
+            $directKey = $fieldName;
+            $filterValue = $params[$paramKey] ?? $params[$directKey] ?? null;
+
+            if ($filterValue === null || $filterValue === '') {
+                continue;
+            }
+
+            // Skip non-scalar values (e.g., filter_x[]=1) to prevent "Array to string conversion"
+            if (!is_scalar($filterValue)) {
+                continue;
+            }
+
+            $filterValue = (string) $filterValue;
+
+            // Apply filter based on phptype
+            match (strtolower($phptype)) {
+                'string', 'text' => $c->where(["Data.`{$fieldName}`:LIKE" => "%{$filterValue}%"]),
+                'integer', 'float' => $c->where(["Data.`{$fieldName}`" => (float) $filterValue]),
+                'boolean' => $c->where(["Data.`{$fieldName}`" => (int) (bool) $filterValue]),
+                'date', 'datetime' => $c->where(["Data.`{$fieldName}`:LIKE" => "{$filterValue}%"]),
+                // json, internal fields excluded from filtering
+                default => null,
+            };
         }
 
         if (!isset($params['deleted']) || $params['deleted'] === '') {
