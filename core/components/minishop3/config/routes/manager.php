@@ -910,12 +910,12 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
                 ->addProduct(array_merge($params, $data));
         });
-        $router->put('/{id}/products/{product_id}', function ($params) use ($modx) {
+        $router->put('/{id}/products/{order_product_id}', function ($params) use ($modx) {
             $data = json_decode(file_get_contents('php://input'), true) ?: [];
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
                 ->updateProduct(array_merge($params, $data));
         });
-        $router->delete('/{id}/products/{product_id}', function ($params) use ($modx) {
+        $router->delete('/{id}/products/{order_product_id}', function ($params) use ($modx) {
             $data = json_decode(file_get_contents('php://input'), true) ?: [];
             return (new \MiniShop3\Controllers\Api\Manager\OrdersController($modx))
                 ->deleteProduct(array_merge($params, $data));

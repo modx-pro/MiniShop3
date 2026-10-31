@@ -216,15 +216,16 @@ class ManagerOrderProductsService
     public function updateProduct(array $params = []): array
     {
         $orderId = (int)($params['id'] ?? 0);
-        $productId = (int)($params['product_id'] ?? 0);
+        // `order_product_id` — canonical; `product_id` — deprecated alias for backward compatibility
+        $orderProductId = (int)($params['order_product_id'] ?? $params['product_id'] ?? 0);
 
-        if (!$orderId || !$productId) {
-            return $this->error('Order ID and Product ID are required', HttpStatus::BAD_REQUEST);
+        if (!$orderId || !$orderProductId) {
+            return $this->error('Order ID and Order Product ID are required', HttpStatus::BAD_REQUEST);
         }
 
         // Find the order product record
         $orderProduct = $this->modx->getObject(msOrderProduct::class, [
-            'id' => $productId,
+            'id' => $orderProductId,
             'order_id' => $orderId,
         ]);
 
@@ -376,15 +377,16 @@ class ManagerOrderProductsService
     public function deleteProduct(array $params = []): array
     {
         $orderId = (int)($params['id'] ?? 0);
-        $productId = (int)($params['product_id'] ?? 0);
+        // `order_product_id` — canonical; `product_id` — deprecated alias for backward compatibility
+        $orderProductId = (int)($params['order_product_id'] ?? $params['product_id'] ?? 0);
 
-        if (!$orderId || !$productId) {
-            return $this->error('Order ID and Product ID are required', HttpStatus::BAD_REQUEST);
+        if (!$orderId || !$orderProductId) {
+            return $this->error('Order ID and Order Product ID are required', HttpStatus::BAD_REQUEST);
         }
 
         // Find the order product record
         $orderProduct = $this->modx->getObject(msOrderProduct::class, [
-            'id' => $productId,
+            'id' => $orderProductId,
             'order_id' => $orderId,
         ]);
 
