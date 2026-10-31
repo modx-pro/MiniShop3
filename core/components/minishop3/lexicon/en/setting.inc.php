@@ -208,9 +208,9 @@ $_lang['setting_ms3_weight_unit_desc'] = 'Weight unit label displayed next to th
 
 // Customer Authentication & Registration
 $_lang['setting_ms3_customer_login_page_id'] = 'Login page ID';
-$_lang['setting_ms3_customer_login_page_id_desc'] = 'Page ID with customer login form. Used for redirecting unauthorized users.';
+$_lang['setting_ms3_customer_login_page_id_desc'] = 'Page ID with customer login form. Used for redirecting unauthorized users. 0 means the page is not selected: no login link is rendered and logout sends the customer to the site start page.';
 $_lang['setting_ms3_customer_register_page_id'] = 'Registration page ID';
-$_lang['setting_ms3_customer_register_page_id_desc'] = 'Page ID with customer registration form.';
+$_lang['setting_ms3_customer_register_page_id_desc'] = 'Page ID with customer registration form. 0 means the page is not selected: no registration link is rendered.';
 $_lang['setting_ms3_customer_auto_register_on_order'] = 'Auto-register customers on checkout';
 $_lang['setting_ms3_customer_auto_register_on_order_desc'] = 'Automatically register a customer with password when placing an order if the email doesn\'t exist in the system. Password is auto-generated and sent via email.';
 $_lang['setting_ms3_customer_auto_login_on_order'] = 'Auto-login after order';
