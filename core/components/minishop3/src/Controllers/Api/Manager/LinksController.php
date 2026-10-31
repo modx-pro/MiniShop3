@@ -221,8 +221,10 @@ class LinksController
             return Response::error('Link not found', HttpStatus::NOT_FOUND)->getData();
         }
 
-        // Check if link is used by products
-        $usageCount = $this->modx->getCount(msProductLink::class, ['link_id' => $id]);
+        // Check if link is used by products (#948). msProductLink stores the
+        // link type in the `link` column; an unknown key is silently dropped
+        // by xPDO, so a typo here disables the guard entirely.
+        $usageCount = $this->modx->getCount(msProductLink::class, ['link' => $id]);
         if ($usageCount > 0) {
             return Response::error("Cannot delete link: it is used by {$usageCount} product connections", HttpStatus::BAD_REQUEST)->getData();
         }
@@ -269,8 +271,8 @@ class LinksController
                 continue;
             }
 
-            // Check if link is used by products
-            $usageCount = $this->modx->getCount(msProductLink::class, ['link_id' => $id]);
+            // Check if link is used by products (#948): column is `link`, not `link_id`
+            $usageCount = $this->modx->getCount(msProductLink::class, ['link' => $id]);
             if ($usageCount > 0) {
                 $inUse++;
                 continue;
