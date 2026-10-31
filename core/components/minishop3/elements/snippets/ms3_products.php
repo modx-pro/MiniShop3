@@ -172,7 +172,7 @@ if (isset($_ms3CategoryIds) && $_ms3CategoryIds !== []) {
     }
 }
 $_ms3SortBy = $scriptProperties['sortby'] ?? '';
-if (!is_array($_ms3SortBy)) {
+if (!is_array($_ms3SortBy) && $_ms3SortBy !== 'ids') {
     $_ms3SortBy = (string) $_ms3SortBy;
     // Whitelist + qualify bare columns before menuindex / sortbyOptions inject expressions (#755).
     $_ms3Passthrough = [];
@@ -241,6 +241,18 @@ if (!is_array($_ms3SortBy)) {
         );
     }
     $scriptProperties['sortby'] = $_ms3SortBy;
+} elseif ($_ms3SortBy === 'ids' && !empty($scriptProperties['resources'])) {
+    // Sort by the order of IDs in &resources parameter (pdoTools-style #912)
+    $resources = is_array($scriptProperties['resources'])
+        ? $scriptProperties['resources']
+        : array_map('trim', explode(',', (string) $scriptProperties['resources']));
+    $caseParts = [];
+    foreach ($resources as $index => $id) {
+        $caseParts[] = "WHEN msProduct.id = " . (int)$id . " THEN " . $index;
+    }
+    if ($caseParts !== []) {
+        $scriptProperties['sortby'] = "CASE " . implode(" ", $caseParts) . " ELSE " . count($resources) . " END";
+    }
 }
 if ($_ms3MenuindexCategoryIds !== [] && CategoryProductMenuindexService::sortbyRefersToMenuindex($_ms3SortBy)) {
     $memberAlias = CategoryProductMenuindexService::MEMBER_JOIN_ALIAS;
