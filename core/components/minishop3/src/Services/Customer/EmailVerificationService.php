@@ -5,6 +5,7 @@ namespace MiniShop3\Services\Customer;
 use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerToken;
 use MiniShop3\Router\HttpStatus;
+use MiniShop3\Utils\SessionHelper;
 use MODX\Revolution\Mail\modMail;
 use MODX\Revolution\modX;
 
@@ -32,6 +33,15 @@ use MODX\Revolution\modX;
  */
 class EmailVerificationService
 {
+    /**
+     * Ключ одноразового state: какой браузер запросил подтверждение (#925).
+     *
+     * Ссылка из письма открывается без токена и без каких-либо заголовков, так что
+     * единственный признак «это тот же браузер» — метка, положенная в его сессию
+     * в момент отправки письма.
+     */
+    private const ORIGIN_SESSION_KEY = 'email_verify_origin';
+
     /** @var modX */
     protected modX $modx;
 
@@ -100,6 +110,7 @@ class EmailVerificationService
         }
 
         $token = $tokenObj->get('token');
+        $this->rememberVerificationOrigin((string) $token);
         $verificationUrl = $this->buildEmailVerificationUrl($token);
 
         $email = $customer->get('email');
@@ -185,6 +196,47 @@ class EmailVerificationService
         }
 
         return $apiPhpAbsoluteUrl . $sep . $q;
+    }
+
+    /**
+     * Запомнить, что подтверждение запросил именно этот браузер.
+     *
+     * В сессии лежит хеш, а не сам токен: сессионное хранилище не должно
+     * содержать живое удостоверение.
+     */
+    private function rememberVerificationOrigin(string $token): void
+    {
+        if ($token === '') {
+            return;
+        }
+
+        SessionHelper::ensureActive();
+
+        if (!isset($_SESSION['ms3']) || !is_array($_SESSION['ms3'])) {
+            $_SESSION['ms3'] = [];
+        }
+
+        $_SESSION['ms3'][self::ORIGIN_SESSION_KEY] = hash('sha256', $token);
+    }
+
+    /**
+     * Тот ли это браузер, что запросил подтверждение.
+     *
+     * State одноразовый: читаем и сразу стираем, чтобы ту же ссылку нельзя было
+     * переиграть повторно. Чужой браузер метки не имеет и сессию не получает (#925).
+     */
+    public static function consumeVerificationOrigin(string $token): bool
+    {
+        SessionHelper::ensureActive();
+
+        $stored = $_SESSION['ms3'][self::ORIGIN_SESSION_KEY] ?? null;
+        unset($_SESSION['ms3'][self::ORIGIN_SESSION_KEY]);
+
+        if (!is_string($stored) || $stored === '' || $token === '') {
+            return false;
+        }
+
+        return hash_equals($stored, hash('sha256', $token));
     }
 
     /**
