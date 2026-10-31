@@ -282,8 +282,14 @@ class OrderFieldManager
             $response = $this->getDeliveryValidationRules($orderData['delivery_id']);
             if (!empty($response['success'])) {
                 $this->deliveryValidationRules = $response['data']['validation_rules'];
-                $this->validationRules = array_unique(
-                    array_merge($this->validationRules, $this->deliveryValidationRules)
+                // Набор правил — карта «поле => строка правил» (#949). array_unique()
+                // здесь сравнивает значения и оставлял по одному полю на каждую
+                // повторяющуюся строку: из шести полей с 'required' выживало одно.
+                // Дубликаты ключей и так разрешает array_merge() — побеждают правила
+                // способа доставки.
+                $this->validationRules = array_merge(
+                    $this->validationRules,
+                    $this->deliveryValidationRules
                 );
             }
         }
