@@ -288,6 +288,7 @@ final class CategoryProductsListService
         }
 
         // Filter by msProductData extra columns (custom fields from xPDO map)
+        /** @var array<string, string> $dataColumns */
         foreach ($dataColumns as $fieldName => $phptype) {
             // Support both filter_<col> and direct <col> param names
             $paramKey = 'filter_' . $fieldName;
