@@ -305,7 +305,8 @@ class ProductDataService
             return false;
         }
         if (isset($filtered['stock'])) {
-            if ((int)$filtered['stock'] != $filtered['stock'] || (int)$filtered['stock'] < 0) {
+            // Accept decimal stock values; ensure numeric and non‑negative
+            if (!is_numeric($filtered['stock']) || (float)$filtered['stock'] < 0) {
                 return false;
             }
         }
