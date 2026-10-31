@@ -13,7 +13,7 @@
     "lint:ci": "eslint . --max-warnings 0",
     "lint:storefront": "cd ../assets/components/minishop3/js/web && ../../../../../vueManager/node_modules/.bin/eslint . --max-warnings 0",
     "lint:storefront:fix": "cd ../assets/components/minishop3/js/web && ../../../../../vueManager/node_modules/.bin/eslint . --fix",
-    "test:smoke": "node scripts/check-ui-group-smoke.mjs && npm run check:vuetools-exports",
+    "test:smoke": "node scripts/check-ui-group-smoke.mjs && node scripts/check-relative-imports.mjs && npm run check:vuetools-exports",
     "check:vuetools-exports": "node scripts/check-vuetools-exports.mjs",
     "format": "prettier --write \"src/**/*.{js,vue,scss,css}\"",
     "format:check": "prettier --check \"src/**/*.{js,vue,scss,css}\"",
