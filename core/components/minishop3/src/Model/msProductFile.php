@@ -243,7 +243,12 @@ class msProductFile extends xPDOSimpleObject
         $width = $options['width'] ?? 0;
         $height = $options['height'] ?? 0;
 
-        $filename = $this->get('id') . '_' . $this->ms3->utils->pathinfo($this->get('file'), 'filename') . '.' . $format;
+        $fileInfo = $this->ms3->utils->pathinfo($this->get('file'));
+        $fileStem = is_array($fileInfo) ? ($fileInfo['filename'] ?? '') : '';
+        if (!is_string($fileStem)) {
+            $fileStem = '';
+        }
+        $filename = $this->get('id') . '_' . $fileStem . '.' . $format;
         if (!empty($options['name'])) {
             $thumb_dir = preg_replace('#[^\w]#', '', $options['name']);
         }
