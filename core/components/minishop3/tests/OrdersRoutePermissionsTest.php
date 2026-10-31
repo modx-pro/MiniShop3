@@ -100,8 +100,8 @@ $expected = [
     'PUT /api/mgr/orders/{id}' => 'msorder_save',
     'DELETE /api/mgr/orders/{id}' => 'msorder_save',
     'POST /api/mgr/orders/{id}/products' => 'msorder_save',
-    'PUT /api/mgr/orders/{id}/products/{product_id}' => 'msorder_save',
-    'DELETE /api/mgr/orders/{id}/products/{product_id}' => 'msorder_save',
+    'PUT /api/mgr/orders/{id}/products/{order_product_id}' => 'msorder_save',
+    'DELETE /api/mgr/orders/{id}/products/{order_product_id}' => 'msorder_save',
     'PUT /api/mgr/orders/{id}/shipment' => 'msorder_save',
 ];
 
