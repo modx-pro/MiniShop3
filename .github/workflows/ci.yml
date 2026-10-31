@@ -183,6 +183,13 @@ jobs:
       - name: ESLint (storefront js/web)
         run: npm run lint:storefront
 
+      # ESLint не проверяет, что относительный путь импорта существует,
+      # а vue-dist лежит в .gitignore и собирается только на машине сборки
+      # пакета. Без этого шага PR с неразрешимым импортом проходит зелёным,
+      # и поломка всплывает при ручной сборке транспорта.
+      - name: Build (vue-dist)
+        run: npm run build
+
       - name: Vitest
         run: npm test
 
