@@ -17,6 +17,7 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
         'fields' => [
             'customer_id' => 0,
             'token' => '',
+            'token_hash' => '',
             'type' => 'api',
             'expires_at' => null,
             'created_at' => null,
@@ -37,6 +38,13 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
                 'phptype' => 'string',
                 'null' => false,
                 'default' => '',
+            ],
+            'token_hash' => [
+                'dbtype' => 'varchar',
+                'precision' => '64',
+                'phptype' => 'string',
+                'null' => true,
+                'default' => null,
             ],
             'type' => [
                 'dbtype' => 'enum',
@@ -73,6 +81,19 @@ class msCustomerToken extends \MiniShop3\Model\msCustomerToken
                         'length' => '',
                         'collation' => 'A',
                         'null' => false,
+                    ],
+                ],
+            ],
+            'idx_token_hash' => [
+                'alias' => 'idx_token_hash',
+                'primary' => false,
+                'unique' => false,
+                'type' => 'BTREE',
+                'columns' => [
+                    'token_hash' => [
+                        'length' => '',
+                        'collation' => 'A',
+                        'null' => true,
                     ],
                 ],
             ],

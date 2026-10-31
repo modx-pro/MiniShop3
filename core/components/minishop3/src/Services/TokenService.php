@@ -110,10 +110,19 @@ class TokenService
         $tokenObj = null;
 
         if ($reuseToken !== null && $reuseToken !== '') {
+            // Try lookup by hash first, then legacy plain token
+            $tokenHash = hash('sha256', $reuseToken);
             $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-                'token' => $reuseToken,
+                'token_hash' => $tokenHash,
                 'type' => msCustomerToken::TYPE_API,
             ]);
+            if (!$tokenObj) {
+                // Fallback to legacy plain token lookup for backward compatibility
+                $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                    'token' => $reuseToken,
+                    'type' => msCustomerToken::TYPE_API,
+                ]);
+            }
         }
 
         if ($tokenObj) {
@@ -122,7 +131,9 @@ class TokenService
         } else {
             $tokenObj = $this->modx->newObject(msCustomerToken::class);
             $tokenObj->set('customer_id', $customerId);
-            $tokenObj->set('token', bin2hex(random_bytes(32)));
+            $rawToken = bin2hex(random_bytes(32));
+            $tokenObj->set('token', $rawToken);
+            $tokenObj->set('token_hash', hash('sha256', $rawToken));
             $tokenObj->set('type', msCustomerToken::TYPE_API);
             $tokenObj->set('expires_at', $expiresAt);
             $tokenObj->set('created_at', date('Y-m-d H:i:s'));
@@ -156,11 +167,21 @@ class TokenService
             return ['token' => null, 'reason' => 'missing'];
         }
 
+        // Lookup by hash first, then legacy plain token
+        $tokenHash = hash('sha256', $tokenString);
         /** @var msCustomerToken|null $tokenObj */
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $tokenString,
+            'token_hash' => $tokenHash,
             'type' => msCustomerToken::TYPE_API,
         ]);
+
+        // Fallback to legacy plain token for backward compatibility
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $tokenString,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return ['token' => null, 'reason' => 'missing'];
@@ -169,7 +190,7 @@ class TokenService
         if ($tokenObj->isExpired()) {
             $this->modx->log(
                 modX::LOG_LEVEL_INFO,
-                '[TokenService] API token expired, removing. Token: ' . substr($tokenString, 0, 16) . '...'
+                '[TokenService] API token expired, removing.'
             );
             $tokenObj->remove();
 
@@ -273,10 +294,18 @@ class TokenService
 
         SessionHelper::ensureActive();
 
+        // Try lookup by hash first, then legacy plain token
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $token,
+            'token_hash' => hash('sha256', $token),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            // Fallback to legacy plain token for backward compatibility
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $token,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return $this->generateCustomerToken($ttl);
@@ -708,10 +737,17 @@ class TokenService
             return;
         }
 
+        // Try lookup by hash first, then legacy plain token
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $cookieToken,
+            'token_hash' => hash('sha256', $cookieToken),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $cookieToken,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj) {
             return;
@@ -744,10 +780,17 @@ class TokenService
             return false;
         }
 
+        // Try lookup by hash first, then legacy plain token
         $tokenObj = $this->modx->getObject(msCustomerToken::class, [
-            'token' => $token,
+            'token_hash' => hash('sha256', $token),
             'type' => msCustomerToken::TYPE_API,
         ]);
+        if (!$tokenObj) {
+            $tokenObj = $this->modx->getObject(msCustomerToken::class, [
+                'token' => $token,
+                'type' => msCustomerToken::TYPE_API,
+            ]);
+        }
 
         if (!$tokenObj || (int)$tokenObj->get('customer_id') !== $customerId) {
             return false;
