@@ -406,7 +406,8 @@ class OrderFinalizeService
 
             // Check if field has value in address data
             $value = $addressData[$field] ?? null;
-            if (empty($value)) {
+            // Consider only null and empty string as empty; 0 and "0" are valid values
+            if ($value === null || $value === '') {
                 $errors[] = $field;
             }
         }
