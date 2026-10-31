@@ -240,9 +240,29 @@ class OrderDraftManager
         }
 
         // Clean order fields
+        // Preserve identity/linking fields: id, token, status, customer binding, context and uuid.
+        // Also keep createdon and calculated sums (weight, total etc.) that come from positions.
         $orderFields = array_keys($draft->toArray());
+        $keepFields = [
+            'id',
+            'user_id',
+            'token',
+            'status_id',
+            'createdon',
+            'context',
+            'uuid',
+            'customer_id',
+            'weight',
+            'total',
+            'payment_total',
+            'delivery_total',
+            'tvo_sum',
+            'tvo_rate',
+            'payment_tvo',
+            'delivery_tvo',
+        ];
         foreach ($orderFields as $key) {
-            if (!in_array($key, ['id', 'user_id', 'token', 'status_id', 'createdon'])) {
+            if (!in_array($key, $keepFields)) {
                 $draft->set($key, null);
             }
         }
