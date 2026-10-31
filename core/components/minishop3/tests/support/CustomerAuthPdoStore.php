@@ -143,13 +143,14 @@ final class CustomerAuthPdoStore
 
         $stmt = $this->pdo->prepare(
             'INSERT INTO ms_customer_token (
-                id, customer_id, token, type, expires_at, created_at, used_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)'
+                id, customer_id, token, token_hash, type, expires_at, created_at, used_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $id,
             (int) ($fields['customer_id'] ?? 0),
             (string) ($fields['token'] ?? ''),
+            $fields['token_hash'] ?? null,
             (string) ($fields['type'] ?? msCustomerToken::TYPE_API),
             (string) ($fields['expires_at'] ?? ''),
             $fields['created_at'] ?? date('Y-m-d H:i:s'),
@@ -233,13 +234,14 @@ final class CustomerAuthPdoStore
         $merged = array_merge($existing, $fields, ['id' => $id]);
         $stmt = $this->pdo->prepare(
             'UPDATE ms_customer_token SET
-                customer_id = ?, token = ?, type = ?, expires_at = ?, created_at = ?, used_at = ?
+                customer_id = ?, token = ?, token_hash = ?, type = ?, expires_at = ?, created_at = ?, used_at = ?
              WHERE id = ?'
         );
 
         return $stmt->execute([
             (int) $merged['customer_id'],
             (string) $merged['token'],
+            $merged['token_hash'] ?? null,
             (string) $merged['type'],
             (string) $merged['expires_at'],
             $merged['created_at'],
@@ -291,6 +293,7 @@ final class CustomerAuthPdoStore
                     id INTEGER PRIMARY KEY,
                     customer_id INTEGER NOT NULL DEFAULT 0,
                     token TEXT NOT NULL,
+                    token_hash TEXT NULL,
                     type TEXT NOT NULL,
                     expires_at TEXT NOT NULL,
                     created_at TEXT NULL,
@@ -318,11 +321,13 @@ final class CustomerAuthPdoStore
                 id INT NOT NULL PRIMARY KEY,
                 customer_id INT NOT NULL DEFAULT 0,
                 token VARCHAR(128) NOT NULL,
+                token_hash VARCHAR(64) NULL,
                 type ENUM('api','refresh','magic_link','email_verification','password_reset') NOT NULL DEFAULT 'api',
                 expires_at DATETIME NOT NULL,
                 created_at DATETIME NULL,
                 used_at DATETIME NULL,
                 UNIQUE KEY uniq_token_type (token, type),
+                KEY idx_token_hash (token_hash),
                 KEY idx_customer_type (customer_id, type)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
@@ -356,6 +361,7 @@ final class CustomerAuthPdoStore
             'id' => (int) $row['id'],
             'customer_id' => (int) $row['customer_id'],
             'token' => (string) $row['token'],
+            'token_hash' => $row['token_hash'] ?? null,
             'type' => (string) $row['type'],
             'expires_at' => (string) $row['expires_at'],
             'created_at' => $row['created_at'],
