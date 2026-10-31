@@ -92,6 +92,18 @@ class VendorsController
 
         $criteria = [];
 
+        // Filter by name, country, email (from grid filters)
+        if (!empty($params['filter_name'])) {
+            $criteria[] = ['name:LIKE' => "%{$params['filter_name']}%"];
+        }
+        if (!empty($params['filter_country'])) {
+            $criteria[] = ['country:LIKE' => "%{$params['filter_country']}%"];
+        }
+        if (!empty($params['filter_email'])) {
+            $criteria[] = ['email:LIKE' => "%{$params['filter_email']}%"];
+        }
+
+        // Search query (searches name, description, country, email)
         if (!empty($query)) {
             $criteria[] = [
                 'name:LIKE' => "%{$query}%",
