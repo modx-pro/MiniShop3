@@ -1,0 +1,57 @@
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+    # Automatically merge minor and patch updates
+    # for GitHub Actions
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+    # Automatically merge updates for GitHub Actions
+    # that don't modify any Go code
+    # (since we assume Go code changes need to be
+    # manually reviewed)
+    groups:
+      github-actions:
+        patterns:
+          - "actions/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Automatically merge updates for dependencies
+    # that don't modify any Go code
+    # (since we assume Go code changes need to be
+    # manually reviewed)
+    groups:
+      dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Automatically merge updates for production
+    # dependencies
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Automatically merge updates for development
+    # dependencies
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
