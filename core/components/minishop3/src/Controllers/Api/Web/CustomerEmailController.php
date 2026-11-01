@@ -125,37 +125,39 @@ class CustomerEmailController
             );
         }
 
-        /** @var AuthManager $authManager */
-        $authManager = $this->modx->services->get('ms3_auth_manager');
-        $session = $authManager->establishApiSession($customer);
+        // Сессию выдаём только браузеру, который сам запросил подтверждение.
+        // Иначе достаточно переслать жертве ссылку со своим токеном, чтобы её
+        // браузер вошёл в аккаунт атакующего (#925, CWE-352). Автовход из #411
+        // при этом сохраняется — для того же браузера.
+        $sameBrowser = EmailVerificationService::consumeVerificationOrigin((string) $token);
 
-        if (!$session) {
-            $this->modx->log(
-                modX::LOG_LEVEL_ERROR,
-                "[CustomerEmailController] Email verified for customer #{$customer->id} but API session bind failed"
-            );
+        $session = null;
 
-            if ($htmlFlow && !$formatJson) {
-                return Response::redirect($this->buildEmailVerificationSuccessRedirectUrl(), 302);
+        if ($sameBrowser) {
+            /** @var AuthManager $authManager */
+            $authManager = $this->modx->services->get('ms3_auth_manager');
+            $session = $authManager->establishApiSession($customer);
+
+            if (!$session) {
+                $this->modx->log(
+                    modX::LOG_LEVEL_ERROR,
+                    "[CustomerEmailController] Email verified for customer #{$customer->id} but API session bind failed"
+                );
+            } else {
+                $this->modx->log(
+                    modX::LOG_LEVEL_INFO,
+                    "[CustomerEmailController] Email verified and customer #{$customer->id} auto-logged in"
+                );
             }
-
-            // Email is verified; auto-login failed (same UX as html=1 redirect without session)
-            return Response::success(
-                [
-                    'customer_id' => $customer->id,
-                    'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
-                    'token' => null,
-                    'expires_at' => null,
-                ],
-                $this->modx->lexicon('ms3_customer_email_verified')
+        } else {
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                "[CustomerEmailController] Email verified for customer #{$customer->id}"
+                . ' from another browser: session not established'
             );
         }
 
-        $this->modx->log(
-            modX::LOG_LEVEL_INFO,
-            "[CustomerEmailController] Email verified and customer #{$customer->id} auto-logged in"
-        );
-
+        // Почта подтверждена в любом случае; различается только наличие сессии.
         if ($htmlFlow && !$formatJson) {
             return Response::redirect($this->buildEmailVerificationSuccessRedirectUrl(), 302);
         }
@@ -164,8 +166,8 @@ class CustomerEmailController
             [
                 'customer_id' => $customer->id,
                 'customer' => CustomerPublicDto::fromCustomer($customer, $this->modx, $this->ms3),
-                'token' => $session['token'],
-                'expires_at' => $session['expires_at'],
+                'token' => $session['token'] ?? null,
+                'expires_at' => $session['expires_at'] ?? null,
             ],
             $this->modx->lexicon('ms3_customer_email_verified')
         );

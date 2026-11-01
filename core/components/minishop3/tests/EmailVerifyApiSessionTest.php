@@ -97,5 +97,50 @@ if (!str_contains($authSrc, 'session_status()')) {
     $fail('AuthManager::establishApiSession() must ensure PHP session is active');
 }
 
+// #925: автовход из #411 остаётся только для браузера, запросившего подтверждение.
+// Чужой браузер, открывший ссылку, подтверждает почту и сессии не получает.
+$emailServiceSrc = file_get_contents(__DIR__ . '/../src/Services/Customer/EmailVerificationService.php');
+if ($emailServiceSrc === false) {
+    $fail('unable to read EmailVerificationService.php');
+}
+
+if (!str_contains($emailServiceSrc, 'rememberVerificationOrigin')) {
+    $fail('EmailVerificationService must remember which browser requested verification (#925)');
+}
+
+if (!str_contains($emailServiceSrc, 'consumeVerificationOrigin')) {
+    $fail('EmailVerificationService must expose consumeVerificationOrigin() (#925)');
+}
+
+if (!str_contains($emailServiceSrc, 'hash_equals(')) {
+    $fail('verification origin state must be compared with hash_equals() (#925)');
+}
+
+// Сам токен в сессию не кладём — только его хеш.
+if (
+    preg_match(
+        '/ORIGIN_SESSION_KEY\]\s*=\s*hash\(\s*[\'"]sha256[\'"]/',
+        $emailServiceSrc
+    ) !== 1
+) {
+    $fail('verification origin must be stored as a sha256 hash, not the raw token (#925)');
+}
+
+// Проверка state идёт раньше выдачи сессии, и сама выдача стоит под условием.
+if (
+    preg_match(
+        '/\$sameBrowser\s*=\s*EmailVerificationService::consumeVerificationOrigin\('
+        . '[\s\S]*?if\s*\(\s*\$sameBrowser\s*\)\s*\{[\s\S]*?establishApiSession\(/',
+        $verifySrc
+    ) !== 1
+) {
+    $fail('verify() must gate establishApiSession() behind the browser state check (#925)');
+}
+
+// Ветка без сессии обязана оставаться успешной: почта подтверждена.
+if (!str_contains($verifySrc, "\$session['token'] ?? null")) {
+    $fail('verify() must return a null token instead of failing when no session is bound (#925)');
+}
+
 fwrite(STDOUT, "OK EmailVerifyApiSessionTest\n");
 exit(0);
