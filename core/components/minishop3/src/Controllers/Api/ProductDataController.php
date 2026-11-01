@@ -5,6 +5,7 @@ namespace MiniShop3\Controllers\Api;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
 use MiniShop3\Services\Category\CategoryProductScopeService;
+use MiniShop3\Services\Product\ProductDocumentPolicy;
 use MiniShop3\Services\Product\ProductLinkService;
 
 /**
@@ -114,9 +115,9 @@ class ProductDataController extends BaseApiController
      */
     public function getCategoriesTree(array $params): Response
     {
-        $productId = (int)($params['id'] ?? 0);
-        if (!$productId) {
-            return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
+        $productId = $this->requireProduct($params, ProductDocumentPolicy::POLICY_VIEW);
+        if ($productId instanceof Response) {
+            return $productId;
         }
 
         $parent = (int)($params['parent'] ?? 0);
@@ -147,7 +148,7 @@ class ProductDataController extends BaseApiController
      */
     public function getLinks(array $params): Response
     {
-        $productId = $this->requireProductId($params);
+        $productId = $this->requireProduct($params, ProductDocumentPolicy::POLICY_VIEW);
         if ($productId instanceof Response) {
             return $productId;
         }
@@ -167,15 +168,23 @@ class ProductDataController extends BaseApiController
      */
     public function createLink(array $params): Response
     {
-        $productId = $this->requireProductId($params);
+        $productId = $this->requireProduct($params, ProductDocumentPolicy::POLICY_SAVE);
         if ($productId instanceof Response) {
             return $productId;
         }
 
         $data = $this->getRequestData();
+        $slave = (int) ($data['slave'] ?? 0);
+
+        // Вторая сторона тоже меняется: many_to_many пишет строки в обе стороны
+        // и домешивает связи соседей, поэтому save нужен и на ней.
+        if (!ProductDocumentPolicy::isAllowed($this->modx, $slave, ProductDocumentPolicy::POLICY_SAVE)) {
+            return $this->productNotAvailable();
+        }
+
         $result = $this->productLinkService()->create(
             $productId,
-            (int) ($data['slave'] ?? 0),
+            $slave,
             (int) ($data['link'] ?? 0)
         );
 
@@ -189,7 +198,7 @@ class ProductDataController extends BaseApiController
      */
     public function removeLinks(array $params): Response
     {
-        $productId = $this->requireProductId($params);
+        $productId = $this->requireProduct($params, ProductDocumentPolicy::POLICY_SAVE);
         if ($productId instanceof Response) {
             return $productId;
         }
@@ -216,6 +225,15 @@ class ProductDataController extends BaseApiController
             );
         }
 
+        // Снятие связи меняет обе стороны — у второй тоже спрашиваем save.
+        if (!ProductDocumentPolicy::isAllowedAll(
+            $this->modx,
+            [$master, $slave],
+            ProductDocumentPolicy::POLICY_SAVE
+        )) {
+            return $this->productNotAvailable();
+        }
+
         return $this->linkActionResponse($this->productLinkService()->remove(
             (int) ($data['link'] ?? 0),
             $master,
@@ -223,14 +241,41 @@ class ProductDataController extends BaseApiController
         ));
     }
 
-    private function requireProductId(array $params): int|Response
+    /**
+     * Id товара из пути вместе с проверкой прав на документ (#922).
+     *
+     * Компонентного msproduct_save на группе маршрутов недостаточно: он не знает
+     * ничего про Resource Group конкретного товара. getProductData() и
+     * updateProductData() защищены тем, что грузят товар как msProduct, а связи
+     * и дерево категорий работали по сырому id и проходили мимо ACL.
+     */
+    private function requireProduct(array $params, string $policy): int|Response
     {
         $productId = (int) ($params['id'] ?? 0);
         if ($productId <= 0) {
             return Response::error('Product ID is required', HttpStatus::BAD_REQUEST);
         }
 
+        if (!ProductDocumentPolicy::isAllowed($this->modx, $productId, $policy)) {
+            return $this->productNotAvailable();
+        }
+
         return $productId;
+    }
+
+    /**
+     * Закрытый товар отвечает «не найден», а не «запрещено»: сам по себе 403
+     * подтверждает, что товар существует. Так же ведут себя ядро MODX
+     * и уже защищённые getProductData() / updateProductData().
+     */
+    private function productNotAvailable(): Response
+    {
+        $this->modx->lexicon->load('minishop3:default');
+
+        return Response::error(
+            $this->modx->lexicon('ms3_err_product_not_found'),
+            HttpStatus::NOT_FOUND
+        );
     }
 
     /**

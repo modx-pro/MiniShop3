@@ -229,6 +229,7 @@ $_lang['ms3_err_no_link'] = 'Тип связи не найден';
 $_lang['ms3_err_link_save'] = 'Не удалось сохранить связь товара (см. системный журнал).';
 $_lang['ms3_err_link_not_in_product_scope'] = 'Эта связь не относится к текущему товару';
 $_lang['ms3_err_link_batch_not_supported'] = 'Пакетное удаление связей не поддерживается';
+$_lang['ms3_err_product_not_found'] = 'Товар не найден';
 $_lang['ms3_err_value_duplicate'] = 'Вы не ввели значение или ввели повтор.';
 
 $_lang['ms3_err_gallery_save'] = 'Не могу сохранить файл не был сохранён (см. системный журнал).';

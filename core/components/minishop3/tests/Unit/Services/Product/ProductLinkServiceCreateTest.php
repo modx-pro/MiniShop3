@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MiniShop3\Tests\Unit\Services\Product;
 
 use MiniShop3\Model\msLink;
+use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductLink;
 use MiniShop3\Services\Product\ProductLinkService;
 use MODX\Revolution\modX;
@@ -98,6 +99,64 @@ final class ProductLinkServiceCreateTest extends TestCase
         ], $saved);
     }
 
+    /**
+     * #922: компонентного msproduct_save мало, нужен доступ к самому документу.
+     * Сюда ведёт ещё и legacy-процессор Product\ProductLink\Create с сырыми id,
+     * поэтому проверка живёт в сервисе, а не только в контроллере.
+     */
+    public function testCreateRefusesWhenMasterDocumentDenied(): void
+    {
+        $saved = [];
+        $service = new ProductLinkService(
+            $this->modxForCreate('one_to_many', $saved, true, true, [], [22])
+        );
+
+        $result = $service->create(22, 124, 1);
+
+        self::assertSame(['ok' => false, 'message' => 'ms3_err_product_not_found'], $result);
+        self::assertSame([], $saved, 'ни одной строки записать не должно');
+    }
+
+    public function testCreateRefusesWhenSlaveDocumentDenied(): void
+    {
+        $saved = [];
+        $service = new ProductLinkService(
+            $this->modxForCreate('one_to_many', $saved, true, true, [], [124])
+        );
+
+        $result = $service->create(22, 124, 1);
+
+        self::assertSame(['ok' => false, 'message' => 'ms3_err_product_not_found'], $result);
+        self::assertSame([], $saved, 'вторая сторона тоже меняется');
+    }
+
+    /**
+     * many_to_many домешивает связи соседей, поэтому закрытый сосед отменяет
+     * всю операцию: наполовину связанная группа хуже отказа.
+     */
+    public function testCreateManyToManyRefusesWhenMeshedProductDenied(): void
+    {
+        $saved = [];
+        $service = new ProductLinkService(
+            $this->modxForCreate('many_to_many', $saved, true, true, [22, 124, 300], [300])
+        );
+
+        $result = $service->create(22, 124, 1);
+
+        self::assertSame(['ok' => false, 'message' => 'ms3_err_product_not_found'], $result);
+        self::assertSame([], $saved, 'отказ до первой записи');
+    }
+
+    public function testProductNotFoundLexiconExistsInEnAndRu(): void
+    {
+        $lexiconDir = dirname(__DIR__, 4) . '/lexicon';
+        $en = (string) file_get_contents($lexiconDir . '/en/default.inc.php');
+        $ru = (string) file_get_contents($lexiconDir . '/ru/default.inc.php');
+
+        self::assertStringContainsString("\$_lang['ms3_err_product_not_found']", $en);
+        self::assertStringContainsString("\$_lang['ms3_err_product_not_found']", $ru);
+    }
+
     public function testLinkSaveLexiconExistsInEnAndRu(): void
     {
         $lexiconDir = dirname(__DIR__, 4) . '/lexicon';
@@ -118,6 +177,7 @@ final class ProductLinkServiceCreateTest extends TestCase
         bool $saveOk = true,
         bool $meshQueryOk = true,
         array $meshSlaves = [],
+        array $deniedProducts = [],
     ): modX {
         $link = new class ($type) extends msLink {
             public function __construct(private string $linkType)
@@ -131,10 +191,11 @@ final class ProductLinkServiceCreateTest extends TestCase
             }
         };
 
-        return new class ($link, $saved, $saveOk, $meshQueryOk, $meshSlaves) extends modX {
+        return new class ($link, $saved, $saveOk, $meshQueryOk, $meshSlaves, $deniedProducts) extends modX {
             /**
              * @param list<array{link: int, master: int, slave: int}> $saved
              * @param list<int> $meshSlaves
+             * @param list<int> $deniedProducts
              */
             public function __construct(
                 private object $link,
@@ -142,6 +203,7 @@ final class ProductLinkServiceCreateTest extends TestCase
                 private bool $saveOk,
                 private bool $meshQueryOk,
                 private array $meshSlaves,
+                private array $deniedProducts = [],
             ) {
                 parent::__construct();
             }
@@ -150,6 +212,22 @@ final class ProductLinkServiceCreateTest extends TestCase
             {
                 if ($className === msLink::class) {
                     return $this->link;
+                }
+
+                // ACL документа (#922): закрытый группой ресурсов товар
+                // не загружается вовсе, поэтому отказ выглядит как «нет товара».
+                if ($className === msProduct::class) {
+                    $id = is_array($criteria) ? (int) ($criteria['id'] ?? 0) : (int) $criteria;
+                    if ($id <= 0 || in_array($id, $this->deniedProducts, true)) {
+                        return null;
+                    }
+
+                    return new class {
+                        public function checkPolicy($criteria, $targets = null): bool
+                        {
+                            return true;
+                        }
+                    };
                 }
 
                 if ($className === msProductLink::class && is_array($criteria)) {

@@ -229,6 +229,7 @@ $_lang['ms3_err_no_link'] = 'Link type not found';
 $_lang['ms3_err_link_save'] = 'Could not save product link (see system log).';
 $_lang['ms3_err_link_not_in_product_scope'] = 'This link does not belong to the current product';
 $_lang['ms3_err_link_batch_not_supported'] = 'Batch link removal is not supported';
+$_lang['ms3_err_product_not_found'] = 'Product not found';
 $_lang['ms3_err_value_duplicate'] = 'You did not enter value or entered duplicate.';
 
 $_lang['ms3_err_gallery_save'] = 'Cannot save file (see system log).';
