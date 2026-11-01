@@ -51,6 +51,19 @@ if (!str_contains($trait, "\$file->get('product_id')")) {
     $fail('fileDocumentAllowed() must resolve the product from the file (#922)');
 }
 
+// product_id = 0 — это «документа нет», а не «закрытый товар»: так выглядят
+// файлы-сироты и выборка GetList по product_id = 0, чей запрос фильтрует
+// ровно ноль и ничего чужого не отдаёт. Отказ здесь ломал живой
+// ProcessorCoverageTest и удаление сирот через интерфейс.
+if (
+    preg_match(
+        '/function productDocumentAllowed\([\s\S]*?if \(\$productId === 0\) \{\s*return true;/',
+        $trait
+    ) !== 1
+) {
+    $fail('productDocumentAllowed() must treat product_id = 0 as "no document to check" (#922)');
+}
+
 // --- Процессоры, работающие по product_id ----------------------------------
 
 $byProductId = [

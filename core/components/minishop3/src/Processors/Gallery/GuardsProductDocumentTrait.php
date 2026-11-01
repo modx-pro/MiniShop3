@@ -18,11 +18,23 @@ trait GuardsProductDocumentTrait
 {
     /**
      * Разрешена ли политика документа на этом товаре.
+     *
+     * product_id = 0 означает, что документа нет: так выглядят файлы-сироты
+     * и выборка GetList по product_id = 0 — её запрос фильтрует ровно
+     * `product_id = 0` и ничего чужого не отдаёт. Проверять там нечего,
+     * доступ остаётся ограничен правом компонента и фильтром запроса.
+     *
+     * Подменить это из запроса нельзя: у операций по файлу product_id
+     * читается из строки файла, а не из параметров.
      */
     protected function productDocumentAllowed(
         int $productId,
         string $policy = ProductDocumentPolicy::POLICY_SAVE
     ): bool {
+        if ($productId === 0) {
+            return true;
+        }
+
         return ProductDocumentPolicy::isAllowed($this->modx, $productId, $policy);
     }
 
