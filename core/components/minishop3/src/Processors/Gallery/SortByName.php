@@ -13,6 +13,8 @@ use MODX\Revolution\Processors\ModelProcessor;
  */
 class SortByName extends ModelProcessor
 {
+    use GuardsProductDocumentTrait;
+
     public $classKey = msProductFile::class;
     public $languageTopics = ['minishop3:default', 'minishop3:product'];
     public $permission = 'msproductfile_save';
@@ -23,6 +25,11 @@ class SortByName extends ModelProcessor
 
         if ($productId <= 0) {
             return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
+        }
+
+        // msProductData — обычный объект xPDO, ACL документа на нём не работает (#922).
+        if (!$this->productDocumentAllowed($productId)) {
+            return $this->failure($this->productDocumentDeniedMessage());
         }
 
         /** @var msProductData|null $productData */

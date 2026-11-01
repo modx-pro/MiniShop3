@@ -7,8 +7,10 @@ use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
 use MODX\Revolution\Processors\ModelProcessor;
 
-class GenerateAll extends  ModelProcessor
+class GenerateAll extends ModelProcessor
 {
+    use GuardsProductDocumentTrait;
+
     public $classKey = msProductFile::class;
     public $languageTopics = ['minishop3:default'];
     public $permission = 'msproductfile_generate';
@@ -22,6 +24,11 @@ class GenerateAll extends  ModelProcessor
         $product_id = (int)$this->getProperty('product_id');
         if (empty($product_id)) {
             return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
+        }
+
+        // msProductData — обычный объект xPDO, ACL документа на нём не работает (#922).
+        if (!$this->productDocumentAllowed($product_id)) {
+            return $this->failure($this->productDocumentDeniedMessage());
         }
 
         /** @var msProductData $productData */

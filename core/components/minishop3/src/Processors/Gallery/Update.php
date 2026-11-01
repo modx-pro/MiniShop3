@@ -8,12 +8,34 @@ use MODX\Revolution\Processors\Model\UpdateProcessor;
 
 class Update extends UpdateProcessor
 {
+    use GuardsProductDocumentTrait;
+
     public $classKey = msProductFile::class;
     public $languageTopics = ['core:default', 'minishop3:default'];
     public $permission = 'msproductfile_save';
     /** @var msProductFile $object */
     public $object;
     protected $old_name = null;
+
+    /**
+     * msProductFile не modAccessibleObject, поэтому базовый UpdateProcessor
+     * поднимал по id файл любого товара, включая закрытый группой ресурсов (#922).
+     *
+     * @return bool|string
+     */
+    public function initialize()
+    {
+        $initialized = parent::initialize();
+        if ($initialized !== true) {
+            return $initialized;
+        }
+
+        if (!$this->fileDocumentAllowed($this->object)) {
+            return $this->productDocumentDeniedMessage();
+        }
+
+        return true;
+    }
 
     /**
      * @return array|bool|string

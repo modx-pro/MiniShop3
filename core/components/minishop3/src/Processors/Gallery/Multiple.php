@@ -10,6 +10,16 @@ class Multiple extends ModelProcessor
     public $permission = 'msproductfile_save';
 
     /**
+     * Имя подпроцессора склеивается с пространством имён, поэтому принимаем
+     * только то, что присылает интерфейс. Дыры тут нет — runProcessor() пускает
+     * лишь существующие подклассы Processor, и каждый проверяет своё право, —
+     * но перебирать классы по пространству имён незачем.
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_METHODS = ['Remove', 'Generate', 'GenerateAll'];
+
+    /**
      * @return array|string
      */
     public function process()
@@ -18,7 +28,11 @@ class Multiple extends ModelProcessor
         if (!$method) {
             return $this->failure();
         }
-        $method = ucfirst($method);
+        $method = ucfirst((string) $method);
+
+        if (!in_array($method, self::ALLOWED_METHODS, true)) {
+            return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
+        }
         $ids = json_decode($this->getProperty('ids'), true);
         if (empty($ids)) {
             return $this->success();

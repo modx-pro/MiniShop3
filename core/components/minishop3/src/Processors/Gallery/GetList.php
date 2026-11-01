@@ -6,6 +6,7 @@ use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Model\msProductFile;
+use MiniShop3\Services\Product\ProductDocumentPolicy;
 use MiniShop3\Services\Product\ProductImageService;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\Model\GetListProcessor;
@@ -14,6 +15,8 @@ use xPDO\Om\xPDOQuery;
 
 class GetList extends GetListProcessor
 {
+    use GuardsProductDocumentTrait;
+
     public $classKey = msProductFile::class;
     public $shortClassKey = 'msProductFile';
     public $languageTopics = ['default', 'minishop3:product'];
@@ -33,8 +36,17 @@ class GetList extends GetListProcessor
     {
         $this->ms3 = $this->modx->services->get('ms3');
 
+        $productId = (int)$this->getProperty('product_id');
+
+        // Товар грузился, но результат никуда не влиял: при закрытом товаре
+        // getObject() отдавал null, настройка превью просто пропускалась,
+        // а список файлов всё равно уходил наружу (#922).
+        if (!$this->productDocumentAllowed($productId, ProductDocumentPolicy::POLICY_VIEW)) {
+            return $this->productDocumentDeniedMessage();
+        }
+
         /** @var msProduct $product */
-        $product = $this->modx->getObject(msProduct::class, (int)$this->getProperty('product_id'));
+        $product = $this->modx->getObject(msProduct::class, $productId);
         if ($product) {
             $data = $product->getOne('Data');
             if ($data instanceof msProductData) {

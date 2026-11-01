@@ -8,6 +8,8 @@ use MODX\Revolution\Processors\ModelProcessor;
 
 class Generate extends ModelProcessor
 {
+    use GuardsProductDocumentTrait;
+
     public $classKey = msProductFile::class;
     public $languageTopics = ['minishop3:default'];
     public $permission = 'msproductfile_generate';
@@ -25,6 +27,13 @@ class Generate extends ModelProcessor
 
         /** @var msProductFile $file */
         $file = $this->modx->getObject(msProductFile::class, $id);
+
+        // msProductFile не modAccessibleObject: по id файла можно было
+        // перегенерировать превью товара, закрытого группой ресурсов (#922).
+        if ($file && !$this->fileDocumentAllowed($file)) {
+            return $this->failure($this->productDocumentDeniedMessage());
+        }
+
         if ($file) {
             $children = $file->getMany('Children');
             /** @var msProductFile $child */
