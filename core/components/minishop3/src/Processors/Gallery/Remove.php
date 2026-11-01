@@ -9,9 +9,35 @@ use MODX\Revolution\Processors\Model\RemoveProcessor;
 
 class Remove extends RemoveProcessor
 {
+    use GuardsProductDocumentTrait;
+
     public $classKey = msProductFile::class;
     public $languageTopics = ['minishop3:default'];
     public $permission = 'msproductfile_save';
+
+    /**
+     * Базовый RemoveProcessor проверяет checkPolicy('remove') только для
+     * modAccessibleObject, а msProductFile им не является — поэтому по id файла
+     * удалялся файл любого товара, включая закрытый группой ресурсов (#922).
+     *
+     * Проверка стоит в initialize(), а не в beforeRemove(): process() ниже
+     * игнорирует результат parent::process() и всегда отвечает успехом.
+     *
+     * @return bool|string
+     */
+    public function initialize()
+    {
+        $initialized = parent::initialize();
+        if ($initialized !== true) {
+            return $initialized;
+        }
+
+        if (!$this->fileDocumentAllowed($this->object)) {
+            return $this->productDocumentDeniedMessage();
+        }
+
+        return true;
+    }
 
     /**
      * @return array|string

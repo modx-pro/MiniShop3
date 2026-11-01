@@ -242,6 +242,7 @@ $_lang['ms3_err_wrong_image'] = 'File is not a valid image.';
 $_lang['ms3_err_gallery_is_not_msproduct'] = '[msGallery] Resource with id = [[+id]] is not a product.';
 $_lang['ms3_gallery_err_ns'] = 'Required parameter is missing.';
 $_lang['ms3_gallery_err_no_product'] = 'Product not found.';
+$_lang['ms3_gallery_err_file_not_in_product'] = 'File does not belong to this product.';
 $_lang['ms3_err_options_is_not_msproduct'] = '[msOptions] Resource with id = [[+id]] is not a product.';
 $_lang['ms3_err_processor_combo_required'] = 'This processor requires combo: true.';
 

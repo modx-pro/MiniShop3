@@ -9,6 +9,8 @@ use MODX\Revolution\Processors\ModelProcessor;
 
 class RemoveAll extends ModelProcessor
 {
+    use GuardsProductDocumentTrait;
+
     public $classKey = msProductFile::class;
     public $languageTopics = ['minishop3:default'];
     public $permission = 'msproductfile_save';
@@ -21,6 +23,12 @@ class RemoveAll extends ModelProcessor
         $product_id = (int)$this->getProperty('product_id');
         if (empty($product_id)) {
             return $this->failure($this->modx->lexicon('ms3_gallery_err_ns'));
+        }
+
+        // Проверяем до удаления: товар здесь загружался уже после того,
+        // как файлы были снесены (#922).
+        if (!$this->productDocumentAllowed($product_id)) {
+            return $this->failure($this->productDocumentDeniedMessage());
         }
 
         $files = $this->modx->getCollection(msProductFile::class, ['product_id' => $product_id, 'parent_id' => 0]);
