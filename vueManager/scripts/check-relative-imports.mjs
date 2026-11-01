@@ -32,7 +32,10 @@ const SCANNED = new Set(['.js', '.mjs', '.ts', '.vue'])
 const PATTERNS = [
   /\bfrom\s+['"](\.[^'"]*)['"]/g,
   /\bimport\s*\(\s*['"](\.[^'"]*)['"]\s*\)/g,
-  /\bimport\s+['"](\.[^'"]*)['"]/g,
+  // `(?<![@\w])` отсекает SCSS `@import './vars'` в блоке <style>: `\b`
+  // срабатывает между `@` и `i`, и правильный partial `_vars.scss`
+  // не резолвился по расширениям JS — CI падал на здоровом коде.
+  /(?<![@\w])import\s+['"](\.[^'"]*)['"]/g,
 ]
 
 function walk(dir, out = []) {
@@ -52,16 +55,93 @@ function walk(dir, out = []) {
  * Гасим комментарии пробелами, сохраняя длину и переводы строк, —
  * тогда позиции совпадений остаются верными для номера строки.
  *
- * Строчные комментарии режем только там, где строка с них и начинается:
- * это закомментированный импорт. Так `https://` в середине выражения цел.
+ * Проход посимвольный, а не регулярками, потому что регулярка не отличает
+ * комментарий от строкового литерала. На строке вида `'image/*'` она считала,
+ * что начался блочный комментарий, и молча съедала всё до ближайшего закрытия:
+ * импорт в этом промежутке проходил мимо проверки. А чтобы при этом не портить
+ * `https://` внутри строки, прежняя версия резала строчные комментарии только
+ * в начале строки — и пропускала `const n = 1 // import('./x')`.
+ *
+ * Знание про строки снимает оба случая сразу.
+ *
+ * Остаётся известный пропуск: регулярное литерал-выражение вида `/a\/\/b/`
+ * здесь не распознаётся как литерал. Экранированные слэши пропускаются, так что
+ * обычные `/https?:\/\//` безопасны, но сконструированный случай может погасить
+ * хвост строки. Это недобор, а не ложное срабатывание: что пройдёт мимо
+ * проверки, поймает следующий за ней `vite build`.
  */
 function maskComments(text) {
-  const blank = (match) => match.replace(/[^\n]/g, ' ')
+  const chars = text.split('')
+  const length = text.length
 
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, blank)
-    .replace(/<!--[\s\S]*?-->/g, blank)
-    .replace(/^[ \t]*(\/\/|\*).*$/gm, blank)
+  const blank = (from, to) => {
+    for (let k = from; k < to && k < length; k++) {
+      if (chars[k] !== '\n') {
+        chars[k] = ' '
+      }
+    }
+  }
+
+  let i = 0
+
+  while (i < length) {
+    const ch = text[i]
+
+    // Экранированный символ: в том числе `\/` внутри регулярного выражения.
+    if (ch === '\\') {
+      i += 2
+      continue
+    }
+
+    // Строковый литерал — внутри него комментариев нет.
+    if (ch === '"' || ch === "'" || ch === '`') {
+      i++
+      while (i < length) {
+        if (text[i] === '\\') {
+          i += 2
+          continue
+        }
+        if (text[i] === ch) {
+          i++
+          break
+        }
+        // Незакрытая обычная строка не должна съесть весь файл.
+        if (ch !== '`' && text[i] === '\n') {
+          break
+        }
+        i++
+      }
+      continue
+    }
+
+    if (ch === '/' && text[i + 1] === '*') {
+      const end = text.indexOf('*/', i + 2)
+      const stop = end === -1 ? length : end + 2
+      blank(i, stop)
+      i = stop
+      continue
+    }
+
+    if (ch === '/' && text[i + 1] === '/') {
+      const end = text.indexOf('\n', i)
+      const stop = end === -1 ? length : end
+      blank(i, stop)
+      i = stop
+      continue
+    }
+
+    if (ch === '<' && text.startsWith('<!--', i)) {
+      const end = text.indexOf('-->', i + 4)
+      const stop = end === -1 ? length : end + 3
+      blank(i, stop)
+      i = stop
+      continue
+    }
+
+    i++
+  }
+
+  return chars.join('')
 }
 
 /** `./file.css?raw`, `./worker.js?worker&url` — суффикс к пути не относится. */
@@ -102,42 +182,62 @@ function lineOf(text, index) {
   return text.slice(0, index).split('\n').length
 }
 
-const broken = []
-const seen = new Set()
-let checked = 0
-
-for (const file of walk(srcRoot)) {
-  const raw = fs.readFileSync(file, 'utf8')
-  const text = maskComments(raw)
+/**
+ * Относительные импорты файла, как их видит проверка.
+ *
+ * Отдельной функцией, чтобы маскировку и шаблоны можно было прогнать тестом:
+ * три дефекта этой логики нашлись внешним ревью именно потому, что её ничем
+ * не покрывали.
+ *
+ * @returns {Array<{ line: number, spec: string }>}
+ */
+export function findRelativeImports(source) {
+  const text = maskComments(source)
+  const found = []
 
   for (const pattern of PATTERNS) {
     pattern.lastIndex = 0
     let match
     while ((match = pattern.exec(text)) !== null) {
-      const key = `${file}:${match.index}:${match[1]}`
-      if (seen.has(key)) {
-        continue
-      }
-      seen.add(key)
+      found.push({ line: lineOf(text, match.index), spec: match[1] })
+    }
+  }
+
+  return found
+}
+
+function main() {
+  const broken = []
+  let checked = 0
+
+  for (const file of walk(srcRoot)) {
+    const raw = fs.readFileSync(file, 'utf8')
+
+    for (const { line, spec } of findRelativeImports(raw)) {
       checked++
 
-      if (!resolves(file, match[1])) {
+      if (!resolves(file, spec)) {
         broken.push({
           file: path.relative(path.join(__dirname, '..'), file).replace(/\\/g, '/'),
-          line: lineOf(text, match.index),
-          spec: match[1],
+          line,
+          spec,
         })
       }
     }
   }
-}
 
-if (broken.length > 0) {
-  console.error(`FAIL: неразрешимых относительных импортов — ${broken.length}:`)
-  for (const item of broken) {
-    console.error(`  ${item.file}:${item.line}  →  ${item.spec}`)
+  if (broken.length > 0) {
+    console.error(`FAIL: неразрешимых относительных импортов — ${broken.length}:`)
+    for (const item of broken) {
+      console.error(`  ${item.file}:${item.line}  →  ${item.spec}`)
+    }
+    process.exit(1)
   }
-  process.exit(1)
+
+  console.warn(`OK: relative imports (${checked} проверено)`)
 }
 
-console.warn(`OK: relative imports (${checked} проверено)`)
+// Запускаем только при прямом вызове: тест импортирует модуль ради функции.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main()
+}
