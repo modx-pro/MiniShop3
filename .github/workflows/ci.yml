@@ -183,8 +183,15 @@ jobs:
       - name: ESLint (storefront js/web)
         run: npm run lint:storefront
 
-      - name: Vitest
-        run: npm test
-
+      # Идёт до сборки: проверка импортов называет файл и строку, тогда как
+      # vite на том же месте падает трассировкой rollup.
       - name: Smoke tests
         run: npm run test:smoke
+
+      # vue-dist лежит в .gitignore и собирается только на машине упаковки
+      # пакета, поэтому без этого шага поломка сборки всплывала там.
+      - name: Build (vue-dist)
+        run: npm run build
+
+      - name: Vitest
+        run: npm test
