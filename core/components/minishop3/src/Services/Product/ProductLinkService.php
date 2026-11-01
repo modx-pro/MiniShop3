@@ -44,16 +44,34 @@ class ProductLinkService
             ]);
         }
 
-        $total = (int) $this->modx->getCount(msProductLink::class, $c);
         $c->sortby('msLink.name', 'ASC');
-        if ($limit > 0) {
-            $c->limit($limit, max(0, $start));
+
+        // Пагинация в PHP, а не в SQL: ACL документа соединением не применяется,
+        // поэтому leftJoin на msProduct отдавал pagetitle товара, закрытого
+        // группой ресурсов (#922). Строки с недоступной второй стороной надо
+        // убрать до нарезки, иначе total и страницы разойдутся.
+        // Связей у товара единицы, выбрать их целиком дешевле, чем считать
+        // отдельным запросом.
+        $visible = [];
+        foreach ($this->modx->getIterator(msProductLink::class, $c) as $row) {
+            $data = $row->toArray();
+
+            $counterparts = [(int) ($data['master'] ?? 0), (int) ($data['slave'] ?? 0)];
+            if (!ProductDocumentPolicy::isAllowedAll(
+                $this->modx,
+                $counterparts,
+                ProductDocumentPolicy::POLICY_VIEW
+            )) {
+                continue;
+            }
+
+            $visible[] = $data;
         }
 
-        $results = [];
-        foreach ($this->modx->getIterator(msProductLink::class, $c) as $row) {
-            $results[] = $row->toArray();
-        }
+        $total = count($visible);
+        $results = $limit > 0
+            ? array_slice($visible, max(0, $start), $limit)
+            : array_slice($visible, max(0, $start));
 
         return ['results' => $results, 'total' => $total];
     }
@@ -141,6 +159,23 @@ class ProductLinkService
             return $this->fail('ms3_err_no_link');
         }
 
+        // ACL документа проверяем здесь, а не только в контроллере: сюда ведёт
+        // ещё и legacy-процессор Product\ProductLink\Create с сырыми master
+        // и slave (#922). Для many_to_many в набор входят все товары, которые
+        // домешает meshManyToMany(), — отказываем целиком, а не создаём
+        // наполовину связанную группу.
+        $participants = $type === 'many_to_many'
+            ? $this->meshParticipants($linkId, $master, $slave)
+            : [$master, $slave];
+
+        if (!ProductDocumentPolicy::isAllowedAll(
+            $this->modx,
+            $participants,
+            ProductDocumentPolicy::POLICY_SAVE
+        )) {
+            return $this->fail('ms3_err_product_not_found');
+        }
+
         foreach ($pairs as $pair) {
             if (!$this->addLink($linkId, $pair['master'], $pair['slave'])) {
                 return $this->fail('ms3_err_link_save');
@@ -168,6 +203,16 @@ class ProductLinkService
         $msLink = $this->findLink($linkId);
         if (!$msLink) {
             return $this->fail('ms3_err_no_link');
+        }
+
+        // Снятие связи меняет обе стороны, и сюда тоже ведёт legacy-процессор
+        // с сырыми id (#922).
+        if (!ProductDocumentPolicy::isAllowedAll(
+            $this->modx,
+            [$master, $slave],
+            ProductDocumentPolicy::POLICY_SAVE
+        )) {
+            return $this->fail('ms3_err_product_not_found');
         }
 
         $q = $this->modx->newQuery(msProductLink::class);
@@ -261,6 +306,32 @@ class ProductLinkService
         }
 
         return true;
+    }
+
+    /**
+     * Товары, которые затронет meshManyToMany(): названная пара плюс все
+     * уже связанные с ней под этим типом связи.
+     *
+     * @return list<int>
+     */
+    private function meshParticipants(int $linkId, int $master, int $slave): array
+    {
+        $q = $this->modx->newQuery(msProductLink::class, ['link' => $linkId]);
+        $q->andCondition(['master:IN' => [$master, $slave]]);
+        $q->select('slave');
+
+        if (!$q->prepare() || !$q->stmt || !$q->stmt->execute()) {
+            // Набор не определить — считаем затронутыми хотя бы названную пару.
+            return [$master, $slave];
+        }
+
+        /** @var list<int|string> $slaves */
+        $slaves = $q->stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        return array_values(array_unique(array_merge(
+            [$master, $slave],
+            array_map('intval', $slaves)
+        )));
     }
 
     private function meshManyToMany(int $linkId, int $master, int $slave): bool
