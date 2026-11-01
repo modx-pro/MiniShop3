@@ -12,6 +12,32 @@ use MiniShop3\Services\Settings\SettingsComboListService;
  */
 class ReferencesController extends BaseApiController
 {
+    /** Потолок выдачи автодополнения: подсказок больше в списке всё равно не показать. */
+    private const AUTOCOMPLETE_LIMIT_MAX = 50;
+
+    /** Значение по умолчанию, когда limit не передан. */
+    private const AUTOCOMPLETE_LIMIT_DEFAULT = 20;
+
+    /**
+     * Приводим limit автодополнения к разумным границам: до этого он уходил
+     * в запрос как есть, и `?limit=100000` выгружал всю таблицу одним вызовом (#921).
+     *
+     * @param mixed $raw
+     */
+    private static function clampAutocompleteLimit($raw): int
+    {
+        if ($raw === null || $raw === '') {
+            return self::AUTOCOMPLETE_LIMIT_DEFAULT;
+        }
+
+        $limit = (int) $raw;
+        if ($limit < 1) {
+            return self::AUTOCOMPLETE_LIMIT_DEFAULT;
+        }
+
+        return min($limit, self::AUTOCOMPLETE_LIMIT_MAX);
+    }
+
     /**
      * GET /api/mgr/references/vendors
      * Get list of vendors for combo/select
@@ -401,7 +427,7 @@ class ReferencesController extends BaseApiController
     {
         try {
             $searchQuery = $_GET['query'] ?? '';
-            $limit = (int)($_GET['limit'] ?? 20);
+            $limit = self::clampAutocompleteLimit($_GET['limit'] ?? null);
 
             if (strlen($searchQuery) < 2) {
                 return Response::success([
@@ -488,7 +514,7 @@ class ReferencesController extends BaseApiController
     {
         try {
             $searchQuery = $_GET['query'] ?? '';
-            $limit = (int)($_GET['limit'] ?? 20);
+            $limit = self::clampAutocompleteLimit($_GET['limit'] ?? null);
 
             if (strlen($searchQuery) < 2) {
                 return Response::success([

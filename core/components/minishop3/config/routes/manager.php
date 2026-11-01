@@ -180,13 +180,20 @@ $router->group('/api/mgr', function ($router) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
             return $controller->getLinkTypes($params);
         });
+        // Единственный потребитель — автодополнение покупателя в карточке заказа,
+        // поэтому порог тот же, что у /api/mgr/customers: группового view_document
+        // хватало любому редактору контента, чтобы перебором вытащить ФИО,
+        // почту и телефоны всех покупателей (#921).
         $router->get('/customers', function ($params) use ($modx) {
             $controller = new \MiniShop3\Controllers\Api\ReferencesController($modx);
             return $controller->searchCustomers($params);
-        });
+        }, [
+            new AnyPermissionMiddleware($modx, ['msorder_list', 'msorder_view', 'msorder_save'])
+        ]);
 
     }, [
-        // Same floor as /api/mgr/customers (#378): block PII lookup for mgr-only sessions (#415)
+        // Нижний порог группы: справочники товаров, поставщиков и опций нужны
+        // при работе с каталогом (#415). PII закрыта отдельно на самом маршруте.
         new PermissionMiddleware($modx, 'view_document')
     ]);
 
