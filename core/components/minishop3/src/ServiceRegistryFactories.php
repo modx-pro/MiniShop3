@@ -61,6 +61,9 @@ class ServiceRegistryFactories
             'ms3_delivery_service' => $modxOnly(),
             'ms3_shipment_lifecycle' => static function (modX $modx, object $services, string $class): object {
                 if (!$modx->pdo instanceof \PDO) {
+                    $modx->getConnection();
+                }
+                if (!$modx->pdo instanceof \PDO) {
                     throw new \RuntimeException('ms3_shipment_lifecycle requires MODX PDO');
                 }
                 $prefix = (string) $modx->getOption('table_prefix', null, '');
@@ -75,6 +78,9 @@ class ServiceRegistryFactories
             'ms3_payment_service' => $modxOnly(),
             'ms3_payment_link_resolver' => $modxOnly(),
             'ms3_payment_lifecycle' => static function (modX $modx, object $services, string $class): object {
+                if (!$modx->pdo instanceof \PDO) {
+                    $modx->getConnection();
+                }
                 if (!$modx->pdo instanceof \PDO) {
                     throw new \RuntimeException('ms3_payment_lifecycle requires MODX PDO');
                 }
@@ -223,6 +229,9 @@ class ServiceRegistryFactories
             },
 
             'ms3_inventory' => static function (modX $modx, object $services, string $class): object {
+                if (!$modx->pdo instanceof \PDO) {
+                    $modx->getConnection();
+                }
                 if (!$modx->pdo instanceof \PDO) {
                     throw new \RuntimeException('ms3_inventory requires MODX PDO');
                 }
