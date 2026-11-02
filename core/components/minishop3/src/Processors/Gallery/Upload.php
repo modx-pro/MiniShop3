@@ -5,6 +5,7 @@ namespace MiniShop3\Processors\Gallery;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductFile;
+use MiniShop3\Utils\PathBoundary;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\ModelProcessor;
 use MODX\Revolution\Sources\modFileMediaSource;
@@ -12,6 +13,22 @@ use MODX\Revolution\Sources\modMediaSource;
 
 class Upload extends ModelProcessor
 {
+    /**
+     * Потолок пикселей против декомпрессионных бомб: маленький файл, который
+     * разворачивается в гигапиксельное изображение и съедает память GD (#923).
+     *
+     * Это не редакторское ограничение размеров, а предохранитель. Настройки
+     * maxUploadWidth и maxUploadHeight медиа-источника здесь намеренно
+     * не применяются: сегодня они не действуют ни на сервере, ни в загрузчике,
+     * и включить их значит начать молча отклонять фотографии, которые
+     * загружались вчера. Конвейер превьюшек для больших оригиналов и сделан —
+     * `large` уменьшает до 1200 по длинной стороне.
+     */
+    private const MAX_IMAGE_PIXELS = 80000000;
+
+    /** Если maxUploadSize у источника не задан. */
+    private const DEFAULT_MAX_UPLOAD_SIZE = 10485760;
+
     public $classKey = msProductFile::class;
     public $languageTopics = ['minishop3:default', 'minishop3:product'];
     public $permission = 'msproductfile_save';
@@ -21,6 +38,9 @@ class Upload extends ModelProcessor
     protected $ms3;
     /** @var msProduct|null $product */
     private $product = null;
+
+    /** Причина отказа из handleFile(), чтобы наружу ушло не общее сообщение. */
+    private ?string $failureMessage = null;
 
     /**
      * @return bool|null|string
@@ -46,7 +66,7 @@ class Upload extends ModelProcessor
     public function process()
     {
         if (!$data = $this->handleFile()) {
-            return $this->failure($this->modx->lexicon('ms3_err_gallery_ns'));
+            return $this->failure($this->failureMessage ?? $this->modx->lexicon('ms3_err_gallery_ns'));
         }
 
         $properties = $this->mediaSource->getPropertyList();
@@ -186,29 +206,38 @@ class Upload extends ModelProcessor
      */
     public function handleFile()
     {
-        $tf = tempnam(MODX_BASE_PATH, 'ms3_');
+        $tf = tempnam(self::basePath(), 'ms3_');
+        $maxSize = $this->maxUploadSize();
 
         if (!empty($_FILES['file']) && is_uploaded_file($_FILES['file']['tmp_name'])) {
             $name = $_FILES['file']['name'];
             move_uploaded_file($_FILES['file']['tmp_name'], $tf);
         } else {
-            $file = $this->getProperty('file');
-            if (!empty($file) && (strpos($file, '://') !== false || file_exists($file))) {
-                $tmp = explode('/', $file);
-                $name = end($tmp);
-                if ($stream = fopen($file, 'r')) {
-                    if ($res = fopen($tf, 'w')) {
-                        while (!feof($stream)) {
-                            fwrite($res, fread($stream, 80000));
-                        }
-                        fclose($res);
-                    }
-                    fclose($stream);
-                }
+            $source = $this->resolveLocalSource((string) $this->getProperty('file', ''));
+            if ($source === null) {
+                @unlink($tf);
+
+                return false;
+            }
+
+            $name = basename($source);
+            if (!$this->copyWithSizeLimit($source, $tf, $maxSize)) {
+                @unlink($tf);
+
+                return false;
             }
         }
 
         clearstatcache(true, $tf);
+
+        // Проверка одна для обоих путей: multipart приходит мимо copyWithSizeLimit().
+        if ($maxSize > 0 && file_exists($tf) && filesize($tf) > $maxSize) {
+            @unlink($tf);
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_too_large');
+
+            return false;
+        }
+
         if (file_exists($tf) && !empty($name) && $size = filesize($tf)) {
             /** @var msProductFile|null $o */
             $o = $this->modx->newObject($this->classKey);
@@ -225,6 +254,10 @@ class Upload extends ModelProcessor
             $tmp = getimagesize($tf);
 
             if (is_array($tmp)) {
+                if (!$this->withinPixelCeiling((int) $tmp[0], (int) $tmp[1], $tf)) {
+                    return false;
+                }
+
                 $data['properties'] = array_merge(
                     $data['properties'],
                     [
@@ -241,6 +274,10 @@ class Upload extends ModelProcessor
                     if ($imageService) {
                         $image = $imageService->imageManager->read($tf);
 
+                        if (!$this->withinPixelCeiling($image->width(), $image->height(), $tf)) {
+                            return false;
+                        }
+
                         $data['properties'] = array_merge(
                             $data['properties'],
                             [
@@ -255,6 +292,10 @@ class Upload extends ModelProcessor
                             $width = imagesx($img);
                             $height = imagesy($img);
                             imagedestroy($img);
+
+                            if (!$this->withinPixelCeiling($width, $height, $tf)) {
+                                return false;
+                            }
 
                             $data['properties'] = array_merge(
                                 $data['properties'],
@@ -279,5 +320,151 @@ class Upload extends ModelProcessor
 
             return false;
         }
+    }
+
+    /**
+     * Корень сайта одним обращением к константе: PHPStan её не видит,
+     * и в базлайне на этот файл заведена ровно одна запись.
+     */
+    private static function basePath(): string
+    {
+        return MODX_BASE_PATH;
+    }
+
+    /**
+     * Предел размера файла из медиа-источника.
+     *
+     * Загрузчик в админке этот же предел уже соблюдает на клиенте, так что
+     * серверная проверка ничего не меняет для обычной загрузки — она закрывает
+     * прямой вызов процессора, минующий интерфейс (#923).
+     */
+    private function maxUploadSize(): int
+    {
+        $properties = $this->mediaSource->getPropertyList();
+        $max = (int) ($properties['maxUploadSize'] ?? 0);
+
+        return $max > 0 ? $max : self::DEFAULT_MAX_UPLOAD_SIZE;
+    }
+
+    /**
+     * Локальный файл-источник для параметра `file`, либо null с причиной отказа.
+     *
+     * Загрузка по URL убрана совсем (#923). Раньше сюда уходил любой
+     * пользовательский адрес: `fopen()` открывал и `http://` внутренней сети,
+     * и обёртки вроде `php://filter`, то есть сервер делал запросы за
+     * пользователя и читал локальные файлы. Внутри компонента такой вызов один
+     * — CSV-импорт, и он передаёт локальный путь под base_path. Вернуть
+     * загрузку по URL безопасно можно только с проверкой адреса после
+     * разрешения DNS, запретом редиректов и закреплением IP; это отдельная
+     * задача, а не побочная часть исправления.
+     */
+    private function resolveLocalSource(string $file): ?string
+    {
+        if ($file === '') {
+            return null;
+        }
+
+        if (str_contains($file, '://')) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[Gallery/Upload] remote source rejected: {$file}"
+            );
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_remote_source');
+
+            return null;
+        }
+
+        $real = PathBoundary::resolveInside($file, self::basePath());
+
+        if ($real === null) {
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[Gallery/Upload] source outside base path rejected: {$file}"
+            );
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_outside_base');
+
+            return null;
+        }
+
+        if (!is_file($real)) {
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_not_found');
+
+            return null;
+        }
+
+        return $real;
+    }
+
+    /**
+     * Копирование с обрывом по превышении предела.
+     *
+     * Раньше поток лился до EOF без ограничения, и достаточно большой источник
+     * заполнял диск ещё до любых проверок (#923).
+     */
+    private function copyWithSizeLimit(string $source, string $target, int $maxSize): bool
+    {
+        $size = filesize($source);
+        if ($size !== false && $maxSize > 0 && $size > $maxSize) {
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_too_large');
+
+            return false;
+        }
+
+        $in = fopen($source, 'rb');
+        if (!$in) {
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_not_found');
+
+            return false;
+        }
+
+        $out = fopen($target, 'wb');
+        if (!$out) {
+            fclose($in);
+
+            return false;
+        }
+
+        $written = 0;
+        $ok = true;
+
+        while (!feof($in)) {
+            $chunk = fread($in, 80000);
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
+
+            $written += strlen($chunk);
+            if ($maxSize > 0 && $written > $maxSize) {
+                $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_too_large');
+                $ok = false;
+                break;
+            }
+
+            fwrite($out, $chunk);
+        }
+
+        fclose($out);
+        fclose($in);
+
+        return $ok;
+    }
+
+    /**
+     * Не бомба ли это: предохранитель по числу пикселей до декодирования.
+     */
+    private function withinPixelCeiling(int $width, int $height, string $tmpFile): bool
+    {
+        if ($width > 0 && $height > 0 && $width * $height > self::MAX_IMAGE_PIXELS) {
+            @unlink($tmpFile);
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                "[Gallery/Upload] image rejected: {$width}x{$height} exceeds pixel ceiling"
+            );
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_too_many_pixels');
+
+            return false;
+        }
+
+        return true;
     }
 }
