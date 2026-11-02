@@ -350,27 +350,32 @@ class Upload extends ModelProcessor
             return null;
         }
 
-        // Сначала существование, потом граница: иначе опечатка в пути
-        // отвечает «вне каталога сайта» и сбивает с толку.
-        $real = realpath($file);
-
-        if ($real === false || !is_file($real)) {
-            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_not_found');
-
-            return null;
-        }
-
-        // Базовый путь тоже через realpath: MODX_BASE_PATH на Windows приходит
+        // Базовый путь через realpath: MODX_BASE_PATH на Windows приходит
         // со слэшами вперёд, а realpath() отдаёт обратные, и сравнение
         // «как есть» молча не совпало бы — то есть граница бы не работала.
         $realBase = realpath(self::basePath());
+        $real = realpath($file);
 
-        if ($realBase === false || !PathBoundary::isInside($real, $realBase)) {
+        $usable = $real !== false
+            && $realBase !== false
+            && PathBoundary::isInside($real, $realBase)
+            && is_file($real);
+
+        if (!$usable) {
+            // Наружу один ответ на все случаи. Разные сообщения для «файл есть,
+            // но снаружи» и «файла нет» превращают процессор в детектор файлов
+            // на всём диске: перебирая пути, можно узнать, что на сервере лежит.
+            // Точную причину пишем в журнал — администратору этого достаточно,
+            // а вызывающему знать её незачем.
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                "[Gallery/Upload] source outside base path rejected: {$file}"
+                sprintf(
+                    '[Gallery/Upload] source rejected (%s): %s',
+                    $real === false ? 'does not resolve' : (is_file($real) ? 'outside base path' : 'not a file'),
+                    $file
+                )
             );
-            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_outside_base');
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_not_found');
 
             return null;
         }
