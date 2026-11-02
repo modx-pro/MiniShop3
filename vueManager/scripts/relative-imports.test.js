@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { findRelativeImports } from './check-relative-imports.mjs'
+import { findRelativeImports } from './relative-imports.mjs'
 
 const specs = source => findRelativeImports(source).map(item => item.spec)
 
@@ -14,7 +14,12 @@ describe('findRelativeImports', () => {
     ].join('\n')
 
     expect(specs(source)).toEqual(
-      expect.arrayContaining(['./Thing.vue', '../utils/helpers.js', './Lazy.vue', '../scss/app.scss'])
+      expect.arrayContaining([
+        './Thing.vue',
+        '../utils/helpers.js',
+        './Lazy.vue',
+        '../scss/app.scss',
+      ])
     )
   })
 
@@ -40,9 +45,7 @@ describe('findRelativeImports', () => {
       "import('./afterComment')",
     ].join('\n')
 
-    expect(specs(source)).toEqual(
-      expect.arrayContaining(['./afterString', './afterComment'])
-    )
+    expect(specs(source)).toEqual(expect.arrayContaining(['./afterString', './afterComment']))
   })
 
   // Регрессия: `\b` срабатывает между `@` и `i`, поэтому SCSS `@import` в блоке
@@ -59,7 +62,7 @@ describe('findRelativeImports', () => {
       "const n = 1 // import('./tailGhost')",
       "// import('./lineGhost')",
       "/* import('./blockGhost') */",
-      '<!-- import(\'./htmlGhost\') -->',
+      "<!-- import('./htmlGhost') -->",
     ].join('\n')
 
     expect(specs(source)).toEqual([])
@@ -73,6 +76,29 @@ describe('findRelativeImports', () => {
     ].join('\n')
 
     expect(specs(source)).toContain('./afterRegex')
+  })
+
+  it('не ломается на делении', () => {
+    const source = ['const q = a / b / c', "import('./afterDivide')"].join('\n')
+
+    expect(specs(source)).toContain('./afterDivide')
+  })
+
+  // Известный предел, закреплён намеренно: слэш со звёздочкой внутри класса
+  // символов регулярного выражения читается как начало блочного комментария.
+  // Это недобор, а не ложное срабатывание — поломку поймает `vite build`.
+  // Если когда-нибудь появится разбор регулярных литералов, тест упадёт
+  // и подскажет снять ограничение.
+  it('документирует пропуск после класса символов со слэшем и звёздочкой', () => {
+    const source = ['const re = /[/*]/', "import('./afterCharClass')"].join('\n')
+
+    expect(specs(source)).toEqual([])
+  })
+
+  it('класс символов без звёздочки пропуска не даёт', () => {
+    const source = ['const re = /[/]/', "import('./afterPlainClass')"].join('\n')
+
+    expect(specs(source)).toContain('./afterPlainClass')
   })
 
   it('не даёт незакрытой строке съесть остаток файла', () => {
