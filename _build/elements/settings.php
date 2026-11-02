@@ -444,6 +444,14 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_security',
     ],
+    // Загрузка картинок в галерею по ссылке. Включена по умолчанию: раньше
+    // это работало как побочный эффект и приёмом пользовались. Выключатель
+    // нужен там, где серверу нельзя ходить в сеть наружу.
+    'ms3_gallery_allow_url_upload' => [
+        'value' => true,
+        'xtype' => 'combo-boolean',
+        'area' => 'ms3_security',
+    ],
     'ms3_password_reset_token_ttl' => [
         'value' => 3600, // 1 час
         'xtype' => 'numberfield',

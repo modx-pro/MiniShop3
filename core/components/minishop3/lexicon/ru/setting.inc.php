@@ -301,4 +301,5 @@ $_lang['setting_ms3_telegram_bot_token'] = 'Токен Telegram бота';
 $_lang['setting_ms3_telegram_bot_token_desc'] = 'Токен бота для отправки уведомлений в Telegram. Получите у @BotFather в Telegram.';
 $_lang['setting_ms3_telegram_manager'] = 'Telegram chat ID менеджеров';
 $_lang['setting_ms3_telegram_manager_desc'] = 'Список chat ID менеджеров через запятую для отправки уведомлений о заказах в Telegram. Узнать свой chat ID можно у бота @userinfobot.';
-
+$_lang['setting_ms3_gallery_allow_url_upload'] = 'Разрешить загрузку картинок по ссылке';
+$_lang['setting_ms3_gallery_allow_url_upload_desc'] = 'Галерея товара сможет скачивать изображение по указанному адресу. Внутренние адреса и приватные сети заблокированы, перенаправления ограничены. Отключите, если серверу нельзя обращаться в интернет.';

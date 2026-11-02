@@ -220,6 +220,10 @@ class ServiceRegistry
             'class' => \MiniShop3\Services\Product\ProductImageService::class,
             'interface' => null,
         ],
+        'ms3_remote_image_fetcher' => [
+            'class' => \MiniShop3\Services\Product\RemoteImageFetcher::class,
+            'interface' => null,
+        ],
         'ms3_vendor_service' => [
             'class' => \MiniShop3\Services\Vendor\VendorService::class,
             'interface' => null,

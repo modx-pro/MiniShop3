@@ -247,6 +247,14 @@ $_lang['ms3_err_gallery_remote_source'] = 'Loading a file by URL is not supporte
 $_lang['ms3_err_gallery_source_not_found'] = 'Source file not found.';
 $_lang['ms3_err_gallery_too_large'] = 'File exceeds the allowed size.';
 $_lang['ms3_err_gallery_too_many_pixels'] = 'Image has too many pixels.';
+$_lang['ms3_err_gallery_url_disabled'] = 'Loading by URL is disabled in settings.';
+$_lang['ms3_err_gallery_url_invalid'] = 'The URL is malformed.';
+$_lang['ms3_err_gallery_url_scheme'] = 'Only http and https URLs are supported.';
+$_lang['ms3_err_gallery_url_unresolved'] = 'Could not resolve the host from the URL.';
+$_lang['ms3_err_gallery_url_private'] = 'The URL points to an internal address.';
+$_lang['ms3_err_gallery_url_too_many_redirects'] = 'Too many redirects while following the URL.';
+$_lang['ms3_err_gallery_url_failed'] = 'Could not download the file by URL.';
+$_lang['ms3_err_gallery_url_no_curl'] = 'Loading by URL is unavailable: the curl extension is missing.';
 $_lang['ms3_err_options_is_not_msproduct'] = '[msOptions] Resource with id = [[+id]] is not a product.';
 $_lang['ms3_err_processor_combo_required'] = 'This processor requires combo: true.';
 

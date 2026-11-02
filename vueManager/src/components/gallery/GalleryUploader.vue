@@ -1,6 +1,23 @@
 <template>
   <div class="gallery-uploader" :class="{ 'gallery-uploader--has-files': hasFiles }">
     <div id="uppy-dashboard" class="uppy-container"></div>
+
+    <form class="gallery-uploader-url" @submit.prevent="onUrlSubmit">
+      <InputText
+        v-model="urlValue"
+        class="gallery-uploader-url-input"
+        :placeholder="_('ms3_gallery_url_placeholder')"
+        :disabled="urlLoading"
+        type="url"
+      />
+      <Button
+        type="submit"
+        :label="_('ms3_gallery_url_submit')"
+        icon="pi pi-link"
+        :loading="urlLoading"
+        :disabled="urlValue.trim() === ''"
+      />
+    </form>
   </div>
 </template>
 
@@ -10,9 +27,13 @@ import Dashboard from '@uppy/dashboard'
 import ImageEditor from '@uppy/image-editor'
 import XHRUpload from '@uppy/xhr-upload'
 import { useLexicon } from '@vuetools/useLexicon'
+import { Button, InputText } from 'primevue'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useGalleryApi } from '../../composables/useGalleryApi.js'
+
 const { _ } = useLexicon()
+const { uploadByUrl } = useGalleryApi()
 
 const EMPTY_HEIGHT = 96
 const FILE_ROW_HEIGHT = 48
@@ -57,9 +78,38 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['upload-success', 'upload-error', 'upload-complete'])
+const emit = defineEmits(['upload-success', 'upload-error', 'upload-complete', 'url-upload-error'])
 
 const hasFiles = ref(false)
+
+const urlValue = ref('')
+const urlLoading = ref(false)
+
+/**
+ * Загрузка картинки по ссылке (#923).
+ *
+ * Проверку адреса делает сервер: имя разрешается заранее, внутренние сети
+ * отклоняются, объём ограничен. Здесь только передаём ссылку и показываем
+ * пришедшую ошибку как есть — она уже на языке интерфейса.
+ */
+async function onUrlSubmit() {
+  const url = urlValue.value.trim()
+  if (url === '' || urlLoading.value) {
+    return
+  }
+
+  urlLoading.value = true
+  try {
+    const result = await uploadByUrl(props.productId, url, props.sourceId)
+    urlValue.value = ''
+    emit('upload-success', { file: { name: result.file }, response: result })
+    emit('upload-complete', { successful: [{ name: result.file }], failed: [] })
+  } catch (error) {
+    emit('url-upload-error', { file: { name: url }, error })
+  } finally {
+    urlLoading.value = false
+  }
+}
 
 let uppy = null
 
@@ -352,43 +402,49 @@ watch(
 }
 
 /* Empty dropzone: icon + copy + real button CTA (Import-like) */
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles) {
+.gallery-uploader:not(.gallery-uploader--has-files)
+  .uppy-container
+  :deep(.uppy-Dashboard-AddFiles) {
   margin: 0 !important;
   border: none !important;
   height: auto !important;
-    min-height: 0 !important;
+  min-height: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-    align-items: stretch;
-    justify-content: center;
-    padding: 0.75rem 1.25rem !important;
-  }
-  
-  .gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles::before) {
-    content: none;
-  }
-  
-  .gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-title) {
-    position: static !important;
-    inset: auto !important;
-    display: inline-flex !important;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0.75rem 1.25rem !important;
+}
+
+.gallery-uploader:not(.gallery-uploader--has-files)
+  .uppy-container
+  :deep(.uppy-Dashboard-AddFiles::before) {
+  content: none;
+}
+
+.gallery-uploader:not(.gallery-uploader--has-files)
+  .uppy-container
+  :deep(.uppy-Dashboard-AddFiles-title) {
+  position: static !important;
+  inset: auto !important;
+  display: inline-flex !important;
   flex-direction: row !important;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
   gap: 0.75rem;
-    width: auto !important;
-    max-width: none;
-    margin: 0 !important;
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    line-height: 1.35 !important;
-    color: var(--p-text-color, #212529);
+  width: auto !important;
+  max-width: none;
+  margin: 0 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  color: var(--p-text-color, #212529);
 }
 
 .gallery-uploader:not(.gallery-uploader--has-files)
   .uppy-container
-    :deep(.uppy-Dashboard-AddFiles-title::before) {
+  :deep(.uppy-Dashboard-AddFiles-title::before) {
   content: '\e944';
   font-family: 'primeicons';
   font-size: 1.5rem;
@@ -411,11 +467,15 @@ watch(
   color: var(--p-text-color, #212529);
 }
 
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-list:empty) {
+.gallery-uploader:not(.gallery-uploader--has-files)
+  .uppy-container
+  :deep(.uppy-Dashboard-AddFiles-list:empty) {
   display: none !important;
 }
 
-.gallery-uploader:not(.gallery-uploader--has-files) .uppy-container :deep(.uppy-Dashboard-AddFiles-info) {
+.gallery-uploader:not(.gallery-uploader--has-files)
+  .uppy-container
+  :deep(.uppy-Dashboard-AddFiles-info) {
   margin: 0.25rem 0 0 !important;
   padding: 0 !important;
 }
@@ -425,8 +485,8 @@ watch(
   justify-content: center;
   margin: 0 !important;
   height: 2.25rem !important;
-    min-height: 2.25rem !important;
-    padding: 0 0.875rem !important;
+  min-height: 2.25rem !important;
+  padding: 0 0.875rem !important;
   border: 1px solid var(--p-primary-color, #6cb24a) !important;
   border-radius: var(--ms3-radius-md, 0.375rem) !important;
   background: var(--p-primary-color, #6cb24a) !important;
@@ -559,5 +619,15 @@ watch(
   .uppy-container {
     transition: none;
   }
+}
+.gallery-uploader-url {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.gallery-uploader-url-input {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 </style>

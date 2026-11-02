@@ -132,6 +132,26 @@ export function useGalleryApi() {
   }
 
   /**
+   * Upload an image by URL (#923).
+   *
+   * The server resolves the host, refuses internal addresses and caps the
+   * size — see RemoteImageFetcher. Here we only pass the link along.
+   *
+   * @param {number} productId
+   * @param {string} url
+   * @param {number|string} sourceId
+   * @returns {Promise<{id: number, file: string}>}
+   */
+  async function uploadByUrl(productId, url, sourceId) {
+    const data = await connectorRequest('MiniShop3\\Processors\\Gallery\\Upload', {
+      id: productId,
+      url,
+      source: sourceId,
+    })
+    return { id: Number(data.object?.id) || 0, file: data.object?.file || '' }
+  }
+
+  /**
    * Sort gallery files by natural filename order (#616).
    * @param {number} productId
    * @returns {Promise<{thumb: string}>}
@@ -237,6 +257,7 @@ export function useGalleryApi() {
   return {
     isLoading,
     fetchGalleryList,
+    uploadByUrl,
     sortFiles,
     sortFilesByName,
     deleteFiles,

@@ -359,6 +359,24 @@ function onUploadComplete(result) {
     .catch(() => {})
 }
 
+/**
+ * Ошибка загрузки по ссылке (#923).
+ *
+ * Событие отдельное, а не общее upload-error: то эмитит и путь Uppy, у
+ * которого свой показ ошибок прямо в списке файлов, и на общем событии
+ * пользователь получал бы два уведомления об одном отказе. Поле со ссылкой
+ * идёт мимо Uppy, поэтому без этого обработчика отказ сервера пропадал
+ * молча: было видно только, что ничего не произошло.
+ */
+function onUrlUploadError({ error }) {
+  toast.add({
+    severity: 'error',
+    summary: _('ms3_gallery_errors'),
+    detail: error?.message || _('ms3_err_gallery_ns'),
+    life: 5000,
+  })
+}
+
 async function runUploadComplete(result) {
   const hasUploads = (result?.successful?.length ?? 0) > 0
 
@@ -409,6 +427,7 @@ onMounted(() => {
       :max-height="Number(mediaSource.maxUploadHeight) || 1080"
       :allowed-file-types="allowedFileTypes"
       @upload-complete="onUploadComplete"
+      @url-upload-error="onUrlUploadError"
     />
 
     <ProductGalleryGrid

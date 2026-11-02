@@ -301,4 +301,5 @@ $_lang['setting_ms3_telegram_bot_token'] = 'Telegram bot token';
 $_lang['setting_ms3_telegram_bot_token_desc'] = 'Bot token for sending notifications to Telegram. Get it from @BotFather in Telegram.';
 $_lang['setting_ms3_telegram_manager'] = 'Manager Telegram chat IDs';
 $_lang['setting_ms3_telegram_manager_desc'] = 'Comma-separated list of manager chat IDs for sending order notifications to Telegram. You can get your chat ID from @userinfobot.';
-
+$_lang['setting_ms3_gallery_allow_url_upload'] = 'Allow uploading images by URL';
+$_lang['setting_ms3_gallery_allow_url_upload_desc'] = 'The product gallery may download an image from a given address. Internal addresses and private networks are blocked, redirects are limited. Disable this if the server must not reach the internet.';
