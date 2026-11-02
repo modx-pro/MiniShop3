@@ -120,15 +120,38 @@ if (
     $fail('Upload must canonicalise the base path before comparing (#923)');
 }
 
-// Существование проверяется раньше границы, иначе опечатка в пути
-// отвечает «вне каталога сайта».
+// Наружу один ответ на все случаи негодного источника. Разные сообщения
+// для «файл есть, но снаружи» и «файла нет» превращают процессор в детектор
+// файлов на всём диске: перебирая пути, можно узнать, что лежит на сервере.
+if (str_contains($src, 'ms3_err_gallery_source_outside_base')) {
+    $fail('Upload must not tell apart an existing outside file from a missing one (#923)');
+}
+
+// Внутри resolveLocalSource() ветка отказа ровно одна: и «не разрешается»,
+// и «снаружи», и «не файл» отвечают одинаково. Второе вхождение этого ключа
+// живёт в copyWithSizeLimit() — там отказ уже после успешной проверки пути.
+$resolveBody = (string) preg_replace(
+    '/^[\s\S]*?private function resolveLocalSource\(|private function copyWithSizeLimit\([\s\S]*$/',
+    '',
+    $src
+);
+
+$sourceRejections = preg_match_all(
+    "/failureMessage = \\\$this->modx->lexicon\('ms3_err_gallery_source_not_found'\)/",
+    $resolveBody
+);
+if ($sourceRejections !== 1) {
+    $fail("resolveLocalSource() must have a single rejection message, got {$sourceRejections} (#923)");
+}
+
+// Точная причина остаётся администратору — в журнале.
 if (
     preg_match(
-        "/ms3_err_gallery_source_not_found[\s\S]*?ms3_err_gallery_source_outside_base/",
+        "/\\\$real === false \? 'does not resolve' : \(is_file\(\\\$real\) \? 'outside base path'/",
         $src
     ) !== 1
 ) {
-    $fail('Upload must report a missing file as not found, not as outside base (#923)');
+    $fail('the precise rejection reason must still reach the log (#923)');
 }
 
 // Ограничение размера берётся из медиа-источника и применяется на обоих путях.
@@ -190,7 +213,6 @@ foreach (['ru', 'en'] as $lang) {
         [
             'ms3_err_gallery_remote_source',
             'ms3_err_gallery_source_not_found',
-            'ms3_err_gallery_source_outside_base',
             'ms3_err_gallery_too_large',
             'ms3_err_gallery_too_many_pixels',
         ] as $key

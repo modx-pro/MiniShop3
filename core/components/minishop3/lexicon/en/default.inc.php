@@ -245,7 +245,6 @@ $_lang['ms3_gallery_err_no_product'] = 'Product not found.';
 $_lang['ms3_gallery_err_file_not_in_product'] = 'File does not belong to this product.';
 $_lang['ms3_err_gallery_remote_source'] = 'Loading a file by URL is not supported.';
 $_lang['ms3_err_gallery_source_not_found'] = 'Source file not found.';
-$_lang['ms3_err_gallery_source_outside_base'] = 'Source file is outside the site directory.';
 $_lang['ms3_err_gallery_too_large'] = 'File exceeds the allowed size.';
 $_lang['ms3_err_gallery_too_many_pixels'] = 'Image has too many pixels.';
 $_lang['ms3_err_gallery_url_disabled'] = 'Loading by URL is disabled in settings.';
