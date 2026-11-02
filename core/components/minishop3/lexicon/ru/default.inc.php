@@ -248,6 +248,14 @@ $_lang['ms3_err_gallery_source_not_found'] = 'Файл-источник не н�
 $_lang['ms3_err_gallery_source_outside_base'] = 'Файл-источник находится вне каталога сайта.';
 $_lang['ms3_err_gallery_too_large'] = 'Файл превышает допустимый размер.';
 $_lang['ms3_err_gallery_too_many_pixels'] = 'Изображение слишком велико по числу пикселей.';
+$_lang['ms3_err_gallery_url_disabled'] = 'Загрузка по ссылке отключена в настройках.';
+$_lang['ms3_err_gallery_url_invalid'] = 'Ссылка указана неверно.';
+$_lang['ms3_err_gallery_url_scheme'] = 'Поддерживаются только ссылки http и https.';
+$_lang['ms3_err_gallery_url_unresolved'] = 'Не удалось определить адрес по имени из ссылки.';
+$_lang['ms3_err_gallery_url_private'] = 'Ссылка ведёт на внутренний адрес.';
+$_lang['ms3_err_gallery_url_too_many_redirects'] = 'Слишком много перенаправлений по ссылке.';
+$_lang['ms3_err_gallery_url_failed'] = 'Не удалось загрузить файл по ссылке.';
+$_lang['ms3_err_gallery_url_no_curl'] = 'Загрузка по ссылке недоступна: на сервере нет расширения curl.';
 $_lang['ms3_err_options_is_not_msproduct'] = '[msOptions] Ресурс с id = [[+id]] не является товаром.';
 $_lang['ms3_err_processor_combo_required'] = 'Этот процессор требует combo: true.';
 

@@ -5,6 +5,7 @@ namespace MiniShop3\Processors\Gallery;
 use MiniShop3\MiniShop3;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductFile;
+use MiniShop3\Services\Product\RemoteImageFetcher;
 use MiniShop3\Utils\PathBoundary;
 use MODX\Revolution\modX;
 use MODX\Revolution\Processors\ModelProcessor;
@@ -214,10 +215,22 @@ class Upload extends ModelProcessor
         $tf = tempnam(self::basePath(), 'ms3_');
         $maxSize = $this->maxUploadSize();
 
+        $url = trim((string) $this->getProperty('url', ''));
+
         if (!empty($_FILES['file']) && is_uploaded_file($_FILES['file']['tmp_name'])) {
             $name = $_FILES['file']['name'];
             move_uploaded_file($_FILES['file']['tmp_name'], $tf);
+        } elseif ($url !== '') {
+            $name = $this->fetchByUrl($url, $tf, $maxSize);
+            if ($name === null) {
+                @unlink($tf);
+
+                return false;
+            }
         } else {
+            // Параметр `file` остался строго локальным: его использует
+            // CSV-импорт, и расширять его до ссылок нельзя — у них разный
+            // уровень доверия. Ссылки идут через отдельный `url`.
             $source = $this->resolveLocalSource((string) $this->getProperty('file', ''));
             if ($source === null) {
                 @unlink($tf);
@@ -296,6 +309,36 @@ class Upload extends ModelProcessor
 
             return false;
         }
+    }
+
+    /**
+     * Загрузка по ссылке: имя файла либо null, причина уже записана.
+     *
+     * Возможность существовала и раньше, но как побочный эффект `fopen($url)`
+     * без каких-либо проверок (#923). Теперь это отдельная фича с защитой от
+     * SSRF в {@see RemoteImageFetcher} и выключателем в настройках.
+     */
+    private function fetchByUrl(string $url, string $target, int $maxSize): ?string
+    {
+        if (!$this->modx->getOption('ms3_gallery_allow_url_upload', null, true)) {
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_url_disabled');
+
+            return null;
+        }
+
+        $fetcher = $this->modx->services->has('ms3_remote_image_fetcher')
+            ? $this->modx->services->get('ms3_remote_image_fetcher')
+            : new RemoteImageFetcher($this->modx);
+
+        $result = $fetcher->fetchTo($url, $target, $maxSize);
+
+        if ($result['ok'] !== true) {
+            $this->failureMessage = $this->modx->lexicon($result['reason']);
+
+            return null;
+        }
+
+        return $result['name'];
     }
 
     /**

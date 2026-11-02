@@ -56,6 +56,7 @@ class ServiceRegistryFactories
             'ms3_key_value_field' => $modxOnly(),
             'ms3_model_field_section_service' => $modxOnly(),
             'ms3_product_image' => $modxOnly(),
+            'ms3_remote_image_fetcher' => $modxOnly(),
             'ms3_vendor_service' => $modxOnly(),
             'ms3_delivery_service' => $modxOnly(),
             'ms3_shipment_lifecycle' => static function (modX $modx, object $services, string $class): object {
