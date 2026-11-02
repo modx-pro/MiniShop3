@@ -78,7 +78,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['upload-success', 'upload-error', 'upload-complete'])
+const emit = defineEmits(['upload-success', 'upload-error', 'upload-complete', 'url-upload-error'])
 
 const hasFiles = ref(false)
 
@@ -105,7 +105,7 @@ async function onUrlSubmit() {
     emit('upload-success', { file: { name: result.file }, response: result })
     emit('upload-complete', { successful: [{ name: result.file }], failed: [] })
   } catch (error) {
-    emit('upload-error', { file: { name: url }, error })
+    emit('url-upload-error', { file: { name: url }, error })
   } finally {
     urlLoading.value = false
   }
