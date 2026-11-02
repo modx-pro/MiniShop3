@@ -104,8 +104,31 @@ if (preg_match('/strpos\(\$file, \'\:\/\/\'\) !== false/', $src) === 1) {
     $fail('Upload must not open remote sources any more (#923)');
 }
 
-if (!str_contains($src, 'PathBoundary::resolveInside(')) {
+if (!str_contains($src, 'PathBoundary::isInside(')) {
     $fail('Upload must confine the local source under base path via PathBoundary (#923)');
+}
+
+// Базовый путь канонизируется: MODX_BASE_PATH на Windows приходит со слэшами
+// вперёд, и сравнение с результатом realpath() «как есть» молча не совпало бы,
+// то есть граница перестала бы работать.
+if (
+    preg_match(
+        '/\$realBase = realpath\(self::basePath\(\)\);[\s\S]*?PathBoundary::isInside\(\$real, \$realBase\)/',
+        $src
+    ) !== 1
+) {
+    $fail('Upload must canonicalise the base path before comparing (#923)');
+}
+
+// Существование проверяется раньше границы, иначе опечатка в пути
+// отвечает «вне каталога сайта».
+if (
+    preg_match(
+        "/ms3_err_gallery_source_not_found[\s\S]*?ms3_err_gallery_source_outside_base/",
+        $src
+    ) !== 1
+) {
+    $fail('Upload must report a missing file as not found, not as outside base (#923)');
 }
 
 // Ограничение размера берётся из медиа-источника и применяется на обоих путях.
@@ -129,19 +152,30 @@ if (
     $fail('Upload must also size-check the multipart path (#923)');
 }
 
-// Потолок пикселей — предохранитель против декомпрессионных бомб.
+// Потолок пикселей — предохранитель против гигапиксельных файлов.
 if (!str_contains($src, 'MAX_IMAGE_PIXELS')) {
-    $fail('Upload must cap total pixels before decoding (#923)');
+    $fail('Upload must cap total pixels (#923)');
 }
 
-if (preg_match('/withinPixelCeiling\(/', $src) !== 1) {
-    // Один вызов — это объявление; нужны ещё и применения.
-    $fail('withinPixelCeiling() must be declared (#923)');
+// Размеры берутся только из getimagesize(), то есть из заголовка.
+if (
+    preg_match(
+        '/\$tmp = getimagesize\(\$tf\);[\s\S]*?withinPixelCeiling\(\(int\) \$tmp\[0\], \(int\) \$tmp\[1\]/',
+        $src
+    ) !== 1
+) {
+    $fail('pixel ceiling must be checked on the getimagesize() result (#923)');
 }
 
-$ceilingCalls = preg_match_all('/\$this->withinPixelCeiling\(/', $src);
-if ($ceilingCalls < 3) {
-    $fail("pixel ceiling must guard every path that learns the dimensions, got {$ceilingCalls} (#923)");
+// Запасной путь для webp убран: оба его способа раскодировали изображение
+// целиком, то есть проверка пикселей срабатывала уже после занятия памяти.
+// getimagesize() разбирает webp с PHP 7.1, а компонент требует 8.2+.
+// Ищем именно вызов, а не упоминание: имена этих функций остались
+// в комментарии, объясняющем, почему ветка убрана.
+foreach (['imagecreatefromwebp\(\$', 'imageManager->read\(\$'] as $decoder) {
+    if (preg_match('/' . $decoder . '/', $src) === 1) {
+        $fail('Upload must not decode an unparsed image to learn its size (#923)');
+    }
 }
 
 // --- Часть 3: сообщения на двух языках -------------------------------------

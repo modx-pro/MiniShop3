@@ -14,8 +14,13 @@ use MODX\Revolution\Sources\modMediaSource;
 class Upload extends ModelProcessor
 {
     /**
-     * Потолок пикселей против декомпрессионных бомб: маленький файл, который
-     * разворачивается в гигапиксельное изображение и съедает память GD (#923).
+     * Потолок пикселей против гигапиксельных файлов (#923).
+     *
+     * Отсекает именно бомбы — крошечный файл, заявляющий десятки тысяч точек
+     * по каждой стороне. От нехватки памяти в общем случае он не спасает:
+     * 80 Мп это уже около 320 МБ в GD, и при memory_limit = 256M запрос упадёт
+     * на изображении, которое проверку прошло. Так было и до правки, и лечится
+     * это не потолком, а памятью и ограничением размеров на входе.
      *
      * Это не редакторское ограничение размеров, а предохранитель. Настройки
      * maxUploadWidth и maxUploadHeight медиа-источника здесь намеренно
@@ -231,7 +236,7 @@ class Upload extends ModelProcessor
         clearstatcache(true, $tf);
 
         // Проверка одна для обоих путей: multipart приходит мимо copyWithSizeLimit().
-        if ($maxSize > 0 && file_exists($tf) && filesize($tf) > $maxSize) {
+        if (file_exists($tf) && filesize($tf) > $maxSize) {
             @unlink($tf);
             $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_too_large');
 
@@ -267,53 +272,24 @@ class Upload extends ModelProcessor
                         'mime' => $tmp['mime'],
                     ]
                 );
-            } elseif (strpos($data['name'], '.webp') !== false) {
-                try {
-                    /** @var \MiniShop3\Services\ImageService $imageService */
-                    $imageService = $this->modx->services->get('ms3_image');
-                    if ($imageService) {
-                        $image = $imageService->imageManager->read($tf);
-
-                        if (!$this->withinPixelCeiling($image->width(), $image->height(), $tf)) {
-                            return false;
-                        }
-
-                        $data['properties'] = array_merge(
-                            $data['properties'],
-                            [
-                                'width' => $image->width(),
-                                'height' => $image->height(),
-                                'mime' => 'image/webp',
-                            ]
-                        );
-                    } else {
-                        if (function_exists('imagecreatefromwebp')) {
-                            $img = imagecreatefromwebp($tf);
-                            $width = imagesx($img);
-                            $height = imagesy($img);
-                            imagedestroy($img);
-
-                            if (!$this->withinPixelCeiling($width, $height, $tf)) {
-                                return false;
-                            }
-
-                            $data['properties'] = array_merge(
-                                $data['properties'],
-                                [
-                                    'width' => $width,
-                                    'height' => $height,
-                                    'mime' => 'image/webp',
-                                ]
-                            );
-                        }
-                    }
-                } catch (\Exception $e) {
-                    $this->modx->log(
-                        modX::LOG_LEVEL_ERROR,
-                        "[miniShop3] Failed to read WebP image: {$e->getMessage()}"
-                    );
-                }
             }
+
+            // Прежде здесь лежал запасной путь для webp: если getimagesize()
+            // не справился, а в имени есть `.webp`, размеры брались через
+            // Intervention или imagecreatefromwebp(). Он убран (#923).
+            //
+            // Во-первых, он бесполезен: getimagesize() разбирает webp с PHP 7.1,
+            // а компонент требует 8.2+. Сюда попадал только файл, который
+            // getimagesize() разобрать не смог.
+            //
+            // Во-вторых, он был опасен ровно для таких файлов: оба способа
+            // раскодируют изображение целиком, то есть проверка числа пикселей
+            // срабатывала уже после того, как память занята. Под именем .webp
+            // можно было подсунуть формат, который getimagesize() не понимает,
+            // а бэкенд Intervention понимает.
+            //
+            // Теперь такой файл остаётся без width/height, и process() отвечает
+            // ms3_err_wrong_image — отказ вместо декодирования неизвестного.
             return $data;
         } else {
             unlink($tf);
@@ -374,20 +350,27 @@ class Upload extends ModelProcessor
             return null;
         }
 
-        $real = PathBoundary::resolveInside($file, self::basePath());
+        // Сначала существование, потом граница: иначе опечатка в пути
+        // отвечает «вне каталога сайта» и сбивает с толку.
+        $real = realpath($file);
 
-        if ($real === null) {
+        if ($real === false || !is_file($real)) {
+            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_not_found');
+
+            return null;
+        }
+
+        // Базовый путь тоже через realpath: MODX_BASE_PATH на Windows приходит
+        // со слэшами вперёд, а realpath() отдаёт обратные, и сравнение
+        // «как есть» молча не совпало бы — то есть граница бы не работала.
+        $realBase = realpath(self::basePath());
+
+        if ($realBase === false || !PathBoundary::isInside($real, $realBase)) {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
                 "[Gallery/Upload] source outside base path rejected: {$file}"
             );
             $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_outside_base');
-
-            return null;
-        }
-
-        if (!is_file($real)) {
-            $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_source_not_found');
 
             return null;
         }
@@ -404,7 +387,7 @@ class Upload extends ModelProcessor
     private function copyWithSizeLimit(string $source, string $target, int $maxSize): bool
     {
         $size = filesize($source);
-        if ($size !== false && $maxSize > 0 && $size > $maxSize) {
+        if ($size !== false && $size > $maxSize) {
             $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_too_large');
 
             return false;
@@ -434,7 +417,7 @@ class Upload extends ModelProcessor
             }
 
             $written += strlen($chunk);
-            if ($maxSize > 0 && $written > $maxSize) {
+            if ($written > $maxSize) {
                 $this->failureMessage = $this->modx->lexicon('ms3_err_gallery_too_large');
                 $ok = false;
                 break;
