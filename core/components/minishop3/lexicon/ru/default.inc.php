@@ -243,6 +243,11 @@ $_lang['ms3_err_gallery_is_not_msproduct'] = '[msGallery] Ресурс с id = [
 $_lang['ms3_gallery_err_ns'] = 'Не указан обязательный параметр.';
 $_lang['ms3_gallery_err_no_product'] = 'Товар не найден.';
 $_lang['ms3_gallery_err_file_not_in_product'] = 'Файл не относится к этому товару.';
+$_lang['ms3_err_gallery_remote_source'] = 'Загрузка файла по ссылке не поддерживается.';
+$_lang['ms3_err_gallery_source_not_found'] = 'Файл-источник не найден.';
+$_lang['ms3_err_gallery_source_outside_base'] = 'Файл-источник находится вне каталога сайта.';
+$_lang['ms3_err_gallery_too_large'] = 'Файл превышает допустимый размер.';
+$_lang['ms3_err_gallery_too_many_pixels'] = 'Изображение слишком велико по числу пикселей.';
 $_lang['ms3_err_options_is_not_msproduct'] = '[msOptions] Ресурс с id = [[+id]] не является товаром.';
 $_lang['ms3_err_processor_combo_required'] = 'Этот процессор требует combo: true.';
 
