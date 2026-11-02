@@ -439,11 +439,6 @@ return [
         'xtype' => 'numberfield',
         'area' => 'ms3_security',
     ],
-    'ms3_customer_api_token_ttl' => [
-        'value' => 86400, // 24 часа
-        'xtype' => 'numberfield',
-        'area' => 'ms3_security',
-    ],
     'ms3_password_reset_token_ttl' => [
         'value' => 3600, // 1 час
         'xtype' => 'numberfield',
