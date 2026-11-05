@@ -64,7 +64,8 @@ class ProductOptionsWriter
             }
 
             $fieldValue = $productData->get($key);
-            $options[$key] = !empty($fieldValue) ? $fieldValue : null;
+            // Treat only null and empty string as empty; 0 and "0" are valid values
+            $options[$key] = ($fieldValue !== null && $fieldValue !== '') ? $fieldValue : null;
         }
 
         return $options;
