@@ -10,6 +10,7 @@ use MiniShop3\Model\msOrderStatus;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
 use MiniShop3\Router\HttpStatus;
+use MiniShop3\Services\Cart\CartItemManager;
 use MiniShop3\Services\Inventory\AdjustableInventoryInterface;
 use MiniShop3\Services\Inventory\InventoryException;
 use MiniShop3\Services\Inventory\InventoryServiceInterface;
@@ -24,6 +25,7 @@ class ManagerOrderProductsService
     protected ?OrderLogService $orderLog;
     protected ?Utils $ms3Utils;
     protected ?OrderInventoryCoordinator $inventoryCoordinator;
+    protected ?CartItemManager $cartItemManager;
 
     /** @var array<int, float> */
     private array $snapshotBeforeSync = [];
@@ -35,12 +37,14 @@ class ManagerOrderProductsService
         modX $modx,
         ?OrderLogService $orderLog = null,
         ?Utils $ms3Utils = null,
-        ?OrderInventoryCoordinator $inventoryCoordinator = null
+        ?OrderInventoryCoordinator $inventoryCoordinator = null,
+        ?CartItemManager $cartItemManager = null
     ) {
         $this->modx = $modx;
         $this->orderLog = $orderLog;
         $this->ms3Utils = $ms3Utils;
         $this->inventoryCoordinator = $inventoryCoordinator;
+        $this->cartItemManager = $cartItemManager;
     }
 
     /**
@@ -135,8 +139,10 @@ class ManagerOrderProductsService
             }
         }
 
-        // Generate product_key (unique identifier for product variation)
-        $productKey = md5($productId . json_encode($options));
+        // Generate product_key (unique identifier for product variation) using CartItemManager
+        $cartItemManager = $this->cartItemManager
+            ?? $this->modx->services->get('ms3_cart_item_manager');
+        $productKey = $cartItemManager->generateProductKey(['id' => $productId], $options);
 
         // Create order product record
         $orderProduct = $this->modx->newObject(msOrderProduct::class);

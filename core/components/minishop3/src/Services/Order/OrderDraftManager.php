@@ -8,6 +8,7 @@ use MiniShop3\Model\msOrderAddress;
 use MiniShop3\Model\msOrderProduct;
 use MiniShop3\Model\msProduct;
 use MiniShop3\Model\msProductData;
+use MiniShop3\Services\Cart\CartItemManager;
 use MODX\Revolution\modSystemEvent;
 use MODX\Revolution\modX;
 use Ramsey\Uuid\Uuid;
@@ -751,7 +752,11 @@ class OrderDraftManager
         $orderProduct = $this->modx->newObject(msOrderProduct::class);
         $orderProduct->set('order_id', $order->get('id'));
         $orderProduct->set('product_id', $productId > 0 ? $productId : null);
-        $orderProduct->set('product_key', md5($productId . json_encode($options)));
+        $cartItemManager = $this->modx->services->get('ms3_cart_item_manager');
+        $productKey = $cartItemManager
+            ? $cartItemManager->generateProductKey(['id' => $productId], $options)
+            : 'ms' . md5($productId . json_encode($options));
+        $orderProduct->set('product_key', $productKey);
         $orderProduct->set('name', $name);
         $orderProduct->set('count', $count);
         $orderProduct->set('price', $price);
