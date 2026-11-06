@@ -321,4 +321,30 @@ switch ($modx->event->name) {
 
     // OnCategoryRemove handler removed in #10 — msOption no longer references modCategory.
     // Options now belong to msOptionGroup, which is independent of the MODX category tree.
+
+    /**
+     * OnResourceDelete - drop native SEO overrides for deleted msProduct / msCategory (#790).
+     *
+     * msProductData::remove() already cleans up via ProductRemovalHelper, but the resource
+     * itself is gone by the time that fires; this event covers both classes and any
+     * category delete path that does not go through msProductData.
+     */
+    case 'OnResourceDelete':
+        if (!isset($resource) || !$resource instanceof \MODX\Revolution\modResource) {
+            break;
+        }
+        $classKey = $resource->get('class_key');
+        if ($classKey !== msProduct::class && $classKey !== \MiniShop3\Model\msCategory::class) {
+            break;
+        }
+        if ($modx->services->has('ms3_resource_seo')) {
+            /** @var \MiniShop3\Services\Seo\ResourceSeoService $resourceSeo */
+            $resourceSeo = $modx->services->get('ms3_resource_seo');
+            $resourceSeo->delete((int) $resource->get('id'));
+        } else {
+            $modx->removeCollection(\MiniShop3\Model\msResourceSeo::class, [
+                'resource_id' => (int) $resource->get('id'),
+            ]);
+        }
+        break;
 }
