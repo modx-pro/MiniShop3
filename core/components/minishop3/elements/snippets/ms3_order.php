@@ -283,20 +283,21 @@ if ($syncEnabled) {
         if (!empty($profile) && !empty($value)) {
             if (strpos($value, 'extended') !== false) {
                 $tmp = substr($value, 9, -1);
-                $value = !empty($profile['extended'][$tmp])
-                    ? $profile['extended'][$tmp]
-                    : '';
+                $value = $profile['extended'][$tmp] ?? '';
             } else {
                 $value = $profile[$value] ?? '';
             }
-            if (!empty($value)) {
+            // Ноль — законное значение адресных полей: цокольный этаж,
+            // строение 0. empty() здесь молча выбрасывал его из заказа,
+            // и обязательное поле приходилось вводить заново (#867, #969).
+            if ($value !== '') {
                 $response = $ms3->order->add($key, $value);
-                if ($response['success'] && !empty($response['data'][$key])) {
+                if ($response['success'] && isset($response['data'][$key])) {
                     $form[$key] = $response['data'][$key];
                 }
             }
         }
-        if (empty($form[$key]) && !empty($order[$key])) {
+        if (($form[$key] ?? '') === '' && ($order[$key] ?? '') !== '') {
             $form[$key] = $order[$key];
             unset($order[$key]);
         }
@@ -317,7 +318,7 @@ if ($syncEnabled) {
 
 // Apply remaining order data to form
 foreach ($userProfileFields as $key => $value) {
-    if (empty($form[$key]) && !empty($order[$key])) {
+    if (($form[$key] ?? '') === '' && ($order[$key] ?? '') !== '') {
         $form[$key] = $order[$key];
         unset($order[$key]);
     }
