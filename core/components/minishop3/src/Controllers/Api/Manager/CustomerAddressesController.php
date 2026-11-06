@@ -6,6 +6,7 @@ use MiniShop3\Model\msCustomer;
 use MiniShop3\Model\msCustomerAddress;
 use MiniShop3\Router\HttpStatus;
 use MiniShop3\Router\Response;
+use MiniShop3\Services\Customer\CustomerAddressManager;
 use MODX\Revolution\modX;
 
 /**
@@ -97,6 +98,7 @@ class CustomerAddressesController
             }
         }
 
+        // Use unified hash generation (4 fields: city, street, building, room)
         $address->set('hash', $this->generateAddressHash($data));
         $address->set('createdon', date('Y-m-d H:i:s'));
 
@@ -146,7 +148,12 @@ class CustomerAddressesController
             }
         }
 
-        $address->set('hash', $this->generateAddressHash($data));
+        // Merge existing address data with incoming data for hash calculation
+        $mergedData = array_merge(
+            $address->toArray(),
+            $data
+        );
+        $address->set('hash', $this->generateAddressHash($mergedData));
         $address->set('updatedon', date('Y-m-d H:i:s'));
 
         if (!$address->save()) {
@@ -223,6 +230,7 @@ class CustomerAddressesController
 
     /**
      * Generate address hash for deduplication
+     * Uses same 4 fields as CustomerAddressManager::generateHash() for consistency
      *
      * @param array $data
      * @return string
@@ -230,9 +238,6 @@ class CustomerAddressesController
     protected function generateAddressHash(array $data): string
     {
         $parts = [
-            $data['country'] ?? '',
-            $data['index'] ?? '',
-            $data['region'] ?? '',
             $data['city'] ?? '',
             $data['street'] ?? '',
             $data['building'] ?? '',
